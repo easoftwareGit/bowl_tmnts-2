@@ -1,0 +1,13 @@
+1) install bcrypt and @types/bcrypt 
+   check paskage.json to see if already installed.
+   if not yest installed:
+  A) npm i bcrypt
+  B) npm i -D @types/bcrypt
+2) generate the prisma client
+    npx prisma generate
+3) create a migration
+    npx prisma migrate dev --name init
+4) seed the database if needed
+    npx prisma db seed
+5) update code in app/auth/[...nextauth]/route.ts 
+    use data from databse, 

@@ -1,0 +1,9 @@
+1) Open a terminal window, and install required files
+  A) npm i -D @testing-library/jest-dom
+  B) npm i -D @testing-library/react
+  C) npm i -D @testing-library/user-event
+  D) npm i -D jest
+  E) npm i -D jest-environment-jsdom
+  F) npm i -D ts-jest
+  OR
+  G) npp i -D @testing-library/jest-dom @testing-library/react @testing-library/react @testing-library/user-event jest jest-environment-jsdom ts-jest

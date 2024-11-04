@@ -1,0 +1,1 @@
+1) create a new auth.tsx file in app/ folder

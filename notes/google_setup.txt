@@ -1,0 +1,43 @@
+1) go to google cloud console
+    https://console.cloud.google.com/
+2) log in
+3) create a new projct
+  A) click on current project to open select a project window
+  B) click on [new project]
+  C) fill in the values to create the project
+  D) Select the new project
+4) in project dashboard, setup OAuth first    
+  A) select APIs & Services
+  B) select OAuth consent
+    1) External app (all user all over the world can use)
+    2) click on [Create]
+    3) enter App information
+      a) app logo not required
+      b) app domain: http://localhost:3000 for testing, real links for real apps
+    4) authorized domains (required when shipped to production)
+    5) enter Developer contact information 
+    6) click [Save and Continue]
+  C) Scopes - how you ask for information
+    1) To get started, only need 3 scopes:
+      a) /auth/userinfo.email
+      b) /auth/userinfo.profile
+      c) openid
+    2) click [Update]
+    3) click [Save and Continue]
+  D) Add test users
+    1) click [+ Add users]
+    2) enter test user email
+    3) click somewhere near [Add] but not on [Add], or press [Tab] key to exit entry field
+    4) click [Add] to add user
+    5) make sure to add 1 addiotional user (so can test with more than 1 user)
+    6) click [Save and Continue]
+  E) click [Back to Dashboard]
+5) setp app details
+  A) in Dachboard, click on Credentials
+  B) click on + Create Credentials, then OAuth client ID
+  C) Application type: Web Application
+  D) Name: app's Name
+  E) Authorized Javascript origins: http://localhost:3000 for testing, real links for real apps
+  F) Authorized redirect URI: http://localhost:3000/api/auth/callback/google for testing, real links for real apps (ending in auth/callback/google)
+  G) click on [Create]
+6) Copy Client ID and Client Secret

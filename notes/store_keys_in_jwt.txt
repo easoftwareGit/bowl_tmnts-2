@@ -1,0 +1,16 @@
+1) modify 2 callbacks in next-auth
+  A) in app/api/auth/[...nextauth]/route.ts
+    1) add 2 key callbacks:
+      a) sessions
+      b) jwt
+2) jwt
+  A) 2 params
+    1) token
+    2) user - only passed into function first time user logs in
+      a) check if there is a user object
+      b) if there is a user object, then ok to add data to user and return it
+3) session
+  A) return session data and
+  B) user object with
+    1) everything in session.user
+    2) custom keys in token 

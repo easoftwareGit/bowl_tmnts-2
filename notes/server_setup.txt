@@ -1,0 +1,19 @@
+1) install next-auth
+    npm i next-auth
+2) make the api route that next-auth will use
+   under the app/ folder, create a new file
+    api/auth/[...nextauth]/route.ts
+   add code to file
+3) add enviornment variable for NEXTAUTH_SECRET
+   in the same folder as .env, create 
+    .env.local
+   set NEXTAUTH_SECRET value 
+4) go to http://localhost:3000/api/auth/signin to test 
+5) server side: get the session info 
+   can use getServerSession() because files in app/ folder are React server components
+    import { getServerSession } from "next-auth";
+    import { authOptions } from "./api/auth/[...nextauth]/route";
+    export default async function AnyFunc() {
+      const session = await getServerSession(authOptions);
+      JSON.stringify(session) // to see JSON data froom session
+    }

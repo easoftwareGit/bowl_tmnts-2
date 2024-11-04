@@ -1,0 +1,3 @@
+1) make new providers.tsx file in app/ folder
+2) in layout.tsx, wrap {children} in <Providers> tag
+3) create user.tsx in same folder as providers.tsx (user.tsx is for testing only)

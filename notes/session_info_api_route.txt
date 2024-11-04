@@ -1,0 +1,4 @@
+1) create a new file under the api/ folder. 
+   folders are the route
+   file name is route.ts
+2) see src/app/api/route.ts

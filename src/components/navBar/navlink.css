@@ -1,0 +1,24 @@
+.mavbar-nav > .nav-link {  
+  color: #ffffff;  
+}
+
+.mavbar-nav > .nav-link.active {
+  color: #0275d8;
+  background-color: #ffffff;
+  border-radius: 5px;
+}
+
+#user-dropdown.active {
+  color: #0275d8;
+  background-color: #ffffff !important;
+  border-radius: 5px;  
+}
+
+.user-nav-item {
+  background-color: #0275d8;
+  color: #ffffff; 
+}
+
+.dropdown-menu {
+  background-color: #0275d8;
+}

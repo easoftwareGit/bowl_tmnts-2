@@ -1,0 +1,5 @@
+.lanes_table {
+  height: 150px;  
+  overflow-y: auto;      
+  align-items: flex-start;
+}

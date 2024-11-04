@@ -1,0 +1,255 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// notes:
+// password is optional because when authenticating via Google, no password is saved in the database
+model User {
+  // gen_random_uuid(): create the uuid string
+  // cast(...) as text: makes sure uuid value is treated as text
+  // replace(..., '-', ''): removed the '-' values from the uuid  
+  // concat('usr_', ...): adds usr_ to start of uuid (so uuid shows table it is for). 
+  // dbgenerated("..."): indicates the code that will be run by the database
+  // @defaul: the default value for the field
+  // @id: indicates the field is the primary key
+  // @db.Text: tells prisma to map the field as a text field
+  id            String   @id @default(dbgenerated("concat('usr_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  email         String   @unique(map: "users_email_idx") @db.VarChar
+  password_hash String?
+  first_name    String   @db.VarChar
+  last_name     String   @db.VarChar
+  phone         String?  @db.VarChar
+  role          String   @default("USER")
+  tmnts         Tmnt[]   @relation("UserTmnts")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Bowl {
+  id        String   @id @default(dbgenerated("concat('bwl_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  bowl_name String   @db.VarChar
+  city      String   @db.VarChar
+  state     String   @db.VarChar
+  url       String   @db.VarChar
+  tmnts     Tmnt[]   @relation("BowlTmnts")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Tmnt {
+  id         String   @id @default(dbgenerated("concat('tmt_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  tmnt_name  String
+  start_date DateTime
+  end_date   DateTime
+  events     Event[]
+  divs       Div[]
+  players    Player[]
+  user_id    String   @db.Text
+  users      User     @relation("UserTmnts", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  bowl_id    String   @db.Text
+  bowls      Bowl     @relation("BowlTmnts", fields: [bowl_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Event {
+  id          String   @id @default(dbgenerated("concat('evt_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  tmnt_id     String   @db.Text
+  event_name  String
+  team_size   Int
+  games       Int
+  entry_fee   Decimal  @db.Decimal(9, 2)
+  lineage     Decimal  @db.Decimal(9, 2)
+  prize_fund  Decimal  @db.Decimal(9, 2)
+  other       Decimal  @db.Decimal(9, 2)
+  expenses    Decimal  @db.Decimal(9, 2)
+  added_money Decimal  @db.Decimal(9, 2)
+  sort_order  Int
+  tmnts       Tmnt     @relation(fields: [tmnt_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  squads      Squad[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([tmnt_id, event_name])
+}
+
+model Div {
+  id         String   @id @default(dbgenerated("concat('div_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  tmnt_id    String   @db.Text
+  div_name   String
+  hdcp_per   Float
+  hdcp_from  Int
+  int_hdcp   Boolean  @default(true)
+  hdcp_for   String   @default("Game")
+  sort_order Int
+  tmnts      Tmnt     @relation(fields: [tmnt_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  entries    Entry[]
+  pots       Pot[]
+  brkts      Brkt[]
+  elims      Elim[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([tmnt_id, div_name])
+}
+
+model Squad {
+  id            String      @id @default(dbgenerated("concat('sqd_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  event_id      String      @db.Text
+  squad_name    String
+  squad_date    DateTime
+  squad_time    String?     @db.Text
+  games         Int
+  lane_count    Int
+  starting_lane Int
+  sort_order    Int
+  lanes         Lane[]
+  lane_asmts    Lane_asmt[]
+  pots          Pot[]
+  brkts         Brkt[]
+  elims         Elim[]
+  events        Event       @relation(fields: [event_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([event_id, squad_name])
+}
+
+model Lane {
+  id          String   @id @default(dbgenerated("concat('lan_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  lane_number Int
+  squad_id    String   @db.Text
+  in_use      Boolean  @default(true)
+  squad       Squad    @relation(fields: [squad_id], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([squad_id, lane_number])
+}
+
+model Pot {
+  id         String   @id @default(dbgenerated("concat('pot_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  squad_id   String   @db.Text
+  div_id     String   @db.Text
+  sort_order Int
+  fee        Decimal  @db.Decimal(9, 2)
+  pot_type   String
+  div        Div      @relation(fields: [div_id], references: [id])
+  squad      Squad    @relation(fields: [squad_id], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([div_id, pot_type])
+}
+
+model Brkt {
+  id         String   @id @default(dbgenerated("concat('brk_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  squad_id   String   @db.Text
+  div_id     String   @db.Text
+  sort_order Int
+  start      Int
+  games      Int
+  players    Int
+  fee        Decimal  @db.Decimal(9, 2)
+  first      Decimal  @db.Decimal(9, 2)
+  second     Decimal  @db.Decimal(9, 2)
+  admin      Decimal  @db.Decimal(9, 2)
+  div        Div      @relation(fields: [div_id], references: [id])
+  squad      Squad    @relation(fields: [squad_id], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([div_id, start])
+}
+
+model Elim {
+  id         String   @id @default(dbgenerated("concat('elm_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  squad_id   String   @db.Text
+  div_id     String   @db.Text
+  sort_order Int
+  start      Int
+  games      Int
+  fee        Decimal  @db.Decimal(9, 2)
+  div        Div      @relation(fields: [div_id], references: [id])
+  squad      Squad    @relation(fields: [squad_id], references: [id])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([div_id, start, games])
+}
+
+model Player {
+  id         String      @id @default(dbgenerated("concat('ply_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  tmnt_id    String      @db.Text
+  first_name String      @db.VarChar
+  last_name  String      @db.VarChar
+  average    Int?
+  usbc       String?     @db.VarChar
+  entries    Entry[]
+  games      Game[]
+  lane_asmts Lane_asmt[]
+  tmnts      Tmnt        @relation(fields: [tmnt_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+model Entry {
+  id        Int      @id @default(autoincrement())
+  player_id String   @db.Text
+  div_id    String   @db.Text
+  divs      Div      @relation(fields: [div_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  players   Player   @relation(fields: [player_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([player_id, div_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model Game {
+  id        Int      @id @default(autoincrement())
+  squad_id  String   @db.Text
+  player_id String   @db.Text
+  game_num  Int
+  score     Int
+  players   Player   @relation(fields: [player_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([squad_id, player_id, game_num])
+}
+
+model Lane_asmt {
+  id        Int      @id @default(autoincrement())
+  lane      Int
+  player_id String   @db.Text
+  squad_id  String   @db.Text
+  position  String   @db.VarChar
+  players   Player   @relation(fields: [player_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  squads    Squad    @relation(fields: [squad_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([lane, position])
+  @@unique([player_id, squad_id])
+}
+
+model testDate {
+  id        Int      @id @default(autoincrement())
+  sod       DateTime
+  eod       DateTime
+  gmt       DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

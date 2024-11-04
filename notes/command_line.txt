@@ -1,0 +1,6 @@
+// seed the database
+npx prisma db seed
+
+// reset and re-seed
+npx prisma db push --force-reset
+npx prisma db seed

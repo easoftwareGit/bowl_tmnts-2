@@ -1,0 +1,48 @@
+https://youtu.be/2kgqPvs0j_I
+
+
+get session from server
+https://youtu.be/2kgqPvs0j_I?t=446
+
+get session from server in api route
+https://youtu.be/2kgqPvs0j_I?t=540
+
+get session from client side
+https://youtu.be/2kgqPvs0j_I?t=608
+
+hookup with prisma to lookup user in database
+https://youtu.be/2kgqPvs0j_I?t=862
+
+add sign in and sign out buttons
+https://youtu.be/2kgqPvs0j_I?t=1426
+
+add custom data to jwt
+https://youtu.be/2kgqPvs0j_I?t=1482
+
+protect routes
+https://youtu.be/2kgqPvs0j_I?t=2002
+
+protect client side
+https://youtu.be/2kgqPvs0j_I?t=2071
+
+protect server side
+https://youtu.be/2kgqPvs0j_I?t=2181
+
+protect server side api routes
+https://youtu.be/2kgqPvs0j_I?t=2257
+
+protect via middleware
+https://youtu.be/2kgqPvs0j_I?t=2338
+
+new video
+google setup
+https://youtu.be/ot9yuKg15iA?t=209
+
+code setup
+https://youtu.be/ot9yuKg15iA?t=691
+
+create auth route
+https://youtu.be/ot9yuKg15iA?t=736
+
+changes for production
+https://youtu.be/ot9yuKg15iA?t=1058

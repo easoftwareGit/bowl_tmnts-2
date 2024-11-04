@@ -1,0 +1,13 @@
+1) add values to .env.local
+  A) GOOGLE_CLIENT_ID
+  B) GOOGLE_CLIENT_SECRET
+  C) NEXTAUTH_URL  - will be http://localhost:3000/ for development
+2) open app/api/auth/[...nextauth]/route.ts
+  A) add google client variables
+  B) setup NextAuthOptions
+    1) import GoogleProvider from 'next-auth/providers/google'
+    2) in Providers: [], add array item for GoogleProvider
+      a) add clientId: GOOGLE_CLIENT_ID,
+      b) add clientSecret: GOOGLE_CLIENT_SECRET
+    3) configure callbacks
+      a) add async signIn() 

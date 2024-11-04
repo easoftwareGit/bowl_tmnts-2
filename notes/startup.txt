@@ -1,0 +1,41 @@
+steps to start
+1) create the nextJs app
+    npx create-next-app
+2) swith to folder for new app
+3) make sure to have a postgres connection
+4) install prisma dev mode
+    npm i -D prisma
+5) install prisma client
+    npm i @prisma/client
+6) initialize prisma
+    npx prisma init
+7) update DATABASE_URL in .env file
+    need
+      username: testname
+      password: testpassword
+      host: localhost
+      port: 5432
+      database name: sample4
+    DATABASE_URL="postgresql://testname:testpassword@localhost:5432/sample4?schema=public"
+8) update \prisma\schema.prisma
+    create models for tables
+9) create first primsa migration
+    npx prisma migrate dev --name init
+10) update main app's package.json - update "scripts" key values
+     "build": "prisma generate && next build",
+    save and close package.json
+11) install ts-node in dev mode
+     npm i -D ts-node
+12) update main app's package.json - create "prisma" key above "dependencies" key
+      "prisma": {
+        "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+      },
+    save and close package.json
+13) create \prisma\seed.ts with code to seed database
+14) regenerate prisma client
+     npx prisma generate
+15) install bcrypt and @types/bcrypt
+  A) npm i bcrypt
+  B) npm i -D @types/bcrypt
+16) seed the database
+     npx prisma db seed

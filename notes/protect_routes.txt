@@ -1,0 +1,15 @@
+1) create a page worth protecting
+  A) create app/dashboard/pages.tsx
+2) check that page is not protected
+  A) sign out
+  B) go to http://localhost:3000/dashboard
+  C) open an incognitio window in browser
+  D) go to http://localhost:3000/dashboard
+3) can protect client side
+4) can protect server side
+5) can protect server side api routes
+  A) sign out / go to route to test
+  B) sign in / go to route to test
+6) best way is to protect via middleware
+  A) create src/middleware.ts (top level directory, not in app/)
+  

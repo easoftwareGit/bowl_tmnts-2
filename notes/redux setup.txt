@@ -1,0 +1,319 @@
+1) install react-redux and @reduxjs/toolkit
+  A) in the terminal, type
+      npm i react-redux @reduxjs/toolkit react-redux
+      npm i -D @types/react @types/react-dom
+2) install axios
+  A) in the terminal, type
+      npm i axios
+3) create the file .env.local at the same level as package.json
+  A) add the code:
+      # ROUTES
+      NEXT_PUBLIC_BASE_HOST=localhost
+      NEXT_PUBLIC_BASE_ROOT=http://
+      NEXT_PUBLIC_BASE_PORT=3000
+
+      # API
+      NEXT_PUBLIC_BASE_API=/api  
+  B) save and close the file
+  C) add .env.local to .gitignore 
+    1) right click on the file name, then  select "add to .gitignore"
+4) create the file .env.test at the same level as package.json
+  A) add the code:
+      # ROUTES
+      TEST_BASE_HOST=localhost
+      TEST_BASE_ROOT=http://
+      TEST_BASE_PORT=3000
+
+      # API
+      TEST_BASE_API=/api
+  B) save and close the file
+  C) add .env.local to .gitignore 
+    1) right click on the file name, then  select "add to .gitignore"
+5) create the file src/app/lib/tools.js
+  A) add the code:
+      const baseRoot = process.env.NEXT_PUBLIC_BASE_ROOT;
+      const baseHost = process.env.NEXT_PUBLIC_BASE_HOST; 
+      const basePort = process.env.NEXT_PUBLIC_BASE_PORT;
+      export const baseOrigin = `${baseRoot}${baseHost}:${basePort}`
+
+      export const baseApi = baseOrigin + process.env.NEXT_PUBLIC_BASE_API;  
+  B) save and close the file
+6) install dotenv
+  A) in the terminal, type
+    npm i -D dotenv
+7) create a test folder at the root level
+8) create the file test/setup-tests.ts
+  A) add the code:
+    import * as dotenv from 'dotenv';
+    dotenv.config({ path: './.env.test' });
+  B) save and close the file
+9) create the file test/testApi.ts
+  A) add the code:
+      const testBaseHost = process.env.TEST_BASE_HOST
+      const testBaseRoot = process.env.TEST_BASE_ROOT
+      const testBasePort = process.env.TEST_BASE_PORT;
+      const testbaseOrigin = `${testBaseRoot}${testBaseHost}:${testBasePort}`
+
+      export const testBaseApi = testbaseOrigin + process.env.TEST_BASE_API  
+
+      export const testBaseUsersApi = testBaseApi + '/users'    
+  B) save and close the file
+10) create the folder src/app/api
+11) create the folder src/app/api/users 
+12) create the file src/app/api/users/route.ts
+  A) add the code:
+      import { prisma } from "@/app/lib/prisma"
+      import { NextResponse } from "next/server"
+
+      export async function GET(request: Request) {
+        
+        const users = await prisma.user.findMany()
+        return NextResponse.json({data: users}, {status: 200})
+      }
+  B) save and close the file
+13) install axios
+  A) in the terminal, type
+      npm i axios
+14) create the folder src/app/db 
+15) create the file src/app/db/apiPaths.ts
+  A) add the code:
+      import { baseApi } from "../lib/tools"
+
+      export const baseUsersApi = baseApi + '/users'  
+  B) save and close the file
+16) create the folder src/app/db/users
+17) create the file src/app/db/users/users.tsx
+  A) add the code:
+      import axios from "axios";
+      import { baseUsersApi } from "../apiPaths";
+      import { testBaseUsersApi } from "../../../../test/testApi";
+
+      /**
+      * get array of all users
+      *
+      * NOTE:
+      * Do not use try / catch blocks here. Need the promise to be fulfilled
+      * or rejected in /src/redux/features/users/usersSlice.tsx
+      * which will have the appropriate response in the extraReducers.
+      *
+      * @returns { data: User[] } - array of users;
+      */
+      export const getUsers = async () => {
+        // for testing.
+        // if testing: tmntYearUrl = testBaseBowlsApi;
+        // if not testing: tmntYearUrl = baseBowlsApi
+        const url = testBaseUsersApi.startsWith("undefined")
+          ? baseUsersApi
+          : testBaseUsersApi;    
+
+        const response = await axios.get(baseUsersApi);
+        return response.data; // response.data is already JSON'ed
+      };
+  B) save and close the file
+18) create a /src/redux/ folder 
+19) create src/redux/store.ts 
+  A) add starter code 
+      import { configureStore } from '@reduxjs/toolkit'
+      import { TypedUseSelectorHook, useSelector } from 'react-redux';
+
+      // create the store, include reduces in object
+      export const store = configureStore({
+        reducer: {
+          // add reducers here
+        }
+      });
+
+
+      // export types for TypeScript
+      export type RootState = ReturnType<typeof store.getState>
+      export type AppDispatch = typeof store.dispatch;
+
+      // export useAppSelector, so can use it instead of useSelector
+      export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector  
+  B) save store.js 
+20) create src/redux/provider.tsx
+  A) add code
+      "use client"
+
+      import { store } from './store'
+      import { Provider } from 'react-redux'
+      import React from 'react'
+
+      export function ReduxProvider({ children }: { children: React.ReactNode }) {
+        return <Provider store={store}>{children}</Provider>
+      }  
+  B) save and close provider.tsx
+21) create the file src/redux/statusTypes.ts
+  A) add code
+      export type loadStatusType = 'idle' | 'loading' | 'succeeded' | 'failed';
+      export type saveStatusType = 'idle' | 'pending' | 'succeeded' | 'failed';  
+  B) save and close statusTypes.ts
+22) create the src/redux/features folder
+  this is where the slices will go
+23) create the src/redux/features/users folder
+  this is where the users slice will go
+24) create the file src/redux/features/users/usersSlice.tsx
+  A) Add code for imports
+      import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+      import { User } from "@prisma/client";
+      import { loadStatusType } from "@/redux/statusTypes";
+      import { RootState } from "@/redux/store";
+      import { getUsers } from "@/app/db/users/users";  
+  B) add code for interface
+      export interface userSliceState {
+        users: User[];
+        status: loadStatusType;
+        error: string | undefined;
+      }
+  C) add code for initial state
+      // initial state constant
+      const initialState: userSliceState = {
+        users: [],
+        status: "idle",
+        error: "",
+      };
+  D) add code to create async thunk
+      export const fetchUsers = createAsyncThunk("users/fetchUsers", async () => {
+
+        // Do not use try / catch blocks here. Need the promise to be fulfilled or
+        // rejected which will have the appropriate response in the extraReducers.
+
+        return getUsers();    
+      });
+  E) add code for slice
+      export const usersSlice = createSlice({
+        name: 'users',
+        initialState,
+        reducers: {},
+        extraReducers: (builder) => {
+          builder.addCase(fetchUsers.pending, (state: userSliceState) => {
+            state.status = "loading";
+            state.error = ''
+          });
+          builder.addCase(fetchUsers.fulfilled, (state: userSliceState, action) => {
+            state.status = 'succeeded';
+            state.users = action.payload.data;
+            state.error = '';
+          });
+          builder.addCase(fetchUsers.rejected, (state: userSliceState, action) => {
+            state.status = 'failed';
+            state.error = action.error.message;
+          });
+        },
+      });  
+  F) add code for exports 
+      export const selectAllUsers = (state: RootState) => state.users.users;
+      export const getUsersStatus = (state: RootState) => state.users.status;
+      export const getUsersError = (state: RootState) => state.users.error;
+
+      export default usersSlice.reducer;  
+  G) save and close file
+25) update src/redux/store.ts
+  A) add to imports:
+      import usersReducer from './features/users/usersSlice';
+  B) in the call to ConfigureStore, add to the reducer property object
+      users: usersReducer
+  C) save and close store.ts
+26) update src/app/layout.tsx
+  A) add inports
+      import { ReduxProvider } from '@/redux/providers'
+  B) update metadata properties:
+      title: 'Sample GET User and Test',
+      description: 'Sample Get User and test with NextJs, Prisma, Postgres and Jest',
+  C) wrap {children} in Providers and ReduxProvider. update the return values
+      return (
+        <html lang="en">
+          <body className={inter.className}>
+            <Providers>
+              <ReduxProvider>
+                {children}
+              </ReduxProvider>
+            </Providers>
+          </body>
+        </html>
+      )
+27) update src/app/page.tsx
+  A) remove all code
+  B) inset new code:
+      import Link from "next/link";
+
+      export default function Home() {  
+        return (
+          <div>
+            <h1>Home Page</h1>
+            <Link href='/users'>Users</Link>
+          </div>
+        )
+      }
+  C) save and close page.tsx
+28) update src/app/global.css
+  A) delete all code
+  B) add this code:
+      :root {
+        --font-mono: ui-monospace, Menlo, Monaco, 'Cascadia Mono', 'Segoe UI Mono',
+          'Roboto Mono', 'Oxygen Mono', 'Ubuntu Monospace', 'Source Code Pro',
+          'Fira Mono', 'Droid Sans Mono', 'Courier New', monospace;
+
+        --foreground-rgb: 0, 0, 0;
+        --background-start-rgb: 214, 219, 220;
+        --background-end-rgb: 255, 255, 255;
+      }
+
+      .popup-help {
+        background-color: #0275d8;
+        color: #ffffff;
+        font-weight: bold;
+        border-radius: 10px;
+      }  
+  C) save and close the file
+29) add the folder src/app/users
+30) add the file src/app/users/page.tsx
+  A) Add code: 
+      "use client"
+      import { useEffect } from "react";
+      import { useSelector, useDispatch } from "react-redux";
+      import { AppDispatch } from "@/redux/store";
+      import { fetchUsers, selectAllUsers, getUsersStatus, getUsersError } from "@/redux/features/users/usersSlice";
+
+      export default function Users() {
+
+        const dispatch = useDispatch<AppDispatch>();
+
+        const usersStatus = useSelector(getUsersStatus);
+        const users = useSelector(selectAllUsers);
+        const usersError = useSelector(getUsersError);  
+
+        useEffect(() => {
+          dispatch(fetchUsers());
+        }, [dispatch]);
+
+        return (
+          <>
+            <h2>Users</h2>
+            {(usersStatus === 'loading') && <div>Loading...</div>}
+            {usersStatus !== 'loading' && usersError ? (
+              <div>Error: {usersError}</div>
+            ) : null}  
+            {(usersStatus === 'succeeded') ? (   
+              <div>
+                {users.map((user) => (
+                  <div key={user.id}>
+                    <h3>{user.first_name} { user.last_name}</h3>
+                    <p>email: {user.email}</p>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </>
+        )
+      }  
+  B) save and close the file
+31) test the app in the browser.
+  A) in the terminal type 
+      npm run dev
+  B) open a browers window, and go to localhost:3000
+  C) Home Page should be displayed, as well as a users link
+  D) CLick on the users link
+    1) the first time the user's page is displayed, you will see
+        Loading... 
+    2) then you will see the list of users.

@@ -1,0 +1,9 @@
+// seed the database
+npx prisma db seed
+
+// migrate - made changes to database schema
+npx prisma migrate dev --name newName
+
+// reset and re-seed
+npx prisma db push --force-reset
+npx prisma db seed
