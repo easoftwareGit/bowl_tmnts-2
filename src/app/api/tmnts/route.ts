@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ErrorCode } from "@/lib/validation";
-import { tmntType } from "@/lib/types/types";
+import { tmntDataType, tmntType } from "@/lib/types/types";
 import { sanitizeTmnt, validateTmnt } from "./valildate";
 import { initTmnt } from "@/lib/db/initVals";
 import { removeTimeFromISODateStr, startOfDayFromString } from "@/lib/dateTools";
@@ -29,17 +29,14 @@ export async function GET(request: NextRequest) {
 export async function POST(request: Request) {  
 
   try {
-    const { id, tmnt_name, start_date, end_date, user_id, bowl_id } = await request.json()    
-
-    const startDateStr = removeTimeFromISODateStr(start_date);
-    const endDateStr = removeTimeFromISODateStr(end_date);
+    const { id, tmnt_name, start_date_str, end_date_str, user_id, bowl_id } = await request.json()    
 
     const toCheck: tmntType = {
       ...initTmnt, 
       id,
       tmnt_name,
-      start_date: startOfDayFromString(startDateStr) as Date,
-      end_date: startOfDayFromString(endDateStr) as Date,
+      start_date_str,
+      end_date_str,
       user_id,
       bowl_id
     }
@@ -65,19 +62,13 @@ export async function POST(request: Request) {
       );
     }
     
-    type tmntDataType = {
-      id: string
-      tmnt_name: string
-      start_date: Date
-      end_date: Date
-      user_id: string
-      bowl_id: string      
-    }
+    const startDate = startOfDayFromString(toPost.start_date_str) as Date
+    const endDate = startOfDayFromString(toPost.end_date_str) as Date
     let tmntData: tmntDataType = {
       id: toPost.id,
       tmnt_name: toPost.tmnt_name,
-      start_date: toPost.start_date,
-      end_date: toPost.end_date,
+      start_date: startDate,
+      end_date: endDate,
       user_id: toPost.user_id,
       bowl_id: toPost.bowl_id
     }

@@ -4,8 +4,8 @@ import { testBaseTmntsApi } from "../../../testApi";
 import { dataOneTmntType, allDataOneTmntType, ioDataErrorsType, tmntType } from "@/lib/types/types";
 import { blankDataOneTmnt, initTmnt } from "@/lib/db/initVals";
 import { deleteTmnt, getTmnt, getTmnts, getTmntYears, getUserTmnts, postTmnt, putTmnt, exportedForTesting, getAllDataForTmnt, deleteAllDataForTmnt } from "@/lib/db/tmnts/tmntsAxios";
-import { compareAsc, startOfToday } from "date-fns";
-import { startOfDayFromString } from "@/lib/dateTools";
+import { compareAsc } from "date-fns";
+import { removeTimeFromISODateStr, todayStr } from "@/lib/dateTools";
 import { mockTmnt, mockEvents, mockDivs, mockSquads, mockLanes, mockPots, mockBrkts, mockElims } from "../../../mocks/tmnts/newTmnt/mockNewTmnt";
 import { saveAllDataOneTmnt } from "@/lib/db/oneTmnt/oneTmnt";
 import { deleteAllTmntElims } from "@/lib/db/elims/elimsAxios";
@@ -44,8 +44,7 @@ const notFoundUserId = "usr_00000000000000000000000000000000";
   
 describe("tmntsAxios", () => {  
 
-  describe('getTmnt', () => {
-    
+  describe('getTmnt', () => {    
     // from prisma/seeds.ts
     const tmntToGet = {
       ...initTmnt,
@@ -53,8 +52,8 @@ describe("tmntsAxios", () => {
       user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
       tmnt_name: "Gold Pin",
       bowl_id: "bwl_561540bd64974da9abdd97765fdb3659",
-      start_date: startOfDayFromString('2022-10-23') as Date, 
-      end_date: startOfDayFromString('2022-10-23') as Date, 
+      start_date_str: '2022-10-23',
+      end_date_str: '2022-10-23', 
     };
 
     it('should get a single tmnt', async () => {
@@ -65,8 +64,8 @@ describe("tmntsAxios", () => {
       expect(gotTmnt.user_id).toBe(tmntToGet.user_id);
       expect(gotTmnt.tmnt_name).toBe(tmntToGet.tmnt_name);
       expect(gotTmnt.bowl_id).toBe(tmntToGet.bowl_id);
-      expect(compareAsc(gotTmnt.start_date, tmntToGet.start_date)).toBe(0);
-      expect(compareAsc(gotTmnt.end_date, tmntToGet.end_date)).toBe(0);
+      expect(gotTmnt.start_date_str).toBe(tmntToGet.start_date_str);
+      expect(gotTmnt.end_date_str).toBe(tmntToGet.end_date_str);
       expect(gotTmnt.bowls).not.toBeNull();
     })
     it('should not get a tmnt that does not exist', async () => { 
@@ -83,8 +82,7 @@ describe("tmntsAxios", () => {
     })
   })
 
-  describe('getUserTmnts', () => {
-    
+  describe('getUserTmnts', () => {    
     it("should get user's tmnts", async () => { 
       const userTmnts = await getUserTmnts(user1Id);
         // 7 tmnt rows for user in prisma/seed.ts
@@ -94,19 +92,26 @@ describe("tmntsAxios", () => {
       expect(userTmnts[6].user_id).toBe(user1Id);
       // tmnts sorted by date, newest to oldest
       expect(userTmnts[0].id).toBe('tmt_e134ac14c5234d708d26037ae812ac33')
-      expect(compareAsc(userTmnts[0].start_date, startOfDayFromString('2025-08-19') as Date)).toBe(0)
+      expect(userTmnts[0].start_date_str).toBe('2025-08-19')
+      // expect(compareAsc(userTmnts[0].start_date, startOfDayFromString('2025-08-19') as Date)).toBe(0)
       expect(userTmnts[1].id).toBe('tmt_9a34a65584f94f548f5ce3b3becbca19')
-      expect(compareAsc(userTmnts[1].start_date, startOfDayFromString('2024-01-05') as Date)).toBe(0)
+      expect(userTmnts[1].start_date_str).toBe('2024-01-05')
+      // expect(compareAsc(userTmnts[1].start_date, startOfDayFromString('2024-01-05') as Date)).toBe(0)
       expect(userTmnts[2].id).toBe('tmt_fe8ac53dad0f400abe6354210a8f4cd1')
-      expect(compareAsc(userTmnts[2].start_date, startOfDayFromString('2023-12-31') as Date)).toBe(0)
+      expect(userTmnts[2].start_date_str).toBe('2023-12-31')
+      // expect(compareAsc(userTmnts[2].start_date, startOfDayFromString('2023-12-31') as Date)).toBe(0)
       expect(userTmnts[3].id).toBe('tmt_718fe20f53dd4e539692c6c64f991bbe')
-      expect(compareAsc(userTmnts[3].start_date, startOfDayFromString('2023-12-20') as Date)).toBe(0)
+      expect(userTmnts[3].start_date_str).toBe('2023-12-20')
+      // expect(compareAsc(userTmnts[3].start_date, startOfDayFromString('2023-12-20') as Date)).toBe(0)
       expect(userTmnts[4].id).toBe('tmt_467e51d71659d2e412cbc64a0d19ecb4')
-      expect(compareAsc(userTmnts[4].start_date, startOfDayFromString('2023-09-16') as Date)).toBe(0)
+      expect(userTmnts[4].start_date_str).toBe('2023-09-16')
+      // expect(compareAsc(userTmnts[4].start_date, startOfDayFromString('2023-09-16') as Date)).toBe(0)
       expect(userTmnts[5].id).toBe('tmt_a78f073789cc0f8a9a0de8c6e273eab1')
-      expect(compareAsc(userTmnts[5].start_date, startOfDayFromString('2023-01-02') as Date)).toBe(0)
+      expect(userTmnts[5].start_date_str).toBe('2023-01-02')
+      // expect(compareAsc(userTmnts[5].start_date, startOfDayFromString('2023-01-02') as Date)).toBe(0)
       expect(userTmnts[6].id).toBe('tmt_fd99387c33d9c78aba290286576ddce5')
-      expect(compareAsc(userTmnts[6].start_date, startOfDayFromString('2022-10-23') as Date)).toBe(0)
+      expect(userTmnts[6].start_date_str).toBe('2022-10-23')
+      // expect(compareAsc(userTmnts[6].start_date, startOfDayFromString('2022-10-23') as Date)).toBe(0)
 
       expect(userTmnts[0].bowls).not.toBeNull();
     })
@@ -125,7 +130,6 @@ describe("tmntsAxios", () => {
   })
 
   describe('getTmntYears', () => { 
-
     it('should get list tmnt years', async () => {
       const years = await getTmntYears();
       expect(years).not.toBeNull();
@@ -135,18 +139,17 @@ describe("tmntsAxios", () => {
         expect(Number(years[i].year)).toBeGreaterThan(Number(years[i+1].year));
       }
     })
-
   })
 
   describe('get upcoming tmnts', () => {
-
     it('should get all upcoming tmnts - getUpcomingTmnts() ', async () => {
       const tmnts = await getUpcomingTmnts() 
       expect(tmnts).not.toBeNull();
       if (!tmnts) return;
       // 1 rows for results in prisma/seed.ts
       expect(tmnts).toHaveLength(1);
-      expect(tmnts[0].bowls).not.toBeNull();
+      expect(tmnts[0].bowls).not.toBeNull(); 
+      expect(tmnts[0].start_date_str).toBe('2025-08-19')
     })
     it('should get all upcoming tmnts - getTmnts()', async () => {
       const tmnts = await getTmnts('') // get upcoming tmnts
@@ -155,11 +158,11 @@ describe("tmntsAxios", () => {
       // 1 rows for results in prisma/seed.ts
       expect(tmnts).toHaveLength(1);
       expect(tmnts[0].bowls).not.toBeNull();
+      expect(tmnts[0].start_date_str).toBe('2025-08-19')
     })
   })
 
-  describe('get tmnt results for a year', () => {
-    
+  describe('get tmnt results for a year', () => {    
     it('should get tmnt results for year 2023 - getTmntsForYear()', async () => { 
       const tmnts = await getTmntsForYear('2023');
       expect(tmnts).not.toBeNull();
@@ -167,6 +170,7 @@ describe("tmntsAxios", () => {
       // 4 rows for 2023 tmnts in prisma/seed.ts
       expect(tmnts).toHaveLength(4);
       expect(tmnts[0].bowls).not.toBeNull();
+      expect(tmnts[0].start_date_str).toBe('2023-12-20')
     })
     it('should get tmnt results for year 2023 - getTmnts()', async () => { 
       const tmnts = await getTmnts('2023');
@@ -175,6 +179,7 @@ describe("tmntsAxios", () => {
       // 4 rows for 2023 tmnts in prisma/seed.ts
       expect(tmnts).toHaveLength(4);
       expect(tmnts[0].bowls).not.toBeNull();
+      expect(tmnts[0].start_date_str).toBe('2023-12-20')
     })
     it('should get tmnt results for year 2022 - getTmntsForYear()', async () => { 
       const tmnts = await getTmntsForYear('2022');
@@ -182,6 +187,7 @@ describe("tmntsAxios", () => {
       if (!tmnts) return;
       // 3 rows for 2022 tmnts in prisma/seed.ts
       expect(tmnts).toHaveLength(3);
+      expect(tmnts[0].start_date_str).toBe('2022-10-23')
     })
     it('should get tmnt results for year 2022 - getTmnts()', async () => { 
       const tmnts = await getTmnts('2022');
@@ -189,6 +195,7 @@ describe("tmntsAxios", () => {
       if (!tmnts) return;
       // 3 rows for 2022 tmnts in prisma/seed.ts
       expect(tmnts).toHaveLength(3);
+      expect(tmnts[0].start_date_str).toBe('2022-10-23')
     })
     it('should get tmnt results for year 2001 - getTmntsForYear()', async () => { 
       const tmnts = await getTmntsForYear('2001');
@@ -219,7 +226,6 @@ describe("tmntsAxios", () => {
   })
 
   describe('getUserTmnts', () => {
-
     it('should get user tmnts', async () => { 
       const gotTmnts = await getUserTmnts(user1Id);
       expect(gotTmnts).not.toBeNull();
@@ -228,21 +234,21 @@ describe("tmntsAxios", () => {
       expect(gotTmnts.length).toBe(7);
       expect(gotTmnts[0].user_id).toBe(user1Id);
       expect(gotTmnts[6].user_id).toBe(user1Id);
-      // tmnts sorted by date, newest to oldest
+      // tmnts sorted by date, newest to oldest      
       expect(gotTmnts[0].id).toBe('tmt_e134ac14c5234d708d26037ae812ac33')
-      expect(compareAsc(gotTmnts[0].start_date, startOfDayFromString('2025-08-19') as Date)).toBe(0)
+      expect(gotTmnts[0].start_date_str).toBe('2025-08-19');      
       expect(gotTmnts[1].id).toBe('tmt_9a34a65584f94f548f5ce3b3becbca19')
-      expect(compareAsc(gotTmnts[1].start_date, startOfDayFromString('2024-01-05') as Date)).toBe(0)
+      expect(gotTmnts[1].start_date_str).toBe('2024-01-05')      
       expect(gotTmnts[2].id).toBe('tmt_fe8ac53dad0f400abe6354210a8f4cd1')
-      expect(compareAsc(gotTmnts[2].start_date, startOfDayFromString('2023-12-31') as Date)).toBe(0)
+      expect(gotTmnts[2].start_date_str).toBe('2023-12-31')
       expect(gotTmnts[3].id).toBe('tmt_718fe20f53dd4e539692c6c64f991bbe')
-      expect(compareAsc(gotTmnts[3].start_date, startOfDayFromString('2023-12-20') as Date)).toBe(0)
+      expect(gotTmnts[3].start_date_str).toBe('2023-12-20')
       expect(gotTmnts[4].id).toBe('tmt_467e51d71659d2e412cbc64a0d19ecb4')
-      expect(compareAsc(gotTmnts[4].start_date, startOfDayFromString('2023-09-16') as Date)).toBe(0)
+      expect(gotTmnts[4].start_date_str).toBe('2023-09-16')
       expect(gotTmnts[5].id).toBe('tmt_a78f073789cc0f8a9a0de8c6e273eab1')
-      expect(compareAsc(gotTmnts[5].start_date, startOfDayFromString('2023-01-02') as Date)).toBe(0)
+      expect(gotTmnts[5].start_date_str).toBe('2023-01-02')
       expect(gotTmnts[6].id).toBe('tmt_fd99387c33d9c78aba290286576ddce5')
-      expect(compareAsc(gotTmnts[6].start_date, startOfDayFromString('2022-10-23') as Date)).toBe(0)
+      expect(gotTmnts[6].start_date_str).toBe('2022-10-23')
     })
     it('should not get user tmnts when user id is not valid', async () => { 
       const gotTmnts = await getUserTmnts('test');
@@ -264,8 +270,7 @@ describe("tmntsAxios", () => {
     })
   })
 
-  describe('getAllDataForTmnt', () => {
-    
+  describe('getAllDataForTmnt', () => {    
     const origData = blankDataOneTmnt();    
     const curData: dataOneTmntType = {
       tmnt: mockTmnt,
@@ -304,8 +309,8 @@ describe("tmntsAxios", () => {
       if (!gotTmntData) return;
       expect(gotTmntData.tmnt.id).toBe(mockTmnt.id);
       expect(gotTmntData.tmnt.tmnt_name).toBe(mockTmnt.tmnt_name);
-      expect(compareAsc(gotTmntData.tmnt.start_date, mockTmnt.start_date)).toBe(0);
-      expect(compareAsc(gotTmntData.tmnt.end_date, mockTmnt.end_date)).toBe(0);
+      expect(removeTimeFromISODateStr(gotTmntData.tmnt.start_date_str)).toBe(mockTmnt.start_date_str);
+      expect(removeTimeFromISODateStr(gotTmntData.tmnt.end_date_str)).toBe(mockTmnt.end_date_str);
       expect(gotTmntData.tmnt.bowl_id).toBe(mockTmnt.bowl_id);
       expect(gotTmntData.tmnt.user_id).toBe(mockTmnt.user_id);
 
@@ -396,7 +401,6 @@ describe("tmntsAxios", () => {
         expect(gotTmntData.elims[i].sort_order).toBe(mockElims[i].sort_order);
       }
     })
-
   })
 
   describe("postTmnt", () => {
@@ -405,8 +409,8 @@ describe("tmntsAxios", () => {
       user_id: user1Id,
       tmnt_name: "Test Tournament",
       bowl_id: "bwl_561540bd64974da9abdd97765fdb3659",
-      start_date: startOfToday(),
-      end_date: startOfToday()
+      start_date_str: todayStr,
+      end_date_str: todayStr,
     };
 
     let createdTmnt = false;
@@ -453,11 +457,9 @@ describe("tmntsAxios", () => {
       expect(postedTmnt.id).toBe(tmntToPost.id);
       expect(postedTmnt.tmnt_name).toBe(tmntToPost.tmnt_name);
       expect(postedTmnt.user_id).toBe(tmntToPost.user_id);
-      expect(postedTmnt.bowl_id).toBe(tmntToPost.bowl_id);
-      const postedStartDate = new Date(postedTmnt.start_date);      
-      expect(compareAsc(postedStartDate, tmntToPost.start_date)).toBe(0);
-      const postedEndDate = new Date(postedTmnt.end_date);
-      expect(compareAsc(postedEndDate, tmntToPost.end_date)).toBe(0);      
+      expect(postedTmnt.bowl_id).toBe(tmntToPost.bowl_id);    
+      expect(postedTmnt.start_date_str).toBe(tmntToPost.start_date_str);
+      expect(postedTmnt.end_date_str).toBe(tmntToPost.end_date_str);
     });
 
     it("should NOT post a tmnt with invalid data", async () => {
@@ -477,8 +479,8 @@ describe("tmntsAxios", () => {
       user_id: user1Id,
       tmnt_name: "Test Tournament",
       bowl_id: "bwl_8b4a5c35ad1247049532ff53a12def0a",
-      start_date: startOfToday(),
-      end_date: startOfToday(),
+      start_date_str: todayStr,
+      end_date_str: todayStr,
     };
 
     const putUrl = oneTmntUrl + tmntToPut.id;
@@ -489,8 +491,8 @@ describe("tmntsAxios", () => {
       user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
       tmnt_name: "Gold Pin",
       bowl_id: "bwl_561540bd64974da9abdd97765fdb3659",
-      start_date: startOfDayFromString('2022-10-23') as Date,
-      end_date: startOfDayFromString('2022-10-23') as Date,
+      start_date_str: '2022-10-23',
+      end_date_str: '2022-10-23',
     };
 
     const doResetTmnt = async () => {
@@ -527,8 +529,8 @@ describe("tmntsAxios", () => {
       expect(puttedTmnt.tmnt_name).toBe(tmntToPut.tmnt_name);
       expect(puttedTmnt.bowl_id).toBe(tmntToPut.bowl_id);
       expect(puttedTmnt.user_id).toBe(tmntToPut.user_id);
-      expect(compareAsc(puttedTmnt.start_date, tmntToPut.start_date)).toBe(0);
-      expect(compareAsc(puttedTmnt.end_date, tmntToPut.end_date)).toBe(0);
+      expect(puttedTmnt.start_date_str).toBe(tmntToPut.start_date_str);
+      expect(puttedTmnt.end_date_str).toBe(tmntToPut.end_date_str);
     });
 
     it("should NOT put a tmnt with invalid data", async () => {
@@ -539,7 +541,6 @@ describe("tmntsAxios", () => {
       const puttedTmnt = await putTmnt(invalidTmnt);
       expect(puttedTmnt).toBeNull();
     });
-
   });
 
   describe('deleteTmnt', () => {     
@@ -550,8 +551,8 @@ describe("tmntsAxios", () => {
       user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
       tmnt_name: "Gold Pin",
       bowl_id: "bwl_561540bd64974da9abdd97765fdb3659",
-      start_date: startOfDayFromString('2025-08-19') as Date,
-      end_date: startOfDayFromString('2025-08-19') as Date,
+      start_date_str: '2025-08-19',
+      end_date_str: '2025-08-19',
     }                             
 
     const rePostToDel = async () => {
@@ -603,7 +604,6 @@ describe("tmntsAxios", () => {
   })
 
   describe('deleteAllDataForTmnt', () => { 
-
     const origData = blankDataOneTmnt();
     const curData: dataOneTmntType = {
       tmnt: mockTmnt,
@@ -662,7 +662,6 @@ describe("tmntsAxios", () => {
       const delResult = await deleteAllDataForTmnt(noElimsTmnt.curData.tmnt.id);
       expect(delResult).toBe(ioDataErrorsType.None);
     })
-
   })
 
 });

@@ -33,26 +33,26 @@ export const SamplePage: React.FC<FormProps> = ({ tmnt = blankTmnt }) => {
   const [elims, setElims] = useState<elimType[]>([])  
   const [showingModal, setShowingModal] = useState(false);
 
-  const tmntFormProps: tmntPropsType = {
-    tmnt: tmntData,
-    setTmnt: setTmntData,
-    events,
-    setEvents,
-    divs,
-    setDivs,
-    squads,
-    setSquads,
-    lanes,
-    setLanes,
-    pots,
-    setPots,
-    brkts,
-    setBrkts,
-    elims,
-    setElims,
-    showingModal,
-    setShowingModal,
-  }
+  // const tmntFormProps: tmntPropsType = {
+  //   tmnt: tmntData,
+  //   setTmnt: setTmntData,
+  //   events,
+  //   setEvents,
+  //   divs,
+  //   setDivs,
+  //   squads,
+  //   setSquads,
+  //   lanes,
+  //   setLanes,
+  //   pots,
+  //   setPots,
+  //   brkts,
+  //   setBrkts,
+  //   elims,
+  //   setElims,
+  //   showingModal,
+  //   setShowingModal,
+  // }
 
   return (
     <div className="d-flex flex-column justify-content-center align-items-center">
@@ -63,14 +63,14 @@ export const SamplePage: React.FC<FormProps> = ({ tmnt = blankTmnt }) => {
         {/* <Form3 events={events} setEvents={setEvents} /> */}
         {/* <Form4 tmntProps={tmntFormProps} /> */}
         {/* <Form5 tmntProps={tmntFormProps} /> */}
-        {/* <Form6 /> */}
+        <Form6 />
         {/* <Form7 /> */}
         {/* <Form8 /> */}
         {/* <Form9 /> */}
         {/* <Form10 /> */}
         {/* <Form12 /> */}
         {/* <Form13 /> */}
-        <Form14 />
+        {/* <Form14 /> */}
       </div>
     </div>
   )

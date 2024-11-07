@@ -49,7 +49,7 @@ const testSquad: squadType = {
   id: "sqd_7116ce5f80164830830a7157eb093396",
   event_id: "evt_cb97b73cb538418ab993fc867f860510",
   squad_name: "Squad 1",
-  squad_date: startOfDayFromString('2022-09-23') as Date,
+  squad_date_str: '2022-09-23',
   squad_time: null,
   games: 6,
   lane_count: 12,
@@ -302,8 +302,9 @@ describe('Squads - API: /api/squads', () => {
       expect(squad.id).toBe(testSquad.id);
       expect(squad.event_id).toBe(testSquad.event_id);
       expect(squad.squad_name).toBe(testSquad.squad_name);
-      const squadDate = new Date(testSquad.squad_date);
-      expect(compareAsc(squadDate, testSquad.squad_date)).toBe(0);      
+      expect(squad.squad_date_str).toBe(testSquad.squad_date_str);
+      // const squadDate = new Date(testSquad.squad_date);
+      // expect(compareAsc(squadDate, testSquad.squad_date)).toBe(0);      
       expect(squad.squad_time).toBe(null);
       expect(squad.games).toBe(testSquad.games);      
       expect(squad.lane_count).toBe(testSquad.lane_count);
@@ -355,7 +356,7 @@ describe('Squads - API: /api/squads', () => {
       ...initSquad,      
       event_id: "evt_c0b2bb31d647414a9bea003bd835f3a0",
       squad_name: "Test Squad",
-      squad_date: startOfDayFromString('2023-02-02') as Date,
+      squad_date_str: '2023-02-02',
       squad_time: '09:00 AM',
       games: 8,
       lane_count: 20,
@@ -393,8 +394,9 @@ describe('Squads - API: /api/squads', () => {
       expect(postedSquad.event_id).toBe(squadToPost.event_id);
       expect(postedSquad.squad_name).toBe(squadToPost.squad_name);
       expect(postedSquad.games).toBe(squadToPost.games);
-      const squadDate = new Date(postedSquad.squad_date);
-      expect(compareAsc(squadDate, squadToPost.squad_date)).toBe(0);
+      expect(postedSquad.squad_date_str).toBe(squadToPost.squad_date_str);
+      // const squadDate = new Date(postedSquad.squad_date);      
+      // expect(compareAsc(squadDate, squadToPost.squad_date)).toBe(0);
       expect(postedSquad.id).toBe(squadToPost.id);
       expect(postedSquad.lane_count).toBe(squadToPost.lane_count);
       expect(postedSquad.starting_lane).toBe(squadToPost.starting_lane);
@@ -1159,7 +1161,8 @@ describe('Squads - API: /api/squads', () => {
         expect(postedSquads[i].games).toEqual(mockSquadsToPost[i].games);
         expect(postedSquads[i].lane_count).toEqual(mockSquadsToPost[i].lane_count);
         expect(postedSquads[i].starting_lane).toEqual(mockSquadsToPost[i].starting_lane);
-        expect(compareAsc(postedSquads[i].squad_date, mockSquadsToPost[i].squad_date)).toBe(0);
+        expect(postedSquads[i].squad_date_str).toEqual(mockSquadsToPost[i].squad_date_str);
+        // expect(compareAsc(postedSquads[i].squad_date, mockSquadsToPost[i].squad_date)).toBe(0);
         expect(postedSquads[i].squad_time).toEqual(mockSquadsToPost[i].squad_time);
         expect(postedSquads[i].sort_order).toEqual(mockSquadsToPost[i].sort_order);
       }

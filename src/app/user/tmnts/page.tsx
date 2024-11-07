@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { fetchUserTmnts, getUserTmntError, getUserTmntStatus, deleteUserTmnt } from "@/redux/features/userTmnts/userTmntsSlice";
 import { tmntsListType } from "@/lib/types/types";
-import { dateTo_UTC_MMddyyyy } from "@/lib/dateTools";
+import { dateTo_UTC_MMddyyyy, yyyyMMdd_To_ddMMyyyy } from "@/lib/dateTools";
 import ModalConfirm from "@/components/modal/confirmModal";
 import { initModalObj } from "@/components/modal/modalObjType";
 import { fetchBowls, getBowlsError, getBowlsLoadStatus } from "@/redux/features/bowls/bowlsSlice";
@@ -55,7 +55,7 @@ export default function UserTmntsPage() {
       title: "Delete Tournament",
       message: "Are you sure you want to delete the tournament: \n" + 
                "Name: " + toDel.tmnt_name + "\n" + 
-               "Start Date: " + dateTo_UTC_MMddyyyy(new Date(toDel.start_date)) + "\n" +
+               "Start Date: " + toDel.start_date_str + "\n" +
                "Center: " + toDel.bowls.bowl_name + "\n" +
                "Location: " + toDel.bowls.city + ", " + toDel.bowls.state,
       id: tmntId,
@@ -97,10 +97,10 @@ export default function UserTmntsPage() {
               <table className="table table-striped table-hover w-100">
                 <thead>
                   <tr className="tmnts-header-row">
-                    <th className="align-middle" style={{ width: 220 }}>
+                    <th className="align-middle" style={{ width: 210 }}>
                       Tournament
                     </th>
-                    <th className="align-middle" style={{ width: 95 }}>
+                    <th className="align-middle" style={{ width: 105 }}>
                       Start Date
                     </th>
                     <th className="align-middle" style={{ width: 250 }}>
@@ -115,7 +115,7 @@ export default function UserTmntsPage() {
                   {userTmnts.map((tmnt) => (
                     <tr key={tmnt.id}>
                       <td className="align-middle">{tmnt.tmnt_name}</td>                      
-                      <td className="align-middle">{dateTo_UTC_MMddyyyy(new Date(tmnt.start_date))}</td>
+                      <td className="align-middle">{yyyyMMdd_To_ddMMyyyy(tmnt.start_date_str)}</td>
                       <td className="align-middle">{tmnt.bowls.bowl_name}</td>                      
                       <td className="align-middle" style={{ textAlign: "center" }}>
                         <Link

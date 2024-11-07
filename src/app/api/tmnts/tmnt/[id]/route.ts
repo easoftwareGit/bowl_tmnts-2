@@ -4,7 +4,7 @@ import { ErrorCode, isValidBtDbId } from "@/lib/validation";
 import { sanitizeTmnt, validateTmnt } from "@/app/api/tmnts/valildate";
 import { tmntType } from "@/lib/types/types";
 import { initTmnt } from "@/lib/db/initVals";
-import { removeTimeFromISODateStr, startOfDayFromString } from "@/lib/dateTools";
+import { dateTo_UTC_yyyyMMdd, dateTo_yyyyMMdd, removeTimeFromISODateStr, startOfDayFromString } from "@/lib/dateTools";
 
 // routes /api/tmnts/tmnt/:id
 
@@ -56,17 +56,14 @@ export async function PUT(
     if (!isValidBtDbId(id, "tmt")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
-    const { tmnt_name, start_date, end_date, user_id, bowl_id } = await request.json();
-
-    const startDateStr = removeTimeFromISODateStr(start_date);
-    const endDateStr = removeTimeFromISODateStr(end_date);
+    const { tmnt_name, start_date_str, end_date_str, user_id, bowl_id } = await request.json();
 
     const toCheck: tmntType = {
       ...initTmnt,
       id,
       tmnt_name,
-      start_date: startOfDayFromString(startDateStr) as Date,
-      end_date: startOfDayFromString(endDateStr) as Date,
+      start_date_str,
+      end_date_str,
       user_id,
       bowl_id,
     };
@@ -88,15 +85,16 @@ export async function PUT(
       }
       return NextResponse.json({ error: errMsg }, { status: 422 });
     }
-    
+    const startDate = startOfDayFromString(toPut.start_date_str) as Date
+    const endDate = startOfDayFromString(toPut.end_date_str) as Date    
     const tmnt = await prisma.tmnt.update({
       where: {
         id: id,
       },
       data: {
         tmnt_name: toPut.tmnt_name,
-        start_date: toPut.start_date,
-        end_date: toPut.end_date,
+        start_date: startDate,
+        end_date: endDate,
         // user_id: toPut.user_id, // not allowed to update user_id
         bowl_id: toPut.bowl_id,
       },
@@ -145,8 +143,8 @@ export async function PATCH(
     const toCheck: tmntType = {
       ...initTmnt,
       tmnt_name: currentTmnt.tmnt_name,
-      start_date: currentTmnt.start_date,
-      end_date: currentTmnt.end_date,
+      start_date_str: dateTo_UTC_yyyyMMdd(currentTmnt.start_date),
+      end_date_str: dateTo_UTC_yyyyMMdd(currentTmnt.end_date),
       user_id: currentTmnt.user_id,
       bowl_id: currentTmnt.bowl_id,
     };
@@ -154,13 +152,11 @@ export async function PATCH(
     if (jsonProps.includes("tmnt_name")) {
       toCheck.tmnt_name = json.tmnt_name;
     }
-    if (jsonProps.includes("start_date")) {
-      const startDateStr = removeTimeFromISODateStr(json.start_date);
-      toCheck.start_date = startOfDayFromString(startDateStr) as Date
+    if (jsonProps.includes("start_date_str")) {
+      toCheck.start_date_str = json.start_date_str; 
     }
-    if (jsonProps.includes("end_date")) {
-      const endDateStr = removeTimeFromISODateStr(json.end_date);      
-      toCheck.end_date = startOfDayFromString(endDateStr) as Date
+    if (jsonProps.includes("end_date_str")) {
+      toCheck.end_date_str = json.end_date_str;
     }
     if (jsonProps.includes("bowl_id")) {      
       toCheck.bowl_id = json.bowl_id;
@@ -199,12 +195,12 @@ export async function PATCH(
     if (jsonProps.includes("tmnt_name")) {
       toPatch.tmnt_name = toBePatched.tmnt_name;
     }
-    if (jsonProps.includes("start_date")) {
-      toPatch.start_date = toBePatched.start_date;
+    if (jsonProps.includes("start_date_str")) {
+      toPatch.start_date = startOfDayFromString(toBePatched.start_date_str)      
       gotEmptyStartDate = '';
     }
-    if (jsonProps.includes("end_date")) {
-      toPatch.end_date = toBePatched.end_date;
+    if (jsonProps.includes("end_date_str")) {
+      toPatch.end_date = startOfDayFromString(toBePatched.end_date_str)      
       gotEmptyEndDate = '';
     }
     if (jsonProps.includes("bowl_id")) {

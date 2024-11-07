@@ -16,8 +16,8 @@ const gotTmntData = (tmnt: tmntType): ErrorCode => {
     if (!tmnt 
       || !tmnt.id
       || !sanitize(tmnt.tmnt_name)
-      || (!tmnt.start_date) 
-      || (!tmnt.end_date)  
+      || (!tmnt.start_date_str) 
+      || (!tmnt.end_date_str)  
       || !tmnt.bowl_id
       || !tmnt.user_id)
     {
@@ -41,22 +41,24 @@ export const validTmntName = (tmntName: string): boolean => {
  * @param endDateStr = end date as string
  * @returns - boolean: true if dates are valid 
  */
-export const validTmntDates = (startDate: Date, endDate: Date): boolean => {     
+export const validTmntDates = (startDateStr: string, endDateStr: string): boolean => {     
   //  - both must be valid dates
   //  - end cannot be before start  
-  if (!startDate || !endDate) {
+  if (!startDateStr || !endDateStr) {
     return false
   }
-  if (typeof startDate === 'string') {
-    if (validDateString(startDate)) {
-      startDate = new Date(startDate)
+  let startDate: Date = null as any
+  let endDate: Date = null as any
+  if (typeof startDateStr === 'string') {
+    if (validDateString(startDateStr)) {
+      startDate = new Date(startDateStr)
     } else {
       return false
     }
   }
-  if (typeof endDate === 'string') {
-    if (validDateString(endDate)) {
-      endDate = new Date(endDate)
+  if (typeof endDateStr === 'string') {
+    if (validDateString(endDateStr)) {
+      endDate = new Date(endDateStr)
     } else {
       return false
     }
@@ -68,11 +70,11 @@ export const validTmntDates = (startDate: Date, endDate: Date): boolean => {
   if (compareAsc(startDate, minDate) < 0 || compareAsc(startDate, maxDate) > 0) { 
     return false               
   }
-  if (compareAsc(endDate, minDate) < 0 || compareAsc(endDate, maxDate) > 0) {
+  if (compareAsc(endDateStr, minDate) < 0 || compareAsc(endDateStr, maxDate) > 0) {
     return false
   }   
   // start must be before or equal to end
-  return (compareAsc(startDate, endDate) <= 0) 
+  return (compareAsc(startDateStr, endDateStr) <= 0) 
 }
 
 /**
@@ -106,7 +108,7 @@ const validTmntData = (tmnt: tmntType): ErrorCode => {
     if (!validTmntName(tmnt.tmnt_name)) {
       return ErrorCode.InvalidData
     }
-    if (!validTmntDates(tmnt.start_date, tmnt.end_date)) {
+    if (!validTmntDates(tmnt.start_date_str, tmnt.end_date_str)) {
       return ErrorCode.InvalidData
     }
     if (!validTmntFkId(tmnt.bowl_id, 'bwl')) {
@@ -131,32 +133,39 @@ export const sanitizeTmnt = (tmnt: tmntType): tmntType => {
   if (!tmnt) return null as any;
   const sanditizedTmnt: tmntType = {
     ...blankTmnt,      
-    start_date: null as any,
-    end_date: null as any
+    start_date_str: '',
+    end_date_str: '',
   }  
   if (isValidBtDbId(tmnt.id, 'tmt')) {
     sanditizedTmnt.id = tmnt.id
   }
   sanditizedTmnt.tmnt_name = sanitize(tmnt.tmnt_name) 
-  if (typeof tmnt.start_date === 'string') {
-    if (validDateString(tmnt.start_date)) {    
-      sanditizedTmnt.start_date = startOfDayFromString(tmnt.start_date) as Date
-    } 
-  } else {
-    if (isValid(tmnt.start_date)) {
-      sanditizedTmnt.start_date = tmnt.start_date
-    } 
+  if (typeof tmnt.start_date_str === 'string' && validDateString(tmnt.start_date_str)) {
+    sanditizedTmnt.start_date_str = tmnt.start_date_str  
+  }
+  if (typeof tmnt.end_date_str === 'string' && validDateString(tmnt.end_date_str)) {
+    sanditizedTmnt.end_date_str = tmnt.end_date_str
   }
 
-  if (typeof tmnt.end_date === 'string') {
-    if (validDateString(tmnt.end_date)) {          
-      sanditizedTmnt.end_date = startOfDayFromString(tmnt.end_date) as Date
-    } 
-  } else {
-    if (isValid(tmnt.end_date)) {
-      sanditizedTmnt.end_date = tmnt.end_date
-    } 
-  }
+  // if (typeof tmnt.start_date === 'string') {
+  //   if (validDateString(tmnt.start_date)) {    
+  //     sanditizedTmnt.start_date = startOfDayFromString(tmnt.start_date) as Date
+  //   } 
+  // } else {
+  //   if (isValid(tmnt.start_date)) {
+  //     sanditizedTmnt.start_date = tmnt.start_date
+  //   } 
+  // }
+
+  // if (typeof tmnt.end_date === 'string') {
+  //   if (validDateString(tmnt.end_date)) {          
+  //     sanditizedTmnt.end_date = startOfDayFromString(tmnt.end_date) as Date
+  //   } 
+  // } else {
+  //   if (isValid(tmnt.end_date)) {
+  //     sanditizedTmnt.end_date = tmnt.end_date
+  //   } 
+  // }
   if (isValidBtDbId(tmnt.bowl_id, 'bwl')) {    
     sanditizedTmnt.bowl_id = tmnt.bowl_id  
   } 

@@ -38,7 +38,7 @@ export type tmntsListType = {
   id: string; 
   user_id: string;
 	tmnt_name: string; 
-	start_date: Date; 
+	start_date_str: string; 
   bowls: BowlInTmntData,  
 }
 
@@ -50,10 +50,19 @@ export type tmntType = {
   bowl_id: string,
   bowls: BowlInTmntData
   bowl_id_err: string,
-  start_date: Date,  
+  start_date_str: string,  
   start_date_err: string,
-  end_date: Date,
+  end_date_str: string,
   end_date_err: string,
+}
+
+export type tmntDataType = {
+  id: string
+  tmnt_name: string
+  start_date: Date
+  end_date: Date
+  user_id: string
+  bowl_id: string      
 }
 
 export type lpoxValidTypes = "is-valid" | "is-invalid" | "";
@@ -155,8 +164,7 @@ export type squadType = {
   lane_count: number,
   lane_count_err: string,
   starting_lane: number,
-  starting_lane_err: string,
-  squad_date: Date,
+  starting_lane_err: string,  
   squad_date_str: string,
   squad_date_err: string,
   squad_time: string | null,

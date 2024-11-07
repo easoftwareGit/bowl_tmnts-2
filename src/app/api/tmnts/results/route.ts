@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
     ],
     select: {
       id: true,
+      user_id: true,
       tmnt_name: true,
       start_date: true,
       bowls: {

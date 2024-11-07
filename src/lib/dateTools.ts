@@ -125,17 +125,43 @@ export type ymdType = {
   month: number
   days: number
 }
+
 /**
- * returns the ymd from a date string
+ * returns true if dateStr is a valid date string in the format YYYY-MM-DD
+ * 
+ * @param {string} dateStr - date in YYYY-MM-DD format
+ * @returns {boolean} - true if dateStr is a valid date string
+ */
+export const valid_yyyyMMdd = (dateStr: string): boolean => {
+  if (!dateStr || dateStr.length !== 10) return false;
+  const regex = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/
+  return regex.test(dateStr)  
+}
+
+/**
+ * converts YYYY-MM-DD to MM/dd/yyyy
+ * 
+ * @param {string} dateStr - date in YYYY-MM-DD format
+ * @returns {string} - date in MM/dd/yyyy
+ */
+export const yyyyMMdd_To_ddMMyyyy = (dateStr: string): string => {
+  if (!valid_yyyyMMdd(dateStr)) return '';
+  return dateStr.split('-')[1] + '/' + dateStr.split('-')[2] + '/' + dateStr.split('-')[0]
+}
+
+/**
+ * returns the ymd from a date string 
+ * NOTE: month is 0 indexed
  * 
  * @param dateStr - date in YYYY-MM-DD format
- * @returns {ymdType} - {year, month, days} or {year: 0, month: 0, days: 0}
+ * @returns {ymdType} - {year, month, days} or {year: 0, month: -1, days: 0}
  */
 export const getYearMonthDays = (dateStr: string): ymdType => { 
-  const ymd: ymdType = { year: 0, month: 0, days: 0 }
-  if (!dateStr || dateStr.length !== 10) return ymd;
-  const regex = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/
-  if (!regex.test(dateStr)) return ymd;  
+  const ymd: ymdType = { year: 0, month: -1, days: 0 }
+  if (!valid_yyyyMMdd(dateStr)) return ymd;
+  // if (!dateStr || dateStr.length !== 10) return ymd;
+  // const regex = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/
+  // if (!regex.test(dateStr)) return ymd;  
   ymd.year = Number(dateStr.substring(0, 4));
   ymd.month = Number(dateStr.substring(5, 7)) - 1;    
   ymd.days = Number(dateStr.substring(8, 10));

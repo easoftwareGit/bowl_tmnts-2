@@ -15,7 +15,7 @@ import {
 } from "@/app/api/squads/validate";
 import { initSquad } from "@/lib/db/initVals";
 import { ErrorCode, maxEventLength, maxSortOrder } from "@/lib/validation";
-import { startOfTodayUTC } from "@/lib/dateTools";
+import { startOfTodayUTC, todayStr } from "@/lib/dateTools";
 import { compareAsc } from "date-fns";
 import { mockSquadsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { validSquadsType } from "@/lib/types/types";
@@ -24,6 +24,9 @@ import { mock } from "node:test";
 const { gotSquadData, validSquadData } = exportedForTesting;
 
 const squadId = 'sqd_7116ce5f80164830830a7157eb093396';
+
+const tooPastDateStr = '1899-12-31'
+const tooFutureDateStr = '2201-02-01';
 
 const validSquad = {
   ...initSquad,
@@ -89,7 +92,7 @@ describe('tests for squad validation', () => {
     it('should return ErrorCode.MissingData when squad_date is missing', () => {
       const testSquad = {
         ...validSquad,
-        squad_date: null as any
+        squad_date_str: ''
       }
       expect(gotSquadData(testSquad)).toBe(ErrorCode.MissingData)       
     })
@@ -244,18 +247,12 @@ describe('tests for squad validation', () => {
   })
 
   describe('validSquadDate function', () => { 
-    const tooPastDate = new Date(Date.UTC(1899, 11, 31, 0, 0, 0, 0)) // 1899-12-31
-    const tooFutureDate = new Date(Date.UTC(2201, 1, 1, 0, 0, 0, 0)) // 2201-02-01
-
-    const tooPastDateStr = '1899-12-31'
-    const tooFutureDateStr = '2201-02-01';
-
 
     it('should return true when date is valid', () => {
-      expect(validSquadDate(startOfTodayUTC())).toBe(true)
+      expect(validSquadDate(todayStr)).toBe(true)
     })
-    it('should return true when date is a date, not string date', () => { 
-      expect(validSquadDate(new Date() as any)).toBe(true)
+    it('should return false when date string is a date, not string date', () => { 
+      expect(validSquadDate(new Date() as any)).toBe(false)
     })
     it('should return false when date is not valid UTC Full Date', () => {
       expect(validSquadDate('2022-02-32' as any)).toBe(false)
@@ -270,12 +267,10 @@ describe('tests for squad validation', () => {
       expect(validSquadDate('abc' as any)).toBe(false)
     })
     it('should return false when date is in the future', () => { 
-      expect(validSquadDate(tooFutureDate)).toBe(false)
-      expect(validSquadDate(tooFutureDateStr as any)).toBe(false)
+      expect(validSquadDate(tooFutureDateStr)).toBe(false)      
     })
     it('should return false when date is in the past', () => { 
-      expect(validSquadDate(tooPastDate)).toBe(false)
-      expect(validSquadDate(tooPastDateStr as any)).toBe(false)
+      expect(validSquadDate(tooPastDateStr)).toBe(false)      
     })
   })
 
@@ -450,7 +445,7 @@ describe('tests for squad validation', () => {
     it('should return ErrorCode.InvalidData for invalid squad_date', () => {
       const invalidSquad = {
         ...validSquad,
-        squad_date: new Date(Date.UTC(1899, 0, 1, 0, 0, 0, 0))
+        squad_date_str: tooPastDateStr
       }
       expect(validSquadData(invalidSquad)).toBe(ErrorCode.InvalidData)
     })
@@ -483,7 +478,7 @@ describe('tests for squad validation', () => {
       expect(sanitizedSquad.games).toEqual(testSquad.games)
       expect(sanitizedSquad.starting_lane).toEqual(testSquad.starting_lane)
       expect(sanitizedSquad.lane_count).toEqual(testSquad.lane_count)
-      expect(compareAsc(sanitizedSquad.squad_date, testSquad.squad_date)).toEqual(0)
+      expect(sanitizedSquad.squad_date_str).toBe(testSquad.squad_date_str)
       expect(sanitizedSquad.squad_time).toEqual(testSquad.squad_time)
       expect(sanitizedSquad.sort_order).toEqual(testSquad.sort_order)
     })
@@ -509,13 +504,13 @@ describe('tests for squad validation', () => {
         ...validSquad,
         event_id: 'abc_123',
         squad_name: '  Test Squad**  ',
-        squad_date: new Date(Date.UTC(2022, 13, 32, 0, 0, 0, 0)),  // month - 1 
+        squad_date_str: '2022-12-31',
         squad_time: '23:59',
       }
       const sanitizedSquad = sanitizeSquad(testSquad)
       expect(sanitizedSquad.event_id).toEqual('')
       expect(sanitizedSquad.squad_name).toEqual('Test Squad')
-      expect(compareAsc(sanitizedSquad.squad_date, new Date(Date.UTC(2022, 13, 32, 0, 0, 0, 0)))).toEqual(0)
+      expect(sanitizedSquad.squad_date_str).toEqual('2022-12-31')
       expect(sanitizedSquad.squad_time).toEqual('23:59')
     })
     it('should return a sanitized squad when numerical values are null', () => {
@@ -652,7 +647,7 @@ describe('tests for squad validation', () => {
       it('should return ErrorCode.MissingData when passed a squad with missing squad_date', () => {
         const missingSquad = {
           ...validSquad,
-          squad_date: null as any,
+          squad_date_str: '',
         }
         expect(validateSquad(missingSquad)).toBe(ErrorCode.MissingData)
       })
@@ -713,7 +708,7 @@ describe('tests for squad validation', () => {
       it('should return ErrorCode.InvalidData when passed a squad with invalid squad_date', () => {
         const invalidSquad = {
           ...validSquad,
-          squad_date: '2022-13-30' as any,  
+          squad_date_str: '2022-13-30',  
         }
         expect(validateSquad(invalidSquad)).toBe(ErrorCode.InvalidData)
       })
@@ -749,7 +744,7 @@ describe('tests for squad validation', () => {
         expect(validSquads.squads[i].games).toEqual(mockSquadsToPost[i].games);
         expect(validSquads.squads[i].starting_lane).toEqual(mockSquadsToPost[i].starting_lane);
         expect(validSquads.squads[i].lane_count).toEqual(mockSquadsToPost[i].lane_count);
-        expect(validSquads.squads[i].squad_date).toEqual(mockSquadsToPost[i].squad_date);
+        expect(validSquads.squads[i].squad_date_str).toEqual(mockSquadsToPost[i].squad_date_str);
         expect(validSquads.squads[i].squad_time).toEqual(mockSquadsToPost[i].squad_time);
         expect(validSquads.squads[i].sort_order).toEqual(mockSquadsToPost[i].sort_order);
       }

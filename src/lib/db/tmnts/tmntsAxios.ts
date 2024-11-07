@@ -4,7 +4,7 @@ import { testBaseTmntsApi } from "../../../../test/testApi";
 import { dataOneTmntType, ioDataErrorsType, tmntsListType, tmntType, YearObj } from "@/lib/types/types";
 import { validateTmnt } from "@/app/api/tmnts/valildate";
 import { ErrorCode, isValidBtDbId, validYear } from "@/lib/validation";
-import { todayYearStr } from "@/lib/dateTools";
+import { removeTimeFromISODateStr, todayYearStr } from "@/lib/dateTools";
 import { blankBrkt, blankDiv, blankElim, blankEvent, blankLane, blankPot, blankSquad, blankTmnt, initTmnt } from "../initVals";
 import { deleteAllTmntEvents, getAllEventsForTmnt } from "../events/eventsAxios";
 import { deleteAllTmntDivs, getAllDivsForTmnt } from "../divs/divsAxios";
@@ -39,9 +39,23 @@ export const getTmnt = async (id: string): Promise<tmntType | null> => {
       withCredentials: true,
       url: oneTmntUrl + id,
     });
-    return (response.status === 200)
-      ? response.data.tmnt
-      : null
+    if (response.status !== 200) return null
+    const dbTmnt = response.data.tmnt
+    return {
+      ...blankTmnt,
+      id: dbTmnt.id,
+      user_id: dbTmnt.user_id,
+      bowl_id: dbTmnt.bowl_id,
+      tmnt_name: dbTmnt.tmnt_name,
+      start_date_str: removeTimeFromISODateStr(dbTmnt.start_date),
+      end_date_str: removeTimeFromISODateStr(dbTmnt.end_date),
+      bowls: {
+        bowl_name: dbTmnt.bowls.bowl_name,
+        city: dbTmnt.bowls.city,
+        state: dbTmnt.bowls.state,
+        url: dbTmnt.bowls.url,
+      },
+    }
   } catch (err) {
     return null;
   }
@@ -65,9 +79,23 @@ export const getUserTmnts = async (userId: string): Promise<tmntsListType[]> => 
       withCredentials: true,
       url: userUrl + userId ,
     });
-    return (response.status === 200)
-      ? response.data.tmnts
-      : []
+    if (response.status !== 200) return [];
+    const dbTmnts = response.data.tmnts    
+    const userTmntsList = dbTmnts.map((tmnt: any) => {
+      return {
+        id: tmnt.id,
+        user_id: tmnt.user_id,
+        tmnt_name: tmnt.tmnt_name,
+        start_date_str: removeTimeFromISODateStr(tmnt.start_date),        
+        bowls: {
+          bowl_name: tmnt.bowls.bowl_name,
+          city: tmnt.bowls.city,
+          state: tmnt.bowls.state,
+          url: tmnt.bowls.url,
+        },
+      }
+    })
+    return userTmntsList
   } catch (err) {
     return [];
   }
@@ -118,7 +146,23 @@ const getTmntsForYear = async (
       take: take
     }
   });
-  return (response.status === 200) ? response.data.tmnts : [];
+  if (response.status !== 200) return [];
+  const dbTmnts = response.data.tmnts
+  const tmntsForYear = dbTmnts.map((tmnt: any) => {
+    return {
+      id: tmnt.id,
+      user_id: tmnt.user_id,
+      tmnt_name: tmnt.tmnt_name,
+      start_date_str: removeTimeFromISODateStr(tmnt.start_date),
+      bowls: {
+        bowl_name: tmnt.bowls.bowl_name,
+        city: tmnt.bowls.city,
+        state: tmnt.bowls.state,
+        url: tmnt.bowls.url,
+      },
+    }
+  })
+  return tmntsForYear
 }
 
 /**
@@ -142,7 +186,22 @@ const getUpcomingTmnts = async (skip?: number, take?: number): Promise<tmntsList
       take: take
     }
   });
-  return (response.status === 200) ? response.data.tmnts : [];
+  if (response.status !== 200) return [];
+  const dbUpcoming = response.data.tmnts
+  const upcomingTmnts = dbUpcoming.map((tmnt: any) => {
+    return {
+      id: tmnt.id,
+      tmnt_name: tmnt.tmnt_name,
+      start_date_str: removeTimeFromISODateStr(tmnt.start_date),
+      bowls: {
+        bowl_name: tmnt.bowls.bowl_name,
+        city: tmnt.bowls.city,
+        state: tmnt.bowls.state,
+        url: tmnt.bowls.url,
+      },
+    }
+  })
+  return upcomingTmnts  
 }
 
 /**
@@ -244,9 +303,18 @@ export const postTmnt = async (tmnt: tmntType): Promise<tmntType | null> => {
       withCredentials: true,
       url: url,
     });
-    return (response.status === 201)
-      ? response.data.tmnt
-      : null
+    if (response.status !== 201) return null
+    const dbTmnt = response.data.tmnt
+    // do not return bowls in tmnt
+    return {
+      ...blankTmnt,
+      id: dbTmnt.id,
+      user_id: dbTmnt.user_id,
+      bowl_id: dbTmnt.bowl_id,
+      tmnt_name: dbTmnt.tmnt_name,
+      start_date_str: removeTimeFromISODateStr(dbTmnt.start_date),
+      end_date_str: removeTimeFromISODateStr(dbTmnt.end_date),
+    }
   } catch (err) {
     return null;
   }
@@ -270,9 +338,18 @@ export const putTmnt = async (tmnt: tmntType): Promise<tmntType | null> => {
       withCredentials: true,
       url: oneTmntUrl + tmnt.id,
     });
-    return (response.status === 200)
-      ? response.data.tmnt
-      : null
+    if (response.status !== 200) return null
+    const dbTmnt = response.data.tmnt
+    // do not return bowls in tmnt
+    return {
+      ...blankTmnt,
+      id: dbTmnt.id,
+      user_id: dbTmnt.user_id,
+      bowl_id: dbTmnt.bowl_id,
+      tmnt_name: dbTmnt.tmnt_name,
+      start_date_str: removeTimeFromISODateStr(dbTmnt.start_date),
+      end_date_str: removeTimeFromISODateStr(dbTmnt.end_date),
+    }
   } catch (err) {
     return null;
   }

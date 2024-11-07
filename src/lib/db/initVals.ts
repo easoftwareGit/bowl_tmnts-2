@@ -76,9 +76,9 @@ export const initTmnt: tmntType = {
   tmnt_name_err: "",
   bowl_id: "",
   bowl_id_err: "",
-  start_date: startOfToday(),
+  start_date_str: todayStr,
   start_date_err: "",
-  end_date: startOfToday(),
+  end_date_str: todayStr,
   end_date_err: "",
   bowls: {
     bowl_name: "",
@@ -91,8 +91,8 @@ export const initTmnt: tmntType = {
 export const blankTmnt = {
   ...initTmnt,
   id: '',
-  start_date: startOfToday(),
-  end_date: startOfToday(),
+  start_date_str: '',
+  end_date_str: '',
 }
 
 export const initPrismaTmnt: Tmnt = {
@@ -185,7 +185,7 @@ export const initSquad: squadType = {
   starting_lane_err: "",
   lane_count: defaultLaneCount,
   lane_count_err: "",
-  squad_date: startOfToday(),
+  // squad_date: startOfToday(),
   squad_date_str: todayStr,
   squad_date_err: "",
   squad_time: "",
@@ -198,7 +198,8 @@ export const blankSquad: squadType = {
   ...initSquad,
   id: "",
   event_id: "",
-  squad_date: null as any,
+  // squad_date: null as any,
+  squad_date_str: "",
   squad_name: "",
   tab_title: "",
 };

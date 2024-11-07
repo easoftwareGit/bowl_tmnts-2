@@ -11,6 +11,7 @@ import {
   endOfDayFromString,
   todayStrMMddyyyy,
   startOfTodayUTC,
+  yyyyMMdd_To_ddMMyyyy,
 } from "@/lib/dateTools";
 
 import "./form.css";
@@ -18,14 +19,6 @@ import "./form.css";
 const sod = startOfDayFromString(todayStr) as Date
 const eod = endOfDayFromString(todayStr) as Date
 const nd = nowOnDayFromString(todayStr) as Date
-
-console.log('sod: ', sod, ' eod: ', eod);
-
-const sod1 = startOfToday();
-const eod1 = endOfToday();
-
-console.log('sod1: ', sod1, ' eod1: ', eod1);
-
 
 export const Form6: React.FC = () => {
   const initVals = {
@@ -37,8 +30,11 @@ export const Form6: React.FC = () => {
     prismaEod: addMilliseconds(addDays(new Date(todayStr), 1), -1),
     nd,  
     ndStr: dateTo_yyyyMMdd(nd),
-    prismaNd: new Date(todayStr),
+    prismaNd: new Date(),
+    di: todayStr,
   }; 
+
+  const toDayStr_to_MMddyyyy = yyyyMMdd_To_ddMMyyyy(todayStr)
 
   const [formData, setFormData] = useState(initVals);
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -61,26 +57,27 @@ export const Form6: React.FC = () => {
     } else if (name === "nd") {
       newFormData.ndStr = value         
       newFormData.nd = nowOnDayFromString(value) as Date;
+    } else if (name === "dateInput") {
+      newFormData.di = value
     }
     setFormData({
       ...newFormData,      
     });
   };
 
+  const diHandleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
+  };
+
   const handleDebug = (e: React.MouseEvent<HTMLElement>) => {
-    // setFormData({
-    //   ...formData,
-    //   sanitized: formatValue({
-    //     value: formData.dollars,
-    //     groupSeparator: localConfig.groupSeparator,
-    //     decimalSeparator: localConfig.decimalSeparator,
-    //     prefix: localConfig.prefix,
-    //     suffix: localConfig.suffix,
-    //     decimalScale: 2,
-    //     disableGroupSeparators: false,
-    //   }),
-    //   anyString: (Number(formData.dollars) || 0).toString(),
-    // });
+    setFormData({
+      ...formData,
+      di: '2024-01-01',
+    })
   };
 
   return (
@@ -101,7 +98,7 @@ export const Form6: React.FC = () => {
         </div>
         <div className="col-md-3">
           <label htmlFor="todayStrMMddYYYY" className="form-label">
-            TodayStrMMddYYYY
+            todayStrMMddYYYY
           </label>
           <input
             type="text"
@@ -109,6 +106,19 @@ export const Form6: React.FC = () => {
             id="todayStrMMddYYYY"
             name="todayStrMMddYYYY"
             value={todayStrMMddyyyy}
+            readOnly
+          />
+        </div>
+        <div className="col-md-3">
+          <label htmlFor="toDayStr_to_MMddyyyy" className="form-label">
+            as MM/DD/YYYY
+          </label>
+          <input
+            type="text"
+            className="form-control"
+            id="toDayStr_to_MMddyyyy"
+            name="toDayStr_to_MMddyyyy"
+            value={toDayStr_to_MMddyyyy}
             readOnly
           />
         </div>
@@ -432,10 +442,42 @@ export const Form6: React.FC = () => {
           <input
             type="text"
             className="form-control"
+            id="startOfTodayUTCsod"
+            name="startOfTodayUTCsod"
+            value={startOfTodayUTC().toString()}
+            readOnly
+          />
+          <input
+            type="text"
+            className="form-control"
+            id="startOfTodayFromString"
+            name="startOfTodayFromString"
+            value={startOfDayFromString(todayStr)?.toString()}
+            readOnly
+          />
+          <input
+            type="text"
+            className="form-control"
             id="prismaNd"
             name="prismaNd"
             value={formData.prismaNd.toString()}
             readOnly
+          />
+
+        </div>
+      </div>
+      <div className="row g-3 mb-3">      
+        <div className="col-md-3">
+          <label htmlFor="di" className="form-label">
+            Date Input
+          </label>
+          <input
+            type="date"
+            className="form-control"
+            id="di"
+            name="di"
+            value={formData.di}
+            onChange={diHandleInputChange}
           />
         </div>
       </div>

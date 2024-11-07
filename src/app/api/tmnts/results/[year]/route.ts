@@ -40,6 +40,7 @@ export async function GET(
     ],
     select: {
       id: true,
+      user_id: true,
       tmnt_name: true,
       start_date: true,
       bowl_id: true,

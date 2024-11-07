@@ -4,7 +4,7 @@ import { ErrorCode, isValidBtDbId } from "@/lib/validation";
 import { sanitizeSquad, validateSquad } from "@/app/api/squads/validate";
 import { squadType } from "@/lib/types/types";
 import { initSquad } from "@/lib/db/initVals";
-import { removeTimeFromISODateStr, startOfDayFromString } from "@/lib/dateTools";
+import { dateTo_UTC_yyyyMMdd, removeTimeFromISODateStr, startOfDayFromString } from "@/lib/dateTools";
 
 // routes /api/squads/:id
 
@@ -47,12 +47,10 @@ export async function PUT(
       games,
       starting_lane,
       lane_count,
-      squad_date,
+      squad_date_str,
       squad_time,
       sort_order,
-    } = await request.json();
-
-    const squadDateStr = removeTimeFromISODateStr(squad_date);
+    } = await request.json();    
 
     const toCheck: squadType = {
       ...initSquad,
@@ -61,7 +59,7 @@ export async function PUT(
       games,
       starting_lane,
       lane_count,
-      squad_date: startOfDayFromString(squadDateStr) as Date,
+      squad_date_str,
       squad_time,
       sort_order,
     };
@@ -84,6 +82,7 @@ export async function PUT(
       return NextResponse.json({ error: errMsg }, { status: 422 });
     }
     
+    const squadDate = startOfDayFromString(toPut.squad_date_str) as Date
     const squad = await prisma.squad.update({
       where: {
         id: id,
@@ -94,7 +93,7 @@ export async function PUT(
         games: toPut.games,
         starting_lane: toPut.starting_lane,
         lane_count: toPut.lane_count,
-        squad_date: toPut.squad_date,
+        squad_date: squadDate,
         squad_time: toPut.squad_time,
         sort_order: toPut.sort_order,
       },
@@ -153,7 +152,7 @@ export async function PATCH(
       games: currentSquad.games,
       starting_lane: currentSquad.starting_lane,
       lane_count: currentSquad.lane_count,
-      squad_date: currentSquad.squad_date,
+      squad_date_str: dateTo_UTC_yyyyMMdd(currentSquad.squad_date),
       squad_time: currentSquad.squad_time!,
       sort_order: currentSquad.sort_order,
     };
@@ -173,9 +172,8 @@ export async function PATCH(
     if (jsonProps.includes("lane_count")) {
       toCheck.lane_count = json.lane_count;
     }
-    if (jsonProps.includes("squad_date")) {
-      const squadDateStr = removeTimeFromISODateStr(json.squad_date);
-      toCheck.squad_date = startOfDayFromString(squadDateStr) as Date;
+    if (jsonProps.includes("squad_date")) {      
+      toCheck.squad_date_str = json.squad_date;
     }
     if (jsonProps.includes("squad_time")) {
       toCheck.squad_time = json.squad_time;
@@ -202,7 +200,8 @@ export async function PATCH(
       return NextResponse.json({ error: errMsg }, { status: 422 });
     }
     
-    let gotSquadTime = undefined;
+    let gotEmptySquadDate = undefined;
+    let gotEmptySquadTime = undefined;
     const toPatch = {      
       event_id: "", 
       squad_name: "",
@@ -228,12 +227,13 @@ export async function PATCH(
     if (jsonProps.includes("lane_count")) {
       toPatch.lane_count = toBePatched.lane_count;
     }
-    if (jsonProps.includes("squad_date")) {
-      toPatch.squad_date = toBePatched.squad_date;
+    if (jsonProps.includes("squad_date_str")) {
+      toPatch.squad_date = startOfDayFromString(toBePatched.squad_date_str);
+      gotEmptySquadDate = '';
     }
     if (jsonProps.includes("squad_time")) {
       toPatch.squad_time = toBePatched.squad_time;
-      gotSquadTime = toBePatched.squad_time;
+      gotEmptySquadTime = toBePatched.squad_time;
     }
     if (jsonProps.includes("sort_order")) {
       toPatch.sort_order = toBePatched.sort_order;
@@ -248,8 +248,8 @@ export async function PATCH(
         games: toPatch.games || undefined,
         starting_lane: toPatch.starting_lane || undefined,
         lane_count: toPatch.lane_count || undefined,
-        squad_date: toPatch.squad_date || undefined,
-        squad_time: toPatch.squad_time || gotSquadTime,
+        squad_date: toPatch.squad_date || gotEmptySquadDate,
+        squad_time: toPatch.squad_time || gotEmptySquadTime,
         sort_order: toPatch.sort_order || undefined,
       },
     });

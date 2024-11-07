@@ -12,13 +12,13 @@ export async function POST(request: NextRequest) {
 
   try { 
     const squads: squadType[] = await request.json();
-    squads.forEach(squad => {
-      // json converted date to string, need to convert back to date
-      // cannot assume squad.squad_date_str is set 
-      const squadDateStr = squad.squad_date as unknown as string
-      const noTimeDateStr = removeTimeFromISODateStr(squadDateStr)
-      squad.squad_date = startOfDayFromString(noTimeDateStr) as Date
-    });
+    // squads.forEach(squad => {
+    //   // json converted date to string, need to convert back to date
+    //   // cannot assume squad.squad_date_str is set 
+    //   const squadDateStr = squad.squad_date as unknown as string
+    //   const noTimeDateStr = removeTimeFromISODateStr(squadDateStr)
+    //   squad.squad_date = startOfDayFromString(noTimeDateStr) as Date
+    // });
     // sanitize and validate squads
     const validSquads = await validateSquads(squads); // need to use await! or else returns a promise
     if (validSquads.errorCode !== ErrorCode.None) {
@@ -27,6 +27,7 @@ export async function POST(request: NextRequest) {
     // convert valid squads into SquadData to post
     const squadsToPost: squadDataType[] = []
     validSquads.squads.forEach(squad => {
+      const squadDate = startOfDayFromString(squad.squad_date_str) as Date
       squadsToPost.push({
         id: squad.id,
         event_id: squad.event_id,        
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
         games: squad.games,
         starting_lane: squad.starting_lane,
         lane_count: squad.lane_count,
-        squad_date: squad.squad_date,
+        squad_date: squadDate,
         squad_time: squad.squad_time,
         sort_order: squad.sort_order,
       })
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
         games: squad.games,
         lane_count: squad.lane_count,
         starting_lane: squad.starting_lane,
-        squad_date: squad.squad_date,        
+        squad_date_str: squad.squad_date,
         squad_time: squad.squad_time,
         sort_order: squad.sort_order,
       })

@@ -14,9 +14,12 @@ import {
   getTimeString,
   startOfTodayUTC,
   validDateString,
-  removeTimeFromISODateStr,  
+  removeTimeFromISODateStr,
+  valid_yyyyMMdd,
+  yyyyMMdd_To_ddMMyyyy,
+  ymdType,  
 } from "@/lib/dateTools";
-import { startOfToday } from "date-fns";
+import { addMinutes, startOfToday } from "date-fns";
 
 describe("tests for dateTools", () => {
   
@@ -258,15 +261,16 @@ describe("tests for dateTools", () => {
     });
   
     it('should return the end of the day for a valid date string', () => {
-      const dateStr = '2024-10-26';      
-      const endOfDay = endOfDayFromString(dateStr)
-      expect(endOfDay?.getFullYear()).toBe(2024);
-      expect(endOfDay?.getMonth()).toBe(9);
-      expect(endOfDay?.getDate()).toBe(26);
-      expect(endOfDay?.getHours()).toBe(23);
-      expect(endOfDay?.getMinutes()).toBe(59);
-      expect(endOfDay?.getSeconds()).toBe(59);
-      expect(endOfDay?.getMilliseconds()).toBe(999);
+      const eoToday = endOfDayFromString(todayStr) as Date
+      if (!eoToday) throw new Error('endOfDayFromString failed')
+      const ymd: ymdType = getYearMonthDays(todayStr);
+      expect(eoToday.getFullYear()).toBe(ymd.year);
+      expect(eoToday.getMonth()).toBe(ymd.month); 
+      expect(eoToday.getDate()).toBe(ymd.days);
+      expect(eoToday.getHours()).toBe(23);
+      expect(eoToday.getMinutes()).toBe(59);
+      expect(eoToday.getSeconds()).toBe(59);
+      expect(eoToday.getMilliseconds()).toBe(999);
     });  
   });
 
@@ -446,6 +450,84 @@ describe("tests for dateTools", () => {
     });
   });
 
+  describe('valid_yyyyMMdd', () => { 
+    it('should return true for valid YYYY-MM-DD date string', () => { 
+      const result = valid_yyyyMMdd('2023-10-05');
+      expect(result).toBe(true);
+    })
+    it('should return false for invalid YYYY-MM-DD date string', () => { 
+      const result = valid_yyyyMMdd('2023-13-05');
+      expect(result).toBe(false);
+    })
+    it('should return false for invalid date string with time', () => {
+      const result = valid_yyyyMMdd('2023-10-05T14:48:00.000Z');
+      expect(result).toBe(false);
+    })
+    it('should return false for invalid date string just text', () => {
+      const result = valid_yyyyMMdd('invalid-date-string');
+      expect(result).toBe(false);
+    })
+    it('should return false for invalid date string not in YYYY-MM-DD format', () => {
+      const result = valid_yyyyMMdd('2024-10-5');
+      expect(result).toBe(false);
+    })
+    it('should return false for invalid date string in MM/DD/YYYY format', () => {
+      const result = valid_yyyyMMdd('10/05/2023');
+      expect(result).toBe(false);
+    })
+    it('should return false for empty string', () => { 
+      const result = valid_yyyyMMdd('');
+      expect(result).toBe(false);
+    })
+    it('should return false for null', () => { 
+      const result = valid_yyyyMMdd(null as any);
+      expect(result).toBe(false);
+    })
+    it('should return false for undefined', () => { 
+      const result = valid_yyyyMMdd(undefined as any);
+      expect(result).toBe(false);
+    })
+  })
+
+  describe('yyyyMMdd_To_ddMMyyyy', () => { 
+    it('should return correct date string when given a valid YYYY-MM-DD date string', () => { 
+      const result = yyyyMMdd_To_ddMMyyyy('2023-10-05');
+      expect(result).toBe('10/05/2023');
+    })
+    it('should return empty string when given an invalid YYYY-MM-DD date string', () => { 
+      const result = yyyyMMdd_To_ddMMyyyy('2023-13-05');
+      expect(result).toBe('');
+    })
+    it('should return empty string when given an invalid date string with time', () => {
+      const result = yyyyMMdd_To_ddMMyyyy('2023-10-05T14:48:00.000Z');
+      expect(result).toBe('');
+    })
+    it('should return empty string when given an invalid date string just text', () => {
+      const result = yyyyMMdd_To_ddMMyyyy('invalid-date-string');
+      expect(result).toBe('');
+    })
+    it('should return empty string when given an invalid date string not in YYYY-MM-DD format', () => {
+      const result = yyyyMMdd_To_ddMMyyyy('2024-10-5');
+      expect(result).toBe('');
+    })
+    it('should return empty string when given an invalid date string in MM/DD/YYYY format', () => {
+      const result = yyyyMMdd_To_ddMMyyyy('10/05/2023');
+      expect(result).toBe('');
+    })
+    it('should return empty string when given an empty string', () => {
+      const result = yyyyMMdd_To_ddMMyyyy('');
+      expect(result).toBe('');
+    })
+    it('should return empty string when given null', () => {
+      const result = yyyyMMdd_To_ddMMyyyy(null as any);
+      expect(result).toBe('');
+    })
+    it('should return empty string when given undefined', () => {
+      const result = yyyyMMdd_To_ddMMyyyy(undefined as any);
+      expect(result).toBe('');
+    })  
+  })
+
   describe('getYearMonthDays', () => {
 
     it('should return correct year, month, and days when given a valid date string', () => {
@@ -456,7 +538,7 @@ describe("tests for dateTools", () => {
     it('should return default ymd object when given an empty string', () => {
       const dateStr = '';
       const result = getYearMonthDays(dateStr);
-      expect(result).toEqual({ year: 0, month: 0, days: 0 });
+      expect(result).toEqual({ year: 0, month: -1, days: 0 });
     });
     it('should return correct year, month, and days when given a valid date string', () => {
       const dateStr = '2023-10-05';
@@ -476,17 +558,17 @@ describe("tests for dateTools", () => {
     it('should return default ymd object for invalid date format', () => {
       const dateStr = '2023-13-05';
       const result = getYearMonthDays(dateStr);
-      expect(result).toEqual({ year: 0, month: 0, days: 0 });
+      expect(result).toEqual({ year: 0, month: -1, days: 0 });
     });
     it('should return default ymd object for date strings with invalid month values', () => {
       const dateStr = '2023-13-05';
       const result = getYearMonthDays(dateStr);
-      expect(result).toEqual({ year: 0, month: 0, days: 0 });
+      expect(result).toEqual({ year: 0, month: -1, days: 0 });
     });
     it('should return empty object when given a date string with non-numeric characters', () => {
       const dateStr = '2023-1a-05';
       const result = getYearMonthDays(dateStr);
-      expect(result).toEqual({ year: 0, month: 0, days: 0 });
+      expect(result).toEqual({ year: 0, month: -1, days: 0 });
     });
     it('should handle trimmed date strings with extra whitespace', () => {
       const dateStr = '  2023-10-05  '.trim();

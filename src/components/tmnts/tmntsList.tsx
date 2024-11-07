@@ -1,6 +1,6 @@
 "use client";
 import { FC, useState, useEffect } from "react";
-import { tmntType, YearObj, tmntsListType } from "@/lib/types/types";
+import { YearObj, tmntsListType } from "@/lib/types/types";
 
 interface TmntListProps {
   years: YearObj[];
@@ -22,7 +22,7 @@ type SortDir = "ASC" | "DESC";
  * @param {SelectOption[]} arr - array of sorted objects
  * @param {string} toBeAdded - new value to be added to sorted array
  * @param {SortDir} [sortDir="ASC"] - direction of sort
- * @return {*} {number} - index to insert new item
+ * @return {number} - index to insert new item
  */
 function sortedIndex(
   arr: SelectOption[],

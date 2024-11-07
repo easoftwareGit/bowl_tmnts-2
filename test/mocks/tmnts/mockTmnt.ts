@@ -1,5 +1,5 @@
 import { initPrismaTmnt } from "@/lib/db/initVals";
-import { startOfDayFromString } from "@/lib/dateTools";
+import { startOfDayFromString, todayStr } from "@/lib/dateTools";
 import { tmntsListType, tmntType, userType } from "@/lib/types/types";
 import { Tmnt } from "@prisma/client";
 import { startOfToday } from "date-fns";
@@ -22,9 +22,9 @@ export const mockTmnt: tmntType = {
   tmnt_name_err: "",
   bowl_id: 'bwl_561540bd64974da9abdd97765fdb3659',
   bowl_id_err: "",
-  start_date: startOfToday(),
+  start_date_str: todayStr,
   start_date_err: "",
-  end_date: startOfToday(),
+  end_date_str: todayStr,
   end_date_err: "",
   bowls: {
     bowl_name: "Earl Anthony's Dublin Bowl",
@@ -67,6 +67,7 @@ export const mockPrismaTmnts: Tmnt[] = [
 export const mockPrismaTmntsList: tmntsListType[] = [
   {
     id: "tmt_fe8ac53dad0f400abe6354210a8f4cd1",    
+    user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
     tmnt_name: "New Year's Eve 6 Gamer",
     start_date: startOfDayFromString('2023-12-31') as Date, 
     bowls: {
@@ -78,6 +79,7 @@ export const mockPrismaTmntsList: tmntsListType[] = [
   },
   {
     id: "tmt_56d916ece6b50e6293300248c6792316",   
+    user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
     tmnt_name: "Yosemite 6 Gamer",    
     start_date: startOfDayFromString('2022-01-02') as Date,
     bowls: {
@@ -89,6 +91,7 @@ export const mockPrismaTmntsList: tmntsListType[] = [
   },
   {
     id: "tmt_e134ac14c5234d708d26037ae812ac33",
+    user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
     tmnt_name: "Gold Pin",
     start_date: startOfDayFromString('2025-08-19') as Date,
     bowls: {

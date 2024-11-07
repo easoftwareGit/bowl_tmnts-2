@@ -19,7 +19,8 @@ import { sanitize } from "@/lib/sanitize";
 import { compareAsc, isValid } from "date-fns";
 import { squadType, idTypes, validSquadsType } from "@/lib/types/types";
 import { blankSquad, initSquad } from "@/lib/db/initVals";
-import { validDateString } from "@/lib/dateTools";
+import { startOfDayFromString, valid_yyyyMMdd, validDateString } from "@/lib/dateTools";
+import { start } from "repl";
 
 /**
  * checks if squad object has missing data - DOES NOT SANITIZE OR VALIDATE
@@ -37,7 +38,7 @@ const gotSquadData =(squad: squadType): ErrorCode => {
       || (typeof squad.games !== "number")
       || (typeof squad.starting_lane !== "number")
       || (typeof squad.lane_count !== "number")
-      || !squad.squad_date
+      || (!squad.squad_date_str)
       || (typeof squad.sort_order !== "number")           
     ) {
       return ErrorCode.MissingData;
@@ -66,18 +67,24 @@ export const validLaneCount = (laneCount: number): boolean => {
   return (laneCount >= 2 && laneCount <= maxStartLane + 1) &&
     isEven(laneCount);
 }
-export const validSquadDate = (squadDate: Date): boolean => { 
-  if (!squadDate) return false  
-  if (typeof squadDate === 'string') {
-    if (validDateString(squadDate)) {
-      squadDate = new Date(squadDate)
-    } else {
-      return false
-    }    
-  }
+export const validSquadDate = (squadDateStr: string): boolean => { 
+  if (!squadDateStr || !valid_yyyyMMdd(squadDateStr)) return false;
+  const squadDate = startOfDayFromString(squadDateStr) as Date
   if (!isValid(squadDate)) return false
   return (compareAsc(squadDate, minDate) >= 0 && compareAsc(squadDate, maxDate) <= 0)
 }
+// export const validSquadDate = (squadDate: Date): boolean => { 
+//   if (!squadDate) return false  
+//   if (typeof squadDate === 'string') {
+//     if (validDateString(squadDate)) {
+//       squadDate = new Date(squadDate)
+//     } else {
+//       return false
+//     }    
+//   }
+//   if (!isValid(squadDate)) return false
+//   return (compareAsc(squadDate, minDate) >= 0 && compareAsc(squadDate, maxDate) <= 0)
+// }
 export const validSquadTime = (squadTimeStr: string | null): boolean => { 
   if (typeof squadTimeStr === 'undefined') return false  
   if (!squadTimeStr) return true
@@ -152,7 +159,7 @@ const validSquadData = (squad: squadType): ErrorCode => {
     if (!validLaneConfig(squad.starting_lane, squad.lane_count)) {
       return ErrorCode.InvalidData;
     }
-    if (!validSquadDate(squad.squad_date)) {
+    if (!validSquadDate(squad.squad_date_str)) {
       return ErrorCode.InvalidData;
     }
     if (!validSquadTime(squad.squad_time)) {
@@ -198,8 +205,8 @@ export const sanitizeSquad = (squad: squadType): squadType => {
   if ((squad.lane_count === null) || isNumber(squad.lane_count)) {
     sanitizedSquad.lane_count = squad.lane_count
   }
-  if (validSquadDate(squad.squad_date)) {
-    sanitizedSquad.squad_date = squad.squad_date
+  if (validSquadDate(squad.squad_date_str)) {
+    sanitizedSquad.squad_date_str = squad.squad_date_str
   }
   sanitizedSquad.squad_time = sanitizedTime(squad.squad_time as string)
   if ((squad.sort_order === null) || isNumber(squad.sort_order)) {

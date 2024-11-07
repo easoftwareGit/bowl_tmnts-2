@@ -31,9 +31,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: Request) {
   try {
-    const { id, event_id, squad_name, games, starting_lane, lane_count, squad_date, squad_time, sort_order } = await request.json()    
+    const { id, event_id, squad_name, games, starting_lane, lane_count, squad_date_str, squad_time, sort_order } = await request.json()    
 
-    const squadDateStr = removeTimeFromISODateStr(squad_date);
+    // const squadDateStr = removeTimeFromISODateStr(squad_date);
     
     const toCheck: squadType = {
       ...initSquad,
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
       games,
       starting_lane,
       lane_count,
-      squad_date: startOfDayFromString(squadDateStr) as Date,
+      squad_date_str,
       squad_time,      
       sort_order
     }
@@ -69,6 +69,7 @@ export async function POST(request: Request) {
       );
     }
     
+    const squadDate = startOfDayFromString(toPost.squad_date_str) as Date
     let squadData: squadDataType = {
       id: toPost.id,
       event_id: toPost.event_id,            
@@ -76,7 +77,7 @@ export async function POST(request: Request) {
       games: toPost.games,        
       lane_count: toPost.lane_count,      
       starting_lane: toPost.starting_lane,      
-      squad_date: toPost.squad_date,      
+      squad_date: squadDate,
       squad_time: toPost.squad_time,      
       sort_order: toPost.sort_order
     }
