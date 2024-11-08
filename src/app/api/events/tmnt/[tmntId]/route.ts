@@ -30,22 +30,26 @@ export async function GET(
     // no matching rows is ok
 
     // add in lpox
-    const events: eventType[] = prismaEvents.map(event => ({
-      ...initEvent,
-      id: event.id,
-      tmnt_id: event.tmnt_id,
-      event_name: event.event_name,
-      team_size: event.team_size,
-      games: event.games,      
-      added_money: event.added_money + '',
-      entry_fee: event.entry_fee + '',
-      lineage: event.lineage + '',
-      prize_fund: event.prize_fund + '',
-      other: event.other + '',
-      expenses: event.expenses + '',
-      lpox: event.entry_fee + '',
-      sort_order: event.sort_order,
-    }))    
+    const events = prismaEvents.map(event => ({
+      ...event,
+      lpox: event.entry_fee
+    }))
+    // const events: eventType[] = prismaEvents.map(event => ({
+    //   ...initEvent,
+    //   id: event.id,
+    //   tmnt_id: event.tmnt_id,
+    //   event_name: event.event_name,
+    //   team_size: event.team_size,
+    //   games: event.games,      
+    //   added_money: event.added_money + '',
+    //   entry_fee: event.entry_fee + '',
+    //   lineage: event.lineage + '',
+    //   prize_fund: event.prize_fund + '',
+    //   other: event.other + '',
+    //   expenses: event.expenses + '',
+    //   lpox: event.entry_fee + '',
+    //   sort_order: event.sort_order,
+    // }))    
     return NextResponse.json({events}, {status: 200});    
   } catch (err: any) {
     return NextResponse.json(

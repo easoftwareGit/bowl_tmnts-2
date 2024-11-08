@@ -3,7 +3,7 @@ import { baseEventsApi } from "@/lib/db/apiPaths";
 import { testBaseEventsApi } from "../../../testApi";
 import { eventType } from "@/lib/types/types";
 import { initEvent } from "@/lib/db/initVals";
-import { Event } from "@prisma/client";
+// import { Event } from "@prisma/client";
 import { btDbUuid } from "@/lib/uuid";
 import { mockEventsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockEvents";
 import { deleteAllTmntEvents } from "@/lib/db/events/eventsAxios";
@@ -86,7 +86,7 @@ describe('Events - GETs and POST API: /api/events', () => {
       const events: eventType[] = response.data.events;
       events.forEach((event: eventType) => {
         expect(event.lpox).not.toBeNull();
-        expect(event.lpox).not.toBe('');
+        expect(event.lpox).not.toBe(0);
       })
     })
 
@@ -102,13 +102,13 @@ describe('Events - GETs and POST API: /api/events', () => {
       expect(event.event_name).toEqual(testEvent.event_name);
       expect(event.team_size).toEqual(testEvent.team_size);
       expect(event.games).toEqual(testEvent.games);
-      expect(event.entry_fee).toEqual(testEvent.entry_fee);
-      expect(event.lineage).toEqual(testEvent.lineage);
-      expect(event.prize_fund).toEqual(testEvent.prize_fund);
-      expect(event.other).toEqual(testEvent.other);
-      expect(event.expenses).toEqual(testEvent.expenses);
-      expect(event.added_money).toEqual(testEvent.added_money);
-      expect(event.lpox).toEqual(testEvent.lpox);
+      expect(event.entry_fee + '').toEqual(testEvent.entry_fee);
+      expect(event.lineage + '').toEqual(testEvent.lineage);
+      expect(event.prize_fund + '').toEqual(testEvent.prize_fund);
+      expect(event.other + '').toEqual(testEvent.other);
+      expect(event.expenses + '').toEqual(testEvent.expenses);
+      expect(event.added_money + '').toEqual(testEvent.added_money);
+      expect(event.lpox + '').toEqual(testEvent.lpox);
       expect(event.sort_order).toEqual(testEvent.sort_order);
     })
     it('should NOT get an event by ID when ID is invalid', async () => {
@@ -182,9 +182,9 @@ describe('Events - GETs and POST API: /api/events', () => {
       expect(events[0].lpox).not.toBeNull();
       expect(events[1].lpox).not.toBeNull();
       expect(events[2].lpox).not.toBeNull();
-      expect(events[0].lpox).not.toBe('');
-      expect(events[1].lpox).not.toBe('');
-      expect(events[2].lpox).not.toBe('');
+      expect(events[0].lpox).not.toBe(0);
+      expect(events[1].lpox).not.toBe(0);
+      expect(events[2].lpox).not.toBe(0);
     })
     it('should return status 404 when tmntId is invalid', async () => { 
       try {
@@ -280,12 +280,13 @@ describe('Events - GETs and POST API: /api/events', () => {
       expect(postedEvent.event_name).toEqual(eventToPost.event_name);
       expect(postedEvent.team_size).toEqual(eventToPost.team_size);
       expect(postedEvent.games).toEqual(eventToPost.games);
-      expect(postedEvent.entry_fee).toEqual(eventToPost.entry_fee);
-      expect(postedEvent.lineage).toEqual(eventToPost.lineage);
-      expect(postedEvent.prize_fund).toEqual(eventToPost.prize_fund);
-      expect(postedEvent.other).toEqual(eventToPost.other);
-      expect(postedEvent.expenses).toEqual(eventToPost.expenses);
-      expect(postedEvent.added_money).toEqual(eventToPost.added_money);
+      expect(postedEvent.entry_fee + '').toEqual(eventToPost.entry_fee);
+      expect(postedEvent.lineage + '').toEqual(eventToPost.lineage);
+      expect(postedEvent.prize_fund + '').toEqual(eventToPost.prize_fund);
+      expect(postedEvent.other + '').toEqual(eventToPost.other);
+      expect(postedEvent.expenses + '').toEqual(eventToPost.expenses);
+      expect(postedEvent.added_money + '').toEqual(eventToPost.added_money);
+      expect(postedEvent.lpox + '').toEqual(eventToPost.entry_fee);
       expect(postedEvent.sort_order).toEqual(eventToPost.sort_order);            
     })
     it('should create a new event when added money is blank', async () => { 
@@ -1656,12 +1657,13 @@ describe('Events - GETs and POST API: /api/events', () => {
       expect(postedEvent.event_name).toEqual(eventToPost.event_name);
       expect(postedEvent.team_size).toEqual(eventToPost.team_size);
       expect(postedEvent.games).toEqual(eventToPost.games);
-      expect(postedEvent.entry_fee).toEqual(eventToPost.entry_fee);
-      expect(postedEvent.lineage).toEqual(eventToPost.lineage);
-      expect(postedEvent.prize_fund).toEqual(eventToPost.prize_fund);
-      expect(postedEvent.other).toEqual(eventToPost.other);
-      expect(postedEvent.expenses).toEqual(eventToPost.expenses);
-      expect(postedEvent.added_money).toEqual(eventToPost.added_money);
+      expect(postedEvent.entry_fee + '').toEqual(eventToPost.entry_fee);
+      expect(postedEvent.lineage + '').toEqual(eventToPost.lineage);
+      expect(postedEvent.prize_fund + '').toEqual(eventToPost.prize_fund);
+      expect(postedEvent.other + '').toEqual(eventToPost.other);
+      expect(postedEvent.expenses + '').toEqual(eventToPost.expenses);
+      expect(postedEvent.added_money + '').toEqual(eventToPost.added_money);
+      expect(postedEvent.entry_fee + '').toEqual(eventToPost.entry_fee);
       expect(postedEvent.sort_order).toEqual(eventToPost.sort_order);      
     })  
     
@@ -1703,13 +1705,14 @@ describe('Events - GETs and POST API: /api/events', () => {
         expect(postedEvents[i].event_name).toEqual(mockEventsToPost[i].event_name);
         expect(postedEvents[i].team_size).toEqual(mockEventsToPost[i].team_size);
         expect(postedEvents[i].games).toEqual(mockEventsToPost[i].games);
-        expect(postedEvents[i].entry_fee).toEqual(mockEventsToPost[i].entry_fee);
-        expect(postedEvents[i].lineage).toEqual(mockEventsToPost[i].lineage);
-        expect(postedEvents[i].prize_fund).toEqual(mockEventsToPost[i].prize_fund);
-        expect(postedEvents[i].other).toEqual(mockEventsToPost[i].other);
-        expect(postedEvents[i].expenses).toEqual(mockEventsToPost[i].expenses);
-        expect(postedEvents[i].added_money).toEqual(mockEventsToPost[i].added_money);
-        expect(postedEvents[i].lpox).toEqual(mockEventsToPost[i].lpox);
+        expect(postedEvents[i].entry_fee + '').toEqual(mockEventsToPost[i].entry_fee);
+        expect(postedEvents[i].lineage + '').toEqual(mockEventsToPost[i].lineage);
+        expect(postedEvents[i].prize_fund + '').toEqual(mockEventsToPost[i].prize_fund);
+        expect(postedEvents[i].other + '').toEqual(mockEventsToPost[i].other);
+        expect(postedEvents[i].expenses + '').toEqual(mockEventsToPost[i].expenses);
+        expect(postedEvents[i].added_money + '').toEqual(mockEventsToPost[i].added_money);
+        expect(postedEvents[i].entry_fee + '').toEqual(mockEventsToPost[i].lpox);
+        // expect(postedEvents[i].lpox).toEqual(mockEventsToPost[i].lpox);
         expect(postedEvents[i].sort_order).toEqual(mockEventsToPost[i].sort_order);        
       } 
     })

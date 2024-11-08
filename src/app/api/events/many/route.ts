@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
         lineage: event.lineage,
         prize_fund: event.prize_fund,
         expenses: event.expenses,
-        other: event.other,        
+        other: event.other,
         sort_order: event.sort_order,
       })
     });      
@@ -39,28 +39,33 @@ export async function POST(request: NextRequest) {
     const prismaEvents = await prisma.event.createManyAndReturn({
       data: [...eventsToPost]
     })
-    // convert prismaEvents to events
-    const manyEvents: eventType[] = [];
-    prismaEvents.map((event) => {
-      manyEvents.push({
-        ...initEvent,
-        id: event.id,
-        tmnt_id: event.tmnt_id,        
-        event_name: event.event_name,
-        tab_title: event.event_name,
-        team_size: event.team_size,
-        games: event.games,
-        added_money: event.added_money + '',
-        entry_fee: event.entry_fee + '',
-        lineage: event.lineage + '',
-        prize_fund: event.prize_fund + '',
-        expenses: event.expenses + '',
-        other: event.other + '',
-        lpox: event.entry_fee + '',
-        sort_order: event.sort_order,
-      })
-    })
-    return NextResponse.json({events: manyEvents}, { status: 201 });
+    return NextResponse.json({events: prismaEvents}, { status: 201 });
+
+    // const prismaEvents = await prisma.event.createManyAndReturn({
+    //   data: [...eventsToPost]
+    // })
+    // // convert prismaEvents to events
+    // const manyEvents: eventType[] = [];
+    // prismaEvents.map((event) => {
+    //   manyEvents.push({
+    //     ...initEvent,
+    //     id: event.id,
+    //     tmnt_id: event.tmnt_id,        
+    //     event_name: event.event_name,
+    //     tab_title: event.event_name,
+    //     team_size: event.team_size,
+    //     games: event.games,
+    //     added_money: event.added_money + '',
+    //     entry_fee: event.entry_fee + '',
+    //     lineage: event.lineage + '',
+    //     prize_fund: event.prize_fund + '',
+    //     expenses: event.expenses + '',
+    //     other: event.other + '',
+    //     lpox: event.entry_fee + '',
+    //     sort_order: event.sort_order,
+    //   })
+    // })
+    // return NextResponse.json({events: manyEvents}, { status: 201 });
   } catch (err: any) {
     let errStatus: number
     switch (err.code) {

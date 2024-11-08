@@ -36,23 +36,28 @@ export async function POST(request: NextRequest) {
     const prismaDivs = await prisma.div.createManyAndReturn({
       data: [...divsToPost]
     })
+    return NextResponse.json({divs: prismaDivs}, { status: 201 });    
 
-    // convert prismaDivs to divs
-    const manyDivs: divType[] = []
-    prismaDivs.map((div) => {
-      manyDivs.push({
-        ...initDiv,
-        id: div.id,
-        tmnt_id: div.tmnt_id,
-        div_name: div.div_name,
-        hdcp_per: div.hdcp_per,
-        hdcp_from: div.hdcp_from,
-        int_hdcp: div.int_hdcp,
-        hdcp_for: div.hdcp_for as HdcpForTypes,
-        sort_order: div.sort_order,
-      })
-    })
-    return NextResponse.json({divs: manyDivs}, { status: 201 });    
+    // const prismaDivs = await prisma.div.createManyAndReturn({
+    //   data: [...divsToPost]
+    // })
+
+    // // convert prismaDivs to divs
+    // const manyDivs: divType[] = []
+    // prismaDivs.map((div) => {
+    //   manyDivs.push({
+    //     ...initDiv,
+    //     id: div.id,
+    //     tmnt_id: div.tmnt_id,
+    //     div_name: div.div_name,
+    //     hdcp_per: div.hdcp_per,
+    //     hdcp_from: div.hdcp_from,
+    //     int_hdcp: div.int_hdcp,
+    //     hdcp_for: div.hdcp_for as HdcpForTypes,
+    //     sort_order: div.sort_order,
+    //   })
+    // })
+    // return NextResponse.json({divs: manyDivs}, { status: 201 });    
   } catch (err: any) {
     let errStatus: number
     switch (err.code) {
