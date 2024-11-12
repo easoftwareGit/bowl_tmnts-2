@@ -2,8 +2,8 @@ import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ErrorCode } from "@/lib/validation";
 import { brktType, brktDataType } from "@/lib/types/types";
-import { initBrkt } from "@/lib/db/initVals";
 import { validateBrkts } from "../validate";
+import { calcFSA } from "@/lib/currency/fsa";
 
 // routes /api/brkts/many
 
@@ -37,25 +37,11 @@ export async function POST(request: NextRequest) {
     const prismaBrkts = await prisma.brkt.createManyAndReturn({
       data: [...brktsToPost]
     })
-    // convert prismaBrkts to brkts
-    const manyBrkts: brktType[] = [];
-    prismaBrkts.map((brkt) => {
-      manyBrkts.push({
-        ...initBrkt,
-        id: brkt.id,
-        div_id: brkt.div_id,
-        squad_id: brkt.squad_id,
-        start: brkt.start,
-        games: brkt.games,
-        players: brkt.players,
-        fee: brkt.fee + '',
-        first: brkt.first + '',
-        second: brkt.second + '',
-        admin: brkt.admin + '',        
-        fsa: Number(brkt.first) + Number(brkt.second) + Number(brkt.admin) + '',
-        sort_order: brkt.sort_order,
-      })
-    })
+    // add fsa
+    const manyBrkts = prismaBrkts.map((brkt) => ({
+      ...brkt,
+      fsa: calcFSA(brkt.first, brkt.second, brkt.admin),      
+    }))
     return NextResponse.json({brkts: manyBrkts}, { status: 201 });    
   } catch (err: any) {
     let errStatus: number

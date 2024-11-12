@@ -12,14 +12,6 @@ export async function POST(request: NextRequest) {
 
   try { 
     const squads: squadType[] = await request.json();
-    // squads.forEach(squad => {
-    //   // json converted date to string, need to convert back to date
-    //   // cannot assume squad.squad_date_str is set 
-    //   const squadDateStr = squad.squad_date as unknown as string
-    //   const noTimeDateStr = removeTimeFromISODateStr(squadDateStr)
-    //   squad.squad_date = startOfDayFromString(noTimeDateStr) as Date
-    // });
-    // sanitize and validate squads
     const validSquads = await validateSquads(squads); // need to use await! or else returns a promise
     if (validSquads.errorCode !== ErrorCode.None) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
@@ -41,25 +33,10 @@ export async function POST(request: NextRequest) {
       })
     });      
 
-    const prismaSquads = await prisma.squad.createManyAndReturn({
+    const manySquads = await prisma.squad.createManyAndReturn({
       data: [...squadsToPost]
     })
-    // convert prismaSquad to squads
-    const manySquads: squadType[] = [];
-    prismaSquads.map((squad) => {
-      manySquads.push({
-        ...initSquad,
-        id: squad.id,
-        event_id: squad.event_id,        
-        squad_name: squad.squad_name,
-        games: squad.games,
-        lane_count: squad.lane_count,
-        starting_lane: squad.starting_lane,
-        squad_date_str: squad.squad_date,
-        squad_time: squad.squad_time,
-        sort_order: squad.sort_order,
-      })
-    })
+
     return NextResponse.json({squads: manySquads}, { status: 201 });
   } catch (err: any) {
     let errStatus: number

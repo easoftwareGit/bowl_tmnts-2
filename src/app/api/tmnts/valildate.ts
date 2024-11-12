@@ -3,7 +3,7 @@ import { sanitize } from "@/lib/sanitize";
 import { isValid, compareAsc } from "date-fns";
 import { idTypes, tmntType } from "@/lib/types/types";
 import { blankTmnt } from "@/lib/db/initVals";
-import { startOfDayFromString, validDateString } from "@/lib/dateTools";
+import { validDateString } from "@/lib/dateTools";
 
 /**
  * checks for required data and returns error code if missing 
@@ -146,26 +146,6 @@ export const sanitizeTmnt = (tmnt: tmntType): tmntType => {
   if (typeof tmnt.end_date_str === 'string' && validDateString(tmnt.end_date_str)) {
     sanditizedTmnt.end_date_str = tmnt.end_date_str
   }
-
-  // if (typeof tmnt.start_date === 'string') {
-  //   if (validDateString(tmnt.start_date)) {    
-  //     sanditizedTmnt.start_date = startOfDayFromString(tmnt.start_date) as Date
-  //   } 
-  // } else {
-  //   if (isValid(tmnt.start_date)) {
-  //     sanditizedTmnt.start_date = tmnt.start_date
-  //   } 
-  // }
-
-  // if (typeof tmnt.end_date === 'string') {
-  //   if (validDateString(tmnt.end_date)) {          
-  //     sanditizedTmnt.end_date = startOfDayFromString(tmnt.end_date) as Date
-  //   } 
-  // } else {
-  //   if (isValid(tmnt.end_date)) {
-  //     sanditizedTmnt.end_date = tmnt.end_date
-  //   } 
-  // }
   if (isValidBtDbId(tmnt.bowl_id, 'bwl')) {    
     sanditizedTmnt.bowl_id = tmnt.bowl_id  
   } 

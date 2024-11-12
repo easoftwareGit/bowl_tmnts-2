@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isValidBtDbId } from "@/lib/validation";
-import { initBrkt } from "@/lib/db/initVals";
+import { calcFSA } from "@/lib/currency/fsa";
 
 // routes /api/brkts/squad/:squadId
 
@@ -25,19 +25,9 @@ export async function GET(
     });
     // add in fsa
     const brkts = prismaBrkts.map((brkt) => ({
-      ...initBrkt,
-      id: brkt.id,
-      div_id: brkt.div_id,
-      squad_id: brkt.squad_id,
-      start: brkt.start,
-      games: brkt.games,
-      players: brkt.players,
-      fee: brkt.fee + "",
-      first: brkt.first + "",
-      second: brkt.second + "",
-      admin: brkt.admin + "",
-      fsa: Number(brkt.first) + Number(brkt.second) + Number(brkt.admin) + "",
-    }));
+      ...brkt,
+      fsa: calcFSA(brkt.first, brkt.second, brkt.admin),
+    }))
 
     // no matching rows is ok
     return NextResponse.json({ brkts }, { status: 200 });

@@ -2,7 +2,6 @@ import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ErrorCode } from "@/lib/validation";
 import { eventDataType, eventType } from "@/lib/types/types";
-import { initEvent } from "@/lib/db/initVals";
 import { validateEvents } from "../validate";
 
 // routes /api/events/many
@@ -39,26 +38,11 @@ export async function POST(request: NextRequest) {
     const prismaEvents = await prisma.event.createManyAndReturn({
       data: [...eventsToPost]
     })
-    // convert prismaEvents to events
-    const manyEvents: eventType[] = [];
-    prismaEvents.map((event) => {
-      manyEvents.push({
-        ...initEvent,
-        id: event.id,
-        tmnt_id: event.tmnt_id,        
-        event_name: event.event_name,
-        tab_title: event.event_name,
-        team_size: event.team_size,
-        games: event.games,
-        added_money: event.added_money + '',
-        entry_fee: event.entry_fee + '',
-        lineage: event.lineage + '',
-        prize_fund: event.prize_fund + '',
-        expenses: event.expenses + '',
-        other: event.other + '',
-        lpox: event.entry_fee + '',
-        sort_order: event.sort_order,
-      })
+    const manyEvents = prismaEvents.map((event) => {
+      return {
+        ...event,
+        lpox: event.entry_fee,
+      }
     })
     return NextResponse.json({events: manyEvents}, { status: 201 });
   } catch (err: any) {

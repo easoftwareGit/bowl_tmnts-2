@@ -113,7 +113,7 @@ describe('brktsAxios', () => {
         expect(brkts[i].first).toEqual(brktsToGet[i].first);
         expect(brkts[i].second).toEqual(brktsToGet[i].second);
         expect(brkts[i].admin).toEqual(brktsToGet[i].admin);
-        expect(brkts[i].fsa).toEqual(brktsToGet[i].fsa);
+        expect(brkts[i].fsa + '').toEqual(brktsToGet[i].fsa);
       }
     })
     it("should return 0 brkts for not found tmnt", async () => { 
@@ -254,7 +254,7 @@ describe('brktsAxios', () => {
         expect(postedBrkts[i].first).toEqual(mockBrktsToPost[i].first);
         expect(postedBrkts[i].second).toEqual(mockBrktsToPost[i].second);
         expect(postedBrkts[i].admin).toEqual(mockBrktsToPost[i].admin);
-        expect(postedBrkts[i].fsa).toEqual(mockBrktsToPost[i].fsa);        
+        expect(postedBrkts[i].fsa + '').toEqual(mockBrktsToPost[i].fsa);        
         expect(postedBrkts[i].sort_order).toEqual(mockBrktsToPost[i].sort_order);        
       }
     })
@@ -362,7 +362,7 @@ describe('brktsAxios', () => {
       expect(puttedBrkt.first).toEqual(brktToPut.first);
       expect(puttedBrkt.second).toEqual(brktToPut.second);
       expect(puttedBrkt.admin).toEqual(brktToPut.admin);
-      expect(puttedBrkt.fsa).toEqual(brktToPut.fsa);
+      expect(puttedBrkt.fsa + '').toEqual(brktToPut.fsa);
       expect(puttedBrkt.sort_order).toEqual(brktToPut.sort_order);      
     });
     it('should not put a brkt with invalid data', async () => { 

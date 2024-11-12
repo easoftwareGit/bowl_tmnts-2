@@ -5,7 +5,7 @@ import { eventType, squadType } from "@/lib/types/types";
 import { initEvent, initSquad } from "@/lib/db/initVals";
 import { deleteAllEventSquads, deleteAllTmntSquads, deleteSquad, getAllSquadsForTmnt, postManySquads, postSquad, putSquad } from "@/lib/db/squads/squadsAxios";
 import { compareAsc } from "date-fns";
-import { startOfDayFromString } from "@/lib/dateTools";
+import { removeTimeFromISODateStr, startOfDayFromString } from "@/lib/dateTools";
 import { mockSquadsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { deleteEvent } from "@/lib/db/events/eventsAxios";
 
@@ -75,7 +75,7 @@ describe('squadsAxios', () => {
         id: "sqd_42be0f9d527e4081972ce8877190489d",
         event_id: "evt_06055deb80674bd592a357a4716d8ef2",
         squad_name: "A Squad",
-        squad_date: startOfDayFromString('2022-08-21') as Date, 
+        squad_date_str: '2022-08-21',
         squad_time: '10:00 AM',
         games: 6,
         lane_count: 24,
@@ -87,7 +87,7 @@ describe('squadsAxios', () => {
         id: "sqd_796c768572574019a6fa79b3b1c8fa57",
         event_id: "evt_06055deb80674bd592a357a4716d8ef2",
         squad_name: "B Squad",
-        squad_date: startOfDayFromString('2022-08-21') as Date, 
+        squad_date_str: '2022-08-21',
         squad_time: '02:00 PM',
         games: 6,
         lane_count: 24, 
@@ -104,7 +104,7 @@ describe('squadsAxios', () => {
         expect(squads[i].id).toBe(squadsToGet[i].id);
         expect(squads[i].event_id).toBe(squadsToGet[i].event_id);
         expect(squads[i].squad_name).toBe(squadsToGet[i].squad_name);
-        expect(compareAsc(squads[i].squad_date, squadsToGet[i].squad_date)).toBe(0);        
+        expect(squads[i].squad_date_str).toBe(squadsToGet[i].squad_date_str);
         expect(squads[i].squad_time).toBe(squadsToGet[i].squad_time);
         expect(squads[i].games).toBe(squadsToGet[i].games);
         expect(squads[i].starting_lane).toBe(squadsToGet[i].starting_lane);
@@ -181,8 +181,7 @@ describe('squadsAxios', () => {
       expect(postedSquad.id).toBe(squadToPost.id);
       expect(postedSquad.squad_name).toBe(squadToPost.squad_name);
       expect(postedSquad.event_id).toBe(squadToPost.event_id);
-      const squadDate = new Date(postedSquad.squad_date);
-      expect(compareAsc(squadDate, squadToPost.squad_date)).toBe(0);
+      expect(postedSquad.squad_date_str).toBe(squadToPost.squad_date_str);
       expect(postedSquad.squad_time).toBe(squadToPost.squad_time);
       expect(postedSquad.games).toBe(squadToPost.games);
       expect(postedSquad.lane_count).toBe(squadToPost.lane_count);
@@ -230,7 +229,7 @@ describe('squadsAxios', () => {
         expect(postedEvents[i].id).toEqual(mockSquadsToPost[i].id);
         expect(postedEvents[i].event_id).toEqual(mockSquadsToPost[i].event_id);
         expect(postedEvents[i].squad_name).toEqual(mockSquadsToPost[i].squad_name);
-        expect(compareAsc(postedEvents[i].squad_date, mockSquadsToPost[i].squad_date)).toBe(0);        
+        expect(postedEvents[i].squad_date_str).toEqual(mockSquadsToPost[i].squad_date_str);
         expect(postedEvents[i].squad_time).toEqual(mockSquadsToPost[i].squad_time);
         expect(postedEvents[i].games).toEqual(mockSquadsToPost[i].games);
         expect(postedEvents[i].lane_count).toEqual(mockSquadsToPost[i].lane_count);
@@ -344,8 +343,7 @@ describe('squadsAxios', () => {
       expect(puttedSquad.id).toEqual(squadToPut.id);
       expect(puttedSquad.event_id).toEqual(squadToPut.event_id);
       expect(puttedSquad.squad_name).toEqual(squadToPut.squad_name);      
-      const squadDate = new Date(puttedSquad.squad_date);
-      expect(compareAsc(squadDate, squadToPut.squad_date)).toBe(0);
+      expect(puttedSquad.squad_date_str).toEqual(squadToPut.squad_date_str);      
       expect(puttedSquad.squad_time).toEqual(squadToPut.squad_time);
       expect(puttedSquad.games).toEqual(squadToPut.games);
       expect(puttedSquad.lane_count).toEqual(squadToPut.lane_count);

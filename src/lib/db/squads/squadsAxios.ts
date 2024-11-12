@@ -5,6 +5,7 @@ import { squadType } from "@/lib/types/types";
 import { validateSquad } from "@/app/api/squads/validate";
 import { ErrorCode, isValidBtDbId } from "@/lib/validation";
 import { removeTimeFromISODateStr, startOfDayFromString } from "@/lib/dateTools";
+import { blankSquad } from "../initVals";
 
 const url = testBaseSquadsApi.startsWith("undefined")
   ? baseSquadsApi
@@ -28,9 +29,24 @@ export const getAllSquadsForTmnt = async (tmntId: string): Promise<squadType[] |
       withCredentials: true,
       url: oneTmntUrl + tmntId 
     });
-    return (response.status === 200)
-      ? response.data.squads
-      : null
+    if (response.status !== 200) return null
+    const tmntSquads = response.data.squads
+    const squads: squadType[] = tmntSquads.map((squad: any) => {
+      return {
+        ...blankSquad,
+        id: squad.id,
+        event_id: squad.event_id,          
+        squad_name: squad.squad_name,
+        tab_title: squad.squad_name,                
+        games: squad.games,          
+        lane_count: squad.lane_count,        
+        starting_lane: squad.starting_lane,        
+        squad_date_str: removeTimeFromISODateStr(squad.squad_date),        
+        squad_time: squad.squad_time,        
+        sort_order: squad.sort_order,        
+      }
+    })
+    return squads
   } catch (err) {
     return null;
   }  
@@ -54,9 +70,22 @@ export const postSquad = async (squad: squadType): Promise<squadType | null> => 
       withCredentials: true,
       url: url,
     });
-    return (response.status === 201)
-      ? response.data.squad
-      : null
+    if (response.status !== 201) return null
+    const dbSquad = response.data.squad
+    const postedSquad: squadType = {
+      ...blankSquad,
+      id: dbSquad.id,
+      event_id: dbSquad.event_id,          
+      squad_name: dbSquad.squad_name,
+      tab_title: dbSquad.squad_name,                
+      games: dbSquad.games,          
+      lane_count: dbSquad.lane_count,        
+      starting_lane: dbSquad.starting_lane,        
+      squad_date_str: removeTimeFromISODateStr(dbSquad.squad_date),        
+      squad_time: dbSquad.squad_time,        
+      sort_order: dbSquad.sort_order,
+    }
+    return postedSquad
   } catch (err) {
     return null;
   }
@@ -79,20 +108,24 @@ export const postManySquads = async (squads: squadType[]): Promise<squadType[] |
       withCredentials: true,
       url: manyUrl,
     });
-
-    if (response.status === 201) {
-      const postedSquads: squadType[] = response.data.squads
-      postedSquads.forEach(squad => {
-        // json converted date to string, need to convert back to date
-        // cannot assume squad.squad_date_str is set 
-        const squadDateStr = squad.squad_date as unknown as string
-        const noTimeDateStr = removeTimeFromISODateStr(squadDateStr)        
-        squad.squad_date = startOfDayFromString(noTimeDateStr) as Date
-      })
-      return response.data.squads
-    } else {
-      return null
-    }
+    if (response.status !== 201) return null
+    const dbSquads = response.data.squads
+    const postedSquads: squadType[] = dbSquads.map((squad: any) => {
+      return {
+        ...blankSquad,
+        id: squad.id,
+        event_id: squad.event_id,          
+        squad_name: squad.squad_name,
+        tab_title: squad.squad_name,                
+        games: squad.games,          
+        lane_count: squad.lane_count,        
+        starting_lane: squad.starting_lane,        
+        squad_date_str: removeTimeFromISODateStr(squad.squad_date),        
+        squad_time: squad.squad_time,        
+        sort_order: squad.sort_order,
+      }
+    })
+    return postedSquads
   } catch (err) {
     return null;
   }
@@ -116,9 +149,22 @@ export const putSquad = async (squad: squadType): Promise<squadType | null> => {
       withCredentials: true,
       url: oneSquadUrl + squad.id,
     });
-    return (response.status === 200)
-      ? response.data.squad
-      : null
+    if (response.status !== 200) return null
+    const dbSquad = response.data.squad
+    const puttedSquad: squadType = {
+      ...blankSquad,
+      id: dbSquad.id,
+      event_id: dbSquad.event_id,          
+      squad_name: dbSquad.squad_name,
+      tab_title: dbSquad.squad_name,                
+      games: dbSquad.games,          
+      lane_count: dbSquad.lane_count,        
+      starting_lane: dbSquad.starting_lane,        
+      squad_date_str: removeTimeFromISODateStr(dbSquad.squad_date),        
+      squad_time: dbSquad.squad_time,        
+      sort_order: dbSquad.sort_order,
+    }
+    return puttedSquad
   } catch (err) {
     return null;
   }

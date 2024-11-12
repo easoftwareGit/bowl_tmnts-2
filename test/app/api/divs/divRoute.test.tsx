@@ -2279,8 +2279,7 @@ describe('Divs - API: /api/divs', () => {
           data: divJSON,
           withCredentials: true,
           url: url
-        })
-        console.log('response.status: ', response.status)
+        })        
       } catch (err) {
         if (err instanceof Error) console.log(err.message);
       }

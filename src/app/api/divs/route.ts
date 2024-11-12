@@ -9,7 +9,7 @@ import { initDiv } from "@/lib/db/initVals";
 
 export async function GET(request: NextRequest) {
   try {
-    const gotDivs = await prisma.div.findMany({
+    const divs = await prisma.div.findMany({
       orderBy: [
         {
           tmnt_id: "asc",
@@ -19,10 +19,10 @@ export async function GET(request: NextRequest) {
         },
       ],
     });
-    const divs = gotDivs.map((gotDiv) => ({
-      ...gotDiv,
-      hdcp_per_str: (gotDiv.hdcp_per * 100).toFixed(2),
-    }));
+    // const divs = gotDivs.map((gotDiv) => ({
+    //   ...gotDiv,
+    //   hdcp_per_str: (gotDiv.hdcp_per * 100).toFixed(2),
+    // }));
     return NextResponse.json({ divs }, { status: 200 });
   } catch (err: any) {
     return NextResponse.json({ error: "error getting divs" }, { status: 500 });

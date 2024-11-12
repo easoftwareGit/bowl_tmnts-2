@@ -2,8 +2,8 @@ import axios from "axios";
 import { baseEventsApi } from "@/lib/db/apiPaths";
 import { testBaseEventsApi } from "../../../../test/testApi";
 import { eventType } from "@/lib/types/types";
-import { validateEvent } from "@/app/api/events/validate";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { isValidBtDbId } from "@/lib/validation";
+import { blankEvent } from "../initVals";
 
 const url = testBaseEventsApi.startsWith("undefined")
   ? baseEventsApi
@@ -27,9 +27,28 @@ export const getAllEventsForTmnt = async (tmntId: string): Promise<eventType[] |
       withCredentials: true,
       url: oneTmntUrl + tmntId,
     });
-    return (response.status === 200)
-      ? response.data.events
-      : null
+    if (response.status !== 200) return null
+    const dbEvents = response.data.events
+    const events: eventType[] = dbEvents.map((event: any) => {
+      return {
+        ...blankEvent,
+        id: event.id,
+        tmnt_id: event.tmnt_id,
+        event_name: event.event_name,
+        tab_title: event.event_name,
+        team_size: event.team_size,        
+        games: event.games,        
+        entry_fee: event.entry_fee,        
+        lineage: event.lineage,        
+        prize_fund: event.prize_fund,        
+        other: event.other,        
+        expenses: event.expenses,        
+        added_money: event.added_money,        
+        lpox: event.entry_fee,
+        sort_order: event.sort_order,              
+      }
+    })
+    return events
   } catch (err) {
     return null;
   }
@@ -53,9 +72,26 @@ export const postEvent = async (event: eventType): Promise<eventType | null> => 
       withCredentials: true,
       url: url,
     });
-    return (response.status === 201)
-      ? response.data.event
-      : null
+    if (response.status !== 201) return null
+    const dbEvent = response.data.event
+    const postedEvent: eventType = {
+      ...blankEvent,
+      id: dbEvent.id,
+      tmnt_id: dbEvent.tmnt_id,
+      event_name: dbEvent.event_name,
+      tab_title: dbEvent.event_name,
+      team_size: dbEvent.team_size,        
+      games: dbEvent.games,        
+      entry_fee: dbEvent.entry_fee,        
+      lineage: dbEvent.lineage,        
+      prize_fund: dbEvent.prize_fund,        
+      other: dbEvent.other,        
+      expenses: dbEvent.expenses,        
+      added_money: dbEvent.added_money,        
+      lpox: dbEvent.entry_fee,        
+      sort_order: dbEvent.sort_order,
+    }
+    return postedEvent
   } catch (err) {
     return null;
   }
@@ -78,9 +114,28 @@ export const postManyEvents = async (events: eventType[]): Promise<eventType[] |
       withCredentials: true,
       url: manyUrl,
     });
-    return (response.status === 201)
-      ? response.data.events
-      : null
+    if (response.status !== 201) return null
+    const dbEvents = response.data.events
+    const postedEvents: eventType[] = dbEvents.map((event: any) => {
+      return {
+        ...blankEvent,
+        id: event.id,
+        tmnt_id: event.tmnt_id,
+        event_name: event.event_name,
+        tab_title: event.event_name,
+        team_size: event.team_size,        
+        games: event.games,        
+        entry_fee: event.entry_fee,        
+        lineage: event.lineage,        
+        prize_fund: event.prize_fund,        
+        other: event.other,        
+        expenses: event.expenses,        
+        added_money: event.added_money,        
+        lpox: event.entry_fee,        
+        sort_order: event.sort_order,
+      }
+    })
+    return postedEvents
   } catch (err) {
     return null;
   }
@@ -104,9 +159,26 @@ export const putEvent = async (event: eventType): Promise<eventType | null> => {
       withCredentials: true,
       url: oneEventUrl + event.id,
     });
-    return (response.status === 200)
-      ? response.data.event
-      : null
+    if (response.status !== 200) return null
+    const dbEvent = response.data.event
+    const puttedEvent: eventType = {
+      ...blankEvent,
+      id: dbEvent.id,
+      tmnt_id: dbEvent.tmnt_id,
+      event_name: dbEvent.event_name,
+      tab_title: dbEvent.event_name,
+      team_size: dbEvent.team_size,        
+      games: dbEvent.games,        
+      entry_fee: dbEvent.entry_fee,        
+      lineage: dbEvent.lineage,        
+      prize_fund: dbEvent.prize_fund,        
+      other: dbEvent.other,        
+      expenses: dbEvent.expenses,        
+      added_money: dbEvent.added_money,        
+      lpox: dbEvent.entry_fee,        
+      sort_order: dbEvent.sort_order,
+    }
+    return puttedEvent
   } catch (err) {
     return null;
   }

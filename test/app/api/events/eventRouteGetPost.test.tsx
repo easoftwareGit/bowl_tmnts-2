@@ -97,6 +97,7 @@ describe('Events - GETs and POST API: /api/events', () => {
     it('should get an event by ID', async () => { 
       const response = await axios.get(oneEventUrl + testEvent.id);
       const event = response.data.event;
+      // the "GET" returns json'ed data, so decimal values return as strings
       expect(event.id).toEqual(testEvent.id);
       expect(event.tmnt_id).toEqual(testEvent.tmnt_id);
       expect(event.event_name).toEqual(testEvent.event_name);
@@ -273,6 +274,7 @@ describe('Events - GETs and POST API: /api/events', () => {
         url: url,
       });
       expect(response.status).toBe(201);
+      // the "POST" returns json'ed data, so decimal values return as strings
       const postedEvent = response.data.event;
       createdEvent = true;
       expect(postedEvent.id).toEqual(eventToPost.id);
@@ -1697,6 +1699,7 @@ describe('Events - GETs and POST API: /api/events', () => {
       expect(response.status).toBe(201);
       createdEvents = true
       expect(postedEvents.length).toEqual(mockEventsToPost.length);
+      // the "POST" returns json'ed data, so decimal values return as strings
       for (let i = 0; i < postedEvents.length; i++) {
         expect(postedEvents[i].id).toEqual(mockEventsToPost[i].id);
         expect(postedEvents[i].tmnt_id).toEqual(mockEventsToPost[i].tmnt_id);

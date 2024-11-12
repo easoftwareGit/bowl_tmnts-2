@@ -3,6 +3,7 @@ import { baseElimsApi } from "@/lib/db/apiPaths";
 import { testBaseElimsApi } from "../../../../test/testApi";
 import { elimType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation";
+import { blankElim } from "../initVals";
 
 const url = testBaseElimsApi.startsWith("undefined")
   ? baseElimsApi
@@ -28,9 +29,21 @@ export const getAllElimsForTmnt = async (tmntId: string): Promise<elimType[] | n
       withCredentials: true,
       url: oneTmntUrl + tmntId,
     });
-    return (response.status === 200)
-      ? response.data.elims
-      : null
+    if (response.status !== 200) return null
+    const tmntElims = response.data.elims
+    const elims: elimType[] = tmntElims.map((elim: any) => {
+      return {
+        ...blankElim,
+        id: elim.id,
+        div_id: elim.div_id,
+        squad_id: elim.squad_id,                            
+        start: elim.start,          
+        games: elim.games,          
+        fee: elim.fee,          
+        sort_order: elim.sort_order,          
+      }
+    })
+    return elims
   } catch (err) {
     return null;
   }
@@ -54,9 +67,19 @@ export const postElim = async (elim: elimType): Promise<elimType | null> => {
       withCredentials: true,
       url: url,
     });
-    return (response.status === 201)
-      ? response.data.elim
-      : null
+    if (response.status !== 201) return null
+    const dbElim = response.data.elim
+    const postedElim: elimType = {
+      ...blankElim,
+      id: dbElim.id,
+      div_id: dbElim.div_id,
+      squad_id: dbElim.squad_id,                            
+      start: dbElim.start,          
+      games: dbElim.games,          
+      fee: dbElim.fee,          
+      sort_order: dbElim.sort_order,
+    }
+    return postedElim
   } catch (err) {
     return null;
   }
@@ -81,9 +104,21 @@ export const postManyElims = async (elims: elimType[]): Promise<elimType[] | nul
       withCredentials: true,
       url: manyUrl,
     });
-    return (response.status === 201)
-      ? response.data.elims
-      : null
+    if (response.status !== 201) return null
+    const dbElims = response.data.elims
+    const postedElims: elimType[] = dbElims.map((elim: any) => {
+      return {
+        ...blankElim,
+        id: elim.id,
+        div_id: elim.div_id,
+        squad_id: elim.squad_id,                            
+        start: elim.start,          
+        games: elim.games,          
+        fee: elim.fee,          
+        sort_order: elim.sort_order,
+      }
+    })
+    return postedElims
   } catch (err) {
     return null;
   }
@@ -107,9 +142,19 @@ export const putElim = async (elim: elimType): Promise<elimType | null> => {
       withCredentials: true,
       url: oneElimUrl + elim.id,
     });
-    return (response.status === 200)
-      ? response.data.elim
-      : null
+    if (response.status !== 200) return null
+    const dbElim = response.data.elim
+    const puttedElim: elimType = {
+      ...blankElim,
+      id: dbElim.id,
+      div_id: dbElim.div_id,
+      squad_id: dbElim.squad_id,                            
+      start: dbElim.start,          
+      games: dbElim.games,          
+      fee: dbElim.fee,          
+      sort_order: dbElim.sort_order,
+    }
+    return puttedElim
   } catch (err) {
     return null;
   }

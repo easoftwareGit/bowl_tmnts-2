@@ -2,8 +2,6 @@ import { validTmntName, sanitizeTmnt, validateTmnt, exportedForTesting, validTmn
 import { tmntType } from "@/lib/types/types";
 import { mockTmnt } from "../../../mocks/tmnts/mockTmnt";
 import { ErrorCode } from "@/lib/validation";
-import { compareAsc } from "date-fns";
-import { dateTo_yyyyMMdd } from "@/lib/dateTools";
 const { gotTmntData, validTmntData } = exportedForTesting;
 
 const startDate1Str = '2020-01-30';
@@ -12,11 +10,6 @@ const endDate1Str = '2020-01-30';
 const endDate2Str = '2020-01-31'; 
 const tooPastDateStr = '1899-12-31';
 const tooFutureDateStr = '2201-02-01';
-
-// const startDate1 = new Date(Date.UTC(2020, 0, 30, 0, 0, 0, 0)) // 2020-01-30, month - 1
-// const startDate2 = new Date(Date.UTC(2020, 0, 31, 0, 0, 0, 0)) // 2020-01-30, month - 1
-// const endDate1 = new Date(Date.UTC(2020, 0, 30, 0, 0, 0, 0)) // 2020-01-30, month - 1
-// const endDate2 = new Date(Date.UTC(2020, 0, 31, 0, 0, 0, 0)) // 2020-01-30, month - 1
 
 const tmntId = 'tmt_fd99387c33d9c78aba290286576ddce5';
 const nonTmntId = 'evt_5bcefb5d314fff1ff5da6521a2fa7bde';

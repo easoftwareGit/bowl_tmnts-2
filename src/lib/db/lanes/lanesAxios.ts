@@ -3,6 +3,7 @@ import { baseLanesApi } from "@/lib/db/apiPaths";
 import { testBaseLanesApi } from "../../../../test/testApi";
 import { laneType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation";
+import { blankLane } from "../initVals";
 
 const url = testBaseLanesApi.startsWith("undefined")
   ? baseLanesApi
@@ -27,9 +28,18 @@ export const getAllLanesForTmnt = async (tmntId: string): Promise<laneType[] | n
       withCredentials: true,
       url: oneTmntUrl + tmntId,
     });
-    return (response.status === 200)
-      ? response.data.lanes
-      : null
+    if (response.status !== 200) return null
+    const tmntLanes = response.data.lanes
+    const lanes: laneType[] = tmntLanes.map((lane: any) => {
+      return {
+        ...blankLane,
+        id: lane.id,
+        squad_id: lane.squad_id,
+        lane_number: lane.lane_number,
+        in_use: lane.in_use,
+      }
+    })
+    return lanes
   } catch (err) {
     return null;
   }
@@ -53,9 +63,16 @@ export const postLane = async (lane: laneType): Promise<laneType | null> => {
       withCredentials: true,
       url: url,
     });
-    return (response.status === 201)
-      ? response.data.lane
-      : null
+    if (response.status !== 201) return null
+    const dbLane = response.data.lane
+    const postedLane: laneType = {
+      ...blankLane,
+      id: dbLane.id,
+      squad_id: dbLane.squad_id,
+      lane_number: dbLane.lane_number,
+      in_use: dbLane.in_use,
+    }
+    return postedLane
   } catch (err) {
     return null;
   }
@@ -79,9 +96,18 @@ export const postManyLanes = async (lanes: laneType[]): Promise<laneType[] | nul
       withCredentials: true,
       url: manyUrl,
     });
-    return (response.status === 201)
-      ? response.data.lanes
-      : null
+    if (response.status !== 201) return null
+    const dbLanes = response.data.lanes
+    const manyLanes: laneType[] = dbLanes.map((lane: any) => {
+      return {
+        ...blankLane,
+        id: lane.id,
+        squad_id: lane.squad_id,
+        lane_number: lane.lane_number,
+        in_use: lane.in_use,
+      }
+    })
+    return manyLanes
   } catch (err) {
     return null;
   }
@@ -105,9 +131,16 @@ export const putLane = async (lane: laneType): Promise<laneType | null> => {
       withCredentials: true,
       url: oneLaneUrl + lane.id,
     });
-    return (response.status === 200)
-      ? response.data.lane
-      : null
+    if (response.status !== 200) return null
+    const dbLane = response.data.lane
+    const puttedLane: laneType = {
+      ...blankLane,
+      id: dbLane.id,
+      squad_id: dbLane.squad_id,
+      lane_number: dbLane.lane_number,
+      in_use: dbLane.in_use,
+    }
+    return puttedLane
   } catch (err) {
     return null;
   }

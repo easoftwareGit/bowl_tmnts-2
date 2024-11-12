@@ -68,7 +68,7 @@ export const validLaneCount = (laneCount: number): boolean => {
     isEven(laneCount);
 }
 export const validSquadDate = (squadDateStr: string): boolean => { 
-  if (!squadDateStr || !valid_yyyyMMdd(squadDateStr)) return false;
+  if (typeof squadDateStr !== 'string' || !squadDateStr || !validDateString(squadDateStr)) return false;
   const squadDate = startOfDayFromString(squadDateStr) as Date
   if (!isValid(squadDate)) return false
   return (compareAsc(squadDate, minDate) >= 0 && compareAsc(squadDate, maxDate) <= 0)

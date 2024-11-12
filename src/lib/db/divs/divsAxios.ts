@@ -3,6 +3,7 @@ import { baseDivsApi } from "@/lib/db/apiPaths";
 import { testBaseDivsApi } from "../../../../test/testApi";
 import { divType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation";
+import { blankDiv } from "../initVals";
 
 const url = testBaseDivsApi.startsWith("undefined")
   ? baseDivsApi
@@ -25,9 +26,24 @@ export const getAllDivsForTmnt = async (tmntId: string): Promise<divType[] | nul
       withCredentials: true,
       url: oneTmntUrl + tmntId,
     });
-    return (response.status === 200)
-      ? response.data.divs
-      : null
+    if (response.status !== 200) return null
+    const dbDivs = response.data.divs;
+    const divs: divType[] = dbDivs.map((div: any) => {
+      return {
+        ...blankDiv,
+        id: div.id,
+        tmnt_id: div.tmnt_id,
+        div_name: div.div_name,        
+        tab_title: div.div_name,
+        hdcp_per: div.hdcp_per,
+        hdcp_per_str: (div.hdcp_per * 100).toFixed(2),
+        hdcp_from: div.hdcp_from,        
+        int_hdcp: div.int_hdcp,
+        hdcp_for: div.hdcp_for,
+        sort_order: div.sort_order,
+      }
+    })
+    return divs
   } catch (err) {
     return null;
   }
@@ -51,9 +67,22 @@ export const postDiv = async (div: divType): Promise<divType | null> => {
       withCredentials: true,
       url: url,
     });
-    return (response.status === 201)
-      ? response.data.div
-      : null
+    if (response.status !== 201) return null
+    const dbDiv = response.data.div;
+    const postedDiv: divType = {
+      ...blankDiv,
+      id: dbDiv.id,
+      tmnt_id: dbDiv.tmnt_id,
+      div_name: dbDiv.div_name,        
+      tab_title: dbDiv.div_name,
+      hdcp_per: dbDiv.hdcp_per,
+      hdcp_per_str: (dbDiv.hdcp_per * 100).toFixed(2),
+      hdcp_from: dbDiv.hdcp_from,        
+      int_hdcp: dbDiv.int_hdcp,
+      hdcp_for: dbDiv.hdcp_for,
+      sort_order: dbDiv.sort_order,
+    }
+    return postedDiv;
   } catch (err) {
     return null;
   }
@@ -76,9 +105,24 @@ export const postManyDivs = async (divs: divType[]): Promise<divType[] | null> =
       withCredentials: true,
       url: manyUrl,
     });
-    return (response.status === 201)
-      ? response.data.divs
-      : null
+    if (response.status !== 201) return null
+    const dbDivs = response.data.divs;
+    const postedDivs: divType[] = dbDivs.map((div: any) => {
+      return {
+        ...blankDiv,
+        id: div.id,
+        tmnt_id: div.tmnt_id,
+        div_name: div.div_name,        
+        tab_title: div.div_name,
+        hdcp_per: div.hdcp_per,
+        hdcp_per_str: (div.hdcp_per * 100).toFixed(2),
+        hdcp_from: div.hdcp_from,        
+        int_hdcp: div.int_hdcp,
+        hdcp_for: div.hdcp_for,
+        sort_order: div.sort_order,
+      }
+    })
+    return postedDivs
   } catch (err) {
     return null;
   }
@@ -102,9 +146,22 @@ export const putDiv = async (div: divType): Promise<divType | null> => {
       withCredentials: true,
       url: oneDivUrl + div.id,
     });
-    return (response.status === 200)
-      ? response.data.div
-      : null
+    if (response.status !== 200) return null
+    const dbDiv = response.data.div;
+    const puttedDiv: divType = {
+      ...blankDiv,
+      id: dbDiv.id,
+      tmnt_id: dbDiv.tmnt_id,
+      div_name: dbDiv.div_name,        
+      tab_title: dbDiv.div_name,
+      hdcp_per: dbDiv.hdcp_per,
+      hdcp_per_str: (dbDiv.hdcp_per * 100).toFixed(2),
+      hdcp_from: dbDiv.hdcp_from,        
+      int_hdcp: dbDiv.int_hdcp,
+      hdcp_for: dbDiv.hdcp_for,
+      sort_order: dbDiv.sort_order,
+    }
+    return puttedDiv;
   } catch (err) {
     return null;
   }

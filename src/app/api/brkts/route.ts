@@ -4,6 +4,7 @@ import { validateBrkt, sanitizeBrkt } from "./validate";
 import { ErrorCode } from "@/lib/validation";
 import { brktDataType, brktType } from "@/lib/types/types";
 import { initBrkt } from "@/lib/db/initVals";
+import { calcFSA } from "@/lib/currency/fsa";
 
 // routes /api/brkts
 
@@ -20,23 +21,10 @@ export async function GET(request: NextRequest) {
       ],
     });
     // add in fsa
-    const brkts: brktType[] = prismaBrkts.map(brkt => { 
-      return {
-        ...initBrkt,
-        id: brkt.id,
-        div_id: brkt.div_id,
-        squad_id: brkt.squad_id,
-        start: brkt.start,
-        games: brkt.games,
-        players: brkt.players,
-        fee: brkt.fee + '',
-        first: brkt.first + '',
-        second: brkt.second + '',
-        admin: brkt.admin + '',     
-        fsa: Number(brkt.first) + Number(brkt.second) + Number(brkt.admin) + '',
-        sort_order: brkt.sort_order
-      }
-    })
+    const brkts = prismaBrkts.map(brkt => ({
+      ...brkt,
+      fsa: calcFSA(brkt.first, brkt.second, brkt.admin),
+    }))
     return NextResponse.json({ brkts }, { status: 200 });
   } catch (err: any) {
     return NextResponse.json({ error: "error getting brkts" }, { status: 500 });
@@ -113,7 +101,7 @@ export async function POST(request: Request) {
     // add in fsa
     const brkt = {
       ...postedBrkt,
-      fsa: (Number(postedBrkt.first) + Number(postedBrkt.second) + Number(postedBrkt.admin)) + "",
+      fsa: calcFSA(postedBrkt.first, postedBrkt.second, postedBrkt.admin),      
     };
     return NextResponse.json({ brkt }, { status: 201 });
   } catch (err: any) {

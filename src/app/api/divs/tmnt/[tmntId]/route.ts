@@ -17,7 +17,7 @@ export async function GET(
         { status: 404 }
       );        
     }
-    const gotDivs = await prisma.div.findMany({
+    const divs = await prisma.div.findMany({
       where: {
         tmnt_id: tmntId
       },
@@ -27,11 +27,11 @@ export async function GET(
     })    
     // no matching rows is ok
 
-    // add in hdcp_per_str
-    const divs = gotDivs.map(gotDiv => ({
-      ...gotDiv,
-      hdcp_per_str: (gotDiv.hdcp_per * 100).toFixed(2)
-    }))
+    // // add in hdcp_per_str
+    // const divs = gotDivs.map(gotDiv => ({
+    //   ...gotDiv,
+    //   hdcp_per_str: (gotDiv.hdcp_per * 100).toFixed(2)
+    // }))
     return NextResponse.json({divs}, {status: 200});    
   } catch (err: any) {
     return NextResponse.json(

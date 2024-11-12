@@ -172,8 +172,8 @@ export async function PATCH(
     if (jsonProps.includes("lane_count")) {
       toCheck.lane_count = json.lane_count;
     }
-    if (jsonProps.includes("squad_date")) {      
-      toCheck.squad_date_str = json.squad_date;
+    if (jsonProps.includes("squad_date_str")) {      
+      toCheck.squad_date_str = json.squad_date_str;
     }
     if (jsonProps.includes("squad_time")) {
       toCheck.squad_time = json.squad_time;

@@ -351,7 +351,7 @@ describe("tmntsAxios", () => {
         expect(gotTmntData.squads[i].games).toBe(mockSquads[i].games);
         expect(gotTmntData.squads[i].lane_count).toBe(mockSquads[i].lane_count);
         expect(gotTmntData.squads[i].starting_lane).toBe(mockSquads[i].starting_lane);
-        expect(compareAsc(gotTmntData.squads[i].squad_date, mockSquads[i].squad_date)).toBe(0);
+        expect(compareAsc(gotTmntData.squads[i].squad_date_str, mockSquads[i].squad_date_str)).toBe(0);
         expect(gotTmntData.squads[i].squad_time).toBe(mockSquads[i].squad_time);
         expect(gotTmntData.squads[i].sort_order).toBe(mockSquads[i].sort_order);        
       }

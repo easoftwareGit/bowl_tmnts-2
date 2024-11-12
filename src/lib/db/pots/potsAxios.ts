@@ -3,6 +3,7 @@ import { basePotsApi } from "@/lib/db/apiPaths";
 import { testBasePotsApi } from "../../../../test/testApi";
 import { potType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation";
+import { blankPot } from "../initVals";
 
 const url = testBasePotsApi.startsWith("undefined")
   ? basePotsApi
@@ -28,9 +29,20 @@ export const getAllPotsForTmnt = async (tmntId: string): Promise<potType[] | nul
       withCredentials: true,
       url: oneTmntUrl + tmntId,
     });
-    return (response.status === 200)
-      ? response.data.pots
-      : null
+    if (response.status !== 200) return null
+    const tmntPots = response.data.pots
+    const pots: potType[] = tmntPots.map((pot: any) => {
+      return {
+        ...blankPot,
+        id: pot.id,
+        div_id: pot.div_id,
+        squad_id: pot.squad_id,
+        pot_type: pot.pot_type,                
+        fee: pot.fee,        
+        sort_order: pot.sort_order,
+      }      
+    })
+    return pots
   } catch (err) {
     return null;
   }  
@@ -54,9 +66,18 @@ export const postPot = async (pot: potType): Promise<potType | null> => {
       withCredentials: true,
       url: url,
     });
-    return (response.status === 201)
-      ? response.data.pot
-      : null
+    if (response.status !== 201) return null
+    const dbPot = response.data.pot
+    const potsedPot: potType = {
+      ...blankPot,
+      id: dbPot.id,
+      div_id: dbPot.div_id,
+      squad_id: dbPot.squad_id,
+      pot_type: dbPot.pot_type,                
+      fee: dbPot.fee,        
+      sort_order: dbPot.sort_order,
+    }
+    return potsedPot
   } catch (err) {
     return null;
   }
@@ -81,9 +102,20 @@ export const postManyPots = async (pots: potType[]): Promise<potType[] | null> =
       withCredentials: true,
       url: manyUrl,
     });
-    return (response.status === 201)
-      ? response.data.pots
-      : null
+    if (response.status !== 201) return null
+    const dbPots = response.data.pots
+    const manyPots: potType[] = dbPots.map((pot: any) => {
+      return {
+        ...blankPot,
+        id: pot.id,
+        div_id: pot.div_id,
+        squad_id: pot.squad_id,
+        pot_type: pot.pot_type,                
+        fee: pot.fee,        
+        sort_order: pot.sort_order,
+      }      
+    })
+    return manyPots
   } catch (err) {
     return null;
   }
@@ -107,9 +139,18 @@ export const putPot = async (pot: potType): Promise<potType | null> => {
       withCredentials: true,
       url: onePotUrl + pot.id,
     });
-    return (response.status === 200)
-      ? response.data.pot
-      : null
+    if (response.status !== 200) return null
+    const dbPot = response.data.pot
+    const puttedPot: potType = {
+      ...blankPot,
+      id: dbPot.id,
+      div_id: dbPot.div_id,
+      squad_id: dbPot.squad_id,
+      pot_type: dbPot.pot_type,                
+      fee: dbPot.fee,        
+      sort_order: dbPot.sort_order,
+    }
+    return puttedPot
   } catch (err) {
     return null;
   }

@@ -177,7 +177,7 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       expect(brkt.first).toBe(putBrkt.first);
       expect(brkt.second).toBe(putBrkt.second);
       expect(brkt.admin).toBe(putBrkt.admin);
-      expect(brkt.fsa).toBe(putBrkt.fsa);
+      expect(brkt.fsa + '').toBe(putBrkt.fsa);
       expect(brkt.sort_order).toBe(putBrkt.sort_order);
     })
     it('should NOT update brkt by ID when ID is invalid', async () => {
@@ -1264,7 +1264,7 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       expect(patchedBrkt.first).toBe(patchBrkt.first);
       expect(patchedBrkt.second).toBe(patchBrkt.second);
       expect(patchedBrkt.admin).toBe(patchBrkt.admin);
-      expect(patchedBrkt.fsa).toBe(patchBrkt.fsa);
+      expect(patchedBrkt.fsa + '').toBe(patchBrkt.fsa);
     })
     it('should NOT patch brkt by ID when ID is invalid', async () => {
       const patchBrkt = {

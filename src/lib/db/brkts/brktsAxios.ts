@@ -3,6 +3,7 @@ import { baseBrktsApi } from "@/lib/db/apiPaths";
 import { testBaseBrktsApi } from "../../../../test/testApi";
 import { brktType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation";
+import { blankBrkt } from "../initVals";
 
 const url = testBaseBrktsApi.startsWith("undefined")
   ? baseBrktsApi
@@ -28,9 +29,26 @@ export const getAllBrktsForTmnt = async (tmntId: string): Promise<brktType[] | n
       withCredentials: true,
       url: oneTmntUrl + tmntId,
     });
-    return (response.status === 200)
-      ? response.data.brkts
-      : null
+    if (response.status !== 200) return null
+    const tmntBrkts = response.data.brkts
+    const brkts: brktType[] = tmntBrkts.map((brkt: any) => {
+      return {
+        ...blankBrkt,
+        id: brkt.id,
+        squad_id: brkt.squad_id,
+        div_id: brkt.div_id,
+        start: brkt.start,
+        games: brkt.games,
+        players: brkt.players,
+        fee: brkt.fee,
+        first: brkt.first,
+        second: brkt.second,
+        admin: brkt.admin,
+        fsa: brkt.fsa,
+        sort_order: brkt.sort_order,
+      }        
+    })
+    return brkts
   } catch (err) {
     return null;
   }
@@ -54,9 +72,24 @@ export const postBrkt = async (brkt: brktType): Promise<brktType | null> => {
       withCredentials: true,
       url: url,
     });
-    return (response.status === 201)
-      ? response.data.brkt
-      : null
+    if (response.status !== 201) return null
+    const dbBrkt = response.data.brkt
+    const postedBrkt = {
+      ...blankBrkt,
+      id: dbBrkt.id,
+      squad_id: dbBrkt.squad_id,
+      div_id: dbBrkt.div_id,
+      start: dbBrkt.start,
+      games: dbBrkt.games,
+      players: dbBrkt.players,
+      fee: dbBrkt.fee,
+      first: dbBrkt.first,
+      second: dbBrkt.second,
+      admin: dbBrkt.admin,
+      fsa: dbBrkt.fsa,
+      sort_order: dbBrkt.sort_order,
+    }
+    return postedBrkt
   } catch (err) {
     return null;
   }
@@ -81,9 +114,26 @@ export const postManyBrkts = async (brkts: brktType[]): Promise<brktType[] | nul
       withCredentials: true,
       url: manyUrl,
     });
-    return (response.status === 201)
-      ? response.data.brkts
-      : null
+    if (response.status !== 201) return null
+    const dbBrkts = response.data.brkts
+    const postedBrkts: brktType[] = dbBrkts.map((brkt: any) => {
+      return {
+        ...blankBrkt,
+        id: brkt.id,
+        squad_id: brkt.squad_id,
+        div_id: brkt.div_id,
+        start: brkt.start,
+        games: brkt.games,
+        players: brkt.players,
+        fee: brkt.fee,
+        first: brkt.first,
+        second: brkt.second,
+        admin: brkt.admin,
+        fsa: brkt.fsa,
+        sort_order: brkt.sort_order,
+      }
+    })
+    return postedBrkts
   } catch (err) {
     return null;
   }
@@ -107,9 +157,24 @@ export const putBrkt = async (brkt: brktType): Promise<brktType | null> => {
       withCredentials: true,
       url: oneBrktUrl + brkt.id,
     });
-    return (response.status === 200)
-      ? response.data.brkt
-      : null
+    if (response.status !== 200) return null
+    const dbBrkt = response.data.brkt
+    const puttedBrkt = {
+      ...blankBrkt,
+      id: dbBrkt.id,
+      squad_id: dbBrkt.squad_id,
+      div_id: dbBrkt.div_id,
+      start: dbBrkt.start,
+      games: dbBrkt.games,
+      players: dbBrkt.players,
+      fee: dbBrkt.fee,
+      first: dbBrkt.first,
+      second: dbBrkt.second,
+      admin: dbBrkt.admin,
+      fsa: dbBrkt.fsa,
+      sort_order: dbBrkt.sort_order,
+    }
+    return puttedBrkt
   } catch (err) {
     return null;
   }

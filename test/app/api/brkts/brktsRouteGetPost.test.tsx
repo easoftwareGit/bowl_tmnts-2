@@ -88,6 +88,11 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
       expect(response.status).toBe(200);
       // 5 rows in prisma/seed.ts
       expect(response.data.brkts).toHaveLength(5);
+      const brkts = response.data.brkts;
+      for (let i = 0; i < brkts.length; i++) {
+        expect(brkts[i].fee * brkts[i].players).toBe(Number(brkts[i].fsa));
+        expect(Number(brkts[i].first) + Number(brkts[i].second) + Number(brkts[i].admin)).toBe(Number(brkts[i].fsa));
+      }
     })
 
   })
@@ -108,7 +113,7 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
       expect(brkt.first).toBe(testBrkt.first);
       expect(brkt.second).toBe(testBrkt.second);
       expect(brkt.admin).toBe(testBrkt.admin);
-      expect(brkt.fsa).toBe('40');
+      expect(brkt.fsa).toBe(40);
       expect(brkt.sort_order).toBe(testBrkt.sort_order);
     })
     it('should NOT get brkt by id when ID is invalid', async () => {
@@ -176,16 +181,17 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
       expect(brkts[1].id).toBe(squadBrktId2);   
       expect(brkts[0].start).toBe(1);
       expect(brkts[1].start).toBe(4);
+      // Decimal values reurned as strings
       expect(brkts[0].fee).toBe('5');
       expect(brkts[1].fee).toBe('5');
       expect(brkts[0].first).toBe('25');
-      expect(brkts[0].first).toBe('25');
+      expect(brkts[1].first).toBe('25');
       expect(brkts[0].second).toBe('10');
-      expect(brkts[0].second).toBe('10');
+      expect(brkts[1].second).toBe('10');
       expect(brkts[0].admin).toBe('5');
-      expect(brkts[0].admin).toBe('5');
-      expect(brkts[0].fsa).toBe('40');
-      expect(brkts[0].fsa).toBe('40');      
+      expect(brkts[1].admin).toBe('5');
+      expect(brkts[0].fsa).toBe(40);
+      expect(brkts[1].fsa).toBe(40);      
     })
     it('should NOT get all brkts for squad when squad ID is invalid', async () => {
       try {
@@ -249,16 +255,17 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
       expect(brkts[1].id).toBe(divBrktId2);      
       expect(brkts[0].start).toBe(1);
       expect(brkts[1].start).toBe(4);
+      // Decimal values reurned as strings
       expect(brkts[0].fee).toBe('5');
       expect(brkts[1].fee).toBe('5');
       expect(brkts[0].first).toBe('25');
-      expect(brkts[0].first).toBe('25');
+      expect(brkts[1].first).toBe('25');
       expect(brkts[0].second).toBe('10');
-      expect(brkts[0].second).toBe('10');
+      expect(brkts[1].second).toBe('10');
       expect(brkts[0].admin).toBe('5');
-      expect(brkts[0].admin).toBe('5');
-      expect(brkts[0].fsa).toBe('40');
-      expect(brkts[0].fsa).toBe('40');
+      expect(brkts[1].admin).toBe('5');
+      expect(brkts[0].fsa).toBe(40);
+      expect(brkts[1].fsa).toBe(40);
     })
     it('should NOT get all brkts for div when div ID is invalid', async () => {
       try {
@@ -318,6 +325,7 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
       expect(brkts[1].id).toBe(tmntBrktId2);
       expect(brkts[0].start).toBe(1);
       expect(brkts[1].start).toBe(4);
+      // Decimal values reurned as strings
       expect(brkts[0].fee).toBe('5');
       expect(brkts[1].fee).toBe('5');
       expect(brkts[0].first).toBe('25');
@@ -326,8 +334,8 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
       expect(brkts[0].second).toBe('10');
       expect(brkts[0].admin).toBe('5');
       expect(brkts[0].admin).toBe('5');
-      expect(brkts[0].fsa).toBe('40');
-      expect(brkts[0].fsa).toBe('40');
+      expect(brkts[0].fsa).toBe(40);
+      expect(brkts[0].fsa).toBe(40);
     })
     it('should NOT get all brkts for tmnt when ID is invalid', async () => {
       try {
@@ -424,6 +432,7 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
       expect(postedBrkt.first).toBe(brktToPost.first);
       expect(postedBrkt.second).toBe(brktToPost.second);
       expect(postedBrkt.admin).toBe(brktToPost.admin);
+      expect(postedBrkt.fsa + '').toBe(brktToPost.fsa);
       expect(postedBrkt.sort_order).toBe(brktToPost.sort_order);      
     })
     it('should NOT create a new brkt when squad id is blank', async () => {
@@ -1552,7 +1561,7 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         expect(postedBrkts[i].first).toBe(mockBrktsToPost[i].first);
         expect(postedBrkts[i].second).toBe(mockBrktsToPost[i].second);
         expect(postedBrkts[i].admin).toBe(mockBrktsToPost[i].admin);
-        expect(postedBrkts[i].fsa).toBe(mockBrktsToPost[i].fsa);
+        expect(postedBrkts[i].fsa + '').toBe(mockBrktsToPost[i].fsa);
         expect(postedBrkts[i].sort_order).toBe(mockBrktsToPost[i].sort_order);
       }
     })

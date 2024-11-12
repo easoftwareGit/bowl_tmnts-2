@@ -16,19 +16,19 @@ export async function GET(
     if (!isValidBtDbId(id, "div")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
-    const gotDiv = await prisma.div.findUnique({
+    const div = await prisma.div.findUnique({
       where: {
         id: id,
       },
     });
-    if (!gotDiv) {
+    if (!div) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
     // add in hdcp_per_str
-    const div = {
-      ...gotDiv,
-      hdcp_per_str: (gotDiv.hdcp_per * 100).toFixed(2),
-    };
+    // const div = {
+    //   ...gotDiv,
+    //   hdcp_per_str: (gotDiv.hdcp_per * 100).toFixed(2),
+    // };
     return NextResponse.json({ div }, { status: 200 });
   } catch (err: any) {
     return NextResponse.json({ error: "error getting div" }, { status: 500 });

@@ -76,9 +76,6 @@ export async function POST(request: Request) {
     const tmnt = await prisma.tmnt.create({
       data: tmntData
     })
-
-    console.log({tmnt})
-
     return NextResponse.json({ tmnt }, { status: 201 });
   } catch (error: any) {
     let errStatus: number

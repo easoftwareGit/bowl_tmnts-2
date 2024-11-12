@@ -4,6 +4,7 @@ import { ErrorCode, isValidBtDbId } from "@/lib/validation";
 import { sanitizeBrkt, validateBrkt } from "../../validate";
 import { brktType } from "@/lib/types/types";
 import { initBrkt } from "@/lib/db/initVals";
+import { calcFSA } from "@/lib/currency/fsa";
 
 // routes /api/brkts/brkt/:id
 
@@ -24,21 +25,11 @@ export async function GET(
     if (!prismaBrkt) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
-    // add in lpox
-    const brkt: brktType = {
-      ...initBrkt,
-      id: prismaBrkt.id,
-      div_id: prismaBrkt.div_id,
-      squad_id: prismaBrkt.squad_id,
-      start: prismaBrkt.start,
-      games: prismaBrkt.games,
-      players: prismaBrkt.players,
-      fee: prismaBrkt.fee + "",
-      first: prismaBrkt.first + "",
-      second: prismaBrkt.second + "",
-      admin: prismaBrkt.admin + "",
-      fsa: Number(prismaBrkt.first) + Number(prismaBrkt.second) + Number(prismaBrkt.admin) + "",
-    };
+    // add in fsa
+    const brkt = {
+      ...prismaBrkt,
+      fsa: calcFSA(prismaBrkt.first, prismaBrkt.second, prismaBrkt.admin),
+    }
     return NextResponse.json({ brkt }, { status: 200 });
   } catch (err: any) {
     return NextResponse.json({ error: "error getting brkt" }, { status: 500 });
@@ -122,7 +113,7 @@ export async function PUT(
     // add in fsa
     const brkt = {
       ...putBrkt,
-      fsa: Number(putBrkt.fee) * putBrkt.players + "",
+      fsa: calcFSA(putBrkt.first, putBrkt.second, putBrkt.admin),
     };
     return NextResponse.json({ brkt }, { status: 200 });    
   } catch (err: any) {
@@ -182,7 +173,7 @@ export async function PATCH(
       first: currentBrkt.first + "",
       second: currentBrkt.second + "",
       admin: currentBrkt.admin + "",
-      fsa: (Number(currentBrkt.fee) * currentBrkt.players) + "",
+      fsa: Number(currentBrkt.first) + Number(currentBrkt.second) + Number(currentBrkt.admin) + '',
       sort_order: currentBrkt.sort_order,
     };
 
@@ -244,8 +235,7 @@ export async function PATCH(
     if (jsonProps.includes("squad_id")) {
       toPatch.squad_id = toBePatched.squad_id;
     }
-    if (jsonProps.includes("fee")) {
-      // DO NOT add fsa
+    if (jsonProps.includes("fee")) {      
       toPatch.fee = toBePatched.fee;     
     }
     if (jsonProps.includes("start")) {
@@ -304,7 +294,7 @@ export async function PATCH(
         jsonProps.includes("admin")) {
       brkt = {
         ...patchBrkt,
-        fsa: (Number(patchBrkt.fee) * patchBrkt.players) + "",
+        fsa: calcFSA(patchBrkt.first, patchBrkt.second, patchBrkt.admin),
       };
     } else {
       brkt = patchBrkt;
