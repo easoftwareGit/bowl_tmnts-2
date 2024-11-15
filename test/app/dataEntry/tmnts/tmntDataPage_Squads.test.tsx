@@ -11,6 +11,15 @@ import TmntDataForm from "@/app/dataEntry/tmntForm/tmntForm";
 import { mockSDBrkts, mockSDDivs, mockSDElims, mockSDEvents, mockSDLanes, mockSDPots, mockSDSquads, mockSDTmnt } from "../../../mocks/tmnts/singlesAndDoubles/mockSD";
 import 'core-js/actual/structured-clone';
 
+// run these tests with the server active
+//    in the VS activity bar,
+//      a) click on "Run and Debug" (Ctrl+Shift+D)
+//      b) at the top of the window, click on the drop-down arrow
+//      c) select "Node.js: debug server-side"
+//      d) directly to the left of the drop down select, click the green play button
+//         This will start the server in debug mode.
+
+
 // Mock state for bowls
 const mockState: Partial<RootState> = {
   bowls: {
@@ -478,10 +487,9 @@ describe('TmntDataPage - Squads Component', () => {
       const acdns = await screen.findAllByRole('button', { name: /squads/i });
       await user.click(acdns[0]);
       const numLanes = screen.getAllByRole('spinbutton', { name: /# of lanes/i }) as HTMLInputElement[];
-      // enter more than max value
+      // enter less than min value
       await user.clear(numLanes[0]);
       await user.type(numLanes[0], '-8');
-      // should show error
       await user.click(saveBtn);
       expect(numLanes[0]).toHaveValue(8);
       const numLanesErrs = await screen.findAllByTestId('dangerLaneCount');
@@ -520,16 +528,13 @@ describe('TmntDataPage - Squads Component', () => {
   describe('render the squad date day error', () => {
     const testTmnt = structuredClone(tmntProps)
 
-    afterEach(() => {
-      testTmnt.curData.squads[0].squad_date = startOfDayFromString(todayStr) as Date;
-      testTmnt.curData.squads[0].squad_date_str = todayStr;
-      testTmnt.curData.squads[1].squad_date = startOfDayFromString(todayStr) as Date;
+    afterEach(() => {      
+      testTmnt.curData.squads[0].squad_date_str = todayStr;      
       testTmnt.curData.squads[1].squad_date_str = todayStr;
     })
 
     it('render the less than min date error', async () => {
-      // create error values
-      testTmnt.curData.squads[0].squad_date = startOfDayFromString('2000-01-01') as Date;
+      // create error values      
       testTmnt.curData.squads[0].squad_date_str = '2000-01-01';
 
       const user = userEvent.setup()
@@ -549,8 +554,7 @@ describe('TmntDataPage - Squads Component', () => {
       expect(aTabs[0]).toHaveClass('objError');
     })
     it('render the more than max date error', async () => {
-      // create error values
-      testTmnt.curData.squads[1].squad_date = startOfDayFromString('3000-01-01') as Date;
+      // create error values      
       testTmnt.curData.squads[1].squad_date_str = '3000-01-01';      
 
       const user = userEvent.setup()
@@ -571,8 +575,7 @@ describe('TmntDataPage - Squads Component', () => {
       expect(bTabs[0]).toHaveClass('objError');
     })
     it('clear the date error', async () => {
-      // create error values
-      testTmnt.curData.squads[1].squad_date = startOfDayFromString('3000-01-01') as Date;
+      // create error values      
       testTmnt.curData.squads[1].squad_date_str = '3000-01-01';      
 
       const user = userEvent.setup()
@@ -651,7 +654,7 @@ describe('TmntDataPage - Squads Component', () => {
       // should show error
       await user.click(saveBtn);
       const timeErrors = await screen.findAllByTestId('dangerSquadTime') as HTMLElement[];
-      const dateErr = dateTo_UTC_MMddyyyy(new Date(testTmnt.curData.squads[1].squad_date));
+      const dateErr = testTmnt.curData.squads[1].squad_date_str;
       const timeErr = `${dateErr} - ${testTmnt.curData.squads[1].squad_time} has already been used.`;
       expect(timeErrors[1]).toHaveTextContent(timeErr);
       expect(acdns[0]).toHaveTextContent(timeErr);
@@ -755,12 +758,12 @@ describe('TmntDataPage - Squads Component', () => {
 
     beforeEach(() => {
       testTmnt.curData.squads[0].games = 0;
-      testTmnt.curData.squads[1].squad_date = startOfDayFromString('3000-01-01') as Date
+      testTmnt.curData.squads[1].squad_date_str = '3000-01-01'
     })
 
     afterEach(() => {
       testTmnt.curData.squads[0].games = 3;
-      testTmnt.curData.squads[1].squad_date = startOfTodayUTC();
+      testTmnt.curData.squads[1].squad_date_str = todayStr
     })
 
     it('render multiple errors', async () => {

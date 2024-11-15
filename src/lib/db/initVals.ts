@@ -361,6 +361,7 @@ export const linkedInitDataOneTmnt = (userId: string): dataOneTmntType => {
   const tmntId = btDbUuid('tmt');
   const eventId = btDbUuid('evt');
   const squadId = btDbUuid('sqd');
+  const divId = btDbUuid('div');
   const initData: dataOneTmntType = {       
     tmnt:{
       ...initTmnt,
@@ -374,6 +375,7 @@ export const linkedInitDataOneTmnt = (userId: string): dataOneTmntType => {
     }],
     divs: [{
       ...initDiv,
+      id: divId,
       tmnt_id: tmntId,
     }],
     squads: [{

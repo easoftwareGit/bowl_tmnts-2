@@ -407,6 +407,27 @@ async function tmntUpsert() {
         end_date: startOfDayFromString('2023-12-20') as Date,
       },
     });
+    // whole tmnt
+    tmnt = await prisma.tmnt.upsert({
+      where: {
+        id: "tmt_d237a388a8fc4641a2e37233f1d6bebd",
+      },
+      update: {
+        user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
+        tmnt_name: "Full Tournament",
+        bowl_id: "bwl_561540bd64974da9abdd97765fdb3659",
+        start_date: startOfDayFromString('2024-07-01') as Date,
+        end_date: startOfDayFromString('2024-07-01') as Date,
+      },
+      create: {
+        id: "tmt_d237a388a8fc4641a2e37233f1d6bebd",
+        user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
+        tmnt_name: "Full Tournament",
+        bowl_id: "bwl_561540bd64974da9abdd97765fdb3659",
+        start_date: startOfDayFromString('2024-07-01') as Date,
+        end_date: startOfDayFromString('2024-07-01') as Date,
+      },
+    });
     // tmnt to delete
     tmnt = await prisma.tmnt.upsert({
       where: {
@@ -428,8 +449,8 @@ async function tmntUpsert() {
         end_date: startOfDayFromString('2025-08-19') as Date,
       },
     });
-    console.log("Upserted tmnts:", 10);
-    return 10;
+    console.log("Upserted tmnts:", 11);
+    return 11;
   } catch (error) {
     console.log(error);
     return -1;
@@ -662,7 +683,39 @@ async function eventUpsert() {
         sort_order: 1,
       },
     });
-
+    // whole tmnt event
+    event = await prisma.event.upsert({
+      where: {
+        id: "evt_4ff710c8493f4a218d2e2b045442974a",
+      },
+      update: {        
+        tmnt_id: "tmt_d237a388a8fc4641a2e37233f1d6bebd",
+        event_name: "Singles",
+        team_size: 1,
+        games: 6,
+        entry_fee: 90,
+        lineage: 21,
+        prize_fund: 62,
+        other: 2,
+        expenses: 5,
+        added_money: 0,
+        sort_order: 1,
+      },
+      create: {
+        id: "evt_4ff710c8493f4a218d2e2b045442974a",
+        tmnt_id: "tmt_d237a388a8fc4641a2e37233f1d6bebd",
+        event_name: "Singles",
+        team_size: 1,
+        games: 6,
+        entry_fee: 90,
+        lineage: 21,
+        prize_fund: 62,
+        other: 2,
+        expenses: 5,
+        added_money: 0,
+        sort_order: 1,
+      },
+    });
     // event to delete 
     event = await prisma.event.upsert({
       where: {
@@ -697,8 +750,8 @@ async function eventUpsert() {
       },
     });    
 
-    console.log("Upserted events:", 8);
-    return 8;
+    console.log("Upserted events:", 9);
+    return 9;
   } catch (error) {
     console.log(error);
     return -1;
@@ -851,6 +904,31 @@ async function divUpsert() {
         sort_order: 3,
       },
     });
+    // whole tmnt div
+    div = await prisma.div.upsert({
+      where: {
+        id: "div_99a3cae28786485bb7a036935f0f6a0a",
+      },
+      update: {        
+        tmnt_id: "tmt_d237a388a8fc4641a2e37233f1d6bebd",
+        div_name: "Scratch",
+        hdcp_per: 0,
+        hdcp_from: 230,
+        int_hdcp: true, 
+        hdcp_for: 'Game',
+        sort_order: 1,
+      },
+      create: {
+        id: "div_99a3cae28786485bb7a036935f0f6a0a",
+        tmnt_id: "tmt_d237a388a8fc4641a2e37233f1d6bebd",
+        div_name: "Scratch",
+        hdcp_per: 0,
+        hdcp_from: 230,
+        int_hdcp: true, 
+        hdcp_for: 'Game',
+        sort_order: 1,
+      },
+    });    
     // div to delete
     div = await prisma.div.upsert({
       where: {
@@ -876,8 +954,8 @@ async function divUpsert() {
         sort_order: 4,
       },
     });
-    console.log("Upserted divs:", 7);
-    return 7;
+    console.log("Upserted divs:", 8);
+    return 8;
   } catch (error) {
     console.log(error);
     return -1;
@@ -959,7 +1037,7 @@ async function squadUpsert() {
         squad_date: startOfDayFromString('2022-08-21') as Date, 
         squad_time: '10:00 AM',
         games: 6,
-        lane_count: 24,
+        lane_count: 10,
         starting_lane: 1,
         sort_order: 1,
       },
@@ -985,7 +1063,7 @@ async function squadUpsert() {
         squad_date: startOfDayFromString('2022-08-21') as Date, 
         squad_time: '02:00 PM',
         games: 6,
-        lane_count: 24, 
+        lane_count: 10, 
         starting_lane: 1,
         sort_order: 2,
       },
@@ -1068,6 +1146,33 @@ async function squadUpsert() {
         sort_order: 1,
       },
     });   
+    // whole tmnt squad
+    squad = await prisma.squad.upsert({
+      where: {
+        id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+      },
+      update: {        
+        event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
+        squad_name: "Squad 1",
+        squad_date: startOfDayFromString('2024-07-01') as Date,  
+        squad_time: null,
+        games: 6,
+        lane_count: 12,
+        starting_lane: 29,
+        sort_order: 1,
+      },
+      create: {
+        id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+        event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
+        squad_name: "Squad 1",
+        squad_date: startOfDayFromString('2022-07-01') as Date,  
+        squad_time: null,
+        games: 6,
+        lane_count: 12,
+        starting_lane: 29,
+        sort_order: 1,
+      },
+    });    
     // squad to delete
     squad = await prisma.squad.upsert({
       where: {
@@ -1095,8 +1200,8 @@ async function squadUpsert() {
         sort_order: 3,
       },
     });   
-    console.log("Upserted squads:", 8);
-    return 8;
+    console.log("Upserted squads:", 9);
+    return 9;
   } catch (error) {
     console.log(error);
     return -1;
@@ -2030,6 +2135,207 @@ async function laneUpsert() {
     }
   }
 
+  async function laneUpsert_WholeTmnt() {
+    try {
+      let lane = await prisma.lane.upsert({
+        where: {
+          id: "lan_ab019d9e6b6e4c5b9f6b7d9e7f9b6c5d",
+        },
+        update: {
+          lane_number: 29,
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          in_use: true,
+        },
+        create: {
+          id: "lan_ab019d9e6b6e4c5b9f6b7d9e7f9b6c5d",
+          lane_number: 29,
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          in_use: true,
+        },
+      });
+      lane = await prisma.lane.upsert({
+        where: {
+          id: "lan_ab029d9e6b6e4c5b9f6b7d9e7f9b6c5d",
+        },
+        update: {
+          lane_number: 30,
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          in_use: true,
+        },
+        create: {
+          id: "lan_ab029d9e6b6e4c5b9f6b7d9e7f9b6c5d",
+          lane_number: 30,
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          in_use: true,
+        },
+      });
+      lane = await prisma.lane.upsert({
+        where: {
+          id: "lan_ab039d9e6b6e4c5b9f6b7d9e7f9b6c5d",
+        },
+        update: {          
+          lane_number: 31,
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          in_use: true,
+        },
+        create: {
+          id: "lan_ab039d9e6b6e4c5b9f6b7d9e7f9b6c5d",
+          lane_number: 31,
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          in_use: true,
+        },
+      });
+      lane = await prisma.lane.upsert({
+        where: {
+          id: "lan_ab049d9e6b6e4c5b9f6b7d9e7f9b6c5d",
+        },
+        update: {          
+          lane_number: 32,
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          in_use: true,
+        },
+        create: {
+          id: "lan_ab049d9e6b6e4c5b9f6b7d9e7f9b6c5d",
+          lane_number: 32,
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          in_use: true,
+        },
+      });
+      lane = await prisma.lane.upsert({
+        where: {
+          id: "lan_ab059d9e6b6e4c5b9f6b7d9e7f9b6c5d",
+        },
+        update: {          
+          lane_number: 33,
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          in_use: true,
+        },
+        create: {
+          id: "lan_ab059d9e6b6e4c5b9f6b7d9e7f9b6c5d",
+          lane_number: 33,
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          in_use: true,
+        },
+      });
+      lane = await prisma.lane.upsert({
+        where: {
+          id: "lan_ab069d9e6b6e4c5b9f6b7d9e7f9b6c5d",
+        },
+        update: {          
+          lane_number: 34,
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          in_use: true,
+        },
+        create: {
+          id: "lan_ab069d9e6b6e4c5b9f6b7d9e7f9b6c5d",
+          lane_number: 34,
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          in_use: true,
+        },
+      });
+      lane = await prisma.lane.upsert({
+        where: {
+          id: "lan_ab079d9e6b6e4c5b9f6b7d9e7f9b6c5d",
+        },
+        update: {          
+          lane_number: 35,
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          in_use: true,
+        },
+        create: {
+          id: "lan_ab079d9e6b6e4c5b9f6b7d9e7f9b6c5d",
+          lane_number: 35,
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          in_use: true,
+        },
+      });
+      lane = await prisma.lane.upsert({
+        where: {
+          id: "lan_ab089d9e6b6e4c5b9f6b7d9e7f9b6c5d",
+        },
+        update: {          
+          lane_number: 36,
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          in_use: true,
+        },
+        create: {
+          id: "lan_ab089d9e6b6e4c5b9f6b7d9e7f9b6c5d",
+          lane_number: 36,
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          in_use: true,
+        },
+      });
+      lane = await prisma.lane.upsert({
+        where: {
+          id: "lan_ab099d9e6b6e4c5b9f6b7d9e7f9b6c5d",
+        },
+        update: {          
+          lane_number: 37,          
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          in_use: true,
+        },
+        create: {
+          id: "lan_ab099d9e6b6e4c5b9f6b7d9e7f9b6c5d",
+          lane_number: 37,          
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          in_use: true,
+        },
+      });
+      lane = await prisma.lane.upsert({
+        where: {
+          id: "lan_ab109d9e6b6e4c5b9f6b7d9e7f9b6c5d",
+        },
+        update: {          
+          lane_number: 38,
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          in_use: true,
+        },
+        create: {
+          id: "lan_ab109d9e6b6e4c5b9f6b7d9e7f9b6c5d",
+          lane_number: 38,
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          in_use: true,
+        },
+      });
+      lane = await prisma.lane.upsert({
+        where: {
+          id: "lan_ab119d9e6b6e4c5b9f6b7d9e7f9b6c5d",
+        },
+        update: {          
+          lane_number: 39,
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          in_use: true,
+        },
+        create: {
+          id: "lan_ab119d9e6b6e4c5b9f6b7d9e7f9b6c5d",
+          lane_number: 39,
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          in_use: true,
+        },
+      });
+      lane = await prisma.lane.upsert({
+        where: {
+          id: "lan_ab129d9e6b6e4c5b9f6b7d9e7f9b6c5d",
+        },
+        update: {          
+          lane_number: 40,
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          in_use: true,
+        },
+        create: {
+          id: "lan_ab129d9e6b6e4c5b9f6b7d9e7f9b6c5d",
+          lane_number: 40,
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          in_use: true,
+        },
+      });
+      return 12;
+    } catch (error) {
+      console.log(error);
+      return -1;
+    }
+  }
+
   async function laneUpsert_ToDelete() {
     try {
       let lane = await prisma.lane.upsert({
@@ -2059,9 +2365,10 @@ async function laneUpsert() {
     const gpCount = await laneUpsert_GoldPin();
     const yCount = await laneUpsert_YosemiteLanes()   
     const abCount = await laneUpsert_AandB()   
+    const wtCount = await laneUpsert_WholeTmnt()
     const delCount = await laneUpsert_ToDelete()
-    console.log("Upserted lanes: ", gpCount + yCount + abCount + delCount);
-    return gpCount + yCount + delCount; // 12 + 24 + 20 + 1 = 57
+    console.log("Upserted lanes: ", gpCount + yCount + abCount + wtCount + delCount);
+    return gpCount + yCount + delCount; // 12 + 24 + 20 + 12 + 1 = 69
   } catch (error) {
     console.log(error);
     return -1;
@@ -2130,6 +2437,27 @@ async function potsUpsert() {
         pot_type: "Last Game",
       },
     });
+    // whole tmnt pot
+    pot = await prisma.pot.upsert({
+      where: {
+        id: "pot_89fd8f787de942a1a92aaa2df3e7c185",
+      },
+      update: {
+        squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+        div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+        sort_order: 1,
+        fee: 20,
+        pot_type: "Game",
+      },
+      create: {
+        id: "pot_89fd8f787de942a1a92aaa2df3e7c185",
+        squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+        div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+        sort_order: 1,
+        fee: 20,
+        pot_type: "Game",
+      },
+    });    
     // pot to delete
     pot = await prisma.pot.upsert({
       where: {
@@ -2152,8 +2480,8 @@ async function potsUpsert() {
       },
     });
 
-    console.log("Upserted pots:", 4);    
-    return 4;
+    console.log("Upserted pots:", 5);    
+    return 5;
   } catch (error) {
     console.log(error);
     return -1;
@@ -2282,6 +2610,67 @@ async function brktUpsert() {
         admin: 5,
       },
     });
+    // whole tmnt brkts
+    brkt = await prisma.brkt.upsert({
+      where: {
+        id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+      },
+      update: {
+        squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+        div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+        sort_order: 1,
+        start: 1,
+        games: 3,
+        players: 8,
+        fee: 5,
+        first: 25,
+        second: 10,
+        admin: 5,
+      },
+      create: {
+        id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+        squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+        div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+        sort_order: 1,
+        start: 1,
+        games: 3,
+        players: 8,
+        fee: 5,
+        first: 25,
+        second: 10,
+        admin: 5,
+      },
+    });
+    brkt = await prisma.brkt.upsert({
+      where: {
+        id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+      },
+      update: {
+        squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+        div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+        sort_order: 2,
+        start: 4,
+        games: 3,
+        players: 8,
+        fee: 5,
+        first: 25,
+        second: 10,
+        admin: 5,
+      },
+      create: {
+        id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+        squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+        div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+        sort_order: 2,
+        start: 4,
+        games: 3,
+        players: 8,
+        fee: 5,
+        first: 25,
+        second: 10,
+        admin: 5,
+      },
+    });
     // bracket to delete
     brkt = await prisma.brkt.upsert({
       where: {
@@ -2313,8 +2702,8 @@ async function brktUpsert() {
         admin: 5,
       },
     });    
-    console.log("Upserted brackets:", 5);
-    return 5;
+    console.log("Upserted brackets:", 7);
+    return 7;
   } catch (error) {
     console.log(error);
     return -1;
@@ -2411,6 +2800,51 @@ async function elimUpsert() {
         fee: 5,
       },
     });
+    // whole tmnt elims
+    elim = await prisma.elim.upsert({
+      where: {
+        id: "elm_c47a4ec07f824b0e93169ae78e8b4b1e",
+      },
+      update: {
+        squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+        div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+        sort_order: 1,
+        start: 1,
+        games: 3,
+        fee: 5,
+      },
+      create: {
+        id: "elm_c47a4ec07f824b0e93169ae78e8b4b1e",
+        squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+        div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+        sort_order: 1,
+        start: 1,
+        games: 3,
+        fee: 5,
+      },
+    });
+    elim = await prisma.elim.upsert({
+      where: {
+        id: "elm_461eece3c50241e9925e9a520730ac7e",
+      },
+      update: {
+        squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+        div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+        sort_order: 2,
+        start: 4,
+        games: 3,
+        fee: 5,
+      },
+      create: {
+        id: "elm_461eece3c50241e9925e9a520730ac7e",
+        squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+        div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+        sort_order: 2,
+        start: 4,
+        games: 3,
+        fee: 5,
+      },
+    });
     // elim to delete
     elim = await prisma.elim.upsert({
       where: {
@@ -2435,8 +2869,8 @@ async function elimUpsert() {
       },
     });
 
-    console.log("Upserted eliminators:", 5);
-    return 5;
+    console.log("Upserted eliminators:", 7);
+    return 7;
   } catch (error) {
     console.log(error);
     return -1;

@@ -4,10 +4,9 @@ import userEvent from "@testing-library/user-event";
 import OneToNSquads, { updatedLanes, validLanes } from "@/app/dataEntry/tmntForm/oneToNSquads";
 import { mockLanes, mockSquads } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { mockEvents } from "../../../mocks/tmnts/singlesAndDoubles/mockEvents";
-import { initSquad, initLanes } from "@/lib/db/initVals";
+import { initSquad } from "@/lib/db/initVals";
 import { laneType, squadType } from "@/lib/types/types";
 import { maxLaneCount, maxStartLane, minLaneCount, minStartLane } from "@/lib/validation";
-import { dateTo_UTC_yyyyMMdd } from "@/lib/dateTools";
 
 const mockSetSquads = jest.fn();
 const mockSetLanes = jest.fn();
@@ -318,7 +317,7 @@ describe("OneToNSquads - Component", () => {
         render(<OneToNSquads {...mockOneToNSquadsProps} />);        
         const squadDates = screen.getAllByLabelText(/date/i) as HTMLInputElement[];
         expect(squadDates).toHaveLength(2);
-        expect(squadDates[0]).toHaveValue(dateTo_UTC_yyyyMMdd(mockSquads[0].squad_date));
+        expect(squadDates[0]).toHaveValue(mockSquads[0].squad_date_str);
       })
       it('DO NOT render squad dates errors', () => {
         render(<OneToNSquads {...mockOneToNSquadsProps} />);
@@ -492,7 +491,7 @@ describe("OneToNSquads - Component", () => {
         const squadDates = screen.getAllByLabelText(/date/i) as HTMLInputElement[];
         expect(squadDates).toHaveLength(2);
         expect(squadDates[1]).toHaveClass("is-invalid");
-        expect(squadDates[1]).toHaveValue(dateTo_UTC_yyyyMMdd(mockSquads[1].squad_date));
+        expect(squadDates[1]).toHaveValue(mockSquads[1].squad_date_str);
       })
       it("render 2nd squad date errors", async () => {
         const user = userEvent.setup();
@@ -633,7 +632,7 @@ describe("OneToNSquads - Component", () => {
       expect(squadEvents[2]).toHaveValue(mockSquads[2].event_id);
       expect(startingLanes[2]).toHaveValue(mockSquads[2].starting_lane);
       expect(squadLanes[2]).toHaveValue(mockSquads[2].lane_count);
-      expect(squadDates[2].value as string).toBe(dateTo_UTC_yyyyMMdd(mockSquads[2].squad_date));
+      expect(squadDates[2].value as string).toBe(mockSquads[2].squad_date_str);
       expect(squadTimes[2].value).toBe(mockSquads[2].squad_time);
     });
   })

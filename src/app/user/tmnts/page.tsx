@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { fetchUserTmnts, getUserTmntError, getUserTmntStatus, deleteUserTmnt } from "@/redux/features/userTmnts/userTmntsSlice";
 import { tmntsListType } from "@/lib/types/types";
-import { dateTo_UTC_MMddyyyy, yyyyMMdd_To_ddMMyyyy } from "@/lib/dateTools";
+import { yyyyMMdd_To_ddMMyyyy } from "@/lib/dateTools";
 import ModalConfirm from "@/components/modal/confirmModal";
 import { initModalObj } from "@/components/modal/modalObjType";
 import { fetchBowls, getBowlsError, getBowlsLoadStatus } from "@/redux/features/bowls/bowlsSlice";
@@ -87,11 +87,11 @@ export default function UserTmntsPage() {
               </Link> 
             </div>
           </div>
-          <div className="row g-1 mb-1 justify-content-md-center align-items-center">      
+          <div className="row g-1 mb-1 justify-content-md-center align-items-center">
             <div className="flex-grow-1 bg-secondary-subtle"></div>
             {/* style width is in pixels */}
             <div
-              className="d-flex justify-content-center tmnt_table bg-primary-subtle"
+              className="d-flex justify-content-center tmnt_table"
               // style={{ width: 768 }}
             >
               <table className="table table-striped table-hover w-100">
@@ -111,7 +111,7 @@ export default function UserTmntsPage() {
                     </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="table-group-divider">
                   {userTmnts.map((tmnt) => (
                     <tr key={tmnt.id}>
                       <td className="align-middle">{tmnt.tmnt_name}</td>                      

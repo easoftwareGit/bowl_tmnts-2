@@ -3,7 +3,6 @@ import { baseEventsApi } from "@/lib/db/apiPaths";
 import { testBaseEventsApi } from "../../../testApi";
 import { eventType } from "@/lib/types/types";
 import { initEvent } from "@/lib/db/initVals";
-import { Event } from "@prisma/client";
 import { btDbUuid } from "@/lib/uuid";
 import { mockEventsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockEvents";
 import { deleteAllTmntEvents } from "@/lib/db/events/eventsAxios";
@@ -81,8 +80,8 @@ describe('Events - GETs and POST API: /api/events', () => {
     it('should get all events', async () => {
       const response = await axios.get(url);
       expect(response.status).toBe(200);
-      // 8 rows in prisma/seed.ts
-      expect(response.data.events).toHaveLength(8);
+      // 9 rows in prisma/seed.ts
+      expect(response.data.events).toHaveLength(9);
       const events: eventType[] = response.data.events;
       events.forEach((event: eventType) => {
         expect(event.lpox).not.toBeNull();

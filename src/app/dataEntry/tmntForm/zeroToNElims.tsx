@@ -198,8 +198,10 @@ const ZeroToNElims: React.FC<ChildProps> = ({
 
   const [modalObj, setModalObj] = useState(initModalObj);
   const [tabKey, setTabKey] = useState(defaultTabKey);
-  const [sortOrder, setSortOrder] = useState(1); 
   const [createElim, setCreateElim] = useState(elimWithSquadId);
+
+  const initSortOrder = elims.length === 0 ? 1 : elims[elims.length - 1].sort_order + 1;
+  const [sortOrder, setSortOrder] = useState(initSortOrder);   
 
   const validNewElim = (): boolean => {
 
@@ -415,112 +417,114 @@ const ZeroToNElims: React.FC<ChildProps> = ({
           eventKey={'createElim'}
           title={createElimTitle}            
         >
-          <div className="row g-3 mb-3">
-            <div className="col-sm-3">
-              <label
-                className="form-label"                      
-              >
-                Division
-              </label>
-              {divs.map((div) => (
-                <div key={div.id} className="form-check text-break">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="elimsDivRadio"
-                    id={`div_name-${div.id}-${div.div_name}-elims`}
-                    checked={createElim.div_id === div.id}
-                    onChange={handleCreateElimInputChange(createElim.id)}
-                  />
-                  <label
-                    className="form-check-label"
-                    htmlFor={`div_name-${div.id}-${div.div_name}-elims`}
-                  >
-                    {div.div_name}
-                  </label>
+          <div className="container rounded-3 createBackground">
+            <div className="row g-3 mb-1">
+              <div className="col-sm-3">
+                <label
+                  className="form-label"                      
+                >
+                  Division
+                </label>
+                {divs.map((div) => (
+                  <div key={div.id} className="form-check text-break">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="elimsDivRadio"
+                      id={`div_name-${div.id}-${div.div_name}-elims`}
+                      checked={createElim.div_id === div.id}
+                      onChange={handleCreateElimInputChange(createElim.id)}
+                    />
+                    <label
+                      className="form-check-label"
+                      htmlFor={`div_name-${div.id}-${div.div_name}-elims`}
+                    >
+                      {div.div_name}
+                    </label>
+                  </div>
+                ))}
+                <div
+                  className="text-danger"
+                  data-testid="dangerElimDivRadio"
+                >
+                  {createElim.div_err}
                 </div>
-              ))}
-              <div
-                className="text-danger"
-                data-testid="dangerElimDivRadio"
-              >
-                {createElim.div_err}
               </div>
-            </div>
-            <div className="col-sm-2">
-              <label
-                htmlFor={`inputElimFee${createElim.id}`}
-                className="form-label"                      
-              >
-                Fee
-              </label>
-              <EaCurrencyInput
-                id={`inputElimFee${createElim.id}`}                      
-                name="fee"
-                className={`form-control ${createElim.fee_err && "is-invalid"}`}
-                value={createElim.fee}
-                onValueChange={handleCreateElimAmountValueChange(createElim.id, 'fee')}                
-              />
-              <div
-                className="text-danger"
-                data-testid="dangerCreateElimFee"
-              >
-                {createElim.fee_err}
+              <div className="col-sm-2">
+                <label
+                  htmlFor={`inputElimFee${createElim.id}`}
+                  className="form-label"                      
+                >
+                  Fee
+                </label>
+                <EaCurrencyInput
+                  id={`inputElimFee${createElim.id}`}                      
+                  name="fee"
+                  className={`form-control ${createElim.fee_err && "is-invalid"}`}
+                  value={createElim.fee}
+                  onValueChange={handleCreateElimAmountValueChange(createElim.id, 'fee')}                
+                />
+                <div
+                  className="text-danger"
+                  data-testid="dangerCreateElimFee"
+                >
+                  {createElim.fee_err}
+                </div>
               </div>
-            </div>
-            <div className="col-sm-2">
-              <label
-                htmlFor={`inputElimStart${createElim.id}`}
-                className="form-label"                      
-              >
-                Start
-              </label>
-              <input
-                type="number"
-                id={`inputElimStart${createElim.id}`}                      
-                name="start"
-                placeholder="#"
-                step={1}
-                className={`form-control ${createElim.start_err && "is-invalid"}`}
-                onChange={handleCreateElimInputChange(createElim.id)}
-                value={createElim.start}
-              />
-              <div
-                className="text-danger"
-                data-testid="dangerCreateElimStart"
-              >
-                {createElim.start_err}
+              <div className="col-sm-2">
+                <label
+                  htmlFor={`inputElimStart${createElim.id}`}
+                  className="form-label"                      
+                >
+                  Start
+                </label>
+                <input
+                  type="number"
+                  id={`inputElimStart${createElim.id}`}                      
+                  name="start"
+                  placeholder="#"
+                  step={1}
+                  className={`form-control ${createElim.start_err && "is-invalid"}`}
+                  onChange={handleCreateElimInputChange(createElim.id)}
+                  value={createElim.start}
+                />
+                <div
+                  className="text-danger"
+                  data-testid="dangerCreateElimStart"
+                >
+                  {createElim.start_err}
+                </div>
               </div>
-            </div>
-            <div className="col-sm-2">
-              <label
-                htmlFor={`inputElimGames${createElim.id}`}
-                className="form-label"                      
-              >
-                Games
-              </label>
-              <input
-                type="number"
-                id={`inputElimGames${createElim.id}`}                      
-                name="games"
-                placeholder="#"
-                step={1}
-                className={`form-control ${createElim.games_err && "is-invalid"}`}
-                onChange={handleCreateElimInputChange(createElim.id)}
-                value={createElim.games}
-                data-testid="createElimGames"
-              />
-              <div
-                className="text-danger"
-                data-testid="dangerCreateElimGames"
-              >
-                {createElim.games_err}
+              <div className="col-sm-2">
+                <label
+                  htmlFor={`inputElimGames${createElim.id}`}
+                  className="form-label"                      
+                >
+                  Games
+                </label>
+                <input
+                  type="number"
+                  id={`inputElimGames${createElim.id}`}                      
+                  name="games"
+                  placeholder="#"
+                  step={1}
+                  className={`form-control ${createElim.games_err && "is-invalid"}`}
+                  onChange={handleCreateElimInputChange(createElim.id)}
+                  value={createElim.games}
+                  data-testid="createElimGames"
+                />
+                <div
+                  className="text-danger"
+                  data-testid="dangerCreateElimGames"
+                >
+                  {createElim.games_err}
+                </div>
               </div>
-            </div>
-            <div className="col-sm-3 d-flex justify-content-center align-items-start">
-              <button className="btn btn-success mx-3" onClick={handleAdd}>
-                Add Eliminator
-              </button>
+              <div className="col-sm-3 d-flex justify-content-center align-items-start">
+                <button className="btn btn-success mx-3" onClick={handleAdd}>
+                  Add Eliminator
+                </button>
+              </div>
             </div>
           </div>
         </Tab>
@@ -531,7 +535,7 @@ const ZeroToNElims: React.FC<ChildProps> = ({
             title={getBrktOrElimName(elim, divs)}
             tabClassName={`${elim.errClassName}`}
           >
-            <div className="row g-3 mb-3">
+            <div className="row g-3 mb-1">
               <div className="col-sm-3">
                 <label
                   className="form-label"
@@ -580,7 +584,7 @@ const ZeroToNElims: React.FC<ChildProps> = ({
                   type="number"
                   id={`viewElimStart${elim.id}`}                      
                   name="start"
-                  className={`form-control ${createElim.start_err && "is-invalid"}`}
+                  className={`form-control ${elim.start_err && "is-invalid"}`}
                   value={elim.start}
                   disabled
                 />

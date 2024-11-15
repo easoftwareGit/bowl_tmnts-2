@@ -267,8 +267,8 @@ const OneToNEvents: React.FC<ChildProps> = ({
   const [confModalObj, setConfModalObj] = useState(initModalObj);
   const [errModalObj, setErrModalObj] = useState(initModalObj);
   const [tabKey, setTabKey] = useState(defaultTabKey);  
-  const [sortOrder, setSortOrder] = useState(1); // id # used in initEvents in form.tsx
-  
+  const [sortOrder, setSortOrder] = useState(events[events.length - 1].sort_order); 
+    
   const tmntId = events[0].tmnt_id; // save parent id for all events 
 
   const handleAdd = () => {
@@ -345,8 +345,6 @@ const OneToNEvents: React.FC<ChildProps> = ({
     const nameErr = name + "_err";
     let rawValue = value === undefined ? 'undefined' : value;
     rawValue = (rawValue || ' ');
-
-    // console.log(`handleAmountValueChange; id: "${id}", name: "${name}", value: "${value}"`);    
 
     setEvents(
       events.map((event) => {
@@ -575,11 +573,11 @@ const OneToNEvents: React.FC<ChildProps> = ({
       setEvents(
         events.map((event) => {
           if (event.id === id) {
-            if (name === "name") {
+            if (name === "event_name") {
               return {
                 ...event,
-                name: "Event " + event.id,
-                tabTitle: "Event " + event.id,
+                event_name: "Event " + event.sort_order,
+                tab_title: "Event " + event.sort_order,
                 name_err: "",
               };
             } else if (name === "team_size") {
@@ -689,7 +687,7 @@ const OneToNEvents: React.FC<ChildProps> = ({
           <Tab
             key={event.id}
             eventKey={`${event.id}`}
-            title={event.tab_title}
+            title={event.tab_title}            
             tabClassName={`${event.errClassName}`}            
           >
             <div className="row g-3 mb-3">

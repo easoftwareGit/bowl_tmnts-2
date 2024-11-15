@@ -28,10 +28,10 @@ const ModalConfirm: React.FC<ChildProps> = ({
         <Modal.Body>{message}</Modal.Body>
         <Modal.Footer>
           <Button className='me-2' variant="success" onClick={onConfirm}>
-            OK
+            Yes
           </Button>
           <Button variant="danger" onClick={onCancel}>
-            Cancel
+            No
           </Button>
         </Modal.Footer>
       </Modal>

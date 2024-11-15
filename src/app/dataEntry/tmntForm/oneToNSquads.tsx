@@ -13,7 +13,7 @@ import {
   isDuplicateDateTime,
 } from "./errors";
 import { maxEventLength, minGames, maxGames, minStartLane, maxStartLane, minLaneCount, maxLaneCount, isOdd, isEven } from "@/lib/validation";
-import { dateTo_UTC_MMddyyyy, getYearMonthDays, startOfDayFromString, startOfTodayUTC, todayStr, twelveHourto24Hour } from "@/lib/dateTools";
+import { dateTo_UTC_MMddyyyy, getYearMonthDays, startOfDayFromString, startOfTodayUTC, todayStr, twelveHourto24Hour, validDateString } from "@/lib/dateTools";
 import { btDbUuid } from "@/lib/uuid";
 import { compareAsc, isValid } from "date-fns";
 import { lanesNotThisSquad } from "@/components/tmnts/lanesList";
@@ -148,20 +148,26 @@ export const validateSquads = (
       } else {
         laneCountErr = "";
       }
-      if (!squad.squad_date) {
+      if (!squad.squad_date_str) {
         dateErr = "Date is required";
         setError(squad.squad_name, dateErr);
-      } else if (!isValid(new Date(squad.squad_date))) {
+      } else if (!validDateString(squad.squad_date_str)) {
         dateErr = "Date is invalid";
         setError(squad.squad_name, dateErr);
-      } else if (compareAsc(squad.squad_date, minDate) < 0) {
-        dateErr = "Earliest date is " + dateTo_UTC_MMddyyyy(minDate);        
-        setError(squad.squad_name, dateErr);
-      } else if (compareAsc(squad.squad_date, maxDate) > 0) {                      
-        dateErr = "Latest date is " + dateTo_UTC_MMddyyyy(maxDate);
-        setError(squad.squad_name, dateErr);
       } else {
-        dateErr = "";
+        const squadDate = startOfDayFromString(squad.squad_date_str) as Date
+        if (!isValid(squadDate)) {
+          dateErr = "Date is invalid";
+          setError(squad.squad_name, dateErr);
+        } else if (compareAsc(squadDate, minDate) < 0) {
+          dateErr = "Earliest date is " + dateTo_UTC_MMddyyyy(minDate);
+          setError(squad.squad_name, dateErr);
+        } else if (compareAsc(squadDate, maxDate) > 0) {
+          dateErr = "Latest date is " + dateTo_UTC_MMddyyyy(maxDate);
+          setError(squad.squad_name, dateErr);
+        } else {
+          dateErr = "";
+        }
       }
       if (squads.length === 1) {
         if (!squad.squad_time) {
@@ -171,9 +177,8 @@ export const validateSquads = (
         if (!squad.squad_time) {
           timeErr = 'Time is required'
           setError(squad.squad_name, timeErr);
-        } else if (isDuplicateDateTime(squads, squad)) {
-          const dateErr = dateTo_UTC_MMddyyyy(new Date(squad.squad_date)) 
-          timeErr = `${dateErr} - ${squad.squad_time} has already been used.`;
+        } else if (isDuplicateDateTime(squads, squad)) {          
+          timeErr = `${squad.squad_date_str} - ${squad.squad_time} has already been used.`;
           setError(squad.squad_name, timeErr);
         } else {
           timeErr = ""; 
@@ -255,7 +260,7 @@ const OneToNSquads: React.FC<ChildProps> = ({
 
   const [modalObj, setModalObj] = useState(initModalObj);
   const [tabKey, setTabKey] = useState(defaultTabKey);  
-  const [sortOrder, setSortOrder] = useState(1); // id # used in initSquads in form.tsx
+  const [sortOrder, setSortOrder] = useState(squads[squads.length - 1].sort_order);   
 
   const clearLanes = (squad: squadType) => {
     const nonSquadLanes = lanes.filter((lane) => lane.squad_id !== squad.id);
@@ -394,11 +399,10 @@ const OneToNSquads: React.FC<ChildProps> = ({
               squad_time: timeStr,
               squad_time_err: "",
             };
-          } else if (name === "squad_date") {
+          } else if (name === "squad_date_str") {
             if (e.target.valueAsDate) {
               updatedSquad = {
-                ...squad,
-                squad_date: startOfDayFromString(value) as Date,
+                ...squad,                
                 squad_date_str: value,
                 squad_date_err: "",                
               };
@@ -452,8 +456,8 @@ const OneToNSquads: React.FC<ChildProps> = ({
             if (name === "name") {
               return {
                 ...squad,
-                name: "Squad " + squad.id,
-                tab_title: "Squad " + squad.id,
+                name: "Squad " + squad.sort_order,
+                tab_title: "Squad " + squad.sort_order,
                 name_err: "",
               };
             } else if (name === "games") {
@@ -474,12 +478,13 @@ const OneToNSquads: React.FC<ChildProps> = ({
                 lane_count: 2,
                 lane_count_err: "",
               };                          
-            } else if (name === "squad_date") {
+            } else if (name === "squad_date_str") {
               const ymd = getYearMonthDays(value);
               if (ymd.year === 0 || ymd.month === 0 || ymd.days === 0) {
                 return {
                   ...squad,
-                  squad_date: new Date(Date.UTC(ymd.year, ymd.month, ymd.days)),
+                  squad_date_str: todayStr,
+                  // squad_date: new Date(Date.UTC(ymd.year, ymd.month, ymd.days)),
                   squad_date_err: "",
                 };                
               } else {
@@ -753,7 +758,7 @@ const OneToNSquads: React.FC<ChildProps> = ({
                     squad.squad_date_err && "is-invalid"
                   }`}
                   id={`inputSquadDate${squad.id}`}                  
-                  name="squad_date"
+                  name="squad_date_str"
                   data-testid="squadDate"
                   value={squad.squad_date_str}
                   onChange={handleInputChange(squad.id)}

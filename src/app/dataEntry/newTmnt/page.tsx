@@ -2,19 +2,20 @@
 import React, { useState } from "react";
 import { useSession } from "next-auth/react"; 
 import TmntDataForm from "../tmntForm/tmntForm";
-import { allDataOneTmntType, dataOneTmntType, tmntPropsType } from "@/lib/types/types";
+import { allDataOneTmntType, dataOneTmntType, eventType, tmntPropsType } from "@/lib/types/types";
 import {
-  initBrkts,
-  blankDataOneTmnt,
+  initBrkts,  
   initDivs,
   initElims,
   initEvents,
   initLanes,
   initPots,
   initSquads,
-  initTmnt,
+  initTmnt,  
   linkedInitDataOneTmnt,  
 } from "@/lib/db/initVals";
+import { btDbUuid } from "@/lib/uuid";
+import { cloneDeep } from "lodash";
 
 const blankFullTmnt: dataOneTmntType = {
   tmnt: initTmnt,
@@ -33,9 +34,11 @@ export const NewTmntPage = () => {
   // link the tmnt data types
   const userId = data?.user?.id || "";
   const fullTmntData: dataOneTmntType = linkedInitDataOneTmnt(userId)
-  
+  // const blankDataOneTmnt = structuredClone(blankFullTmnt);
+  const blankDataOneTmnt = cloneDeep(blankFullTmnt);
+
   const dataOneTmnt: allDataOneTmntType = {
-    origData: blankDataOneTmnt(),
+    origData: blankDataOneTmnt,
     curData: fullTmntData,
   }
   
@@ -43,7 +46,7 @@ export const NewTmntPage = () => {
     <>      
       <div className="d-flex flex-column justify-content-center align-items-center">
         <div className="shadow p-3 m-3 rounded-3 container">
-          <h2 className="mb-3">Tournament Info</h2>                    
+          <h2 className="mb-3">New Tournament</h2>                    
           <TmntDataForm tmntProps={dataOneTmnt} />
         </div>
       </div>

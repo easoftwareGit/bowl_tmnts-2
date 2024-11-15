@@ -85,33 +85,28 @@ describe("tmntsAxios", () => {
   describe('getUserTmnts', () => {    
     it("should get user's tmnts", async () => { 
       const userTmnts = await getUserTmnts(user1Id);
-        // 7 tmnt rows for user in prisma/seed.ts
-      expect(userTmnts).toHaveLength(7);     
+        // 8 tmnt rows for user in prisma/seed.ts
+      expect(userTmnts).toHaveLength(8);     
       if (!userTmnts) return;   
       expect(userTmnts[0].user_id).toBe(user1Id);
-      expect(userTmnts[6].user_id).toBe(user1Id);
+      expect(userTmnts[7].user_id).toBe(user1Id);
       // tmnts sorted by date, newest to oldest
       expect(userTmnts[0].id).toBe('tmt_e134ac14c5234d708d26037ae812ac33')
       expect(userTmnts[0].start_date_str).toBe('2025-08-19')
-      // expect(compareAsc(userTmnts[0].start_date, startOfDayFromString('2025-08-19') as Date)).toBe(0)
-      expect(userTmnts[1].id).toBe('tmt_9a34a65584f94f548f5ce3b3becbca19')
-      expect(userTmnts[1].start_date_str).toBe('2024-01-05')
-      // expect(compareAsc(userTmnts[1].start_date, startOfDayFromString('2024-01-05') as Date)).toBe(0)
-      expect(userTmnts[2].id).toBe('tmt_fe8ac53dad0f400abe6354210a8f4cd1')
-      expect(userTmnts[2].start_date_str).toBe('2023-12-31')
-      // expect(compareAsc(userTmnts[2].start_date, startOfDayFromString('2023-12-31') as Date)).toBe(0)
-      expect(userTmnts[3].id).toBe('tmt_718fe20f53dd4e539692c6c64f991bbe')
-      expect(userTmnts[3].start_date_str).toBe('2023-12-20')
-      // expect(compareAsc(userTmnts[3].start_date, startOfDayFromString('2023-12-20') as Date)).toBe(0)
-      expect(userTmnts[4].id).toBe('tmt_467e51d71659d2e412cbc64a0d19ecb4')
-      expect(userTmnts[4].start_date_str).toBe('2023-09-16')
-      // expect(compareAsc(userTmnts[4].start_date, startOfDayFromString('2023-09-16') as Date)).toBe(0)
-      expect(userTmnts[5].id).toBe('tmt_a78f073789cc0f8a9a0de8c6e273eab1')
-      expect(userTmnts[5].start_date_str).toBe('2023-01-02')
-      // expect(compareAsc(userTmnts[5].start_date, startOfDayFromString('2023-01-02') as Date)).toBe(0)
-      expect(userTmnts[6].id).toBe('tmt_fd99387c33d9c78aba290286576ddce5')
-      expect(userTmnts[6].start_date_str).toBe('2022-10-23')
-      // expect(compareAsc(userTmnts[6].start_date, startOfDayFromString('2022-10-23') as Date)).toBe(0)
+      expect(userTmnts[1].id).toBe('tmt_d237a388a8fc4641a2e37233f1d6bebd')
+      expect(userTmnts[1].start_date_str).toBe('2024-07-01')
+      expect(userTmnts[2].id).toBe('tmt_9a34a65584f94f548f5ce3b3becbca19')
+      expect(userTmnts[2].start_date_str).toBe('2024-01-05')
+      expect(userTmnts[3].id).toBe('tmt_fe8ac53dad0f400abe6354210a8f4cd1')
+      expect(userTmnts[3].start_date_str).toBe('2023-12-31')
+      expect(userTmnts[4].id).toBe('tmt_718fe20f53dd4e539692c6c64f991bbe')
+      expect(userTmnts[4].start_date_str).toBe('2023-12-20')
+      expect(userTmnts[5].id).toBe('tmt_467e51d71659d2e412cbc64a0d19ecb4')
+      expect(userTmnts[5].start_date_str).toBe('2023-09-16')
+      expect(userTmnts[6].id).toBe('tmt_a78f073789cc0f8a9a0de8c6e273eab1')
+      expect(userTmnts[6].start_date_str).toBe('2023-01-02')
+      expect(userTmnts[7].id).toBe('tmt_fd99387c33d9c78aba290286576ddce5')
+      expect(userTmnts[7].start_date_str).toBe('2022-10-23')
 
       expect(userTmnts[0].bowls).not.toBeNull();
     })
@@ -230,25 +225,27 @@ describe("tmntsAxios", () => {
       const gotTmnts = await getUserTmnts(user1Id);
       expect(gotTmnts).not.toBeNull();
       if (!gotTmnts) return;
-      // 7 tmnt rows for user in prisma/seed.ts
-      expect(gotTmnts.length).toBe(7);
+      // 8 tmnt rows for user in prisma/seed.ts
+      expect(gotTmnts.length).toBe(8);
       expect(gotTmnts[0].user_id).toBe(user1Id);
-      expect(gotTmnts[6].user_id).toBe(user1Id);
+      expect(gotTmnts[7].user_id).toBe(user1Id);
       // tmnts sorted by date, newest to oldest      
       expect(gotTmnts[0].id).toBe('tmt_e134ac14c5234d708d26037ae812ac33')
       expect(gotTmnts[0].start_date_str).toBe('2025-08-19');      
-      expect(gotTmnts[1].id).toBe('tmt_9a34a65584f94f548f5ce3b3becbca19')
-      expect(gotTmnts[1].start_date_str).toBe('2024-01-05')      
-      expect(gotTmnts[2].id).toBe('tmt_fe8ac53dad0f400abe6354210a8f4cd1')
-      expect(gotTmnts[2].start_date_str).toBe('2023-12-31')
-      expect(gotTmnts[3].id).toBe('tmt_718fe20f53dd4e539692c6c64f991bbe')
-      expect(gotTmnts[3].start_date_str).toBe('2023-12-20')
-      expect(gotTmnts[4].id).toBe('tmt_467e51d71659d2e412cbc64a0d19ecb4')
-      expect(gotTmnts[4].start_date_str).toBe('2023-09-16')
-      expect(gotTmnts[5].id).toBe('tmt_a78f073789cc0f8a9a0de8c6e273eab1')
-      expect(gotTmnts[5].start_date_str).toBe('2023-01-02')
-      expect(gotTmnts[6].id).toBe('tmt_fd99387c33d9c78aba290286576ddce5')
-      expect(gotTmnts[6].start_date_str).toBe('2022-10-23')
+      expect(gotTmnts[1].id).toBe('tmt_d237a388a8fc4641a2e37233f1d6bebd')
+      expect(gotTmnts[1].start_date_str).toBe('2024-07-01')      
+      expect(gotTmnts[2].id).toBe('tmt_9a34a65584f94f548f5ce3b3becbca19')
+      expect(gotTmnts[2].start_date_str).toBe('2024-01-05')      
+      expect(gotTmnts[3].id).toBe('tmt_fe8ac53dad0f400abe6354210a8f4cd1')
+      expect(gotTmnts[3].start_date_str).toBe('2023-12-31')
+      expect(gotTmnts[4].id).toBe('tmt_718fe20f53dd4e539692c6c64f991bbe')
+      expect(gotTmnts[4].start_date_str).toBe('2023-12-20')
+      expect(gotTmnts[5].id).toBe('tmt_467e51d71659d2e412cbc64a0d19ecb4')
+      expect(gotTmnts[5].start_date_str).toBe('2023-09-16')
+      expect(gotTmnts[6].id).toBe('tmt_a78f073789cc0f8a9a0de8c6e273eab1')
+      expect(gotTmnts[6].start_date_str).toBe('2023-01-02')
+      expect(gotTmnts[7].id).toBe('tmt_fd99387c33d9c78aba290286576ddce5')
+      expect(gotTmnts[7].start_date_str).toBe('2022-10-23')
     })
     it('should not get user tmnts when user id is not valid', async () => { 
       const gotTmnts = await getUserTmnts('test');
@@ -386,7 +383,7 @@ describe("tmntsAxios", () => {
         expect(gotTmntData.brkts[i].first).toBe(mockBrkts[i].first);
         expect(gotTmntData.brkts[i].second).toBe(mockBrkts[i].second);
         expect(gotTmntData.brkts[i].admin).toBe(mockBrkts[i].admin);        
-        expect(gotTmntData.brkts[i].fsa).toBe(mockBrkts[i].fsa);
+        expect(gotTmntData.brkts[i].fsa + '').toBe(mockBrkts[i].fsa);
         expect(gotTmntData.brkts[i].sort_order).toBe(mockBrkts[i].sort_order);
       }
 

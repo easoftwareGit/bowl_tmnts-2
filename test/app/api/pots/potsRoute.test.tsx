@@ -148,8 +148,8 @@ describe('Pots - API: /api/pots', () => {
     it('should get all pots', async () => { 
       const response = await axios.get(url);
       expect(response.status).toBe(200);
-      // 4 rows in prisma/seed.ts
-      expect(response.data.pots).toHaveLength(4);
+      // 5 rows in prisma/seed.ts
+      expect(response.data.pots).toHaveLength(5);
     })
 
   })

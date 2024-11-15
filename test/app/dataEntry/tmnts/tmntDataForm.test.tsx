@@ -6,12 +6,15 @@ import { RootState } from "@/redux/store";
 import TmntDataForm from '@/app/dataEntry/tmntForm/tmntForm';
 import {
   blankDataOneTmnt,
+  initBrkt,
   linkedInitDataOneTmnt,
 } from "@/lib/db/initVals";
-import { startOfTodayUTC, dateTo_UTC_yyyyMMdd } from '@/lib/dateTools';
+import { startOfTodayUTC, dateTo_UTC_yyyyMMdd, todayStr, dateTo_yyyyMMdd, startOfDayFromString } from '@/lib/dateTools';
 import { allDataOneTmntType } from '@/lib/types/types';
 import { mockStateBowls } from '../../../mocks/state/mockState';
 import 'core-js/actual/structured-clone';
+import { addDays, addMonths } from "date-fns";
+import { btDbUuid } from "@/lib/uuid";
 
 // Mock state for bowls
 const mockState: Partial<RootState> = {
@@ -172,6 +175,80 @@ describe('TmntDataForm - Component', () => {
       const endError = await screen.findByTestId("dangerEndDate");
       expect(endError).toHaveTextContent("end date error");
     })
+  })
+
+  describe('changes to start or end date can change squad(s) date', () => {      
+
+    it('should not change squad date if end date is changed and valid', async () => { 
+      const tempTmnt = structuredClone(tmntProps);
+      tempTmnt.curData.tmnt.start_date_str = todayStr
+      tempTmnt.curData.tmnt.end_date_str = todayStr
+      tempTmnt.curData.squads[0].squad_date_str = todayStr  
+      const tomorrowStr = dateTo_yyyyMMdd(addDays(new Date(todayStr), 1))
+
+      const user = userEvent.setup()
+      render(<ReduxProvider><TmntDataForm tmntProps={tempTmnt} /></ReduxProvider>);      
+      const endDate = await screen.findByLabelText(/end date/i);
+      const endError = await screen.findByTestId("dangerEndDate");
+      fireEvent.change(endDate, { target: { value: tomorrowStr } });
+      expect(endDate).toHaveValue(tomorrowStr);
+      expect(endError).toHaveTextContent("");      
+    })
+    it('should change squad date if start date and end date valid, and new start date is after squad date', async () => {
+      const tempTmnt = structuredClone(tmntProps);
+      tempTmnt.curData.tmnt.start_date_str = todayStr
+      tempTmnt.curData.tmnt.end_date_str = todayStr
+      tempTmnt.curData.squads[0].squad_date_str = todayStr  
+      const yesterdayStr = dateTo_yyyyMMdd(addDays(startOfDayFromString(todayStr) as Date, -1))
+      const lastMonthStr = dateTo_yyyyMMdd(addMonths(startOfDayFromString(todayStr) as Date, -1))
+
+      const user = userEvent.setup()
+      render(<ReduxProvider><TmntDataForm tmntProps={tempTmnt} /></ReduxProvider>);      
+
+      const acdns = await screen.findAllByRole('button', { name: /squads/i });
+      const startDate = await screen.findByLabelText(/start date/i);
+      const endDate = await screen.findByLabelText(/end date/i);
+
+      await user.click(acdns[0]);
+      const squadDates = screen.getAllByTestId('squadDate') as HTMLInputElement[];
+      expect(squadDates).toHaveLength(1);
+      expect(squadDates[0]).toHaveValue(todayStr);
+
+      fireEvent.change(squadDates[0], { target: { value: lastMonthStr } });
+      expect(squadDates[0]).toHaveValue(lastMonthStr);
+      fireEvent.change(startDate, { target: { value: yesterdayStr } });
+      expect(startDate).toHaveValue(yesterdayStr);
+      expect(endDate).toHaveValue(todayStr);
+      expect(squadDates[0]).toHaveValue(yesterdayStr);
+    })
+    it('should change squad date if start date and end date valid, and new end date is before squad date', async () => {
+      const tempTmnt = structuredClone(tmntProps);
+      tempTmnt.curData.tmnt.start_date_str = todayStr
+      tempTmnt.curData.tmnt.end_date_str = todayStr
+      tempTmnt.curData.squads[0].squad_date_str = todayStr       
+      
+      const tomorrowStr = dateTo_yyyyMMdd(addDays(startOfDayFromString(todayStr) as Date, 1))
+      const nextMonthStr = dateTo_yyyyMMdd(addMonths(startOfDayFromString(todayStr) as Date, 1))
+
+      const user = userEvent.setup()
+      render(<ReduxProvider><TmntDataForm tmntProps={tempTmnt} /></ReduxProvider>);      
+
+      const acdns = await screen.findAllByRole('button', { name: /squads/i });
+      const startDate = await screen.findByLabelText(/start date/i);
+      const endDate = await screen.findByLabelText(/end date/i);
+
+      await user.click(acdns[0]);
+      const squadDates = screen.getAllByTestId('squadDate') as HTMLInputElement[];
+      expect(squadDates).toHaveLength(1);
+      expect(squadDates[0]).toHaveValue(todayStr);
+
+      fireEvent.change(squadDates[0], { target: { value: nextMonthStr } });
+      expect(squadDates[0]).toHaveValue(nextMonthStr);
+      fireEvent.change(endDate, { target: { value: tomorrowStr } });
+      expect(startDate).toHaveValue(todayStr);
+      expect(endDate).toHaveValue(tomorrowStr);
+      expect(squadDates[0]).toHaveValue(todayStr); // start date value
+    })    
   })
 
 })

@@ -112,11 +112,11 @@ const TmntsList: FC<TmntListProps> = (props) => {
 
   return (
     <>
-      <div className="d-flex bg-primary">
-        <div className="flex-grow-1 bg-secondary-subtle"></div>
+      <div className="d-flex">
+        <div className="flex-grow-1"></div>
         {/* style width is in pixels */}
         <div
-          className="d-flex justify-content-center tmnt_table bg-primary-subtle"
+          className="d-flex justify-content-center tmnt_table"
           style={{ width: 720 }}
         >
           <table className="table table-striped table-hover w-100">
@@ -165,7 +165,7 @@ const TmntsList: FC<TmntListProps> = (props) => {
                 </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="table-group-divider">
               {filteredTmnts.map((tmnt) => (
                 <tr key={tmnt.id}>
                   <td colSpan={2}>{tmnt.tmnt_name}</td>
@@ -185,8 +185,8 @@ const TmntsList: FC<TmntListProps> = (props) => {
               ))}
             </tbody>
           </table>
-        </div>
-        <div className="flex-grow-1 bg-secondary-subtle"></div>
+        </div>        
+        <div className="flex-grow-1"></div>
       </div>
     </>
   );

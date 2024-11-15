@@ -110,8 +110,8 @@ describe('Tmnts - API: /api/tmnts', () => {
     it('should get all tmnts', async () => {
       const response = await axios.get(url);
       expect(response.status).toBe(200);
-      // 10 rows in prisma/seed.ts
-      expect(response.data.tmnts).toHaveLength(10);
+      // 11 rows in prisma/seed.ts
+      expect(response.data.tmnts).toHaveLength(11);
     })
 
   })
@@ -182,33 +182,28 @@ describe('Tmnts - API: /api/tmnts', () => {
     it('should get all tmnts for user', async () => {
       const response = await axios.get(oneUserUrl + userId);
       expect(response.status).toBe(200);
-      // 7 tmnt rows for user in prisma/seed.ts
-      expect(response.data.tmnts).toHaveLength(7);
+      // 8 tmnt rows for user in prisma/seed.ts
+      expect(response.data.tmnts).toHaveLength(8);
       const tmnts = response.data.tmnts;
       expect(tmnts[0].user_id).toBe(userId);
-      expect(tmnts[6].user_id).toBe(userId);
+      expect(tmnts[7].user_id).toBe(userId);
       // tmnts sorted by date, newest to oldest
       expect(tmnts[0].id).toBe('tmt_e134ac14c5234d708d26037ae812ac33')
       expect(removeTimeFromISODateStr(tmnts[0].start_date)).toBe('2025-08-19')  
-      // expect(compareAsc(tmnts[0].start_date, startOfDayFromString('2025-08-19'))).toBe(0)
-      expect(tmnts[1].id).toBe('tmt_9a34a65584f94f548f5ce3b3becbca19')
-      expect(removeTimeFromISODateStr(tmnts[1].start_date)).toBe('2024-01-05')  
-      // expect(compareAsc(tmnts[1].start_date, startOfDayFromString('2024-01-05'))).toBe(0)
-      expect(tmnts[2].id).toBe('tmt_fe8ac53dad0f400abe6354210a8f4cd1')
-      expect(removeTimeFromISODateStr(tmnts[2].start_date)).toBe('2023-12-31')
-      // expect(compareAsc(tmnts[2].start_date, startOfDayFromString('2023-12-31'))).toBe(0)
-      expect(tmnts[3].id).toBe('tmt_718fe20f53dd4e539692c6c64f991bbe')
-      expect(removeTimeFromISODateStr(tmnts[3].start_date)).toBe('2023-12-20')
-      // expect(compareAsc(tmnts[3].start_date, startOfDayFromString('2023-12-20'))).toBe(0)
-      expect(tmnts[4].id).toBe('tmt_467e51d71659d2e412cbc64a0d19ecb4')
-      expect(removeTimeFromISODateStr(tmnts[4].start_date)).toBe('2023-09-16')
-      // expect(compareAsc(tmnts[4].start_date, startOfDayFromString('2023-09-16'))).toBe(0)
-      expect(tmnts[5].id).toBe('tmt_a78f073789cc0f8a9a0de8c6e273eab1')
-      expect(removeTimeFromISODateStr(tmnts[5].start_date)).toBe('2023-01-02')
-      // expect(compareAsc(tmnts[5].start_date, startOfDayFromString('2023-01-02'))).toBe(0)
-      expect(tmnts[6].id).toBe('tmt_fd99387c33d9c78aba290286576ddce5')
-      expect(removeTimeFromISODateStr(tmnts[6].start_date)).toBe('2022-10-23')
-      // expect(compareAsc(tmnts[6].start_date, startOfDayFromString('2022-10-23'))).toBe(0)
+      expect(tmnts[1].id).toBe('tmt_d237a388a8fc4641a2e37233f1d6bebd')
+      expect(removeTimeFromISODateStr(tmnts[1].start_date)).toBe('2024-07-01')        
+      expect(tmnts[2].id).toBe('tmt_9a34a65584f94f548f5ce3b3becbca19')
+      expect(removeTimeFromISODateStr(tmnts[2].start_date)).toBe('2024-01-05')        
+      expect(tmnts[3].id).toBe('tmt_fe8ac53dad0f400abe6354210a8f4cd1')
+      expect(removeTimeFromISODateStr(tmnts[3].start_date)).toBe('2023-12-31')      
+      expect(tmnts[4].id).toBe('tmt_718fe20f53dd4e539692c6c64f991bbe')
+      expect(removeTimeFromISODateStr(tmnts[4].start_date)).toBe('2023-12-20')      
+      expect(tmnts[5].id).toBe('tmt_467e51d71659d2e412cbc64a0d19ecb4')
+      expect(removeTimeFromISODateStr(tmnts[5].start_date)).toBe('2023-09-16')      
+      expect(tmnts[6].id).toBe('tmt_a78f073789cc0f8a9a0de8c6e273eab1')
+      expect(removeTimeFromISODateStr(tmnts[6].start_date)).toBe('2023-01-02')      
+      expect(tmnts[7].id).toBe('tmt_fd99387c33d9c78aba290286576ddce5')
+      expect(removeTimeFromISODateStr(tmnts[7].start_date)).toBe('2022-10-23')    
 
       expect(tmnts[0].bowls).not.toBeNull();
     })
@@ -294,12 +289,12 @@ describe('Tmnts - API: /api/tmnts', () => {
         url: allResultsUrl,
       });
       expect(response.status).toBe(200);
-      // 9 rows for results in prisma/seed.ts
-      expect(response.data.tmnts).toHaveLength(9);
+      // 10 rows for results in prisma/seed.ts
+      expect(response.data.tmnts).toHaveLength(10);
       const tmnts = response.data.tmnts;
       expect(tmnts[0].bowls).not.toBeNull();   
       // tmnts sorted by date newest to oldest
-      expect(removeTimeFromISODateStr(tmnts[0].start_date)).toBe('2024-01-05');
+      expect(removeTimeFromISODateStr(tmnts[0].start_date)).toBe('2024-07-01');
     })
     it('should get array of tmnt results by year for 2022 API: /api/tmnts/results/yyyy', async () => {
       const response = await axios({

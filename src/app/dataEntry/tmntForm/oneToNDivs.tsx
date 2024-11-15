@@ -137,8 +137,8 @@ const OneToNDivs: React.FC<ChildProps> = ({
   const [confModalObj, setConfModalObj] = useState(initModalObj);
   const [errModalObj, setErrModalObj] = useState(initModalObj);
   const [tabKey, setTabKey] = useState(defaultTabKey);   
-  const [sortOrder, setSortOrder] = useState(1); // id # used in initDivs in form.tsx
-
+  const [sortOrder, setSortOrder] = useState(divs[divs.length - 1].sort_order); 
+  
   const tmntId = divs[0].tmnt_id; // index 0 always has tmnt_id
 
   const handleAdd = () => {
@@ -356,11 +356,11 @@ const OneToNDivs: React.FC<ChildProps> = ({
       setDivs(
         divs.map((div) => {
           if (div.id === id) {
-            if (name === 'name') {
+            if (name === 'div_name') {
               return {
                 ...div,
-                name: 'Division ' + div.id,
-                tab_title: 'Division ' + div.id,
+                div_name: 'Division ' + div.sort_order,
+                tab_title: 'Division ' + div.sort_order,
                 name_err: ''  
               }
             } else if (name === 'hdcp_per_str') {

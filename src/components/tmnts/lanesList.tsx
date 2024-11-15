@@ -166,7 +166,7 @@ const LanesList: FC<LanesListProps> = (props) => {
               </th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="table-group-divider">
             {pairs.map((pair) => (
               <tr key={pair.left_id}>
                 <td>{pair.left_lane} - {pair.right_lane}</td>

@@ -143,8 +143,10 @@ const ZeroToNPots: React.FC<ChildProps> = ({
   
   const [modalObj, setModalObj] = useState(initModalObj);
   const [tabKey, setTabKey] = useState(defaultTabKey);  
-  const [sortOrder, setSortOrder] = useState(1);
   const [createPot, setCreatePot] = useState(potWithSquadId);
+
+  const initSortOrder = pots.length === 0 ? 1 : pots[pots.length - 1].sort_order + 1;
+  const [sortOrder, setSortOrder] = useState(initSortOrder); 
 
   const validNewPot = () => {
     let isPotValid = true;
@@ -336,7 +338,7 @@ const ZeroToNPots: React.FC<ChildProps> = ({
       <Tabs
         defaultActiveKey={defaultTabKey}
         id="pots-tabs"
-        className="mb-2"
+        className="mb-3"
         variant="pills"
         activeKey={tabKey}
         onSelect={handleTabSelect}
@@ -344,88 +346,90 @@ const ZeroToNPots: React.FC<ChildProps> = ({
         <Tab
           key="createPot"
           eventKey="createPot"
-          title={createPotTitle}          
+          title={createPotTitle}               
         >
-          <div className="row g-3 mb-3">
-            <div className="col-sm-3">
-              <label className="form-label">
-                Pot Type
-              </label>
-              {potCategories.map((potCat) => (
-                <div key={potCat.id} className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="potTypeRadio"                    
-                    id={`pot_type-${potCat.name}`}
-                    value={potCat.name}
-                    checked={createPot.pot_type === potCat.name}
-                    onChange={handleCreatePotInputChange}
-                  />
-                  <label
-                    className="form-check-label"
-                    htmlFor={`pot_type-${potCat.name}`}
-                  >
-                    {potCat.name}
-                  </label>
+          <div className="container rounded-3 createBackground">
+            <div className="row g-3 mb-1">
+              <div className="col-sm-3">              
+                <label className="form-label">
+                  Pot Type
+                </label>
+                {potCategories.map((potCat) => (
+                  <div key={potCat.id} className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="potTypeRadio"                    
+                      id={`pot_type-${potCat.name}`}
+                      value={potCat.name}
+                      checked={createPot.pot_type === potCat.name}
+                      onChange={handleCreatePotInputChange}
+                    />
+                    <label
+                      className="form-check-label"
+                      htmlFor={`pot_type-${potCat.name}`}
+                    >
+                      {potCat.name}
+                    </label>
+                  </div>
+                ))}
+                <div className="text-danger" data-testid="dangerPotType">
+                  {createPot.pot_type_err}
+                </div>                
+              </div>  
+              <div className="col-sm-3">
+                <label
+                  className="form-label"                      
+                >
+                  Division
+                </label>
+                {divs.map((div) => (
+                  <div key={div.id} className="form-check text-break">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="potsDivRadio"
+                      id={`div_name-${div.id}-${div.div_name}-pots`}
+                      value={div.div_name}
+                      checked={createPot.div_id === div.id}
+                      onChange={handleCreatePotInputChange}
+                    />
+                    <label
+                      className="form-check-label"
+                      htmlFor={`div_name-${div.id}-${div.div_name}-pots`}
+                    >
+                      {div.div_name}
+                    </label>
+                  </div>
+                ))}
+                <div className="text-danger" data-testid="dangerDiv">
+                  {createPot.div_err}
                 </div>
-              ))}
-              <div className="text-danger" data-testid="dangerPotType">
-                {createPot.pot_type_err}
-              </div>
-            </div>  
-            <div className="col-sm-3">
-              <label
-                className="form-label"                      
-              >
-                Division
-              </label>
-              {divs.map((div) => (
-                <div key={div.id} className="form-check text-break">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="potsDivRadio"
-                    id={`div_name-${div.id}-${div.div_name}-pots`}
-                    value={div.div_name}
-                    checked={createPot.div_id === div.id}
-                    onChange={handleCreatePotInputChange}
-                  />
-                  <label
-                    className="form-check-label"
-                    htmlFor={`div_name-${div.id}-${div.div_name}-pots`}
-                  >
-                    {div.div_name}
-                  </label>
+              </div>   
+              <div className="col-sm-3">
+                <label htmlFor="inputPotFee" className="form-label">
+                  Fee
+                </label>
+                <EaCurrencyInput
+                  id="inputPotFee"                      
+                  name="inputPotFee"
+                  className={`form-control ${createPot.fee_err && "is-invalid"}`}
+                  value={createPot.fee}
+                  onValueChange={handleCreatePotAmountValueChange(createPot.id)}
+                />
+                <div className="text-danger" data-testid="dangerPotFee">
+                  {createPot.fee_err}
                 </div>
-              ))}
-              <div className="text-danger" data-testid="dangerDiv">
-                {createPot.div_err}
               </div>
-            </div>   
-            <div className="col-sm-3">
-              <label htmlFor="inputPotFee" className="form-label">
-                Fee
-              </label>
-              <EaCurrencyInput
-                id="inputPotFee"                      
-                name="inputPotFee"
-                className={`form-control ${createPot.fee_err && "is-invalid"}`}
-                value={createPot.fee}
-                onValueChange={handleCreatePotAmountValueChange(createPot.id)}
-              />
-              <div className="text-danger" data-testid="dangerPotFee">
-                {createPot.fee_err}
-              </div>
+              <div className="col-sm-3 d-flex justify-content-center align-items-start">
+                <button
+                  className="btn btn-success mx-3"
+                  onClick={handleAdd}
+                >
+                  Add Pot
+                </button>
+              </div>            
             </div>
-            <div className="col-sm-3 d-flex justify-content-center align-items-start">
-              <button
-                className="btn btn-success mx-3"
-                onClick={handleAdd}
-              >
-                Add Pot
-              </button>
-            </div>            
           </div>
         </Tab>
         {pots.map((pot) => (
@@ -435,7 +439,7 @@ const ZeroToNPots: React.FC<ChildProps> = ({
             title={getPotName(pot, divs)}
             tabClassName={`${pot.errClassName}`}
           >
-            <div className="row g-3 mb-3">
+            <div className="row g-3 mb-1">
               <div className="col-sm-3">
                 <label
                   className="form-label"

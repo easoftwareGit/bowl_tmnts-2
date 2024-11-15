@@ -204,8 +204,10 @@ const ZeroToNBrackets: React.FC<ChildProps> = ({
   
   const [modalObj, setModalObj] = useState(initModalObj);
   const [tabKey, setTabKey] = useState(defaultTabKey);
-  const [sortOrder, setSortOrder] = useState(1); 
   const [createBrkt, setCreateBrkt] = useState(brktWithSquadId);
+
+  const initSortOrder = brkts.length === 0 ? 1 : brkts[brkts.length - 1].sort_order + 1;
+  const [sortOrder, setSortOrder] = useState(initSortOrder); 
 
   // right now only 1 squad is allowed, so just use the first one
   const maxStartGame = squads[0].games - (defaultBrktGames - 1);
@@ -534,7 +536,7 @@ const ZeroToNBrackets: React.FC<ChildProps> = ({
       <Tabs
         defaultActiveKey={defaultTabKey}
         id="brkts-tab"
-        className="mb-2"
+        className="mb-3"
         variant="pills"
         activeKey={tabKey}
         onSelect={handleTabSelect}
@@ -544,137 +546,139 @@ const ZeroToNBrackets: React.FC<ChildProps> = ({
           eventKey="createBrkt"
           title={createBrktTitle}
         >
-          <div className="row g-3 mb-3">
-            <div className="col-sm-2">
-              <label className="form-label">
-                Division
-              </label>
-              {divs.map((div) => (
-                <div key={div.id} className="form-check text-break">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="brktsDivRadio"
-                    id={`div_name-${div.id}-${div.div_name}-brkts`}
-                    checked={createBrkt.div_id === div.id}
-                    onChange={handleCreateBrktInputChange}
-                  />
-                  <label
-                    className="form-check-label"
-                    htmlFor={`div_name-${div.id}-${div.div_name}-brkts`}
-                  >
-                    {div.div_name}
-                  </label>
-                </div>
-              ))}
-              <div
-                className="text-danger"
-                data-testid="dangerBrktDivRadio"
-              >
-                {createBrkt.div_err}
-              </div>
-            </div>
-            <div className="col-sm-8">
-              <div className="row mb-3">
-                <div className="col-sm-3">
-                  <label
-                    htmlFor={`inputBrktFee${createBrkt.id}`}
-                    className="form-label"
-                  >
-                    Fee
-                  </label>
-                  <EaCurrencyInput
-                    id={`inputBrktFee${createBrkt.id}`}
-                    name="fee"
-                    className={`form-control ${
-                      createBrkt.fee_err && "is-invalid"
-                    }`}
-                    value={createBrkt.fee}
-                    onValueChange={handlCreateBrktAmountValueChange(createBrkt.id)}
-                    onBlur={handleCreateBrktBlur(createBrkt.id)}                            
-                  />
-                  <div
-                    className="text-danger"
-                    data-testid="dangerCreateBrktFee"
-                  >
-                    {createBrkt.fee_err}
+          <div className="container rounded-3 createBackground">
+            <div className="row g-3 mb-1">
+              <div className="col-sm-2">
+                <label className="form-label">
+                  Division
+                </label>
+                {divs.map((div) => (
+                  <div key={div.id} className="form-check text-break">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="brktsDivRadio"
+                      id={`div_name-${div.id}-${div.div_name}-brkts`}
+                      checked={createBrkt.div_id === div.id}
+                      onChange={handleCreateBrktInputChange}
+                    />
+                    <label
+                      className="form-check-label"
+                      htmlFor={`div_name-${div.id}-${div.div_name}-brkts`}
+                    >
+                      {div.div_name}
+                    </label>
                   </div>
+                ))}
+                <div
+                  className="text-danger"
+                  data-testid="dangerBrktDivRadio"
+                >
+                  {createBrkt.div_err}
                 </div>
-                <div className="col-sm-3">
-                  <label
-                    htmlFor={`inputBrktStart${createBrkt.id}`}
-                    className="form-label"
-                  >
-                    Start
-                  </label>
-                  <input
-                    type="number"
-                    id={`inputBrktStart${createBrkt.id}`}
-                    name="start"
-                    placeholder="#"
-                    step={1}
-                    className={`form-control ${
-                      createBrkt.start_err && "is-invalid"
-                    }`}
-                    onChange={handleCreateBrktInputChange}
-                    value={createBrkt.start}
-                  />
-                  <div
-                    className="text-danger"
-                    data-testid="dangerCreateBrktStart"
-                  >
-                    {createBrkt.start_err}
+              </div>
+              <div className="col-sm-8">
+                <div className="row mb-3">
+                  <div className="col-sm-3">
+                    <label
+                      htmlFor={`inputBrktFee${createBrkt.id}`}
+                      className="form-label"
+                    >
+                      Fee
+                    </label>
+                    <EaCurrencyInput
+                      id={`inputBrktFee${createBrkt.id}`}
+                      name="fee"
+                      className={`form-control ${
+                        createBrkt.fee_err && "is-invalid"
+                      }`}
+                      value={createBrkt.fee}
+                      onValueChange={handlCreateBrktAmountValueChange(createBrkt.id)}
+                      onBlur={handleCreateBrktBlur(createBrkt.id)}                            
+                    />
+                    <div
+                      className="text-danger"
+                      data-testid="dangerCreateBrktFee"
+                    >
+                      {createBrkt.fee_err}
+                    </div>
                   </div>
+                  <div className="col-sm-3">
+                    <label
+                      htmlFor={`inputBrktStart${createBrkt.id}`}
+                      className="form-label"
+                    >
+                      Start
+                    </label>
+                    <input
+                      type="number"
+                      id={`inputBrktStart${createBrkt.id}`}
+                      name="start"
+                      placeholder="#"
+                      step={1}
+                      className={`form-control ${
+                        createBrkt.start_err && "is-invalid"
+                      }`}
+                      onChange={handleCreateBrktInputChange}
+                      value={createBrkt.start}
+                    />
+                    <div
+                      className="text-danger"
+                      data-testid="dangerCreateBrktStart"
+                    >
+                      {createBrkt.start_err}
+                    </div>
+                  </div>
+                  <NumberEntry
+                    brkt={createBrkt}
+                    LabelText="Games"
+                    property="games"
+                    value={createBrkt.games}
+                  />
+                  <NumberEntry
+                    brkt={createBrkt}
+                    LabelText="Players"
+                    property="players"
+                    value={createBrkt.players}
+                  />
                 </div>
-                <NumberEntry
-                  brkt={createBrkt}
-                  LabelText="Games"
-                  property="games"
-                  value={createBrkt.games}
-                />
-                <NumberEntry
-                  brkt={createBrkt}
-                  LabelText="Players"
-                  property="players"
-                  value={createBrkt.players}
-                />
+                <div className="row">
+                  <MoneyDisabled
+                    brkt={createBrkt}
+                    LabelText="First"
+                    property="first"
+                    value={createBrkt.first}
+                  />
+                  <MoneyDisabled
+                    brkt={createBrkt}
+                    LabelText="Second"
+                    property="second"
+                    value={createBrkt.second}
+                  />
+                  <MoneyDisabled
+                    brkt={createBrkt}
+                    LabelText="Admin"
+                    property="admin"
+                    value={createBrkt.admin}
+                  />
+                  <MoneyDisabled
+                    brkt={createBrkt}
+                    LabelText="F+S+A"
+                    property="fsa"
+                    value={createBrkt.fsa}
+                    title="First + Second + Admin must equal Fee * Players"
+                  />
+                </div>
               </div>
-              <div className="row">
-                <MoneyDisabled
-                  brkt={createBrkt}
-                  LabelText="First"
-                  property="first"
-                  value={createBrkt.first}
-                />
-                <MoneyDisabled
-                  brkt={createBrkt}
-                  LabelText="Second"
-                  property="second"
-                  value={createBrkt.second}
-                />
-                <MoneyDisabled
-                  brkt={createBrkt}
-                  LabelText="Admin"
-                  property="admin"
-                  value={createBrkt.admin}
-                />
-                <MoneyDisabled
-                  brkt={createBrkt}
-                  LabelText="F+S+A"
-                  property="fsa"
-                  value={createBrkt.fsa}
-                  title="First + Second + Admin must equal Fee * Players"
-                />
+              <div className="col-sm-2 d-flex justify-content-center align-items-start">
+                <button
+                  className="btn btn-success mx-3"
+                  onClick={handleAdd}
+                >
+                  Add Bracket
+                </button>
               </div>
-            </div>
-            <div className="col-sm-2 d-flex justify-content-center align-items-start">
-              <button
-                className="btn btn-success mx-3"
-                onClick={handleAdd}
-              >
-                Add Bracket
-              </button>
-            </div>
+              </div>
           </div>
         </Tab>
         {brkts.map((brkt) => (

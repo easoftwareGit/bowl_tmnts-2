@@ -48,7 +48,7 @@ const testSquad: squadType = {
   id: "sqd_7116ce5f80164830830a7157eb093396",
   event_id: "evt_cb97b73cb538418ab993fc867f860510",
   squad_name: "Squad 1",
-  squad_date_str: '2022-09-23',
+  squad_date_str: '2022-10-23',
   squad_time: null,
   games: 6,
   lane_count: 12,
@@ -132,8 +132,8 @@ describe('Squads - API: /api/squads', () => {
     it('should get all squads', async () => { 
       const response = await axios.get(url);
       expect(response.status).toBe(200);
-      // 8 rows in prisma/seed.ts
-      expect(response.data.squads).toHaveLength(8);
+      // 9 rows in prisma/seed.ts
+      expect(response.data.squads).toHaveLength(9);
     })
 
   })

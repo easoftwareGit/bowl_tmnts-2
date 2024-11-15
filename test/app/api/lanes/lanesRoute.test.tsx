@@ -138,8 +138,8 @@ describe('Lanes - API: /api/lanes', () => {
     it('should get all lanes', async () => {
       const response = await axios.get(url);
       expect(response.status).toEqual(200);
-      // 57 rows in prisma/seed.ts
-      expect(response.data.lanes).toHaveLength(57);
+      // 69 rows in prisma/seed.ts
+      expect(response.data.lanes).toHaveLength(69);
     })    
 
   })

@@ -19,7 +19,7 @@ import {
   yyyyMMdd_To_ddMMyyyy,
   ymdType,  
 } from "@/lib/dateTools";
-import { addMinutes, startOfToday } from "date-fns";
+import { addDays, addMinutes, compareAsc, startOfToday } from "date-fns";
 
 describe("tests for dateTools", () => {
   
@@ -32,55 +32,55 @@ describe("tests for dateTools", () => {
   });
 
   describe("dateTo_yyyyMMdd", () => {
-
-    // correctly formats a typical date in the middle of the year
+    
     it('should format a typical date in the middle of the year correctly', () => {
       const date = new Date(2024, 9, 26); // October 26, 2024
       const formattedDate = dateTo_yyyyMMdd(date);
       expect(formattedDate).toBe('2024-10-26');
     });
-
-    // handles dates with single-digit months correctly
     it('should handle dates with single-digit months correctly', () => {
       const date = new Date(2024, 0, 5); // January 5, 2024
       const formattedDate = dateTo_yyyyMMdd(date);
       expect(formattedDate).toBe('2024-01-05');
     });
-
-    // correctly formats a date at the end of the year
     it('should format a date at the end of the year correctly', () => {
       const date = new Date(2024, 11, 31); // December 31, 2024
       const formattedDate = dateTo_yyyyMMdd(date);
       expect(formattedDate).toBe('2024-12-31');
     });
-
-    // correctly formats a date at the beginning of the year
     it('should format a date at the beginning of the year correctly', () => {
       const date = new Date(2024, 0, 1); // January 1, 2024
       const formattedDate = dateTo_yyyyMMdd(date);
       expect(formattedDate).toBe('2024-01-01');
     });
-
-    // correctly formats a date in a leap year
     it('should format a date in a leap year correctly', () => {
       const date = new Date(2020, 1, 29); // February 29, 2020 (leap year)
       const formattedDate = dateTo_yyyyMMdd(date);
       expect(formattedDate).toBe('2020-02-29');
     });
-
-    // handles dates with single-digit days correctly
     it('should handle single-digit days correctly', () => {
       const date = new Date(2024, 9, 6); // October 6, 2024
       const formattedDate = dateTo_yyyyMMdd(date);
       expect(formattedDate).toBe('2024-10-06');
-    });
-
-    // returns an empty string for an invalid date object
+    });    
     it('should return empty string when given an invalid date object', () => {
       const date = new Date('invalid-date');
       const result = dateTo_UTC_yyyyMMdd(date);
       expect(result).toBe('');
     });
+    it('should return same date as todayStr', () => { 
+      const todayDate = startOfDayFromString(todayStr) as Date;
+      const formattedDate = dateTo_yyyyMMdd(todayDate);
+      expect(formattedDate).toBe(todayStr);
+    })
+    it('should return tomarrow when added 1 day to today', () => { 
+      const todayDate = startOfDayFromString(todayStr) as Date;
+      const tomorrowDate = addDays(todayDate, 1);
+      const formattedDate = dateTo_yyyyMMdd(tomorrowDate);
+      expect(formattedDate).not.toBe(todayStr);
+      expect(compareAsc(tomorrowDate, todayDate)).toBe(1);
+    })
+
   });
 
   describe("dateTo_UTC_MMddyyyy", () => {

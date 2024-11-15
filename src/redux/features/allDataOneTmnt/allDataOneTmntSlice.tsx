@@ -57,6 +57,9 @@ export const fetchOneTmnt = createAsyncThunk(
     // Do not use try / catch blocks here. Need the promise to be fulfilled or
     // rejected which will have the appropriate response in the extraReducers.
     const gotData = await getAllDataForTmnt(tmntId); 
+    if (!gotData) {
+      return null;
+    }
     const td: allDataOneTmntType = {
       origData: cloneDeep(gotData) as dataOneTmntType,
       curData: cloneDeep(gotData) as dataOneTmntType
@@ -90,10 +93,16 @@ export const allDataOneTmntSlice = createSlice({
       state.loadStatus = 'loading';
       state.error = '';
     });
-    builder.addCase(fetchOneTmnt.fulfilled, (state: allDataOneTmntState, action) => {
-      state.loadStatus = 'succeeded';
-      state.tmntData = action.payload;
-      state.error = '';
+    builder.addCase(fetchOneTmnt.fulfilled, (state: allDataOneTmntState, action) => {      
+      if (!action.payload) {
+        state.loadStatus = 'failed';
+        state.tmntData = null;
+        state.error = 'tournament not found'; 
+      } else {        
+        state.loadStatus = 'succeeded';
+        state.tmntData = action.payload;
+        state.error = '';        
+      }
     });
     builder.addCase(fetchOneTmnt.rejected, (state: allDataOneTmntState, action) => {
       state.loadStatus = 'failed';

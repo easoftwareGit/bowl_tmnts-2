@@ -4,8 +4,7 @@ import { testBaseSquadsApi, testBaseEventsApi } from "../../../testApi";
 import { eventType, squadType } from "@/lib/types/types";
 import { initEvent, initSquad } from "@/lib/db/initVals";
 import { deleteAllEventSquads, deleteAllTmntSquads, deleteSquad, getAllSquadsForTmnt, postManySquads, postSquad, putSquad } from "@/lib/db/squads/squadsAxios";
-import { compareAsc } from "date-fns";
-import { removeTimeFromISODateStr, startOfDayFromString } from "@/lib/dateTools";
+import { startOfDayFromString } from "@/lib/dateTools";
 import { mockSquadsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { deleteEvent } from "@/lib/db/events/eventsAxios";
 
@@ -78,7 +77,7 @@ describe('squadsAxios', () => {
         squad_date_str: '2022-08-21',
         squad_time: '10:00 AM',
         games: 6,
-        lane_count: 24,
+        lane_count: 10,
         starting_lane: 1,
         sort_order: 1,
       },
@@ -90,7 +89,7 @@ describe('squadsAxios', () => {
         squad_date_str: '2022-08-21',
         squad_time: '02:00 PM',
         games: 6,
-        lane_count: 24, 
+        lane_count: 10, 
         starting_lane: 1,
         sort_order: 2,
       }

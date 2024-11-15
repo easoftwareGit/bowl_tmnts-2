@@ -3,7 +3,6 @@ import { baseDivsApi } from "@/lib/db/apiPaths";
 import { testBaseDivsApi } from "../../../testApi";
 import { divType } from "@/lib/types/types";
 import { initDiv } from "@/lib/db/initVals";
-import { isValidBtDbId } from "@/lib/validation";
 import { mockDivsToPost, tmntToDelId } from "../../../mocks/tmnts/twoDivs/mockDivs";
 import { deleteAllTmntDivs, postDiv } from "@/lib/db/divs/divsAxios";
 
@@ -92,8 +91,8 @@ describe('Divs - API: /api/divs', () => {
     it('should get all divs', async () => { 
       const response = await axios.get(url);
       expect(response.status).toBe(200);
-      // 7 rows in prisma/seed.ts
-      expect(response.data.divs).toHaveLength(7);
+      // 8 rows in prisma/seed.ts
+      expect(response.data.divs).toHaveLength(8);
     })
 
   })
