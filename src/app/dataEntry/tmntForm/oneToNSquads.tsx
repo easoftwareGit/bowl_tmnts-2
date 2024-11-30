@@ -1,5 +1,5 @@
 import React, { useState, ChangeEvent } from "react";
-import { squadType, AcdnErrType, eventType, laneType } from "../../../lib/types/types";
+import { squadType, AcdnErrType, eventType, laneType, tmntActions } from "../../../lib/types/types";
 import { initSquad } from "../../../lib/db/initVals";
 import { Tabs, Tab } from "react-bootstrap";
 import ModalConfirm, { delConfTitle } from "@/components/modal/confirmModal";
@@ -25,6 +25,7 @@ interface ChildProps {
   setLanes: (lanes: laneType[]) => void;
   events: eventType[];
   setAcdnErr: (objAcdnErr: AcdnErrType) => void;  
+  tmntAction: tmntActions;
 }
 interface AddOrDelButtonProps {
   id: string;
@@ -254,6 +255,7 @@ const OneToNSquads: React.FC<ChildProps> = ({
   lanes,
   setLanes,
   setAcdnErr,
+  tmntAction,
 }) => {
 
   const defaultTabKey = squads[0].id;
@@ -261,6 +263,10 @@ const OneToNSquads: React.FC<ChildProps> = ({
   const [modalObj, setModalObj] = useState(initModalObj);
   const [tabKey, setTabKey] = useState(defaultTabKey);  
   const [sortOrder, setSortOrder] = useState(squads[squads.length - 1].sort_order);   
+
+  const isDisabled = (tmntAction === tmntActions.Run);
+  const addBtnStyle = isDisabled ? 'btn-dark' : 'btn-success';
+  const delBtnStyle = isDisabled ? 'btn-dark' : 'btn-danger';
 
   const clearLanes = (squad: squadType) => {
     const nonSquadLanes = lanes.filter((lane) => lane.squad_id !== squad.id);
@@ -456,7 +462,7 @@ const OneToNSquads: React.FC<ChildProps> = ({
             if (name === "name") {
               return {
                 ...squad,
-                name: "Squad " + squad.sort_order,
+                squad_name: "Squad " + squad.sort_order,
                 tab_title: "Squad " + squad.sort_order,
                 name_err: "",
               };
@@ -558,10 +564,11 @@ const OneToNSquads: React.FC<ChildProps> = ({
             </div>
             <div className="d-grid col-sm-4">            
               <button
-                className="btn btn-success"
+                className={`btn ${addBtnStyle}`}
                 id="squadAdd"
                 data-testid="squadAdd"
-                onClick={handleAdd}                
+                onClick={handleAdd}
+                disabled={isDisabled}
               >
                 Add
               </button>
@@ -573,9 +580,10 @@ const OneToNSquads: React.FC<ChildProps> = ({
       return (
         <div className="col-sm-3 d-flex justify-content-center align-items-end">
           <button
-            className="btn btn-danger"
+            className={`btn ${delBtnStyle}`}
             id="squadDel"            
             onClick={() => handleDelete(id)}
+            disabled={isDisabled}
           >
             Delete Squad
           </button>
@@ -633,6 +641,7 @@ const OneToNSquads: React.FC<ChildProps> = ({
                   value={squad.squad_name}
                   onChange={handleInputChange(squad.id)}
                   onBlur={handleBlur(squad.id)}
+                  disabled={isDisabled}
                 />
                 <div
                   className="text-danger"
@@ -659,6 +668,7 @@ const OneToNSquads: React.FC<ChildProps> = ({
                   value={squad.games}
                   onChange={handleInputChange(squad.id)}
                   onBlur={handleBlur(squad.id)}
+                  disabled={isDisabled}
                 />
                 <div
                   className="text-danger"
@@ -677,9 +687,9 @@ const OneToNSquads: React.FC<ChildProps> = ({
                 <select
                   id={`inputSquadEvent${squad.id}`}                  
                   className={`form-select ${squad.event_id_err && "is-invalid"}`}
-                  onChange={handleEventSelectChange(squad.id)}
-                  // defaultValue={events[0].id}
+                  onChange={handleEventSelectChange(squad.id)}                  
                   value={squad.event_id}
+                  disabled={isDisabled}
                 >
                   {eventOptions}
                 </select>
@@ -710,6 +720,7 @@ const OneToNSquads: React.FC<ChildProps> = ({
                   value={squad.starting_lane}
                   onChange={handleInputChange(squad.id)}
                   onBlur={handleBlur(squad.id)}
+                  disabled={isDisabled}
                 />
                 <div
                   className="text-danger"
@@ -737,6 +748,7 @@ const OneToNSquads: React.FC<ChildProps> = ({
                   value={squad.lane_count}
                   onChange={handleInputChange(squad.id)}
                   onBlur={handleBlur(squad.id)}
+                  disabled={isDisabled}
                 />
                 <div
                   className="text-danger"
@@ -763,6 +775,7 @@ const OneToNSquads: React.FC<ChildProps> = ({
                   value={squad.squad_date_str}
                   onChange={handleInputChange(squad.id)}
                   onBlur={handleBlur(squad.id)}
+                  disabled={isDisabled}
                 />
                 <div
                   className="text-danger"
@@ -784,11 +797,11 @@ const OneToNSquads: React.FC<ChildProps> = ({
                     squad.squad_time_err && "is-invalid"
                   }`}
                   id={`inputSquadTime${squad.id}`}                  
-                  name="squad_time"
-                  // value={squad.squad_time ?? ""}
+                  name="squad_time"                  
                   value={squad.squad_time !== null ? squad.squad_time : ""}
                   onChange={handleInputChange(squad.id)}
                   onBlur={handleBlur(squad.id)}
+                  disabled={isDisabled}
                 />
                 <div
                   className="text-danger"

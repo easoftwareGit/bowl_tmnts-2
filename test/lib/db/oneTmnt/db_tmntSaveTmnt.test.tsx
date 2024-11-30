@@ -1,11 +1,11 @@
 import axios, { AxiosError } from "axios";
 import { baseTmntsApi } from "@/lib/db/apiPaths";
 import { testBaseTmntsApi } from "../../../testApi";
-import { tmntSaveTmnt } from "@/lib/db/oneTmnt/oneTmnt";
+import { tmntSaveTmnt } from "@/lib/db/oneTmnt/dbOneTmnt";
 import { mockTmnt } from "../../../mocks/tmnts/newTmnt/mockNewTmnt";
 import { blankTmnt, initTmnt } from "@/lib/db/initVals";
 import { tmntType } from "@/lib/types/types";
-import { deleteTmnt, putTmnt } from "@/lib/db/tmnts/tmntsAxios";
+import { deleteTmnt, putTmnt } from "@/lib/db/tmnts/dbTmnts";
 import { btDbUuid } from "@/lib/uuid";
 import { compareAsc } from "date-fns";
 import { startOfDayFromString } from "@/lib/dateTools";

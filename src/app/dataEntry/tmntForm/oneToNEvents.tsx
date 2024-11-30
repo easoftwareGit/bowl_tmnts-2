@@ -1,5 +1,5 @@
 import React, { useState, ChangeEvent } from "react";
-import { eventType, AcdnErrType, squadType, lpoxValidTypes } from "../../../lib/types/types";
+import { eventType, AcdnErrType, squadType, lpoxValidTypes, tmntActions } from "../../../lib/types/types";
 import { initEvent } from "../../../lib/db/initVals";
 import { Tabs, Tab } from "react-bootstrap";
 import ModalConfirm, { delConfTitle } from "@/components/modal/confirmModal";
@@ -31,7 +31,8 @@ interface ChildProps {
   setEvents: (events: eventType[]) => void;
   squads: squadType[],
   setSquads: (squds: squadType[]) => void;
-  setAcdnErr: (objAcdnErr: AcdnErrType) => void;    
+  setAcdnErr: (objAcdnErr: AcdnErrType) => void;   
+  tmntAction: tmntActions;
 }
 interface AddOrDelButtonProps {
   id: string,
@@ -260,6 +261,7 @@ const OneToNEvents: React.FC<ChildProps> = ({
   squads,
   setSquads,
   setAcdnErr,  
+  tmntAction,
 }) => {
   
   const defaultTabKey = events[0].id;
@@ -268,8 +270,12 @@ const OneToNEvents: React.FC<ChildProps> = ({
   const [errModalObj, setErrModalObj] = useState(initModalObj);
   const [tabKey, setTabKey] = useState(defaultTabKey);  
   const [sortOrder, setSortOrder] = useState(events[events.length - 1].sort_order); 
-    
+  
   const tmntId = events[0].tmnt_id; // save parent id for all events 
+
+  const isDisabled = (tmntAction === tmntActions.Run);
+  const addBtnStyle = isDisabled ? 'btn-dark' : 'btn-success';
+  const delBtnStyle = isDisabled ? 'btn-dark' : 'btn-danger';
 
   const handleAdd = () => {
     const newEvent: eventType = {
@@ -634,10 +640,11 @@ const OneToNEvents: React.FC<ChildProps> = ({
             </div> 
             <div className="d-grid col-sm-4">            
               <button
-                className="btn btn-success"
+                className={`btn ${addBtnStyle}`}
                 id="eventAdd"
                 data-testid="eventAdd"
-                onClick={handleAdd}                  
+                onClick={handleAdd}
+                disabled={isDisabled}
               >
                 Add
               </button>
@@ -649,9 +656,10 @@ const OneToNEvents: React.FC<ChildProps> = ({
       return (
         <div className="col-sm-3 d-flex justify-content-center align-items-end">
           <button
-            className="btn btn-danger"
+            className={`btn ${delBtnStyle}`}
             id="eventDel"
             onClick={() => handleDelete(id)}
+            disabled={isDisabled}
           >
             Delete Event
           </button>
@@ -708,7 +716,8 @@ const OneToNEvents: React.FC<ChildProps> = ({
                   value={event.event_name}
                   maxLength={maxEventLength}
                   onChange={handleInputChange(event.id)}
-                  onBlur={handleBlur(event.id)}                  
+                  onBlur={handleBlur(event.id)}
+                  disabled={isDisabled}
                 />
                 <div
                   className="text-danger"
@@ -734,6 +743,7 @@ const OneToNEvents: React.FC<ChildProps> = ({
                   value={event.team_size}
                   onChange={handleInputChange(event.id)}
                   onBlur={handleBlur(event.id)}
+                  disabled={isDisabled}
                 />
                 <div
                   className="text-danger"
@@ -758,6 +768,7 @@ const OneToNEvents: React.FC<ChildProps> = ({
                   value={event.games}
                   onChange={handleInputChange(event.id)}
                   onBlur={handleBlur(event.id)}
+                  disabled={isDisabled}
                 />
                 <div
                   className="text-danger"
@@ -780,6 +791,7 @@ const OneToNEvents: React.FC<ChildProps> = ({
                   className={`form-control ${event.added_money_err && "is-invalid"}`}
                   value={event.added_money}
                   onValueChange={handleAmountValueChange(event.id, 'added_money')}                  
+                  disabled={isDisabled}
                 />
                 <div
                   className="text-danger"
@@ -802,9 +814,9 @@ const OneToNEvents: React.FC<ChildProps> = ({
                   name="entry_fee"
                   className={`form-control ${event.entry_fee_err && "is-invalid"}`}
                   value={event.entry_fee}
-                  onValueChange={handleAmountValueChange(event.id, 'entry_fee')}
-                  // onValueChange={handleAmountValueChange2(event.id, 'entry_fee')}
+                  onValueChange={handleAmountValueChange(event.id, 'entry_fee')}                  
                   onBlur={handleBlur(event.id)}
+                  disabled={isDisabled}
                 />
                 <div
                   className="text-danger"
@@ -827,6 +839,7 @@ const OneToNEvents: React.FC<ChildProps> = ({
                   value={event.lineage}
                   onValueChange={handleAmountValueChange(event.id, 'lineage')}
                   onBlur={handleBlur(event.id)}
+                  disabled={isDisabled}
                 />
                 <div
                   className="text-danger"
@@ -849,6 +862,7 @@ const OneToNEvents: React.FC<ChildProps> = ({
                   value={event.prize_fund}
                   onValueChange={handleAmountValueChange(event.id, 'prize_fund')}
                   onBlur={handleBlur(event.id)}
+                  disabled={isDisabled}
                 />
                 <div
                   className="text-danger"
@@ -871,6 +885,7 @@ const OneToNEvents: React.FC<ChildProps> = ({
                   value={event.other}
                   onValueChange={handleAmountValueChange(event.id, 'other')}
                   onBlur={handleBlur(event.id)}
+                  disabled={isDisabled}
                 />
                 <div
                   className="text-danger"
@@ -893,6 +908,7 @@ const OneToNEvents: React.FC<ChildProps> = ({
                   value={event.expenses}
                   onValueChange={handleAmountValueChange(event.id, 'expenses')}
                   onBlur={handleBlur(event.id)}
+                  disabled={isDisabled}
                 />
                 <div
                   className="text-danger"

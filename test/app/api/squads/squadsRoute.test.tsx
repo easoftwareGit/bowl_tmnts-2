@@ -4,7 +4,7 @@ import { testBaseSquadsApi, testBaseEventsApi } from "../../../testApi";
 import { eventType, squadType } from "@/lib/types/types";
 import { initEvent, initSquad } from "@/lib/db/initVals";
 import { removeTimeFromISODateStr, startOfDayFromString } from "@/lib/dateTools";
-import { deleteAllTmntSquads } from "@/lib/db/squads/squadsAxios";
+import { deleteAllTmntSquads } from "@/lib/db/squads/dbSquads";
 import { mockSquadsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 
 // before running this test, run the following commands in the terminal:
@@ -132,8 +132,8 @@ describe('Squads - API: /api/squads', () => {
     it('should get all squads', async () => { 
       const response = await axios.get(url);
       expect(response.status).toBe(200);
-      // 9 rows in prisma/seed.ts
-      expect(response.data.squads).toHaveLength(9);
+      // 10 rows in prisma/seed.ts
+      expect(response.data.squads).toHaveLength(10);
     })
 
   })

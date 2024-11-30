@@ -4,7 +4,7 @@ import { testBaseEventsApi } from "../../../testApi";
 import { eventType } from "@/lib/types/types";
 import { initEvent } from "@/lib/db/initVals";
 import { mockEventsToPost, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockEvents";
-import { postManyEvents } from "@/lib/db/events/eventsAxios";
+import { postManyEvents } from "@/lib/db/events/dbEvents";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -62,12 +62,12 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
 
   describe('PUT by ID - API: /api/events/event/:id', () => { 
 
-    const resetUser = async () => {
-      // make sure test user is reset in database
-      const userJSON = JSON.stringify(testEvent);
+    const resetEvent = async () => {
+      // make sure test event is reset in database
+      const eventJSON = JSON.stringify(testEvent);
       const putResponse = await axios({
         method: "put",
-        data: userJSON,
+        data: eventJSON,
         withCredentials: true,
         url: oneEventUrl + testEvent.id,
       })
@@ -105,12 +105,20 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       sort_order: 5,
     }
 
+    let didPut = false;
+
     beforeAll(async () => {
-      await resetUser()
+      await resetEvent()
+    })
+
+    beforeEach(() => {
+      didPut = false;
     })
 
     afterEach(async () => {
-      await resetUser()
+      if (didPut) {        
+        await resetEvent()
+      }      
     })
 
     it('should update an event by ID', async () => { 
@@ -120,7 +128,9 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         data: eventJSON,
         withCredentials: true,
         url: oneEventUrl + testEvent.id,
-      })
+      })      
+      expect(putResponse.status).toBe(200);
+      didPut = true;
       const puttedEvent = putResponse.data.event;
       // did not update tmnt_id
       expect(puttedEvent.tmnt_id).toEqual(testEvent.tmnt_id);
@@ -149,6 +159,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         url: oneEventUrl + testEvent.id,
       });
       expect(putResponse.status).toBe(200);
+      didPut = true;
       const puttedEvent = putResponse.data.event;
       expect(puttedEvent.added_money).toEqual('0');
     })
@@ -171,6 +182,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         url: oneEventUrl + testEvent.id,
       });
       expect(putResponse.status).toBe(200);
+      didPut = true;
       const puttedEvent = putResponse.data.event;
       expect(puttedEvent.added_money).toEqual('0');
       expect(puttedEvent.entry_fee).toEqual('0');

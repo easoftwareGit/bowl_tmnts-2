@@ -82,8 +82,8 @@ export default function UserTmntsPage() {
         <div className="container">
           <div className="row g-3 mb-3 justify-content-md-center align-items-center">      
             <div className="col-md-auto">
-              <Link className="btn btn-success" href="/dataEntry/newTmnt">
-                &nbsp;&nbsp;New Tournament
+              <Link className="btn btn-success ms-3" href="/dataEntry/newTmnt">
+                New Tournament
               </Link> 
             </div>
           </div>
@@ -91,10 +91,10 @@ export default function UserTmntsPage() {
             <div className="flex-grow-1 bg-secondary-subtle"></div>
             {/* style width is in pixels */}
             <div
-              className="d-flex justify-content-center tmnt_table"
+              className="d-flex justify-content-center"
               // style={{ width: 768 }}
-            >
-              <table className="table table-striped table-hover w-100">
+            >              
+              <table className="table table-striped table-hover w-100">              
                 <thead>
                   <tr className="tmnts-header-row">
                     <th className="align-middle" style={{ width: 210 }}>
@@ -114,28 +114,22 @@ export default function UserTmntsPage() {
                 <tbody className="table-group-divider">
                   {userTmnts.map((tmnt) => (
                     <tr key={tmnt.id}>
-                      <td className="align-middle">{tmnt.tmnt_name}</td>                      
+                      <td className="align-middle">{tmnt.tmnt_name}</td>
                       <td className="align-middle">{yyyyMMdd_To_ddMMyyyy(tmnt.start_date_str)}</td>
-                      <td className="align-middle">{tmnt.bowls.bowl_name}</td>                      
+                      <td className="align-middle">{tmnt.bowls.bowl_name}</td>
                       <td className="align-middle" style={{ textAlign: "center" }}>
                         <Link
-                          className="btn btn-info"
+                          className="btn btn-info me-2"
                           href={`/dataEntry/editTmnt/${tmnt.id}`}
                         >
                           Edit
-                        </Link>&nbsp;&nbsp;
-                      {/*<button
-                          type="button"
-                          className="btn btn-info"                          
-                        >
-                          Edit
-                        </button>&nbsp;&nbsp; */}
-                        <button
-                          type="button"
-                          className="btn btn-primary"
+                        </Link>
+                        <Link
+                          className="btn btn-primary me-2"
+                          href={`/dataEntry/runTmnt/${tmnt.id}`}
                         >
                           Run
-                        </button>&nbsp;&nbsp;
+                        </Link>
                         <button
                           type="button"
                           className="btn btn-danger"
@@ -150,7 +144,7 @@ export default function UserTmntsPage() {
               </table>
             </div>
           </div>
-        </div>    
+        </div>          
       ) : null}
     </>
   );

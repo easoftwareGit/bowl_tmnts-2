@@ -1,5 +1,5 @@
 import React, { useState, ChangeEvent } from "react";
-import { postTmnt } from "@/lib/db/tmnts/tmntsAxios";
+import { postTmnt } from "@/lib/db/tmnts/dbTmnts";
 
 import './form.css';
 

@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect } from "react";
-import { allDataOneTmntType } from "@/lib/types/types";
+import { allDataOneTmntType, tmntActions, tmntFormDataType } from "@/lib/types/types";
 import TmntDataForm from "../../tmntForm/tmntForm";
 import { useParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
@@ -12,8 +12,6 @@ export default function EditTmntPage() {
   const params = useParams();
   const tmntId = params.tmntId as string;
 
-  console.log('tmntId', tmntId)
-
   const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
@@ -24,8 +22,11 @@ export default function EditTmntPage() {
   const tmntError = useSelector(getOneTmntError);  
 
   const dataOneTmnt = useSelector((state: RootState) => state.allDataOneTmnt.tmntData) as allDataOneTmntType;
-
-  console.log('dataOneTmnt', dataOneTmnt)
+  const tmntFormData: tmntFormDataType = {
+    origData: dataOneTmnt.origData,
+    curData: dataOneTmnt.curData,
+    tmntAction: tmntActions.Edit,
+  };
 
   return (
     <> 
@@ -37,7 +38,7 @@ export default function EditTmntPage() {
         <div className="d-flex flex-column justify-content-center align-items-center">
           <div className="shadow p-3 m-3 rounded-3 container">
             <h2 className="mb-3">Edit Tournament</h2>
-            <TmntDataForm tmntProps={dataOneTmnt} />
+            <TmntDataForm tmntProps={tmntFormData} />
           </div>
         </div> 
       ) : null}  

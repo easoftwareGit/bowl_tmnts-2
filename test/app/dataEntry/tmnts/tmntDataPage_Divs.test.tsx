@@ -1,13 +1,8 @@
 import React from "react";
-import { render, screen, waitFor } from '../../../test-utils'
+import { render, screen } from '../../../test-utils'
 import userEvent from "@testing-library/user-event";
-import RootLayout from '../../../../src/app/layout'; 
-import { mockTmnt } from "../../../mocks/tmnts/twoDivs/mockTmnt";
-import { mockEvent } from "../../../mocks/tmnts/twoDivs/mockEvent";
-import { mockDivs, mockPots, mockBrkts, mockElims } from "../../../mocks/tmnts/twoDivs/mockDivs";
-import { mockSquad } from "../../../mocks/tmnts/twoDivs/mockSquad";
-import { allDataOneTmntType, dataOneTmntType } from "@/lib/types/types";
-import { defaultHdcpPer, defaultHdcpFrom, initBrkts, initDivs, initElims, initEvents, initPots, initSquads, initLanes, blankDataOneTmnt } from "@/lib/db/initVals";
+import { tmntActions, tmntFormDataType } from "@/lib/types/types";
+import { defaultHdcpFrom, blankDataOneTmnt } from "@/lib/db/initVals";
 import { formatValuePercent2Dec } from "@/lib/currency/formatValue";
 import { RootState } from "@/redux/store";
 import { mockStateBowls } from "../../../mocks/state/mockState";
@@ -30,11 +25,18 @@ jest.mock('react-redux', () => ({
   ...jest.requireActual('react-redux'),
   useSelector: jest.fn().mockImplementation((selector) => selector(mockState)),
 }));
-
+// Mock useRouter:
+jest.mock("next/navigation", () => ({
+  useRouter() {
+    return {
+      prefetch: () => null
+    };
+  }
+}));
 
 describe('TmntDataPage - Divs Component', () => { 
 
-  const tmntProps: allDataOneTmntType = {
+  const tmntProps: tmntFormDataType = {
     origData: blankDataOneTmnt(),
     curData: {
       tmnt: mockSDTmnt,
@@ -45,7 +47,8 @@ describe('TmntDataPage - Divs Component', () => {
       pots: mockSDPots,
       brkts: mockSDBrkts,
       elims: mockSDElims,
-    }
+    },
+    tmntAction: tmntActions.New
   };   
 
   describe('click on the divs accordian', () => { 
@@ -326,29 +329,42 @@ describe('TmntDataPage - Divs Component', () => {
     })
   })
 
+  describe('reset the div name to "Division 1" for first division when division name is cleared', () => { 
+    it('reset the div name to "Division 1" for first division when division name is cleared', async () => { 
+      const user = userEvent.setup()
+      render(<ReduxProvider><TmntDataForm tmntProps={tmntProps} /></ReduxProvider>);
+      const acdns = await screen.findAllByRole('button', { name: /divisions/i });
+      const scratchTabs = await screen.findAllByRole('tab', { name: /scratch/i })
+      // [0] - divs, [1] - pots, [2,3] - brkts, [4,5] - lanes
+      expect(scratchTabs).toHaveLength(6);
+      const hdcpTabs = await screen.findAllByRole('tab', { name: /handicap/i })
+      // [0] - divs, [1] - pots, [2,3] - brkts, [4,5] - lanes
+      expect(hdcpTabs).toHaveLength(6);
+      const divNames = screen.getAllByRole("textbox", { name: /div name/i }) as HTMLInputElement[];
+      expect(divNames).toHaveLength(2);
+      const hdcpFroms = screen.getAllByRole("spinbutton", { name: /hdcp from/i });
+      expect(hdcpFroms).toHaveLength(2);
+      
+      await user.click(acdns[0]);      
+      await user.clear(divNames[0]);
+      expect(divNames[0]).toHaveValue("");
+      expect(scratchTabs[0]).toHaveValue("");
+
+      // click will cause division name to be reset to "Division 1" (sort order is 1)
+      await user.click(hdcpFroms[0]);      
+      const divNameErrors = await screen.findAllByTestId('dangerDivName');    
+      expect(divNameErrors).toHaveLength(2);
+      expect(divNameErrors[0]).toHaveTextContent("");
+      expect(divNames[0]).toHaveValue("Division 1");
+      expect(scratchTabs[0]).toHaveTextContent("Division 1");
+    })
+  })
+
   describe('render the div name errors', () => {
     // create invalid data so click on save button will not try to save
     const invalidTmnt = structuredClone(tmntProps)
     invalidTmnt.curData.tmnt.tmnt_name = '';
 
-    it('render the div name required error', async () => {
-      const user = userEvent.setup()
-      render(<ReduxProvider><TmntDataForm tmntProps={invalidTmnt} /></ReduxProvider>);
-      const saveBtn = await screen.findByRole('button', { name: /save tournament/i });
-      const acdns = await screen.findAllByRole('button', { name: /divisions/i });
-      await user.click(acdns[0]);
-      const divNames = screen.getAllByRole("textbox", { name: /div name/i }) as HTMLInputElement[];
-      const divTabs = await screen.findAllByRole('tab', { name: /scratch/i })      
-      expect(divNames[0]).toHaveValue("Scratch");
-      await user.click(divNames[0]);
-      await user.clear(divNames[0]);
-      expect(divNames[0]).toHaveValue("");
-      await user.click(saveBtn);
-      const divNameErrors = await screen.findAllByTestId('dangerDivName');    
-      expect(divNameErrors[0]).toHaveTextContent("Div Name is required");
-      expect(acdns[0]).toHaveTextContent("Divisions - 2: Error in Divisions - Div Name is required");
-      expect(divTabs[0]).toHaveClass('objError')
-    })
     it('render error for duplicate div names', async () => { 
       const user = userEvent.setup()      
       render(<ReduxProvider><TmntDataForm tmntProps={invalidTmnt} /></ReduxProvider>);
@@ -370,28 +386,33 @@ describe('TmntDataPage - Divs Component', () => {
       expect(hdcpTabs[0]).toHaveClass('objError');
     })
     it('clear the div name error', async () => { 
-      const user = userEvent.setup()
+      const user = userEvent.setup()      
       render(<ReduxProvider><TmntDataForm tmntProps={invalidTmnt} /></ReduxProvider>);
       const saveBtn = await screen.findByRole('button', { name: /save tournament/i });      
       const acdns = await screen.findAllByRole('button', { name: /divisions/i });
-      await user.click(acdns[0]);
-      const divNames = screen.getAllByRole("textbox", { name: /div name/i }) as HTMLInputElement[];
-      const divTabs = await screen.findAllByRole('tab', { name: /scratch/i })      
-      expect(divNames[0]).toHaveValue("Scratch");
-      await user.click(divNames[0]);
-      await user.clear(divNames[0]);
-      expect(divNames[0]).toHaveValue("");
+      await user.click(acdns[0]);      
+      const hdcpTabs = await screen.findAllByRole('tab', { name: /handicap/i })
+      // [0] - divs, [1] - pots, [2,3] - brkts, [4,5] - lanes
+      expect(hdcpTabs).toHaveLength(6);
+      const divNames = screen.getAllByRole("textbox", { name: /div name/i }) as HTMLInputElement[];      
+      await user.clear(divNames[1]);
+      await user.type(divNames[1], 'Scratch')
+      expect(divNames[0]).toHaveValue("Scratch")
+      expect(divNames[1]).toHaveValue("Scratch")
+      // click will cause invalid data errors to show
       await user.click(saveBtn);
       const divNameErrors = await screen.findAllByTestId('dangerDivName');    
-      expect(divNameErrors[0]).toHaveTextContent("Div Name is required");
-      expect(acdns[0]).toHaveTextContent("Divisions - 2: Error in Divisions - Div Name is required");
-      expect(divTabs[0]).toHaveClass('objError')
-      await user.click(divNames[0]);  
+      expect(divNameErrors[1]).toHaveTextContent("has already been used");
+      expect(acdns[0]).toHaveTextContent("has already been used");
+      expect(hdcpTabs[0]).toHaveClass('objError');
+      await user.click(divNames[1]);  
       // editing div name should clear the error
-      await user.type(divNames[0], 'Testing')
-      expect(divNameErrors[0]).toHaveTextContent("");
-      expect(acdns[0]).not.toHaveTextContent(": Error in Divisions - Div Name is required");
-      expect(divTabs[0]).not.toHaveClass('objError')
+      await user.clear(divNames[1]);
+      await user.type(divNames[1], 'Testing')
+      expect(divNames[1]).toHaveValue("Testing")
+      expect(divNameErrors[1]).toHaveTextContent("");
+      expect(acdns[0]).not.toHaveTextContent(": Error in Divisions - Div Name is required");      
+      expect(hdcpTabs[0]).not.toHaveClass('objError')
     })
   })
 
@@ -617,7 +638,7 @@ describe('TmntDataPage - Divs Component', () => {
   describe('render multiple errors', () => { 
     // create invalid data so click on save button will not try to save
     const invalidTmnt = structuredClone(tmntProps)
-    invalidTmnt.curData.tmnt.tmnt_name = '';
+    invalidTmnt.curData.divs[1].div_name = 'Scratch'
 
     it('should render multiple errors', async () => { 
       const user = userEvent.setup()      
@@ -631,7 +652,7 @@ describe('TmntDataPage - Divs Component', () => {
       const hdcps = screen.getAllByRole('textbox', { name: /hdcp %/i }) as HTMLInputElement[];            
       await user.click(hdcpTabs[0]);
       // use mockDivs[1]
-      await user.clear(divNames[1]);
+      // await user.clear(divNames[1]);
 
       expect(hdcps[1]).toHaveValue(formatValuePercent2Dec(0.9));
       await user.clear(hdcps[1]);      
@@ -645,7 +666,7 @@ describe('TmntDataPage - Divs Component', () => {
       expect(hdcpfroms[1]).toHaveValue(301)
       await user.click(saveBtn);    
       expect(hdcpTabs[0]).toHaveClass('objError');      
-      expect(acdns[0]).toHaveTextContent("Div Name is required");
+      expect(acdns[0]).toHaveTextContent("has already been used");
       await user.clear(divNames[1]);
       await user.type(divNames[1], 'Testing');
       expect(acdns[0]).toHaveTextContent("Hdcp % cannot be more than");               
@@ -704,13 +725,13 @@ describe('TmntDataPage - Divs Component', () => {
       await user.click(saveBtn);
       expect(scratchTabs[0]).toHaveClass('objError');      
       // show 1st division error before 2nd division error
-      expect(acdns[0]).toHaveTextContent("Hdcp % cannot be more than");
+      expect(acdns[0]).toHaveTextContent('Hdcp % cannot be more than 125.00%');
       expect(hdcpTabs[0]).toHaveClass('objError');
       await user.click(scratchTabs[0]);
       await user.clear(hdcps[0]);
       await user.type(hdcps[0], '0')
       // show 2nd division error
-      expect(acdns[0]).toHaveTextContent("Hdcp From cannot be more than");
+      expect(acdns[0]).toHaveTextContent('"Scratch" has already been used.');
     })
   })
 

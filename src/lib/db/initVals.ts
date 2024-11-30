@@ -11,12 +11,15 @@ import {
   potType,  
   testDateType,
   dataOneTmntType,
+  playerType,
+  divEntryType,
 } from "../types/types";
 import { User, Bowl, Tmnt } from "@prisma/client";
 import { todayStr } from "@/lib/dateTools";
 import { btDbUuid } from "../uuid";
 import { startOfToday } from "date-fns";
 import { init } from "next/dist/compiled/webpack/webpack";
+import { first } from "lodash";
 
 export const initUser: userType = {
   id: btDbUuid('usr'),
@@ -143,6 +146,13 @@ export const blankEvent: eventType = {
   tab_title: "",  
 };
 
+export const initEvents: eventType[] = [
+  {
+    ...initEvent,
+    id: btDbUuid('evt'),
+  },
+];
+
 export const defaultHdcpPer = 1.0;
 export const defaultHdcpFrom = 230;
 export const initDiv: divType = {
@@ -170,6 +180,13 @@ export const blankDiv: divType = {
   tab_title: "",
 };
 
+export const initDivs: divType[] = [
+  {
+    ...initDiv,
+    id: btDbUuid('div'),
+  },
+];
+
 export const defaultStartingLane = 1;
 export const defaultLaneCount = 2;
 export const initSquad: squadType = {
@@ -185,7 +202,6 @@ export const initSquad: squadType = {
   starting_lane_err: "",
   lane_count: defaultLaneCount,
   lane_count_err: "",
-  // squad_date: startOfToday(),
   squad_date_str: todayStr,
   squad_date_err: "",
   squad_time: "",
@@ -198,11 +214,18 @@ export const blankSquad: squadType = {
   ...initSquad,
   id: "",
   event_id: "",
-  // squad_date: null as any,
   squad_date_str: "",
   squad_name: "",
   tab_title: "",
 };
+
+
+export const initSquads: squadType[] = [
+  {
+    ...initSquad,
+    id: btDbUuid('sqd'),
+  },
+];
 
 export const initLane: laneType = {
   id: btDbUuid('lan'),
@@ -216,6 +239,21 @@ export const blankLane: laneType = {
   id: "",
   squad_id: "",
 };
+
+export const initLanes: laneType[] = [
+  {
+    id: btDbUuid('lan'),    
+    lane_number: 1,
+    squad_id: "",
+    in_use: true,
+  },
+  {
+    id: btDbUuid('lan'),
+    lane_number: 2,
+    squad_id: "",
+    in_use: true,
+  },
+];
 
 export const initPot: potType = {
   id: btDbUuid('pot'),
@@ -234,6 +272,8 @@ export const blankPot: potType = {
   ...initPot,
   id: "",
 }
+
+export const initPots: potType[] = [];
 
 export const defaultBrktGames = 3;
 export const defaultBrktPlayers = 8;
@@ -268,6 +308,8 @@ export const blankBrkt: brktType = {
   id: "",
 }
 
+export const initBrkts: brktType[] = [];
+
 export const defaultElimGames = 3;
 export const initElim: elimType = {
   id: btDbUuid('elm'),
@@ -289,47 +331,44 @@ export const blankElim: elimType = {
   id: "",
 }
 
-export const initEvents: eventType[] = [
-  {
-    ...initEvent,
-    id: btDbUuid('evt'),
-  },
-];
-
-export const initDivs: divType[] = [
-  {
-    ...initDiv,
-    id: btDbUuid('div'),
-  },
-];
-
-export const initSquads: squadType[] = [
-  {
-    ...initSquad,
-    id: btDbUuid('sqd'),
-  },
-];
-
-export const initLanes: laneType[] = [
-  {
-    id: btDbUuid('lan'),    
-    lane_number: 1,
-    squad_id: "",
-    in_use: true,
-  },
-  {
-    id: btDbUuid('lan'),
-    lane_number: 2,
-    squad_id: "",
-    in_use: true,
-  },
-];
-
-export const initPots: potType[] = [];
-
-export const initBrkts: brktType[] = [];
-
 export const initElims: elimType[] = [];
+
+export const initPlayer: playerType = {
+  id: btDbUuid('ply'),
+  squad_id: "",
+  first_name: "",
+  first_name_err: "",
+  last_name: "",
+  last_name_err: "",
+  average: 0,
+  average_err: "",
+  lane: 0,
+  lane_err: "",
+  position: "",
+  position_err: "",
+}
+
+export const blankPlayer: playerType = {
+  ...initPlayer,
+  id: "", 
+}
+
+export const initDivEntry: divEntryType = {
+  id: btDbUuid('den'),
+  squad_id: "",
+  squad_id_err: "",
+  div_id: "",
+  div_id_err: "",
+  player_id: "",
+  player_id_err: "",
+  fee: "",
+  fee_err: "",
+}
+
+export const blankDivEntry: divEntryType = {
+  ...initDivEntry,
+  id: "",
+}
 
 export const blankDataOneTmnt = (): dataOneTmntType => {
   const initData: dataOneTmntType = {    

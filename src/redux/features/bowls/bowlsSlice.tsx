@@ -1,8 +1,8 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { Bowl } from "@prisma/client";
-import { ioStatusType, ioTaskType } from "@/redux/statusTypes";
+import { ioStatusType } from "@/redux/statusTypes";
 import { RootState } from "@/redux/store";
-import { getBowls, postBowl, putBowl } from "@/lib/db/bowls/bowlsAxios";
+import { getBowls, postBowl, putBowl } from "@/lib/db/bowls/dbBowls";
 import { bowlType } from "@/lib/types/types";
 
 export interface bowlSliceState {

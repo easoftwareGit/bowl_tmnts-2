@@ -4,7 +4,7 @@ import { testBaseDivsApi } from "../../../testApi";
 import { divType } from "@/lib/types/types";
 import { initDiv } from "@/lib/db/initVals";
 import { mockDivsToPost, tmntToDelId } from "../../../mocks/tmnts/twoDivs/mockDivs";
-import { deleteAllTmntDivs, postDiv } from "@/lib/db/divs/divsAxios";
+import { deleteAllTmntDivs, postDiv } from "@/lib/db/divs/dbDivs";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -91,8 +91,8 @@ describe('Divs - API: /api/divs', () => {
     it('should get all divs', async () => { 
       const response = await axios.get(url);
       expect(response.status).toBe(200);
-      // 8 rows in prisma/seed.ts
-      expect(response.data.divs).toHaveLength(8);
+      // 9 rows in prisma/seed.ts
+      expect(response.data.divs).toHaveLength(9);
     })
 
   })

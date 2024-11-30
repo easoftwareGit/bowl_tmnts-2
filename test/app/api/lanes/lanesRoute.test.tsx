@@ -3,9 +3,9 @@ import { baseLanesApi, baseSquadsApi } from "@/lib/db/apiPaths";
 import { testBaseLanesApi, testBaseSquadsApi } from "../../../testApi";
 import { laneType, squadType } from "@/lib/types/types";
 import { initLane, initSquad } from "@/lib/db/initVals";
-import { deleteAllTmntLanes } from "@/lib/db/lanes/lanesAxios";
+import { deleteAllTmntLanes } from "@/lib/db/lanes/dbLanes";
 import { mockLanesToPost, mockSquadsToPost, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/squadsAxios";
+import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/dbSquads";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -138,8 +138,8 @@ describe('Lanes - API: /api/lanes', () => {
     it('should get all lanes', async () => {
       const response = await axios.get(url);
       expect(response.status).toEqual(200);
-      // 69 rows in prisma/seed.ts
-      expect(response.data.lanes).toHaveLength(69);
+      // 81 rows in prisma/seed.ts
+      expect(response.data.lanes).toHaveLength(81);
     })    
 
   })

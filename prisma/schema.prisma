@@ -54,7 +54,6 @@ model Tmnt {
   end_date   DateTime
   events     Event[]
   divs       Div[]
-  players    Player[]
   user_id    String   @db.Text
   users      User     @relation("UserTmnts", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   bowl_id    String   @db.Text
@@ -85,21 +84,21 @@ model Event {
 }
 
 model Div {
-  id         String   @id @default(dbgenerated("concat('div_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
-  tmnt_id    String   @db.Text
-  div_name   String
-  hdcp_per   Float
-  hdcp_from  Int
-  int_hdcp   Boolean  @default(true)
-  hdcp_for   String   @default("Game")
-  sort_order Int
-  tmnts      Tmnt     @relation(fields: [tmnt_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  entries    Entry[]
-  pots       Pot[]
-  brkts      Brkt[]
-  elims      Elim[]
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id          String      @id @default(dbgenerated("concat('div_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  tmnt_id     String      @db.Text
+  div_name    String
+  hdcp_per    Float
+  hdcp_from   Int
+  int_hdcp    Boolean     @default(true)
+  hdcp_for    String      @default("Game")
+  sort_order  Int
+  tmnts       Tmnt        @relation(fields: [tmnt_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  pots        Pot[]
+  brkts       Brkt[]
+  elims       Elim[]
+  div_entries Div_Entry[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
   @@unique([tmnt_id, div_name])
 }
@@ -115,10 +114,11 @@ model Squad {
   starting_lane Int
   sort_order    Int
   lanes         Lane[]
-  lane_asmts    Lane_asmt[]
   pots          Pot[]
   brkts         Brkt[]
   elims         Elim[]
+  players       Player[] 
+  dviEntries    Div_Entry[] 
   events        Event       @relation(fields: [event_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
@@ -139,81 +139,131 @@ model Lane {
 }
 
 model Pot {
-  id         String   @id @default(dbgenerated("concat('pot_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
-  squad_id   String   @db.Text
-  div_id     String   @db.Text
-  sort_order Int
-  fee        Decimal  @db.Decimal(9, 2)
-  pot_type   String
-  div        Div      @relation(fields: [div_id], references: [id])
-  squad      Squad    @relation(fields: [squad_id], references: [id])
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id          String      @id @default(dbgenerated("concat('pot_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  squad_id    String      @db.Text
+  div_id      String      @db.Text
+  sort_order  Int
+  fee         Decimal     @db.Decimal(9, 2)
+  pot_type    String
+  pot_entries Pot_Entry[]
+  div         Div         @relation(fields: [div_id], references: [id])
+  squad       Squad       @relation(fields: [squad_id], references: [id])
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
   @@unique([div_id, pot_type])
 }
 
 model Brkt {
-  id         String   @id @default(dbgenerated("concat('brk_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
-  squad_id   String   @db.Text
-  div_id     String   @db.Text
-  sort_order Int
-  start      Int
-  games      Int
-  players    Int
-  fee        Decimal  @db.Decimal(9, 2)
-  first      Decimal  @db.Decimal(9, 2)
-  second     Decimal  @db.Decimal(9, 2)
-  admin      Decimal  @db.Decimal(9, 2)
-  div        Div      @relation(fields: [div_id], references: [id])
-  squad      Squad    @relation(fields: [squad_id], references: [id])
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id           String       @id @default(dbgenerated("concat('brk_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  squad_id     String       @db.Text
+  div_id       String       @db.Text
+  sort_order   Int
+  start        Int
+  games        Int
+  players      Int
+  fee          Decimal      @db.Decimal(9, 2)
+  first        Decimal      @db.Decimal(9, 2)
+  second       Decimal      @db.Decimal(9, 2)
+  admin        Decimal      @db.Decimal(9, 2)
+  brkt_entries Brkt_Entry[]
+  div          Div          @relation(fields: [div_id], references: [id])
+  squad        Squad        @relation(fields: [squad_id], references: [id])
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   @@unique([div_id, start])
 }
 
 model Elim {
-  id         String   @id @default(dbgenerated("concat('elm_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
-  squad_id   String   @db.Text
-  div_id     String   @db.Text
-  sort_order Int
-  start      Int
-  games      Int
-  fee        Decimal  @db.Decimal(9, 2)
-  div        Div      @relation(fields: [div_id], references: [id])
-  squad      Squad    @relation(fields: [squad_id], references: [id])
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id           String       @id @default(dbgenerated("concat('elm_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  squad_id     String       @db.Text
+  div_id       String       @db.Text
+  sort_order   Int
+  start        Int
+  games        Int
+  fee          Decimal      @db.Decimal(9, 2)
+  elim_entries Elim_Entry[]
+  div          Div          @relation(fields: [div_id], references: [id])
+  squad        Squad        @relation(fields: [squad_id], references: [id])
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   @@unique([div_id, start, games])
 }
 
 model Player {
-  id         String      @id @default(dbgenerated("concat('ply_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
-  tmnt_id    String      @db.Text
-  first_name String      @db.VarChar
-  last_name  String      @db.VarChar
-  average    Int?
-  usbc       String?     @db.VarChar
-  entries    Entry[]
-  games      Game[]
-  lane_asmts Lane_asmt[]
-  tmnts      Tmnt        @relation(fields: [tmnt_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  id           String       @id @default(dbgenerated("concat('ply_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  squad_id     String       @db.Text
+  first_name   String       @db.VarChar
+  last_name    String       @db.VarChar
+  average      Int
+  usbc         String?      @db.VarChar
+  lane         Int
+  position     String       @db.VarChar
+  div_entries  Div_Entry[]
+  pot_entries  Pot_Entry[]
+  brkt_entries Brkt_Entry[]
+  elim_entries Elim_Entry[]
+  games        Game[]
+  squad        Squad        @relation(fields: [squad_id], references: [id])
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt  
 }
 
-model Entry {
-  id        Int      @id @default(autoincrement())
-  player_id String   @db.Text
+model Div_Entry {
+  id        String   @id @default(dbgenerated("concat('den_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text  
+  squad_id  String   @db.Text 
   div_id    String   @db.Text
-  divs      Div      @relation(fields: [div_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  players   Player   @relation(fields: [player_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  player_id String   @db.Text
+  fee       Decimal  @db.Decimal(9, 2) @default(0)
+  squad     Squad    @relation(fields: [squad_id], references: [id])
+  div       Div      @relation(fields: [div_id], references: [id])
+  player    Player   @relation(fields: [player_id], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([player_id, div_id])
+  @@unique([squad_id, div_id, player_id])
+}
+
+model Pot_Entry {
+  id        String   @id @default(dbgenerated("concat('pen_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  pot_id    String   @db.Text
+  player_id String   @db.Text
+  fee       Decimal  @db.Decimal(9, 2) @default(0)
+  pot       Pot      @relation(fields: [pot_id], references: [id])
+  player    Player   @relation(fields: [player_id], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([pot_id, player_id])
+}
+
+model Brkt_Entry {
+  id        String   @id @default(dbgenerated("concat('bre_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  brkt_id   String   @db.Text
+  player_id String   @db.Text
+  brackets  Int
+  fee       Decimal  @db.Decimal(9, 2) @default(0)
+  brkt      Brkt     @relation(fields: [brkt_id], references: [id])
+  player    Player   @relation(fields: [player_id], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([brkt_id, player_id])
+}
+
+model Elim_Entry {
+  id        String   @id @default(dbgenerated("concat('ele_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  elim_id   String   @db.Text
+  player_id String   @db.Text
+  fee       Decimal  @db.Decimal(9, 2) @default(0)
+  elim      Elim     @relation(fields: [elim_id], references: [id])
+  player    Player   @relation(fields: [player_id], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([elim_id, player_id])
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -228,21 +278,6 @@ model Game {
   updatedAt DateTime @updatedAt
 
   @@unique([squad_id, player_id, game_num])
-}
-
-model Lane_asmt {
-  id        Int      @id @default(autoincrement())
-  lane      Int
-  player_id String   @db.Text
-  squad_id  String   @db.Text
-  position  String   @db.VarChar
-  players   Player   @relation(fields: [player_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  squads    Squad    @relation(fields: [squad_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([lane, position])
-  @@unique([player_id, squad_id])
 }
 
 model testDate {

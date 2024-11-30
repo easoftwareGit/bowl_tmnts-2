@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import LanesList, { getLanesFromPairs, lanesNotThisSquad, lanesThisSquad, pairsOfLanes } from '@/components/tmnts/lanesList';
 import { mockLanes, mockPairs } from '../../../mocks/tmnts/newTmnt/mockNewTmnt';
-import { laneType, pairsOfLanesType } from '@/lib/types/types';
+import { laneType, pairsOfLanesType, tmntActions } from '@/lib/types/types';
 import 'core-js/actual/structured-clone';
 
 describe('LanesList - Component', () => { 
@@ -348,29 +348,59 @@ describe('LanesList - Component', () => {
   describe('render the lanes list', () => {
 
     it('should render the "Lanes" column header', () => {
-      render(<LanesList squadId={squad1Id} lanes={mockLanes} setLanes={mockSetLanes}/>) 
+      render(<LanesList
+        squadId={squad1Id}
+        lanes={mockLanes}
+        setLanes={mockSetLanes}
+        tmntAction={tmntActions.Edit}
+      />) 
       const lanesHeader = screen.getByText('Lanes');
       expect(lanesHeader).toBeInTheDocument();
     })
-
     it('should render the "In Use" column header', () => {
-      render(<LanesList squadId={squad1Id} lanes={mockLanes} setLanes={mockSetLanes}/>) 
+      render(<LanesList
+        squadId={squad1Id}
+        lanes={mockLanes}
+        setLanes={mockSetLanes}
+        tmntAction={tmntActions.Edit}
+      />) 
       const inUseHeader = screen.getByText('In Use');
       expect(inUseHeader).toBeInTheDocument();
     })
-
     it('should render the first pair of lanes', () => { 
-      render(<LanesList squadId={squad1Id} lanes={mockLanes} setLanes={mockSetLanes}/>)
+      render(<LanesList
+        squadId={squad1Id}
+        lanes={mockLanes}
+        setLanes={mockSetLanes}
+        tmntAction={tmntActions.Edit}
+      />) 
       const firstPairText = mockLanes[0].lane_number + ' - ' + mockLanes[1].lane_number
       const firstPair = screen.getByText(firstPairText);
       expect(firstPair).toBeInTheDocument();
     })
-
     it('should render the 2nd pair of lanes (map is working)', () => { 
-      render(<LanesList squadId={squad1Id} lanes={mockLanes} setLanes={mockSetLanes}/>)
+      render(<LanesList
+        squadId={squad1Id}
+        lanes={mockLanes}
+        setLanes={mockSetLanes}
+        tmntAction={tmntActions.Edit}
+      />) 
       const secondPairText = mockLanes[2].lane_number + ' - ' + mockLanes[3].lane_number
       const secondPair = screen.getByText(secondPairText);
       expect(secondPair).toBeInTheDocument();
+    })
+    it('should render the component with checkboxes disabled', () => {
+      render(<LanesList
+        squadId={squad1Id}
+        lanes={mockLanes}
+        setLanes={mockSetLanes}
+        tmntAction={tmntActions.Run}
+      />) 
+      const checkboxes = screen.queryAllByRole('checkbox');
+      expect(checkboxes).toHaveLength(6);
+      for (let i = 0; i < checkboxes.length; i++) {
+        expect(checkboxes[i]).toBeDisabled();
+      }
     })
   })
 })

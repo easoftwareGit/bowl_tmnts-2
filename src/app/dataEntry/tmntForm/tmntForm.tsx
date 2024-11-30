@@ -3,7 +3,7 @@ import React, { ChangeEvent, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import { Accordion, AccordionItem } from "react-bootstrap";
-import { allDataOneTmntType, dataOneTmntType, ioDataErrorsType } from "@/lib/types/types";
+import { dataOneTmntType, ioDataErrorsType, tmntActions, tmntFormDataType } from "@/lib/types/types";
 import ModalErrorMsg, { cannotSaveTitle } from "@/components/modal/errorModal";
 import { initModalObj } from "@/components/modal/modalObjType";
 import { maxTmntNameLength } from "@/lib/validation";
@@ -17,13 +17,13 @@ import ZeroToNPots, { validatePots } from "./zeroToNPots";
 import ZeroToNBrackets, { validateBrkts } from "./zeroToNBrkts";
 import ZeroToNElims, { validateElims } from "./zeroToNElims";
 import { compareAsc } from "date-fns";
-import { saveAllDataOneTmnt } from "@/lib/db/oneTmnt/oneTmnt";
+import { saveAllDataOneTmnt } from "@/lib/db/oneTmnt/dbOneTmnt";
 import ModalConfirm from "@/components/modal/confirmModal";
-import { redirect, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
 import "./tmntForm.css";
 
 interface FormProps {  
-  tmntProps: allDataOneTmntType
+  tmntProps: tmntFormDataType
 }
 
 const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => { 
@@ -32,13 +32,15 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
 
   let origData = tmntProps.origData;
   let oneTmntData = tmntProps.curData;  
+  const tmntAction = tmntProps.tmntAction;
 
-  const cancelAction = (origData.tmnt.tmnt_name === '')
+  const cancelAction = (tmntAction === tmntActions.New)
     ? 'entering new'
-    : 'editing';
-  const cancelTitle = (origData.tmnt.tmnt_name === '')
+    : 'editing';  
+  const cancelTitle = (tmntAction === tmntActions.New)
     ? 'New'
     : 'Editing';
+  const isDisabled = (tmntAction === tmntActions.Run);
 
   const bowls = useSelector((state: RootState) => state.bowls.bowls); 
 
@@ -432,6 +434,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
               value={tmnt.tmnt_name}
               maxLength={maxTmntNameLength}
               onChange={handleInputChange}
+              disabled={isDisabled}
             />
             <div
               className="text-danger"
@@ -451,6 +454,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
               className={`form-select ${tmnt.bowl_id_err && "is-invalid"}`}
               onChange={handleBowlSelectChange}
               value={tmnt.bowl_id === '' ? 'Choose...' : tmnt.bowl_id}
+              disabled={isDisabled}
             >
               <option disabled>                
                 Choose...
@@ -481,6 +485,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
               value={tmnt.start_date_str}
               onChange={handleInputChange}
               onBlur={handleBlur}
+              disabled={isDisabled}
             />
             <div
               className="text-danger"
@@ -504,6 +509,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
               value={tmnt.end_date_str}
               onChange={handleInputChange}
               onBlur={handleBlur}
+              disabled={isDisabled}
             />
             <div
               className="text-danger"
@@ -512,21 +518,36 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
               {tmnt.end_date_err}
             </div>
           </div>
-          <div className="col-md-6 d-flex justify-content-center align-items-center">
+          {(tmntAction !== tmntActions.Run) ? ( 
+            <div className="col-md-6 d-flex justify-content-center align-items-center">
+              <button
+                className="btn btn-success me-2"
+                onClick={handleSubmit}
+              >
+                Save Tournament
+              </button>            
+              <button
+                className="btn btn-danger"
+                onClick={handleCancel}
+              >
+                Cancel
+              </button>
+            </div>
+          ) : null }
+          {/* <div className="col-md-6 d-flex justify-content-center align-items-center">
             <button
-              className="btn btn-success"
+              className="btn btn-success me-2"
               onClick={handleSubmit}
             >
               Save Tournament
-            </button>
-            &nbsp;&nbsp;&nbsp;
+            </button>            
             <button
               className="btn btn-danger"
               onClick={handleCancel}
             >
               Cancel
             </button>
-          </div>
+          </div> */}
           {/* <div className="col-sm-3">
             <button 
               className="btn btn-info"
@@ -548,7 +569,8 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
                 setEvents={setEvents}
                 squads={squads}
                 setSquads={setSquads}
-                setAcdnErr={setEventAcdnErr}                    
+                setAcdnErr={setEventAcdnErr}  
+                tmntAction={tmntAction}
               />
             </Accordion.Body>
           </AccordionItem>
@@ -566,6 +588,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
                 brkts={brkts}
                 elims={elims}
                 setAcdnErr={setDivAcdnErr}
+                tmntAction={tmntAction}
               />
             </Accordion.Body>
           </AccordionItem>
@@ -583,6 +606,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
                 setLanes={setLanes}
                 events={events}
                 setAcdnErr={setSquadAcdnErr}
+                tmntAction={tmntAction}
               />
             </Accordion.Body>
           </AccordionItem>
@@ -598,6 +622,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
                 lanes={lanes} 
                 setLanes={setLanes}
                 squads={squads}
+                tmntAction={tmntAction}
               />
             </Accordion.Body>
           </AccordionItem>
@@ -615,6 +640,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
                 squads={squads}
                 setAcdnErr={setPotAcdnErr}
                 setShowingModal={setShowingModal}
+                tmntAction={tmntAction}
               />
             </Accordion.Body>
           </AccordionItem>
@@ -632,6 +658,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
                 squads={squads}
                 setAcdnErr={setBrktAcdnErr}
                 setShowingModal={setShowingModal}
+                tmntAction={tmntAction}
               />
             </Accordion.Body>
           </AccordionItem>
@@ -649,6 +676,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
                 squads={squads}
                 setAcdnErr={setElimAcdnErr}
                 setShowingModal={setShowingModal}
+                tmntAction={tmntAction}
               />
             </Accordion.Body>
           </AccordionItem>

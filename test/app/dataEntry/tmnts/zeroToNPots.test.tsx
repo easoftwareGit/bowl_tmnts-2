@@ -6,7 +6,8 @@ import { mockPots, mockDivs, mockSquads } from "../../../mocks/tmnts/twoDivs/moc
 import { localConfig } from "@/lib/currency/const";
 import { formatValueSymbSep2Dec } from "@/lib/currency/formatValue";
 import { getDivName } from "@/lib/getName";
-import { potType } from "@/lib/types/types";
+import { potType, tmntActions } from "@/lib/types/types";
+import { cloneDeep } from "lodash";
 
 const mockSetPots = jest.fn();
 const mockSetAcdnErr = jest.fn();
@@ -19,6 +20,7 @@ const mockZeroToNPotsProps = {
   squads: mockSquads,
   setAcdnErr: mockSetAcdnErr,
   setShowingModal: mockSetShowingModal,
+  tmntAction: tmntActions.New,
 }
 
 describe("ZeroToNPots - Component", () => { 
@@ -26,12 +28,18 @@ describe("ZeroToNPots - Component", () => {
   describe("render the component", () => {
 
     describe("render the Create Pot tab", () => {
-      it("render Pot Type Radio label", () => {
+      it('render the "Create Pots" tab', async () => {        
         // ARRANGE        
-        render(<ZeroToNPots {...mockZeroToNPotsProps} />);
+        render(<ZeroToNPots {...mockZeroToNPotsProps} />);        
         // ACT        
-        const potTypeLabels = screen.getAllByText(/pot type/i);        
-        // ASSERT        
+        const tabs = screen.getAllByRole("tab");        
+        // ASSERT     
+        expect(tabs).toHaveLength(mockPots.length + 1);  //  + 1 for create pot tab
+        expect(tabs[0]).toHaveTextContent("Create Pot");
+      })
+      it("render Pot Type Radio label", () => {        
+        render(<ZeroToNPots {...mockZeroToNPotsProps} />);        
+        const potTypeLabels = screen.getAllByText(/pot type/i);                
         expect(potTypeLabels).toHaveLength(mockPots.length + 1); // + 1 for create pot
       })
       it('render the "Game" radio button', () => {
@@ -52,7 +60,7 @@ describe("ZeroToNPots - Component", () => {
         expect(seriesRadio).toBeInTheDocument();
         expect(seriesRadio).not.toBeChecked();
       })
-      it('DO NOT render the Pot Type errors', () => {
+      it('render the Pot Type error', () => {
         render(<ZeroToNPots {...mockZeroToNPotsProps} />);
         const potTypeError = screen.queryByTestId("dangerPotType");
         expect(potTypeError).toHaveTextContent("");
@@ -60,61 +68,42 @@ describe("ZeroToNPots - Component", () => {
       it('render the Division Radio label', () => {
         render(<ZeroToNPots {...mockZeroToNPotsProps} />);
         const divLabels = screen.getAllByText(/division/i)
-        expect(divLabels).toHaveLength(mockPots.length + 1);
+        expect(divLabels).toHaveLength(mockPots.length + 1); // + 1 for create pot
       })
       it('render the "Sratch" radio button', () => {
         render(<ZeroToNPots {...mockZeroToNPotsProps} />);        
-        const scratchRadio = screen.getByRole('radio', { name: /scratch/i }) as HTMLInputElement;
-        expect(scratchRadio).not.toBeChecked();        
+        const scratchRadio = screen.queryByRole('radio', { name: /scratch/i }) as HTMLInputElement;
+        expect(scratchRadio).toBeInTheDocument();
       })
       it('render the "HDCP" radio button', () => {
         render(<ZeroToNPots {...mockZeroToNPotsProps} />);                       
-        const hdcpRadio = screen.getByRole('radio', { name: /hdcp/i }) as HTMLInputElement;
-        expect(hdcpRadio).not.toBeChecked();
+        const hdcpRadio = screen.queryByRole('radio', { name: /hdcp/i }) as HTMLInputElement;
+        expect(hdcpRadio).toBeInTheDocument();
       })
-      it('DO NOT render the Division errors', () => {
+      it('render the Division error', () => {
         render(<ZeroToNPots {...mockZeroToNPotsProps} />);
         const divError = screen.queryByTestId("dangerDiv");
-        expect(divError).toHaveTextContent("");
+        expect(divError).toBeInTheDocument();
       })
       it('render the "Fee" labels', () => {
         render(<ZeroToNPots {...mockZeroToNPotsProps} />);
         const feeLabels = screen.getAllByLabelText("Fee");
-        expect(feeLabels).toHaveLength(mockPots.length + 1);
+        expect(feeLabels).toHaveLength(mockPots.length + 1); // + 1 for create pot
       })
       it('render the "Fee" values', () => {
         render(<ZeroToNPots {...mockZeroToNPotsProps} />);        
         const fees = screen.getAllByRole('textbox', { name: /fee/i }) as HTMLInputElement[];
-        expect(fees).toHaveLength(mockPots.length + 1);
-        expect(fees[0]).toHaveValue('')
+        expect(fees).toHaveLength(mockPots.length + 1); // no create pot fee input        
       })
-      it('DO NOT render the "Fee" errors', () => {
+      it('render the "Fee" error', () => {
         render(<ZeroToNPots {...mockZeroToNPotsProps} />);
         const feeError = screen.queryByTestId("dangerPotFee");        
-        expect(feeError).toHaveTextContent("");
+        expect(feeError).toBeInTheDocument();
       })
       it('render the "Add Pot" button', () => {
         render(<ZeroToNPots {...mockZeroToNPotsProps} />);
-        const addBtn = screen.getByRole("button", { name: /add pot/i });
+        const addBtn = screen.queryByRole("button", { name: /add pot/i });
         expect(addBtn).toBeInTheDocument();
-      })
-      it('render the tabs', async () => {         
-        const user = userEvent.setup()
-        render(<ZeroToNPots {...mockZeroToNPotsProps} />);        
-        const tabs = screen.getAllByRole("tab");        
-        expect(tabs).toHaveLength(mockPots.length + 1);
-        await user.click(tabs[0]);
-        
-        expect(tabs[0]).toHaveTextContent('Create Pot');
-        expect(tabs[0]).toHaveAttribute("aria-selected", "true");
-        expect(tabs[1]).toHaveTextContent(mockPots[0].pot_type + ' - ' + getDivName(mockPots[0].div_id, mockDivs));
-        expect(tabs[1]).toHaveAttribute("aria-selected", "false");
-        expect(tabs[2]).toHaveTextContent(mockPots[1].pot_type + ' - ' + getDivName(mockPots[1].div_id, mockDivs));
-        expect(tabs[2]).toHaveAttribute("aria-selected", "false");
-        expect(tabs[3]).toHaveTextContent(mockPots[2].pot_type + ' - ' + getDivName(mockPots[2].div_id, mockDivs));
-        expect(tabs[3]).toHaveAttribute("aria-selected", "false");
-        expect(tabs[4]).toHaveTextContent(mockPots[3].pot_type + ' - ' + getDivName(mockPots[3].div_id, mockDivs));
-        expect(tabs[4]).toHaveAttribute("aria-selected", "false");
       })
     });
 
@@ -170,7 +159,7 @@ describe("ZeroToNPots - Component", () => {
         render(<ZeroToNPots {...mockZeroToNPotsProps} />);
         const tabs = screen.getAllByRole("tab");
         await user.click(tabs[1]);
-        const potFeeError = screen.queryByTestId("dangerPotFee2");        
+        const potFeeError = screen.queryByTestId(`dangerPotFee${mockPots[0].id}`);
         expect(potFeeError).toHaveTextContent("");
       })
       it('render the "Delete Pot" button', async () => {
@@ -241,7 +230,7 @@ describe("ZeroToNPots - Component", () => {
         render(<ZeroToNPots {...mockZeroToNPotsProps} />);
         const tabs = screen.getAllByRole("tab");
         await user.click(tabs[2]);
-        const potFeeError = screen.queryByTestId("dangerPotFee3");      
+        const potFeeError = screen.queryByTestId(`dangerPotFee${mockPots[1].id}`);
         expect(potFeeError).toHaveTextContent('test fee error');
       })
       it('render the "Delete Pot" button', async () => {
@@ -306,7 +295,7 @@ describe("ZeroToNPots - Component", () => {
         render(<ZeroToNPots {...mockZeroToNPotsProps} />);
         const tabs = screen.getAllByRole("tab");
         await user.click(tabs[3]);
-        const potFeeError = screen.queryByTestId("dangerPotFee4");      
+        const potFeeError = screen.queryByTestId(`dangerPotFee${mockPots[2].id}`);
         expect(potFeeError).toHaveTextContent("");
       })
       it('render the "Delete Pot" button', async () => {
@@ -371,7 +360,7 @@ describe("ZeroToNPots - Component", () => {
         render(<ZeroToNPots {...mockZeroToNPotsProps} />);
         const tabs = screen.getAllByRole("tab");
         await user.click(tabs[4]);
-        const potFeeError = screen.queryByTestId("dangerPotFee5");      
+        const potFeeError = screen.queryByTestId(`dangerPotFee${mockPots[3].id}`);
         expect(potFeeError).toHaveTextContent("");
       })
       it('render the "Delete Pot" button', async () => {
@@ -383,6 +372,121 @@ describe("ZeroToNPots - Component", () => {
         expect(delBtns).toHaveLength(mockPots.length); // add button shown in Create Pot tab
       })
     })
+
+    describe('render Pots when tmntAction === Run', () => { 
+      const runTmntProps = cloneDeep(mockZeroToNPotsProps);
+      runTmntProps.tmntAction = tmntActions.Run;
+      it('render the pot type value', async () => { 
+        const user = userEvent.setup()
+        render(<ZeroToNPots {...runTmntProps} />);
+        const tabs = screen.getAllByRole("tab");
+        await user.click(tabs[0]);        
+        const potTypeValues = screen.getAllByRole('textbox', { name: /pot type/i }) as HTMLInputElement[];
+        expect(potTypeValues).toHaveLength(mockPots.length);        
+        for (let i = 0; i < mockPots.length; i++) {
+          expect(potTypeValues[i]).toBeDisabled();
+        }        
+      })
+      it('render the division value', async () => { 
+        const user = userEvent.setup()
+        render(<ZeroToNPots {...runTmntProps} />);
+        const tabs = screen.getAllByRole("tab");
+        await user.click(tabs[0]);
+        const divValues = screen.getAllByRole('textbox', { name: /division/i }) as HTMLInputElement[];
+        expect(divValues).toHaveLength(mockPots.length);        
+        for (let i = 0; i < mockPots.length; i++) {
+          expect(divValues[i]).toBeDisabled();  
+        }        
+      })
+      it('render the pot fee value', async () => { 
+        const user = userEvent.setup()
+        render(<ZeroToNPots {...runTmntProps} />);
+        const tabs = screen.getAllByRole("tab");
+        await user.click(tabs[0]);
+        const potFeeValues = screen.getAllByRole('textbox', { name: /fee/i }) as HTMLInputElement[];                
+        expect(potFeeValues).toHaveLength(mockPots.length);
+        for (let i = 0; i < mockPots.length; i++) {
+          expect(potFeeValues[i]).toBeDisabled();
+        }        
+      })
+      it('render the "Delete Pot" button', async () => {
+        const user = userEvent.setup()
+        render(<ZeroToNPots {...runTmntProps} />);
+        const tabs = screen.getAllByRole("tab");
+        await user.click(tabs[0]);   
+        const delBtns = screen.getAllByRole("button", { name: /delete pot/i });
+        expect(delBtns).toHaveLength(mockPots.length); // add button shown in Create Pot tab
+        for (let i = 0; i < mockPots.length; i++) {
+          expect(delBtns[i]).toBeDisabled();
+        }        
+      })
+    })
+
+    describe('DO NOT render Create Pots tab when tmntAction === Run', () => { 
+      const runTmntProps = cloneDeep(mockZeroToNPotsProps);
+      runTmntProps.tmntAction = tmntActions.Run;
+      it('DO NOT render the "Create Pots" tab', async () => {        
+        render(<ZeroToNPots {...runTmntProps} />);        
+        const tabs = screen.getAllByRole("tab");        
+        expect(tabs).toHaveLength(mockPots.length);  // no create pot tab
+
+        expect(tabs[0]).toHaveAttribute("aria-selected", "true");
+        expect(tabs[1]).toHaveAttribute("aria-selected", "false");
+        expect(tabs[2]).toHaveAttribute("aria-selected", "false");
+        expect(tabs[3]).toHaveAttribute("aria-selected", "false");                
+
+        expect(tabs[0]).not.toHaveTextContent(/create pot/i);
+        expect(tabs[1]).not.toHaveTextContent(/create pot/i);
+        expect(tabs[2]).not.toHaveTextContent(/create pot/i);
+        expect(tabs[3]).not.toHaveTextContent(/create pot/i);
+      })
+      it("DO NOT render Pot Type Radio label", () => {        
+        render(<ZeroToNPots {...runTmntProps} />);        
+        const potTypeLabels = screen.getAllByText(/pot type/i);                
+        expect(potTypeLabels).toHaveLength(mockPots.length); // no create pot label
+      })
+      it('DO NOT render the "Game" radio button', () => {
+        render(<ZeroToNPots {...runTmntProps} />);        
+        const gameRadio = screen.queryByRole('radio', { name: "Game" });
+        expect(gameRadio).not.toBeInTheDocument();
+      })
+      it('DO NOT render the "Last Game" radio button', () => {
+        render(<ZeroToNPots {...runTmntProps} />);        
+        const lastRadio = screen.queryByRole('radio', { name: /last game/i }) as HTMLInputElement;
+        expect(lastRadio).not.toBeInTheDocument();        
+      })
+      it('DO NOT render the "Series" radio button', () => {
+        render(<ZeroToNPots {...runTmntProps} />);        
+        const seriesRadio = screen.queryByRole('radio', { name: /series/i }) as HTMLInputElement;
+        expect(seriesRadio).not.toBeInTheDocument();        
+      })
+      it('DO NOT render the Pot Type errors', () => {
+        render(<ZeroToNPots {...runTmntProps} />);
+        const potTypeError = screen.queryByTestId("dangerPotType");
+        expect(potTypeError).not.toBeInTheDocument();
+      })
+      it('DO NOT render the Division Radio label', () => {
+        render(<ZeroToNPots {...runTmntProps} />);
+        const divLabels = screen.getAllByText(/division/i)
+        expect(divLabels).toHaveLength(mockPots.length); // no create pot label
+      })
+      it('DO NOT render the "Sratch" radio button', () => {
+        render(<ZeroToNPots {...runTmntProps} />);        
+        const scratchRadio = screen.queryByRole('radio', { name: /scratch/i }) as HTMLInputElement;
+        expect(scratchRadio).not.toBeInTheDocument();
+      })
+      it('DO NOT render the "HDCP" radio button', () => {
+        render(<ZeroToNPots {...runTmntProps} />);                       
+        const hdcpRadio = screen.queryByRole('radio', { name: /hdcp/i }) as HTMLInputElement;
+        expect(hdcpRadio).not.toBeInTheDocument();
+      })
+      it('DO NOT render the Division errors', () => {
+        render(<ZeroToNPots {...runTmntProps} />);
+        const divError = screen.queryByTestId("dangerDiv");
+        expect(divError).not.toBeInTheDocument();
+      })
+    })
+        
   });
 
   describe('render radio buttons, buttons in group have the same name', () => { 
@@ -502,12 +606,12 @@ describe("ZeroToNPots - Component", () => {
       // ACT
       await user.click(delBtns[3]);
       // ASSERT
-      const okBtn = await screen.findByRole('button', { name: /ok/i });
-      expect(okBtn).toBeInTheDocument();
-      const cancelBtn = screen.queryByRole('button', { name: /cancel/i });
-      expect(cancelBtn).toBeInTheDocument();
+      const yesBtn = await screen.findByRole('button', { name: /yes/i });
+      expect(yesBtn).toBeInTheDocument();
+      const noBtn = await screen.findByRole('button', { name: /no/i });
+      expect(noBtn).toBeInTheDocument();
       // ACT
-      await user.click(okBtn);
+      await user.click(yesBtn);
       // ASSERT
       expect(mockZeroToNPotsProps.setPots).toHaveBeenCalled();            
     })

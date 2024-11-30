@@ -3,7 +3,7 @@ import { baseEventsApi } from "@/lib/db/apiPaths";
 import { testBaseEventsApi } from "../../../testApi";
 import { eventType } from "@/lib/types/types";
 import { initEvent } from "@/lib/db/initVals";
-import { deleteAllTmntEvents, deleteEvent, getAllEventsForTmnt, postEvent, postManyEvents, putEvent } from "@/lib/db/events/eventsAxios";
+import { deleteAllTmntEvents, deleteEvent, getAllEventsForTmnt, postEvent, postManyEvents, putEvent } from "@/lib/db/events/dbEvents";
 import { mockEventsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockEvents";
 
 // before running this test, run the following commands in the terminal:

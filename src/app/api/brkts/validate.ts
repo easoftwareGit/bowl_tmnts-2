@@ -9,7 +9,7 @@ import {
 } from "@/lib/validation";
 import { sanitizeCurrency } from "@/lib/sanitize";
 import { validMoney } from "@/lib/currency/validate";
-import { brktType, idTypes, validBrktsType } from "@/lib/types/types";
+import { brktType, validBrktsType } from "@/lib/types/types";
 import { blankBrkt, defaultBrktGames, defaultBrktPlayers } from "@/lib/db/initVals";
 
 /**
@@ -24,27 +24,15 @@ const gotBrktData = (brkt: brktType): ErrorCode => {
       !brkt.id ||
       !brkt.div_id ||
       !brkt.squad_id ||
-      typeof brkt.start !== "number" ||
-      typeof brkt.games !== "number" ||
-      typeof brkt.players !== "number" ||
-      !validMoney(brkt.fee, Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER) ||
-      !validMoney(
-        brkt.first,
-        Number.MIN_SAFE_INTEGER,
-        Number.MAX_SAFE_INTEGER
-      ) ||
-      !validMoney(
-        brkt.second,
-        Number.MIN_SAFE_INTEGER,
-        Number.MAX_SAFE_INTEGER
-      ) ||
-      !validMoney(
-        brkt.admin,
-        Number.MIN_SAFE_INTEGER,
-        Number.MAX_SAFE_INTEGER
-      ) ||
-      !validMoney(brkt.fsa, Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER) ||
-      typeof brkt.sort_order !== "number"
+      !brkt.start ||
+      !brkt.games ||
+      !brkt.players ||
+      !brkt.fee ||
+      !brkt.first ||
+      !brkt.second ||
+      !brkt.admin ||
+      !brkt.fsa ||
+      !brkt.sort_order
     ) {
       return ErrorCode.MissingData;
     }
@@ -120,20 +108,6 @@ export const validFsa = (brkt: brktType): boolean => {
 };
 
 /**
- * checks if foreign key is valid
- *
- * @param FkId - foreign key
- * @param idType - id type - 'div' or 'sqd'
- * @returns {boolean} - true if foreign key is valid
- */
-export const validBrktFkId = (FkId: string, idType: idTypes): boolean => {
-  if (!FkId || !isValidBtDbId(FkId, idType)) {
-    return false;
-  }
-  return idType === "div" || idType === "sqd";
-};
-
-/**
  * checks if brkt data is valid
  *
  * @param brkt - brkt object to validate
@@ -205,10 +179,10 @@ export const sanitizeBrkt = (brkt: brktType): brktType => {
   if (isValidBtDbId(brkt.id, "brk")) {
     sanitizedBrkt.id = brkt.id;
   }
-  if (validBrktFkId(brkt.div_id, "div")) {
+  if (isValidBtDbId(brkt.div_id, "div")) {
     sanitizedBrkt.div_id = brkt.div_id;
   }
-  if (validBrktFkId(brkt.squad_id, "sqd")) {
+  if (isValidBtDbId(brkt.squad_id, "sqd")) {
     sanitizedBrkt.squad_id = brkt.squad_id;
   }
   if ((brkt.start === null) || isNumber(brkt.start)) {
@@ -251,9 +225,7 @@ export const sanitizeBrkt = (brkt: brktType): brktType => {
 export function validateBrkt(brkt: brktType): ErrorCode {
   try {
     const errCode = gotBrktData(brkt);
-    if (errCode !== ErrorCode.None) {
-      return errCode;
-    }
+    if (errCode !== ErrorCode.None) return errCode;
     return validBrktData(brkt);
   } catch (err) {
     return ErrorCode.OtherError;

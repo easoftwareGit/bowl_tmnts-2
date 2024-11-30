@@ -4,9 +4,9 @@ import { testBaseBrktsApi } from "../../../testApi";
 import { brktType } from "@/lib/types/types";
 import { initBrkt } from "@/lib/db/initVals";
 import { mockBrktsToPost, mockSquadsToPost, tmntToDelId, mockDivs } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllDivBrkts, deleteAllSquadBrkts, deleteAllTmntBrkts, deleteBrkt, getAllBrktsForTmnt, postBrkt, postManyBrkts, putBrkt } from "@/lib/db/brkts/brktsAxios";
-import { deleteAllTmntSquads, deleteSquad, postManySquads, postSquad } from "@/lib/db/squads/squadsAxios";
-import { deleteAllTmntDivs, deleteDiv, postDiv, postManyDivs } from "@/lib/db/divs/divsAxios";
+import { deleteAllDivBrkts, deleteAllSquadBrkts, deleteAllTmntBrkts, deleteBrkt, getAllBrktsForTmnt, postBrkt, postManyBrkts, putBrkt } from "@/lib/db/brkts/dbBrkts";
+import { deleteAllTmntSquads, deleteSquad, postManySquads, postSquad } from "@/lib/db/squads/dbSquads";
+import { deleteAllTmntDivs, deleteDiv, postDiv, postManyDivs } from "@/lib/db/divs/dbDivs";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -128,7 +128,14 @@ describe('brktsAxios', () => {
       const brkts = await getAllBrktsForTmnt(brktsToGet[0].id);
       expect(brkts).toBeNull();
     })
-
+    it('should return null if tmnt id is undefined', async () => { 
+      const brkts = await getAllBrktsForTmnt(undefined as any);  
+      expect(brkts).toBeNull();
+    })
+    it('should return null if tmnt id is null', async () => { 
+      const brkts = await getAllBrktsForTmnt(null as any);  
+      expect(brkts).toBeNull();
+    })
   })
 
   describe('postBrkt', () => { 
@@ -150,7 +157,7 @@ describe('brktsAxios', () => {
 
     let createdBrkt = false;
 
-    const deletePostedBrbkt = async () => { 
+    const deletePostedBrkt = async () => { 
       const response = await axios.get(url);
       const brkts = response.data.brkts;
       const toDel = brkts.find((b: brktType) => b.fee === '4');
@@ -168,7 +175,7 @@ describe('brktsAxios', () => {
     }
 
     beforeAll(async () => { 
-      await deletePostedBrbkt();
+      await deletePostedBrkt();
     })
 
     beforeEach(() => {
@@ -177,7 +184,7 @@ describe('brktsAxios', () => {
 
     afterEach(async () => {
       if (createdBrkt) {
-        await deletePostedBrbkt();
+        await deletePostedBrkt();
       }
     })
 
@@ -202,8 +209,8 @@ describe('brktsAxios', () => {
         ...brktToPost,
         games: -1,
       }
-      const postedDiv = await postBrkt(invalidBrkt);
-      expect(postedDiv).toBeNull();
+      const postedBrkt = await postBrkt(invalidBrkt);
+      expect(postedBrkt).toBeNull();
     })
 
   })
@@ -323,10 +330,10 @@ describe('brktsAxios', () => {
 
     const doReset = async () => {
       try {
-        const potJSON = JSON.stringify(resetBrkt);
+        const brktJSON = JSON.stringify(resetBrkt);
         const response = await axios({
           method: "put",
-          data: potJSON,
+          data: brktJSON,
           withCredentials: true,
           url: putUrl,
         });

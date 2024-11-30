@@ -1,9 +1,10 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import OneToNLanes from "../../../../src/app/dataEntry/newTmnt/oneToNLanes";
+import OneToNLanes from "@/app/dataEntry/tmntForm/oneToNLanes";
 import { mockLanes, mockSquads } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { pairsOfLanes } from "@/components/tmnts/lanesList";
+import { tmntActions } from "@/lib/types/types";
 
 const mockSetSquads = jest.fn();
 const mockSetLanes = jest.fn();
@@ -13,6 +14,7 @@ const mockOneToNLanesProps = {
   setLanes: mockSetLanes,
   squads: mockSquads,
   setSquads: mockSetSquads,
+  tmntAction: tmntActions.New,
 };
 
 describe("OneToNLanes - Component", () => { 
@@ -26,6 +28,7 @@ describe("OneToNLanes - Component", () => {
       setLanes: mockSetLanes,
       squads: oneSquad,
       setSquads: mockSetSquads,
+      tmntAction: tmntActions.New,
     }
     it('should render the component', () => { 
       render(<OneToNLanes {...justOneSquadProps} />)
@@ -143,7 +146,39 @@ describe("OneToNLanes - Component", () => {
       expect(tabs[1]).toHaveAttribute("aria-selected", "false");
     });
   })
-  
+
+  describe('Render the component - TmntAction === Run', () => { 
+    const oneSquad = mockSquads.filter(squad => squad.id === 'sqd_e214ede16c5c46a4950e9a48bfeef61a');
+    const lanesOneSquad = mockLanes.filter(lane => lane.squad_id === 'sqd_e214ede16c5c46a4950e9a48bfeef61a');
+
+    const justOneSquadProps = {      
+      lanes: lanesOneSquad,
+      setLanes: mockSetLanes,
+      squads: oneSquad,
+      setSquads: mockSetSquads,
+      tmntAction: tmntActions.Run,
+    }
+    it('should render checkboxes in the "In Use" column with correct values', () => {
+      render(<OneToNLanes {...justOneSquadProps} />)
+      const checkboxes = screen.getAllByRole('checkbox') as HTMLInputElement[];
+      const s1pairs = pairsOfLanes(mockSquads[0].id, mockLanes);
+      expect(s1pairs).toHaveLength(10);
+      s1pairs.forEach((pair, index) => {      
+        expect((checkboxes[index] as HTMLInputElement).checked).toBe(pair.in_use);
+        expect((checkboxes[index] as HTMLInputElement).disabled).toBe(true);
+      })
+    })
+
+    it("render the tabs", async () => {
+      const user = userEvent.setup();
+      render(<OneToNLanes {...mockOneToNLanesProps} />);
+      const tabs = screen.getAllByRole("tab");
+      await user.click(tabs[0]); // focus on first tab
+      expect(tabs[0]).toHaveTextContent(oneSquad[0].tab_title);
+      expect(tabs[0]).toHaveAttribute("aria-selected", "true");
+    });
+  })
+
   describe('check the In Use checkboxes', () => {
     const oneSquad = mockSquads.filter(squad => squad.id === 'sqd_e214ede16c5c46a4950e9a48bfeef61a');
     const lanesOneSquad = mockLanes.filter(lane => lane.squad_id === 'sqd_e214ede16c5c46a4950e9a48bfeef61a');
@@ -153,6 +188,7 @@ describe("OneToNLanes - Component", () => {
       setLanes: mockSetLanes,
       squads: oneSquad,
       setSquads: mockSetSquads,
+      tmntAction: tmntActions.New
     }
 
     it('check the "In Use" checkboxes', async () => {

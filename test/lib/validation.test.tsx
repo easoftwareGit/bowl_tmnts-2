@@ -1,4 +1,3 @@
-import { postSecret } from "@/lib/tools";
 import {
   isEmail,
   isPassword8to20,
@@ -13,10 +12,12 @@ import {
   maxSortOrder,
   validPositiveInt,
   isValidRole,
+  validName,
 } from "@/lib/validation";
 import { initDiv, initEvent } from "@/lib/db/initVals";
 
 describe("tests for validation functions", () => {
+
   describe("isEmail function", () => {
     it("should return true for a valid email", () => {
       expect(isEmail("test@example.com")).toBe(true);
@@ -400,62 +401,43 @@ describe("tests for validation functions", () => {
     });
   });
 
-  describe("isNumber", () => {
-    // returns true for integer values
+  describe("isNumber", () => {    
     it("should return true when the value is an integer", () => {
       const result = isNumber(42);
       expect(result).toBe(true);
     });
-
-    // return true for 0
     it("should return true for 0", () => {
       const result = isNumber(0);
       expect(result).toBe(true);
     });
-
-    // returns false for Infinity
     it("should return false when the value is Infinity", () => {
       const result = isNumber(Infinity);
       expect(result).toBe(false);
     });
-
-    // returns false for -Infinity
     it("should return false for -Infinity", () => {
       const result = isNumber(-Infinity);
       expect(result).toBe(false);
     });
-
-    // returns false for string values
     it("should return false when the value is a string", () => {
       const result = isNumber("42");
       expect(result).toBe(false);
     });
-
-    // returns true for floating-point values
     it("should return true for floating-point values", () => {
       const result = isNumber(3.14);
       expect(result).toBe(true);
     });
-
-    // returns false for boolean values
     it("should return false for boolean values", () => {
       const result = isNumber(true);
       expect(result).toBe(false);
     });
-
-    // returns false for null values
     it("should return false for null values", () => {
       const result = isNumber(null);
       expect(result).toBe(false);
     });
-
-    // returns false for undefined values
     it("should return false for undefined values", () => {
       const result = isNumber(undefined);
       expect(result).toBe(false);
     });
-
-    // returns false for NaN
     it("should return false for NaN", () => {
       const result = isNumber(NaN);
       expect(result).toBe(false);
@@ -486,4 +468,68 @@ describe("tests for validation functions", () => {
       expect(validSortOrder(undefined as any)).toBe(false);
     });
   });
+
+  describe('valdateName function', () => { 
+    const maxLength = 15;
+    it('should return true when name is within max length', () => {
+      const name = "John";      
+      const result = validName(name, maxLength);
+      expect(result).toBe(true);
+    });
+    it('should return true when name is exactly at max length', () => {
+      const name = "A".repeat(15);      
+      const result = validName(name, maxLength);
+      expect(result).toBe(true);
+    });
+    it('should return false when name is empty', () => {
+      const name = "";      
+      const result = validName(name, maxLength);
+      expect(result).toBe(false);
+    });
+    it('should sanitize name before checking length', () => {
+      const name = "  John  ";      
+      const sanitized = "John";
+      jest.mock('../../src/lib/sanitize', () => ({
+        sanitize: jest.fn(() => sanitized)
+      }));
+      const result = validName(name, maxLength);
+      expect(result).toBe(true);
+    });
+    it('should return false when name exceeds max length by one character', () => {
+      const name = "A".repeat(16); // 16 characters, exceeding maxFirstNameLength by 1      
+      const result = validName(name, maxLength);
+      expect(result).toBe(false);
+    });
+    it('should return false when name contains only whitespace characters', () => {
+      const name = "   ";
+      const result = validName(name, maxLength);
+      expect(result).toBe(false);
+    });
+    it('should return true for name with special characters within max length', () => {
+      const name = "J@hn-Doe!";      
+      const result = validName(name, maxLength);
+      expect(result).toBe(true);
+    });
+    it('should return true for a valid mixed case name within max length', () => {
+      const name = "JoHnDoE";      
+      const result = validName(name, maxLength);
+      expect(result).toBe(true);
+    });
+    it('should return true when name contains numeric characters and is within max length', () => {
+      const name = "John123";      
+      const result = validName(name, maxLength);
+      expect(result).toBe(true);
+    });
+    it('should return true when name with spaces is within max length', () => {
+      const name = "  John  ";      
+      const result = validName(name, maxLength);
+      expect(result).toBe(true);
+    });
+    it('should return false when name is null or undefined', () => {      
+      const resultNull = validName(null as any, maxLength);
+      const resultUndefined = validName(undefined as any, maxLength);
+      expect(resultNull).toBe(false);
+      expect(resultUndefined).toBe(false);
+    });
+  })
 });

@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     if (validBrkts.errorCode !== ErrorCode.None) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
-    // convert valid pots into potData to post
+    // convert valid brkts into brktData to post
     const brktsToPost: brktDataType[] = []
     validBrkts.brkts.forEach(brkt => {
       brktsToPost.push({

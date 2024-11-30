@@ -5,7 +5,7 @@ import { allEventMoneyValid, sanitizeEvent, validateEvent } from "@/app/api/even
 import { eventType } from "@/lib/types/types";
 import { initEvent } from "@/lib/db/initVals";
 
-// routes /api/events/:id
+// routes /api/events/event/:id
 
 export async function GET(
   request: Request,

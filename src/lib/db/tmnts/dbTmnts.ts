@@ -5,13 +5,13 @@ import { dataOneTmntType, ioDataErrorsType, tmntsListType, tmntType, YearObj } f
 import { isValidBtDbId, validYear } from "@/lib/validation";
 import { removeTimeFromISODateStr, todayYearStr } from "@/lib/dateTools";
 import { blankTmnt } from "../initVals";
-import { deleteAllTmntEvents, getAllEventsForTmnt } from "../events/eventsAxios";
-import { deleteAllTmntDivs, getAllDivsForTmnt } from "../divs/divsAxios";
-import { deleteAllTmntSquads, getAllSquadsForTmnt } from "../squads/squadsAxios";
-import { deleteAllTmntLanes, getAllLanesForTmnt } from "../lanes/lanesAxios";
-import { deleteAllTmntPots, getAllPotsForTmnt } from "../pots/potsAxios";
-import { deleteAllTmntBrkts, getAllBrktsForTmnt } from "../brkts/brktsAxios";
-import { deleteAllTmntElims, getAllElimsForTmnt } from "../elims/elimsAxios";
+import { deleteAllTmntEvents, getAllEventsForTmnt } from "../events/dbEvents";
+import { deleteAllTmntDivs, getAllDivsForTmnt } from "../divs/dbDivs";
+import { deleteAllTmntSquads, getAllSquadsForTmnt } from "../squads/dbSquads";
+import { deleteAllTmntLanes, getAllLanesForTmnt } from "../lanes/dbLanes";
+import { deleteAllTmntPots, getAllPotsForTmnt } from "../pots/dbPots";
+import { deleteAllTmntBrkts, getAllBrktsForTmnt } from "../brkts/dbBrkts";
+import { deleteAllTmntElims, getAllElimsForTmnt } from "../elims/dbElims";
 
 const url = testBaseTmntsApi.startsWith("undefined")
   ? baseTmntsApi

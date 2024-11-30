@@ -4,9 +4,9 @@ import { testBasePotsApi, testBaseSquadsApi, testBaseDivsApi } from "../../../te
 import { divType, potCategoriesTypes, potType, squadType } from "@/lib/types/types";
 import { initDiv, initPot, initSquad } from "@/lib/db/initVals";
 import { mockSquadsToPost, mockPotsToPost, mockDivs, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/squadsAxios";
-import { deleteAllTmntDivs, postManyDivs } from "@/lib/db/divs/divsAxios";
-import { deleteAllTmntPots } from "@/lib/db/pots/potsAxios";
+import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/dbSquads";
+import { deleteAllTmntDivs, postManyDivs } from "@/lib/db/divs/dbDivs";
+import { deleteAllTmntPots } from "@/lib/db/pots/dbPots";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -148,8 +148,8 @@ describe('Pots - API: /api/pots', () => {
     it('should get all pots', async () => { 
       const response = await axios.get(url);
       expect(response.status).toBe(200);
-      // 5 rows in prisma/seed.ts
-      expect(response.data.pots).toHaveLength(5);
+      // 6 rows in prisma/seed.ts
+      expect(response.data.pots).toHaveLength(6);
     })
 
   })

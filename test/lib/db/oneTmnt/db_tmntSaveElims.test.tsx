@@ -1,12 +1,12 @@
 import axios from "axios";
 import { baseElimsApi } from "@/lib/db/apiPaths";
 import { testBaseElimsApi } from "../../../testApi";
-import { tmntSaveElims, exportedForTesting } from "@/lib/db/oneTmnt/oneTmnt";
-import { deleteAllTmntElims, deleteElim, postElim, postManyElims, putElim } from "@/lib/db/elims/elimsAxios";
+import { tmntSaveElims, exportedForTesting } from "@/lib/db/oneTmnt/dbOneTmnt";
+import { deleteAllTmntElims, deleteElim, postElim, postManyElims, putElim } from "@/lib/db/elims/dbElims";
 import { mockElimsToPost, mockSquadsToPost, mockDivs, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { elimType } from "@/lib/types/types";
-import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/squadsAxios";
-import { deleteAllTmntDivs, postManyDivs } from "@/lib/db/divs/divsAxios";
+import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/dbSquads";
+import { deleteAllTmntDivs, postManyDivs } from "@/lib/db/divs/dbDivs";
 import { blankElim } from "@/lib/db/initVals";
 import 'core-js/actual/structured-clone';
 const { tmntPostPutOrDelElims } = exportedForTesting;

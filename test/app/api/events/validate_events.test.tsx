@@ -408,6 +408,10 @@ describe("tests for event validation", () => {
       const result = validTeamSize(2.5);
       expect(result).toBe(false);
     });
+    it("should return false when non number is passed", () => {
+      const result = validTeamSize('abc' as any);
+      expect(result).toBe(false);
+    });
     it("should return false when passed null", () => {
       const result = validTeamSize(null as any);
       expect(result).toBe(false);
@@ -433,6 +437,10 @@ describe("tests for event validation", () => {
     });
     it("should return false when non integer number is passed", () => {
       const result = validGames(2.5);
+      expect(result).toBe(false);
+    });
+    it("should return false when non number is passed", () => {
+      const result = validGames('abc' as any);
       expect(result).toBe(false);
     });
     it("should return false when passed null", () => {

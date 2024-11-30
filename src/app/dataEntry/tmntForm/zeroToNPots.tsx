@@ -1,5 +1,5 @@
 import React, { useState, ChangeEvent } from "react";
-import { divType, squadType, AcdnErrType, PotCategoryObjType, potType, potCategoriesTypes } from "@/lib/types/types";
+import { divType, squadType, AcdnErrType, PotCategoryObjType, potType, potCategoriesTypes, tmntActions } from "@/lib/types/types";
 import ModalConfirm, { delConfTitle } from "@/components/modal/confirmModal";
 import { Tab, Tabs } from "react-bootstrap";
 import { initModalObj } from "@/components/modal/modalObjType";
@@ -25,6 +25,7 @@ interface ChildProps {
   squads: squadType[];
   setAcdnErr: (objAcdnErr: AcdnErrType) => void;  
   setShowingModal: (showingModal: boolean) => void;
+  tmntAction: tmntActions;
 }
 
 const createPotTitle = "Create Pot";
@@ -131,9 +132,13 @@ const ZeroToNPots: React.FC<ChildProps> = ({
   squads,
   setAcdnErr,  
   setShowingModal,
+  tmntAction,
 }) => {
-
-  const defaultTabKey = 'createPot';
+  
+  const isDisabled = (tmntAction === tmntActions.Run);  
+  const defaultTabKey = (isDisabled && pots.length > 0 && pots[0].id)
+    ? pots[0].id
+    : 'createPot';  
 
   // only 1 squad for now, so all pots use squad[0]
   const potWithSquadId = {
@@ -147,6 +152,8 @@ const ZeroToNPots: React.FC<ChildProps> = ({
 
   const initSortOrder = pots.length === 0 ? 1 : pots[pots.length - 1].sort_order + 1;
   const [sortOrder, setSortOrder] = useState(initSortOrder); 
+   
+  const delBtnStyle = isDisabled ? 'btn-dark' : 'btn-danger';
 
   const validNewPot = () => {
     let isPotValid = true;
@@ -343,95 +350,97 @@ const ZeroToNPots: React.FC<ChildProps> = ({
         activeKey={tabKey}
         onSelect={handleTabSelect}
       >
-        <Tab
-          key="createPot"
-          eventKey="createPot"
-          title={createPotTitle}               
-        >
-          <div className="container rounded-3 createBackground">
-            <div className="row g-3 mb-1">
-              <div className="col-sm-3">              
-                <label className="form-label">
-                  Pot Type
-                </label>
-                {potCategories.map((potCat) => (
-                  <div key={potCat.id} className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="radio"
-                      name="potTypeRadio"                    
-                      id={`pot_type-${potCat.name}`}
-                      value={potCat.name}
-                      checked={createPot.pot_type === potCat.name}
-                      onChange={handleCreatePotInputChange}
-                    />
-                    <label
-                      className="form-check-label"
-                      htmlFor={`pot_type-${potCat.name}`}
-                    >
-                      {potCat.name}
-                    </label>
+        {(tmntAction !== tmntActions.Run) ? (
+          <Tab
+            key="createPot"
+            eventKey="createPot"
+            title={createPotTitle}               
+          >
+            <div className="container rounded-3 createBackground">
+              <div className="row g-3 mb-1">
+                <div className="col-sm-3">              
+                  <label className="form-label">
+                    Pot Type
+                  </label>
+                  {potCategories.map((potCat) => (
+                    <div key={potCat.id} className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="radio"
+                        name="potTypeRadio"                    
+                        id={`pot_type-${potCat.name}`}
+                        value={potCat.name}
+                        checked={createPot.pot_type === potCat.name}
+                        onChange={handleCreatePotInputChange}
+                      />
+                      <label
+                        className="form-check-label"
+                        htmlFor={`pot_type-${potCat.name}`}
+                      >
+                        {potCat.name}
+                      </label>
+                    </div>
+                  ))}
+                  <div className="text-danger" data-testid="dangerPotType">
+                    {createPot.pot_type_err}
+                  </div>                
+                </div>  
+                <div className="col-sm-3">
+                  <label
+                    className="form-label"                      
+                  >
+                    Division
+                  </label>
+                  {divs.map((div) => (
+                    <div key={div.id} className="form-check text-break">
+                      <input
+                        className="form-check-input"
+                        type="radio"
+                        name="potsDivRadio"
+                        id={`div_name-${div.id}-${div.div_name}-pots`}
+                        value={div.div_name}
+                        checked={createPot.div_id === div.id}
+                        onChange={handleCreatePotInputChange}
+                      />
+                      <label
+                        className="form-check-label"
+                        htmlFor={`div_name-${div.id}-${div.div_name}-pots`}
+                      >
+                        {div.div_name}
+                      </label>
+                    </div>
+                  ))}
+                  <div className="text-danger" data-testid="dangerDiv">
+                    {createPot.div_err}
                   </div>
-                ))}
-                <div className="text-danger" data-testid="dangerPotType">
-                  {createPot.pot_type_err}
-                </div>                
-              </div>  
-              <div className="col-sm-3">
-                <label
-                  className="form-label"                      
-                >
-                  Division
-                </label>
-                {divs.map((div) => (
-                  <div key={div.id} className="form-check text-break">
-                    <input
-                      className="form-check-input"
-                      type="radio"
-                      name="potsDivRadio"
-                      id={`div_name-${div.id}-${div.div_name}-pots`}
-                      value={div.div_name}
-                      checked={createPot.div_id === div.id}
-                      onChange={handleCreatePotInputChange}
-                    />
-                    <label
-                      className="form-check-label"
-                      htmlFor={`div_name-${div.id}-${div.div_name}-pots`}
-                    >
-                      {div.div_name}
-                    </label>
+                </div>   
+                <div className="col-sm-3">
+                  <label htmlFor="inputPotFee" className="form-label">
+                    Fee
+                  </label>
+                  <EaCurrencyInput
+                    id="inputPotFee"                      
+                    name="inputPotFee"
+                    className={`form-control ${createPot.fee_err && "is-invalid"}`}
+                    value={createPot.fee}
+                    onValueChange={handleCreatePotAmountValueChange(createPot.id)}
+                  />
+                  <div className="text-danger" data-testid="dangerPotFee">
+                    {createPot.fee_err}
                   </div>
-                ))}
-                <div className="text-danger" data-testid="dangerDiv">
-                  {createPot.div_err}
                 </div>
-              </div>   
-              <div className="col-sm-3">
-                <label htmlFor="inputPotFee" className="form-label">
-                  Fee
-                </label>
-                <EaCurrencyInput
-                  id="inputPotFee"                      
-                  name="inputPotFee"
-                  className={`form-control ${createPot.fee_err && "is-invalid"}`}
-                  value={createPot.fee}
-                  onValueChange={handleCreatePotAmountValueChange(createPot.id)}
-                />
-                <div className="text-danger" data-testid="dangerPotFee">
-                  {createPot.fee_err}
-                </div>
+                <div className="col-sm-3 d-flex justify-content-center align-items-start">
+                  <button
+                    className="btn btn-success mx-3"
+                    onClick={handleAdd}
+                  >
+                    Add Pot
+                  </button>
+                </div>            
               </div>
-              <div className="col-sm-3 d-flex justify-content-center align-items-start">
-                <button
-                  className="btn btn-success mx-3"
-                  onClick={handleAdd}
-                >
-                  Add Pot
-                </button>
-              </div>            
             </div>
-          </div>
-        </Tab>
+          </Tab>
+        ) : null }
         {pots.map((pot) => (
           <Tab
             key={pot.id}
@@ -477,11 +486,12 @@ const ZeroToNPots: React.FC<ChildProps> = ({
                   Fee
                 </label>
                 <EaCurrencyInput
-                  id={`potFee-${pot.id}`}                      
+                  id={`potFee-${pot.id}`}
                   name={`potFee-${pot.id}`}
                   className={`form-control ${pot.fee_err && "is-invalid"}`}
                   value={pot.fee}
                   onValueChange={handleAmountValueChange(pot.id)}
+                  disabled={isDisabled}
                 />
                 <div
                   className="text-danger"
@@ -491,9 +501,10 @@ const ZeroToNPots: React.FC<ChildProps> = ({
                 </div>
               </div>
               <div className="col-sm-3 d-flex justify-content-center align-items-start">
-                <button
-                  className="btn btn-danger mx-3"
+                <button                  
+                  className={`btn ${delBtnStyle} mx-3`}
                   onClick={() => handleDelete(pot.id)}
+                  disabled={isDisabled}
                 >
                   Delete Pot
                 </button>

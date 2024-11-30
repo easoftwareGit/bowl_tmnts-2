@@ -1,6 +1,6 @@
 import { todayStr } from "@/lib/dateTools";
-import { initBrkt, initDiv, initElim, initEvent, initLane, initPot, initSquad, initTmnt } from "@/lib/db/initVals";
-import { brktType, divType, elimType, eventType, laneType, pairsOfLanesType, potType, squadType, tmntType } from "@/lib/types/types";
+import { initBrkt, initDiv, initElim, initEvent, initLane, initPlayer, initPot, initSquad, initTmnt } from "@/lib/db/initVals";
+import { brktType, divType, elimType, eventType, laneType, pairsOfLanesType, playerType, potType, squadType, tmntType } from "@/lib/types/types";
 import { startOfToday } from "date-fns";
 
 export const mockTmnt: tmntType = {
@@ -322,4 +322,48 @@ export const mockElims: elimType[] = [
     games: 3,
     fee: '5',
   },
+]
+
+export const mockPlayers: playerType[] = [
+  {
+    ...initPlayer,
+    id: "ply_000184582e7042bb95b4818ccdd9974c",
+    squad_id: "sqd_1234ce5f80164830830a7157eb093396",
+    first_name: "John",
+    last_name: "Smith",
+    average: 200,
+    lane: 1,
+    position: "A",
+  },
+  {
+    ...initPlayer,
+    id: "ply_000284582e7042bb95b4818ccdd9974c",
+    squad_id: "sqd_1234ce5f80164830830a7157eb093396",
+    first_name: "Jane",
+    last_name: "Doe",
+    average: 201,
+    lane: 1,
+    position: "B",
+  },
+  {
+    ...initPlayer,
+    id: "ply_000384582e7042bb95b4818ccdd9974c",
+    squad_id: "sqd_1234ce5f80164830830a7157eb093396",
+    first_name: "Bob",
+    last_name: "White",
+    average: 202,
+    lane: 2,
+    position: "A",
+  },
+  {
+    ...initPlayer,
+    id: "ply_000484582e7042bb95b4818ccdd9974c",
+    squad_id: "sqd_1234ce5f80164830830a7157eb093396",
+    first_name: "Tom",
+    last_name: "Jones",
+    average: 203,
+    lane: 2,
+    position: "B",
+  },
+
 ]

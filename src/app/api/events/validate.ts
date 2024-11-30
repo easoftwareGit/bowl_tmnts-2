@@ -212,7 +212,7 @@ const sanitizedEventMoney = (moneyStr: string): string => {
 /**
  * sanitizes an event object
  *
- * @param event - event to sanitize
+ * @param {eventType} event - event to sanitize
  * @returns {eventType} - event object with sanitized data
  */
 export const sanitizeEvent = (event: eventType): eventType => {
@@ -269,9 +269,12 @@ export const sanitizeEvent = (event: eventType): eventType => {
  * validates an event object
  *
  * @param event - event to validate
- * @returns {ErrorCode.None | ErrorCode.MissingData | ErrorCode.InvalidData | ErrorCode.OtherError} - error code
+ * @returns {ErrorCode} - ErrorCode.None: event data is valid, 
+ *    ErrorCode.InvalidData: event data is invalid, 
+ *    ErrorCode.MissingData: event data is missing,
+ *    ErrorCode.OtherError: an error occurred
  */
-export function validateEvent(event: eventType): ErrorCode {
+export const validateEvent = (event: eventType): ErrorCode => {
   try {
     const errCode = gotEventData(event);
     if (errCode !== ErrorCode.None) {
@@ -284,7 +287,7 @@ export function validateEvent(event: eventType): ErrorCode {
 }
 
 /**
- * sanitizea and validates an array of events
+ * sanitizes and validates an array of events
  * 
  * @param {eventType[]} events - array of event to validate
  * @returns {validEventsType} - {events:eventType[], errorCode: ErrorCode.None | ErrorCode.MissingData | ErrorCode.InvalidData | ErrorCode.OtherError}

@@ -1,17 +1,17 @@
 import { IntlConfig } from "@/lib/currency/components/CurrencyInputProps";
 import { getLocaleConfig } from "@/lib/currency/components/utils";
 import { mockBrkts, mockDivs, mockElims, mockEvents, mockLanes, mockPots, mockSquads, mockTmnt } from "../../../mocks/tmnts/newTmnt/mockNewTmnt";
-import { deleteAllTmntElims, getAllElimsForTmnt } from "@/lib/db/elims/elimsAxios";
-import { deleteAllTmntBrkts, getAllBrktsForTmnt } from "@/lib/db/brkts/brktsAxios";
-import { deleteAllTmntPots, getAllPotsForTmnt } from "@/lib/db/pots/potsAxios";
-import { deleteAllTmntLanes, getAllLanesForTmnt } from "@/lib/db/lanes/lanesAxios";
-import { deleteAllTmntSquads, getAllSquadsForTmnt } from "@/lib/db/squads/squadsAxios";
-import { deleteAllTmntDivs, getAllDivsForTmnt } from "@/lib/db/divs/divsAxios";
-import { deleteAllTmntEvents, getAllEventsForTmnt } from "@/lib/db/events/eventsAxios";
-import { deleteTmnt, getTmnt } from "@/lib/db/tmnts/tmntsAxios";
+import { deleteAllTmntElims, getAllElimsForTmnt } from "@/lib/db/elims/dbElims";
+import { deleteAllTmntBrkts, getAllBrktsForTmnt } from "@/lib/db/brkts/dbBrkts";
+import { deleteAllTmntPots, getAllPotsForTmnt } from "@/lib/db/pots/dbPots";
+import { deleteAllTmntLanes, getAllLanesForTmnt } from "@/lib/db/lanes/dbLanes";
+import { deleteAllTmntSquads, getAllSquadsForTmnt } from "@/lib/db/squads/dbSquads";
+import { deleteAllTmntDivs, getAllDivsForTmnt } from "@/lib/db/divs/dbDivs";
+import { deleteAllTmntEvents, getAllEventsForTmnt } from "@/lib/db/events/dbEvents";
+import { deleteTmnt, getTmnt } from "@/lib/db/tmnts/dbTmnts";
 import { blankDataOneTmnt } from "@/lib/db/initVals";
 import { dataOneTmntType, ioDataErrorsType, allDataOneTmntType } from "@/lib/types/types";
-import { saveAllDataOneTmnt } from "@/lib/db/oneTmnt/oneTmnt";
+import { saveAllDataOneTmnt } from "@/lib/db/oneTmnt/dbOneTmnt";
 import { compareAsc } from "date-fns";
 import 'core-js/actual/structured-clone';
 

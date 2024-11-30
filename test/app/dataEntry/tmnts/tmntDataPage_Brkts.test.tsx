@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen } from "../../../test-utils";
 import userEvent from "@testing-library/user-event";
 import { blankDataOneTmnt } from "@/lib/db/initVals";
-import { allDataOneTmntType } from "@/lib/types/types";
+import { allDataOneTmntType, tmntActions, tmntFormDataType } from "@/lib/types/types";
 import { RootState } from "@/redux/store";
 import { mockStateBowls } from "../../../mocks/state/mockState";
 import { mockSDBrkts, mockSDDivs, mockSDElims, mockSDEvents, mockSDLanes, mockSDPots, mockSDSquads, mockSDTmnt } from "../../../mocks/tmnts/singlesAndDoubles/mockSD";
@@ -24,10 +24,18 @@ jest.mock('react-redux', () => ({
   ...jest.requireActual('react-redux'),
   useSelector: jest.fn().mockImplementation((selector) => selector(mockState)),
 }));
+// Mock useRouter:
+jest.mock("next/navigation", () => ({
+  useRouter() {
+    return {
+      prefetch: () => null
+    };
+  }
+}));
 
 describe("TmntDataPage - Brackets Component", () => { 
 
-  const tmntProps: allDataOneTmntType = {
+  const tmntProps: tmntFormDataType = {
     origData: blankDataOneTmnt(),
     curData: {
       tmnt: mockSDTmnt,
@@ -38,7 +46,8 @@ describe("TmntDataPage - Brackets Component", () => {
       pots: mockSDPots,
       brkts: mockSDBrkts,
       elims: mockSDElims,
-    }
+    },
+    tmntAction: tmntActions.Edit
   };   
 
   describe("click on the brackets accordian", () => {
@@ -475,8 +484,10 @@ describe("TmntDataPage - Brackets Component", () => {
       const delBtns = screen.getAllByRole('button', { name: /delete bracket/i }) as HTMLElement[];
       expect(delBtns).toHaveLength(4);
       await user.click(delBtns[0]);
-      const okBtn = await screen.findByRole('button', { name: /ok/i });
-      expect(okBtn).toBeInTheDocument();
+      const yesBtn = await screen.findByRole('button', { name: /yes/i });
+      expect(yesBtn).toBeInTheDocument();
+      const noBtn = await screen.findByRole('button', { name: /no/i });
+      expect(noBtn).toBeInTheDocument();
       const cancelBtn = screen.queryByRole('button', { name: /cancel/i });
       expect(cancelBtn).toBeInTheDocument();
       const confirmDelete = screen.getByText('Confirm Delete')

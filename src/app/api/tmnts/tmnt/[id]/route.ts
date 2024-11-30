@@ -114,7 +114,7 @@ export async function PUT(
         break;
     }
     return NextResponse.json(
-      { error: "Error putting bowl" },
+      { error: "Error putting tmnt" },
       { status: errStatus }
     );
   }
@@ -238,7 +238,7 @@ export async function PATCH(
         break;
     }
     return NextResponse.json(
-      { error: "Error pasting tmnt" },
+      { error: "Error patching tmnt" },
       { status: errStatus }
     );
   }

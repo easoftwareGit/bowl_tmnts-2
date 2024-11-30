@@ -10,7 +10,7 @@ import {
   linkedInitDataOneTmnt,
 } from "@/lib/db/initVals";
 import { startOfTodayUTC, dateTo_UTC_yyyyMMdd, todayStr, dateTo_yyyyMMdd, startOfDayFromString } from '@/lib/dateTools';
-import { allDataOneTmntType } from '@/lib/types/types';
+import { allDataOneTmntType, tmntActions, tmntFormDataType } from '@/lib/types/types';
 import { mockStateBowls } from '../../../mocks/state/mockState';
 import 'core-js/actual/structured-clone';
 import { addDays, addMonths } from "date-fns";
@@ -31,12 +31,22 @@ jest.mock('react-redux', () => ({
   useSelector: jest.fn().mockImplementation((selector) => selector(mockState)),
 }));
 
+// Mock useRouter:
+jest.mock("next/navigation", () => ({
+  useRouter() {
+    return {
+      prefetch: () => null
+    };
+  }
+}));
+
 const userId = 'usr_5bcefb5d314fff1ff5da6521a2fa7bde';
 const bowlId = 'bwl_561540bd64974da9abdd97765fdb3659';
 
-const tmntProps: allDataOneTmntType = {
+const tmntProps: tmntFormDataType = {
   origData: blankDataOneTmnt(),
-  curData: linkedInitDataOneTmnt(userId)
+  curData: linkedInitDataOneTmnt(userId),  
+  tmntAction: tmntActions.New
 };    
 
 describe('TmntDataForm - Component', () => { 
@@ -80,6 +90,47 @@ describe('TmntDataForm - Component', () => {
 
       const saveBtn = screen.getByRole('button', { name: /save tournament/i });
       expect(saveBtn).toBeInTheDocument();
+
+      const cancelBtn = screen.getByRole('button', { name: /cancel/i });
+      expect(cancelBtn).toBeInTheDocument();
+    })
+  })
+
+  describe('render TmntDataForm when tmntAction === Run', () => { 
+  
+    const runTmntProps: tmntFormDataType = {
+      origData: blankDataOneTmnt(),
+      curData: linkedInitDataOneTmnt(userId),  
+      tmntAction: tmntActions.Run
+    };    
+    
+    it('render tournament items', async () => {
+      render(<ReduxProvider><TmntDataForm tmntProps={runTmntProps} /></ReduxProvider>)
+
+      const tmntNameInput = screen.getByRole('textbox', { name: /tournament name/i }) as HTMLInputElement;
+      expect(tmntNameInput).toBeInTheDocument();
+      expect(tmntNameInput).toBeDisabled();
+
+      const bowlSelect = screen.getByRole('combobox', { name: /bowl name/i }) as HTMLInputElement;
+      expect(bowlSelect).toBeInTheDocument();
+      expect(bowlSelect).toBeDisabled();
+      
+      const startDateInput = screen.getByTestId('inputStartDate') as HTMLInputElement;
+      expect(startDateInput).toBeInTheDocument();   
+      expect(startDateInput.value).toBe(dateTo_UTC_yyyyMMdd(startOfTodayUTC()));
+      expect(startDateInput).toBeDisabled();
+      
+      const endDateInput = screen.getByTestId('inputEndDate') as HTMLInputElement;
+      expect(endDateInput).toBeInTheDocument();      
+      expect(endDateInput.value).toBe(dateTo_UTC_yyyyMMdd(startOfTodayUTC()));
+      expect(endDateInput).toBeDisabled();
+
+      const saveBtn = screen.queryByRole('button', { name: /save tournament/i });
+      expect(saveBtn).not.toBeInTheDocument();
+
+      const cancelBtn = screen.queryByRole('button', { name: /cancel/i });
+      expect(cancelBtn).not.toBeInTheDocument();
+
     })
   })
 

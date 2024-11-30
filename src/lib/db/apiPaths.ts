@@ -23,3 +23,7 @@ export const basePotsApi = baseApi + '/pots'
 export const baseBrktsApi = baseApi + '/brkts'
 
 export const baseElimsApi = baseApi + '/elims'
+
+export const basePlayersApi = baseApi + '/players'
+
+export const baseDivEntriesApi = baseApi + '/divEntries'

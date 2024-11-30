@@ -1,5 +1,5 @@
 import React, { useState, ChangeEvent } from "react";
-import { divType, AcdnErrType, potType, brktType, elimType, HdcpForTypes } from "../../../lib/types/types";
+import { divType, AcdnErrType, potType, brktType, elimType, HdcpForTypes, tmntActions } from "../../../lib/types/types";
 import { defaultHdcpFrom, initDiv } from "../../../lib/db/initVals";
 import { Tabs, Tab } from "react-bootstrap";
 import ModalConfirm, { delConfTitle } from "@/components/modal/confirmModal";
@@ -18,6 +18,7 @@ interface ChildProps {
   brkts: brktType[],
   elims: elimType[],
   setAcdnErr: (objAcdnErr: AcdnErrType) => void;
+  tmntAction: tmntActions;
 }
 interface AddOrDelButtonProps {
   id: string;
@@ -129,7 +130,8 @@ const OneToNDivs: React.FC<ChildProps> = ({
   pots,
   brkts,
   elims,
-  setAcdnErr
+  setAcdnErr,
+  tmntAction,
 }) => { 
   
   const defaultTabKey = divs[0].id;
@@ -140,6 +142,10 @@ const OneToNDivs: React.FC<ChildProps> = ({
   const [sortOrder, setSortOrder] = useState(divs[divs.length - 1].sort_order); 
   
   const tmntId = divs[0].tmnt_id; // index 0 always has tmnt_id
+  const isDisabled = (tmntAction === tmntActions.Run);
+  const addBtnStyle = isDisabled ? 'btn-dark' : 'btn-success';
+  const delBtnStyle = isDisabled ? 'btn-dark' : 'btn-danger';
+
 
   const handleAdd = () => {
     const newDiv: divType = {
@@ -429,10 +435,11 @@ const OneToNDivs: React.FC<ChildProps> = ({
             </div>
             <div className="d-grid col-sm-4">            
               <button
-                className="btn btn-success"
+                className={`btn ${addBtnStyle}`}
                 id="divAdd"
                 data-testid="divAdd"
-                onClick={handleAdd}                
+                onClick={handleAdd}
+                disabled={isDisabled}
               >
                 Add
               </button>
@@ -444,9 +451,10 @@ const OneToNDivs: React.FC<ChildProps> = ({
       return (
         <div className="col-sm-3 d-flex justify-content-center align-items-end">
           <button
-            className="btn btn-danger"
+            className={`btn ${delBtnStyle}`}
             id="divDel"
             onClick={() => handleDelete(id)}
+            disabled={isDisabled}
           >
             Delete Div
           </button>
@@ -501,6 +509,7 @@ const OneToNDivs: React.FC<ChildProps> = ({
                   value={div.div_name}
                   onChange={handleInputChange(div.id)}
                   onBlur={handleBlur(div.id)}
+                  disabled={isDisabled}
                 />
                 <div
                   className="text-danger"
@@ -524,6 +533,7 @@ const OneToNDivs: React.FC<ChildProps> = ({
                   value={div.hdcp_per_str}
                   onValueChange={handlePercentValueChange(div.id)}                  
                   onBlur={handleBlur(div.id)}
+                  disabled={isDisabled}
                 />
                 <div
                   className="text-danger"
@@ -545,7 +555,7 @@ const OneToNDivs: React.FC<ChildProps> = ({
                   value={div.hdcp_from}                        
                   onChange={handleInputChange(div.id)}
                   onBlur={handleBlur(div.id)}
-                  disabled={div.hdcp_per === 0}
+                  disabled={div.hdcp_per === 0 || isDisabled}
                 />
                 <div
                   className="text-danger"
@@ -566,7 +576,7 @@ const OneToNDivs: React.FC<ChildProps> = ({
                   name='item.int_hdcp'
                   checked={div.int_hdcp}
                   onChange={handleInputChange(div.id)}
-                  disabled={div.hdcp_per === 0}
+                  disabled={div.hdcp_per === 0 || isDisabled}
                 />
                 <label htmlFor={`chkBoxIntHdcp${div.id}`} className="form-label">
                   &nbsp;Integer Hdcp
@@ -584,7 +594,7 @@ const OneToNDivs: React.FC<ChildProps> = ({
                   value="Game"
                   checked={div.hdcp_for === 'Game'}
                   onChange={handleInputChange(div.id)}
-                  disabled={div.hdcp_per === 0}
+                  disabled={div.hdcp_per === 0 || isDisabled}
                 />
                 <label htmlFor={`radioHdcpForGame${div.id}`} className="form-check-label">
                   &nbsp;Game &nbsp; 
@@ -597,7 +607,7 @@ const OneToNDivs: React.FC<ChildProps> = ({
                   value="Series"
                   checked={div.hdcp_for !== 'Game'}
                   onChange={handleInputChange(div.id)}
-                  disabled={div.hdcp_per === 0}
+                  disabled={div.hdcp_per === 0 || isDisabled}
                 />
                 <label htmlFor={`radioHdcpForSeries${div.id}`} className="form-check-label">
                   &nbsp;Series

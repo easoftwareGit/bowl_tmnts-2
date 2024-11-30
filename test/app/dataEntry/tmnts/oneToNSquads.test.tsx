@@ -5,8 +5,9 @@ import OneToNSquads, { updatedLanes, validLanes } from "@/app/dataEntry/tmntForm
 import { mockLanes, mockSquads } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { mockEvents } from "../../../mocks/tmnts/singlesAndDoubles/mockEvents";
 import { initSquad } from "@/lib/db/initVals";
-import { laneType, squadType } from "@/lib/types/types";
+import { laneType, squadType, tmntActions } from "@/lib/types/types";
 import { maxLaneCount, maxStartLane, minLaneCount, minStartLane } from "@/lib/validation";
+import { cloneDeep } from "lodash";
 
 const mockSetSquads = jest.fn();
 const mockSetLanes = jest.fn();
@@ -19,6 +20,7 @@ const mockOneToNSquadsProps = {
   setLanes: mockSetLanes,
   events: mockEvents,
   setAcdnErr: mockSetAcdnErr,
+  tmntAction: tmntActions.New
 };
 
 describe("OneToNSquads - Component", () => { 
@@ -522,6 +524,80 @@ describe("OneToNSquads - Component", () => {
         expect(timeErrors[1]).toHaveTextContent("test time error");
       });
     })
+
+    describe('render the squads when tmntAction is Run - inputs and buttons disabled', () => { 
+      const runTmntProps = cloneDeep(mockOneToNSquadsProps);      
+      runTmntProps.tmntAction = tmntActions.Run;
+      it('render number of squads', () => { 
+        render(<OneToNSquads {...runTmntProps} />);        
+        const squadNum = screen.getByRole('textbox', { name: /# squads/i }) as HTMLInputElement;
+        expect(squadNum).toBeInTheDocument();
+        expect(squadNum).toHaveValue('2');
+        expect(squadNum).toBeDisabled();
+      })
+      it("render add button", () => {
+        render(<OneToNSquads {...runTmntProps} />);
+        const addBtn = screen.getByRole("button", { name: /add/i });        
+        expect(addBtn).toBeInTheDocument();
+        expect(addBtn).toBeDisabled();
+      });
+      it("render delete button", () => {
+        render(<OneToNSquads {...runTmntProps} />);
+        const delBtn = screen.getByRole("button", { name: /delete/i });        
+        expect(delBtn).toBeInTheDocument();
+        expect(delBtn).toBeDisabled();
+      });
+      it('render squad names', () => {
+        render(<OneToNSquads {...runTmntProps} />);        
+        const squadNames = screen.getAllByRole("textbox", { name: /squad name/i }) as HTMLInputElement[];
+        expect(squadNames).toHaveLength(2);
+        expect(squadNames[0]).toBeDisabled();
+        expect(squadNames[1]).toBeDisabled();
+      })
+      it('render squad games', () => {
+        render(<OneToNSquads {...runTmntProps} />);        
+        const squadGames = screen.getAllByRole("spinbutton", { name: /squad games/i }) as HTMLInputElement[];
+        expect(squadGames).toHaveLength(2);
+        expect(squadGames[0]).toBeDisabled();
+        expect(squadGames[1]).toBeDisabled();
+      })
+      it('render squad events', () => {
+        render(<OneToNSquads {...runTmntProps} />);        
+        const squadEvents = screen.getAllByRole("combobox", { name: /event/i }) as HTMLInputElement[];
+        expect(squadEvents).toHaveLength(2);        
+        expect(squadEvents[0]).toBeDisabled();
+        expect(squadEvents[1]).toBeDisabled();
+      })
+      it('render the starting lane', () => {
+        render(<OneToNSquads {...runTmntProps} />);
+        const startingLanes = screen.getAllByRole("spinbutton", { name: /starting lane/i }) as HTMLInputElement[];
+        expect(startingLanes).toHaveLength(2);
+        expect(startingLanes[0]).toBeDisabled();
+        expect(startingLanes[1]).toBeDisabled();
+      })
+      it('render the # of lanes', () => {
+        render(<OneToNSquads {...runTmntProps} />);
+        const numberOfLanes = screen.getAllByRole("spinbutton", { name: /# of lanes/i }) as HTMLInputElement[];
+        expect(numberOfLanes).toHaveLength(2);
+        expect(numberOfLanes[0]).toBeDisabled();
+        expect(numberOfLanes[1]).toBeDisabled();
+      })
+      it('render squad dates', () => {
+        render(<OneToNSquads {...runTmntProps} />);        
+        const squadDates = screen.getAllByLabelText(/date/i) as HTMLInputElement[];
+        expect(squadDates).toHaveLength(2);
+        expect(squadDates[0]).toBeDisabled();
+        expect(squadDates[1]).toBeDisabled();
+      })
+      it('render start times', () => { 
+        render(<OneToNSquads {...runTmntProps} />);        
+        const squadTimes = screen.getAllByLabelText(/start time/i) as HTMLInputElement[];        
+        expect(squadTimes).toHaveLength(2);
+        expect(squadTimes[0]).toBeDisabled();
+        expect(squadTimes[1]).toBeDisabled();
+      })
+
+    })
   })
 
   describe('render just one squad', () => { 
@@ -539,6 +615,7 @@ describe("OneToNSquads - Component", () => {
       setLanes: mockSetLanes,
       events: mockEvents,
       setAcdnErr: mockSetAcdnErr,
+      tmntAction: tmntActions.New
     };
     
     it('render number of squads', () => { 

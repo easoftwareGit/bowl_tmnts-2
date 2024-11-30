@@ -3,7 +3,7 @@ import { baseElimsApi } from "@/lib/db/apiPaths";
 import { testBaseElimsApi } from "../../../testApi";
 import { elimType } from "@/lib/types/types";
 import { initElim } from "@/lib/db/initVals";
-import { deleteAllDivElims, deleteAllSquadElims, postManyElims } from "@/lib/db/elims/elimsAxios";
+import { deleteAllDivElims, deleteAllSquadElims, postManyElims } from "@/lib/db/elims/dbElims";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database

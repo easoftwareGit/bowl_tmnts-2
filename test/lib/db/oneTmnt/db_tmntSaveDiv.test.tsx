@@ -1,10 +1,10 @@
 import axios from "axios";
 import { baseDivsApi } from "@/lib/db/apiPaths";
 import { testBaseDivsApi } from "../../../testApi";
-import { tmntSaveDivs, exportedForTesting } from "@/lib/db/oneTmnt/oneTmnt";
+import { tmntSaveDivs, exportedForTesting } from "@/lib/db/oneTmnt/dbOneTmnt";
 import { mockDivsToPost, mockDivsToEdit } from "../../../mocks/tmnts/twoDivs/mockDivs";
 import { divType, HdcpForTypes } from "@/lib/types/types";
-import { deleteAllTmntDivs, deleteDiv, postDiv, putDiv } from "@/lib/db/divs/divsAxios";
+import { deleteAllTmntDivs, deleteDiv, postDiv, putDiv } from "@/lib/db/divs/dbDivs";
 import { blankDiv } from "@/lib/db/initVals";
 import 'core-js/actual/structured-clone';
 

@@ -1,10 +1,11 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-// import OneToNDivs from "../../../../src/app/dataEntry/newTmnt/oneToNDivs";
 import OneToNDivs from "@/app/dataEntry/tmntForm/oneToNDivs";
 import { mockDivs, mockPots, mockBrkts, mockElims } from '../../../mocks/tmnts/twoDivs/mockDivs'
 import { defaultHdcpFrom, initDiv } from "@/lib/db/initVals";
+import { tmntActions } from "@/lib/types/types";
+import { cloneDeep } from "lodash";
 
 const mockSetDivs = jest.fn();
 const mockSetAcdnErr = jest.fn();
@@ -15,7 +16,8 @@ const mockOneToNDivsProps = {
   pots: mockPots,
   brkts: mockBrkts,
   elims: mockElims,
-  setAcdnErr: mockSetAcdnErr
+  setAcdnErr: mockSetAcdnErr,
+  tmntAction: tmntActions.New,
 }
 
 describe("OneToNDivs - Component", () => { 
@@ -255,6 +257,73 @@ describe("OneToNDivs - Component", () => {
         expect(hdcpForSeries).toHaveLength(2)
         expect(hdcpForSeries[1]).not.toBeChecked()  
         expect(hdcpForSeries[1]).toBeEnabled()
+      })
+    })
+
+    describe('render the divs when tmntAction is Run - inputs and buttons disabled', () => { 
+      const runTmntProps = cloneDeep(mockOneToNDivsProps);   
+      runTmntProps.tmntAction = tmntActions.Run;
+      it('render num divs', () => {         
+        render(<OneToNDivs {...runTmntProps} />)      
+        // const numDivs = screen.getByTestId('inputNumDivs') as HTMLInputElement;
+        const numDivs = screen.getByRole('textbox', { name: /# divisions/i }) as HTMLInputElement;
+        expect(numDivs).toBeInTheDocument()        
+        expect(numDivs).toHaveValue('2')
+        expect(numDivs).toBeDisabled()          
+      })
+      it('render add button', () => {        
+        render(<OneToNDivs {...runTmntProps} />) 
+        const addBtn = screen.getByRole("button", { name: /add/i });        
+        expect(addBtn).toBeInTheDocument() 
+        expect(addBtn).toBeDisabled()
+      })
+      it('render delete button', () => {        
+        render(<OneToNDivs {...runTmntProps} />) 
+        const delBtn = screen.getByRole("button", { name: /delete/i });        
+        expect(delBtn).toBeInTheDocument() 
+        expect(delBtn).toBeDisabled()
+      })
+      it('render div name inputs', () => {        
+        render(<OneToNDivs {...runTmntProps} />)      
+        const divNames = screen.getAllByRole('textbox', { name: /div name/i }) as HTMLInputElement[];
+        expect(divNames).toHaveLength(2)
+        expect(divNames[0]).toBeDisabled()
+        expect(divNames[1]).toBeDisabled()
+      })
+      it('render hdcp % inputs', () => {        
+        render(<OneToNDivs {...runTmntProps} />)                      
+        const hdcps = screen.getAllByRole('textbox', { name: /hdcp %/i }) as HTMLInputElement[];
+        expect(hdcps).toHaveLength(2)
+        expect(hdcps[0]).toBeDisabled()
+        expect(hdcps[1]).toBeDisabled()
+      })
+      it('render hdcp from inputs', () => {        
+        render(<OneToNDivs {...runTmntProps} />)              
+        const hdcpFroms = screen.getAllByRole('spinbutton', { name: /hdcp from/i }) as HTMLInputElement[];        
+        expect(hdcpFroms).toHaveLength(2)        
+        expect(hdcpFroms[0]).toBeDisabled()
+        expect(hdcpFroms[1]).toBeDisabled()
+      })
+      it('render int hdcp checkbox', () => {        
+        render(<OneToNDivs {...runTmntProps} />)      
+        const intHdcps = screen.getAllByRole('checkbox', { name: /integer hdcp/i }) as HTMLInputElement[];
+        expect(intHdcps).toHaveLength(2)                
+        expect(intHdcps[0]).toBeDisabled()
+        expect(intHdcps[1]).toBeDisabled()
+      })
+      it('render hdcp for game radio', () => {
+        render(<OneToNDivs {...runTmntProps} />)               
+        const hdcpForGames = screen.getAllByRole('radio', { name: /game/i }) as HTMLInputElement[];
+        expect(hdcpForGames).toHaveLength(2)                
+        expect(hdcpForGames[0]).toBeDisabled()
+        expect(hdcpForGames[1]).toBeDisabled()
+      })
+      it('render hdcp for series radio', () => {        
+        render(<OneToNDivs {...runTmntProps} />)              
+        const hdcpForSeries = screen.getAllByRole('radio', { name: /series/i }) as HTMLInputElement[];
+        expect(hdcpForSeries).toHaveLength(2)                
+        expect(hdcpForSeries[0]).toBeDisabled()
+        expect(hdcpForSeries[1]).toBeDisabled()
       })
     })
   })

@@ -2,10 +2,10 @@ import axios from "axios";
 import { baseEventsApi } from "@/lib/db/apiPaths";
 import { testBaseEventsApi } from "../../../testApi";
 import { mockEventsToPost, mockEventsToEdit } from "../../../mocks/tmnts/singlesAndDoubles/mockEvents";
-import { tmntSaveEvents, exportedForTesting } from "@/lib/db/oneTmnt/oneTmnt";
+import { tmntSaveEvents, exportedForTesting } from "@/lib/db/oneTmnt/dbOneTmnt";
 
 import 'core-js/actual/structured-clone';
-import { deleteAllTmntEvents, deleteEvent, postEvent, putEvent } from "@/lib/db/events/eventsAxios";
+import { deleteAllTmntEvents, deleteEvent, postEvent, putEvent } from "@/lib/db/events/dbEvents";
 import { eventType } from "@/lib/types/types";
 import { blankEvent } from "@/lib/db/initVals";
 

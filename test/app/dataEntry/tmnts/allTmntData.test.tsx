@@ -2,20 +2,20 @@ import { render, screen } from '@testing-library/react';
 import { ReduxProvider } from '@/redux/provider';
 import userEvent from '@testing-library/user-event';
 import TmntDataForm from '@/app/dataEntry/tmntForm/tmntForm';
-import { allDataOneTmntType } from '@/lib/types/types';
+import { allDataOneTmntType, tmntActions, tmntFormDataType } from '@/lib/types/types';
 import { mockTmnt, mockEvents, mockDivs, mockSquads, mockLanes, mockPots, mockBrkts, mockElims } from '../../../mocks/tmnts/newTmnt/mockNewTmnt';
 import { dateTo_UTC_yyyyMMdd, startOfTodayUTC } from '@/lib/dateTools';
 import { IntlConfig } from '@/lib/currency/components/CurrencyInputProps';
 import { getLocaleConfig } from '@/lib/currency/components/utils';
 import { formatValuePercent2Dec, formatValueSymbSep2Dec } from '@/lib/currency/formatValue';
-import { deleteAllTmntElims, getAllElimsForTmnt } from '@/lib/db/elims/elimsAxios';
-import { deleteAllTmntBrkts, getAllBrktsForTmnt } from '@/lib/db/brkts/brktsAxios';
-import { deleteAllTmntPots, getAllPotsForTmnt } from '@/lib/db/pots/potsAxios';
-import { deleteAllTmntLanes, getAllLanesForTmnt } from '@/lib/db/lanes/lanesAxios';
-import { deleteAllTmntSquads, getAllSquadsForTmnt } from '@/lib/db/squads/squadsAxios';
-import { deleteAllTmntDivs, getAllDivsForTmnt } from '@/lib/db/divs/divsAxios';
-import { deleteAllTmntEvents, getAllEventsForTmnt } from '@/lib/db/events/eventsAxios';
-import { deleteTmnt, getTmnt } from '@/lib/db/tmnts/tmntsAxios';
+import { deleteAllTmntElims, getAllElimsForTmnt } from '@/lib/db/elims/dbElims';
+import { deleteAllTmntBrkts, getAllBrktsForTmnt } from '@/lib/db/brkts/dbBrkts';
+import { deleteAllTmntPots, getAllPotsForTmnt } from '@/lib/db/pots/dbPots';
+import { deleteAllTmntLanes, getAllLanesForTmnt } from '@/lib/db/lanes/dbLanes';
+import { deleteAllTmntSquads, getAllSquadsForTmnt } from '@/lib/db/squads/dbSquads';
+import { deleteAllTmntDivs, getAllDivsForTmnt } from '@/lib/db/divs/dbDivs';
+import { deleteAllTmntEvents, getAllEventsForTmnt } from '@/lib/db/events/dbEvents';
+import { deleteTmnt, getTmnt } from '@/lib/db/tmnts/dbTmnts';
 import { compareAsc } from 'date-fns';
 import { blankDataOneTmnt } from '@/lib/db/initVals';
 import { RootState } from '@/redux/store';
@@ -38,7 +38,7 @@ jest.mock('react-redux', () => ({
 
 describe('Render Tmnt data', () => {
 
-  const tmntProps: allDataOneTmntType = {
+  const tmntProps: tmntFormDataType = {
     origData: blankDataOneTmnt(),
     curData: {
       tmnt: mockTmnt,
@@ -49,7 +49,8 @@ describe('Render Tmnt data', () => {
       pots: mockPots,
       brkts: mockBrkts,
       elims: mockElims,
-    }
+    },
+    tmntAction: tmntActions.New
   };   
 
   const ic: IntlConfig = {
@@ -234,7 +235,8 @@ describe('Render Tmnt data', () => {
         const squadDates = screen.getAllByLabelText(/date/i) as HTMLInputElement[];
         expect(squadDates).toHaveLength(3);
         // [0,1] - events, [2] - squads
-        expect(squadDates[2].value).toBe(dateTo_UTC_yyyyMMdd(mockSquads[0].squad_date));    
+        // expect(squadDates[2].value).toBe(dateTo_UTC_yyyyMMdd(mockSquads[0].squad_date));    
+        expect(squadDates[2].value).toBe(mockSquads[0].squad_date_str);    
 
         const squadTimes = screen.getAllByLabelText(/start time/i) as HTMLInputElement[];        
         expect(squadTimes).toHaveLength(1);

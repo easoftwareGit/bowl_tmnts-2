@@ -1,10 +1,10 @@
 import axios from "axios";
 import { baseSquadsApi } from "@/lib/db/apiPaths";
 import { testBaseSquadsApi } from "../../../testApi";
-import { tmntSaveSquads, exportedForTesting } from "@/lib/db/oneTmnt/oneTmnt";
+import { tmntSaveSquads, exportedForTesting } from "@/lib/db/oneTmnt/dbOneTmnt";
 import { mockSquadsToPost, mockSquadsToEdit, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { squadType } from "@/lib/types/types";
-import { deleteAllTmntSquads, deleteSquad, postManySquads, postSquad, putSquad } from "@/lib/db/squads/squadsAxios";
+import { deleteAllTmntSquads, deleteSquad, postManySquads, postSquad, putSquad } from "@/lib/db/squads/dbSquads";
 import { blankSquad } from "@/lib/db/initVals";
 import { compareAsc } from "date-fns";
 import 'core-js/actual/structured-clone';

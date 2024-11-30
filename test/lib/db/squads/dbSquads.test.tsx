@@ -3,10 +3,10 @@ import { baseSquadsApi, baseEventsApi } from "@/lib/db/apiPaths";
 import { testBaseSquadsApi, testBaseEventsApi } from "../../../testApi";
 import { eventType, squadType } from "@/lib/types/types";
 import { initEvent, initSquad } from "@/lib/db/initVals";
-import { deleteAllEventSquads, deleteAllTmntSquads, deleteSquad, getAllSquadsForTmnt, postManySquads, postSquad, putSquad } from "@/lib/db/squads/squadsAxios";
+import { deleteAllEventSquads, deleteAllTmntSquads, deleteSquad, getAllSquadsForTmnt, postManySquads, postSquad, putSquad } from "@/lib/db/squads/dbSquads";
 import { startOfDayFromString } from "@/lib/dateTools";
 import { mockSquadsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteEvent } from "@/lib/db/events/eventsAxios";
+import { deleteEvent } from "@/lib/db/events/dbEvents";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database

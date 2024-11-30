@@ -1,12 +1,12 @@
 import axios from "axios";
 import { basePotsApi } from "@/lib/db/apiPaths";
 import { testBasePotsApi } from "../../../testApi";
-import { tmntSavePots, exportedForTesting } from "@/lib/db/oneTmnt/oneTmnt";
+import { tmntSavePots, exportedForTesting } from "@/lib/db/oneTmnt/dbOneTmnt";
 import { mockPotsToPost, mockSquadsToPost, mockDivs, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { potCategoriesTypes, potType } from "@/lib/types/types";
-import { deleteAllTmntPots, deletePot, postManyPots, postPot, putPot } from "@/lib/db/pots/potsAxios";
-import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/squadsAxios";
-import { deleteAllTmntDivs, postManyDivs } from "@/lib/db/divs/divsAxios";
+import { deleteAllTmntPots, deletePot, postManyPots, postPot, putPot } from "@/lib/db/pots/dbPots";
+import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/dbSquads";
+import { deleteAllTmntDivs, postManyDivs } from "@/lib/db/divs/dbDivs";
 import { blankPot } from "@/lib/db/initVals";
 import 'core-js/actual/structured-clone';
 const { tmntPostPutOrDelPots } = exportedForTesting;

@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen } from "../../../test-utils";
 import userEvent from "@testing-library/user-event";
 import { blankDataOneTmnt } from "@/lib/db/initVals";
-import { allDataOneTmntType } from "@/lib/types/types";
+import { tmntActions, tmntFormDataType } from "@/lib/types/types";
 import { mockSDBrkts, mockSDDivs, mockSDElims, mockSDEvents, mockSDLanes, mockSDPots, mockSDSquads, mockSDTmnt } from "../../../mocks/tmnts/singlesAndDoubles/mockSD";
 import { RootState } from "@/redux/store";
 import { mockStateBowls } from "../../../mocks/state/mockState";
@@ -24,10 +24,18 @@ jest.mock('react-redux', () => ({
   ...jest.requireActual('react-redux'),
   useSelector: jest.fn().mockImplementation((selector) => selector(mockState)),
 }));
+// Mock useRouter:
+jest.mock("next/navigation", () => ({
+  useRouter() {
+    return {
+      prefetch: () => null
+    };
+  }
+}));
 
 describe("TmntDataPage - Pots Component", () => {
 
-  const tmntProps: allDataOneTmntType = {
+  const tmntProps: tmntFormDataType = {
     origData: blankDataOneTmnt(),
     curData: {
       tmnt: mockSDTmnt,
@@ -38,7 +46,8 @@ describe("TmntDataPage - Pots Component", () => {
       pots: mockSDPots,
       brkts: mockSDBrkts,
       elims: mockSDElims,
-    }
+    },
+    tmntAction: tmntActions.Edit
   };   
 
   describe("click on the pots accordian", () => {
@@ -516,8 +525,10 @@ describe("TmntDataPage - Pots Component", () => {
       const deleteBtns = await screen.findAllByRole('button', { name: /delete pot/i }) as HTMLElement[];
       expect(deleteBtns).toHaveLength(2);
       await user.click(deleteBtns[0]);
-      const okBtn = await screen.findByRole('button', { name: /ok/i });
-      expect(okBtn).toBeInTheDocument();              
+      const yesBtn = await screen.findByRole('button', { name: /yes/i });
+      expect(yesBtn).toBeInTheDocument();              
+      const noBtn = await screen.findByRole('button', { name: /no/i });
+      expect(noBtn).toBeInTheDocument();              
     })
   })
 

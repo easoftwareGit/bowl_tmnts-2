@@ -3,7 +3,7 @@ import { baseDivsApi } from "@/lib/db/apiPaths";
 import { testBaseDivsApi } from "../../../testApi";
 import { divType, HdcpForTypes } from "@/lib/types/types";
 import { initDiv } from "@/lib/db/initVals";
-import { deleteAllTmntDivs, deleteDiv, getAllDivsForTmnt, postDiv, postManyDivs, putDiv } from "@/lib/db/divs/divsAxios";
+import { deleteAllTmntDivs, deleteDiv, getAllDivsForTmnt, postDiv, postManyDivs, putDiv } from "@/lib/db/divs/dbDivs";
 import { mockDivsToPost } from "../../../mocks/tmnts/twoDivs/mockDivs";
 
 // before running this test, run the following commands in the terminal:
@@ -343,10 +343,10 @@ describe("divsAxios", () => {
       );
       if (!foundToDel) {
         try {
-          const eventJSON = JSON.stringify(toDel);
+          const divJSON = JSON.stringify(toDel);
           const rePostedResponse = await axios({
             method: "post",
-            data: eventJSON,
+            data: divJSON,
             withCredentials: true,
             url: url,
           });          

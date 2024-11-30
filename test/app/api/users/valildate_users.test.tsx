@@ -21,7 +21,7 @@ describe("user table data validation", () => {
 
   describe("gotUserData function - check for missing data", () => {
     
-    it("should return ErrorCode.None when valid user object", () => {
+    it("should return ErrorCode.None when user object has no missing data", () => {
       const testUser: userType = {
         ...mockUser,
         password: "Test123!",

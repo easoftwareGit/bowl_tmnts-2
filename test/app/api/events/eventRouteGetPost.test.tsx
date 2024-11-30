@@ -5,7 +5,7 @@ import { eventType } from "@/lib/types/types";
 import { initEvent } from "@/lib/db/initVals";
 import { btDbUuid } from "@/lib/uuid";
 import { mockEventsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockEvents";
-import { deleteAllTmntEvents } from "@/lib/db/events/eventsAxios";
+import { deleteAllTmntEvents } from "@/lib/db/events/dbEvents";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -80,8 +80,8 @@ describe('Events - GETs and POST API: /api/events', () => {
     it('should get all events', async () => {
       const response = await axios.get(url);
       expect(response.status).toBe(200);
-      // 9 rows in prisma/seed.ts
-      expect(response.data.events).toHaveLength(9);
+      // 10 rows in prisma/seed.ts
+      expect(response.data.events).toHaveLength(10);
       const events: eventType[] = response.data.events;
       events.forEach((event: eventType) => {
         expect(event.lpox).not.toBeNull();
@@ -230,7 +230,7 @@ describe('Events - GETs and POST API: /api/events', () => {
 
   })
 
-  describe('POST', () => { 
+  describe('POST one event API: /api/events', () => { 
 
     const eventToPost: eventType = {
       ...initEvent,      

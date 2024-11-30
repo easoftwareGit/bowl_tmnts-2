@@ -1,4 +1,4 @@
-import { ErrorCode, maxFirstNameLength, maxLastNameLength, isEmail, isPassword8to20, isValidBtDbId, isValidRole } from "@/lib/validation";
+import { ErrorCode, maxFirstNameLength, maxLastNameLength, isEmail, isPassword8to20, isValidBtDbId, isValidRole, validName } from "@/lib/validation";
 import { sanitize } from "@/lib/sanitize";
 import { userType } from "@/lib/types/types";
 import { phone as phoneChecking } from "phone";
@@ -38,12 +38,10 @@ const gotUserData = (user: userType, checkPhone: boolean, checkPass: boolean): E
 }
 
 export const validUserFirstName = (firstName: string): boolean => {  
-  const sanitized = sanitize(firstName);  
-  return (sanitized.length > 0 && sanitized.length <= maxFirstNameLength)
+  return validName(firstName, maxFirstNameLength)
 }
 export const validUserLastName = (lastName: string): boolean => {  
-  const sanitized = sanitize(lastName);
-  return (sanitized.length > 0 && sanitized.length <= maxLastNameLength)  
+  return validName(lastName, maxLastNameLength)
 }
 export const validUserEmail = (email: string): boolean => {  
   if (!email) return false
@@ -61,10 +59,12 @@ export const validUserPassword = (password: string): boolean => {
 /**
  * checks if user data is valid
  * 
- * @param user - user data to check
- * @param checkPhone - true if need to check phone 
- * @param checkPass - true if need to check password
- * @returns - {ErrorCode.InvalidData, ErrorCode.None, ErrorCode.OtherError}
+ * @param {userType} user - user data to check
+ * @param {boolean} checkPhone - true if need to check phone 
+ * @param {boolean} checkPass - true if need to check password
+ * @returns {ErrorCode} - ErrorCode.None: user data is valid, 
+ *    ErrorCode.InvalidData: user data is invalid
+ *    ErrorCode.OtherError: unknown error
  */
 const validUserData = (user: userType, checkPhone: boolean, checkPass: boolean): ErrorCode => {
   

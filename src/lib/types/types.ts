@@ -2,7 +2,7 @@ import { ErrorCode } from "../validation"
 
 export type roleTypes = "ADMIN" | "DIRECTOR" | "USER"
 
-export type idTypes = 'usr' | 'bwl' | 'tmt' | 'evt' | 'div' | 'sqd' | 'lan' | 'hdc' | 'pot' | 'brk' | 'elm' | 'ply'
+export type idTypes = 'usr' | 'bwl' | 'tmt' | 'evt' | 'div' | 'sqd' | 'lan' | 'hdc' | 'pot' | 'brk' | 'elm' | 'ply' | 'den' | 'pen' | 'ben' | 'een' | 'gam' 
 
 export type userType = {
   id: string
@@ -326,6 +326,61 @@ export type elimDataType = {
   sort_order: number;      
 };
 
+export type playerType = {
+  id: string,
+  squad_id: string,
+  first_name: string,
+  first_name_err: string,
+  last_name: string,
+  last_name_err: string,
+  average: number,
+  average_err: string,
+  lane: number,
+  lane_err: string,
+  position: string,
+  position_err: string,
+}
+
+export type playerDataType = {
+  squad_id: string,
+  first_name: string,
+  last_name: string,
+  average: number,
+  lane: number,
+  position: string,
+  id?: string
+}
+
+export type validPlayersType = {
+  players: playerType[],
+  errorCode: ErrorCode
+}
+
+export type divEntryType = {
+  id: string,
+  squad_id: string,
+  squad_id_err: string,
+  div_id: string,
+  div_id_err: string,
+  player_id: string,
+  player_id_err: string,
+  fee: string,
+  fee_err: string,
+}
+
+export type divEntryDataType = {
+  id: string,
+  squad_id: string,
+  div_id: string,
+  player_id: string,
+  fee: string,
+}
+
+export type validDivEntriesType = {
+  divEntries: divEntryType[],
+  errorCode: ErrorCode
+}
+
 export type AcdnErrType = {
   errClassName: string,
   message: string,
@@ -342,13 +397,24 @@ export type dataOneTmntType = {
   elims: elimType[];
 }
 
-export type allDataOneTmntType = {      
-  origData: dataOneTmntType;
-  curData: dataOneTmntType;
+export enum tmntActions {
+  None = 0,
+  New = 1,
+  Delete = 2,
+  Edit = 3,
+  Run = 4,
 }
 
-export type tmntPropsType = {
-  // allDataOneTmntType: allDataOneTmntType;
+export type allDataOneTmntType = {      
+  origData: dataOneTmntType;
+  curData: dataOneTmntType;  
+}
+
+export type tmntFormDataType = allDataOneTmntType & {
+  tmntAction: tmntActions;
+}
+
+export type tmntPropsType = {  
   tmnt: tmntType;
   setTmnt: (tmnt: tmntType) => void;
   events: eventType[];

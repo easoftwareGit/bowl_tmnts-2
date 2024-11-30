@@ -1,7 +1,7 @@
 import React from "react";
 import { fireEvent, render, screen } from '../../../test-utils'
 import userEvent from "@testing-library/user-event";
-import { allDataOneTmntType } from "@/lib/types/types";
+import { allDataOneTmntType, tmntActions, tmntFormDataType } from "@/lib/types/types";
 import { blankDataOneTmnt } from "@/lib/db/initVals";
 import { dateTo_UTC_MMddyyyy, startOfDayFromString, startOfTodayUTC, todayStr } from "@/lib/dateTools";
 import { RootState } from "@/redux/store";
@@ -34,10 +34,18 @@ jest.mock('react-redux', () => ({
   ...jest.requireActual('react-redux'),
   useSelector: jest.fn().mockImplementation((selector) => selector(mockState)),
 }));
+// Mock useRouter:
+jest.mock("next/navigation", () => ({
+  useRouter() {
+    return {
+      prefetch: () => null
+    };
+  }
+}));
 
 describe('TmntDataPage - Squads Component', () => { 
 
-  const tmntProps: allDataOneTmntType = {
+  const tmntProps: tmntFormDataType = {
     origData: blankDataOneTmnt(),
     curData: {
       tmnt: mockSDTmnt,
@@ -48,7 +56,8 @@ describe('TmntDataPage - Squads Component', () => {
       pots: mockSDPots,
       brkts: mockSDBrkts,
       elims: mockSDElims,
-    }
+    },
+    tmntAction: tmntActions.Edit
   };   
 
   describe('click on the squads accordian', () => { 
@@ -104,6 +113,37 @@ describe('TmntDataPage - Squads Component', () => {
     })
   })
 
+  describe('reset the squad name to "Squad 1" for first squad when squad name is cleared', () => { 
+    it('reset the squad name to "Squad 1" for first squad when squad name is cleared', async () => { 
+      const user = userEvent.setup()
+      render(<ReduxProvider><TmntDataForm tmntProps={tmntProps} /></ReduxProvider>)
+      const acdns = await screen.findAllByRole('button', { name: /squads/i });
+      await user.click(acdns[0]);
+      const aTabs = await screen.findAllByRole('tab', { name: /a squad/i })
+      // [0] - squads, [1] - lanes
+      expect(aTabs).toHaveLength(2);
+      const bTabs = await screen.findAllByRole('tab', { name: /b squad/i })       
+      // [0] - squads, [1] - lanes
+      expect(bTabs).toHaveLength(2);
+      const squadNames = screen.getAllByRole("textbox", { name: /squad name/i }) as HTMLInputElement[];
+      expect(squadNames).toHaveLength(2);
+      const squadGames = screen.getAllByRole('spinbutton', { name: /squad games/i }) as HTMLInputElement[];
+      expect(squadGames).toHaveLength(2);
+
+      await user.clear(squadNames[0]);
+      expect(aTabs[0]).toHaveTextContent('');
+
+      // click will cause event name to be reset to "Squad 1" (sort order is 1)
+      await user.click(squadGames[0]);
+
+      const squadNameErrors = await screen.findAllByTestId('dangerSquadName');
+      expect(squadNameErrors).toHaveLength(2);
+      expect(squadNameErrors[0]).toHaveTextContent("");
+      expect(squadNames[0]).toHaveValue("Squad 1");
+      expect(aTabs[0]).toHaveTextContent('Squad 1');
+    })
+  })
+
   describe('changing the squad name changed the squad tab title', () => {
     it('changing the squad name changed the squad tab title', async () => {
       const user = userEvent.setup()
@@ -126,28 +166,6 @@ describe('TmntDataPage - Squads Component', () => {
   })
 
   describe('render the squad name errors', () => {
-    it('render the blank squad name error', async () => {
-      const user = userEvent.setup()
-      render(<ReduxProvider><TmntDataForm tmntProps={tmntProps} /></ReduxProvider>)
-
-      const saveBtn = await screen.findByRole('button', { name: /save tournament/i });
-      const acdns = await screen.findAllByRole('button', { name: /squads/i });
-      await user.click(acdns[0]);
-      const aTabs = await screen.findAllByRole('tab', { name: /a squad/i })
-      const squadNames = screen.getAllByRole("textbox", { name: /squad name/i }) as HTMLInputElement[];
-      expect(squadNames).toHaveLength(2);
-      await user.click(squadNames[0]);
-      await user.clear(squadNames[0]);
-      expect(squadNames[0]).toHaveValue("");
-      // click will cause invalid data errors to show
-      await user.click(saveBtn);
-      const squadNameErrors = await screen.findAllByTestId('dangerSquadName');
-      expect(squadNameErrors).toHaveLength(2);
-      expect(squadNameErrors[0]).toHaveTextContent("Squad Name is required");
-      expect(acdns[0]).toHaveTextContent("Squads - 2: Error in Squads - Squad Name is required");
-      // singlesTabs[0] is for events, singlesTabs[1] is for squads
-      expect(aTabs[0]).toHaveClass('objError');
-    })
     it('redner duplicate event name error', async () => {
       const user = userEvent.setup()
       render(<ReduxProvider><TmntDataForm tmntProps={tmntProps} /></ReduxProvider>)
@@ -187,24 +205,34 @@ describe('TmntDataPage - Squads Component', () => {
       const acdns = await screen.findAllByRole('button', { name: /squads/i });
       await user.click(acdns[0]);
       const aTabs = await screen.findAllByRole('tab', { name: /a squad/i })
+      const bTabs = await screen.findAllByRole('tab', { name: /b squad/i })
+      expect(aTabs).toHaveLength(2);
+      expect(bTabs).toHaveLength(2);
+      expect(aTabs[0]).toBeInTheDocument();
+      expect(bTabs[0]).toBeInTheDocument();
+      await user.click(bTabs[0])
       const squadNames = screen.getAllByRole("textbox", { name: /squad name/i }) as HTMLInputElement[];
       expect(squadNames).toHaveLength(2);
-      await user.click(squadNames[0]);
-      await user.clear(squadNames[0]);
-      expect(squadNames[0]).toHaveValue("");
+      await user.click(bTabs[0]);
+      await user.click(squadNames[1]);
+      await user.clear(squadNames[1]);
+      await user.type(squadNames[1], 'A Squad')
+      expect(squadNames[0]).toHaveValue("A Squad");
+      expect(squadNames[1]).toHaveValue("A Squad");
       // click will cause invalid data errors to show
       await user.click(saveBtn);
       const squadNameErrors = await screen.findAllByTestId('dangerSquadName');
-      expect(squadNameErrors[0]).toHaveTextContent("Squad Name is required");
-      expect(acdns[0]).toHaveTextContent("Squads - 2: Error in Squads - Squad Name is required");
-      // singlesTabs[0] is for events, singlesTabs[1] is for squads
-      expect(aTabs[0]).toHaveClass('objError');
-      // editing the squad name clears the error
-      await user.clear(squadNames[0]);
-      await user.type(squadNames[0], 'Testing');
       expect(squadNameErrors[0]).toHaveTextContent("");
-      expect(aTabs[1]).not.toHaveClass('objError');
-      expect(aTabs[1]).toHaveTextContent('Testing');
+      expect(squadNameErrors[1]).toHaveTextContent("has already been used");
+      expect(acdns[0]).toHaveTextContent("has already been used");
+      expect(aTabs[0]).not.toHaveClass('objError');
+      expect(bTabs[0]).toHaveClass('objError');
+
+      await user.clear(squadNames[1]);
+      await user.type(squadNames[1], 'Testing');
+      expect(squadNameErrors[1]).toHaveTextContent("");
+      expect(bTabs[1]).not.toHaveClass('objError');
+      expect(bTabs[1]).toHaveTextContent('Testing');
       expect(acdns[0]).not.toHaveTextContent(": Error in Squads - Squad Name is required");
       expect(acdns[0]).toHaveTextContent("Squads");
     })
@@ -699,24 +727,29 @@ describe('TmntDataPage - Squads Component', () => {
       const acdns = await screen.findAllByRole('button', { name: /squads/i });
       await user.click(acdns[0]);
       const aTabs = await screen.findAllByRole('tab', { name: /a squad/i }) as HTMLElement[];
-      const squadNames = screen.getAllByRole("textbox", { name: /squad name/i }) as HTMLInputElement[];
-      await user.click(squadNames[0]);
-      await user.clear(squadNames[0]);
-      const squadGames = screen.getAllByRole('spinbutton', { name: /squad games/i }) as HTMLInputElement[];
-      await user.clear(squadGames[0]);
-      await user.type(squadGames[0], '0');
+      const startingLanes = screen.getAllByRole("spinbutton", { name: /starting lane/i }) as HTMLInputElement[];
+      const numberOfLanes = screen.getAllByRole("spinbutton", { name: /# of lanes/i }) as HTMLInputElement[];
+      
+      await user.click(startingLanes[0]);
+      await user.clear(startingLanes[0]);
+      await user.type(startingLanes[0], '222');
+
+      await user.click(numberOfLanes[0]);
+      await user.clear(numberOfLanes[0]); 
+      await user.type(numberOfLanes[0], '0');
+
       // should show error
       await user.click(saveBtn);
           
-      expect(squadNames[0]).toHaveValue("");
-      const squadNameErrors = await screen.findAllByTestId('dangerSquadName');
-      expect(squadNameErrors[0]).toHaveTextContent("Squad Name is required");
-      expect(acdns[0]).toHaveTextContent("Squads - 2: Error in Squads - Squad Name is required");
+      expect(startingLanes[0]).toHaveValue(222);
+      const startingLaneErrs = screen.queryAllByTestId("dangerStartingLane");      
+      expect(startingLaneErrs[0]).toHaveTextContent("Starting Lane cannot be more than 199");
+      expect(acdns[0]).toHaveTextContent("Squads - 2: Error in A Squad - Starting Lane cannot be more than 199");
       expect(aTabs[0]).toHaveClass('objError');
       
-      expect(squadGames[0]).toHaveValue(0);
-      const gamesErrors = await screen.findAllByTestId('dangerSquadGames');
-      expect(gamesErrors[0]).toHaveTextContent("Games cannot be less than");
+      expect(numberOfLanes[0]).toHaveValue(0);
+      const numLanesErrors = await screen.findAllByTestId('dangerLaneCount');
+      expect(numLanesErrors[0]).toHaveTextContent("Number of Lanes cannot be less than 2");
     })
     it('render multiple errors, clear first error, show 2nd in acdn', async () => {
       const user = userEvent.setup()
@@ -725,31 +758,36 @@ describe('TmntDataPage - Squads Component', () => {
       const acdns = await screen.findAllByRole('button', { name: /squads/i });
       await user.click(acdns[0]);
       const aTabs = await screen.findAllByRole('tab', { name: /a squad/i }) as HTMLElement[];
-      const squadNames = screen.getAllByRole("textbox", { name: /squad name/i }) as HTMLInputElement[];
-      await user.click(squadNames[0]);
-      await user.clear(squadNames[0]);
-      const squadGames = screen.getAllByRole('spinbutton', { name: /squad games/i }) as HTMLInputElement[];
-      await user.clear(squadGames[0]);
-      await user.type(squadGames[0], '0');
+      const startingLanes = screen.getAllByRole("spinbutton", { name: /starting lane/i }) as HTMLInputElement[];
+      const numberOfLanes = screen.getAllByRole("spinbutton", { name: /# of lanes/i }) as HTMLInputElement[];
+      
+      await user.click(startingLanes[0]);
+      await user.clear(startingLanes[0]);
+      await user.type(startingLanes[0], '222');
+
+      await user.click(numberOfLanes[0]);
+      await user.clear(numberOfLanes[0]); 
+      await user.type(numberOfLanes[0], '0');
+
       // should show error
       await user.click(saveBtn);
           
-      expect(squadNames[0]).toHaveValue("");
-      const squadNameErrors = await screen.findAllByTestId('dangerSquadName');
-      expect(squadNameErrors[0]).toHaveTextContent("Squad Name is required");
-      expect(acdns[0]).toHaveTextContent("Squads - 2: Error in Squads - Squad Name is required");
+      expect(startingLanes[0]).toHaveValue(222);
+      const startingLaneErrs = screen.queryAllByTestId("dangerStartingLane");      
+      expect(startingLaneErrs[0]).toHaveTextContent("Starting Lane cannot be more than 199");
+      expect(acdns[0]).toHaveTextContent("Squads - 2: Error in A Squad - Starting Lane cannot be more than 199");
       expect(aTabs[0]).toHaveClass('objError');
       
-      expect(squadGames[0]).toHaveValue(0);
-      const gamesErrors = await screen.findAllByTestId('dangerSquadGames');
-      expect(gamesErrors[0]).toHaveTextContent("Games cannot be less than");
+      expect(numberOfLanes[0]).toHaveValue(0);
+      const numLanesErrors = await screen.findAllByTestId('dangerLaneCount');
+      expect(numLanesErrors[0]).toHaveTextContent("Number of Lanes cannot be less than 2");
 
-      await user.click(squadNames[0]);
-      await user.type(squadNames[0], 'Squad 1');
-      // squad name error cleared, acdn error message changed to games error
-      expect(squadNameErrors[0]).toHaveTextContent("");
-      expect(acdns[0]).toHaveTextContent("Games cannot be less than");
-      expect(aTabs[0]).toHaveClass('objError');
+      await user.click(startingLanes[0]);
+      await user.clear(startingLanes[0]);
+      await user.type(startingLanes[0], '1');
+
+      expect(startingLaneErrs[0]).toHaveTextContent("");
+      expect(acdns[0]).toHaveTextContent("Squads - 2: Error in A Squad - Number of Lanes cannot be less than 2");
     })
   })
 

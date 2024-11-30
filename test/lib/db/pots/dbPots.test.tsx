@@ -4,9 +4,9 @@ import { testBasePotsApi } from "../../../testApi";
 import { potCategoriesTypes, potType } from "@/lib/types/types";
 import { initPot } from "@/lib/db/initVals";
 import { mockDivs, mockPotsToPost, mockSquadsToPost, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllDivPots, deleteAllSquadPots, deleteAllTmntPots, deletePot, getAllPotsForTmnt, postManyPots, postPot, putPot } from "@/lib/db/pots/potsAxios";
-import { deleteAllTmntSquads, deleteSquad, postManySquads, postSquad } from "@/lib/db/squads/squadsAxios";
-import { deleteAllTmntDivs, deleteDiv, postDiv, postManyDivs } from "@/lib/db/divs/divsAxios";
+import { deleteAllDivPots, deleteAllSquadPots, deleteAllTmntPots, deletePot, getAllPotsForTmnt, postManyPots, postPot, putPot } from "@/lib/db/pots/dbPots";
+import { deleteAllTmntSquads, deleteSquad, postManySquads, postSquad } from "@/lib/db/squads/dbSquads";
+import { deleteAllTmntDivs, deleteDiv, postDiv, postManyDivs } from "@/lib/db/divs/dbDivs";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database

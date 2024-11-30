@@ -3,9 +3,9 @@ import { baseLanesApi, baseSquadsApi } from "@/lib/db/apiPaths";
 import { testBaseLanesApi, testBaseSquadsApi } from "../../../testApi";
 import { laneType } from "@/lib/types/types";
 import { initLane } from "@/lib/db/initVals";
-import { deleteAllSquadLanes, deleteAllTmntLanes, deleteLane, getAllLanesForTmnt, postLane, postManyLanes, putLane } from "@/lib/db/lanes/lanesAxios";
+import { deleteAllSquadLanes, deleteAllTmntLanes, deleteLane, getAllLanesForTmnt, postLane, postManyLanes, putLane } from "@/lib/db/lanes/dbLanes";
 import { mockLanesToPost, mockSquadsToPost, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllTmntSquads, deleteSquad, postManySquads, postSquad } from "@/lib/db/squads/squadsAxios";
+import { deleteAllTmntSquads, deleteSquad, postManySquads, postSquad } from "@/lib/db/squads/dbSquads";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database

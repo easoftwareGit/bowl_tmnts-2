@@ -1,12 +1,12 @@
 import axios from "axios";
 import { baseBrktsApi } from "@/lib/db/apiPaths";
 import { testBaseBrktsApi } from "../../../testApi";
-import { tmntSaveBrkts, exportedForTesting } from "@/lib/db/oneTmnt/oneTmnt";
+import { tmntSaveBrkts, exportedForTesting } from "@/lib/db/oneTmnt/dbOneTmnt";
 import { mockBrktsToPost, mockSquadsToPost, mockDivs, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { brktType } from "@/lib/types/types";
-import { deleteAllTmntBrkts, deleteBrkt, postManyBrkts, postBrkt, putBrkt } from "@/lib/db/brkts/brktsAxios";
-import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/squadsAxios";
-import { deleteAllTmntDivs, postManyDivs } from "@/lib/db/divs/divsAxios";
+import { deleteAllTmntBrkts, deleteBrkt, postManyBrkts, postBrkt, putBrkt } from "@/lib/db/brkts/dbBrkts";
+import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/dbSquads";
+import { deleteAllTmntDivs, postManyDivs } from "@/lib/db/divs/dbDivs";
 import { blankBrkt } from "@/lib/db/initVals";
 import 'core-js/actual/structured-clone';
 const { tmntPostPutOrDelBrkts } = exportedForTesting;

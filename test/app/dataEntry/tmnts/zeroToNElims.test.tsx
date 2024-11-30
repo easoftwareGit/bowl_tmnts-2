@@ -7,9 +7,10 @@ import { localConfig } from "@/lib/currency/const";
 import { formatValueSymbSep2Dec } from "@/lib/currency/formatValue";
 import { defaultElimGames} from "@/lib/db/initVals";
 import { getDivName } from "@/lib/getName";
-import { elimType } from "@/lib/types/types";
+import { elimType, tmntActions } from "@/lib/types/types";
 import { btDbUuid } from "@/lib/uuid";
 import { minFeeText } from "@/components/currency/eaCurrencyInput";
+import { cloneDeep } from "lodash";
 const { validateElim } = exportedForTesting;
 
 const mockSetElims = jest.fn();
@@ -23,6 +24,7 @@ const mockZeroToNElimsProps = {
   squads: mockSquads,
   setAcdnErr: mockSetAcdnErr,
   setShowingModal: mockSetShowingModal,
+  tmntAction: tmntActions.New,
 }
 
 describe('ZeroToNElims - Component', () => { 
@@ -30,12 +32,18 @@ describe('ZeroToNElims - Component', () => {
   describe('render the component', () => { 
 
     describe('render the Create Eliminator tab', () => { 
+      it('render the "Create Pots" tab', async () => {        
+        // ARRANGE        
+        render(<ZeroToNElims {...mockZeroToNElimsProps} />);        
+        // ACT        
+        const tabs = screen.getAllByRole("tab");        
+        // ASSERT     
+        expect(tabs).toHaveLength(mockElims.length + 1);  //  + 1 for create pot tab
+        expect(tabs[0]).toHaveTextContent("Create Eliminator");
+      })
       it('render the Division label', () => {
-        // ARRANGE
         render(<ZeroToNElims {...mockZeroToNElimsProps} />)
-        // ACT
         const divLabels = screen.getAllByText(/division/i);
-        // ASSERT
         expect(divLabels).toHaveLength(mockElims.length + 1); // + 1 for create pot
       })
       it('render the "Scratch" radio button', () => {
@@ -102,8 +110,8 @@ describe('ZeroToNElims - Component', () => {
         expect(elimGamesError).toHaveTextContent("");
       })
       it('render the "Add Eliminator" button', () => {
-        render(<ZeroToNElims {...mockZeroToNElimsProps} />);
-        const addBtn = screen.getByText("Add Eliminator");
+        render(<ZeroToNElims {...mockZeroToNElimsProps} />);        
+        const addBtn = screen.getByRole('button', { name: /add eliminator/i });
         expect(addBtn).toBeInTheDocument();
       })
       it('render the tabs', async () => {
@@ -472,6 +480,7 @@ describe('ZeroToNElims - Component', () => {
           squads: mockSquads,
           setAcdnErr: mockSetAcdnErr,
           setShowingModal: mockSetShowingModal,
+          tmntAction: tmntActions.New,
         }
         
         const user = userEvent.setup()
@@ -485,6 +494,158 @@ describe('ZeroToNElims - Component', () => {
       })
     })
         
+    describe('render elims when tmntAction === Run', () => { 
+      const runTmntProps = cloneDeep(mockZeroToNElimsProps);
+      runTmntProps.tmntAction = tmntActions.Run;
+      it('render the Division input', async () => {
+        const user = userEvent.setup()
+        render(<ZeroToNElims {...runTmntProps} />);
+        const tabs = screen.getAllByRole("tab");
+        await user.click(tabs[1]);
+        const divInputs = screen.getAllByRole('textbox', { name: /division/i }) as HTMLInputElement[];
+        expect(divInputs).toHaveLength(mockElims.length);
+        for (let i = 0; i < mockElims.length; i++) {
+          expect(divInputs[i]).toBeDisabled();
+        }
+      })
+      it('render the Fee input', async () => {
+        const user = userEvent.setup()
+        render(<ZeroToNElims {...runTmntProps} />);
+        const tabs = screen.getAllByRole("tab");
+        await user.click(tabs[1]);
+        const feeInputs = screen.getAllByRole('textbox', { name: /fee/i }) as HTMLInputElement[];
+        expect(feeInputs).toHaveLength(mockElims.length);
+        for (let i = 0; i < mockElims.length; i++) {
+          expect(feeInputs[i]).toBeDisabled();
+        }
+      })
+      it('render the Start input', async () => {
+        const user = userEvent.setup()
+        render(<ZeroToNElims {...runTmntProps} />);
+        const tabs = screen.getAllByRole("tab");
+        await user.click(tabs[1]);
+        const startInputs = screen.getAllByRole('spinbutton', { name: /start/i }) as HTMLInputElement[];
+        expect(startInputs).toHaveLength(mockElims.length);
+        for (let i = 0; i < mockElims.length; i++) {
+          expect(startInputs[i]).toBeDisabled();
+        }
+      })
+      it('render the Games input', async () => {
+        const user = userEvent.setup()
+        render(<ZeroToNElims {...runTmntProps} />);
+        const tabs = screen.getAllByRole("tab");
+        await user.click(tabs[1]);
+        const gamesInputs = screen.getAllByRole('spinbutton', { name: /games/i }) as HTMLInputElement[];
+        expect(gamesInputs).toHaveLength(mockElims.length);
+        for (let i = 0; i < mockElims.length; i++) {
+          expect(gamesInputs[i]).toBeDisabled();
+        }
+      })
+      it('render the Delete Eliminator button', async () => {
+        const user = userEvent.setup()
+        render(<ZeroToNElims {...runTmntProps} />);
+        const tabs = screen.getAllByRole("tab");
+        await user.click(tabs[1]);
+        const delBtns = screen.getAllByRole("button", { name: /delete eliminator/i });
+        expect(delBtns).toHaveLength(mockElims.length);
+        for (let i = 0; i < mockElims.length; i++) {
+          expect(delBtns[i]).toBeDisabled();
+        }
+      })
+    })
+
+    describe('DO NOT render Create Eliminators tab when tmntAction === Run', () => { 
+      const runTmntProps = cloneDeep(mockZeroToNElimsProps);
+      runTmntProps.tmntAction = tmntActions.Run;
+      it('DO NOT render the "Create Pots" tab', async () => {        
+        render(<ZeroToNElims {...runTmntProps} />);        
+        const tabs = screen.getAllByRole("tab");        
+        expect(tabs).toHaveLength(mockElims.length);  // no create pot tab
+
+        expect(tabs[0]).toHaveAttribute("aria-selected", "true");
+        expect(tabs[1]).toHaveAttribute("aria-selected", "false");
+        expect(tabs[2]).toHaveAttribute("aria-selected", "false");
+        expect(tabs[3]).toHaveAttribute("aria-selected", "false");                
+
+        expect(tabs[0]).not.toHaveTextContent(/create eliminator/i);
+        expect(tabs[1]).not.toHaveTextContent(/create eliminator/i);
+        expect(tabs[2]).not.toHaveTextContent(/create eliminator/i);
+        expect(tabs[3]).not.toHaveTextContent(/create eliminator/i);
+      })
+      it('DO NOT render the Division label', async () => {
+        const user = userEvent.setup()
+        render(<ZeroToNElims {...runTmntProps} />);
+        const tabs = screen.getAllByRole("tab");
+        await user.click(tabs[1]);
+        const divLabels = screen.getAllByText(/division/i);
+        expect(divLabels).toHaveLength(mockElims.length); // no div label for create eliminator
+      })
+      it('DO NOT render the "Scratch" radio button', () => {
+        render(<ZeroToNElims {...runTmntProps} />);
+        const scratchRadio = screen.queryByRole('radio', { name: /scratch/i }) as HTMLInputElement;
+        expect(scratchRadio).not.toBeInTheDocument();
+      })
+      it('render the "Hdcp" radio button', () => {
+        render(<ZeroToNElims {...runTmntProps} />);
+        const hdcpRadio = screen.queryByRole('radio', { name: /hdcp/i }) as HTMLInputElement;
+        expect(hdcpRadio).not.toBeInTheDocument();
+      })
+      it('DO NOT render the divison errors', () => {
+        render(<ZeroToNElims {...runTmntProps} />);
+        const divError = screen.queryByTestId("dangerElimDivRadio");
+        expect(divError).not.toBeInTheDocument();
+      })
+      it('DO NOT render the "Fee" label', () => {
+        render(<ZeroToNElims {...runTmntProps} />);
+        const feeLabels = screen.getAllByText("Fee");
+        expect(feeLabels).toHaveLength(mockElims.length); // no fee label for create eliminator
+      })
+      it('render the "Fee" input', () => {
+        render(<ZeroToNElims {...runTmntProps} />);
+        const fees = screen.getAllByRole('textbox', { name: /fee/i }) as HTMLInputElement[];
+        expect(fees).toHaveLength(mockElims.length); // no fee input for create eliminator
+      })
+      it('DO NOT render the create eliminator fee error', () => {
+        render(<ZeroToNElims {...runTmntProps} />);
+        const elimFeeError = screen.queryByTestId("dangerCreateElimFee");
+        expect(elimFeeError).not.toBeInTheDocument();
+      })
+      it('DO NOT render the create eliminator "Start" label', () => {
+        render(<ZeroToNElims {...runTmntProps} />);
+        const startLabels = screen.getAllByText(/start/i);
+        expect(startLabels).toHaveLength(mockElims.length); // no start label for create eliminator
+      })
+      it('DO NOT render the create eliminator "Start" input', () => {
+        render(<ZeroToNElims {...runTmntProps} />);
+        const startInputs = screen.getAllByRole('spinbutton', { name: /start/i }) as HTMLInputElement[];
+        expect(startInputs).toHaveLength(mockElims.length); // no start input for create eliminator        
+      })
+      it('DO NOT render the create eliminator "Start" error', () => {
+        render(<ZeroToNElims {...runTmntProps} />);
+        const elimStartError = screen.queryByTestId("dangerCreateElimStart");
+        expect(elimStartError).not.toBeInTheDocument();
+      })
+      it('DO NOT render the "Games" label', () => {
+        render(<ZeroToNElims {...runTmntProps} />);
+        const gamesLabels = screen.getAllByText("Games");
+        expect(gamesLabels).toHaveLength(mockElims.length); // no games label for create eliminator
+      })
+      it('DO NOT render the "Games" input', () => {
+        render(<ZeroToNElims {...runTmntProps} />);
+        const gamesInputs = screen.getAllByRole('spinbutton', { name: /games/i }) as HTMLInputElement[];
+        expect(gamesInputs).toHaveLength(mockElims.length); // no games input for create eliminator        
+      })
+      it('DO NOT render the create eliminator "Start" error', () => {
+        render(<ZeroToNElims {...runTmntProps} />);
+        const elimGamesError = screen.queryByTestId("dangerCreateElimGames");
+        expect(elimGamesError).not.toBeInTheDocument();
+      })
+      it('render the "Add Eliminator" button', () => {
+        render(<ZeroToNElims {...runTmntProps} />);        
+        const addBtn = screen.queryByRole('button', { name: /add eliminator/i });
+        expect(addBtn).not.toBeInTheDocument();
+      })
+    })
   })
 
   describe('add an eliminator', () => {
@@ -534,12 +695,12 @@ describe('ZeroToNElims - Component', () => {
       // ACT
       await user.click(delBtns[3]);
       // ASSERT
-      const okBtn = await screen.findByRole('button', { name: /ok/i });
-      expect(okBtn).toBeInTheDocument();
-      const cancelBtn = screen.queryByRole('button', { name: /cancel/i });
-      expect(cancelBtn).toBeInTheDocument();
+      const yesBtn = await screen.findByRole('button', { name: /yes/i });
+      expect(yesBtn).toBeInTheDocument();
+      const noBtn = screen.queryByRole('button', { name: /no/i });
+      expect(noBtn).toBeInTheDocument();
       // ACT
-      await user.click(okBtn);
+      await user.click(yesBtn);
       // ASSERT
       expect(mockZeroToNElimsProps.setElims).toHaveBeenCalled();                    
     })

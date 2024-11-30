@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { ioStatusType } from "@/redux/statusTypes";
 import { RootState } from "@/redux/store";
-import { deleteAllDataForTmnt, getUserTmnts } from "@/lib/db/tmnts/tmntsAxios";
+import { deleteAllDataForTmnt, getUserTmnts } from "@/lib/db/tmnts/dbTmnts";
 import { ioDataErrorsType, tmntsListType } from "@/lib/types/types";
 
 export interface userTmntSliceState {

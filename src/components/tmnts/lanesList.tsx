@@ -1,5 +1,5 @@
 import { FC, useState, useEffect, ChangeEvent } from "react";
-import { laneType, pairsOfLanesType } from "@/lib/types/types"
+import { laneType, pairsOfLanesType, tmntActions } from "@/lib/types/types"
 import { isOdd } from "@/lib/validation";
 
 import "./lanesList.css";
@@ -8,7 +8,8 @@ import { btDbUuid } from "@/lib/uuid";
 interface LanesListProps {
   squadId: string,
   lanes: laneType[],
-  setLanes: (lanes: laneType[]) => void
+  setLanes: (lanes: laneType[]) => void,
+  tmntAction: tmntActions,
 }
 
 /**
@@ -91,10 +92,12 @@ export const pairsOfLanes = (squadId: string, lanes: laneType[]): pairsOfLanesTy
 }
 
 const LanesList: FC<LanesListProps> = (props) => {
-  const { squadId, lanes, setLanes } = props;
+  const { squadId, lanes, setLanes, tmntAction } = props;
   const initPairs = pairsOfLanes(squadId, lanes);
 
   const [pairs, setPairs] = useState(initPairs);
+
+  const isDisabled = (tmntAction === tmntActions.Run);
 
   useEffect(() => {
     setPairs(pairsOfLanes(squadId, lanes));
@@ -177,6 +180,7 @@ const LanesList: FC<LanesListProps> = (props) => {
                     id={`inUse${pair.left_id}`}
                     checked={pair.in_use}
                     onChange={handleInputChange(pair.left_id)}
+                    disabled={isDisabled}
                   >
                   </input>
                 </td>

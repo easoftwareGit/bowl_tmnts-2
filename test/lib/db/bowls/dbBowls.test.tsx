@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { baseBowlsApi } from "@/lib/db/apiPaths";
 import { testBaseBowlsApi } from "../../../testApi";
-import { getBowl, getBowls, postBowl, putBowl } from "@/lib/db/bowls/bowlsAxios";
+import { getBowl, getBowls, postBowl, putBowl } from "@/lib/db/bowls/dbBowls";
 import { initBowl } from "@/lib/db/initVals";
 import { bowlType } from "@/lib/types/types";
 

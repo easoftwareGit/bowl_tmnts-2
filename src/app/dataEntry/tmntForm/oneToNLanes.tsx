@@ -1,13 +1,14 @@
 "use client";
 import React, { useState } from "react";
-import { squadType, laneType } from "../../../lib/types/types";
+import { squadType, laneType, tmntActions } from "../../../lib/types/types";
 import { Tabs, Tab } from "react-bootstrap";
 import LanesList from "@/components/tmnts/lanesList";
 
 interface ChildProps {
   lanes: laneType[];  
   setLanes: (lanes: laneType[]) => void;
-  squads: squadType[];  
+  squads: squadType[];
+  tmntAction: tmntActions;
 }
 
 // const defaultTabKey = 'squad1'
@@ -15,13 +16,14 @@ interface ChildProps {
 const OneToNLanes: React.FC<ChildProps> = ({
   lanes,  
   setLanes,
-  squads,  
+  squads,
+  tmntAction,
 }) => {
   
   const defaultTabKey = `lane${squads[0].id}`; // need to have 'lane' in key
 
   const [tabKey, setTabKey] = useState(defaultTabKey); 
-
+  
   const handleTabSelect = (key: string | null) => {
     if (key) {
       setTabKey(key);
@@ -42,13 +44,13 @@ const OneToNLanes: React.FC<ChildProps> = ({
           <Tab
             key={squad.id}
             eventKey={`lane${squad.id}`} // need to have 'lane' in key
-            title={squad.tab_title}
-            // tabClassName={`${squad.laneErrClassName}`} no errors in lane tabs
+            title={squad.tab_title}            
           >
             <LanesList
               squadId={squad.id}
               lanes={lanes}
               setLanes={setLanes}
+              tmntAction={tmntAction}
             />
           </Tab>
         )}

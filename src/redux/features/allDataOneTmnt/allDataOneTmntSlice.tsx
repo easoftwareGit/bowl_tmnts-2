@@ -2,10 +2,9 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { ioStatusType } from "@/redux/statusTypes";
 import { RootState } from "@/redux/store";
 import { allDataOneTmntType, dataOneTmntType, ioDataErrorsType } from "@/lib/types/types";
-import { blankTmnt, initDiv, initEvent, initLane, initSquad, initTmnt } from "@/lib/db/initVals";
-import { btDbUuid } from "@/lib/uuid";
-import { deleteAllDataForTmnt, getAllDataForTmnt } from "@/lib/db/tmnts/tmntsAxios";
-import { saveAllDataOneTmnt } from "@/lib/db/oneTmnt/oneTmnt";
+import { blankTmnt  } from "@/lib/db/initVals";
+import { getAllDataForTmnt } from "@/lib/db/tmnts/dbTmnts";
+import { saveAllDataOneTmnt } from "@/lib/db/oneTmnt/dbOneTmnt";
 import { cloneDeep } from 'lodash';
 
 export interface allDataOneTmntState {
@@ -52,7 +51,14 @@ const initialState: allDataOneTmntState = {
  */
 export const fetchOneTmnt = createAsyncThunk(
   "allDataOneTmnt/fetchOneTmnt",
-  async (tmntId: string) => {
+  async (tmntId: string, { getState }) => {    
+
+    const state = getState() as RootState;
+    const currentTmnt = state.allDataOneTmnt.tmntData?.origData.tmnt.id;
+    if (currentTmnt === tmntId) {
+      // Return the current state if the tournament ID matches the one being fetched 
+      return state.allDataOneTmnt.tmntData;
+    }
 
     // Do not use try / catch blocks here. Need the promise to be fulfilled or
     // rejected which will have the appropriate response in the extraReducers.
@@ -97,7 +103,7 @@ export const allDataOneTmntSlice = createSlice({
       if (!action.payload) {
         state.loadStatus = 'failed';
         state.tmntData = null;
-        state.error = 'tournament not found'; 
+        state.error = 'all tournament data not found'; 
       } else {        
         state.loadStatus = 'succeeded';
         state.tmntData = action.payload;

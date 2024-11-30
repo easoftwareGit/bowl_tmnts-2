@@ -3,8 +3,7 @@ import {
   validateBrkt,
   validStart,
   validGames,
-  validPlayers,
-  validBrktFkId,
+  validPlayers,  
   exportedForTesting,
   validBrktMoney,
   validFsa,
@@ -33,7 +32,7 @@ const validBrkt = {
   admin: '5',
   fsa: '40',
   sort_order: 1,
-} as brktType;
+};
 
 describe("tests for bracket validation", () => { 
 
@@ -236,28 +235,6 @@ describe("tests for bracket validation", () => {
       expect(validFsa(undefined as any)).toBe(false);
     })
   })
-
-  describe("validBrktFkId function", () => {
-    it("should return true for valid tmnt_id", () => {
-      expect(validBrktFkId(validBrkt.div_id, "div")).toBe(true);
-      expect(validBrktFkId(validBrkt.squad_id, "sqd")).toBe(true);
-    });
-    it("should return false for invalid foreign key id", () => {
-      expect(validBrktFkId("abc_def", "div")).toBe(false);
-    });
-    it("should return false if foreign key id type does not match id type", () => {
-      expect(validBrktFkId(validBrkt.div_id, "usr")).toBe(false);
-    });
-    it("should return false for an empty foreign key id", () => {
-      expect(validBrktFkId("", "bwl")).toBe(false);
-    });
-    it("should return false for an null foreign key id", () => {
-      expect(validBrktFkId(null as any, "div")).toBe(false);
-    });
-    it("should return false for an null key type", () => {
-      expect(validBrktFkId(validBrkt.div_id, null as any)).toBe(false);
-    });
-  });
 
   describe('validBrktData function', () => { 
     it('should return ErrorCode.None for valid bracket data', () => {

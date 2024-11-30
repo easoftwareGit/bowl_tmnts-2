@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useSession } from "next-auth/react"; 
 import TmntDataForm from "../tmntForm/tmntForm";
-import { allDataOneTmntType, dataOneTmntType, eventType, tmntPropsType } from "@/lib/types/types";
+import { dataOneTmntType, tmntActions, tmntFormDataType } from "@/lib/types/types";
 import {
   initBrkts,  
   initDivs,
@@ -14,7 +14,6 @@ import {
   initTmnt,  
   linkedInitDataOneTmnt,  
 } from "@/lib/db/initVals";
-import { btDbUuid } from "@/lib/uuid";
 import { cloneDeep } from "lodash";
 
 const blankFullTmnt: dataOneTmntType = {
@@ -34,12 +33,12 @@ export const NewTmntPage = () => {
   // link the tmnt data types
   const userId = data?.user?.id || "";
   const fullTmntData: dataOneTmntType = linkedInitDataOneTmnt(userId)
-  // const blankDataOneTmnt = structuredClone(blankFullTmnt);
   const blankDataOneTmnt = cloneDeep(blankFullTmnt);
 
-  const dataOneTmnt: allDataOneTmntType = {
+  const dataOneTmnt: tmntFormDataType = {
     origData: blankDataOneTmnt,
     curData: fullTmntData,
+    tmntAction: tmntActions.New
   }
   
   return (

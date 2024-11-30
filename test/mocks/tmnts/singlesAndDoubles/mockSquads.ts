@@ -1,8 +1,7 @@
-import { brktType, divType, elimType, laneType, potCategoriesTypes, potType, squadType } from "@/lib/types/types";
+import { brktType, divEntryType, divType, elimType, laneType, playerType, potCategoriesTypes, potType, squadType } from "@/lib/types/types";
 import { startOfDayFromString, todayStr } from "@/lib/dateTools";
 import { Squad } from "@prisma/client";
-import { initBrkt, initPot, initSquad } from "@/lib/db/initVals";
-import { startOfToday } from "date-fns";
+import { initBrkt, initDivEntry, initPlayer, initPot, initSquad } from "@/lib/db/initVals";
 
 export const tmntToDelId = 'tmt_467e51d71659d2e412cbc64a0d19ecb4'
 
@@ -600,5 +599,83 @@ export const mockElimsToPost: elimType[] = [
     start: 4,
     games: 3,
     fee: '5',
+  },
+]
+
+export const mockPlayersToPost: playerType[] = [
+  {
+    ...initPlayer,
+    id: "ply_01be0472be3d476ea1caa99dd05953fa",
+    squad_id: "sqd_42be0f9d527e4081972ce8877190489d",
+    first_name: "John",
+    last_name: "Doe",
+    average: 220,
+    lane: 3,
+    position: 'A',   
+  },
+  {
+    ...initPlayer,
+    id: "ply_02be0472be3d476ea1caa99dd05953fa",
+    squad_id: "sqd_42be0f9d527e4081972ce8877190489d",
+    first_name: "James",
+    last_name: "Bennett",
+    average: 221,
+    lane: 3,
+    position: 'B',
+  },
+  {
+    ...initPlayer,
+    id: "ply_03be0472be3d476ea1caa99dd05953fa",
+    squad_id: "sqd_42be0f9d527e4081972ce8877190489d",
+    first_name: "Olivia",
+    last_name: "Morgan",
+    average: 210,
+    lane: 4,
+    position: 'A',
+  },
+  {
+    ...initPlayer,
+    id: "ply_04be0472be3d476ea1caa99dd05953fa",
+    squad_id: "sqd_42be0f9d527e4081972ce8877190489d",
+    first_name: "William", 
+    last_name: "Harris",
+    average: 211,
+    lane: 4,
+    position: 'B',
+  }
+]
+
+export const mockDivEntriesToPost: divEntryType[] = [
+  {
+    ...initDivEntry,
+    id: "den_01be0472be3d476ea1caa99dd05953fa",
+    squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
+    div_id:'div_578834e04e5e4885bbae79229d8b96e8',
+    player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+    fee: '84',
+  },
+  {
+    ...initDivEntry,
+    id: "den_02be0472be3d476ea1caa99dd05953fa",
+    squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
+    div_id:'div_578834e04e5e4885bbae79229d8b96e8',
+    player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+    fee: '84',
+  },
+  {
+    ...initDivEntry,
+    id: "den_03be0472be3d476ea1caa99dd05953fa",
+    squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
+    div_id:'div_578834e04e5e4885bbae79229d8b96e8',
+    player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+    fee: '84',
+  },
+  {
+    ...initDivEntry,
+    id: "den_04be0472be3d476ea1caa99dd05953fa",
+    squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
+    div_id:'div_578834e04e5e4885bbae79229d8b96e8',
+    player_id: 'ply_8b0fd8bbd9e34d34a7fa90b4111c6e40',
+    fee: '84',
   },
 ]

@@ -7,6 +7,8 @@ import { mockSquads } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { localConfig } from "@/lib/currency/const";
 import { formatValueSymbSep2Dec } from "@/lib/currency/formatValue";
 import { initEvent } from "@/lib/db/initVals";
+import { tmntActions } from "@/lib/types/types";
+import { cloneDeep } from "lodash";
 
 const mockSetEvents = jest.fn();
 const mockSetSquads = jest.fn();
@@ -18,6 +20,7 @@ const mockOneToNEventsProps = {
   squads: mockSquads,
   setSquads: mockSetSquads,
   setAcdnErr: mockSetAcdnErr,
+  tmntAction: tmntActions.New
 };
 
 describe("OneToNEvents - Component", () => {
@@ -513,6 +516,96 @@ describe("OneToNEvents - Component", () => {
         expect(nameErrors[1]).toHaveTextContent("test lpox error");
       });
     });
+
+    describe('render the events when tmntAction is Run - inputs and buttons disabled', () => {
+      const runTmntProps = cloneDeep(mockOneToNEventsProps);      
+      runTmntProps.tmntAction = tmntActions.Run;
+      it("render number of events", () => {
+        render(<OneToNEvents {...runTmntProps} />);
+        const eventNum = screen.getByRole('textbox', { name: /# events/i }) as HTMLInputElement;
+        expect(eventNum).toBeInTheDocument();
+        expect(eventNum).toHaveValue("2");
+        expect(eventNum).toBeDisabled();
+      });
+      it("render add button", () => {
+        render(<OneToNEvents {...runTmntProps} />);
+        const addBtn = screen.getByRole("button", { name: /add/i });
+        expect(addBtn).toBeInTheDocument();
+        expect(addBtn).toBeDisabled();
+      });
+      it("render event names", () => {
+        render(<OneToNEvents {...runTmntProps} />);
+        const eventNames = screen.getAllByRole("textbox", { name: /event name/i }) as HTMLInputElement[];
+        expect(eventNames).toHaveLength(2);
+        expect(eventNames[0]).toBeDisabled();
+        expect(eventNames[1]).toBeDisabled();
+      });
+      it("render team sizes", () => {
+        render(<OneToNEvents {...runTmntProps} />);
+        const teamSizes = screen.getAllByRole('spinbutton', { name: /team size/i })
+        expect(teamSizes).toHaveLength(2);
+        expect(teamSizes[0]).toBeDisabled();
+        expect(teamSizes[1]).toBeDisabled();
+      });
+      it("render event games", () => {
+        render(<OneToNEvents {...runTmntProps} />);        
+        const games = screen.getAllByRole('spinbutton', { name: /event games/i })
+        expect(games).toHaveLength(2);
+        expect(games[0]).toBeDisabled();
+        expect(games[1]).toBeDisabled();
+      });
+      it("render added values", () => {
+        render(<OneToNEvents {...runTmntProps} />);
+        const addeds = screen.getAllByRole('textbox', { name: /added \$/i }) as HTMLInputElement[];
+        expect(addeds).toHaveLength(2);
+        expect(addeds[0]).toBeDisabled();
+        expect(addeds[1]).toBeDisabled();
+      });
+      it("render fee values", () => {
+        render(<OneToNEvents {...runTmntProps} />);
+        const fees = screen.getAllByRole('textbox', { name: /entry fee/i }) as HTMLInputElement[];
+        expect(fees).toHaveLength(2);
+        expect(fees[0]).toBeDefined();
+        expect(fees[0]).toBeDisabled();
+      });
+      it("render lineage values", () => {
+        render(<OneToNEvents {...runTmntProps} />);
+        const lineages = screen.getAllByRole('textbox', { name: /lineage/i }) as HTMLInputElement[];
+        expect(lineages).toHaveLength(2);
+        expect(lineages[0]).toBeDisabled();
+        expect(lineages[1]).toBeDisabled();
+      });
+      it("render the prize fund values", () => {
+        render(<OneToNEvents {...runTmntProps} />);
+        const prizes = screen.getAllByRole('textbox', { name: /prize fund/i }) as HTMLInputElement[];
+        expect(prizes).toHaveLength(2);
+        expect(prizes[0]).toBeDisabled();
+        expect(prizes[1]).toBeDisabled();
+      });
+      it("render the other values", () => {
+        render(<OneToNEvents {...runTmntProps} />);
+        const others = screen.getAllByRole('textbox', { name: /other/i }) as HTMLInputElement[];
+        expect(others).toHaveLength(2);
+        expect(others[0]).toBeDisabled();
+        expect(others[1]).toBeDisabled();
+      });
+      it("render the expense values", () => {
+        render(<OneToNEvents {...runTmntProps} />);
+        const expenses = screen.getAllByRole('textbox', { name: /expenses/i }) as HTMLInputElement[];
+        expect(expenses).toHaveLength(2);
+        expect(expenses[0]).toBeDisabled();
+        expect(expenses[1]).toBeDisabled();
+      });
+      it("render the delete button", async () => {
+        const user = userEvent.setup();
+        render(<OneToNEvents {...runTmntProps} />);
+        const tabs = screen.getAllByRole("tab");
+        await user.click(tabs[1]);
+        const delBtn = screen.getByText("Delete Event");
+        expect(delBtn).toBeInTheDocument();
+        expect(delBtn).toBeDisabled();
+      });
+    })
   });
 
   describe("add event", () => {

@@ -1,11 +1,11 @@
 import axios from "axios";
 import { baseLanesApi } from "@/lib/db/apiPaths";
 import { testBaseLanesApi } from "../../../testApi";
-import { tmntSaveLanes, exportedForTesting } from "@/lib/db/oneTmnt/oneTmnt";
+import { tmntSaveLanes, exportedForTesting } from "@/lib/db/oneTmnt/dbOneTmnt";
 import { mockLanesToPost, mockLanesToEdit, mockSquadsToPost, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { laneType } from "@/lib/types/types";
-import { deleteAllTmntLanes, deleteLane, postLane, postManyLanes, putLane } from "@/lib/db/lanes/lanesAxios";
-import { deleteAllEventSquads, postManySquads } from "@/lib/db/squads/squadsAxios";
+import { deleteAllTmntLanes, deleteLane, postLane, postManyLanes, putLane } from "@/lib/db/lanes/dbLanes";
+import { deleteAllEventSquads, postManySquads } from "@/lib/db/squads/dbSquads";
 import { blankLane } from "@/lib/db/initVals";
 import 'core-js/actual/structured-clone';
 const { tmntPostPutOrDelLanes } = exportedForTesting;

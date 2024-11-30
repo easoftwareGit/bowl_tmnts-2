@@ -1,3 +1,4 @@
+import { sanitize } from "./sanitize";
 import { postSecret } from "./tools";
 import { idTypes } from "./types/types";
 
@@ -93,6 +94,11 @@ const validIdTypes = [
   "brk",
   "elm",
   "ply",
+  "den",
+  "pen",
+  "ben",
+  "een",
+  "gam",
 ];
 
 const validRoles = ["ADMIN", "DIRECTOR", "USER"]
@@ -205,4 +211,16 @@ export const validSortOrder = (sortOrder: number): boolean => {
     || !Number.isInteger(sortOrder)
     || sortOrder < minSortOrder
     || sortOrder > maxSortOrder) ? false : true;  
+}
+
+/**
+ * validates a name string
+ * 
+ * @param {string} name - name to validate
+ * @param {number} maxLength - max length of name
+ * @returns {boolean} - true if name is valid
+ */
+export const validName =(name: string, maxLength: number): boolean => {
+  const sanitized = sanitize(name);  
+  return (sanitized.length > 0 && sanitized.length <= maxLength)
 }

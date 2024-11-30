@@ -3,7 +3,7 @@ import { baseBrktsApi } from "@/lib/db/apiPaths";
 import { testBaseBrktsApi } from "../../../testApi";
 import { brktType } from "@/lib/types/types";
 import { initBrkt } from "@/lib/db/initVals";
-import { deleteAllDivBrkts, deleteAllSquadBrkts, postManyBrkts } from "@/lib/db/brkts/brktsAxios";
+import { deleteAllDivBrkts, deleteAllSquadBrkts, postManyBrkts } from "@/lib/db/brkts/dbBrkts";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database

@@ -1,13 +1,13 @@
 import { brktType, divType, elimType, eventType, ioDataErrorsType, laneType, potType, allDataOneTmntType, squadType, tmntType } from "@/lib/types/types";
-import { deleteTmnt, postTmnt, putTmnt } from "../tmnts/tmntsAxios";
+import { deleteTmnt, postTmnt, putTmnt } from "../tmnts/dbTmnts";
 import { isValidBtDbId } from "@/lib/validation";
-import { deleteAllTmntEvents, deleteEvent, postEvent, postManyEvents, putEvent } from "../events/eventsAxios";
-import { deleteAllTmntDivs, deleteDiv, postDiv, postManyDivs, putDiv } from "../divs/divsAxios";
-import { deleteAllTmntSquads, deleteSquad, postManySquads, postSquad, putSquad } from "../squads/squadsAxios";
-import { deleteAllTmntLanes, deleteLane, postLane, postManyLanes, putLane } from "../lanes/lanesAxios";
-import { deleteAllTmntPots, deletePot, postManyPots, postPot, putPot } from "../pots/potsAxios";
-import { deleteAllTmntBrkts, deleteBrkt, postBrkt, postManyBrkts, putBrkt } from "../brkts/brktsAxios";
-import { deleteElim, postElim, postManyElims, putElim } from "../elims/elimsAxios";
+import { deleteAllTmntEvents, deleteEvent, postEvent, postManyEvents, putEvent } from "../events/dbEvents";
+import { deleteAllTmntDivs, deleteDiv, postDiv, postManyDivs, putDiv } from "../divs/dbDivs";
+import { deleteAllTmntSquads, deleteSquad, postManySquads, postSquad, putSquad } from "../squads/dbSquads";
+import { deleteAllTmntLanes, deleteLane, postLane, postManyLanes, putLane } from "../lanes/dbLanes";
+import { deleteAllTmntPots, deletePot, postManyPots, postPot, putPot } from "../pots/dbPots";
+import { deleteAllTmntBrkts, deleteBrkt, postBrkt, postManyBrkts, putBrkt } from "../brkts/dbBrkts";
+import { deleteElim, postElim, postManyElims, putElim } from "../elims/dbElims";
 
 /**
  * saves a tournament
