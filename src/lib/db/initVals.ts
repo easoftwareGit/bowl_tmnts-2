@@ -13,6 +13,9 @@ import {
   dataOneTmntType,
   playerType,
   divEntryType,
+  potEntryType,
+  brktEntryType,
+  elimEntryType,
 } from "../types/types";
 import { User, Bowl, Tmnt } from "@prisma/client";
 import { todayStr } from "@/lib/dateTools";
@@ -367,6 +370,53 @@ export const initDivEntry: divEntryType = {
 
 export const blankDivEntry: divEntryType = {
   ...initDivEntry,
+  id: "",
+}
+
+export const initPotEntry: potEntryType = {
+  id: btDbUuid('pen'),
+  pot_id: "",
+  pot_id_err: "",
+  player_id: "",
+  player_id_err: "",
+  fee: "",
+  fee_err: "",
+}
+
+export const blankPotEntry: potEntryType = {
+  ...initPotEntry,
+  id: "",
+}
+
+export const initBrktEntry: brktEntryType = {
+  id: btDbUuid('ben'),
+  brkt_id: "",
+  brkt_id_err: "",
+  player_id: "",
+  player_id_err: "",
+  num_brackets: 0,
+  num_brackets_err: "",
+  fee: "",
+  fee_err: "",
+}
+
+export const blankBrktEntry: brktEntryType = {
+  ...initBrktEntry,
+  id: "",
+}
+
+export const initElimEntry: elimEntryType = {
+  id: btDbUuid('een'),
+  elim_id: "",
+  elim_id_err: "",
+  player_id: "",
+  player_id_err: "",
+  fee: "",
+  fee_err: "",
+}
+
+export const blankElimEntry: elimEntryType = {
+  ...initElimEntry,
   id: "",
 }
 

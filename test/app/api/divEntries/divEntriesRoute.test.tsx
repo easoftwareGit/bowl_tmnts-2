@@ -328,26 +328,27 @@ describe("DivEntries - API's: /api/divEntries", () => {
       expect(divEntry.player_id).toEqual(divEntryToPost.player_id);
       expect(divEntry.fee).toEqual(divEntryToPost.fee);
     })
-    it('should post a sanitized divEntry', async () => { 
+    it('should NOT post a sanitized divEntry (saninted fee = "")', async () => { 
       const toSanitize = {
         ...divEntryToPost,
         fee: '   83  ',        
       }
-      const divPlayerJSON = JSON.stringify(toSanitize);
-      const response = await axios({
-        method: "post",
-        withCredentials: true,
-        url: url,
-        data: divEntryToPost
-      });      
-      expect(response.status).toBe(201);
-      createdDivEntry = true;
-      const divEntry = response.data.divEntry;
-      expect(divEntry.id).toEqual(toSanitize.id);
-      expect(divEntry.squad_id).toEqual(toSanitize.squad_id);
-      expect(divEntry.div_id).toEqual(toSanitize.div_id);
-      expect(divEntry.player_id).toEqual(toSanitize.player_id);
-      expect(divEntry.fee).toEqual('83');
+      const divEntryJSON = JSON.stringify(toSanitize);
+      try {
+        const response = await axios({
+          method: "post",
+          withCredentials: true,
+          url: url,
+          data: divEntryJSON
+        });
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }        
+      }      
     })
     it('should not post one divEntry when id is blank', async () => {
       const invalidDivEntry = {
@@ -1674,6 +1675,7 @@ describe("DivEntries - API's: /api/divEntries", () => {
 
   describe('DELETE by ID - API: /api/divEntries/divEntry/:id', () => { 
 
+    // from prisma/seeds.ts
     const toDelDivEntry = {
       ...initDivEntry,
       id: "den_a55c6cd27d1b482aa0ff248d5fb496ed",   

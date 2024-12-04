@@ -84,8 +84,8 @@ describe("Elims - API: /api/elims", () => {
     it("should get all elims", async () => {
       const response = await axios.get(url);
       expect(response.status).toBe(200);
-      // 9 rows in prisma/seed.ts
-      expect(response.data.elims).toHaveLength(9);
+      // 10 rows in prisma/seed.ts
+      expect(response.data.elims).toHaveLength(10);
     });
 
   });

@@ -117,8 +117,8 @@ model Squad {
   pots          Pot[]
   brkts         Brkt[]
   elims         Elim[]
-  players       Player[] 
-  dviEntries    Div_Entry[] 
+  players       Player[]
+  dviEntries    Div_Entry[]
   events        Event       @relation(fields: [event_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
@@ -208,15 +208,15 @@ model Player {
   games        Game[]
   squad        Squad        @relation(fields: [squad_id], references: [id])
   createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt  
+  updatedAt    DateTime     @updatedAt
 }
 
 model Div_Entry {
-  id        String   @id @default(dbgenerated("concat('den_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text  
-  squad_id  String   @db.Text 
+  id        String   @id @default(dbgenerated("concat('den_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  squad_id  String   @db.Text
   div_id    String   @db.Text
   player_id String   @db.Text
-  fee       Decimal  @db.Decimal(9, 2) @default(0)
+  fee       Decimal  @default(0) @db.Decimal(9, 2)
   squad     Squad    @relation(fields: [squad_id], references: [id])
   div       Div      @relation(fields: [div_id], references: [id])
   player    Player   @relation(fields: [player_id], references: [id])
@@ -230,7 +230,7 @@ model Pot_Entry {
   id        String   @id @default(dbgenerated("concat('pen_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
   pot_id    String   @db.Text
   player_id String   @db.Text
-  fee       Decimal  @db.Decimal(9, 2) @default(0)
+  fee       Decimal  @db.Decimal(9, 2)
   pot       Pot      @relation(fields: [pot_id], references: [id])
   player    Player   @relation(fields: [player_id], references: [id])
   createdAt DateTime @default(now())
@@ -240,15 +240,15 @@ model Pot_Entry {
 }
 
 model Brkt_Entry {
-  id        String   @id @default(dbgenerated("concat('bre_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
-  brkt_id   String   @db.Text
-  player_id String   @db.Text
-  brackets  Int
-  fee       Decimal  @db.Decimal(9, 2) @default(0)
-  brkt      Brkt     @relation(fields: [brkt_id], references: [id])
-  player    Player   @relation(fields: [player_id], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(dbgenerated("concat('bre_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  brkt_id      String   @db.Text
+  player_id    String   @db.Text
+  num_brackets Int
+  fee          Decimal  @db.Decimal(9, 2)
+  brkt         Brkt     @relation(fields: [brkt_id], references: [id])
+  player       Player   @relation(fields: [player_id], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@unique([brkt_id, player_id])
 }
@@ -257,7 +257,7 @@ model Elim_Entry {
   id        String   @id @default(dbgenerated("concat('ele_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
   elim_id   String   @db.Text
   player_id String   @db.Text
-  fee       Decimal  @db.Decimal(9, 2) @default(0)
+  fee       Decimal  @db.Decimal(9, 2)
   elim      Elim     @relation(fields: [elim_id], references: [id])
   player    Player   @relation(fields: [player_id], references: [id])
   createdAt DateTime @default(now())

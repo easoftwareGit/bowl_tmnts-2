@@ -259,8 +259,9 @@ export const deleteAllDivEntriesForSquad = async (squadId: string): Promise<numb
  * @param {string} divId - id of div to delete
  * @returns {number} - number of div entries deleted, -1 on failure
  */
-export const deleteAllDivEntriesForDiv = async (divId: string): Promise<number> => {
+export const deleteAllDivEntriesForDiv = async (divId: string): Promise<number> => {  
   try {
+    if (!divId || !isValidBtDbId(divId, "div")) return -1;
     const response = await axios({
       method: "delete",
       withCredentials: true,

@@ -124,8 +124,7 @@ export async function PATCH(
       div_id: currentDivEntry.div_id,
       player_id: currentDivEntry.player_id,
       fee: currentDivEntry.fee + '',
-    };
-    
+    };    
     let gotDataToPatch = false;
     if (jsonProps.includes("squad_id")) {
       toCheck.squad_id = json.squad_id;
@@ -205,7 +204,7 @@ export async function PATCH(
         break;
     }
     return NextResponse.json(
-      { error: "Error patching player" },
+      { error: "Error patching divEntry" },
       { status: errStatus }
     );
   }

@@ -381,6 +381,75 @@ export type validDivEntriesType = {
   errorCode: ErrorCode
 }
 
+export type potEntryType = {
+  id: string,
+  pot_id: string,
+  pot_id_err: string,
+  player_id: string,
+  player_id_err: string,
+  fee: string,
+  fee_err: string,
+}
+
+export type potEntryDataType = {
+  id: string,
+  pot_id: string,
+  player_id: string,
+  fee: string,
+}
+
+export type validPotEntriesType = {
+  potEntries: potEntryType[],
+  errorCode: ErrorCode
+}
+
+export type brktEntryType = {
+  id: string,
+  brkt_id: string,
+  brkt_id_err: string,
+  player_id: string,
+  player_id_err: string,
+  num_brackets: number,
+  num_brackets_err: string,
+  fee: string,
+  fee_err: string,  
+}
+
+export type brktEntryDataType = {
+  id: string,  
+  brkt_id: string,
+  player_id: string,
+  num_brackets: number,
+  fee: string,
+}
+
+export type validBrktEntriesType = {
+  brktEntries: brktEntryType[],
+  errorCode: ErrorCode
+}
+
+export type elimEntryType = {
+  id: string,
+  elim_id: string,
+  elim_id_err: string,
+  player_id: string,
+  player_id_err: string,
+  fee: string,
+  fee_err: string,  
+}
+
+export type elimEntryDataType = {
+  id: string,  
+  elim_id: string,
+  player_id: string,  
+  fee: string,
+}
+
+export type validElimEntriesType = {
+  elimEntries: elimEntryType[],
+  errorCode: ErrorCode
+}
+
 export type AcdnErrType = {
   errClassName: string,
   message: string,

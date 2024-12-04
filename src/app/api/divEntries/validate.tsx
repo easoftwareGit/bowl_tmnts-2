@@ -40,7 +40,7 @@ export const validDivEntryFee = (moneyStr: string): boolean => {
 /**
  * checks if divEntry data is valid
  * 
- * @param divEntry - divEntry to validate
+ * @param {divEntryType} divEntry - divEntry to validate
  * @returns {ErrorCode.None | ErrorCode.InvalidData | ErrorCode.OtherError} - error code
  */
 const validDivEntryData = (divEntry: divEntryType): ErrorCode => { 
@@ -67,6 +67,12 @@ const validDivEntryData = (divEntry: divEntryType): ErrorCode => {
   }
 }
 
+/**
+ * sanitizes divEntry
+ * 
+ * @param {divEntryType} divEntry - divEntry to sanitize
+ * @returns {divEntryType} - sanitized divEntry
+ */
 export const sanitizeDivEntry = (divEntry: divEntryType): divEntryType => { 
   if (!divEntry) return null as any;
   const sanitziedDivEntry: divEntryType = {
@@ -84,7 +90,7 @@ export const sanitizeDivEntry = (divEntry: divEntryType): divEntryType => {
   if (isValidBtDbId(divEntry.player_id, "ply")) {
     sanitziedDivEntry.player_id = divEntry.player_id;
   }
-  if (validDivEntryFee(divEntry.fee)) {
+  if (validMoney(divEntry.fee, 0, maxMoney)) {
     sanitziedDivEntry.fee = divEntry.fee;
   }
   return sanitziedDivEntry;
@@ -106,6 +112,12 @@ export const validateDivEntry = (divEntry: divEntryType): ErrorCode => {
   }
 }
 
+/**
+ * validates array of divEntries
+ * 
+ * @param {divEntryType[]} divEntries - array of divEntries to validate
+ * @returns {divEntries: divEntryType[], errorCode: ErrorCode.None | ErrorCode.MissingData | ErrorCode.InvalidData | ErrorCode.OtherError}
+ */
 export const validateDivEntries = (divEntries: divEntryType[]): validDivEntriesType => {
   
   const blankDivEntries: divEntryType[] = [];

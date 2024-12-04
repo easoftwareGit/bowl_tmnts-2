@@ -76,7 +76,7 @@ export const POST = async (request: NextRequest) => {
         break;
     }
     return NextResponse.json(
-      { error: "error creating player" },
+      { error: "error creating divEntry" },
       { status: errStatus }
     );
   }

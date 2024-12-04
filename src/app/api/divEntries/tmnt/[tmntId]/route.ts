@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isValidBtDbId } from "@/lib/validation";
 
-// routes /api/elims/tmnt/:tmntId
+// routes /api/divEntries/tmnt/:tmntId
 
 export async function GET(
   request: Request,
@@ -56,7 +56,7 @@ export async function DELETE(
     return NextResponse.json({ deleted }, { status: 200 });
   } catch (err: any) {
     return NextResponse.json(
-      { err: "error deleting elims for tmnt" },
+      { err: "error deleting divEntries for tmnt" },
       { status: 500 }
     );
   }

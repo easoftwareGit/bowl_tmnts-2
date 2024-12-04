@@ -1,7 +1,7 @@
-import { brktType, divEntryType, divType, elimType, laneType, playerType, potCategoriesTypes, potType, squadType } from "@/lib/types/types";
+import { brktEntryType, brktType, divEntryType, divType, elimEntryType, elimType, laneType, playerType, potCategoriesTypes, potEntryType, potType, squadType } from "@/lib/types/types";
 import { startOfDayFromString, todayStr } from "@/lib/dateTools";
 import { Squad } from "@prisma/client";
-import { initBrkt, initDivEntry, initPlayer, initPot, initSquad } from "@/lib/db/initVals";
+import { initBrkt, initBrktEntry, initDivEntry, initElimEntry, initPlayer, initPot, initPotEntry, initSquad } from "@/lib/db/initVals";
 
 export const tmntToDelId = 'tmt_467e51d71659d2e412cbc64a0d19ecb4'
 
@@ -677,5 +677,102 @@ export const mockDivEntriesToPost: divEntryType[] = [
     div_id:'div_578834e04e5e4885bbae79229d8b96e8',
     player_id: 'ply_8b0fd8bbd9e34d34a7fa90b4111c6e40',
     fee: '84',
+  },
+]
+
+export const mockPotEntriesToPost: potEntryType[] = [
+  {
+    ...initPotEntry,
+    id: 'pen_01be0472be3d476ea1caa99dd05953fa',
+    pot_id: 'pot_98b3a008619b43e493abf17d9f462a65',
+    player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+    fee: '20'
+  },
+  {
+    ...initPotEntry,
+    id: 'pen_02be0472be3d476ea1caa99dd05953fa',
+    pot_id: 'pot_98b3a008619b43e493abf17d9f462a65',
+    player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+    fee: '20'
+  },
+  {
+    ...initPotEntry,
+    id: 'pen_03be0472be3d476ea1caa99dd05953fa',
+    pot_id: 'pot_98b3a008619b43e493abf17d9f462a65',
+    player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+    fee: '20'
+  },
+  {
+    ...initPotEntry,
+    id: 'pen_04be0472be3d476ea1caa99dd05953fa',
+    pot_id: 'pot_98b3a008619b43e493abf17d9f462a65',
+    player_id: 'ply_8b0fd8bbd9e34d34a7fa90b4111c6e40',
+    fee: '20'
+  },
+]
+
+export const mockBrktEntriesToPost: brktEntryType[] = [
+  {
+    ...initBrktEntry,
+    id: 'ben_01ce0472be3d476ea1caa99dd05953fa',
+    brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+    player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+    num_brackets: 4,
+    fee: '20'
+  },
+  {
+    ...initBrktEntry,
+    id: 'ben_02ce0472be3d476ea1caa99dd05953fa',
+    brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+    player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+    num_brackets: 4,
+    fee: '20'
+  },
+  {
+    ...initBrktEntry,
+    id: 'ben_03ce0472be3d476ea1caa99dd05953fa',
+    brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+    player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+    num_brackets: 4,
+    fee: '20'
+  },
+  {
+    ...initBrktEntry,
+    id: 'ben_04ce0472be3d476ea1caa99dd05953fa',
+    brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+    player_id: 'ply_8b0fd8bbd9e34d34a7fa90b4111c6e40',
+    num_brackets: 4,
+    fee: '20'
+  },
+]
+
+export const mockElimEntriesToPost: elimEntryType[] = [
+  {
+    ...initElimEntry,
+    id: 'een_01de0472be3d476ea1caa99dd05953fa',
+    elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
+    player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+    fee: '5'
+  },
+  {
+    ...initElimEntry,
+    id: 'een_02de0472be3d476ea1caa99dd05953fa',
+    elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
+    player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+    fee: '5'
+  },
+  {
+    ...initElimEntry,
+    id: 'een_03de0472be3d476ea1caa99dd05953fa',
+    elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
+    player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+    fee: '5'
+  },
+  {
+    ...initElimEntry,
+    id: 'een_04de0472be3d476ea1caa99dd05953fa',
+    elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
+    player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+    fee: '5'
   },
 ]

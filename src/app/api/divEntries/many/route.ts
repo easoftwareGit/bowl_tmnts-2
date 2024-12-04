@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     if (validDivEntries.errorCode !== ErrorCode.None) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
-    // convert valid divEntries into brktData to post
+    // convert valid divEntries into divEntryData to post
     const divEntriesToPost: divEntryDataType[] = []
     validDivEntries.divEntries.forEach(divEntry => {
       divEntriesToPost.push({
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
         break;
     }
     return NextResponse.json(
-      { error: "error creating many brkts" },
+      { error: "error creating many divEntries" },
       { status: errStatus }
     );        
   } 

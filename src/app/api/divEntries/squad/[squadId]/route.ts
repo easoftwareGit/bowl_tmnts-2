@@ -58,7 +58,7 @@ export async function DELETE(
         break;
     }
     return NextResponse.json(
-      { error: "Error deleting divEntry" },
+      { error: "Error deleting divEntries for squad" },
       { status: errStatus }
     );
   }

@@ -3,7 +3,7 @@ import { baseDivEntriesApi } from "@/lib/db/apiPaths";
 import { testBaseDivEntriesApi } from "../../../testApi";
 import { divEntryType } from "@/lib/types/types";
 import { initDivEntry } from "@/lib/db/initVals";
-import { mockDivEntriesToPost, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
+import { mockDivEntriesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { deleteAllDivEntriesForDiv, deleteAllDivEntriesForSquad, deleteAllDivEntriesForTmnt, deleteDivEntry, getAllDivEntriesForDiv, getAllDivEntriesForSquad, getAllDivEntriesForTmnt, postDivEntry, postManyDivEntries, putDivEntry } from "@/lib/db/divEntries/dbDivEntries";
 import { cloneDeep } from "lodash";
 
@@ -70,6 +70,8 @@ const notFoundPlayerId = "ply_01234567890123456789012345678901";
 const notFoundSquadId = "sqd_01234567890123456789012345678901";
 const notFoundTmntId = "tmt_01234567890123456789012345678901";
 const userId = "usr_01234567890123456789012345678901";
+
+const tmntIdToDel = 'tmt_fe8ac53dad0f400abe6354210a8f4cd1';
 
 describe('dbDivEntries', () => { 
 
@@ -239,7 +241,7 @@ describe('dbDivEntries', () => {
       expect(divEntries).toBeNull();
     })
     it('should return null if div id is a valid id, but not a div id', async () => {
-      const divEntries = await getAllDivEntriesForDiv(notFoundTmntId);
+      const divEntries = await getAllDivEntriesForDiv(userId);
       expect(divEntries).toBeNull();
     })
     it('should return null if div id is null', async () => { 
@@ -328,8 +330,8 @@ describe('dbDivEntries', () => {
         ...divEntryToPost,
         fee: '-1'
       }
-      const postedPlayer = await postDivEntry(invalidDivEntry);
-      expect(postedPlayer).toBeNull();
+      const postedDivEntry = await postDivEntry(invalidDivEntry);
+      expect(postedDivEntry).toBeNull();
     })
   })
 
@@ -338,7 +340,7 @@ describe('dbDivEntries', () => {
     let createdDivEntries = false;    
 
     beforeAll(async () => {
-      await deleteAllDivEntriesForSquad(mockDivEntriesToPost[0].squad_id);
+      await deleteAllDivEntriesForTmnt(tmntIdToDel);
     })
 
     beforeEach(() => {
@@ -347,12 +349,12 @@ describe('dbDivEntries', () => {
 
     afterEach(async () => {
       if (createdDivEntries) {
-        await deleteAllDivEntriesForTmnt(mockDivEntriesToPost[0].squad_id);
+        await deleteAllDivEntriesForTmnt(tmntIdToDel);
       }
     })
 
     afterAll(async () => {
-      await deleteAllDivEntriesForTmnt(mockDivEntriesToPost[0].squad_id);
+      await deleteAllDivEntriesForTmnt(tmntIdToDel);
     })
 
     it('should post many divEntries', async () => {
@@ -600,7 +602,7 @@ describe('dbDivEntries', () => {
       const deleted = await deleteAllDivEntriesForDiv("test");
       expect(deleted).toBe(-1);
     })
-    it('should not delete all divEntries for a div when div id is valid, but not a squad id', async () => { 
+    it('should not delete all divEntries for a div when div id is valid, but not a div id', async () => { 
       const deleted = await deleteAllDivEntriesForDiv(userId);
       expect(deleted).toBe(-1);
     })
@@ -614,9 +616,7 @@ describe('dbDivEntries', () => {
     })
   })
 
-  describe('deleteAllDivEntriesForTmnt()', () => { 
-
-    const tmntIdToDel = 'tmt_fe8ac53dad0f400abe6354210a8f4cd1';
+  describe('deleteAllDivEntriesForTmnt()', () => {     
 
     let didDel = false;
 
@@ -651,7 +651,7 @@ describe('dbDivEntries', () => {
       const deleted = await deleteAllDivEntriesForTmnt("test");
       expect(deleted).toBe(-1);
     })
-    it('should not delete all divEntries for a tmnt when tmnt id is valid, but not a squad id', async () => { 
+    it('should not delete all divEntries for a tmnt when tmnt id is valid, but not a tmnt id', async () => { 
       const deleted = await deleteAllDivEntriesForTmnt(userId);
       expect(deleted).toBe(-1);
     })

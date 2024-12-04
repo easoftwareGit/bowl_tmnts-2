@@ -34,5 +34,10 @@ export const testBasePlayersApi = testBaseApi + '/players'
 
 export const testBaseDivEntriesApi = testBaseApi + '/divEntries'
 
+export const testBasePotEntriesApi = testBaseApi + '/potEntries'
+
+export const testBaseBrktEntriesApi = testBaseApi + '/brktEntries'
+
+export const testBaseElimEntriesApi = testBaseApi + '/elimEntries'
 
 export const testPostSecret = process.env.TEST_POST_SECRET!

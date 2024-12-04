@@ -270,7 +270,7 @@ describe("tests for divEntry validation", () => {
       const errorCode = validDivEntryData(testDivEntry);
       expect(errorCode).toBe(ErrorCode.InvalidData);
     })
-    it('should return ErrorCode.InvalidData when player_id is a valid id, but not a divEntry id', () => {
+    it('should return ErrorCode.InvalidData when player_id is a valid id, but not a player id', () => {
       const testDivEntry = {
         ...validDivEntry,
         player_id: userId
@@ -315,12 +315,16 @@ describe("tests for divEntry validation", () => {
         ...validDivEntry,
         fee: '-1'
       }
+      const errorCode = validDivEntryData(testDivEntry);
+      expect(errorCode).toBe(ErrorCode.InvalidData);
     })
     it('should return ErrorCode.InvalidData when fee is too high', () => {  
       const testDivEntry = {
         ...validDivEntry,
         fee: '1234567890'
       }
+      const errorCode = validDivEntryData(testDivEntry);
+      expect(errorCode).toBe(ErrorCode.InvalidData);
     })
     it('should return ErrorCode.InvalidData when fee is blank', () => { 
       const testDivEntry = {
@@ -329,22 +333,6 @@ describe("tests for divEntry validation", () => {
       } 
       const errorCode = validDivEntryData(testDivEntry);
       expect(errorCode).toBe(ErrorCode.InvalidData);
-    })
-    it('should return ErrorCode.InvalidData when fee is null', () => { 
-      const testDivEntry = {
-        ...validDivEntry,
-        fee: null as any
-      } 
-      const errorCode = validDivEntryData(testDivEntry);
-      expect(errorCode).toBe(ErrorCode.InvalidData);
-    })
-    it('should return ErrorCode.InvalidData when fee is undefined', () => {
-      const testDivEntry = {
-        ...validDivEntry,
-        fee: null as any
-      } 
-      const errorCode = validDivEntryData(testDivEntry);
-      expect(errorCode).toBe(ErrorCode.InvalidData);      
     })
     it('should return ErrorCode.InvalidData when fee is null', () => { 
       const testDivEntry = {
@@ -507,7 +495,7 @@ describe("tests for divEntry validation", () => {
       it('should return ErrorCode.InvalidData when id is a valid id, but not a divEntry id', () => {
         const testDivEntry = {
           ...validDivEntry,
-          id: notFoundSquadId
+          id: userId
         }
         const errorCode = validateDivEntry(testDivEntry);
         expect(errorCode).toBe(ErrorCode.InvalidData);
@@ -520,10 +508,10 @@ describe("tests for divEntry validation", () => {
         const errorCode = validateDivEntry(testDivEntry);
         expect(errorCode).toBe(ErrorCode.InvalidData);
       })
-      it('should return ErrorCode.InvalidData when div_id is a valid id, but not a divEntry id', () => {
+      it('should return ErrorCode.InvalidData when div_id is a valid id, but not a div id', () => {
         const testDivEntry = {
           ...validDivEntry,
-          div_id: notFoundSquadId
+          div_id: userId
         }
         const errorCode = validateDivEntry(testDivEntry);
         expect(errorCode).toBe(ErrorCode.InvalidData);
@@ -536,10 +524,10 @@ describe("tests for divEntry validation", () => {
         const errorCode = validateDivEntry(testDivEntry);
         expect(errorCode).toBe(ErrorCode.InvalidData);
       })
-      it('should return ErrorCode.InvalidData when player_id is a valid id, but not a divEntry id', () => {
+      it('should return ErrorCode.InvalidData when player_id is a valid id, but not a player id', () => {
         const testDivEntry = {
           ...validDivEntry,
-          player_id: notFoundSquadId
+          player_id: userId
         }
         const errorCode = validateDivEntry(testDivEntry);
         expect(errorCode).toBe(ErrorCode.InvalidData);
@@ -592,7 +580,7 @@ describe("tests for divEntry validation", () => {
       const validDivEntries: validDivEntriesType = validateDivEntries(divEntriesToValidate);
       expect(validDivEntries.errorCode).toBe(ErrorCode.None);
       expect(validDivEntries.divEntries.length).toBe(divEntriesToValidate.length);
-      expect(validDivEntries.divEntries[0].fee).toBe('85');
+      expect(validDivEntries.divEntries[1].fee).toBe('85.000');
     })
     it('should return ErrorCode.MissingData when id is sanitzied to ""', () => { 
       const divEntriesToValidate = [...mockDivEntriesToPost];

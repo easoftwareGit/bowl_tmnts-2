@@ -10,7 +10,7 @@ import {
   validateBrkts,
 } from "@/app/api/brkts/validate";
 import { defaultBrktGames, defaultBrktPlayers, initBrkt } from "@/lib/db/initVals";
-import { brktType, validBrktsType } from "@/lib/types/types";
+import { validBrktsType } from "@/lib/types/types";
 import { ErrorCode, maxGames, maxSortOrder } from "@/lib/validation";
 import { mockBrktsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 

@@ -24,6 +24,7 @@ export const minStartLane = 1;
 export const maxStartLane = 199;
 export const minLaneCount = 2;
 export const maxLaneCount = 200;
+export const maxBrackets = 999;
 export const maxEvents = 10;
 export const minHdcpPer = 0;
 export const maxHdcpPer = 1.25;

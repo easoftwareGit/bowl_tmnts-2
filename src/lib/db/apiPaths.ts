@@ -27,3 +27,9 @@ export const baseElimsApi = baseApi + '/elims'
 export const basePlayersApi = baseApi + '/players'
 
 export const baseDivEntriesApi = baseApi + '/divEntries'
+
+export const baseBrktEntriesApi = baseApi + '/brktEntries'
+
+export const baseElimEntriesApi = baseApi + '/elimEntries'
+
+export const basePotEntriesApi = baseApi + '/potEntries'
