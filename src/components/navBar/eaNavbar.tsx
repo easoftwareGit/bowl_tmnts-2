@@ -11,7 +11,6 @@ import ModelConfirm from "@/components/modal/confirmModal"
 import { useState } from "react";
 
 import "./navlink.css";
-import UserPage from "@/app/user/page";
 
 export default function EaNavbar() {
 
@@ -54,7 +53,7 @@ export default function EaNavbar() {
                     Tournaments
                   </NavDropdown.Item>
                   <NavDropdown.Item
-                    href="/user"
+                    href="/user/acctInfo"
                     className="user-nav-item"
                   >
                     Account

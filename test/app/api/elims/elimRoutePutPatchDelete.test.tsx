@@ -4,6 +4,10 @@ import { testBaseElimsApi } from "../../../testApi";
 import { elimType } from "@/lib/types/types";
 import { initElim } from "@/lib/db/initVals";
 import { deleteAllDivElims, deleteAllSquadElims, postManyElims } from "@/lib/db/elims/dbElims";
+import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/dbSquads";
+import { deleteAllTmntDivs, postManyDivs } from "@/lib/db/divs/dbDivs";
+import { mockElimsToPost, mockSquadsToPost, mockDivsToPost, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
+import { mock } from "node:test";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -1433,24 +1437,6 @@ describe("Elims - PUT, PATCH, DELETE", () => {
         }
       }
     });
-
-    // it('should NOT delete en elim by ID when pot has child rows', async () => {
-    //   try {
-    //     const delResponse = await axios({
-    //       method: "delete",
-    //       withCredentials: true,
-    //       url: oneElimUrl + testElim.id
-    //     })
-    //     expect(delResponse.status).toBe(409);
-    //   } catch (err) {
-    //     if (err instanceof AxiosError) {
-    //       expect(err.response?.status).toBe(409);
-    //     } else {
-    //       expect(true).toBeFalsy();
-    //     }
-    //   }
-    // })
-
   });
 
   describe('DELETE all elims for a squad API: /api/elims/squad/:squadId', () => { 
@@ -1575,80 +1561,19 @@ describe("Elims - PUT, PATCH, DELETE", () => {
 
   describe('DELETE all elims for a tmnt API: /api/elims/tmnt/:tmntId', () => { 
 
-    // squad id and div id are from squad to delete from prisma/seeds.ts        
-    const toDelElims = [
-      {
-        ...initElim,
-        id: "elm_ee24c5cc04f6463d89f24e6e19a12601",
-        squad_id: "sqd_3397da1adc014cf58c44e07c19914f72",
-        div_id: "div_66d39a83d7a84a8c85d28d8d1b2c7a90",
-        sort_order: 1,
-        start: 1,
-        games: 3,        
-        fee: '5',
-      },
-      {
-        ...initElim,
-        id: "elm_ee24c5cc04f6463d89f24e6e19a12602",
-        squad_id: "sqd_3397da1adc014cf58c44e07c19914f72",
-        div_id: "div_66d39a83d7a84a8c85d28d8d1b2c7a90",
-        sort_order: 2,
-        start: 2,
-        games: 3,
-        fee: '5',
-      },
-      {
-        ...initElim,
-        id: "elm_ee24c5cc04f6463d89f24e6e19a12603",
-        squad_id: "sqd_3397da1adc014cf58c44e07c19914f72",
-        div_id: "div_66d39a83d7a84a8c85d28d8d1b2c7a90",
-        sort_order: 3,
-        start: 3,
-        fee: '5',
-      },
-      {
-        ...initElim,
-        id: "elm_ee24c5cc04f6463d89f24e6e19a12604",
-        squad_id: "sqd_20c24199328447f8bbe95c05e1b84644",
-        div_id: "div_24b1cd5dee0542038a1244fc2978e862",
-        sort_order: 4,
-        start: 1,
-        games: 3,
-        fee: '5',
-      },
-      {
-        ...initElim,
-        id: "elm_ee24c5cc04f6463d89f24e6e19a12605",
-        squad_id: "sqd_20c24199328447f8bbe95c05e1b84644",
-        div_id: "div_24b1cd5dee0542038a1244fc2978e862",
-        sort_order: 5,
-        start: 2,
-        games: 3,
-        fee: '5',
-      },
-      {
-        ...initElim,
-        id: "elm_ee24c5cc04f6463d89f24e6e19a12606",
-        squad_id: "sqd_20c24199328447f8bbe95c05e1b84644",
-        div_id: "div_24b1cd5dee0542038a1244fc2978e862",
-        sort_order: 6,
-        start: 3,
-        players: 8,
-        fee: '5',
-      },
-    ]
-
-    const tmntId = 'tmt_fe8ac53dad0f400abe6354210a8f4cd1'
-
     let didDel = false
 
     beforeAll(async () => {
-      // clean up any left over data
-      await deleteAllSquadElims(toDelElims[0].squad_id);
-      await deleteAllSquadElims(toDelElims[3].squad_id);
+      // clean up any left over data      
+      await deleteAllSquadElims(mockSquadsToPost[0].id);      
+      await deleteAllSquadElims(mockSquadsToPost[1].id);      
+      await deleteAllTmntSquads(tmntToDelId)
+      await deleteAllTmntDivs(tmntToDelId)
 
       // setup data 
-      await postManyElims(toDelElims);
+      await postManyDivs(mockDivsToPost)
+      await postManySquads(mockSquadsToPost)
+      await postManyElims(mockElimsToPost);
     })
 
     beforeEach(() => {
@@ -1657,24 +1582,26 @@ describe("Elims - PUT, PATCH, DELETE", () => {
 
     afterEach(async () => {
       if (!didDel) return;
-      await postManyElims(toDelElims);
+      await postManyElims(mockElimsToPost);
     })
 
     afterAll(async () => {      
-      await deleteAllSquadElims(toDelElims[0].squad_id);
-      await deleteAllSquadElims(toDelElims[3].squad_id);
+      await deleteAllSquadElims(mockSquadsToPost[0].id);      
+      await deleteAllSquadElims(mockSquadsToPost[1].id);      
+      await deleteAllTmntSquads(tmntToDelId)
+      await deleteAllTmntDivs(tmntToDelId)
     })
 
     it('should delete all elims for a tmnt', async () => {
       const response = await axios({
         method: "delete",
         withCredentials: true,
-        url: tmntUrl + tmntId
+        url: tmntUrl + tmntToDelId
       })
       expect(response.status).toBe(200);
       didDel = true;
       const count = response.data.deleted.count;
-      expect(count).toBe(toDelElims.length);
+      expect(count).toBe(mockElimsToPost.length);
     })
     it('should return 404 when div id is invalid', async () => { 
       try {

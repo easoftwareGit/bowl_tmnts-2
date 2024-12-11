@@ -1,11 +1,11 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { hash } from "bcrypt";
 import { ErrorCode } from "@/lib/validation";
 import { findUserByEmail } from "@/lib/db/users/users";
 import { sanitizeUser, validateUser } from "./validate";
 import { userType } from "@/lib/types/types";
 import { initUser } from "@/lib/db/initVals";
+import { doHash } from "@/lib/hash";
 
 // routes /api/users
 
@@ -59,10 +59,7 @@ export async function POST(request: Request) {
         { status: 409 }
       );
     }
-    
-    const saltRoundsStr: any = process.env.SALT_ROUNDS;
-    const saltRounds = parseInt(saltRoundsStr);
-    const hashed = await hash(password, saltRounds);
+    const hashed = await doHash(password);
 
     type userDataType = {
       id: string;

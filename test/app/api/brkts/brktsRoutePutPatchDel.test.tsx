@@ -4,6 +4,9 @@ import { testBaseBrktsApi } from "../../../testApi";
 import { brktType } from "@/lib/types/types";
 import { initBrkt } from "@/lib/db/initVals";
 import { deleteAllDivBrkts, deleteAllSquadBrkts, postManyBrkts } from "@/lib/db/brkts/dbBrkts";
+import { mockBrktsToPost, mockDivsToPost, mockSquadsToPost, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
+import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/dbSquads";
+import { deleteAllTmntDivs, postManyDivs } from "@/lib/db/divs/dbDivs";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -36,7 +39,8 @@ const nonBrktId = "usr_01234567890123456789012345678901";
 const squad2Id = 'sqd_1a6c885ee19a49489960389193e8f819';
 const div2Id = "div_1f42042f9ef24029a0a2d48cc276a087";
 
-// squad id and div id are from squad to delete from prisma/seeds.ts        
+// squad id and div id are from squad to delete from prisma/seeds.ts 
+     
 const toDelDivSquadBrkts = [
   {
     ...initBrkt,
@@ -2278,25 +2282,23 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
           expect(true).toBeFalsy();
         }
       }
+    })    
+    it('should NOT delete a brkt by ID when brkt has child rows', async () => { 
+      try {
+        const delResponse = await axios({
+          method: "delete",
+          withCredentials: true,
+          url: oneBrktUrl + testBrkt.id
+        })  
+        expect(delResponse.status).toBe(409);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(409);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
     })
-    
-    // it('should NOT delete a brkt by ID when brkt has child rows', async () => { 
-    //   try {
-    //     const delResponse = await axios({
-    //       method: "delete",
-    //       withCredentials: true,
-    //       url: oneBrktUrl + testBrkt.id
-    //     })  
-    //     expect(delResponse.status).toBe(409);
-    //   } catch (err) {
-    //     if (err instanceof AxiosError) {
-    //       expect(err.response?.status).toBe(409);
-    //     } else {
-    //       expect(true).toBeFalsy();
-    //     }
-    //   }
-    // })
-
   })
 
   describe('DELETE all brkts for a squad API: /api/brkts/squad/:squadId', () => { 
@@ -2421,111 +2423,19 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
 
   describe('DELETE all brkts for a tmnt API: /api/brkts/tmnt/:tmntId', () => { 
 
-    // squad id and div id are from squad to delete from prisma/seeds.ts        
-    const toDelBrkts = [
-      {
-        ...initBrkt,
-        id: "brk_ce24c5cc04f6463d89f24e6e19a12601",
-        squad_id: "sqd_3397da1adc014cf58c44e07c19914f72",
-        div_id: "div_66d39a83d7a84a8c85d28d8d1b2c7a90",
-        sort_order: 1,
-        start: 1,
-        games: 3,
-        players: 8,
-        fee: '5',
-        first: '25',
-        second: '10',
-        admin: '5',
-        fsa: '40',
-      },
-      {
-        ...initBrkt,
-        id: "brk_ce24c5cc04f6463d89f24e6e19a12602",
-        squad_id: "sqd_3397da1adc014cf58c44e07c19914f72",
-        div_id: "div_66d39a83d7a84a8c85d28d8d1b2c7a90",
-        sort_order: 2,
-        start: 2,
-        games: 3,
-        players: 8,
-        fee: '5',
-        first: '25',
-        second: '10',
-        admin: '5',
-        fsa: '40',
-      },
-      {
-        ...initBrkt,
-        id: "brk_ce24c5cc04f6463d89f24e6e19a12603",
-        squad_id: "sqd_3397da1adc014cf58c44e07c19914f72",
-        div_id: "div_66d39a83d7a84a8c85d28d8d1b2c7a90",
-        sort_order: 3,
-        start: 3,
-        games: 3,
-        players: 8,
-        fee: '5',
-        first: '25',
-        second: '10',
-        admin: '5',
-        fsa: '40',
-      },
-      {
-        ...initBrkt,
-        id: "brk_ce24c5cc04f6463d89f24e6e19a12604",
-        squad_id: "sqd_20c24199328447f8bbe95c05e1b84644",
-        div_id: "div_24b1cd5dee0542038a1244fc2978e862",
-        sort_order: 4,
-        start: 1,
-        games: 3,
-        players: 8,
-        fee: '5',
-        first: '25',
-        second: '10',
-        admin: '5',
-        fsa: '40',
-      },
-      {
-        ...initBrkt,
-        id: "brk_ce24c5cc04f6463d89f24e6e19a12605",
-        squad_id: "sqd_20c24199328447f8bbe95c05e1b84644",
-        div_id: "div_24b1cd5dee0542038a1244fc2978e862",
-        sort_order: 5,
-        start: 2,
-        games: 3,
-        players: 8,
-        fee: '5',
-        first: '25',
-        second: '10',
-        admin: '5',
-        fsa: '40',
-      },
-      {
-        ...initBrkt,
-        id: "brk_ce24c5cc04f6463d89f24e6e19a12606",
-        squad_id: "sqd_20c24199328447f8bbe95c05e1b84644",
-        div_id: "div_24b1cd5dee0542038a1244fc2978e862",
-        sort_order: 6,
-        start: 3,
-        games: 3,
-        players: 8,
-        fee: '5',
-        first: '25',
-        second: '10',
-        admin: '5',
-        fsa: '40',
-      },
-    ]
-
-    const tmntId = 'tmt_fe8ac53dad0f400abe6354210a8f4cd1'
-
     let didDel = false
 
     beforeAll(async () => {
-      // clean up any left over data
-      await deleteAllSquadBrkts(toDelBrkts[0].squad_id);
-      await deleteAllSquadBrkts(toDelBrkts[3].squad_id);
+      // clean up any left over data      
+      await deleteAllSquadBrkts(mockSquadsToPost[0].id);      
+      await deleteAllSquadBrkts(mockSquadsToPost[1].id);      
+      await deleteAllTmntSquads(tmntToDelId)
+      await deleteAllTmntDivs(tmntToDelId)
 
       // setup data 
-      await postManyBrkts(toDelBrkts);
+      await postManyDivs(mockDivsToPost)
+      await postManySquads(mockSquadsToPost)
+      await postManyBrkts(mockBrktsToPost);
     })
 
     beforeEach(() => {
@@ -2534,24 +2444,26 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
 
     afterEach(async () => {
       if (!didDel) return;
-      await postManyBrkts(toDelBrkts);
+      await postManyBrkts(mockBrktsToPost);
     })
 
     afterAll(async () => {      
-      await deleteAllSquadBrkts(toDelBrkts[0].squad_id);
-      await deleteAllSquadBrkts(toDelBrkts[3].squad_id);
+      await deleteAllSquadBrkts(mockSquadsToPost[0].id);      
+      await deleteAllSquadBrkts(mockSquadsToPost[1].id);      
+      await deleteAllTmntSquads(tmntToDelId)
+      await deleteAllTmntDivs(tmntToDelId)
     })
 
     it('should delete all brkts for a tmnt', async () => {
       const response = await axios({
         method: "delete",
         withCredentials: true,
-        url: tmntUrl + tmntId
+        url: tmntUrl + tmntToDelId
       })
       expect(response.status).toBe(200);
       didDel = true;
       const count = response.data.deleted.count;
-      expect(count).toBe(toDelBrkts.length);
+      expect(count).toBe(mockBrktsToPost.length);
     })
     it('should return 404 when div id is invalid', async () => { 
       try {

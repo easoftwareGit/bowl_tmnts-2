@@ -148,8 +148,8 @@ describe('Pots - API: /api/pots', () => {
     it('should get all pots', async () => { 
       const response = await axios.get(url);
       expect(response.status).toBe(200);
-      // 6 rows in prisma/seed.ts
-      expect(response.data.pots).toHaveLength(6);
+      // 7 rows in prisma/seed.ts
+      expect(response.data.pots).toHaveLength(7);
     })
 
   })
@@ -1913,23 +1913,22 @@ describe('Pots - API: /api/pots', () => {
         }
       }
     })
-
-    // it('should NOT delete a pot by ID when pot has child rows', async () => { 
-    //   try {
-    //     const delResponse = await axios({
-    //       method: "delete",
-    //       withCredentials: true,
-    //       url: onePotUrl + testPot.id
-    //     })  
-    //     expect(delResponse.status).toBe(409);
-    //   } catch (err) {
-    //     if (err instanceof AxiosError) {
-    //       expect(err.response?.status).toBe(409);
-    //     } else {
-    //       expect(true).toBeFalsy();
-    //     }
-    //   }
-    // })
+    it('should NOT delete a pot by ID when pot has child rows', async () => { 
+      try {
+        const delResponse = await axios({
+          method: "delete",
+          withCredentials: true,
+          url: onePotUrl + testPot.id
+        })  
+        expect(delResponse.status).toBe(409);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(409);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
 
   })  
 

@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/prisma";
-import { hash } from "bcrypt";
 import { NextResponse } from "next/server";
 import { ErrorCode } from "@/lib/validation";
 import { userType } from "@/lib/types/types";
 import { initUser } from "@/lib/db/initVals";
 import { sanitizeUser, validateUser } from "../../users/validate";
+import { doHash } from "@/lib/hash";
 
 export async function POST(req: Request) {
   try {        
@@ -58,10 +58,7 @@ export async function POST(req: Request) {
         { status: 409 }
       );
     }
-
-    const saltRoundsStr: any = process.env.SALT_ROUNDS;
-    const saltRounds = parseInt(saltRoundsStr);
-    const hashedpassword = await hash(password, saltRounds);
+    const hashedpassword = await doHash(password);
 
     const user = await prisma.user.create({
       data: {

@@ -4,7 +4,7 @@ import { userType } from "@/lib/types/types";
 import { initUser } from "@/lib/db/initVals";
 import { sanitizeUser, validateUser } from "../../validate";
 import { ErrorCode, isValidBtDbId } from "@/lib/validation";
-import { hash } from "bcrypt";
+import { doHash } from "@/lib/hash";
 
 export async function GET(
   request: Request,
@@ -66,11 +66,8 @@ export async function PUT(
       }
       return NextResponse.json({ error: errMsg }, { status: 422 });
     }
-
-    const saltRoundsStr: any = process.env.SALT_ROUNDS;
-    const saltRounds = parseInt(saltRoundsStr);
-    const hashedPassword = await hash(toPut.password, saltRounds);
-
+    const hashedPassword = await doHash(toPut.password);
+    
     const user = await prisma.user.update({
       where: {
         id: id,
@@ -175,9 +172,7 @@ export async function PATCH(
 
     let hashedPassword = "";
     if (jsonProps.includes("password")) {
-      const saltRoundsStr: any = process.env.SALT_ROUNDS;
-      const saltRounds = parseInt(saltRoundsStr);
-      hashedPassword = await hash(toCheck.password, saltRounds);
+      hashedPassword = await doHash(toCheck.password);
     }    
     const toPatch = {
       first_name: "",

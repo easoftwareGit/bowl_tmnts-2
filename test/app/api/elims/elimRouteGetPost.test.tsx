@@ -5,7 +5,7 @@ import { elimType } from "@/lib/types/types";
 import { initElim } from "@/lib/db/initVals";
 import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/dbSquads";
 import { deleteAllTmntDivs, postManyDivs } from "@/lib/db/divs/dbDivs";
-import { mockElimsToPost, mockSquadsToPost, mockDivs, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
+import { mockElimsToPost, mockSquadsToPost, mockDivsToPost, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { deleteAllTmntElims } from "@/lib/db/elims/dbElims";
 
 // before running this test, run the following commands in the terminal:
@@ -940,7 +940,7 @@ describe("Elims - API: /api/elims", () => {
       await deleteAllTmntDivs(tmntToDelId);
 
       // make sure test data in database
-      await postManyDivs(mockDivs)
+      await postManyDivs(mockDivsToPost)
       await postManySquads(mockSquadsToPost)
     })
 

@@ -1,7 +1,7 @@
 import { brktEntryType, brktType, divEntryType, divType, elimEntryType, elimType, laneType, playerType, potCategoriesTypes, potEntryType, potType, squadType } from "@/lib/types/types";
 import { startOfDayFromString, todayStr } from "@/lib/dateTools";
 import { Squad } from "@prisma/client";
-import { initBrkt, initBrktEntry, initDivEntry, initElimEntry, initPlayer, initPot, initPotEntry, initSquad } from "@/lib/db/initVals";
+import { initBrkt, initBrktEntry, initDiv, initDivEntry, initElimEntry, initPlayer, initPot, initPotEntry, initSquad } from "@/lib/db/initVals";
 
 export const tmntToDelId = 'tmt_467e51d71659d2e412cbc64a0d19ecb4'
 
@@ -37,6 +37,31 @@ export const mockDivs: divType[] = [
     hdcp_for: "Game",
     sort_order: 2,
     errClassName: "",
+  }
+]
+
+export const mockDivsToPost: divType[] = [
+  {
+    ...initDiv,
+    id: "div_1f42042f9ef24029a0a2d48cc276a088", // changed last digit to make unique
+    tmnt_id: tmntToDelId,
+    div_name: "Scratch",
+    hdcp_per: 0,
+    hdcp_from: 230,
+    int_hdcp: true, 
+    hdcp_for: 'Game',
+    sort_order: 11,
+  },
+  {
+    ...initDiv,
+    id: "div_29b9225d8dd44a4eae276f8bde855728", // changed last digit to make unique
+    tmnt_id: tmntToDelId,
+    div_name: "50+ Scratch",
+    hdcp_per: 0,
+    hdcp_from: 230,
+    int_hdcp: true, 
+    hdcp_for: 'Game',
+    sort_order: 12,
   }
 ]
 
@@ -501,7 +526,7 @@ export const mockBrktsToPost: brktType[] = [
     ...initBrkt,
     id: "brk_01758d99c5494efabb3b0d273cf22e7a",
     squad_id: mockSquadsToPost[0].id,
-    div_id: mockDivs[0].id,
+    div_id: mockDivsToPost[0].id,
     sort_order: 1,
     start: 1,
     games: 3,
@@ -516,7 +541,7 @@ export const mockBrktsToPost: brktType[] = [
     ...initBrkt,
     id: "brk_02758d99c5494efabb3b0d273cf22e7a",
     squad_id: mockSquadsToPost[0].id,
-    div_id: mockDivs[0].id,
+    div_id: mockDivsToPost[0].id,
     sort_order: 1,
     start: 4,
     games: 3,
@@ -531,7 +556,7 @@ export const mockBrktsToPost: brktType[] = [
     ...initBrkt,
     id: "brk_03758d99c5494efabb3b0d273cf22e7a",
     squad_id: mockSquadsToPost[1].id,
-    div_id: mockDivs[1].id,
+    div_id: mockDivsToPost[1].id,
     sort_order: 1,
     start: 1,
     games: 3,
@@ -546,7 +571,7 @@ export const mockBrktsToPost: brktType[] = [
     ...initBrkt,
     id: "brk_04758d99c5494efabb3b0d273cf22e7a",
     squad_id: mockSquadsToPost[1].id,
-    div_id: mockDivs[1].id,
+    div_id: mockDivsToPost[1].id,
     sort_order: 4,
     start: 4,
     games: 3,
@@ -564,7 +589,7 @@ export const mockElimsToPost: elimType[] = [
     ...initBrkt,
     id: "elm_01758d99c5494efabb3b0d273cf22e7b",
     squad_id: mockSquadsToPost[0].id,
-    div_id: mockDivs[0].id,
+    div_id: mockDivsToPost[0].id,
     sort_order: 1,
     start: 1,
     games: 3,
@@ -574,7 +599,7 @@ export const mockElimsToPost: elimType[] = [
     ...initBrkt,
     id: "elm_02758d99c5494efabb3b0d273cf22e7b",
     squad_id: mockSquadsToPost[0].id,
-    div_id: mockDivs[0].id,
+    div_id: mockDivsToPost[0].id,
     sort_order: 2,
     start: 4,
     games: 3,
@@ -584,8 +609,8 @@ export const mockElimsToPost: elimType[] = [
     ...initBrkt,
     id: "elm_03758d99c5494efabb3b0d273cf22e7b",
     squad_id: mockSquadsToPost[1].id,
-    div_id: mockDivs[1].id,
-    sort_order: 1,
+    div_id: mockDivsToPost[1].id,
+    sort_order: 3,
     start: 3,
     games: 3,
     fee: '5',
@@ -594,7 +619,7 @@ export const mockElimsToPost: elimType[] = [
     ...initBrkt,
     id: "elm_04758d99c5494efabb3b0d273cf22e7b",
     squad_id: mockSquadsToPost[1].id,
-    div_id: mockDivs[1].id,
+    div_id: mockDivsToPost[1].id,
     sort_order: 4,
     start: 4,
     games: 3,

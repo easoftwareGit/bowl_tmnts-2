@@ -38,13 +38,6 @@ export const RegisterForm = () => {
   const [formErrors, setFormErrors] = useState(blankValues);
   const [usedEmail, setUsedEmail] = useState("");
   
-  // const sanitized = {
-  //   first_name: "",
-  //   last_name: "",
-  //   email: "",
-  //   phone: "",
-  // };
-
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -206,7 +199,7 @@ export const RegisterForm = () => {
         <div className="row g-3 mb-3">
           <div className="col-md-6">
             <label htmlFor="inputFirstName" className="form-label">
-              First name
+              First Name
             </label>
             <input
               type="text"
@@ -221,7 +214,7 @@ export const RegisterForm = () => {
           </div>
           <div className="col-md-6">
             <label htmlFor="inputLastName" className="form-label">
-              Last name
+              Last Name
             </label>
             <input
               type="text"

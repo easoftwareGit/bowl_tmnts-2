@@ -26,7 +26,7 @@ const gotUserData = (user: userType, checkPhone: boolean, checkPass: boolean): E
       return ErrorCode.MissingData
     }
     if (checkPhone && !user.phone) {      
-        return ErrorCode.MissingData
+      return ErrorCode.MissingData
     }
     if (checkPass && !user.password) {
       return ErrorCode.MissingData

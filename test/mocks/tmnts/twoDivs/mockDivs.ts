@@ -1,10 +1,8 @@
 import { divType, squadType, potType, brktType, elimType } from "@/lib/types/types";
 import { defaultBrktGames, defaultBrktPlayers, defaultElimGames, initDiv, initElim } from "@/lib/db/initVals";
-import { initPot, initBrkt } from "@/lib/db/initVals";
 import { todayStr } from "@/lib/dateTools";
 import { Div, Pot, Brkt, Elim } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
-import { startOfToday } from "date-fns";
 
 export const mockDivs: divType[] = [
   {

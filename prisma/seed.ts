@@ -10,7 +10,7 @@ import { addDays, addMilliseconds, endOfDay, startOfDay } from "date-fns";
 const prisma = new PrismaClient();
 
 async function userUpsert() {
-  const testPassword = await hash("Test123!", 12);
+  const testPassword = await hash("Test123!", 12); // same as call to doHash()
 
   try {
     let user = await prisma.user.upsert({
@@ -439,7 +439,7 @@ async function tmntUpsert() {
       },
       update: {
         user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
-        tmnt_name: "Full Tournament",
+        tmnt_name: "New Tournament",
         bowl_id: "bwl_561540bd64974da9abdd97765fdb3659",
         start_date: startOfDayFromString("2024-12-01") as Date,
         end_date: startOfDayFromString("2024-12-01") as Date,
@@ -447,7 +447,7 @@ async function tmntUpsert() {
       create: {
         id: "tmt_a237a388a8fc4641a2e37233f1d6bebd",
         user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
-        tmnt_name: "Full Tournament",
+        tmnt_name: "New Tournament",
         bowl_id: "bwl_561540bd64974da9abdd97765fdb3659",
         start_date: startOfDayFromString("2024-12-01") as Date,
         end_date: startOfDayFromString("2024-12-01") as Date,
@@ -3384,8 +3384,8 @@ async function elimUpsert() {
       },
     });
 
-    console.log("Upserted eliminators:", 9);
-    return 9;
+    console.log("Upserted eliminators:", 10);
+    return 10;
   } catch (error) {
     console.log(error);
     return -1;

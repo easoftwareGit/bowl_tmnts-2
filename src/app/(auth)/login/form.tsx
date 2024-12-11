@@ -16,7 +16,7 @@ export const LoginForm = () => {
 
   const router = useRouter()
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') || '/user';
+  const callbackUrl = searchParams.get('callbackUrl') || '/user/tmnts';
 
   const [formData, setFormData] = useState(blankValues);
   const [formErrors, setFormErrors] = useState(blankValues);
@@ -113,7 +113,7 @@ export const LoginForm = () => {
 
   const handleLoginAsEric = () => {
     setFormData({
-      email: 'eric@email.com',
+      email: 'adam@email.com',
       password: 'Test123!',
     });
   }
@@ -174,7 +174,7 @@ export const LoginForm = () => {
             Login
           </button>
           <button id="btnLoginAsEric" className="btn btn-secondary mt-2" onClick={handleLoginAsEric}>
-            login as Eric Johnson
+            login as Adam Smith
           </button>
         </div>
         <div className="d-flex justify-content-center align-middle mt-3">

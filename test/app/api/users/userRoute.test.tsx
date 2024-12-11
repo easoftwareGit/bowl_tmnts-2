@@ -86,6 +86,58 @@ describe('Users - API: /api/users', () => {
   
   })
 
+  describe('GET by ID - API: API: /api/users/user/:id', () => {
+
+    it('should get a user by ID', async () => {
+      const response = await axios.get(oneUserUrl + testUser.id);
+      const user = response.data.user;
+      expect(response.status).toBe(200);      
+      expect(user.first_name).toEqual(testUser.first_name);
+      expect(user.last_name).toEqual(testUser.last_name);
+      expect(user.email).toEqual(testUser.email);
+      expect(user.phone).toEqual(testUser.phone);
+    })
+
+    it('should NOT get a user by ID when ID is invalid', async () => {
+      try {
+        const response = await axios.get(oneUserUrl + "test");
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should NOT get a user by ID when ID is valid, but not a user ID', async () => {
+      try {
+        const response = await axios.get(oneUserUrl + nonUserId);
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should NOT get a user by ID when ID is not found', async () => {
+      try {
+        const response = await axios.get(oneUserUrl + notFoundId);
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        // } else if ('response' in err) {
+        //   expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+  })
+
   describe('POST', () => {
 
     const userToPost: userType = {
@@ -419,59 +471,6 @@ describe('Users - API: /api/users', () => {
   
   })
   
-  describe('GET by ID - API: API: /api/users/user/:id', () => {
-
-    it('should get a user by ID', async () => {
-      const response = await axios.get(oneUserUrl + testUser.id);
-      const user = response.data.user;
-      expect(response.status).toBe(200);      
-      expect(user.first_name).toEqual(testUser.first_name);
-      expect(user.last_name).toEqual(testUser.last_name);
-      expect(user.email).toEqual(testUser.email);
-      expect(user.phone).toEqual(testUser.phone);
-    })
-
-    it('should NOT get a user by ID when ID is invalid', async () => {
-      try {
-        const response = await axios.get(oneUserUrl + "test");
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT get a user by ID when ID is valid, but not a user ID', async () => {
-      try {
-        const response = await axios.get(oneUserUrl + nonUserId);
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT get a user by ID when ID is not found', async () => {
-      try {
-        const response = await axios.get(oneUserUrl + notFoundId);
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        // } else if ('response' in err) {
-        //   expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-
-  })
-
   describe("PUT by ID - API: API: /api/users/user/:id", () => {
 
     const putUser = {
@@ -803,6 +802,10 @@ describe('Users - API: /api/users', () => {
 
     let user2: User;
 
+    const toPatchUser = {      
+      id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",  
+    }
+
     beforeAll(async () => {
       // get user 2 - only need user 2 for user route tests
       const response = await axios.get(url);
@@ -811,7 +814,7 @@ describe('Users - API: /api/users', () => {
 
       // make sure test user is reset in database
       const userJSON = JSON.stringify(testUser);
-      const putResponse = await axios({
+      const patchResponse = await axios({
         method: "put",
         data: userJSON,
         withCredentials: true,
@@ -822,7 +825,7 @@ describe('Users - API: /api/users', () => {
     afterEach(async () => {
       try {
         const userJSON = JSON.stringify(testUser);
-        const putResponse = await axios({
+        const response = await axios({
           method: "put",
           data: userJSON,
           withCredentials: true,
@@ -851,14 +854,14 @@ describe('Users - API: /api/users', () => {
     })
     it('should patch a user last name by ID', async () => { 
       const userJSON = JSON.stringify({
-        ...testUser,
+        ...toPatchUser,
         last_name: "Jones",
       })
       const response = await axios({
         method: "patch",
         data: userJSON,
         withCredentials: true,
-        url: oneUserUrl + testUser.id,
+        url: oneUserUrl + toPatchUser.id,
       })
       const patchedUser = response.data.user;
       expect(response.status).toBe(200);      
@@ -866,14 +869,14 @@ describe('Users - API: /api/users', () => {
     })
     it('should patch a user email by ID', async () => { 
       const userJSON = JSON.stringify({
-        ...testUser,
+        ...toPatchUser,
         email: "zach@email.com",
       })
       const response = await axios({
         method: "patch",
         data: userJSON,
         withCredentials: true,
-        url: oneUserUrl + testUser.id,
+        url: oneUserUrl + toPatchUser.id,
       })
       const patchedUser = response.data.user;
       expect(response.status).toBe(200);      
@@ -881,14 +884,14 @@ describe('Users - API: /api/users', () => {
     })
     it('should patch a user phone by ID', async () => { 
       const userJSON = JSON.stringify({
-        ...testUser,
+        ...toPatchUser,
         phone: "+18005559999",
       })
       const response = await axios({
         method: "patch",
         data: userJSON,
         withCredentials: true,
-        url: oneUserUrl + testUser.id,
+        url: oneUserUrl + toPatchUser.id,
       })
       const patchedUser = response.data.user;
       expect(response.status).toBe(200);      
@@ -896,14 +899,14 @@ describe('Users - API: /api/users', () => {
     })  
     it('should patch a user password by ID', async () => { 
       const userJSON = JSON.stringify({
-        ...testUser,
+        ...toPatchUser,
         password: "321Test!",
       })
       const response = await axios({
         method: "patch",
         data: userJSON,
         withCredentials: true,
-        url: oneUserUrl + testUser.id,
+        url: oneUserUrl + toPatchUser.id,
       })
       const patchedUser = response.data.user;
       expect(response.status).toBe(200);      
@@ -912,7 +915,7 @@ describe('Users - API: /api/users', () => {
     it('should NOT patch a user by ID when ID is invalid', async () => { 
       try {
         const userJSON = JSON.stringify({
-          ...testUser,
+          ...toPatchUser,
           first_name: "Zach",
         })
         const response = await axios({
@@ -933,7 +936,7 @@ describe('Users - API: /api/users', () => {
     it('should NOT patch a user by ID when ID is not found', async () => { 
       try {
         const userJSON = JSON.stringify({
-          ...testUser,
+          ...toPatchUser,
           first_name: "Zach",
         })
         const response = await axios({
@@ -954,7 +957,7 @@ describe('Users - API: /api/users', () => {
     it('should NOT patch a user by ID when ID is valid, but not a user ID', async () => {
       try {
         const userJSON = JSON.stringify({
-          ...testUser,
+          ...toPatchUser,
           first_name: "Zach",
         })
         const response = await axios({
@@ -974,7 +977,7 @@ describe('Users - API: /api/users', () => {
     })
     it('should NOT patch a user by ID when first name is missing', async () => { 
       const invalidUser = {
-        ...testUser,
+        ...toPatchUser,
         first_name: "",
       } 
       const userJSON = JSON.stringify(invalidUser);
@@ -983,7 +986,7 @@ describe('Users - API: /api/users', () => {
           method: "patch",
           data: userJSON,
           withCredentials: true,
-          url: oneUserUrl + testUser.id,
+          url: oneUserUrl + toPatchUser.id,
         })
         expect(response.status).toBe(422);
       } catch (err) { 
@@ -996,7 +999,7 @@ describe('Users - API: /api/users', () => {
     })
     it('should NOT patch a user by ID when last name is missing', async () => { 
       const invalidUser = {
-        ...testUser,
+        ...toPatchUser,
         last_name: "",
       }
       const userJSON = JSON.stringify(invalidUser);
@@ -1005,7 +1008,7 @@ describe('Users - API: /api/users', () => {
           method: "patch",
           data: userJSON,
           withCredentials: true,
-          url: oneUserUrl + testUser.id,
+          url: oneUserUrl + toPatchUser.id,
         })
         expect(response.status).toBe(422);
       } catch (err) { 
@@ -1018,7 +1021,7 @@ describe('Users - API: /api/users', () => {
     })
     it('should NOT patch a user by ID when email is missing', async () => { 
       const invalidUser = {
-        ...testUser,
+        ...toPatchUser,
         email: "",
       }
       const userJSON = JSON.stringify(invalidUser);
@@ -1027,7 +1030,7 @@ describe('Users - API: /api/users', () => {
           method: "patch",
           data: userJSON,
           withCredentials: true,
-          url: oneUserUrl + testUser.id,
+          url: oneUserUrl + toPatchUser.id,
         })
         expect(response.status).toBe(422);
       } catch (err) { 
@@ -1040,7 +1043,7 @@ describe('Users - API: /api/users', () => {
     })
     it('should NOT patch a user by ID when phone is missing', async () => {
       const invalidUser = {
-        ...testUser,
+        ...toPatchUser,
         phone: "",
       }
       const userJSON = JSON.stringify(invalidUser);
@@ -1049,7 +1052,7 @@ describe('Users - API: /api/users', () => {
           method: "patch",
           data: userJSON,
           withCredentials: true,
-          url: oneUserUrl + testUser.id,
+          url: oneUserUrl + toPatchUser.id,
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1062,7 +1065,7 @@ describe('Users - API: /api/users', () => {
     })
     it('should NOT patch a user by ID when password is missing', async () => { 
       const invalidUser = {
-        ...testUser,
+        ...toPatchUser,
         password: "",
       } 
       const userJSON = JSON.stringify(invalidUser);
@@ -1071,7 +1074,7 @@ describe('Users - API: /api/users', () => {
           method: "patch",
           data: userJSON,
           withCredentials: true,
-          url: oneUserUrl + testUser.id,
+          url: oneUserUrl + toPatchUser.id,
         })
         expect(response.status).toBe(422);
       } catch (err) { 
@@ -1084,7 +1087,7 @@ describe('Users - API: /api/users', () => {
     })
     it('should not patch a user by ID when first name is too long', async () => {
       const invalidUser = {
-        ...testUser,
+        ...toPatchUser,
         first_name: "a".repeat(51),
       }      
       const userJSON = JSON.stringify(invalidUser);
@@ -1093,7 +1096,7 @@ describe('Users - API: /api/users', () => {
           method: "patch",
           data: userJSON,
           withCredentials: true,
-          url: oneUserUrl + testUser.id,
+          url: oneUserUrl + toPatchUser.id,
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1106,7 +1109,7 @@ describe('Users - API: /api/users', () => {
     })
     it('should not patch a user by ID when last name is too long', async () => {
       const invalidUser = {
-        ...testUser,
+        ...toPatchUser,
         last_name: "a".repeat(51),
       } 
       const userJSON = JSON.stringify(invalidUser);
@@ -1115,7 +1118,7 @@ describe('Users - API: /api/users', () => {
           method: "patch",
           data: userJSON,
           withCredentials: true,
-          url: oneUserUrl + testUser.id,
+          url: oneUserUrl + toPatchUser.id,
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1128,7 +1131,7 @@ describe('Users - API: /api/users', () => {
     })
     it('should not patch a user by ID when email is too long', async () => {
       const invalidUser = {
-        ...testUser,
+        ...toPatchUser,
         email: "a".repeat(256),
       } 
       const userJSON = JSON.stringify(invalidUser);
@@ -1137,7 +1140,7 @@ describe('Users - API: /api/users', () => {
           method: "patch",
           data: userJSON,
           withCredentials: true,
-          url: oneUserUrl + testUser.id,
+          url: oneUserUrl + toPatchUser.id,
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1150,7 +1153,7 @@ describe('Users - API: /api/users', () => {
     })
     it('should not patch a user by ID when phone is too long', async () => {
       const invalidUser = {
-        ...testUser,
+        ...toPatchUser,
         phone: "a".repeat(256),
       } 
       const userJSON = JSON.stringify(invalidUser);
@@ -1159,7 +1162,7 @@ describe('Users - API: /api/users', () => {
           method: "patch",
           data: userJSON,
           withCredentials: true,
-          url: oneUserUrl + testUser.id,
+          url: oneUserUrl + toPatchUser.id,
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1172,7 +1175,7 @@ describe('Users - API: /api/users', () => {
     })    
     it('should not patch a user by ID when email is a duplicate', async () => { 
       const userJSON = JSON.stringify({
-        ...testUser,
+        ...toPatchUser,
         email: user2Email,
       })
       try {
@@ -1180,7 +1183,7 @@ describe('Users - API: /api/users', () => {
           method: "patch",
           data: userJSON,
           withCredentials: true,
-          url: oneUserUrl + testUser.id,
+          url: oneUserUrl + toPatchUser.id,
         })
         expect(response.status).toBe(409);
       } catch (err) { 
@@ -1193,14 +1196,14 @@ describe('Users - API: /api/users', () => {
     })
     it('should patch a user by ID with sanitized first name', async () => { 
       const userJSON = JSON.stringify({
-        ...testUser,
+        ...toPatchUser,
         first_name: "<script>alert(1)</script>",
       })
       const response = await axios({
         method: "patch",
         data: userJSON,
         withCredentials: true,
-        url: oneUserUrl + testUser.id,
+        url: oneUserUrl + toPatchUser.id,
       })
       const patchedUser = response.data.user;
       expect(response.status).toBe(200);      
@@ -1208,14 +1211,14 @@ describe('Users - API: /api/users', () => {
     })
     it('should patch a user by ID with sanitized last name', async () => { 
       const userJSON = JSON.stringify({
-        ...testUser,
+        ...toPatchUser,
         last_name: "   Jones ***",
       })
       const response = await axios({
         method: "patch",
         data: userJSON,
         withCredentials: true,
-        url: oneUserUrl + testUser.id,
+        url: oneUserUrl + toPatchUser.id,
       })
       const patchedUser = response.data.user;
       expect(response.status).toBe(200);      

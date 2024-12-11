@@ -1,4 +1,3 @@
-import { findUserByEmail } from "@/lib/db/users/users";
 import { prisma } from "@/lib/prisma";
 import { User } from "@prisma/client";
 import { compare } from "bcrypt";
@@ -78,7 +77,7 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.first_name + " " + user.last_name,
           first_name: user.first_name,
-          last_name: user.last_name,
+          last_name: user.last_name,          
           role: user.role
         };
       },
@@ -101,9 +100,9 @@ export const authOptions: NextAuthOptions = {
     // signIn is for GoogleProvider    
     async session({ session, token, user }) {
       // session if used in client components
-      // console.log("Session Callback", { session, token, user });
-
-      if (session?.user) session.user.role = token.role;
+      console.log("Session Callback", { session, token, user });
+      
+      // pass in user info into session
       return {
         ...session,
         user: {
@@ -111,21 +110,33 @@ export const authOptions: NextAuthOptions = {
           id: token.id,
           first_name: token.first_name,
           last_name: token.last_name,
+          email: token.email,
+          role: token.role,
+          name: token.first_name + " " + token.last_name
         },
       };
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, session, trigger }) {
 
-      // console.log("JWT Callback", { token, user, account });
+      console.log("JWT Callback", { token, user, account, session, trigger });
 
-      if (user) token.role = user.role;
+      if (trigger === "update" &&
+        (session?.first_name ||
+          session?.last_name ||
+          session?.email)) {
+        token.first_name = session.first_name;   
+        token.last_name = session.last_name;
+        token.email = session.email;
+        token.name = token.first_name + " " + token.last_name;
+      }
 
       if (user) {
         if (account?.provider === "credentials") {     
           const u = user as User;
 
           // console.log('credentials u: ', u)
-
+        
+          // pass user info into token
           return {
             ...token,
             id: user.id,
@@ -135,7 +146,7 @@ export const authOptions: NextAuthOptions = {
           };
           // } else if (account?.provider === 'google') {
         } else {
-          // using else now becsue only oauth is google
+          // using else now becasue only oauth is google
           // extract first and last name from name
 
           // console.log('oAuth Google User: ', user)
@@ -165,7 +176,8 @@ export const authOptions: NextAuthOptions = {
             ...token,
             id: user.id,
             first_name: firstName,
-            last_name: lastName
+            last_name: lastName,
+            role: user.role            
           }          
         }
       }
@@ -179,7 +191,7 @@ export const authOptions: NextAuthOptions = {
         return true;
         // } else if (account?.provider === 'google') {        
       } else { 
-        // using else now becsue only oauth is google
+        // using else now because only oauth is google
         if (!profile?.email) {
           throw new Error("No Profile email");
         }
@@ -225,7 +237,12 @@ export const authOptions: NextAuthOptions = {
           },
         });    
         if (googleUser && googleUser.id) {
-          user.id = googleUser?.id                    
+          user.id = googleUser?.id      
+          if (googleUser.role) {
+            user.role = googleUser.role
+          } else {
+            user.role = 'USER'
+          }          
         }
 
         // user was authenticated and upserted

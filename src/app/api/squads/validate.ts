@@ -28,7 +28,7 @@ import { start } from "repl";
  * @param squad - squad to check for missing data
  * @returns {ErrorCode.MissingData | ErrorCode.None | ErrorCode.OtherError} - error code
  */
-const gotSquadData =(squad: squadType): ErrorCode => {
+const gotSquadData = (squad: squadType): ErrorCode => {
   try {
     // squad_time can be blank
     if (!squad
@@ -73,18 +73,6 @@ export const validSquadDate = (squadDateStr: string): boolean => {
   if (!isValid(squadDate)) return false
   return (compareAsc(squadDate, minDate) >= 0 && compareAsc(squadDate, maxDate) <= 0)
 }
-// export const validSquadDate = (squadDate: Date): boolean => { 
-//   if (!squadDate) return false  
-//   if (typeof squadDate === 'string') {
-//     if (validDateString(squadDate)) {
-//       squadDate = new Date(squadDate)
-//     } else {
-//       return false
-//     }    
-//   }
-//   if (!isValid(squadDate)) return false
-//   return (compareAsc(squadDate, minDate) >= 0 && compareAsc(squadDate, maxDate) <= 0)
-// }
 export const validSquadTime = (squadTimeStr: string | null): boolean => { 
   if (typeof squadTimeStr === 'undefined') return false  
   if (!squadTimeStr) return true
