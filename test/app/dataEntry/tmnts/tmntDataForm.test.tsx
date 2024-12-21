@@ -4,17 +4,12 @@ import userEvent from "@testing-library/user-event";
 import { ReduxProvider } from '@/redux/provider';
 import { RootState } from "@/redux/store";
 import TmntDataForm from '@/app/dataEntry/tmntForm/tmntForm';
-import {
-  blankDataOneTmnt,
-  initBrkt,
-  linkedInitDataOneTmnt,
-} from "@/lib/db/initVals";
+import { blankDataOneTmnt, linkedInitDataOneTmnt } from "@/lib/db/initVals";
 import { startOfTodayUTC, dateTo_UTC_yyyyMMdd, todayStr, dateTo_yyyyMMdd, startOfDayFromString } from '@/lib/dateTools';
-import { allDataOneTmntType, tmntActions, tmntFormDataType } from '@/lib/types/types';
+import { tmntActions, tmntFormDataType } from '@/lib/types/types';
 import { mockStateBowls } from '../../../mocks/state/mockState';
 import 'core-js/actual/structured-clone';
 import { addDays, addMonths } from "date-fns";
-import { btDbUuid } from "@/lib/uuid";
 
 // Mock state for bowls
 const mockState: Partial<RootState> = {
@@ -25,12 +20,11 @@ const mockState: Partial<RootState> = {
     error: "",
   },  
 }
-
+// Mock redux state 
 jest.mock('react-redux', () => ({
   ...jest.requireActual('react-redux'),
   useSelector: jest.fn().mockImplementation((selector) => selector(mockState)),
 }));
-
 // Mock useRouter:
 jest.mock("next/navigation", () => ({
   useRouter() {

@@ -1,0 +1,16 @@
+if the file to be texted is a React component, and has:
+
+import { useRouter } from "next/navigation"
+...
+const router = useRouter();
+
+add the following code to the top of the test file, after the imports:
+
+// Mock useRouter:
+jest.mock("next/navigation", () => ({
+  useRouter() {
+    return {
+      prefetch: () => null
+    };
+  }
+}));

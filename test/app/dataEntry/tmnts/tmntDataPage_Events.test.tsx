@@ -21,7 +21,7 @@ const mockState: Partial<RootState> = {
     error: "",
   },  
 }
-
+// Mock redux state 
 jest.mock('react-redux', () => ({
   ...jest.requireActual('react-redux'),
   useSelector: jest.fn().mockImplementation((selector) => selector(mockState)),

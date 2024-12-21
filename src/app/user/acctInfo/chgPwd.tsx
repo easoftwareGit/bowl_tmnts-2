@@ -3,11 +3,11 @@ import React, { ChangeEvent, useState } from 'react'
 import Image from "next/image";
 import { isPassword8to20 } from '@/lib/validation';
 import { userType } from '@/lib/types/types';
-import { compare } from "bcrypt";
-import { doHash } from '@/lib/hash';
+import { doCompare, doHash } from '@/lib/hash';
 import { patchUser } from '@/lib/db/users/dbUsers';
 import { initModalObj } from '@/components/modal/modalObjType';
 import ModalErrorMsg from '@/components/modal/errorModal';
+import { findUserById } from '@/lib/db/users/users';
 
 const blankValues = {
   current: '',
@@ -87,13 +87,19 @@ const ChangePassword: React.FC<ChildProps> = ({
     
     // compare current password to hashed password 
     if (isValid) { 
-      // const hashedCurrent = await doHash(pwdData.current);      
-      const isCurrentValid = false
-      // const isCurrentValid = (hashedCurrent === user.password_hash);
-      // const isCurrentValid = await compare(hashedCurrent, user.password_hash);
-      if (!isCurrentValid) {
-        errors.current = 'Current Password is incorrect';
+      const dbUser = await findUserById(user.id);
+      if (!dbUser) {
+        errors.current = 'Error getting user from database';
         isValid = false;
+      } else { 
+        const isCurrentValid = await doCompare(
+          pwdData.current,
+          user.password_hash
+        );
+        if (!isCurrentValid) {
+          errors.current = 'Current Password is incorrect';
+          isValid = false;
+        }
       }
     }
 
@@ -117,9 +123,11 @@ const ChangePassword: React.FC<ChildProps> = ({
     });
   };
 
-  // const canceledModalErr = () => {
-  //   setErrModalObj(initModalObj); // reset modal object (hides modal)
-  // };
+  const canceledModalErr = () => {
+    const gotoAcctInfo = (errModalObj.id === 'success') ? true : false;
+    setErrModalObj(initModalObj); // reset modal object (hides modal)
+    if (gotoAcctInfo) setInfoType('AcctInfo');
+  };
 
   const toggleCurrentVisibility = () => {
     setShowCurrent(!showCurrent);
@@ -133,29 +141,34 @@ const ChangePassword: React.FC<ChildProps> = ({
     setShowConfirm(!showConfirm);
   };
 
-  // const updatePassword = async () => { 
-  //   // patch user
-  //   const dataToPatch = {
-  //     id: user.id,
-  //     password_hash: await doHash(pwdData.new)
-  //   }
-  //   const patchedUser = await patchUser(dataToPatch);
-  //   if (!patchedUser) {
-  //     setErrModalObj({
-  //       show: true,
-  //       title: 'Update Password Failed',
-  //       message: `Cannot update new password.`,
-  //       id: initModalObj.id
-  //     })   
-  //   } else { 
-  //     setInfoType('AcctInfo');
-  //   }
-  // }
+  const updatePassword = async () => { 
+    // patch user
+    const dataToPatch = {
+      id: user.id,
+      password: pwdData.new
+    }
+    const patchedUser = await patchUser(dataToPatch);
+    if (!patchedUser) {
+      setErrModalObj({
+        show: true,
+        title: 'Update Password Failed',
+        message: `Cannot update new password.`,
+        id: 'fail'
+      })   
+    } else { 
+      setErrModalObj({
+        show: true,
+        title: 'Update Password Success',
+        message: 'Successfully updated password.',
+        id: 'success'
+      })            
+    }
+  }
 
   const handleUpdateClick = async () => {
     const isValid = await validUserData();
     if (isValid) {
-      // update password
+      updatePassword();
     }
   }
 
@@ -165,7 +178,7 @@ const ChangePassword: React.FC<ChildProps> = ({
         show={errModalObj.show}
         title={errModalObj.title}
         message={errModalObj.message}   
-        // onCancel={canceledModalErr}
+        onCancel={canceledModalErr}
       />        
       <div className="form_container">
         <div className="row g-3 mb-1">
@@ -173,10 +186,7 @@ const ChangePassword: React.FC<ChildProps> = ({
         </div>
         <div className="row g-3 mb-2">
           <div className="col-12">
-            <label
-              className="form-label"
-              htmlFor="current"
-            >
+            <label className="form-label" htmlFor="inputCurrent">
               Current Password
             </label>
             <div className="input-group">
@@ -189,6 +199,7 @@ const ChangePassword: React.FC<ChildProps> = ({
                 name="current"
                 value={pwdData.current}
                 onChange={handleInputChange}
+                data-testid="inputCurrent"
               />
               <button
                 className="btn border border-start-0 rounded-end"
@@ -208,10 +219,7 @@ const ChangePassword: React.FC<ChildProps> = ({
         </div>
         <div className="row g-3 mb-2">
           <div className="col-12">
-            <label
-              className="form-label"
-              htmlFor="new"
-            >
+            <label className="form-label"htmlFor="inputNew">
               New Password
             </label>
             <div className="input-group">
@@ -224,6 +232,7 @@ const ChangePassword: React.FC<ChildProps> = ({
                 name="new"
                 value={pwdData.new}
                 onChange={handleInputChange}
+                data-testid="inputNew"
               />
               <button
                 className="btn border border-start-0 rounded-end"
@@ -243,10 +252,7 @@ const ChangePassword: React.FC<ChildProps> = ({
         </div>
         <div className="row g-3 mb-3">
           <div className="col-12">
-            <label
-              className="form-label"
-              htmlFor="confirm"
-            >
+            <label className="form-label" htmlFor="inputConfirm">
               Confirm Password
             </label>
             <div className="input-group">
@@ -259,6 +265,7 @@ const ChangePassword: React.FC<ChildProps> = ({
                 name="confirm"
                 value={pwdData.confirm}
                 onChange={handleInputChange}
+                data-testid="inputConfirm"
               />
               <button
                 className="btn border border-start-0 rounded-end"
@@ -291,7 +298,7 @@ const ChangePassword: React.FC<ChildProps> = ({
             <button
               type="button"
               className="btn btn-success"
-              // onClick={handleUpdateClick}
+              onClick={handleUpdateClick}
             >
               Update
             </button>

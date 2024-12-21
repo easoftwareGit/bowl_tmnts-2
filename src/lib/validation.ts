@@ -13,6 +13,9 @@ export const maxCityLength = 25;
 export const maxStateLength = 5
 export const maxUrlLength = 2048;
 
+export const maxToHashLength = 72;
+export const bcryptLength = 60; // https://www.npmjs.com/package/bcrypt
+
 export const maxTmntNameLength = 30;
 export const maxEventLength = 20;
 

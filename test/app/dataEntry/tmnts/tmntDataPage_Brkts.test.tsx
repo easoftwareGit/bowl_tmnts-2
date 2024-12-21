@@ -2,7 +2,7 @@ import React from "react";
 import { render, screen } from "../../../test-utils";
 import userEvent from "@testing-library/user-event";
 import { blankDataOneTmnt } from "@/lib/db/initVals";
-import { allDataOneTmntType, tmntActions, tmntFormDataType } from "@/lib/types/types";
+import { tmntActions, tmntFormDataType } from "@/lib/types/types";
 import { RootState } from "@/redux/store";
 import { mockStateBowls } from "../../../mocks/state/mockState";
 import { mockSDBrkts, mockSDDivs, mockSDElims, mockSDEvents, mockSDLanes, mockSDPots, mockSDSquads, mockSDTmnt } from "../../../mocks/tmnts/singlesAndDoubles/mockSD";

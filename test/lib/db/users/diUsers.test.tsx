@@ -117,6 +117,20 @@ describe("dbUsers.tsx", () => {
       expect(patchedUser.phone).toEqual(testUser.phone);
       expect(patchedUser.role).toEqual(testUser.role);
     });
+    it("should patch a user password by ID", async () => {
+      const toBePatched = {
+        ...toPatchUser,
+        password: "321!Test",
+      };
+      const patchedUser = (await patchUser(toBePatched)) as userType;
+      expect(patchedUser).not.toBeNull();
+      if (patchedUser === null) return;
+      expect(patchedUser.email).toEqual(patchedUser.email);
+      expect(patchedUser.first_name).toEqual(testUser.first_name);
+      expect(patchedUser.last_name).toEqual(testUser.last_name);
+      expect(patchedUser.phone).toEqual(testUser.phone);
+      expect(patchedUser.role).toEqual(testUser.role);
+    });
     it("should not patch a user by ID when id is invalid", async () => {
       const toBePatched = {
         ...toPatchUser,

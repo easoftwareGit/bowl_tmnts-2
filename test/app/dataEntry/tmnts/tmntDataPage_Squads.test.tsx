@@ -19,7 +19,6 @@ import 'core-js/actual/structured-clone';
 //      d) directly to the left of the drop down select, click the green play button
 //         This will start the server in debug mode.
 
-
 // Mock state for bowls
 const mockState: Partial<RootState> = {
   bowls: {
@@ -29,7 +28,7 @@ const mockState: Partial<RootState> = {
     error: "",
   },  
 }
-
+// Mock redux state 
 jest.mock('react-redux', () => ({
   ...jest.requireActual('react-redux'),
   useSelector: jest.fn().mockImplementation((selector) => selector(mockState)),

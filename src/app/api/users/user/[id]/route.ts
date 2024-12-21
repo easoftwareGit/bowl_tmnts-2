@@ -129,7 +129,7 @@ export async function PATCH(
       last_name: currentUser.last_name,
       email: currentUser.email,
       phone: currentUser.phone || "",        
-      password_hash: currentUser.password_hash || "",
+      // password_hash: currentUser.password_hash || "",
     };
 
     let checkPhone = false

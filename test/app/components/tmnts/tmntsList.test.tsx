@@ -5,6 +5,7 @@ import { mockYears } from '../../../mocks/tmnts/mockYears';
 import { mockResults } from '../../../mocks/tmnts/mockResults';
 import { mockUpcoming } from '../../../mocks/tmnts/mockUpcoming';
 import { YearObj } from '@/lib/types/types';
+import { on } from 'events';
 
 const mockOnYearChange = jest.fn();
 
@@ -40,7 +41,8 @@ describe("TmntsList - Component", () => {
   describe('TmntsList: Results', () => {
 
     it("renders the component with initial data", () => {
-      render(<TmntsList {...mockResultsProps} />);  // ARRANGE            
+      // render(<TmntsList {...mockResultsProps} />);  // ARRANGE            
+      render(<TmntsList years={mockResultsProps.yearsArr} tmnts={mockResultsProps.tmntsArr} onYearChange={mockOnYearChange} />);  // ARRANGE
       const stateLabel = screen.getByLabelText("Select State")  // ACT
       const options = screen.getAllByTestId('select-option')    // ACT 
       const dublinText = screen.getAllByText(/dublin/i)  // ACT 
@@ -52,7 +54,7 @@ describe("TmntsList - Component", () => {
     });
 
     it("handles year change correctly", () => {
-      render(<TmntsList {...mockResultsProps} />); // ARRANGE
+      render(<TmntsList years={mockResultsProps.yearsArr} tmnts={mockResultsProps.tmntsArr} onYearChange={mockOnYearChange} />);  // ARRANGE
 
       // ACT  Simulate year change event 
       fireEvent.change(screen.getByTestId("yearSelect"), {
@@ -64,7 +66,7 @@ describe("TmntsList - Component", () => {
     });
 
     it("handles state filter change correctly", async () => {
-      render(<TmntsList {...mockResultsProps} />); //ARRANGE
+      render(<TmntsList years={mockResultsProps.yearsArr} tmnts={mockResultsProps.tmntsArr} onYearChange={mockOnYearChange} />);  // ARRANGE
 
       // ARRANGE Simulate state filter change event    
       fireEvent.change(screen.getByTestId("stateSelect"), {
@@ -81,7 +83,7 @@ describe("TmntsList - Component", () => {
 
   describe('TmntsList: Upcoming', () => { 
     it("renders the component with initial data", () => {
-      render(<TmntsList {...mockUpcomingProps} />);  // ARRANGE            
+      render(<TmntsList years={mockUpcomingProps.yearsArr} tmnts={mockUpcomingProps.tmntsArr} onYearChange={mockOnYearChange} />);  // ARRANGE
       const stateLabel = screen.getByLabelText("Select State")  // ACT
       const yearSelect = screen.queryByTestId("yearSelect")  // ACT       
       const stateTest = screen.getAllByText(/dublin/i)  // ACT 

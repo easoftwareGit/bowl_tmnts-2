@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ZeroToNElims, { validateElims, exportedForTesting } from "@/app/dataEntry/tmntForm/zeroToNElims";
 import { mockElims, mockDivs, mockSquads } from "../../../mocks/tmnts/twoDivs/mockDivs";

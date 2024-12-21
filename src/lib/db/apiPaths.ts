@@ -33,3 +33,5 @@ export const baseBrktEntriesApi = baseApi + '/brktEntries'
 export const baseElimEntriesApi = baseApi + '/elimEntries'
 
 export const basePotEntriesApi = baseApi + '/potEntries'
+
+export const baseBcryptApi = baseApi + '/bcrypt'

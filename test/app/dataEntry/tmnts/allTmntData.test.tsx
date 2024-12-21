@@ -2,21 +2,12 @@ import { render, screen } from '@testing-library/react';
 import { ReduxProvider } from '@/redux/provider';
 import userEvent from '@testing-library/user-event';
 import TmntDataForm from '@/app/dataEntry/tmntForm/tmntForm';
-import { allDataOneTmntType, tmntActions, tmntFormDataType } from '@/lib/types/types';
+import { tmntActions, tmntFormDataType } from '@/lib/types/types';
 import { mockTmnt, mockEvents, mockDivs, mockSquads, mockLanes, mockPots, mockBrkts, mockElims } from '../../../mocks/tmnts/newTmnt/mockNewTmnt';
 import { dateTo_UTC_yyyyMMdd, startOfTodayUTC } from '@/lib/dateTools';
 import { IntlConfig } from '@/lib/currency/components/CurrencyInputProps';
 import { getLocaleConfig } from '@/lib/currency/components/utils';
 import { formatValuePercent2Dec, formatValueSymbSep2Dec } from '@/lib/currency/formatValue';
-import { deleteAllTmntElims, getAllElimsForTmnt } from '@/lib/db/elims/dbElims';
-import { deleteAllTmntBrkts, getAllBrktsForTmnt } from '@/lib/db/brkts/dbBrkts';
-import { deleteAllTmntPots, getAllPotsForTmnt } from '@/lib/db/pots/dbPots';
-import { deleteAllTmntLanes, getAllLanesForTmnt } from '@/lib/db/lanes/dbLanes';
-import { deleteAllTmntSquads, getAllSquadsForTmnt } from '@/lib/db/squads/dbSquads';
-import { deleteAllTmntDivs, getAllDivsForTmnt } from '@/lib/db/divs/dbDivs';
-import { deleteAllTmntEvents, getAllEventsForTmnt } from '@/lib/db/events/dbEvents';
-import { deleteTmnt, getTmnt } from '@/lib/db/tmnts/dbTmnts';
-import { compareAsc } from 'date-fns';
 import { blankDataOneTmnt } from '@/lib/db/initVals';
 import { RootState } from '@/redux/store';
 import { mockStateBowls } from '../../../mocks/state/mockState';
@@ -34,6 +25,14 @@ const mockState: Partial<RootState> = {
 jest.mock('react-redux', () => ({
   ...jest.requireActual('react-redux'),
   useSelector: jest.fn().mockImplementation((selector) => selector(mockState)),
+}));
+// Mock useRouter:
+jest.mock("next/navigation", () => ({
+  useRouter() {
+    return {
+      prefetch: () => null
+    };
+  }
 }));
 
 describe('Render Tmnt data', () => {

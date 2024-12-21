@@ -15,8 +15,6 @@ const AcctInfoForm = () => {
   const [origUserData, setOrigUserData] = useState(blankUser);
   const [infoType, setInfoType] = useState("AcctInfo");
 
-  // const router = useRouter();
-
   useEffect(() => {
     const fetchOneUser = async () => {
       try {
@@ -27,14 +25,14 @@ const AcctInfoForm = () => {
         const dbUser = response;
         const userToSet = {
           ...blankUser,
+          id: dbUser.id,
           first_name: dbUser.first_name,
           last_name: dbUser.last_name,
           email: dbUser.email,
           password_hash: dbUser.password_hash || "",
         };
         if (dbUser.phone) {
-          userToSet.phone = dbUser.phone;
-          // setPhoneRequired(true);
+          userToSet.phone = dbUser.phone;          
         }
         setUser(userToSet);
         setOrigUserData(userToSet);

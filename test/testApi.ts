@@ -40,4 +40,6 @@ export const testBaseBrktEntriesApi = testBaseApi + '/brktEntries'
 
 export const testBaseElimEntriesApi = testBaseApi + '/elimEntries'
 
+export const testBaseBcryptApi = testBaseApi + '/bcrypt'
+
 export const testPostSecret = process.env.TEST_POST_SECRET!
