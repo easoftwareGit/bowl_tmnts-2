@@ -3520,7 +3520,7 @@ async function playersUpsert() {
         },
         update: {
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-          first_name: "Henry",
+          first_name: "Al",
           last_name: "Davis",
           average: 213,
           lane: 29,
@@ -3529,7 +3529,7 @@ async function playersUpsert() {
         create: {
           id: "ply_a01758cff1cc4bab9d9133e661bd49b0",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-          first_name: "Henry",
+          first_name: "Al",
           last_name: "Davis",
           average: 213,
           lane: 29,
@@ -3542,7 +3542,7 @@ async function playersUpsert() {
         },
         update: {
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-          first_name: "Anna",
+          first_name: "Bob",
           last_name: "Smith",
           average: 205,
           lane: 29,
@@ -3551,7 +3551,7 @@ async function playersUpsert() {
         create: {
           id: "ply_a02758cff1cc4bab9d9133e661bd49b0",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-          first_name: "Anna",
+          first_name: "Bob",
           last_name: "Smith",
           average: 205,
           lane: 29,
@@ -3564,7 +3564,7 @@ async function playersUpsert() {
         },
         update: {
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-          first_name: "Michael",
+          first_name: "Curt",
           last_name: "Johnson",
           average: 210,
           lane: 29,
@@ -3573,7 +3573,7 @@ async function playersUpsert() {
         create: {
           id: "ply_a03758cff1cc4bab9d9133e661bd49b0",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-          first_name: "Michael",
+          first_name: "Curt",
           last_name: "Johnson",
           average: 210,
           lane: 29,
@@ -3586,7 +3586,7 @@ async function playersUpsert() {
         },
         update: {
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-          first_name: "Emily",
+          first_name: "Don",
           last_name: "Brown",
           average: 200,
           lane: 30,
@@ -3595,7 +3595,7 @@ async function playersUpsert() {
         create: {
           id: "ply_a04758cff1cc4bab9d9133e661bd49b0",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-          first_name: "Emily",
+          first_name: "Don",
           last_name: "Brown",
           average: 200,
           lane: 30,
@@ -3608,7 +3608,7 @@ async function playersUpsert() {
         },
         update: {
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-          first_name: "James",
+          first_name: "Ed",
           last_name: "Taylor",
           average: 195,
           lane: 30,
@@ -3617,7 +3617,7 @@ async function playersUpsert() {
         create: {
           id: "ply_a05758cff1cc4bab9d9133e661bd49b0",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-          first_name: "James",
+          first_name: "Ed",
           last_name: "Taylor",
           average: 195,
           lane: 30,
@@ -3630,7 +3630,7 @@ async function playersUpsert() {
         },
         update: {
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-          first_name: "Olivia",
+          first_name: "Fred",
           last_name: "Anderson",
           average: 215,
           lane: 30,
@@ -3639,7 +3639,7 @@ async function playersUpsert() {
         create: {
           id: "ply_a06758cff1cc4bab9d9133e661bd49b0",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-          first_name: "Olivia",
+          first_name: "Fred",
           last_name: "Anderson",
           average: 215,
           lane: 30,
@@ -3652,7 +3652,7 @@ async function playersUpsert() {
         },
         update: {
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-          first_name: "Henry",
+          first_name: "Greg",
           last_name: "Smith",
           average: 214,
           lane: 31,
@@ -3661,7 +3661,7 @@ async function playersUpsert() {
         create: {
           id: "ply_a07758cff1cc4bab9d9133e661bd49b0",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-          first_name: "Henry",
+          first_name: "Greg",
           last_name: "Smith",
           average: 214,
           lane: 31,
@@ -3674,7 +3674,7 @@ async function playersUpsert() {
         },
         update: {
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-          first_name: "Olivia",
+          first_name: "Hal",
           last_name: "Johnson",
           average: 218,
           lane: 31,
@@ -3683,7 +3683,7 @@ async function playersUpsert() {
         create: {
           id: "ply_a08758cff1cc4bab9d9133e661bd49b0",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-          first_name: "Olivia",
+          first_name: "Hal",
           last_name: "Johnson",
           average: 218,
           lane: 31,
@@ -3696,7 +3696,7 @@ async function playersUpsert() {
         },
         update: {
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-          first_name: "James",
+          first_name: "Ian",
           last_name: "Brown",
           average: 200,
           lane: 31,
@@ -3705,7 +3705,7 @@ async function playersUpsert() {
         create: {
           id: "ply_a09758cff1cc4bab9d9133e661bd49b0",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-          first_name: "James",
+          first_name: "Ian",
           last_name: "Brown",
           average: 200,
           lane: 31,
@@ -3718,7 +3718,7 @@ async function playersUpsert() {
         },
         update: {
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-          first_name: "Emma",
+          first_name: "Jim",
           last_name: "Williams",
           average: 199,
           lane: 32,
@@ -3727,7 +3727,7 @@ async function playersUpsert() {
         create: {
           id: "ply_a10758cff1cc4bab9d9133e661bd49b0",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-          first_name: "Emma",
+          first_name: "Jim",
           last_name: "Williams",
           average: 199,
           lane: 32,
@@ -3740,7 +3740,7 @@ async function playersUpsert() {
         },
         update: {
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-          first_name: "Sophia",
+          first_name: "Kyle",
           last_name: "Jones",
           average: 211,
           lane: 32,
@@ -3749,7 +3749,7 @@ async function playersUpsert() {
         create: {
           id: "ply_a11758cff1cc4bab9d9133e661bd49b0",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-          first_name: "Sophia",
+          first_name: "Kyle",
           last_name: "Jones",
           average: 211,
           lane: 32,
@@ -5873,15 +5873,15 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           player_id: "ply_a01758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 8,
-          fee: 40,
+          num_brackets: 10,
+          fee: 50,
         },
         create: {
           id: "ben_c0126ba58d3f4a7d950101a5674ce595",
           brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           player_id: "ply_a01758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 8,
-          fee: 40,
+          num_brackets: 10,
+          fee: 50,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -5891,51 +5891,51 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
           player_id: "ply_a01758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 8,
-          fee: 40,
+          num_brackets: 10,
+          fee: 50,
         },
         create: {
           id: "ben_c0226ba58d3f4a7d950101a5674ce595",
           brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
           player_id: "ply_a01758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 10,
+          fee: 50,
+        },
+      });
+      brktEntry = await prisma.brkt_Entry.upsert({
+        where: {
+          id: "ben_c0326ba58d3f4a7d950101a5674ce595",
+        },
+        update: {
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          player_id: "ply_a02758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 8,
+          fee: 40,
+        },
+        create: {
+          id: "ben_c0326ba58d3f4a7d950101a5674ce595",
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          player_id: "ply_a02758cff1cc4bab9d9133e661bd49b0",
           num_brackets: 8,
           fee: 40,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
         where: {
-          id: "ben_c0326ba58d3f4a7d950101a5674ce595",
-        },
-        update: {
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-          player_id: "ply_a02758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 5,
-          fee: 25,
-        },
-        create: {
-          id: "ben_c0326ba58d3f4a7d950101a5674ce595",
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-          player_id: "ply_a02758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 5,
-          fee: 25,
-        },
-      });
-      brktEntry = await prisma.brkt_Entry.upsert({
-        where: {
           id: "ben_c0426ba58d3f4a7d950101a5674ce595",
         },
         update: {
           brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
           player_id: "ply_a02758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 5,
-          fee: 25,
+          num_brackets: 8,
+          fee: 40,
         },
         create: {
           id: "ben_c0426ba58d3f4a7d950101a5674ce595",
           brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
           player_id: "ply_a02758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 5,
-          fee: 25,
+          num_brackets: 8,
+          fee: 40,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -5945,15 +5945,15 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           player_id: "ply_a03758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 7,
-          fee: 35,
+          num_brackets: 6,
+          fee: 30,
         },
         create: {
           id: "ben_c0526ba58d3f4a7d950101a5674ce595",
           brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           player_id: "ply_a03758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 7,
-          fee: 35,
+          num_brackets: 6,
+          fee: 30,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -5963,15 +5963,15 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
           player_id: "ply_a03758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 7,
-          fee: 35,
+          num_brackets: 6,
+          fee: 30,
         },
         create: {
           id: "ben_c0626ba58d3f4a7d950101a5674ce595",
           brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
           player_id: "ply_a03758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 7,
-          fee: 35,
+          num_brackets: 6,
+          fee: 30,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -5981,15 +5981,15 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           player_id: "ply_a04758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 3,
-          fee: 15,
+          num_brackets: 7,
+          fee: 35,
         },
         create: {
           id: "ben_c0726ba58d3f4a7d950101a5674ce595",
           brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           player_id: "ply_a04758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 3,
-          fee: 15,
+          num_brackets: 7,
+          fee: 35,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -5999,15 +5999,15 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
           player_id: "ply_a04758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 3,
-          fee: 15,
+          num_brackets: 7,
+          fee: 35,
         },
         create: {
           id: "ben_c0826ba58d3f4a7d950101a5674ce595",
           brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
           player_id: "ply_a04758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 3,
-          fee: 15,
+          num_brackets: 7,
+          fee: 35,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -6017,15 +6017,15 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           player_id: "ply_a05758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 4,
-          fee: 20,
+          num_brackets: 6,
+          fee: 30,
         },
         create: {
           id: "ben_c0926ba58d3f4a7d950101a5674ce595",
           brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           player_id: "ply_a05758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 4,
-          fee: 20,
+          num_brackets: 6,
+          fee: 30,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -6035,15 +6035,15 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
           player_id: "ply_a05758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 4,
-          fee: 20,
+          num_brackets: 6,
+          fee: 30,
         },
         create: {
           id: "ben_c1026ba58d3f4a7d950101a5674ce595",
           brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
           player_id: "ply_a05758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 4,
-          fee: 20,
+          num_brackets: 6,
+          fee: 30,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -6053,15 +6053,15 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           player_id: "ply_a06758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 7,
-          fee: 35,
+          num_brackets: 4,
+          fee: 20,
         },
         create: {
           id: "ben_c1126ba58d3f4a7d950101a5674ce595",
           brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           player_id: "ply_a06758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 7,
-          fee: 35,
+          num_brackets: 4,
+          fee: 20,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -6071,15 +6071,15 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
           player_id: "ply_a06758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 7,
-          fee: 35,
+          num_brackets: 4,
+          fee: 20,
         },
         create: {
           id: "ben_c1226ba58d3f4a7d950101a5674ce595",
           brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
           player_id: "ply_a06758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 7,
-          fee: 35,
+          num_brackets: 4,
+          fee: 20,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -6089,15 +6089,15 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           player_id: "ply_a07758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 3,
-          fee: 15,
+          num_brackets: 6,
+          fee: 30,
         },
         create: {
           id: "ben_c1326ba58d3f4a7d950101a5674ce595",
           brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           player_id: "ply_a07758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 3,
-          fee: 15,
+          num_brackets: 6,
+          fee: 30,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -6107,485 +6107,485 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
           player_id: "ply_a07758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 3,
-          fee: 15,
+          num_brackets: 6,
+          fee: 30,
         },
         create: {
           id: "ben_c1426ba58d3f4a7d950101a5674ce595",
           brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
           player_id: "ply_a07758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 3,
-          fee: 15,
-        },
-      });
-      brktEntry = await prisma.brkt_Entry.upsert({
-        where: {
-          id: "ben_c1526ba58d3f4a7d950101a5674ce595",
-        },
-        update: {
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-          player_id: "ply_a08758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 9,
-          fee: 45,
-        },
-        create: {
-          id: "ben_c1526ba58d3f4a7d950101a5674ce595",
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-          player_id: "ply_a08758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 9,
-          fee: 45,
-        },
-      });
-      brktEntry = await prisma.brkt_Entry.upsert({
-        where: {
-          id: "ben_c1626ba58d3f4a7d950101a5674ce595",
-        },
-        update: {
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-          player_id: "ply_a08758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 9,
-          fee: 45,
-        },
-        create: {
-          id: "ben_c1626ba58d3f4a7d950101a5674ce595",
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-          player_id: "ply_a08758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 9,
-          fee: 45,
-        },
-      });
-      brktEntry = await prisma.brkt_Entry.upsert({
-        where: {
-          id: "ben_c1726ba58d3f4a7d950101a5674ce595",
-        },
-        update: {
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-          player_id: "ply_a09758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 6,
-          fee: 30,
-        },
-        create: {
-          id: "ben_c1726ba58d3f4a7d950101a5674ce595",
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-          player_id: "ply_a09758cff1cc4bab9d9133e661bd49b0",
           num_brackets: 6,
           fee: 30,
         },
       });
-      brktEntry = await prisma.brkt_Entry.upsert({
-        where: {
-          id: "ben_c1826ba58d3f4a7d950101a5674ce595",
-        },
-        update: {
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-          player_id: "ply_a09758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 6,
-          fee: 30,
-        },
-        create: {
-          id: "ben_c1826ba58d3f4a7d950101a5674ce595",
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-          player_id: "ply_a09758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 6,
-          fee: 30,
-        },
-      });
-      brktEntry = await prisma.brkt_Entry.upsert({
-        where: {
-          id: "ben_c1926ba58d3f4a7d950101a5674ce595",
-        },
-        update: {
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-          player_id: "ply_a10758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 3,
-          fee: 15,
-        },
-        create: {
-          id: "ben_c1926ba58d3f4a7d950101a5674ce595",
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-          player_id: "ply_a10758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 3,
-          fee: 15,
-        },
-      });
-      brktEntry = await prisma.brkt_Entry.upsert({
-        where: {
-          id: "ben_c2026ba58d3f4a7d950101a5674ce595",
-        },
-        update: {
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-          player_id: "ply_a10758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 3,
-          fee: 15,
-        },
-        create: {
-          id: "ben_c2026ba58d3f4a7d950101a5674ce595",
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-          player_id: "ply_a10758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 3,
-          fee: 15,
-        },
-      });
-      brktEntry = await prisma.brkt_Entry.upsert({
-        where: {
-          id: "ben_c2126ba58d3f4a7d950101a5674ce595",
-        },
-        update: {
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-          player_id: "ply_a11758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 10,
-          fee: 50,
-        },
-        create: {
-          id: "ben_c2126ba58d3f4a7d950101a5674ce595",
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-          player_id: "ply_a11758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 10,
-          fee: 50,
-        },
-      });
-      brktEntry = await prisma.brkt_Entry.upsert({
-        where: {
-          id: "ben_c2226ba58d3f4a7d950101a5674ce595",
-        },
-        update: {
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-          player_id: "ply_a11758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 10,
-          fee: 50,
-        },
-        create: {
-          id: "ben_c2226ba58d3f4a7d950101a5674ce595",
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-          player_id: "ply_a11758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 10,
-          fee: 50,
-        },
-      });
-      brktEntry = await prisma.brkt_Entry.upsert({
-        where: {
-          id: "ben_c2326ba58d3f4a7d950101a5674ce595",
-        },
-        update: {
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-          player_id: "ply_a12758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 2,
-          fee: 10,
-        },
-        create: {
-          id: "ben_c2326ba58d3f4a7d950101a5674ce595",
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-          player_id: "ply_a12758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 2,
-          fee: 10,
-        },
-      });
-      brktEntry = await prisma.brkt_Entry.upsert({
-        where: {
-          id: "ben_c2426ba58d3f4a7d950101a5674ce595",
-        },
-        update: {
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-          player_id: "ply_a12758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 2,
-          fee: 10,
-        },
-        create: {
-          id: "ben_c2426ba58d3f4a7d950101a5674ce595",
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-          player_id: "ply_a12758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 2,
-          fee: 10,
-        },
-      });
-      brktEntry = await prisma.brkt_Entry.upsert({
-        where: {
-          id: "ben_c2526ba58d3f4a7d950101a5674ce595",
-        },
-        update: {
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-          player_id: "ply_a13758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 6,
-          fee: 30,
-        },
-        create: {
-          id: "ben_c2526ba58d3f4a7d950101a5674ce595",
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-          player_id: "ply_a13758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 6,
-          fee: 30,
-        },
-      });
-      brktEntry = await prisma.brkt_Entry.upsert({
-        where: {
-          id: "ben_c2626ba58d3f4a7d950101a5674ce595",
-        },
-        update: {
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-          player_id: "ply_a13758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 6,
-          fee: 30,
-        },
-        create: {
-          id: "ben_c2626ba58d3f4a7d950101a5674ce595",
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-          player_id: "ply_a13758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 6,
-          fee: 30,
-        },
-      });
-      brktEntry = await prisma.brkt_Entry.upsert({
-        where: {
-          id: "ben_c2726ba58d3f4a7d950101a5674ce595",
-        },
-        update: {
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-          player_id: "ply_a14758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 9,
-          fee: 45,
-        },
-        create: {
-          id: "ben_c2726ba58d3f4a7d950101a5674ce595",
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-          player_id: "ply_a14758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 9,
-          fee: 45,
-        },
-      });
-      brktEntry = await prisma.brkt_Entry.upsert({
-        where: {
-          id: "ben_c2826ba58d3f4a7d950101a5674ce595",
-        },
-        update: {
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-          player_id: "ply_a14758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 9,
-          fee: 45,
-        },
-        create: {
-          id: "ben_c2826ba58d3f4a7d950101a5674ce595",
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-          player_id: "ply_a14758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 9,
-          fee: 45,
-        },
-      });
-      brktEntry = await prisma.brkt_Entry.upsert({
-        where: {
-          id: "ben_c2926ba58d3f4a7d950101a5674ce595",
-        },
-        update: {
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-          player_id: "ply_a15758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 3,
-          fee: 15,
-        },
-        create: {
-          id: "ben_c2926ba58d3f4a7d950101a5674ce595",
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-          player_id: "ply_a15758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 3,
-          fee: 15,
-        },
-      });
-      brktEntry = await prisma.brkt_Entry.upsert({
-        where: {
-          id: "ben_c3026ba58d3f4a7d950101a5674ce595",
-        },
-        update: {
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-          player_id: "ply_a15758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 3,
-          fee: 15,
-        },
-        create: {
-          id: "ben_c3026ba58d3f4a7d950101a5674ce595",
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-          player_id: "ply_a15758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 3,
-          fee: 15,
-        },
-      });
-      brktEntry = await prisma.brkt_Entry.upsert({
-        where: {
-          id: "ben_c3126ba58d3f4a7d950101a5674ce595",
-        },
-        update: {
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-          player_id: "ply_a16758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 7,
-          fee: 35,
-        },
-        create: {
-          id: "ben_c3126ba58d3f4a7d950101a5674ce595",
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-          player_id: "ply_a16758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 7,
-          fee: 35,
-        },
-      });
-      brktEntry = await prisma.brkt_Entry.upsert({
-        where: {
-          id: "ben_c3226ba58d3f4a7d950101a5674ce595",
-        },
-        update: {
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-          player_id: "ply_a16758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 7,
-          fee: 35,
-        },
-        create: {
-          id: "ben_c3226ba58d3f4a7d950101a5674ce595",
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-          player_id: "ply_a16758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 7,
-          fee: 35,
-        },
-      });
-      brktEntry = await prisma.brkt_Entry.upsert({
-        where: {
-          id: "ben_c3326ba58d3f4a7d950101a5674ce595",
-        },
-        update: {
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-          player_id: "ply_a17758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 4,
-          fee: 20,
-        },
-        create: {
-          id: "ben_c3326ba58d3f4a7d950101a5674ce595",
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-          player_id: "ply_a17758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 4,
-          fee: 20,
-        },
-      });
-      brktEntry = await prisma.brkt_Entry.upsert({
-        where: {
-          id: "ben_c3426ba58d3f4a7d950101a5674ce595",
-        },
-        update: {
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-          player_id: "ply_a17758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 4,
-          fee: 20,
-        },
-        create: {
-          id: "ben_c3426ba58d3f4a7d950101a5674ce595",
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-          player_id: "ply_a17758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 4,
-          fee: 20,
-        },
-      });
-      brktEntry = await prisma.brkt_Entry.upsert({
-        where: {
-          id: "ben_c3526ba58d3f4a7d950101a5674ce595",
-        },
-        update: {
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-          player_id: "ply_a18758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 9,
-          fee: 45,
-        },
-        create: {
-          id: "ben_c3526ba58d3f4a7d950101a5674ce595",
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-          player_id: "ply_a18758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 9,
-          fee: 45,
-        },
-      });
-      brktEntry = await prisma.brkt_Entry.upsert({
-        where: {
-          id: "ben_c3626ba58d3f4a7d950101a5674ce595",
-        },
-        update: {
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-          player_id: "ply_a18758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 9,
-          fee: 45,
-        },
-        create: {
-          id: "ben_c3626ba58d3f4a7d950101a5674ce595",
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-          player_id: "ply_a18758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 9,
-          fee: 45,
-        },
-      });
-      brktEntry = await prisma.brkt_Entry.upsert({
-        where: {
-          id: "ben_c3726ba58d3f4a7d950101a5674ce595",
-        },
-        update: {
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-          player_id: "ply_a19758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 6,
-          fee: 30,
-        },
-        create: {
-          id: "ben_c3726ba58d3f4a7d950101a5674ce595",
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-          player_id: "ply_a19758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 6,
-          fee: 30,
-        },
-      });
-      brktEntry = await prisma.brkt_Entry.upsert({
-        where: {
-          id: "ben_c3826ba58d3f4a7d950101a5674ce595",
-        },
-        update: {
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-          player_id: "ply_a19758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 6,
-          fee: 30,
-        },
-        create: {
-          id: "ben_c3826ba58d3f4a7d950101a5674ce595",
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-          player_id: "ply_a19758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 6,
-          fee: 30,
-        },
-      });
-      brktEntry = await prisma.brkt_Entry.upsert({
-        where: {
-          id: "ben_c3926ba58d3f4a7d950101a5674ce595",
-        },
-        update: {
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-          player_id: "ply_a20758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 2,
-          fee: 10,
-        },
-        create: {
-          id: "ben_c3926ba58d3f4a7d950101a5674ce595",
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-          player_id: "ply_a20758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 2,
-          fee: 10,
-        },
-      });
-      brktEntry = await prisma.brkt_Entry.upsert({
-        where: {
-          id: "ben_c4026ba58d3f4a7d950101a5674ce595",
-        },
-        update: {
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-          player_id: "ply_a20758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 2,
-          fee: 10,
-        },
-        create: {
-          id: "ben_c4026ba58d3f4a7d950101a5674ce595",
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-          player_id: "ply_a20758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 2,
-          fee: 10,
-        },
-      });
+      // brktEntry = await prisma.brkt_Entry.upsert({
+      //   where: {
+      //     id: "ben_c1526ba58d3f4a7d950101a5674ce595",
+      //   },
+      //   update: {
+      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+      //     player_id: "ply_a08758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 9,
+      //     fee: 45,
+      //   },
+      //   create: {
+      //     id: "ben_c1526ba58d3f4a7d950101a5674ce595",
+      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+      //     player_id: "ply_a08758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 9,
+      //     fee: 45,
+      //   },
+      // });
+      // brktEntry = await prisma.brkt_Entry.upsert({
+      //   where: {
+      //     id: "ben_c1626ba58d3f4a7d950101a5674ce595",
+      //   },
+      //   update: {
+      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+      //     player_id: "ply_a08758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 9,
+      //     fee: 45,
+      //   },
+      //   create: {
+      //     id: "ben_c1626ba58d3f4a7d950101a5674ce595",
+      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+      //     player_id: "ply_a08758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 9,
+      //     fee: 45,
+      //   },
+      // });
+      // brktEntry = await prisma.brkt_Entry.upsert({
+      //   where: {
+      //     id: "ben_c1726ba58d3f4a7d950101a5674ce595",
+      //   },
+      //   update: {
+      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+      //     player_id: "ply_a09758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 6,
+      //     fee: 30,
+      //   },
+      //   create: {
+      //     id: "ben_c1726ba58d3f4a7d950101a5674ce595",
+      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+      //     player_id: "ply_a09758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 6,
+      //     fee: 30,
+      //   },
+      // });
+      // brktEntry = await prisma.brkt_Entry.upsert({
+      //   where: {
+      //     id: "ben_c1826ba58d3f4a7d950101a5674ce595",
+      //   },
+      //   update: {
+      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+      //     player_id: "ply_a09758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 6,
+      //     fee: 30,
+      //   },
+      //   create: {
+      //     id: "ben_c1826ba58d3f4a7d950101a5674ce595",
+      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+      //     player_id: "ply_a09758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 6,
+      //     fee: 30,
+      //   },
+      // });
+      // brktEntry = await prisma.brkt_Entry.upsert({
+      //   where: {
+      //     id: "ben_c1926ba58d3f4a7d950101a5674ce595",
+      //   },
+      //   update: {
+      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+      //     player_id: "ply_a10758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 3,
+      //     fee: 15,
+      //   },
+      //   create: {
+      //     id: "ben_c1926ba58d3f4a7d950101a5674ce595",
+      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+      //     player_id: "ply_a10758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 3,
+      //     fee: 15,
+      //   },
+      // });
+      // brktEntry = await prisma.brkt_Entry.upsert({
+      //   where: {
+      //     id: "ben_c2026ba58d3f4a7d950101a5674ce595",
+      //   },
+      //   update: {
+      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+      //     player_id: "ply_a10758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 3,
+      //     fee: 15,
+      //   },
+      //   create: {
+      //     id: "ben_c2026ba58d3f4a7d950101a5674ce595",
+      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+      //     player_id: "ply_a10758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 3,
+      //     fee: 15,
+      //   },
+      // });
+      // brktEntry = await prisma.brkt_Entry.upsert({
+      //   where: {
+      //     id: "ben_c2126ba58d3f4a7d950101a5674ce595",
+      //   },
+      //   update: {
+      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+      //     player_id: "ply_a11758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 10,
+      //     fee: 50,
+      //   },
+      //   create: {
+      //     id: "ben_c2126ba58d3f4a7d950101a5674ce595",
+      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+      //     player_id: "ply_a11758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 10,
+      //     fee: 50,
+      //   },
+      // });
+      // brktEntry = await prisma.brkt_Entry.upsert({
+      //   where: {
+      //     id: "ben_c2226ba58d3f4a7d950101a5674ce595",
+      //   },
+      //   update: {
+      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+      //     player_id: "ply_a11758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 10,
+      //     fee: 50,
+      //   },
+      //   create: {
+      //     id: "ben_c2226ba58d3f4a7d950101a5674ce595",
+      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+      //     player_id: "ply_a11758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 10,
+      //     fee: 50,
+      //   },
+      // });
+      // brktEntry = await prisma.brkt_Entry.upsert({
+      //   where: {
+      //     id: "ben_c2326ba58d3f4a7d950101a5674ce595",
+      //   },
+      //   update: {
+      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+      //     player_id: "ply_a12758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 2,
+      //     fee: 10,
+      //   },
+      //   create: {
+      //     id: "ben_c2326ba58d3f4a7d950101a5674ce595",
+      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+      //     player_id: "ply_a12758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 2,
+      //     fee: 10,
+      //   },
+      // });
+      // brktEntry = await prisma.brkt_Entry.upsert({
+      //   where: {
+      //     id: "ben_c2426ba58d3f4a7d950101a5674ce595",
+      //   },
+      //   update: {
+      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+      //     player_id: "ply_a12758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 2,
+      //     fee: 10,
+      //   },
+      //   create: {
+      //     id: "ben_c2426ba58d3f4a7d950101a5674ce595",
+      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+      //     player_id: "ply_a12758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 2,
+      //     fee: 10,
+      //   },
+      // });
+      // brktEntry = await prisma.brkt_Entry.upsert({
+      //   where: {
+      //     id: "ben_c2526ba58d3f4a7d950101a5674ce595",
+      //   },
+      //   update: {
+      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+      //     player_id: "ply_a13758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 6,
+      //     fee: 30,
+      //   },
+      //   create: {
+      //     id: "ben_c2526ba58d3f4a7d950101a5674ce595",
+      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+      //     player_id: "ply_a13758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 6,
+      //     fee: 30,
+      //   },
+      // });
+      // brktEntry = await prisma.brkt_Entry.upsert({
+      //   where: {
+      //     id: "ben_c2626ba58d3f4a7d950101a5674ce595",
+      //   },
+      //   update: {
+      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+      //     player_id: "ply_a13758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 6,
+      //     fee: 30,
+      //   },
+      //   create: {
+      //     id: "ben_c2626ba58d3f4a7d950101a5674ce595",
+      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+      //     player_id: "ply_a13758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 6,
+      //     fee: 30,
+      //   },
+      // });
+      // brktEntry = await prisma.brkt_Entry.upsert({
+      //   where: {
+      //     id: "ben_c2726ba58d3f4a7d950101a5674ce595",
+      //   },
+      //   update: {
+      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+      //     player_id: "ply_a14758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 9,
+      //     fee: 45,
+      //   },
+      //   create: {
+      //     id: "ben_c2726ba58d3f4a7d950101a5674ce595",
+      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+      //     player_id: "ply_a14758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 9,
+      //     fee: 45,
+      //   },
+      // });
+      // brktEntry = await prisma.brkt_Entry.upsert({
+      //   where: {
+      //     id: "ben_c2826ba58d3f4a7d950101a5674ce595",
+      //   },
+      //   update: {
+      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+      //     player_id: "ply_a14758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 9,
+      //     fee: 45,
+      //   },
+      //   create: {
+      //     id: "ben_c2826ba58d3f4a7d950101a5674ce595",
+      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+      //     player_id: "ply_a14758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 9,
+      //     fee: 45,
+      //   },
+      // });
+      // brktEntry = await prisma.brkt_Entry.upsert({
+      //   where: {
+      //     id: "ben_c2926ba58d3f4a7d950101a5674ce595",
+      //   },
+      //   update: {
+      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+      //     player_id: "ply_a15758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 3,
+      //     fee: 15,
+      //   },
+      //   create: {
+      //     id: "ben_c2926ba58d3f4a7d950101a5674ce595",
+      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+      //     player_id: "ply_a15758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 3,
+      //     fee: 15,
+      //   },
+      // });
+      // brktEntry = await prisma.brkt_Entry.upsert({
+      //   where: {
+      //     id: "ben_c3026ba58d3f4a7d950101a5674ce595",
+      //   },
+      //   update: {
+      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+      //     player_id: "ply_a15758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 3,
+      //     fee: 15,
+      //   },
+      //   create: {
+      //     id: "ben_c3026ba58d3f4a7d950101a5674ce595",
+      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+      //     player_id: "ply_a15758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 3,
+      //     fee: 15,
+      //   },
+      // });
+      // brktEntry = await prisma.brkt_Entry.upsert({
+      //   where: {
+      //     id: "ben_c3126ba58d3f4a7d950101a5674ce595",
+      //   },
+      //   update: {
+      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+      //     player_id: "ply_a16758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 7,
+      //     fee: 35,
+      //   },
+      //   create: {
+      //     id: "ben_c3126ba58d3f4a7d950101a5674ce595",
+      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+      //     player_id: "ply_a16758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 7,
+      //     fee: 35,
+      //   },
+      // });
+      // brktEntry = await prisma.brkt_Entry.upsert({
+      //   where: {
+      //     id: "ben_c3226ba58d3f4a7d950101a5674ce595",
+      //   },
+      //   update: {
+      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+      //     player_id: "ply_a16758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 7,
+      //     fee: 35,
+      //   },
+      //   create: {
+      //     id: "ben_c3226ba58d3f4a7d950101a5674ce595",
+      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+      //     player_id: "ply_a16758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 7,
+      //     fee: 35,
+      //   },
+      // });
+      // brktEntry = await prisma.brkt_Entry.upsert({
+      //   where: {
+      //     id: "ben_c3326ba58d3f4a7d950101a5674ce595",
+      //   },
+      //   update: {
+      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+      //     player_id: "ply_a17758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 4,
+      //     fee: 20,
+      //   },
+      //   create: {
+      //     id: "ben_c3326ba58d3f4a7d950101a5674ce595",
+      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+      //     player_id: "ply_a17758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 4,
+      //     fee: 20,
+      //   },
+      // });
+      // brktEntry = await prisma.brkt_Entry.upsert({
+      //   where: {
+      //     id: "ben_c3426ba58d3f4a7d950101a5674ce595",
+      //   },
+      //   update: {
+      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+      //     player_id: "ply_a17758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 4,
+      //     fee: 20,
+      //   },
+      //   create: {
+      //     id: "ben_c3426ba58d3f4a7d950101a5674ce595",
+      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+      //     player_id: "ply_a17758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 4,
+      //     fee: 20,
+      //   },
+      // });
+      // brktEntry = await prisma.brkt_Entry.upsert({
+      //   where: {
+      //     id: "ben_c3526ba58d3f4a7d950101a5674ce595",
+      //   },
+      //   update: {
+      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+      //     player_id: "ply_a18758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 9,
+      //     fee: 45,
+      //   },
+      //   create: {
+      //     id: "ben_c3526ba58d3f4a7d950101a5674ce595",
+      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+      //     player_id: "ply_a18758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 9,
+      //     fee: 45,
+      //   },
+      // });
+      // brktEntry = await prisma.brkt_Entry.upsert({
+      //   where: {
+      //     id: "ben_c3626ba58d3f4a7d950101a5674ce595",
+      //   },
+      //   update: {
+      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+      //     player_id: "ply_a18758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 9,
+      //     fee: 45,
+      //   },
+      //   create: {
+      //     id: "ben_c3626ba58d3f4a7d950101a5674ce595",
+      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+      //     player_id: "ply_a18758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 9,
+      //     fee: 45,
+      //   },
+      // });
+      // brktEntry = await prisma.brkt_Entry.upsert({
+      //   where: {
+      //     id: "ben_c3726ba58d3f4a7d950101a5674ce595",
+      //   },
+      //   update: {
+      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+      //     player_id: "ply_a19758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 6,
+      //     fee: 30,
+      //   },
+      //   create: {
+      //     id: "ben_c3726ba58d3f4a7d950101a5674ce595",
+      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+      //     player_id: "ply_a19758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 6,
+      //     fee: 30,
+      //   },
+      // });
+      // brktEntry = await prisma.brkt_Entry.upsert({
+      //   where: {
+      //     id: "ben_c3826ba58d3f4a7d950101a5674ce595",
+      //   },
+      //   update: {
+      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+      //     player_id: "ply_a19758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 6,
+      //     fee: 30,
+      //   },
+      //   create: {
+      //     id: "ben_c3826ba58d3f4a7d950101a5674ce595",
+      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+      //     player_id: "ply_a19758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 6,
+      //     fee: 30,
+      //   },
+      // });
+      // brktEntry = await prisma.brkt_Entry.upsert({
+      //   where: {
+      //     id: "ben_c3926ba58d3f4a7d950101a5674ce595",
+      //   },
+      //   update: {
+      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+      //     player_id: "ply_a20758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 2,
+      //     fee: 10,
+      //   },
+      //   create: {
+      //     id: "ben_c3926ba58d3f4a7d950101a5674ce595",
+      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+      //     player_id: "ply_a20758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 2,
+      //     fee: 10,
+      //   },
+      // });
+      // brktEntry = await prisma.brkt_Entry.upsert({
+      //   where: {
+      //     id: "ben_c4026ba58d3f4a7d950101a5674ce595",
+      //   },
+      //   update: {
+      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+      //     player_id: "ply_a20758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 2,
+      //     fee: 10,
+      //   },
+      //   create: {
+      //     id: "ben_c4026ba58d3f4a7d950101a5674ce595",
+      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+      //     player_id: "ply_a20758cff1cc4bab9d9133e661bd49b0",
+      //     num_brackets: 2,
+      //     fee: 10,
+      //   },
+      // });
 
       return 40;
     } catch (error) {

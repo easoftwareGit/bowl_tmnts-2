@@ -39,8 +39,6 @@ interface AddOrDelButtonProps {
   sortOrder: number;
 }
 
-// const defaultTabKey = "event1";
-
 const amountFields = [
   "entry_fee",
   "lineage",

@@ -36,6 +36,7 @@ export const maxHdcpFrom = 300;
 export const zeroAmount = 0;
 export const minFee = 1;
 export const maxMoney = 999999;
+export const maxAverage = 300;
 
 export const minSortOrder = 1;
 export const maxSortOrder = 1000000;

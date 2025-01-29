@@ -1,6 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit'
 import { TypedUseSelectorHook, useSelector } from 'react-redux';
 import allDataOneTmntReducer from './features/allDataOneTmnt/allDataOneTmntSlice';
+import allEntriesOneSquadReducer from './features/allEntriesOneSquad/allEntriesOnSquadSlice';
 import bowlsReducer from './features/bowls/bowlsSlice';
 import tmntsReducer from './features/tmnts/tmntsSlice';
 import tmntYearsReducer from './features/tmnts/yearsSlice';
@@ -11,6 +12,7 @@ import testdatesReducer from './features/testdates/testdatesSlice';
 export const store = configureStore({
   reducer: {
     allDataOneTmnt: allDataOneTmntReducer,
+    allEntriesOneSquad: allEntriesOneSquadReducer,
     bowls: bowlsReducer,    
     tmnts: tmntsReducer,
     tmntYears: tmntYearsReducer,

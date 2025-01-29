@@ -8,6 +8,8 @@ import { fetchOneTmnt, getOneTmntError, getOneTmntLoadStatus } from "@/redux/fea
 import { allDataOneTmntType, tmntActions, tmntFormDataType } from "@/lib/types/types";
 import Link from "next/link";
 
+// http://localhost:3000/dataEntry/runTmnt/tmt_d237a388a8fc4641a2e37233f1d6bebd
+
 export const RunTmntPage = () => { 
 
   const params = useParams();
@@ -28,7 +30,7 @@ export const RunTmntPage = () => {
     curData: dataOneTmnt.curData,
     tmntAction: tmntActions.Run,
   };
-
+ 
   return (
     <>
       {(tmntLoadStatus === 'loading') && <div>Loading...</div>}  
@@ -50,8 +52,11 @@ export const RunTmntPage = () => {
             </div>
             <div className="row g-3 mb-2">
               <div className="col-2">
-                <Link className="btn btn-primary" href="#">
-                  Enter Bowlers
+                <Link
+                  className="btn btn-primary"
+                  href={`/dataEntry/editPlayers/${tmntId}`}
+                >
+                  Edit Bowlers
                 </Link>
               </div> 
               <div className="col-2">

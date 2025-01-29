@@ -17,7 +17,8 @@ import {
   removeTimeFromISODateStr,
   valid_yyyyMMdd,
   yyyyMMdd_To_ddMMyyyy,
-  ymdType,  
+  ymdType,
+  dateStringToTimeStamp,  
 } from "@/lib/dateTools";
 import { addDays, addMinutes, compareAsc, startOfToday } from "date-fns";
 
@@ -707,4 +708,77 @@ describe("tests for dateTools", () => {
       expect(result).toBe(-1)
     })
   })
+
+  describe('dateStringToTimeStamp', () => {
+
+    it('should convert ISO date string to Unix timestamp number when given valid date', () => {
+      const isoDateString = '2023-12-25T10:30:00.000Z';
+      const expectedTimestamp = new Date('2023-12-25T10:30:00.000Z').getTime();
+      const result = dateStringToTimeStamp(isoDateString);
+      expect(result).toBe(expectedTimestamp);
+    });
+    it('should return NaN when given invalid date string format', () => {
+      const invalidDateString = 'not-a-date';
+      const result = dateStringToTimeStamp(invalidDateString);
+      expect(result).toBeNaN();
+    });
+    it('should convert ISO date string with timezone offset to Unix timestamp number', () => {
+      const isoDateStringWithOffset = '2023-12-25T10:30:00.000+02:00';
+      const expectedTimestamp = new Date('2023-12-25T08:30:00.000Z').getTime();
+      const result = dateStringToTimeStamp(isoDateStringWithOffset);
+      expect(result).toBe(expectedTimestamp);
+    });
+    it('should convert UTC ISO date string to Unix timestamp number when given valid date', () => {
+      const utcIsoDateString = '2023-12-25T10:30:00.000Z';
+      const expectedTimestamp = new Date('2023-12-25T10:30:00.000Z').getTime();
+      const result = dateStringToTimeStamp(utcIsoDateString);
+      expect(result).toBe(expectedTimestamp);
+    });
+    it('should convert date string with time components to Unix timestamp number', () => {
+      const dateString = '2023-12-25T15:45:30.000Z';
+      const expectedTimestamp = new Date('2023-12-25T15:45:30.000Z').getTime();
+      const result = dateStringToTimeStamp(dateString);
+      expect(result).toBe(expectedTimestamp);
+    });
+    it('should convert ISO date string from different years to Unix timestamp number', () => {
+      const isoDateString = '1999-01-01T00:00:00.000Z';
+      const expectedTimestamp = new Date('1999-01-01T00:00:00.000Z').getTime();
+      const result = dateStringToTimeStamp(isoDateString);
+      expect(result).toBe(expectedTimestamp);
+    });
+    it('should return NaN when given an empty string', () => {
+      const emptyString = '';
+      const result = dateStringToTimeStamp(emptyString);
+      expect(result).toBeNaN();
+    });
+    it('should return NaN when input is null or undefined', () => {
+      const resultNull = dateStringToTimeStamp(null as any);
+      const resultUndefined = dateStringToTimeStamp(undefined as any);
+      expect(resultNull).toBeNaN();
+      expect(resultUndefined).toBeNaN();
+    });
+    it('should return NaN when input is not a string', () => {
+      const nonStringInput = 12345;
+      const result = dateStringToTimeStamp(nonStringInput as any);
+      expect(result).toBeNaN();
+    });
+    it('should return NaN when given a malformed ISO date string', () => {
+      const malformedIsoDateString = '2023-13-40T25:61:00.000Z';
+      const result = dateStringToTimeStamp(malformedIsoDateString);
+      expect(result).toBeNaN();
+    });
+    it('should return negative timestamp for dates before 1970', () => {
+      const isoDateString = '1965-12-25T10:30:00.000Z';
+      const expectedTimestamp = new Date('1965-12-25T10:30:00.000Z').getTime();
+      const result = dateStringToTimeStamp(isoDateString);
+      expect(result).toBe(expectedTimestamp);
+    });
+    it('should correctly handle daylight savings time transition', () => {
+      const isoDateString = '2023-03-12T02:30:00.000Z'; // Date during DST transition
+      const expectedTimestamp = new Date('2023-03-12T02:30:00.000Z').getTime();
+      const result = dateStringToTimeStamp(isoDateString);
+      expect(result).toBe(expectedTimestamp);
+    });
+  });
+
 });

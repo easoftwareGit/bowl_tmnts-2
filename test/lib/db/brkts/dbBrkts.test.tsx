@@ -3,7 +3,7 @@ import { baseBrktsApi } from "@/lib/db/apiPaths";
 import { testBaseBrktsApi } from "../../../testApi";
 import { brktType } from "@/lib/types/types";
 import { initBrkt } from "@/lib/db/initVals";
-import { mockBrktsToPost, mockSquadsToPost, tmntToDelId, mockDivs } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
+import { mockBrktsToPost, mockSquadsToPost, tmntToDelId, mockDivs, mockDivsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { deleteAllDivBrkts, deleteAllSquadBrkts, deleteAllTmntBrkts, deleteBrkt, getAllBrktsForTmnt, postBrkt, postManyBrkts, putBrkt } from "@/lib/db/brkts/dbBrkts";
 import { deleteAllTmntSquads, deleteSquad, postManySquads, postSquad } from "@/lib/db/squads/dbSquads";
 import { deleteAllTmntDivs, deleteDiv, postDiv, postManyDivs } from "@/lib/db/divs/dbDivs";
@@ -227,7 +227,7 @@ describe('brktsAxios', () => {
       await deleteAllTmntDivs(tmntToDelId);
 
       // make sure test squads in database
-      await postManyDivs(mockDivs);
+      await postManyDivs(mockDivsToPost);
       await postManySquads(mockSquadsToPost);       
     })
 
@@ -481,9 +481,9 @@ describe('brktsAxios', () => {
       // cleanup before tests
       await deleteAllSquadBrkts(multiBrkts[0].squad_id);
       await deleteSquad(mockSquadsToPost[0].id);
-      await deleteDiv(mockDivs[0].id);
+      await deleteDiv(mockDivsToPost[0].id);
       // setup for tests
-      await postDiv(mockDivs[0]);
+      await postDiv(mockDivsToPost[0]);
       await postSquad(mockSquadsToPost[0])
       await rePostToDel();
     });
@@ -501,7 +501,7 @@ describe('brktsAxios', () => {
     afterAll(async () => {
       await deleteAllSquadBrkts(multiBrkts[0].squad_id);
       await deleteSquad(mockSquadsToPost[0].id);
-      await deleteDiv(mockDivs[0].id);
+      await deleteDiv(mockDivsToPost[0].id);
     });
 
     it('should delete all brkts for a squad', async () => {
@@ -557,9 +557,9 @@ describe('brktsAxios', () => {
       // cleanup before tests
       await deleteAllSquadBrkts(multiBrkts[0].squad_id);
       await deleteSquad(mockSquadsToPost[0].id);
-      await deleteDiv(mockDivs[0].id);
+      await deleteDiv(mockDivsToPost[0].id);
       // setup for tests
-      await postDiv(mockDivs[0]);
+      await postDiv(mockDivsToPost[0]);
       await postSquad(mockSquadsToPost[0])
       await rePostToDel();
     });
@@ -577,7 +577,7 @@ describe('brktsAxios', () => {
     afterAll(async () => {
       await deleteAllSquadBrkts(multiBrkts[0].squad_id);
       await deleteSquad(mockSquadsToPost[0].id);
-      await deleteDiv(mockDivs[0].id);
+      await deleteDiv(mockDivsToPost[0].id);
     });
 
     it('should delete all brkts for a div', async () => {
@@ -602,7 +602,7 @@ describe('brktsAxios', () => {
 
   describe('deleteAllTmntBrkts', () => { 
 
-    const toDelDivs = [...mockDivs]
+    const toDelDivs = [...mockDivsToPost]
     const toDelSquads = [...mockSquadsToPost]
     const toDelBrkts = [...mockBrktsToPost]
 

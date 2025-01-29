@@ -7,7 +7,6 @@ import { deleteAllDivElims, deleteAllSquadElims, postManyElims } from "@/lib/db/
 import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/dbSquads";
 import { deleteAllTmntDivs, postManyDivs } from "@/lib/db/divs/dbDivs";
 import { mockElimsToPost, mockSquadsToPost, mockDivsToPost, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { mock } from "node:test";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database

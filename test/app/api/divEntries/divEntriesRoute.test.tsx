@@ -1,11 +1,12 @@
 import axios, { AxiosError } from "axios";
 import { baseDivEntriesApi } from "@/lib/db/apiPaths";
 import { testBaseDivEntriesApi } from "../../../testApi";
-import { initDivEntry } from "@/lib/db/initVals";
-import { divEntryType } from "@/lib/types/types";
+import { initDiv, initDivEntry } from "@/lib/db/initVals";
+import { divEntryType, HdcpForTypes } from "@/lib/types/types";
 import { mockDivEntriesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { deleteAllDivEntriesForDiv, deleteAllDivEntriesForSquad, deleteAllDivEntriesForTmnt, postManyDivEntries } from "@/lib/db/divEntries/dbDivEntries";
 import { cloneDeep } from "lodash";
+import { putDiv } from "@/lib/db/divs/dbDivs";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -39,7 +40,20 @@ describe("DivEntries - API's: /api/divEntries", () => {
     squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
     div_id: 'div_f30aea2c534f4cfe87f4315531cef8ef',
     player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
-    fee: '80'
+    fee: '80',    
+    hdcp: 0,
+  }
+
+  const div = {
+    ...initDiv,
+    id: "div_f30aea2c534f4cfe87f4315531cef8ef",
+    tmnt_id: "tmt_fd99387c33d9c78aba290286576ddce5",
+    div_name: "Scratch",
+    hdcp_per: 0,
+    hdcp_from: 230,
+    int_hdcp: true,
+    hdcp_for: "Game" as HdcpForTypes,
+    sort_order: 1,
   }
 
   const tmntIdForMulti = 'tmt_fe8ac53dad0f400abe6354210a8f4cd1';
@@ -87,202 +101,410 @@ describe("DivEntries - API's: /api/divEntries", () => {
 
   describe('GET one divEntry API: /api/divEntries/divEntry/:id', () => { 
 
-    it('should get one divEntry by ID', async () => {
-      try {
-        const urlToUse = oneDivEntryUrl + testDivEntry.id;
-        const response = await axios.get(urlToUse);
-        expect(response.status).toBe(200);        
-        const divEntry = response.data.divEntry;
-        expect(divEntry.id).toEqual(testDivEntry.id);
-        expect(divEntry.squad_id).toEqual(testDivEntry.squad_id);
-        expect(divEntry.div_id).toEqual(testDivEntry.div_id);
-        expect(divEntry.player_id).toEqual(testDivEntry.player_id);
-        expect(divEntry.fee).toEqual(testDivEntry.fee);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
+    describe('GET one divEntry by ID sucess with different div data', () => { 
+
+      beforeAll(async () => {
+        await deletePostedDivEntry();
+        await putDiv(div);
+      })
+
+      afterEach(async () => {
+        await putDiv(div);
+      })
+
+      it('should get one divEntry by ID', async () => {
+        try {
+          const urlToUse = oneDivEntryUrl + testDivEntry.id;
+          const response = await axios.get(urlToUse);
+          expect(response.status).toBe(200);        
+          const divEntry = response.data.divEntry;
+          expect(divEntry.id).toEqual(testDivEntry.id);
+          expect(divEntry.squad_id).toEqual(testDivEntry.squad_id);
+          expect(divEntry.div_id).toEqual(testDivEntry.div_id);
+          expect(divEntry.player_id).toEqual(testDivEntry.player_id);
+          expect(divEntry.fee + '').toEqual(testDivEntry.fee);
+          expect(divEntry.hdcp).toEqual(testDivEntry.hdcp);
+        } catch (err) {
+          if (err instanceof AxiosError) {
+            expect(err.response?.status).toBe(404);
+          } else {
+            expect(true).toBeFalsy();
+          }
         }
-      }
+      })      
+      it('should get one divEntry by ID when div hdcp is not 0', async () => {
+        try {
+          const hdcpDiv = {
+            ...div,
+            hdcp_per: 0.85,
+          }
+          await putDiv(hdcpDiv);
+
+          const urlToUse = oneDivEntryUrl + testDivEntry.id;
+          const response = await axios.get(urlToUse);
+          expect(response.status).toBe(200);        
+          const divEntry = response.data.divEntry;
+          expect(divEntry.id).toEqual(testDivEntry.id);
+          expect(divEntry.hdcp).toEqual(8);
+        } catch (err) {
+          if (err instanceof AxiosError) {
+            expect(err.response?.status).toBe(404);
+          } else {
+            expect(true).toBeFalsy();
+          }
+        }        
+      })
+      it('should get one divEntry by ID when div hdcp is not 0 and hdcp is int_hdcp is false', async () => {
+        try {
+          const hdcpDiv = {
+            ...div,
+            hdcp_per: 0.85,
+            int_hdcp: false,
+          }
+          await putDiv(hdcpDiv);
+
+          const urlToUse = oneDivEntryUrl + testDivEntry.id;
+          const response = await axios.get(urlToUse);
+          expect(response.status).toBe(200);        
+          const divEntry = response.data.divEntry;
+          expect(divEntry.id).toEqual(testDivEntry.id);
+          expect(divEntry.hdcp).toEqual(8.5);
+        } catch (err) {
+          if (err instanceof AxiosError) {
+            expect(err.response?.status).toBe(404);
+          } else {
+            expect(true).toBeFalsy();
+          }
+        }        
+      })      
     })
-    it('should not get one divEntry by ID when id is invalid', async () => {
-      try {
-        const response = await axios.get(oneDivEntryUrl + 'test');
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
+
+    describe('GET one divEntry by ID failures', () => { 
+      it('should not get one divEntry by ID when id is invalid', async () => {
+        try {
+          const response = await axios.get(oneDivEntryUrl + 'test');
+          expect(response.status).toBe(404);
+        } catch (err) {
+          if (err instanceof AxiosError) {
+            expect(err.response?.status).toBe(404);
+          } else {
+            expect(true).toBeFalsy();
+          }
         }
-      }
-    })
-    it('should not get one divEntry by ID when id is valid, but not a divEntry id', async () => {
-      try {
-        const response = await axios.get(oneDivEntryUrl + userId);
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
+      })
+      it('should not get one divEntry by ID when id is valid, but not a divEntry id', async () => {
+        try {
+          const response = await axios.get(oneDivEntryUrl + userId);
+          expect(response.status).toBe(404);
+        } catch (err) {
+          if (err instanceof AxiosError) {
+            expect(err.response?.status).toBe(404);
+          } else {
+            expect(true).toBeFalsy();
+          }
         }
-      }
-    })
-    it('should not get one divEntry by ID when id is not found', async () => {
-      try {
-        const response = await axios.get(oneDivEntryUrl + notFoundId);
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
+      })
+      it('should not get one divEntry by ID when id is not found', async () => {
+        try {
+          const response = await axios.get(oneDivEntryUrl + notFoundId);
+          expect(response.status).toBe(404);
+        } catch (err) {
+          if (err instanceof AxiosError) {
+            expect(err.response?.status).toBe(404);
+          } else {
+            expect(true).toBeFalsy();
+          }
         }
-      }
+      })
     })
+
   })
 
   describe('GET all divEntries for one div API: /api/divEntries/div/:divId', () => { 
 
-    beforeAll(async () => {
-      await deletePostedDivEntry();
+    describe('GET all divEntries for one div success', () => { 
+      beforeAll(async () => {
+        await deletePostedDivEntry();
+        await putDiv(div);
+      })
+
+      afterEach(async () => {
+        await putDiv(div);
+      })
+
+      it('should get all divEntries for one div', async () => { 
+        const response = await axios.get(divUrl + testDivEntry.div_id);
+        expect(response.status).toBe(200);        
+        const divEntries = response.data.divEntries;
+        expect(divEntries).toHaveLength(4); // 4 divEntries for div in prisma/seeds.ts
+        for (let i = 0; i < divEntries.length; i++) {
+          expect(divEntries[i].div_id).toEqual(testDivEntry.div_id);
+        }      
+      })
+      it('should get all divEntries for one div when div hdcp is 0', async () => {
+        const response = await axios.get(divUrl + testDivEntry.div_id);
+        expect(response.status).toBe(200);        
+        const divEntries = response.data.divEntries;
+        expect(divEntries).toHaveLength(4); // 4 divEntries for div in prisma/seeds.ts
+        // get the only divEntry for testDivEntry
+        const onePlayerDivEntry = divEntries.filter((divEntry: divEntryType) => divEntry.player_id === testDivEntry.player_id)[0];
+        expect(onePlayerDivEntry.hdcp).toEqual(0);
+      })
+      it('should get all divEntries for one div when div hdcp is not 0', async () => {
+        const hdcpDiv = {
+          ...div,
+          hdcp_per: 0.85,
+        }
+        await putDiv(hdcpDiv);
+        const response = await axios.get(divUrl + testDivEntry.div_id);
+        expect(response.status).toBe(200);        
+        const divEntries = response.data.divEntries;
+        expect(divEntries).toHaveLength(4); // 4 divEntries for div in prisma/seeds.ts
+        // get the only divEntry for testDivEntry
+        const onePlayerDivEntry = divEntries.filter((divEntry: divEntryType) => divEntry.player_id === testDivEntry.player_id)[0];
+        expect(onePlayerDivEntry.hdcp).toEqual(8);
+      })
+      it('should get all divEntries for one div when div hdcp is not 0 and hdcp is int_hdcp is false', async () => {
+        const hdcpDiv = {
+          ...div,
+          hdcp_per: 0.85,
+          int_hdcp: false,
+        }
+        await putDiv(hdcpDiv);
+        const response = await axios.get(divUrl + testDivEntry.div_id);
+        expect(response.status).toBe(200);        
+        const divEntries = response.data.divEntries;
+        expect(divEntries).toHaveLength(4); // 4 divEntries for div in prisma/seeds.ts
+        // get the only divEntry for testDivEntry
+        const onePlayerDivEntry = divEntries.filter((divEntry: divEntryType) => divEntry.player_id === testDivEntry.player_id)[0];
+        expect(onePlayerDivEntry.hdcp).toEqual(8.5);
+      })
+      it('should not get all divEntries for one div when divId is not found', async () => {
+        const response = await axios.get(divUrl + notFoundDivId);
+        expect(response.status).toBe(200);
+        const divEntries = response.data.divEntries;
+        expect(divEntries).toHaveLength(0);
+      })          
     })
 
-    it('should get all divEntries for one div', async () => { 
-      const response = await axios.get(divUrl + testDivEntry.div_id);
-      expect(response.status).toBe(200);        
-      const divEntries = response.data.divEntries;
-      expect(divEntries).toHaveLength(4); // 4 divEntries for div in prisma/seeds.ts
-      for (let i = 0; i < divEntries.length; i++) {
-        expect(divEntries[i].div_id).toEqual(testDivEntry.div_id);
-      }      
+    describe('GET all divEntries for one div failures', () => { 
+      // it('should not get all divEntries for one div when divId is invalid', async () => {
+      //   try {
+      //     const response = await axios.get(divUrl + 'test');
+      //     expect(response.status).toBe(404);
+      //   } catch (err) {
+      //     if (err instanceof AxiosError) {
+      //       expect(err.response?.status).toBe(404);
+      //     } else {
+      //       expect(true).toBeFalsy();
+      //     }
+      //   }
+      // })
+      // it('should not get all divEntries for one div when divId is valid, but not a div id', async () => {
+      //   try {
+      //     const response = await axios.get(divUrl + userId);
+      //     expect(response.status).toBe(404);
+      //   } catch (err) {
+      //     if (err instanceof AxiosError) {
+      //       expect(err.response?.status).toBe(404);
+      //     } else {
+      //       expect(true).toBeFalsy();
+      //     }
+      //   }
+      // })
     })
-    it('should not get all divEntries for one div when divId is invalid', async () => {
-      try {
-        const response = await axios.get(divUrl + 'test');
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not get all divEntries for one div when divId is valid, but not a div id', async () => {
-      try {
-        const response = await axios.get(divUrl + userId);
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not get all divEntries for one div when divId is not found', async () => {
-      const response = await axios.get(divUrl + notFoundDivId);
-      expect(response.status).toBe(200);
-      const divEntries = response.data.divEntries;
-      expect(divEntries).toHaveLength(0);
-    })    
   })
 
   describe('GET all divEntries for one squad API: /api/divEntries/squad/:squadId', () => { 
 
-    beforeAll(async () => {
-      await deletePostedDivEntry();
+    describe('GET all divEntries for one squad success', () => { 
+      beforeAll(async () => {
+        await deletePostedDivEntry();
+        await putDiv(div);
+      })
+
+      afterEach(async () => {
+        await putDiv(div);
+      })
+
+      it('should get all divEntries for one squad', async () => { 
+        const response = await axios.get(squadUrl + squadIdForDivEntries);
+        expect(response.status).toBe(200);        
+        const divEntries = response.data.divEntries;
+        expect(divEntries).toHaveLength(4); // 4 divEntries for squad is prisma/seeds.ts
+        for (let i = 0; i < divEntries.length; i++) {
+          expect(divEntries[i].div_id).toEqual(testDivEntry.div_id);
+        }      
+      })
+      it('should get all divEntries for one squad when div hdcp is 0', async () => {
+        const response = await axios.get(squadUrl + squadIdForDivEntries);
+        expect(response.status).toBe(200);        
+        const divEntries = response.data.divEntries;
+        expect(divEntries).toHaveLength(4); // 4 divEntries for div in prisma/seeds.ts
+        // get the only divEntry for testDivEntry
+        const onePlayerDivEntry = divEntries.filter((divEntry: divEntryType) => divEntry.player_id === testDivEntry.player_id)[0];
+        expect(onePlayerDivEntry.hdcp).toEqual(0);
+      })
+      it('should get all divEntries for one squad when div hdcp is not 0', async () => {
+        const hdcpDiv = {
+          ...div,
+          hdcp_per: 0.85,
+        }
+        await putDiv(hdcpDiv);
+        const response = await axios.get(squadUrl + squadIdForDivEntries);
+        expect(response.status).toBe(200);        
+        const divEntries = response.data.divEntries;
+        expect(divEntries).toHaveLength(4); // 4 divEntries for div in prisma/seeds.ts
+        // get the only divEntry for testDivEntry
+        const onePlayerDivEntry = divEntries.filter((divEntry: divEntryType) => divEntry.player_id === testDivEntry.player_id)[0];
+        expect(onePlayerDivEntry.hdcp).toEqual(8);
+      })
+      it('should get all divEntries for one squad when div hdcp is not 0 and hdcp is int_hdcp is false', async () => {
+        const hdcpDiv = {
+          ...div,
+          hdcp_per: 0.85,
+          int_hdcp: false,
+        }
+        await putDiv(hdcpDiv);
+        const response = await axios.get(squadUrl + squadIdForDivEntries);
+        expect(response.status).toBe(200);        
+        const divEntries = response.data.divEntries;
+        expect(divEntries).toHaveLength(4); // 4 divEntries for div in prisma/seeds.ts
+        // get the only divEntry for testDivEntry
+        const onePlayerDivEntry = divEntries.filter((divEntry: divEntryType) => divEntry.player_id === testDivEntry.player_id)[0];
+        expect(onePlayerDivEntry.hdcp).toEqual(8.5);
+      })
+      it('should not get all divEntries for one squad when squadId is not found', async () => {
+        const response = await axios.get(squadUrl + notFoundSquadId);
+        expect(response.status).toBe(200);
+        const divEntries = response.data.divEntries;
+        expect(divEntries).toHaveLength(0);
+      })          
     })
 
-    it('should get all divEntries for one squad', async () => { 
-      const response = await axios.get(squadUrl + squadIdForDivEntries);
-      expect(response.status).toBe(200);        
-      const divEntries = response.data.divEntries;
-      expect(divEntries).toHaveLength(4); // 4 divEntries for squad is prisma/seeds.ts
-      for (let i = 0; i < divEntries.length; i++) {
-        expect(divEntries[i].div_id).toEqual(testDivEntry.div_id);
-      }      
-    })
-    it('should not get all divEntries for one squad when squadId is invalid', async () => {
-      try {
-        const response = await axios.get(squadUrl + 'test');
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
+    describe('GET all divEntries for one squad failures', () => { 
+      it('should not get all divEntries for one squad when squadId is invalid', async () => {
+        try {
+          const response = await axios.get(squadUrl + 'test');
+          expect(response.status).toBe(404);
+        } catch (err) {
+          if (err instanceof AxiosError) {
+            expect(err.response?.status).toBe(404);
+          } else {
+            expect(true).toBeFalsy();
+          }
         }
-      }
-    })
-    it('should not get all divEntries for one squad when squadId is valid, but not a div id', async () => {
-      try {
-        const response = await axios.get(squadUrl + userId);
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
+      })
+      it('should not get all divEntries for one squad when squadId is valid, but not a div id', async () => {
+        try {
+          const response = await axios.get(squadUrl + userId);
+          expect(response.status).toBe(404);
+        } catch (err) {
+          if (err instanceof AxiosError) {
+            expect(err.response?.status).toBe(404);
+          } else {
+            expect(true).toBeFalsy();
+          }
         }
-      }
+      })
     })
-    it('should not get all divEntries for one squad when squadId is not found', async () => {
-      const response = await axios.get(squadUrl + notFoundSquadId);
-      expect(response.status).toBe(200);
-      const divEntries = response.data.divEntries;
-      expect(divEntries).toHaveLength(0);
-    })    
   })
 
   describe('GET all divEntries for one tmnt API: /api/divEntries/tmnt/:tmntId', () => { 
 
-    beforeAll(async () => {
-      await deletePostedDivEntry();
+    describe('GET all divEntries for one tmnt success', () => { 
+
+      beforeAll(async () => {
+        await deletePostedDivEntry();
+        await putDiv(div);
+      })
+
+      afterEach(async () => {
+        await putDiv(div);
+      })
+
+      it('should get all divEntries for one tmnt', async () => { 
+        const response = await axios.get(tmntUrl + tmntIdForDivEntries);
+        expect(response.status).toBe(200);        
+        const divEntries = response.data.divEntries;
+        expect(divEntries).toHaveLength(4); // 4 divEntries for tmnt is prisma/seeds.ts
+        for (let i = 0; i < divEntries.length; i++) {
+          expect(divEntries[i].div_id).toEqual(testDivEntry.div_id);
+        }      
+      })
+
+      it('should get all divEntries for one tmnt when div hdcp is 0', async () => {        
+        const response = await axios.get(tmntUrl + tmntIdForDivEntries);
+        expect(response.status).toBe(200);        
+        const divEntries = response.data.divEntries;
+        expect(divEntries).toHaveLength(4); // 4 divEntries for div in prisma/seeds.ts
+        // get the only divEntry for testDivEntry
+        const onePlayerDivEntry = divEntries.filter((divEntry: divEntryType) => divEntry.player_id === testDivEntry.player_id)[0];
+        expect(onePlayerDivEntry.hdcp).toEqual(0);
+      })
+      it('should get all divEntries for one tmnt when div hdcp is not 0', async () => {
+        const hdcpDiv = {
+          ...div,
+          hdcp_per: 0.85,
+        }
+        await putDiv(hdcpDiv);        
+        const response = await axios.get(tmntUrl + tmntIdForDivEntries);
+        expect(response.status).toBe(200);        
+        const divEntries = response.data.divEntries;
+        expect(divEntries).toHaveLength(4); // 4 divEntries for div in prisma/seeds.ts
+        // get the only divEntry for testDivEntry
+        const onePlayerDivEntry = divEntries.filter((divEntry: divEntryType) => divEntry.player_id === testDivEntry.player_id)[0];
+        expect(onePlayerDivEntry.hdcp).toEqual(8);
+      })
+      it('should get all divEntries for one tmnt when div hdcp is not 0 and hdcp is int_hdcp is false', async () => {
+        const hdcpDiv = {
+          ...div,
+          hdcp_per: 0.85,
+          int_hdcp: false,
+        }
+        await putDiv(hdcpDiv);
+        const response = await axios.get(tmntUrl + tmntIdForDivEntries);        
+        expect(response.status).toBe(200);        
+        const divEntries = response.data.divEntries;
+        expect(divEntries).toHaveLength(4); // 4 divEntries for div in prisma/seeds.ts
+        // get the only divEntry for testDivEntry
+        const onePlayerDivEntry = divEntries.filter((divEntry: divEntryType) => divEntry.player_id === testDivEntry.player_id)[0];
+        expect(onePlayerDivEntry.hdcp).toEqual(8.5);
+      })
+      it('should not get all divEntries for one tmnt when tmntId is not found', async () => {        
+        const response = await axios.get(tmntUrl + notFoundTmntId);
+        expect(response.status).toBe(200);
+        const divEntries = response.data.divEntries;
+        expect(divEntries).toHaveLength(0);
+      })          
     })
 
-    it('should get all divEntries for one tmnt', async () => { 
-      const response = await axios.get(tmntUrl + tmntIdForDivEntries);
-      expect(response.status).toBe(200);        
-      const divEntries = response.data.divEntries;
-      expect(divEntries).toHaveLength(4); // 4 divEntries for tmnt is prisma/seeds.ts
-      for (let i = 0; i < divEntries.length; i++) {
-        expect(divEntries[i].div_id).toEqual(testDivEntry.div_id);
-      }      
-    })
-    it('should not get all divEntries for one tmnt when tmntId is invalid', async () => {
-      try {
-        const response = await axios.get(tmntUrl + 'test');
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
+    describe('GET all divEntries for one tmnt failures', () => { 
+      it('should not get all divEntries for one tmnt when tmntId is invalid', async () => {
+        try {
+          const response = await axios.get(tmntUrl + 'test');
+          expect(response.status).toBe(404);
+        } catch (err) {
+          if (err instanceof AxiosError) {
+            expect(err.response?.status).toBe(404);
+          } else {
+            expect(true).toBeFalsy();
+          }
         }
-      }
-    })
-    it('should not get all divEntries for one tmnt when tmntId is valid, but not a div id', async () => {
-      try {
-        const response = await axios.get(tmntUrl + userId);
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
+      })
+      it('should not get all divEntries for one tmnt when tmntId is valid, but not a div id', async () => {
+        try {
+          const response = await axios.get(tmntUrl + userId);
+          expect(response.status).toBe(404);
+        } catch (err) {
+          if (err instanceof AxiosError) {
+            expect(err.response?.status).toBe(404);
+          } else {
+            expect(true).toBeFalsy();
+          }
         }
-      }
+      })
     })
-    it('should not get all divEntries for one tmnt when tmntId is not found', async () => {
-      const response = await axios.get(tmntUrl + notFoundTmntId);
-      expect(response.status).toBe(200);
-      const divEntries = response.data.divEntries;
-      expect(divEntries).toHaveLength(0);
-    })    
   })
 
   describe('POST one divEntry API: /api/divEntries', () => { 
@@ -1043,93 +1265,534 @@ describe("DivEntries - API's: /api/divEntries", () => {
     })
   })
 
-  describe('PUT one divEntry API: /api/divEntries/divEntry/:id', () => { 
+  describe('PUT many divEntries - API: /api/divEntries/many', () => { 
 
-    const resetDivEntry = async () => {
-      // make sure test player is reset in database
-      const divEntryJSON = JSON.stringify(testDivEntry);
-      const putResponse = await axios({
-        method: "put",
-        data: divEntryJSON,
-        withCredentials: true,
-        url: oneDivEntryUrl + testDivEntry.id,
-      })
-    }
+    let createdDivEntries = false;
 
-    const putDivEntry = {
-      ...testDivEntry,
-      squad_id: 'sqd_1a6c885ee19a49489960389193e8f819',
-      div_id: 'div_99a3cae28786485bb7a036935f0f6a0a',
-      player_id: 'ply_8b0fd8bbd9e34d34a7fa90b4111c6e40',
-      fee: '83'
-    }
-
-    let didPut = false;
+    const divEntriesToDelTmntId = 'tmt_fe8ac53dad0f400abe6354210a8f4cd1';
 
     beforeAll(async () => {
-      await resetDivEntry()
+      await deleteAllDivEntriesForTmnt(divEntriesToDelTmntId);
     })
 
     beforeEach(() => {
-      didPut = false;
+      createdDivEntries = false;
     })
 
     afterEach(async () => {
-      if (didPut) {        
-        await resetDivEntry()
+      if (createdDivEntries) {
+        await deleteAllDivEntriesForTmnt(divEntriesToDelTmntId);
       }      
     })
 
-    it('should update a divEntry by ID', async () => {
-      const divEntryJSON = JSON.stringify(putDivEntry);
+    const mockMultiDivEntriesToPost: divEntryType[] = [
+      {
+        ...mockDivEntriesToPost[0],
+      },
+      {
+        ...mockDivEntriesToPost[1],
+      },
+      {
+        ...mockDivEntriesToPost[2],
+      },
+      {
+        ...mockDivEntriesToPost[3],
+      },
+      {
+        ...initDivEntry,
+        id: "den_05be0472be3d476ea1caa99dd05953fa",
+        squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
+        div_id:'div_24b1cd5dee0542038a1244fc2978e862',
+        player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+        fee: '64',
+      },
+      {
+        ...initDivEntry,
+        id: "den_06be0472be3d476ea1caa99dd05953fa",
+        squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
+        div_id:'div_24b1cd5dee0542038a1244fc2978e862',
+        player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+        fee: '64',
+      },
+      {
+        ...initDivEntry,
+        id: "den_07be0472be3d476ea1caa99dd05953fa",
+        squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
+        div_id:'div_24b1cd5dee0542038a1244fc2978e862',
+        player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+        fee: '64',
+      },
+      {
+        ...initDivEntry,
+        id: "den_08be0472be3d476ea1caa99dd05953fa",
+        squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
+        div_id:'div_24b1cd5dee0542038a1244fc2978e862',
+        player_id: 'ply_8b0fd8bbd9e34d34a7fa90b4111c6e40',
+        fee: '64',
+      },
+    ]
+
+    it('should update many divEntries - just update 1 player 2 div entry', async () => {
+      const divEntryJSON = JSON.stringify(mockMultiDivEntriesToPost);
       const response = await axios({
-        method: "put",
+        method: "post",
         data: divEntryJSON,
         withCredentials: true,
-        url: oneDivEntryUrl + testDivEntry.id,
-      });
-      expect(response.status).toBe(200);
-      didPut = true;
-      const puttedDivEntry = response.data.divEntry;
-      // did not update squad_id
-      expect(puttedDivEntry.squad_id).toBe(putDivEntry.squad_id);
-      expect(puttedDivEntry.div_id).toBe(putDivEntry.div_id);
-      expect(puttedDivEntry.player_id).toBe(putDivEntry.player_id);
-      expect(puttedDivEntry.fee).toBe(putDivEntry.fee);
-    })
-    it('should update a sanitized divEntry by ID', async () => { 
-      const toSanitize = {
-        ...putDivEntry,
-        fee: '83.000',
-      }
-      const divEntryJSON = JSON.stringify(toSanitize);
-      const response = await axios({
+        url: manyUrl,        
+      })
+      const postedDivEntries = response.data.divEntries;
+      expect(response.status).toBe(201);
+      createdDivEntries = true;
+      expect(postedDivEntries).not.toBeNull();
+      expect(postedDivEntries.length).toBe(mockMultiDivEntriesToPost.length);
+      
+      // change fee 
+      // change average, add eType = 'u'
+      const divEntriesToUpdate = [
+        {
+          ...mockMultiDivEntriesToPost[0],
+          fee: '83',
+          eType: "u",
+        },
+        {
+          ...mockMultiDivEntriesToPost[4],
+          fee: '63',
+          eType: "u",
+        },
+      ]
+      const toUpdateJSON = JSON.stringify(divEntriesToUpdate) 
+      const updateResponse = await axios({
         method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.updates).toBe(2);
+      expect(updateInfo.inserts).toBe(0);
+      expect(updateInfo.deletes).toBe(0);
+    })
+    it('should update many divEntries - just update 2 player 1 div entry', async () => {
+      const divEntryJSON = JSON.stringify(mockMultiDivEntriesToPost);
+      const response = await axios({
+        method: "post",
         data: divEntryJSON,
         withCredentials: true,
-        url: oneDivEntryUrl + testDivEntry.id,
-      });
-      expect(response.status).toBe(200);
-      didPut = true;
-      const puttedDivEntry = response.data.divEntry;
-      expect(puttedDivEntry.squad_id).toBe(putDivEntry.squad_id);
-      expect(puttedDivEntry.div_id).toBe(putDivEntry.div_id);
-      expect(puttedDivEntry.player_id).toBe(putDivEntry.player_id);
-      expect(puttedDivEntry.fee).toBe(putDivEntry.fee);
+        url: manyUrl,        
+      })
+      const postedDivEntries = response.data.divEntries;
+      expect(response.status).toBe(201);
+      createdDivEntries = true;
+      expect(postedDivEntries).not.toBeNull();
+      expect(postedDivEntries.length).toBe(mockMultiDivEntriesToPost.length);
+      // change fee 
+      // change average, add eType = 'u'
+      const divEntriesToUpdate = [
+        {
+          ...mockMultiDivEntriesToPost[0],
+          fee: '83',
+          eType: "u",
+        },
+        {
+          ...mockMultiDivEntriesToPost[1],
+          fee: '83',
+          eType: "u",
+        },
+      ]
+      const toUpdateJSON = JSON.stringify(divEntriesToUpdate) 
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.updates).toBe(2);
+      expect(updateInfo.inserts).toBe(0);
+      expect(updateInfo.deletes).toBe(0);
     })
-    it('should not update a divEntry by ID when squad_id is blank', async () => {
-      const invalidDivEntry = {
-        ...putDivEntry,
-        squad_id: ''
-      }
-      const divEntryJSON = JSON.stringify(invalidDivEntry);
+    it('should update many divEntries - just update 2 player 2 div entry', async () => {
+      const divEntryJSON = JSON.stringify(mockMultiDivEntriesToPost);
+      const response = await axios({
+        method: "post",
+        data: divEntryJSON,
+        withCredentials: true,
+        url: manyUrl,        
+      })
+      const postedDivEntries = response.data.divEntries;
+      expect(response.status).toBe(201);
+      createdDivEntries = true;
+      expect(postedDivEntries).not.toBeNull();
+      expect(postedDivEntries.length).toBe(mockMultiDivEntriesToPost.length);
+      // change fee 
+      // change average, add eType = 'u'
+      const divEntriesToUpdate = [
+        {
+          ...mockMultiDivEntriesToPost[0],
+          fee: '83',
+          eType: "u",
+        },
+        {
+          ...mockMultiDivEntriesToPost[1],
+          fee: '83',
+          eType: "u",
+        },
+        {
+          ...mockMultiDivEntriesToPost[4],
+          fee: '63',
+          eType: "u",
+        },
+        {
+          ...mockMultiDivEntriesToPost[5],
+          fee: '63',
+          eType: "u",
+        },
+      ]
+      const toUpdateJSON = JSON.stringify(divEntriesToUpdate) 
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.updates).toBe(4);
+      expect(updateInfo.inserts).toBe(0);
+      expect(updateInfo.deletes).toBe(0);
+    })
+    it('should insert many divEntries - just insert 1 player 2 div entries', async () => { 
+      createdDivEntries = true;
+      // add eType = 'u'
+      const divEntriesToInsert = [
+        {
+          ...mockMultiDivEntriesToPost[0],          
+          eType: "i",
+        },
+        {
+          ...mockMultiDivEntriesToPost[4],          
+          eType: "i",
+        },
+      ]
+      const toUpdateJSON = JSON.stringify(divEntriesToInsert) 
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.inserts).toBe(2);
+      expect(updateInfo.updates).toBe(0);
+      expect(updateInfo.deletes).toBe(0);     
+    })
+    it('should insert many divEntries - just insert 2 player 1 div entries', async () => { 
+      createdDivEntries = true;
+      // add eType = 'u'
+      const divEntriesToInsert = [
+        {
+          ...mockMultiDivEntriesToPost[0],          
+          eType: "i",
+        },
+        {
+          ...mockMultiDivEntriesToPost[1],          
+          eType: "i",
+        },
+      ]
+      const toUpdateJSON = JSON.stringify(divEntriesToInsert) 
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.inserts).toBe(2);
+      expect(updateInfo.updates).toBe(0);
+      expect(updateInfo.deletes).toBe(0);      
+    })
+    it('should insert many divEntries - just insert 2 player 2 div entries', async () => { 
+      createdDivEntries = true;
+      // add eType = 'u'
+      const divEntriesToInsert = [
+        {
+          ...mockMultiDivEntriesToPost[0],          
+          eType: "i",
+        },
+        {
+          ...mockMultiDivEntriesToPost[1],          
+          eType: "i",
+        },
+        {
+          ...mockMultiDivEntriesToPost[4],          
+          eType: "i",
+        },
+        {
+          ...mockMultiDivEntriesToPost[5],          
+          eType: "i",
+        },
+      ]
+      const toUpdateJSON = JSON.stringify(divEntriesToInsert) 
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.inserts).toBe(4);
+      expect(updateInfo.updates).toBe(0);
+      expect(updateInfo.deletes).toBe(0);      
+    })
+    it('should delete many divEntries - just delete 1 player 2 div entry', async () => {
+      const divEntryJSON = JSON.stringify(mockMultiDivEntriesToPost);
+      const response = await axios({
+        method: "post",
+        data: divEntryJSON,
+        withCredentials: true,
+        url: manyUrl,        
+      })
+      const postedDivEntries = response.data.divEntries;
+      expect(response.status).toBe(201);
+      createdDivEntries = true;
+      expect(postedDivEntries).not.toBeNull();
+      expect(postedDivEntries.length).toBe(mockMultiDivEntriesToPost.length);      
+      // set eType = 'd'
+      const divEntriesToUpdate = [
+        {
+          ...mockMultiDivEntriesToPost[0],          
+          eType: "d",
+        },
+        {
+          ...mockMultiDivEntriesToPost[4],          
+          eType: "d",
+        },
+      ]
+      const toUpdateJSON = JSON.stringify(divEntriesToUpdate) 
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.deletes).toBe(2);
+      expect(updateInfo.updates).toBe(0);
+      expect(updateInfo.inserts).toBe(0);      
+    })
+    it('should delete many divEntries - just delete 2 player 1 div entry', async () => {
+      const divEntryJSON = JSON.stringify(mockMultiDivEntriesToPost);
+      const response = await axios({
+        method: "post",
+        data: divEntryJSON,
+        withCredentials: true,
+        url: manyUrl,        
+      })
+      const postedDivEntries = response.data.divEntries;
+      expect(response.status).toBe(201);
+      createdDivEntries = true;
+      expect(postedDivEntries).not.toBeNull();
+      expect(postedDivEntries.length).toBe(mockMultiDivEntriesToPost.length);      
+      // set eType = 'd'
+      const divEntriesToUpdate = [
+        {
+          ...mockMultiDivEntriesToPost[0],          
+          eType: "d",
+        },
+        {
+          ...mockMultiDivEntriesToPost[1],          
+          eType: "d",
+        },
+      ]
+      const toUpdateJSON = JSON.stringify(divEntriesToUpdate) 
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.deletes).toBe(2);
+      expect(updateInfo.updates).toBe(0);
+      expect(updateInfo.inserts).toBe(0);      
+    })
+    it('should delete many divEntries - just delete 2 player 2 div entry', async () => {
+      const divEntryJSON = JSON.stringify(mockMultiDivEntriesToPost);
+      const response = await axios({
+        method: "post",
+        data: divEntryJSON,
+        withCredentials: true,
+        url: manyUrl,        
+      })
+      const postedDivEntries = response.data.divEntries;
+      expect(response.status).toBe(201);
+      createdDivEntries = true;
+      expect(postedDivEntries).not.toBeNull();
+      expect(postedDivEntries.length).toBe(mockMultiDivEntriesToPost.length);      
+      // set eType = 'd'
+      const divEntriesToUpdate = [
+        {
+          ...mockMultiDivEntriesToPost[0],          
+          eType: "d",
+        },
+        {
+          ...mockMultiDivEntriesToPost[1],          
+          eType: "d",
+        },
+        {
+          ...mockMultiDivEntriesToPost[4],          
+          eType: "d",
+        },
+        {
+          ...mockMultiDivEntriesToPost[5],          
+          eType: "d",
+        },
+      ]
+      const toUpdateJSON = JSON.stringify(divEntriesToUpdate) 
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.deletes).toBe(4);
+      expect(updateInfo.updates).toBe(0);
+      expect(updateInfo.inserts).toBe(0);      
+    })
+    it('should update, insert and delete many divEntries', async () => {
+      const divEntryJSON = JSON.stringify(mockDivEntriesToPost);
+      const response = await axios({
+        method: "post",
+        data: divEntryJSON,
+        withCredentials: true,
+        url: manyUrl,        
+      })
+      const postedDivEntries = response.data.divEntries;
+      expect(response.status).toBe(201);
+      createdDivEntries = true;
+      expect(postedDivEntries).not.toBeNull();
+      expect(postedDivEntries.length).toBe(mockDivEntriesToPost.length);      
+      // set divs edits, set eType
+      const divEntriesToUpdate = [
+        {
+          ...mockMultiDivEntriesToPost[0],          
+          fee: '83',
+          eType: "u",
+        },
+        {
+          ...mockMultiDivEntriesToPost[1],          
+          fee: '83',
+          eType: "u",
+        },
+        {
+          ...mockMultiDivEntriesToPost[2],          
+          eType: "d",
+        },
+        {
+          ...mockMultiDivEntriesToPost[3],          
+          eType: "d",
+        },
+        {
+          ...mockMultiDivEntriesToPost[4],          
+          eType: "i",
+        },
+        {
+          ...mockMultiDivEntriesToPost[5],          
+          eType: "i",
+        },
+      ]
+      const toUpdateJSON = JSON.stringify(divEntriesToUpdate) 
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.deletes).toBe(2);
+      expect(updateInfo.updates).toBe(2);
+      expect(updateInfo.inserts).toBe(2);      
+    })
+    it('should NOT update, insert and delete many divEntries with invalid data', async () => {
+      const divEntryJSON = JSON.stringify(mockDivEntriesToPost);
+      const response = await axios({
+        method: "post",
+        data: divEntryJSON,
+        withCredentials: true,
+        url: manyUrl,        
+      })
+      const postedDivEntries = response.data.divEntries;
+      expect(response.status).toBe(201);
+      createdDivEntries = true;
+      expect(postedDivEntries).not.toBeNull();
+      expect(postedDivEntries.length).toBe(mockDivEntriesToPost.length);      
+      // set divs edits, set eType
+      const divEntriesToUpdate = [
+        {
+          ...mockMultiDivEntriesToPost[0],          
+          fee: '1234567890',
+          eType: "u",
+        },
+        {
+          ...mockMultiDivEntriesToPost[1],          
+          fee: '83',
+          eType: "d",
+        },
+        {
+          ...mockMultiDivEntriesToPost[2],          
+          eType: "d",
+        },
+        {
+          ...mockMultiDivEntriesToPost[3],          
+          eType: "d",
+        },
+        {
+          ...mockMultiDivEntriesToPost[4],          
+          eType: "i",
+        },
+        {
+          ...mockMultiDivEntriesToPost[5],          
+          eType: "i",
+        },
+      ]
+      const toUpdateJSON = JSON.stringify(divEntriesToUpdate) 
       try {
-        const response = await axios({
+        const updateResponse = await axios({
           method: "put",
-          data: divEntryJSON,
+          data: toUpdateJSON,
           withCredentials: true,
-          url: oneDivEntryUrl + testDivEntry.id,
-        });
+          url: manyUrl,
+        })
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1139,138 +1802,237 @@ describe("DivEntries - API's: /api/divEntries", () => {
         }
       }
     })
-    it('should not update a divEntry by ID when div_id is blank', async () => {
-      const invalidDivEntry = {
-        ...putDivEntry,
-        div_id: ''
-      }
-      const divEntryJSON = JSON.stringify(invalidDivEntry);
-      try {
-        const response = await axios({
-          method: "put",
-          data: divEntryJSON,
-          withCredentials: true,
-          url: oneDivEntryUrl + testDivEntry.id,
-        });
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not update a divEntry by ID when player_id is blank', async () => {
-      const invalidDivEntry = {
-        ...putDivEntry,
-        player_id: ''
-      }
-      const divEntryJSON = JSON.stringify(invalidDivEntry);
-      try {
-        const response = await axios({
-          method: "put",
-          data: divEntryJSON,
-          withCredentials: true,
-          url: oneDivEntryUrl + testDivEntry.id,
-        });
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }        
-      }
-    })
-    it('should not update a divEntry by ID when fee is blank', async () => {
-      const invalidDivEntry = {
-        ...putDivEntry,
-        fee: ''
-      }
-      const divEntryJSON = JSON.stringify(invalidDivEntry);
-      try {
-        const response = await axios({
-          method: "put",
-          data: divEntryJSON,
-          withCredentials: true,
-          url: oneDivEntryUrl + testDivEntry.id,
-        });
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not update a divEntry by ID when fee is too low', async () => {
-      const invalidDivEntry = {
-        ...putDivEntry,
-        fee: '-1'
-      }
-      const divEntryJSON = JSON.stringify(invalidDivEntry);
-      try {
-        const response = await axios({
-          method: "put",
-          data: divEntryJSON,
-          withCredentials: true,
-          url: oneDivEntryUrl + testDivEntry.id,
-        });
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }        
-      }      
-    })
-    it('should not update a divEntry by ID when fee is too high', async () => {
-      const invalidDivEntry = {
-        ...putDivEntry,
-        fee: '1234567890'
-      }
-      const divEntryJSON = JSON.stringify(invalidDivEntry);
-      try {
-        const response = await axios({
-          method: "put",
-          data: divEntryJSON,
-          withCredentials: true,
-          url: oneDivEntryUrl + testDivEntry.id,
-        });
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }        
-      }
-    })
-    it('should not update a divEntry by ID when fee is not a number', async () => {
-      const invalidDivEntry = {
-        ...putDivEntry,
-        fee: 'not a number'
-      }
-      const divEntryJSON = JSON.stringify(invalidDivEntry);
-      try {
-        const response = await axios({
-          method: "put",
-          data: divEntryJSON,
-          withCredentials: true,
-          url: oneDivEntryUrl + testDivEntry.id,
-        });
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }        
-      }      
-    })
+
+  })
+
+  describe('PUT one divEntry API: /api/divEntries/divEntry/:id', () => { 
+
+    // const resetDivEntry = async () => {
+    //   // make sure test player is reset in database
+    //   const divEntryJSON = JSON.stringify(testDivEntry);
+    //   const putResponse = await axios({
+    //     method: "put",
+    //     data: divEntryJSON,
+    //     withCredentials: true,
+    //     url: oneDivEntryUrl + testDivEntry.id,
+    //   })
+    // }
+
+    // const putDivEntry = {
+    //   ...testDivEntry,
+    //   squad_id: 'sqd_1a6c885ee19a49489960389193e8f819',
+    //   div_id: 'div_99a3cae28786485bb7a036935f0f6a0a',
+    //   player_id: 'ply_8b0fd8bbd9e34d34a7fa90b4111c6e40',
+    //   fee: '83'
+    // }
+
+    // let didPut = false;
+
+    // beforeAll(async () => {
+    //   await resetDivEntry()
+    // })
+
+    // beforeEach(() => {
+    //   didPut = false;
+    // })
+
+    // afterEach(async () => {
+    //   if (didPut) {        
+    //     await resetDivEntry()
+    //   }      
+    // })
+
+    // it('should update a divEntry by ID', async () => {
+    //   const divEntryJSON = JSON.stringify(putDivEntry);
+    //   const response = await axios({
+    //     method: "put",
+    //     data: divEntryJSON,
+    //     withCredentials: true,
+    //     url: oneDivEntryUrl + testDivEntry.id,
+    //   });
+    //   expect(response.status).toBe(200);
+    //   didPut = true;
+    //   const puttedDivEntry = response.data.divEntry;
+    //   // did not update squad_id
+    //   expect(puttedDivEntry.squad_id).toBe(putDivEntry.squad_id);
+    //   expect(puttedDivEntry.div_id).toBe(putDivEntry.div_id);
+    //   expect(puttedDivEntry.player_id).toBe(putDivEntry.player_id);
+    //   expect(puttedDivEntry.fee).toBe(putDivEntry.fee);
+    // })
+    // it('should update a sanitized divEntry by ID', async () => { 
+    //   const toSanitize = {
+    //     ...putDivEntry,
+    //     fee: '83.000',
+    //   }
+    //   const divEntryJSON = JSON.stringify(toSanitize);
+    //   const response = await axios({
+    //     method: "put",
+    //     data: divEntryJSON,
+    //     withCredentials: true,
+    //     url: oneDivEntryUrl + testDivEntry.id,
+    //   });
+    //   expect(response.status).toBe(200);
+    //   didPut = true;
+    //   const puttedDivEntry = response.data.divEntry;
+    //   expect(puttedDivEntry.squad_id).toBe(putDivEntry.squad_id);
+    //   expect(puttedDivEntry.div_id).toBe(putDivEntry.div_id);
+    //   expect(puttedDivEntry.player_id).toBe(putDivEntry.player_id);
+    //   expect(puttedDivEntry.fee).toBe(putDivEntry.fee);
+    // })
+    // it('should not update a divEntry by ID when squad_id is blank', async () => {
+    //   const invalidDivEntry = {
+    //     ...putDivEntry,
+    //     squad_id: ''
+    //   }
+    //   const divEntryJSON = JSON.stringify(invalidDivEntry);
+    //   try {
+    //     const response = await axios({
+    //       method: "put",
+    //       data: divEntryJSON,
+    //       withCredentials: true,
+    //       url: oneDivEntryUrl + testDivEntry.id,
+    //     });
+    //     expect(response.status).toBe(422);
+    //   } catch (err) {
+    //     if (err instanceof AxiosError) {
+    //       expect(err.response?.status).toBe(422);
+    //     } else {
+    //       expect(true).toBeFalsy();
+    //     }
+    //   }
+    // })
+    // it('should not update a divEntry by ID when div_id is blank', async () => {
+    //   const invalidDivEntry = {
+    //     ...putDivEntry,
+    //     div_id: ''
+    //   }
+    //   const divEntryJSON = JSON.stringify(invalidDivEntry);
+    //   try {
+    //     const response = await axios({
+    //       method: "put",
+    //       data: divEntryJSON,
+    //       withCredentials: true,
+    //       url: oneDivEntryUrl + testDivEntry.id,
+    //     });
+    //     expect(response.status).toBe(422);
+    //   } catch (err) {
+    //     if (err instanceof AxiosError) {
+    //       expect(err.response?.status).toBe(422);
+    //     } else {
+    //       expect(true).toBeFalsy();
+    //     }
+    //   }
+    // })
+    // it('should not update a divEntry by ID when player_id is blank', async () => {
+    //   const invalidDivEntry = {
+    //     ...putDivEntry,
+    //     player_id: ''
+    //   }
+    //   const divEntryJSON = JSON.stringify(invalidDivEntry);
+    //   try {
+    //     const response = await axios({
+    //       method: "put",
+    //       data: divEntryJSON,
+    //       withCredentials: true,
+    //       url: oneDivEntryUrl + testDivEntry.id,
+    //     });
+    //     expect(response.status).toBe(422);
+    //   } catch (err) {
+    //     if (err instanceof AxiosError) {
+    //       expect(err.response?.status).toBe(422);
+    //     } else {
+    //       expect(true).toBeFalsy();
+    //     }        
+    //   }
+    // })
+    // it('should not update a divEntry by ID when fee is blank', async () => {
+    //   const invalidDivEntry = {
+    //     ...putDivEntry,
+    //     fee: ''
+    //   }
+    //   const divEntryJSON = JSON.stringify(invalidDivEntry);
+    //   try {
+    //     const response = await axios({
+    //       method: "put",
+    //       data: divEntryJSON,
+    //       withCredentials: true,
+    //       url: oneDivEntryUrl + testDivEntry.id,
+    //     });
+    //     expect(response.status).toBe(422);
+    //   } catch (err) {
+    //     if (err instanceof AxiosError) {
+    //       expect(err.response?.status).toBe(422);
+    //     } else {
+    //       expect(true).toBeFalsy();
+    //     }
+    //   }
+    // })
+    // it('should not update a divEntry by ID when fee is too low', async () => {
+    //   const invalidDivEntry = {
+    //     ...putDivEntry,
+    //     fee: '-1'
+    //   }
+    //   const divEntryJSON = JSON.stringify(invalidDivEntry);
+    //   try {
+    //     const response = await axios({
+    //       method: "put",
+    //       data: divEntryJSON,
+    //       withCredentials: true,
+    //       url: oneDivEntryUrl + testDivEntry.id,
+    //     });
+    //     expect(response.status).toBe(422);
+    //   } catch (err) {
+    //     if (err instanceof AxiosError) {
+    //       expect(err.response?.status).toBe(422);
+    //     } else {
+    //       expect(true).toBeFalsy();
+    //     }        
+    //   }      
+    // })
+    // it('should not update a divEntry by ID when fee is too high', async () => {
+    //   const invalidDivEntry = {
+    //     ...putDivEntry,
+    //     fee: '1234567890'
+    //   }
+    //   const divEntryJSON = JSON.stringify(invalidDivEntry);
+    //   try {
+    //     const response = await axios({
+    //       method: "put",
+    //       data: divEntryJSON,
+    //       withCredentials: true,
+    //       url: oneDivEntryUrl + testDivEntry.id,
+    //     });
+    //     expect(response.status).toBe(422);
+    //   } catch (err) {
+    //     if (err instanceof AxiosError) {
+    //       expect(err.response?.status).toBe(422);
+    //     } else {
+    //       expect(true).toBeFalsy();
+    //     }        
+    //   }
+    // })
+    // it('should not update a divEntry by ID when fee is not a number', async () => {
+    //   const invalidDivEntry = {
+    //     ...putDivEntry,
+    //     fee: 'not a number'
+    //   }
+    //   const divEntryJSON = JSON.stringify(invalidDivEntry);
+    //   try {
+    //     const response = await axios({
+    //       method: "put",
+    //       data: divEntryJSON,
+    //       withCredentials: true,
+    //       url: oneDivEntryUrl + testDivEntry.id,
+    //     });
+    //     expect(response.status).toBe(422);
+    //   } catch (err) {
+    //     if (err instanceof AxiosError) {
+    //       expect(err.response?.status).toBe(422);
+    //     } else {
+    //       expect(true).toBeFalsy();
+    //     }        
+    //   }      
+    // })
   })
 
   describe('PATCH one divEntry API: /api/divEntries/divEntry/:id', () => { 

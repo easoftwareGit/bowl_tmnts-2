@@ -16,13 +16,12 @@ import {
   potEntryType,
   brktEntryType,
   elimEntryType,
+  rawBrktEntryType,
 } from "../types/types";
 import { User, Bowl, Tmnt } from "@prisma/client";
 import { todayStr } from "@/lib/dateTools";
 import { btDbUuid } from "../uuid";
 import { startOfToday } from "date-fns";
-import { init } from "next/dist/compiled/webpack/webpack";
-import { first } from "lodash";
 
 export const initUser: userType = {
   id: btDbUuid('usr'),
@@ -365,7 +364,8 @@ export const initDivEntry: divEntryType = {
   player_id: "",
   player_id_err: "",
   fee: "",
-  fee_err: "",
+  fee_err: "",    
+  hdcp: 0,
 }
 
 export const blankDivEntry: divEntryType = {
@@ -402,6 +402,25 @@ export const initBrktEntry: brktEntryType = {
 
 export const blankBrktEntry: brktEntryType = {
   ...initBrktEntry,
+  id: "",
+}
+
+export const initRawBrktEntry: rawBrktEntryType = {
+  id: btDbUuid('ben'),
+  brkt_id: "",
+  brkt_id_err: "",
+  player_id: "",
+  player_id_err: "",
+  num_brackets: 0,
+  num_brackets_err: "",
+  fee: "",
+  fee_err: "",
+  createdAt: 0,
+  updatedAt: 0,
+}
+
+export const blankRawBrktEntry: rawBrktEntryType = {
+  ...initRawBrktEntry,
   id: "",
 }
 

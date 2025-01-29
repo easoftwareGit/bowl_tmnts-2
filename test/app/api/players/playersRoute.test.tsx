@@ -3,9 +3,10 @@ import { basePlayersApi } from "@/lib/db/apiPaths";
 import { testBasePlayersApi } from "../../../testApi";
 import { initPlayer } from "@/lib/db/initVals";
 import { playerType } from "@/lib/types/types";
-import { deleteAllSquadPlayers, deleteAllTmntPlayers, postManyPlayers } from "@/lib/db/players/dbPlayers";
+import { deleteAllSquadPlayers, deleteAllTmntPlayers, getAllPlayersForSquad, postManyPlayers } from "@/lib/db/players/dbPlayers";
 import { mockPlayersToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { cloneDeep } from "lodash";
+
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -1051,6 +1052,320 @@ describe("Players - API's: /api/players", () => {
       }
     })
 
+  })
+
+  describe('PUT many players - API: /api/players/many', () => { 
+
+    let createdPlayers = false;    
+    
+    const playersToDelTmntId = 'tmt_d9b1af944d4941f65b2d2d4ac160cdea';
+
+    beforeAll(async () => { 
+      await deleteAllTmntPlayers(playersToDelTmntId);
+    })
+
+    beforeEach(() => {
+      createdPlayers = false;
+    })
+
+    afterEach(async () => {
+      if (createdPlayers) {
+        await deleteAllTmntPlayers(playersToDelTmntId);
+      }      
+    })
+
+    it('should update many players - just update', async () => {      
+      const playerJSON = JSON.stringify(mockPlayersToPost);
+      const response = await axios({
+        method: "post",
+        data: playerJSON,
+        withCredentials: true,
+        url: manyUrl,        
+      })
+      const postedPlayers = response.data.players;
+      expect(response.status).toBe(201);
+      createdPlayers = true;
+      expect(postedPlayers).not.toBeNull();
+      expect(postedPlayers.length).toBe(mockPlayersToPost.length);
+
+      // change average, add eType = 'u'
+      const playersToUpdate = [
+        {
+          ...mockPlayersToPost[0],
+          average: 200,
+          eType: "u",
+        },
+        {
+          ...mockPlayersToPost[1],
+          average: 201,
+          eType: "u",
+        },
+      ]
+      const toUpdateJSON = JSON.stringify(playersToUpdate) 
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.updates).toBe(2);
+      expect(updateInfo.inserts).toBe(0);
+      expect(updateInfo.deletes).toBe(0);
+    })
+    it('should insert many players - just insert', async () => {      
+      createdPlayers = true;
+
+      // set eType = 'i'
+      const playersToInsert = [
+        {
+          ...mockPlayersToPost[0],          
+          eType: "i",
+        },
+        {
+          ...mockPlayersToPost[1],          
+          eType: "i",
+        },
+      ]
+      const toUpdateJSON = JSON.stringify(playersToInsert) 
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.inserts).toBe(2);
+      expect(updateInfo.updates).toBe(0);
+      expect(updateInfo.deletes).toBe(0);
+    })
+    it('should delete many players - just delete', async () => {      
+      const playerJSON = JSON.stringify(mockPlayersToPost);
+      const response = await axios({
+        method: "post",
+        data: playerJSON,
+        withCredentials: true,
+        url: manyUrl,        
+      })
+      const postedPlayers = response.data.players;
+      expect(response.status).toBe(201);
+      createdPlayers = true;
+      expect(postedPlayers).not.toBeNull();
+      expect(postedPlayers.length).toBe(mockPlayersToPost.length);
+
+      // change average, add eType = 'd'
+      const playersToDelete = [
+        {
+          ...mockPlayersToPost[0],
+          eType: "d",
+        },
+        {
+          ...mockPlayersToPost[1],
+          eType: "d",
+        },
+      ]
+      const toUpdateJSON = JSON.stringify(playersToDelete) 
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.deletes).toBe(2);
+      expect(updateInfo.updates).toBe(0);
+      expect(updateInfo.inserts).toBe(0);
+    })
+    it('should update, insert, delete many players', async () => {      
+      const toInsert: playerType[] = [              
+        {
+          ...initPlayer,
+          id: "ply_05be0472be3d476ea1caa99dd05953fa",
+          squad_id: "sqd_42be0f9d527e4081972ce8877190489d",
+          first_name: "Art",
+          last_name: "Smith",
+          average: 222,
+          lane: 3,
+          position: 'C',
+        },
+        {
+          ...initPlayer,
+          id: "ply_06be0472be3d476ea1caa99dd05953fa",
+          squad_id: "sqd_42be0f9d527e4081972ce8877190489d",
+          first_name: "Bob",
+          last_name: "Rees",
+          average: 223,
+          lane: 4,
+          position: 'C',
+        }
+      ];
+    
+      const playerJSON = JSON.stringify(mockPlayersToPost);
+      const response = await axios({
+        method: "post",
+        data: playerJSON,
+        withCredentials: true,
+        url: manyUrl,        
+      })
+      const postedPlayers = response.data.players;
+      expect(response.status).toBe(201);
+      createdPlayers = true;
+      expect(postedPlayers).not.toBeNull();
+      expect(postedPlayers.length).toBe(mockPlayersToPost.length);
+
+      // change average, add eType = 'u'
+      const playersToUpdate = [
+        {
+          ...mockPlayersToPost[0],
+          average: 200,
+          eType: "u",
+        },
+        {
+          ...mockPlayersToPost[1],
+          average: 201,
+          eType: "u",
+        },
+      ]
+
+      // add eType = 'i'
+      const playersToInsert = [
+        {
+          ...toInsert[0],
+          eType: "i",
+        },
+        {
+          ...toInsert[1],
+          eType: "i",
+        },
+      ]
+
+      // add eType = 'd'
+      const playersToDelete = [
+        {
+          ...mockPlayersToPost[2],
+          eType: "d",
+        },
+        {
+          ...mockPlayersToPost[3],
+          eType: "d",
+        },
+      ]
+      const allToUpdate = [...playersToUpdate, ...playersToInsert, ...playersToDelete];
+      const toUpdateJSON = JSON.stringify(allToUpdate) 
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.updates).toBe(2);
+      expect(updateInfo.inserts).toBe(2);
+      expect(updateInfo.deletes).toBe(2);
+    })
+    it('should update many players - sanitized first and last names', async () => {      
+      const playerJSON = JSON.stringify(mockPlayersToPost);
+      const response = await axios({
+        method: "post",
+        data: playerJSON,
+        withCredentials: true,
+        url: manyUrl,        
+      })
+      const postedPlayers = response.data.players;
+      expect(response.status).toBe(201);
+      createdPlayers = true;
+      expect(postedPlayers).not.toBeNull();
+      expect(postedPlayers.length).toBe(mockPlayersToPost.length);
+
+      // change average, add eType = 'u'
+      const playersToUpdate = [
+        {
+          ...mockPlayersToPost[0],
+          first_name: "<script>alert(1)</script>",
+          last_name: "    abcdef***",
+          eType: "u",
+        },
+      ]
+      const toUpdateJSON = JSON.stringify(playersToUpdate) 
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.updates).toBe(1);
+      expect(updateInfo.inserts).toBe(0);
+      expect(updateInfo.deletes).toBe(0);
+
+      const squadPlayers = await getAllPlayersForSquad(mockPlayersToPost[0].squad_id);
+      expect(squadPlayers).not.toBeNull();
+      if (!squadPlayers) return
+      const updatedPlayer = squadPlayers.find(p => p.id === mockPlayersToPost[0].id);
+      expect(updatedPlayer).not.toBeNull();
+      if (!updatedPlayer) return
+      expect(updatedPlayer.first_name).toBe("alert1");
+      expect(updatedPlayer.last_name).toBe("abcdef");
+    })
+    it('should not update any players if any data is invalid - invalid average', async () => {      
+      const playerJSON = JSON.stringify(mockPlayersToPost);
+      const response = await axios({
+        method: "post",
+        data: playerJSON,
+        withCredentials: true,
+        url: manyUrl,        
+      })
+      const postedPlayers = response.data.players;
+      expect(response.status).toBe(201);
+      createdPlayers = true;
+      expect(postedPlayers).not.toBeNull();
+      expect(postedPlayers.length).toBe(mockPlayersToPost.length);
+
+      // change average, add eType = 'u'
+      const playersToUpdate = [
+        {
+          ...mockPlayersToPost[0],
+          average: -1,    // invalid average
+          eType: "u",
+        },
+        {
+          ...mockPlayersToPost[1],
+          average: 201,
+          eType: "u",
+        },
+      ]      
+      const toUpdateJSON = JSON.stringify(playersToUpdate) 
+      try {
+        const updateResponse = await axios({
+          method: "put",
+          data: toUpdateJSON,
+          withCredentials: true,
+          url: manyUrl,
+        })
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
   })
 
   describe('PUT by ID - API: /api/players/player/:id', () => {

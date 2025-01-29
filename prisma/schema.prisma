@@ -208,7 +208,7 @@ model Player {
   games        Game[]
   squad        Squad        @relation(fields: [squad_id], references: [id])
   createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  updatedAt    DateTime     @updatedAt @default(now())
 }
 
 model Div_Entry {
@@ -221,7 +221,7 @@ model Div_Entry {
   div       Div      @relation(fields: [div_id], references: [id])
   player    Player   @relation(fields: [player_id], references: [id])
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @updatedAt @default(now())
 
   @@unique([squad_id, div_id, player_id])
 }
@@ -234,7 +234,7 @@ model Pot_Entry {
   pot       Pot      @relation(fields: [pot_id], references: [id])
   player    Player   @relation(fields: [player_id], references: [id])
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @updatedAt @default(now())
 
   @@unique([pot_id, player_id])
 }
@@ -248,7 +248,7 @@ model Brkt_Entry {
   brkt         Brkt     @relation(fields: [brkt_id], references: [id])
   player       Player   @relation(fields: [player_id], references: [id])
   createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  updatedAt    DateTime @updatedAt @default(now())
 
   @@unique([brkt_id, player_id])
 }
@@ -261,7 +261,7 @@ model Elim_Entry {
   elim      Elim     @relation(fields: [elim_id], references: [id])
   player    Player   @relation(fields: [player_id], references: [id])
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @updatedAt @default(now())
 
   @@unique([elim_id, player_id])
 }

@@ -1,11 +1,12 @@
 import axios, { AxiosError } from "axios";
 import { baseDivEntriesApi } from "@/lib/db/apiPaths";
 import { testBaseDivEntriesApi } from "../../../testApi";
-import { divEntryType } from "@/lib/types/types";
-import { initDivEntry } from "@/lib/db/initVals";
+import { divEntryRawWithHdcpType, divEntryType, divType, HdcpForTypes, playerType } from "@/lib/types/types";
+import { initDiv, initDivEntry, initPlayer } from "@/lib/db/initVals";
 import { mockDivEntriesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { deleteAllDivEntriesForDiv, deleteAllDivEntriesForSquad, deleteAllDivEntriesForTmnt, deleteDivEntry, getAllDivEntriesForDiv, getAllDivEntriesForSquad, getAllDivEntriesForTmnt, postDivEntry, postManyDivEntries, putDivEntry } from "@/lib/db/divEntries/dbDivEntries";
 import { cloneDeep } from "lodash";
+import { putDiv } from "@/lib/db/divs/dbDivs";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -26,6 +27,18 @@ const url = testBaseDivEntriesApi.startsWith("undefined")
   ? baseDivEntriesApi
   : testBaseDivEntriesApi;
 const oneDivEntryUrl = url + "/divEntry/";
+
+const div = {
+  ...initDiv,
+  id: "div_f30aea2c534f4cfe87f4315531cef8ef",
+  tmnt_id: "tmt_fd99387c33d9c78aba290286576ddce5",
+  div_name: "Scratch",
+  hdcp_per: 0,
+  hdcp_from: 230,
+  int_hdcp: true,
+  hdcp_for: "Game" as HdcpForTypes,
+  sort_order: 1,
+}
 
 const divEntriesToGet: divEntryType[] = [
   {
@@ -59,6 +72,49 @@ const divEntriesToGet: divEntryType[] = [
     div_id: 'div_f30aea2c534f4cfe87f4315531cef8ef',
     player_id: 'ply_8b0fd8bbd9e34d34a7fa90b4111c6e40',
     fee: '80',
+  }
+]
+
+const players: playerType[] = [
+  {
+    ...initPlayer,
+    id: "ply_88be0472be3d476ea1caa99dd05953fa",
+    squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+    first_name: "John",
+    last_name: "Doe",
+    average: 220,
+    lane: 1,
+    position: "A",
+  },
+  {
+    ...initPlayer,
+    id: "ply_be57bef21fc64d199c2f6de4408bd136",
+    squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+    first_name: "James",
+    last_name: "Bennett",
+    average: 221,
+    lane: 1,
+    position: "B",
+  },
+  {
+    ...initPlayer,
+    id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
+    squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+    first_name: "Olivia",
+    last_name: "Morgan",
+    average: 210,
+    lane: 2,
+    position: "C",
+  },
+  {
+    ...initPlayer,
+    id: "ply_8b0fd8bbd9e34d34a7fa90b4111c6e40",
+    squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+    first_name: "William",
+    last_name: "Harris",
+    average: 211,
+    lane: 2,
+    position: "D",
   }
 ]
 
@@ -118,7 +174,44 @@ describe('dbDivEntries', () => {
     }
   }
 
+  const deletePostedDivEntry = async () => {
+    const response = await axios.get(url);
+    const divEntries = response.data.divEntries;
+    const toDel = divEntries.find((d: divEntryRawWithHdcpType) => d.fee === 82);
+    if (toDel) {
+      try {
+        const delResponse = await axios({
+          method: "delete",
+          withCredentials: true,
+          url: oneDivEntryUrl + toDel.id
+        });
+      } catch (err) {
+        if (err instanceof AxiosError) console.log(err.message);
+      }
+    }
+  }
+
+  const calcHdcp = (divEntry: divEntryType, hdcpDiv: divType) => {
+    const player = players.find(p => p.id === divEntry.player_id);
+    if (!player) return -1;
+    const hdcp = player.average < hdcpDiv.hdcp_from
+      ? (hdcpDiv.int_hdcp
+        ? Math.floor((hdcpDiv.hdcp_from - player.average) * hdcpDiv.hdcp_per)
+        : ((hdcpDiv.hdcp_from - player.average) * hdcpDiv.hdcp_per))
+      : 0;
+    return hdcp;
+  }
+
   describe('getAllDivEntriesForTmnt()', () => { 
+
+    beforeAll(async () => {
+      await deletePostedDivEntry();
+      await putDiv(div);
+    })
+
+    afterEach(async () => {
+      await putDiv(div);
+    })
 
     it('should get all divEntries for tmnt', async () => { 
       const divEntries = await getAllDivEntriesForTmnt(tmntIdForDivEntries);
@@ -126,19 +219,86 @@ describe('dbDivEntries', () => {
       if (!divEntries) return;
       for (let i = 0; i < divEntries.length; i++) {
         if (divEntries[i].id === divEntriesToGet[0].id) { 
-          expect(divEntries[i].player_id).toEqual(divEntriesToGet[0].player_id);
+          expect(divEntries[i].player_id).toEqual(divEntriesToGet[0].player_id);          
+          expect(divEntries[i].hdcp).toEqual(calcHdcp(divEntriesToGet[0], div));
         } else if (divEntries[i].id === divEntriesToGet[1].id) {
-          expect(divEntries[i].player_id).toEqual(divEntriesToGet[1].player_id);
+          expect(divEntries[i].player_id).toEqual(divEntriesToGet[1].player_id);          
+          expect(divEntries[i].hdcp).toEqual(calcHdcp(divEntriesToGet[1], div));
         } else if (divEntries[i].id === divEntriesToGet[2].id) { 
           expect(divEntries[i].player_id).toEqual(divEntriesToGet[2].player_id);
+          expect(divEntries[i].hdcp).toEqual(calcHdcp(divEntriesToGet[2], div));
         } else if (divEntries[i].id === divEntriesToGet[3].id) {
           expect(divEntries[i].player_id).toEqual(divEntriesToGet[3].player_id);
+          expect(divEntries[i].hdcp).toEqual(calcHdcp(divEntriesToGet[3], div));
         } else {
           expect(true).toBe(false);
         }        
         expect(divEntries[i].squad_id).toEqual(divEntriesToGet[i].squad_id);
         expect(divEntries[i].div_id).toEqual(divEntriesToGet[i].div_id);        
-        expect(divEntries[i].fee).toEqual(divEntriesToGet[i].fee);
+        expect(divEntries[i].fee + "").toEqual(divEntriesToGet[i].fee);
+      }
+    })
+    it('should get all divEntries for tmnt when hdcp is not 0', async () => { 
+      const hdcpDiv = {
+        ...div,
+        hdcp_per: 0.85,
+      }
+      await putDiv(hdcpDiv);      
+
+      const divEntries = await getAllDivEntriesForTmnt(tmntIdForDivEntries);
+      expect(divEntries).toHaveLength(divEntriesToGet.length);
+      if (!divEntries) return;
+      for (let i = 0; i < divEntries.length; i++) {
+        if (divEntries[i].id === divEntriesToGet[0].id) { 
+          expect(divEntries[i].player_id).toEqual(divEntriesToGet[0].player_id);
+          expect(divEntries[i].hdcp).toEqual(calcHdcp(divEntriesToGet[0], hdcpDiv));                    
+        } else if (divEntries[i].id === divEntriesToGet[1].id) {
+          expect(divEntries[i].player_id).toEqual(divEntriesToGet[1].player_id);
+          expect(divEntries[i].hdcp).toEqual(calcHdcp(divEntriesToGet[1], hdcpDiv));
+        } else if (divEntries[i].id === divEntriesToGet[2].id) { 
+          expect(divEntries[i].player_id).toEqual(divEntriesToGet[2].player_id);
+          expect(divEntries[i].hdcp).toEqual(calcHdcp(divEntriesToGet[2], hdcpDiv));
+        } else if (divEntries[i].id === divEntriesToGet[3].id) {
+          expect(divEntries[i].player_id).toEqual(divEntriesToGet[3].player_id);
+          expect(divEntries[i].hdcp).toEqual(calcHdcp(divEntriesToGet[3], hdcpDiv));
+        } else {
+          expect(true).toBe(false);
+        }        
+        expect(divEntries[i].squad_id).toEqual(divEntriesToGet[i].squad_id);
+        expect(divEntries[i].div_id).toEqual(divEntriesToGet[i].div_id);        
+        expect(divEntries[i].fee + "").toEqual(divEntriesToGet[i].fee);
+      }
+    })
+    it('should get all divEntries for tmnt when hdcp is not 0 and int_hdcp = true' , async () => { 
+      const hdcpDiv = {
+        ...div,
+        hdcp_per: 0.85,
+        int_hdcp: true,
+      }
+      await putDiv(hdcpDiv);      
+
+      const divEntries = await getAllDivEntriesForTmnt(tmntIdForDivEntries);
+      expect(divEntries).toHaveLength(divEntriesToGet.length);
+      if (!divEntries) return;
+      for (let i = 0; i < divEntries.length; i++) {
+        if (divEntries[i].id === divEntriesToGet[0].id) { 
+          expect(divEntries[i].player_id).toEqual(divEntriesToGet[0].player_id);
+          expect(divEntries[i].hdcp).toEqual(calcHdcp(divEntriesToGet[0], hdcpDiv));
+        } else if (divEntries[i].id === divEntriesToGet[1].id) {
+          expect(divEntries[i].player_id).toEqual(divEntriesToGet[1].player_id);
+          expect(divEntries[i].hdcp).toEqual(calcHdcp(divEntriesToGet[1], hdcpDiv));
+        } else if (divEntries[i].id === divEntriesToGet[2].id) { 
+          expect(divEntries[i].player_id).toEqual(divEntriesToGet[2].player_id);
+          expect(divEntries[i].hdcp).toEqual(calcHdcp(divEntriesToGet[2], hdcpDiv));
+        } else if (divEntries[i].id === divEntriesToGet[3].id) {
+          expect(divEntries[i].player_id).toEqual(divEntriesToGet[3].player_id);
+          expect(divEntries[i].hdcp).toEqual(calcHdcp(divEntriesToGet[3], hdcpDiv));
+        } else {
+          expect(true).toBe(false);
+        }        
+        expect(divEntries[i].squad_id).toEqual(divEntriesToGet[i].squad_id);
+        expect(divEntries[i].div_id).toEqual(divEntriesToGet[i].div_id);        
+        expect(divEntries[i].fee + "").toEqual(divEntriesToGet[i].fee);
       }
     })
     it('should return 0 divEntries for not found tmnt', async () => { 
@@ -166,6 +326,15 @@ describe('dbDivEntries', () => {
 
   describe('getAllDivEntriesForSquad()', () => {
 
+    beforeAll(async () => {
+      await deletePostedDivEntry();
+      await putDiv(div);
+    })
+
+    afterEach(async () => {
+      await putDiv(div);
+    })
+
     it('should get all divEntries for squad', async () => { 
       const divEntries = await getAllDivEntriesForSquad(divEntriesToGet[0].squad_id);  
       expect(divEntries).toHaveLength(divEntriesToGet.length);
@@ -173,18 +342,85 @@ describe('dbDivEntries', () => {
       for (let i = 0; i < divEntries.length; i++) {
         if (divEntries[i].id === divEntriesToGet[0].id) { 
           expect(divEntries[i].player_id).toEqual(divEntriesToGet[0].player_id);
+          expect(divEntries[i].hdcp).toEqual(divEntriesToGet[0].hdcp);
         } else if (divEntries[i].id === divEntriesToGet[1].id) {
           expect(divEntries[i].player_id).toEqual(divEntriesToGet[1].player_id);
+          expect(divEntries[i].hdcp).toEqual(divEntriesToGet[1].hdcp);
         } else if (divEntries[i].id === divEntriesToGet[2].id) { 
           expect(divEntries[i].player_id).toEqual(divEntriesToGet[2].player_id);
+          expect(divEntries[i].hdcp).toEqual(divEntriesToGet[2].hdcp);
         } else if (divEntries[i].id === divEntriesToGet[3].id) {
           expect(divEntries[i].player_id).toEqual(divEntriesToGet[3].player_id);
+          expect(divEntries[i].hdcp).toEqual(divEntriesToGet[3].hdcp);
         } else {
           expect(true).toBe(false);
         }        
         expect(divEntries[i].squad_id).toEqual(divEntriesToGet[i].squad_id);
         expect(divEntries[i].div_id).toEqual(divEntriesToGet[i].div_id);        
-        expect(divEntries[i].fee).toEqual(divEntriesToGet[i].fee);
+        expect(divEntries[i].fee + "").toEqual(divEntriesToGet[i].fee);
+      }
+    })
+    it('should get all divEntries for squad when hdcp is not 0', async () => { 
+      const hdcpDiv = {
+        ...div,
+        hdcp_per: 0.85,
+      }
+      await putDiv(hdcpDiv);      
+
+      const divEntries = await getAllDivEntriesForSquad(divEntriesToGet[0].squad_id);  
+      expect(divEntries).toHaveLength(divEntriesToGet.length);
+      if (!divEntries) return;
+      for (let i = 0; i < divEntries.length; i++) {
+        if (divEntries[i].id === divEntriesToGet[0].id) { 
+          expect(divEntries[i].player_id).toEqual(divEntriesToGet[0].player_id);
+          expect(divEntries[i].hdcp).toEqual(calcHdcp(divEntriesToGet[0], hdcpDiv));                    
+        } else if (divEntries[i].id === divEntriesToGet[1].id) {
+          expect(divEntries[i].player_id).toEqual(divEntriesToGet[1].player_id);
+          expect(divEntries[i].hdcp).toEqual(calcHdcp(divEntriesToGet[1], hdcpDiv));
+        } else if (divEntries[i].id === divEntriesToGet[2].id) { 
+          expect(divEntries[i].player_id).toEqual(divEntriesToGet[2].player_id);
+          expect(divEntries[i].hdcp).toEqual(calcHdcp(divEntriesToGet[2], hdcpDiv));
+        } else if (divEntries[i].id === divEntriesToGet[3].id) {
+          expect(divEntries[i].player_id).toEqual(divEntriesToGet[3].player_id);
+          expect(divEntries[i].hdcp).toEqual(calcHdcp(divEntriesToGet[3], hdcpDiv));
+        } else {
+          expect(true).toBe(false);
+        }        
+        expect(divEntries[i].squad_id).toEqual(divEntriesToGet[i].squad_id);
+        expect(divEntries[i].div_id).toEqual(divEntriesToGet[i].div_id);        
+        expect(divEntries[i].fee + "").toEqual(divEntriesToGet[i].fee);
+      }
+    })
+    it('should get all divEntries for squad when hdcp is not 0 and int_hdcp = true' , async () => { 
+      const hdcpDiv = {
+        ...div,
+        hdcp_per: 0.85,
+        int_hdcp: true,
+      }
+      await putDiv(hdcpDiv);      
+
+      const divEntries = await getAllDivEntriesForSquad(divEntriesToGet[0].squad_id);  
+      expect(divEntries).toHaveLength(divEntriesToGet.length);
+      if (!divEntries) return;
+      for (let i = 0; i < divEntries.length; i++) {
+        if (divEntries[i].id === divEntriesToGet[0].id) { 
+          expect(divEntries[i].player_id).toEqual(divEntriesToGet[0].player_id);
+          expect(divEntries[i].hdcp).toEqual(calcHdcp(divEntriesToGet[0], hdcpDiv));
+        } else if (divEntries[i].id === divEntriesToGet[1].id) {
+          expect(divEntries[i].player_id).toEqual(divEntriesToGet[1].player_id);
+          expect(divEntries[i].hdcp).toEqual(calcHdcp(divEntriesToGet[1], hdcpDiv));
+        } else if (divEntries[i].id === divEntriesToGet[2].id) { 
+          expect(divEntries[i].player_id).toEqual(divEntriesToGet[2].player_id);
+          expect(divEntries[i].hdcp).toEqual(calcHdcp(divEntriesToGet[2], hdcpDiv));
+        } else if (divEntries[i].id === divEntriesToGet[3].id) {
+          expect(divEntries[i].player_id).toEqual(divEntriesToGet[3].player_id);
+          expect(divEntries[i].hdcp).toEqual(calcHdcp(divEntriesToGet[3], hdcpDiv));
+        } else {
+          expect(true).toBe(false);
+        }        
+        expect(divEntries[i].squad_id).toEqual(divEntriesToGet[i].squad_id);
+        expect(divEntries[i].div_id).toEqual(divEntriesToGet[i].div_id);        
+        expect(divEntries[i].fee + "").toEqual(divEntriesToGet[i].fee);
       }
     })
     it('should return 0 divEntries for not found squad', async () => { 
@@ -211,6 +447,15 @@ describe('dbDivEntries', () => {
 
   describe('getAllDivEntriesForDiv()', () => {
 
+    beforeAll(async () => {
+      await deletePostedDivEntry();
+      await putDiv(div);
+    })
+
+    afterEach(async () => {
+      await putDiv(div);
+    })
+
     it('should get all divEntries for div', async () => { 
       const divEntries = await getAllDivEntriesForDiv(divEntriesToGet[0].div_id);  
       expect(divEntries).toHaveLength(divEntriesToGet.length);
@@ -218,20 +463,89 @@ describe('dbDivEntries', () => {
       for (let i = 0; i < divEntries.length; i++) {
         if (divEntries[i].id === divEntriesToGet[0].id) { 
           expect(divEntries[i].player_id).toEqual(divEntriesToGet[0].player_id);
+          expect(divEntries[i].hdcp).toEqual(divEntriesToGet[0].hdcp);
         } else if (divEntries[i].id === divEntriesToGet[1].id) {
           expect(divEntries[i].player_id).toEqual(divEntriesToGet[1].player_id);
+          expect(divEntries[i].hdcp).toEqual(divEntriesToGet[1].hdcp);
         } else if (divEntries[i].id === divEntriesToGet[2].id) { 
           expect(divEntries[i].player_id).toEqual(divEntriesToGet[2].player_id);
+          expect(divEntries[i].hdcp).toEqual(divEntriesToGet[2].hdcp);
         } else if (divEntries[i].id === divEntriesToGet[3].id) {
           expect(divEntries[i].player_id).toEqual(divEntriesToGet[3].player_id);
+          expect(divEntries[i].hdcp).toEqual(divEntriesToGet[3].hdcp);
         } else {
           expect(true).toBe(false);
         }        
         expect(divEntries[i].squad_id).toEqual(divEntriesToGet[i].squad_id);
         expect(divEntries[i].div_id).toEqual(divEntriesToGet[i].div_id);        
-        expect(divEntries[i].fee).toEqual(divEntriesToGet[i].fee);
+        expect(divEntries[i].fee + "").toEqual(divEntriesToGet[i].fee);
       }
     })
+
+    it('should get all divEntries for div when hdcp is not 0', async () => { 
+      const hdcpDiv = {
+        ...div,
+        hdcp_per: 0.85,
+      }
+      await putDiv(hdcpDiv);      
+
+      const divEntries = await getAllDivEntriesForDiv(divEntriesToGet[0].div_id);  
+      expect(divEntries).toHaveLength(divEntriesToGet.length);
+      if (!divEntries) return;
+      for (let i = 0; i < divEntries.length; i++) {
+        if (divEntries[i].id === divEntriesToGet[0].id) { 
+          expect(divEntries[i].player_id).toEqual(divEntriesToGet[0].player_id);
+          expect(divEntries[i].hdcp).toEqual(calcHdcp(divEntriesToGet[0], hdcpDiv));                    
+        } else if (divEntries[i].id === divEntriesToGet[1].id) {
+          expect(divEntries[i].player_id).toEqual(divEntriesToGet[1].player_id);
+          expect(divEntries[i].hdcp).toEqual(calcHdcp(divEntriesToGet[1], hdcpDiv));
+        } else if (divEntries[i].id === divEntriesToGet[2].id) { 
+          expect(divEntries[i].player_id).toEqual(divEntriesToGet[2].player_id);
+          expect(divEntries[i].hdcp).toEqual(calcHdcp(divEntriesToGet[2], hdcpDiv));
+        } else if (divEntries[i].id === divEntriesToGet[3].id) {
+          expect(divEntries[i].player_id).toEqual(divEntriesToGet[3].player_id);
+          expect(divEntries[i].hdcp).toEqual(calcHdcp(divEntriesToGet[3], hdcpDiv));
+        } else {
+          expect(true).toBe(false);
+        }        
+        expect(divEntries[i].squad_id).toEqual(divEntriesToGet[i].squad_id);
+        expect(divEntries[i].div_id).toEqual(divEntriesToGet[i].div_id);        
+        expect(divEntries[i].fee + "").toEqual(divEntriesToGet[i].fee);
+      }
+    })
+    it('should get all divEntries for div when hdcp is not 0 and int_hdcp = true' , async () => { 
+      const hdcpDiv = {
+        ...div,
+        hdcp_per: 0.85,
+        int_hdcp: true,
+      }
+      await putDiv(hdcpDiv);      
+
+      const divEntries = await getAllDivEntriesForDiv(divEntriesToGet[0].div_id);  
+      expect(divEntries).toHaveLength(divEntriesToGet.length);
+      if (!divEntries) return;
+      for (let i = 0; i < divEntries.length; i++) {
+        if (divEntries[i].id === divEntriesToGet[0].id) { 
+          expect(divEntries[i].player_id).toEqual(divEntriesToGet[0].player_id);
+          expect(divEntries[i].hdcp).toEqual(calcHdcp(divEntriesToGet[0], hdcpDiv));
+        } else if (divEntries[i].id === divEntriesToGet[1].id) {
+          expect(divEntries[i].player_id).toEqual(divEntriesToGet[1].player_id);
+          expect(divEntries[i].hdcp).toEqual(calcHdcp(divEntriesToGet[1], hdcpDiv));
+        } else if (divEntries[i].id === divEntriesToGet[2].id) { 
+          expect(divEntries[i].player_id).toEqual(divEntriesToGet[2].player_id);
+          expect(divEntries[i].hdcp).toEqual(calcHdcp(divEntriesToGet[2], hdcpDiv));
+        } else if (divEntries[i].id === divEntriesToGet[3].id) {
+          expect(divEntries[i].player_id).toEqual(divEntriesToGet[3].player_id);
+          expect(divEntries[i].hdcp).toEqual(calcHdcp(divEntriesToGet[3], hdcpDiv));
+        } else {
+          expect(true).toBe(false);
+        }        
+        expect(divEntries[i].squad_id).toEqual(divEntriesToGet[i].squad_id);
+        expect(divEntries[i].div_id).toEqual(divEntriesToGet[i].div_id);        
+        expect(divEntries[i].fee + "").toEqual(divEntriesToGet[i].fee);
+      }
+    })
+
     it('should return 0 divEntries for not found div', async () => { 
       const divEntries = await getAllDivEntriesForDiv(notFoundDivId);
       expect(divEntries).toHaveLength(0);
@@ -267,22 +581,22 @@ describe('dbDivEntries', () => {
 
     let createdDivEntry = false;
 
-    const deletePostedDivEntry = async () => { 
-      const response = await axios.get(url);
-      const divEntrys = response.data.divEntries;
-      const toDel = divEntrys.find((d: divEntryType) => d.fee === '82');
-      if (toDel) {
-        try {
-          const delResponse = await axios({
-            method: "delete",
-            withCredentials: true,
-            url: oneDivEntryUrl + toDel.id          
-          });        
-        } catch (err) {
-          if (err instanceof AxiosError) console.log(err.message);
-        }
-      }
-    }
+    // const deletePostedDivEntry = async () => { 
+    //   const response = await axios.get(url);
+    //   const divEntrys = response.data.divEntries;
+    //   const toDel = divEntrys.find((d: divEntryType) => d.fee === '82');
+    //   if (toDel) {
+    //     try {
+    //       const delResponse = await axios({
+    //         method: "delete",
+    //         withCredentials: true,
+    //         url: oneDivEntryUrl + toDel.id          
+    //       });        
+    //     } catch (err) {
+    //       if (err instanceof AxiosError) console.log(err.message);
+    //     }
+    //   }
+    // }
 
     beforeAll(async () => { 
       await deletePostedDivEntry();
@@ -307,7 +621,7 @@ describe('dbDivEntries', () => {
       expect(postedDivEntry.squad_id).toEqual(divEntryToPost.squad_id);
       expect(postedDivEntry.div_id).toEqual(divEntryToPost.div_id);
       expect(postedDivEntry.player_id).toEqual(divEntryToPost.player_id);
-      expect(postedDivEntry.fee).toEqual(divEntryToPost.fee);
+      expect(postedDivEntry.fee + "").toEqual(divEntryToPost.fee);
     })
     it('should post a sanitzed divEntry', async () => { 
       const toSanitizse = {
@@ -323,7 +637,7 @@ describe('dbDivEntries', () => {
       expect(postedDivEntry.div_id).toEqual(toSanitizse.div_id);
       expect(postedDivEntry.squad_id).toEqual(toSanitizse.squad_id);
       expect(postedDivEntry.player_id).toEqual(toSanitizse.player_id);
-      expect(postedDivEntry.fee).toEqual('82');
+      expect(postedDivEntry.fee + "").toEqual('82');
     })
     it('should not post a divEntry if got invalid data', async () => { 
       const invalidDivEntry = {
@@ -340,6 +654,7 @@ describe('dbDivEntries', () => {
     let createdDivEntries = false;    
 
     beforeAll(async () => {
+      await deletePostedDivEntry();
       await deleteAllDivEntriesForTmnt(tmntIdToDel);
     })
 
@@ -368,7 +683,7 @@ describe('dbDivEntries', () => {
         expect(divEntries[i].squad_id).toEqual(mockDivEntriesToPost[i].squad_id);
         expect(divEntries[i].div_id).toEqual(mockDivEntriesToPost[i].div_id);
         expect(divEntries[i].player_id).toEqual(mockDivEntriesToPost[i].player_id);
-        expect(divEntries[i].fee).toEqual(mockDivEntriesToPost[i].fee);
+        expect(divEntries[i].fee + "").toEqual(mockDivEntriesToPost[i].fee);
       }
     })
     it('should NOT post many divEntries with sanitization, fee value sanitized to ""', async () => {
@@ -449,7 +764,7 @@ describe('dbDivEntries', () => {
       expect(puttedDivEntry.squad_id).toBe(divEntryToPut.squad_id);
       expect(puttedDivEntry.div_id).toBe(divEntryToPut.div_id);
       expect(puttedDivEntry.player_id).toBe(divEntryToPut.player_id);
-      expect(puttedDivEntry.fee).toBe(divEntryToPut.fee);
+      expect(puttedDivEntry.fee + "").toBe(divEntryToPut.fee);
     })
     it('should NOT put a divEntry with sanitization, fee value sanitized to ""', async () => {
       const toSanitize = cloneDeep(divEntryToPut)

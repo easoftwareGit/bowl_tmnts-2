@@ -37,6 +37,11 @@ export const formatValue2Dec = (value: string, localConfig: LocaleConfig): strin
   });
 }
 
+export const currencyFormatter = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+});
+
 export const formatDecimalValue = (value: number): string => { 
   if (Number.isNaN(value)) return '';
   return (Number.isInteger(value)) ? value.toString() : value.toFixed(2);  

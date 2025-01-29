@@ -4,11 +4,40 @@ import { initDivEntry } from "@/lib/db/initVals";
 import { divEntryDataType, divEntryType } from "@/lib/types/types";
 import { sanitizeDivEntry, validateDivEntry } from "./validate";
 import { ErrorCode } from "@/lib/validation";
+import { divEntriesWithHdcp } from "./hdcpCalc";
 
 // routes /api/divEntries
 export async function GET(request: NextRequest) {
   try {
-    const divEntries = await prisma.div_Entry.findMany();
+    const divEntriesNoHdcp = await prisma.div_Entry.findMany({
+      select: {
+        id: true,
+        squad_id: true,
+        div_id: true,
+        player_id: true,
+        fee: true,
+        player: {
+          select: {
+            average: true,
+          },
+        },
+        div: {
+          select: {
+            hdcp_from: true,
+            int_hdcp: true,
+            hdcp_per: true,            
+          },
+        },        
+      },
+    });    
+
+    const divEntries = divEntriesWithHdcp(
+      divEntriesNoHdcp.map(entry => ({
+        ...entry,
+        fee: entry.fee.toNumber()
+      })
+    ));    
+
     return NextResponse.json({ divEntries }, { status: 200 });
   } catch (error) {
     return NextResponse.json(

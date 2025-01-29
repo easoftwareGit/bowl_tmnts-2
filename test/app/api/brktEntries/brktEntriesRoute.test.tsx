@@ -92,8 +92,8 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
     it('should get all brktEntries', async () => {
       const response = await axios.get(url);
       expect(response.status).toBe(200);
-      // 45 rows in prisma/seed.ts
-      expect(response.data.brktEntries).toHaveLength(45);
+      // 19 rows in prisma/seed.ts
+      expect(response.data.brktEntries).toHaveLength(19);
     })
   })
 
@@ -1142,6 +1142,592 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         }
       }
     })
+  })
+
+  describe('PUT many brktEntries API: /api/brktEntries/many', () => {  
+    let createdBrktEntries = false;    
+
+    beforeAll(async () => { 
+      await deleteAllBrktEntriesForTmnt(tmntIdFormMockData);
+    })
+
+    beforeEach(() => {
+      createdBrktEntries = false;
+    })
+
+    afterEach(async () => {
+      if (createdBrktEntries) {
+        await deleteAllBrktEntriesForTmnt(tmntIdFormMockData);
+      }      
+    })
+
+    const testBrktEntries: brktEntryType[] = [
+      {
+        ...initBrktEntry,
+        id: 'ben_01ce0472be3d476ea1caa99dd05953fa',
+        player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+        brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+        num_brackets: 4,
+        fee: '20'
+      },
+      {
+        ...initBrktEntry,
+        id: 'ben_02ce0472be3d476ea1caa99dd05953fa',
+        player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+        brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+        num_brackets: 4,
+        fee: '20'
+      },
+      {
+        ...initBrktEntry,
+        id: 'ben_03ce0472be3d476ea1caa99dd05953fa',
+        player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+        brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+        num_brackets: 6,
+        fee: '30'
+      },
+      {
+        ...initBrktEntry,
+        id: 'ben_04ce0472be3d476ea1caa99dd05953fa',
+        player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+        brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+        num_brackets: 6,
+        fee: '30'
+      },
+      {
+        ...initBrktEntry,
+        id: 'ben_05ce0472be3d476ea1caa99dd05953fa',
+        player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+        brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+        num_brackets: 8,
+        fee: '40'
+      },
+      {
+        ...initBrktEntry,
+        id: 'ben_06ce0472be3d476ea1caa99dd05953fa',
+        player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+        brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+        num_brackets: 8,
+        fee: '40'
+      },
+    ];
+
+    it('should update many brktEntries - just update 1 player 2 bracket entry', async () => {
+      const brktEntryJSON = JSON.stringify(testBrktEntries);
+      const response = await axios({
+        method: "post",
+        data: brktEntryJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      const postedBrktEntries = response.data.brktEntries;
+      expect(response.status).toBe(201);
+      createdBrktEntries = true;
+      expect(postedBrktEntries).not.toBeNull();
+      expect(postedBrktEntries.length).toBe(testBrktEntries.length);
+      
+      // change number of brackets, fee, add eType = 'u'
+      const brktEntriesToUpdate = [
+        {
+          ...testBrktEntries[0],
+          num_brackets: 3,
+          fee: '15',
+          eType: "u",
+        },
+        {
+          ...testBrktEntries[1],
+          num_brackets: 3,
+          fee: '15',
+          eType: "u",
+        },
+      ]
+
+      const toUpdateJSON = JSON.stringify(brktEntriesToUpdate)
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.updates).toBe(2);
+      expect(updateInfo.inserts).toBe(0);
+      expect(updateInfo.deletes).toBe(0);
+    });
+    it('should update many brktEntries - just update 2 player 1 bracket entry', async () => {
+      const brktEntryJSON = JSON.stringify(testBrktEntries);
+      const response = await axios({
+        method: "post",
+        data: brktEntryJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      const postedBrktEntries = response.data.brktEntries;
+      expect(response.status).toBe(201);
+      createdBrktEntries = true;
+      expect(postedBrktEntries).not.toBeNull();
+      expect(postedBrktEntries.length).toBe(testBrktEntries.length);
+      
+      // change number of brackets, fee, add eType = 'u'
+      const brktEntriesToUpdate = [
+        {
+          ...testBrktEntries[0],
+          num_brackets: 3,
+          fee: '15',
+          eType: "u",
+        },
+        {
+          ...testBrktEntries[2],
+          num_brackets: 5,
+          fee: '25',
+          eType: "u",
+        },
+      ]
+
+      const toUpdateJSON = JSON.stringify(brktEntriesToUpdate)
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.updates).toBe(2);
+      expect(updateInfo.inserts).toBe(0);
+      expect(updateInfo.deletes).toBe(0);
+    });
+    it('should update many brktEntries - just update 2 player 2 bracket entry', async () => {
+      const brktEntryJSON = JSON.stringify(testBrktEntries);
+      const response = await axios({
+        method: "post",
+        data: brktEntryJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      const postedBrktEntries = response.data.brktEntries;
+      expect(response.status).toBe(201);
+      createdBrktEntries = true;
+      expect(postedBrktEntries).not.toBeNull();
+      expect(postedBrktEntries.length).toBe(testBrktEntries.length);
+      
+      // change number of brackets, fee, add eType = 'u'
+      const brktEntriesToUpdate = [
+        {
+          ...testBrktEntries[0],
+          num_brackets: 3,
+          fee: '15',
+          eType: "u",
+        },
+        {
+          ...testBrktEntries[1],
+          num_brackets: 3,
+          fee: '15',
+          eType: "u",
+        },
+        {
+          ...testBrktEntries[2],
+          num_brackets: 5,
+          fee: '25',
+          eType: "u",
+        },
+        {
+          ...testBrktEntries[3],
+          num_brackets: 5,
+          fee: '25',
+          eType: "u",
+        },
+      ]
+
+      const toUpdateJSON = JSON.stringify(brktEntriesToUpdate)
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.updates).toBe(4);
+      expect(updateInfo.inserts).toBe(0);
+      expect(updateInfo.deletes).toBe(0);
+    });
+    it('should insert many brktEntries - just insert 1 player 2 bracket entry', async () => {
+      createdBrktEntries = true;
+      
+      // add eType = 'i'
+      const brktEntriesToUpdate = [
+        {
+          ...testBrktEntries[0],
+          eType: "i",
+        },
+        {
+          ...testBrktEntries[1],
+          eType: "i",
+        },
+      ]
+
+      const toUpdateJSON = JSON.stringify(brktEntriesToUpdate)
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.updates).toBe(0);
+      expect(updateInfo.inserts).toBe(2);
+      expect(updateInfo.deletes).toBe(0);
+    });
+    it('should insert many brktEntries - just insert 2 player 1 bracket entry', async () => {
+      createdBrktEntries = true;
+      
+      // add eType = 'i'
+      const brktEntriesToUpdate = [
+        {
+          ...testBrktEntries[0],
+          eType: "i",
+        },
+        {
+          ...testBrktEntries[2],
+          eType: "i",
+        },
+      ]
+
+      const toUpdateJSON = JSON.stringify(brktEntriesToUpdate)
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.updates).toBe(0);
+      expect(updateInfo.inserts).toBe(2);
+      expect(updateInfo.deletes).toBe(0);
+    });
+    it('should insert many brktEntries - just insert 2 player 2 bracket entry', async () => {
+      createdBrktEntries = true;
+      
+      // add eType = 'i'
+      const brktEntriesToUpdate = [
+        {
+          ...testBrktEntries[0],
+          eType: "i",
+        },
+        {
+          ...testBrktEntries[1],
+          eType: "i",
+        },
+        {
+          ...testBrktEntries[2],
+          eType: "i",
+        },
+        {
+          ...testBrktEntries[3],
+          eType: "i",
+        },
+      ]
+
+      const toUpdateJSON = JSON.stringify(brktEntriesToUpdate)
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.updates).toBe(0);
+      expect(updateInfo.inserts).toBe(4);
+      expect(updateInfo.deletes).toBe(0);
+    });
+    it('should delete many brktEntries - just delete 1 player 2 bracket entry', async () => {
+      const brktEntryJSON = JSON.stringify(testBrktEntries);
+      const response = await axios({
+        method: "post",
+        data: brktEntryJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      const postedBrktEntries = response.data.brktEntries;
+      expect(response.status).toBe(201);
+      createdBrktEntries = true;
+      expect(postedBrktEntries).not.toBeNull();
+      expect(postedBrktEntries.length).toBe(testBrktEntries.length);
+      
+      // add eType = 'd'
+      const brktEntriesToUpdate = [
+        {
+          ...testBrktEntries[0],
+          eType: "d",
+        },
+        {
+          ...testBrktEntries[1],
+          eType: "d",
+        },
+      ]
+
+      const toUpdateJSON = JSON.stringify(brktEntriesToUpdate)
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.updates).toBe(0);
+      expect(updateInfo.inserts).toBe(0);
+      expect(updateInfo.deletes).toBe(2);
+    });
+    it('should delete many brktEntries - just delete 2 player 1 bracket entry', async () => {
+      const brktEntryJSON = JSON.stringify(testBrktEntries);
+      const response = await axios({
+        method: "post",
+        data: brktEntryJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      const postedBrktEntries = response.data.brktEntries;
+      expect(response.status).toBe(201);
+      createdBrktEntries = true;
+      expect(postedBrktEntries).not.toBeNull();
+      expect(postedBrktEntries.length).toBe(testBrktEntries.length);
+      
+      // add eType = 'd'
+      const brktEntriesToUpdate = [
+        {
+          ...testBrktEntries[0],
+          eType: "d",
+        },
+        {
+          ...testBrktEntries[2],
+          eType: "d",
+        },
+      ]
+
+      const toUpdateJSON = JSON.stringify(brktEntriesToUpdate)
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.updates).toBe(0);
+      expect(updateInfo.inserts).toBe(0);
+      expect(updateInfo.deletes).toBe(2);
+    });
+    it('should delete many brktEntries - just delete 2 player 2 bracket entry', async () => {
+      const brktEntryJSON = JSON.stringify(testBrktEntries);
+      const response = await axios({
+        method: "post",
+        data: brktEntryJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      const postedBrktEntries = response.data.brktEntries;
+      expect(response.status).toBe(201);
+      createdBrktEntries = true;
+      expect(postedBrktEntries).not.toBeNull();
+      expect(postedBrktEntries.length).toBe(testBrktEntries.length);
+      
+      // add eType = 'd'
+      const brktEntriesToUpdate = [
+        {
+          ...testBrktEntries[0],
+          eType: "d",
+        },
+        {
+          ...testBrktEntries[1],
+          eType: "d",
+        },
+        {
+          ...testBrktEntries[2],
+          eType: "d",
+        },
+        {
+          ...testBrktEntries[3],
+          eType: "d",
+        },
+      ]
+
+      const toUpdateJSON = JSON.stringify(brktEntriesToUpdate)
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.updates).toBe(0);
+      expect(updateInfo.inserts).toBe(0);
+      expect(updateInfo.deletes).toBe(4);
+    });
+    it('should update, insert and delete many brktEntries', async () => {
+      const multiBrktEntriesTest = [
+        {
+          ...testBrktEntries[0],
+        },
+        {
+          ...testBrktEntries[1],
+        },
+        {
+          ...testBrktEntries[2],
+        },
+        {
+          ...testBrktEntries[3],
+        },
+      ]
+      const potEntryJSON = JSON.stringify(multiBrktEntriesTest);
+      const response = await axios({
+        method: "post",
+        data: potEntryJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      const postedBrktEntries = response.data.brktEntries;
+      expect(response.status).toBe(201);
+      createdBrktEntries = true;
+      expect(postedBrktEntries).not.toBeNull();
+      expect(postedBrktEntries.length).toBe(multiBrktEntriesTest.length);
+
+      // set edits, set eType
+      const brktEntriesToUpdate = [
+        {
+          ...multiBrktEntriesTest[0],
+          num_brackets: 3,
+          fee: '15',
+          eType: "u",
+        },
+        {
+          ...multiBrktEntriesTest[1],
+          num_brackets: 3,
+          fee: '15',
+          eType: "u",
+        },
+        {
+          ...multiBrktEntriesTest[2],
+          eType: "d",
+        },
+        {
+          ...multiBrktEntriesTest[3],          
+          eType: "d",
+        },
+        {
+          ...testBrktEntries[4],
+          eType: "i",
+        },
+        {
+          ...testBrktEntries[5],
+          eType: "i",
+        },
+      ]
+      const toUpdateJSON = JSON.stringify(brktEntriesToUpdate)
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.updates).toBe(2);
+      expect(updateInfo.inserts).toBe(2);
+      expect(updateInfo.deletes).toBe(2);
+    });
+    it('should NOT update, insert and delete many brktEntries with invalid data', async () => {
+      const multiBrktEntriesTest = [
+        {
+          ...testBrktEntries[0],
+        },
+        {
+          ...testBrktEntries[1],
+        },
+        {
+          ...testBrktEntries[2],
+        },
+        {
+          ...testBrktEntries[3],
+        },
+      ]
+      const potEntryJSON = JSON.stringify(multiBrktEntriesTest);
+      const response = await axios({
+        method: "post",
+        data: potEntryJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      const postedBrktEntries = response.data.brktEntries;
+      expect(response.status).toBe(201);
+      createdBrktEntries = true;
+      expect(postedBrktEntries).not.toBeNull();
+      expect(postedBrktEntries.length).toBe(multiBrktEntriesTest.length);
+
+      // set edits, set eType
+      const brktEntriesToUpdate = [
+        {
+          ...multiBrktEntriesTest[0],
+          num_brackets: 999999,
+          fee: '4999995',
+          eType: "u",
+        },
+        {
+          ...multiBrktEntriesTest[1],
+          num_brackets: 3,
+          fee: '15',
+          eType: "u",
+        },
+        {
+          ...multiBrktEntriesTest[2],
+          eType: "d",
+        },
+        {
+          ...multiBrktEntriesTest[3],          
+          eType: "d",
+        },
+        {
+          ...testBrktEntries[4],
+          eType: "i",
+        },
+        {
+          ...testBrktEntries[5],
+          eType: "i",
+        },
+      ]
+      const toUpdateJSON = JSON.stringify(brktEntriesToUpdate)
+      try {
+        const updateResponse = await axios({
+          method: "put",
+          data: toUpdateJSON,
+          withCredentials: true,
+          url: manyUrl,
+        })
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    });
   })
 
   describe('PUT one brktEntry API: /api/brktEntries/brktEntry/:id', () => { 

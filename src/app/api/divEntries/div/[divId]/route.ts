@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isValidBtDbId } from "@/lib/validation";
+import { divEntriesWithHdcp } from "../../hdcpCalc";
 
 // routes /api/divEntry/div/:divId
 
@@ -14,11 +15,38 @@ export async function GET(
     if (!isValidBtDbId(divId, "div")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
-    const divEntries = await prisma.div_Entry.findMany({
+    const divEntriesNoHdcp = await prisma.div_Entry.findMany({
+      select: {
+        id: true,
+        squad_id: true,
+        div_id: true,
+        player_id: true,
+        fee: true,
+        player: {
+          select: {
+            average: true,
+          },
+        },
+        div: {
+          select: {
+            hdcp_from: true,
+            int_hdcp: true,
+            hdcp_per: true,            
+          },
+        },        
+      },
       where: {
         div_id: divId
       },
     })
+
+    const divEntries = divEntriesWithHdcp(
+      divEntriesNoHdcp.map(entry => ({
+        ...entry,
+        fee: entry.fee.toNumber()
+      })
+    ));    
+
     return NextResponse.json({divEntries}, {status: 200});
   } catch (err: any) {
     return NextResponse.json({ err: "error getting divEntries for div" },

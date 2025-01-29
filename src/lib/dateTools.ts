@@ -97,7 +97,7 @@ export const startOfDayFromString = (dateStr: string): Date | null => {
   if (!validDateString(dateStr)) return null;
   const d = new Date(dateStr)
   if (!isValid(d)) return null;
-  let tsoMins = d.getTimezoneOffset()
+  const tsoMins = d.getTimezoneOffset()
   return addMinutes(new Date(dateStr), tsoMins) 
 }
 
@@ -231,7 +231,7 @@ export const removeTimeFromISODateStr = (dateStr: string): string => {
 export const getTimeString = (timeAsDate: Date): string => {  
   if (timeAsDate) {
     const offset = timeAsDate.getTimezoneOffset();
-    let currentDateTime = new Date(
+    const currentDateTime = new Date(
       timeAsDate.getFullYear(),
       timeAsDate.getMonth() - 1,
       timeAsDate.getDate(),
@@ -312,4 +312,17 @@ export const getMinutesFromTime = (time: string): number => {
   } catch (error) {
     return -1
   }
+}
+
+/**
+ * converts a date string to a number
+ * 
+ * @param {string} dateStr - date string to convert to number
+ * @returns {number | NaN} - number of milliseconds or NaN
+ */
+export const dateStringToTimeStamp = (dateStr: string): number => {
+  if (!dateStr || dateStr.length === 0 || typeof dateStr !== 'string') return NaN
+  const date = parseISO(dateStr)
+  if (!isValid(date)) return NaN
+  return date.getTime()
 }

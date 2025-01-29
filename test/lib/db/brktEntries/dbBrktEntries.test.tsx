@@ -4,8 +4,9 @@ import { testBaseBrktEntriesApi } from "../../../testApi";
 import { brktEntryType } from "@/lib/types/types";
 import { initBrktEntry } from "@/lib/db/initVals";
 import { mockBrktEntriesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllBrktEntriesForBrkt, deleteAllBrktEntriesForDiv, deleteAllBrktEntriesForSquad, deleteAllBrktEntriesForTmnt, deleteBrktEntry, getAllBrktEntriesForBrkt, getAllBrktEntriesForDiv, getAllBrktEntriesForSquad, getAllBrktEntriesForTmnt, postBrktEntry, postManyBrktEntries, putBrktEntry } from "@/lib/db/brktEntries/dbBrktEntries";
+import { deleteAllBrktEntriesForBrkt, deleteAllBrktEntriesForDiv, deleteAllBrktEntriesForSquad, deleteAllBrktEntriesForTmnt, deleteBrktEntry, getAllBrktEntriesForBrkt, getAllBrktEntriesForDiv, getAllBrktEntriesForSquad, getAllBrktEntriesForTmnt, getAllRawBrktEntriesForBrkt, getAllRawBrktEntriesForSquad, postBrktEntry, postManyBrktEntries, putBrktEntry } from "@/lib/db/brktEntries/dbBrktEntries";
 import { cloneDeep } from "lodash";
+import { dateStringToTimeStamp } from "@/lib/dateTools";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -26,6 +27,8 @@ const url = testBaseBrktEntriesApi.startsWith("undefined")
   ? baseBrktEntriesApi
   : testBaseBrktEntriesApi;
 const oneBrktEntryUrl = url + "/brktEntry/";
+const oneSquadUrl = url + "/squad/";
+const brktUrl = url + "/brkt/";
 
 const brktEntriesToGet: brktEntryType[] = [
   {
@@ -219,6 +222,63 @@ describe('dbBrktEntries', () => {
     })
   })
 
+  describe('getAllRawBrktEntriesForSquad()', () => {
+
+    it('should get all raw brktEntries for squad', async () => { 
+
+      // get raw data from the database
+      const rawResponse = await axios.get(oneSquadUrl + squadIdForBrktEntries);
+      expect(rawResponse.status).toBe(200);        
+      const rawBrktEntries = rawResponse.data.brktEntries;
+      expect(rawBrktEntries).toHaveLength(4); // 2 brktEntries for brkt in prisma/seeds.ts
+      for (let i = 0; i < rawBrktEntries.length; i++) {
+        expect(rawBrktEntries[i].brkt_id === brktEntriesToGet[0].brkt_id || rawBrktEntries[i].brkt_id === brktEntriesToGet[1].brkt_id).toBe(true);
+        expect(rawBrktEntries[i].createdAt).not.toBe(null);
+        expect(rawBrktEntries[i].updatedAt).not.toBe(null);
+      }      
+
+      const brktEntries = await getAllRawBrktEntriesForSquad(squadIdForBrktEntries);  
+      expect(brktEntries).toHaveLength(brktEntriesToGet.length);
+      if (!brktEntries) return;
+      for (let i = 0; i < brktEntries.length; i++) {
+        if (brktEntries[i].id === brktEntriesToGet[0].id) { 
+          expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[0].player_id);
+        } else if (brktEntries[i].id === brktEntriesToGet[1].id) {
+          expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[1].player_id);
+        } else if (brktEntries[i].id === brktEntriesToGet[2].id) { 
+          expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[2].player_id);
+        } else if (brktEntries[i].id === brktEntriesToGet[3].id) {
+          expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[3].player_id);
+        } else {
+          expect(true).toBe(false);
+        }        
+        expect(brktEntries[i].brkt_id === brkt1Id || brktEntries[i].brkt_id === brkt2Id).toBeTruthy();        
+        expect(brktEntries[i].num_brackets).toEqual(brktEntriesToGet[i].num_brackets);        
+        expect(brktEntries[i].fee).toEqual(brktEntriesToGet[i].fee);
+      }
+    })
+    it('should return 0 brktEntries for not found squad', async () => { 
+      const brktEntries = await getAllRawBrktEntriesForSquad(notFoundSquadId);
+      expect(brktEntries).toHaveLength(0);
+    })
+    it('should return null if squad id is invalid', async () => { 
+      const brktEntries = await getAllRawBrktEntriesForSquad("test");
+      expect(brktEntries).toBeNull();
+    })
+    it('should return null if squad id is a valid id, but not a squad id', async () => {
+      const brktEntries = await getAllRawBrktEntriesForSquad(notFoundTmntId);
+      expect(brktEntries).toBeNull();
+    })
+    it('should return null if squad id is null', async () => { 
+      const brktEntries = await getAllRawBrktEntriesForSquad(null as any);
+      expect(brktEntries).toBeNull();
+    })
+    it('should return null if squad id is undefined', async () => { 
+      const brktEntries = await getAllRawBrktEntriesForSquad(undefined as any);
+      expect(brktEntries).toBeNull();
+    })
+  })
+
   describe('getAllBrktEntriesForDiv()', () => {
 
     it('should get all brktEntries for div', async () => { 
@@ -305,6 +365,66 @@ describe('dbBrktEntries', () => {
     })
     it('should return null if brkt id is undefined', async () => { 
       const brktEntries = await getAllBrktEntriesForBrkt(undefined as any);
+      expect(brktEntries).toBeNull();
+    })
+  })
+
+  describe('getAllRawBrktEntriesForBrkt()', () => {
+
+    it('should get all brktEntries for brkt', async () => {
+      // get raw data from the database
+      const rawResponse = await axios.get(brktUrl + brktIdForBrktEntries);
+      expect(rawResponse.status).toBe(200);        
+      const rawBrktEntries = rawResponse.data.brktEntries;
+      expect(rawBrktEntries).toHaveLength(2); // 2 brktEntries for brkt in prisma/seeds.ts
+      for (let i = 0; i < rawBrktEntries.length; i++) {
+        expect(rawBrktEntries[i].brkt_id).toBe(brktIdForBrktEntries);
+        expect(rawBrktEntries[i].createdAt).not.toBe(null);
+        expect(rawBrktEntries[i].updatedAt).not.toBe(null);
+      }      
+
+      // get data from the function
+      const brktEntries = await getAllRawBrktEntriesForBrkt(brktIdForBrktEntries);  
+      expect(brktEntries).toHaveLength(2);
+      if (!brktEntries) return;
+      for (let i = 0; i < brktEntries.length; i++) {
+        if (brktEntries[i].id === brktEntriesToGet[0].id) { 
+          expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[0].player_id);
+        } else if (brktEntries[i].id === brktEntriesToGet[1].id) {
+          expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[1].player_id);
+        } else if (brktEntries[i].id === brktEntriesToGet[2].id) { 
+          expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[2].player_id);
+        } else if (brktEntries[i].id === brktEntriesToGet[3].id) {
+          expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[3].player_id);
+        } else {
+          expect(true).toBe(false);
+        }        
+        // all remaining fields should be the same for each brkt
+        expect(brktEntries[i].brkt_id === brkt1Id || brktEntries[i].brkt_id === brkt2Id).toBeTruthy();        
+        expect(brktEntries[i].num_brackets).toEqual(brktEntriesToGet[i].num_brackets);        
+        expect(brktEntries[i].fee).toEqual(brktEntriesToGet[i].fee);
+        expect(brktEntries[i].createdAt).toBe(dateStringToTimeStamp(rawBrktEntries[i].createdAt));
+        expect(brktEntries[i].updatedAt).toBe(dateStringToTimeStamp(rawBrktEntries[i].updatedAt));
+      }
+    })
+    it('should return 0 brktEntries for not found brkt', async () => { 
+      const brktEntries = await getAllRawBrktEntriesForBrkt(notFoundBrktId);
+      expect(brktEntries).toHaveLength(0);
+    })
+    it('should return null if brkt id is invalid', async () => { 
+      const brktEntries = await getAllRawBrktEntriesForBrkt("test");
+      expect(brktEntries).toBeNull();
+    })
+    it('should return null if brkt id is a valid id, but not a div id', async () => {
+      const brktEntries = await getAllRawBrktEntriesForBrkt(userId);
+      expect(brktEntries).toBeNull();
+    })
+    it('should return null if brkt id is null', async () => { 
+      const brktEntries = await getAllRawBrktEntriesForBrkt(null as any);
+      expect(brktEntries).toBeNull();
+    })
+    it('should return null if brkt id is undefined', async () => { 
+      const brktEntries = await getAllRawBrktEntriesForBrkt(undefined as any);
       expect(brktEntries).toBeNull();
     })
   })

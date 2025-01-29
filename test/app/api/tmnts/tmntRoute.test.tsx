@@ -288,12 +288,12 @@ describe('Tmnts - API: /api/tmnts', () => {
         url: allResultsUrl,
       });
       expect(response.status).toBe(200);
-      // 10 rows for results in prisma/seed.ts
-      expect(response.data.tmnts).toHaveLength(10);
+      // 11 rows for results in prisma/seed.ts
+      expect(response.data.tmnts).toHaveLength(11);
       const tmnts = response.data.tmnts;
       expect(tmnts[0].bowls).not.toBeNull();   
       // tmnts sorted by date newest to oldest
-      expect(removeTimeFromISODateStr(tmnts[0].start_date)).toBe('2024-07-01');
+      expect(removeTimeFromISODateStr(tmnts[0].start_date)).toBe('2024-12-01');
     })
     it('should get array of tmnt results by year for 2022 API: /api/tmnts/results/yyyy', async () => {
       const response = await axios({
@@ -337,7 +337,7 @@ describe('Tmnts - API: /api/tmnts', () => {
       });
       expect(response.status).toBe(200);
       // 1 rows for upcoming in prisma/seed.ts
-      expect(response.data.tmnts).toHaveLength(2);
+      expect(response.data.tmnts).toHaveLength(1);
       const tmnts = response.data.tmnts;
       expect(tmnts[0].bowls).not.toBeNull();
       // tmnts sorted by date newest to oldest

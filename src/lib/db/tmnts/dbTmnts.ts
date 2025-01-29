@@ -20,7 +20,6 @@ const oneTmntUrl = url + "/tmnt/";
 const userUrl = url + "/user/";
 const yearsUrl = url + "/years/";
 const upcomingUrl = url + "/upcoming";
-const allResultsUrl = url + "/results"
 const resultsUrl = url + "/results/"
 
 /**

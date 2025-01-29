@@ -4,7 +4,7 @@ import { testBaseBrktsApi } from "../../../testApi";
 import { brktType } from "@/lib/types/types";
 import { initBrkt } from "@/lib/db/initVals";
 import { btDbUuid } from "@/lib/uuid";
-import { mockBrktsToPost, tmntToDelId, mockDivs, mockSquadsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
+import { mockBrktsToPost, tmntToDelId, mockDivs, mockSquadsToPost, mockDivsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/dbSquads";
 import { deleteAllTmntDivs, postManyDivs } from "@/lib/db/divs/dbDivs";
 import { deleteAllTmntBrkts } from "@/lib/db/brkts/dbBrkts";
@@ -1517,8 +1517,10 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
       await deleteAllTmntSquads(tmntToDelId);      
       await deleteAllTmntDivs(tmntToDelId);
 
+      await deletePostedBrkt();
+
       // make sure test data in database
-      await postManyDivs(mockDivs)
+      await postManyDivs(mockDivsToPost)
       await postManySquads(mockSquadsToPost)
     })
 
@@ -1529,6 +1531,8 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
     afterEach(async () => {
       if (createdBrkts) {
         await deleteAllTmntBrkts(tmntToDelId);
+
+        await deletePostedBrkt();
       }
     })
 
@@ -1538,17 +1542,17 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
       await deleteAllTmntSquads(tmntToDelId);
     })
 
-    it('should create many brkts', async () => {
-      const brktsJSON = JSON.stringify(mockBrktsToPost);
+    it('should create many brkts', async () => {  
+      const brktsJSON = JSON.stringify(mockBrktsToPost);      
       const response = await axios({
         method: "post",
         data: brktsJSON,
         withCredentials: true,
-        url: manyUrl
+        url: manyUrl        
       })
       expect(response.status).toBe(201);
       const postedBrkts = response.data.brkts;
-      createdBrkts = true;
+      createdBrkts = true;      
       expect(postedBrkts.length).toBe(mockBrktsToPost.length);
       for (let i = 0; i < postedBrkts.length; i++) {
         expect(postedBrkts[i].id).toBe(mockBrktsToPost[i].id);

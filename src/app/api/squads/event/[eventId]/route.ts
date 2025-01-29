@@ -19,7 +19,8 @@ export async function GET(
     const squads = await prisma.squad.findMany({
       where: {
         event_id: evevntId
-      }
+      },
+      orderBy: { sort_order: 'asc' }
     })    
     // no matching rows is ok
     return NextResponse.json({squads}, {status: 200});    

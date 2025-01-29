@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ErrorCode, isValidBtDbId } from "@/lib/validation";
 import { initDivEntry } from "@/lib/db/initVals";
-import { divEntryType } from "@/lib/types/types";
+import { divEntryRawType, divEntryType } from "@/lib/types/types";
 import { sanitizeDivEntry, validateDivEntry } from "../../validate";
+import { divEntriesWithHdcp } from "../../hdcpCalc";
 
 // routes /api/divEntries/divEntry/:id
 
@@ -16,14 +17,44 @@ export async function GET(
     if (!isValidBtDbId(id, "den")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
-    const divEntry = await prisma.div_Entry.findUnique({
+    const divEntryNoHdcp = await prisma.div_Entry.findUnique({
+      select: {
+        id: true,
+        squad_id: true,
+        div_id: true,
+        player_id: true,
+        fee: true,
+        player: {
+          select: {
+            average: true,
+          },
+        },
+        div: {
+          select: {
+            hdcp_from: true,
+            int_hdcp: true,
+            hdcp_per: true,            
+          },
+        },        
+      },      
       where: {
         id: id,
       },
     })
-    if (!divEntry) {
+    if (!divEntryNoHdcp) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
-    }    
+    } 
+    // convert fee to number
+    const divEntriesNoHecp: divEntryRawType[] = [
+      {
+        ...divEntryNoHdcp,
+        fee: divEntryNoHdcp.fee.toNumber(),
+      }
+    ];
+    // calc hdcp
+    const divEntries = divEntriesWithHdcp(divEntriesNoHecp);
+    // get just 1st and only div entry
+    const divEntry = divEntries[0];
     return NextResponse.json({ divEntry }, { status: 200 });
   } catch (err: any) {
     return NextResponse.json({ error: "error getting divEntry" }, { status: 500 });

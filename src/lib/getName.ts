@@ -26,6 +26,15 @@ export const getBrktOrElimName = (feature: brktType | elimType, divs: divType[])
     : '';
 }
 
+export const fullName = (first: string, last: string): string => {  
+  if (!first || first.trim().length === 0) {
+    return (!last || last.trim().length === 0) ? '' : last.trim();
+  } else { 
+    return (!last || last.trim().length === 0)
+      ? first : first.trim() + ' ' + last.trim();
+  }
+}
+
 export const exportedForTesting = {
   findDiv,  
 }

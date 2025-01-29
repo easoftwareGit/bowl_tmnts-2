@@ -100,7 +100,7 @@ export const authOptions: NextAuthOptions = {
     // signIn is for GoogleProvider    
     async session({ session, token, user }) {
       // session if used in client components
-      console.log("Session Callback", { session, token, user });
+      // console.log("Session Callback", { session, token, user });
       
       // pass in user info into session
       return {
@@ -118,7 +118,7 @@ export const authOptions: NextAuthOptions = {
     },
     async jwt({ token, user, account, session, trigger }) {
 
-      console.log("JWT Callback", { token, user, account, session, trigger });
+      // console.log("JWT Callback", { token, user, account, session, trigger });
 
       if (trigger === "update" &&
         (session?.first_name ||

@@ -1,11 +1,15 @@
 import axios from "axios";
 import { baseSquadsApi } from "@/lib/db/apiPaths";
 import { testBaseSquadsApi } from "../../../../test/testApi";
-import { squadType } from "@/lib/types/types";
-import { validateSquad } from "@/app/api/squads/validate";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { dataOneSquadEntriesType, squadType } from "@/lib/types/types";
+import { isValidBtDbId } from "@/lib/validation";
 import { removeTimeFromISODateStr, startOfDayFromString } from "@/lib/dateTools";
 import { blankSquad } from "../initVals";
+import { getAllPlayersForSquad } from "../players/dbPlayers";
+import { getAllDivEntriesForSquad } from "../divEntries/dbDivEntries";
+import { getAllPotEntriesForSquad } from "../potEntries/dbPotEntries";
+import { getAllBrktEntriesForSquad, getAllRawBrktEntriesForSquad } from "../brktEntries/dbBrktEntries";
+import { getAllElimEntriesForSquad } from "../elimEntries/dbElimEntries";
 
 const url = testBaseSquadsApi.startsWith("undefined")
   ? baseSquadsApi
@@ -50,6 +54,55 @@ export const getAllSquadsForTmnt = async (tmntId: string): Promise<squadType[] |
   } catch (err) {
     return null;
   }  
+}
+
+/**
+ * get all entries for a squad
+ *  
+ * @param {string} squadId - id of squad
+ * @returns {dataOneSquadEntriesType | null} - all entries for squad
+ */
+export const getAllEntriesForSquad = async (squadId: string): Promise<dataOneSquadEntriesType | null> => { 
+  if (!squadId || !isValidBtDbId(squadId, 'sqd')) return null
+  try {
+    const allTmntEntries: dataOneSquadEntriesType = {      
+      squadId: squadId,
+      players: [],
+      divEntries: [],
+      potEntries: [],
+      // brktEntries: [],
+      rawBrktEntries: [],
+      elimEntries: [],
+    }
+
+    const aePlayers = await getAllPlayersForSquad(squadId);
+    if (!aePlayers) return null
+    allTmntEntries.players = [...aePlayers];
+
+    const aeDivs = await getAllDivEntriesForSquad(squadId);
+    if (!aeDivs) return null
+    allTmntEntries.divEntries = [...aeDivs];
+
+    const aePots = await getAllPotEntriesForSquad(squadId);
+    if (!aePots) return null
+    allTmntEntries.potEntries = [...aePots];
+
+    // const aeBrkts = await getAllBrktEntriesForSquad(squadId);
+    // if (!aeBrkts) return null
+    // allTmntEntries.brktEntries = [...aeBrkts];
+
+    const aeBrkts = await getAllRawBrktEntriesForSquad(squadId);
+    if (!aeBrkts) return null
+    allTmntEntries.rawBrktEntries = [...aeBrkts];
+
+    const aeElims = await getAllElimEntriesForSquad(squadId);
+    if (!aeElims) return null
+    allTmntEntries.elimEntries = [...aeElims];
+
+    return allTmntEntries
+  } catch (err) {
+    return null;
+  }
 }
 
 /**

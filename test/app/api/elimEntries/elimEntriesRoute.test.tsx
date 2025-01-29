@@ -4,9 +4,8 @@ import { testBaseElimEntriesApi } from "../../../testApi";
 import { initElimEntry } from "@/lib/db/initVals";
 import { elimEntryType } from "@/lib/types/types";
 import { mockElimEntriesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-// import { deleteAllElimEntriesForTmnt, postManyElimEntries } from "@/lib/db/elimEntries/dbElimEntries";
-import { cloneDeep } from "lodash";
 import { deleteAllElimEntriesForTmnt, postManyElimEntries } from "@/lib/db/elimEntries/dbElimEntries";
+import { cloneDeep } from "lodash";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -97,17 +96,17 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
     })
   })
 
-  describe('GET one elimEntry API: /api/elimEntries/elimEntry/:id', () => { 
+  describe('GET one elimEntry API: /api/elimEntries/elimEntry/:id', () => {
 
     it('should get one elimEntry by ID', async () => {
       try {
         const urlToUse = oneElimEntryUrl + testElimEntry.id;
         const response = await axios.get(urlToUse);
-        expect(response.status).toBe(200);        
+        expect(response.status).toBe(200);
         const elimEntry = response.data.elimEntry;
-        expect(elimEntry.id).toEqual(testElimEntry.id);        
+        expect(elimEntry.id).toEqual(testElimEntry.id);
         expect(elimEntry.elim_id).toEqual(testElimEntry.elim_id);
-        expect(elimEntry.player_id).toEqual(testElimEntry.player_id);        
+        expect(elimEntry.player_id).toEqual(testElimEntry.player_id);
         expect(elimEntry.fee).toEqual(testElimEntry.fee);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -155,20 +154,20 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
     })
   })
 
-  describe('GET all elimEntries for one div API: /api/elimEntries/div/:divId', () => { 
+  describe('GET all elimEntries for one div API: /api/elimEntries/div/:divId', () => {
 
     beforeAll(async () => {
       await deletePostedElimEntry();
     })
 
-    it('should get all elimEntries for one div', async () => { 
+    it('should get all elimEntries for one div', async () => {
       const response = await axios.get(divUrl + divIdForElimEntries);
-      expect(response.status).toBe(200);        
+      expect(response.status).toBe(200);
       const elimEntries = response.data.elimEntries;
       expect(elimEntries).toHaveLength(4); // 4 elimEntries for div in prisma/seeds.ts
-      for (let i = 0; i < elimEntries.length; i++) {        
+      for (let i = 0; i < elimEntries.length; i++) {
         expect(elimEntries[i].elim_id === elim1Id || elimEntries[i].elim_id === elim2Id).toBeTruthy();
-      }      
+      }
     })
     it('should not get all elimEntries for one div when divId is invalid', async () => {
       try {
@@ -199,23 +198,23 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
       expect(response.status).toBe(200);
       const elimEntries = response.data.elimEntries;
       expect(elimEntries).toHaveLength(0);
-    })    
+    })
   })
 
-  describe('GET all elimEntries for one squad API: /api/elimEntries/squad/:squadId', () => { 
+  describe('GET all elimEntries for one squad API: /api/elimEntries/squad/:squadId', () => {
 
     beforeAll(async () => {
       await deletePostedElimEntry();
     })
 
-    it('should get all elimEntries for one squad', async () => { 
+    it('should get all elimEntries for one squad', async () => {
       const response = await axios.get(squadUrl + squadIdForElimEntries);
-      expect(response.status).toBe(200);        
+      expect(response.status).toBe(200);
       const elimEntries = response.data.elimEntries;
       expect(elimEntries).toHaveLength(4); // 4 elimEntries for squad in prisma/seeds.ts
       for (let i = 0; i < elimEntries.length; i++) {
         expect(elimEntries[i].elim_id === elim1Id || elimEntries[i].elim_id === elim2Id).toBeTruthy();
-      }      
+      }
     })
     it('should not get all elimEntries for one squad when squadId is invalid', async () => {
       try {
@@ -246,23 +245,23 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
       expect(response.status).toBe(200);
       const elimEntries = response.data.elimEntries;
       expect(elimEntries).toHaveLength(0);
-    })    
+    })
   })
 
-  describe('GET all elimEntries for one brkt API: /api/elimEntries/brkt/:brktId', () => { 
+  describe('GET all elimEntries for one brkt API: /api/elimEntries/brkt/:brktId', () => {
 
     beforeAll(async () => {
       await deletePostedElimEntry();
     })
 
-    it('should get all elimEntries for one brkt', async () => { 
+    it('should get all elimEntries for one brkt', async () => {
       const response = await axios.get(elimUrl + elimIdForElimEntries);
-      expect(response.status).toBe(200);        
+      expect(response.status).toBe(200);
       const elimEntries = response.data.elimEntries;
       expect(elimEntries).toHaveLength(2); // 2 elimEntries for brkt in prisma/seeds.ts
       for (let i = 0; i < elimEntries.length; i++) {
         expect(elimEntries[i].elim_id).toBe(elimIdForElimEntries);
-      }      
+      }
     })
     it('should not get all elimEntries for one brkt when brktId is invalid', async () => {
       try {
@@ -293,23 +292,23 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
       expect(response.status).toBe(200);
       const elimEntries = response.data.elimEntries;
       expect(elimEntries).toHaveLength(0);
-    })        
+    })
   })
 
-  describe('GET all elimEntries for one tmnt API: /api/elimEntries/tmnt/:tmntId', () => { 
+  describe('GET all elimEntries for one tmnt API: /api/elimEntries/tmnt/:tmntId', () => {
 
     beforeAll(async () => {
       await deletePostedElimEntry();
     })
 
-    it('should get all elimEntries for one tmnt', async () => { 
+    it('should get all elimEntries for one tmnt', async () => {
       const response = await axios.get(tmntUrl + tmntIdForElimEntries);
-      expect(response.status).toBe(200);        
+      expect(response.status).toBe(200);
       const elimEntries = response.data.elimEntries;
       expect(elimEntries).toHaveLength(4); // 4 elimEntries for tmnt in prisma/seeds.ts
       for (let i = 0; i < elimEntries.length; i++) {
         expect(elimEntries[i].elim_id === elim1Id || elimEntries[i].elim_id === elim2Id).toBeTruthy();
-      }      
+      }
     })
     it('should not get all elimEntries for one tmnt when tmntId is invalid', async () => {
       try {
@@ -340,15 +339,15 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
       expect(response.status).toBe(200);
       const elimEntries = response.data.elimEntries;
       expect(elimEntries).toHaveLength(0);
-    })    
+    })
   })
 
-  describe('POST one elimEntry API: /api/elimEntries', () => { 
+  describe('POST one elimEntry API: /api/elimEntries', () => {
     
     const elimEntryToPost: elimEntryType = {
-      ...initElimEntry,           
+      ...initElimEntry,
       elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
-      player_id: 'ply_bb0fd8bbd9e34d34a7fa90b4111c6e40',      
+      player_id: 'ply_bb0fd8bbd9e34d34a7fa90b4111c6e40',
       fee: '3'
     }
 
@@ -365,7 +364,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
     afterEach(async () => {
       if (createdElimEntry) {
         await deletePostedElimEntry();
-      }      
+      }
     })
 
     it('should post one elimEntry', async () => {
@@ -375,19 +374,19 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         withCredentials: true,
         url: url,
         data: divPlayerJSON
-      });      
+      });
       expect(response.status).toBe(201);
       createdElimEntry = true;
       const elimEntry = response.data.elimEntry;
-      expect(elimEntry.id).toEqual(elimEntryToPost.id);      
+      expect(elimEntry.id).toEqual(elimEntryToPost.id);
       expect(elimEntry.elim_id).toEqual(elimEntryToPost.elim_id);
-      expect(elimEntry.player_id).toEqual(elimEntryToPost.player_id);      
+      expect(elimEntry.player_id).toEqual(elimEntryToPost.player_id);
       expect(elimEntry.fee).toEqual(elimEntryToPost.fee);
     })
-    it('should NOT post a sanitized elimEntry (saninted fee = "")', async () => { 
+    it('should NOT post a sanitized elimEntry (saninted fee = "")', async () => {
       const toSanitize = {
         ...elimEntryToPost,
-        fee: '   3  ',        
+        fee: '   3  ',
       }
       const elimEntryJSON = JSON.stringify(toSanitize);
       try {
@@ -403,8 +402,8 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
           expect(err.response?.status).toBe(422);
         } else {
           expect(true).toBeFalsy();
-        }        
-      }      
+        }
+      }
     })
     it('should not post one elimEntry when id is blank', async () => {
       const invalidElimEntry = {
@@ -425,8 +424,8 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
           expect(err.response?.status).toBe(422);
         } else {
           expect(true).toBeFalsy();
-        }        
-      }      
+        }
+      }
     })
     it('should not post one elimEntry when elim_id is blank', async () => {
       const invalidElimEntry = {
@@ -447,7 +446,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
           expect(err.response?.status).toBe(422);
         } else {
           expect(true).toBeFalsy();
-        }        
+        }
       }
     })
     it('should not post one elimEntry when player_id is blank', async () => {
@@ -469,7 +468,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
           expect(err.response?.status).toBe(422);
         } else {
           expect(true).toBeFalsy();
-        }        
+        }
       }
     })
     it('should not post one elimEntry when fee is blank', async () => {
@@ -491,8 +490,8 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
           expect(err.response?.status).toBe(422);
         } else {
           expect(true).toBeFalsy();
-        }        
-      }      
+        }
+      }
     })
     it('should not post one elimEntry when id is invalid', async () => {
       const invalidElimEntry = {
@@ -513,7 +512,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
           expect(err.response?.status).toBe(422);
         } else {
           expect(true).toBeFalsy();
-        }        
+        }
       }
     })
     it('should not post one elimEntry when id is valid, but not a elimEntry id', async () => {
@@ -535,7 +534,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
           expect(err.response?.status).toBe(422);
         } else {
           expect(true).toBeFalsy();
-        }        
+        }
       }
     })
     it('should not post one elimEntry when elim_id is invalid', async () => {
@@ -557,7 +556,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
           expect(err.response?.status).toBe(422);
         } else {
           expect(true).toBeFalsy();
-        }        
+        }
       }
     })
     it('should not post one elimEntry when elim_id is valid, bit not a elim id', async () => {
@@ -579,7 +578,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
           expect(err.response?.status).toBe(422);
         } else {
           expect(true).toBeFalsy();
-        }        
+        }
       }
     })
     it('should not post one elimEntry when player_id is invalid', async () => {
@@ -652,7 +651,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
       const invalidElimEntry = {
         ...elimEntryToPost,
         fee: '1234567890'
-      } 
+      }
       const elimEntryJSON = JSON.stringify(invalidElimEntry);
       try {
         const response = await axios({
@@ -668,15 +667,15 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         } else {
           expect(true).toBeFalsy();
         }
-      } 
+      }
     })
   })
 
-  describe('POST many elimEntries for one tmnt API: /api/elimEntries/many', () => { 
+  describe('POST many elimEntries for one tmnt API: /api/elimEntries/many', () => {
 
-    let createdElimEntries = false;    
+    let createdElimEntries = false;
 
-    beforeAll(async () => { 
+    beforeAll(async () => {
       await deleteAllElimEntriesForTmnt(tmntIdFormMockData);
     })
 
@@ -687,7 +686,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
     afterEach(async () => {
       if (createdElimEntries) {
         await deleteAllElimEntriesForTmnt(tmntIdFormMockData);
-      }      
+      }
     })
 
     it('should create many elimEntries', async () => {
@@ -696,7 +695,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         method: "post",
         data: elimEntryJSON,
         withCredentials: true,
-        url: manyUrl,        
+        url: manyUrl,
       })
       const postedElimEntries = response.data.elimEntries;
       expect(response.status).toBe(201);
@@ -704,22 +703,22 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
       expect(postedElimEntries).not.toBeNull();
       expect(postedElimEntries.length).toBe(mockElimEntriesToPost.length);
       for (let i = 0; i < mockElimEntriesToPost.length; i++) {
-        expect(postedElimEntries[i].id).toBe(mockElimEntriesToPost[i].id);        
+        expect(postedElimEntries[i].id).toBe(mockElimEntriesToPost[i].id);
         expect(postedElimEntries[i].elim_id).toBe(mockElimEntriesToPost[i].elim_id);
-        expect(postedElimEntries[i].player_id).toBe(mockElimEntriesToPost[i].player_id);        
-        expect(postedElimEntries[i].fee).toBe(mockElimEntriesToPost[i].fee);        
+        expect(postedElimEntries[i].player_id).toBe(mockElimEntriesToPost[i].player_id);
+        expect(postedElimEntries[i].fee).toBe(mockElimEntriesToPost[i].fee);
       }
     })
-    it('should NOT create many elimEntries with sanitzied data, fee sanitized to ""', async () => { 
+    it('should NOT create many elimEntries with sanitzied data, fee sanitized to ""', async () => {
       const toSanitize = cloneDeep(mockElimEntriesToPost);
-      toSanitize[0].fee = '   84  ';      
-      const elimEntryJSON = JSON.stringify(toSanitize);      
+      toSanitize[0].fee = '   84  ';
+      const elimEntryJSON = JSON.stringify(toSanitize);
       try {
         const response = await axios({
           method: "post",
           data: elimEntryJSON,
           withCredentials: true,
-          url: manyUrl,        
+          url: manyUrl,
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -731,7 +730,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
       }
     })
     it('shold NOT create many elimEntries with blank ids', async () => {
-      const toSanitize = cloneDeep(mockElimEntriesToPost);      
+      const toSanitize = cloneDeep(mockElimEntriesToPost);
       toSanitize[1].id = '';
       const elimEntryJSON = JSON.stringify(toSanitize);
       try {
@@ -739,7 +738,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
           method: "post",
           data: elimEntryJSON,
           withCredentials: true,
-          url: manyUrl,        
+          url: manyUrl,
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -751,7 +750,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
       }
     })
     it('should NOT create many elimEntries with blank elim_id', async () => {
-      const toSanitize = cloneDeep(mockElimEntriesToPost);      
+      const toSanitize = cloneDeep(mockElimEntriesToPost);
       toSanitize[1].elim_id = '';
       const elimEntryJSON = JSON.stringify(toSanitize);
       try {
@@ -759,7 +758,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
           method: "post",
           data: elimEntryJSON,
           withCredentials: true,
-          url: manyUrl,        
+          url: manyUrl,
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -771,7 +770,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
       }
     })
     it('should NOT create many elimEntries with blank player_id', async () => {
-      const toSanitize = cloneDeep(mockElimEntriesToPost);      
+      const toSanitize = cloneDeep(mockElimEntriesToPost);
       toSanitize[1].player_id = '';
       const elimEntryJSON = JSON.stringify(toSanitize);
       try {
@@ -779,7 +778,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
           method: "post",
           data: elimEntryJSON,
           withCredentials: true,
-          url: manyUrl,        
+          url: manyUrl,
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -791,7 +790,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
       }
     })
     it('should NOT create many elimEntries with blank fee', async () => {
-      const toSanitize = cloneDeep(mockElimEntriesToPost);      
+      const toSanitize = cloneDeep(mockElimEntriesToPost);
       toSanitize[1].fee = '';
       const elimEntryJSON = JSON.stringify(toSanitize);
       try {
@@ -799,7 +798,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
           method: "post",
           data: elimEntryJSON,
           withCredentials: true,
-          url: manyUrl,        
+          url: manyUrl,
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -811,7 +810,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
       }
     })
     it('should NOT create many elimEntries with invalid id', async () => {
-      const toSanitize = cloneDeep(mockElimEntriesToPost);      
+      const toSanitize = cloneDeep(mockElimEntriesToPost);
       toSanitize[1].id = 'test';
       const elimEntryJSON = JSON.stringify(toSanitize);
       try {
@@ -819,7 +818,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
           method: "post",
           data: elimEntryJSON,
           withCredentials: true,
-          url: manyUrl,        
+          url: manyUrl,
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -831,7 +830,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
       }
     })
     it('should NOT create many elimEntries with valid id, but not a elimEntry id', async () => {
-      const toSanitize = cloneDeep(mockElimEntriesToPost);      
+      const toSanitize = cloneDeep(mockElimEntriesToPost);
       toSanitize[1].id = userId;
       const elimEntryJSON = JSON.stringify(toSanitize);
       try {
@@ -839,7 +838,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
           method: "post",
           data: elimEntryJSON,
           withCredentials: true,
-          url: manyUrl,        
+          url: manyUrl,
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -851,7 +850,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
       }
     })
     it('should NOT create many elimEntries with invalid elim_id', async () => {
-      const toSanitize = cloneDeep(mockElimEntriesToPost);      
+      const toSanitize = cloneDeep(mockElimEntriesToPost);
       toSanitize[1].elim_id = 'test';
       const elimEntryJSON = JSON.stringify(toSanitize);
       try {
@@ -859,7 +858,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
           method: "post",
           data: elimEntryJSON,
           withCredentials: true,
-          url: manyUrl,        
+          url: manyUrl,
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -871,7 +870,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
       }
     })
     it('should NOT create many elimEntries with valid elim_id, but not a div id', async () => {
-      const toSanitize = cloneDeep(mockElimEntriesToPost);      
+      const toSanitize = cloneDeep(mockElimEntriesToPost);
       toSanitize[1].elim_id = userId;
       const elimEntryJSON = JSON.stringify(toSanitize);
       try {
@@ -879,7 +878,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
           method: "post",
           data: elimEntryJSON,
           withCredentials: true,
-          url: manyUrl,        
+          url: manyUrl,
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -891,7 +890,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
       }
     })
     it('should NOT create many elimEntries with invalid player_id', async () => {
-      const toSanitize = cloneDeep(mockElimEntriesToPost);      
+      const toSanitize = cloneDeep(mockElimEntriesToPost);
       toSanitize[1].player_id = 'test';
       const elimEntryJSON = JSON.stringify(toSanitize);
       try {
@@ -899,7 +898,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
           method: "post",
           data: elimEntryJSON,
           withCredentials: true,
-          url: manyUrl,        
+          url: manyUrl,
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -911,7 +910,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
       }
     })
     it('should NOT create many elimEntries with valid player_id, but not a player id', async () => {
-      const toSanitize = cloneDeep(mockElimEntriesToPost);      
+      const toSanitize = cloneDeep(mockElimEntriesToPost);
       toSanitize[1].player_id = userId;
       const elimEntryJSON = JSON.stringify(toSanitize);
       try {
@@ -919,7 +918,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
           method: "post",
           data: elimEntryJSON,
           withCredentials: true,
-          url: manyUrl,        
+          url: manyUrl,
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -931,7 +930,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
       }
     })
     it('should NOT create many elimEntries when fee to too low', async () => {
-      const toSanitize = cloneDeep(mockElimEntriesToPost);      
+      const toSanitize = cloneDeep(mockElimEntriesToPost);
       toSanitize[1].fee = '-1';
       const elimEntryJSON = JSON.stringify(toSanitize);
       try {
@@ -939,7 +938,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
           method: "post",
           data: elimEntryJSON,
           withCredentials: true,
-          url: manyUrl,        
+          url: manyUrl,
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -959,7 +958,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
           method: "post",
           data: elimEntryJSON,
           withCredentials: true,
-          url: manyUrl,        
+          url: manyUrl,
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -971,6 +970,530 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
       }
     })
   })
+
+  describe('PUT many elimEntries API: /api/elimEntries/many', () => {
+
+    let createdElimEntries = false;
+
+    beforeAll(async () => {
+      await deleteAllElimEntriesForTmnt(tmntIdFormMockData);
+    })
+
+    beforeEach(() => {
+      createdElimEntries = false;
+    })
+
+    afterEach(async () => {
+      if (createdElimEntries) {
+        await deleteAllElimEntriesForTmnt(tmntIdFormMockData);
+      }
+    })
+
+    const testElimEntries = [
+      {
+        ...mockElimEntriesToPost[0],
+      },
+      {
+        ...mockElimEntriesToPost[1],
+      },
+      {
+        ...initElimEntry,
+        id: 'een_03be0472be3d476ea1caa99dd05953fa',
+        elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
+        player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+        fee: '5'
+      },
+      {
+        ...initElimEntry,
+        id: 'een_04be0472be3d476ea1caa99dd05953fa',
+        elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
+        player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+        fee: '5'
+      },
+    ];
+
+    it('should update many elimEntries - just update 1 player 2 elim entry', async () => {
+      const potEntryJSON = JSON.stringify(testElimEntries);
+      const response = await axios({
+        method: "post",
+        data: potEntryJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      const postedElimEntries = response.data.elimEntries;
+      expect(response.status).toBe(201);
+      createdElimEntries = true;
+      expect(postedElimEntries).not.toBeNull();
+      expect(postedElimEntries.length).toBe(testElimEntries.length);
+            
+      // change fee, add eType = 'u'
+      const elimEntriesToUpdate = [
+        {
+          ...testElimEntries[0],
+          fee: '4',
+          eType: "u",
+        },
+        {
+          ...testElimEntries[1],
+          fee: '4',
+          eType: "u",
+        },
+      ]
+      const toUpdateJSON = JSON.stringify(elimEntriesToUpdate)
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.updates).toBe(2);
+      expect(updateInfo.inserts).toBe(0);
+      expect(updateInfo.deletes).toBe(0);
+    });
+    it('should update many elimEntries - just update 2 player 1 elim entry', async () => {
+      const potEntryJSON = JSON.stringify(testElimEntries);
+      const response = await axios({
+        method: "post",
+        data: potEntryJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      const postedElimEntries = response.data.elimEntries;
+      expect(response.status).toBe(201);
+      createdElimEntries = true;
+      expect(postedElimEntries).not.toBeNull();
+      expect(postedElimEntries.length).toBe(testElimEntries.length);
+            
+      // change fee, add eType = 'u'
+      const elimEntriesToUpdate = [
+        {
+          ...testElimEntries[0],
+          fee: '4',
+          eType: "u",
+        },
+        {
+          ...testElimEntries[2],
+          fee: '4',
+          eType: "u",
+        },
+      ]
+      const toUpdateJSON = JSON.stringify(elimEntriesToUpdate)
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.updates).toBe(2);
+      expect(updateInfo.inserts).toBe(0);
+      expect(updateInfo.deletes).toBe(0);
+    });
+    it('should update many elimEntries - just update 2 player 2 elim entry', async () => {
+      const potEntryJSON = JSON.stringify(testElimEntries);
+      const response = await axios({
+        method: "post",
+        data: potEntryJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      const postedElimEntries = response.data.elimEntries;
+      expect(response.status).toBe(201);
+      createdElimEntries = true;
+      expect(postedElimEntries).not.toBeNull();
+      expect(postedElimEntries.length).toBe(testElimEntries.length);
+            
+      // change fee, add eType = 'u'
+      const elimEntriesToUpdate = [
+        {
+          ...testElimEntries[0],
+          fee: '4',
+          eType: "u",
+        },
+        {
+          ...testElimEntries[1],
+          fee: '4',
+          eType: "u",
+        },
+        {
+          ...testElimEntries[2],
+          fee: '4',
+          eType: "u",
+        },
+        {
+          ...testElimEntries[3],
+          fee: '4',
+          eType: "u",
+        },
+      ]
+      const toUpdateJSON = JSON.stringify(elimEntriesToUpdate)
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.updates).toBe(4);
+      expect(updateInfo.inserts).toBe(0);
+      expect(updateInfo.deletes).toBe(0);
+    });
+    it('should insert many elimEntries - just insert 1 player 2 elim entry', async () => {
+      createdElimEntries = true;
+      // add eType = 'i'
+      const elimEntriesToUpdate = [
+        {
+          ...testElimEntries[0],
+          eType: "i",
+        },
+        {
+          ...testElimEntries[1],
+          eType: "i",
+        },
+      ]
+      const toUpdateJSON = JSON.stringify(elimEntriesToUpdate)
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.updates).toBe(0);
+      expect(updateInfo.inserts).toBe(2);
+      expect(updateInfo.deletes).toBe(0);
+    });
+    it('should insert many elimEntries - just insert 2 player 1 elim entry', async () => {
+      createdElimEntries = true;
+      // add eType = 'i'
+      const elimEntriesToUpdate = [
+        {
+          ...testElimEntries[0],
+          eType: "i",
+        },
+        {
+          ...testElimEntries[2],
+          eType: "i",
+        },
+      ]
+      const toUpdateJSON = JSON.stringify(elimEntriesToUpdate)
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.updates).toBe(0);
+      expect(updateInfo.inserts).toBe(2);
+      expect(updateInfo.deletes).toBe(0);
+    });
+    it('should insert many elimEntries - just insert 2 player 2 elim entry', async () => {
+      createdElimEntries = true;
+      // add eType = 'i'
+      const elimEntriesToUpdate = [
+        {
+          ...testElimEntries[0],
+          eType: "i",
+        },
+        {
+          ...testElimEntries[1],
+          eType: "i",
+        },
+        {
+          ...testElimEntries[2],
+          eType: "i",
+        },
+        {
+          ...testElimEntries[3],
+          eType: "i",
+        },
+      ]
+      const toUpdateJSON = JSON.stringify(elimEntriesToUpdate)
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.updates).toBe(0);
+      expect(updateInfo.inserts).toBe(4);
+      expect(updateInfo.deletes).toBe(0);
+    });
+    it('should delete many elimEntries - just delete 1 player 2 elim entry', async () => {
+      const potEntryJSON = JSON.stringify(testElimEntries);
+      const response = await axios({
+        method: "post",
+        data: potEntryJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      const postedElimEntries = response.data.elimEntries;
+      expect(response.status).toBe(201);
+      createdElimEntries = true;
+      expect(postedElimEntries).not.toBeNull();
+      expect(postedElimEntries.length).toBe(testElimEntries.length);
+            
+      // add eType = 'd'
+      const elimEntriesToUpdate = [
+        {
+          ...testElimEntries[0],
+          eType: "d",
+        },
+        {
+          ...testElimEntries[1],
+          eType: "d",
+        },
+      ]
+      const toUpdateJSON = JSON.stringify(elimEntriesToUpdate)
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.updates).toBe(0);
+      expect(updateInfo.inserts).toBe(0);
+      expect(updateInfo.deletes).toBe(2);
+    });
+    it('should delete many elimEntries - just delete 1 player 2 elim entry', async () => {
+      const potEntryJSON = JSON.stringify(testElimEntries);
+      const response = await axios({
+        method: "post",
+        data: potEntryJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      const postedElimEntries = response.data.elimEntries;
+      expect(response.status).toBe(201);
+      createdElimEntries = true;
+      expect(postedElimEntries).not.toBeNull();
+      expect(postedElimEntries.length).toBe(testElimEntries.length);
+            
+      // add eType = 'd'
+      const elimEntriesToUpdate = [
+        {
+          ...testElimEntries[0],
+          eType: "d",
+        },
+        {
+          ...testElimEntries[2],
+          eType: "d",
+        },
+      ]
+      const toUpdateJSON = JSON.stringify(elimEntriesToUpdate)
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.updates).toBe(0);
+      expect(updateInfo.inserts).toBe(0);
+      expect(updateInfo.deletes).toBe(2);
+    });
+    it('should delete many elimEntries - just delete 1 player 2 elim entry', async () => {
+      const potEntryJSON = JSON.stringify(testElimEntries);
+      const response = await axios({
+        method: "post",
+        data: potEntryJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      const postedElimEntries = response.data.elimEntries;
+      expect(response.status).toBe(201);
+      createdElimEntries = true;
+      expect(postedElimEntries).not.toBeNull();
+      expect(postedElimEntries.length).toBe(testElimEntries.length);
+            
+      // add eType = 'd'
+      const elimEntriesToUpdate = [
+        {
+          ...testElimEntries[0],
+          eType: "d",
+        },
+        {
+          ...testElimEntries[1],
+          eType: "d",
+        },
+        {
+          ...testElimEntries[2],
+          eType: "d",
+        },
+        {
+          ...testElimEntries[3],
+          eType: "d",
+        },
+      ]
+      const toUpdateJSON = JSON.stringify(elimEntriesToUpdate)
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.updates).toBe(0);
+      expect(updateInfo.inserts).toBe(0);
+      expect(updateInfo.deletes).toBe(4);
+    });
+    it('should update, insert and delete many elimEntries', async () => {
+      const potEntryJSON = JSON.stringify(testElimEntries);
+      const response = await axios({
+        method: "post",
+        data: potEntryJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      const postedElimEntries = response.data.elimEntries;
+      expect(response.status).toBe(201);
+      createdElimEntries = true;
+      expect(postedElimEntries).not.toBeNull();
+      expect(postedElimEntries.length).toBe(testElimEntries.length);
+            
+      // set editsm,  eType 
+      const elimEntriesToUpdate = [
+        {
+          ...testElimEntries[0],
+          fee: '4',
+          eType: "u",
+        },
+        {
+          ...testElimEntries[1],
+          fee: '4',
+          eType: "u",
+        },
+        {
+          ...testElimEntries[2],          
+          eType: "d",
+        },
+        {
+          ...testElimEntries[3],          
+          eType: "d",
+        },
+        {
+          ...initElimEntry,
+          id: 'een_05de0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          fee: '5',
+          eType: "i",
+        },
+        {
+          ...initElimEntry,
+          id: 'een_06de0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          fee: '5',
+          eType: "i",
+        },
+      ]
+      const toUpdateJSON = JSON.stringify(elimEntriesToUpdate)
+      const updateResponse = await axios({
+        method: "put",
+        data: toUpdateJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      expect(updateResponse.status).toBe(200);
+      const updateInfo = updateResponse.data.updateInfo;
+      expect(updateInfo).not.toBeNull();
+      expect(updateInfo.updates).toBe(2);
+      expect(updateInfo.inserts).toBe(2);
+      expect(updateInfo.deletes).toBe(2);
+    });
+    it('should NOT update many elimEntries when data is invalid', async () => {
+      const potEntryJSON = JSON.stringify(testElimEntries);
+      const response = await axios({
+        method: "post",
+        data: potEntryJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      const postedElimEntries = response.data.elimEntries;
+      expect(response.status).toBe(201);
+      createdElimEntries = true;
+      expect(postedElimEntries).not.toBeNull();
+      expect(postedElimEntries.length).toBe(testElimEntries.length);
+            
+      // change fee, add eType = 'u'
+      const elimEntriesToUpdate = [
+        {
+          ...testElimEntries[0],
+          fee: '1234567890',
+          eType: "u",
+        },
+        {
+          ...testElimEntries[1],
+          fee: '4',
+          eType: "u",
+        },
+        {
+          ...testElimEntries[2],          
+          eType: "d",
+        },
+        {
+          ...testElimEntries[3],          
+          eType: "d",
+        },
+        {
+          ...initElimEntry,
+          id: 'een_05de0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          fee: '5',
+          eType: "i",
+        },
+        {
+          ...initElimEntry,
+          id: 'een_06de0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          fee: '5',
+          eType: "i",
+        },
+      ]
+      const toUpdateJSON = JSON.stringify(elimEntriesToUpdate)
+      try {
+        const updateResponse = await axios({
+          method: "put",
+          data: toUpdateJSON,
+          withCredentials: true,
+          url: manyUrl,
+        })
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    });
+    
+  });
 
   describe('PUT one elimEntry API: /api/elimEntries/elimEntry/:id', () => { 
 

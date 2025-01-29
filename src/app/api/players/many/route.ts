@@ -1,8 +1,9 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ErrorCode } from "@/lib/validation";
-import { playerType, playerDataType } from "@/lib/types/types";
+import { playerType, playerDataType, tmntEntryPlayerType } from "@/lib/types/types";
 import { validatePlayers } from "../validate";
+import { getDeleteManySQL, getInsertManySQL, getUpdateManySQL } from "./getSql";
 
 // routes /api/players/many
 
@@ -48,6 +49,75 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json(
       { error: "error creating many players" },
+      { status: errStatus }
+    );
+  }
+}
+
+export async function PUT(request: NextRequest) {  
+
+  try {
+    const tePlayers: tmntEntryPlayerType[] = await request.json();
+    // sanitize and validate players
+    const validPlayers = await validatePlayers(tePlayers as playerType[]); // need to use await! or else returns a promise
+    if (validPlayers.errorCode !== ErrorCode.None) {
+      return NextResponse.json({ error: "invalid data" }, { status: 422 });
+    }
+
+    const validTePlayers: tmntEntryPlayerType[] = [];
+    validPlayers.players.forEach((player) => {
+      const foundPlayer = tePlayers.find((p) => p.id === player.id);
+      if (foundPlayer) {
+        const vtePlayer = {
+          ...player,
+          eType: foundPlayer.eType,
+        }
+        validTePlayers.push(vtePlayer);
+      }
+    })
+
+    if (validTePlayers.length === 0) {
+      return NextResponse.json({ error: "invalid data" }, { status: 422 });
+    }
+
+    const playersToUpdate = validTePlayers.filter((player) => player.eType === "u");    
+    const updateManySQL = (playersToUpdate.length > 0)
+      ? getUpdateManySQL(playersToUpdate)
+      : "";
+
+    const playersToInsert = validTePlayers.filter((player) => player.eType === "i");
+    const insertManySQL = (playersToInsert.length > 0)
+      ? getInsertManySQL(playersToInsert)
+      : "";
+    
+    const playersToDelete = validTePlayers.filter((player) => player.eType === "d");
+    const deleteManySQL = (playersToDelete.length > 0)
+      ? getDeleteManySQL(playersToDelete)
+      : "";
+
+    const [updates, inserts, deletes] = await prisma.$transaction([
+      prisma.$executeRawUnsafe(updateManySQL),
+      prisma.$executeRawUnsafe(insertManySQL),
+      prisma.$executeRawUnsafe(deleteManySQL),      
+    ])
+    
+    const updateInfo = { updates: updates, inserts: inserts, deletes: deletes };    
+    return NextResponse.json({updateInfo}, { status: 200 });
+  } catch (err: any) {
+    let errStatus: number
+    switch (err.code) {
+      case 'P2002': // Unique constraint
+        errStatus = 409
+        break;
+      case 'P2003': // parent not found
+        errStatus = 404
+        break;
+      default:
+        errStatus = 500
+        break;
+    }
+    return NextResponse.json(
+      { error: "error updating many players" },
       { status: errStatus }
     );
   }

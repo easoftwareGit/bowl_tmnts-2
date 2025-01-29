@@ -341,6 +341,10 @@ export type playerType = {
   position_err: string,
 }
 
+export interface tmntEntryPlayerType extends playerType {
+  eType: string,
+}
+
 export type playerDataType = {
   squad_id: string,
   first_name: string,
@@ -365,7 +369,36 @@ export type divEntryType = {
   player_id: string,
   player_id_err: string,
   fee: string,
-  fee_err: string,
+  fee_err: string,    
+  hdcp: number,
+}
+
+export interface tmntEntryDivEntryType extends divEntryType {
+  eType: string,
+}
+
+export type divEntryPlayerType = {
+  average: number,
+}
+
+export type divEntryDivType = {
+  hdcp_from: number,
+  hdcp_per: number,
+  int_hdcp: boolean,
+}
+
+export type divEntryRawType = {
+  id: string,
+  squad_id: string,
+  div_id: string,
+  player_id: string,
+  fee: number,
+  player: divEntryPlayerType,
+  div: divEntryDivType,
+}
+
+export type divEntryRawWithHdcpType = divEntryRawType & {
+  hdcp: number,
 }
 
 export type divEntryDataType = {
@@ -389,6 +422,10 @@ export type potEntryType = {
   player_id_err: string,
   fee: string,
   fee_err: string,
+}
+
+export interface tmntEntryPotEntryType extends potEntryType {
+  eType: string,
 }
 
 export type potEntryDataType = {
@@ -415,6 +452,20 @@ export type brktEntryType = {
   fee_err: string,  
 }
 
+export interface tmntEntryBrktEntryType extends brktEntryType {
+  eType: string,
+}
+
+export interface rawBrktEntryStrTimestampsType extends brktEntryType {
+  createdAt: string,
+  updatedAt: string,
+}
+
+export interface rawBrktEntryType extends brktEntryType {
+  createdAt: number,
+  updatedAt: number,
+}
+
 export type brktEntryDataType = {
   id: string,  
   brkt_id: string,
@@ -436,6 +487,10 @@ export type elimEntryType = {
   player_id_err: string,
   fee: string,
   fee_err: string,  
+}
+
+export interface tmntEntryElimEntryType extends elimEntryType {
+  eType: string,
 }
 
 export type elimEntryDataType = {
@@ -466,6 +521,15 @@ export type dataOneTmntType = {
   elims: elimType[];
 }
 
+export type dataOneSquadEntriesType = {  
+  squadId: string;
+  players: playerType[];
+  divEntries: divEntryType[];
+  potEntries: potEntryDataType[];  
+  rawBrktEntries: rawBrktEntryType[];
+  elimEntries: elimEntryDataType[];
+}
+
 export enum tmntActions {
   None = 0,
   New = 1,
@@ -477,6 +541,11 @@ export enum tmntActions {
 export type allDataOneTmntType = {      
   origData: dataOneTmntType;
   curData: dataOneTmntType;  
+}
+
+export type allEntriesOneSquadType = {      
+  origData: dataOneSquadEntriesType;
+  curData: dataOneSquadEntriesType;  
 }
 
 export type tmntFormDataType = allDataOneTmntType & {

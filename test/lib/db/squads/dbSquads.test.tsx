@@ -3,7 +3,7 @@ import { baseSquadsApi, baseEventsApi } from "@/lib/db/apiPaths";
 import { testBaseSquadsApi, testBaseEventsApi } from "../../../testApi";
 import { eventType, squadType } from "@/lib/types/types";
 import { initEvent, initSquad } from "@/lib/db/initVals";
-import { deleteAllEventSquads, deleteAllTmntSquads, deleteSquad, getAllSquadsForTmnt, postManySquads, postSquad, putSquad } from "@/lib/db/squads/dbSquads";
+import { deleteAllEventSquads, deleteAllTmntSquads, deleteSquad, getAllEntriesForSquad, getAllSquadsForTmnt, postManySquads, postSquad, putSquad } from "@/lib/db/squads/dbSquads";
 import { startOfDayFromString } from "@/lib/dateTools";
 import { mockSquadsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { deleteEvent } from "@/lib/db/events/dbEvents";
@@ -122,6 +122,77 @@ describe('squadsAxios', () => {
     it('should return null if tmnt id is valid, but not a tmnt id', async () => { 
       const squads = await getAllSquadsForTmnt(squadsToGet[0].id);
       expect(squads).toBeNull();
+    })
+  })
+
+  describe('getAllEntriesForSquad', () => { 
+    // from prisma/seed.ts    
+    const tmntId = 'tmt_d237a388a8fc4641a2e37233f1d6bebd';
+    const squadId = 'sqd_8e4266e1174642c7a1bcec47a50f275f';
+    const divId = 'div_99a3cae28786485bb7a036935f0f6a0a';
+    const potId = 'pot_89fd8f787de942a1a92aaa2df3e7c185';
+    const brktId1 = 'brk_3e6bf51cc1ca4748ad5e8abab88277e0';
+    const brktId2 = 'brk_fd88cd2f5a164e8c8f758daae18bfc83';
+    const elimId1 = 'elm_c47a4ec07f824b0e93169ae78e8b4b1e';
+    const elimId2 = 'elm_461eece3c50241e9925e9a520730ac7e';
+
+    const notFoundSquadId = 'sqd_00000000000000000000000000000000';
+
+    it('gets all entries for a squad', async () => { 
+      const allEntries = await getAllEntriesForSquad(squadId);      
+      expect(allEntries).not.toBeNull();
+      if (!allEntries) return;      
+      expect(allEntries.squadId).toBe(squadId);
+      // 36 players in prisma/seeds.ts
+      expect(allEntries.players.length).toBe(36);
+      // 36 divEntries in prisma/seeds.ts
+      expect(allEntries.divEntries.length).toBe(36);
+      // 30 potEntries in prisma/seeds.ts
+      expect(allEntries.potEntries.length).toBe(30);
+      // 40 brktEntries in prisma/seeds.ts (20 each for 2 brackets)
+      expect(allEntries.brktEntries.length).toBe(40);
+      // 32 elimEntries in prisma/seeds.ts (16 each for 2 brackets)
+      expect(allEntries.elimEntries.length).toBe(32);
+  
+      for (let i = 0; i < allEntries.players.length; i++) {
+        expect(allEntries.players[i].squad_id).toBe(squadId);
+      }
+      for (let i = 0; i < allEntries.divEntries.length; i++) {
+        expect(allEntries.divEntries[i].squad_id).toBe(squadId);
+        expect(allEntries.divEntries[i].div_id).toBe(divId);
+      }
+      for (let i = 0; i < allEntries.potEntries.length; i++) {        
+        expect(allEntries.potEntries[i].pot_id).toBe(potId);
+      }
+      for (let i = 0; i < allEntries.brktEntries.length; i++) {
+        expect([brktId1, brktId2]).toContain(allEntries.brktEntries[i].brkt_id);        
+      }
+      for (let i = 0; i < allEntries.elimEntries.length; i++) {
+        expect([elimId1, elimId2]).toContain(allEntries.elimEntries[i].elim_id);        
+      }
+    })
+    it("should return 0 entries for not found squad", async () => { 
+      const allEntries = await getAllEntriesForSquad(notFoundSquadId);            
+      expect(allEntries).not.toBeNull();
+      if (!allEntries) return;      
+      expect(allEntries.squadId).toBe(notFoundSquadId);      
+      expect(allEntries.players.length).toBe(0);      
+      expect(allEntries.divEntries.length).toBe(0);      
+      expect(allEntries.potEntries.length).toBe(0);      
+      expect(allEntries.brktEntries.length).toBe(0);      
+      expect(allEntries.elimEntries.length).toBe(0);      
+    })
+    it('should return null if squad id is invalid', async () => { 
+      const allEntries = await getAllEntriesForSquad('test');
+      expect(allEntries).toBeNull();
+    })
+    it('should return null if squad id is valid, but not a squad id', async () => { 
+      const allEntries = await getAllEntriesForSquad(tmntId);                  
+      expect(allEntries).toBeNull();
+    })
+    it('should return null if squad id is blank', async () => { 
+      const allEntries = await getAllEntriesForSquad('');
+      expect(allEntries).toBeNull();
     })
   })
 

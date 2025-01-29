@@ -38,7 +38,8 @@ export const getAllDivEntriesForTmnt = async (tmntId: string): Promise<divEntryT
         squad_id: divEntry.squad_id,
         div_id: divEntry.div_id,
         player_id: divEntry.player_id,
-        fee: divEntry.fee,
+        fee: divEntry.fee,    
+        hdcp: divEntry.hdcp,
       }
     });
     return divEntries;
@@ -71,6 +72,7 @@ export const getAllDivEntriesForDiv = async (divId: string): Promise<divEntryTyp
         div_id: divEntry.div_id,
         player_id: divEntry.player_id,
         fee: divEntry.fee,
+        hdcp: divEntry.hdcp,
       }
     });
     return divEntries;
@@ -103,6 +105,7 @@ export const getAllDivEntriesForSquad = async (squadId: string): Promise<divEntr
         div_id: divEntry.div_id,
         player_id: divEntry.player_id,
         fee: divEntry.fee,
+        hdcp: divEntry.hdcp,
       }
     });
     return divEntries;
@@ -136,7 +139,8 @@ export const postDivEntry = async (divEntry: divEntryType): Promise<divEntryType
       squad_id: dbDivEntry.squad_id,
       div_id: dbDivEntry.div_id,
       player_id: dbDivEntry.player_id,
-      fee: dbDivEntry.fee,
+      fee: dbDivEntry.fee,   
+      hdcp: divEntry.hdcp,
     };
     return postedDivEntry;
   } catch (err) {
@@ -172,6 +176,7 @@ export const postManyDivEntries = async (divEntries: divEntryType[]): Promise<di
         div_id: divEntry.div_id,
         player_id: divEntry.player_id,
         fee: divEntry.fee,
+        hdcp: divEntry.hdcp,
       }
     });
     return postedDivEntries;
@@ -205,7 +210,8 @@ export const putDivEntry = async (divEntry: divEntryType): Promise<divEntryType 
       squad_id: dbDivEntry.squad_id,
       div_id: dbDivEntry.div_id,
       player_id: dbDivEntry.player_id,
-      fee: dbDivEntry.fee,
+      fee: dbDivEntry.fee,      
+      hdcp: divEntry.hdcp,
     };
     return puttedDivEntry;
   } catch (err) {

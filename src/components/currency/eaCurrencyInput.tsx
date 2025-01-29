@@ -37,7 +37,7 @@ const ic: IntlConfig = {
   // locale: window.navigator.language,
   locale: 'en-US'
 };
-const localConfig = getLocaleConfig(ic);
+export const localConfig = getLocaleConfig(ic);
 localConfig.prefix = "$";
 const percentConfig = getLocaleConfig(ic);
 percentConfig.prefix = "";

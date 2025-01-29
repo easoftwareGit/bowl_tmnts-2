@@ -6,7 +6,7 @@ import { isValidBtDbId } from "@/lib/validation";
 import { blankPotEntry } from "../initVals";
 
 const url = testBasePotEntriesApi.startsWith("undefined")
-  ? testBasePotEntriesApi
+  ? basePotEntriesApi
   : testBasePotEntriesApi; 
 
 const onePotEntryUrl = url + "/potEntry/";
@@ -92,8 +92,8 @@ export const getAllPotEntriesForSquad = async (squadId: string): Promise<potEntr
       url: oneSquadUrl + squadId,
     });
     if (response.status !== 200) return null;
-    const divPotEntries = response.data.potEntries;
-    const potEntries: potEntryType[] = divPotEntries.map((potEntry: potEntryType) => {
+    const squadPotEntries = response.data.potEntries;
+    const potEntries: potEntryType[] = squadPotEntries.map((potEntry: potEntryType) => {
       return {
         ...blankPotEntry,
         id: potEntry.id,        

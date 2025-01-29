@@ -387,17 +387,23 @@ describe("tests for validation functions", () => {
   });
 
   describe("isOdd and IsEven functions", () => {
-    it("should return true for odd number", () => {
+    it("isOdd should return true for odd number", () => {
       expect(isOdd(5)).toBe(true);
     });
-    it("should return false for even number", () => {
+    it("isOdd should return false for even number", () => {
       expect(isOdd(4)).toBe(false);
     });
-    it("should return true for even number", () => {
+    it("isOdd should return false for 0", () => {
+      expect(isOdd(0)).toBe(false);
+    });
+    it("isEven should return true for even number", () => {
       expect(isEven(4)).toBe(true);
     });
-    it("should return false for odd number", () => {
+    it("isEven should return false for odd number", () => {
       expect(isEven(5)).toBe(false);
+    });
+    it('isEven should return true for 0', () => {
+      expect(isEven(0)).toBe(true);
     });
   });
 
