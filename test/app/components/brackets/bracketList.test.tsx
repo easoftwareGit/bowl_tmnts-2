@@ -65,6 +65,107 @@ describe('BracketList', () => {
     expect(result.players[0]).toBe(brkt1.players[0]);    
   })
 
+  describe('brktsAvaliableForPlayer', () => { 
+    const mockBracketList = new BracketList("brk_test1", 2, 3);
+    // test input
+    // 10, 8, 6, 7, 6, 4, 6
+    // test results
+    // 1, 1, 1, 1, 2, 2, 5, 6, 7, 7
+    // 0, 0, 0, 0, 1, 1, 4, 5, 6, 6
+
+    beforeAll(() => {
+      // 1
+      mockBracketList.addBrkt()
+      mockBracketList.putPlayerInBrkt('player-1');
+      mockBracketList.putPlayerInBrkt('player-2');
+      mockBracketList.putPlayerInBrkt('player-3');
+      mockBracketList.putPlayerInBrkt('player-4');
+      mockBracketList.putPlayerInBrkt('player-5');
+      mockBracketList.putPlayerInBrkt('player-6');
+      mockBracketList.putPlayerInBrkt('player-7');    
+      // 2 
+      mockBracketList.addBrkt()
+      mockBracketList.putPlayerInBrkt('player-1');
+      mockBracketList.putPlayerInBrkt('player-2');
+      mockBracketList.putPlayerInBrkt('player-3');
+      mockBracketList.putPlayerInBrkt('player-4');
+      mockBracketList.putPlayerInBrkt('player-5');
+      mockBracketList.putPlayerInBrkt('player-6');
+      mockBracketList.putPlayerInBrkt('player-7');    
+      // 3
+      mockBracketList.addBrkt()
+      mockBracketList.putPlayerInBrkt('player-1');
+      mockBracketList.putPlayerInBrkt('player-2');
+      mockBracketList.putPlayerInBrkt('player-3');
+      mockBracketList.putPlayerInBrkt('player-4');
+      mockBracketList.putPlayerInBrkt('player-5');
+      mockBracketList.putPlayerInBrkt('player-6');
+      mockBracketList.putPlayerInBrkt('player-7');    
+      // 4
+      mockBracketList.addBrkt()
+      mockBracketList.putPlayerInBrkt('player-1');
+      mockBracketList.putPlayerInBrkt('player-2');
+      mockBracketList.putPlayerInBrkt('player-3');
+      mockBracketList.putPlayerInBrkt('player-4');
+      mockBracketList.putPlayerInBrkt('player-5');
+      mockBracketList.putPlayerInBrkt('player-6');
+      mockBracketList.putPlayerInBrkt('player-7');    
+      // 5
+      mockBracketList.addBrkt()
+      mockBracketList.putPlayerInBrkt('player-1');
+      mockBracketList.putPlayerInBrkt('player-2');
+      mockBracketList.putPlayerInBrkt('player-3');
+      mockBracketList.putPlayerInBrkt('player-4');
+      mockBracketList.putPlayerInBrkt('player-5');    
+      mockBracketList.putPlayerInBrkt('player-7');    
+      // 6
+      mockBracketList.addBrkt()
+      mockBracketList.putPlayerInBrkt('player-1');
+      mockBracketList.putPlayerInBrkt('player-2');
+      mockBracketList.putPlayerInBrkt('player-3');
+      mockBracketList.putPlayerInBrkt('player-4');
+      mockBracketList.putPlayerInBrkt('player-5');    
+      mockBracketList.putPlayerInBrkt('player-7');    
+      // 7
+      mockBracketList.addBrkt()
+      mockBracketList.putPlayerInBrkt('player-1');
+      mockBracketList.putPlayerInBrkt('player-2');
+      mockBracketList.putPlayerInBrkt('player-4');
+      // 8
+      mockBracketList.addBrkt()
+      mockBracketList.putPlayerInBrkt('player-1');
+      mockBracketList.putPlayerInBrkt('player-2');
+      // 9
+      mockBracketList.addBrkt()
+      mockBracketList.putPlayerInBrkt('player-1');
+      // 10
+      mockBracketList.addBrkt()
+      mockBracketList.putPlayerInBrkt('player-1');          
+    })
+
+    it('should return 2 brackets (#9 & #10) for player-2', () => {
+      const result = mockBracketList.brktsAvaliableForPlayer('player-2');
+      expect(result.length).toBe(2);
+    })
+    it('should return 0 brackets for player-1', () => { 
+      const result = mockBracketList.brktsAvaliableForPlayer('player-1');
+      expect(result.length).toBe(0);
+    })
+    it('should return 4 brackets for player-3', () => {
+      const result = mockBracketList.brktsAvaliableForPlayer('player-3');
+      expect(result.length).toBe(4);
+    })
+    it('should return 0 brackets for player-2 when Brakcts array is empty', () => { 
+      const emptyBracketList = new BracketList("brk_test1", 2, 3);
+      const result = emptyBracketList.brktsAvaliableForPlayer('player-2');
+      expect(result.length).toBe(0);
+    })
+    it('should return all brackets for player-abc when player is not found in brackets', () => {       
+      const result = mockBracketList.brktsAvaliableForPlayer('player-abc');
+      expect(result.length).toBe(mockBracketList.brackets.length);
+    })
+  })
+
   describe('brktNumColName', () => { 
 
     const mockBracketList = new BracketList("brk_test1", 2, 3);
@@ -317,6 +418,68 @@ describe('BracketList', () => {
       expect(result.for1ByeValues[8]).toBe(6);
       expect(result.for1ByeValues[9]).toBe(6);      
     });    
+
+    it('should set _filledBrkts with 2 filled brackets', () => {
+      const bracketList = new BracketList('B1', 2, 3);
+      // num brackets name = id + "_name" = 'B1_name'
+      const playerData = [
+        { player_id: 'player1', B1_name: 2, createdAt: 100 },
+        { player_id: 'player2', B1_name: 2, createdAt: 200 },
+        { player_id: 'player3', B1_name: 2, createdAt: 51 },
+        { player_id: 'player4', B1_name: 2, createdAt: 52 },
+        { player_id: 'player5', B1_name: 2, createdAt: 53 },
+        { player_id: 'player6', B1_name: 2, createdAt: 54 },
+        { player_id: 'player7', B1_name: 2, createdAt: 55 },
+        { player_id: 'player8', B1_name: 2, createdAt: 56 },
+        { player_id: 'player9', B1_name: 1, createdAt: 500 },
+      ];
+  
+      bracketList.rePopulateBrkts(playerData);
+      expect(bracketList.filledBrkts.length).toBe(2);
+    });
+    it('should set _filledBrkts with 2 filled brackets when 2 brackets are full', () => {
+      const bracketList = new BracketList('B1', 2, 3);
+      // num brackets name = id + "_name" = 'B1_name'
+      const playerData = [
+        { player_id: 'player1', B1_name: 2, createdAt: 100 },
+        { player_id: 'player2', B1_name: 2, createdAt: 200 },
+        { player_id: 'player3', B1_name: 2, createdAt: 51 },
+        { player_id: 'player4', B1_name: 2, createdAt: 52 },
+        { player_id: 'player5', B1_name: 2, createdAt: 53 },
+        { player_id: 'player6', B1_name: 2, createdAt: 54 },
+        { player_id: 'player7', B1_name: 2, createdAt: 55 },
+        { player_id: 'player8', B1_name: 2, createdAt: 56 },
+        { player_id: 'player9', B1_name: 1, createdAt: 500 },
+      ];
+  
+      bracketList.rePopulateBrkts(playerData);
+      expect(bracketList.filledBrkts.length).toBe(2);
+    });
+    it('should set _filledBrkts with 0 filled brackets when no brackets are full', () => {
+      const bracketList = new BracketList('B1', 2, 3);
+      // num brackets name = id + "_name" = 'B1_name'
+      const playerData = [
+        { player_id: 'player1', B1_name: 3, createdAt: 100 },
+        { player_id: 'player2', B1_name: 5, createdAt: 200 },
+        { player_id: 'player3', B1_name: 5, createdAt: 150 },
+        { player_id: 'player4', B1_name: 2, createdAt: 50 }
+      ];
+    
+      bracketList.rePopulateBrkts(playerData);
+      expect(bracketList.filledBrkts.length).toBe(0);
+    });
+    it('should set _filledBrkts with 0 filled brackets when no player data', () => {
+      const bracketList = new BracketList('B1', 2, 3);
+      // num brackets name = id + "_name" = 'B1_name'
+      const playerData = [{}];
+    
+      bracketList.rePopulateBrkts(playerData);
+      expect(bracketList.filledBrkts.length).toBe(0);
+    });
+    it('should set _filledBrkts with 0 filled brackets when bracketList is created', () => {
+      const bracketList = new BracketList('B1', 2, 3);
+      expect(bracketList.filledBrkts.length).toBe(0);
+    });
   })
 
   describe('populateBrktCounts', () => {
@@ -697,5 +860,5 @@ describe('BracketList', () => {
       expect(brkt1).toBe(null);
     })
   })
-  
+
 })

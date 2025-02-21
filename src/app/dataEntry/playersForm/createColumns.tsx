@@ -3,6 +3,7 @@ import { maxAverage, maxBrackets, maxMoney } from "@/lib/validation";
 import {
   GridColDef,
   GridEditInputCell,
+  GridRenderCellParams,
   GridRowModel,
   GridRowModesModel,
 } from "@mui/x-data-grid";
@@ -15,8 +16,9 @@ import { sanitize } from "@/lib/sanitize";
 export const feeColNameEnd = "_fee";
 export const hdcpColNameEnd = "_hdcp";
 export const intHdcpColNameEnd = "_intHdcp";
-export const createdColNameEnd = "_created";
-export const updatedColNameEnd = "_updated";
+// export const createdColNameEnd = "_created";
+// export const updatedColNameEnd = "_updated";
+export const timeStampColNameEnd = "_timeStamp";
 export const feeColWidth = 95;
 
 export const playerEntryData: { [key: string]: any } = {
@@ -177,7 +179,7 @@ export const createPlayerEntryColumns = (
       lanePos,
     };
   };
-  
+
   const playersColumns: GridColDef[] = [
     {
       field: "first_name",
@@ -273,9 +275,14 @@ export const createPlayerEntryColumns = (
 export const entryFeeColName = (id: string) => id + feeColNameEnd;
 export const divEntryHdcpColName = (div_id: string) => div_id + hdcpColNameEnd;
 export const divEntryIntHdcpColName = (div_id: string) => div_id + intHdcpColNameEnd;
-export const createdColName = (id: string) => id + createdColNameEnd;
-export const updatedColName = (id: string) => id + updatedColNameEnd;
+export const timeStampColName = (id: string) => id + timeStampColNameEnd;
 
+/**
+ * check if column name is a division entry fee column
+ * 
+ * @param {string} colName - column name to check
+ * @returns {boolean} - true if column name is a division entry fee column
+ */
 export const isDivEntryFeeColumnName = (colName: string): boolean => { 
   if (!colName) return false;
   return (colName.startsWith('div')
@@ -358,8 +365,8 @@ export const createDivEntryColumns = (divs: divType[]): GridColDef[] => {
       headerAlign: "center",
       type: "number",
       width: 80,
-      align: "center",
-      valueFormatter: formatHdcp,
+      align: "center",      
+      valueFormatter: formatHdcp,       
       disableExport: div.int_hdcp, // cant export Hdcp column, so stick intHdcp value here
     };
     divColumns.push(hdcpColumn);
@@ -400,6 +407,12 @@ const applyPotOrElimFeeCellColor = (value: number, fee: number) => {
   return "";
 };
 
+/**
+ * creates columns for pot section of entries grid
+ * 
+ * @param {potType[]} pots - array of tournament pots to create columns for
+ * @returns {GridColDef[]} - array of column definitions for pot section
+ */
 export const createPotEntryColumns = (pots: potType[]): GridColDef[] => {
   const potColumns: GridColDef[] = [];
   pots.forEach((pot) => {
@@ -443,13 +456,20 @@ const applyNumBrktsCellColor = (value: number) => {
   return "";
 };
 
+/**
+ * creates columns for bracket section of entries grid
+ * 
+ * @param {brktType[]} brkts - array of tournament brackets to create columns for
+ * @param {divType[]} divs - array of tournament divisions
+ * @returns {GridColDef[]} - array of column definitions for bracket section
+ */
 export const createBrktEntryColumns = (
   brkts: brktType[],
   divs: divType[]
 ): GridColDef[] => {
   let feePerBrkt = 0;
 
-  const setBrktsFee = (
+  const setBrktColsValues = (
     value: number,
     row: GridRowModel,
     column: GridColDef
@@ -460,18 +480,14 @@ export const createBrktEntryColumns = (
     const feeName = entryFeeColName(brktId);  // get fee per brkt field name
     if (isNaN(numBrkts) || isNaN(feePerBrkt)) return row;
     const fee = numBrkts * feePerBrkt;
-    const upColName = updatedColName(brktId);
-    const crColName = createdColName(brktId);
-    const updated = new Date().getTime();
-    let created = row[crColName];
-    if (!created) created = updated;  
-    // no columns for created or updated, but rows objects has the properties 
+    const tsColName = timeStampColName(brktId);
+    const timeStamp = new Date().getTime();
+    // no column for time stamp (tsColName), but row object has the property 
     return {
       ...row,
       [column.field]: numBrkts,
       [feeName]: fee,
-      [upColName]: updated,
-      [crColName]: created,
+      [tsColName]: timeStamp,
     };
   };
 
@@ -500,7 +516,7 @@ export const createBrktEntryColumns = (
       cellClassName: (params: any) =>
         applyNumBrktsCellColor(params.value as number),
       valueGetter: getOnlyIntegerOrNull,
-      valueSetter: setBrktsFee,
+      valueSetter: setBrktColsValues,
       valueFormatter: formatIntZeroAsBlank,
     };
     brktColumns.push(numBrktsColumn);
@@ -520,12 +536,26 @@ export const createBrktEntryColumns = (
   return brktColumns;
 };
 
+/**
+ * gets the eliminator fee
+ * 
+ * @param {elimType[]} elims - array of tournament eliminators
+ * @param {string} elimId - eliminator id
+ * @returns - eliminator fee
+ */
 export const getElimFee = (elims: elimType[], elimId: string) => {
   if (!elims || elims.length === 0 || !elimId) return 0;
   const elim = elims.find((elim) => elim.id === elimId);
   return elim ? Number(elim.fee) : 0;
 };
 
+/**
+ * creates columns for eliminator section of entries grid
+ * 
+ * @param {elimType[]} elims - array of tournament eliminators to create columns for
+ * @param {divType[]} divs - array of tournament divisions 
+ * @returns {GridColDef[]} - array of column definitions for eliminator section 
+ */
 export const createElimEntryColumns = (
   elims: elimType[],
   divs: divType[]
@@ -563,6 +593,11 @@ export const createElimEntryColumns = (
   return elimColumns;
 };
 
+/**
+ * creates column for fee total
+ * 
+ * @returns {GridColDef[]} - array of column definitions for fee total
+ */
 export const feeTotalColumn = (): GridColDef[] => {
   const totalColumn: GridColDef[] = [
     {

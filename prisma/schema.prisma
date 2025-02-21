@@ -55,9 +55,9 @@ model Tmnt {
   events     Event[]
   divs       Div[]
   user_id    String   @db.Text
-  users      User     @relation("UserTmnts", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users      User     @relation("UserTmnts", fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   bowl_id    String   @db.Text
-  bowls      Bowl     @relation("BowlTmnts", fields: [bowl_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  bowls      Bowl     @relation("BowlTmnts", fields: [bowl_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }
@@ -75,7 +75,7 @@ model Event {
   expenses    Decimal  @db.Decimal(9, 2)
   added_money Decimal  @db.Decimal(9, 2)
   sort_order  Int
-  tmnts       Tmnt     @relation(fields: [tmnt_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tmnts       Tmnt     @relation(fields: [tmnt_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   squads      Squad[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -92,7 +92,7 @@ model Div {
   int_hdcp    Boolean     @default(true)
   hdcp_for    String      @default("Game")
   sort_order  Int
-  tmnts       Tmnt        @relation(fields: [tmnt_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tmnts       Tmnt        @relation(fields: [tmnt_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   pots        Pot[]
   brkts       Brkt[]
   elims       Elim[]
@@ -119,7 +119,7 @@ model Squad {
   elims         Elim[]
   players       Player[]
   dviEntries    Div_Entry[]
-  events        Event       @relation(fields: [event_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  events        Event       @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
@@ -131,7 +131,7 @@ model Lane {
   lane_number Int
   squad_id    String   @db.Text
   in_use      Boolean  @default(true)
-  squad       Squad    @relation(fields: [squad_id], references: [id])
+  squad       Squad    @relation(fields: [squad_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -146,8 +146,8 @@ model Pot {
   fee         Decimal     @db.Decimal(9, 2)
   pot_type    String
   pot_entries Pot_Entry[]
-  div         Div         @relation(fields: [div_id], references: [id])
-  squad       Squad       @relation(fields: [squad_id], references: [id])
+  div         Div         @relation(fields: [div_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  squad       Squad       @relation(fields: [squad_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
@@ -167,8 +167,8 @@ model Brkt {
   second       Decimal      @db.Decimal(9, 2)
   admin        Decimal      @db.Decimal(9, 2)
   brkt_entries Brkt_Entry[]
-  div          Div          @relation(fields: [div_id], references: [id])
-  squad        Squad        @relation(fields: [squad_id], references: [id])
+  div          Div          @relation(fields: [div_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  squad        Squad        @relation(fields: [squad_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
@@ -184,8 +184,8 @@ model Elim {
   games        Int
   fee          Decimal      @db.Decimal(9, 2)
   elim_entries Elim_Entry[]
-  div          Div          @relation(fields: [div_id], references: [id])
-  squad        Squad        @relation(fields: [squad_id], references: [id])
+  div          Div          @relation(fields: [div_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  squad        Squad        @relation(fields: [squad_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
@@ -206,7 +206,7 @@ model Player {
   brkt_entries Brkt_Entry[]
   elim_entries Elim_Entry[]
   games        Game[]
-  squad        Squad        @relation(fields: [squad_id], references: [id])
+  squad        Squad        @relation(fields: [squad_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt @default(now())
 }
@@ -217,9 +217,9 @@ model Div_Entry {
   div_id    String   @db.Text
   player_id String   @db.Text
   fee       Decimal  @default(0) @db.Decimal(9, 2)
-  squad     Squad    @relation(fields: [squad_id], references: [id])
-  div       Div      @relation(fields: [div_id], references: [id])
-  player    Player   @relation(fields: [player_id], references: [id])
+  squad     Squad    @relation(fields: [squad_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  div       Div      @relation(fields: [div_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  player    Player   @relation(fields: [player_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
 
@@ -231,8 +231,8 @@ model Pot_Entry {
   pot_id    String   @db.Text
   player_id String   @db.Text
   fee       Decimal  @db.Decimal(9, 2)
-  pot       Pot      @relation(fields: [pot_id], references: [id])
-  player    Player   @relation(fields: [player_id], references: [id])
+  pot       Pot      @relation(fields: [pot_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  player    Player   @relation(fields: [player_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
 
@@ -243,10 +243,10 @@ model Brkt_Entry {
   id           String   @id @default(dbgenerated("concat('bre_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
   brkt_id      String   @db.Text
   player_id    String   @db.Text
-  num_brackets Int
-  fee          Decimal  @db.Decimal(9, 2)
-  brkt         Brkt     @relation(fields: [brkt_id], references: [id])
-  player       Player   @relation(fields: [player_id], references: [id])
+  num_brackets Int  
+  time_stamp   DateTime @default(now())
+  brkt         Brkt     @relation(fields: [brkt_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  player       Player   @relation(fields: [player_id], references: [id], onDelete: Cascade, onUpdate: NoAction)  
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt @default(now())
 
@@ -258,8 +258,8 @@ model Elim_Entry {
   elim_id   String   @db.Text
   player_id String   @db.Text
   fee       Decimal  @db.Decimal(9, 2)
-  elim      Elim     @relation(fields: [elim_id], references: [id])
-  player    Player   @relation(fields: [player_id], references: [id])
+  elim      Elim     @relation(fields: [elim_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  player    Player   @relation(fields: [player_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
 
@@ -273,7 +273,7 @@ model Game {
   player_id String   @db.Text
   game_num  Int
   score     Int
-  players   Player   @relation(fields: [player_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  players   Player   @relation(fields: [player_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

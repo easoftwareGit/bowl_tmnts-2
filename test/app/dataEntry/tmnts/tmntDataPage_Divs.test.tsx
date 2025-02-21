@@ -9,7 +9,7 @@ import { mockStateBowls } from "../../../mocks/state/mockState";
 import { ReduxProvider } from "@/redux/provider";
 import TmntDataForm from "@/app/dataEntry/tmntForm/tmntForm";
 import { mockSDBrkts, mockSDDivs, mockSDElims, mockSDEvents, mockSDLanes, mockSDPots, mockSDSquads, mockSDTmnt } from "../../../mocks/tmnts/singlesAndDoubles/mockSD";
-import 'core-js/actual/structured-clone';
+import { cloneDeep } from "lodash";
 
 // Mock state for bowls
 const mockState: Partial<RootState> = {
@@ -362,7 +362,7 @@ describe('TmntDataPage - Divs Component', () => {
 
   describe('render the div name errors', () => {
     // create invalid data so click on save button will not try to save
-    const invalidTmnt = structuredClone(tmntProps)
+    const invalidTmnt = cloneDeep(tmntProps)
     invalidTmnt.curData.tmnt.tmnt_name = '';
 
     it('render error for duplicate div names', async () => { 
@@ -418,7 +418,7 @@ describe('TmntDataPage - Divs Component', () => {
 
   describe('render hdcp % errors', () => { 
     // create invalid data so click on save button will not try to save
-    const invalidTmnt = structuredClone(tmntProps)
+    const invalidTmnt = cloneDeep(tmntProps)
     invalidTmnt.curData.tmnt.tmnt_name = '';
     
     it('render Hdcp % over max error', async () => {
@@ -525,7 +525,7 @@ describe('TmntDataPage - Divs Component', () => {
 
   describe('render the hdcp from errors', () => {
     // create invalid data so click on save button will not try to save
-    const invalidTmnt = structuredClone(tmntProps)
+    const invalidTmnt = cloneDeep(tmntProps)
     invalidTmnt.curData.tmnt.tmnt_name = '';
     
     it('render the hdcp from error', async () => {
@@ -637,7 +637,7 @@ describe('TmntDataPage - Divs Component', () => {
 
   describe('render multiple errors', () => { 
     // create invalid data so click on save button will not try to save
-    const invalidTmnt = structuredClone(tmntProps)
+    const invalidTmnt = cloneDeep(tmntProps)
     invalidTmnt.curData.divs[1].div_name = 'Scratch'
 
     it('should render multiple errors', async () => { 
@@ -738,7 +738,7 @@ describe('TmntDataPage - Divs Component', () => {
   describe('delete division errors', () => {
     it('delete division error, when division to delete has a pot', async () => {
       // create invalid data so click on save button will not try to save      
-      const invalidTmnt = structuredClone(tmntProps)
+      const invalidTmnt = cloneDeep(tmntProps)
       invalidTmnt.curData.tmnt.tmnt_name = '';
 
       const user = userEvent.setup()
@@ -759,7 +759,7 @@ describe('TmntDataPage - Divs Component', () => {
     it('delete division error, when division to delete has a bracket', async () => {
       // create invalid data so click on save button will not try to save
       // also remove pots
-      const invalidTmnt = structuredClone(tmntProps)
+      const invalidTmnt = cloneDeep(tmntProps)
       invalidTmnt.curData.tmnt.tmnt_name = '';
       invalidTmnt.curData.pots = [];
 
@@ -781,7 +781,7 @@ describe('TmntDataPage - Divs Component', () => {
     it('delete division error, when division to delete has an eliminator', async () => {
       // create invalid data so click on save button will not try to save
       // also remove pots and brackets
-      const invalidTmnt = structuredClone(tmntProps)
+      const invalidTmnt = cloneDeep(tmntProps)
       invalidTmnt.curData.tmnt.tmnt_name = '';
       invalidTmnt.curData.pots = [];
       invalidTmnt.curData.brkts = [];
@@ -820,7 +820,7 @@ describe('TmntDataPage - Divs Component', () => {
     it('should delete the division', async () => { 
       // create invalid data so click on save button will not try to save
       // also remove pots, brackets and eliminators
-      const invalidTmnt = structuredClone(tmntProps)
+      const invalidTmnt = cloneDeep(tmntProps)
       invalidTmnt.curData.tmnt.tmnt_name = '';
       invalidTmnt.curData.pots = [];
       invalidTmnt.curData.brkts = [];

@@ -1,8 +1,10 @@
 import { elimEntryType } from "@/lib/types/types";
 import { initElimEntry } from "@/lib/db/initVals";
 import { mockElimEntriesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { getDeleteManySQL, getInsertManySQL, getUpdateManySQL } from "@/app/api/elimEntries/many/getSql";
+import { getDeleteManySQL, getInsertManySQL, getUpdateManySQL, exportedForTesting } from "@/app/api/elimEntries/many/getSql";
 import { deleteAllElimEntriesForSquad, postManyElimEntries } from "@/lib/db/elimEntries/dbElimEntries";
+
+const { getElimIds } = exportedForTesting;
 
 describe('getSql', () => {
 
@@ -30,6 +32,14 @@ describe('getSql', () => {
       fee: '5'
     },
   ]
+
+  describe('getElimIds', () => { 
+
+    it('should return an array of unique elimIds', () => { 
+      const elimIds = getElimIds(testElimEntries);
+      expect(elimIds).toEqual(['elm_b4c3939adca140898b1912b75b3725f8', 'elm_4f176545e4294a0292732cccada91b9d']);
+    })
+  })
 
   describe('getUpdateManySQL', () => { 
 
@@ -190,9 +200,142 @@ describe('getSql', () => {
 
       expect(updateSQL).toBe(expected);
     })
+    it('should return "" if id is invalid', () => { 
+
+      const mockElimEntries: elimEntryType[] = [
+        {
+          ...initElimEntry,
+          id: '<script>alert("xss")</script>',
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
+          fee: '5'
+        },
+        {
+          ...initElimEntry,
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
+          fee: '5'
+        },
+      ];
+
+      const updateSQL = getUpdateManySQL(mockElimEntries);
+      expect(updateSQL).toBe('');
+    })
+    it('should return "" if player_id is invalid', () => { 
+
+      const mockElimEntries: elimEntryType[] = [
+        {
+          ...initElimEntry,          
+          player_id: '<script>alert("xss")</script>',
+          elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
+          fee: '5'
+        },
+        {
+          ...initElimEntry,
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
+          fee: '5'
+        },
+      ];
+
+      const updateSQL = getUpdateManySQL(mockElimEntries);
+      expect(updateSQL).toBe('');
+    })
+    it('should return "" if elim_id is invalid', () => { 
+
+      const mockElimEntries: elimEntryType[] = [
+        {
+          ...initElimEntry,          
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: '<script>alert("xss")</script>',
+          fee: '5'
+        },
+        {
+          ...initElimEntry,
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
+          fee: '5'
+        },
+      ];
+
+      const updateSQL = getUpdateManySQL(mockElimEntries);
+      expect(updateSQL).toBe('');
+    })
+    it('should return "" if fee is invalid', () => { 
+
+      const mockElimEntries: elimEntryType[] = [
+        {
+          ...initElimEntry,
+          id: '<script>alert("xss")</script>',
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
+          fee: '<script>alert("xss")</script>'
+        },
+        {
+          ...initElimEntry,
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
+          fee: '5'
+        },
+      ];
+
+      const updateSQL = getUpdateManySQL(mockElimEntries);
+      expect(updateSQL).toBe('');
+    })
+    it('should return "" if fee is too high', () => { 
+
+      const mockElimEntries: elimEntryType[] = [
+        {
+          ...initElimEntry,
+          id: '<script>alert("xss")</script>',
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
+          fee: '1234567890'
+        },
+        {
+          ...initElimEntry,
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
+          fee: '5'
+        },
+      ];
+
+      const updateSQL = getUpdateManySQL(mockElimEntries);
+      expect(updateSQL).toBe('');
+    })
+    it('should return "" if fee is too low', () => { 
+
+      const mockElimEntries: elimEntryType[] = [
+        {
+          ...initElimEntry,
+          id: '<script>alert("xss")</script>',
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
+          fee: '-1'
+        },
+        {
+          ...initElimEntry,
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
+          fee: '5'
+        },
+      ];
+
+      const updateSQL = getUpdateManySQL(mockElimEntries);
+      expect(updateSQL).toBe('');
+    })
+
   })
 
   describe('getInsertManySQL', () => { 
+
+    // beforeEach(async () => {
+    //   await deleteAllElimEntriesForSquad(squadId);            
+    // })
+
+    // afterAll(async () => {
+    //   await deleteAllElimEntriesForSquad(squadId);
+    // })
 
     it('should return valid insert SQL - 1 player 2 elims', () => { 
 
@@ -212,12 +355,14 @@ describe('getSql', () => {
       const mockElimEntries: elimEntryType[] = [
         {
           ...initElimEntry,
+          id: 'een_a123456789abcdef0123456789abcdef', 
           player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
           elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
           fee: '5'
         },
         {
           ...initElimEntry,
+          id: 'een_a133456789abcdef0123456789abcdef', 
           player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
           elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
           fee: '5'
@@ -226,13 +371,13 @@ describe('getSql', () => {
 
       const insertSQL = getInsertManySQL(mockElimEntries);
       const expected = 
-      `INSERT INTO public."Elim_Entry" (elim_id, player_id, fee) ` +
-      `SELECT e2up.elim_id, e2up.player_id, e2up.fee ` +
+      `INSERT INTO public."Elim_Entry" (id, elim_id, player_id, fee) ` +
+      `SELECT e2up.id, e2up.elim_id, e2up.player_id, e2up.fee ` +
       `FROM (VALUES ` +
-        `('elm_b4c3939adca140898b1912b75b3725f8', 'ply_88be0472be3d476ea1caa99dd05953fa', 5), ` +
-        `('elm_4f176545e4294a0292732cccada91b9d', 'ply_88be0472be3d476ea1caa99dd05953fa', 5)` +
-        `) AS e2up(elim_id, player_id, fee) ` +
-      `WHERE NOT EXISTS (SELECT 1 FROM public."Elim_Entry" WHERE elim_id = e2up.elim_id AND player_id = e2up.player_id);`
+        `('een_a123456789abcdef0123456789abcdef', 'elm_b4c3939adca140898b1912b75b3725f8', 'ply_88be0472be3d476ea1caa99dd05953fa', 5), ` +
+        `('een_a133456789abcdef0123456789abcdef', 'elm_4f176545e4294a0292732cccada91b9d', 'ply_88be0472be3d476ea1caa99dd05953fa', 5)` +
+        `) AS e2up(id, elim_id, player_id, fee) ` +
+      `WHERE NOT EXISTS (SELECT 1 FROM public."Elim_Entry" WHERE id = e2up.id);`
   
       expect(insertSQL).toBe(expected);
     })
@@ -254,12 +399,14 @@ describe('getSql', () => {
       const mockElimEntries: elimEntryType[] = [
         {
           ...initElimEntry,
+          id: 'een_a123456789abcdef0123456789abcdef', 
           player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
           elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
           fee: '5'
         },
         {
           ...initElimEntry,
+          id: 'een_a143456789abcdef0123456789abcdef', 
           player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
           elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
           fee: '5'
@@ -268,13 +415,13 @@ describe('getSql', () => {
 
       const insertSQL = getInsertManySQL(mockElimEntries);
       const expected = 
-      `INSERT INTO public."Elim_Entry" (elim_id, player_id, fee) ` +
-      `SELECT e2up.elim_id, e2up.player_id, e2up.fee ` +
+      `INSERT INTO public."Elim_Entry" (id, elim_id, player_id, fee) ` +
+      `SELECT e2up.id, e2up.elim_id, e2up.player_id, e2up.fee ` +
       `FROM (VALUES ` +
-        `('elm_b4c3939adca140898b1912b75b3725f8', 'ply_88be0472be3d476ea1caa99dd05953fa', 5), ` +
-        `('elm_b4c3939adca140898b1912b75b3725f8', 'ply_be57bef21fc64d199c2f6de4408bd136', 5)` +
-        `) AS e2up(elim_id, player_id, fee) ` +
-      `WHERE NOT EXISTS (SELECT 1 FROM public."Elim_Entry" WHERE elim_id = e2up.elim_id AND player_id = e2up.player_id);`
+        `('een_a123456789abcdef0123456789abcdef', 'elm_b4c3939adca140898b1912b75b3725f8', 'ply_88be0472be3d476ea1caa99dd05953fa', 5), ` +
+        `('een_a143456789abcdef0123456789abcdef', 'elm_b4c3939adca140898b1912b75b3725f8', 'ply_be57bef21fc64d199c2f6de4408bd136', 5)` +
+        `) AS e2up(id, elim_id, player_id, fee) ` +
+      `WHERE NOT EXISTS (SELECT 1 FROM public."Elim_Entry" WHERE id = e2up.id);`
   
       expect(insertSQL).toBe(expected);
     })
@@ -296,24 +443,28 @@ describe('getSql', () => {
       const mockElimEntries: elimEntryType[] = [
         {
           ...initElimEntry,
+          id: 'een_a123456789abcdef0123456789abcdef', 
           player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
           elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
           fee: '5'
         },
         {
           ...initElimEntry,
+          id: 'een_a133456789abcdef0123456789abcdef', 
           player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
           elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
           fee: '5'
         },
         {
           ...initElimEntry,
+          id: 'een_a143456789abcdef0123456789abcdef', 
           player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
           elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
           fee: '5'
         },
         {
           ...initElimEntry,
+          id: 'een_a153456789abcdef0123456789abcdef', 
           player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
           elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
           fee: '5'
@@ -322,17 +473,141 @@ describe('getSql', () => {
 
       const insertSQL = getInsertManySQL(mockElimEntries);
       const expected = 
-      `INSERT INTO public."Elim_Entry" (elim_id, player_id, fee) ` +
-      `SELECT e2up.elim_id, e2up.player_id, e2up.fee ` +
+      `INSERT INTO public."Elim_Entry" (id, elim_id, player_id, fee) ` +
+      `SELECT e2up.id, e2up.elim_id, e2up.player_id, e2up.fee ` +
       `FROM (VALUES ` +
-        `('elm_b4c3939adca140898b1912b75b3725f8', 'ply_88be0472be3d476ea1caa99dd05953fa', 5), ` +
-        `('elm_4f176545e4294a0292732cccada91b9d', 'ply_88be0472be3d476ea1caa99dd05953fa', 5), ` +
-        `('elm_b4c3939adca140898b1912b75b3725f8', 'ply_be57bef21fc64d199c2f6de4408bd136', 5), ` +
-        `('elm_4f176545e4294a0292732cccada91b9d', 'ply_be57bef21fc64d199c2f6de4408bd136', 5)` +
-        `) AS e2up(elim_id, player_id, fee) ` +
-      `WHERE NOT EXISTS (SELECT 1 FROM public."Elim_Entry" WHERE elim_id = e2up.elim_id AND player_id = e2up.player_id);`
+        `('een_a123456789abcdef0123456789abcdef', 'elm_b4c3939adca140898b1912b75b3725f8', 'ply_88be0472be3d476ea1caa99dd05953fa', 5), ` +
+        `('een_a133456789abcdef0123456789abcdef', 'elm_4f176545e4294a0292732cccada91b9d', 'ply_88be0472be3d476ea1caa99dd05953fa', 5), ` +
+        `('een_a143456789abcdef0123456789abcdef', 'elm_b4c3939adca140898b1912b75b3725f8', 'ply_be57bef21fc64d199c2f6de4408bd136', 5), ` +
+        `('een_a153456789abcdef0123456789abcdef', 'elm_4f176545e4294a0292732cccada91b9d', 'ply_be57bef21fc64d199c2f6de4408bd136', 5)` +
+        `) AS e2up(id, elim_id, player_id, fee) ` +
+      `WHERE NOT EXISTS (SELECT 1 FROM public."Elim_Entry" WHERE id = e2up.id);`
   
       expect(insertSQL).toBe(expected);
+    })
+    it('should return "" if id is invalid', () => { 
+
+      const mockElimEntries: elimEntryType[] = [
+        {
+          ...initElimEntry,
+          id: '<script>alert("xss")</script>',
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
+          fee: '5'
+        },
+        {
+          ...initElimEntry,
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
+          fee: '5'
+        },
+      ];
+
+      const updateSQL = getInsertManySQL(mockElimEntries);
+      expect(updateSQL).toBe('');
+    })
+    it('should return "" if player_id is invalid', () => { 
+
+      const mockElimEntries: elimEntryType[] = [
+        {
+          ...initElimEntry,          
+          player_id: '<script>alert("xss")</script>',
+          elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
+          fee: '5'
+        },
+        {
+          ...initElimEntry,
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
+          fee: '5'
+        },
+      ];
+
+      const updateSQL = getInsertManySQL(mockElimEntries);
+      expect(updateSQL).toBe('');
+    })
+    it('should return "" if elim_id is invalid', () => { 
+
+      const mockElimEntries: elimEntryType[] = [
+        {
+          ...initElimEntry,          
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: '<script>alert("xss")</script>',
+          fee: '5'
+        },
+        {
+          ...initElimEntry,
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
+          fee: '5'
+        },
+      ];
+
+      const updateSQL = getInsertManySQL(mockElimEntries);
+      expect(updateSQL).toBe('');
+    })
+    it('should return "" if fee is invalid', () => { 
+
+      const mockElimEntries: elimEntryType[] = [
+        {
+          ...initElimEntry,
+          id: '<script>alert("xss")</script>',
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
+          fee: '<script>alert("xss")</script>'
+        },
+        {
+          ...initElimEntry,
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
+          fee: '5'
+        },
+      ];
+
+      const updateSQL = getInsertManySQL(mockElimEntries);
+      expect(updateSQL).toBe('');
+    })
+    it('should return "" if fee is too high', () => { 
+
+      const mockElimEntries: elimEntryType[] = [
+        {
+          ...initElimEntry,
+          id: '<script>alert("xss")</script>',
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
+          fee: '1234567890'
+        },
+        {
+          ...initElimEntry,
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
+          fee: '5'
+        },
+      ];
+
+      const updateSQL = getInsertManySQL(mockElimEntries);
+      expect(updateSQL).toBe('');
+    })
+    it('should return "" if fee is too low', () => { 
+
+      const mockElimEntries: elimEntryType[] = [
+        {
+          ...initElimEntry,
+          id: '<script>alert("xss")</script>',
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
+          fee: '-1'
+        },
+        {
+          ...initElimEntry,
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
+          fee: '5'
+        },
+      ];
+
+      const updateSQL = getInsertManySQL(mockElimEntries);
+      expect(updateSQL).toBe('');
     })
 
   })
@@ -472,6 +747,130 @@ describe('getSql', () => {
       `);`
 
       expect(deleteSQL).toBe(expected);
+    })
+    it('should return "" if id is invalid', () => { 
+
+      const mockElimEntries: elimEntryType[] = [
+        {
+          ...initElimEntry,
+          id: '<script>alert("xss")</script>',
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
+          fee: '5'
+        },
+        {
+          ...initElimEntry,
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
+          fee: '5'
+        },
+      ];
+
+      const updateSQL = getDeleteManySQL(mockElimEntries);
+      expect(updateSQL).toBe('');
+    })
+    it('should return "" if player_id is invalid', () => { 
+
+      const mockElimEntries: elimEntryType[] = [
+        {
+          ...initElimEntry,          
+          player_id: '<script>alert("xss")</script>',
+          elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
+          fee: '5'
+        },
+        {
+          ...initElimEntry,
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
+          fee: '5'
+        },
+      ];
+
+      const updateSQL = getDeleteManySQL(mockElimEntries);
+      expect(updateSQL).toBe('');
+    })
+    it('should return "" if elim_id is invalid', () => { 
+
+      const mockElimEntries: elimEntryType[] = [
+        {
+          ...initElimEntry,          
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: '<script>alert("xss")</script>',
+          fee: '5'
+        },
+        {
+          ...initElimEntry,
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
+          fee: '5'
+        },
+      ];
+
+      const updateSQL = getDeleteManySQL(mockElimEntries);
+      expect(updateSQL).toBe('');
+    })
+    it('should return "" if fee is invalid', () => { 
+
+      const mockElimEntries: elimEntryType[] = [
+        {
+          ...initElimEntry,
+          id: '<script>alert("xss")</script>',
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
+          fee: '<script>alert("xss")</script>'
+        },
+        {
+          ...initElimEntry,
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
+          fee: '5'
+        },
+      ];
+
+      const updateSQL = getDeleteManySQL(mockElimEntries);
+      expect(updateSQL).toBe('');
+    })
+    it('should return "" if fee is too high', () => { 
+
+      const mockElimEntries: elimEntryType[] = [
+        {
+          ...initElimEntry,
+          id: '<script>alert("xss")</script>',
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
+          fee: '1234567890'
+        },
+        {
+          ...initElimEntry,
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
+          fee: '5'
+        },
+      ];
+
+      const updateSQL = getUpdateManySQL(mockElimEntries);
+      expect(updateSQL).toBe('');
+    })
+    it('should return "" if fee is too low', () => { 
+
+      const mockElimEntries: elimEntryType[] = [
+        {
+          ...initElimEntry,
+          id: '<script>alert("xss")</script>',
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
+          fee: '-1'
+        },
+        {
+          ...initElimEntry,
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
+          fee: '5'
+        },
+      ];
+
+      const updateSQL = getUpdateManySQL(mockElimEntries);
+      expect(updateSQL).toBe('');
     })
 
   })

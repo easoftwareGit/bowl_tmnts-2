@@ -8,7 +8,7 @@ import { mockStateBowls } from "../../../mocks/state/mockState";
 import { mockSDBrkts, mockSDDivs, mockSDElims, mockSDEvents, mockSDLanes, mockSDPots, mockSDSquads, mockSDTmnt } from "../../../mocks/tmnts/singlesAndDoubles/mockSD";
 import { ReduxProvider } from "@/redux/provider";
 import TmntDataForm from "@/app/dataEntry/tmntForm/tmntForm";
-import 'core-js/actual/structured-clone';
+import { cloneDeep } from "lodash";
 
 // Mock state for bowls
 const mockState: Partial<RootState> = {
@@ -340,7 +340,7 @@ describe("TmntDataPage - Brackets Component", () => {
 
   describe('render edited bracket fee errors', () => {
     it('edited bracket fee less than min error', async () => {
-      const testTmnt = structuredClone(tmntProps)
+      const testTmnt = cloneDeep(tmntProps)
       testTmnt.curData.brkts[0].fee = '0';
 
       const user = userEvent.setup();
@@ -364,7 +364,7 @@ describe("TmntDataPage - Brackets Component", () => {
       expect(scratchGame1Tabs[0]).toHaveClass('objError')
     })
     it('edited bracket more than max error', async () => {
-      const testTmnt = structuredClone(tmntProps)
+      const testTmnt = cloneDeep(tmntProps)
       testTmnt.curData.brkts[0].fee = '1234567';
 
       const user = userEvent.setup();
@@ -388,7 +388,7 @@ describe("TmntDataPage - Brackets Component", () => {
       expect(scratchGame1Tabs[0]).toHaveClass('objError')
     })
     it('clear bracket fee error', async () => {
-      const testTmnt = structuredClone(tmntProps)
+      const testTmnt = cloneDeep(tmntProps)
       testTmnt.curData.brkts[0].fee = '1234567';
 
       const user = userEvent.setup();
@@ -424,7 +424,7 @@ describe("TmntDataPage - Brackets Component", () => {
   describe('render multiple errors', () => { 
     
     it('render multiple errors for different brackets', async () => {       
-      const testTmnt = structuredClone(tmntProps)
+      const testTmnt = cloneDeep(tmntProps)
       testTmnt.curData.brkts[0].fee = '0';
       testTmnt.curData.brkts[1].fee = '1234567';
 

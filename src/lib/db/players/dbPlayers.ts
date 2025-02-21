@@ -1,9 +1,9 @@
 import axios from "axios";
 import { basePlayersApi } from "@/lib/db/apiPaths";
 import { testBasePlayersApi } from "../../../../test/testApi";
-import { playerType } from "@/lib/types/types";
+import { playerType, putManyReturnType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation";
-import { blankPlayer } from "../initVals";
+import { blankPlayer, noUpdates } from "../initVals";
 
 const url = testBasePlayersApi.startsWith("undefined")
   ? basePlayersApi
@@ -187,6 +187,36 @@ export const putPlayer = async (player: playerType): Promise<playerType | null> 
       position: dbPlayer.position,
     };
     return postedPlayer;
+  } catch (err) {
+    return null;
+  }
+}
+
+/**
+ * updates, inserts or deletes many players
+ * 
+ * @param {playerType[]} players - array of players to update, insert or delete
+ * @returns {putManyReturnType | null} - putManyReturnType has how many of each type updated or null
+ */
+export const putManyPlayers = async (players: playerType[]): Promise<putManyReturnType | null> => {
+
+  try { 
+    if (!players) return null;
+    if (players.length === 0) return noUpdates; // not an error, just no data to update, insert or delete
+    for (let i = 0; i < players.length; i++) {
+      if (!isValidBtDbId(players[i].id, "ply")) return null;
+    }
+    // further sanatation and validation done in PUT route
+    const playersJSON = JSON.stringify(players);
+    const response = await axios({
+      method: "put",
+      data: playersJSON,
+      withCredentials: true,
+      url: manyUrl,
+    });
+    if (response.status !== 200) return null;
+    const updatedInfo: putManyReturnType = response.data.updateInfo;
+    return updatedInfo;
   } catch (err) {
     return null;
   }

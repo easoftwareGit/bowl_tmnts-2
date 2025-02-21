@@ -2,6 +2,7 @@ import { ErrorCode, isValidBtDbId, maxBowlNameLemgth, maxCityLength, maxStateLen
 import { sanitize, sanitizeUrl } from "@/lib/sanitize";
 import { bowlType } from "@/lib/types/types";
 import { blankBowl } from "@/lib/db/initVals";
+import { cloneDeep } from "lodash";
 
 /**
  * checks for required data and returns error code if missing 
@@ -83,7 +84,7 @@ const validBowlData = (bowl: bowlType): ErrorCode => {
  */
 export const sanitizeBowl = (bowl: bowlType): bowlType => { 
   if (!bowl) return null as any;
-  const sanitizedBowl: bowlType = { ...blankBowl }
+  const sanitizedBowl: bowlType = cloneDeep(blankBowl)
   if (isValidBtDbId(bowl.id, "bwl")) {
     sanitizedBowl.id = bowl.id;
   }

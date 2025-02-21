@@ -9,6 +9,7 @@ import { deleteTmnt, putTmnt } from "@/lib/db/tmnts/dbTmnts";
 import { btDbUuid } from "@/lib/uuid";
 import { compareAsc } from "date-fns";
 import { startOfDayFromString } from "@/lib/dateTools";
+import { cloneDeep } from "lodash";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -34,7 +35,7 @@ describe("save just tmnt data", () => {
   const userId = 'usr_5bcefb5d314fff1ff5da6521a2fa7bde';
   
   describe("new tournament", () => {
-    const origTmnt = { ...blankTmnt };    
+    const origTmnt = cloneDeep(blankTmnt); 
     let createdTmnt = false;
   
     const delTestTmnt = async () => {
@@ -81,15 +82,15 @@ describe("save just tmnt data", () => {
       expect(postedTmnt.tmnt_name).toBe(newTmnt.tmnt_name);
       expect(postedTmnt.user_id).toBe(newTmnt.user_id);
       expect(postedTmnt.bowl_id).toBe(newTmnt.bowl_id);
-      const postedStartDate = new Date(postedTmnt.start_date);
-      const postedEndDate = new Date(postedTmnt.end_date);
-      expect(compareAsc(postedStartDate, newTmnt.start_date)).toBe(0);
-      expect(compareAsc(postedEndDate, newTmnt.end_date)).toBe(0);
+      const postedStartDate = new Date(postedTmnt.start_date_str);
+      const postedEndDate = new Date(postedTmnt.end_date_str);
+      expect(compareAsc(postedStartDate, newTmnt.start_date_str)).toBe(0);
+      expect(compareAsc(postedEndDate, newTmnt.end_date_str)).toBe(0);
 
       const allTmntsResponse = await axios.get(url);
       const allTmnts = allTmntsResponse.data.tmnts;
-      // 10 tmnts in prisma/seeds.ts
-      expect(allTmnts.length).toBe(11); // created, not updated
+      // 12 tmnts in prisma/seeds.ts
+      expect(allTmnts.length).toBe(13); // created, not updated 12 + 1 = 13
     });
 
     it("should return false when tmnt data is invalid", async () => {
@@ -161,15 +162,15 @@ describe("save just tmnt data", () => {
       expect(postedTmnt.tmnt_name).toBe(toPutTmnt.tmnt_name);
       expect(postedTmnt.user_id).toBe(toPutTmnt.user_id);
       expect(postedTmnt.bowl_id).toBe(toPutTmnt.bowl_id);
-      const postedStartDate = new Date(postedTmnt.start_date);
-      const postedEndDate = new Date(postedTmnt.end_date);
+      const postedStartDate = new Date(toPutTmnt.start_date);
+      const postedEndDate = new Date(toPutTmnt.end_date);
       expect(compareAsc(postedStartDate, toPutTmnt.start_date)).toBe(0);
       expect(compareAsc(postedEndDate, toPutTmnt.end_date)).toBe(0);
 
       const allTmntsResponse = await axios.get(url);
       const allTmnts = allTmntsResponse.data.tmnts;
-      // 10 tmnts in prisma/seeds.ts
-      expect(allTmnts.length).toBe(10); // updated, not created      
+      // 12 tmnts in prisma/seeds.ts
+      expect(allTmnts.length).toBe(12); // updated, not created      
     });
 
     it("should return false when data is invalid", async () => {

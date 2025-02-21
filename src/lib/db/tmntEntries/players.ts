@@ -16,6 +16,7 @@ export const getPlayerRow = (row: typeof playerEntryData, squadId: string): play
 }
 
 export const playerRowChanged = (playerRow: playerType, players: playerType[]): boolean => {
+  if (!playerRow || !players) return false;
   const origRow = players.find((player) => player.id === playerRow.id);
   if (!origRow) return false; // new player, not changed
   const origPlayer = {

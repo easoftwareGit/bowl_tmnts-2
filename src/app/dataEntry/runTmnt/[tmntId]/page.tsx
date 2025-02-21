@@ -7,6 +7,7 @@ import { AppDispatch, RootState } from "@/redux/store";
 import { fetchOneTmnt, getOneTmntError, getOneTmntLoadStatus } from "@/redux/features/allDataOneTmnt/allDataOneTmntSlice";
 import { allDataOneTmntType, tmntActions, tmntFormDataType } from "@/lib/types/types";
 import Link from "next/link";
+import WaitModal from "@/components/modal/waitModal";
 
 // http://localhost:3000/dataEntry/runTmnt/tmt_d237a388a8fc4641a2e37233f1d6bebd
 
@@ -33,10 +34,10 @@ export const RunTmntPage = () => {
  
   return (
     <>
-      {(tmntLoadStatus === 'loading') && <div>Loading...</div>}  
-      {tmntLoadStatus !== 'loading' && tmntError
-        ? (<div>Error: {tmntError}</div>
-        ) : null}
+      <WaitModal show={tmntLoadStatus === 'loading'} message="Loading..." />
+      {tmntLoadStatus !== 'loading' && tmntLoadStatus !== 'succeeded' && tmntError
+        ? (<div>Error: {tmntError} tmntLoadStatus: {tmntLoadStatus}</div>
+        ) : null}     
       {(tmntLoadStatus === 'succeeded') ? ( 
         <div className="d-flex flex-column justify-content-center align-items-center">
           <div className="shadow p-3 m-3 rounded-3 container">

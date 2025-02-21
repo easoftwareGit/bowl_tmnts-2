@@ -9,8 +9,7 @@ import { getDeleteManySQL, getInsertManySQL, getUpdateManySQL } from "./getSql";
 
 export async function POST(request: NextRequest) {
 
-  try {
-    
+  try {    
     const divEntries: divEntryType[] = await request.json();
     // sanitize and validate divEntries
     const validDivEntries = await validateDivEntries(divEntries); // need to use await! or else returns a promise

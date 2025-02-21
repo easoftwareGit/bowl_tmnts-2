@@ -7,7 +7,7 @@ import { squadType } from "@/lib/types/types";
 import { deleteAllTmntSquads, deleteSquad, postManySquads, postSquad, putSquad } from "@/lib/db/squads/dbSquads";
 import { blankSquad } from "@/lib/db/initVals";
 import { compareAsc } from "date-fns";
-import 'core-js/actual/structured-clone';
+import { cloneDeep } from "lodash";
 
 const { tmntPostPutOrDelSquads } = exportedForTesting;
 
@@ -36,7 +36,7 @@ describe('saveTmntDivs test', () => {
   };
 
   describe('tmntPostPutOrDelSquads(): edited div(s)', () => {   
-    const clonedSquad = structuredClone(mockSquadsToEdit[0]);
+    const clonedSquad = cloneDeep(mockSquadsToEdit[0]);
     const toAddSquad = {
       ...clonedSquad,
       id: 'sqd_3397da1adc014cf58c44e07c19914f04', // added one to last diget
@@ -104,7 +104,7 @@ describe('saveTmntDivs test', () => {
     })
 
     it('should save edited squads, one squad edited', async () => {
-      const squadsToEdit = structuredClone(mockSquadsToEdit);
+      const squadsToEdit = cloneDeep(mockSquadsToEdit);
       squadsToEdit[1].squad_name = "Edited Squad";
       squadsToEdit[1].games = 5;
       squadsToEdit[1].lane_count = 16;
@@ -126,7 +126,7 @@ describe('saveTmntDivs test', () => {
       expect(found.lane_count).toBe(squadsToEdit[1].lane_count);
     })
     it('should save edited squads, one squad added', async () => { 
-      const squadsToEdit = structuredClone(mockSquadsToEdit);
+      const squadsToEdit = cloneDeep(mockSquadsToEdit);
       squadsToEdit.push(toAddSquad);
       const savedSquads = await tmntPostPutOrDelSquads(mockSquadsToEdit, squadsToEdit);
       if (!savedSquads) {
@@ -144,12 +144,13 @@ describe('saveTmntDivs test', () => {
       expect(found.squad_name).toBe(toAddSquad.squad_name);
       expect(found.games).toBe(toAddSquad.games);      
       expect(found.lane_count).toBe(toAddSquad.lane_count);
-      expect(compareAsc(found.squad_date, toAddSquad.squad_date)).toBe(0);
+      // expect(compareAsc(found.squad_date_str, toAddSquad.squad_date_str)).toBe(0);
+      expect(found.squad_date_str).toBe(toAddSquad.squad_date_str); 
       expect(found.squad_time).toBe(toAddSquad.squad_time);
       expect(found.sort_order).toBe(toAddSquad.sort_order);
     })
     it('should save edited squads, one squad deleted', async () => { 
-      const squadsToEdit = structuredClone(mockSquadsToEdit);
+      const squadsToEdit = cloneDeep(mockSquadsToEdit);
       squadsToEdit.pop();      
       const savedSquads = await tmntPostPutOrDelSquads(mockSquadsToEdit, squadsToEdit);
       if (!savedSquads) {
@@ -166,7 +167,7 @@ describe('saveTmntDivs test', () => {
       expect(found).toBeUndefined();
     })   
     it('should save edited squads, one squad edited, one added, one deleted', async () => { 
-      const squadsToEdit = structuredClone(mockSquadsToEdit);
+      const squadsToEdit = cloneDeep(mockSquadsToEdit);
       // delete squad 3
       squadsToEdit.pop();
       // edit squad 2
@@ -213,7 +214,7 @@ describe('saveTmntDivs test', () => {
       }
     });
 
-    const origClone = structuredClone(blankSquad);
+    const origClone = cloneDeep(blankSquad);
     const origSquads: squadType[] = [
       {
         ...origClone,
@@ -221,7 +222,7 @@ describe('saveTmntDivs test', () => {
     ]
 
     it('should create one new squad when only one squad to save', async () => { 
-      const newSquadClone = structuredClone(mockSquadsToPost[0]);
+      const newSquadClone = cloneDeep(mockSquadsToPost[0]);
       const newSquads = [
         {
           ...newSquadClone
@@ -236,7 +237,8 @@ describe('saveTmntDivs test', () => {
       expect(postedSquad.id).toBe(newSquads[0].id);
       expect(postedSquad.event_id).toBe(newSquads[0].event_id);
       expect(postedSquad.squad_name).toBe(newSquads[0].squad_name);
-      expect(compareAsc(postedSquad.squad_date, newSquads[0].squad_date)).toBe(0);
+      // expect(compareAsc(postedSquad.squad_date, newSquads[0].squad_date)).toBe(0);
+      expect(postedSquad.squad_date_str).toBe(newSquads[0].squad_date_str);
       expect(postedSquad.squad_time).toBe(newSquads[0].squad_time);      
       expect(postedSquad.games).toBe(newSquads[0].games);
       expect(postedSquad.lane_count).toBe(newSquads[0].lane_count);
@@ -244,7 +246,7 @@ describe('saveTmntDivs test', () => {
       expect(postedSquad.sort_order).toBe(newSquads[0].sort_order);
     })
     it('should create multiple new squads when multiple squads to save', async () => {
-      const newSquads = structuredClone(mockSquadsToPost);
+      const newSquads = cloneDeep(mockSquadsToPost);
       const result = await tmntSaveSquads(origSquads, newSquads);
       expect(result).not.toBeNull();
       didCreate = true;
@@ -260,7 +262,8 @@ describe('saveTmntDivs test', () => {
       expect(postedSquad.id).toBe(newSquads[0].id);
       expect(postedSquad.event_id).toBe(newSquads[0].event_id);
       expect(postedSquad.squad_name).toBe(newSquads[0].squad_name);
-      expect(compareAsc(postedSquad.squad_date, newSquads[0].squad_date)).toBe(0);
+      // expect(compareAsc(postedSquad.squad_date, newSquads[0].squad_date)).toBe(0);
+      expect(postedSquad.squad_date_str).toBe(newSquads[0].squad_date_str); 
       expect(postedSquad.squad_time).toBe(newSquads[0].squad_time);      
       expect(postedSquad.games).toBe(newSquads[0].games);
       expect(postedSquad.lane_count).toBe(newSquads[0].lane_count);
@@ -274,7 +277,8 @@ describe('saveTmntDivs test', () => {
       expect(postedSquad.id).toBe(newSquads[1].id);
       expect(postedSquad.event_id).toBe(newSquads[1].event_id);
       expect(postedSquad.squad_name).toBe(newSquads[1].squad_name);
-      expect(compareAsc(postedSquad.squad_date, newSquads[1].squad_date)).toBe(0);
+      // expect(compareAsc(postedSquad.squad_date, newSquads[1].squad_date)).toBe(0);
+      expect(postedSquad.squad_date_str).toBe(newSquads[1].squad_date_str); 
       expect(postedSquad.squad_time).toBe(newSquads[1].squad_time);      
       expect(postedSquad.games).toBe(newSquads[1].games);
       expect(postedSquad.lane_count).toBe(newSquads[1].lane_count);
@@ -285,7 +289,7 @@ describe('saveTmntDivs test', () => {
   })
 
   describe('tmntSaveSquads(): update squads(s)', () => { 
-    const clonedSquad = structuredClone(mockSquadsToEdit[0]);
+    const clonedSquad = cloneDeep(mockSquadsToEdit[0]);
     const toAddSquad = {
       ...clonedSquad,
       id: 'sqd_3397da1adc014cf58c44e07c19914f04', // added one to last diget
@@ -353,7 +357,7 @@ describe('saveTmntDivs test', () => {
     })
 
     it('should saved edited squads, one squad edited', async () => {
-      const squadsToEdit = structuredClone(mockSquadsToEdit);
+      const squadsToEdit = cloneDeep(mockSquadsToEdit);
       squadsToEdit[1].squad_name = "Edited Squad";
       squadsToEdit[1].games = 5;
       squadsToEdit[1].lane_count = 16;
@@ -375,7 +379,7 @@ describe('saveTmntDivs test', () => {
       expect(found.lane_count).toBe(squadsToEdit[1].lane_count);
     })
     it('should save edited squads, one squad added', async () => { 
-      const squadsToEdit = structuredClone(mockSquadsToEdit);
+      const squadsToEdit = cloneDeep(mockSquadsToEdit);
       squadsToEdit.push(toAddSquad);
       const savedSquads = await tmntSaveSquads(mockSquadsToEdit, squadsToEdit);
       if (!savedSquads) {
@@ -393,12 +397,13 @@ describe('saveTmntDivs test', () => {
       expect(found.squad_name).toBe(toAddSquad.squad_name);
       expect(found.games).toBe(toAddSquad.games);      
       expect(found.lane_count).toBe(toAddSquad.lane_count);
-      expect(compareAsc(found.squad_date, toAddSquad.squad_date)).toBe(0);
+      // expect(compareAsc(found.squad_date, toAddSquad.squad_date)).toBe(0);
+      expect(found.squad_date_str).toBe(toAddSquad.squad_date_str); 
       expect(found.squad_time).toBe(toAddSquad.squad_time);
       expect(found.sort_order).toBe(toAddSquad.sort_order);
     })
     it('should save edited squads, one squad deleted', async () => { 
-      const squadsToEdit = structuredClone(mockSquadsToEdit);
+      const squadsToEdit = cloneDeep(mockSquadsToEdit);
       squadsToEdit.pop();      
       const savedSquads = await tmntSaveSquads(mockSquadsToEdit, squadsToEdit);
       if (!savedSquads) {
@@ -415,7 +420,7 @@ describe('saveTmntDivs test', () => {
       expect(found).toBeUndefined();
     })   
     it('should save edited squads, one squad edited, one added, one deleted', async () => { 
-      const squadsToEdit = structuredClone(mockSquadsToEdit);
+      const squadsToEdit = cloneDeep(mockSquadsToEdit);
       // delete squad 3
       squadsToEdit.pop();
       // edit squad 2

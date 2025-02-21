@@ -1,10 +1,10 @@
 import axios, { AxiosError } from "axios";
 import { baseDivEntriesApi } from "@/lib/db/apiPaths";
 import { testBaseDivEntriesApi } from "../../../testApi";
-import { divEntryRawWithHdcpType, divEntryType, divType, HdcpForTypes, playerType } from "@/lib/types/types";
+import { divEntryRawWithHdcpType, divEntryType, divType, HdcpForTypes, playerType, tmntEntryDivEntryType } from "@/lib/types/types";
 import { initDiv, initDivEntry, initPlayer } from "@/lib/db/initVals";
 import { mockDivEntriesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllDivEntriesForDiv, deleteAllDivEntriesForSquad, deleteAllDivEntriesForTmnt, deleteDivEntry, getAllDivEntriesForDiv, getAllDivEntriesForSquad, getAllDivEntriesForTmnt, postDivEntry, postManyDivEntries, putDivEntry } from "@/lib/db/divEntries/dbDivEntries";
+import { deleteAllDivEntriesForDiv, deleteAllDivEntriesForSquad, deleteAllDivEntriesForTmnt, deleteDivEntry, getAllDivEntriesForDiv, getAllDivEntriesForSquad, getAllDivEntriesForTmnt, postDivEntry, postManyDivEntries, putDivEntry, putManyDivEntries } from "@/lib/db/divEntries/dbDivEntries";
 import { cloneDeep } from "lodash";
 import { putDiv } from "@/lib/db/divs/dbDivs";
 
@@ -235,7 +235,7 @@ describe('dbDivEntries', () => {
         }        
         expect(divEntries[i].squad_id).toEqual(divEntriesToGet[i].squad_id);
         expect(divEntries[i].div_id).toEqual(divEntriesToGet[i].div_id);        
-        expect(divEntries[i].fee + "").toEqual(divEntriesToGet[i].fee);
+        expect(divEntries[i].fee).toEqual(divEntriesToGet[i].fee);
       }
     })
     it('should get all divEntries for tmnt when hdcp is not 0', async () => { 
@@ -266,7 +266,7 @@ describe('dbDivEntries', () => {
         }        
         expect(divEntries[i].squad_id).toEqual(divEntriesToGet[i].squad_id);
         expect(divEntries[i].div_id).toEqual(divEntriesToGet[i].div_id);        
-        expect(divEntries[i].fee + "").toEqual(divEntriesToGet[i].fee);
+        expect(divEntries[i].fee).toEqual(divEntriesToGet[i].fee);
       }
     })
     it('should get all divEntries for tmnt when hdcp is not 0 and int_hdcp = true' , async () => { 
@@ -298,7 +298,7 @@ describe('dbDivEntries', () => {
         }        
         expect(divEntries[i].squad_id).toEqual(divEntriesToGet[i].squad_id);
         expect(divEntries[i].div_id).toEqual(divEntriesToGet[i].div_id);        
-        expect(divEntries[i].fee + "").toEqual(divEntriesToGet[i].fee);
+        expect(divEntries[i].fee).toEqual(divEntriesToGet[i].fee);
       }
     })
     it('should return 0 divEntries for not found tmnt', async () => { 
@@ -357,7 +357,7 @@ describe('dbDivEntries', () => {
         }        
         expect(divEntries[i].squad_id).toEqual(divEntriesToGet[i].squad_id);
         expect(divEntries[i].div_id).toEqual(divEntriesToGet[i].div_id);        
-        expect(divEntries[i].fee + "").toEqual(divEntriesToGet[i].fee);
+        expect(divEntries[i].fee).toEqual(divEntriesToGet[i].fee);
       }
     })
     it('should get all divEntries for squad when hdcp is not 0', async () => { 
@@ -388,7 +388,7 @@ describe('dbDivEntries', () => {
         }        
         expect(divEntries[i].squad_id).toEqual(divEntriesToGet[i].squad_id);
         expect(divEntries[i].div_id).toEqual(divEntriesToGet[i].div_id);        
-        expect(divEntries[i].fee + "").toEqual(divEntriesToGet[i].fee);
+        expect(divEntries[i].fee).toEqual(divEntriesToGet[i].fee);
       }
     })
     it('should get all divEntries for squad when hdcp is not 0 and int_hdcp = true' , async () => { 
@@ -420,7 +420,7 @@ describe('dbDivEntries', () => {
         }        
         expect(divEntries[i].squad_id).toEqual(divEntriesToGet[i].squad_id);
         expect(divEntries[i].div_id).toEqual(divEntriesToGet[i].div_id);        
-        expect(divEntries[i].fee + "").toEqual(divEntriesToGet[i].fee);
+        expect(divEntries[i].fee).toEqual(divEntriesToGet[i].fee);
       }
     })
     it('should return 0 divEntries for not found squad', async () => { 
@@ -478,7 +478,7 @@ describe('dbDivEntries', () => {
         }        
         expect(divEntries[i].squad_id).toEqual(divEntriesToGet[i].squad_id);
         expect(divEntries[i].div_id).toEqual(divEntriesToGet[i].div_id);        
-        expect(divEntries[i].fee + "").toEqual(divEntriesToGet[i].fee);
+        expect(divEntries[i].fee).toEqual(divEntriesToGet[i].fee);
       }
     })
 
@@ -510,7 +510,7 @@ describe('dbDivEntries', () => {
         }        
         expect(divEntries[i].squad_id).toEqual(divEntriesToGet[i].squad_id);
         expect(divEntries[i].div_id).toEqual(divEntriesToGet[i].div_id);        
-        expect(divEntries[i].fee + "").toEqual(divEntriesToGet[i].fee);
+        expect(divEntries[i].fee).toEqual(divEntriesToGet[i].fee);
       }
     })
     it('should get all divEntries for div when hdcp is not 0 and int_hdcp = true' , async () => { 
@@ -542,7 +542,7 @@ describe('dbDivEntries', () => {
         }        
         expect(divEntries[i].squad_id).toEqual(divEntriesToGet[i].squad_id);
         expect(divEntries[i].div_id).toEqual(divEntriesToGet[i].div_id);        
-        expect(divEntries[i].fee + "").toEqual(divEntriesToGet[i].fee);
+        expect(divEntries[i].fee).toEqual(divEntriesToGet[i].fee);
       }
     })
 
@@ -621,7 +621,7 @@ describe('dbDivEntries', () => {
       expect(postedDivEntry.squad_id).toEqual(divEntryToPost.squad_id);
       expect(postedDivEntry.div_id).toEqual(divEntryToPost.div_id);
       expect(postedDivEntry.player_id).toEqual(divEntryToPost.player_id);
-      expect(postedDivEntry.fee + "").toEqual(divEntryToPost.fee);
+      expect(postedDivEntry.fee).toEqual(divEntryToPost.fee);
     })
     it('should post a sanitzed divEntry', async () => { 
       const toSanitizse = {
@@ -637,7 +637,7 @@ describe('dbDivEntries', () => {
       expect(postedDivEntry.div_id).toEqual(toSanitizse.div_id);
       expect(postedDivEntry.squad_id).toEqual(toSanitizse.squad_id);
       expect(postedDivEntry.player_id).toEqual(toSanitizse.player_id);
-      expect(postedDivEntry.fee + "").toEqual('82');
+      expect(postedDivEntry.fee).toEqual('82');
     })
     it('should not post a divEntry if got invalid data', async () => { 
       const invalidDivEntry = {
@@ -683,7 +683,7 @@ describe('dbDivEntries', () => {
         expect(divEntries[i].squad_id).toEqual(mockDivEntriesToPost[i].squad_id);
         expect(divEntries[i].div_id).toEqual(mockDivEntriesToPost[i].div_id);
         expect(divEntries[i].player_id).toEqual(mockDivEntriesToPost[i].player_id);
-        expect(divEntries[i].fee + "").toEqual(mockDivEntriesToPost[i].fee);
+        expect(divEntries[i].fee).toEqual(mockDivEntriesToPost[i].fee);
       }
     })
     it('should NOT post many divEntries with sanitization, fee value sanitized to ""', async () => {
@@ -764,7 +764,7 @@ describe('dbDivEntries', () => {
       expect(puttedDivEntry.squad_id).toBe(divEntryToPut.squad_id);
       expect(puttedDivEntry.div_id).toBe(divEntryToPut.div_id);
       expect(puttedDivEntry.player_id).toBe(divEntryToPut.player_id);
-      expect(puttedDivEntry.fee + "").toBe(divEntryToPut.fee);
+      expect(puttedDivEntry.fee).toBe(divEntryToPut.fee);
     })
     it('should NOT put a divEntry with sanitization, fee value sanitized to ""', async () => {
       const toSanitize = cloneDeep(divEntryToPut)
@@ -780,6 +780,173 @@ describe('dbDivEntries', () => {
       const puttedDivEntry = await putDivEntry(invalidDivEntry);
       expect(puttedDivEntry).toBeNull();
     })    
+  })
+
+  describe('putManyDivEntries()', () => { 
+    let createdDivEntries = false;    
+
+    beforeAll(async () => {
+      await deletePostedDivEntry();
+      await deleteAllDivEntriesForTmnt(tmntIdToDel);
+    })
+
+    beforeEach(() => {
+      createdDivEntries = false;
+    })
+
+    afterEach(async () => {
+      if (createdDivEntries) {
+        await deleteAllDivEntriesForTmnt(tmntIdToDel);
+      }
+    })
+
+    afterAll(async () => {
+      await deleteAllDivEntriesForTmnt(tmntIdToDel);
+    })
+
+    const mockMultiDivEntriesToPost: divEntryType[] = [
+      {
+        ...mockDivEntriesToPost[0],
+      },
+      {
+        ...mockDivEntriesToPost[1],
+      },
+      {
+        ...mockDivEntriesToPost[2],
+      },
+      {
+        ...mockDivEntriesToPost[3],
+      },
+      {
+        ...initDivEntry,
+        id: "den_05be0472be3d476ea1caa99dd05953fa",
+        squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
+        div_id:'div_24b1cd5dee0542038a1244fc2978e862',
+        player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+        fee: '64',
+      },
+      {
+        ...initDivEntry,
+        id: "den_06be0472be3d476ea1caa99dd05953fa",
+        squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
+        div_id:'div_24b1cd5dee0542038a1244fc2978e862',
+        player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+        fee: '64',
+      },
+      {
+        ...initDivEntry,
+        id: "den_07be0472be3d476ea1caa99dd05953fa",
+        squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
+        div_id:'div_24b1cd5dee0542038a1244fc2978e862',
+        player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+        fee: '64',
+      },
+      {
+        ...initDivEntry,
+        id: "den_08be0472be3d476ea1caa99dd05953fa",
+        squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
+        div_id:'div_24b1cd5dee0542038a1244fc2978e862',
+        player_id: 'ply_8b0fd8bbd9e34d34a7fa90b4111c6e40',
+        fee: '64',
+      },
+    ]
+
+    it('should update, insert, delete many div entries', async () => {      
+      createdDivEntries = true;
+      const postedDivEntries = await postManyDivEntries(mockDivEntriesToPost);
+      expect(postedDivEntries).not.toBeNull();
+      if (!postedDivEntries) return;
+      expect(postedDivEntries.length).toBe(mockDivEntriesToPost.length);      
+      // set divs edits, set eType
+      const divEntriesToUpdate = [
+        {
+          ...mockMultiDivEntriesToPost[0],          
+          fee: '83',
+          eType: "u",
+        },
+        {
+          ...mockMultiDivEntriesToPost[1],          
+          fee: '83',
+          eType: "u",
+        },
+        {
+          ...mockMultiDivEntriesToPost[2],          
+          eType: "d",
+        },
+        {
+          ...mockMultiDivEntriesToPost[3],          
+          eType: "d",
+        },
+        {
+          ...mockMultiDivEntriesToPost[4],          
+          eType: "i",
+        },
+        {
+          ...mockMultiDivEntriesToPost[5],          
+          eType: "i",
+        },
+      ]
+      const updateInfo = await putManyDivEntries(divEntriesToUpdate);
+      expect(updateInfo).not.toBeNull();
+      if (!updateInfo) return;
+      expect(updateInfo.updates).toBe(2);
+      expect(updateInfo.inserts).toBe(2);
+      expect(updateInfo.deletes).toBe(2);
+    })
+    it('should return no updates, inserts or deletes when passed empty div entries', async () => {      
+      createdDivEntries = true;
+      const postedDivEntries = await postManyDivEntries(mockDivEntriesToPost);
+      expect(postedDivEntries).not.toBeNull();
+      if (!postedDivEntries) return;
+      expect(postedDivEntries.length).toBe(mockDivEntriesToPost.length);      
+      // set no divs entries edits
+      const divEntriesToUpdate: tmntEntryDivEntryType[] = []
+      const updateInfo = await putManyDivEntries(divEntriesToUpdate);
+      expect(updateInfo).not.toBeNull();
+      if (!updateInfo) return;
+      expect(updateInfo.updates).toBe(0);
+      expect(updateInfo.inserts).toBe(0);
+      expect(updateInfo.deletes).toBe(0);
+    })
+    it('should update no div entries when error in data', async () => {      
+      createdDivEntries = true;
+      const postedDivEntries = await postManyDivEntries(mockDivEntriesToPost);
+      expect(postedDivEntries).not.toBeNull();
+      if (!postedDivEntries) return;
+      expect(postedDivEntries.length).toBe(mockDivEntriesToPost.length);      
+      // set divs edits, set eType
+      const divEntriesToUpdate = [
+        {
+          ...mockMultiDivEntriesToPost[0],          
+          fee: '1234567890', // error in fee
+          eType: "u",
+        },
+        {
+          ...mockMultiDivEntriesToPost[1],          
+          fee: '83',
+          eType: "u",
+        },
+        {
+          ...mockMultiDivEntriesToPost[2],          
+          eType: "d",
+        },
+        {
+          ...mockMultiDivEntriesToPost[3],          
+          eType: "d",
+        },
+        {
+          ...mockMultiDivEntriesToPost[4],          
+          eType: "i",
+        },
+        {
+          ...mockMultiDivEntriesToPost[5],          
+          eType: "i",
+        },
+      ]
+      
+      const updateInfo = await putManyDivEntries(divEntriesToUpdate);
+      expect(updateInfo).toBeNull();
+    })
   })
 
   describe('deleteDivEntry()', () => {

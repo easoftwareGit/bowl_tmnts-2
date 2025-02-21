@@ -4,7 +4,7 @@ import { testBaseElimsApi } from "../../../testApi";
 import { elimType } from "@/lib/types/types";
 import { initElim } from "@/lib/db/initVals";
 import { deleteAllDivElims, deleteAllSquadElims, deleteAllTmntElims, deleteElim, getAllElimsForTmnt, postElim, postManyElims, putElim } from "@/lib/db/elims/dbElims";
-import { mockElimsToPost, mockSquadsToPost, mockDivs, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
+import { mockElimsToPost, mockSquadsToPost, mockDivs, tmntToDelId, mockDivsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { deleteAllTmntSquads, deleteSquad, postManySquads, postSquad } from "@/lib/db/squads/dbSquads";
 import { deleteAllTmntDivs, deleteDiv, postDiv, postManyDivs } from "@/lib/db/divs/dbDivs";
 
@@ -197,7 +197,7 @@ describe('elimsAxios', () => {
       await deleteAllTmntDivs(tmntToDelId);
 
       // make sure test squads in database
-      await postManyDivs(mockDivs);
+      await postManyDivs(mockDivsToPost);
       await postManySquads(mockSquadsToPost);       
     })
 
@@ -432,9 +432,9 @@ describe('elimsAxios', () => {
       // cleanup before tests
       await deleteAllSquadElims(multiElims[0].squad_id);
       await deleteSquad(mockSquadsToPost[0].id);
-      await deleteDiv(mockDivs[0].id);
+      await deleteDiv(mockDivsToPost[0].id);
       // setup for tests
-      await postDiv(mockDivs[0]);
+      await postDiv(mockDivsToPost[0]);
       await postSquad(mockSquadsToPost[0])
       await rePostToDel();
     });
@@ -452,7 +452,7 @@ describe('elimsAxios', () => {
     afterAll(async () => {
       await deleteAllSquadElims(multiElims[0].squad_id);
       await deleteSquad(mockSquadsToPost[0].id);
-      await deleteDiv(mockDivs[0].id);
+      await deleteDiv(mockDivsToPost[0].id);
     });
 
     it('should delete all elims for a squad', async () => {
@@ -508,9 +508,9 @@ describe('elimsAxios', () => {
       // cleanup before tests
       await deleteAllSquadElims(multiElims[0].squad_id);
       await deleteSquad(mockSquadsToPost[0].id);
-      await deleteDiv(mockDivs[0].id);
+      await deleteDiv(mockDivsToPost[0].id);
       // setup for tests
-      await postDiv(mockDivs[0]);
+      await postDiv(mockDivsToPost[0]);
       await postSquad(mockSquadsToPost[0])
       await rePostToDel();
     });
@@ -528,7 +528,7 @@ describe('elimsAxios', () => {
     afterAll(async () => {
       await deleteAllSquadElims(multiElims[0].squad_id);
       await deleteSquad(mockSquadsToPost[0].id);
-      await deleteDiv(mockDivs[0].id);
+      await deleteDiv(mockDivsToPost[0].id);
     });
 
     it('should delete all elims for a div', async () => {
@@ -553,7 +553,7 @@ describe('elimsAxios', () => {
 
   describe('deleteAllTmntBrkts', () => { 
 
-    const toDelDivs = [...mockDivs]
+    const toDelDivs = [...mockDivsToPost]
     const toDelSquads = [...mockSquadsToPost]
     const toDelElims = [...mockElimsToPost]
 

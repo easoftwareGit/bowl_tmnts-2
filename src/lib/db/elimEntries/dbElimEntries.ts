@@ -1,9 +1,9 @@
 import axios from "axios";
 import { baseElimEntriesApi } from "@/lib/db/apiPaths";
 import { testBaseElimEntriesApi } from "../../../../test/testApi";
-import { elimEntryType } from "@/lib/types/types";
+import { elimEntryType, putManyReturnType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation";
-import { blankElimEntry } from "../initVals";
+import { blankElimEntry, noUpdates } from "../initVals";
 
 const url = testBaseElimEntriesApi.startsWith("undefined")
   ? baseElimEntriesApi
@@ -234,6 +234,36 @@ export const putElimEntry = async (elimEntry: elimEntryType): Promise<elimEntryT
       fee: dbElimEntry.fee,
     };
     return puttedElimEntry;
+  } catch (err) {
+    return null;
+  }
+}
+
+/**
+ * updates, inserts or deletes many elim entries
+ * 
+ * @param {elimEntryType[]} elimEntries - array of elimEntries to update, insert or delete
+ * @returns {putManyReturnType | null} - putManyReturnType has how many of each type updated or null 
+ */
+export const putManyElimEntries = async (elimEntries: elimEntryType[]): Promise<putManyReturnType | null> => {
+
+  try {
+    if (!elimEntries) return null;
+    if (elimEntries.length === 0) return noUpdates;
+    for (let i = 0; i < elimEntries.length; i++) {
+      if (!isValidBtDbId(elimEntries[i].id, "een")) return null;
+    }
+    // further sanatation and validation done in PUT route
+    const elimEntriesJSON = JSON.stringify(elimEntries);
+    const response = await axios({
+      method: "put",
+      data: elimEntriesJSON,
+      withCredentials: true,
+      url: manyUrl,
+    });
+    if (response.status !== 200) return null;
+    const updatedInfo: putManyReturnType = response.data.updateInfo;
+    return updatedInfo;
   } catch (err) {
     return null;
   }

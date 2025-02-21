@@ -1,7 +1,7 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ioStatusType } from "@/redux/statusTypes";
 import { RootState } from "@/redux/store";
-import { allDataOneTmntType, dataOneTmntType, ioDataErrorsType } from "@/lib/types/types";
+import { allDataOneTmntType, dataOneTmntType, ioDataError } from "@/lib/types/types";
 import { blankTmnt  } from "@/lib/db/initVals";
 import { getAllDataForTmnt } from "@/lib/db/tmnts/dbTmnts";
 import { saveAllDataOneTmnt } from "@/lib/db/oneTmnt/dbOneTmnt";
@@ -12,13 +12,14 @@ export interface allDataOneTmntState {
   loadStatus: ioStatusType;
   saveStatus: ioStatusType;
   error: string | undefined;
+  ioError: ioDataError | undefined;
 }
 
 // initial state constant
 const initialState: allDataOneTmntState = {
   tmntData: {
     origData: {
-      tmnt: {...blankTmnt},
+      tmnt: cloneDeep(blankTmnt),
       events: [],
       divs: [],
       squads: [],
@@ -28,7 +29,7 @@ const initialState: allDataOneTmntState = {
       elims: [],
     },
     curData: {
-      tmnt: {...blankTmnt},
+      tmnt: cloneDeep(blankTmnt),
       events: [],
       divs: [],
       squads: [],
@@ -41,6 +42,7 @@ const initialState: allDataOneTmntState = {
   loadStatus: 'idle',
   saveStatus: 'idle',
   error: '',
+  ioError: ioDataError.None,
 };
 
 /**
@@ -76,16 +78,19 @@ export const fetchOneTmnt = createAsyncThunk(
 
 export const saveOneTmnt = createAsyncThunk(
   "allDataOneTmnt/saveOneTmnt",
-  async (data: allDataOneTmntType) => {
-    const errorCode: ioDataErrorsType = await saveAllDataOneTmnt(data);
-    if (errorCode === ioDataErrorsType.None) {
+  async (data: allDataOneTmntType, { rejectWithValue } ) => {
+    const errorCode: ioDataError = await saveAllDataOneTmnt(data);
+    if (errorCode === ioDataError.None) {
       const td: allDataOneTmntType = {
         origData: cloneDeep(data.curData) as dataOneTmntType,
         curData: data.curData,
       }
-      return td
+      // return td
+      return { data: td, ioError: errorCode };
     } else {
-      return data;
+      // return data;
+      // return { data: data, ioError: errorCode };
+      return rejectWithValue({ data, ioError: errorCode })
     }    
   }
 )
@@ -118,14 +123,21 @@ export const allDataOneTmntSlice = createSlice({
       state.saveStatus = 'saving';
       state.error = '';
     });
-    builder.addCase(saveOneTmnt.fulfilled, (state: allDataOneTmntState, action) => {
-      state.saveStatus = 'succeeded';
-      state.tmntData = action.payload;
+    // builder.addCase(saveOneTmnt.fulfilled, (state: allDataOneTmntState, action) => {
+    builder.addCase(saveOneTmnt.fulfilled, (state: allDataOneTmntState, action: PayloadAction<{ data: allDataOneTmntType; ioError: ioDataError }>) => {    
+      state.saveStatus = 'succeeded';      
+      state.tmntData = action.payload.data;
+      state.ioError = action.payload.ioError;
       state.error = '';
     });
     builder.addCase(saveOneTmnt.rejected, (state: allDataOneTmntState, action) => {
-      state.saveStatus = 'failed';
+      state.saveStatus = 'failed';      
       state.error = action.error.message;
+      if (action.payload && (action.payload as { ioError: ioDataError }).ioError) {
+        state.ioError = (action.payload as { ioError: ioDataError }).ioError;
+      } else {
+        state.ioError = ioDataError.OtherError; // Use a default value if ioError is not available
+      }      
     });
   }
 });
@@ -134,5 +146,6 @@ export const selectOneTmnt = (state: RootState) => state.allDataOneTmnt.tmntData
 export const getOneTmntLoadStatus = (state: RootState) => state.allDataOneTmnt.loadStatus
 export const getOneTmntSaveStatus = (state: RootState) => state.allDataOneTmnt.saveStatus
 export const getOneTmntError = (state: RootState) => state.allDataOneTmnt.error
+export const getOneTmntIoError = (state: RootState) => state.allDataOneTmnt.ioError
 
 export default allDataOneTmntSlice.reducer;

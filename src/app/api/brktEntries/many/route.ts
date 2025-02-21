@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { ErrorCode } from "@/lib/validation";
 import { brktEntryType, brktEntryDataType, tmntEntryBrktEntryType } from "@/lib/types/types";
 import { validateBrktEntries } from "../validate";
-import { getDeleteManySQL, getInsertManySQL, getUpdateManySQL } from "./getSQL";
+import { getDeleteManySQL, getInsertManySQL, getUpdateManySQL } from "./getSql";
 
 // routes /api/brktEntries/many
 
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
         brkt_id: brktEntry.brkt_id,
         player_id: brktEntry.player_id,
         num_brackets: brktEntry.num_brackets,
-        fee: brktEntry.fee,
+        time_stamp: new Date(brktEntry.time_stamp), // Convert to Date object             
       })
     });      
 
@@ -67,6 +67,8 @@ export async function PUT(request: NextRequest) {
       if (foundBrktEntry) {
         const vteBrktEntry = {
           ...brktEntry,
+          // createdAt: foundBrktEntry.createdAt,
+          // updatedAt: foundBrktEntry.updatedAt,
           eType: foundBrktEntry.eType,
         }
         validTeBrktEntries.push(vteBrktEntry);
@@ -77,7 +79,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "no data" }, { status: 422 });
     }
 
-    const brktEntriesToUpdate = validTeBrktEntries.filter((brktEntry) => brktEntry.eType === "u");    
+    const brktEntriesToUpdate = validTeBrktEntries.filter((brktEntry) => brktEntry.eType === "u");
     const updateManySQL = (brktEntriesToUpdate.length > 0)
       ? getUpdateManySQL(brktEntriesToUpdate)
       : "";

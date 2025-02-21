@@ -1,7 +1,7 @@
 import { blankPlayer } from "@/lib/db/initVals";
 import { sanitize } from "@/lib/sanitize";
 import { idTypes, playerType, validPlayersType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId, maxFirstNameLength, maxLastNameLength, maxStartLane, validName } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId, maxFirstNameLength, maxLastNameLength, maxStartLane, isValidName } from "@/lib/validation";
 import { isNumber } from "lodash";
 
 const gotPlayerData = (player: playerType): ErrorCode => {
@@ -24,10 +24,10 @@ const gotPlayerData = (player: playerType): ErrorCode => {
 }
 
 export const validPlayerFirstName = (firstName: string): boolean => {  
-  return validName(firstName, maxFirstNameLength)
+  return isValidName(firstName, maxFirstNameLength)
 }
 export const validPlayerLastName = (lastName: string): boolean => {  
-  return validName(lastName, maxLastNameLength)
+  return isValidName(lastName, maxLastNameLength)
 }
 
 export const validAverage = (average: number): boolean => {
@@ -41,7 +41,7 @@ export const validLane = (lane: number): boolean => {
 }
 
 export const validPosition = (position: string): boolean => {
-  return validName(position, 1) // only 1 character
+  return isValidName(position, 1) // only 1 character
 }
 
 /**

@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import LanesList, { getLanesFromPairs, lanesNotThisSquad, lanesThisSquad, pairsOfLanes } from '@/components/tmnts/lanesList';
 import { mockLanes, mockPairs } from '../../../mocks/tmnts/newTmnt/mockNewTmnt';
 import { laneType, pairsOfLanesType, tmntActions } from '@/lib/types/types';
-import 'core-js/actual/structured-clone';
+import { cloneDeep } from 'lodash';
 
 describe('LanesList - Component', () => { 
 
@@ -302,21 +302,21 @@ describe('LanesList - Component', () => {
       result.forEach(lane => expect(lane.squad_id).toEqual(squad1Id));
     });
     it('should exclude pairs if left_id or right_id is missing', () => {
-      const missingDataPairs = structuredClone(mockPairs);
+      const missingDataPairs = cloneDeep(mockPairs);
       missingDataPairs[0].left_id = '';
       missingDataPairs[1].right_id = '';
       const result = getLanesFromPairs(missingDataPairs, squad1Id);
       expect(result).toHaveLength(8);
     });
     it('should exclude pairs with undefined left_lane or right_lane values - Updated', () => {
-      const missingDataPairs = structuredClone(mockPairs);
+      const missingDataPairs = cloneDeep(mockPairs);
       missingDataPairs[0].left_lane = undefined as any;
       missingDataPairs[1].right_lane = undefined as any;      
       const result = getLanesFromPairs(missingDataPairs, squad1Id);
       expect(result).toHaveLength(8);
     });
     it('should not mutate input pairs array', () => {
-      const originalPairs = structuredClone(mockPairs);
+      const originalPairs = cloneDeep(mockPairs);
       getLanesFromPairs(mockPairs, squad1Id);
       expect(mockPairs).toEqual(originalPairs);
     });
@@ -336,7 +336,7 @@ describe('LanesList - Component', () => {
       expect(result[11].lane_number).toEqual(mockPairs[5].right_lane);
     });
     it('should not skip not in use lanes, but set in_use to false', () => { 
-      const notInUsePairs = structuredClone(mockPairs)
+      const notInUsePairs = cloneDeep(mockPairs)
       notInUsePairs[2].in_use = false
       const squadLanes = getLanesFromPairs(notInUsePairs, squad1Id)
       expect(squadLanes).toHaveLength(12) 

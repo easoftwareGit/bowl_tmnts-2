@@ -31,7 +31,7 @@ const notFoundUserId = "usr_00000000000000000000000000000000";
 
 const testBowlName = "Test Bowl";
 
-describe('bowlsAxios', () => { 
+describe('dbBowls', () => { 
 
   // data from prisma/seeds.ts
   const firstBowl = {

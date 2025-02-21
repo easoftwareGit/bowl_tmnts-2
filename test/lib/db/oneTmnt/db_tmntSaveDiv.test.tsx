@@ -6,7 +6,7 @@ import { mockDivsToPost, mockDivsToEdit } from "../../../mocks/tmnts/twoDivs/moc
 import { divType, HdcpForTypes } from "@/lib/types/types";
 import { deleteAllTmntDivs, deleteDiv, postDiv, putDiv } from "@/lib/db/divs/dbDivs";
 import { blankDiv } from "@/lib/db/initVals";
-import 'core-js/actual/structured-clone';
+import { cloneDeep } from "lodash";
 
 const { tmntPostPutOrDelDivs } = exportedForTesting;
 
@@ -35,7 +35,7 @@ describe('saveTmntDivs test', () => {
   };
 
   describe('tmntPostPutOrDelDivs(): edited div(s)', () => { 
-    const clonedDiv = structuredClone(mockDivsToEdit[0]);
+    const clonedDiv = cloneDeep(mockDivsToEdit[0]);
     const toAddDiv = {
       ...clonedDiv,
       id: 'div_24b1cd5dee0542038a1244fc2978e863', // added one to last diget
@@ -97,7 +97,7 @@ describe('saveTmntDivs test', () => {
     });
 
     it('should saved edited divs, one div edited', async () => {
-      const divsToEdit = structuredClone(mockDivsToEdit);
+      const divsToEdit = cloneDeep(mockDivsToEdit);
       divsToEdit[1].div_name = "Edited Div";
       divsToEdit[1].hdcp_per = .87;
       divsToEdit[1].hdcp_from = 222;
@@ -119,7 +119,7 @@ describe('saveTmntDivs test', () => {
       expect(found.hdcp_from).toBe(divsToEdit[1].hdcp_from);
     })
     it('should save edited divs, one div added', async () => { 
-      const divsToEdit = structuredClone(mockDivsToEdit);
+      const divsToEdit = cloneDeep(mockDivsToEdit);
       divsToEdit.push(toAddDiv);
       const savedDivs = await tmntPostPutOrDelDivs(mockDivsToEdit, divsToEdit);
       if (!savedDivs) {
@@ -139,7 +139,7 @@ describe('saveTmntDivs test', () => {
       expect(found.hdcp_from).toBe(toAddDiv.hdcp_from);
     })
     it('should save edited divs, one div deleted', async () => { 
-      const divsToEdit = structuredClone(mockDivsToEdit);
+      const divsToEdit = cloneDeep(mockDivsToEdit);
       divsToEdit.pop();      
       const savedDivs = await tmntPostPutOrDelDivs(mockDivsToEdit, divsToEdit);
       if (!savedDivs) {
@@ -156,7 +156,7 @@ describe('saveTmntDivs test', () => {
       expect(found).toBeUndefined();
     })   
     it('should save edited divs, one div edited, one added, one deleted', async () => { 
-      const divsToEdit = structuredClone(mockDivsToEdit);
+      const divsToEdit = cloneDeep(mockDivsToEdit);
       // delete Hdcp 50+
       divsToEdit.pop();
       // edit hdcp
@@ -203,7 +203,7 @@ describe('saveTmntDivs test', () => {
       }
     });
 
-    const origClone = structuredClone(blankDiv);
+    const origClone = cloneDeep(blankDiv);
     const origDivs: divType[] = [
       {
         ...origClone,
@@ -211,7 +211,7 @@ describe('saveTmntDivs test', () => {
     ]
 
     it('should create one new div when only one div to save', async () => { 
-      const newDivClone = structuredClone(mockDivsToPost[0]);
+      const newDivClone = cloneDeep(mockDivsToPost[0]);
       const newDivs = [
         {
           ...newDivClone
@@ -233,7 +233,7 @@ describe('saveTmntDivs test', () => {
       expect(postedDiv.sort_order).toBe(newDivs[0].sort_order);
     })
     it('should create multiple new divs when multiple divs to save', async () => {
-      const newDivs = structuredClone(mockDivsToPost);
+      const newDivs = cloneDeep(mockDivsToPost);
       const result = await tmntSaveDivs(origDivs, newDivs);
       expect(result).not.toBeNull();
       createdDiv = true;
@@ -273,7 +273,7 @@ describe('saveTmntDivs test', () => {
   })
 
   describe('tmntSaveDivs(): update div(s)', () => { 
-    const clonedDiv = structuredClone(mockDivsToEdit[0]);
+    const clonedDiv = cloneDeep(mockDivsToEdit[0]);
     const toAddDiv = {
       ...clonedDiv,
       id: 'div_24b1cd5dee0542038a1244fc2978e863', // added one to last diget
@@ -335,7 +335,7 @@ describe('saveTmntDivs test', () => {
     });
 
     it('should saved edited events, one event edited', async () => {
-      const eventsToEdit = structuredClone(mockDivsToEdit);
+      const eventsToEdit = cloneDeep(mockDivsToEdit);
       eventsToEdit[1].div_name = "Edited Div";
       eventsToEdit[1].hdcp_per = .87;
       eventsToEdit[1].hdcp_from = 222;
@@ -357,7 +357,7 @@ describe('saveTmntDivs test', () => {
       expect(found.hdcp_from).toBe(eventsToEdit[1].hdcp_from);
     })
     it('should save edited divs, one div added', async () => { 
-      const divsToEdit = structuredClone(mockDivsToEdit);
+      const divsToEdit = cloneDeep(mockDivsToEdit);
       divsToEdit.push(toAddDiv);
       const savedDivs = await tmntSaveDivs(mockDivsToEdit, divsToEdit);
       if (!savedDivs) {
@@ -377,7 +377,7 @@ describe('saveTmntDivs test', () => {
       expect(found.hdcp_from).toBe(toAddDiv.hdcp_from);
     })
     it('should save edited divs, one div deleted', async () => { 
-      const divsToEdit = structuredClone(mockDivsToEdit);
+      const divsToEdit = cloneDeep(mockDivsToEdit);
       divsToEdit.pop();      
       const savedDivs = await tmntSaveDivs(mockDivsToEdit, divsToEdit);
       if (!savedDivs) {
@@ -394,7 +394,7 @@ describe('saveTmntDivs test', () => {
       expect(found).toBeUndefined();
     })   
     it('should save edited divs, one div edited, one added, one deleted', async () => { 
-      const divsToEdit = structuredClone(mockDivsToEdit);
+      const divsToEdit = cloneDeep(mockDivsToEdit);
       // delete Hdcp 50+
       divsToEdit.pop();
       // edit hdcp

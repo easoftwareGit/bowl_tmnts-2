@@ -3,14 +3,13 @@ import { baseElimsApi } from "@/lib/db/apiPaths";
 import { testBaseElimsApi } from "../../../testApi";
 import { tmntSaveElims, exportedForTesting } from "@/lib/db/oneTmnt/dbOneTmnt";
 import { deleteAllTmntElims, deleteElim, postElim, postManyElims, putElim } from "@/lib/db/elims/dbElims";
-import { mockElimsToPost, mockSquadsToPost, mockDivs, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
+import { mockElimsToPost, mockSquadsToPost, tmntToDelId, mockDivsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { elimType } from "@/lib/types/types";
 import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/dbSquads";
 import { deleteAllTmntDivs, postManyDivs } from "@/lib/db/divs/dbDivs";
 import { blankElim } from "@/lib/db/initVals";
-import 'core-js/actual/structured-clone';
+import { cloneDeep } from "lodash";
 const { tmntPostPutOrDelElims } = exportedForTesting;
-
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -80,7 +79,7 @@ describe('saveTmntDivs test', () => {
       await deleteAllTmntSquads(tmntToDelId);      
       await deleteAllTmntDivs(tmntToDelId);      
       // setup for current tests
-      await postManyDivs(mockDivs)            
+      await postManyDivs(mockDivsToPost)            
       await postManySquads(mockSquadsToPost)      
       await postManyElims(mockElimsToEdit)
     })
@@ -116,7 +115,7 @@ describe('saveTmntDivs test', () => {
     })
 
     it('should save edited elims, one elim edited', async () => { 
-      const elimsToEdit = structuredClone(mockElimsToEdit);
+      const elimsToEdit = cloneDeep(mockElimsToEdit);
       elimsToEdit[1].start = 2;
       const savedElims = await tmntPostPutOrDelElims(mockElimsToEdit, elimsToEdit);
       if (!savedElims) {
@@ -135,7 +134,7 @@ describe('saveTmntDivs test', () => {
       didPut = true;
     })
     it('should save edited elims, one elim added', async () => { 
-      const elimsToEdit = structuredClone(mockElimsToEdit);
+      const elimsToEdit = cloneDeep(mockElimsToEdit);
       elimsToEdit.push(toAddElim);
       const savedElims = await tmntPostPutOrDelElims(mockElimsToEdit, elimsToEdit);
       if (!savedElims) {
@@ -158,7 +157,7 @@ describe('saveTmntDivs test', () => {
       expect(found.sort_order).toEqual(toAddElim.sort_order);      
     })
     it('should save edited elims, one elim deleted', async () => { 
-      const elimsToEdit = structuredClone(mockElimsToEdit);
+      const elimsToEdit = cloneDeep(mockElimsToEdit);
       elimsToEdit.pop();
       const savedElims = await tmntPostPutOrDelElims(mockElimsToEdit, elimsToEdit);
       if (!savedElims) {
@@ -175,7 +174,7 @@ describe('saveTmntDivs test', () => {
       expect(found).toBeUndefined();
     })
     it('should save edited elims, one elim edited, one added, one deleted', async () => {
-      const elimsToEdit = structuredClone(mockElimsToEdit);
+      const elimsToEdit = cloneDeep(mockElimsToEdit);
       const deletedId = mockElimsToEdit[2].id;
       // delete elim
       elimsToEdit.pop();
@@ -237,7 +236,7 @@ describe('saveTmntDivs test', () => {
       await deleteAllTmntDivs(tmntToDelId);
 
       // create temp squads for elims
-      await postManyDivs(mockDivs);
+      await postManyDivs(mockDivsToPost);
       await postManySquads(mockSquadsToPost)
     })
 
@@ -257,7 +256,7 @@ describe('saveTmntDivs test', () => {
       await deleteAllTmntDivs(tmntToDelId);
     })
 
-    const origClone = structuredClone(blankElim);
+    const origClone = cloneDeep(blankElim);
     const origElims: elimType[] = [
       {
         ...origClone,
@@ -265,7 +264,7 @@ describe('saveTmntDivs test', () => {
     ]
 
     it('should create one new elim when only one elim to save', async () => { 
-      const newElimClone = structuredClone(mockElimsToPost[0]);
+      const newElimClone = cloneDeep(mockElimsToPost[0]);
       const newElims = [
         {
           ...newElimClone,
@@ -286,7 +285,7 @@ describe('saveTmntDivs test', () => {
       expect(postedElim.sort_order).toBe(newElims[0].sort_order);      
     })
     it('should create multiple new elims when multiple elims to save', async () => { 
-      const newLanes = structuredClone(mockElimsToPost);
+      const newLanes = cloneDeep(mockElimsToPost);
       const result = await tmntSaveElims(origElims, newLanes);
       expect(result).not.toBeNull();
       didCreate = true;
@@ -344,7 +343,7 @@ describe('saveTmntDivs test', () => {
       await deleteAllTmntSquads(tmntToDelId);
       await deleteAllTmntDivs(tmntToDelId);
       // setup for current tests
-      await postManyDivs(mockDivs)
+      await postManyDivs(mockDivsToPost)
       await postManySquads(mockSquadsToPost)
       await postManyElims(mockElimsToEdit)
     })
@@ -380,7 +379,7 @@ describe('saveTmntDivs test', () => {
     })
 
     it('should save edited elims, one elim edited', async () => { 
-      const elimsToEdit = structuredClone(mockElimsToEdit);
+      const elimsToEdit = cloneDeep(mockElimsToEdit);
       elimsToEdit[1].start = 2;
       const savedElims = await tmntSaveElims(mockElimsToEdit, elimsToEdit);
       if (!savedElims) {
@@ -399,7 +398,7 @@ describe('saveTmntDivs test', () => {
       didPut = true;
     })
     it('should save edited elims, one elim added', async () => { 
-      const elimsToEdit = structuredClone(mockElimsToEdit);
+      const elimsToEdit = cloneDeep(mockElimsToEdit);
       elimsToEdit.push(toAddElim);
       const savedElims = await tmntSaveElims(mockElimsToEdit, elimsToEdit);
       if (!savedElims) {
@@ -422,7 +421,7 @@ describe('saveTmntDivs test', () => {
       expect(found.sort_order).toEqual(toAddElim.sort_order);      
     })
     it('should save edited elims, one elim deleted', async () => { 
-      const elimsToEdit = structuredClone(mockElimsToEdit);
+      const elimsToEdit = cloneDeep(mockElimsToEdit);
       elimsToEdit.pop();
       const savedElims = await tmntSaveElims(mockElimsToEdit, elimsToEdit);
       if (!savedElims) {
@@ -439,7 +438,7 @@ describe('saveTmntDivs test', () => {
       expect(found).toBeUndefined();
     })
     it('should save edited elims, one elim edited, one added, one deleted', async () => {
-      const elimsToEdit = structuredClone(mockElimsToEdit);
+      const elimsToEdit = cloneDeep(mockElimsToEdit);
       const deletedId = mockElimsToEdit[2].id;
       // delete 
       elimsToEdit.pop();

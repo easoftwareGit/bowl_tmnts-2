@@ -1,10 +1,9 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { User } from "@prisma/client";
 import { ioStatusType } from "@/redux/statusTypes";
-import { RootState } from "@/redux/store";
 import { findUserById } from "@/lib/db/users/users";
 import { userType } from "@/lib/types/types";
 import { blankUser } from "@/lib/db/initVals";
+import { cloneDeep } from "lodash";
 
 export interface userSliceState {
   user: userType;
@@ -15,7 +14,7 @@ export interface userSliceState {
 
 // initial state constant
 const initialState: userSliceState = {
-  user: blankUser,
+  user: cloneDeep(blankUser),
   loadStatus: "idle",
   saveStatus: "idle",
   error: "",
@@ -51,7 +50,7 @@ export const userSlice = createSlice({
       .addCase(fetchUser.fulfilled, (state: userSliceState, action) => {
         state.loadStatus = "succeeded";
         // need to get set values indidividually
-        // don't seet password
+        // don't set password
         // skip setting password hash
         
         // state.user = action.payload;

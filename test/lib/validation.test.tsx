@@ -12,7 +12,8 @@ import {
   maxSortOrder,
   validPositiveInt,
   isValidRole,
-  validName,
+  isValidName,
+  isValidTimeStamp,
 } from "@/lib/validation";
 import { initDiv, initEvent } from "@/lib/db/initVals";
 
@@ -475,21 +476,21 @@ describe("tests for validation functions", () => {
     });
   });
 
-  describe('valdateName function', () => { 
+  describe('IsValidName function', () => { 
     const maxLength = 15;
     it('should return true when name is within max length', () => {
       const name = "John";      
-      const result = validName(name, maxLength);
+      const result = isValidName(name, maxLength);
       expect(result).toBe(true);
     });
     it('should return true when name is exactly at max length', () => {
       const name = "A".repeat(15);      
-      const result = validName(name, maxLength);
+      const result = isValidName(name, maxLength);
       expect(result).toBe(true);
     });
     it('should return false when name is empty', () => {
       const name = "";      
-      const result = validName(name, maxLength);
+      const result = isValidName(name, maxLength);
       expect(result).toBe(false);
     });
     it('should sanitize name before checking length', () => {
@@ -498,44 +499,100 @@ describe("tests for validation functions", () => {
       jest.mock('../../src/lib/sanitize', () => ({
         sanitize: jest.fn(() => sanitized)
       }));
-      const result = validName(name, maxLength);
+      const result = isValidName(name, maxLength);
       expect(result).toBe(true);
     });
     it('should return false when name exceeds max length by one character', () => {
       const name = "A".repeat(16); // 16 characters, exceeding maxFirstNameLength by 1      
-      const result = validName(name, maxLength);
+      const result = isValidName(name, maxLength);
       expect(result).toBe(false);
     });
     it('should return false when name contains only whitespace characters', () => {
       const name = "   ";
-      const result = validName(name, maxLength);
+      const result = isValidName(name, maxLength);
       expect(result).toBe(false);
     });
     it('should return true for name with special characters within max length', () => {
       const name = "J@hn-Doe!";      
-      const result = validName(name, maxLength);
+      const result = isValidName(name, maxLength);
       expect(result).toBe(true);
     });
     it('should return true for a valid mixed case name within max length', () => {
       const name = "JoHnDoE";      
-      const result = validName(name, maxLength);
+      const result = isValidName(name, maxLength);
       expect(result).toBe(true);
     });
     it('should return true when name contains numeric characters and is within max length', () => {
       const name = "John123";      
-      const result = validName(name, maxLength);
+      const result = isValidName(name, maxLength);
       expect(result).toBe(true);
     });
     it('should return true when name with spaces is within max length', () => {
       const name = "  John  ";      
-      const result = validName(name, maxLength);
+      const result = isValidName(name, maxLength);
       expect(result).toBe(true);
     });
     it('should return false when name is null or undefined', () => {      
-      const resultNull = validName(null as any, maxLength);
-      const resultUndefined = validName(undefined as any, maxLength);
+      const resultNull = isValidName(null as any, maxLength);
+      const resultUndefined = isValidName(undefined as any, maxLength);
       expect(resultNull).toBe(false);
       expect(resultUndefined).toBe(false);
     });
   })
+
+  describe('isValidTimeStamp', () => {
+
+    it('should return true for valid timestamp within range', () => {
+      const currentTimestamp = Date.now();
+      const result = isValidTimeStamp(currentTimestamp);
+      expect(result).toBe(true);
+    });
+    it('should return true for positive timestamp less than max allowed value', () => {
+      const testTimestamp = 1e12; // A positive timestamp within the valid range
+      const result = isValidTimeStamp(testTimestamp);
+      expect(result).toBe(true);
+    });
+    it('should return true for a valid negative timestamp', () => {
+      const negativeTimestamp = -1;
+      const result = isValidTimeStamp(negativeTimestamp);
+      expect(result).toBe(true);
+    });
+    it('should return true for valid floating point timestamp within range', () => {
+      const floatingPointTimestamp = 1.23e12;
+      const result = isValidTimeStamp(floatingPointTimestamp);
+      expect(result).toBe(true);
+    });
+    it('should return false for timestamp less than -8.64e15', () => {
+      const largeTimestamp = -8.64e15 - 1;
+      const result = isValidTimeStamp(largeTimestamp);
+      expect(result).toBe(false);
+    });
+    it('should return false for timestamp greater than 8.64e15', () => {
+      const largeTimestamp = 8.64e15 + 1;
+      const result = isValidTimeStamp(largeTimestamp);
+      expect(result).toBe(false);
+    });
+    it('should return true when timestamp is 0', () => {
+      const result = isValidTimeStamp(0);
+      expect(result).toBe(true);
+    });
+    it('should return false for valid non-integer decimal timestamp', () => {
+      const decimalTimestamp = 1234567890.123;
+      const result = isValidTimeStamp(decimalTimestamp);
+      expect(result).toBe(false);
+    });
+    it('should return false for timestamp is null', () => {      
+      const result = isValidTimeStamp(null as any);
+      expect(result).toBe(false);
+    });
+    it('should return false for timestamp is undefined', () => {      
+      const result = isValidTimeStamp(undefined as any);
+      expect(result).toBe(false);
+    });
+    it('should return false for timestamp is text', () => {      
+      const result = isValidTimeStamp('abc' as any);
+      expect(result).toBe(false);
+    });
+  });
+
 });

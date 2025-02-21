@@ -10,7 +10,7 @@ import { ReduxProvider } from "@/redux/provider";
 import TmntDataForm from "@/app/dataEntry/tmntForm/tmntForm";
 import { todayStr } from "@/lib/dateTools";
 import { btDbUuid } from "@/lib/uuid";
-import 'core-js/actual/structured-clone';
+import { cloneDeep } from "lodash";
 
 // Mock state for bowls
 const mockState: Partial<RootState> = {
@@ -189,7 +189,7 @@ describe('TmntDataPage - Event Component', () => {
 
   describe('change event games making bracket start invalid', () => { 
     it('should show error message for invalid bracket start', async () => { 
-      const tempTmnt = structuredClone(tmntProps);
+      const tempTmnt = cloneDeep(tmntProps);
       tempTmnt.curData.tmnt.tmnt_name = 'Test Tournament'
       tempTmnt.curData.tmnt.bowl_id = 'bwl_561540bd64974da9abdd97765fdb3659'
       tempTmnt.curData.tmnt.start_date_str = todayStr
@@ -259,7 +259,7 @@ describe('TmntDataPage - Event Component', () => {
 
   describe('change event games making elim start invalid', () => { 
     it('should show error message for invalid bracket start', async () => { 
-      const tempTmnt = structuredClone(tmntProps);
+      const tempTmnt = cloneDeep(tmntProps);
       tempTmnt.curData.tmnt.tmnt_name = 'Test Tournament'
       tempTmnt.curData.tmnt.bowl_id = 'bwl_561540bd64974da9abdd97765fdb3659'
       tempTmnt.curData.tmnt.start_date_str = todayStr
@@ -511,7 +511,7 @@ describe('TmntDataPage - Event Component', () => {
   
   describe('render the event name errors', () => {    
     it('redner duplicate event name error', async () => {
-      const invalidData = structuredClone(tmntProps)
+      const invalidData = cloneDeep(tmntProps)
       invalidData.curData.events[1].event_name = "Singles";
 
       const user = userEvent.setup()
@@ -539,7 +539,7 @@ describe('TmntDataPage - Event Component', () => {
       expect(doublesTabs[0]).toHaveClass('objError');
     })
     it('clear the event name error', async () => {
-      const invalidData = structuredClone(tmntProps)
+      const invalidData = cloneDeep(tmntProps)
       invalidData.curData.events[1].event_name = "Singles";
 
       const user = userEvent.setup()
@@ -1124,7 +1124,7 @@ describe('TmntDataPage - Event Component', () => {
 
   describe('show accordian error for next event', () => {
 
-    const invalidTmnt = structuredClone(tmntProps)
+    const invalidTmnt = cloneDeep(tmntProps)
 
     beforeAll(() => {
       invalidTmnt.curData.events[0].team_size = 6;
@@ -1187,7 +1187,7 @@ describe('TmntDataPage - Event Component', () => {
 
   describe('add event', () => {
 
-    const tempTmnt = structuredClone(tmntProps)
+    const tempTmnt = cloneDeep(tmntProps)
 
     it('add event', async () => { 
       const user = userEvent.setup()
@@ -1203,7 +1203,7 @@ describe('TmntDataPage - Event Component', () => {
 
   describe('delete event error, when deleted event has a squad', () => {
    
-    const tempTmnt = structuredClone(tmntProps)
+    const tempTmnt = cloneDeep(tmntProps)
 
     it('delete event error, when deleted event has a squad', async () => { 
       const user = userEvent.setup()

@@ -1,7 +1,7 @@
 import axios from "axios";
 import { baseTmntsApi } from "@/lib/db/apiPaths";
 import { testBaseTmntsApi } from "../../../../test/testApi";
-import { dataOneTmntType, ioDataErrorsType, tmntsListType, tmntType, YearObj } from "@/lib/types/types";
+import { dataOneTmntType, ioDataError, tmntsListType, tmntType, YearObj } from "@/lib/types/types";
 import { isValidBtDbId, validYear } from "@/lib/validation";
 import { removeTimeFromISODateStr, todayYearStr } from "@/lib/dateTools";
 import { blankTmnt } from "../initVals";
@@ -378,9 +378,9 @@ export const deleteTmnt = async (id: string): Promise<boolean> => {
  * deletes all data for tmnt
  * 
  * @param {string} tmntId - id of tmnt to delete all data for
- * @returns {ioDataErrorsType} - save code: 0 for good delete, <0 for error
+ * @returns {ioDataError} - save code: 0 for good delete, <0 for error
  */
-export const deleteAllDataForTmnt = async (tmntId: string): Promise<ioDataErrorsType> => {
+export const deleteAllDataForTmnt = async (tmntId: string): Promise<ioDataError> => {
   const elimDelCount = await deleteAllTmntElims(tmntId);
   const brktsDelCount = await deleteAllTmntBrkts(tmntId);  
   const potsDelCount = await deleteAllTmntPots(tmntId);
@@ -390,15 +390,15 @@ export const deleteAllDataForTmnt = async (tmntId: string): Promise<ioDataErrors
   const eventsDelCount = await deleteAllTmntEvents(tmntId);
   const tmntDel = await deleteTmnt(tmntId);
 
-  if (elimDelCount < 0) return ioDataErrorsType.Elims;
-  if (brktsDelCount < 0) return ioDataErrorsType.Brkts;
-  if (potsDelCount < 0) return ioDataErrorsType.Pots;
-  if (lanesDelCount < 0) return ioDataErrorsType.Lanes;
-  if (squadsDelCount < 0) return ioDataErrorsType.Squads;
-  if (divsDelCount < 0) return ioDataErrorsType.Divs;
-  if (eventsDelCount < 0) return ioDataErrorsType.Events;
-  if (!tmntDel) return ioDataErrorsType.Tmnt;
-  return ioDataErrorsType.None
+  if (elimDelCount < 0) return ioDataError.Elims;
+  if (brktsDelCount < 0) return ioDataError.Brkts;
+  if (potsDelCount < 0) return ioDataError.Pots;
+  if (lanesDelCount < 0) return ioDataError.Lanes;
+  if (squadsDelCount < 0) return ioDataError.Squads;
+  if (divsDelCount < 0) return ioDataError.Divs;
+  if (eventsDelCount < 0) return ioDataError.Events;
+  if (!tmntDel) return ioDataError.Tmnt;
+  return ioDataError.None
 }
 
 export const exportedForTesting = {  

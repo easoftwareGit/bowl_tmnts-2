@@ -20,14 +20,15 @@ export async function GET(request: NextRequest) {
 
 export const POST = async (request: NextRequest) => {
   try {
-    const { id, brkt_id, player_id, num_brackets, fee } = await request.json()
+    const { id, brkt_id, player_id, num_brackets, fee, time_stamp } = await request.json()
     const toCheck: brktEntryType = {
       ...initBrktEntry,
       id,      
       brkt_id,
       player_id,
-      num_brackets,
+      num_brackets,      
       fee,
+      time_stamp,
     }
 
     const toPost = sanitizeBrktEntry(toCheck);
@@ -51,12 +52,13 @@ export const POST = async (request: NextRequest) => {
       );
     }
 
+    // DO NOT POST FEE
     const brktEntryData: brktEntryDataType = {
       id: toPost.id,      
       brkt_id: toPost.brkt_id,
       player_id: toPost.player_id,
       num_brackets: toPost.num_brackets,
-      fee: toPost.fee,
+      time_stamp: new Date(toPost.time_stamp), // Convert to Date object      
     }
     const brktEntry = await prisma.brkt_Entry.create({
       data: brktEntryData

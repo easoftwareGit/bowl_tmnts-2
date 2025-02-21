@@ -6,6 +6,9 @@ import { brktEntryType } from "@/lib/types/types";
 import { mockBrktEntriesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { deleteAllBrktEntriesForTmnt, postManyBrktEntries } from "@/lib/db/brktEntries/dbBrktEntries";
 import { cloneDeep } from "lodash";
+import { compareAsc } from "date-fns";
+import { maxDate, minDate } from "@/lib/validation";
+import { time } from "console";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -41,6 +44,7 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
     player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
     num_brackets: 8,
     fee: '40',
+    time_stamp: new Date("2024-01-01").getTime(),
   }
 
   const tmntIdForMulti = 'tmt_fe8ac53dad0f400abe6354210a8f4cd1';
@@ -69,14 +73,14 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
   const deletePostedBrktEntry = async () => {
     const response = await axios.get(url);
     const brktEntries = response.data.brktEntries;
-    const toDel = brktEntries.find((b: brktEntryType) => b.fee === '83');
+    const toDel = brktEntries.find((b: brktEntryType) => b.num_brackets === 17);
     if (toDel) {
       try {
         const delResponse = await axios({
           method: "delete",
           withCredentials: true,
           url: oneBrktEntryUrl + toDel.id
-        });
+        });        
       } catch (err) {
         if (err instanceof AxiosError) console.log(err.message);
       }
@@ -109,7 +113,7 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         expect(brktEntry.brkt_id).toEqual(testBrktEntry.brkt_id);
         expect(brktEntry.player_id).toEqual(testBrktEntry.player_id);
         expect(brktEntry.num_brackets).toEqual(testBrktEntry.num_brackets);
-        expect(brktEntry.fee).toEqual(testBrktEntry.fee);
+        expect(brktEntry.fee).toEqual(Number(testBrktEntry.fee));
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -169,6 +173,7 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
       expect(brktEntries).toHaveLength(4); // 4 brktEntries for div in prisma/seeds.ts
       for (let i = 0; i < brktEntries.length; i++) {        
         expect(brktEntries[i].brkt_id === brkt1Id || brktEntries[i].brkt_id === brkt2Id).toBeTruthy();
+        expect(brktEntries[i].fee).toBeGreaterThan(0);
       }      
     })
     it('should not get all brktEntries for one div when divId is invalid', async () => {
@@ -211,11 +216,12 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
 
     it('should get all brktEntries for one squad', async () => { 
       const response = await axios.get(squadUrl + squadIdForBrktEntries);
-      expect(response.status).toBe(200);        
+      expect(response.status).toBe(200);
       const brktEntries = response.data.brktEntries;
       expect(brktEntries).toHaveLength(4); // 4 brktEntries for squad in prisma/seeds.ts
       for (let i = 0; i < brktEntries.length; i++) {
         expect(brktEntries[i].brkt_id === brkt1Id || brktEntries[i].brkt_id === brkt2Id).toBeTruthy();
+        expect(brktEntries[i].fee).toBeGreaterThan(0);
       }      
     })
     it('should not get all brktEntries for one squad when squadId is invalid', async () => {
@@ -263,6 +269,7 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
       expect(brktEntries).toHaveLength(2); // 2 brktEntries for brkt in prisma/seeds.ts
       for (let i = 0; i < brktEntries.length; i++) {
         expect(brktEntries[i].brkt_id).toBe(brktIdForBrktEntries);
+        expect(brktEntries[i].fee).toBeGreaterThan(0);
       }      
     })
     it('should not get all brktEntries for one brkt when brktId is invalid', async () => {
@@ -310,6 +317,7 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
       expect(brktEntries).toHaveLength(4); // 4 brktEntries for tmnt in prisma/seeds.ts
       for (let i = 0; i < brktEntries.length; i++) {
         expect(brktEntries[i].brkt_id === brkt1Id || brktEntries[i].brkt_id === brkt2Id).toBeTruthy();
+        expect(brktEntries[i].fee).toBeGreaterThan(0);
       }      
     })
     it('should not get all brktEntries for one tmnt when tmntId is invalid', async () => {
@@ -350,7 +358,7 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
       ...initBrktEntry,           
       brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
       player_id: 'ply_bb0fd8bbd9e34d34a7fa90b4111c6e40',
-      num_brackets: 7,
+      num_brackets: 17,
       fee: '83'
     }
 
@@ -370,6 +378,10 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
       }      
     })
 
+    afterAll(async () => {
+      await deletePostedBrktEntry();
+    })
+
     it('should post one brktEntry', async () => {
       const divPlayerJSON = JSON.stringify(brktEntryToPost);
       const response = await axios({
@@ -385,7 +397,9 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
       expect(brktEntry.brkt_id).toEqual(brktEntryToPost.brkt_id);
       expect(brktEntry.player_id).toEqual(brktEntryToPost.player_id);
       expect(brktEntry.num_brackets).toEqual(brktEntryToPost.num_brackets);
-      expect(brktEntry.fee).toEqual(brktEntryToPost.fee);
+      // expect(brktEntry.fee).toEqual(brktEntryToPost.fee);
+      expect(brktEntry.time_stamp).not.toBeNull();
+      expect(compareAsc(brktEntry.time_stamp, brktEntryToPost.time_stamp)).toBe(0);
     })
     it('should NOT post a sanitized brktEntry (saninted num_brackets = 0)', async () => { 
       const toSanitize = {
@@ -761,6 +775,73 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         }
       } 
     })
+    it('should not post one brktEntry when time_stamp is invalid', async () => {
+      createdBrktEntry = true;
+      const invalidBrktEntry = {
+        ...brktEntryToPost,
+        time_stamp: 'abc'
+      }
+      const brktEntryJSON = JSON.stringify(invalidBrktEntry);         
+      try {
+        const response = await axios({
+          method: "post",
+          withCredentials: true,
+          url: url,
+          data: brktEntryJSON
+        });
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }       
+    })
+    it('should not post one brktEntry when time_stamp is too low', async () => {
+      const invalidBrktEntry = {
+        ...brktEntryToPost,
+        time_stamp: minDate.getTime() - 1
+      }
+      const brktEntryJSON = JSON.stringify(invalidBrktEntry);
+      try {
+        const response = await axios({
+          method: "post",
+          withCredentials: true,
+          url: url,
+          data: brktEntryJSON
+        });
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not post one brktEntry when fee is too high', async () => {
+      const invalidBrktEntry = {
+        ...brktEntryToPost,
+        time_stamp: maxDate.getTime() + 1
+      } 
+      const brktEntryJSON = JSON.stringify(invalidBrktEntry);
+      try {
+        const response = await axios({
+          method: "post",
+          withCredentials: true,
+          url: url,
+          data: brktEntryJSON
+        });
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      } 
+    })
   })
 
   describe('POST many brktEntries for one tmnt API: /api/brktEntries/many', () => { 
@@ -799,7 +880,10 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         expect(postedBrktEntries[i].brkt_id).toBe(mockBrktEntriesToPost[i].brkt_id);
         expect(postedBrktEntries[i].player_id).toBe(mockBrktEntriesToPost[i].player_id);
         expect(postedBrktEntries[i].num_brackets).toBe(mockBrktEntriesToPost[i].num_brackets);
-        expect(postedBrktEntries[i].fee).toBe(mockBrktEntriesToPost[i].fee);        
+        // expect(postedBrktEntries[i].fee).toBe(mockBrktEntriesToPost[i].fee);        
+        expect(postedBrktEntries[i].time_stamp).not.toBeNull();
+        expect(compareAsc(postedBrktEntries[i].time_stamp, minDate)).toBe(1);
+        expect(compareAsc(postedBrktEntries[i].time_stamp, maxDate)).toBe(-1);
       }
     })
     it('should NOT create many brktEntries with sanitzied num_brackets data, num_brackets sanitized to 0', async () => { 
@@ -925,6 +1009,26 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
     it('should NOT create many brktEntries with blank fee', async () => {
       const toSanitize = cloneDeep(mockBrktEntriesToPost);      
       toSanitize[1].fee = '';
+      const brktEntryJSON = JSON.stringify(toSanitize);
+      try {
+        const response = await axios({
+          method: "post",
+          data: brktEntryJSON,
+          withCredentials: true,
+          url: manyUrl,        
+        })
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should NOT create many brktEntries with time_stamp as null', async () => {
+      const toSanitize = cloneDeep(mockBrktEntriesToPost);      
+      toSanitize[1].time_stamp = null as any;
       const brktEntryJSON = JSON.stringify(toSanitize);
       try {
         const response = await axios({
@@ -1142,9 +1246,70 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         }
       }
     })
+    it('should NOT create many brktEntries when time_stamp to too low', async () => {
+      const toSanitize = cloneDeep(mockBrktEntriesToPost);      
+      toSanitize[1].time_stamp= -8.65e15 - 1;
+      const brktEntryJSON = JSON.stringify(toSanitize);
+      try {
+        const response = await axios({
+          method: "post",
+          data: brktEntryJSON,
+          withCredentials: true,
+          url: manyUrl,        
+        })
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should NOT create many brktEntries when time_stamp to too high', async () => {
+      const toSanitize = cloneDeep(mockBrktEntriesToPost);
+      toSanitize[1].time_stamp = 8.65e15 + 1
+      const brktEntryJSON = JSON.stringify(toSanitize);
+      try {
+        const response = await axios({
+          method: "post",
+          data: brktEntryJSON,
+          withCredentials: true,
+          url: manyUrl,        
+        })
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should NOT create many brktEntries when time_stamp is invalid', async () => {
+      const toSanitize = cloneDeep(mockBrktEntriesToPost);      
+      toSanitize[1].time_stamp= 'abc' as any;
+      const brktEntryJSON = JSON.stringify(toSanitize);
+      try {
+        const response = await axios({
+          method: "post",
+          data: brktEntryJSON,
+          withCredentials: true,
+          url: manyUrl,        
+        })
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
   })
 
   describe('PUT many brktEntries API: /api/brktEntries/many', () => {  
+
     let createdBrktEntries = false;    
 
     beforeAll(async () => { 
@@ -1168,7 +1333,8 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
         brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
         num_brackets: 4,
-        fee: '20'
+        fee: '20',
+        time_stamp: 1739259269537,
       },
       {
         ...initBrktEntry,
@@ -1176,7 +1342,8 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
         brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
         num_brackets: 4,
-        fee: '20'
+        fee: '20',
+        time_stamp: 1739259269537,
       },
       {
         ...initBrktEntry,
@@ -1184,7 +1351,8 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
         brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
         num_brackets: 6,
-        fee: '30'
+        fee: '30',
+        time_stamp: 1739259269537,
       },
       {
         ...initBrktEntry,
@@ -1192,7 +1360,8 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
         brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
         num_brackets: 6,
-        fee: '30'
+        fee: '30',
+        time_stamp: 1739259269537,
       },
       {
         ...initBrktEntry,
@@ -1200,7 +1369,8 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
         brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
         num_brackets: 8,
-        fee: '40'
+        fee: '40',
+        time_stamp: 1739259269537,
       },
       {
         ...initBrktEntry,
@@ -1208,7 +1378,8 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
         brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
         num_brackets: 8,
-        fee: '40'
+        fee: '40',
+        time_stamp: 1739259269537,
       },
     ];
 
@@ -1232,12 +1403,14 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
           ...testBrktEntries[0],
           num_brackets: 3,
           fee: '15',
+          time_stamp: new Date("2026-01-01").getTime(),
           eType: "u",
         },
         {
           ...testBrktEntries[1],
           num_brackets: 3,
           fee: '15',
+          time_stamp: new Date("2026-01-01").getTime(),
           eType: "u",
         },
       ]
@@ -1748,7 +1921,8 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
       brkt_id: 'brk_3e6bf51cc1ca4748ad5e8abab88277e0',
       player_id: 'ply_8b0fd8bbd9e34d34a7fa90b4111c6e40',
       num_brackets: 7,
-      fee: '83'
+      fee: '83',
+      time_stamp: 1739259269537
     }
 
     let didPut = false;
@@ -1782,7 +1956,7 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
       expect(puttedBrktEntry.brkt_id).toBe(putBrktEntry.brkt_id);
       expect(puttedBrktEntry.player_id).toBe(putBrktEntry.player_id);
       expect(puttedBrktEntry.num_brackets).toBe(putBrktEntry.num_brackets);
-      expect(puttedBrktEntry.fee).toBe(putBrktEntry.fee);
+      expect(compareAsc(puttedBrktEntry.time_stamp, putBrktEntry.time_stamp)).toBe(0);
     })
     it('should update a sanitized brktEntry by ID', async () => { 
       const toSanitize = {
@@ -1801,7 +1975,7 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
       const puttedBrktEntry = response.data.brktEntry;      
       expect(puttedBrktEntry.brkt_id).toBe(putBrktEntry.brkt_id);
       expect(puttedBrktEntry.player_id).toBe(putBrktEntry.player_id);
-      expect(puttedBrktEntry.fee).toBe(putBrktEntry.fee);
+      expect(compareAsc(puttedBrktEntry.time_stamp, putBrktEntry.time_stamp)).toBe(0);
     })
     it('should not update a brktEntry by ID when brkt_id is blank', async () => {
       const invalidBrktEntry = {
@@ -2045,6 +2219,183 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         }        
       }      
     })
+
+    it('should not update a brktEntry by ID when time_stamp is too low', async () => {
+      const invalidBrktEntry = {
+        ...putBrktEntry,
+        time_stamp: -8.65e15 - 1
+      }
+      const brktEntryJSON = JSON.stringify(invalidBrktEntry);
+      try {
+        const response = await axios({
+          method: "put",
+          data: brktEntryJSON,
+          withCredentials: true,
+          url: oneBrktEntryUrl + testBrktEntry.id,
+        });
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }        
+      }      
+    })
+    it('should not update a brktEntry by ID when time_stamp is too high', async () => {
+      const invalidBrktEntry = {
+        ...putBrktEntry,
+        time_stamp: 8.65e15 + 1
+      }
+      const brktEntryJSON = JSON.stringify(invalidBrktEntry);
+      try {
+        const response = await axios({
+          method: "put",
+          data: brktEntryJSON,
+          withCredentials: true,
+          url: oneBrktEntryUrl + testBrktEntry.id,
+        });
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }        
+      }
+    })
+    it('should not update a brktEntry by ID when time_stamp is invalid', async () => {
+      const invalidBrktEntry = {
+        ...putBrktEntry,
+        time_stamp: 'abc'
+      }
+      const brktEntryJSON = JSON.stringify(invalidBrktEntry);
+      try {
+        const response = await axios({
+          method: "put",
+          data: brktEntryJSON,
+          withCredentials: true,
+          url: oneBrktEntryUrl + testBrktEntry.id,
+        });
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }        
+      }      
+    })
+    it('should not update a brktEntry by ID when time_stamp is null', async () => {
+      const invalidBrktEntry = {
+        ...putBrktEntry,
+        time_stamp: null as any,
+      }
+      const brktEntryJSON = JSON.stringify(invalidBrktEntry);
+      try {
+        const response = await axios({
+          method: "put",
+          data: brktEntryJSON,
+          withCredentials: true,
+          url: oneBrktEntryUrl + testBrktEntry.id,
+        });
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not update a brktEntry by ID when time_stamp is null', async () => {
+      const invalidBrktEntry = {
+        ...putBrktEntry,
+        time_stamp: null as any,
+      }
+      const brktEntryJSON = JSON.stringify(invalidBrktEntry);
+      try {
+        const response = await axios({
+          method: "put",
+          data: brktEntryJSON,
+          withCredentials: true,
+          url: oneBrktEntryUrl + testBrktEntry.id,
+        });
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not update a brktEntry by ID when time_stamp is too low', async () => {
+      const invalidBrktEntry = {
+        ...putBrktEntry,
+        time_stamp: -8.65e15 - 1
+      }
+      const brktEntryJSON = JSON.stringify(invalidBrktEntry);
+      try {
+        const response = await axios({
+          method: "put",
+          data: brktEntryJSON,
+          withCredentials: true,
+          url: oneBrktEntryUrl + testBrktEntry.id,
+        });
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }        
+      }      
+    })
+    it('should not update a brktEntry by ID when time_stamp is too high', async () => {
+      const invalidBrktEntry = {
+        ...putBrktEntry,
+        time_stamp: 8.65e15 + 1
+      }
+      const brktEntryJSON = JSON.stringify(invalidBrktEntry);
+      try {
+        const response = await axios({
+          method: "put",
+          data: brktEntryJSON,
+          withCredentials: true,
+          url: oneBrktEntryUrl + testBrktEntry.id,
+        });
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }        
+      }
+    })
+    it('should not update a brktEntry by ID when time_stamp is invalid', async () => {
+      const invalidBrktEntry = {
+        ...putBrktEntry,
+        time_stamp: 'abc' as any
+      }
+      const brktEntryJSON = JSON.stringify(invalidBrktEntry);
+      try {
+        const response = await axios({
+          method: "put",
+          data: brktEntryJSON,
+          withCredentials: true,
+          url: oneBrktEntryUrl + testBrktEntry.id,
+        });
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }        
+      }      
+    })
   })
 
   describe('PATCH one brktEntry API: /api/brktEntries/brktEntry/:id', () => { 
@@ -2140,11 +2491,10 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
       expect(patchedBrktEntry.id).toBe(toPatch.id);
       expect(patchedBrktEntry.num_brackets).toBe(toPatchNumBrackets);      
     })
-    it('should patch fee in a brktEntry by ID', async () => { 
-      const toPatchedFee = '83'
+    it('should patch time_stamp in a brktEntry by ID', async () => {       
       const patchBrktEntry = {
         ...toPatch,
-        fee: toPatchedFee,
+        time_stamp: 1739259269537
       }
       const brktEntryJSON = JSON.stringify(patchBrktEntry);
       const response = await axios({
@@ -2157,7 +2507,7 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
       didPatch = true;
       const patchedBrktEntry = response.data.brktEntry;
       expect(patchedBrktEntry.id).toBe(toPatch.id);
-      expect(patchedBrktEntry.fee).toBe(toPatchedFee);      
+      expect(compareAsc(patchedBrktEntry.time_stamp, patchBrktEntry.time_stamp)).toBe(0);
     })
     it('should not patch a brktEntry by ID when brkt_id is blank', async () => {
       const invalidBrktEntry = {
@@ -2402,10 +2752,99 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         }        
       }
     })
-    it('should not patch a brktEntry by ID when fee is blank', async () => {
+    // no error checking for fee, not included in patch
+    // it('should not patch a brktEntry by ID when fee is blank', async () => {
+    //   const invalidBrktEntry = {
+    //     ...toPatch,
+    //     fee: ''
+    //   } 
+    //   const brktEntryJSON = JSON.stringify(invalidBrktEntry);
+    //   try {
+    //     const response = await axios({
+    //       method: "patch",
+    //       data: brktEntryJSON,
+    //       withCredentials: true,
+    //       url: oneBrktEntryUrl + toPatch.id,
+    //     });
+    //     expect(response.status).toBe(422);
+    //   } catch (err) {
+    //     if (err instanceof AxiosError) {
+    //       expect(err.response?.status).toBe(422);
+    //     } else {
+    //       expect(true).toBeFalsy();
+    //     }        
+    //   }
+    // })
+    // it('should not patch a brktEntry by ID when fee is too low', async () => {
+    //   const invalidBrktEntry = {
+    //     ...toPatch,
+    //     fee: '-1'
+    //   } 
+    //   const brktEntryJSON = JSON.stringify(invalidBrktEntry);
+    //   try {
+    //     const response = await axios({
+    //       method: "patch",
+    //       data: brktEntryJSON,
+    //       withCredentials: true,
+    //       url: oneBrktEntryUrl + toPatch.id,
+    //     });
+    //     expect(response.status).toBe(422);
+    //   } catch (err) {
+    //     if (err instanceof AxiosError) {
+    //       expect(err.response?.status).toBe(422);
+    //     } else {
+    //       expect(true).toBeFalsy();
+    //     }        
+    //   }
+    // })
+    // it('should not patch a brktEntry by ID when fee is too high', async () => {
+    //   const invalidBrktEntry = {
+    //     ...toPatch,
+    //     fee: '1234567890'
+    //   } 
+    //   const brktEntryJSON = JSON.stringify(invalidBrktEntry);
+    //   try {
+    //     const response = await axios({
+    //       method: "patch",
+    //       data: brktEntryJSON,
+    //       withCredentials: true,
+    //       url: oneBrktEntryUrl + toPatch.id,
+    //     });
+    //     expect(response.status).toBe(422);
+    //   } catch (err) {
+    //     if (err instanceof AxiosError) {
+    //       expect(err.response?.status).toBe(422);
+    //     } else {
+    //       expect(true).toBeFalsy();
+    //     }        
+    //   }
+    // })
+    // it('should not patch a brktEntry by ID when fee is not a number', async () => {
+    //   const invalidBrktEntry = {
+    //     ...toPatch,
+    //     fee: 'abc'
+    //   } 
+    //   const brktEntryJSON = JSON.stringify(invalidBrktEntry);
+    //   try {
+    //     const response = await axios({
+    //       method: "patch",
+    //       data: brktEntryJSON,
+    //       withCredentials: true,
+    //       url: oneBrktEntryUrl + toPatch.id,
+    //     });
+    //     expect(response.status).toBe(422);
+    //   } catch (err) {
+    //     if (err instanceof AxiosError) {
+    //       expect(err.response?.status).toBe(422);
+    //     } else {
+    //       expect(true).toBeFalsy();
+    //     }        
+    //   }
+    // })
+    it('should not patch a brktEntry by ID when time_stamp is null', async () => {
       const invalidBrktEntry = {
         ...toPatch,
-        fee: ''
+        time_stamp: null as any,
       } 
       const brktEntryJSON = JSON.stringify(invalidBrktEntry);
       try {
@@ -2424,10 +2863,10 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         }        
       }
     })
-    it('should not patch a brktEntry by ID when fee is too low', async () => {
+    it('should not patch a brktEntry by ID when time_stamp is too low', async () => {
       const invalidBrktEntry = {
         ...toPatch,
-        fee: '-1'
+        time_stamp: -8.65e15 - 1
       } 
       const brktEntryJSON = JSON.stringify(invalidBrktEntry);
       try {
@@ -2446,10 +2885,10 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         }        
       }
     })
-    it('should not patch a brktEntry by ID when fee is too high', async () => {
+    it('should not patch a brktEntry by ID when time_stamp is too high', async () => {
       const invalidBrktEntry = {
         ...toPatch,
-        fee: '1234567890'
+        time_stamp: 8.65e15 + 1
       } 
       const brktEntryJSON = JSON.stringify(invalidBrktEntry);
       try {
@@ -2468,10 +2907,10 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         }        
       }
     })
-    it('should not patch a brktEntry by ID when fee is not a number', async () => {
+    it('should not patch a brktEntry by ID when time_stamp is not a number', async () => {
       const invalidBrktEntry = {
         ...toPatch,
-        fee: 'abc'
+        time_stamp: 'abc' as any
       } 
       const brktEntryJSON = JSON.stringify(invalidBrktEntry);
       try {

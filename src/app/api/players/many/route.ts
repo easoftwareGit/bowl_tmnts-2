@@ -4,6 +4,7 @@ import { ErrorCode } from "@/lib/validation";
 import { playerType, playerDataType, tmntEntryPlayerType } from "@/lib/types/types";
 import { validatePlayers } from "../validate";
 import { getDeleteManySQL, getInsertManySQL, getUpdateManySQL } from "./getSql";
+import { initPlayer } from "@/lib/db/initVals";
 
 // routes /api/players/many
 
@@ -58,8 +59,21 @@ export async function PUT(request: NextRequest) {
 
   try {
     const tePlayers: tmntEntryPlayerType[] = await request.json();
+    const teToValidate: playerType[] = tePlayers.map((player) => {
+      return {
+        ...initPlayer,
+        id: player.id ?? "",
+        squad_id: player.squad_id,
+        first_name: player.first_name,
+        last_name: player.last_name,
+        average: player.average,
+        lane: player.lane,
+        position: player.position,        
+      }
+    })
     // sanitize and validate players
-    const validPlayers = await validatePlayers(tePlayers as playerType[]); // need to use await! or else returns a promise
+    // const validPlayers = await validatePlayers(tePlayers as playerType[]); // need to use await! or else returns a promise
+    const validPlayers = await validatePlayers(teToValidate); // need to use await! or else returns a promise    
     if (validPlayers.errorCode !== ErrorCode.None) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }

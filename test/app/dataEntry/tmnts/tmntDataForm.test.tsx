@@ -8,8 +8,8 @@ import { blankDataOneTmnt, linkedInitDataOneTmnt } from "@/lib/db/initVals";
 import { startOfTodayUTC, dateTo_UTC_yyyyMMdd, todayStr, dateTo_yyyyMMdd, startOfDayFromString } from '@/lib/dateTools';
 import { tmntActions, tmntFormDataType } from '@/lib/types/types';
 import { mockStateBowls } from '../../../mocks/state/mockState';
-import 'core-js/actual/structured-clone';
 import { addDays, addMonths } from "date-fns";
+import { cloneDeep } from "lodash";
 
 // Mock state for bowls
 const mockState: Partial<RootState> = {
@@ -199,7 +199,7 @@ describe('TmntDataForm - Component', () => {
   })
 
   describe('render TmntDataForm - render errors', () => {   
-    const tmntWithErrors = structuredClone(tmntProps);
+    const tmntWithErrors = cloneDeep(tmntProps);
     tmntWithErrors.curData.tmnt.bowl_id_err = "bowl error";
     tmntWithErrors.curData.tmnt.tmnt_name_err = "tmnt error";
     tmntWithErrors.curData.tmnt.start_date_err = "start date error";
@@ -225,7 +225,7 @@ describe('TmntDataForm - Component', () => {
   describe('changes to start or end date can change squad(s) date', () => {      
 
     it('should not change squad date if end date is changed and valid', async () => { 
-      const tempTmnt = structuredClone(tmntProps);
+      const tempTmnt = cloneDeep(tmntProps);
       tempTmnt.curData.tmnt.start_date_str = todayStr
       tempTmnt.curData.tmnt.end_date_str = todayStr
       tempTmnt.curData.squads[0].squad_date_str = todayStr  
@@ -240,7 +240,7 @@ describe('TmntDataForm - Component', () => {
       expect(endError).toHaveTextContent("");      
     })
     it('should change squad date if start date and end date valid, and new start date is after squad date', async () => {
-      const tempTmnt = structuredClone(tmntProps);
+      const tempTmnt = cloneDeep(tmntProps);
       tempTmnt.curData.tmnt.start_date_str = todayStr
       tempTmnt.curData.tmnt.end_date_str = todayStr
       tempTmnt.curData.squads[0].squad_date_str = todayStr  
@@ -267,7 +267,7 @@ describe('TmntDataForm - Component', () => {
       expect(squadDates[0]).toHaveValue(yesterdayStr);
     })
     it('should change squad date if start date and end date valid, and new end date is before squad date', async () => {
-      const tempTmnt = structuredClone(tmntProps);
+      const tempTmnt = cloneDeep(tmntProps);
       tempTmnt.curData.tmnt.start_date_str = todayStr
       tempTmnt.curData.tmnt.end_date_str = todayStr
       tempTmnt.curData.squads[0].squad_date_str = todayStr       

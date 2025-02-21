@@ -10,10 +10,11 @@ import { deleteAllTmntDivs, getAllDivsForTmnt } from "@/lib/db/divs/dbDivs";
 import { deleteAllTmntEvents, getAllEventsForTmnt } from "@/lib/db/events/dbEvents";
 import { deleteTmnt, getTmnt } from "@/lib/db/tmnts/dbTmnts";
 import { blankDataOneTmnt } from "@/lib/db/initVals";
-import { dataOneTmntType, ioDataErrorsType, allDataOneTmntType } from "@/lib/types/types";
+import { dataOneTmntType, ioDataError, allDataOneTmntType } from "@/lib/types/types";
 import { saveAllDataOneTmnt } from "@/lib/db/oneTmnt/dbOneTmnt";
 import { compareAsc } from "date-fns";
 import 'core-js/actual/structured-clone';
+import { cloneDeep } from "lodash";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -65,7 +66,7 @@ describe('Save New Tmnt', () => {
     })
 
     const origData = blankDataOneTmnt();
-    // const origData = structuredClone(initDataOneTmnt);
+    // const origData = cloneDeep(initDataOneTmnt);
     const curData: dataOneTmntType = {
       tmnt: mockTmnt,
       events: mockEvents,
@@ -84,16 +85,18 @@ describe('Save New Tmnt', () => {
     it('saves new tmnt', async () => {       
 
       const savedError = await saveAllDataOneTmnt(allTmntData);
-      expect(savedError).toBe(ioDataErrorsType.None);
+      expect(savedError).toBe(ioDataError.None);
 
       const gotTmntData = await getTmnt(mockTmnt.id);
       expect(gotTmntData).not.toBeNull();
       if (!gotTmntData) return;
       expect(gotTmntData.id).toBe(mockTmnt.id);
       expect(gotTmntData.tmnt_name).toBe(mockTmnt.tmnt_name);
-      expect(compareAsc(gotTmntData.start_date, mockTmnt.start_date)).toBe(0);
-      expect(compareAsc(gotTmntData.end_date, mockTmnt.end_date)).toBe(0);
-
+      // expect(compareAsc(gotTmntData.start_date, mockTmnt.start_date)).toBe(0);
+      expect(gotTmntData.start_date_str).toBe(mockTmnt.start_date_str); 
+      // expect(compareAsc(gotTmntData.end_date, mockTmnt.end_date)).toBe(0);
+      expect(gotTmntData.end_date_str).toBe(mockTmnt.end_date_str); 
+      
       const gotEvents = await getAllEventsForTmnt(mockTmnt.id);
       expect(gotEvents).not.toBeNull();
       if (!gotEvents) return;
@@ -138,7 +141,8 @@ describe('Save New Tmnt', () => {
         expect(gotSquads[i].games).toBe(mockSquads[i].games);
         expect(gotSquads[i].starting_lane).toBe(mockSquads[i].starting_lane);
         expect(gotSquads[i].lane_count).toBe(mockSquads[i].lane_count);
-        expect(compareAsc(gotSquads[i].squad_date, mockSquads[i].squad_date)).toBe(0);
+        // expect(compareAsc(gotSquads[i].squad_date, mockSquads[i].squad_date)).toBe(0);
+        expect(gotSquads[i].squad_date_str).toBe(mockSquads[i].squad_date_str); 
         expect(gotSquads[i].squad_time).toBe(mockSquads[i].squad_time);        
         expect(gotSquads[i].sort_order).toBe(mockSquads[i].sort_order);
       }
@@ -182,7 +186,7 @@ describe('Save New Tmnt', () => {
         expect(gotBrkts[i].first).toBe(mockBrkts[i].first);
         expect(gotBrkts[i].second).toBe(mockBrkts[i].second);
         expect(gotBrkts[i].admin).toBe(mockBrkts[i].admin);
-        expect(gotBrkts[i].fsa).toBe(mockBrkts[i].fsa);
+        expect(gotBrkts[i].fsa + '').toBe(mockBrkts[i].fsa);
         expect(gotBrkts[i].sort_order).toBe(mockBrkts[i].sort_order);
       }
 
@@ -201,37 +205,37 @@ describe('Save New Tmnt', () => {
       }
     })
     it('should save when tmnt has no pots', async () => {
-      const noPotsTmnt = structuredClone(allTmntData);
+      const noPotsTmnt = cloneDeep(allTmntData);
       noPotsTmnt.curData.pots = [];
       const savedError = await saveAllDataOneTmnt(noPotsTmnt);
-      expect(savedError).toBe(ioDataErrorsType.None);
+      expect(savedError).toBe(ioDataError.None);
     })
     it('should save when tmnt has no brkts', async () => {
-      const noBrktsTmnt = structuredClone(allTmntData);
+      const noBrktsTmnt = cloneDeep(allTmntData);
       noBrktsTmnt.curData.brkts = [];
       const savedError = await saveAllDataOneTmnt(noBrktsTmnt);
-      expect(savedError).toBe(ioDataErrorsType.None);
+      expect(savedError).toBe(ioDataError.None);
     })
     it('should save when tmnt has no elims', async () => {
-      const noElimsTmnt = structuredClone(allTmntData);
+      const noElimsTmnt = cloneDeep(allTmntData);
       noElimsTmnt.curData.elims = [];
       const savedError = await saveAllDataOneTmnt(noElimsTmnt);
-      expect(savedError).toBe(ioDataErrorsType.None);
+      expect(savedError).toBe(ioDataError.None);
     })
     it('should save when tmnt has no pots, brkts or elims', async () => {
-      const noExtrasTmnt = structuredClone(allTmntData);
+      const noExtrasTmnt = cloneDeep(allTmntData);
       noExtrasTmnt.curData.pots = [];
       noExtrasTmnt.curData.brkts = [];
       noExtrasTmnt.curData.elims = [];
       const savedError = await saveAllDataOneTmnt(noExtrasTmnt);
-      expect(savedError).toBe(ioDataErrorsType.None);
+      expect(savedError).toBe(ioDataError.None);
     })
     it('should not save when tmnt have invalid tmnt data', async () => {
-      const invalidTmnt = structuredClone(allTmntData);
+      const invalidTmnt = cloneDeep(allTmntData);
       invalidTmnt.curData.tmnt.tmnt_name = '';
 
       const savedError = await saveAllDataOneTmnt(invalidTmnt);
-      expect(savedError).toBe(ioDataErrorsType.Tmnt);
+      expect(savedError).toBe(ioDataError.Tmnt);
       
       const gotTmntData = await getTmnt(mockTmnt.id);
       expect(gotTmntData).toBeNull();
@@ -251,11 +255,11 @@ describe('Save New Tmnt', () => {
       expect(gotElims).toHaveLength(0);
     })
     it('should not save when tmnt have invalid event data', async () => {
-      const invalidTmnt = structuredClone(allTmntData);
+      const invalidTmnt = cloneDeep(allTmntData);
       invalidTmnt.curData.events[0].event_name = '';
 
       const savedError = await saveAllDataOneTmnt(invalidTmnt);
-      expect(savedError).toBe(ioDataErrorsType.Events);
+      expect(savedError).toBe(ioDataError.Events);
       
       const gotTmntData = await getTmnt(mockTmnt.id);
       expect(gotTmntData).toBeNull();
@@ -275,11 +279,11 @@ describe('Save New Tmnt', () => {
       expect(gotElims).toHaveLength(0);
     })
     it('should not save when tmnt have invalid div data', async () => {
-      const invalidTmnt = structuredClone(allTmntData);
+      const invalidTmnt = cloneDeep(allTmntData);
       invalidTmnt.curData.divs[0].div_name = '';
 
       const savedError = await saveAllDataOneTmnt(invalidTmnt);
-      expect(savedError).toBe(ioDataErrorsType.Divs);
+      expect(savedError).toBe(ioDataError.Divs);
       
       const gotTmntData = await getTmnt(mockTmnt.id);
       expect(gotTmntData).toBeNull();
@@ -299,11 +303,11 @@ describe('Save New Tmnt', () => {
       expect(gotElims).toHaveLength(0);
     })
     it('should not save when tmnt have invalid squad data', async () => {
-      const invalidTmnt = structuredClone(allTmntData);
+      const invalidTmnt = cloneDeep(allTmntData);
       invalidTmnt.curData.squads[0].squad_name = '';
 
       const savedError = await saveAllDataOneTmnt(invalidTmnt);
-      expect(savedError).toBe(ioDataErrorsType.Squads);
+      expect(savedError).toBe(ioDataError.Squads);
       
       const gotTmntData = await getTmnt(mockTmnt.id);
       expect(gotTmntData).toBeNull();
@@ -323,11 +327,11 @@ describe('Save New Tmnt', () => {
       expect(gotElims).toHaveLength(0);
     })
     it('should not save when tmnt have invalid lanes data', async () => {
-      const invalidTmnt = structuredClone(allTmntData);
+      const invalidTmnt = cloneDeep(allTmntData);
       invalidTmnt.curData.lanes[0].lane_number = 1234;
 
       const savedError = await saveAllDataOneTmnt(invalidTmnt);
-      expect(savedError).toBe(ioDataErrorsType.Lanes);
+      expect(savedError).toBe(ioDataError.Lanes);
       
       const gotTmntData = await getTmnt(mockTmnt.id);
       expect(gotTmntData).toBeNull();
@@ -347,11 +351,11 @@ describe('Save New Tmnt', () => {
       expect(gotElims).toHaveLength(0);
     })
     it('should not save when tmnt have invalid pots data', async () => {
-      const invalidTmnt = structuredClone(allTmntData);
+      const invalidTmnt = cloneDeep(allTmntData);
       invalidTmnt.curData.pots[0].fee = '0';
 
       const savedError = await saveAllDataOneTmnt(invalidTmnt);
-      expect(savedError).toBe(ioDataErrorsType.Pots);
+      expect(savedError).toBe(ioDataError.Pots);
       
       const gotTmntData = await getTmnt(mockTmnt.id);
       expect(gotTmntData).toBeNull();
@@ -371,11 +375,11 @@ describe('Save New Tmnt', () => {
       expect(gotElims).toHaveLength(0);
     })
     it('should not save when tmnt have invalid brackets data', async () => {
-      const invalidTmnt = structuredClone(allTmntData);
+      const invalidTmnt = cloneDeep(allTmntData);
       invalidTmnt.curData.brkts[0].fee = '0';
 
       const savedError = await saveAllDataOneTmnt(invalidTmnt);
-      expect(savedError).toBe(ioDataErrorsType.Brkts);
+      expect(savedError).toBe(ioDataError.Brkts);
       
       const gotTmntData = await getTmnt(mockTmnt.id);
       expect(gotTmntData).toBeNull();
@@ -395,11 +399,11 @@ describe('Save New Tmnt', () => {
       expect(gotElims).toHaveLength(0);
     })
     it('should not save when tmnt have invalid elims data', async () => {
-      const invalidTmnt = structuredClone(allTmntData);
+      const invalidTmnt = cloneDeep(allTmntData);
       invalidTmnt.curData.elims[0].fee = '0';
 
       const savedError = await saveAllDataOneTmnt(invalidTmnt);
-      expect(savedError).toBe(ioDataErrorsType.Elims);
+      expect(savedError).toBe(ioDataError.Elims);
       
       const gotTmntData = await getTmnt(mockTmnt.id);
       expect(gotTmntData).toBeNull();

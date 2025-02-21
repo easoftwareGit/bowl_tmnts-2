@@ -1,9 +1,9 @@
 import axios from "axios";
 import { basePotEntriesApi } from "@/lib/db/apiPaths";
 import { testBasePotEntriesApi } from "../../../../test/testApi";
-import { potEntryType } from "@/lib/types/types";
+import { potEntryType, putManyReturnType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation";
-import { blankPotEntry } from "../initVals";
+import { blankPotEntry, noUpdates } from "../initVals";
 
 const url = testBasePotEntriesApi.startsWith("undefined")
   ? basePotEntriesApi
@@ -203,6 +203,36 @@ export const putPotEntry = async (potEntry: potEntryType): Promise<potEntryType 
       fee: dbPotEntry.fee,
     };
     return puttedPotEntry;
+  } catch (err) {
+    return null;
+  }
+}
+
+/**
+ * updates, inserts or deletes many pot entries
+ * 
+ * @param {potEntryType[]} potEntries - array of potEntries to update, insert or delete
+ * @returns {putManyReturnType | null} - putManyReturnType has how many of each type updated or null 
+ */
+export const putManyPotEntries = async (potEntries: potEntryType[]): Promise<putManyReturnType | null> => {
+
+  try {
+    if (!potEntries) return null;
+    if (potEntries.length === 0) return noUpdates;
+    for (let i = 0; i < potEntries.length; i++) {
+      if (!isValidBtDbId(potEntries[i].id, "pen")) return null;
+    }
+    // further sanatation and validation done in PUT route
+    const divEntriesJSON = JSON.stringify(potEntries);
+    const response = await axios({
+      method: "put",
+      data: divEntriesJSON,
+      withCredentials: true,
+      url: manyUrl,
+    });
+    if (response.status !== 200) return null;
+    const updatedInfo: putManyReturnType = response.data.updateInfo;
+    return updatedInfo;
   } catch (err) {
     return null;
   }

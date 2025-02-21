@@ -4,8 +4,6 @@ import { brktType, divType, elimType, potType } from "@/lib/types/types";
 import { maxAverage, maxBrackets, maxMoney } from "@/lib/validation";
 import { GridApi, GridCellParams, GridColDef, GridRowModel } from "@mui/x-data-grid";
 import '@testing-library/jest-dom/extend-expect';
-import exp from "constants";
-import { unescape } from "lodash";
 import { MutableRefObject } from "react";
 
 describe('createColumns functions tests', () => {
@@ -892,6 +890,7 @@ describe('createColumns functions tests', () => {
   })
 
   describe('createBrktEntryColumns', () => {
+    const timeStamp = new Date().getTime();
     const mockBrkts: brktType[] = [
       { ...initBrkt, id: "brkt1", div_id: "div1", start: 1, games: 3, fee: '5' },
       { ...initBrkt, id: "brkt2", div_id: "div1", start: 4, games: 3, fee: '5' }
@@ -1051,47 +1050,6 @@ describe('createColumns functions tests', () => {
       expect(updatedRow2.brkt2_name).toBe(6);
       expect(updatedRow2['brkt2_fee']).toBe(30);   // brkt_fee * num_brkts = 5 * 6 = 30
     });
-    it('should set brkt createdAt and updatedAt correctly', () => {
-      const columns = createBrktEntryColumns(mockBrkts, mockDivs);
-      expect(columns).toBeDefined();
-      if (!columns) return;         
-      const setBrktsFee = columns[0]?.valueSetter;
-      const col = columns.find(col => col.field === 'brkt1_name');
-      expect(setBrktsFee).toBeDefined();
-      if (!setBrktsFee) return;        
-
-      const row = { brkt1_name: 8, brkt1_created: null, brkt1_updated: null };
-      const nowTime = new Date().getTime();
-      let updatedRow = setBrktsFee(row.brkt1_name, row, col as any, null as any);
-      expect(updatedRow).toBeDefined();      
-      expect(updatedRow.brkt1_name).toBe(8);
-      const nowTime2 = new Date().getTime();
-      expect(updatedRow['brkt1_created']).toBeGreaterThanOrEqual(nowTime);
-      expect(updatedRow['brkt1_updated']).toBeGreaterThanOrEqual(nowTime);
-      expect(updatedRow['brkt1_created']).toBe(updatedRow['brkt1_updated']);
-      expect(updatedRow['brkt1_created']).toBeLessThanOrEqual(nowTime2);
-      expect(updatedRow['brkt1_updated']).toBeLessThanOrEqual(nowTime2);
-
-      row.brkt1_name = null as any;
-      updatedRow = setBrktsFee(row.brkt1_name, row, col as any, null as any);
-      expect(updatedRow).toBeDefined();      
-      expect(updatedRow.brkt1_name).toBe(0);
-      expect(updatedRow['brkt1_fee']).toBe(0);
-      expect(updatedRow['brkt1_created']).toBeGreaterThanOrEqual(nowTime);
-      expect(updatedRow['brkt1_updated']).toBeGreaterThanOrEqual(nowTime);
-
-      const setBrktsFee2 = columns[2]?.valueSetter;
-      const col2 = columns.find(col => col.field === 'brkt2_name');
-      expect(setBrktsFee2).toBeDefined();
-      if (!setBrktsFee2) return;        
-      const row2 = { brkt2_name: 6, brkt2_created: nowTime, brkt2_updated: nowTime };
-      const updatedRow2 = setBrktsFee(row2.brkt2_name, row2, col2 as any, null as any);
-      expect(updatedRow2).toBeDefined();      
-      expect(updatedRow2.brkt2_name).toBe(6);
-      expect(updatedRow2['brkt2_created']).toBe(nowTime);
-      expect(updatedRow2['brkt2_updated']).toBeGreaterThan(nowTime);
-    });
-
   })
 
   describe('getElimFee', () => {

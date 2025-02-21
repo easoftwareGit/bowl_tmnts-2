@@ -7,7 +7,7 @@ import { laneType } from "@/lib/types/types";
 import { deleteAllTmntLanes, deleteLane, postLane, postManyLanes, putLane } from "@/lib/db/lanes/dbLanes";
 import { deleteAllEventSquads, postManySquads } from "@/lib/db/squads/dbSquads";
 import { blankLane } from "@/lib/db/initVals";
-import 'core-js/actual/structured-clone';
+import { cloneDeep } from "lodash";
 const { tmntPostPutOrDelLanes } = exportedForTesting;
 
 // before running this test, run the following commands in the terminal:
@@ -43,7 +43,7 @@ describe('saveTmntDivs test', () => {
   }
 
   describe('tmntPostPutOrDelLanes(): edited lane(s)', () => {
-    const clonedLane = structuredClone(mockLanesToEdit[0]);
+    const clonedLane = cloneDeep(mockLanesToEdit[0]);
     const toAddLane = {
       ...clonedLane,
       id: 'lan_20c24199328447f8bbe95c05e1b84611', // added one to 2nd last diget
@@ -98,7 +98,7 @@ describe('saveTmntDivs test', () => {
     })
 
     it('should save edited lanes, one lane edited', async () => { 
-      const lanesToEdit = structuredClone(mockLanesToEdit);
+      const lanesToEdit = cloneDeep(mockLanesToEdit);
       lanesToEdit[1].lane_number = 22;
       const savedLanes = await tmntPostPutOrDelLanes(mockLanesToEdit, lanesToEdit);
       if (!savedLanes) {
@@ -113,7 +113,7 @@ describe('saveTmntDivs test', () => {
       didPut = true;
     })
     it('should save edited lanes, one lane added', async () => { 
-      const lanesToEdit = structuredClone(mockLanesToEdit);
+      const lanesToEdit = cloneDeep(mockLanesToEdit);
       lanesToEdit.push(toAddLane);
       const savedLanes = await tmntPostPutOrDelLanes(mockLanesToEdit, lanesToEdit);
       if (!savedLanes) {
@@ -132,7 +132,7 @@ describe('saveTmntDivs test', () => {
       expect(found.lane_number).toEqual(toAddLane.lane_number);
     })
     it('should save edited lanes, one lane deleted', async () => { 
-      const lanesToEdit = structuredClone(mockLanesToEdit);
+      const lanesToEdit = cloneDeep(mockLanesToEdit);
       lanesToEdit.pop();
       const savedLanes = await tmntPostPutOrDelLanes(mockLanesToEdit, lanesToEdit);
       if (!savedLanes) {
@@ -149,7 +149,7 @@ describe('saveTmntDivs test', () => {
       expect(found).toBeUndefined();
     })
     it('should save edited lanes, one lane edited, one added, one deleted', async () => {
-      const lanesToEdit = structuredClone(mockLanesToEdit);
+      const lanesToEdit = cloneDeep(mockLanesToEdit);
       const deletedId = mockLanesToEdit[3].id;
       // delete lane 3
       lanesToEdit.pop();
@@ -218,7 +218,7 @@ describe('saveTmntDivs test', () => {
       await deleteAllEventSquads(mockSquadsToPost[0].event_id);
     })
 
-    const origClone = structuredClone(blankLane);
+    const origClone = cloneDeep(blankLane);
     const origLanes: laneType[] = [
       {
         ...origClone,
@@ -228,7 +228,7 @@ describe('saveTmntDivs test', () => {
     it('should create one new lane when only one lane to save', async () => { 
       // NOTE: there will NEVER be just one lane to save
       //       lanes are created in pairs, this is just a test
-      const newLaneClone = structuredClone(mockLanesToPost[0]);
+      const newLaneClone = cloneDeep(mockLanesToPost[0]);
       const newLanes = [
         {
           ...newLaneClone,
@@ -245,7 +245,7 @@ describe('saveTmntDivs test', () => {
       expect(postedLane.lane_number).toBe(newLanes[0].lane_number);
     })
     it('should create multiple new lanes when multiple lanes to save', async () => { 
-      const newLanes = structuredClone(mockLanesToPost);
+      const newLanes = cloneDeep(mockLanesToPost);
       const result = await tmntSaveLanes(origLanes, newLanes);
       expect(result).not.toBeNull();
       didCreate = true;
@@ -268,7 +268,7 @@ describe('saveTmntDivs test', () => {
   })
 
   describe('tmntSaveLanes(): edited lane(s)', () => {
-    const clonedLane = structuredClone(mockLanesToEdit[0]);
+    const clonedLane = cloneDeep(mockLanesToEdit[0]);
     const toAddLane = {
       ...clonedLane,
       id: 'lan_20c24199328447f8bbe95c05e1b84611', // added one to 2nd last diget
@@ -323,7 +323,7 @@ describe('saveTmntDivs test', () => {
     })
 
     it('should save edited lanes, one lane edited', async () => { 
-      const lanesToEdit = structuredClone(mockLanesToEdit);
+      const lanesToEdit = cloneDeep(mockLanesToEdit);
       lanesToEdit[1].lane_number = 22;
       const savedLanes = await tmntSaveLanes(mockLanesToEdit, lanesToEdit);
       if (!savedLanes) {
@@ -338,7 +338,7 @@ describe('saveTmntDivs test', () => {
       didPut = true;
     })
     it('should save edited lanes, one lane added', async () => { 
-      const lanesToEdit = structuredClone(mockLanesToEdit);
+      const lanesToEdit = cloneDeep(mockLanesToEdit);
       lanesToEdit.push(toAddLane);
       const savedLanes = await tmntSaveLanes(mockLanesToEdit, lanesToEdit);
       if (!savedLanes) {
@@ -357,7 +357,7 @@ describe('saveTmntDivs test', () => {
       expect(found.lane_number).toEqual(toAddLane.lane_number);
     })
     it('should save edited lanes, one lane deleted', async () => { 
-      const lanesToEdit = structuredClone(mockLanesToEdit);
+      const lanesToEdit = cloneDeep(mockLanesToEdit);
       lanesToEdit.pop();
       const savedLanes = await tmntSaveLanes(mockLanesToEdit, lanesToEdit);
       if (!savedLanes) {
@@ -374,7 +374,7 @@ describe('saveTmntDivs test', () => {
       expect(found).toBeUndefined();
     })
     it('should save edited lanes, one lane edited, one added, one deleted', async () => {
-      const lanesToEdit = structuredClone(mockLanesToEdit);
+      const lanesToEdit = cloneDeep(mockLanesToEdit);
       const deletedId = mockLanesToEdit[3].id;
       // delete lane 3
       lanesToEdit.pop();

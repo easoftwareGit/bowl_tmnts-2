@@ -1,5 +1,11 @@
 import { divEntryRawType, divEntryRawWithHdcpType } from "@/lib/types/types";
 
+/**
+ * calculate HDCP for each div entry
+ * 
+ * @param {divEntryRawType[]} divEntriesNoHdcp - array div entries without hdcp
+ * @returns {divEntryRawWithHdcpType[]} - array of div entries with hdcp
+ */
 export const divEntriesWithHdcp = (divEntriesNoHdcp: divEntryRawType[]): divEntryRawWithHdcpType[] => {
   return divEntriesNoHdcp.map(divEntry => ({
     ...divEntry,

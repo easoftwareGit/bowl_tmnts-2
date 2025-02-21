@@ -437,15 +437,6 @@ describe("user table data validation", () => {
   })
 
   describe("sanitizeUser function", () => {
-    // const testUser: userType = {
-    //   ...mockUser,
-    //   first_name: "   J>o<h@n-P#aকu😀l",
-    //   last_name: "J?o/n[e,s.D]o{e}   ",
-    //   email: "john.doe@example.com",
-    //   phone: "(800) 555-1234",
-    //   password: "Test123!",
-    //   role: "USER",
-    // };
     it("should return a sanitized user object - no sanitizing", () => {
       const testUser: userType = {
         ...mockUser,

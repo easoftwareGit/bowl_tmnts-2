@@ -29,7 +29,7 @@ const oneDivUrl = url + "/div/";
 const notFoundId = "div_00000000000000000000000000000000";
 const notFoundTmntId = "tmt_00000000000000000000000000000000"
 
-describe("divsAxios", () => {
+describe("dbDivs", () => {
 
   describe('getAllDivsForTmnt', () => { 
 

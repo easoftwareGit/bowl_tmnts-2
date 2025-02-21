@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOneTmnt, getOneTmntError, getOneTmntLoadStatus } from "@/redux/features/allDataOneTmnt/allDataOneTmntSlice";
 import { AppDispatch, RootState } from "@/redux/store";
+import WaitModal from "@/components/modal/waitModal";
 
 export default function EditTmntPage() {
 
@@ -29,15 +30,15 @@ export default function EditTmntPage() {
   };
 
   return (
-    <> 
-      {(tmntLoadStatus === 'loading') && <div>Loading...</div>}  
-      {tmntLoadStatus !== 'loading' && tmntError
-        ? (<div>Error: {tmntError}</div>
+    <>       
+      <WaitModal show={tmntLoadStatus === 'loading'} message="Loading..." />
+      {tmntLoadStatus !== 'loading' && tmntLoadStatus !== 'succeeded' && tmntError
+        ? (<div>Error: {tmntError} tmntLoadStatus: {tmntLoadStatus}</div>
         ) : null}
       {(tmntLoadStatus === 'succeeded') ? ( 
         <div className="d-flex flex-column justify-content-center align-items-center">
           <div className="shadow p-3 m-3 rounded-3 container">
-            <h2 className="mb-3">Edit Tournament</h2>
+            <h2 className="mb-3">Edit Tournament</h2>            
             <TmntDataForm tmntProps={tmntFormData} />
           </div>
         </div> 

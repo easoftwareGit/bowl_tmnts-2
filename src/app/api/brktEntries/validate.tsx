@@ -1,12 +1,14 @@
 import { validMoney } from "@/lib/currency/validate";
-import { blankBrktEntry } from "@/lib/db/initVals";
+import { blankBrktEntry} from "@/lib/db/initVals";
 import { brktEntryType, validBrktEntriesType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId, maxBrackets, maxMoney } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId, isValidTimeStamp, maxBrackets, maxDate, maxMoney, minDate, validTime } from "@/lib/validation";
+import { isValid } from "date-fns";
+import { cloneDeep, min } from "lodash";
 
 /**
  * checks if brktEntry object has missing data - DOES NOT SANITIZE OR VALIDATE
  * 
- * @param brktEntry - brktEntry to check for missing data
+ * @param {brktEntryType} brktEntry - brktEntry to check for missing data
  * @returns {ErrorCode.MissingData | ErrorCode.None | ErrorCode.OtherError} - error code
  */
 const gotBrktEntryData = (brktEntry: brktEntryType): ErrorCode => {
@@ -15,8 +17,9 @@ const gotBrktEntryData = (brktEntry: brktEntryType): ErrorCode => {
       !brktEntry.id ||
       !brktEntry.brkt_id ||
       !brktEntry.player_id ||
-      !brktEntry.num_brackets ||
-      !brktEntry.fee)
+      (brktEntry.num_brackets === undefined || brktEntry.num_brackets === null) ||
+      !brktEntry.fee ||
+      !brktEntry.time_stamp) 
     {
       return ErrorCode.MissingData
     }
@@ -34,7 +37,7 @@ const gotBrktEntryData = (brktEntry: brktEntryType): ErrorCode => {
  */
 export const validBrktEntryNumBrackets = (numBrackets: number): boolean => {
   if (typeof numBrackets !== 'number') return false
-  return Number.isInteger(numBrackets) && numBrackets >= 1 && numBrackets <= maxBrackets;
+  return Number.isInteger(numBrackets) && numBrackets >= 0 && numBrackets <= maxBrackets;
 }
 
 /**
@@ -72,6 +75,17 @@ const validBrktEntryData = (brktEntry: brktEntryType): ErrorCode => {
     if (!validBrktEntryFee(brktEntry.fee)) {
       return ErrorCode.InvalidData;
     }
+    if (brktEntry.num_brackets === 0 && (brktEntry.fee !== '' || Number(brktEntry.fee) !== 0)) {
+      return ErrorCode.InvalidData;      
+    }
+    if ((brktEntry.fee === '' || Number(brktEntry.fee) === 0) && (brktEntry.num_brackets !== 0)) {
+      return ErrorCode.InvalidData;
+    } 
+    if (brktEntry.time_stamp) {
+      if (!isValidTimeStamp(brktEntry.time_stamp) || brktEntry.time_stamp < 0 || brktEntry.time_stamp > maxDate.getTime()) {
+        return ErrorCode.InvalidData
+      }
+    }
     return ErrorCode.None;
   } catch (error) {
     return ErrorCode.OtherError;
@@ -86,9 +100,8 @@ const validBrktEntryData = (brktEntry: brktEntryType): ErrorCode => {
  */
 export const sanitizeBrktEntry = (brktEntry: brktEntryType): brktEntryType => { 
   if (!brktEntry) return null as any;
-  const sanitziedBrktEntry: brktEntryType = {
-    ...blankBrktEntry
-  }
+  const sanitziedBrktEntry: brktEntryType = cloneDeep(blankBrktEntry);
+  sanitziedBrktEntry.time_stamp = 0;
   if (isValidBtDbId(brktEntry.id, "ben")) {
     sanitziedBrktEntry.id = brktEntry.id;
   }
@@ -103,6 +116,9 @@ export const sanitizeBrktEntry = (brktEntry: brktEntryType): brktEntryType => {
   }
   if (validMoney(brktEntry.fee, 0, maxMoney)) {
     sanitziedBrktEntry.fee = brktEntry.fee;
+  }
+  if (brktEntry.time_stamp && isValidTimeStamp(brktEntry.time_stamp)) {
+    sanitziedBrktEntry.time_stamp = brktEntry.time_stamp;
   }
   return sanitziedBrktEntry;
 }
@@ -138,13 +154,12 @@ export const validateBrktEntries = (brktEntries: brktEntryType[]): validBrktEntr
   };
   // cannot use forEach because if got an error need exit loop
   let i = 0;  
-  while (i < brktEntries.length) {
-    const toPost = sanitizeBrktEntry(brktEntries[i]);
-    const errCode = validateBrktEntry(toPost);
+  while (i < brktEntries.length) {    
+    const errCode = validateBrktEntry(brktEntries[i]);
     if (errCode !== ErrorCode.None) {
       return { brktEntries: okBrktEntries, errorCode: errCode };
     }
-    okBrktEntries.push(toPost);
+    okBrktEntries.push(brktEntries[i]);
     i++;
   }
   return { brktEntries: okBrktEntries, errorCode: ErrorCode.None };
@@ -152,5 +167,5 @@ export const validateBrktEntries = (brktEntries: brktEntryType[]): validBrktEntr
 
 export const exportedForTesting = {
   gotBrktEntryData,
-  validBrktEntryData,
+  validBrktEntryData,  
 };

@@ -2,11 +2,10 @@ import axios, { AxiosError } from "axios";
 import { basePlayersApi } from "@/lib/db/apiPaths";
 import { testBasePlayersApi } from "../../../testApi";
 import { initPlayer } from "@/lib/db/initVals";
-import { playerType } from "@/lib/types/types";
+import { playerType, tmntEntryPlayerType } from "@/lib/types/types";
 import { deleteAllSquadPlayers, deleteAllTmntPlayers, getAllPlayersForSquad, postManyPlayers } from "@/lib/db/players/dbPlayers";
 import { mockPlayersToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { cloneDeep } from "lodash";
-
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -1349,6 +1348,39 @@ describe("Players - API's: /api/players", () => {
           eType: "u",
         },
       ]      
+      const toUpdateJSON = JSON.stringify(playersToUpdate) 
+      try {
+        const updateResponse = await axios({
+          method: "put",
+          data: toUpdateJSON,
+          withCredentials: true,
+          url: manyUrl,
+        })
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not update if no data is provided', async () => {      
+      const playerJSON = JSON.stringify(mockPlayersToPost);
+      const response = await axios({
+        method: "post",
+        data: playerJSON,
+        withCredentials: true,
+        url: manyUrl,        
+      })
+      const postedPlayers = response.data.players;
+      expect(response.status).toBe(201);
+      createdPlayers = true;
+      expect(postedPlayers).not.toBeNull();
+      expect(postedPlayers.length).toBe(mockPlayersToPost.length);
+
+      // change average, add eType = 'u'
+      const playersToUpdate: tmntEntryPlayerType[] = [];
       const toUpdateJSON = JSON.stringify(playersToUpdate) 
       try {
         const updateResponse = await axios({

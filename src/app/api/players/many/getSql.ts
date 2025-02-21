@@ -1,8 +1,18 @@
-import { playerType } from "@/lib/types/types"
+import { playerType, validPlayersType } from "@/lib/types/types"
+import { validatePlayers } from "../validate"
+import { ErrorCode } from "@/lib/validation";
 
-export const getUpdateManySQL = (playersToUpdate: playerType[]) => {
+/**
+ * Returns SQL query to update many players at once
+ * 
+ * @param {playerType[]} playerEntries - array of player entries
+ * @returns {string} - SQL query to update many players at once or ''
+ */
+export const getUpdateManySQL = (playerEntries: playerType[]) => {
 
-  if (playersToUpdate.length === 0) return ''
+  if (!playerEntries || playerEntries.length === 0) return ''
+  const validPlayerEntries: validPlayersType = validatePlayers(playerEntries);
+  if (validPlayerEntries.errorCode !== ErrorCode.None) return ''
   
   // create the SQL query
   // update does not need to update squad_id
@@ -14,36 +24,52 @@ export const getUpdateManySQL = (playersToUpdate: playerType[]) => {
       `lane = p2up.lane, ` +
       `position = p2up.position ` +
     `FROM (VALUES ` +
-      playersToUpdate.map((player) => `('${player.id}', '${player.first_name}', '${player.last_name}', ${player.average}, ${player.lane}, '${player.position}')`).join(`, `) +
+      validPlayerEntries.players.map((player) => `('${player.id}', '${player.first_name}', '${player.last_name}', ${player.average}, ${player.lane}, '${player.position}')`).join(`, `) +
       `) AS p2up(id, first, last, average, lane, position) ` +
     `WHERE public."Player".id = p2up.id;`
 
   return updateManySQL
 }
 
-export const getInsertManySQL = (playersToInsert: playerType[]) => { 
+/**
+ * Returns SQL query to insert many players at once
+ * 
+ * @param {playerType[]} playerEntries - array of player entries
+ * @returns {string} - SQL query to insert many players at once or '' 
+ */
+export const getInsertManySQL = (playerEntries: playerType[]) => { 
 
-  if (playersToInsert.length === 0) return ''
+  if (!playerEntries || playerEntries.length === 0) return ''
+  const validPlayerEntries: validPlayersType = validatePlayers(playerEntries);
+  if (validPlayerEntries.errorCode !== ErrorCode.None) return ''
 
   const insertManySQL = 
     `INSERT INTO public."Player" (id, squad_id, first_name, last_name, average, lane, position) ` +
     `SELECT p2up.id, p2up.squad_id, p2up.first, p2up.last, p2up.average, p2up.lane, p2up.position ` +
     `FROM (VALUES ` +
-      playersToInsert.map((player) => `('${player.id}', '${player.squad_id}', '${player.first_name}', '${player.last_name}', ${player.average}, ${player.lane}, '${player.position}')`).join(`, `) +
+      validPlayerEntries.players.map((player) => `('${player.id}', '${player.squad_id}', '${player.first_name}', '${player.last_name}', ${player.average}, ${player.lane}, '${player.position}')`).join(`, `) +
       `) AS p2up(id, squad_id, first, last, average, lane, position) ` +
     `WHERE NOT EXISTS (SELECT 1 FROM public."Player" WHERE id = p2up.id);`
 
   return insertManySQL
 }
 
-export const getDeleteManySQL = (playersToDelete: playerType[]) => { 
+/**
+ * Returns SQL query to delete many players at once
+ * 
+ * @param {playerType[]} playerEntries - array of player entries
+ * @returns {string} - SQL query to delete many players at once or ''
+ */
+export const getDeleteManySQL = (playerEntries: playerType[]) => { 
 
-  if (playersToDelete.length === 0) return ''
+  if (!playerEntries || playerEntries.length === 0) return ''
+  const validPlayerEntries: validPlayersType = validatePlayers(playerEntries);
+  if (validPlayerEntries.errorCode !== ErrorCode.None) return ''
 
   const deleteManySQL = 
     `DELETE FROM public."Player" ` +
     `WHERE id IN ( ` +
-    playersToDelete.map((player) => `'${player.id}'`).join(`, `) +
+      validPlayerEntries.players.map((player) => `'${player.id}'`).join(`, `) +
     `);`
 
   return deleteManySQL

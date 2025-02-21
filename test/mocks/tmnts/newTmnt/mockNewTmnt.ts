@@ -1,7 +1,7 @@
+import { entryFeeColName, entryNumBrktsColName } from "@/app/dataEntry/playersForm/createColumns";
 import { todayStr } from "@/lib/dateTools";
-import { initBrkt, initDiv, initElim, initEvent, initLane, initPlayer, initPot, initSquad, initTmnt } from "@/lib/db/initVals";
-import { brktType, divType, elimType, eventType, laneType, pairsOfLanesType, playerType, potType, squadType, tmntType } from "@/lib/types/types";
-import { startOfToday } from "date-fns";
+import { blankBrktEntry, blankElimEntry, initBrkt, initDiv, initDivEntry, initElim, initEvent, initLane, initPlayer, initPot, initPotEntry, initSquad, initTmnt } from "@/lib/db/initVals";
+import { brktEntryType, brktType, dataOneTmntType, divEntryType, divType, elimEntryType, elimType, eventType, laneType, pairsOfLanesType, playerType, potEntryType, potType, squadType, tmntType } from "@/lib/types/types";
 
 export const mockTmnt: tmntType = {
   ...initTmnt,
@@ -365,5 +365,141 @@ export const mockPlayers: playerType[] = [
     lane: 2,
     position: "B",
   },
+]
 
+export const mockDivEntries: divEntryType[] = [
+  {
+    ...initDivEntry,
+    id: "den_01be0472be3d476ea1caa99dd05953fa",
+    squad_id: 'sqd_1234ce5f80164830830a7157eb093396',
+    div_id:'div_000134e04e5e4885bbae79229d8b96e8',
+    player_id: 'ply_000184582e7042bb95b4818ccdd9974c',
+    fee: '85',
+  },
+  {
+    ...initDivEntry,
+    id: "den_02be0472be3d476ea1caa99dd05953fa",
+    squad_id: 'sqd_1234ce5f80164830830a7157eb093396',
+    div_id:'div_000134e04e5e4885bbae79229d8b96e8',
+    player_id: 'ply_000284582e7042bb95b4818ccdd9974c',
+    fee: '85',
+  },
+  {
+    ...initDivEntry,
+    id: "den_03be0472be3d476ea1caa99dd05953fa",
+    squad_id: 'sqd_1234ce5f80164830830a7157eb093396',
+    div_id:'div_000134e04e5e4885bbae79229d8b96e8',
+    player_id: 'ply_000384582e7042bb95b4818ccdd9974c',
+    fee: '85',
+  },
+  {
+    ...initDivEntry,
+    id: "den_04be0472be3d476ea1caa99dd05953fa",
+    squad_id: 'sqd_1234ce5f80164830830a7157eb093396',
+    div_id:'div_000134e04e5e4885bbae79229d8b96e8',
+    player_id: 'ply_000484582e7042bb95b4818ccdd9974c',
+    fee: '85',
+  },
+]
+
+export const mockPotEntries: potEntryType[] = [
+  {
+    ...initPotEntry,
+    id: 'pen_01be0472be3d476ea1caa99dd05953fa',
+    pot_id: 'pot_0001b02d761b4f5ab5438be84f642c3b',
+    player_id: 'ply_000184582e7042bb95b4818ccdd9974c',
+    fee: '20'
+  },
+  {
+    ...initPotEntry,
+    id: 'pen_02be0472be3d476ea1caa99dd05953fa',
+    pot_id: 'pot_0002b02d761b4f5ab5438be84f642c3b',
+    player_id: 'ply_000184582e7042bb95b4818ccdd9974c',
+    fee: '10'
+  },
+  {
+    ...initPotEntry,
+    id: 'pen_03be0472be3d476ea1caa99dd05953fa',
+    pot_id: 'pot_0001b02d761b4f5ab5438be84f642c3b',
+    player_id: 'ply_000284582e7042bb95b4818ccdd9974c',
+    fee: '20'
+  },
+  {
+    ...initPotEntry,
+    id: 'pen_04be0472be3d476ea1caa99dd05953fa',
+    pot_id: 'pot_0002b02d761b4f5ab5438be84f642c3b',
+    player_id: 'ply_000284582e7042bb95b4818ccdd9974c',
+    fee: '10'
+  },
+]
+
+const timeStamp = new Date().setDate(new Date().getDate() - 1)
+export const mockBrktEntries: brktEntryType[] = [
+  {
+    ...blankBrktEntry,
+    id: 'ben_01ce0472be3d476ea1caa99dd05953fa',
+    brkt_id: 'brk_0001b54c2cc44ff9a3721de42c80c8c1',
+    player_id: 'ply_000184582e7042bb95b4818ccdd9974c',
+    num_brackets: 4,
+    fee: '20',
+    time_stamp: timeStamp,    
+  },
+  {
+    ...blankBrktEntry,
+    id: 'ben_02ce0472be3d476ea1caa99dd05953fa',
+    brkt_id: 'brk_0002b54c2cc44ff9a3721de42c80c8c1',
+    player_id: 'ply_000184582e7042bb95b4818ccdd9974c',
+    num_brackets: 4,
+    fee: '20',
+    time_stamp: timeStamp,
+  },
+  {
+    ...blankBrktEntry,
+    id: 'ben_03ce0472be3d476ea1caa99dd05953fa',
+    brkt_id: 'brk_0001b54c2cc44ff9a3721de42c80c8c1',
+    player_id: 'ply_000284582e7042bb95b4818ccdd9974c',
+    num_brackets: 6,
+    fee: '30',
+    time_stamp: timeStamp,
+  },
+  {
+    ...blankBrktEntry,
+    id: 'ben_04ce0472be3d476ea1caa99dd05953fa',
+    brkt_id: 'brk_0002b54c2cc44ff9a3721de42c80c8c1',
+    player_id: 'ply_000284582e7042bb95b4818ccdd9974c',
+    num_brackets: 6,
+    fee: '30',
+    time_stamp: timeStamp,
+  },
+]
+
+export const mockElimEntries: elimEntryType[] = [
+  {
+    ...blankElimEntry,
+    id: 'een_01de0472be3d476ea1caa99dd05953fa',
+    elim_id: 'elm_000184582e7042bb95b4818ccdd9974c',
+    player_id: 'ply_000184582e7042bb95b4818ccdd9974c',
+    fee: '5'
+  },
+  {
+    ...blankElimEntry,
+    id: 'een_02de0472be3d476ea1caa99dd05953fa',
+    elim_id: 'elm_000284582e7042bb95b4818ccdd9974c',
+    player_id: 'ply_000184582e7042bb95b4818ccdd9974c',
+    fee: '5'
+  },
+  {
+    ...blankElimEntry,
+    id: 'een_03de0472be3d476ea1caa99dd05953fa',
+    elim_id: 'elm_000184582e7042bb95b4818ccdd9974c',
+    player_id: 'ply_000284582e7042bb95b4818ccdd9974c',
+    fee: '5'
+  },
+  {
+    ...blankElimEntry,
+    id: 'een_04de0472be3d476ea1caa99dd05953fa',
+    elim_id: 'elm_000284582e7042bb95b4818ccdd9974c',
+    player_id: 'ply_000284582e7042bb95b4818ccdd9974c',
+    fee: '5'
+  },
 ]

@@ -11,3 +11,13 @@ export const initModalObj: modalObjectType = {
   message: 'message',
   id: "0"
 }
+
+export type waitModalObjectType = {
+  show: boolean,
+  message: string,
+}
+
+export const initWaitModalObj: waitModalObjectType = {
+  show: false,
+  message: 'Please wait...',
+}

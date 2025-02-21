@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { ioStatusType } from "@/redux/statusTypes";
 import { RootState } from "@/redux/store";
 import { deleteAllDataForTmnt, getUserTmnts } from "@/lib/db/tmnts/dbTmnts";
-import { ioDataErrorsType, tmntsListType } from "@/lib/types/types";
+import { ioDataError, tmntsListType } from "@/lib/types/types";
 
 export interface userTmntSliceState {
   userTmnts: tmntsListType[];
@@ -44,7 +44,7 @@ export const deleteUserTmnt = createAsyncThunk(
   "userTmnts/deleteUserTmnt",
   async (tmntId: string) => {
     const errCode = await deleteAllDataForTmnt(tmntId);    
-    if (errCode === ioDataErrorsType.None) {
+    if (errCode === ioDataError.None) {
       return tmntId;
     } else {
       return '';

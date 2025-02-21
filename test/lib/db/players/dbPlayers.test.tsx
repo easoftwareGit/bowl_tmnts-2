@@ -1,10 +1,10 @@
 import axios, { AxiosError } from "axios";
 import { basePlayersApi } from "@/lib/db/apiPaths";
 import { testBasePlayersApi } from "../../../testApi";
-import { playerType } from "@/lib/types/types";
+import { playerType, tmntEntryPlayerType } from "@/lib/types/types";
 import { initPlayer } from "@/lib/db/initVals";
 import { mockPlayersToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllSquadPlayers, deleteAllTmntPlayers, deletePlayer, getAllPlayersForSquad, getAllPlayersForTmnt, postManyPlayers, postPlayer, putPlayer } from "@/lib/db/players/dbPlayers";
+import { deleteAllSquadPlayers, deleteAllTmntPlayers, deletePlayer, getAllPlayersForSquad, getAllPlayersForTmnt, postManyPlayers, postPlayer, putManyPlayers, putPlayer } from "@/lib/db/players/dbPlayers";
 import { cloneDeep } from "lodash";
 
 // before running this test, run the following commands in the terminal:
@@ -83,7 +83,7 @@ const playersToGet: playerType[] = [
     average: 219,
     lane: 2,
     position: 'E',
-}
+  }
 ]
 
 describe('dbPlayers', () => { 
@@ -409,7 +409,7 @@ describe('dbPlayers', () => {
       await doReset();
     });
 
-    it('shoul;d put a player', async () => {
+    it('should put a player', async () => {
       const puttedPlayer = await putPlayer(playerToPut);
       expect(puttedPlayer).not.toBeNull();
       if (!puttedPlayer) return;
@@ -427,6 +427,244 @@ describe('dbPlayers', () => {
       }
       const puttedPlayer = await putPlayer(invalidPlayer);
       expect(puttedPlayer).toBeNull();
+    })
+    
+  })
+
+  describe('putManyPlayers()', () => { 
+    let createdPlayers = false;    
+    
+    const playersToDelTmntId = 'tmt_d9b1af944d4941f65b2d2d4ac160cdea';
+
+    beforeAll(async () => { 
+      await deleteAllTmntPlayers(playersToDelTmntId);
+    })
+
+    beforeEach(() => {
+      createdPlayers = false;
+    })
+
+    afterEach(async () => {
+      if (createdPlayers) {
+        await deleteAllTmntPlayers(playersToDelTmntId);
+      }      
+    })
+
+    it('should update, insert, delete many players', async () => {      
+      const toInsert: playerType[] = [              
+        {
+          ...initPlayer,
+          id: "ply_05be0472be3d476ea1caa99dd05953fa",
+          squad_id: "sqd_42be0f9d527e4081972ce8877190489d",
+          first_name: "Art",
+          last_name: "Smith",
+          average: 222,
+          lane: 3,
+          position: 'C',
+        },
+        {
+          ...initPlayer,
+          id: "ply_06be0472be3d476ea1caa99dd05953fa",
+          squad_id: "sqd_42be0f9d527e4081972ce8877190489d",
+          first_name: "Bob",
+          last_name: "Rees",
+          average: 223,
+          lane: 4,
+          position: 'C',
+        }
+      ];
+      createdPlayers = true;
+      const postedPlayers = await postManyPlayers(mockPlayersToPost);
+      expect(postedPlayers).not.toBeNull();
+      if (!postedPlayers) return;
+      expect(postedPlayers.length).toBe(mockPlayersToPost.length);
+
+      // change average, add eType = 'u'
+      const playersToUpdate = [
+        {
+          ...mockPlayersToPost[0],
+          average: 200,
+          eType: "u",
+        },
+        {
+          ...mockPlayersToPost[1],
+          average: 201,
+          eType: "u",
+        },
+      ]
+
+      // add eType = 'i'
+      const playersToInsert = [
+        {
+          ...toInsert[0],
+          eType: "i",
+        },
+        {
+          ...toInsert[1],
+          eType: "i",
+        },
+      ]
+
+      // add eType = 'd'
+      const playersToDelete = [
+        {
+          ...mockPlayersToPost[2],
+          eType: "d",
+        },
+        {
+          ...mockPlayersToPost[3],
+          eType: "d",
+        },
+      ]
+      const allToUpdate = [...playersToUpdate, ...playersToInsert, ...playersToDelete];
+      const updateInfo = await putManyPlayers(allToUpdate);
+      expect(updateInfo).not.toBeNull();
+      if (!updateInfo) return;
+      expect(updateInfo.updates).toBe(2);
+      expect(updateInfo.inserts).toBe(2);
+      expect(updateInfo.deletes).toBe(2);
+    })
+    it('should update many players - sanitized first and last names', async () => {      
+
+      createdPlayers = true;
+      const postedPlayers = await postManyPlayers(mockPlayersToPost);
+      expect(postedPlayers).not.toBeNull();
+      if (!postedPlayers) return;
+      expect(postedPlayers.length).toBe(mockPlayersToPost.length);
+
+      // change average, add eType = 'u'
+      const playersToUpdate = [
+        {
+          ...mockPlayersToPost[0],
+          first_name: "<script>alert(1)</script>",
+          last_name: "    abcdef***",
+          eType: "u",
+        },
+      ]
+      
+      const allToUpdate = [...playersToUpdate];
+      const updateInfo = await putManyPlayers(allToUpdate);
+      expect(updateInfo).not.toBeNull();
+      if (!updateInfo) return;
+      expect(updateInfo.updates).toBe(1);
+      expect(updateInfo.inserts).toBe(0);
+      expect(updateInfo.deletes).toBe(0);
+
+      const squadPlayers = await getAllPlayersForSquad(mockPlayersToPost[0].squad_id);
+      expect(squadPlayers).not.toBeNull();
+      if (!squadPlayers) return
+      const updatedPlayer = squadPlayers.find(p => p.id === mockPlayersToPost[0].id);
+      expect(updatedPlayer).not.toBeNull();
+      if (!updatedPlayer) return
+      expect(updatedPlayer.first_name).toBe("alert1");
+      expect(updatedPlayer.last_name).toBe("abcdef");
+    })
+    it('should return no updates, inserts or delete if no changes', async () => {      
+      const toInsert: playerType[] = [              
+        {
+          ...initPlayer,
+          id: "ply_05be0472be3d476ea1caa99dd05953fa",
+          squad_id: "sqd_42be0f9d527e4081972ce8877190489d",
+          first_name: "Art",
+          last_name: "Smith",
+          average: 222,
+          lane: 3,
+          position: 'C',
+        },
+        {
+          ...initPlayer,
+          id: "ply_06be0472be3d476ea1caa99dd05953fa",
+          squad_id: "sqd_42be0f9d527e4081972ce8877190489d",
+          first_name: "Bob",
+          last_name: "Rees",
+          average: 223,
+          lane: 4,
+          position: 'C',
+        }
+      ];
+      createdPlayers = true;
+      const postedPlayers = await postManyPlayers(mockPlayersToPost);
+      expect(postedPlayers).not.toBeNull();
+      if (!postedPlayers) return;
+      expect(postedPlayers.length).toBe(mockPlayersToPost.length);
+      
+      const playersToUpdate: tmntEntryPlayerType[] = [];      
+      const updateInfo = await putManyPlayers(playersToUpdate);
+      expect(updateInfo).not.toBeNull();
+      if (!updateInfo) return;
+      expect(updateInfo.updates).toBe(0);
+      expect(updateInfo.inserts).toBe(0);
+      expect(updateInfo.deletes).toBe(0);
+    })
+    it('should update no players when error in data', async () => {      
+      const toInsert: playerType[] = [              
+        {
+          ...initPlayer,
+          id: "ply_05be0472be3d476ea1caa99dd05953fa",
+          squad_id: "sqd_42be0f9d527e4081972ce8877190489d",
+          first_name: "Art",
+          last_name: "Smith",
+          average: 222,
+          lane: 3,
+          position: 'C',
+        },
+        {
+          ...initPlayer,
+          id: "ply_06be0472be3d476ea1caa99dd05953fa",
+          squad_id: "sqd_42be0f9d527e4081972ce8877190489d",
+          first_name: "Bob",
+          last_name: "Rees",
+          average: 223,
+          lane: 4,
+          position: 'C',
+        }
+      ];
+      createdPlayers = true;
+      const postedPlayers = await postManyPlayers(mockPlayersToPost);
+      expect(postedPlayers).not.toBeNull();
+      if (!postedPlayers) return;
+      expect(postedPlayers.length).toBe(mockPlayersToPost.length);
+
+      // change average, add eType = 'u'
+      const playersToUpdate = [
+        {
+          ...mockPlayersToPost[0],
+          average: 333,    // invalid average
+          eType: "u",
+        },
+        {
+          ...mockPlayersToPost[1],
+          average: 201,
+          eType: "u",
+        },
+      ]
+
+      // add eType = 'i'
+      const playersToInsert = [
+        {
+          ...toInsert[0],
+          eType: "i",
+        },
+        {
+          ...toInsert[1],
+          eType: "i",
+        },
+      ]
+
+      // add eType = 'd'
+      const playersToDelete = [
+        {
+          ...mockPlayersToPost[2],
+          eType: "d",
+        },
+        {
+          ...mockPlayersToPost[3],
+          eType: "d",
+        },
+      ]
+      const allToUpdate = [...playersToUpdate, ...playersToInsert, ...playersToDelete];
+      const updateInfo = await putManyPlayers(allToUpdate);
+      expect(updateInfo).toBeNull();
     })
     
   })

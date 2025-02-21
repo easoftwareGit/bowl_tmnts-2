@@ -32,7 +32,7 @@ const urlForSquads = testBaseSquadsApi.startsWith("undefined")
 
 const notFoundTmntId = 'tmt_00000000000000000000000000000000';
 
-describe('lanesAxios', () => {
+describe('dbLanes', () => {
 
   const rePostLane = async (lane: laneType) => {
     try {

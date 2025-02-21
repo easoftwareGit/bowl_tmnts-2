@@ -1,10 +1,11 @@
 import axios from "axios";
 import { baseBrktEntriesApi } from "@/lib/db/apiPaths";
 import { testBaseBrktEntriesApi } from "../../../../test/testApi";
-import { brktEntryType, rawBrktEntryStrTimestampsType, rawBrktEntryType } from "@/lib/types/types";
+import { brktEntryType, putManyReturnType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation";
-import { blankBrktEntry, blankRawBrktEntry, initRawBrktEntry } from "../initVals";
+import { blankBrktEntry, noUpdates } from "../initVals";
 import { dateStringToTimeStamp } from "@/lib/dateTools";
+import { time } from "console";
 
 const url = testBaseBrktEntriesApi.startsWith("undefined")
   ? baseBrktEntriesApi
@@ -41,6 +42,7 @@ export const getAllBrktEntriesForTmnt = async (tmntId: string): Promise<brktEntr
         player_id: brktEntry.player_id,
         num_brackets: brktEntry.num_brackets,
         fee: brktEntry.fee,
+        time_stamp: brktEntry.time_stamp,
       }
     });
     return brktEntries;
@@ -73,6 +75,7 @@ export const getAllBrktEntriesForDiv = async (divId: string): Promise<brktEntryT
         player_id: brktEntry.player_id,
         num_brackets: brktEntry.num_brackets,
         fee: brktEntry.fee,
+        time_stamp: brktEntry.time_stamp,
       }
     });
     return brktEntries;
@@ -105,43 +108,10 @@ export const getAllBrktEntriesForBrkt = async (brktId: string): Promise<brktEntr
         player_id: brktEntry.player_id,
         num_brackets: brktEntry.num_brackets,
         fee: brktEntry.fee,
+        time_stamp: brktEntry.time_stamp,
       }
     });
     return brktEntries;
-  } catch (err) {
-    return null;
-  }
-}
-
-/**
- * Get all raw brkt entries for a brkt (include time stamp columns)
- * 
- * @param {string} brktId - id of brkt to get brkt entries for
- * @returns {rawBrktEntryType[] | null} - array of raw brkt entries
- */
-export const getAllRawBrktEntriesForBrkt = async (brktId: string): Promise<rawBrktEntryType[] | null> => {
-  try {
-    if (!isValidBtDbId(brktId, "brk")) return null;
-    const response = await axios({
-      method: "get",
-      withCredentials: true,
-      url: oneBrktUrl + brktId,
-    });
-    if (response.status !== 200) return null;
-    const dbBrktEntries: rawBrktEntryStrTimestampsType[] = response.data.brktEntries;
-    const rawBrktEntries: rawBrktEntryType[] = dbBrktEntries.map((rawBrktEntryTsStr: rawBrktEntryStrTimestampsType) => {
-      return {
-        ...blankRawBrktEntry,
-        id: rawBrktEntryTsStr.id,        
-        brkt_id: rawBrktEntryTsStr.brkt_id,
-        player_id: rawBrktEntryTsStr.player_id,
-        num_brackets: rawBrktEntryTsStr.num_brackets,
-        fee: rawBrktEntryTsStr.fee,
-        createdAt: dateStringToTimeStamp(rawBrktEntryTsStr.createdAt),
-        updatedAt: dateStringToTimeStamp(rawBrktEntryTsStr.updatedAt),
-      }      
-    })
-    return rawBrktEntries;
   } catch (err) {
     return null;
   }
@@ -171,43 +141,10 @@ export const getAllBrktEntriesForSquad = async (squadId: string): Promise<brktEn
         player_id: brktEntry.player_id,
         num_brackets: brktEntry.num_brackets,
         fee: brktEntry.fee,
+        time_stamp: brktEntry.time_stamp,
       }
     });
     return brktEntries;
-  } catch (err) {
-    return null;
-  }
-}
-
-/**
- * Get all raw brkt entries for a squad (include time stamp columns)
- * 
- * @param {string} squadId - id of squad to get brkt entries for
- * @returns {rawBrktEntryType[] | null} - array of brkt entries
- */
-export const getAllRawBrktEntriesForSquad = async (squadId: string): Promise<rawBrktEntryType[] | null> => {
-  try {
-    if (!isValidBtDbId(squadId, "sqd")) return null;
-    const response = await axios({
-      method: "get",
-      withCredentials: true,
-      url: oneSquadUrl + squadId,
-    });
-    if (response.status !== 200) return null;
-    const squadBrktEntries: rawBrktEntryStrTimestampsType[] = response.data.brktEntries;
-    const rawBrktEntries: rawBrktEntryType[] = squadBrktEntries.map((rawBrktEntryTsStr: rawBrktEntryStrTimestampsType) => {
-      return {
-        ...initRawBrktEntry,
-        id: rawBrktEntryTsStr.id,        
-        brkt_id: rawBrktEntryTsStr.brkt_id,
-        player_id: rawBrktEntryTsStr.player_id,
-        num_brackets: rawBrktEntryTsStr.num_brackets,
-        fee: rawBrktEntryTsStr.fee,
-        createdAt: dateStringToTimeStamp(rawBrktEntryTsStr.createdAt),
-        updatedAt: dateStringToTimeStamp(rawBrktEntryTsStr.updatedAt),
-      }
-    });
-    return rawBrktEntries;
   } catch (err) {
     return null;
   }
@@ -310,6 +247,36 @@ export const putBrktEntry = async (brktEntry: brktEntryType): Promise<brktEntryT
       fee: dbBrktEntry.fee,
     };
     return puttedBrktEntry;
+  } catch (err) {
+    return null;
+  }
+}
+
+/**
+ * updates, inserts or deletes many brkt entries
+ * 
+ * @param {brktEntryType[]} brktEntries - array of brktEntries to update, insert or delete
+ * @returns {putManyReturnType | null} - putManyReturnType has how many of each type updated or null 
+ */
+export const putManyBrktEntries = async (brktEntries: brktEntryType[]): Promise<putManyReturnType | null> => {
+
+  try {
+    if (!brktEntries) return null;
+    if (brktEntries.length === 0) return noUpdates;
+    for (let i = 0; i < brktEntries.length; i++) {
+      if (!isValidBtDbId(brktEntries[i].id, "ben")) return null;
+    }
+    // further sanatation and validation done in PUT route
+    const brktEntriesJSON = JSON.stringify(brktEntries);
+    const response = await axios({
+      method: "put",
+      data: brktEntriesJSON,
+      withCredentials: true,
+      url: manyUrl,
+    });
+    if (response.status !== 200) return null;
+    const updatedInfo: putManyReturnType = response.data.updateInfo;
+    return updatedInfo;
   } catch (err) {
     return null;
   }

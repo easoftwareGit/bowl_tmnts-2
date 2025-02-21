@@ -1,4 +1,4 @@
-import { brktType, divType, elimType, eventType, ioDataErrorsType, laneType, potType, allDataOneTmntType, squadType, tmntType } from "@/lib/types/types";
+import { brktType, divType, elimType, eventType, ioDataError, laneType, potType, allDataOneTmntType, squadType, tmntType } from "@/lib/types/types";
 import { deleteTmnt, postTmnt, putTmnt } from "../tmnts/dbTmnts";
 import { isValidBtDbId } from "@/lib/validation";
 import { deleteAllTmntEvents, deleteEvent, postEvent, postManyEvents, putEvent } from "../events/dbEvents";
@@ -513,9 +513,9 @@ export const tmntSaveElims = async (origElims: elimType[], elims: elimType[]): P
  * saves all data for one tournament post, put or delete as needed
  * 
  * @param {allDataOneTmntType} allTmntData - data to save
- * @returns {ioDataErrorsType} - save result 
+ * @returns {ioDataError} - save result 
  */
-export const saveAllDataOneTmnt = async (allTmntData: allDataOneTmntType): Promise<ioDataErrorsType> => { 
+export const saveAllDataOneTmnt = async (allTmntData: allDataOneTmntType): Promise<ioDataError> => { 
   const { origData, curData } = allTmntData  
   const origTmnt = origData.tmnt
   const origEvents = origData.events
@@ -528,19 +528,19 @@ export const saveAllDataOneTmnt = async (allTmntData: allDataOneTmntType): Promi
   const { tmnt, events, divs, squads, lanes, pots, brkts, elims } = curData
 
   const savedTmnt = await tmntSaveTmnt(origTmnt, tmnt);
-  if (!savedTmnt) return ioDataErrorsType.Tmnt;
+  if (!savedTmnt) return ioDataError.Tmnt;
   const savedEvents = await tmntSaveEvents(origEvents, events);
   if (!savedEvents) { 
     // delete saved tmnt data
     await deleteTmnt(tmnt.id);            
-    return ioDataErrorsType.Events;
+    return ioDataError.Events;
   } 
   const savedDivs = await tmntSaveDivs(origDivs, divs);
   if (!savedDivs) { 
     // delete saved tmnt data
     await deleteAllTmntEvents(tmnt.id);   
     await deleteTmnt(tmnt.id);            
-    return ioDataErrorsType.Divs;
+    return ioDataError.Divs;
   } 
   const savedSquads = await tmntSaveSquads(origSquads, squads);
   if (!savedSquads) { 
@@ -548,7 +548,7 @@ export const saveAllDataOneTmnt = async (allTmntData: allDataOneTmntType): Promi
     await deleteAllTmntDivs(tmnt.id);
     await deleteAllTmntEvents(tmnt.id);   
     await deleteTmnt(tmnt.id);            
-    return ioDataErrorsType.Squads;
+    return ioDataError.Squads;
   }
   const savedLanes = await tmntSaveLanes(origLanes, lanes);
   if (!savedLanes) { 
@@ -557,7 +557,7 @@ export const saveAllDataOneTmnt = async (allTmntData: allDataOneTmntType): Promi
     await deleteAllTmntDivs(tmnt.id);
     await deleteAllTmntEvents(tmnt.id);   
     await deleteTmnt(tmnt.id);
-    return ioDataErrorsType.Lanes;
+    return ioDataError.Lanes;
   }
   const savedPots = await tmntSavePots(origPots, pots);
   if (!savedPots) { 
@@ -567,7 +567,7 @@ export const saveAllDataOneTmnt = async (allTmntData: allDataOneTmntType): Promi
     await deleteAllTmntDivs(tmnt.id);
     await deleteAllTmntEvents(tmnt.id);   
     await deleteTmnt(tmnt.id);
-    return ioDataErrorsType.Pots;
+    return ioDataError.Pots;
   }
   const savedBrkts = await tmntSaveBrkts(origBrkts, brkts);
   if (!savedBrkts) { 
@@ -578,7 +578,7 @@ export const saveAllDataOneTmnt = async (allTmntData: allDataOneTmntType): Promi
     await deleteAllTmntDivs(tmnt.id);
     await deleteAllTmntEvents(tmnt.id);   
     await deleteTmnt(tmnt.id);
-    return ioDataErrorsType.Brkts;
+    return ioDataError.Brkts;
   }
   const savedElims = await tmntSaveElims(origElims, elims);
   if (!savedElims) { 
@@ -590,9 +590,9 @@ export const saveAllDataOneTmnt = async (allTmntData: allDataOneTmntType): Promi
     await deleteAllTmntDivs(tmnt.id);
     await deleteAllTmntEvents(tmnt.id);   
     await deleteTmnt(tmnt.id);
-    return ioDataErrorsType.Elims;
+    return ioDataError.Elims;
   }
-  return ioDataErrorsType.None
+  return ioDataError.None
 }
 
 export const exportedForTesting = {  

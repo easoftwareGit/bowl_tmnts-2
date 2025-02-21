@@ -13,6 +13,9 @@ import {
   startOfTodayUTC,
   yyyyMMdd_To_ddMMyyyy,
 } from "@/lib/dateTools";
+import ModalConfirm, { cancelConfTitle } from "@/components/modal/confirmModal";
+import { initModalObj } from "@/components/modal/modalObjType";
+import { useRouter } from "next/navigation"
 
 import "./form.css";
 
@@ -37,6 +40,20 @@ export const Form6: React.FC = () => {
   const toDayStr_to_MMddyyyy = yyyyMMdd_To_ddMMyyyy(todayStr)
 
   const [formData, setFormData] = useState(initVals);
+
+  const router = useRouter();
+  const [modalObj, setModalObj] = useState(initModalObj);
+
+  const confirmedCancel = () => {        
+    setModalObj(initModalObj);  // reset modal object (hides modal)    
+    router.push('/user/tmnts'); // back to list of tournaments    
+  };
+
+  const canceledCancel = () => {    
+    setModalObj(initModalObj); // reset modal object (hides modal)
+  };
+
+
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     
@@ -80,8 +97,24 @@ export const Form6: React.FC = () => {
     })
   };
 
+  const handleCancel = () => {    
+    setModalObj({
+      show: true,
+      title: `Cancel ${cancelConfTitle} Sample`,
+      message: `Do you want to cancel sample?`,
+      id: '0'
+    }); // cancel done in confirmedCancel    
+  }
+
   return (
     <>
+      <ModalConfirm
+        show={modalObj.show}
+        title={modalObj.title}
+        message={modalObj.message}
+        onConfirm={confirmedCancel}
+        onCancel={canceledCancel}        
+      />      
       <div className="row g-3 mb-3">
         <div className="col-md-3">
           <label htmlFor="todayStr" className="form-label">
@@ -485,6 +518,11 @@ export const Form6: React.FC = () => {
         <div className="col-md-3">
           <button className="btn btn-info" onClick={handleDebug}>
             Debug
+          </button>
+        </div>
+        <div className="col-md-3">
+          <button className="btn btn-danger" onClick={handleCancel}>
+            Cancel
           </button>
         </div>
       </div>

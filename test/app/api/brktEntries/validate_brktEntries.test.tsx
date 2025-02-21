@@ -1,8 +1,10 @@
 import { exportedForTesting, sanitizeBrktEntry, validateBrktEntries, validateBrktEntry, validBrktEntryFee, validBrktEntryNumBrackets } from "@/app/api/brktEntries/validate";
 import { initBrktEntry } from "@/lib/db/initVals";
-import { ErrorCode } from "@/lib/validation";
+import { ErrorCode, maxDate, minDate } from "@/lib/validation";
 import { mockBrktEntriesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { validBrktEntriesType } from "@/lib/types/types";
+import { cloneDeep } from "lodash";
+import { time } from "console";
 
 const { gotBrktEntryData, validBrktEntryData } = exportedForTesting;
 
@@ -13,6 +15,7 @@ const validBrktEntry = {
   player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
   num_brackets: 8,
   fee: '40',
+  time_stamp: new Date().getTime(),  
 }
 
 const userId = "usr_01234567890123456789012345678901";
@@ -61,6 +64,14 @@ describe("tests for brktEntry validation", () => {
       const testBrktEntry = {
         ...validBrktEntry,
         fee: null as any
+      }
+      const errorCode = gotBrktEntryData(testBrktEntry);
+      expect(errorCode).toBe(ErrorCode.MissingData);
+    })
+    it('should return ErrorCode.MissingData when time_stamp is missing', () => {
+      const testBrktEntry = {
+        ...validBrktEntry,
+        time_stamp: null as any
       }
       const errorCode = gotBrktEntryData(testBrktEntry);
       expect(errorCode).toBe(ErrorCode.MissingData);
@@ -114,11 +125,8 @@ describe("tests for brktEntry validation", () => {
     it('should return false when num_brackets is not a number', () => {      
       expect(validBrktEntryNumBrackets('abc' as any)).toBe(false);
     })
-    it('should return false when num_brackets is negative', () => {      
-      expect(validBrktEntryNumBrackets(-1)).toBe(false);
-    })
     it('should return false when num_brackets is too low', () => {      
-      expect(validBrktEntryNumBrackets(0)).toBe(false);
+      expect(validBrktEntryNumBrackets(-1)).toBe(false);
     })
     it('should return false when num_brackets is too big', () => {       
       expect(validBrktEntryNumBrackets(1234567890)).toBe(false);
@@ -160,6 +168,24 @@ describe("tests for brktEntry validation", () => {
     it('should return ErrorCode.None when all data is valid', () => {
       const errorCode = validBrktEntryData(validBrktEntry);
       expect(errorCode).toBe(ErrorCode.None);
+    })
+    it('should return ErrorCode.None when num_brackets is 0 and fee is 0', () => {
+      const testBrktEntry = {
+        ...validBrktEntry,
+        num_brackets: 0,
+        fee: '0'
+      } 
+      const errorCode = validBrktEntryData(testBrktEntry);
+      expect(errorCode).toBe(ErrorCode.InvalidData);      
+    })
+    it('should return ErrorCode.None when num_brackets is 0 and fee is ""', () => {
+      const testBrktEntry = {
+        ...validBrktEntry,
+        num_brackets: 0,
+        fee: ''
+      } 
+      const errorCode = validBrktEntryData(testBrktEntry);
+      expect(errorCode).toBe(ErrorCode.InvalidData);      
     })
     it('should return ErrorCode.InvalidData when id is invalid', () => { 
       const testBrktEntry = {
@@ -292,7 +318,7 @@ describe("tests for brktEntry validation", () => {
     it('should return ErrorCode.InvalidData when num_brackets is too low', () => { 
       const testBrktEntry = {
         ...validBrktEntry,
-        num_brackets: 0
+        num_brackets: -1
       }
       const errorCode = validBrktEntryData(testBrktEntry);
       expect(errorCode).toBe(ErrorCode.InvalidData);
@@ -321,6 +347,14 @@ describe("tests for brktEntry validation", () => {
       const errorCode = validBrktEntryData(testBrktEntry);
       expect(errorCode).toBe(ErrorCode.InvalidData);      
     })
+    it('should return ErrorCode.InvalidData when num_brackets is 0 and fee is not 0 or blank', () => {
+      const testBrktEntry = {
+        ...validBrktEntry,
+        num_brackets: 0
+      } 
+      const errorCode = validBrktEntryData(testBrktEntry);
+      expect(errorCode).toBe(ErrorCode.InvalidData);      
+    })
     it('should return ErrorCode.InvalidData when fee is not a number', () => { 
       const testBrktEntry = {
         ...validBrktEntry,
@@ -345,14 +379,6 @@ describe("tests for brktEntry validation", () => {
       const errorCode = validBrktEntryData(testBrktEntry);
       expect(errorCode).toBe(ErrorCode.InvalidData);
     })
-    it('should return ErrorCode.InvalidData when fee is blank', () => { 
-      const testBrktEntry = {
-        ...validBrktEntry,
-        fee: ''
-      } 
-      const errorCode = validBrktEntryData(testBrktEntry);
-      expect(errorCode).toBe(ErrorCode.InvalidData);
-    })
     it('should return ErrorCode.InvalidData when fee is null', () => { 
       const testBrktEntry = {
         ...validBrktEntry,
@@ -369,9 +395,26 @@ describe("tests for brktEntry validation", () => {
       const errorCode = validBrktEntryData(testBrktEntry);
       expect(errorCode).toBe(ErrorCode.InvalidData);      
     })
+    it('should return ErrorCode.InvalidData when fee is blank and num_brackets is not 0', () => { 
+      const testBrktEntry = {
+        ...validBrktEntry,
+        fee: ''
+      } 
+      const errorCode = validBrktEntryData(testBrktEntry);
+      expect(errorCode).toBe(ErrorCode.InvalidData);
+    })
+    it('should return ErrorCode.InvalidData when fee is "0" and num_brackets is not 0', () => { 
+      const testBrktEntry = {
+        ...validBrktEntry,
+        fee: '0'
+      } 
+      const errorCode = validBrktEntryData(testBrktEntry);
+      expect(errorCode).toBe(ErrorCode.InvalidData);
+    })
+
   })
 
-  describe('sanitizeBrktEntryData()', () => { 
+  describe('sanitizeBrktEntry()', () => { 
     it('should return a sanitized brktEntry', () => { 
       const testBrktEntry = {
         ...validBrktEntry,
@@ -467,21 +510,48 @@ describe("tests for brktEntry validation", () => {
       const sanitizedBrktEntry = sanitizeBrktEntry(testBrktEntry);
       expect(sanitizedBrktEntry.fee).toEqual('80.000');
     })
+    it('should return a sanitized brktEntry when time_stamp is invalid', () => { 
+      const testBrktEntry = {
+        ...validBrktEntry,
+        time_stamp: 'abc' as any
+      }
+      const sanitizedBrktEntry = sanitizeBrktEntry(testBrktEntry);
+      expect(sanitizedBrktEntry.time_stamp).toBeGreaterThanOrEqual(0);
+      expect(sanitizedBrktEntry.time_stamp).toBeLessThanOrEqual(8.64e15);
+    })
+    it('should return a sanitized brktEntry when time_stamp is too low', () => { 
+      const testBrktEntry = {
+        ...validBrktEntry,
+        time_stamp: -8.64e15 - 1
+      }
+      const sanitizedBrktEntry = sanitizeBrktEntry(testBrktEntry);
+      expect(sanitizedBrktEntry.time_stamp).toBeGreaterThanOrEqual(-8.64e15);
+      expect(sanitizedBrktEntry.time_stamp).toBeLessThanOrEqual(8.64e15);
+    })
+    it('should return a sanitized brktEntry when time_stamp is too high', () => { 
+      const testBrktEntry = {
+        ...validBrktEntry,
+        time_stamp: 8.64e15 + 1
+      }
+      const sanitizedBrktEntry = sanitizeBrktEntry(testBrktEntry);
+      expect(sanitizedBrktEntry.time_stamp).toBeGreaterThanOrEqual(0);
+      expect(sanitizedBrktEntry.time_stamp).toBeLessThanOrEqual(8.64e15);
+    })
     it('should return a sanitized brktEntry when data is not sanitzied', () => { 
       const testBrktEntry = {
         ...validBrktEntry,
         id: '<script>alert(1)</script>',
         brkt_id: '<script>alert(1)</script>',
-        player_id: '<script>alert(1)</script>',
-        num_brackets: '<script>alert(1)</script>' as any,
-        fee: '<script>alert(1)</script>',        
+        player_id: '<script>alert(1)</script>',        
+        fee: '<script>alert(1)</script>',          
       }
       const sanitizedBrktEntry = sanitizeBrktEntry(testBrktEntry);
       expect(sanitizedBrktEntry.id).toEqual('');
       expect(sanitizedBrktEntry.brkt_id).toEqual('');
-      expect(sanitizedBrktEntry.player_id).toEqual('');
-      expect(sanitizedBrktEntry.num_brackets).toEqual(0);
+      expect(sanitizedBrktEntry.player_id).toEqual('');      
       expect(sanitizedBrktEntry.fee).toEqual(''); // sanitized, not valildated
+      expect(sanitizedBrktEntry.time_stamp).toBeGreaterThanOrEqual(0);
+      expect(sanitizedBrktEntry.time_stamp).toBeLessThanOrEqual(8.64e15);
     })    
 
   })
@@ -491,14 +561,6 @@ describe("tests for brktEntry validation", () => {
     describe('valid data', () => { 
       it('should return ErrorCode.None when all data is valid', () => {
         const errorCode = validateBrktEntry(validBrktEntry);
-        expect(errorCode).toBe(ErrorCode.None);
-      })
-      it('should return ErrorCode.None when all fields are properly sanitized', () => {
-        const testBrktEntry = {
-          ...validBrktEntry,
-          fee: '80.000',
-        }
-        const errorCode = validateBrktEntry(testBrktEntry);
         expect(errorCode).toBe(ErrorCode.None);
       })
     })
@@ -541,6 +603,12 @@ describe("tests for brktEntry validation", () => {
           fee: null as any
         }
         const errorCode = validateBrktEntry(testBrktEntry);
+        expect(errorCode).toBe(ErrorCode.MissingData);
+      })
+      it('should return ErrorCode.MissingData when time_stamp is null', () => {
+        const noTimeStampBrktEntry = cloneDeep(validBrktEntry);
+        noTimeStampBrktEntry.time_stamp = null as any;
+        const errorCode = validateBrktEntry(noTimeStampBrktEntry);
         expect(errorCode).toBe(ErrorCode.MissingData);
       })
     })
@@ -641,8 +709,31 @@ describe("tests for brktEntry validation", () => {
         const errorCode = validateBrktEntry(testBrktEntry);
         expect(errorCode).toBe(ErrorCode.InvalidData);
       })
-    })      
-    
+      it('should return ErrorCode.InvalidData when time_stamp is not a number', () => {
+        const testBrktEntry = {
+          ...validBrktEntry,
+          time_stamp: 'abc' as any
+        }
+        const errorCode = validateBrktEntry(testBrktEntry);
+        expect(errorCode).toBe(ErrorCode.InvalidData);
+      })
+      it('should return ErrorCode.InvalidData when time_stamp is too low', () => {
+        const testBrktEntry = {
+          ...validBrktEntry,
+          time_stamp: minDate.getTime() - 1
+        }
+        const errorCode = validateBrktEntry(testBrktEntry);
+        expect(errorCode).toBe(ErrorCode.InvalidData);
+      })
+      it('should return ErrorCode.InvalidData when time_stamp is too high', () => {
+        const testBrktEntry = {
+          ...validBrktEntry,
+          time_stamp: maxDate.getTime() + 1 
+        }
+        const errorCode = validateBrktEntry(testBrktEntry);
+        expect(errorCode).toBe(ErrorCode.InvalidData);
+      })
+    })          
   })
 
   describe('validateBrktEntries()', () => { 
@@ -657,154 +748,186 @@ describe("tests for brktEntry validation", () => {
         expect(validBrktEntries.brktEntries[i].player_id).toBe(brktEntriesToValidate[i].player_id);
         expect(validBrktEntries.brktEntries[i].num_brackets).toBe(brktEntriesToValidate[i].num_brackets);
         expect(validBrktEntries.brktEntries[i].fee).toBe(brktEntriesToValidate[i].fee);
+        expect(validBrktEntries.brktEntries[i].time_stamp).toBe(brktEntriesToValidate[i].time_stamp);
       }
     })
     it('should return sanitized brktEntries when data is not sanitized', () => { 
-      const brktEntriesToValidate = [...mockBrktEntriesToPost];
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].fee = '85.000'
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
       expect(validBrktEntries.errorCode).toBe(ErrorCode.None);
       expect(validBrktEntries.brktEntries.length).toBe(brktEntriesToValidate.length);
       expect(validBrktEntries.brktEntries[1].fee).toBe('85.000');
     })
-    it('should return ErrorCode.MissingData when id is sanitzied to ""', () => { 
-      const brktEntriesToValidate = [...mockBrktEntriesToPost];
+    it('should return ErrorCode.InvalidData when id is sanitzied to ""', () => { 
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].id = '<script>alert("xss")</script>'
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
-      expect(validBrktEntries.errorCode).toBe(ErrorCode.MissingData);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.InvalidData);
     })
-    it('should return ErrorCode.MissingData when brkt_id is sanitzied to ""', () => { 
-      const brktEntriesToValidate = [...mockBrktEntriesToPost];
+    it('should return ErrorCode.InvalidData when brkt_id is sanitzied to ""', () => { 
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].brkt_id = 'test'
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
-      expect(validBrktEntries.errorCode).toBe(ErrorCode.MissingData);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.InvalidData);
     })
     it('should return ErrorCode.MissingData when player_id is sanitzied to ""', () => { 
-      const brktEntriesToValidate = [...mockBrktEntriesToPost];
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].player_id = ''
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
       expect(validBrktEntries.errorCode).toBe(ErrorCode.MissingData);
     })
-    it('should return ErrorCode.MissingData when num_brackets is sanitzied to ""', () => { 
-      const brktEntriesToValidate = [...mockBrktEntriesToPost];
+    it('should return ErrorCode.InvalidData when num_brackets is not a number', () => { 
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].num_brackets = 'abc' as any
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
-      expect(validBrktEntries.errorCode).toBe(ErrorCode.MissingData);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.InvalidData);
     })
-    it('should return ErrorCode.MissingData when fee is sanitzied to ""', () => { 
-      const brktEntriesToValidate = [...mockBrktEntriesToPost];
+    it('should return ErrorCode.InvalidData when fee is not a number', () => { 
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].fee = 'abc'
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
-      expect(validBrktEntries.errorCode).toBe(ErrorCode.MissingData);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.InvalidData);
     })
-    it('should return ErrorCode.MissingData when id is invalid', () => { 
-      const brktEntriesToValidate = [...mockBrktEntriesToPost];
+    it('should return ErrorCode.InvalidData when time_stamp is not a number', () => { 
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
+      brktEntriesToValidate[1].time_stamp = 'abc' as any
+      const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.InvalidData);
+    })
+    it('should return ErrorCode.InvalidData when id is invalid', () => { 
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].id = 'abc'
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
-      expect(validBrktEntries.errorCode).toBe(ErrorCode.MissingData);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.InvalidData);
     })
-    it('should return ErrorCode.MissingData when id is valid, but not a brktEntry id', () => { 
-      const brktEntriesToValidate = [...mockBrktEntriesToPost];
+    it('should return ErrorCode.InvalidData when id is valid, but not a brktEntry id', () => { 
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].id = userId
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
-      expect(validBrktEntries.errorCode).toBe(ErrorCode.MissingData);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.InvalidData);
     })    
-    it('should return ErrorCode.MissingData when brkt_id is invalid', () => { 
-      const brktEntriesToValidate = [...mockBrktEntriesToPost];
+    it('should return ErrorCode.InvalidData when brkt_id is invalid', () => { 
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].brkt_id = 'abc'
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
-      expect(validBrktEntries.errorCode).toBe(ErrorCode.MissingData);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.InvalidData);
     })    
     it('should return ErrorCode.MissingData when id is null', () => {
-      const brktEntriesToValidate = [...mockBrktEntriesToPost];
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].id = null as any;
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
       expect(validBrktEntries.errorCode).toBe(ErrorCode.MissingData);      
     })
-    it('should return ErrorCode.MissingData when brkt_id is valid, but not a div id', () => { 
-      const brktEntriesToValidate = [...mockBrktEntriesToPost];
+    it('should return ErrorCode.InvalidData when brkt_id is valid, but not a div id', () => { 
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].brkt_id = userId
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
-      expect(validBrktEntries.errorCode).toBe(ErrorCode.MissingData);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.InvalidData);
     })
     it('should return ErrorCode.MissingData when brkt_id is null', () => {
-      const brktEntriesToValidate = [...mockBrktEntriesToPost];
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].brkt_id = null as any;
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
       expect(validBrktEntries.errorCode).toBe(ErrorCode.MissingData);      
     })
-    it('should return ErrorCode.MissingData when player_id is invalid', () => { 
-      const brktEntriesToValidate = [...mockBrktEntriesToPost];
+    it('should return ErrorCode.InvalidData when player_id is invalid', () => { 
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].player_id = 'abc'
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
-      expect(validBrktEntries.errorCode).toBe(ErrorCode.MissingData);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.InvalidData);
     })    
-    it('should return ErrorCode.MissingData when player_id is valid, but not a player id', () => { 
-      const brktEntriesToValidate = [...mockBrktEntriesToPost];
+    it('should return ErrorCode.InvalidData when player_id is valid, but not a player id', () => { 
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].player_id = userId
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
-      expect(validBrktEntries.errorCode).toBe(ErrorCode.MissingData);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.InvalidData);
     })
     it('should return ErrorCode.MissingData when player_id is null', () => {
-      const brktEntriesToValidate = [...mockBrktEntriesToPost];
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].player_id = null as any;
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
       expect(validBrktEntries.errorCode).toBe(ErrorCode.MissingData);      
     })
-    it('should return ErrorCode.MissingData when num_brackets is invalid', () => { 
-      const brktEntriesToValidate = [...mockBrktEntriesToPost];
+    it('should return ErrorCode.InvalidData when num_brackets is invalid', () => { 
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].num_brackets = 'abc' as any
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
-      expect(validBrktEntries.errorCode).toBe(ErrorCode.MissingData);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.InvalidData);
     })
-    it('should return ErrorCode.MissingData when num_brackets is too low', () => { 
-      const brktEntriesToValidate = [...mockBrktEntriesToPost];
+    it('should return ErrorCode.InvalidData when num_brackets is too low', () => { 
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].num_brackets = -1
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
-      expect(validBrktEntries.errorCode).toBe(ErrorCode.MissingData);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.InvalidData);
     })
-    it('should return ErrorCode.MissingData when num_brackets is too high', () => { 
-      const brktEntriesToValidate = [...mockBrktEntriesToPost]; 
+    it('should return ErrorCode.InvalidData when num_brackets is too high', () => { 
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].num_brackets = 1234567890
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
-      expect(validBrktEntries.errorCode).toBe(ErrorCode.MissingData);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.InvalidData);
     })
     it('should return ErrorCode.MissingData when num_brackets is null', () => { 
-      const brktEntriesToValidate = [...mockBrktEntriesToPost];
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].num_brackets = null as any
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
       expect(validBrktEntries.errorCode).toBe(ErrorCode.MissingData);
     })
-    it('should return ErrorCode.MissingData when fee is invalid', () => { 
-      const brktEntriesToValidate = [...mockBrktEntriesToPost];
+    it('should return ErrorCode.InvalidData when fee is invalid', () => { 
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].fee = 'abc'
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
-      expect(validBrktEntries.errorCode).toBe(ErrorCode.MissingData);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.InvalidData);
     })
-    it('should return ErrorCode.MissingData when fee is too low', () => { 
-      const brktEntriesToValidate = [...mockBrktEntriesToPost];
+    it('should return ErrorCode.InvalidData when fee is too low', () => { 
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].fee = '-1'
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
-      expect(validBrktEntries.errorCode).toBe(ErrorCode.MissingData);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.InvalidData);
     })
-    it('should return ErrorCode.MissingData when fee is too high', () => { 
-      const brktEntriesToValidate = [...mockBrktEntriesToPost]; 
+    it('should return ErrorCode.InvalidData when fee is too high', () => { 
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].fee = '1234567890'
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
-      expect(validBrktEntries.errorCode).toBe(ErrorCode.MissingData);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.InvalidData);
     })
     it('should return ErrorCode.InvalidData when fee is blank', () => { 
-      const brktEntriesToValidate = [...mockBrktEntriesToPost];
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].fee = ''
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
       expect(validBrktEntries.errorCode).toBe(ErrorCode.MissingData);
     })
     it('should return ErrorCode.MissingData when fee is null', () => { 
-      const brktEntriesToValidate = [...mockBrktEntriesToPost];
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].fee = null as any
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
       expect(validBrktEntries.errorCode).toBe(ErrorCode.MissingData);
     })
+    it('should return ErrorCode.InvalidData when time_stamp is invalid', () => { 
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
+      brktEntriesToValidate[1].time_stamp = 'abc' as any
+      const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.InvalidData);
+    })
+    it('should return ErrorCode.InvalidData when time_stamp is too low', () => { 
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
+      brktEntriesToValidate[1].time_stamp = -1
+      const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.InvalidData);
+    })
+    it('should return ErrorCode.InvalidData when time_stamp is too high', () => { 
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
+      brktEntriesToValidate[1].time_stamp = 8.64e15 + 1
+      const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.InvalidData);
+    })
+    it('should return ErrorCode.MissingData when time_stamp is null', () => { 
+      const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
+      brktEntriesToValidate[1].time_stamp = null as any
+      const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntriesToValidate);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.MissingData);
+    })
+
   })
 
 })

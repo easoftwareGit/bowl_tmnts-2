@@ -8,7 +8,7 @@ import { deleteAllTmntPots, deletePot, postManyPots, postPot, putPot } from "@/l
 import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/dbSquads";
 import { deleteAllTmntDivs, postManyDivs } from "@/lib/db/divs/dbDivs";
 import { blankPot } from "@/lib/db/initVals";
-import 'core-js/actual/structured-clone';
+import { cloneDeep } from "lodash";
 const { tmntPostPutOrDelPots } = exportedForTesting;
 
 // before running this test, run the following commands in the terminal:
@@ -116,7 +116,7 @@ describe('saveTmntDivs test', () => {
     })
 
     it('should save edited pots, one pot edited', async () => { 
-      const potsToEdit = structuredClone(mockPotsToEdit);
+      const potsToEdit = cloneDeep(mockPotsToEdit);
       potsToEdit[1].fee = '13';
       const savedPots = await tmntPostPutOrDelPots(mockPotsToEdit, potsToEdit);
       if (!savedPots) {
@@ -134,7 +134,7 @@ describe('saveTmntDivs test', () => {
       didPut = true;
     })
     it('should save edited pots, one pot added', async () => { 
-      const potsToEdit = structuredClone(mockPotsToEdit);
+      const potsToEdit = cloneDeep(mockPotsToEdit);
       potsToEdit.push(toAddPot);
       const savedPots = await tmntPostPutOrDelPots(mockPotsToEdit, potsToEdit);
       if (!savedPots) {
@@ -156,7 +156,7 @@ describe('saveTmntDivs test', () => {
       expect(found.sort_order).toEqual(toAddPot.sort_order);      
     })
     it('should save edited pots, one pot deleted', async () => { 
-      const potsToEdit = structuredClone(mockPotsToEdit);
+      const potsToEdit = cloneDeep(mockPotsToEdit);
       potsToEdit.pop();
       const savedPots = await tmntPostPutOrDelPots(mockPotsToEdit, potsToEdit);
       if (!savedPots) {
@@ -173,7 +173,7 @@ describe('saveTmntDivs test', () => {
       expect(found).toBeUndefined();
     })
     it('should save edited pots, one pot edited, one added, one deleted', async () => {
-      const potsToEdit = structuredClone(mockPotsToEdit);
+      const potsToEdit = cloneDeep(mockPotsToEdit);
       const deletedId = mockPotsToEdit[2].id;
       // delete Series Pot
       potsToEdit.pop();
@@ -252,7 +252,7 @@ describe('saveTmntDivs test', () => {
       await deleteAllTmntDivs(tmntToDelId);
     })
 
-    const origClone = structuredClone(blankPot);
+    const origClone = cloneDeep(blankPot);
     const origPots: potType[] = [
       {
         ...origClone,
@@ -260,7 +260,7 @@ describe('saveTmntDivs test', () => {
     ]
 
     it('should create one new pot when only one pot to save', async () => { 
-      const newPotClone = structuredClone(mockPotsToPost[0]);
+      const newPotClone = cloneDeep(mockPotsToPost[0]);
       const newPots = [
         {
           ...newPotClone,
@@ -280,7 +280,7 @@ describe('saveTmntDivs test', () => {
       expect(postedPot.sort_order).toBe(newPots[0].sort_order);      
     })
     it('should create multiple new pots when multiple pots to save', async () => { 
-      const newPots = structuredClone(mockPotsToPost);
+      const newPots = cloneDeep(mockPotsToPost);
       const result = await tmntSavePots(origPots, newPots);
       expect(result).not.toBeNull();
       didCreate = true;
@@ -372,7 +372,7 @@ describe('saveTmntDivs test', () => {
     })
 
     it('should save edited pots, one pot edited', async () => { 
-      const potsToEdit = structuredClone(mockPotsToEdit);
+      const potsToEdit = cloneDeep(mockPotsToEdit);
       potsToEdit[1].fee = '13';
       const savedPots = await tmntSavePots(mockPotsToEdit, potsToEdit);
       if (!savedPots) {
@@ -390,7 +390,7 @@ describe('saveTmntDivs test', () => {
       didPut = true;
     })
     it('should save edited pots, one pot added', async () => { 
-      const potsToEdit = structuredClone(mockPotsToEdit);
+      const potsToEdit = cloneDeep(mockPotsToEdit);
       potsToEdit.push(toAddPot);
       const savedPots = await tmntSavePots(mockPotsToEdit, potsToEdit);
       if (!savedPots) {
@@ -412,7 +412,7 @@ describe('saveTmntDivs test', () => {
       expect(found.sort_order).toEqual(toAddPot.sort_order);      
     })
     it('should save edited pots, one pot deleted', async () => { 
-      const potsToEdit = structuredClone(mockPotsToEdit);
+      const potsToEdit = cloneDeep(mockPotsToEdit);
       potsToEdit.pop();
       const savedPots = await tmntSavePots(mockPotsToEdit, potsToEdit);
       if (!savedPots) {
@@ -429,7 +429,7 @@ describe('saveTmntDivs test', () => {
       expect(found).toBeUndefined();
     })
     it('should save edited pots, one pot edited, one added, one deleted', async () => {
-      const potsToEdit = structuredClone(mockPotsToEdit);
+      const potsToEdit = cloneDeep(mockPotsToEdit);
       const deletedId = mockPotsToEdit[2].id;
       // delete Series Pot
       potsToEdit.pop();

@@ -15,13 +15,17 @@ import {
   divEntryType,
   potEntryType,
   brktEntryType,
-  elimEntryType,
-  rawBrktEntryType,
+  elimEntryType,  
+  putManyReturnType,
+  putManyEntriesReturnType,
+  updatedEntriesCountsType,
 } from "../types/types";
 import { User, Bowl, Tmnt } from "@prisma/client";
 import { todayStr } from "@/lib/dateTools";
 import { btDbUuid } from "../uuid";
 import { startOfToday } from "date-fns";
+import { clone, cloneDeep } from "lodash";
+import { deepClone } from "@mui/x-data-grid/internals";
 
 export const initUser: userType = {
   id: btDbUuid('usr'),
@@ -221,7 +225,6 @@ export const blankSquad: squadType = {
   tab_title: "",
 };
 
-
 export const initSquads: squadType[] = [
   {
     ...initSquad,
@@ -398,29 +401,11 @@ export const initBrktEntry: brktEntryType = {
   num_brackets_err: "",
   fee: "",
   fee_err: "",
+  time_stamp: new Date().getTime(),
 }
 
 export const blankBrktEntry: brktEntryType = {
   ...initBrktEntry,
-  id: "",
-}
-
-export const initRawBrktEntry: rawBrktEntryType = {
-  id: btDbUuid('ben'),
-  brkt_id: "",
-  brkt_id_err: "",
-  player_id: "",
-  player_id_err: "",
-  num_brackets: 0,
-  num_brackets_err: "",
-  fee: "",
-  fee_err: "",
-  createdAt: 0,
-  updatedAt: 0,
-}
-
-export const blankRawBrktEntry: rawBrktEntryType = {
-  ...initRawBrktEntry,
   id: "",
 }
 
@@ -441,21 +426,18 @@ export const blankElimEntry: elimEntryType = {
 
 export const blankDataOneTmnt = (): dataOneTmntType => {
   const initData: dataOneTmntType = {    
-    tmnt:
-    {
-      ...blankTmnt,      
-    },
+    tmnt: cloneDeep(blankTmnt),
     events: [{
-      ...blankEvent,      
+      ...cloneDeep(blankEvent)
     }],
     divs: [{
-      ...blankDiv,
+      ...cloneDeep(blankDiv),
     }],
     squads: [{
-      ...blankSquad,
+      ...cloneDeep(blankSquad),
     }],
     lanes: [{
-      ...blankLane,
+      ...cloneDeep(blankLane),
 
     }],
     pots: [],
@@ -516,4 +498,51 @@ export const initTestDate: testDateType = {
   sod: new Date(Date.UTC(2000, 0, 1)),
   eod: new Date(Date.UTC(2000, 0, 1, 23, 59, 59, 999)),
   gmt: new Date(Date.UTC(2000, 0, 1, 1, 2, 3, 0))        
+}
+
+export const noUpdates: putManyReturnType = {
+  updates: 0,
+  inserts: 0,
+  deletes: 0,
+}
+
+export const allEntriesNoUpdates: putManyEntriesReturnType = {
+  players: deepClone(noUpdates),
+  divEntries: deepClone(noUpdates),
+  potEntries: deepClone(noUpdates),
+  brktEntries: deepClone(noUpdates),
+  elimEntries: deepClone(noUpdates),
+  playersToUpdate: [],
+  divEntriesToUpdate: [],
+  potEntriesToUpdate: [],
+  brktEntriesToUpdate: [],
+  elimEntriesToUpdate: [],
+}
+
+export const zeroUdatedEntriesCounts: updatedEntriesCountsType = {
+  players: 0,
+  divEntries: 0,
+  potEntries: 0,
+  brktEntries: 0,
+  elimEntries: 0,
+  total: 0
+}
+
+export const errorUpdate: putManyReturnType = {
+  updates: -1,
+  inserts: -1,
+  deletes: -1,
+}
+
+export const allEntriesAllErrors: putManyEntriesReturnType = {
+  players: deepClone(errorUpdate),
+  divEntries: deepClone(errorUpdate),
+  potEntries: deepClone(errorUpdate),
+  brktEntries: deepClone(errorUpdate),
+  elimEntries: deepClone(errorUpdate),
+  playersToUpdate: [],
+  divEntriesToUpdate: [],
+  potEntriesToUpdate: [],
+  brktEntriesToUpdate: [],
+  elimEntriesToUpdate: [],
 }

@@ -1,9 +1,9 @@
 import axios from "axios";
 import { baseDivEntriesApi } from "@/lib/db/apiPaths";
 import { testBaseDivEntriesApi } from "../../../../test/testApi";
-import { divEntryType } from "@/lib/types/types";
+import { divEntryType, putManyReturnType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation";
-import { blankDivEntry } from "../initVals";
+import { blankDivEntry, noUpdates } from "../initVals";
 
 const url = testBaseDivEntriesApi.startsWith("undefined")
   ? baseDivEntriesApi
@@ -38,7 +38,7 @@ export const getAllDivEntriesForTmnt = async (tmntId: string): Promise<divEntryT
         squad_id: divEntry.squad_id,
         div_id: divEntry.div_id,
         player_id: divEntry.player_id,
-        fee: divEntry.fee,    
+        fee: divEntry.fee + '', 
         hdcp: divEntry.hdcp,
       }
     });
@@ -71,7 +71,7 @@ export const getAllDivEntriesForDiv = async (divId: string): Promise<divEntryTyp
         squad_id: divEntry.squad_id,
         div_id: divEntry.div_id,
         player_id: divEntry.player_id,
-        fee: divEntry.fee,
+        fee: divEntry.fee + '',
         hdcp: divEntry.hdcp,
       }
     });
@@ -104,7 +104,7 @@ export const getAllDivEntriesForSquad = async (squadId: string): Promise<divEntr
         squad_id: divEntry.squad_id,
         div_id: divEntry.div_id,
         player_id: divEntry.player_id,
-        fee: divEntry.fee,
+        fee: divEntry.fee + '',
         hdcp: divEntry.hdcp,
       }
     });
@@ -214,6 +214,36 @@ export const putDivEntry = async (divEntry: divEntryType): Promise<divEntryType 
       hdcp: divEntry.hdcp,
     };
     return puttedDivEntry;
+  } catch (err) {
+    return null;
+  }
+}
+
+/**
+ * updates, inserts or deletes many div entries
+ * 
+ * @param {divEntryType[]} divEntries - array of divEntries to update, insert or delete
+ * @returns {putManyReturnType | null} - putManyReturnType has how many of each type updated or null 
+ */
+export const putManyDivEntries = async (divEntries: divEntryType[]): Promise<putManyReturnType | null> => {
+
+  try {
+    if (!divEntries) return null;
+    if (divEntries.length === 0) return noUpdates;
+    for (let i = 0; i < divEntries.length; i++) {
+      if (!isValidBtDbId(divEntries[i].id, "den")) return null;
+    }
+    // further sanatation and validation done in PUT route
+    const divEntriesJSON = JSON.stringify(divEntries);
+    const response = await axios({
+      method: "put",
+      data: divEntriesJSON,
+      withCredentials: true,
+      url: manyUrl,
+    });
+    if (response.status !== 200) return null;
+    const updatedInfo: putManyReturnType = response.data.updateInfo;
+    return updatedInfo;
   } catch (err) {
     return null;
   }

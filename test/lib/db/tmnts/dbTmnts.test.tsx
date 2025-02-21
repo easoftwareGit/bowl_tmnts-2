@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { baseTmntsApi } from "@/lib/db/apiPaths";
 import { testBaseTmntsApi } from "../../../testApi";
-import { dataOneTmntType, allDataOneTmntType, ioDataErrorsType, tmntType } from "@/lib/types/types";
+import { dataOneTmntType, allDataOneTmntType, ioDataError, tmntType } from "@/lib/types/types";
 import { blankDataOneTmnt, initTmnt } from "@/lib/db/initVals";
 import { deleteTmnt, getTmnt, getTmnts, getTmntYears, getUserTmnts, postTmnt, putTmnt, exportedForTesting, getAllDataForTmnt, deleteAllDataForTmnt } from "@/lib/db/tmnts/dbTmnts";
 import { compareAsc } from "date-fns";
@@ -15,8 +15,8 @@ import { deleteAllTmntLanes } from "@/lib/db/lanes/dbLanes";
 import { deleteAllTmntSquads } from "@/lib/db/squads/dbSquads";
 import { deleteAllTmntDivs } from "@/lib/db/divs/dbDivs";
 import { deleteAllTmntEvents } from "@/lib/db/events/dbEvents";
+import { cloneDeep } from "lodash";
 const { getTmntsForYear, getUpcomingTmnts } = exportedForTesting;
-import 'core-js/actual/structured-clone';
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -42,7 +42,7 @@ const notFoundId = "tmt_00000000000000000000000000000000";
 const user1Id = "usr_5bcefb5d314fff1ff5da6521a2fa7bde";
 const notFoundUserId = "usr_00000000000000000000000000000000";
   
-describe("tmntsAxios", () => {  
+describe("dbTmnts", () => {  
 
   describe('getTmnt', () => {    
     // from prisma/seeds.ts
@@ -85,28 +85,30 @@ describe("tmntsAxios", () => {
   describe('getUserTmnts', () => {    
     it("should get user's tmnts", async () => { 
       const userTmnts = await getUserTmnts(user1Id);
-        // 8 tmnt rows for user in prisma/seed.ts
-      expect(userTmnts).toHaveLength(8);     
+      // 9 tmnt rows for user in prisma/seed.ts
+      expect(userTmnts).toHaveLength(9);     
       if (!userTmnts) return;   
       expect(userTmnts[0].user_id).toBe(user1Id);
-      expect(userTmnts[7].user_id).toBe(user1Id);
+      expect(userTmnts[8].user_id).toBe(user1Id);
       // tmnts sorted by date, newest to oldest
       expect(userTmnts[0].id).toBe('tmt_e134ac14c5234d708d26037ae812ac33')
       expect(userTmnts[0].start_date_str).toBe('2025-08-19')
-      expect(userTmnts[1].id).toBe('tmt_d237a388a8fc4641a2e37233f1d6bebd')
-      expect(userTmnts[1].start_date_str).toBe('2024-07-01')
-      expect(userTmnts[2].id).toBe('tmt_9a34a65584f94f548f5ce3b3becbca19')
-      expect(userTmnts[2].start_date_str).toBe('2024-01-05')
-      expect(userTmnts[3].id).toBe('tmt_fe8ac53dad0f400abe6354210a8f4cd1')
-      expect(userTmnts[3].start_date_str).toBe('2023-12-31')
-      expect(userTmnts[4].id).toBe('tmt_718fe20f53dd4e539692c6c64f991bbe')
-      expect(userTmnts[4].start_date_str).toBe('2023-12-20')
-      expect(userTmnts[5].id).toBe('tmt_467e51d71659d2e412cbc64a0d19ecb4')
-      expect(userTmnts[5].start_date_str).toBe('2023-09-16')
-      expect(userTmnts[6].id).toBe('tmt_a78f073789cc0f8a9a0de8c6e273eab1')
-      expect(userTmnts[6].start_date_str).toBe('2023-01-02')
-      expect(userTmnts[7].id).toBe('tmt_fd99387c33d9c78aba290286576ddce5')
-      expect(userTmnts[7].start_date_str).toBe('2022-10-23')
+      expect(userTmnts[1].id).toBe('tmt_a237a388a8fc4641a2e37233f1d6bebd')
+      expect(userTmnts[1].start_date_str).toBe('2024-12-01')
+      expect(userTmnts[2].id).toBe('tmt_d237a388a8fc4641a2e37233f1d6bebd')
+      expect(userTmnts[2].start_date_str).toBe('2024-07-01')
+      expect(userTmnts[3].id).toBe('tmt_9a34a65584f94f548f5ce3b3becbca19')
+      expect(userTmnts[3].start_date_str).toBe('2024-01-05')
+      expect(userTmnts[4].id).toBe('tmt_fe8ac53dad0f400abe6354210a8f4cd1')
+      expect(userTmnts[4].start_date_str).toBe('2023-12-31')
+      expect(userTmnts[5].id).toBe('tmt_718fe20f53dd4e539692c6c64f991bbe')
+      expect(userTmnts[5].start_date_str).toBe('2023-12-20')
+      expect(userTmnts[6].id).toBe('tmt_467e51d71659d2e412cbc64a0d19ecb4')
+      expect(userTmnts[6].start_date_str).toBe('2023-09-16')
+      expect(userTmnts[7].id).toBe('tmt_a78f073789cc0f8a9a0de8c6e273eab1')
+      expect(userTmnts[7].start_date_str).toBe('2023-01-02')
+      expect(userTmnts[8].id).toBe('tmt_fd99387c33d9c78aba290286576ddce5')
+      expect(userTmnts[8].start_date_str).toBe('2022-10-23')
 
       expect(userTmnts[0].bowls).not.toBeNull();
     })
@@ -220,53 +222,6 @@ describe("tmntsAxios", () => {
     })
   })
 
-  describe('getUserTmnts', () => {
-    it('should get user tmnts', async () => { 
-      const gotTmnts = await getUserTmnts(user1Id);
-      expect(gotTmnts).not.toBeNull();
-      if (!gotTmnts) return;
-      // 8 tmnt rows for user in prisma/seed.ts
-      expect(gotTmnts.length).toBe(8);
-      expect(gotTmnts[0].user_id).toBe(user1Id);
-      expect(gotTmnts[7].user_id).toBe(user1Id);
-      // tmnts sorted by date, newest to oldest      
-      expect(gotTmnts[0].id).toBe('tmt_e134ac14c5234d708d26037ae812ac33')
-      expect(gotTmnts[0].start_date_str).toBe('2025-08-19');      
-      expect(gotTmnts[1].id).toBe('tmt_d237a388a8fc4641a2e37233f1d6bebd')
-      expect(gotTmnts[1].start_date_str).toBe('2024-07-01')      
-      expect(gotTmnts[2].id).toBe('tmt_9a34a65584f94f548f5ce3b3becbca19')
-      expect(gotTmnts[2].start_date_str).toBe('2024-01-05')      
-      expect(gotTmnts[3].id).toBe('tmt_fe8ac53dad0f400abe6354210a8f4cd1')
-      expect(gotTmnts[3].start_date_str).toBe('2023-12-31')
-      expect(gotTmnts[4].id).toBe('tmt_718fe20f53dd4e539692c6c64f991bbe')
-      expect(gotTmnts[4].start_date_str).toBe('2023-12-20')
-      expect(gotTmnts[5].id).toBe('tmt_467e51d71659d2e412cbc64a0d19ecb4')
-      expect(gotTmnts[5].start_date_str).toBe('2023-09-16')
-      expect(gotTmnts[6].id).toBe('tmt_a78f073789cc0f8a9a0de8c6e273eab1')
-      expect(gotTmnts[6].start_date_str).toBe('2023-01-02')
-      expect(gotTmnts[7].id).toBe('tmt_fd99387c33d9c78aba290286576ddce5')
-      expect(gotTmnts[7].start_date_str).toBe('2022-10-23')
-    })
-    it('should not get user tmnts when user id is not valid', async () => { 
-      const gotTmnts = await getUserTmnts('test');
-      expect(gotTmnts).not.toBeNull();
-      if (!gotTmnts) return;
-      expect(gotTmnts.length).toBe(0);
-    })
-    it('should not get user tmnts when user id is valid, but not a user id', async () => { 
-      const gotTmnts = await getUserTmnts(notFoundId); // tmnt id
-      expect(gotTmnts).not.toBeNull(); 
-      if (!gotTmnts) return;
-      expect(gotTmnts.length).toBe(0);
-    })
-    it('should return an empty array when user has no tmnts', async () => {
-      const gotTmnts = await getUserTmnts(notFoundUserId);
-      expect(gotTmnts).not.toBeNull();
-      if (!gotTmnts) return;
-      expect(gotTmnts.length).toBe(0);
-    })
-  })
-
   describe('getAllDataForTmnt', () => {    
     const origData = blankDataOneTmnt();    
     const curData: dataOneTmntType = {
@@ -285,8 +240,8 @@ describe("tmntsAxios", () => {
     }
 
     beforeAll(async () => {
-      let result: ioDataErrorsType = await saveAllDataOneTmnt(toSaveTmntData);
-      if (result !== ioDataErrorsType.None) console.log('Error: ', result); 
+      let result: ioDataError = await saveAllDataOneTmnt(toSaveTmntData);
+      if (result !== ioDataError.None) console.log('Error: ', result); 
     });
 
     afterAll(async () => {
@@ -629,35 +584,35 @@ describe("tmntsAxios", () => {
     });
 
     it('should delete all data for a tmnt', async () => { 
-      let result: ioDataErrorsType = await saveAllDataOneTmnt(toSaveTmntData);
-      if (result !== ioDataErrorsType.None) console.log('Error: ', result);
-      expect(result).toBe(ioDataErrorsType.None);
+      let result: ioDataError = await saveAllDataOneTmnt(toSaveTmntData);
+      if (result !== ioDataError.None) console.log('Error: ', result);
+      expect(result).toBe(ioDataError.None);
       result = await deleteAllDataForTmnt(mockTmnt.id);
-      expect(result).toBe(ioDataErrorsType.None);
+      expect(result).toBe(ioDataError.None);
     })
     it('should delete when no pots for a tmnt', async () => { 
-      const noPotsTmnt = structuredClone(toSaveTmntData)
+      const noPotsTmnt = cloneDeep(toSaveTmntData)
       noPotsTmnt.curData.pots = [];
       const saveResult = await saveAllDataOneTmnt(noPotsTmnt);
-      expect(saveResult).toBe(ioDataErrorsType.None);
+      expect(saveResult).toBe(ioDataError.None);
       const delResult = await deleteAllDataForTmnt(noPotsTmnt.curData.tmnt.id);
-      expect(delResult).toBe(ioDataErrorsType.None);
+      expect(delResult).toBe(ioDataError.None);
     })
     it('should delete when no brkts for a tmnt', async () => { 
-      const noBrktsTmnt = structuredClone(toSaveTmntData)
+      const noBrktsTmnt = cloneDeep(toSaveTmntData)
       noBrktsTmnt.curData.brkts = [];
       const saveResult = await saveAllDataOneTmnt(noBrktsTmnt);
-      expect(saveResult).toBe(ioDataErrorsType.None);
+      expect(saveResult).toBe(ioDataError.None);
       const delResult = await deleteAllDataForTmnt(noBrktsTmnt.curData.tmnt.id);
-      expect(delResult).toBe(ioDataErrorsType.None);
+      expect(delResult).toBe(ioDataError.None);
     })
     it('should delete when no elims for a tmnt', async () => { 
-      const noElimsTmnt = structuredClone(toSaveTmntData)
+      const noElimsTmnt = cloneDeep(toSaveTmntData)
       noElimsTmnt.curData.elims = [];
       const saveResult = await saveAllDataOneTmnt(noElimsTmnt);
-      expect(saveResult).toBe(ioDataErrorsType.None);
+      expect(saveResult).toBe(ioDataError.None);
       const delResult = await deleteAllDataForTmnt(noElimsTmnt.curData.tmnt.id);
-      expect(delResult).toBe(ioDataErrorsType.None);
+      expect(delResult).toBe(ioDataError.None);
     })
   })
 

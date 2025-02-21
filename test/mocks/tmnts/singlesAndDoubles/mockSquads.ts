@@ -743,7 +743,8 @@ export const mockBrktEntriesToPost: brktEntryType[] = [
     brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
     player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
     num_brackets: 4,
-    fee: '20'
+    fee: '20',
+    time_stamp: new Date().getTime(),
   },
   {
     ...initBrktEntry,
@@ -751,7 +752,8 @@ export const mockBrktEntriesToPost: brktEntryType[] = [
     brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
     player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
     num_brackets: 4,
-    fee: '20'
+    fee: '20',
+    time_stamp: new Date().getTime(),
   },
   {
     ...initBrktEntry,
@@ -759,7 +761,8 @@ export const mockBrktEntriesToPost: brktEntryType[] = [
     brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
     player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
     num_brackets: 4,
-    fee: '20'
+    fee: '20',
+    time_stamp: new Date().getTime(),
   },
   {
     ...initBrktEntry,
@@ -767,7 +770,8 @@ export const mockBrktEntriesToPost: brktEntryType[] = [
     brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
     player_id: 'ply_8b0fd8bbd9e34d34a7fa90b4111c6e40',
     num_brackets: 4,
-    fee: '20'
+    fee: '20',
+    time_stamp: new Date().getTime(),
   },
 ]
 

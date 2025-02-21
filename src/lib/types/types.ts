@@ -450,20 +450,15 @@ export type brktEntryType = {
   num_brackets_err: string,
   fee: string,
   fee_err: string,  
+  time_stamp: number,
 }
 
 export interface tmntEntryBrktEntryType extends brktEntryType {
   eType: string,
 }
 
-export interface rawBrktEntryStrTimestampsType extends brktEntryType {
-  createdAt: string,
-  updatedAt: string,
-}
-
-export interface rawBrktEntryType extends brktEntryType {
-  createdAt: number,
-  updatedAt: number,
+export type BrktInBbrktEntryType = {
+  fee: number,
 }
 
 export type brktEntryDataType = {
@@ -471,7 +466,27 @@ export type brktEntryDataType = {
   brkt_id: string,
   player_id: string,
   num_brackets: number,
-  fee: string,
+  time_stamp: Date,  
+}
+
+export interface brktEntriesFromPrisa extends brktEntryDataType {
+  brkt: BrktInBbrktEntryType,  
+}
+
+export interface brktEntryWithFeeDataType extends brktEntryDataType {
+  fee: number,
+}
+
+export type brktEntryNfType = {
+  id: string,
+  brkt_id: string,  
+  player_id: string,  
+  num_brackets: number,      
+  time_stamp: number,  
+}
+
+export type brktEntryWithFeeType = brktEntryNfType & {
+  fee: number,
 }
 
 export type validBrktEntriesType = {
@@ -490,7 +505,7 @@ export type elimEntryType = {
 }
 
 export interface tmntEntryElimEntryType extends elimEntryType {
-  eType: string,
+  eType: string,  
 }
 
 export type elimEntryDataType = {
@@ -524,10 +539,19 @@ export type dataOneTmntType = {
 export type dataOneSquadEntriesType = {  
   squadId: string;
   players: playerType[];
-  divEntries: divEntryType[];
-  potEntries: potEntryDataType[];  
-  rawBrktEntries: rawBrktEntryType[];
-  elimEntries: elimEntryDataType[];
+  divEntries: divEntryType[];    
+  potEntries: potEntryType[];    
+  brktEntries: brktEntryType[];
+  elimEntries: elimEntryType[];
+}
+
+export type editedOneSquadEntriesType = {
+  squadId: string;
+  players: tmntEntryPlayerType[];
+  divEntries: tmntEntryDivEntryType[];
+  potEntries: tmntEntryPotEntryType[];  
+  brktEntries: tmntEntryBrktEntryType[];
+  elimEntries: tmntEntryElimEntryType[];
 }
 
 export enum tmntActions {
@@ -572,7 +596,35 @@ export type tmntPropsType = {
   origData: dataOneTmntType;  
 }
 
-export enum ioDataErrorsType {
+export type putManyReturnType = {
+  updates: number,
+  inserts: number,
+  deletes: number,
+}
+
+export type updatedEntriesCountsType = {
+  players: number,
+  divEntries: number,
+  potEntries: number,
+  brktEntries: number,
+  elimEntries: number,
+  total: number,
+}
+
+export type putManyEntriesReturnType = {
+  players: putManyReturnType,
+  divEntries: putManyReturnType,
+  potEntries: putManyReturnType,
+  brktEntries: putManyReturnType,
+  elimEntries: putManyReturnType,  
+  playersToUpdate: tmntEntryPlayerType[],
+  divEntriesToUpdate: tmntEntryDivEntryType[],
+  potEntriesToUpdate: tmntEntryPotEntryType[],
+  brktEntriesToUpdate: tmntEntryBrktEntryType[],
+  elimEntriesToUpdate: tmntEntryElimEntryType[],
+}
+
+export enum ioDataError {  
   None = 0,
   Tmnt = -1,
   Events = -2,    
@@ -584,7 +636,6 @@ export enum ioDataErrorsType {
   Elims = -8,
   OtherError = -99,
 }
-
 
 export type testDateType = {
   id: number,

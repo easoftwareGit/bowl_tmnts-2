@@ -37,10 +37,10 @@ export interface brktCountType {
   [key: string]: number | string; // add an index signature
 }
 
-interface filledBrktType { 
-  pos: string;
-  [key: string]: string;
-}
+// interface filledBrktType { 
+//   pos: string;
+//   [key: string]: string;
+// }
 
 export const brktsToShow = 10
 
@@ -59,7 +59,8 @@ export class BracketList {
   private _copyFrom: Bracket[] = [];   
   private _brktColTitles = cloneDeep(initBGColNames);
   private _brktCounts: initBrktCountsType = cloneDeep(initBrktCounts) as initBrktCountsType;
-  private _filledBrkts: filledBrktType[] = [];  
+  // private _filledBrkts: filledBrktType[] = [];  
+  private _filledBrkts: Bracket[] = [];
 
   brktId: string;
   games: number;
@@ -86,7 +87,7 @@ export class BracketList {
   get brktCounts() {
     return this._brktCounts;
   }
-  get filledBrkts(): filledBrktType[] {
+  get filledBrkts(): Bracket[] {
     return this._filledBrkts;
   }
   get needToAddBrkt(): boolean {
@@ -105,6 +106,16 @@ export class BracketList {
     const brkt = new Bracket(this);
     this.brackets.push(brkt);
     return brkt;
+  }
+
+  /**
+   * finds brackets where the player can be added
+   * 
+   * @param {string} playerId - player id
+   * @returns {Bracket[]} - array of brackets where the player can be added 
+   */
+  brktsAvaliableForPlayer(playerId: string): Bracket[] {
+    return this.brackets.filter(brkt => !brkt.isFull && brkt.findPlayerIndex(playerId) === -1);
   }
 
   /**
@@ -191,7 +202,7 @@ export class BracketList {
     }
     return null;
   }
-
+  
   /**
    * repopulates brackets based on player bracket entry rows
    * 
@@ -206,6 +217,7 @@ export class BracketList {
 
     // 1) clear all brackets
     this.brackets.length = 0;
+    this._filledBrkts.length = 0;
     if (brktEntRows.length === 0) return; 
     
     // 2) sort by # brackets (DESC), and createdAt (ASC)
@@ -224,6 +236,7 @@ export class BracketList {
     let playerId = "";
     let numBrkts = 0;
     while (i < brktEntRows.length) {
+      // if need player id, then get it and num brkts
       if (playerId === '') {
         playerId = brktEntRows[i].player_id;
         numBrkts = brktEntRows[i][numBrktsName];
@@ -232,19 +245,20 @@ export class BracketList {
           return;
         }
       }
-      if (numBrkts > 0) {
+      for (let j = numBrkts; j > 0; j--) {
         let oneBracket = this.putPlayerInBrkt(playerId);
         if (!oneBracket) {
           oneBracket = new Bracket(this);
           oneBracket.addPlayer(playerId);
-          this.brackets.push(oneBracket);                 
-        }        
-        numBrkts--;        
+          this.brackets.push(oneBracket);
+        } else { 
+          if (oneBracket.isFull) {
+            this._filledBrkts.push(oneBracket);
+          }
+        }                
       }
-      if (numBrkts <= 0) { 
-        i++;
-        playerId = '';  
-      }      
+      i++;
+      playerId = '';  
     }
     this.populateBrktCounts();
     // this.populateFilledBrkts();
@@ -267,20 +281,31 @@ export class BracketList {
     }
   }
 
+  /**
+   * ppopulates filled brackets
+   * 
+   * @returns {void} - no return
+   */
   // populateFilledBrkts(): void { 
   //   this._filledBrkts.length = 0;
   //   if (this.brackets.length === 0) return;    
-  //   for (let p = 1; p <= this.playersPerBrkt; p++) {
-  //     const filledRow: filledBrktType = {
-  //       pos: p + ''
-  //     };            
-  //     this._filledBrkts.push(filledRow);
-  //   }
-  //   for (let b = 0; b < this.brackets.length; b++) {
-  //     const bColName = this.brktNumColName(b + 1);
-  //     for (let i = 0; i < this.brackets[b].players.length; i++) { 
-  //       this._filledBrkts[i][bColName] = this.brackets[b].players[i]
+
+  //   this.brackets.forEach(brkt => {
+  //     if (brkt.isFull) { 
+  //       this._filledBrkts.push(brkt);
   //     }
-  //   }
+  //   });
+  //   // for (let p = 1; p <= this.playersPerBrkt; p++) {
+  //   //   const filledRow: filledBrktType = {
+  //   //     pos: p + ''
+  //   //   };            
+  //   //   this._filledBrkts.push(filledRow);
+  //   // }
+  //   // for (let b = 0; b < this.brackets.length; b++) {
+  //   //   const bColName = this.brktNumColName(b + 1);
+  //   //   for (let i = 0; i < this.brackets[b].players.length; i++) { 
+  //   //     this._filledBrkts[i][bColName] = this.brackets[b].players[i]
+  //   //   }
+  //   // }
   // }
 }

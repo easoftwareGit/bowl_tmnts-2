@@ -8,7 +8,7 @@ import { RootState } from "@/redux/store";
 import { mockStateBowls } from "../../../mocks/state/mockState";
 import { ReduxProvider } from "@/redux/provider";
 import TmntDataForm from "@/app/dataEntry/tmntForm/tmntForm";
-import 'core-js/actual/structured-clone';
+import { cloneDeep } from "lodash";
 
 // Mock state for bowls
 const mockState: Partial<RootState> = {
@@ -480,7 +480,7 @@ describe("TmntDataPage - Pots Component", () => {
       expect(divError).toHaveTextContent("");
     });
     it('render multiple errors', async () => { 
-      const testTmnt = structuredClone(tmntProps)
+      const testTmnt = cloneDeep(tmntProps)
       testTmnt.curData.pots[0].fee = '0';
       testTmnt.curData.pots[1].fee = '1234567';
 

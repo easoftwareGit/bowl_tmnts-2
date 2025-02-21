@@ -9,7 +9,7 @@ import { mockStateBowls } from "../../../mocks/state/mockState";
 import { ReduxProvider } from "@/redux/provider";
 import TmntDataForm from "@/app/dataEntry/tmntForm/tmntForm";
 import { mockSDBrkts, mockSDDivs, mockSDElims, mockSDEvents, mockSDLanes, mockSDPots, mockSDSquads, mockSDTmnt } from "../../../mocks/tmnts/singlesAndDoubles/mockSD";
-import 'core-js/actual/structured-clone';
+import { cloneDeep } from "lodash";
 
 // run these tests with the server active
 //    in the VS activity bar,
@@ -553,7 +553,7 @@ describe('TmntDataPage - Squads Component', () => {
   })
 
   describe('render the squad date day error', () => {
-    const testTmnt = structuredClone(tmntProps)
+    const testTmnt = cloneDeep(tmntProps)
 
     afterEach(() => {      
       testTmnt.curData.squads[0].squad_date_str = todayStr;      
@@ -633,7 +633,7 @@ describe('TmntDataPage - Squads Component', () => {
   })
 
   describe('render the squad time error', () => {
-    const testTmnt = structuredClone(tmntProps)
+    const testTmnt = cloneDeep(tmntProps)
 
     afterAll(() => {
       testTmnt.curData.squads[0].squad_time = '10:00';
@@ -717,7 +717,7 @@ describe('TmntDataPage - Squads Component', () => {
   })
 
   describe('render multiple errors', () => {
-    const testTmnt = structuredClone(tmntProps)
+    const testTmnt = cloneDeep(tmntProps)
 
     it('render multiple errors', async () => {
       const user = userEvent.setup()
@@ -791,7 +791,7 @@ describe('TmntDataPage - Squads Component', () => {
   })
 
   describe('show accordian error for next squad', () => {
-    const testTmnt = structuredClone(tmntProps)
+    const testTmnt = cloneDeep(tmntProps)
 
     beforeEach(() => {
       testTmnt.curData.squads[0].games = 0;

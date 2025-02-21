@@ -28,7 +28,7 @@ const oneEventUrl = url + "/event/";
 
 const notFoundTmntId = "tmt_00000000000000000000000000000000";
 
-describe("eventsAxios", () => {
+describe("dbEvents", () => {
 
   describe('getAllEventsForTmnt', () => { 
 

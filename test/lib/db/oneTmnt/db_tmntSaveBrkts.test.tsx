@@ -2,13 +2,13 @@ import axios from "axios";
 import { baseBrktsApi } from "@/lib/db/apiPaths";
 import { testBaseBrktsApi } from "../../../testApi";
 import { tmntSaveBrkts, exportedForTesting } from "@/lib/db/oneTmnt/dbOneTmnt";
-import { mockBrktsToPost, mockSquadsToPost, mockDivs, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
+import { mockBrktsToPost, mockSquadsToPost, tmntToDelId, mockDivsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { brktType } from "@/lib/types/types";
 import { deleteAllTmntBrkts, deleteBrkt, postManyBrkts, postBrkt, putBrkt } from "@/lib/db/brkts/dbBrkts";
 import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/dbSquads";
 import { deleteAllTmntDivs, postManyDivs } from "@/lib/db/divs/dbDivs";
 import { blankBrkt } from "@/lib/db/initVals";
-import 'core-js/actual/structured-clone';
+import { cloneDeep } from "lodash";
 const { tmntPostPutOrDelBrkts } = exportedForTesting;
 
 // before running this test, run the following commands in the terminal:
@@ -79,7 +79,7 @@ describe('saveTmntDivs test', () => {
       await deleteAllTmntSquads(tmntToDelId);
       await deleteAllTmntDivs(tmntToDelId);
       // setup for current tests
-      await postManyDivs(mockDivs)
+      await postManyDivs(mockDivsToPost)
       await postManySquads(mockSquadsToPost)
       await postManyBrkts(mockBrktsToEdit)
     })
@@ -115,7 +115,7 @@ describe('saveTmntDivs test', () => {
     })
 
     it('should save edited brkts, one brkt edited', async () => { 
-      const brktsToEdit = structuredClone(mockBrktsToEdit);
+      const brktsToEdit = cloneDeep(mockBrktsToEdit);
       brktsToEdit[1].start = 2;
       const savedBrkts = await tmntPostPutOrDelBrkts(mockBrktsToEdit, brktsToEdit);
       if (!savedBrkts) {
@@ -134,12 +134,12 @@ describe('saveTmntDivs test', () => {
       expect(savedBrkts[1].first).toEqual(brktsToEdit[1].first);
       expect(savedBrkts[1].second).toEqual(brktsToEdit[1].second);
       expect(savedBrkts[1].admin).toEqual(brktsToEdit[1].admin);
-      expect(savedBrkts[1].fsa).toEqual(brktsToEdit[1].fsa);
+      expect(savedBrkts[1].fsa + '').toEqual(brktsToEdit[1].fsa);
       expect(savedBrkts[1].sort_order).toEqual(brktsToEdit[1].sort_order); 
       didPut = true;
     })
     it('should save edited brkts, one brkt added', async () => { 
-      const brktsToEdit = structuredClone(mockBrktsToEdit);
+      const brktsToEdit = cloneDeep(mockBrktsToEdit);
       brktsToEdit.push(toAddBrkt);
       const savedBrkts = await tmntPostPutOrDelBrkts(mockBrktsToEdit, brktsToEdit);
       if (!savedBrkts) {
@@ -163,11 +163,11 @@ describe('saveTmntDivs test', () => {
       expect(found.first).toEqual(toAddBrkt.first);
       expect(found.second).toEqual(toAddBrkt.second);
       expect(found.admin).toEqual(toAddBrkt.admin);
-      expect(found.fsa).toEqual(toAddBrkt.fsa);
+      expect(found.fsa + '').toEqual(toAddBrkt.fsa);
       expect(found.sort_order).toEqual(toAddBrkt.sort_order);      
     })
     it('should save edited brkts, one brkt deleted', async () => { 
-      const brktsToEdit = structuredClone(mockBrktsToEdit);
+      const brktsToEdit = cloneDeep(mockBrktsToEdit);
       brktsToEdit.pop();
       const savedBrkts = await tmntPostPutOrDelBrkts(mockBrktsToEdit, brktsToEdit);
       if (!savedBrkts) {
@@ -184,7 +184,7 @@ describe('saveTmntDivs test', () => {
       expect(found).toBeUndefined();
     })
     it('should save edited brkts, one brkt edited, one added, one deleted', async () => {
-      const brktsToEdit = structuredClone(mockBrktsToEdit);
+      const brktsToEdit = cloneDeep(mockBrktsToEdit);
       const deletedId = mockBrktsToEdit[2].id;
       // delete brkt
       brktsToEdit.pop();
@@ -216,7 +216,7 @@ describe('saveTmntDivs test', () => {
       expect(foundEdited.first).toEqual(brktsToEdit[1].first);
       expect(foundEdited.second).toEqual(brktsToEdit[1].second);
       expect(foundEdited.admin).toEqual(brktsToEdit[1].admin);
-      expect(foundEdited.fsa).toEqual(brktsToEdit[1].fsa);
+      expect(foundEdited.fsa + '').toEqual(brktsToEdit[1].fsa);
       expect(foundEdited.sort_order).toEqual(brktsToEdit[1].sort_order); 
       const foundDeleted = savedBrkts.find((b) => b.id === deletedId);
       if (foundDeleted) {
@@ -239,7 +239,7 @@ describe('saveTmntDivs test', () => {
       expect(foundAdded.first).toEqual(toAddBrkt.first);
       expect(foundAdded.second).toEqual(toAddBrkt.second);
       expect(foundAdded.admin).toEqual(toAddBrkt.admin);
-      expect(foundAdded.fsa).toEqual(toAddBrkt.fsa);
+      expect(foundAdded.fsa + '').toEqual(toAddBrkt.fsa);
       expect(foundAdded.sort_order).toEqual(toAddBrkt.sort_order);
     })
 
@@ -256,7 +256,7 @@ describe('saveTmntDivs test', () => {
       await deleteAllTmntDivs(tmntToDelId);
 
       // create temp squads for brkts
-      await postManyDivs(mockDivs);
+      await postManyDivs(mockDivsToPost);
       await postManySquads(mockSquadsToPost)
     })
 
@@ -276,7 +276,7 @@ describe('saveTmntDivs test', () => {
       await deleteAllTmntDivs(tmntToDelId);
     })
 
-    const origClone = structuredClone(blankBrkt);
+    const origClone = cloneDeep(blankBrkt);
     const origBrkts: brktType[] = [
       {
         ...origClone,
@@ -284,7 +284,7 @@ describe('saveTmntDivs test', () => {
     ]
 
     it('should create one new brkt when only one brkt to save', async () => { 
-      const newBrktClone = structuredClone(mockBrktsToPost[0]);
+      const newBrktClone = cloneDeep(mockBrktsToPost[0]);
       const newBrkts = [
         {
           ...newBrktClone,
@@ -306,11 +306,11 @@ describe('saveTmntDivs test', () => {
       expect(postedBrkt.first).toBe(newBrkts[0].first);
       expect(postedBrkt.second).toBe(newBrkts[0].second);
       expect(postedBrkt.admin).toBe(newBrkts[0].admin);
-      expect(postedBrkt.fsa).toBe(newBrkts[0].fsa);
+      expect(postedBrkt.fsa + '').toBe(newBrkts[0].fsa);
       expect(postedBrkt.sort_order).toBe(newBrkts[0].sort_order);      
     })
     it('should create multiple new brkts when multiple brkts to save', async () => { 
-      const newLanes = structuredClone(mockBrktsToPost);
+      const newLanes = cloneDeep(mockBrktsToPost);
       const result = await tmntSaveBrkts(origBrkts, newLanes);
       expect(result).not.toBeNull();
       didCreate = true;
@@ -334,7 +334,7 @@ describe('saveTmntDivs test', () => {
         expect(postedBrkt.first).toBe(foundBrkt.first);
         expect(postedBrkt.second).toBe(foundBrkt.second);
         expect(postedBrkt.admin).toBe(foundBrkt.admin);
-        expect(postedBrkt.fsa).toBe(foundBrkt.fsa);
+        expect(postedBrkt.fsa + '').toBe(foundBrkt.fsa);
         expect(postedBrkt.sort_order).toBe(foundBrkt.sort_order);        
       }
     })
@@ -373,7 +373,7 @@ describe('saveTmntDivs test', () => {
       await deleteAllTmntSquads(tmntToDelId);
       await deleteAllTmntDivs(tmntToDelId);
       // setup for current tests
-      await postManyDivs(mockDivs)
+      await postManyDivs(mockDivsToPost)
       await postManySquads(mockSquadsToPost)
       await postManyBrkts(mockBrktsToEdit)
     })
@@ -409,7 +409,7 @@ describe('saveTmntDivs test', () => {
     })
 
     it('should save edited brkts, one brkt edited', async () => { 
-      const brktsToEdit = structuredClone(mockBrktsToEdit);
+      const brktsToEdit = cloneDeep(mockBrktsToEdit);
       brktsToEdit[1].start = 2;
       const savedBrkts = await tmntSaveBrkts(mockBrktsToEdit, brktsToEdit);
       if (!savedBrkts) {
@@ -428,12 +428,12 @@ describe('saveTmntDivs test', () => {
       expect(savedBrkts[1].first).toEqual(brktsToEdit[1].first);
       expect(savedBrkts[1].second).toEqual(brktsToEdit[1].second);
       expect(savedBrkts[1].admin).toEqual(brktsToEdit[1].admin);
-      expect(savedBrkts[1].fsa).toEqual(brktsToEdit[1].fsa);
+      expect(savedBrkts[1].fsa + '').toEqual(brktsToEdit[1].fsa);
       expect(savedBrkts[1].sort_order).toEqual(brktsToEdit[1].sort_order); 
       didPut = true;
     })
     it('should save edited brkts, one brkt added', async () => { 
-      const brktsToEdit = structuredClone(mockBrktsToEdit);
+      const brktsToEdit = cloneDeep(mockBrktsToEdit);
       brktsToEdit.push(toAddBrkt);
       const savedBrkts = await tmntSaveBrkts(mockBrktsToEdit, brktsToEdit);
       if (!savedBrkts) {
@@ -457,11 +457,11 @@ describe('saveTmntDivs test', () => {
       expect(found.first).toEqual(toAddBrkt.first);
       expect(found.second).toEqual(toAddBrkt.second);
       expect(found.admin).toEqual(toAddBrkt.admin);
-      expect(found.fsa).toEqual(toAddBrkt.fsa);
+      expect(found.fsa + '').toEqual(toAddBrkt.fsa);
       expect(found.sort_order).toEqual(toAddBrkt.sort_order);      
     })
     it('should save edited brkts, one brkt deleted', async () => { 
-      const brktsToEdit = structuredClone(mockBrktsToEdit);
+      const brktsToEdit = cloneDeep(mockBrktsToEdit);
       brktsToEdit.pop();
       const savedBrkts = await tmntSaveBrkts(mockBrktsToEdit, brktsToEdit);
       if (!savedBrkts) {
@@ -478,7 +478,7 @@ describe('saveTmntDivs test', () => {
       expect(found).toBeUndefined();
     })
     it('should save edited brkts, one brkt edited, one added, one deleted', async () => {
-      const brktsToEdit = structuredClone(mockBrktsToEdit);
+      const brktsToEdit = cloneDeep(mockBrktsToEdit);
       const deletedId = mockBrktsToEdit[2].id;
       // delete 
       brktsToEdit.pop();
@@ -510,7 +510,7 @@ describe('saveTmntDivs test', () => {
       expect(foundEdited.first).toEqual(brktsToEdit[1].first);
       expect(foundEdited.second).toEqual(brktsToEdit[1].second);
       expect(foundEdited.admin).toEqual(brktsToEdit[1].admin);
-      expect(foundEdited.fsa).toEqual(brktsToEdit[1].fsa);
+      expect(foundEdited.fsa + '').toEqual(brktsToEdit[1].fsa);
       expect(foundEdited.sort_order).toEqual(brktsToEdit[1].sort_order); 
       const foundDeleted = savedBrkts.find((b) => b.id === deletedId);
       if (foundDeleted) {
@@ -533,7 +533,7 @@ describe('saveTmntDivs test', () => {
       expect(foundAdded.first).toEqual(toAddBrkt.first);
       expect(foundAdded.second).toEqual(toAddBrkt.second);
       expect(foundAdded.admin).toEqual(toAddBrkt.admin);
-      expect(foundAdded.fsa).toEqual(toAddBrkt.fsa);
+      expect(foundAdded.fsa + '').toEqual(toAddBrkt.fsa);
       expect(foundAdded.sort_order).toEqual(toAddBrkt.sort_order);
     })
 

@@ -20,23 +20,25 @@ import {
   fetchOneSquadEntries,
   getOneSquadEntriesError,
   getOneSquadEntriesLoadStatus,
-} from "@/redux/features/allEntriesOneSquad/allEntriesOnSquadSlice";
-import {
-  createdColName,
+  SaveOneSquadEntries,
+} from "@/redux/features/allEntriesOneSquad/allEntriesOneSquadSlice";
+import {  
   divEntryHdcpColName,
   entryFeeColName,
   entryNumBrktsColName,
   feeColNameEnd,
   playerEntryData,
-  updatedColName,
+  timeStampColName,  
 } from "../../playersForm/createColumns";
 import { getBrktOrElimName } from "@/lib/getName";
 import { Tab, Tabs } from "react-bootstrap";
 import { BracketList } from "@/components/brackets/bracketList";
-import BracketGrid, { BGDataType, BGNumberedColCount } from "@/components/brackets/bracketGrid";
+import BracketGrid, { BGDataType } from "@/components/brackets/bracketGrid";
 import { cloneDeep } from "lodash";
+import usePreventUnload from "@/components/preventUnload/preventUnload";
+import WaitModal from "@/components/modal/waitModal";
+
 import "./editPlayers.css";
-import PopBracketsGrid from "../../playersForm/popBrkts";
 
 const populateRows = (formData: dataOneSquadEntriesType) => {
   const pRows: (typeof playerEntryData)[] = [];
@@ -75,15 +77,14 @@ const populateRows = (formData: dataOneSquadEntriesType) => {
     }
   });
   // populate bracket entries & fee(s)
-  formData?.rawBrktEntries?.forEach((rawBrktEntry) => {
+  formData?.brktEntries?.forEach((brktEntry) => {
     const pRow = pRows.find(
-      (row) => row.player_id === rawBrktEntry.player_id
+      (row) => row.player_id === brktEntry.player_id
     ) as typeof playerEntryData;
     if (pRow) {
-      pRow[entryNumBrktsColName(rawBrktEntry.brkt_id)] = rawBrktEntry.num_brackets;
-      pRow[entryFeeColName(rawBrktEntry.brkt_id)] = rawBrktEntry.fee;
-      pRow[createdColName(rawBrktEntry.brkt_id)] = rawBrktEntry.createdAt;
-      pRow[updatedColName(rawBrktEntry.brkt_id)] = rawBrktEntry.updatedAt;
+      pRow[entryNumBrktsColName(brktEntry.brkt_id)] = brktEntry.num_brackets;
+      pRow[entryFeeColName(brktEntry.brkt_id)] = brktEntry.fee;
+      pRow[timeStampColName(brktEntry.brkt_id)] = brktEntry.time_stamp;
     }
   });
   // populate elimination fee(s)
@@ -115,6 +116,7 @@ export default function EditPlayersPage() {
   const dispatch = useDispatch<AppDispatch>();
 
   const [rows, setRows] = useState<(typeof playerEntryData)[]>([]);
+  const [origRows, setOrigRows] = useState<(typeof playerEntryData)[]>([]);
 
   interface entriesCountType {
     [key: string]: number;
@@ -236,7 +238,10 @@ export default function EditPlayersPage() {
   }, [emptyBGDataList, emptyBrktsList, playerFormTmnt.curData]); 
 
   useEffect(() => {
-    setRows(populateRows(playersFormData.curData));   
+    // setRows(populateRows(playersFormData.curData));   
+    const currRows = populateRows(playersFormData.curData);
+    setRows(currRows);   
+    setOrigRows(currRows);
   }, [playersFormData.curData]); // DO NOT INCLUDE setRow in array
 
   useEffect(() => {
@@ -278,6 +283,20 @@ export default function EditPlayersPage() {
     setPriorCount(updatedPriorCount);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rows]); // DO NOT INCLUDE entriesCount or priorCount in array  
+
+  const dataWasChanged = (): boolean => {
+    if (rows.length !== origRows.length) return true;    
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const origRow = origRows[i];      
+      if (JSON.stringify(row) !== JSON.stringify(origRow)) {
+        return true;
+      }
+    }    
+    return false;
+  };  
+
+  usePreventUnload(dataWasChanged);
 
   const DivCounts: React.FC = ({}) => {
 
@@ -383,9 +402,9 @@ export default function EditPlayersPage() {
                     {getBrktOrElimName(brkt, playerFormTmnt?.curData?.divs)}
                   </label>
                 </div>
-                <div className="col-6">
+                {/* <div className="col-6">
                   Brackets Here
-                </div>
+                </div> */}
               </div>
               <div className="row mb-3">
                 <div className="col-6">
@@ -393,12 +412,12 @@ export default function EditPlayersPage() {
                     brktGridData={BGDataList[brkt.id]}
                   />
                 </div>
-                <div className="col-6">
+                {/* <div className="col-6">
                   <PopBracketsGrid
                     popBrkts={allBrktsList[brkt.id].allBrkts}
                     entryRows={rows}
                   />
-                </div>
+                </div> */}
               </div>
             </div>              
 
@@ -472,27 +491,30 @@ export default function EditPlayersPage() {
     if (key) {
       setTabKey(key);
     }
-  };
+  };  
+
+  const handleSave = async () => { 
+    // error checking done in PlayersEntryForm
+    dispatch(SaveOneSquadEntries({rows: rows, data: playersFormData}))
+  }
 
   return (
     <>
-      <div>
-        <h2>Bowlers</h2>
-
+      <div>        
         {tmntLoadStatus === "loading" ||
         entriesLoadStatus === "loading" ||
         entriesLoadStatus === "pending" ? (
-          <>
+          <>            
             {tmntLoadStatus === "loading" ? (
-              <div>Loading Tournament configuration...</div>
+              <WaitModal show={tmntLoadStatus === "loading"} message="Loading Tournament configuration..." />              
             ) : (
-              <div>Loading Entries...</div>
+              <WaitModal show={entriesLoadStatus === "loading"} message="Loading Entries..." />              
             )}
           </>
         ) : null}
 
-        {(tmntLoadStatus !== "loading" && tmntError) ||
-        (entriesLoadStatus !== "loading" && entriesError) ? (
+        {(tmntLoadStatus !== "loading" && tmntLoadStatus !== 'succeeded' && tmntError) ||
+        (entriesLoadStatus !== "loading" && entriesLoadStatus !== 'succeeded' && entriesError) ? (
           <>
             <div>Tmnt Error: {tmntError}</div>
             <div>Entries Error: {entriesError}</div>
@@ -501,8 +523,9 @@ export default function EditPlayersPage() {
 
         {tmntLoadStatus === "succeeded" && entriesLoadStatus === "succeeded" ? (
           <>
+            <h2>Bowlers</h2>
             <PlayersEntryForm
-              playerFormTmnt={playerFormTmnt}
+              // playerFormTmnt={playerFormTmnt}
               rows={rows}
               setRows={setRows}
             />
@@ -534,3 +557,7 @@ export default function EditPlayersPage() {
     </>
   );
 }
+
+export const exportedForTesting = {
+  populateRows,
+};

@@ -8,6 +8,7 @@ import { fetchUserTmnts, getUserTmntError, getUserTmntStatus, deleteUserTmnt } f
 import { tmntsListType } from "@/lib/types/types";
 import { yyyyMMdd_To_ddMMyyyy } from "@/lib/dateTools";
 import ModalConfirm from "@/components/modal/confirmModal";
+import WaitModal from "@/components/modal/waitModal";
 import { initModalObj } from "@/components/modal/modalObjType";
 import { fetchBowls, getBowlsError, getBowlsLoadStatus } from "@/redux/features/bowls/bowlsSlice";
 import "./userTmnts.css";
@@ -71,11 +72,11 @@ export default function UserTmntsPage() {
         onConfirm={confirmedDelete}
         onCancel={canceledDelete}
       />
-      {(userTmntsStatus === 'loading' || bowlsStatus === 'loading') && <div>Loading...</div>}
-      {userTmntsStatus !== 'loading' && userTmntsError
+      <WaitModal show={userTmntsStatus === 'loading' || bowlsStatus === 'loading'} message="Loading..." />      
+      {userTmntsStatus !== 'loading' && userTmntsStatus !== 'succeeded' && userTmntsError
         ? (<div>Error: {userTmntsError}</div>
         ) : null}
-      {bowlsStatus !== 'loading' && bowlsError
+      {bowlsStatus !== 'loading' && bowlsStatus !== 'succeeded' && bowlsError
         ? (<div>Error: {bowlsError}</div>
         ) : null}
       {(userTmntsStatus === 'succeeded' && bowlsStatus === 'succeeded') ? ( 

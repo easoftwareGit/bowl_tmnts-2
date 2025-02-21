@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ErrorCode, isValidBtDbId } from "@/lib/validation";
 import { initBrktEntry } from "@/lib/db/initVals";
-import { brktEntryType } from "@/lib/types/types";
+import { brktEntriesFromPrisa, brktEntryType } from "@/lib/types/types";
 import { sanitizeBrktEntry, validateBrktEntry } from "../../validate";
+import { brktEntriesWithFee } from "../../feeCalc";
 
 // routes /api/brktEntries/brktEntry/:id
 
@@ -16,14 +17,42 @@ export async function GET(
     if (!isValidBtDbId(id, "ben")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
-    const brktEntry = await prisma.brkt_Entry.findUnique({
+    const brktEntryNoFee = await prisma.brkt_Entry.findUnique({
+      select: {
+        id: true,
+        brkt_id: true,
+        player_id: true,
+        num_brackets: true,
+        time_stamp: true,
+        brkt: {
+          select: {
+            fee: true,
+          },
+        },
+      },      
       where: {
         id: id,
       },
     })
-    if (!brktEntry) {
+    if (!brktEntryNoFee) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
-    }    
+    }   
+
+    // convert brkt.fee to a number
+    const brktEntriesNoFee: brktEntriesFromPrisa[] = [
+      {
+        ...brktEntryNoFee,
+        brkt: {
+          ...brktEntryNoFee.brkt,
+          fee: Number(brktEntryNoFee.brkt.fee),
+        },
+      }
+    ];
+
+    // calc player fee
+    const brktEntries = brktEntriesWithFee(brktEntriesNoFee);
+    // get just 1st and only brkt entry
+    const brktEntry = brktEntries[0];
     return NextResponse.json({ brktEntry }, { status: 200 });
   } catch (err: any) {
     return NextResponse.json({ error: "error getting brktEntry" }, { status: 500 });
@@ -40,7 +69,7 @@ export async function PUT(
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
 
-    const { brkt_id, player_id, num_brackets, fee } = await request.json()
+    const { brkt_id, player_id, num_brackets, fee, time_stamp } = await request.json()
     const toCheck: brktEntryType = {
       ...initBrktEntry,      
       id,
@@ -48,6 +77,7 @@ export async function PUT(
       player_id,
       num_brackets,
       fee,
+      time_stamp,
     };
 
     const toPut = sanitizeBrktEntry(toCheck);
@@ -67,6 +97,8 @@ export async function PUT(
       }
       return NextResponse.json({ error: errMsg }, { status: 422 });
     }
+
+    // DO NOT PUT FEE
     const brktEntry = await prisma.brkt_Entry.update({
       where: {
         id: id,
@@ -75,7 +107,7 @@ export async function PUT(
         brkt_id: toPut.brkt_id,
         player_id: toPut.player_id,
         num_brackets: toPut.num_brackets,
-        fee: toPut.fee,
+        time_stamp: new Date(toPut.time_stamp)
       },
     });
 
@@ -109,12 +141,40 @@ export async function PATCH(
     if (!isValidBtDbId(id, "ben")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }  
-    const currentBrktEntry = await prisma.brkt_Entry.findUnique({
-      where: { id: id },
+    const currentBrktEntryNoFee = await prisma.brkt_Entry.findUnique({
+      select: {
+        id: true,
+        brkt_id: true,
+        player_id: true,
+        num_brackets: true,
+        time_stamp: true,
+        brkt: {
+          select: {
+            fee: true,
+          },
+        },
+      },      
+      where: {
+        id: id,
+      },
     });
-    if (!currentBrktEntry) {
+    if (!currentBrktEntryNoFee) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
+    // convert brkt.fee to a number
+    const currentBrktEntriesNoFee: brktEntriesFromPrisa[] = [
+      {
+        ...currentBrktEntryNoFee,
+        brkt: {
+          ...currentBrktEntryNoFee.brkt,
+          fee: Number(currentBrktEntryNoFee.brkt.fee),
+        },
+      }
+    ];
+    // calc player fee
+    const brktEntries = brktEntriesWithFee(currentBrktEntriesNoFee);
+    // get just 1st and only brkt entry
+    const currentBrktEntry = brktEntries[0];
 
     const json = await request.json();
     // populate toCheck with json
@@ -125,6 +185,7 @@ export async function PATCH(
       player_id: currentBrktEntry.player_id,
       num_brackets: currentBrktEntry.num_brackets,
       fee: currentBrktEntry.fee + '',
+      time_stamp: currentBrktEntry.time_stamp,
     };    
     let gotDataToPatch = false;
     if (jsonProps.includes("brkt_id")) {
@@ -139,8 +200,8 @@ export async function PATCH(
       toCheck.num_brackets = json.num_brackets;
       gotDataToPatch = true;
     }
-    if (jsonProps.includes("fee")) {
-      toCheck.fee = json.fee;
+    if (jsonProps.includes("time_stamp")) {
+      toCheck.time_stamp = json.time_stamp;
       gotDataToPatch = true;
     }
 
@@ -174,10 +235,11 @@ export async function PATCH(
     if (jsonProps.includes("num_brackets")) {
       toPatch.num_brackets = toBePatched.num_brackets;
     }
-    if (jsonProps.includes("fee")) {
-      toPatch.fee = toBePatched.fee;
+    if (jsonProps.includes("time_stamp")) {
+      toPatch.time_stamp = toBePatched.time_stamp;
     }
     
+    // DO NOT PATCH FEE
     const brktEntry = await prisma.brkt_Entry.update({
       where: {
         id: id,
@@ -186,7 +248,7 @@ export async function PATCH(
         brkt_id: toPatch.brkt_id || undefined,
         player_id: toPatch.player_id || undefined,
         num_brackets: toPatch.num_brackets || undefined,
-        fee: toPatch.fee || undefined,
+        time_stamp: new Date(toPatch.time_stamp) || undefined,
       },
     });
 

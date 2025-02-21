@@ -1,7 +1,7 @@
 import { validMoney } from "@/lib/currency/validate";
 import { blankElimEntry } from "@/lib/db/initVals";
 import { elimEntryType, validElimEntriesType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId, maxBrackets, maxMoney } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId, maxMoney } from "@/lib/validation";
 
 /**
  * checks if elimEntry object has missing data - DOES NOT SANITIZE OR VALIDATE

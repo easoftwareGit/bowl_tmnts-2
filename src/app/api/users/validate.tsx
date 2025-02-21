@@ -1,8 +1,9 @@
-import { ErrorCode, maxFirstNameLength, maxLastNameLength, isEmail, isPassword8to20, isValidBtDbId, isValidRole, validName } from "@/lib/validation";
+import { ErrorCode, maxFirstNameLength, maxLastNameLength, isEmail, isPassword8to20, isValidBtDbId, isValidRole, isValidName } from "@/lib/validation";
 import { sanitize } from "@/lib/sanitize";
 import { userType } from "@/lib/types/types";
 import { phone as phoneChecking } from "phone";
 import { blankUser } from "@/lib/db/initVals";
+import { cloneDeep } from "lodash";
 
 const validRoles = ["ADMIN", "DIRECTOR", "USER"]
 
@@ -38,10 +39,10 @@ const gotUserData = (user: userType, checkPhone: boolean, checkPass: boolean): E
 }
 
 export const validUserFirstName = (firstName: string): boolean => {  
-  return validName(firstName, maxFirstNameLength)
+  return isValidName(firstName, maxFirstNameLength)
 }
 export const validUserLastName = (lastName: string): boolean => {  
-  return validName(lastName, maxLastNameLength)
+  return isValidName(lastName, maxLastNameLength)
 }
 export const validUserEmail = (email: string): boolean => {  
   if (!email) return false
@@ -106,9 +107,10 @@ const validUserData = (user: userType, checkPhone: boolean, checkPass: boolean):
  *  - phone in correct format (not validated, just format OK) 
  */
 export const sanitizeUser = (user: userType): userType => {
-  if (!user) return null as any;
-  const sanitizedUser: userType = { ...blankUser }
-  if (isValidBtDbId(user.id, 'usr')) {
+  if (!user) return null as any;  
+  const sanitizedUser: userType = cloneDeep(blankUser)
+  if
+    (isValidBtDbId(user.id, 'usr')) {
     sanitizedUser.id = user.id
   }  
   sanitizedUser.first_name = sanitize(user.first_name)

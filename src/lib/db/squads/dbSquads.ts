@@ -8,7 +8,7 @@ import { blankSquad } from "../initVals";
 import { getAllPlayersForSquad } from "../players/dbPlayers";
 import { getAllDivEntriesForSquad } from "../divEntries/dbDivEntries";
 import { getAllPotEntriesForSquad } from "../potEntries/dbPotEntries";
-import { getAllBrktEntriesForSquad, getAllRawBrktEntriesForSquad } from "../brktEntries/dbBrktEntries";
+import { getAllBrktEntriesForSquad } from "../brktEntries/dbBrktEntries";
 import { getAllElimEntriesForSquad } from "../elimEntries/dbElimEntries";
 
 const url = testBaseSquadsApi.startsWith("undefined")
@@ -69,9 +69,8 @@ export const getAllEntriesForSquad = async (squadId: string): Promise<dataOneSqu
       squadId: squadId,
       players: [],
       divEntries: [],
-      potEntries: [],
-      // brktEntries: [],
-      rawBrktEntries: [],
+      potEntries: [],      
+      brktEntries: [],
       elimEntries: [],
     }
 
@@ -87,13 +86,9 @@ export const getAllEntriesForSquad = async (squadId: string): Promise<dataOneSqu
     if (!aePots) return null
     allTmntEntries.potEntries = [...aePots];
 
-    // const aeBrkts = await getAllBrktEntriesForSquad(squadId);
-    // if (!aeBrkts) return null
-    // allTmntEntries.brktEntries = [...aeBrkts];
-
-    const aeBrkts = await getAllRawBrktEntriesForSquad(squadId);
+    const aeBrkts = await getAllBrktEntriesForSquad(squadId);
     if (!aeBrkts) return null
-    allTmntEntries.rawBrktEntries = [...aeBrkts];
+    allTmntEntries.brktEntries = [...aeBrkts];
 
     const aeElims = await getAllElimEntriesForSquad(squadId);
     if (!aeElims) return null

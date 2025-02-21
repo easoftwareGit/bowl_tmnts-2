@@ -2,6 +2,7 @@ import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 
 export const delConfTitle = 'Confirm Delete'
+export const cancelConfTitle = 'Confirm Cancel'
 
 interface ChildProps {
   show: boolean,

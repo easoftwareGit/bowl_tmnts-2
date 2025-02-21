@@ -7,7 +7,7 @@
   // "Could not read sourcemaps for file" errors
   "resolveSourceMapLocations": [
     "${workspaceFolder}/**",
-    "!**/node_modules/**"
+    "!**/node_modules/**"     
   ],  
   "configurations": [
     {
@@ -57,6 +57,6 @@
         "uriFormat": "%s",
         "webRoot": "${workspaceFolder}"
       }
-    }    
+    }        
   ],
 }

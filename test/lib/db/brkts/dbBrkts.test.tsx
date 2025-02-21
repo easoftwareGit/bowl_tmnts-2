@@ -30,7 +30,7 @@ const oneBrktUrl = url + "/brkt/";
 
 const notFoundTmntId = 'tmt_00000000000000000000000000000000';
 
-describe('brktsAxios', () => { 
+describe('dbBrkts', () => { 
 
   const rePostBrkt = async (brkt: brktType) => {
     try {

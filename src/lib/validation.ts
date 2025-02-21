@@ -1,5 +1,5 @@
+import { times } from "lodash";
 import { sanitize } from "./sanitize";
-import { postSecret } from "./tools";
 import { idTypes } from "./types/types";
 
 export const maxFirstNameLength = 15;
@@ -225,7 +225,20 @@ export const validSortOrder = (sortOrder: number): boolean => {
  * @param {number} maxLength - max length of name
  * @returns {boolean} - true if name is valid
  */
-export const validName =(name: string, maxLength: number): boolean => {
+export const isValidName =(name: string, maxLength: number): boolean => {
   const sanitized = sanitize(name);  
   return (sanitized.length > 0 && sanitized.length <= maxLength)
+}
+
+/**
+ * validates a timestamp
+ * 
+ * @param {number} timestamp - timestamp to validate
+ * @returns {boolean} - true if timestamp is valid 
+ */
+export const isValidTimeStamp = (timestamp: number): boolean => {
+  if (isNaN(timestamp) || timestamp === null) return false;
+  // 8.64.15 is max date per 
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date#the_epoch_timestamps_and_invalid_date
+  return timestamp >= -8.64e15 && timestamp <= 8.64e15 && Number.isInteger(timestamp);
 }

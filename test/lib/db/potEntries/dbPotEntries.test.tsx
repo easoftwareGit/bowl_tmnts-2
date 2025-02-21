@@ -1,12 +1,12 @@
 import axios, { AxiosError } from "axios";
 import { basePotEntriesApi } from "@/lib/db/apiPaths";
 import { testBasePotEntriesApi } from "../../../testApi";
-import { potEntryType } from "@/lib/types/types";
+import { potEntryType, tmntEntryPotEntryType } from "@/lib/types/types";
 import { initPotEntry } from "@/lib/db/initVals";
-import { mockPotEntriesToPost, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
+import { mockPotEntriesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 
 import { cloneDeep } from "lodash";
-import { deleteAllPotEntriesForDiv, deleteAllPotEntriesForSquad, deleteAllPotEntriesForTmnt, deletePotEntry, getAllPotEntriesForDiv, getAllPotEntriesForSquad, getAllPotEntriesForTmnt, postManyPotEntries, postPotEntry, putPotEntry } from "@/lib/db/potEntries/dbPotEntries";
+import { deleteAllPotEntriesForDiv, deleteAllPotEntriesForSquad, deleteAllPotEntriesForTmnt, deletePotEntry, getAllPotEntriesForDiv, getAllPotEntriesForSquad, getAllPotEntriesForTmnt, postManyPotEntries, postPotEntry, putManyPotEntries, putPotEntry } from "@/lib/db/potEntries/dbPotEntries";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -330,7 +330,6 @@ describe('dbPotEntries', () => {
   })
 
   describe('postManyPotEntries()', () => { 
-
     let createdPotEntries = false;    
 
     beforeAll(async () => {
@@ -455,6 +454,202 @@ describe('dbPotEntries', () => {
       const puttedPotEntry = await putPotEntry(invalidPotEntry);
       expect(puttedPotEntry).toBeNull();
     })    
+  })
+
+  describe('putManyPotEntries()', () => { 
+    let createdPotEntries = false;    
+
+    beforeAll(async () => {
+      await deleteAllPotEntriesForTmnt(tmntIdFormMockData);
+    })
+
+    beforeEach(() => {
+      createdPotEntries = false;
+    })
+
+    afterEach(async () => {
+      if (createdPotEntries) {
+        await deleteAllPotEntriesForTmnt(tmntIdFormMockData);
+      }
+    })
+
+    afterAll(async () => {
+      await deleteAllPotEntriesForTmnt(tmntIdFormMockData);
+    })
+
+    const testPotEntries = [
+      {
+        ...mockPotEntriesToPost[0],
+      },
+      {
+        ...initPotEntry,
+        id: 'pen_04be0472be3d476ea1caa99dd05953fa',
+        pot_id: 'pot_ab80213899ea424b938f52a062deacfe',
+        player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+        fee: '10'
+      },
+      {
+        ...mockPotEntriesToPost[1],
+      },
+      {
+        ...initPotEntry,
+        id: 'pen_05be0472be3d476ea1caa99dd05953fa',
+        pot_id: 'pot_ab80213899ea424b938f52a062deacfe',
+        player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+        fee: '10'
+      },
+      {
+        ...mockPotEntriesToPost[2],
+      },
+      {
+        ...initPotEntry,
+        id: 'pen_06be0472be3d476ea1caa99dd05953fa',
+        pot_id: 'pot_ab80213899ea424b938f52a062deacfe',
+        player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+        fee: '10'
+      },
+    ]
+
+    it('should update, insert and delete many potEntries', async () => { 
+      const multiPotEntriesTest = [
+        {
+          ...testPotEntries[0],
+        },
+        {
+          ...testPotEntries[1],
+        },
+        {
+          ...testPotEntries[2],
+        },
+        {
+          ...testPotEntries[3],
+        },
+      ]
+      createdPotEntries = true;
+      const postedPotEntries = await postManyPotEntries(multiPotEntriesTest);
+      expect(postedPotEntries).not.toBeNull();
+      if (!postedPotEntries) return;
+      expect(postedPotEntries.length).toBe(multiPotEntriesTest.length);      
+
+      // set edits, set eType
+      const potEntriesToUpdate = [
+        {
+          ...multiPotEntriesTest[0],
+          fee: '19',
+          eType: "u",
+        },
+        {
+          ...multiPotEntriesTest[1],
+          fee: '9',
+          eType: "u",
+        },
+        {
+          ...multiPotEntriesTest[2],
+          eType: "d",
+        },
+        {
+          ...multiPotEntriesTest[3],          
+          eType: "d",
+        },
+        {
+          ...testPotEntries[4],
+          eType: "i",
+        },
+        {
+          ...testPotEntries[5],
+          eType: "i",
+        },
+      ]
+      const updateInfo = await putManyPotEntries(potEntriesToUpdate);
+      expect(updateInfo).not.toBeNull();
+      if (!updateInfo) return;
+      expect(updateInfo.updates).toBe(2);
+      expect(updateInfo.inserts).toBe(2);
+      expect(updateInfo.deletes).toBe(2);
+    })
+    it('should return no updates, inserts or deletes when no edits are passed', async () => { 
+      const multiPotEntriesTest = [
+        {
+          ...testPotEntries[0],
+        },
+        {
+          ...testPotEntries[1],
+        },
+        {
+          ...testPotEntries[2],
+        },
+        {
+          ...testPotEntries[3],
+        },
+      ]
+      createdPotEntries = true;
+      const postedPotEntries = await postManyPotEntries(multiPotEntriesTest);
+      expect(postedPotEntries).not.toBeNull();
+      if (!postedPotEntries) return;
+      expect(postedPotEntries.length).toBe(multiPotEntriesTest.length);      
+
+      // set no edits
+      const potEntriesToUpdate: tmntEntryPotEntryType[] = []
+      const updateInfo = await putManyPotEntries(potEntriesToUpdate);
+      expect(updateInfo).not.toBeNull();
+      if (!updateInfo) return;
+      expect(updateInfo.updates).toBe(0);
+      expect(updateInfo.inserts).toBe(0);
+      expect(updateInfo.deletes).toBe(0);
+    })
+    it('should update no pot entries when error in data', async () => { 
+      const multiPotEntriesTest = [
+        {
+          ...testPotEntries[0],
+        },
+        {
+          ...testPotEntries[1],
+        },
+        {
+          ...testPotEntries[2],
+        },
+        {
+          ...testPotEntries[3],
+        },
+      ]
+      createdPotEntries = true;
+      const postedPotEntries = await postManyPotEntries(multiPotEntriesTest);
+      expect(postedPotEntries).not.toBeNull();
+      if (!postedPotEntries) return;
+      expect(postedPotEntries.length).toBe(multiPotEntriesTest.length);      
+
+      // set edits, set eType
+      const potEntriesToUpdate = [
+        {
+          ...multiPotEntriesTest[0],
+          fee: '1234567890', // error in fee
+          eType: "u",
+        },
+        {
+          ...multiPotEntriesTest[1],
+          fee: '9',
+          eType: "u",
+        },
+        {
+          ...multiPotEntriesTest[2],
+          eType: "d",
+        },
+        {
+          ...multiPotEntriesTest[3],          
+          eType: "d",
+        },
+        {
+          ...testPotEntries[4],
+          eType: "i",
+        },
+        {
+          ...testPotEntries[5],
+          eType: "i",
+        },
+      ]
+      const updateInfo = await putManyPotEntries(potEntriesToUpdate);
+      expect(updateInfo).toBeNull();
+    })
   })
 
   describe('deletePotEntry()', () => {

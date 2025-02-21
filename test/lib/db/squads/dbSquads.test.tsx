@@ -34,7 +34,7 @@ const oneEventUrl = urlForEvents + "/event/"
 
 const notFoundTmntId = 'tmt_00000000000000000000000000000000';
 
-describe('squadsAxios', () => { 
+describe('dbSquads', () => { 
 
   const rePostSquad = async (squad: squadType) => {
     try {
@@ -149,8 +149,8 @@ describe('squadsAxios', () => {
       expect(allEntries.divEntries.length).toBe(36);
       // 30 potEntries in prisma/seeds.ts
       expect(allEntries.potEntries.length).toBe(30);
-      // 40 brktEntries in prisma/seeds.ts (20 each for 2 brackets)
-      expect(allEntries.brktEntries.length).toBe(40);
+      // 14 brktEntries in prisma/seeds.ts (7 each for 2 brackets)
+      expect(allEntries.brktEntries.length).toBe(14);
       // 32 elimEntries in prisma/seeds.ts (16 each for 2 brackets)
       expect(allEntries.elimEntries.length).toBe(32);
   

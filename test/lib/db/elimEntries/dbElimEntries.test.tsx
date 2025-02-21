@@ -4,7 +4,7 @@ import { testBaseElimEntriesApi } from "../../../testApi";
 import { elimEntryType } from "@/lib/types/types";
 import { initElimEntry } from "@/lib/db/initVals";
 import { mockElimEntriesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllElimEntriesForElim, deleteAllElimEntriesForDiv, deleteAllElimEntriesForSquad, deleteAllElimEntriesForTmnt, deleteElimEntry, getAllElimEntriesForElim, getAllElimEntriesForDiv, getAllElimEntriesForSquad, getAllElimEntriesForTmnt, postElimEntry, postManyElimEntries, putElimEntry } from "@/lib/db/elimEntries/dbElimEntries";
+import { deleteAllElimEntriesForElim, deleteAllElimEntriesForDiv, deleteAllElimEntriesForSquad, deleteAllElimEntriesForTmnt, deleteElimEntry, getAllElimEntriesForElim, getAllElimEntriesForDiv, getAllElimEntriesForSquad, getAllElimEntriesForTmnt, postElimEntry, postManyElimEntries, putElimEntry, putManyElimEntries } from "@/lib/db/elimEntries/dbElimEntries";
 import { cloneDeep } from "lodash";
 
 // before running this test, run the following commands in the terminal:
@@ -504,6 +504,181 @@ describe('dbElimEntries', () => {
       const puttedElimEntry = await putElimEntry(invalidElimEntry);
       expect(puttedElimEntry).toBeNull();
     })    
+  })
+
+  describe('post many elimEntries', () => { 
+    let createdElimEntries = false;    
+
+    beforeAll(async () => {
+      await deleteAllElimEntriesForTmnt(tmntIdFormMockData);
+    })
+
+    beforeEach(() => {
+      createdElimEntries = false;
+    })
+
+    afterEach(async () => {
+      if (createdElimEntries) {
+        await deleteAllElimEntriesForTmnt(tmntIdFormMockData);
+      }
+    })
+
+    afterAll(async () => {
+      await deleteAllElimEntriesForTmnt(tmntIdFormMockData);
+    })
+
+    const testElimEntries = [
+      {
+        ...mockElimEntriesToPost[0],
+      },
+      {
+        ...mockElimEntriesToPost[1],
+      },
+      {
+        ...initElimEntry,
+        id: 'een_03be0472be3d476ea1caa99dd05953fa',
+        elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
+        player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+        fee: '5'
+      },
+      {
+        ...initElimEntry,
+        id: 'een_04be0472be3d476ea1caa99dd05953fa',
+        elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
+        player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+        fee: '5'
+      },
+    ];
+
+    it('should update, insert and delete many elimEntries', async () => { 
+      const multiBrktEntriesTest = [
+        {
+          ...testElimEntries[0],
+        },
+        {
+          ...testElimEntries[1],
+        },
+        {
+          ...testElimEntries[2],
+        },
+        {
+          ...testElimEntries[3],
+        },
+      ]
+      createdElimEntries = true;
+      const postedElimEntries = await postManyElimEntries(multiBrktEntriesTest);
+      expect(postedElimEntries).not.toBeNull();
+      if (!postedElimEntries) return;
+      expect(postedElimEntries.length).toBe(multiBrktEntriesTest.length);      
+
+      // set editsm,  eType 
+      const elimEntriesToUpdate = [
+        {
+          ...testElimEntries[0],
+          fee: '4',
+          eType: "u",
+        },
+        {
+          ...testElimEntries[1],
+          fee: '4',
+          eType: "u",
+        },
+        {
+          ...testElimEntries[2],          
+          eType: "d",
+        },
+        {
+          ...testElimEntries[3],          
+          eType: "d",
+        },
+        {
+          ...initElimEntry,
+          id: 'een_05de0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          fee: '5',
+          eType: "i",
+        },
+        {
+          ...initElimEntry,
+          id: 'een_06de0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          fee: '5',
+          eType: "i",
+        },
+      ]
+      
+      const updateInfo = await putManyElimEntries(elimEntriesToUpdate);
+      expect(updateInfo).not.toBeNull();
+      if (!updateInfo) return;
+      expect(updateInfo.updates).toBe(2);
+      expect(updateInfo.inserts).toBe(2);
+      expect(updateInfo.deletes).toBe(2);
+    })
+    it('should update no elim Entries when error in data', async () => { 
+      const multiBrktEntriesTest = [
+        {
+          ...testElimEntries[0],
+        },
+        {
+          ...testElimEntries[1],
+        },
+        {
+          ...testElimEntries[2],
+        },
+        {
+          ...testElimEntries[3],
+        },
+      ]
+      createdElimEntries = true;
+      const postedElimEntries = await postManyElimEntries(multiBrktEntriesTest);
+      expect(postedElimEntries).not.toBeNull();
+      if (!postedElimEntries) return;
+      expect(postedElimEntries.length).toBe(multiBrktEntriesTest.length);      
+
+      // set editsm,  eType 
+      const elimEntriesToUpdate = [
+        {
+          ...testElimEntries[0],
+          fee: '1234567890',  // error in fee
+          eType: "u",
+        },
+        {
+          ...testElimEntries[1],
+          fee: '4',
+          eType: "u",
+        },
+        {
+          ...testElimEntries[2],          
+          eType: "d",
+        },
+        {
+          ...testElimEntries[3],          
+          eType: "d",
+        },
+        {
+          ...initElimEntry,
+          id: 'een_05de0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          fee: '5',
+          eType: "i",
+        },
+        {
+          ...initElimEntry,
+          id: 'een_06de0472be3d476ea1caa99dd05953fa',
+          elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          fee: '5',
+          eType: "i",
+        },
+      ]
+      
+      const updateInfo = await putManyElimEntries(elimEntriesToUpdate);
+      expect(updateInfo).toBeNull();
+    })
+
   })
 
   describe('deleteElimEntry()', () => {

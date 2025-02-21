@@ -1,8 +1,11 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import {
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/redux/store";
+import { 
   allDataOneTmntType,
-  dataOneTmntType,
+  allEntriesOneSquadType,  
+  dataOneTmntType,  
 } from "@/lib/types/types";
 import {
   DataGrid,
@@ -28,12 +31,16 @@ import {
 } from "./createColumns";
 import { currencyFormatter } from "@/lib/currency/formatValue";
 import { btDbUuid } from "@/lib/uuid";
-import ModalConfirm, { delConfTitle } from "@/components/modal/confirmModal";
+import ModalConfirm, { delConfTitle, cancelConfTitle } from "@/components/modal/confirmModal";
 import ModalErrorMsg from "@/components/modal/errorModal";
 import { initModalObj } from "@/components/modal/modalObjType";
-import { errInfoType, findNextError, getCanSaveErr, getRowPlayerName } from "./rowInfo";
-
+import { errInfoType, findNextError, getRowPlayerName } from "./rowInfo";
+import { useRouter } from "next/navigation"
+import { getOneSquadEntriesSaveStatus, getOneSquadEntriesUpdatedInfo, SaveOneSquadEntries, updatePlayers } from "@/redux/features/allEntriesOneSquad/allEntriesOneSquadSlice";
+import WaitModal from "@/components/modal/waitModal";
+import { getTotalUpdated } from "@/lib/db/tmntEntries/dbTmntEntries";
 import "./grid.css";
+import { cloneDeep, last } from "lodash";
 
 // http://localhost:3000/dataEntry/runTmnt/tmt_d237a388a8fc4641a2e37233f1d6bebd
 // http://localhost:3000/dataEntry/editPlayers/tmt_d237a388a8fc4641a2e37233f1d6bebd
@@ -50,17 +57,34 @@ declare module "@mui/x-data-grid" {
 }
 
 interface ChildProps {
-  playerFormTmnt: allDataOneTmntType;  
   rows: (typeof playerEntryData)[];
   setRows: (rows: (typeof playerEntryData)[]) => void;
 }
 
-const PlayersEntryForm: React.FC<ChildProps> = ({ 
-  playerFormTmnt,  
+const PlayersEntryForm: React.FC<ChildProps> = ({   
   rows,
   setRows
 }) => {
+
+  const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
   
+  const playerFormTmnt = useSelector(
+    (state: RootState) => state.allDataOneTmnt.tmntData
+  ) as allDataOneTmntType;
+
+  const dataEntriesOneSquad = useSelector(
+    (state: RootState) => state.allEntriesOneSquad.entryData
+  ) as allEntriesOneSquadType;
+
+  const playersFormData: allEntriesOneSquadType = {
+    origData: dataEntriesOneSquad?.origData,
+    curData: dataEntriesOneSquad?.curData,
+  };
+
+  const entriesSaveStatus = useSelector(getOneSquadEntriesSaveStatus);
+  const updatedInfo = useSelector(getOneSquadEntriesUpdatedInfo);
+
   const [gridEditMode, setGridEditMode] = useState<"cell" | "row">("cell");
   const [rowModesModel, setRowModesModel] = React.useState<GridRowModesModel>(
     {}
@@ -451,28 +475,50 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
     const updatedRow = {
       ...newRow,
       feeTotal: total,
-      isNew: false,
+      // isNew: false,
     };
     setRows(rows.map((row) => (row.id === newRow.id ? updatedRow : row)));
     return updatedRow;
   };
 
-  const confirmedDelete = () => {
-    const idToDel = confModalObj.id;
-    setConfModalObj(initModalObj); // reset modal object (hides modal)
+  const confirmYes = () => {
+    // if confirmed delete
+    if (confModalObj.title === delConfTitle) { 
+      const idToDel = confModalObj.id;
+      setConfModalObj(initModalObj); // reset modal object (hides modal)
 
-    // filter out deleted row
-    setRows(rows.filter((row) => row.id !== selectedRowId));
-    setSelectedRowId("");
+      // filter out deleted row
+      setRows(rows.filter((row) => row.id !== selectedRowId));
+      setSelectedRowId("");
+
+    // if confirmed cancel
+    } else if (confModalObj.title === cancelConfTitle) {      
+      setConfModalObj(initModalObj);  // reset modal object (hides modal)      
+      // go back to run tournament page
+      router.push(`/dataEntry/runTmnt/${playerFormTmnt.curData.tmnt.id}`);
+    }
   };
 
-  const canceledDelete = () => {
+  const confirmNo = () => {
     setConfModalObj(initModalObj); // reset modal object (hides modal)
   };
 
   const canceledModalErr = () => {
     setErrModalObj(initModalObj); // reset modal object (hides modal)
   };
+
+  const handleCancel = () => {
+    if (rows.length === 0) {
+      router.push(`/dataEntry/runTmnt/${playerFormTmnt.curData.tmnt.id}`);
+      return;
+    }    
+    setConfModalObj({
+      show: true,
+      title: cancelConfTitle,
+      message: `Do you want to cancel editing bowlers for this tournament?`,
+      id: '0'
+    }); // cancel done in confirmYes    
+  }
 
   const handleDelete = () => {
     if (selectedRowId === "") {
@@ -487,7 +533,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
       const rowToDel = rows.find((row) => row.id === selectedRowId);
       if (!rowToDel) return;
 
-      const toDelName = getRowPlayerName(rows, rowToDel);
+      const toDelName: string = getRowPlayerName(rows, rowToDel);
       setConfModalObj({
         show: true,
         title: delConfTitle,
@@ -502,17 +548,13 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
     const id = btDbUuid("ply");
     const newRow: typeof playerEntryData = {
       id,
-      isNew: true,
+      // isNew: true,
+      player_id: id,
       first_name: "",
       last_name: "",
       feeTotal: 0,
     };
     setRows([...rows, newRow]);
-    // setRows((oldRows) => [...oldRows, newRow]);
-    // setRowModesModel((oldModel) => ({
-    //   ...oldModel,
-    //   [id]: { mode: GridRowModes.Edit, fieldToFocus: 'first_name' },
-    // }));
   };
 
   const handleFindErrorClick = () => {
@@ -534,8 +576,8 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
     }
   };
 
-  const handleSaveClick = () => {
-    const errInfo: errInfoType = getCanSaveErr(rows, playerFormTmnt.curData);
+  const handleSaveClick = async () => {
+    const errInfo: errInfoType = findNextError(rows, playerFormTmnt.curData);
     if (errInfo.msg !== "") {
       setErrModalObj({
         show: true,
@@ -544,14 +586,35 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
         id: errInfo.id,
       });
     } else {
-      setErrModalObj({
-        show: true,
-        title: "Saving...",
-        message: "There are no errors in the entries",
-        id: "none",
-      });
-    }
+      const d = await dispatch(SaveOneSquadEntries({ rows: rows, data: playersFormData }))      
+      console.log('d: ', d);      
+      if (updatedInfo) {
 
+        const updatedPlayers = getUpdatedPlayers(updatedInfo.playersToUpdate, playersFormData);
+        dispatch(updatePlayers(updatedPlayers));
+
+        const totalUpdates: number = getTotalUpdated(updatedInfo);
+        if (totalUpdates >= 0) {          
+          router.push(`/dataEntry/runTmnt/${playerFormTmnt.curData.tmnt.id}`);
+        }        
+      }
+    }
+  }
+
+  const handleDebugClick = () => {
+    const newId = btDbUuid("ply");
+    const newRow = cloneDeep(rows[0]);
+    const addedRow: typeof playerEntryData = {
+      ...newRow,
+      id: newId,
+      player_id: newId,
+      first_name: 'Linda',
+      last_name: 'Lindgren',
+      average: 201,
+      lane: 40,
+      position: 'G',
+    }
+    setRows([...rows, addedRow]);    
   }
 
   return (
@@ -561,8 +624,8 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
           show={confModalObj.show}
           title={confModalObj.title}
           message={confModalObj.message}
-          onConfirm={confirmedDelete}
-          onCancel={canceledDelete}
+          onConfirm={confirmYes}
+          onCancel={confirmNo}
         />
         <ModalErrorMsg
           show={errModalObj.show}
@@ -570,10 +633,12 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
           message={errModalObj.message}
           onCancel={canceledModalErr}
         />
+        <WaitModal show={entriesSaveStatus === 'saving' && !errModalObj.show} message="Saving..." />
         <div>
           <h5>Tournament: {playerFormTmnt?.curData?.tmnt.tmnt_name}</h5>
           <h6>Entries: {rows.length}</h6>
           <div className="d-flex gap-2 mb-2">
+            {/* add button */}
             <button
               type="button"
               className="btn btn-primary"
@@ -593,6 +658,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
               </svg>
               &ensp;Add
             </button>
+            {/* delete button */}
             <button
               type="button"
               className="btn btn-danger"
@@ -612,6 +678,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
               </svg>
               &ensp;Delete
             </button>
+            {/* find next error button */}
             <button
               type="button"
               className="btn btn-warning"
@@ -631,9 +698,10 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
               </svg>
               &ensp;Find Next Error
             </button>
+            {/* save button */}
             <button
               type="button"
-              className="btn btn-info"
+              className="btn btn-success"
               onClick={handleSaveClick}
               title="Save bowlers. Must finalize BEFORE you can enter scores."
             >
@@ -649,23 +717,34 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
               </svg>
               &ensp;Save
             </button> 
+            {/* cancel button */}
             <button
               type="button"
-              className="btn btn-success"
-              // onClick={handleSaveClick}
-              title="Sane and finalize. Must finalize BEFORE you can enter scores."
+              className="btn btn-danger"
+              onClick={handleCancel}              
+              title="Cancel. All changes will be lost."
             >
-              <svg xmlns="/check-circle.svg"
+              <svg
+                xmlns="/x-circle.svg"
                 width="16"
                 height="16"
                 fill="currentColor"
-                className="bi bi-check-circle"
+                className="bi bi-x-circle"
                 viewBox="0 0 16 16"
               >
-                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                <path d="m10.97 4.97-.02.022-3.473 4.425-2.093-2.094a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05"/>
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
               </svg>              
-              &ensp;Finalize
+              &ensp;Cancel
+            </button>
+            {/* debug button */}
+            <button
+              type="button"
+              className="btn btn-info"
+              onClick={handleDebugClick}              
+              title="Debug"
+            >
+              Debug
             </button>
           </div>
         </div>

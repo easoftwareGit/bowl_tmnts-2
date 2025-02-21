@@ -54,13 +54,13 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) { 
 
   try {
-    const teElimEntries: tmntEntryElimEntryType[] = await request.json();
+    const teElimEntries: tmntEntryElimEntryType[] = await request.json();    
     const validElimEntries = await validateElimEntries(teElimEntries as elimEntryType[]); // need to use await! or else returns a promise
     if (validElimEntries.errorCode !== ErrorCode.None) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
 
-    const validTeElimEntries: tmntEntryElimEntryType[] = [];
+    const validTeElimEntries: tmntEntryElimEntryType[] = [];    
     validElimEntries.elimEntries.forEach((elimEntry) => {
       const foundElimEntry = teElimEntries.find((e) => e.elim_id === elimEntry.elim_id && e.player_id === elimEntry.player_id);
       if (foundElimEntry) {
@@ -76,17 +76,17 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
 
-    const elimEntriesToUpdate = validTeElimEntries.filter((potEntry) => potEntry.eType === "u");    
+    const elimEntriesToUpdate = validTeElimEntries.filter((elimEntry) => elimEntry.eType === "u");
     const updateManySQL = (elimEntriesToUpdate.length > 0)
       ? getUpdateManySQL(elimEntriesToUpdate)
       : "";
     
-    const elimEntriesToInsert = validTeElimEntries.filter((potEntry) => potEntry.eType === "i");
+    const elimEntriesToInsert = validTeElimEntries.filter((elimEntry) => elimEntry.eType === "i");
     const insertManySQL = (elimEntriesToInsert.length > 0)
       ? getInsertManySQL(elimEntriesToInsert)
       : "";
     
-    const elimEntriesToDelete = validTeElimEntries.filter((potEntry) => potEntry.eType === "d");
+    const elimEntriesToDelete = validTeElimEntries.filter((elimEntry) => elimEntry.eType === "d");
     const deleteManySQL = (elimEntriesToDelete.length > 0)
       ? getDeleteManySQL(elimEntriesToDelete)
       : "";
