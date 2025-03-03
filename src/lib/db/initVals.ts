@@ -19,6 +19,8 @@ import {
   putManyReturnType,
   putManyEntriesReturnType,
   updatedEntriesCountsType,
+  gameType,
+  divDataType,
 } from "../types/types";
 import { User, Bowl, Tmnt } from "@prisma/client";
 import { todayStr } from "@/lib/dateTools";
@@ -192,6 +194,17 @@ export const initDivs: divType[] = [
     id: btDbUuid('div'),
   },
 ];
+
+export const blankDivData: divDataType = {
+  id: "",  
+  tmnt_id: "",
+  div_name: "",  
+  hdcp_per: 0,
+  hdcp_from: 0,
+  int_hdcp: true,
+  hdcp_for: 'Game',  
+  sort_order: 1,      
+}
 
 export const defaultStartingLane = 1;
 export const defaultLaneCount = 2;
@@ -422,6 +435,20 @@ export const initElimEntry: elimEntryType = {
 export const blankElimEntry: elimEntryType = {
   ...initElimEntry,
   id: "",
+}
+
+export const initGame: gameType = {
+  id: btDbUuid('gam'),
+  squad_id: "",
+  player_id: "",
+  game_num: 1,
+  score: 0,
+}
+
+export const blankGame: gameType = {
+  ...initGame,  
+  id: "",
+  game_num: 0,
 }
 
 export const blankDataOneTmnt = (): dataOneTmntType => {

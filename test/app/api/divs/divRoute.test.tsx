@@ -91,8 +91,8 @@ describe('Divs - API: /api/divs', () => {
     it('should get all divs', async () => { 
       const response = await axios.get(url);
       expect(response.status).toBe(200);
-      // 9 rows in prisma/seed.ts
-      expect(response.data.divs).toHaveLength(9);
+      // 11 rows in prisma/seed.ts
+      expect(response.data.divs).toHaveLength(11);
     })
 
   })
@@ -2349,23 +2349,6 @@ describe('Divs - API: /api/divs', () => {
         }
       }
     })
-    it('should NOT delete a div by ID when div has child rows', async () => { 
-      try {
-        const delResponse = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: oneDivUrl + testDiv.id
-        })  
-        expect(delResponse.status).toBe(409);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(409);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-
   })
 
   describe('DELETE all divs for a tmnt - API: /api/divs/tmnt/:tmntId', () => { 

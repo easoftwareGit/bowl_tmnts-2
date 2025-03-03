@@ -1,6 +1,8 @@
 "use client";
 import { FC, useState, useEffect } from "react";
 import { YearObj, tmntsListType } from "@/lib/types/types";
+import Link from "next/link";
+import { getMonthDay } from "@/lib/dateTools";
 
 interface TmntListProps {
   years: YearObj[];
@@ -82,6 +84,10 @@ const TmntsList: FC<TmntListProps> = (props) => {
     setFilteredTmnts(tmnts)
     setTmntYear(years[0]?.year)    
   }, [tmnts, years])
+
+  const TmntMonthDay = (tmnt: tmntsListType): string => {
+    return getMonthDay(tmnt.start_date_str);
+  };
 
   function filterTmnt(tmnt: tmntsListType): boolean {
     if (stateFilter === "all") return true;
@@ -168,7 +174,11 @@ const TmntsList: FC<TmntListProps> = (props) => {
             <tbody className="table-group-divider">
               {filteredTmnts.map((tmnt) => (
                 <tr key={tmnt.id}>
-                  <td colSpan={2}>{tmnt.tmnt_name}</td>
+                  <td colSpan={2}>
+                    <Link href={`/results/tmnt/${tmnt.id}`}>
+                      {tmnt.tmnt_name} - {TmntMonthDay(tmnt)}
+                    </Link>
+                  </td>
                   <td>
                     <a
                       href={tmnt.bowls.url}

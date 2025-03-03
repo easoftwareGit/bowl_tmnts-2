@@ -5,9 +5,10 @@ import { useParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { fetchOneTmnt, getOneTmntError, getOneTmntLoadStatus } from "@/redux/features/allDataOneTmnt/allDataOneTmntSlice";
-import { allDataOneTmntType, tmntActions, tmntFormDataType } from "@/lib/types/types";
+import { allDataOneTmntType, allEntriesOneSquadType, tmntActions, tmntFormDataType } from "@/lib/types/types";
 import Link from "next/link";
 import WaitModal from "@/components/modal/waitModal";
+// import { selectOneSquadEntries } from "@/redux/features/allEntriesOneSquad/allEntriesOneSquadSlice";
 
 // http://localhost:3000/dataEntry/runTmnt/tmt_d237a388a8fc4641a2e37233f1d6bebd
 
@@ -24,14 +25,14 @@ export const RunTmntPage = () => {
 
   const tmntLoadStatus = useSelector(getOneTmntLoadStatus);
   const tmntError = useSelector(getOneTmntError);  
-
+  
   const dataOneTmnt = useSelector((state: RootState) => state.allDataOneTmnt.tmntData) as allDataOneTmntType;
   const tmntFormData: tmntFormDataType = {
     origData: dataOneTmnt.origData,
     curData: dataOneTmnt.curData,
     tmntAction: tmntActions.Run,
-  };
- 
+  };  
+  
   return (
     <>
       <WaitModal show={tmntLoadStatus === 'loading'} message="Loading..." />
@@ -81,6 +82,13 @@ export const RunTmntPage = () => {
                 </Link>
               </div> 
               <div className="col-2">
+                {/* <button
+                  type="button"
+                  className="btn btn-warning"
+                  onClick={handleLastButtonClick}
+                >
+                  Last Button
+                </button> */}
                 <Link className="btn btn-warning" href="#">
                   Last Button
                 </Link>

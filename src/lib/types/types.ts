@@ -519,6 +519,18 @@ export type validElimEntriesType = {
   elimEntries: elimEntryType[],
   errorCode: ErrorCode
 }
+export type gameType = {
+  id: string,
+  squad_id: string,
+  player_id: string,
+  game_num: number,
+  score: number
+}
+
+export type validGamesType = {
+  games: gameType[],
+  errorCode: ErrorCode
+}
 
 export type AcdnErrType = {
   errClassName: string,

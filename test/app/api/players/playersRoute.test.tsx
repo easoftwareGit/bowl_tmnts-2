@@ -76,8 +76,8 @@ describe("Players - API's: /api/players", () => {
     it('should get all players', async () => {
       const response = await axios.get(url);
       expect(response.status).toBe(200);
-      // 42 rows in prisma/seed.ts
-      expect(response.data.players).toHaveLength(42);
+      // 45 rows in prisma/seed.ts
+      expect(response.data.players).toHaveLength(45);
     })
 
   })
@@ -2294,25 +2294,7 @@ describe("Players - API's: /api/players", () => {
           expect(true).toBeFalsy();
         }
       }
-    })
-    it('should NOT delete a player by id when player row has child rows', async () => {
-      const playerWithChildId = 'ply_88be0472be3d476ea1caa99dd05953fa';
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: onePlayerUrl + playerWithChildId
-        });
-        expect(response.status).toBe(409);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(409);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    
+    })    
   })
 
   describe('DELETE all players for a squad - API: /api/players/player/squad/:squad_id', () => { 

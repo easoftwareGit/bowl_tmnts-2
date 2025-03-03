@@ -243,7 +243,7 @@ describe("tests for pot validation", () => {
       const sanitizedPot = sanitizePot(testPot)
       expect(sanitizedPot.id).toEqual(potId)
     })
-    it('should return sanitized pot when pot_type is sanitzied to a vlaid type', () => {
+    it('should return sanitized pot when pot_type is sanitzied to a valid type', () => {
       const testPot = {
         ...validPot,
         pot_type: '<script>Game</script>' as any,

@@ -7,6 +7,7 @@ import { mockSquadsToPost, mockPotsToPost, mockDivs, tmntToDelId } from "../../.
 import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/dbSquads";
 import { deleteAllTmntDivs, postManyDivs } from "@/lib/db/divs/dbDivs";
 import { deleteAllTmntPots } from "@/lib/db/pots/dbPots";
+import { isValidBtDbId } from "@/lib/validation";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -396,8 +397,8 @@ describe('Pots - API: /api/pots', () => {
       })
       expect(response.status).toBe(201);
       const postedPot = response.data.pot;
-      createdPot = true;
-      expect(postedPot.id).toBe(potToPost.id);
+      createdPot = true;      
+      expect(isValidBtDbId(postedPot.id, "pot")).toBe(true);
       expect(postedPot.div_id).toBe(potToPost.div_id);
       expect(postedPot.squad_id).toBe(potToPost.squad_id);
       expect(postedPot.fee).toBe(potToPost.fee);

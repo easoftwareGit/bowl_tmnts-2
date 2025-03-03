@@ -107,7 +107,6 @@ export async function PUT(
   }
 }
 
-
 export async function PATCH(
   request: Request,
   { params }: { params: { id: string } }
@@ -262,7 +261,7 @@ export async function DELETE(
         break;
     }
     return NextResponse.json(
-      { error: "error deleting div" },
+      { error: "error deleting pot" },
       { status: errStatus }
     );    
   }

@@ -491,29 +491,31 @@ const updateCurrentBrktEntries = (brktEntriesToSave: tmntEntryBrktEntryType[],  
  * 
  * @param {tmntEntryElimEntryType[]} elimEntriesToSave - array of saved elimEntries
  * @param {allEntriesOneSquadType} allEntries - object with current and original data
- * @returns {number} - number of elimEntries rows updated, -1 if got an error
+ * @returns {elimEntryType[] | null} - updated elimEntries array or null
  */
-const updateCurrentElimEntries = (elimEntriesToSave: tmntEntryElimEntryType[],  allEntries: allEntriesOneSquadType) => {
+const updateCurrentElimEntries = (elimEntriesToSave: tmntEntryElimEntryType[], allEntries: allEntriesOneSquadType): elimEntryType[] | null => {
   
-  if (!elimEntriesToSave || !allEntries) return -1;  
-  if (elimEntriesToSave.length === 0) return 0;  
+  if (!elimEntriesToSave || !allEntries) return null;  
+  if (elimEntriesToSave.length === 0) return [];  
+
+  let updatedElimEntries = [...allEntries.curData.elimEntries];
 
   // deletes
   const toDelete = elimEntriesToSave.filter((elimEntry) => elimEntry.eType === 'd');
   toDelete.forEach((elimEntry: tmntEntryElimEntryType) => {
-    const curIndex = allEntries.curData.elimEntries.findIndex((curElimEntry) => elimEntry.elim_id === curElimEntry.elim_id && elimEntry.player_id === curElimEntry.player_id);
+    const curIndex = updatedElimEntries.findIndex((curElimEntry) => elimEntry.elim_id === curElimEntry.elim_id && elimEntry.player_id === curElimEntry.player_id);
     if (curIndex !== -1) {
-      allEntries.curData.elimEntries.splice(curIndex, 1);
+      updatedElimEntries.splice(curIndex, 1);
     }
   })
 
   // updates
   const toUpdate = elimEntriesToSave.filter((elimEntry) => elimEntry.eType === 'u');
   toUpdate.forEach((elimEntry: tmntEntryElimEntryType) => {
-    const curIndex = allEntries.curData.elimEntries.findIndex((curElimEntry) => elimEntry.elim_id === curElimEntry.elim_id && elimEntry.player_id === curElimEntry.player_id);
+    const curIndex = updatedElimEntries.findIndex((curElimEntry) => elimEntry.elim_id === curElimEntry.elim_id && elimEntry.player_id === curElimEntry.player_id);
     if (curIndex !== -1) {      
-      allEntries.curData.elimEntries[curIndex] = {
-        ...allEntries.curData.elimEntries[curIndex],
+      updatedElimEntries[curIndex] = {
+        ...updatedElimEntries[curIndex],
         fee: elimEntry.fee,
       };    
     }
@@ -523,12 +525,10 @@ const updateCurrentElimEntries = (elimEntriesToSave: tmntEntryElimEntryType[],  
   const toInsert = elimEntriesToSave.filter((elimEntry) => elimEntry.eType === 'i');
   toInsert.forEach((elimEntry: tmntEntryElimEntryType) => {
     const { eType, ...insElimEntry } = elimEntry;
-    allEntries.curData.elimEntries.push(insElimEntry);
+    updatedElimEntries.push(insElimEntry);
   })
 
-  // orig data is now current data
-  // allEntries.origData.elimEntries = cloneDeep(allEntries.curData.elimEntries); 
-  return elimEntriesToSave.length;
+  return updatedElimEntries
 }
 
 /**
@@ -624,8 +624,9 @@ export const saveEntriesData = async (
 //   return updateCount
 // }
 
-export const updateAllEntries = (updateInfo: putManyEntriesReturnType, allEntries: allEntriesOneSquadType) => { 
+export const updateAllEntries = (updateInfo: putManyEntriesReturnType, allEntries: allEntriesOneSquadType) => {
 
+  if (!updateInfo || !allEntries || !allEntries.origData) return null;  
   const allUpdates: dataOneSquadEntriesType = {
     squadId: allEntries.origData.squadId,
     players: [],
@@ -634,10 +635,28 @@ export const updateAllEntries = (updateInfo: putManyEntriesReturnType, allEntrie
     brktEntries: [],
     elimEntries: [],  
   }
+  
   const updatedPlayers = updateCurrentPlayers(updateInfo.playersToUpdate, allEntries);
   if (!updatedPlayers) return null;
   allUpdates.players = updatedPlayers;
   
+  const updatedDivEntries = updateCurrentDivEntries(updateInfo.divEntriesToUpdate, allEntries);
+  if (!updatedDivEntries) return null;
+  allUpdates.divEntries = updatedDivEntries;
+  
+  const updatedPotEntries = updateCurrentPotEntries(updateInfo.potEntriesToUpdate, allEntries);
+  if (!updatedPotEntries) return null;
+  allUpdates.potEntries = updatedPotEntries;
+  
+  const updatedBrktEntries = updateCurrentBrktEntries(updateInfo.brktEntriesToUpdate, allEntries);
+  if (!updatedBrktEntries) return null;
+  allUpdates.brktEntries = updatedBrktEntries;
+  
+  const updatedElimEntries = updateCurrentElimEntries(updateInfo.elimEntriesToUpdate, allEntries);
+  if (!updatedElimEntries) return null;
+  allUpdates.elimEntries = updatedElimEntries;
+  
+  return allUpdates
 }
 
 export const exportedForTesting = {

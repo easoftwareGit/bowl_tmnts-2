@@ -34,4 +34,8 @@ export const baseElimEntriesApi = baseApi + '/elimEntries'
 
 export const basePotEntriesApi = baseApi + '/potEntries'
 
+export const baseGamesApi = baseApi + '/games'
+
+export const baseResultsApi = baseApi + '/results'
+
 export const baseBcryptApi = baseApi + '/bcrypt'

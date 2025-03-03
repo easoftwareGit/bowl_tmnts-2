@@ -8,6 +8,7 @@ import {
   fetchOneTmnt,
   getOneTmntError,
   getOneTmntLoadStatus,
+  selectOneTmnt,
 } from "@/redux/features/allDataOneTmnt/allDataOneTmntSlice";
 import {
   allDataOneTmntType,
@@ -21,6 +22,7 @@ import {
   getOneSquadEntriesError,
   getOneSquadEntriesLoadStatus,
   SaveOneSquadEntries,
+  selectOneSquadEntries,
 } from "@/redux/features/allEntriesOneSquad/allEntriesOneSquadSlice";
 import {  
   divEntryHdcpColName,
@@ -148,27 +150,23 @@ export default function EditPlayersPage() {
 
   const tmntLoadStatus = useSelector(getOneTmntLoadStatus);
   const tmntError = useSelector(getOneTmntError);
+  const dataOneTmnt = useSelector(selectOneTmnt) as allDataOneTmntType;   
 
-  const dataOneTmnt = useSelector(
-    (state: RootState) => state.allDataOneTmnt.tmntData
-  ) as allDataOneTmntType;
-  const playerFormTmnt: allDataOneTmntType = {
+  const playerFormTmnt = {
     origData: dataOneTmnt.origData,
     curData: dataOneTmnt.curData,
-  };
-
-  squadId = playerFormTmnt?.curData?.squads[0]?.id;
+  } as allDataOneTmntType;
+  
+  squadId = playerFormTmnt?.curData?.squads[0]?.id || "";
 
   useEffect(() => {
     dispatch(fetchOneSquadEntries(squadId));
   }, [squadId, dispatch]);
 
   const entriesLoadStatus = useSelector(getOneSquadEntriesLoadStatus);
-  const entriesError = useSelector(getOneSquadEntriesError);
+  const entriesError = useSelector(getOneSquadEntriesError);    
+  const dataEntriesOneSquad = useSelector(selectOneSquadEntries) as allEntriesOneSquadType;
 
-  const dataEntriesOneSquad = useSelector(
-    (state: RootState) => state.allEntriesOneSquad.entryData
-  ) as allEntriesOneSquadType;
   const playersFormData: allEntriesOneSquadType = {
     origData: dataEntriesOneSquad?.origData,
     curData: dataEntriesOneSquad?.curData,
@@ -237,8 +235,7 @@ export default function EditPlayersPage() {
     setBrktsObjs(playerFormTmnt.curData.brkts);
   }, [emptyBGDataList, emptyBrktsList, playerFormTmnt.curData]); 
 
-  useEffect(() => {
-    // setRows(populateRows(playersFormData.curData));   
+  useEffect(() => {    
     const currRows = populateRows(playersFormData.curData);
     setRows(currRows);   
     setOrigRows(currRows);

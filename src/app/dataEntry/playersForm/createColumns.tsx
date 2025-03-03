@@ -16,8 +16,6 @@ import { sanitize } from "@/lib/sanitize";
 export const feeColNameEnd = "_fee";
 export const hdcpColNameEnd = "_hdcp";
 export const intHdcpColNameEnd = "_intHdcp";
-// export const createdColNameEnd = "_created";
-// export const updatedColNameEnd = "_updated";
 export const timeStampColNameEnd = "_timeStamp";
 export const feeColWidth = 95;
 

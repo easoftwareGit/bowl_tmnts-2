@@ -268,7 +268,7 @@ model Elim_Entry {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model Game {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(dbgenerated("concat('gam_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
   squad_id  String   @db.Text
   player_id String   @db.Text
   game_num  Int

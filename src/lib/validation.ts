@@ -35,8 +35,9 @@ export const minHdcpFrom = 0;
 export const maxHdcpFrom = 300;
 export const zeroAmount = 0;
 export const minFee = 1;
+export const maxScore = 300;
 export const maxMoney = 999999;
-export const maxAverage = 300;
+export const maxAverage = maxScore;
 
 export const minSortOrder = 1;
 export const maxSortOrder = 1000000;
@@ -203,6 +204,18 @@ export const isEven = (num: number): boolean => {
  */
 export const isNumber = (value: any): boolean => { 
   return typeof value === 'number' && isFinite(value);
+}
+
+/**
+ * checks to see if value is an integer
+ * 
+ * @param value - value to test
+ * @returns {boolean} - true if value is an integer, else false  
+ */
+export const validInteger = (value: number): boolean => {
+  if (!Number.isInteger(value)) return false;
+  if (value < Number.MIN_SAFE_INTEGER || value > Number.MAX_SAFE_INTEGER) return false;
+  return true;
 }
 
 /**

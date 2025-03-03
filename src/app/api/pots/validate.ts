@@ -7,7 +7,7 @@ import { blankPot } from "@/lib/db/initVals";
 /**
  * checks if pot object has missing data - DOES NOT SANITIZE OR VALIDATE
  *
- * @param pot - pot to check for missing data
+ * @param {potType} pot - pot to check for missing data
  * @returns {ErrorCode.MissingData | ErrorCode.None | ErrorCode.OtherError} - error code
  */
 const gotPotData = (pot: potType): ErrorCode => {
@@ -28,12 +28,25 @@ const gotPotData = (pot: potType): ErrorCode => {
   }
 };
 
+/**
+ * checks if pot type is valid
+ * 
+ * @param {pot_type} pot_type - pot type to validate
+ * @returns {boolean} - true if pot type is valid, else false
+ */
 export const validPotType = (pot_type: potCategoriesTypes): boolean => {
   if (!pot_type) return false;
   const sanitized = sanitize(pot_type);
   // "" is inclided in PotCategories type, but is not a valid value
   return (sanitized === 'Game' || sanitized === 'Last Game' || sanitized === 'Series');  
 }
+
+/**
+ * checks if pot money is valid
+ * 
+ * @param {string} moneyStr - money to check
+ * @returns {boolean} - true if amount is valid and not blank; else false
+ */
 export const validPotMoney = (moneyStr: string): boolean => {
   // min 1, max 999999
   return validBtdbMoney(moneyStr, 1);

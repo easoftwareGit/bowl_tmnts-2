@@ -127,7 +127,7 @@ const notFoundSquadId = "sqd_01234567890123456789012345678901";
 const notFoundTmntId = "tmt_01234567890123456789012345678901";
 const userId = "usr_01234567890123456789012345678901";
 
-const tmntIdToDel = 'tmt_fe8ac53dad0f400abe6354210a8f4cd1';
+const tmntIdToDel = 'tmt_d9b1af944d4941f65b2d2d4ac160cdea';
 
 describe('dbDivEntries', () => { 
 
@@ -821,32 +821,16 @@ describe('dbDivEntries', () => {
         ...initDivEntry,
         id: "den_05be0472be3d476ea1caa99dd05953fa",
         squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
-        div_id:'div_24b1cd5dee0542038a1244fc2978e862',
-        player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+        div_id: 'div_18997d3fd7ef4eb7ad2b53a9e93f9ce5',
+        player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
         fee: '64',
       },
       {
         ...initDivEntry,
         id: "den_06be0472be3d476ea1caa99dd05953fa",
         squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
-        div_id:'div_24b1cd5dee0542038a1244fc2978e862',
-        player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
-        fee: '64',
-      },
-      {
-        ...initDivEntry,
-        id: "den_07be0472be3d476ea1caa99dd05953fa",
-        squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
-        div_id:'div_24b1cd5dee0542038a1244fc2978e862',
+        div_id: 'div_367309aa1444446ea9ab23d2e4aae98f',
         player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
-        fee: '64',
-      },
-      {
-        ...initDivEntry,
-        id: "den_08be0472be3d476ea1caa99dd05953fa",
-        squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
-        div_id:'div_24b1cd5dee0542038a1244fc2978e862',
-        player_id: 'ply_8b0fd8bbd9e34d34a7fa90b4111c6e40',
         fee: '64',
       },
     ]
@@ -1005,6 +989,7 @@ describe('dbDivEntries', () => {
     let didDel = false;
 
     beforeAll(async () => {
+      await deleteAllDivEntriesForTmnt(tmntIdToDel);
       await rePostToDel();
     })
     
@@ -1024,7 +1009,7 @@ describe('dbDivEntries', () => {
 
     it('should delete all divEntries for a squad', async () => { 
       const deleted = await deleteAllDivEntriesForSquad(mockDivEntriesToPost[0].squad_id);
-      expect(deleted).toBe(mockDivEntriesToPost.length);
+      expect(deleted).toBe(4);
       didDel = true;
     })
     it('should not delete all divEntries for a squad when squad id is not found', async () => {
@@ -1054,6 +1039,7 @@ describe('dbDivEntries', () => {
     let didDel = false;
 
     beforeAll(async () => {
+      await deleteAllDivEntriesForTmnt(tmntIdToDel);
       await rePostToDel();
     })
     
@@ -1073,7 +1059,7 @@ describe('dbDivEntries', () => {
 
     it('should delete all divEntries for a div', async () => { 
       const deleted = await deleteAllDivEntriesForDiv(mockDivEntriesToPost[0].div_id);
-      expect(deleted).toBe(mockDivEntriesToPost.length);
+      expect(deleted).toBe(2);
       didDel = true;
     })
     it('should not delete all divEntries for a div when div id is not found', async () => {
@@ -1103,6 +1089,7 @@ describe('dbDivEntries', () => {
     let didDel = false;
 
     beforeAll(async () => {
+      await deleteAllDivEntriesForTmnt(tmntIdToDel);
       await rePostToDel();
     })
     

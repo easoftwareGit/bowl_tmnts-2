@@ -30,7 +30,7 @@ const onePotUrl = url + "/pot/";
 
 const notFoundTmntId = 'tmt_00000000000000000000000000000000';
 
-describe('potsAxios', () => { 
+describe('dbPots', () => { 
 
   const rePostPot = async (pot: potType) => {
     try {

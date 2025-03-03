@@ -14,6 +14,7 @@ import {
   isValidRole,
   isValidName,
   isValidTimeStamp,
+  validInteger,
 } from "@/lib/validation";
 import { initDiv, initEvent } from "@/lib/db/initVals";
 
@@ -448,6 +449,87 @@ describe("tests for validation functions", () => {
     it("should return false for NaN", () => {
       const result = isNumber(NaN);
       expect(result).toBe(false);
+    });
+  });
+
+  describe('validInteger', () => {
+
+    it('should return true for valid integers within safe range', () => {
+      const testValues = [0, 1, -1, 42, Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER];
+  
+      testValues.forEach(value => {
+        expect(validInteger(value)).toBe(true);
+      });
+    });
+    it('should return false for decimal numbers', () => {
+      const testValues = [1.5, -3.14, 0.1, 42.42];
+  
+      testValues.forEach(value => {
+        expect(validInteger(value)).toBe(false);
+      });
+    });
+    it('should return true when input is zero', () => {
+      expect(validInteger(0)).toBe(true);
+    });
+    it('should return true for positive integers within safe range', () => {
+      const testValues = [1, 10, 100, 1000, Number.MAX_SAFE_INTEGER - 1];
+
+      testValues.forEach(value => {
+        expect(validInteger(value)).toBe(true);
+      });
+    });
+    it('should return true for negative integers within safe range', () => {
+      const testValues = [-1, -42, -100, Number.MIN_SAFE_INTEGER + 1];
+
+      testValues.forEach(value => {
+        expect(validInteger(value)).toBe(true);
+      });
+    });
+    it('should return true for Number.MIN_SAFE_INTEGER', () => {
+      expect(validInteger(Number.MIN_SAFE_INTEGER)).toBe(true);
+    });
+    it('should return true when value is Number.MAX_SAFE_INTEGER', () => {
+      expect(validInteger(Number.MAX_SAFE_INTEGER)).toBe(true);
+    });
+    it('should return false when value is NaN', () => {
+      expect(validInteger(NaN)).toBe(false);
+    });
+    it('should return false for Infinity and -Infinity', () => {
+      const testValues = [Infinity, -Infinity];
+
+      testValues.forEach(value => {
+        expect(validInteger(value)).toBe(false);
+      });
+    });
+    it('should return false for values below Number.MIN_SAFE_INTEGER', () => {
+      const testValues = [Number.MIN_SAFE_INTEGER - 1, Number.MIN_SAFE_INTEGER - 100, -1e20];
+
+      testValues.forEach(value => {
+        expect(validInteger(value)).toBe(false);
+      });
+    });
+    it('should return false for values exceeding Number.MAX_SAFE_INTEGER', () => {
+      const testValues = [Number.MAX_SAFE_INTEGER + 1, Number.MAX_SAFE_INTEGER + 1000];
+
+      testValues.forEach(value => {
+        expect(validInteger(value)).toBe(false);
+      });
+    });
+    it('should return false when value is less than Number.MIN_SAFE_INTEGER', () => {
+      const value = Number.MIN_SAFE_INTEGER - 1;
+      expect(validInteger(value)).toBe(false);
+    });
+    it('should return false when value is greater than Number.MAX_SAFE_INTEGER', () => {
+      const value = Number.MAX_SAFE_INTEGER + 1;
+      expect(validInteger(value)).toBe(false);
+    });
+    it('should return true for Number.MAX_SAFE_INTEGER minus 100', () => {
+      const value = Number.MAX_SAFE_INTEGER - 100;
+      expect(validInteger(value)).toBe(true);
+    });
+    it('should return true for Number.MIN_SAFE_INTEGER plus 100', () => {
+      const value = Number.MIN_SAFE_INTEGER + 100;
+      expect(validInteger(value)).toBe(true);
     });
   });
 

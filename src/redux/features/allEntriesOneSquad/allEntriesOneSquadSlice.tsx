@@ -3,10 +3,10 @@ import { ioStatusType } from "@/redux/statusTypes";
 import { RootState } from "@/redux/store";
 import { allEntriesOneSquadType, brktEntryType, dataOneSquadEntriesType, divEntryType, elimEntryType, ioDataError, playerType, potEntryType, putManyEntriesReturnType, tmntEntryPlayerType, updatedEntriesCountsType } from "@/lib/types/types";
 import { getAllEntriesForSquad } from "@/lib/db/squads/dbSquads";
-import { cloneDeep, update } from "lodash";
-import { gotUpdateErrors, saveEntriesData } from "@/lib/db/tmntEntries/dbTmntEntries";
+import { cloneDeep } from "lodash";
+import { saveEntriesData } from "@/lib/db/tmntEntries/dbTmntEntries";
 import { playerEntryData } from "@/app/dataEntry/playersForm/createColumns";
-import { allEntriesAllErrors, allEntriesNoUpdates, zeroUdatedEntriesCounts } from "@/lib/db/initVals";
+import { allEntriesAllErrors, allEntriesNoUpdates } from "@/lib/db/initVals";
 
 export interface allEntriesOneSquadState {
   entryData: allEntriesOneSquadType | null;  
@@ -77,12 +77,6 @@ export const SaveOneSquadEntries = createAsyncThunk(
   "allEntriesOneSquad/saveOneSquadEntries",    
   async ({ rows, data }: { rows: (typeof playerEntryData)[], data: allEntriesOneSquadType }, { rejectWithValue }) => {      
     const updatedInfo = await saveEntriesData(rows, data);    
-    // if (!gotUpdateErrors(updatedInfo)) {
-    //   const entriesUpdates = updateOneSquadEntries(updatedInfo, data);
-    //   if (entriesUpdates.total > 0) {
-    //     data.origData = cloneDeep(data.curData);
-    //   }
-    // }
     return { data, updatedInfo };
   }
 )
@@ -120,7 +114,7 @@ export const allEntriesOneSquadSlice = createSlice({
         state.entryData.curData.elimEntries = action.payload;
         state.entryData.origData.elimEntries = action.payload;
       } 
-    }
+    }    
   },
   extraReducers: (builder) => {
     builder.addCase(fetchOneSquadEntries.pending, (state) => {      

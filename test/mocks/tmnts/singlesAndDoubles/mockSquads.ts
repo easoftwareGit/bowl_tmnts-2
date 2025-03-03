@@ -1,7 +1,7 @@
-import { brktEntryType, brktType, divEntryType, divType, elimEntryType, elimType, laneType, playerType, potCategoriesTypes, potEntryType, potType, squadType } from "@/lib/types/types";
+import { brktEntryType, brktType, divEntryType, divType, elimEntryType, elimType, gameType, laneType, playerType, potCategoriesTypes, potEntryType, potType, squadType } from "@/lib/types/types";
 import { startOfDayFromString, todayStr } from "@/lib/dateTools";
 import { Squad } from "@prisma/client";
-import { initBrkt, initBrktEntry, initDiv, initDivEntry, initElimEntry, initPlayer, initPot, initPotEntry, initSquad } from "@/lib/db/initVals";
+import { initBrkt, initBrktEntry, initDiv, initDivEntry, initElimEntry, initGame, initPlayer, initPot, initPotEntry, initSquad } from "@/lib/db/initVals";
 
 export const tmntToDelId = 'tmt_467e51d71659d2e412cbc64a0d19ecb4'
 
@@ -675,7 +675,7 @@ export const mockDivEntriesToPost: divEntryType[] = [
     ...initDivEntry,
     id: "den_01be0472be3d476ea1caa99dd05953fa",
     squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
-    div_id:'div_578834e04e5e4885bbae79229d8b96e8',
+    div_id: 'div_18997d3fd7ef4eb7ad2b53a9e93f9ce5',
     player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
     fee: '84',
   },
@@ -683,24 +683,24 @@ export const mockDivEntriesToPost: divEntryType[] = [
     ...initDivEntry,
     id: "den_02be0472be3d476ea1caa99dd05953fa",
     squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
-    div_id:'div_578834e04e5e4885bbae79229d8b96e8',
-    player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+    div_id: 'div_367309aa1444446ea9ab23d2e4aae98f',
+    player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
     fee: '84',
   },
   {
     ...initDivEntry,
     id: "den_03be0472be3d476ea1caa99dd05953fa",
     squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
-    div_id:'div_578834e04e5e4885bbae79229d8b96e8',
-    player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+    div_id: 'div_18997d3fd7ef4eb7ad2b53a9e93f9ce5',
+    player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
     fee: '84',
   },
   {
     ...initDivEntry,
     id: "den_04be0472be3d476ea1caa99dd05953fa",
     squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
-    div_id:'div_578834e04e5e4885bbae79229d8b96e8',
-    player_id: 'ply_8b0fd8bbd9e34d34a7fa90b4111c6e40',
+    div_id: 'div_367309aa1444446ea9ab23d2e4aae98f',
+    player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
     fee: '84',
   },
 ]
@@ -803,5 +803,56 @@ export const mockElimEntriesToPost: elimEntryType[] = [
     elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
     player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
     fee: '5'
+  },
+]
+
+export const mockGamesToPost: gameType[] = [
+  {
+    ...initGame,
+    id: 'gam_01de0472be3d476ea1caa99dd05953fa',
+    squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',  
+    player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+    game_num: 1,
+    score: 201,
+  },
+  {
+    ...initGame,
+    id: 'gam_02de0472be3d476ea1caa99dd05953fa',
+    squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',  
+    player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+    game_num: 2,
+    score: 202,
+  },
+  {
+    ...initGame,
+    id: 'gam_03de0472be3d476ea1caa99dd05953fa',
+    squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',  
+    player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+    game_num: 3,
+    score: 203,
+  },
+  {
+    ...initGame,
+    id: 'gam_04de0472be3d476ea1caa99dd05953fa',
+    squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',  
+    player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+    game_num: 4,
+    score: 204,
+  },
+  {
+    ...initGame,
+    id: 'gam_05de0472be3d476ea1caa99dd05953fa',
+    squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',  
+    player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+    game_num: 5,
+    score: 205,
+  },
+  {
+    ...initGame,
+    id: 'gam_06de0472be3d476ea1caa99dd05953fa',
+    squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',  
+    player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+    game_num: 6,
+    score: 206,
   },
 ]

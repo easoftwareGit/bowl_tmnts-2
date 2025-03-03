@@ -11,6 +11,7 @@ import {
   endOfDayFromString,
   nowOnDayFromString,
   getYearMonthDays,
+  getMonthDay,
   getTimeString,
   startOfTodayUTC,
   validDateString,
@@ -590,6 +591,77 @@ describe("tests for dateTools", () => {
       const dateStr = '2022-12-31';
       const result = getYearMonthDays(dateStr);
       expect(result).toEqual({ year: 2022, month: 11, days: 31 });
+    });
+  });
+
+  describe('getMonthDay', () => {
+
+    it('should return formatted month and day when given valid date string', () => {
+      const dateStr = '2023-12-25';
+      const result = getMonthDay(dateStr);
+      expect(result).toBe('Dec 25');
+    });
+    it('should return empty string when given empty date string', () => {
+      const dateStr = '';
+      const result = getMonthDay(dateStr);
+      expect(result).toBe('');
+    });
+    it('should return formatted month and day when given valid date string', () => {
+      const dateStr = '2023-12-25';
+      const result = getMonthDay(dateStr);
+      expect(result).toBe('Dec 25');
+    });
+    it('should return formatted month and day with leading zero removed for single digit days', () => {
+      const dateStr = '2023-01-05';
+      const result = getMonthDay(dateStr);
+      expect(result).toBe('Jan 05');
+    });
+    it('should return empty string when given invalid date format', () => {
+      const invalidDateStr = '12-25-2023';
+      const result = getMonthDay(invalidDateStr);
+      expect(result).toBe('');
+    });
+    it('should return empty string when date string length is incorrect', () => {
+      const dateStr = '2023-12-2';
+      const result = getMonthDay(dateStr);
+      expect(result).toBe('');
+    });
+    it('should return empty string when given date string with invalid month number', () => {
+      const invalidMonthDateStr1 = '2023-00-15';
+      const invalidMonthDateStr2 = '2023-13-15';
+      const result1 = getMonthDay(invalidMonthDateStr1);
+      const result2 = getMonthDay(invalidMonthDateStr2);
+      expect(result1).toBe('');
+      expect(result2).toBe('');
+    });
+    it('should return empty string when given invalid day number', () => {
+      const invalidDateStr1 = '2023-12-00';
+      const invalidDateStr2 = '2023-12-32';
+      const result1 = getMonthDay(invalidDateStr1);
+      const result2 = getMonthDay(invalidDateStr2);
+      expect(result1).toBe('');
+      expect(result2).toBe('');
+    });
+    it('should return empty string when date string has incorrect separators', () => {
+      const dateStr = '2023/12/25';
+      const result = getMonthDay(dateStr);
+      expect(result).toBe('');
+    });
+    it('should preserve leading zero in day number when given valid date string', () => {
+      const dateStr = '2023-01-05';
+      const result = getMonthDay(dateStr);
+      expect(result).toBe('Jan 05');
+    });
+    it('should return the same month and day for different years', () => {
+      const dateStr1 = '2023-12-25';
+      const dateStr2 = '2022-12-25';
+      const dateStr3 = '2021-12-25';
+      const result1 = getMonthDay(dateStr1);
+      const result2 = getMonthDay(dateStr2);
+      const result3 = getMonthDay(dateStr3);
+      expect(result1).toBe('Dec 25');
+      expect(result2).toBe('Dec 25');
+      expect(result3).toBe('Dec 25');
     });
   });
 

@@ -1,5 +1,5 @@
 import { IntlConfig } from "@/lib/currency/components/CurrencyInputProps";
-import { startOfToday, addMinutes, isValid, addSeconds, addDays, addMilliseconds, parseISO, parse } from "date-fns";
+import { startOfToday, addMinutes, isValid, addSeconds, addDays, addMilliseconds, parseISO, parse, format } from "date-fns";
 import { validTime } from "./validation";
 
 const ic: IntlConfig = {
@@ -176,6 +176,20 @@ export const getYearMonthDays = (dateStr: string): ymdType => {
 export const startOfTodayUTC = (): Date => { 
   const todayYmd = getYearMonthDays(todayStr)
   return new Date(Date.UTC(todayYmd.year, todayYmd.month, todayYmd.days, 0, 0, 0, 0))
+}
+
+/**
+ * converts YYYY-MM-dd to MMM dd
+ * 
+ * @param {string} dateStr - date in YYYY-MM-dd format
+ * @returns {string} - date in MMM dd
+ */
+export const getMonthDay = (dateStr: string): string => { 
+  if (!valid_yyyyMMdd(dateStr)) return '';
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const monthIndex = Number(dateStr.substring(5, 7)) - 1;
+  const month = monthNames[monthIndex];
+  return month + ' ' + dateStr.substring(8, 10)
 }
 
 /**

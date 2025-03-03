@@ -5,7 +5,8 @@ import { AppDispatch, RootState } from "@/redux/store";
 import { 
   allDataOneTmntType,
   allEntriesOneSquadType,  
-  dataOneTmntType,  
+  dataOneTmntType,
+  putManyEntriesReturnType,  
 } from "@/lib/types/types";
 import {
   DataGrid,
@@ -36,11 +37,12 @@ import ModalErrorMsg from "@/components/modal/errorModal";
 import { initModalObj } from "@/components/modal/modalObjType";
 import { errInfoType, findNextError, getRowPlayerName } from "./rowInfo";
 import { useRouter } from "next/navigation"
-import { getOneSquadEntriesSaveStatus, getOneSquadEntriesUpdatedInfo, SaveOneSquadEntries, updatePlayers } from "@/redux/features/allEntriesOneSquad/allEntriesOneSquadSlice";
+import { getOneSquadEntriesSaveStatus, getOneSquadEntriesUpdatedInfo, SaveOneSquadEntries, updateBrktEntries, updateDivEntries, updateElimEntries, updatePlayers, updatePotEntries } from "@/redux/features/allEntriesOneSquad/allEntriesOneSquadSlice";
 import WaitModal from "@/components/modal/waitModal";
-import { getTotalUpdated } from "@/lib/db/tmntEntries/dbTmntEntries";
+import { getTotalUpdated, updateAllEntries } from "@/lib/db/tmntEntries/dbTmntEntries";
 import "./grid.css";
-import { cloneDeep, last } from "lodash";
+import { cloneDeep } from "lodash";
+import { PayloadAction, unwrapResult } from "@reduxjs/toolkit";
 
 // http://localhost:3000/dataEntry/runTmnt/tmt_d237a388a8fc4641a2e37233f1d6bebd
 // http://localhost:3000/dataEntry/editPlayers/tmt_d237a388a8fc4641a2e37233f1d6bebd
@@ -83,7 +85,8 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
   };
 
   const entriesSaveStatus = useSelector(getOneSquadEntriesSaveStatus);
-  const updatedInfo = useSelector(getOneSquadEntriesUpdatedInfo);
+  const [saveCompleted, setSaveCompleted] = useState(false);      
+  const [resultAction, setResultAction] = useState<PayloadAction<{ data: allEntriesOneSquadType; updatedInfo: putManyEntriesReturnType; }, string, { arg: { rows: { [key: string]: any; }[]; data: allEntriesOneSquadType; }; requestId: string; requestStatus: "fulfilled"; }, never> | null>(null);
 
   const [gridEditMode, setGridEditMode] = useState<"cell" | "row">("cell");
   const [rowModesModel, setRowModesModel] = React.useState<GridRowModesModel>(
@@ -586,22 +589,51 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
         id: errInfo.id,
       });
     } else {
-      const d = await dispatch(SaveOneSquadEntries({ rows: rows, data: playersFormData }))      
-      console.log('d: ', d);      
-      if (updatedInfo) {
 
-        const updatedPlayers = getUpdatedPlayers(updatedInfo.playersToUpdate, playersFormData);
-        dispatch(updatePlayers(updatedPlayers));
-
-        const totalUpdates: number = getTotalUpdated(updatedInfo);
-        if (totalUpdates >= 0) {          
-          router.push(`/dataEntry/runTmnt/${playerFormTmnt.curData.tmnt.id}`);
-        }        
+      setSaveCompleted(false); // Reset state before dispatching
+      const saveResultAction = await dispatch(SaveOneSquadEntries({ rows: rows, data: playersFormData }));      
+      if (SaveOneSquadEntries.fulfilled.match(saveResultAction)) {        
+        setResultAction(saveResultAction);
+        setSaveCompleted(true);
       }
+
+      // const ess = entriesSaveStatus;
+
+      // const resultAction = await dispatch(SaveOneSquadEntries({ rows: rows, data: playersFormData }));
+      // console.log('resultAction: ', resultAction);      
+      // const unwrapped = unwrapResult(resultAction);
+      // console.log('unwrapped: ', unwrapped);
+
+      // // const d = await dispatch(SaveOneSquadEntries({ rows: rows, data: playersFormData }))
+      // if (entriesSaveStatus !== 'succeeded') return;
+
+      // // const payload = d.payload as any;
+      // // const updatedInfo = payload.updatedInfo;
+
+      // // const updatedInfo = (d.payload as any).updatedInfo;
+
+      // const updatedInfo = unwrapped.updatedInfo;
+      // if (updatedInfo) {
+      //   const updatedPlayers = updateAllEntries(updatedInfo, playersFormData);
+      //   if (!updatedPlayers) return;
+      //   dispatch(updatePlayers(updatedPlayers.players));
+      //   dispatch(updateDivEntries(updatedPlayers.divEntries));
+      //   dispatch(updatePotEntries(updatedPlayers.potEntries));
+      //   dispatch(updateBrktEntries(updatedPlayers.brktEntries));
+      //   dispatch(updateElimEntries(updatedPlayers.elimEntries));
+
+      //   const totalUpdates: number = getTotalUpdated(updatedInfo);
+      //   if (totalUpdates >= 0) {          
+      //     router.push(`/dataEntry/runTmnt/${playerFormTmnt.curData.tmnt.id}`);
+      //   }
+
+      //   const allUpdatedEntries = dataEntriesOneSquad;
+      //   console.log('allUpdatedEntries: ', allUpdatedEntries);
+      // }
     }
   }
 
-  const handleDebugClick = () => {
+  const handleDebug1Click = () => {
     const newId = btDbUuid("ply");
     const newRow = cloneDeep(rows[0]);
     const addedRow: typeof playerEntryData = {
@@ -616,6 +648,29 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
     }
     setRows([...rows, addedRow]);    
   }
+
+  useEffect(() => {
+    if (saveCompleted && entriesSaveStatus === "succeeded" && resultAction) {
+      const updatedInfo = (resultAction.payload as any).updatedInfo;
+  
+      if (updatedInfo) {
+        const updatedPlayers = updateAllEntries(updatedInfo, playersFormData);
+        if (!updatedPlayers) return;
+        
+        dispatch(updatePlayers(updatedPlayers.players));
+        dispatch(updateDivEntries(updatedPlayers.divEntries));
+        dispatch(updatePotEntries(updatedPlayers.potEntries));
+        dispatch(updateBrktEntries(updatedPlayers.brktEntries));
+        dispatch(updateElimEntries(updatedPlayers.elimEntries));
+  
+        const totalUpdates: number = getTotalUpdated(updatedInfo);
+        if (totalUpdates >= 0) {
+          router.push(`/dataEntry/runTmnt/${playerFormTmnt.curData.tmnt.id}`);
+        }
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saveCompleted, entriesSaveStatus]); // ok for just saveCompleted and entriesSaveStatus
 
   return (
     <>
@@ -741,10 +796,10 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
             <button
               type="button"
               className="btn btn-info"
-              onClick={handleDebugClick}              
+              onClick={handleDebug1Click}              
               title="Debug"
             >
-              Debug
+              Debug 1
             </button>
           </div>
         </div>

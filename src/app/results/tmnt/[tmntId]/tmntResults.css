@@ -1,0 +1,23 @@
+.tmnt-results-container {
+  max-width: 100%;
+  width: auto;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+@media (min-width: 1400px) {
+  .tmnt-results-container {    
+    max-width: 1400px;
+  }
+}
+
+.nav-pills .nav-link.active {
+  background-color: #cfe2ff;
+  color: #000000;
+  font-weight: bold;
+}
+
+.resultsHeader {
+  background-color: rgb(164, 219, 244);
+  font-weight: bold;
+}

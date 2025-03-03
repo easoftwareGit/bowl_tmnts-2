@@ -122,8 +122,7 @@ export const allDataOneTmntSlice = createSlice({
     builder.addCase(saveOneTmnt.pending, (state: allDataOneTmntState) => {
       state.saveStatus = 'saving';
       state.error = '';
-    });
-    // builder.addCase(saveOneTmnt.fulfilled, (state: allDataOneTmntState, action) => {
+    });    
     builder.addCase(saveOneTmnt.fulfilled, (state: allDataOneTmntState, action: PayloadAction<{ data: allDataOneTmntType; ioError: ioDataError }>) => {    
       state.saveStatus = 'succeeded';      
       state.tmntData = action.payload.data;

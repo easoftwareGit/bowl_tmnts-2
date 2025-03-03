@@ -9,21 +9,26 @@ export async function GET(
   request: NextRequest, 
   { params }: {params: { year: string}}
 ) {
-  const paramYear = params.year;
+  const yearStr = params.year;
 
-  if (!validYear(paramYear)) {
+  if (!validYear(yearStr)) {
     return NextResponse.json({ error: 'Invalid parameter' }, { status: 400 });
   }
   
+  const paramYear = parseInt(yearStr);
   const todayYear = endOfToday().getFullYear();
   let maxDate
-  if (todayYear === parseInt(paramYear)) {
+  if (todayYear === paramYear) {
     maxDate = endOfToday();
   } else {    
-    maxDate = endOfDay(new Date(`${paramYear}-12-31`))    
+    // maxDate = endOfDay(new Date(`${paramYear}-12-31`))    
+    // maxDate = endOfDay(new Date(Date.UTC(paramYear, 11, 31))); 
+    maxDate = new Date(Date.UTC(paramYear, 11, 31, 23, 59, 59, 999)); // December 31st, 23:59:59.999 UTC
   }  
   
-  const jan1st = new Date(`${paramYear}-01-01`)
+  // const jan1st = new Date(`${paramYear}-01-01`)
+  // const jan1st = new Date(Date.UTC(paramYear, 0, 1));
+  const jan1st = new Date(Date.UTC(paramYear, 0, 1, 0, 0, 0, 0)); // january 1st, 00:00:00.000 UTC
   const skip = request.nextUrl.searchParams.get('skip')
   const take = request.nextUrl.searchParams.get('take')
   const tmnts = await prisma.tmnt.findMany({

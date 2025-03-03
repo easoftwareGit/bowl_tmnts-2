@@ -2,7 +2,7 @@ import axios, { AxiosError } from "axios";
 import { baseDivEntriesApi } from "@/lib/db/apiPaths";
 import { testBaseDivEntriesApi } from "../../../testApi";
 import { initDiv, initDivEntry } from "@/lib/db/initVals";
-import { divEntryType, HdcpForTypes } from "@/lib/types/types";
+import { divEntryRawWithHdcpType, divEntryType, HdcpForTypes } from "@/lib/types/types";
 import { mockDivEntriesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { deleteAllDivEntriesForDiv, deleteAllDivEntriesForSquad, deleteAllDivEntriesForTmnt, postManyDivEntries } from "@/lib/db/divEntries/dbDivEntries";
 import { cloneDeep } from "lodash";
@@ -56,7 +56,7 @@ describe("DivEntries - API's: /api/divEntries", () => {
     sort_order: 1,
   }
 
-  const tmntIdForMulti = 'tmt_fe8ac53dad0f400abe6354210a8f4cd1';
+  const tmntIdForMulti = 'tmt_d9b1af944d4941f65b2d2d4ac160cdea';
 
   const tmntIdForDivEntries = 'tmt_fd99387c33d9c78aba290286576ddce5';
   const squadIdForDivEntries = 'sqd_7116ce5f80164830830a7157eb093396';
@@ -71,7 +71,7 @@ describe("DivEntries - API's: /api/divEntries", () => {
   const deletePostedDivEntry = async () => {
     const response = await axios.get(url);
     const divEntries = response.data.divEntries;
-    const toDel = divEntries.find((d: divEntryType) => d.fee === '83');
+    const toDel = divEntries.find((d: divEntryRawWithHdcpType) => d.fee === 83);
     if (toDel) {
       try {
         const delResponse = await axios({
@@ -94,8 +94,8 @@ describe("DivEntries - API's: /api/divEntries", () => {
     it('should get all divEntries', async () => {
       const response = await axios.get(url);
       expect(response.status).toBe(200);
-      // 41 rows in prisma/seed.ts
-      expect(response.data.divEntries).toHaveLength(41);
+      // 47 rows in prisma/seed.ts
+      expect(response.data.divEntries).toHaveLength(47);
     })
   })
 
@@ -288,30 +288,30 @@ describe("DivEntries - API's: /api/divEntries", () => {
     })
 
     describe('GET all divEntries for one div failures', () => { 
-      // it('should not get all divEntries for one div when divId is invalid', async () => {
-      //   try {
-      //     const response = await axios.get(divUrl + 'test');
-      //     expect(response.status).toBe(404);
-      //   } catch (err) {
-      //     if (err instanceof AxiosError) {
-      //       expect(err.response?.status).toBe(404);
-      //     } else {
-      //       expect(true).toBeFalsy();
-      //     }
-      //   }
-      // })
-      // it('should not get all divEntries for one div when divId is valid, but not a div id', async () => {
-      //   try {
-      //     const response = await axios.get(divUrl + userId);
-      //     expect(response.status).toBe(404);
-      //   } catch (err) {
-      //     if (err instanceof AxiosError) {
-      //       expect(err.response?.status).toBe(404);
-      //     } else {
-      //       expect(true).toBeFalsy();
-      //     }
-      //   }
-      // })
+      it('should not get all divEntries for one div when divId is invalid', async () => {
+        try {
+          const response = await axios.get(divUrl + 'test');
+          expect(response.status).toBe(404);
+        } catch (err) {
+          if (err instanceof AxiosError) {
+            expect(err.response?.status).toBe(404);
+          } else {
+            expect(true).toBeFalsy();
+          }
+        }
+      })
+      it('should not get all divEntries for one div when divId is valid, but not a div id', async () => {
+        try {
+          const response = await axios.get(divUrl + userId);
+          expect(response.status).toBe(404);
+        } catch (err) {
+          if (err instanceof AxiosError) {
+            expect(err.response?.status).toBe(404);
+          } else {
+            expect(true).toBeFalsy();
+          }
+        }
+      })
     })
   })
 
@@ -1269,7 +1269,7 @@ describe("DivEntries - API's: /api/divEntries", () => {
 
     let createdDivEntries = false;
 
-    const divEntriesToDelTmntId = 'tmt_fe8ac53dad0f400abe6354210a8f4cd1';
+    const divEntriesToDelTmntId = 'tmt_d9b1af944d4941f65b2d2d4ac160cdea';
 
     beforeAll(async () => {
       await deleteAllDivEntriesForTmnt(divEntriesToDelTmntId);
@@ -1285,52 +1285,11 @@ describe("DivEntries - API's: /api/divEntries", () => {
       }      
     })
 
-    const mockMultiDivEntriesToPost: divEntryType[] = [
-      {
-        ...mockDivEntriesToPost[0],
-      },
-      {
-        ...mockDivEntriesToPost[1],
-      },
-      {
-        ...mockDivEntriesToPost[2],
-      },
-      {
-        ...mockDivEntriesToPost[3],
-      },
-      {
-        ...initDivEntry,
-        id: "den_05be0472be3d476ea1caa99dd05953fa",
-        squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
-        div_id:'div_24b1cd5dee0542038a1244fc2978e862',
-        player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
-        fee: '64',
-      },
-      {
-        ...initDivEntry,
-        id: "den_06be0472be3d476ea1caa99dd05953fa",
-        squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
-        div_id:'div_24b1cd5dee0542038a1244fc2978e862',
-        player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
-        fee: '64',
-      },
-      {
-        ...initDivEntry,
-        id: "den_07be0472be3d476ea1caa99dd05953fa",
-        squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
-        div_id:'div_24b1cd5dee0542038a1244fc2978e862',
-        player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
-        fee: '64',
-      },
-      {
-        ...initDivEntry,
-        id: "den_08be0472be3d476ea1caa99dd05953fa",
-        squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
-        div_id:'div_24b1cd5dee0542038a1244fc2978e862',
-        player_id: 'ply_8b0fd8bbd9e34d34a7fa90b4111c6e40',
-        fee: '64',
-      },
-    ]
+    afterAll(async () => {
+      await deleteAllDivEntriesForTmnt(divEntriesToDelTmntId);
+    })
+
+    const mockMultiDivEntriesToPost = cloneDeep(mockDivEntriesToPost);
 
     it('should update many divEntries - just update 1 player 2 div entry', async () => {
       const divEntryJSON = JSON.stringify(mockMultiDivEntriesToPost);
@@ -1355,7 +1314,7 @@ describe("DivEntries - API's: /api/divEntries", () => {
           eType: "u",
         },
         {
-          ...mockMultiDivEntriesToPost[4],
+          ...mockMultiDivEntriesToPost[1],
           fee: '63',
           eType: "u",
         },
@@ -1397,7 +1356,7 @@ describe("DivEntries - API's: /api/divEntries", () => {
           eType: "u",
         },
         {
-          ...mockMultiDivEntriesToPost[1],
+          ...mockMultiDivEntriesToPost[2],
           fee: '83',
           eType: "u",
         },
@@ -1444,12 +1403,12 @@ describe("DivEntries - API's: /api/divEntries", () => {
           eType: "u",
         },
         {
-          ...mockMultiDivEntriesToPost[4],
+          ...mockMultiDivEntriesToPost[2],
           fee: '63',
           eType: "u",
         },
         {
-          ...mockMultiDivEntriesToPost[5],
+          ...mockMultiDivEntriesToPost[3],
           fee: '63',
           eType: "u",
         },
@@ -1478,7 +1437,7 @@ describe("DivEntries - API's: /api/divEntries", () => {
           eType: "i",
         },
         {
-          ...mockMultiDivEntriesToPost[4],          
+          ...mockMultiDivEntriesToPost[1],          
           eType: "i",
         },
       ]
@@ -1506,7 +1465,7 @@ describe("DivEntries - API's: /api/divEntries", () => {
           eType: "i",
         },
         {
-          ...mockMultiDivEntriesToPost[1],          
+          ...mockMultiDivEntriesToPost[2],          
           eType: "i",
         },
       ]
@@ -1538,11 +1497,11 @@ describe("DivEntries - API's: /api/divEntries", () => {
           eType: "i",
         },
         {
-          ...mockMultiDivEntriesToPost[4],          
+          ...mockMultiDivEntriesToPost[2],          
           eType: "i",
         },
         {
-          ...mockMultiDivEntriesToPost[5],          
+          ...mockMultiDivEntriesToPost[3],          
           eType: "i",
         },
       ]
@@ -1581,7 +1540,7 @@ describe("DivEntries - API's: /api/divEntries", () => {
           eType: "d",
         },
         {
-          ...mockMultiDivEntriesToPost[4],          
+          ...mockMultiDivEntriesToPost[2],          
           eType: "d",
         },
       ]
@@ -1620,7 +1579,7 @@ describe("DivEntries - API's: /api/divEntries", () => {
           eType: "d",
         },
         {
-          ...mockMultiDivEntriesToPost[1],          
+          ...mockMultiDivEntriesToPost[2],          
           eType: "d",
         },
       ]
@@ -1663,11 +1622,11 @@ describe("DivEntries - API's: /api/divEntries", () => {
           eType: "d",
         },
         {
-          ...mockMultiDivEntriesToPost[4],          
+          ...mockMultiDivEntriesToPost[2],          
           eType: "d",
         },
         {
-          ...mockMultiDivEntriesToPost[5],          
+          ...mockMultiDivEntriesToPost[3],          
           eType: "d",
         },
       ]
@@ -1720,12 +1679,22 @@ describe("DivEntries - API's: /api/divEntries", () => {
           eType: "d",
         },
         {
-          ...mockMultiDivEntriesToPost[4],          
-          eType: "i",
+          ...initDivEntry,
+          id: "den_05be0472be3d476ea1caa99dd05953fa",
+          squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
+          div_id: 'div_18997d3fd7ef4eb7ad2b53a9e93f9ce5',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          fee: '83',
+          eType: "i"
         },
         {
-          ...mockMultiDivEntriesToPost[5],          
-          eType: "i",
+          ...initDivEntry,
+          id: "den_06be0472be3d476ea1caa99dd05953fa",
+          squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
+          div_id: 'div_367309aa1444446ea9ab23d2e4aae98f',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          fee: '83',
+          eType: "i"
         },
       ]
       const toUpdateJSON = JSON.stringify(divEntriesToUpdate) 
@@ -1777,12 +1746,22 @@ describe("DivEntries - API's: /api/divEntries", () => {
           eType: "d",
         },
         {
-          ...mockMultiDivEntriesToPost[4],          
-          eType: "i",
+          ...initDivEntry,
+          id: "den_03be0472be3d476ea1caa99dd05953fa",
+          squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
+          div_id: 'div_18997d3fd7ef4eb7ad2b53a9e93f9ce5',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          fee: '83',
+          eType: "i"
         },
         {
-          ...mockMultiDivEntriesToPost[5],          
-          eType: "i",
+          ...initDivEntry,
+          id: "den_04be0472be3d476ea1caa99dd05953fa",
+          squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
+          div_id: 'div_367309aa1444446ea9ab23d2e4aae98f',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          fee: '83',
+          eType: "i"
         },
       ]
       const toUpdateJSON = JSON.stringify(divEntriesToUpdate) 
@@ -1807,232 +1786,232 @@ describe("DivEntries - API's: /api/divEntries", () => {
 
   describe('PUT one divEntry API: /api/divEntries/divEntry/:id', () => { 
 
-    // const resetDivEntry = async () => {
-    //   // make sure test player is reset in database
-    //   const divEntryJSON = JSON.stringify(testDivEntry);
-    //   const putResponse = await axios({
-    //     method: "put",
-    //     data: divEntryJSON,
-    //     withCredentials: true,
-    //     url: oneDivEntryUrl + testDivEntry.id,
-    //   })
-    // }
+    const resetDivEntry = async () => {
+      // make sure test player is reset in database
+      const divEntryJSON = JSON.stringify(testDivEntry);
+      const putResponse = await axios({
+        method: "put",
+        data: divEntryJSON,
+        withCredentials: true,
+        url: oneDivEntryUrl + testDivEntry.id,
+      })
+    }
 
-    // const putDivEntry = {
-    //   ...testDivEntry,
-    //   squad_id: 'sqd_1a6c885ee19a49489960389193e8f819',
-    //   div_id: 'div_99a3cae28786485bb7a036935f0f6a0a',
-    //   player_id: 'ply_8b0fd8bbd9e34d34a7fa90b4111c6e40',
-    //   fee: '83'
-    // }
+    const putDivEntry = {
+      ...testDivEntry,
+      squad_id: 'sqd_1a6c885ee19a49489960389193e8f819',
+      div_id: 'div_99a3cae28786485bb7a036935f0f6a0a',
+      player_id: 'ply_8b0fd8bbd9e34d34a7fa90b4111c6e40',
+      fee: '83'
+    }
 
-    // let didPut = false;
+    let didPut = false;
 
-    // beforeAll(async () => {
-    //   await resetDivEntry()
-    // })
+    beforeAll(async () => {
+      await resetDivEntry()
+    })
 
-    // beforeEach(() => {
-    //   didPut = false;
-    // })
+    beforeEach(() => {
+      didPut = false;
+    })
 
-    // afterEach(async () => {
-    //   if (didPut) {        
-    //     await resetDivEntry()
-    //   }      
-    // })
+    afterEach(async () => {
+      if (didPut) {        
+        await resetDivEntry()
+      }      
+    })
 
-    // it('should update a divEntry by ID', async () => {
-    //   const divEntryJSON = JSON.stringify(putDivEntry);
-    //   const response = await axios({
-    //     method: "put",
-    //     data: divEntryJSON,
-    //     withCredentials: true,
-    //     url: oneDivEntryUrl + testDivEntry.id,
-    //   });
-    //   expect(response.status).toBe(200);
-    //   didPut = true;
-    //   const puttedDivEntry = response.data.divEntry;
-    //   // did not update squad_id
-    //   expect(puttedDivEntry.squad_id).toBe(putDivEntry.squad_id);
-    //   expect(puttedDivEntry.div_id).toBe(putDivEntry.div_id);
-    //   expect(puttedDivEntry.player_id).toBe(putDivEntry.player_id);
-    //   expect(puttedDivEntry.fee).toBe(putDivEntry.fee);
-    // })
-    // it('should update a sanitized divEntry by ID', async () => { 
-    //   const toSanitize = {
-    //     ...putDivEntry,
-    //     fee: '83.000',
-    //   }
-    //   const divEntryJSON = JSON.stringify(toSanitize);
-    //   const response = await axios({
-    //     method: "put",
-    //     data: divEntryJSON,
-    //     withCredentials: true,
-    //     url: oneDivEntryUrl + testDivEntry.id,
-    //   });
-    //   expect(response.status).toBe(200);
-    //   didPut = true;
-    //   const puttedDivEntry = response.data.divEntry;
-    //   expect(puttedDivEntry.squad_id).toBe(putDivEntry.squad_id);
-    //   expect(puttedDivEntry.div_id).toBe(putDivEntry.div_id);
-    //   expect(puttedDivEntry.player_id).toBe(putDivEntry.player_id);
-    //   expect(puttedDivEntry.fee).toBe(putDivEntry.fee);
-    // })
-    // it('should not update a divEntry by ID when squad_id is blank', async () => {
-    //   const invalidDivEntry = {
-    //     ...putDivEntry,
-    //     squad_id: ''
-    //   }
-    //   const divEntryJSON = JSON.stringify(invalidDivEntry);
-    //   try {
-    //     const response = await axios({
-    //       method: "put",
-    //       data: divEntryJSON,
-    //       withCredentials: true,
-    //       url: oneDivEntryUrl + testDivEntry.id,
-    //     });
-    //     expect(response.status).toBe(422);
-    //   } catch (err) {
-    //     if (err instanceof AxiosError) {
-    //       expect(err.response?.status).toBe(422);
-    //     } else {
-    //       expect(true).toBeFalsy();
-    //     }
-    //   }
-    // })
-    // it('should not update a divEntry by ID when div_id is blank', async () => {
-    //   const invalidDivEntry = {
-    //     ...putDivEntry,
-    //     div_id: ''
-    //   }
-    //   const divEntryJSON = JSON.stringify(invalidDivEntry);
-    //   try {
-    //     const response = await axios({
-    //       method: "put",
-    //       data: divEntryJSON,
-    //       withCredentials: true,
-    //       url: oneDivEntryUrl + testDivEntry.id,
-    //     });
-    //     expect(response.status).toBe(422);
-    //   } catch (err) {
-    //     if (err instanceof AxiosError) {
-    //       expect(err.response?.status).toBe(422);
-    //     } else {
-    //       expect(true).toBeFalsy();
-    //     }
-    //   }
-    // })
-    // it('should not update a divEntry by ID when player_id is blank', async () => {
-    //   const invalidDivEntry = {
-    //     ...putDivEntry,
-    //     player_id: ''
-    //   }
-    //   const divEntryJSON = JSON.stringify(invalidDivEntry);
-    //   try {
-    //     const response = await axios({
-    //       method: "put",
-    //       data: divEntryJSON,
-    //       withCredentials: true,
-    //       url: oneDivEntryUrl + testDivEntry.id,
-    //     });
-    //     expect(response.status).toBe(422);
-    //   } catch (err) {
-    //     if (err instanceof AxiosError) {
-    //       expect(err.response?.status).toBe(422);
-    //     } else {
-    //       expect(true).toBeFalsy();
-    //     }        
-    //   }
-    // })
-    // it('should not update a divEntry by ID when fee is blank', async () => {
-    //   const invalidDivEntry = {
-    //     ...putDivEntry,
-    //     fee: ''
-    //   }
-    //   const divEntryJSON = JSON.stringify(invalidDivEntry);
-    //   try {
-    //     const response = await axios({
-    //       method: "put",
-    //       data: divEntryJSON,
-    //       withCredentials: true,
-    //       url: oneDivEntryUrl + testDivEntry.id,
-    //     });
-    //     expect(response.status).toBe(422);
-    //   } catch (err) {
-    //     if (err instanceof AxiosError) {
-    //       expect(err.response?.status).toBe(422);
-    //     } else {
-    //       expect(true).toBeFalsy();
-    //     }
-    //   }
-    // })
-    // it('should not update a divEntry by ID when fee is too low', async () => {
-    //   const invalidDivEntry = {
-    //     ...putDivEntry,
-    //     fee: '-1'
-    //   }
-    //   const divEntryJSON = JSON.stringify(invalidDivEntry);
-    //   try {
-    //     const response = await axios({
-    //       method: "put",
-    //       data: divEntryJSON,
-    //       withCredentials: true,
-    //       url: oneDivEntryUrl + testDivEntry.id,
-    //     });
-    //     expect(response.status).toBe(422);
-    //   } catch (err) {
-    //     if (err instanceof AxiosError) {
-    //       expect(err.response?.status).toBe(422);
-    //     } else {
-    //       expect(true).toBeFalsy();
-    //     }        
-    //   }      
-    // })
-    // it('should not update a divEntry by ID when fee is too high', async () => {
-    //   const invalidDivEntry = {
-    //     ...putDivEntry,
-    //     fee: '1234567890'
-    //   }
-    //   const divEntryJSON = JSON.stringify(invalidDivEntry);
-    //   try {
-    //     const response = await axios({
-    //       method: "put",
-    //       data: divEntryJSON,
-    //       withCredentials: true,
-    //       url: oneDivEntryUrl + testDivEntry.id,
-    //     });
-    //     expect(response.status).toBe(422);
-    //   } catch (err) {
-    //     if (err instanceof AxiosError) {
-    //       expect(err.response?.status).toBe(422);
-    //     } else {
-    //       expect(true).toBeFalsy();
-    //     }        
-    //   }
-    // })
-    // it('should not update a divEntry by ID when fee is not a number', async () => {
-    //   const invalidDivEntry = {
-    //     ...putDivEntry,
-    //     fee: 'not a number'
-    //   }
-    //   const divEntryJSON = JSON.stringify(invalidDivEntry);
-    //   try {
-    //     const response = await axios({
-    //       method: "put",
-    //       data: divEntryJSON,
-    //       withCredentials: true,
-    //       url: oneDivEntryUrl + testDivEntry.id,
-    //     });
-    //     expect(response.status).toBe(422);
-    //   } catch (err) {
-    //     if (err instanceof AxiosError) {
-    //       expect(err.response?.status).toBe(422);
-    //     } else {
-    //       expect(true).toBeFalsy();
-    //     }        
-    //   }      
-    // })
+    it('should update a divEntry by ID', async () => {
+      const divEntryJSON = JSON.stringify(putDivEntry);
+      const response = await axios({
+        method: "put",
+        data: divEntryJSON,
+        withCredentials: true,
+        url: oneDivEntryUrl + testDivEntry.id,
+      });
+      expect(response.status).toBe(200);
+      didPut = true;
+      const puttedDivEntry = response.data.divEntry;
+      // did not update squad_id
+      expect(puttedDivEntry.squad_id).toBe(putDivEntry.squad_id);
+      expect(puttedDivEntry.div_id).toBe(putDivEntry.div_id);
+      expect(puttedDivEntry.player_id).toBe(putDivEntry.player_id);
+      expect(puttedDivEntry.fee).toBe(putDivEntry.fee);
+    })
+    it('should update a sanitized divEntry by ID', async () => { 
+      const toSanitize = {
+        ...putDivEntry,
+        fee: '83.000',
+      }
+      const divEntryJSON = JSON.stringify(toSanitize);
+      const response = await axios({
+        method: "put",
+        data: divEntryJSON,
+        withCredentials: true,
+        url: oneDivEntryUrl + testDivEntry.id,
+      });
+      expect(response.status).toBe(200);
+      didPut = true;
+      const puttedDivEntry = response.data.divEntry;
+      expect(puttedDivEntry.squad_id).toBe(putDivEntry.squad_id);
+      expect(puttedDivEntry.div_id).toBe(putDivEntry.div_id);
+      expect(puttedDivEntry.player_id).toBe(putDivEntry.player_id);
+      expect(puttedDivEntry.fee).toBe(putDivEntry.fee);
+    })
+    it('should not update a divEntry by ID when squad_id is blank', async () => {
+      const invalidDivEntry = {
+        ...putDivEntry,
+        squad_id: ''
+      }
+      const divEntryJSON = JSON.stringify(invalidDivEntry);
+      try {
+        const response = await axios({
+          method: "put",
+          data: divEntryJSON,
+          withCredentials: true,
+          url: oneDivEntryUrl + testDivEntry.id,
+        });
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not update a divEntry by ID when div_id is blank', async () => {
+      const invalidDivEntry = {
+        ...putDivEntry,
+        div_id: ''
+      }
+      const divEntryJSON = JSON.stringify(invalidDivEntry);
+      try {
+        const response = await axios({
+          method: "put",
+          data: divEntryJSON,
+          withCredentials: true,
+          url: oneDivEntryUrl + testDivEntry.id,
+        });
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not update a divEntry by ID when player_id is blank', async () => {
+      const invalidDivEntry = {
+        ...putDivEntry,
+        player_id: ''
+      }
+      const divEntryJSON = JSON.stringify(invalidDivEntry);
+      try {
+        const response = await axios({
+          method: "put",
+          data: divEntryJSON,
+          withCredentials: true,
+          url: oneDivEntryUrl + testDivEntry.id,
+        });
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }        
+      }
+    })
+    it('should not update a divEntry by ID when fee is blank', async () => {
+      const invalidDivEntry = {
+        ...putDivEntry,
+        fee: ''
+      }
+      const divEntryJSON = JSON.stringify(invalidDivEntry);
+      try {
+        const response = await axios({
+          method: "put",
+          data: divEntryJSON,
+          withCredentials: true,
+          url: oneDivEntryUrl + testDivEntry.id,
+        });
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not update a divEntry by ID when fee is too low', async () => {
+      const invalidDivEntry = {
+        ...putDivEntry,
+        fee: '-1'
+      }
+      const divEntryJSON = JSON.stringify(invalidDivEntry);
+      try {
+        const response = await axios({
+          method: "put",
+          data: divEntryJSON,
+          withCredentials: true,
+          url: oneDivEntryUrl + testDivEntry.id,
+        });
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }        
+      }      
+    })
+    it('should not update a divEntry by ID when fee is too high', async () => {
+      const invalidDivEntry = {
+        ...putDivEntry,
+        fee: '1234567890'
+      }
+      const divEntryJSON = JSON.stringify(invalidDivEntry);
+      try {
+        const response = await axios({
+          method: "put",
+          data: divEntryJSON,
+          withCredentials: true,
+          url: oneDivEntryUrl + testDivEntry.id,
+        });
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }        
+      }
+    })
+    it('should not update a divEntry by ID when fee is not a number', async () => {
+      const invalidDivEntry = {
+        ...putDivEntry,
+        fee: 'not a number'
+      }
+      const divEntryJSON = JSON.stringify(invalidDivEntry);
+      try {
+        const response = await axios({
+          method: "put",
+          data: divEntryJSON,
+          withCredentials: true,
+          url: oneDivEntryUrl + testDivEntry.id,
+        });
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }        
+      }      
+    })
   })
 
   describe('PATCH one divEntry API: /api/divEntries/divEntry/:id', () => { 
@@ -2540,12 +2519,16 @@ describe("DivEntries - API's: /api/divEntries", () => {
     
     const divIdForDivEntries = mockDivEntriesToPost[0].div_id
 
-    beforeAll(async () => {
+    beforeAll(async () => { 
+      await deleteAllDivEntriesForTmnt(tmntIdForMulti)
+    })
+
+    beforeEach(async () => {
       await postManyDivEntries(mockDivEntriesToPost)
     })
 
-    afterAll(async () => {
-      await deleteAllDivEntriesForDiv(divIdForDivEntries)
+    afterEach(async () => {
+      await deleteAllDivEntriesForTmnt(tmntIdForMulti)
     })
 
     it('should delete all divEntries for one div', async () => { 
@@ -2556,7 +2539,7 @@ describe("DivEntries - API's: /api/divEntries", () => {
           url: divUrl + divIdForDivEntries
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(mockDivEntriesToPost.length);
+        expect(response.data.deleted.count).toBe(2);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -2616,12 +2599,16 @@ describe("DivEntries - API's: /api/divEntries", () => {
     
     const squadIdForDivEntries = mockDivEntriesToPost[0].squad_id
 
-    beforeAll(async () => {
+    beforeAll(async () => { 
+      await deleteAllDivEntriesForTmnt(tmntIdForMulti)
+    })
+
+    beforeEach(async () => {
       await postManyDivEntries(mockDivEntriesToPost)
     })
 
-    afterAll(async () => {
-      await deleteAllDivEntriesForSquad(squadIdForDivEntries)
+    afterEach(async () => {
+      await deleteAllDivEntriesForTmnt(tmntIdForMulti)
     })
 
     it('should delete all divEntries for one squad', async () => { 
@@ -2632,7 +2619,7 @@ describe("DivEntries - API's: /api/divEntries", () => {
           url: squadUrl + squadIdForDivEntries
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(mockDivEntriesToPost.length);
+        expect(response.data.deleted.count).toBe(4);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
