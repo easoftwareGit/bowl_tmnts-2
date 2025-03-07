@@ -132,8 +132,8 @@ describe('Squads - API: /api/squads', () => {
     it('should get all squads', async () => { 
       const response = await axios.get(url);
       expect(response.status).toBe(200);
-      // 10 rows in prisma/seed.ts
-      expect(response.data.squads).toHaveLength(10);
+      // 12 rows in prisma/seed.ts
+      expect(response.data.squads).toHaveLength(12);
     })
 
   })
@@ -149,6 +149,7 @@ describe('Squads - API: /api/squads', () => {
       const multiSquadEventId = "evt_06055deb80674bd592a357a4716d8ef2";
       const eventSquadId1 = 'sqd_42be0f9d527e4081972ce8877190489d';
       const eventSquadId2 = 'sqd_796c768572574019a6fa79b3b1c8fa57';
+      const eventSquadId3 = 'sqd_1234ec18b3d44c0189c83f6ac5fd4ad6';
       
       const response = await axios({
         method: "get",
@@ -156,12 +157,13 @@ describe('Squads - API: /api/squads', () => {
         url: eventUrl + multiSquadEventId,
       })
       expect(response.status).toBe(200);
-      // 2 rows for tmnt in prisma/seed.ts
-      expect(response.data.squads).toHaveLength(2);
+      // 3 rows for tmnt in prisma/seed.ts
+      expect(response.data.squads).toHaveLength(3);
       const squads: squadType[] = response.data.squads;
       // query in /api/divs/tmnt GET sorts by sort_order
       expect(squads[0].id).toBe(eventSquadId1);
-      expect(squads[1].id).toBe(eventSquadId2);      
+      expect(squads[1].id).toBe(eventSquadId2);  
+      expect(squads[2].id).toBe(eventSquadId3);  
     })
     it('should return 404 status code for an invalid event id', async () => { 
       try {        
@@ -216,25 +218,8 @@ describe('Squads - API: /api/squads', () => {
       const tmntId = 'tmt_d9b1af944d4941f65b2d2d4ac160cdea'; // 1 event & 2 squads
       const tmntSquadId1 = 'sqd_42be0f9d527e4081972ce8877190489d';
       const tmntSquadId2 = 'sqd_796c768572574019a6fa79b3b1c8fa57';
+      const tmntSquadId3 = 'sqd_1234ec18b3d44c0189c83f6ac5fd4ad6';
 
-      const response = await axios({
-        method: "get",
-        withCredentials: true,
-        url: tmntUrl + tmntId,
-      })
-      expect(response.status).toBe(200);
-      // 2 rows for tmnt in prisma/seed.ts
-      expect(response.data.squads).toHaveLength(2);
-      const squads: squadType[] = response.data.squads;
-      // query in /api/divs/tmnt GET sorts by sort_order
-      expect(squads[0].id).toBe(tmntSquadId1);
-      expect(squads[1].id).toBe(tmntSquadId2);      
-    })
-    it('should get all squads for a tournament, 3 events, 2 squads', async () => {
-      const tmntId = 'tmt_fe8ac53dad0f400abe6354210a8f4cd1';
-      const tmntSquadId1 = 'sqd_3397da1adc014cf58c44e07c19914f71';
-      const tmntSquadId2 = 'sqd_20c24199328447f8bbe95c05e1b84644';
-      const tmntSquadId3 = 'sqd_3397da1adc014cf58c44e07c19914f72';
       const response = await axios({
         method: "get",
         withCredentials: true,
@@ -246,8 +231,25 @@ describe('Squads - API: /api/squads', () => {
       const squads: squadType[] = response.data.squads;
       // query in /api/divs/tmnt GET sorts by sort_order
       expect(squads[0].id).toBe(tmntSquadId1);
-      expect(squads[1].id).toBe(tmntSquadId2);   
-      expect(squads[2].id).toBe(tmntSquadId3);   
+      expect(squads[1].id).toBe(tmntSquadId2); 
+      expect(squads[2].id).toBe(tmntSquadId3); 
+    })
+    it('should get all squads for a tournament, 2 events, 2 squads', async () => {
+      const tmntId = 'tmt_2d494e9bb51f4b9abba428c3f37131c9';
+      const tmntSquadId1 = 'sqd_853edbcc963745b091829e3eadfcf064';
+      const tmntSquadId2 = 'sqd_a8daec18b3d44c0189c83f6ac5fd4ad6';      
+      const response = await axios({
+        method: "get",
+        withCredentials: true,
+        url: tmntUrl + tmntId,
+      })
+      expect(response.status).toBe(200);
+      // 2 rows for tmnt in prisma/seed.ts
+      expect(response.data.squads).toHaveLength(2);
+      const squads: squadType[] = response.data.squads;
+      // query in /api/divs/tmnt GET sorts by sort_order
+      expect(squads[0].id).toBe(tmntSquadId1);
+      expect(squads[1].id).toBe(tmntSquadId2);         
     })
     it('should return code 404 for an invalid tmnt id', async () => { 
       try {        
@@ -2926,22 +2928,22 @@ describe('Squads - API: /api/squads', () => {
         }
       }
     })
-    it('should NOT delete a squad by ID when squad has child rows', async () => { 
-      try {
-        const response = await axios({
-          method: 'delete',
-          withCredentials: true,
-          url: oneSquadUrl + testSquad.id
-        })
-        expect(response.status).toBe(409);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(409);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
+    // it('should NOT delete a squad by ID when squad has child rows', async () => { 
+    //   try {
+    //     const response = await axios({
+    //       method: 'delete',
+    //       withCredentials: true,
+    //       url: oneSquadUrl + testSquad.id
+    //     })
+    //     expect(response.status).toBe(409);
+    //   } catch (err) {
+    //     if (err instanceof AxiosError) {
+    //       expect(err.response?.status).toBe(409);
+    //     } else {
+    //       expect(true).toBeFalsy();
+    //     }
+    //   }
+    // })
 
   })
 

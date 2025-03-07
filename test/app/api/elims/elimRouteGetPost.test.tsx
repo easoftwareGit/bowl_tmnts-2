@@ -7,6 +7,7 @@ import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/dbSquads";
 import { deleteAllTmntDivs, postManyDivs } from "@/lib/db/divs/dbDivs";
 import { mockElimsToPost, mockSquadsToPost, mockDivsToPost, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { deleteAllTmntElims } from "@/lib/db/elims/dbElims";
+import { btDbUuid } from "@/lib/uuid";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -84,8 +85,8 @@ describe("Elims - API: /api/elims", () => {
     it("should get all elims", async () => {
       const response = await axios.get(url);
       expect(response.status).toBe(200);
-      // 10 rows in prisma/seed.ts
-      expect(response.data.elims).toHaveLength(10);
+      // 13 rows in prisma/seed.ts
+      expect(response.data.elims).toHaveLength(13);
     });
 
   });
@@ -335,10 +336,11 @@ describe("Elims - API: /api/elims", () => {
   describe("POST", () => {
 
     const elimToPost: elimType = {
-      ...initElim,      
+      ...initElim, 
+      id: btDbUuid('elm'),
       squad_id: "sqd_3397da1adc014cf58c44e07c19914f72",
       div_id: "div_66d39a83d7a84a8c85d28d8d1b2c7a90",
-      start: 1,
+      start: 4,
       games: 3,
       fee: "13",
       sort_order: 13,

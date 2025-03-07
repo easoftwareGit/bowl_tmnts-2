@@ -136,52 +136,6 @@ describe('dbBrktEntries', () => {
     }
   }
 
-  // describe('getAllBrktEntriesForTmnt()', () => { 
-
-  //   it('should get all brktEntries for tmnt', async () => {
-  //     const brktEntries = await getAllBrktEntriesForTmnt(tmntIdForBrktEntries);
-  //     expect(brktEntries).toHaveLength(brktEntriesToGet.length);
-  //     if (!brktEntries) return;
-  //     for (let i = 0; i < brktEntries.length; i++) {
-  //       if (brktEntries[i].id === brktEntriesToGet[0].id) {
-  //         expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[0].player_id);
-  //       } else if (brktEntries[i].id === brktEntriesToGet[1].id) {
-  //         expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[1].player_id);
-  //       } else if (brktEntries[i].id === brktEntriesToGet[2].id) {
-  //         expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[2].player_id);
-  //       } else if (brktEntries[i].id === brktEntriesToGet[3].id) {
-  //         expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[3].player_id);
-  //       } else {
-  //         expect(true).toBe(false);
-  //       }
-  //       expect(brktEntries[i].brkt_id === brkt1Id || brktEntries[i].brkt_id === brkt2Id).toBeTruthy();
-  //       expect(brktEntries[i].num_brackets).toEqual(brktEntriesToGet[i].num_brackets);
-  //       expect(brktEntries[i].fee).toEqual(brktEntriesToGet[i].fee);
-  //     }
-  //   })
-  //   it('should return 0 brktEntries for not found tmnt', async () => {
-  //     const brktEntries = await getAllBrktEntriesForTmnt(notFoundTmntId);
-  //     expect(brktEntries).toHaveLength(0);
-  //   })
-  //   it('should return null if tmmt id is invalid', async () => {
-  //     const brktEntries = await getAllBrktEntriesForTmnt("test");
-  //     expect(brktEntries).toBeNull();
-  //   })
-  //   it('should return null if tmnt id is a valid id, but not a tmnt id', async () => {
-  //     const brktEntries = await getAllBrktEntriesForTmnt(notFoundSquadId);
-  //     expect(brktEntries).toBeNull();
-  //   }
-  //   )
-  //   it('should return null if tmnt id is null', async () => {
-  //     const brktEntries = await getAllBrktEntriesForTmnt(null as any);
-  //     expect(brktEntries).toBeNull();
-  //   })
-  //   it('should return null if tmnt id is undefined', async () => {
-  //     const brktEntries = await getAllBrktEntriesForTmnt(undefined as any);
-  //     expect(brktEntries).toBeNull();
-  //   })
-  // })
-
   describe('getAllBrktEntriesForTmnt()', () => {
 
     it('should get all brktEntries for tournament', async () => { 
@@ -510,8 +464,8 @@ describe('dbBrktEntries', () => {
     const brktEntryToPut = {
       ...initBrktEntry,
       id: "ben_bc4c581d7b1c4fc99dbdbd46f4f7210a",
-      brkt_id: 'brk_d537ea07dbc6453a8a705f4bb7599ed4',
-      player_id: 'ply_a01758cff1cc4bab9d9133e661bd49b0',
+      brkt_id: 'brk_5109b54c2cc44ff9a3721de42c80c8c1',
+      player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
       num_brackets: 7,
       fee: '83', 
       time_stamp: new Date('2023-01-01').getTime()
@@ -522,7 +476,7 @@ describe('dbBrktEntries', () => {
     const resetBrktEntry = {
       ...initBrktEntry,
       id: "ben_bc4c581d7b1c4fc99dbdbd46f4f7210a",
-      brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",          
+      brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
       player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
       num_brackets: 8,
       fee: '40',
@@ -813,7 +767,7 @@ describe('dbBrktEntries', () => {
     const toDel = {
       ...initBrktEntry,
       id: "ben_093a0902e01e46dbbe9f111acefc17da",
-      brkt_id: "brk_d537ea07dbc6453a8a705f4bb7599ed4",          
+      brkt_id: "brk_12344698f47e4d64935547923e2bdbfb",          
       player_id: "ply_bb0fd8bbd9e34d34a7fa90b4111c6e40",
       num_brackets: 8,
       fee: '40',

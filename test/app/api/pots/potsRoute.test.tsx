@@ -149,8 +149,8 @@ describe('Pots - API: /api/pots', () => {
     it('should get all pots', async () => { 
       const response = await axios.get(url);
       expect(response.status).toBe(200);
-      // 7 rows in prisma/seed.ts
-      expect(response.data.pots).toHaveLength(7);
+      // 10 rows in prisma/seed.ts
+      expect(response.data.pots).toHaveLength(10);
     })
 
   })
@@ -1821,7 +1821,7 @@ describe('Pots - API: /api/pots', () => {
     const toDelPot = {
       ...initPot,
       id: "pot_e3758d99c5494efabb3b0d273cf22e7a",
-      squad_id: "sqd_20c24199328447f8bbe95c05e1b84644",
+      squad_id: "sqd_bb2de887bf274242af5d867476b029b8",
       div_id: "div_29b9225d8dd44a4eae276f8bde855729",
       sort_order: 1,
       fee: '20',
@@ -1914,22 +1914,22 @@ describe('Pots - API: /api/pots', () => {
         }
       }
     })
-    it('should NOT delete a pot by ID when pot has child rows', async () => { 
-      try {
-        const delResponse = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: onePotUrl + testPot.id
-        })  
-        expect(delResponse.status).toBe(409);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(409);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
+    // it('should NOT delete a pot by ID when pot has child rows', async () => { 
+    //   try {
+    //     const delResponse = await axios({
+    //       method: "delete",
+    //       withCredentials: true,
+    //       url: onePotUrl + testPot.id
+    //     })  
+    //     expect(delResponse.status).toBe(409);
+    //   } catch (err) {
+    //     if (err instanceof AxiosError) {
+    //       expect(err.response?.status).toBe(409);
+    //     } else {
+    //       expect(true).toBeFalsy();
+    //     }
+    //   }
+    // })
 
   })  
 

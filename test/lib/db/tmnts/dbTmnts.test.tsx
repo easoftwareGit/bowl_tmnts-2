@@ -85,30 +85,32 @@ describe("dbTmnts", () => {
   describe('getUserTmnts', () => {    
     it("should get user's tmnts", async () => { 
       const userTmnts = await getUserTmnts(user1Id);
-      // 9 tmnt rows for user in prisma/seed.ts
-      expect(userTmnts).toHaveLength(9);     
+      // 10 tmnt rows for user in prisma/seed.ts
+      expect(userTmnts).toHaveLength(10);     
       if (!userTmnts) return;   
       expect(userTmnts[0].user_id).toBe(user1Id);
       expect(userTmnts[8].user_id).toBe(user1Id);
       // tmnts sorted by date, newest to oldest
       expect(userTmnts[0].id).toBe('tmt_e134ac14c5234d708d26037ae812ac33')
       expect(userTmnts[0].start_date_str).toBe('2025-08-19')
-      expect(userTmnts[1].id).toBe('tmt_a237a388a8fc4641a2e37233f1d6bebd')
-      expect(userTmnts[1].start_date_str).toBe('2024-12-01')
-      expect(userTmnts[2].id).toBe('tmt_d237a388a8fc4641a2e37233f1d6bebd')
-      expect(userTmnts[2].start_date_str).toBe('2024-07-01')
-      expect(userTmnts[3].id).toBe('tmt_9a34a65584f94f548f5ce3b3becbca19')
-      expect(userTmnts[3].start_date_str).toBe('2024-01-05')
-      expect(userTmnts[4].id).toBe('tmt_fe8ac53dad0f400abe6354210a8f4cd1')
-      expect(userTmnts[4].start_date_str).toBe('2023-12-31')
-      expect(userTmnts[5].id).toBe('tmt_718fe20f53dd4e539692c6c64f991bbe')
-      expect(userTmnts[5].start_date_str).toBe('2023-12-20')
-      expect(userTmnts[6].id).toBe('tmt_467e51d71659d2e412cbc64a0d19ecb4')
-      expect(userTmnts[6].start_date_str).toBe('2023-09-16')
-      expect(userTmnts[7].id).toBe('tmt_a78f073789cc0f8a9a0de8c6e273eab1')
-      expect(userTmnts[7].start_date_str).toBe('2023-01-02')
-      expect(userTmnts[8].id).toBe('tmt_fd99387c33d9c78aba290286576ddce5')
-      expect(userTmnts[8].start_date_str).toBe('2022-10-23')
+      expect(userTmnts[1].id).toBe('tmt_2d494e9bb51f4b9abba428c3f37131c9')
+      expect(userTmnts[1].start_date_str).toBe('2024-12-20')
+      expect(userTmnts[2].id).toBe('tmt_a237a388a8fc4641a2e37233f1d6bebd')
+      expect(userTmnts[2].start_date_str).toBe('2024-12-01')
+      expect(userTmnts[3].id).toBe('tmt_d237a388a8fc4641a2e37233f1d6bebd')
+      expect(userTmnts[3].start_date_str).toBe('2024-07-01')
+      expect(userTmnts[4].id).toBe('tmt_9a34a65584f94f548f5ce3b3becbca19')
+      expect(userTmnts[4].start_date_str).toBe('2024-01-05')
+      expect(userTmnts[5].id).toBe('tmt_fe8ac53dad0f400abe6354210a8f4cd1')
+      expect(userTmnts[5].start_date_str).toBe('2023-12-31')
+      expect(userTmnts[6].id).toBe('tmt_718fe20f53dd4e539692c6c64f991bbe')
+      expect(userTmnts[6].start_date_str).toBe('2023-12-20')
+      expect(userTmnts[7].id).toBe('tmt_467e51d71659d2e412cbc64a0d19ecb4')
+      expect(userTmnts[7].start_date_str).toBe('2023-09-16')
+      expect(userTmnts[8].id).toBe('tmt_a78f073789cc0f8a9a0de8c6e273eab1')
+      expect(userTmnts[8].start_date_str).toBe('2023-01-02')
+      expect(userTmnts[9].id).toBe('tmt_fd99387c33d9c78aba290286576ddce5')
+      expect(userTmnts[9].start_date_str).toBe('2022-10-23')
 
       expect(userTmnts[0].bowls).not.toBeNull();
     })
@@ -164,19 +166,19 @@ describe("dbTmnts", () => {
       const tmnts = await getTmntsForYear('2023');
       expect(tmnts).not.toBeNull();
       if (!tmnts) return;
-      // 4 rows for 2023 tmnts in prisma/seed.ts
-      expect(tmnts).toHaveLength(4);
+      // 5 rows for 2023 tmnts in prisma/seed.ts
+      expect(tmnts).toHaveLength(5);
       expect(tmnts[0].bowls).not.toBeNull();
-      expect(tmnts[0].start_date_str).toBe('2023-12-20')
+      expect(tmnts[0].start_date_str).toBe('2023-12-31')
     })
     it('should get tmnt results for year 2023 - getTmnts()', async () => { 
       const tmnts = await getTmnts('2023');
       expect(tmnts).not.toBeNull();
       if (!tmnts) return;
-      // 4 rows for 2023 tmnts in prisma/seed.ts
-      expect(tmnts).toHaveLength(4);
+      // 5 rows for 2023 tmnts in prisma/seed.ts
+      expect(tmnts).toHaveLength(5);
       expect(tmnts[0].bowls).not.toBeNull();
-      expect(tmnts[0].start_date_str).toBe('2023-12-20')
+      expect(tmnts[0].start_date_str).toBe('2023-12-31')
     })
     it('should get tmnt results for year 2022 - getTmntsForYear()', async () => { 
       const tmnts = await getTmntsForYear('2022');

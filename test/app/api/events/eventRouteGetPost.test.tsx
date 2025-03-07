@@ -158,10 +158,9 @@ describe('Events - GETs and POST API: /api/events', () => {
 
     it('should get all events for a tournament', async () => { 
       // const values taken from prisma/seed.ts
-      const miltiEventTmntId = 'tmt_fe8ac53dad0f400abe6354210a8f4cd1';
-      const tmntEvent1Id = 'evt_9a58f0a486cb4e6c92ca3348702b1a62';
-      const tmntEvent2Id = 'evt_cb55703a8a084acb86306e2944320e8d';
-      const tmntEvent3Id = 'evt_adfcff4846474a25ad2936aca121bd37';
+      const miltiEventTmntId = 'tmt_2d494e9bb51f4b9abba428c3f37131c9';
+      const tmntEvent1Id = 'evt_cb55703a8a084acb86306e2944320e8d';
+      const tmntEvent2Id = 'evt_adfcff4846474a25ad2936aca121bd37';      
       
       const response = await axios({
         method: "get",
@@ -169,22 +168,18 @@ describe('Events - GETs and POST API: /api/events', () => {
         url: tmntUrl + miltiEventTmntId, 
       })
       expect(response.status).toBe(200);
-      // 3 event rows for tmnt in prisma/seed.ts
-      expect(response.data.events).toHaveLength(3);
+      // 2 event rows for tmnt in prisma/seed.ts
+      expect(response.data.events).toHaveLength(2);
       const events: eventType[] = response.data.events;
       // query in /api/events/tmnt GET sorts by sort_order
       expect(events[0].id).toBe(tmntEvent1Id);
-      expect(events[1].id).toBe(tmntEvent2Id);
-      expect(events[2].id).toBe(tmntEvent3Id);
+      expect(events[1].id).toBe(tmntEvent2Id);      
       expect(events[0].tmnt_id).toBe(miltiEventTmntId);
-      expect(events[1].tmnt_id).toBe(miltiEventTmntId);
-      expect(events[2].tmnt_id).toBe(miltiEventTmntId);
+      expect(events[1].tmnt_id).toBe(miltiEventTmntId);      
       expect(events[0].lpox).not.toBeNull();
-      expect(events[1].lpox).not.toBeNull();
-      expect(events[2].lpox).not.toBeNull();
+      expect(events[1].lpox).not.toBeNull();      
       expect(events[0].lpox).not.toBe('');
-      expect(events[1].lpox).not.toBe('');
-      expect(events[2].lpox).not.toBe('');
+      expect(events[1].lpox).not.toBe('');      
     })
     it('should return status 404 when tmntId is invalid', async () => { 
       try {

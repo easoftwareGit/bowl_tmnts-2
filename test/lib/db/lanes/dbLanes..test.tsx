@@ -378,7 +378,7 @@ describe('dbLanes', () => {
       ...initLane,
       id: "lan_255dd3b8755f4dea956445e7a3511d91",
       lane_number: 99,
-      squad_id: "sqd_20c24199328447f8bbe95c05e1b84644",
+      squad_id: "sqd_bb2de887bf274242af5d867476b029b8",
     }
 
     const nonFoundId = "lan_00000000000000000000000000000000";

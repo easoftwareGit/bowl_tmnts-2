@@ -84,8 +84,8 @@ describe("Pot Entries - API's: /api/potEntries", () => {
     it('should get all potEntries', async () => {
       const response = await axios.get(url);
       expect(response.status).toBe(200);
-      // 35 rows in prisma/seed.ts
-      expect(response.data.potEntries).toHaveLength(35);
+      // 43 rows in prisma/seed.ts
+      expect(response.data.potEntries).toHaveLength(43);
       for (let i = 0; i < response.data.potEntries.length; i++) {
         const potEntry = response.data.potEntries[i];
         expect(potEntry.id).toBeDefined();

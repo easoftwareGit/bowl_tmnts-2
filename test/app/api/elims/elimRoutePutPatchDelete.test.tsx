@@ -46,8 +46,8 @@ const toDelDivSquadElims = [
   {
     ...initElim,
     id: "elm_de24c5cc04f6463d89f24e6e19a12601",
-    squad_id: "sqd_3397da1adc014cf58c44e07c19914f72",
-    div_id: "div_66d39a83d7a84a8c85d28d8d1b2c7a90",
+    squad_id: "sqd_42be0f9d527e4081972ce8877190489d",
+    div_id: "div_18997d3fd7ef4eb7ad2b53a9e93f9ce5",
     sort_order: 1,
     start: 1,
     games: 3,
@@ -56,8 +56,8 @@ const toDelDivSquadElims = [
   {
     ...initElim,
     id: "elm_de24c5cc04f6463d89f24e6e19a12602",
-    squad_id: "sqd_3397da1adc014cf58c44e07c19914f72",
-    div_id: "div_66d39a83d7a84a8c85d28d8d1b2c7a90",
+    squad_id: "sqd_42be0f9d527e4081972ce8877190489d",
+    div_id: "div_18997d3fd7ef4eb7ad2b53a9e93f9ce5",
     sort_order: 2,
     start: 2,
     games: 3,
@@ -66,8 +66,8 @@ const toDelDivSquadElims = [
   {
     ...initElim,
     id: "elm_de24c5cc04f6463d89f24e6e19a12603",
-    squad_id: "sqd_3397da1adc014cf58c44e07c19914f72",
-    div_id: "div_66d39a83d7a84a8c85d28d8d1b2c7a90",
+    squad_id: "sqd_42be0f9d527e4081972ce8877190489d",
+    div_id: "div_18997d3fd7ef4eb7ad2b53a9e93f9ce5",
     sort_order: 3,
     start: 3,
     games: 3,
@@ -658,11 +658,14 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       }
     });
     it("should NOT update elim by ID when div_id + start + games is not unique", async () => {
+      const noUpDivId = 'div_99a3cae28786485bb7a036935f0f6a0a';
+      const noUpSquadId = 'sqd_8e4266e1174642c7a1bcec47a50f275f';
+
       const invalidElim = {
-        ...putElim,
-        id: elim3Id,
-        div_id: div2Id,
-        start: 4,
+        ...putElim,        
+        squad_id: noUpSquadId,
+        div_id: noUpDivId,
+        start: 1,
         games: 3,
       };
       const elimJSON = JSON.stringify(invalidElim);

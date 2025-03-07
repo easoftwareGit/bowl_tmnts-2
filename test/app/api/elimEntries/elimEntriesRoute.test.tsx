@@ -91,8 +91,8 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
     it('should get all elimEntries', async () => {
       const response = await axios.get(url);
       expect(response.status).toBe(200);
-      // 37 rows in prisma/seed.ts
-      expect(response.data.elimEntries).toHaveLength(37);
+      // 45 rows in prisma/seed.ts
+      expect(response.data.elimEntries).toHaveLength(45);
     })
   })
 
@@ -2043,7 +2043,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
     const toDelElimEntry = {
       ...initElimEntry,
       id: "een_19f158c6cc0d4f619227fbc24a885bab",
-      elim_id: "elm_c75077494c2d4d9da166d697c08c28d2",
+      elim_id: "elm_a47a4ec07f824b0e93169ae78e8b4b1e",
       player_id: "ply_bb0fd8bbd9e34d34a7fa90b4111c6e40",
       fee: '5',
     }

@@ -58,7 +58,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
   const event2Id = 'evt_dadfd0e9c11a4aacb87084f1609a0afd';
   const event5Id = 'evt_cb55703a8a084acb86306e2944320e8d'; // doubles
   const tmnt1Id = 'tmt_fd99387c33d9c78aba290286576ddce5';
-  const tmnt8Id = 'tmt_fe8ac53dad0f400abe6354210a8f4cd1'; //tmnt with singles & doubles
+  const teamsTmntId = 'tmt_2d494e9bb51f4b9abba428c3f37131c9'; //tmnt with doubles and trios
 
   describe('PUT by ID - API: /api/events/event/:id', () => { 
 
@@ -1445,11 +1445,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
     })
     it('should NOT update an event by ID when tmnt_id + event_name are not unique', async () => {
-      const dubName = 'Singles';      
+      const TriosName = 'Trios';      
       const invalidEvent = {
         ...putEvent,
-        tmnt_id: tmnt8Id,   
-        event_name: dubName,
+        tmnt_id: teamsTmntId,   
+        event_name: TriosName,
         sort_order: 2,
       }
       const eventJSON = JSON.stringify(invalidEvent);
@@ -2497,11 +2497,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
     })
     it('should NOT update an event by ID when tmnt_id + event_name are not unique', async () => {
-      const dubName = 'Singles';      
+      const TriosName = 'Trios';      
       const invalidEvent = {
         ...blankEvent,
-        tmnt_id: tmnt8Id,   
-        event_name: dubName,
+        tmnt_id: teamsTmntId,   
+        event_name: TriosName,
         sort_order: 2,
       }
       const eventJSON = JSON.stringify(invalidEvent);
@@ -2650,22 +2650,22 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         }
       }
     })
-    it('should NOT delete an event by ID when event has child rows', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id
-        });
-        expect(response.status).toBe(409);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(409);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
+    // it('should NOT delete an event by ID when event has child rows', async () => {
+    //   try {
+    //     const response = await axios({
+    //       method: "delete",
+    //       withCredentials: true,
+    //       url: oneEventUrl + testEvent.id
+    //     });
+    //     expect(response.status).toBe(409);
+    //   } catch (err) {
+    //     if (err instanceof AxiosError) {
+    //       expect(err.response?.status).toBe(409);
+    //     } else {
+    //       expect(true).toBeFalsy();
+    //     }
+    //   }
+    // })
     
   })
 

@@ -244,35 +244,51 @@ export const getAllDataForTmnt = async (tmntId: string): Promise<dataOneTmntType
       elims: [],
     }
     const adTmnt = await getTmnt(tmntId);
-    if (!adTmnt) return null
+    if (!adTmnt) { 
+      return null
+    } 
     allTmntData.tmnt = { ...adTmnt };
 
     const adEvents = await getAllEventsForTmnt(tmntId);
-    if (!adEvents || adEvents.length === 0) return null
+    if (!adEvents || adEvents.length === 0) { 
+      return null
+    } 
     allTmntData.events = [...adEvents];
 
     const adDivs = await getAllDivsForTmnt(tmntId);
-    if (!adDivs || adDivs.length === 0) return null
+    if (!adDivs || adDivs.length === 0) { 
+      return null
+    } 
     allTmntData.divs = [...adDivs];
 
     const adSquads = await getAllSquadsForTmnt(tmntId);
-    if (!adSquads || adSquads.length === 0) return null
+    if (!adSquads || adSquads.length === 0) { 
+      return null
+    } 
     allTmntData.squads = [...adSquads];
 
     const adLanes = await getAllLanesForTmnt(tmntId);
-    if (!adLanes || adLanes.length === 0) return null
+    if (!adLanes || adLanes.length === 0) { 
+      return null
+    } 
     allTmntData.lanes = [...adLanes];
 
     const adPots = await getAllPotsForTmnt(tmntId);
-    if (!adPots) return null
+    if (!adPots) { 
+      return null
+    } 
     allTmntData.pots = [...adPots];
 
     const adBrkts = await getAllBrktsForTmnt(tmntId);
-    if (!adBrkts) return null
+    if (!adBrkts) { 
+      return null
+    }    
     allTmntData.brkts = [...adBrkts];
 
     const adElims = await getAllElimsForTmnt(tmntId);
-    if (!adElims) return null
+    if (!adElims) { 
+      return null
+    } 
     allTmntData.elims = [...adElims];
 
     return allTmntData

@@ -939,7 +939,7 @@ describe('dbDivEntries', () => {
     const toDel = {
       ...initDivEntry,
       id: "den_a55c6cd27d1b482aa0ff248d5fb496ed",      
-      squad_id: "sqd_20c24199328447f8bbe95c05e1b84644",
+      squad_id: "sqd_bb2de887bf274242af5d867476b029b8",
       div_id: 'div_1f42042f9ef24029a0a2d48cc276a087',
       player_id: 'ply_bb0fd8bbd9e34d34a7fa90b4111c6e40',
       fee: '80'

@@ -76,8 +76,8 @@ describe("Players - API's: /api/players", () => {
     it('should get all players', async () => {
       const response = await axios.get(url);
       expect(response.status).toBe(200);
-      // 45 rows in prisma/seed.ts
-      expect(response.data.players).toHaveLength(45);
+      // 48 rows in prisma/seed.ts
+      expect(response.data.players).toHaveLength(48);
     })
 
   })

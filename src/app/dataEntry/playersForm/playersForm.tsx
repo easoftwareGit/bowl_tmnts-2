@@ -44,10 +44,17 @@ import "./grid.css";
 import { cloneDeep } from "lodash";
 import { PayloadAction, unwrapResult } from "@reduxjs/toolkit";
 
+// full tmnt
 // http://localhost:3000/dataEntry/runTmnt/tmt_d237a388a8fc4641a2e37233f1d6bebd
 // http://localhost:3000/dataEntry/editPlayers/tmt_d237a388a8fc4641a2e37233f1d6bebd
-
 // squadId: "sqd_8e4266e1174642c7a1bcec47a50f275f"
+//
+// new years eve 
+// http://localhost:3000/dataEntry/runTmnt/tmt_fe8ac53dad0f400abe6354210a8f4cd1
+// http://localhost:3000/dataEntry/editPlayers/tmt_fe8ac53dad0f400abe6354210a8f4cd1
+// eventId: "evt_9a58f0a486cb4e6c92ca3348702b1a62"
+// squadId: "sqd_3397da1adc014cf58c44e07c19914f71"
+
 
 declare module "@mui/x-data-grid" {
   interface ToolbarPropsOverrides {

@@ -4,7 +4,7 @@ import { testBaseDivEntriesApi } from "../../../testApi";
 import { initDiv, initDivEntry } from "@/lib/db/initVals";
 import { divEntryRawWithHdcpType, divEntryType, HdcpForTypes } from "@/lib/types/types";
 import { mockDivEntriesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllDivEntriesForDiv, deleteAllDivEntriesForSquad, deleteAllDivEntriesForTmnt, postManyDivEntries } from "@/lib/db/divEntries/dbDivEntries";
+import { deleteAllDivEntriesForTmnt, postManyDivEntries } from "@/lib/db/divEntries/dbDivEntries";
 import { cloneDeep } from "lodash";
 import { putDiv } from "@/lib/db/divs/dbDivs";
 
@@ -94,8 +94,8 @@ describe("DivEntries - API's: /api/divEntries", () => {
     it('should get all divEntries', async () => {
       const response = await axios.get(url);
       expect(response.status).toBe(200);
-      // 47 rows in prisma/seed.ts
-      expect(response.data.divEntries).toHaveLength(47);
+      // 49 rows in prisma/seed.ts
+      expect(response.data.divEntries).toHaveLength(49);
     })
   })
 
@@ -2419,11 +2419,11 @@ describe("DivEntries - API's: /api/divEntries", () => {
     // from prisma/seeds.ts
     const toDelDivEntry = {
       ...initDivEntry,
-      id: "den_a55c6cd27d1b482aa0ff248d5fb496ed",   
-      squad_id: "sqd_20c24199328447f8bbe95c05e1b84644",
-      div_id: 'div_1f42042f9ef24029a0a2d48cc276a087',
-      player_id: 'ply_bb0fd8bbd9e34d34a7fa90b4111c6e40',
-      fee: '80'
+      id: "den_a55c6cd27d1b482aa0ff248d5fb496ed",
+      squad_id: "sqd_bb2de887bf274242af5d867476b029b8",
+      div_id: "div_1f42042f9ef24029a0a2d48cc276a087",
+      player_id: "ply_bb0fd8bbd9e34d34a7fa90b4111c6e40",
+      fee: '80',
     }
 
     let didDel = false

@@ -86,8 +86,8 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
     it('should get all brkts', async () => {
       const response = await axios.get(url);
       expect(response.status).toBe(200);
-      // 10 rows in prisma/seed.ts
-      expect(response.data.brkts).toHaveLength(10);
+      // 15 rows in prisma/seed.ts
+      expect(response.data.brkts).toHaveLength(15);
       const brkts = response.data.brkts;
       for (let i = 0; i < brkts.length; i++) {
         expect(brkts[i].fee * brkts[i].players).toBe(Number(brkts[i].fsa));

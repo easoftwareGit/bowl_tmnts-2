@@ -92,6 +92,18 @@ describe('dbSquads', () => {
         lane_count: 10, 
         starting_lane: 1,
         sort_order: 2,
+      },
+      {
+        ...initSquad,
+        id: "sqd_1234ec18b3d44c0189c83f6ac5fd4ad6",
+        event_id: "evt_06055deb80674bd592a357a4716d8ef2",
+        squad_name: "C Squad",
+        squad_date_str: "2022-08-21",
+        squad_time: "04:30 PM",
+        games: 3,
+        lane_count: 24,
+        starting_lane: 1,
+        sort_order: 3,
       }
     ]
 

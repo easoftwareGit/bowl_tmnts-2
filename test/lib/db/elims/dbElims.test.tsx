@@ -4,7 +4,7 @@ import { testBaseElimsApi } from "../../../testApi";
 import { elimType } from "@/lib/types/types";
 import { initElim } from "@/lib/db/initVals";
 import { deleteAllDivElims, deleteAllSquadElims, deleteAllTmntElims, deleteElim, getAllElimsForTmnt, postElim, postManyElims, putElim } from "@/lib/db/elims/dbElims";
-import { mockElimsToPost, mockSquadsToPost, mockDivs, tmntToDelId, mockDivsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
+import { mockElimsToPost, mockSquadsToPost, tmntToDelId, mockDivsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { deleteAllTmntSquads, deleteSquad, postManySquads, postSquad } from "@/lib/db/squads/dbSquads";
 import { deleteAllTmntDivs, deleteDiv, postDiv, postManyDivs } from "@/lib/db/divs/dbDivs";
 
@@ -119,10 +119,10 @@ describe('elimsAxios', () => {
   describe('postElim', () => {
 
     const elimToPost = {
-      ...initElim,    
-      squad_id: 'sqd_3397da1adc014cf58c44e07c19914f72',
-      div_id: 'div_66d39a83d7a84a8c85d28d8d1b2c7a90',
-      start: 1,
+      ...initElim,
+      squad_id: 'sqd_ae4266e1174642c7a1bcec47a50f275f',
+      div_id: 'div_a9a3cae28786485bb7a036935f0f6a0a',
+      start: 2,
       games: 3,
       fee: '13',
       sort_order: 13

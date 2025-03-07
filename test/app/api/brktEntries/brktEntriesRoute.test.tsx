@@ -8,7 +8,6 @@ import { deleteAllBrktEntriesForTmnt, postManyBrktEntries } from "@/lib/db/brktE
 import { cloneDeep } from "lodash";
 import { compareAsc } from "date-fns";
 import { maxDate, minDate } from "@/lib/validation";
-import { time } from "console";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -96,8 +95,8 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
     it('should get all brktEntries', async () => {
       const response = await axios.get(url);
       expect(response.status).toBe(200);
-      // 19 rows in prisma/seed.ts
-      expect(response.data.brktEntries).toHaveLength(19);
+      // 27 rows currently in prisma/seed.ts
+      expect(response.data.brktEntries).toHaveLength(27);
     })
   })
 
@@ -355,9 +354,10 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
   describe('POST one brktEntry API: /api/brktEntries', () => { 
     
     const brktEntryToPost: brktEntryType = {
-      ...initBrktEntry,           
+      ...initBrktEntry,  
+      id: 'ben_8b5ee3ceb07541bd94bf9ddec146b5ef',
       brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
-      player_id: 'ply_bb0fd8bbd9e34d34a7fa90b4111c6e40',
+      player_id: 'ply_91c5aa1c14644e03b6735abd1480ee32',
       num_brackets: 17,
       fee: '83'
     }
@@ -376,10 +376,6 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
       if (createdBrktEntry) {
         await deletePostedBrktEntry();
       }      
-    })
-
-    afterAll(async () => {
-      await deletePostedBrktEntry();
     })
 
     it('should post one brktEntry', async () => {
@@ -2937,7 +2933,7 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
     const toDelBrktEntry = {
       ...initBrktEntry,
       id: "ben_093a0902e01e46dbbe9f111acefc17da",
-      brkt_id: "brk_d537ea07dbc6453a8a705f4bb7599ed4",          
+      brkt_id: "brk_12344698f47e4d64935547923e2bdbfb",          
       player_id: "ply_bb0fd8bbd9e34d34a7fa90b4111c6e40",
       num_brackets: 8,
       fee: '40',

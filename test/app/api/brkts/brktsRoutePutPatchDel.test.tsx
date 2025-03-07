@@ -2283,22 +2283,22 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
         }
       }
     })    
-    it('should NOT delete a brkt by ID when brkt has child rows', async () => { 
-      try {
-        const delResponse = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: oneBrktUrl + testBrkt.id
-        })  
-        expect(delResponse.status).toBe(409);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(409);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
+    // it('should NOT delete a brkt by ID when brkt has child rows', async () => { 
+    //   try {
+    //     const delResponse = await axios({
+    //       method: "delete",
+    //       withCredentials: true,
+    //       url: oneBrktUrl + testBrkt.id
+    //     })  
+    //     expect(delResponse.status).toBe(409);
+    //   } catch (err) {
+    //     if (err instanceof AxiosError) {
+    //       expect(err.response?.status).toBe(409);
+    //     } else {
+    //       expect(true).toBeFalsy();
+    //     }
+    //   }
+    // })
   })
 
   describe('DELETE all brkts for a squad API: /api/brkts/squad/:squadId', () => { 

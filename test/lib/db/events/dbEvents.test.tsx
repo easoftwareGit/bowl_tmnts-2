@@ -36,23 +36,8 @@ describe("dbEvents", () => {
     const eventsToGet: eventType[] = [
       {
         ...initEvent,
-        id: "evt_9a58f0a486cb4e6c92ca3348702b1a62",
-        tmnt_id: "tmt_fe8ac53dad0f400abe6354210a8f4cd1",
-        event_name: "Singles",
-        team_size: 1,
-        games: 6,
-        entry_fee: '80',
-        lineage: '18',
-        prize_fund: '55',
-        other: '2',
-        expenses: '5',
-        added_money: '0',
-        sort_order: 1,
-      },
-      {
-        ...initEvent,
         id: "evt_cb55703a8a084acb86306e2944320e8d",
-        tmnt_id: "tmt_fe8ac53dad0f400abe6354210a8f4cd1",
+        tmnt_id: "tmt_2d494e9bb51f4b9abba428c3f37131c9",
         event_name: "Doubles",
         team_size: 2,
         games: 6,
@@ -62,12 +47,12 @@ describe("dbEvents", () => {
         other: '4',
         expenses: '10',
         added_money: '0',
-        sort_order: 2,
+        sort_order: 1,
       },
       {
         ...initEvent,
         id: "evt_adfcff4846474a25ad2936aca121bd37",
-        tmnt_id: "tmt_fe8ac53dad0f400abe6354210a8f4cd1",
+        tmnt_id: "tmt_2d494e9bb51f4b9abba428c3f37131c9",
         event_name: "Trios",
         team_size: 3,
         games: 3,
@@ -77,7 +62,7 @@ describe("dbEvents", () => {
         other: '4',
         expenses: '10',
         added_money: '0',
-        sort_order: 3,
+        sort_order: 2,
       }
     ]
 

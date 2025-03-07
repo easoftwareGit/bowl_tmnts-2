@@ -138,8 +138,8 @@ describe('Lanes - API: /api/lanes', () => {
     it('should get all lanes', async () => {
       const response = await axios.get(url);
       expect(response.status).toEqual(200);
-      // 81 rows in prisma/seed.ts
-      expect(response.data.lanes).toHaveLength(81);
+      // 87 rows in prisma/seed.ts
+      expect(response.data.lanes).toHaveLength(87);
     })    
 
   })
@@ -1037,7 +1037,7 @@ describe('Lanes - API: /api/lanes', () => {
       ...initLane,
       id: "lan_255dd3b8755f4dea956445e7a3511d91",
       lane_number: 99,
-      squad_id: "sqd_20c24199328447f8bbe95c05e1b84644",
+      squad_id: "sqd_bb2de887bf274242af5d867476b029b8",
     }
 
     let didDel = false
