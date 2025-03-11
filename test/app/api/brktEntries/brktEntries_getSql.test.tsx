@@ -1,4 +1,4 @@
-import { getUpdateManySQL, getDeleteManySQL, getInsertManySQL, exportedForTesting } from "@/app/api/brktEntries/many/getSql";
+import { getUpdateManySQL, getDeleteManySQL, getInsertManySQL, exportedForTesting } from "@/app/api/brktEntries/many/getSql2";
 import { deleteAllBrktEntriesForSquad, postManyBrktEntries } from "@/lib/db/brktEntries/dbBrktEntries";
 import { initBrktEntry } from "@/lib/db/initVals";
 import { brktEntryType } from "@/lib/types/types";
