@@ -1,8 +1,8 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ioStatusType } from "@/redux/statusTypes";
 import { RootState } from "@/redux/store";
-import { allEntriesOneSquadType, brktEntryType, dataOneSquadEntriesType, divEntryType, elimEntryType, ioDataError, playerType, potEntryType, putManyEntriesReturnType, tmntEntryPlayerType, updatedEntriesCountsType } from "@/lib/types/types";
-import { getAllEntriesForSquad } from "@/lib/db/squads/dbSquads";
+import { allEntriesOneSquadType, brktEntryType, dataOneSquadEntriesType, dataOneTmntType, divEntryType, elimEntryType, ioDataError, playerType, potEntryType, putManyEntriesReturnType, tmntEntryPlayerType, updatedEntriesCountsType } from "@/lib/types/types";
+import { getAllEntriesForSquad, getAllEntriesForSquad2 } from "@/lib/db/squads/dbSquads";
 import { cloneDeep } from "lodash";
 import { saveEntriesData } from "@/lib/db/tmntEntries/dbTmntEntries";
 import { playerEntryData } from "@/app/dataEntry/playersForm/createColumns";
@@ -72,6 +72,40 @@ export const fetchOneSquadEntries = createAsyncThunk(
     return allEnts as allEntriesOneSquadType    
   }
 )
+
+// export const fetchOneSquadEntries = createAsyncThunk(
+//   "allEntriesOneSquad/fetchOneSquadEntries",
+//   async (curData: dataOneTmntType, { getState }) => {
+
+//     // noIdYet = (squadId === "" || squadId === undefined || squadId === null);
+//     noIdYet = (!curData || curData.squads.length === 0 || curData.squads[0].id === "" || curData.squads[0].id === undefined || curData.squads[0].id === null);
+//     let squadId = '';
+//     if (!noIdYet) {
+//       squadId = curData.squads[0].id;
+//     }
+    
+//     const state = getState() as RootState;
+//     // const currentSquad = state.allDataOneTmnt.tmntData?.origData.squads[0].id;
+//     // if (currentSquad === squadId) {
+//     //   // Return the current state if the tournament ID matches the one being fetched 
+//     //   return state.allEntriesOneSquad.entryData;
+//     // }
+
+//     // Do not use try / catch blocks here. Need the promise to be fulfilled or
+//     // rejected which will have the appropriate response in the extraReducers.    
+//     const gotData = await getAllEntriesForSquad2(curData); 
+//     if (!gotData) {
+//       return null;
+//     }
+
+//     const allEnts: allEntriesOneSquadType = {
+//       origData: cloneDeep(gotData) as dataOneSquadEntriesType,
+//       curData: cloneDeep(gotData) as dataOneSquadEntriesType
+//     }
+
+//     return allEnts as allEntriesOneSquadType    
+//   }
+// )
 
 export const SaveOneSquadEntries = createAsyncThunk(
   "allEntriesOneSquad/saveOneSquadEntries",    

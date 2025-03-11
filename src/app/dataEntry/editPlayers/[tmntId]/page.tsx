@@ -36,7 +36,7 @@ import { getBrktOrElimName } from "@/lib/getName";
 import { Tab, Tabs } from "react-bootstrap";
 import { BracketList } from "@/components/brackets/bracketList";
 import BracketGrid, { BGDataType } from "@/components/brackets/bracketGrid";
-import { cloneDeep } from "lodash";
+import { cloneDeep, entries } from "lodash";
 import usePreventUnload from "@/components/preventUnload/preventUnload";
 import WaitModal from "@/components/modal/waitModal";
 
@@ -160,8 +160,12 @@ export default function EditPlayersPage() {
   squadId = playerFormTmnt?.curData?.squads[0]?.id || "";
 
   useEffect(() => {
-    dispatch(fetchOneSquadEntries(squadId));
+    dispatch(fetchOneSquadEntries(squadId));    
   }, [squadId, dispatch]);
+
+  // useEffect(() => {
+  //   dispatch(fetchOneSquadEntries(playerFormTmnt?.curData));    
+  // }, [playerFormTmnt?.curData, dispatch]);
 
   const entriesLoadStatus = useSelector(getOneSquadEntriesLoadStatus);
   const entriesError = useSelector(getOneSquadEntriesError);    
@@ -171,6 +175,75 @@ export default function EditPlayersPage() {
     origData: dataEntriesOneSquad?.origData,
     curData: dataEntriesOneSquad?.curData,
   };
+
+  // useEffect(() => {
+  //   // sets entriesCountObj and priorCount
+  //   const setEntriesCountObj = (tmntData: dataOneTmntType) => {
+  //     let initCount: entriesCountType = {};
+  //     let initPriorCount: entriesCountType = {};
+  //     tmntData.divs.forEach((div) => {
+  //       const divFeeName = entryFeeColName(div.id);
+  //       initCount = {
+  //         ...initCount,
+  //         [divFeeName]: 0,
+  //       };        
+  //     });
+  //     tmntData.pots.forEach((pot) => {
+  //       const potFeeName = entryFeeColName(pot.id);
+  //       initCount = {
+  //         ...initCount,
+  //         [potFeeName]: 0,
+  //       };
+  //     });
+  //     tmntData.brkts.forEach((brkt) => {
+  //       const numBrktsName = entryNumBrktsColName(brkt.id);
+  //       initCount = {
+  //         ...initCount,
+  //         [numBrktsName]: 0,
+  //       };
+  //       initPriorCount = {
+  //         ...initPriorCount,
+  //         [numBrktsName]: -1,
+  //       }
+  //     });
+  //     tmntData.elims.forEach((elim) => {
+  //       const elimFeeName = entryFeeColName(elim.id);
+  //       initCount = {
+  //         ...initCount,
+  //         [elimFeeName]: 0,
+  //       };
+  //     });
+  //     setEntriesCount(initCount);  
+  //   };
+  //   // sets brktsList
+  //   const setBrktsObjs = (brkts: brktType[]) => {
+  //     const initBrktsList = cloneDeep(emptyBrktsList)
+  //     const initBrktGridData = cloneDeep(emptyBGDataList)
+  //     const playersPerMatch = 2; 
+  //     brkts.forEach((brkt) => {    
+  //       // right now only 2 players per match, 3 games in bracket
+  //       // const playersPerMatch = Math.pow(brkt.players, 1 / brkt.games);        
+  //       const brktList = new BracketList(brkt.id, playersPerMatch, brkt.games);
+  //       initBrktsList[brkt.id] = brktList;
+  //       const bgData: BGDataType = {          
+  //         forFullValues: [],
+  //         for1ByeValues: [],
+  //       };   
+  //       initBrktGridData[brkt.id] = (bgData);
+  //     });      
+  //     setAllBrktsList(initBrktsList);
+  //     setBGDataList(initBrktGridData);
+  //   } 
+    
+  //   setEntriesCountObj(playerFormTmnt.curData);
+  //   setBrktsObjs(playerFormTmnt.curData.brkts);
+  // }, [emptyBGDataList, emptyBrktsList, playerFormTmnt.curData]); 
+
+  // useEffect(() => {    
+  //   const currRows = populateRows(playersFormData.curData);
+  //   setRows(currRows);   
+  //   setOrigRows(currRows);
+  // }, [playersFormData.curData]); // DO NOT INCLUDE setRow in array
 
   useEffect(() => {
     // sets entriesCountObj and priorCount
@@ -209,7 +282,7 @@ export default function EditPlayersPage() {
           [elimFeeName]: 0,
         };
       });
-      setEntriesCount(initCount);
+      setEntriesCount(initCount);      
     };
     // sets brktsList
     const setBrktsObjs = (brkts: brktType[]) => {
@@ -233,20 +306,24 @@ export default function EditPlayersPage() {
     
     setEntriesCountObj(playerFormTmnt.curData);
     setBrktsObjs(playerFormTmnt.curData.brkts);
-  }, [emptyBGDataList, emptyBrktsList, playerFormTmnt.curData]); 
 
-  useEffect(() => {    
     const currRows = populateRows(playersFormData.curData);
     setRows(currRows);   
     setOrigRows(currRows);
-  }, [playersFormData.curData]); // DO NOT INCLUDE setRow in array
+    // DO NOT INCLUDE emptyBrktsList, emptyBGDataList, setRow in array
+    // emptyBrktsList and emptyBGDataList are constants, never change
+    // setRow is a function
+    // eslint-disable-next-line react-hooks/exhaustive-deps    
+  }, [playersFormData.curData]); // DO NOT INCLUDE emptyBrktsList, emptyBGDataList, setRow in array
 
-  useEffect(() => {
-    const updatedCount = { ...entriesCount };
+
+  useEffect(() => { 
+    if (Object.keys(entriesCount).length === 0) return;
+    const updatedCount = { ...entriesCount };    
     const updatedPriorCount = { ...priorCount };
     const updatedAllBrktsList = cloneDeep(emptyBrktsList);
     const updatedBGDataList = cloneDeep(emptyBGDataList);
-
+    
     Object.keys(entriesCount).forEach((key) => {
       if (key.endsWith(feeColNameEnd)) { // fee count is number of non-zero rows
         const colCount = rows.filter(
@@ -490,11 +567,6 @@ export default function EditPlayersPage() {
     }
   };  
 
-  const handleSave = async () => { 
-    // error checking done in PlayersEntryForm
-    dispatch(SaveOneSquadEntries({rows: rows, data: playersFormData}))
-  }
-
   return (
     <>
       <div>        
@@ -521,8 +593,7 @@ export default function EditPlayersPage() {
         {tmntLoadStatus === "succeeded" && entriesLoadStatus === "succeeded" ? (
           <>
             <h2>Bowlers</h2>
-            <PlayersEntryForm
-              // playerFormTmnt={playerFormTmnt}
+            <PlayersEntryForm              
               rows={rows}
               setRows={setRows}
             />

@@ -603,40 +603,6 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
         setResultAction(saveResultAction);
         setSaveCompleted(true);
       }
-
-      // const ess = entriesSaveStatus;
-
-      // const resultAction = await dispatch(SaveOneSquadEntries({ rows: rows, data: playersFormData }));
-      // console.log('resultAction: ', resultAction);      
-      // const unwrapped = unwrapResult(resultAction);
-      // console.log('unwrapped: ', unwrapped);
-
-      // // const d = await dispatch(SaveOneSquadEntries({ rows: rows, data: playersFormData }))
-      // if (entriesSaveStatus !== 'succeeded') return;
-
-      // // const payload = d.payload as any;
-      // // const updatedInfo = payload.updatedInfo;
-
-      // // const updatedInfo = (d.payload as any).updatedInfo;
-
-      // const updatedInfo = unwrapped.updatedInfo;
-      // if (updatedInfo) {
-      //   const updatedPlayers = updateAllEntries(updatedInfo, playersFormData);
-      //   if (!updatedPlayers) return;
-      //   dispatch(updatePlayers(updatedPlayers.players));
-      //   dispatch(updateDivEntries(updatedPlayers.divEntries));
-      //   dispatch(updatePotEntries(updatedPlayers.potEntries));
-      //   dispatch(updateBrktEntries(updatedPlayers.brktEntries));
-      //   dispatch(updateElimEntries(updatedPlayers.elimEntries));
-
-      //   const totalUpdates: number = getTotalUpdated(updatedInfo);
-      //   if (totalUpdates >= 0) {          
-      //     router.push(`/dataEntry/runTmnt/${playerFormTmnt.curData.tmnt.id}`);
-      //   }
-
-      //   const allUpdatedEntries = dataEntriesOneSquad;
-      //   console.log('allUpdatedEntries: ', allUpdatedEntries);
-      // }
     }
   }
 
@@ -799,15 +765,15 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
               </svg>              
               &ensp;Cancel
             </button>
-            {/* debug button */}
-            <button
+            {/* debug button  */}
+            {/* <button
               type="button"
               className="btn btn-info"
               onClick={handleDebug1Click}              
               title="Debug"
             >
               Debug 1
-            </button>
+            </button> */}
           </div>
         </div>
         <div

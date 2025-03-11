@@ -3,7 +3,7 @@ import { hash } from "bcrypt";
 import {
   endOfDayFromString,
   nowOnDayFromString,
-  startOfDayFromString,  
+  startOfDayFromString,
 } from "../src/lib/dateTools";
 import { addDays, addMilliseconds, endOfDay, startOfDay } from "date-fns";
 
@@ -922,7 +922,7 @@ async function divUpsert() {
         int_hdcp: true,
         hdcp_for: "Game",
         sort_order: 1,
-      }, 
+      },
       create: {
         id: "div_621bfee84e774d5a9dc2e9b6bdc5d31c",
         tmnt_id: "tmt_2d494e9bb51f4b9abba428c3f37131c9",
@@ -933,7 +933,7 @@ async function divUpsert() {
         hdcp_for: "Game",
         sort_order: 1,
       },
-    });    
+    });
     div = await prisma.div.upsert({
       where: {
         id: "div_18997d3fd7ef4eb7ad2b53a9e93f9ce5",
@@ -1018,7 +1018,7 @@ async function divUpsert() {
         hdcp_from: 230,
         int_hdcp: true,
         hdcp_for: "Game",
-        sort_order: 3,
+        sort_order: 2,
       },
       create: {
         id: "div_fe72ab97edf8407186c8e6df7f7fb741",
@@ -1028,9 +1028,9 @@ async function divUpsert() {
         hdcp_from: 230,
         int_hdcp: true,
         hdcp_for: "Game",
-        sort_order: 3,
+        sort_order: 2,
       },
-    });    
+    });
     // whole tmnt div
     div = await prisma.div.upsert({
       where: {
@@ -1419,7 +1419,7 @@ async function squadUpsert() {
         lane_count: 24,
         starting_lane: 1,
         sort_order: 3,
-      }, 
+      },
       create: {
         id: "sqd_3397da1adc014cf58c44e07c19914f72",
         event_id: "evt_c0b2bb31d647414a9bea003bd835f3a0",
@@ -1441,7 +1441,6 @@ async function squadUpsert() {
 }
 
 async function laneUpsert() {
-
   async function laneUpsert_GoldPin() {
     try {
       let lane = await prisma.lane.upsert({
@@ -2374,13 +2373,13 @@ async function laneUpsert() {
           id: "lan_01ad95cd82aa45fa8bad1bcfdd804e90",
         },
         update: {
-          lane_number: 1,
+          lane_number: 29,
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
           in_use: true,
         },
         create: {
           id: "lan_01ad95cd82aa45fa8bad1bcfdd804e90",
-          lane_number: 1,
+          lane_number: 29,
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
           in_use: true,
         },
@@ -2390,13 +2389,13 @@ async function laneUpsert() {
           id: "lan_02ad95cd82aa45fa8bad1bcfdd804e90",
         },
         update: {
-          lane_number: 2,
+          lane_number: 30,
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
           in_use: true,
         },
         create: {
           id: "lan_02ad95cd82aa45fa8bad1bcfdd804e90",
-          lane_number: 2,
+          lane_number: 30,
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
           in_use: true,
         },
@@ -2406,13 +2405,13 @@ async function laneUpsert() {
           id: "lan_03ad95cd82aa45fa8bad1bcfdd804e90",
         },
         update: {
-          lane_number: 3,
+          lane_number: 31,
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
           in_use: true,
         },
         create: {
           id: "lan_03ad95cd82aa45fa8bad1bcfdd804e90",
-          lane_number: 3,
+          lane_number: 31,
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
           in_use: true,
         },
@@ -2422,13 +2421,13 @@ async function laneUpsert() {
           id: "lan_04ad95cd82aa45fa8bad1bcfdd804e90",
         },
         update: {
-          lane_number: 4,
+          lane_number: 32,
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
           in_use: true,
         },
         create: {
           id: "lan_04ad95cd82aa45fa8bad1bcfdd804e90",
-          lane_number: 4,
+          lane_number: 32,
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
           in_use: true,
         },
@@ -2438,13 +2437,13 @@ async function laneUpsert() {
           id: "lan_05ad95cd82aa45fa8bad1bcfdd804e90",
         },
         update: {
-          lane_number: 5,
+          lane_number: 33,
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
           in_use: true,
         },
         create: {
           id: "lan_05ad95cd82aa45fa8bad1bcfdd804e90",
-          lane_number: 5,
+          lane_number: 33,
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
           in_use: true,
         },
@@ -2454,18 +2453,17 @@ async function laneUpsert() {
           id: "lan_06ad95cd82aa45fa8bad1bcfdd804e90",
         },
         update: {
-          lane_number: 6,
+          lane_number: 34,
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
           in_use: true,
         },
         create: {
           id: "lan_06ad95cd82aa45fa8bad1bcfdd804e90",
-          lane_number: 6,
+          lane_number: 34,
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
           in_use: true,
         },
       });
-
       return 6;
     } catch (error) {
       console.log(error);
@@ -3880,7 +3878,7 @@ async function elimUpsert() {
         start: 1,
         games: 3,
         fee: 10,
-      }, 
+      },
       create: {
         id: "elm_4c5aad9baa7246c19e07f215561e58c4",
         squad_id: "sqd_1234ec18b3d44c0189c83f6ac5fd4ad6",
@@ -4843,7 +4841,7 @@ async function playersUpsert() {
     }
   }
 
-  async function playersUpsert_NewYearsEve() { 
+  async function playersUpsert_NewYearsEve() {
     try {
       let player = await prisma.player.upsert({
         where: {
@@ -4865,7 +4863,7 @@ async function playersUpsert() {
           average: 213,
           lane: 29,
           position: "A",
-        },        
+        },
       });
       player = await prisma.player.upsert({
         where: {
@@ -5768,7 +5766,7 @@ async function divEntryUpsert() {
     }
   }
 
-  async function divEntriesUpsert_NewYearEve() { 
+  async function divEntriesUpsert_NewYearEve() {
     try {
       let divEntry = await prisma.div_Entry.upsert({
         where: {
@@ -5822,8 +5820,8 @@ async function divEntryUpsert() {
           div_id: "div_578834e04e5e4885bbae79229d8b96e8",
           player_id: "ply_8ffe9406fcc046508aa4b214ef16f647",
           fee: 80,
-        },        
-      });            
+        },
+      });
       divEntry = await prisma.div_Entry.upsert({
         where: {
           id: "den_25f8398426ad4105ab752e1ec0a32d02",
@@ -5840,8 +5838,8 @@ async function divEntryUpsert() {
           div_id: "div_fe72ab97edf8407186c8e6df7f7fb741",
           player_id: "ply_8ffe9406fcc046508aa4b214ef16f647",
           fee: 60,
-        },        
-      });      
+        },
+      });
       divEntry = await prisma.div_Entry.upsert({
         where: {
           id: "den_2b98116d990046a2ac032102ba42e3a3",
@@ -5904,14 +5902,14 @@ async function divEntryUpsert() {
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
           div_id: "div_578834e04e5e4885bbae79229d8b96e8",
           player_id: "ply_9fff21de787b4637beb65a1936967071",
-          fee: 50,
+          fee: 80,
         },
         create: {
           id: "den_84dd57459e2340ab8808417719ae994e",
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
           div_id: "div_578834e04e5e4885bbae79229d8b96e8",
           player_id: "ply_9fff21de787b4637beb65a1936967071",
-          fee: 50,
+          fee: 80,
         },
       });
 
@@ -5950,11 +5948,14 @@ async function divEntryUpsert() {
   }
 
   try {
-    const gpCount = await divEntryUpsert_GoldPin();    
+    const gpCount = await divEntryUpsert_GoldPin();
     const wtCount = await divEntriesUpsert_WholeTmnt();
-    const nyCount = await divEntriesUpsert_NewYearEve();    
-    const delCount = await divEntriesUpsert_ToDelete();    
-    console.log("Upserted DivEntries: ", gpCount + wtCount + nyCount + delCount);
+    const nyCount = await divEntriesUpsert_NewYearEve();
+    const delCount = await divEntriesUpsert_ToDelete();
+    console.log(
+      "Upserted DivEntries: ",
+      gpCount + wtCount + nyCount + delCount
+    );
     // 4 + 36 + 8 + 1 = 49
     return gpCount + wtCount + delCount;
   } catch (error) {
@@ -6625,7 +6626,6 @@ async function potEntriesUpsert() {
           fee: 10,
         },
       });
-
       potEntry = await prisma.pot_Entry.upsert({
         where: {
           id: "pen_f0722807d8e5414aa905aaa4d0d0552c",
@@ -6696,7 +6696,10 @@ async function potEntriesUpsert() {
     const wtCount = await potEntryUpsert_WholeTmnt();
     const nyCount = await potEntryUpsert_NewYear();
     const delCount = await potEntryUpsert_ToDelete();
-    console.log("Upserted potEntries: ", gpCount + wtCount + nyCount + delCount);
+    console.log(
+      "Upserted potEntries: ",
+      gpCount + wtCount + nyCount + delCount
+    );
     // 4 + 30 + 8 + 1 = 43
     return gpCount + wtCount + delCount;
   } catch (error) {
@@ -6797,13 +6800,13 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           player_id: "ply_a01758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 10,          
+          num_brackets: 10,
         },
         create: {
           id: "ben_c0126ba58d3f4a7d950101a5674ce595",
           brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           player_id: "ply_a01758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 10,          
+          num_brackets: 10,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -6813,13 +6816,13 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
           player_id: "ply_a01758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 10,          
+          num_brackets: 10,
         },
         create: {
           id: "ben_c0226ba58d3f4a7d950101a5674ce595",
           brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
           player_id: "ply_a01758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 10,          
+          num_brackets: 10,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -6829,13 +6832,13 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           player_id: "ply_a02758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 8,          
+          num_brackets: 8,
         },
         create: {
           id: "ben_c0326ba58d3f4a7d950101a5674ce595",
           brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           player_id: "ply_a02758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 8,          
+          num_brackets: 8,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -6845,13 +6848,13 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
           player_id: "ply_a02758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 8,          
+          num_brackets: 8,
         },
         create: {
           id: "ben_c0426ba58d3f4a7d950101a5674ce595",
           brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
           player_id: "ply_a02758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 8,          
+          num_brackets: 8,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -6862,7 +6865,6 @@ async function brktEntriesUpsert() {
           brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           player_id: "ply_a03758cff1cc4bab9d9133e661bd49b0",
           num_brackets: 6,
-          
         },
         create: {
           id: "ben_c0526ba58d3f4a7d950101a5674ce595",
@@ -6878,13 +6880,13 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
           player_id: "ply_a03758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 6,          
+          num_brackets: 6,
         },
         create: {
           id: "ben_c0626ba58d3f4a7d950101a5674ce595",
           brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
           player_id: "ply_a03758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 6,          
+          num_brackets: 6,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -6894,13 +6896,13 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           player_id: "ply_a04758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 7,          
+          num_brackets: 7,
         },
         create: {
           id: "ben_c0726ba58d3f4a7d950101a5674ce595",
           brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           player_id: "ply_a04758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 7,          
+          num_brackets: 7,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -6910,13 +6912,13 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
           player_id: "ply_a04758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 7,          
+          num_brackets: 7,
         },
         create: {
           id: "ben_c0826ba58d3f4a7d950101a5674ce595",
           brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
           player_id: "ply_a04758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 7,          
+          num_brackets: 7,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -6926,13 +6928,13 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           player_id: "ply_a05758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 6,          
+          num_brackets: 6,
         },
         create: {
           id: "ben_c0926ba58d3f4a7d950101a5674ce595",
           brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           player_id: "ply_a05758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 6,          
+          num_brackets: 6,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -6942,13 +6944,13 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
           player_id: "ply_a05758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 6,          
+          num_brackets: 6,
         },
         create: {
           id: "ben_c1026ba58d3f4a7d950101a5674ce595",
           brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
           player_id: "ply_a05758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 6,          
+          num_brackets: 6,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -6958,13 +6960,13 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           player_id: "ply_a06758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 4,          
+          num_brackets: 4,
         },
         create: {
           id: "ben_c1126ba58d3f4a7d950101a5674ce595",
           brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           player_id: "ply_a06758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 4,          
+          num_brackets: 4,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -6974,13 +6976,13 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
           player_id: "ply_a06758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 4,          
+          num_brackets: 4,
         },
         create: {
           id: "ben_c1226ba58d3f4a7d950101a5674ce595",
           brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
           player_id: "ply_a06758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 4,          
+          num_brackets: 4,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -6990,13 +6992,13 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           player_id: "ply_a07758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 6,          
+          num_brackets: 6,
         },
         create: {
           id: "ben_c1326ba58d3f4a7d950101a5674ce595",
           brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           player_id: "ply_a07758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 6,          
+          num_brackets: 6,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -7006,13 +7008,13 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
           player_id: "ply_a07758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 6,          
+          num_brackets: 6,
         },
         create: {
           id: "ben_c1426ba58d3f4a7d950101a5674ce595",
           brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
           player_id: "ply_a07758cff1cc4bab9d9133e661bd49b0",
-          num_brackets: 6,          
+          num_brackets: 6,
         },
       });
       // brktEntry = await prisma.brkt_Entry.upsert({
@@ -7500,13 +7502,13 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_d017ea07dbc6453a8a705f4bb7599ed4",
           player_id: "ply_da674926088d4f739c69c2c72a465ccd",
-          num_brackets: 10,          
+          num_brackets: 10,
         },
         create: {
           id: "ben_3a1eb5eef01d449eb444bfdf6b7d9035",
           brkt_id: "brk_d017ea07dbc6453a8a705f4bb7599ed4",
           player_id: "ply_da674926088d4f739c69c2c72a465ccd",
-          num_brackets: 10,          
+          num_brackets: 10,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -7516,13 +7518,13 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_d027ea07dbc6453a8a705f4bb7599ed4",
           player_id: "ply_da674926088d4f739c69c2c72a465ccd",
-          num_brackets: 10,          
+          num_brackets: 10,
         },
         create: {
           id: "ben_3a2eb5eef01d449eb444bfdf6b7d9035",
           brkt_id: "brk_d027ea07dbc6453a8a705f4bb7599ed4",
           player_id: "ply_da674926088d4f739c69c2c72a465ccd",
-          num_brackets: 10,          
+          num_brackets: 10,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -7532,13 +7534,13 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_d037ea07dbc6453a8a705f4bb7599ed4",
           player_id: "ply_da674926088d4f739c69c2c72a465ccd",
-          num_brackets: 10,          
+          num_brackets: 10,
         },
         create: {
           id: "ben_3a3eb5eef01d449eb444bfdf6b7d9035",
           brkt_id: "brk_d037ea07dbc6453a8a705f4bb7599ed4",
           player_id: "ply_da674926088d4f739c69c2c72a465ccd",
-          num_brackets: 10,          
+          num_brackets: 10,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -7548,13 +7550,13 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_d047ea07dbc6453a8a705f4bb7599ed4",
           player_id: "ply_da674926088d4f739c69c2c72a465ccd",
-          num_brackets: 10,          
+          num_brackets: 10,
         },
         create: {
           id: "ben_3a4eb5eef01d449eb444bfdf6b7d9035",
           brkt_id: "brk_d047ea07dbc6453a8a705f4bb7599ed4",
           player_id: "ply_da674926088d4f739c69c2c72a465ccd",
-          num_brackets: 10,          
+          num_brackets: 10,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -7564,13 +7566,13 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_d017ea07dbc6453a8a705f4bb7599ed4",
           player_id: "ply_8ffe9406fcc046508aa4b214ef16f647",
-          num_brackets: 8,          
+          num_brackets: 8,
         },
         create: {
           id: "ben_3a5eb5eef01d449eb444bfdf6b7d9035",
           brkt_id: "brk_d017ea07dbc6453a8a705f4bb7599ed4",
           player_id: "ply_8ffe9406fcc046508aa4b214ef16f647",
-          num_brackets: 8,          
+          num_brackets: 8,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -7580,13 +7582,13 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_d027ea07dbc6453a8a705f4bb7599ed4",
           player_id: "ply_8ffe9406fcc046508aa4b214ef16f647",
-          num_brackets: 8,          
+          num_brackets: 8,
         },
         create: {
           id: "ben_3a6eb5eef01d449eb444bfdf6b7d9035",
           brkt_id: "brk_d027ea07dbc6453a8a705f4bb7599ed4",
           player_id: "ply_8ffe9406fcc046508aa4b214ef16f647",
-          num_brackets: 8,          
+          num_brackets: 8,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -7596,13 +7598,13 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_d037ea07dbc6453a8a705f4bb7599ed4",
           player_id: "ply_92670d50aa7f44a487a172412bef8af5",
-          num_brackets: 4,          
+          num_brackets: 4,
         },
         create: {
           id: "ben_3a7eb5eef01d449eb444bfdf6b7d9035",
           brkt_id: "brk_d037ea07dbc6453a8a705f4bb7599ed4",
           player_id: "ply_92670d50aa7f44a487a172412bef8af5",
-          num_brackets: 4,          
+          num_brackets: 4,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -7612,13 +7614,13 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_d047ea07dbc6453a8a705f4bb7599ed4",
           player_id: "ply_92670d50aa7f44a487a172412bef8af5",
-          num_brackets: 4,          
+          num_brackets: 4,
         },
         create: {
           id: "ben_3a8eb5eef01d449eb444bfdf6b7d9035",
           brkt_id: "brk_d047ea07dbc6453a8a705f4bb7599ed4",
           player_id: "ply_92670d50aa7f44a487a172412bef8af5",
-          num_brackets: 4,          
+          num_brackets: 4,
         },
       });
 
@@ -7638,13 +7640,13 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_12344698f47e4d64935547923e2bdbfb",
           player_id: "ply_bb0fd8bbd9e34d34a7fa90b4111c6e40",
-          num_brackets: 8,          
+          num_brackets: 8,
         },
         create: {
           id: "ben_093a0902e01e46dbbe9f111acefc17da",
           brkt_id: "brk_12344698f47e4d64935547923e2bdbfb",
           player_id: "ply_bb0fd8bbd9e34d34a7fa90b4111c6e40",
-          num_brackets: 8,          
+          num_brackets: 8,
         },
       });
       return 1;
@@ -7659,8 +7661,11 @@ async function brktEntriesUpsert() {
     const wtCount = await brktEntryUpsert_WholeTmnt();
     const nyCount = await brktEntryUpsert_NewYearsEve();
     const delCount = await brktEntryUpsert_ToDelete();
-    
-    console.log("Upserted potEntries: ", gpCount + wtCount + nyCount + delCount);
+
+    console.log(
+      "Upserted potEntries: ",
+      gpCount + wtCount + nyCount + delCount
+    );
     // console.log("Upserted potEntries: ", delCount);
     // 4 + 40 + 8 + 1 = 53
     return gpCount + wtCount + nyCount + delCount;
@@ -7882,9 +7887,8 @@ async function elimEntriesUpsert() {
     }
   }
 
-  async function brktEntryUpsert_WholeTmnt() { 
-
-    try { 
+  async function brktEntryUpsert_WholeTmnt() {
+    try {
       let elimEntry = await prisma.elim_Entry.upsert({
         where: {
           id: "een_d0126ba58d3f4a7d950101a5674ce595",
@@ -8397,7 +8401,7 @@ async function elimEntriesUpsert() {
           fee: 5,
         },
       });
-      
+
       return 32;
     } catch (error) {
       console.log(error);
@@ -8405,8 +8409,8 @@ async function elimEntriesUpsert() {
     }
   }
 
-  async function brktEntryUpsert_ToDelete() { 
-    try { 
+  async function brktEntryUpsert_ToDelete() {
+    try {
       let elimEntry = await prisma.elim_Entry.upsert({
         where: {
           id: "een_19f158c6cc0d4f619227fbc24a885bab",
@@ -8436,7 +8440,10 @@ async function elimEntriesUpsert() {
     const nyCount = await elimEntryUpsert_NewYearsEve();
     const wtCount = await brktEntryUpsert_WholeTmnt();
     const delCount = await brktEntryUpsert_ToDelete();
-    console.log("Upserted potEntries: ", gpCount + nyCount + wtCount + delCount);
+    console.log(
+      "Upserted potEntries: ",
+      gpCount + nyCount + wtCount + delCount
+    );
     // 4 + 8 + 32 + 1 = 45
     return gpCount + wtCount + delCount;
   } catch (error) {
@@ -8450,339 +8457,339 @@ async function gamesUpsert() {
     try {
       let game = await prisma.game.upsert({
         where: {
-          id: 'gam_99ea810b452843018f3f1db5139ffa72',
+          id: "gam_99ea810b452843018f3f1db5139ffa72",
         },
-        update: {          
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+        update: {
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
           game_num: 1,
           score: 201,
         },
         create: {
-          id: 'gam_99ea810b452843018f3f1db5139ffa72',
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          id: "gam_99ea810b452843018f3f1db5139ffa72",
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
           game_num: 1,
           score: 201,
-        }
-      })
+        },
+      });
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_5f2e2b1cb1e44e58b32d121d7ae2941f',
+          id: "gam_5f2e2b1cb1e44e58b32d121d7ae2941f",
         },
-        update: {          
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+        update: {
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
           game_num: 2,
           score: 202,
         },
         create: {
-          id: 'gam_5f2e2b1cb1e44e58b32d121d7ae2941f',
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          id: "gam_5f2e2b1cb1e44e58b32d121d7ae2941f",
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
           game_num: 2,
           score: 202,
-        }
-      })
+        },
+      });
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_58e0b0efb4a3459b8b2b5e3e48747707',
+          id: "gam_58e0b0efb4a3459b8b2b5e3e48747707",
         },
-        update: {          
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+        update: {
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
           game_num: 3,
           score: 203,
         },
         create: {
-          id: 'gam_58e0b0efb4a3459b8b2b5e3e48747707',
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          id: "gam_58e0b0efb4a3459b8b2b5e3e48747707",
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
           game_num: 3,
           score: 203,
-        }
-      })
+        },
+      });
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_928a3f6e4c6d4a19a9fc194d7c819ed8',
+          id: "gam_928a3f6e4c6d4a19a9fc194d7c819ed8",
         },
-        update: {          
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+        update: {
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
           game_num: 4,
           score: 204,
         },
         create: {
-          id: 'gam_928a3f6e4c6d4a19a9fc194d7c819ed8',
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          id: "gam_928a3f6e4c6d4a19a9fc194d7c819ed8",
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
           game_num: 4,
           score: 204,
-        }
-      })
+        },
+      });
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_5b94dc3a7a884b79ac4a0b0d4a13cf57',
+          id: "gam_5b94dc3a7a884b79ac4a0b0d4a13cf57",
         },
-        update: {          
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+        update: {
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
           game_num: 5,
           score: 205,
         },
         create: {
-          id: 'gam_5b94dc3a7a884b79ac4a0b0d4a13cf57',
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          id: "gam_5b94dc3a7a884b79ac4a0b0d4a13cf57",
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
           game_num: 5,
           score: 205,
-        }
-      })
+        },
+      });
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_46a8bf1a637c4df89da96e05a6d6d67f',
+          id: "gam_46a8bf1a637c4df89da96e05a6d6d67f",
         },
-        update: {          
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+        update: {
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
           game_num: 6,
           score: 206,
         },
         create: {
-          id: 'gam_46a8bf1a637c4df89da96e05a6d6d67f',
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          id: "gam_46a8bf1a637c4df89da96e05a6d6d67f",
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
           game_num: 6,
           score: 206,
-        }
-      })
+        },
+      });
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_3e2d1feab8f84d77b5c1baefca20a993',
+          id: "gam_3e2d1feab8f84d77b5c1baefca20a993",
         },
-        update: {          
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+        update: {
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
           game_num: 1,
           score: 211,
         },
         create: {
-          id: 'gam_3e2d1feab8f84d77b5c1baefca20a993',
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+          id: "gam_3e2d1feab8f84d77b5c1baefca20a993",
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
           game_num: 1,
           score: 211,
-        }
-      })
+        },
+      });
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_1bf78c5c63864d238eef7b4500d87450',
+          id: "gam_1bf78c5c63864d238eef7b4500d87450",
         },
-        update: {          
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+        update: {
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
           game_num: 2,
           score: 212,
         },
         create: {
-          id: 'gam_1bf78c5c63864d238eef7b4500d87450',
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+          id: "gam_1bf78c5c63864d238eef7b4500d87450",
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
           game_num: 2,
           score: 212,
-        }
-      })
+        },
+      });
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_6b89117c7d5e4e11a4b6cfad7e4f2042',
+          id: "gam_6b89117c7d5e4e11a4b6cfad7e4f2042",
         },
-        update: {          
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+        update: {
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
           game_num: 3,
           score: 213,
         },
         create: {
-          id: 'gam_6b89117c7d5e4e11a4b6cfad7e4f2042',
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+          id: "gam_6b89117c7d5e4e11a4b6cfad7e4f2042",
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
           game_num: 3,
           score: 213,
-        }
-      })
+        },
+      });
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_21b4ae4df3c5447da25d4b61853c76cb',
+          id: "gam_21b4ae4df3c5447da25d4b61853c76cb",
         },
-        update: {          
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+        update: {
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
           game_num: 4,
           score: 214,
         },
         create: {
-          id: 'gam_21b4ae4df3c5447da25d4b61853c76cb',
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+          id: "gam_21b4ae4df3c5447da25d4b61853c76cb",
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
           game_num: 4,
           score: 214,
-        }
-      })
+        },
+      });
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_7c13f49a1b204b49b3204a669a1d49b7',
+          id: "gam_7c13f49a1b204b49b3204a669a1d49b7",
         },
-        update: {          
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+        update: {
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
           game_num: 5,
           score: 215,
         },
         create: {
-          id: 'gam_7c13f49a1b204b49b3204a669a1d49b7',
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+          id: "gam_7c13f49a1b204b49b3204a669a1d49b7",
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
           game_num: 5,
           score: 215,
-        }
-      })
+        },
+      });
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_dab4619d40f548788b2c12c57b964387',
+          id: "gam_dab4619d40f548788b2c12c57b964387",
         },
-        update: {          
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+        update: {
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
           game_num: 6,
           score: 216,
         },
         create: {
-          id: 'gam_dab4619d40f548788b2c12c57b964387',
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+          id: "gam_dab4619d40f548788b2c12c57b964387",
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
           game_num: 6,
           score: 216,
-        }
-      })
+        },
+      });
       let randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_51f99d2abbe94482b8ac23234778e2db',
+          id: "gam_51f99d2abbe94482b8ac23234778e2db",
         },
-        update: {          
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+        update: {
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
           game_num: 1,
           score: randomScore,
         },
         create: {
-          id: 'gam_51f99d2abbe94482b8ac23234778e2db',
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          id: "gam_51f99d2abbe94482b8ac23234778e2db",
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
           game_num: 1,
           score: randomScore,
-        }
-      });    
+        },
+      });
       randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_4c7e4cbf846348d1b88504146baf5b8d',
+          id: "gam_4c7e4cbf846348d1b88504146baf5b8d",
         },
-        update: {          
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+        update: {
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
           game_num: 2,
           score: randomScore,
         },
         create: {
-          id: 'gam_4c7e4cbf846348d1b88504146baf5b8d',
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          id: "gam_4c7e4cbf846348d1b88504146baf5b8d",
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
           game_num: 2,
           score: randomScore,
-        }
-      });    
+        },
+      });
       randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_f3b95d6debd24cf8a85f5e4c82b3c786',
+          id: "gam_f3b95d6debd24cf8a85f5e4c82b3c786",
         },
-        update: {          
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+        update: {
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
           game_num: 3,
           score: randomScore,
         },
         create: {
-          id: 'gam_f3b95d6debd24cf8a85f5e4c82b3c786',
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          id: "gam_f3b95d6debd24cf8a85f5e4c82b3c786",
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
           game_num: 3,
           score: randomScore,
-        }
-      });    
+        },
+      });
       randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_163df6bdfedf44a399b9110b2df3c3de',
+          id: "gam_163df6bdfedf44a399b9110b2df3c3de",
         },
-        update: {        
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+        update: {
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
           game_num: 4,
           score: randomScore,
         },
         create: {
-          id: 'gam_163df6bdfedf44a399b9110b2df3c3de',
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          id: "gam_163df6bdfedf44a399b9110b2df3c3de",
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
           game_num: 4,
           score: randomScore,
-        }
-      });    
+        },
+      });
       randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_c8f04da31ed54c2fb1dd3e0e5aa0b9d1',
+          id: "gam_c8f04da31ed54c2fb1dd3e0e5aa0b9d1",
         },
-        update: {          
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+        update: {
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
           game_num: 5,
           score: randomScore,
         },
         create: {
-          id: 'gam_c8f04da31ed54c2fb1dd3e0e5aa0b9d1',
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          id: "gam_c8f04da31ed54c2fb1dd3e0e5aa0b9d1",
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
           game_num: 5,
           score: randomScore,
-        }
-      });    
+        },
+      });
       randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_1ec686a77bd048c19a182b09d5d4e934 ',
+          id: "gam_1ec686a77bd048c19a182b09d5d4e934 ",
         },
-        update: {          
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+        update: {
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
           game_num: 6,
           score: randomScore,
         },
         create: {
-          id: 'gam_1ec686a77bd048c19a182b09d5d4e934 ',
-          squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          id: "gam_1ec686a77bd048c19a182b09d5d4e934 ",
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
           game_num: 6,
           score: randomScore,
-        }
-      });  
+        },
+      });
       return 18;
     } catch (error) {
       console.log(error);
       return -1;
-    }    
+    }
   }
 
   async function gamesUpsert_NewYearsEve() {
@@ -8790,351 +8797,351 @@ async function gamesUpsert() {
       let randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
       let game = await prisma.game.upsert({
         where: {
-          id: 'gam_f47ac10b58cc4372a5670e02b2c3d479',
+          id: "gam_f47ac10b58cc4372a5670e02b2c3d479",
         },
-        update: {          
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+        update: {
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
           game_num: 1,
           score: randomScore,
         },
         create: {
-          id: 'gam_f47ac10b58cc4372a5670e02b2c3d479',
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
-          game_num: 1,
-          score: randomScore,
-        }
-      })
-      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
-      game = await prisma.game.upsert({
-        where: {
-          id: 'gam_9bb58ff04e7a45d98ae4b5f2d7b1b45e',
-        },
-        update: {          
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
-          game_num: 2,
-          score: randomScore,
-        },
-        create: {
-          id: 'gam_9bb58ff04e7a45d98ae4b5f2d7b1b45e',
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
-          game_num: 2,
-          score: randomScore,
-        }
-      })
-      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
-      game = await prisma.game.upsert({
-        where: {
-          id: 'gam_3c9a9ea1d9bc44e899ad9e1d82b7cdb6',
-        },
-        update: {          
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
-          game_num: 3,
-          score: randomScore,
-        },
-        create: {
-          id: 'gam_3c9a9ea1d9bc44e899ad9e1d82b7cdb6',
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
-          game_num: 3,
-          score: randomScore,
-        }
-      })
-      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
-      game = await prisma.game.upsert({
-        where: {
-          id: 'gam_6a0be04152a3483a8d50c8ea037f4d99',
-        },
-        update: {          
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
-          game_num: 4,
-          score: randomScore,
-        },
-        create: {
-          id: 'gam_6a0be04152a3483a8d50c8ea037f4d99',
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
-          game_num: 4,
-          score: randomScore,
-        }
-      })
-      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
-      game = await prisma.game.upsert({
-        where: {
-          id: 'gam_ba7cf3081a1b46218ab8b7d8791b5c76',
-        },
-        update: {          
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
-          game_num: 5,
-          score: randomScore,
-        },
-        create: {
-          id: 'gam_ba7cf3081a1b46218ab8b7d8791b5c76',
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
-          game_num: 5,
-          score: randomScore,
-        }
-      })
-      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
-      game = await prisma.game.upsert({
-        where: {
-          id: 'gam_8113dd4a1dfc4d8b96e7f8694fb17738',
-        },
-        update: {          
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
-          game_num: 6,
-          score: randomScore,
-        },
-        create: {
-          id: 'gam_8113dd4a1dfc4d8b96e7f8694fb17738',
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
-          game_num: 6,
-          score: randomScore,
-        }
-      })
-      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
-      game = await prisma.game.upsert({
-        where: {
-          id: 'gam_4dc8f1b94b0045248decd4239c5b2c59',
-        },
-        update: {          
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+          id: "gam_f47ac10b58cc4372a5670e02b2c3d479",
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
           game_num: 1,
           score: randomScore,
         },
-        create: {
-          id: 'gam_4dc8f1b94b0045248decd4239c5b2c59',
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
-          game_num: 1,
-          score: randomScore,
-        }
-      })
+      });
       randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_0bde6a2ab2fa4c6c9c10a2a6cd3f4730',
+          id: "gam_9bb58ff04e7a45d98ae4b5f2d7b1b45e",
         },
-        update: {          
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+        update: {
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
           game_num: 2,
           score: randomScore,
         },
         create: {
-          id: 'gam_0bde6a2ab2fa4c6c9c10a2a6cd3f4730',
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+          id: "gam_9bb58ff04e7a45d98ae4b5f2d7b1b45e",
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
           game_num: 2,
           score: randomScore,
-        }
-      })
+        },
+      });
       randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_214d572a9db34c4d80cbb84ed484fc39',
+          id: "gam_3c9a9ea1d9bc44e899ad9e1d82b7cdb6",
         },
-        update: {          
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+        update: {
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
           game_num: 3,
           score: randomScore,
         },
         create: {
-          id: 'gam_214d572a9db34c4d80cbb84ed484fc39',
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+          id: "gam_3c9a9ea1d9bc44e899ad9e1d82b7cdb6",
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
           game_num: 3,
           score: randomScore,
-        }
-      })
+        },
+      });
       randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_9fb63b72c4fc43dba7b8796dfaba5aef',
+          id: "gam_6a0be04152a3483a8d50c8ea037f4d99",
         },
-        update: {          
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+        update: {
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
           game_num: 4,
           score: randomScore,
         },
         create: {
-          id: 'gam_9fb63b72c4fc43dba7b8796dfaba5aef',
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+          id: "gam_6a0be04152a3483a8d50c8ea037f4d99",
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
           game_num: 4,
           score: randomScore,
-        }
-      })
+        },
+      });
       randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_94e431702e934a8c97b4d24169f5d3f4',
+          id: "gam_ba7cf3081a1b46218ab8b7d8791b5c76",
         },
-        update: {          
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+        update: {
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
           game_num: 5,
           score: randomScore,
         },
         create: {
-          id: 'gam_94e431702e934a8c97b4d24169f5d3f4',
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+          id: "gam_ba7cf3081a1b46218ab8b7d8791b5c76",
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
           game_num: 5,
           score: randomScore,
-        }
-      })
+        },
+      });
       randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_574a2a3c2eb6417b81e582bddbd1d79c',
+          id: "gam_8113dd4a1dfc4d8b96e7f8694fb17738",
         },
-        update: {          
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+        update: {
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
           game_num: 6,
           score: randomScore,
         },
         create: {
-          id: 'gam_574a2a3c2eb6417b81e582bddbd1d79c',
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+          id: "gam_8113dd4a1dfc4d8b96e7f8694fb17738",
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
           game_num: 6,
           score: randomScore,
-        }
-      })
+        },
+      });
       randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_6422b6e984d04dd09f82d39976b7d554',
+          id: "gam_4dc8f1b94b0045248decd4239c5b2c59",
         },
-        update: {          
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+        update: {
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
           game_num: 1,
           score: randomScore,
         },
         create: {
-          id: 'gam_6422b6e984d04dd09f82d39976b7d554',
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          id: "gam_4dc8f1b94b0045248decd4239c5b2c59",
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
           game_num: 1,
           score: randomScore,
-        }
-      })
+        },
+      });
       randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_7897b4c582644bbab1f4c5e4fbf6b13e',
+          id: "gam_0bde6a2ab2fa4c6c9c10a2a6cd3f4730",
         },
-        update: {          
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+        update: {
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
           game_num: 2,
           score: randomScore,
         },
         create: {
-          id: 'gam_7897b4c582644bbab1f4c5e4fbf6b13e',
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          id: "gam_0bde6a2ab2fa4c6c9c10a2a6cd3f4730",
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
           game_num: 2,
           score: randomScore,
-        }
-      })
+        },
+      });
       randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_ad3f69e98e364f8288e32b8a68e87ffb',
+          id: "gam_214d572a9db34c4d80cbb84ed484fc39",
         },
-        update: {          
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+        update: {
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
           game_num: 3,
           score: randomScore,
         },
         create: {
-          id: 'gam_ad3f69e98e364f8288e32b8a68e87ffb',
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          id: "gam_214d572a9db34c4d80cbb84ed484fc39",
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
           game_num: 3,
           score: randomScore,
-        }
-      })
+        },
+      });
       randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_b1d85f462ff04b5fa7db1a7fc6eab8e4',
+          id: "gam_9fb63b72c4fc43dba7b8796dfaba5aef",
         },
-        update: {          
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+        update: {
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
           game_num: 4,
           score: randomScore,
         },
         create: {
-          id: 'gam_b1d85f462ff04b5fa7db1a7fc6eab8e4',
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          id: "gam_9fb63b72c4fc43dba7b8796dfaba5aef",
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
           game_num: 4,
           score: randomScore,
-        }
-      })
+        },
+      });
       randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_e92461ea6c704f208be119fb9ec8c037',
+          id: "gam_94e431702e934a8c97b4d24169f5d3f4",
         },
-        update: {          
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+        update: {
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
           game_num: 5,
           score: randomScore,
         },
         create: {
-          id: 'gam_e92461ea6c704f208be119fb9ec8c037',
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          id: "gam_94e431702e934a8c97b4d24169f5d3f4",
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
           game_num: 5,
           score: randomScore,
-        }
-      })
+        },
+      });
       randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_07f7cca05a084087994aabfd8e4845d1',
+          id: "gam_574a2a3c2eb6417b81e582bddbd1d79c",
         },
-        update: {          
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+        update: {
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
           game_num: 6,
           score: randomScore,
         },
         create: {
-          id: 'gam_07f7cca05a084087994aabfd8e4845d1',
-          squad_id: 'sqd_3397da1adc014cf58c44e07c19914f71',
-          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          id: "gam_574a2a3c2eb6417b81e582bddbd1d79c",
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
           game_num: 6,
           score: randomScore,
-        }
-      })
+        },
+      });
+      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
+      game = await prisma.game.upsert({
+        where: {
+          id: "gam_6422b6e984d04dd09f82d39976b7d554",
+        },
+        update: {
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
+          game_num: 1,
+          score: randomScore,
+        },
+        create: {
+          id: "gam_6422b6e984d04dd09f82d39976b7d554",
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
+          game_num: 1,
+          score: randomScore,
+        },
+      });
+      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
+      game = await prisma.game.upsert({
+        where: {
+          id: "gam_7897b4c582644bbab1f4c5e4fbf6b13e",
+        },
+        update: {
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
+          game_num: 2,
+          score: randomScore,
+        },
+        create: {
+          id: "gam_7897b4c582644bbab1f4c5e4fbf6b13e",
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
+          game_num: 2,
+          score: randomScore,
+        },
+      });
+      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
+      game = await prisma.game.upsert({
+        where: {
+          id: "gam_ad3f69e98e364f8288e32b8a68e87ffb",
+        },
+        update: {
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
+          game_num: 3,
+          score: randomScore,
+        },
+        create: {
+          id: "gam_ad3f69e98e364f8288e32b8a68e87ffb",
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
+          game_num: 3,
+          score: randomScore,
+        },
+      });
+      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
+      game = await prisma.game.upsert({
+        where: {
+          id: "gam_b1d85f462ff04b5fa7db1a7fc6eab8e4",
+        },
+        update: {
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
+          game_num: 4,
+          score: randomScore,
+        },
+        create: {
+          id: "gam_b1d85f462ff04b5fa7db1a7fc6eab8e4",
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
+          game_num: 4,
+          score: randomScore,
+        },
+      });
+      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
+      game = await prisma.game.upsert({
+        where: {
+          id: "gam_e92461ea6c704f208be119fb9ec8c037",
+        },
+        update: {
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
+          game_num: 5,
+          score: randomScore,
+        },
+        create: {
+          id: "gam_e92461ea6c704f208be119fb9ec8c037",
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
+          game_num: 5,
+          score: randomScore,
+        },
+      });
+      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
+      game = await prisma.game.upsert({
+        where: {
+          id: "gam_07f7cca05a084087994aabfd8e4845d1",
+        },
+        update: {
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
+          game_num: 6,
+          score: randomScore,
+        },
+        create: {
+          id: "gam_07f7cca05a084087994aabfd8e4845d1",
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
+          game_num: 6,
+          score: randomScore,
+        },
+      });
 
       return 18;
     } catch (error) {
       console.log(error);
       return -1;
-    }    
+    }
   }
 
   async function gamesUpsert_WholeTmnt() {
@@ -9142,378 +9149,377 @@ async function gamesUpsert() {
       let randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
       let game = await prisma.game.upsert({
         where: {
-          id: 'gam_d9b0f7e8f1b84292a4e3ab711703d1f1',
+          id: "gam_d9b0f7e8f1b84292a4e3ab711703d1f1",
         },
-        update: {          
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a01758cff1cc4bab9d9133e661bd49b0',
+        update: {
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a01758cff1cc4bab9d9133e661bd49b0",
           game_num: 1,
           score: randomScore,
         },
         create: {
-          id: 'gam_d9b0f7e8f1b84292a4e3ab711703d1f1',
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a01758cff1cc4bab9d9133e661bd49b0',
+          id: "gam_d9b0f7e8f1b84292a4e3ab711703d1f1",
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a01758cff1cc4bab9d9133e661bd49b0",
           game_num: 1,
           score: randomScore,
-        }
-      });    
-      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
-      game = await prisma.game.upsert({
-        where: {
-          id: 'gam_b89d6c5a2e7a4b5ea5b89c8f2d716d5d',
         },
-        update: {          
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a01758cff1cc4bab9d9133e661bd49b0',
-          game_num: 2,
-          score: randomScore,
-        },
-        create: {
-          id: 'gam_b89d6c5a2e7a4b5ea5b89c8f2d716d5d',
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a01758cff1cc4bab9d9133e661bd49b0',
-          game_num: 2,
-          score: randomScore,
-        }
-      });    
-      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
-      game = await prisma.game.upsert({
-        where: {
-          id: 'gam_0a5e912e41ad4e0eb1a4e6d9c15fb4b6',
-        },
-        update: {          
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a01758cff1cc4bab9d9133e661bd49b0',
-          game_num: 3,
-          score: randomScore,
-        },
-        create: {
-          id: 'gam_0a5e912e41ad4e0eb1a4e6d9c15fb4b6',
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a01758cff1cc4bab9d9133e661bd49b0',
-          game_num: 3,
-          score: randomScore,
-        }
-      });    
-      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
-      game = await prisma.game.upsert({
-        where: {
-          id: 'gam_5b0c7b13a3a94d09802e5b6f9dcf3c10',
-        },
-        update: {          
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a01758cff1cc4bab9d9133e661bd49b0',
-          game_num: 4,
-          score: randomScore,
-        },
-        create: {
-          id: 'gam_5b0c7b13a3a94d09802e5b6f9dcf3c10',
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a01758cff1cc4bab9d9133e661bd49b0',
-          game_num: 4,
-          score: randomScore,
-        }
-      });    
-      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
-      game = await prisma.game.upsert({
-        where: {
-          id: 'gam_4c5d1b9844f64a8da2ab4e8b6d317a9e',
-        },
-        update: {          
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a01758cff1cc4bab9d9133e661bd49b0',
-          game_num: 5,
-          score: randomScore,
-        },
-        create: {
-          id: 'gam_4c5d1b9844f64a8da2ab4e8b6d317a9e',
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a01758cff1cc4bab9d9133e661bd49b0',
-          game_num: 5,
-          score: randomScore,
-        }
-      });    
-      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
-      game = await prisma.game.upsert({
-        where: {
-          id: 'gam_b1c6e0f7153f413791f394e2f3ac4e8c',
-        },
-        update: {          
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a01758cff1cc4bab9d9133e661bd49b0',
-          game_num: 6,
-          score: randomScore,
-        },
-        create: {
-          id: 'gam_b1c6e0f7153f413791f394e2f3ac4e8c',
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a01758cff1cc4bab9d9133e661bd49b0',
-          game_num: 6,
-          score: randomScore,
-        }
       });
       randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_3c7d8f6e4a024e6fb1b5e9f7d214c3b4',
+          id: "gam_b89d6c5a2e7a4b5ea5b89c8f2d716d5d",
         },
-        update: {          
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a02758cff1cc4bab9d9133e661bd49b0',
-          game_num: 1,
-          score: randomScore,
-        },
-        create: {
-          id: 'gam_3c7d8f6e4a024e6fb1b5e9f7d214c3b4',
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a02758cff1cc4bab9d9133e661bd49b0',
-          game_num: 1,
-          score: randomScore,
-        }
-      });    
-      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
-      game = await prisma.game.upsert({
-        where: {
-          id: 'gam_7b9e0d5c2f9a467b9a1e5c6d4f3b2a1e',
-        },
-        update: {          
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a02758cff1cc4bab9d9133e661bd49b0',
+        update: {
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a01758cff1cc4bab9d9133e661bd49b0",
           game_num: 2,
           score: randomScore,
         },
         create: {
-          id: 'gam_7b9e0d5c2f9a467b9a1e5c6d4f3b2a1e',
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a02758cff1cc4bab9d9133e661bd49b0',
+          id: "gam_b89d6c5a2e7a4b5ea5b89c8f2d716d5d",
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a01758cff1cc4bab9d9133e661bd49b0",
           game_num: 2,
           score: randomScore,
-        }
-      });    
-      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
-      game = await prisma.game.upsert({
-        where: {
-          id: 'gam_9d1c7f8a3b924f8cb1e6a7c5e8b4d1f2',
         },
-        update: {          
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a02758cff1cc4bab9d9133e661bd49b0',
-          game_num: 3,
-          score: randomScore,
-        },
-        create: {
-          id: 'gam_9d1c7f8a3b924f8cb1e6a7c5e8b4d1f2',
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a02758cff1cc4bab9d9133e661bd49b0',
-          game_num: 3,
-          score: randomScore,
-        }
-      });    
-      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
-      game = await prisma.game.upsert({
-        where: {
-          id: 'gam_2e7b4d6a1f9e4c6f8a2b3c1d7e5f9b3a',
-        },
-        update: {          
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a02758cff1cc4bab9d9133e661bd49b0',
-          game_num: 4,
-          score: randomScore,
-        },
-        create: {
-          id: 'gam_2e7b4d6a1f9e4c6f8a2b3c1d7e5f9b3a',
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a02758cff1cc4bab9d9133e661bd49b0',
-          game_num: 4,
-          score: randomScore,
-        }
-      });    
-      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
-      game = await prisma.game.upsert({
-        where: {
-          id: 'gam_8a6d5f4c2e1b4d9fb7a0c3e5d4f7a2b1',
-        },
-        update: {          
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a02758cff1cc4bab9d9133e661bd49b0',
-          game_num: 5,
-          score: randomScore,
-        },
-        create: {
-          id: 'gam_8a6d5f4c2e1b4d9fb7a0c3e5d4f7a2b1',
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a02758cff1cc4bab9d9133e661bd49b0',
-          game_num: 5,
-          score: randomScore,
-        }
-      });    
-      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
-      game = await prisma.game.upsert({
-        where: {
-          id: 'gam_6c5d8e7a2b9f4c3d1a0b6f7e4a2e9b8f',
-        },
-        update: {          
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a02758cff1cc4bab9d9133e661bd49b0',
-          game_num: 6,
-          score: randomScore,
-        },
-        create: {
-          id: 'gam_6c5d8e7a2b9f4c3d1a0b6f7e4a2e9b8f',
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a02758cff1cc4bab9d9133e661bd49b0',
-          game_num: 6,
-          score: randomScore,
-        }
       });
       randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_4e1a2b5d8c9f4e7b6a0c3d2e5f9b7d1c',
+          id: "gam_0a5e912e41ad4e0eb1a4e6d9c15fb4b6",
         },
-        update: {          
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a03758cff1cc4bab9d9133e661bd49b0',
-          game_num: 1,
-          score: randomScore,
-        },
-        create: {
-          id: 'gam_4e1a2b5d8c9f4e7b6a0c3d2e5f9b7d1c',
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a03758cff1cc4bab9d9133e661bd49b0',
-          game_num: 1,
-          score: randomScore,
-        }
-      });    
-      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
-      game = await prisma.game.upsert({
-        where: {
-          id: 'gam_f7b4d1e2c5a8b9f6d3e0a4c6e8b5d1e3',
-        },
-        update: {          
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a03758cff1cc4bab9d9133e661bd49b0',
-          game_num: 2,
-          score: randomScore,
-        },
-        create: {
-          id: 'gam_f7b4d1e2c5a8b9f6d3e0a4c6e8b5d1e3',
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a03758cff1cc4bab9d9133e661bd49b0',
-          game_num: 2,
-          score: randomScore,
-        }
-      });    
-      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
-      game = await prisma.game.upsert({
-        where: {
-          id: 'gam_3e8b4d2a1f9e7c5a6b4c0d3e5a9f7b2d',
-        },
-        update: {          
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a03758cff1cc4bab9d9133e661bd49b0',
+        update: {
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a01758cff1cc4bab9d9133e661bd49b0",
           game_num: 3,
           score: randomScore,
         },
         create: {
-          id: 'gam_3e8b4d2a1f9e7c5a6b4c0d3e5a9f7b2d',
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a03758cff1cc4bab9d9133e661bd49b0',
+          id: "gam_0a5e912e41ad4e0eb1a4e6d9c15fb4b6",
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a01758cff1cc4bab9d9133e661bd49b0",
           game_num: 3,
           score: randomScore,
-        }
-      });    
+        },
+      });
       randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_5d6a1f9e2c3b4e8a7b5c4d0e9f3a2b7f',
+          id: "gam_5b0c7b13a3a94d09802e5b6f9dcf3c10",
         },
-        update: {          
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a03758cff1cc4bab9d9133e661bd49b0',
+        update: {
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a01758cff1cc4bab9d9133e661bd49b0",
           game_num: 4,
           score: randomScore,
         },
         create: {
-          id: 'gam_5d6a1f9e2c3b4e8a7b5c4d0e9f3a2b7f',
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a03758cff1cc4bab9d9133e661bd49b0',
+          id: "gam_5b0c7b13a3a94d09802e5b6f9dcf3c10",
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a01758cff1cc4bab9d9133e661bd49b0",
           game_num: 4,
           score: randomScore,
-        }
-      });    
+        },
+      });
       randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_1b4e3a2c5d9f8b7a0c6e4d1a7f3e5b2d',
+          id: "gam_4c5d1b9844f64a8da2ab4e8b6d317a9e",
         },
-        update: {          
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a03758cff1cc4bab9d9133e661bd49b0',
+        update: {
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a01758cff1cc4bab9d9133e661bd49b0",
           game_num: 5,
           score: randomScore,
         },
         create: {
-          id: 'gam_1b4e3a2c5d9f8b7a0c6e4d1a7f3e5b2d',
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a03758cff1cc4bab9d9133e661bd49b0',
+          id: "gam_4c5d1b9844f64a8da2ab4e8b6d317a9e",
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a01758cff1cc4bab9d9133e661bd49b0",
           game_num: 5,
           score: randomScore,
-        }
-      });    
+        },
+      });
       randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
       game = await prisma.game.upsert({
         where: {
-          id: 'gam_2c3b4e1a9f7d5e8b6a0c1d4e3f2b7a9f',
+          id: "gam_b1c6e0f7153f413791f394e2f3ac4e8c",
         },
-        update: {          
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a03758cff1cc4bab9d9133e661bd49b0',
+        update: {
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a01758cff1cc4bab9d9133e661bd49b0",
           game_num: 6,
           score: randomScore,
         },
         create: {
-          id: 'gam_2c3b4e1a9f7d5e8b6a0c1d4e3f2b7a9f',
-          squad_id: 'sqd_8e4266e1174642c7a1bcec47a50f275f',
-          player_id: 'ply_a03758cff1cc4bab9d9133e661bd49b0',
+          id: "gam_b1c6e0f7153f413791f394e2f3ac4e8c",
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a01758cff1cc4bab9d9133e661bd49b0",
           game_num: 6,
           score: randomScore,
-        }
-      });     
+        },
+      });
+      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
+      game = await prisma.game.upsert({
+        where: {
+          id: "gam_3c7d8f6e4a024e6fb1b5e9f7d214c3b4",
+        },
+        update: {
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a02758cff1cc4bab9d9133e661bd49b0",
+          game_num: 1,
+          score: randomScore,
+        },
+        create: {
+          id: "gam_3c7d8f6e4a024e6fb1b5e9f7d214c3b4",
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a02758cff1cc4bab9d9133e661bd49b0",
+          game_num: 1,
+          score: randomScore,
+        },
+      });
+      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
+      game = await prisma.game.upsert({
+        where: {
+          id: "gam_7b9e0d5c2f9a467b9a1e5c6d4f3b2a1e",
+        },
+        update: {
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a02758cff1cc4bab9d9133e661bd49b0",
+          game_num: 2,
+          score: randomScore,
+        },
+        create: {
+          id: "gam_7b9e0d5c2f9a467b9a1e5c6d4f3b2a1e",
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a02758cff1cc4bab9d9133e661bd49b0",
+          game_num: 2,
+          score: randomScore,
+        },
+      });
+      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
+      game = await prisma.game.upsert({
+        where: {
+          id: "gam_9d1c7f8a3b924f8cb1e6a7c5e8b4d1f2",
+        },
+        update: {
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a02758cff1cc4bab9d9133e661bd49b0",
+          game_num: 3,
+          score: randomScore,
+        },
+        create: {
+          id: "gam_9d1c7f8a3b924f8cb1e6a7c5e8b4d1f2",
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a02758cff1cc4bab9d9133e661bd49b0",
+          game_num: 3,
+          score: randomScore,
+        },
+      });
+      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
+      game = await prisma.game.upsert({
+        where: {
+          id: "gam_2e7b4d6a1f9e4c6f8a2b3c1d7e5f9b3a",
+        },
+        update: {
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a02758cff1cc4bab9d9133e661bd49b0",
+          game_num: 4,
+          score: randomScore,
+        },
+        create: {
+          id: "gam_2e7b4d6a1f9e4c6f8a2b3c1d7e5f9b3a",
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a02758cff1cc4bab9d9133e661bd49b0",
+          game_num: 4,
+          score: randomScore,
+        },
+      });
+      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
+      game = await prisma.game.upsert({
+        where: {
+          id: "gam_8a6d5f4c2e1b4d9fb7a0c3e5d4f7a2b1",
+        },
+        update: {
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a02758cff1cc4bab9d9133e661bd49b0",
+          game_num: 5,
+          score: randomScore,
+        },
+        create: {
+          id: "gam_8a6d5f4c2e1b4d9fb7a0c3e5d4f7a2b1",
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a02758cff1cc4bab9d9133e661bd49b0",
+          game_num: 5,
+          score: randomScore,
+        },
+      });
+      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
+      game = await prisma.game.upsert({
+        where: {
+          id: "gam_6c5d8e7a2b9f4c3d1a0b6f7e4a2e9b8f",
+        },
+        update: {
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a02758cff1cc4bab9d9133e661bd49b0",
+          game_num: 6,
+          score: randomScore,
+        },
+        create: {
+          id: "gam_6c5d8e7a2b9f4c3d1a0b6f7e4a2e9b8f",
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a02758cff1cc4bab9d9133e661bd49b0",
+          game_num: 6,
+          score: randomScore,
+        },
+      });
+      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
+      game = await prisma.game.upsert({
+        where: {
+          id: "gam_4e1a2b5d8c9f4e7b6a0c3d2e5f9b7d1c",
+        },
+        update: {
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a03758cff1cc4bab9d9133e661bd49b0",
+          game_num: 1,
+          score: randomScore,
+        },
+        create: {
+          id: "gam_4e1a2b5d8c9f4e7b6a0c3d2e5f9b7d1c",
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a03758cff1cc4bab9d9133e661bd49b0",
+          game_num: 1,
+          score: randomScore,
+        },
+      });
+      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
+      game = await prisma.game.upsert({
+        where: {
+          id: "gam_f7b4d1e2c5a8b9f6d3e0a4c6e8b5d1e3",
+        },
+        update: {
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a03758cff1cc4bab9d9133e661bd49b0",
+          game_num: 2,
+          score: randomScore,
+        },
+        create: {
+          id: "gam_f7b4d1e2c5a8b9f6d3e0a4c6e8b5d1e3",
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a03758cff1cc4bab9d9133e661bd49b0",
+          game_num: 2,
+          score: randomScore,
+        },
+      });
+      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
+      game = await prisma.game.upsert({
+        where: {
+          id: "gam_3e8b4d2a1f9e7c5a6b4c0d3e5a9f7b2d",
+        },
+        update: {
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a03758cff1cc4bab9d9133e661bd49b0",
+          game_num: 3,
+          score: randomScore,
+        },
+        create: {
+          id: "gam_3e8b4d2a1f9e7c5a6b4c0d3e5a9f7b2d",
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a03758cff1cc4bab9d9133e661bd49b0",
+          game_num: 3,
+          score: randomScore,
+        },
+      });
+      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
+      game = await prisma.game.upsert({
+        where: {
+          id: "gam_5d6a1f9e2c3b4e8a7b5c4d0e9f3a2b7f",
+        },
+        update: {
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a03758cff1cc4bab9d9133e661bd49b0",
+          game_num: 4,
+          score: randomScore,
+        },
+        create: {
+          id: "gam_5d6a1f9e2c3b4e8a7b5c4d0e9f3a2b7f",
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a03758cff1cc4bab9d9133e661bd49b0",
+          game_num: 4,
+          score: randomScore,
+        },
+      });
+      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
+      game = await prisma.game.upsert({
+        where: {
+          id: "gam_1b4e3a2c5d9f8b7a0c6e4d1a7f3e5b2d",
+        },
+        update: {
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a03758cff1cc4bab9d9133e661bd49b0",
+          game_num: 5,
+          score: randomScore,
+        },
+        create: {
+          id: "gam_1b4e3a2c5d9f8b7a0c6e4d1a7f3e5b2d",
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a03758cff1cc4bab9d9133e661bd49b0",
+          game_num: 5,
+          score: randomScore,
+        },
+      });
+      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
+      game = await prisma.game.upsert({
+        where: {
+          id: "gam_2c3b4e1a9f7d5e8b6a0c1d4e3f2b7a9f",
+        },
+        update: {
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a03758cff1cc4bab9d9133e661bd49b0",
+          game_num: 6,
+          score: randomScore,
+        },
+        create: {
+          id: "gam_2c3b4e1a9f7d5e8b6a0c1d4e3f2b7a9f",
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          player_id: "ply_a03758cff1cc4bab9d9133e661bd49b0",
+          game_num: 6,
+          score: randomScore,
+        },
+      });
       return 18;
     } catch (error) {
       console.log(error);
-      return -1
+      return -1;
     }
   }
 
   async function gamesUpsert_ToDelete() {
-    try {      
+    try {
       let game = await prisma.game.upsert({
         where: {
-          id: 'gam_c1dfffcefd344ef0a9a2aaacda98635a',
+          id: "gam_c1dfffcefd344ef0a9a2aaacda98635a",
         },
-        update: {          
-          squad_id: 'sqd_1a6c885ee19a49489960389193e8f819',
-          player_id: 'ply_bb0fd8bbd9e34d34a7fa90b4111c6e40',
+        update: {
+          squad_id: "sqd_1a6c885ee19a49489960389193e8f819",
+          player_id: "ply_bb0fd8bbd9e34d34a7fa90b4111c6e40",
           game_num: 1,
           score: 222,
         },
         create: {
-          id: 'gam_c1dfffcefd344ef0a9a2aaacda98635a',
-          squad_id: 'sqd_1a6c885ee19a49489960389193e8f819',
-          player_id: 'ply_bb0fd8bbd9e34d34a7fa90b4111c6e40',
+          id: "gam_c1dfffcefd344ef0a9a2aaacda98635a",
+          squad_id: "sqd_1a6c885ee19a49489960389193e8f819",
+          player_id: "ply_bb0fd8bbd9e34d34a7fa90b4111c6e40",
           game_num: 1,
           score: 222,
-        }
+        },
       });
-      return 1
-    }
-    catch (error) {
+      return 1;
+    } catch (error) {
       console.log(error);
-      return -1
-    }    
+      return -1;
+    }
   }
 
   try {

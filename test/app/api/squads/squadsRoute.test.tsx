@@ -6,6 +6,8 @@ import { initEvent, initSquad } from "@/lib/db/initVals";
 import { removeTimeFromISODateStr, startOfDayFromString } from "@/lib/dateTools";
 import { deleteAllTmntSquads } from "@/lib/db/squads/dbSquads";
 import { mockSquadsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
+import { mockCurData } from "../../../mocks/tmnts/playerEntries/mockOneSquadEntries";
+import { cloneDeep } from "lodash";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -26,6 +28,7 @@ const url = testBaseSquadsApi.startsWith("undefined")
   ? baseSquadsApi
   : testBaseSquadsApi;   
 const oneSquadUrl = url + "/squad/";
+const entriesUrl = url + '/entries/';
 const eventUrl = url + '/event/';
 const tmntUrl = url + '/tmnt/';
 const manyUrl = url + "/many";
@@ -294,7 +297,7 @@ describe('Squads - API: /api/squads', () => {
     })
   })
 
-  describe('GET by ID - API: /api/squads/squad/[id]', () => { 
+  describe('GET by ID - API: /api/squads/squad/:id', () => { 
 
     it('should get squad by ID', async () => { 
       const response = await axios.get(oneSquadUrl + testSquad.id);
@@ -346,7 +349,99 @@ describe('Squads - API: /api/squads', () => {
         }
       }
     })
+  })
 
+  describe('GET all entries for one squad API: /api/squads/entries/squad/:id', () => { 
+    
+    it('should get all entries for one squad', async () => {
+      const squadID = mockCurData.squads[0].id;
+      const response = await axios({
+        method: "get",
+        withCredentials: true,
+        url: entriesUrl + squadID,        
+        params: { curData: JSON.stringify(mockCurData) }
+      });
+      expect(response.status).toBe(200);
+      const squadEntries = response.data.squadEntries;
+      expect(squadEntries).toHaveLength(6);
+    })
+    it('should return code 404 for when id does not match squad id in curData', async () => {      
+      const squadID = 'sqd_3397da1adc014cf58c44e07c19914f70'; // changed last digit to not match
+      try {
+        const response = await axios({
+          method: "get",
+          withCredentials: true,
+          url: entriesUrl + squadID,          
+          params: { curData: JSON.stringify(mockCurData) }
+        });
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should return code 404 for when squads is null in curData', async () => {      
+      const squadID = mockCurData.squads[0].id;
+      const invalidData = cloneDeep(mockCurData)
+      invalidData.squads = null as any;
+      try {
+        const response = await axios({
+          method: "get",
+          withCredentials: true,
+          url: entriesUrl + squadID,          
+          params: { curData: JSON.stringify(invalidData) }
+        });
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should return code 404 for with empty squads in curData', async () => {      
+      const squadID = mockCurData.squads[0].id;
+      const invalidData = cloneDeep(mockCurData)
+      invalidData.squads = [];
+      try {
+        const response = await axios({
+          method: "get",
+          withCredentials: true,
+          url: entriesUrl + squadID,          
+          params: { curData: JSON.stringify(invalidData) }
+        });
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should return code 400 for when no curData', async () => {      
+      const squadID = 'sqd_3397da1adc014cf58c44e07c19914f70'; // changed last digit to not match
+      try {
+        const response = await axios({
+          method: "get",
+          withCredentials: true,
+          url: entriesUrl + squadID,          
+          params: { curData: JSON.stringify({}) }
+        });
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    
   })
 
   describe('POST', () => {

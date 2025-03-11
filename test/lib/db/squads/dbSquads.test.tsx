@@ -3,10 +3,12 @@ import { baseSquadsApi, baseEventsApi } from "@/lib/db/apiPaths";
 import { testBaseSquadsApi, testBaseEventsApi } from "../../../testApi";
 import { eventType, squadType } from "@/lib/types/types";
 import { initEvent, initSquad } from "@/lib/db/initVals";
-import { deleteAllEventSquads, deleteAllTmntSquads, deleteSquad, getAllEntriesForSquad, getAllSquadsForTmnt, postManySquads, postSquad, putSquad } from "@/lib/db/squads/dbSquads";
+import { deleteAllEventSquads, deleteAllTmntSquads, deleteSquad, getAllEntriesForSquad, getAllEntriesForSquad2, getAllSquadsForTmnt, postManySquads, postSquad, putSquad } from "@/lib/db/squads/dbSquads";
 import { startOfDayFromString } from "@/lib/dateTools";
 import { mockSquadsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
+import { mockCurData, mockSquadEntries, mockSquadEntriesData } from "../../../mocks/tmnts/playerEntries/mockOneSquadEntries";
 import { deleteEvent } from "@/lib/db/events/dbEvents";
+import { cloneDeep } from "lodash";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -206,6 +208,131 @@ describe('dbSquads', () => {
       const allEntries = await getAllEntriesForSquad('');
       expect(allEntries).toBeNull();
     })
+  })
+
+  describe('getAllEntriesForSquad2', () => {    
+    it('gets all entries for a squad', async () => { 
+      const allEntries = await getAllEntriesForSquad2(mockCurData);
+      expect(allEntries).not.toBeNull();
+      if (!allEntries) return;      
+      expect(allEntries.squadId).toBe(mockSquadEntries.squadId);
+      expect(allEntries.players.length).toBe(mockSquadEntries.players.length);
+      for (let i = 0; i < allEntries.players.length; i++) {
+        expect(allEntries.players[i].id).toBe(mockSquadEntries.players[i].id);
+        expect(allEntries.players[i].squad_id).toBe(mockSquadEntries.squadId);
+        expect(allEntries.players[i].first_name).toBe(mockSquadEntries.players[i].first_name);
+        expect(allEntries.players[i].last_name).toBe(mockSquadEntries.players[i].last_name);
+        expect(allEntries.players[i].average).toBe(mockSquadEntries.players[i].average);
+        expect(allEntries.players[i].lane).toBe(mockSquadEntries.players[i].lane);
+        expect(allEntries.players[i].position).toBe(mockSquadEntries.players[i].position);
+      }
+      
+      expect(allEntries.divEntries.length).toBe(mockSquadEntries.divEntries.length);
+      for (let i = 0; i < allEntries.divEntries.length; i++) {
+        // expect(allEntries.divEntries[i].id).toBe(mockSquadEntries.divEntries[i].id);
+        expect(allEntries.divEntries[i].squad_id).toBe(mockSquadEntries.squadId);
+        expect(allEntries.divEntries[i].div_id).toBe(mockSquadEntries.divEntries[i].div_id);
+        expect(allEntries.divEntries[i].player_id).toBe(mockSquadEntries.divEntries[i].player_id);
+        expect(allEntries.divEntries[i].fee).toBe(mockSquadEntries.divEntries[i].fee);
+      }
+
+      expect(allEntries.potEntries.length).toBe(mockSquadEntries.potEntries.length);
+      for (let i = 0; i < allEntries.potEntries.length; i++) {
+        // expect(allEntries.potEntries[i].id).toBe(mockSquadEntries.potEntries[i].id);
+        expect(allEntries.potEntries[i].pot_id).toBe(mockSquadEntries.potEntries[i].pot_id);
+        expect(allEntries.potEntries[i].player_id).toBe(mockSquadEntries.potEntries[i].player_id);
+        expect(allEntries.potEntries[i].fee).toBe(mockSquadEntries.potEntries[i].fee);
+      }
+
+      expect(allEntries.brktEntries.length).toBe(mockSquadEntries.brktEntries.length);
+      for (let i = 0; i < allEntries.brktEntries.length; i++) {
+        // expect(allEntries.brktEntries[i].id).toBe(mockSquadEntries.brktEntries[i].id);
+        expect(allEntries.brktEntries[i].brkt_id).toBe(mockSquadEntries.brktEntries[i].brkt_id);        
+        expect(allEntries.brktEntries[i].player_id).toBe(mockSquadEntries.brktEntries[i].player_id);
+        expect(allEntries.brktEntries[i].num_brackets).toBe(mockSquadEntries.brktEntries[i].num_brackets);
+      }
+
+      expect(allEntries.elimEntries.length).toBe(mockSquadEntries.elimEntries.length);
+      for (let i = 0; i < allEntries.elimEntries.length; i++) {
+        // expect(allEntries.elimEntries[i].id).toBe(mockSquadEntries.elimEntries[i].id);
+        expect(allEntries.elimEntries[i].elim_id).toBe(mockSquadEntries.elimEntries[i].elim_id);
+        expect(allEntries.elimEntries[i].player_id).toBe(mockSquadEntries.elimEntries[i].player_id);
+        expect(allEntries.elimEntries[i].fee).toBe(mockSquadEntries.elimEntries[i].fee);
+      }
+    })
+    it('should not get all entries for not found squad', async () => { 
+      const notFound = cloneDeep(mockCurData);
+      const notFoundSquadId = "sqd_01234567890123456789012345678901";
+      notFound.squads[0].id = notFoundSquadId;  
+      const allEntries = await getAllEntriesForSquad2(notFound);
+      expect(allEntries).not.toBeNull();
+      if (!allEntries) return;      
+      expect(allEntries.squadId).toBe(notFoundSquadId);
+      expect(allEntries.players.length).toBe(0);      
+      expect(allEntries.divEntries.length).toBe(0);      
+      expect(allEntries.potEntries.length).toBe(0);      
+      expect(allEntries.brktEntries.length).toBe(0);      
+      expect(allEntries.elimEntries.length).toBe(0);
+    })
+    it('should return null if passed null', async () => { 
+      const allEntries = await getAllEntriesForSquad2(null as any);
+      expect(allEntries).toBeNull();
+    })
+    it('should return null if squads is null in current data', async () => { 
+      const noSquads = cloneDeep(mockCurData);
+      noSquads.squads = null as any;
+      const allEntries = await getAllEntriesForSquad2(noSquads);
+      expect(allEntries).toBeNull();
+    })
+    it('should return null if no squads in current data', async () => { 
+      const noSquads = cloneDeep(mockCurData);
+      noSquads.squads = [];
+      const allEntries = await getAllEntriesForSquad2(noSquads);
+      expect(allEntries).toBeNull();
+    })
+    it('should return null if invalid squad id in current data', async () => { 
+      const noSquads = cloneDeep(mockCurData);
+      noSquads.squads[0].id = 'testing';
+      const allEntries = await getAllEntriesForSquad2(noSquads);
+      expect(allEntries).toBeNull();
+    })
+    it('should return null if valid id in squad, but not a squad id, in current data', async () => { 
+      const noSquads = cloneDeep(mockCurData);
+      noSquads.squads[0].id = noSquads.tmnt.id;
+      const allEntries = await getAllEntriesForSquad2(noSquads);
+      expect(allEntries).toBeNull();
+    })
+    it('should return null if divs is null in current data', async () => { 
+      const noDivs = cloneDeep(mockCurData);
+      noDivs.divs = null as any;
+      const allEntries = await getAllEntriesForSquad2(noDivs);
+      expect(allEntries).toBeNull();
+    })
+    it('should return null if no divs in current data', async () => { 
+      const noDivs = cloneDeep(mockCurData);
+      noDivs.divs = [];
+      const allEntries = await getAllEntriesForSquad2(noDivs);
+      expect(allEntries).toBeNull();
+    })
+    it('should return null if pots is null in current data', async () => { 
+      const noPots = cloneDeep(mockCurData);
+      noPots.pots = null as any;
+      const allEntries = await getAllEntriesForSquad2(noPots);
+      expect(allEntries).toBeNull();
+    })
+    it('should return null if brkts is null in current data', async () => { 
+      const noBrkts = cloneDeep(mockCurData);
+      noBrkts.brkts = null as any;
+      const allEntries = await getAllEntriesForSquad2(noBrkts);
+      expect(allEntries).toBeNull();
+    })
+    it('should return null if elims is null in current data', async () => { 
+      const noElims = cloneDeep(mockCurData);
+      noElims.elims = null as any;
+      const allEntries = await getAllEntriesForSquad2(noElims);
+      expect(allEntries).toBeNull();
+    })
+
   })
 
   describe('postSquad', () => { 
