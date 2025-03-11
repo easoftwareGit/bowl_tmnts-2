@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
-import { fetchTmnts } from "@/redux/features/tmnts/tmntsSlice";
+import { clearTmnts, fetchTmnts } from "@/redux/features/tmnts/tmntsSlice";
 import { YearObj } from "@/lib/types/types" 
 import TmntsList from "@/components/tmnts/tmntsList";
 
@@ -10,6 +10,11 @@ export default function TmntUpcomingPage() {
   const dispatch = useDispatch<AppDispatch>();
 
   const tmntYear = ''
+
+  useEffect(() => {
+    // Clear tournaments when the page loads
+    dispatch(clearTmnts());
+  }, [dispatch]);
 
   useEffect(() => {
     dispatch(fetchTmnts(tmntYear));
@@ -28,6 +33,7 @@ export default function TmntUpcomingPage() {
       <TmntsList
         years={yearsArr}        
         tmnts={stateTmnts.tmnts}
+        showResults={false}
         onYearChange={yearChanged}
       />
     </div>

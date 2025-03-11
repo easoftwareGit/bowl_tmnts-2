@@ -28,8 +28,12 @@ export default withAuth(
 
 export const config = {
   matcher: [
+    '/dataEntry',
+    '/denied',
+    '/hello',
+    '/sample',
     '/secret',  
-    '/user'
+    '/user',    
   ]
 }
 

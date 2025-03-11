@@ -18,7 +18,7 @@ import './tmntResults.css';
 // new years eve
 // http://localhost:3000/results/tmnt/tmt_fe8ac53dad0f400abe6354210a8f4cd1
 
-export const DivResultsPage = () => { 
+const DivResultsPage = () => { 
 
   const params = useParams();
   const tmntId = params.tmntId as string;  

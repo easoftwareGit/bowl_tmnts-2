@@ -7,7 +7,6 @@ import CurrencyInput, { formatValue } from "@/lib/currency";
 import { getLocaleConfig } from "@/lib/currency/components/utils";
 import { IntlConfig } from "@/lib/currency/components/CurrencyInputProps";
 import EaCurrencyInput from "@/components/currency/eaCurrencyInput";
-import { IMaskInput } from 'react-imask';
 
 import "./form.css";
 

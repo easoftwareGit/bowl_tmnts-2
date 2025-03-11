@@ -17,13 +17,9 @@ import { btDbUuid } from "@/lib/uuid";
 import { Form13 } from "./form13";
 import { Form14 } from "./form14";
 
-interface FormProps {
-  tmnt?: tmntType  
-}
+const SamplePage = () => { 
 
-export const SamplePage: React.FC<FormProps> = ({ tmnt = blankTmnt }) => { 
-
-  const [tmntData, setTmntData] = useState(tmnt);
+  const [tmntData, setTmntData] = useState(blankTmnt);
   const [events, setEvents] = useState<eventType[]>([]);
   const [divs, setDivs] = useState<divType[]>(initDivs);
   const [squads, setSquads] = useState<squadType[]>([]);

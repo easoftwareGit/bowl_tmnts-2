@@ -36,7 +36,13 @@ export const fetchTmnts = createAsyncThunk(
 export const tmntsSlice = createSlice({
   name: "tmnts",
   initialState,
-  reducers: {},
+  reducers: {
+    clearTmnts: (state) => { 
+      state.tmnts = [];
+      state.status = "idle";
+      state.error = "";
+    }
+  },
   extraReducers: (builder) => {
     builder.addCase(fetchTmnts.pending, (state: TmntSliceState) => {
       state.status = "loading";      
@@ -53,5 +59,6 @@ export const tmntsSlice = createSlice({
     });
   },
 });
+export const { clearTmnts } = tmntsSlice.actions;
 
 export default tmntsSlice.reducer;

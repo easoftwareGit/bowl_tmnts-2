@@ -7,6 +7,7 @@ import { getMonthDay } from "@/lib/dateTools";
 interface TmntListProps {
   years: YearObj[];
   tmnts: tmntsListType[];
+  showResults: boolean;
   onYearChange: (val: string) => void | undefined;
 }
 
@@ -74,7 +75,7 @@ export function getSortedStateOptions(tmnts: tmntsListType[]): SelectOption[] {
 }
 
 const TmntsList: FC<TmntListProps> = (props) => {
-  const { years, tmnts } = props;
+  const { years, tmnts, showResults } = props;
 
   let stateFilter: string = "all";
   const [filteredTmnts, setFilteredTmnts] = useState(tmnts);
@@ -175,9 +176,13 @@ const TmntsList: FC<TmntListProps> = (props) => {
               {filteredTmnts.map((tmnt) => (
                 <tr key={tmnt.id}>
                   <td colSpan={2}>
-                    <Link href={`/results/tmnt/${tmnt.id}`}>
-                      {tmnt.tmnt_name} - {TmntMonthDay(tmnt)}
-                    </Link>
+                    {showResults
+                      ?
+                      <Link href={`/results/tmnt/${tmnt.id}`}>
+                        {tmnt.tmnt_name} - {TmntMonthDay(tmnt)}
+                      </Link>
+                      : <>{tmnt.tmnt_name} - {TmntMonthDay(tmnt)}</>
+                    }
                   </td>
                   <td>
                     <a

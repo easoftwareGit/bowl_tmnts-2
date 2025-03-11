@@ -2,7 +2,7 @@
 import usePreventUnload from "@/components/preventUnload/preventUnload";
 import React, { useState } from "react";
 
-export const SamplePage: React.FC = () => { 
+const SamplePage = () => { 
 
   const initSample = 'Sample Text';
   const [sample, setSample] = useState(initSample);

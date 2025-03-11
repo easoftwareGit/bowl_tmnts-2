@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
 import { useSession } from "next-auth/react"; 
 import TmntDataForm from "../tmntForm/tmntForm";
 import { dataOneTmntType, tmntActions, tmntFormDataType } from "@/lib/types/types";
@@ -27,7 +27,7 @@ const blankFullTmnt: dataOneTmntType = {
   elims: initElims,
 };
 
-export const NewTmntPage = () => {
+const NewTmntPage = () => {
 
   const { status, data } = useSession();
   // link the tmnt data types

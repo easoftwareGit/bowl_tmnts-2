@@ -8,7 +8,7 @@ describe('getSql', () => {
   describe('getSQL for div games', () => { 
 
     const divId = "div_578834e04e5e4885bbae79229d8b96e8"
-    const divIdHdcp = 'div_24b1cd5dee0542038a1244fc2978e862'
+    const divIdHdcp = 'div_fe72ab97edf8407186c8e6df7f7fb741'
     const squadGames = 6
 
     describe('should return the correct SQL for div games', () => { 
@@ -97,7 +97,7 @@ describe('getSql', () => {
           `SELECT * ` +
           `FROM final_result ` +
           `ORDER BY "total + Hdcp" DESC;`
-
+        
         expect(sql).toBe(expected)
       })
       it('should return the correct SQL for div games - HDCP', () => { 
@@ -334,7 +334,7 @@ describe('getSql', () => {
       
         expect(sql).toBe(expected)
       })
-      it('should return the corect SQL for tmnt games, multi divs', () => { 
+      it('should return the corect SQL for tmnt games, one div', () => { 
         const sql = getTmntGamesSql(tmntIdOneDiv, squadGames);
         const expected = 
           // get game scores

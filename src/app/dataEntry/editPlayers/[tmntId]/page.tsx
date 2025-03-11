@@ -36,11 +36,12 @@ import { getBrktOrElimName } from "@/lib/getName";
 import { Tab, Tabs } from "react-bootstrap";
 import { BracketList } from "@/components/brackets/bracketList";
 import BracketGrid, { BGDataType } from "@/components/brackets/bracketGrid";
-import { cloneDeep, entries } from "lodash";
+import { cloneDeep } from "lodash";
 import usePreventUnload from "@/components/preventUnload/preventUnload";
 import WaitModal from "@/components/modal/waitModal";
 
 import "./editPlayers.css";
+import { defaultBrktGames, defaultPlayersPerMatch } from "@/lib/db/initVals";
 
 const populateRows = (formData: dataOneSquadEntriesType) => {
   const pRows: (typeof playerEntryData)[] = [];
@@ -342,8 +343,8 @@ export default function EditPlayersPage() {
         const brktEntRows = rows.filter(row => row[key] > 0);
         const brktId = key.slice(0, -5); // remove '_name'        
 
-        // create a new brktList for each bracket
-        const oneBrktList = new BracketList(brktId, 2, 3, allBrktsList[brktId].brackets);
+        // create a new brktList for each bracket        
+        const oneBrktList = new BracketList(brktId, defaultPlayersPerMatch, defaultBrktGames, allBrktsList[brktId].brackets);
         // populate the new brktList
         oneBrktList.rePopulateBrkts(brktEntRows);
         updatedAllBrktsList[brktId] = oneBrktList;        
@@ -626,6 +627,6 @@ export default function EditPlayersPage() {
   );
 }
 
-export const exportedForTesting = {
-  populateRows,
-};
+// export const exportedForTesting = {
+//   populateRows,
+// };

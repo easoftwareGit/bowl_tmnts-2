@@ -5,7 +5,7 @@ import { brktEntryType, brktEntryDataType, tmntEntryBrktEntryType } from "@/lib/
 import { validateBrktEntries } from "../validate";
 import { getDeleteManySQL, getInsertManySQL, getUpdateManySQL } from "./getSql";
 
-// routes /api/brktEntries/many
+// routes /api/brktEntries/many 
 
 export async function POST(request: NextRequest) {
 
