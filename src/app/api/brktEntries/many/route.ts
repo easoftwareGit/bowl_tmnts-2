@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { ErrorCode } from "@/lib/validation";
 import { brktEntryType, brktEntryDataType, tmntEntryBrktEntryType } from "@/lib/types/types";
 import { validateBrktEntries } from "../validate";
-import { getDeleteManySQL, getInsertManySQL, getUpdateManySQL } from "./getSql2";
+import { getDeleteManySQL, getInsertManySQL, getUpdateManySQL } from "./getSql";
 
 // routes /api/brktEntries/many 
 
