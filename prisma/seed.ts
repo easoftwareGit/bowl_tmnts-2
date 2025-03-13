@@ -8801,14 +8801,14 @@ async function gamesUpsert() {
         },
         update: {
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
+          player_id: "ply_da674926088d4f739c69c2c72a465ccd",
           game_num: 1,
           score: randomScore,
         },
         create: {
           id: "gam_f47ac10b58cc4372a5670e02b2c3d479",
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
+          player_id: "ply_da674926088d4f739c69c2c72a465ccd",
           game_num: 1,
           score: randomScore,
         },
@@ -8820,14 +8820,14 @@ async function gamesUpsert() {
         },
         update: {
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
+          player_id: "ply_da674926088d4f739c69c2c72a465ccd",
           game_num: 2,
           score: randomScore,
         },
         create: {
           id: "gam_9bb58ff04e7a45d98ae4b5f2d7b1b45e",
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
+          player_id: "ply_da674926088d4f739c69c2c72a465ccd",
           game_num: 2,
           score: randomScore,
         },
@@ -8839,14 +8839,14 @@ async function gamesUpsert() {
         },
         update: {
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
+          player_id: "ply_da674926088d4f739c69c2c72a465ccd",
           game_num: 3,
           score: randomScore,
         },
         create: {
           id: "gam_3c9a9ea1d9bc44e899ad9e1d82b7cdb6",
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
+          player_id: "ply_da674926088d4f739c69c2c72a465ccd",
           game_num: 3,
           score: randomScore,
         },
@@ -8858,14 +8858,14 @@ async function gamesUpsert() {
         },
         update: {
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
+          player_id: "ply_da674926088d4f739c69c2c72a465ccd",
           game_num: 4,
           score: randomScore,
         },
         create: {
           id: "gam_6a0be04152a3483a8d50c8ea037f4d99",
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
+          player_id: "ply_da674926088d4f739c69c2c72a465ccd",
           game_num: 4,
           score: randomScore,
         },
@@ -8877,14 +8877,14 @@ async function gamesUpsert() {
         },
         update: {
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
+          player_id: "ply_da674926088d4f739c69c2c72a465ccd",
           game_num: 5,
           score: randomScore,
         },
         create: {
           id: "gam_ba7cf3081a1b46218ab8b7d8791b5c76",
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
+          player_id: "ply_da674926088d4f739c69c2c72a465ccd",
           game_num: 5,
           score: randomScore,
         },
@@ -8896,14 +8896,14 @@ async function gamesUpsert() {
         },
         update: {
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
+          player_id: "ply_da674926088d4f739c69c2c72a465ccd",
           game_num: 6,
           score: randomScore,
         },
         create: {
           id: "gam_8113dd4a1dfc4d8b96e7f8694fb17738",
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
+          player_id: "ply_da674926088d4f739c69c2c72a465ccd",
           game_num: 6,
           score: randomScore,
         },
@@ -8915,14 +8915,14 @@ async function gamesUpsert() {
         },
         update: {
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
+          player_id: "ply_8ffe9406fcc046508aa4b214ef16f647",
           game_num: 1,
           score: randomScore,
         },
         create: {
           id: "gam_4dc8f1b94b0045248decd4239c5b2c59",
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
+          player_id: "ply_8ffe9406fcc046508aa4b214ef16f647",
           game_num: 1,
           score: randomScore,
         },
@@ -8934,14 +8934,14 @@ async function gamesUpsert() {
         },
         update: {
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
+          player_id: "ply_8ffe9406fcc046508aa4b214ef16f647",
           game_num: 2,
           score: randomScore,
         },
         create: {
           id: "gam_0bde6a2ab2fa4c6c9c10a2a6cd3f4730",
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
+          player_id: "ply_8ffe9406fcc046508aa4b214ef16f647",
           game_num: 2,
           score: randomScore,
         },
@@ -8953,14 +8953,14 @@ async function gamesUpsert() {
         },
         update: {
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
+          player_id: "ply_8ffe9406fcc046508aa4b214ef16f647",
           game_num: 3,
           score: randomScore,
         },
         create: {
           id: "gam_214d572a9db34c4d80cbb84ed484fc39",
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
+          player_id: "ply_8ffe9406fcc046508aa4b214ef16f647",
           game_num: 3,
           score: randomScore,
         },
@@ -8972,14 +8972,14 @@ async function gamesUpsert() {
         },
         update: {
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
+          player_id: "ply_8ffe9406fcc046508aa4b214ef16f647",
           game_num: 4,
           score: randomScore,
         },
         create: {
           id: "gam_9fb63b72c4fc43dba7b8796dfaba5aef",
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
+          player_id: "ply_8ffe9406fcc046508aa4b214ef16f647",
           game_num: 4,
           score: randomScore,
         },
@@ -8991,14 +8991,14 @@ async function gamesUpsert() {
         },
         update: {
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
+          player_id: "ply_8ffe9406fcc046508aa4b214ef16f647",
           game_num: 5,
           score: randomScore,
         },
         create: {
           id: "gam_94e431702e934a8c97b4d24169f5d3f4",
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
+          player_id: "ply_8ffe9406fcc046508aa4b214ef16f647",
           game_num: 5,
           score: randomScore,
         },
@@ -9010,14 +9010,14 @@ async function gamesUpsert() {
         },
         update: {
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
+          player_id: "ply_8ffe9406fcc046508aa4b214ef16f647",
           game_num: 6,
           score: randomScore,
         },
         create: {
           id: "gam_574a2a3c2eb6417b81e582bddbd1d79c",
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
+          player_id: "ply_8ffe9406fcc046508aa4b214ef16f647",
           game_num: 6,
           score: randomScore,
         },
@@ -9029,14 +9029,14 @@ async function gamesUpsert() {
         },
         update: {
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
+          player_id: "ply_b830099ed18a4e9da06e345ec2320848",
           game_num: 1,
           score: randomScore,
         },
         create: {
           id: "gam_6422b6e984d04dd09f82d39976b7d554",
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
+          player_id: "ply_b830099ed18a4e9da06e345ec2320848",
           game_num: 1,
           score: randomScore,
         },
@@ -9048,14 +9048,14 @@ async function gamesUpsert() {
         },
         update: {
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
+          player_id: "ply_b830099ed18a4e9da06e345ec2320848",
           game_num: 2,
           score: randomScore,
         },
         create: {
           id: "gam_7897b4c582644bbab1f4c5e4fbf6b13e",
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
+          player_id: "ply_b830099ed18a4e9da06e345ec2320848",
           game_num: 2,
           score: randomScore,
         },
@@ -9067,14 +9067,14 @@ async function gamesUpsert() {
         },
         update: {
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
+          player_id: "ply_b830099ed18a4e9da06e345ec2320848",
           game_num: 3,
           score: randomScore,
         },
         create: {
           id: "gam_ad3f69e98e364f8288e32b8a68e87ffb",
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
+          player_id: "ply_b830099ed18a4e9da06e345ec2320848",
           game_num: 3,
           score: randomScore,
         },
@@ -9086,14 +9086,14 @@ async function gamesUpsert() {
         },
         update: {
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
+          player_id: "ply_b830099ed18a4e9da06e345ec2320848",
           game_num: 4,
           score: randomScore,
         },
         create: {
           id: "gam_b1d85f462ff04b5fa7db1a7fc6eab8e4",
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
+          player_id: "ply_b830099ed18a4e9da06e345ec2320848",
           game_num: 4,
           score: randomScore,
         },
@@ -9105,14 +9105,14 @@ async function gamesUpsert() {
         },
         update: {
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
+          player_id: "ply_b830099ed18a4e9da06e345ec2320848",
           game_num: 5,
           score: randomScore,
         },
         create: {
           id: "gam_e92461ea6c704f208be119fb9ec8c037",
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
+          player_id: "ply_b830099ed18a4e9da06e345ec2320848",
           game_num: 5,
           score: randomScore,
         },
@@ -9124,20 +9124,134 @@ async function gamesUpsert() {
         },
         update: {
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
+          player_id: "ply_b830099ed18a4e9da06e345ec2320848",
           game_num: 6,
           score: randomScore,
         },
         create: {
           id: "gam_07f7cca05a084087994aabfd8e4845d1",
           squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
-          player_id: "ply_8bc2b34cf25e4081ba6a365e89ff49d8",
+          player_id: "ply_b830099ed18a4e9da06e345ec2320848",
+          game_num: 6,
+          score: randomScore,
+        },
+      });
+      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
+      game = await prisma.game.upsert({
+        where: {
+          id: "gam_aca74838e61849c68af77d559745e03e",
+        },
+        update: {
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_92670d50aa7f44a487a172412bef8af5",
+          game_num: 1,
+          score: randomScore,
+        },
+        create: {
+          id: "gam_aca74838e61849c68af77d559745e03e",
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_92670d50aa7f44a487a172412bef8af5",
+          game_num: 1,
+          score: randomScore,
+        },
+      });
+      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
+      game = await prisma.game.upsert({
+        where: {
+          id: "gam_837f8b8220154e91b23a3e69e513ffd8",
+        },
+        update: {
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_92670d50aa7f44a487a172412bef8af5",
+          game_num: 2,
+          score: randomScore,
+        },
+        create: {
+          id: "gam_837f8b8220154e91b23a3e69e513ffd8",
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_92670d50aa7f44a487a172412bef8af5",
+          game_num: 2,
+          score: randomScore,
+        },
+      });
+      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
+      game = await prisma.game.upsert({
+        where: {
+          id: "gam_52b57500590e49cf9c0773fd0fa033f9",
+        },
+        update: {
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_92670d50aa7f44a487a172412bef8af5",
+          game_num: 3,
+          score: randomScore,
+        },
+        create: {
+          id: "gam_52b57500590e49cf9c0773fd0fa033f9",
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_92670d50aa7f44a487a172412bef8af5",
+          game_num: 3,
+          score: randomScore,
+        },
+      });
+      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
+      game = await prisma.game.upsert({
+        where: {
+          id: "gam_db10de13bb9143e0ba85fbfc5f292c82",
+        },
+        update: {
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_92670d50aa7f44a487a172412bef8af5",
+          game_num: 4,
+          score: randomScore,
+        },
+        create: {
+          id: "gam_db10de13bb9143e0ba85fbfc5f292c82",
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_92670d50aa7f44a487a172412bef8af5",
+          game_num: 4,
+          score: randomScore,
+        },
+      });
+      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
+      game = await prisma.game.upsert({
+        where: {
+          id: "gam_7242ba85e7aa41a99dc99eaf0e11b1c8",
+        },
+        update: {
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_92670d50aa7f44a487a172412bef8af5",
+          game_num: 5,
+          score: randomScore,
+        },
+        create: {
+          id: "gam_7242ba85e7aa41a99dc99eaf0e11b1c8",
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_92670d50aa7f44a487a172412bef8af5",
+          game_num: 5,
+          score: randomScore,
+        },
+      });
+      randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
+      game = await prisma.game.upsert({
+        where: {
+          id: "gam_e35bd6027ed043d8845312ab5a5a05a1",
+        },
+        update: {
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_92670d50aa7f44a487a172412bef8af5",
+          game_num: 6,
+          score: randomScore,
+        },
+        create: {
+          id: "gam_e35bd6027ed043d8845312ab5a5a05a1",
+          squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
+          player_id: "ply_92670d50aa7f44a487a172412bef8af5",
           game_num: 6,
           score: randomScore,
         },
       });
 
-      return 18;
+      return 24;
     } catch (error) {
       console.log(error);
       return -1;
@@ -9528,8 +9642,8 @@ async function gamesUpsert() {
     const nyCount = await gamesUpsert_NewYearsEve();
     const delCount = await gamesUpsert_ToDelete();
     console.log("Upserted Games: ", gpCount + wtCount + nyCount + delCount);
-    // 18 + 18 + 18 + 1 = 55
-    return gpCount + wtCount + delCount;
+    // 18 + 18 + 24 + 1 = 61
+    return gpCount + wtCount + nyCount + delCount;
   } catch (error) {
     console.log(error);
     return -1;

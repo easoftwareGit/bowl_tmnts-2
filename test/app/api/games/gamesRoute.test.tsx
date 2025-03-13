@@ -129,8 +129,8 @@ describe('Games - API: /api/games', () => {
     it('should get all games', async () => {
       const response = await axios.get(url);
       const games = response.data.games;
-      // 55 rows in prisma/seed.ts
-      expect(games.length).toBe(55);
+      // 61 rows in prisma/seed.ts
+      expect(games.length).toBe(61);
     })
   })
 
