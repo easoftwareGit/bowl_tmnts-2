@@ -293,8 +293,9 @@ export const blankPot: potType = {
 
 export const initPots: potType[] = [];
 
+export const defaultPlayersPerMatch = 2;
 export const defaultBrktGames = 3;
-export const defaultBrktPlayers = 8;
+export const defaultBrktPlayers = 8; // 2^3 = 8
 export const initBrkt: brktType = {
   id: btDbUuid('brk'),
   div_id: "",

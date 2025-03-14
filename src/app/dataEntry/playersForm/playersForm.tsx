@@ -42,7 +42,7 @@ import WaitModal from "@/components/modal/waitModal";
 import { getTotalUpdated, updateAllEntries } from "@/lib/db/tmntEntries/dbTmntEntries";
 import "./grid.css";
 import { cloneDeep } from "lodash";
-import { PayloadAction, unwrapResult } from "@reduxjs/toolkit";
+import { PayloadAction } from "@reduxjs/toolkit";
 
 // full tmnt
 // http://localhost:3000/dataEntry/runTmnt/tmt_d237a388a8fc4641a2e37233f1d6bebd
