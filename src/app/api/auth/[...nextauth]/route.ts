@@ -8,15 +8,7 @@ import GoogleProvider, { GoogleProfile } from "next-auth/providers/google";
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
 
-const splitName = (name = "") => {
-  const [firstName, ...lastName] = name.split(" ").filter(Boolean);
-  return {
-    firstName: firstName,
-    lastName: lastName.join(" "),
-  };
-};
-
-export const authOptions: NextAuthOptions = {
+export const authOptions: NextAuthOptions = {  
   pages: {
     signIn: '/login'
   },

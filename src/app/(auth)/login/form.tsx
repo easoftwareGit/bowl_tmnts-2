@@ -16,7 +16,10 @@ export const LoginForm = () => {
 
   const router = useRouter()
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') || '/user/tmnts';
+  const rawCallbackUrl = searchParams.get('callbackUrl');
+  const callbackUrl =
+    rawCallbackUrl === window.location.origin ? "/user/tmnts" : rawCallbackUrl || "/user/tmnts";
+  // const callbackUrl = searchParams.get('callbackUrl') || '/user/tmnts';
 
   const [formData, setFormData] = useState(blankValues);
   const [formErrors, setFormErrors] = useState(blankValues);
