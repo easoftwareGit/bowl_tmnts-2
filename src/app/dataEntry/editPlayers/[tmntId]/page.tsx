@@ -36,7 +36,7 @@ import { getBrktOrElimName } from "@/lib/getName";
 import { Tab, Tabs } from "react-bootstrap";
 import { BracketList } from "@/components/brackets/bracketList";
 import BracketGrid, { BGDataType } from "@/components/brackets/bracketGrid";
-import { cloneDeep, entries } from "lodash";
+import { cloneDeep } from "lodash";
 import usePreventUnload from "@/components/preventUnload/preventUnload";
 import WaitModal from "@/components/modal/waitModal";
 

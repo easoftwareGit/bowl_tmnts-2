@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation";
 import { Container, Nav, Navbar } from "react-bootstrap";
 import NavDropdown from 'react-bootstrap/NavDropdown';
 import { useSession } from "next-auth/react"; 
-import { getServerSession } from "next-auth";
 import { signOut } from "next-auth/react"; 
+import { useRouter } from "next/navigation"
 import ModelConfirm from "@/components/modal/confirmModal"
 import { useState } from "react";
 
@@ -19,9 +19,13 @@ export default function EaNavbar() {
 
   const [isModalOpen, setModalOpen] = useState(false)
 
-  const handleConfirm = () => {
-    signOut();
-    setModalOpen(false)
+  const router = useRouter();
+
+  const handleConfirm = async () => {
+    // signOut();
+    await signOut({ redirect: false }); // Sign out without automatic redirect
+    router.push('/');
+    setModalOpen(false)    
   }
 
   const handleCancel = () => {
