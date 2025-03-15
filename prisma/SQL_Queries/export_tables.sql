@@ -1,0 +1,16 @@
+\copy "Bowl" TO 'c:/temp/btdb/bowl_dump.csv' DELIMITER ',' CSV HEADER;
+\copy "Brkt" TO 'c:/temp/btdb/brkt_dump.csv' DELIMITER ',' CSV HEADER;
+\copy "Brkt_Entry" TO 'c:/temp/btdb/brkt_entry_dump.csv' DELIMITER ',' CSV HEADER;
+\copy "Div" TO 'c:/temp/btdb/div_dump.csv' DELIMITER ',' CSV HEADER;
+\copy "Div_Entry" TO 'c:/temp/btdb/div_entry_dump.csv' DELIMITER ',' CSV HEADER;
+\copy "Elim" TO 'c:/temp/btdb/elim_dump.csv' DELIMITER ',' CSV HEADER;
+\copy "Elim_Entry" TO 'c:/temp/btdb/elim_entry_dump.csv' DELIMITER ',' CSV HEADER;
+\copy "Event" TO 'c:/temp/btdb/elim_dump.csv' DELIMITER ',' CSV HEADER;
+\copy "Game" TO 'c:/temp/btdb/game_dump.csv' DELIMITER ',' CSV HEADER;
+\copy "Lane" TO 'c:/temp/btdb/lane_dump.csv' DELIMITER ',' CSV HEADER;
+\copy "Player" TO 'c:/temp/btdb/player_dump.csv' DELIMITER ',' CSV HEADER;
+\copy "Pot" TO 'c:/temp/btdb/pot_dump.csv' DELIMITER ',' CSV HEADER;
+\copy "Pot_Entry" TO 'c:/temp/btdb/pot_entry_dump.csv' DELIMITER ',' CSV HEADER;
+\copy "Squad" TO 'c:/temp/btdb/squad_dump.csv' DELIMITER ',' CSV HEADER;
+\copy "Tmnt" TO 'c:/temp/btdb/tmnt_dump.csv' DELIMITER ',' CSV HEADER;
+\copy "User" TO 'c:/temp/btdb/user_dump.csv' DELIMITER ',' CSV HEADER;

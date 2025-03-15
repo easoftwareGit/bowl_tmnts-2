@@ -275,7 +275,7 @@ describe('BracketList', () => {
       expect(bracketList.brackets[2].players[1]).toBe('player2');
     });
     it('should create new brackets when all existing brackets are full', () => {
-      const bracketList = new BracketList('B1', 2, 3);
+      const bracketList = new BracketList('B1', 2, 3);      
       // num brackets name = id + "_name" = 'B1_name'
       const playerData = [
         { player_id: 'player1', B1_name: 2, createdAt: 100 },
