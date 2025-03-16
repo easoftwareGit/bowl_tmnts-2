@@ -21,7 +21,7 @@ interface FormProps {
   tmnt?: tmntType  
 }
 
-export const SamplePage: React.FC<FormProps> = ({ tmnt = blankTmnt }) => { 
+const SamplePage: React.FC<FormProps> = ({ tmnt = blankTmnt }) => { 
 
   const [tmntData, setTmntData] = useState(tmnt);
   const [events, setEvents] = useState<eventType[]>([]);
