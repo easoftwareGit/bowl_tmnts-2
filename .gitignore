@@ -38,4 +38,3 @@ next-env.d.ts
 /.env.local
 /.env.test
 .qodo
-/prisma/SQL_Queries/copy_data_to_render.sql

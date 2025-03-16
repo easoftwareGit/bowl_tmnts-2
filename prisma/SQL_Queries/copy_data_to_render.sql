@@ -20,20 +20,3 @@ pg_dump -h localhost -U postgres -d bowling_tmnt --inserts > full_dump_with_inse
 cd c:\temp\btdb
 set PGPASSWORD=AYt00njgfMjQuCVRZfykGVkbMkHVW0v5
 psql "sslmode=require host=dpg-cva68h9c1ekc738qur60-a.oregon-postgres.render.com port=5432 user=testname dbname=bowling_tmnt" < full_dump_with_inserts.sql
-
---render.com deploy setting:
-Connections
-Hostname: dpg-cva68h9c1ekc738qur60-a
-Port: 5432
-Database: bowling_tmnt
-Username: testname
-Password: AYt00njgfMjQuCVRZfykGVkbMkHVW0v5
-Internal Database URL: postgresql://testname:AYt00njgfMjQuCVRZfykGVkbMkHVW0v5@dpg-cva68h9c1ekc738qur60-a/bowling_tmnt
-External Database URL: postgresql://testname:AYt00njgfMjQuCVRZfykGVkbMkHVW0v5@dpg-cva68h9c1ekc738qur60-a.oregon-postgres.render.com/bowling_tmnt
-PSQL Command: PGPASSWORD=AYt00njgfMjQuCVRZfykGVkbMkHVW0v5 psql -h dpg-cva68h9c1ekc738qur60-a.oregon-postgres.render.com -U testname bowling_tmnt
-
-sample
-DATABASE_URL="postgresql://username:ABCDEFGHIJKLMNOPQRSTUVWXYZ123456@dpg-cva68h9c1ekc738qur60-a.oregon-postgres.render.com/database_name?schema=public"
-real
-DATABASE_URL="postgresql://testname:AYt00njgfMjQuCVRZfykGVkbMkHVW0v5@dpg-cva68h9c1ekc738qur60-a.oregon-postgres.render.com/bowling_tmnt?schema=public"
-

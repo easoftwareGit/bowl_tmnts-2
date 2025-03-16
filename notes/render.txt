@@ -2,3 +2,16 @@ PostgreSQL password: AYt00njgfMjQuCVRZfykGVkbMkHVW0v5
 Internal Database URL: postgresql://testname:AYt00njgfMjQuCVRZfykGVkbMkHVW0v5@dpg-cva68h9c1ekc738qur60-a/bowling_tmnt
 External Database URL: postgresql://testname:AYt00njgfMjQuCVRZfykGVkbMkHVW0v5@dpg-cva68h9c1ekc738qur60-a.oregon-postgres.render.com/bowling_tmnt
 PSQL Command: PGPASSWORD=AYt00njgfMjQuCVRZfykGVkbMkHVW0v5 psql -h dpg-cva68h9c1ekc738qur60-a.oregon-postgres.render.com -U testname bowling_tmnt
+
+--render.com deploy setting:
+Connections
+Hostname: dpg-cva68h9c1ekc738qur60-a
+Port: 5432
+Database: bowling_tmnt
+Username: testname
+Password: AYt00njgfMjQuCVRZfykGVkbMkHVW0v5
+Internal Database URL: postgresql://testname:AYt00njgfMjQuCVRZfykGVkbMkHVW0v5@dpg-cva68h9c1ekc738qur60-a/bowling_tmnt
+External Database URL: postgresql://testname:AYt00njgfMjQuCVRZfykGVkbMkHVW0v5@dpg-cva68h9c1ekc738qur60-a.oregon-postgres.render.com/bowling_tmnt
+PSQL Command: PGPASSWORD=AYt00njgfMjQuCVRZfykGVkbMkHVW0v5 psql -h dpg-cva68h9c1ekc738qur60-a.oregon-postgres.render.com -U testname bowling_tmnt
+
+DATABASE_URL="postgresql://testname:AYt00njgfMjQuCVRZfykGVkbMkHVW0v5@dpg-cva68h9c1ekc738qur60-a.oregon-postgres.render.com/bowling_tmnt?schema=public"
