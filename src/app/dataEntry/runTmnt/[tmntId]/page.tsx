@@ -12,7 +12,7 @@ import WaitModal from "@/components/modal/waitModal";
 
 // http://localhost:3000/dataEntry/runTmnt/tmt_d237a388a8fc4641a2e37233f1d6bebd
 
-export const RunTmntPage = () => { 
+const RunTmntPage = () => { 
 
   const params = useParams();
   const tmntId = params.tmntId as string;
