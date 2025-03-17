@@ -6,7 +6,11 @@ import { maxGames, minGames } from '@/lib/validation'
 import { objErrClassName } from '../dataEntry/tmntForm/errors'
 import ModalConfirm from '@/components/modal/confirmModal'
 import EaCurrencyInput from '@/components/currency/eaCurrencyInput'
-import { petType } from './page_forms1-3'
+
+export type petType = {
+  id: number;
+  name: string;
+};
 
 const fruits = [
   {
