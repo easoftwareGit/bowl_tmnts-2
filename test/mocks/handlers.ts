@@ -1,4 +1,4 @@
-import { rest } from "msw";
+import { http, HttpResponse, HttpHandler } from "msw"; // Correct imports
 import { mockYears } from "../mocks/tmnts/mockYears";
 import { mockResults } from '../mocks/tmnts/mockResults';
 import { mockUpcoming } from "../mocks/tmnts/mockUpcoming";
@@ -15,26 +15,22 @@ const year = new Date().getFullYear().toString();
 export const handlers = [
 
   // api/tmnts/years/:year
-
-  rest.get(testBaseTmntsYearsApi + year, (req, res, ctx) => {
-    return res(ctx.status(200), ctx.json({ data: mockYears }));    
+  http.get(testBaseTmntsYearsApi + year, () => {
+    return HttpResponse.json({ data: mockYears });
   }),
 
   // api/tmnts/results/:year
-
-  rest.get(testBaseTmntsResultsApi + '2023', (req, res, ctx) => {
-    return res(ctx.status(200), ctx.json({ data: mockResults }));
+  http.get(testBaseTmntsResultsApi + '2023', () => {
+    return HttpResponse.json({ data: mockResults });
   }),
 
   // api/tmnts/upcoming
-
-  rest.get(testBaseTmntsUpcomingApi, (req, res, ctx) => {
-    return res(ctx.status(200), ctx.json({ data: mockUpcoming }));
+  http.get(testBaseTmntsUpcomingApi, () => {
+    return HttpResponse.json({ data: mockUpcoming });
   }),
 
   // /api/bowls
-
-  rest.get(testBaseBowlsApi, (req, res, ctx) => {
-    return res(ctx.status(200), ctx.json({ data: mockPrismaBowls }));
-  })
+  http.get(testBaseBowlsApi, () => {
+    return HttpResponse.json({ data: mockPrismaBowls });
+  }),
 ]

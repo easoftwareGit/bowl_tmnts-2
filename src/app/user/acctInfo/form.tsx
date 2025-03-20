@@ -4,6 +4,7 @@ import { findUserById } from "@/lib/db/users/users";
 import { blankUser } from "@/lib/db/initVals";
 import AcctInfo from "./acctInfo";
 import ChangePassword from "./chgPwd";
+import { set } from "lodash";
 
 const AcctInfoForm = () => {
 
@@ -61,8 +62,7 @@ const AcctInfoForm = () => {
           <AcctInfo
             user={user}
             setUser={setUser}
-            origUserData={origUserData}
-            infoType={infoType}
+            origUserData={origUserData}            
             setInfoType={setInfoType}
           />
         ) : null}
@@ -70,8 +70,7 @@ const AcctInfoForm = () => {
         {!loading && !error && infoType === "Password" ? (
           <>
             <ChangePassword
-              user={user}
-              infoType={infoType}
+              user={user}              
               setInfoType={setInfoType}
             />
           </>

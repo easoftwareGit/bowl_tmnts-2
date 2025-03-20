@@ -16,14 +16,12 @@ const blankValues = {
 }
 
 interface ChildProps { 
-  user: userType,
-  infoType: string
+  user: userType,  
   setInfoType: (infoType: string) => void
 }
 
 const ChangePassword: React.FC<ChildProps> = ({
-  user,
-  infoType,
+  user,  
   setInfoType
 }) => {
  

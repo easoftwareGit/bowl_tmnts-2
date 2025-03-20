@@ -16,11 +16,12 @@ import { initModalObj } from "@/components/modal/modalObjType";
 import { userType } from "@/lib/types/types";
 import { useRouter } from "next/navigation"
 
+const savedAcctInfoTitle = 'Saved Account Info';
+
 interface ChildProps {
   user: userType;
   setUser: (user: userType) => void;
-  origUserData: userType,
-  infoType: string
+  origUserData: userType,  
   setInfoType: (infoType: string) => void
 }
 
@@ -34,8 +35,7 @@ const blankErrors = {
 const AcctInfo: React.FC<ChildProps> = ({
   user,
   setUser,
-  origUserData,
-  infoType,
+  origUserData,  
   setInfoType
 }) => {
 
@@ -117,7 +117,7 @@ const AcctInfo: React.FC<ChildProps> = ({
   }
   
   const canceledModalErr = () => {
-    const saved = (errModalObj.title === 'Account Info Saved') ? true : false;
+    const saved = (errModalObj.title === savedAcctInfoTitle) ? true : false;
     setErrModalObj(initModalObj); // reset modal object (hides modal)
     if (saved) {      
       router.push('/'); // back to list of tournaments
@@ -178,7 +178,12 @@ const AcctInfo: React.FC<ChildProps> = ({
       }      
       const patchedUser = await patchUser(dataToPatch);
       if (patchedUser) {
-        router.push('/'); // back to home 
+        setErrModalObj({
+          show: true,
+          title: savedAcctInfoTitle,
+          message: `Successfully updated account information.`,
+          id: "success"
+        })            
       }
     } catch (error) {
       setErrModalObj({
@@ -279,6 +284,7 @@ const AcctInfo: React.FC<ChildProps> = ({
               type="button"
               className="btn btn-primary"
               onClick={handleChangePasswordClick}
+              disabled={user.password_hash === ''}
             >
               Change Password
             </button>

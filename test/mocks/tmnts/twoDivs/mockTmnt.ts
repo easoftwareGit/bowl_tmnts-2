@@ -8,9 +8,9 @@ export const mockTmnt: tmntType = {
   tmnt_name_err: "",
   bowl_id: 'bwl_561540bd64974da9abdd97765fdb3659',
   bowl_id_err: "",
-  start_date: startOfDayFromString('2023-12-31') as Date, 
+  start_date_str:'2023-12-31',
   start_date_err: "",
-  end_date: startOfDayFromString('2023-12-31') as Date, 
+  end_date_str: '2023-12-31',
   end_date_err: "",
   bowls: {
     bowl_name: "Earl Anthony's Dublin Bowl",

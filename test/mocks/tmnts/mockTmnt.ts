@@ -69,7 +69,7 @@ export const mockPrismaTmntsList: tmntsListType[] = [
     id: "tmt_fe8ac53dad0f400abe6354210a8f4cd1",    
     user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
     tmnt_name: "New Year's Eve 6 Gamer",
-    start_date: startOfDayFromString('2023-12-31') as Date, 
+    start_date_str: '2023-12-31', 
     bowls: {
       bowl_name: "Earl Anthony's Dublin Bowl",
       city: "Dublin",
@@ -81,7 +81,7 @@ export const mockPrismaTmntsList: tmntsListType[] = [
     id: "tmt_56d916ece6b50e6293300248c6792316",   
     user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
     tmnt_name: "Yosemite 6 Gamer",    
-    start_date: startOfDayFromString('2022-01-02') as Date,
+    start_date_str: '2022-01-02',
     bowls: {
       bowl_name: "Yosemite Lanes",
       city: "Modesto",
@@ -93,7 +93,7 @@ export const mockPrismaTmntsList: tmntsListType[] = [
     id: "tmt_e134ac14c5234d708d26037ae812ac33",
     user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
     tmnt_name: "Gold Pin",
-    start_date: startOfDayFromString('2025-08-19') as Date,
+    start_date_str: '2025-08-19',
     bowls: {
       bowl_name: "Earl Anthony's Dublin Bowl",
       city: "Dublin",

@@ -1,5 +1,5 @@
 import { tmntType } from "@/lib/types/types";
-import { dateTo_UTC_MMddyyyy } from "@/lib/dateTools";
+import { dateTo_UTC_MMddyyyy, todayStr } from "@/lib/dateTools";
 
 export const mockResults: tmntType[] = [
   {
@@ -15,9 +15,9 @@ export const mockResults: tmntType[] = [
       state: "NV",
       url: "https://wildisland.com/bowl/",
     },
-    start_date: dateTo_UTC_MMddyyyy(new Date()),
+    start_date_str: todayStr, 
     start_date_err: "",
-    end_date: dateTo_UTC_MMddyyyy(new Date()),
+    end_date_str: todayStr,
     end_date_err: "",
   },
   {
@@ -33,9 +33,9 @@ export const mockResults: tmntType[] = [
       state: "CA",
       url: "https://www.earlanthonysdublinbowl.com/",
     },    
-    start_date: dateTo_UTC_MMddyyyy(new Date()),
+    start_date_str: todayStr, 
     start_date_err: "",
-    end_date: dateTo_UTC_MMddyyyy(new Date()),
+    end_date_str: todayStr,
     end_date_err: "",
   },
   {
@@ -51,9 +51,9 @@ export const mockResults: tmntType[] = [
       state: "CA",
       url: "https://www.earlanthonysdublinbowl.com/",
     },    
-    start_date: dateTo_UTC_MMddyyyy(new Date()),
+    start_date_str: todayStr,
     start_date_err: "",
-    end_date: dateTo_UTC_MMddyyyy(new Date()),
+    end_date_str: todayStr,
     end_date_err: "",
   },
   {
@@ -69,9 +69,9 @@ export const mockResults: tmntType[] = [
       state: "CA",
       url: "http://yosemitelanes.com/",
     },
-    start_date: dateTo_UTC_MMddyyyy(new Date()),
+    start_date_str: todayStr,
     start_date_err: "",
-    end_date: dateTo_UTC_MMddyyyy(new Date()),
+    end_date_str: todayStr,
     end_date_err: "",
   },
 ]
