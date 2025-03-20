@@ -1,5 +1,5 @@
-import { Session, getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/authOptions";
 
 export async function userFromServer() {
   try {
@@ -8,6 +8,4 @@ export async function userFromServer() {
   } catch (error) {
     return JSON.stringify(null);
   }
-  // const session = await getServerSession(authOptions)
-  // return JSON.stringify(session)
 }

@@ -3,7 +3,7 @@ import React, {
   useState,
   useEffect,
   useRef,
-  forwardRef,
+  forwardRef,    
   useMemo,
   useImperativeHandle,
 } from 'react';
@@ -21,7 +21,8 @@ import {
   repositionCursor,
 } from './utils';
 
-export const CurrencyInput: FC<CurrencyInputProps> = forwardRef<
+// export const CurrencyInput: FC<CurrencyInputProps> = forwardRef<
+export const CurrencyInput = forwardRef<  
   HTMLInputElement,
   CurrencyInputProps
 >(

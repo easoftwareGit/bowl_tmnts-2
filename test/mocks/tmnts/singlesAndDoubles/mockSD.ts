@@ -1,3 +1,4 @@
+import { todayStr } from "@/lib/dateTools";
 import { defaultHdcpPer, initBrkt, initDiv, initElim, initEvent, initLane, initPot, initSquad, initTmnt } from "@/lib/db/initVals";
 import { brktType, divType, elimType, eventType, laneType, pairsOfLanesType, potType, squadType, tmntType } from "@/lib/types/types";
 import { startOfToday } from "date-fns";
@@ -8,8 +9,8 @@ export const mockSDTmnt: tmntType = {
   user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
   tmnt_name: "Test Tournament",
   bowl_id: "bwl_561540bd64974da9abdd97765fdb3659",
-  start_date: startOfToday(),
-  end_date: startOfToday(),
+  start_date_str: todayStr,
+  end_date_str: todayStr,
 };
 
 export const mockSDEvents: eventType[] = [
@@ -85,7 +86,7 @@ export const mockSDSquads: squadType[] = [
     event_id: "evt_1234b73cb538418ab993fc867f860510",
     squad_name: "A Squad",
     tab_title: "A Squad",
-    squad_date: startOfToday(),
+    squad_date_str: todayStr,
     squad_time: '08:00 AM',
     games: 6,
     lane_count: 12,
@@ -98,7 +99,7 @@ export const mockSDSquads: squadType[] = [
     event_id: "evt_1234b73cb538418ab993fc867f860511",
     squad_name: "B Squad",
     tab_title: "B Squad",
-    squad_date: startOfToday(),
+    squad_date_str: todayStr,
     squad_time: '11:00 AM',
     games: 4,
     lane_count: 12,
