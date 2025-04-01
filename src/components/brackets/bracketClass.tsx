@@ -1,5 +1,5 @@
 import { isEven } from "@/lib/validation";
-import { BracketList } from "./bracketList";
+import { BracketList } from "./bracketListClass";
 import { v4 as uuidv4 } from 'uuid';
 
 export class Bracket { 
@@ -51,6 +51,23 @@ export class Bracket {
     if (this._players.length >= this.playersPerBracket) return Bracket.errBracketIsFull;
     this._players.push(playerId);
     return this._players.length;
+  }
+
+  /**
+   * clear all players from bracket
+   * note: called clearPlayers() not emptyPlayers(), to avoid confusion with emptySpots()
+   */
+  clearPlayers(): void { 
+    this._players.length = 0;
+  }
+
+  /**
+   * get number of empty spots in bracket
+   * 
+   * @returns {number} - number of empty spots in bracket
+   */
+  emptySpots(): number {
+    return this.playersPerBracket - this._players.length;
   }
 
   /**

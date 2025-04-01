@@ -8,7 +8,7 @@ describe('BracketGrid', () => {
     const mockBrktGridData: BGDataType = {
       // Initialize the properties of BGDataType here
       forFullValues: [], 
-      for1ByeValues: [],  
+      forOneByeValues: [],  
     };    
     const mockBrktGridProps = {  
       brktGridData: mockBrktGridData
@@ -79,7 +79,7 @@ describe('BracketGrid', () => {
     const mockBrktGridData: BGDataType = {
       // Initialize the properties of BGDataType here
       forFullValues: [1, 1, 1, 1, 2, 2, 5, 6, 7, 7], 
-      for1ByeValues: [0, 0, 0, 0, 1, 1, 4, 5, 6, 6],  
+      forOneByeValues: [0, 0, 0, 0, 1, 1, 4, 5, 6, 6],  
     };    
     const mockBrktGridProps = {  
       brktGridData: mockBrktGridData
@@ -117,8 +117,8 @@ describe('BracketGrid', () => {
       render(<BracketGrid {...mockBrktGridProps} />);
       const toFillForFull = screen.getAllByText('33');
       expect(toFillForFull).toHaveLength(1);
-      const toFillFor1Bye = screen.getAllByText('23');
-      expect(toFillFor1Bye).toHaveLength(1);
+      const toFillForOneBye = screen.getAllByText('23');
+      expect(toFillForOneBye).toHaveLength(1);
     })
     it('should render grid cells', () => { 
       render(<BracketGrid {...mockBrktGridProps} />);
@@ -157,7 +157,7 @@ describe('BracketGrid', () => {
     const mockBrktGridData: BGDataType = {
       // Initialize the properties of BGDataType here
       forFullValues: [1, 1, 1, 1, 2, 2, 5, 6, 7, 7, 7, 7], 
-      for1ByeValues: [0, 0, 0, 0, 1, 1, 4, 5, 6, 6, 6, 6],  
+      forOneByeValues: [0, 0, 0, 0, 1, 1, 4, 5, 6, 6, 6, 6],  
     };    
     const mockBrktGridProps = {  
       brktGridData: mockBrktGridData
@@ -194,8 +194,8 @@ describe('BracketGrid', () => {
       render(<BracketGrid {...mockBrktGridProps} />);
       const toFillForFull = screen.getAllByText('47');
       expect(toFillForFull).toHaveLength(1);
-      const toFillFor1Bye = screen.getAllByText('35');
-      expect(toFillFor1Bye).toHaveLength(1);
+      const toFillForOneBye = screen.getAllByText('35');
+      expect(toFillForOneBye).toHaveLength(1);
     })
     it('should render grid cells', () => { 
       render(<BracketGrid {...mockBrktGridProps} />);
@@ -234,7 +234,7 @@ describe('BracketGrid', () => {
     const mockBrktGridData: BGDataType = {
       // Initialize the properties of BGDataType here
       forFullValues: [1, 1, 1, 1, 3, 3, 6, 7], 
-      for1ByeValues: [0, 0, 0, 0, 2, 2, 5, 6],  
+      forOneByeValues: [0, 0, 0, 0, 2, 2, 5, 6],  
     };    
     const mockBrktGridProps = {  
       brktGridData: mockBrktGridData
@@ -271,8 +271,8 @@ describe('BracketGrid', () => {
       render(<BracketGrid {...mockBrktGridProps} />);
       const toFillForFull = screen.getAllByText('23');
       expect(toFillForFull).toHaveLength(1);
-      const toFillFor1Bye = screen.getAllByText('15');
-      expect(toFillFor1Bye).toHaveLength(1);
+      const toFillForOneBye = screen.getAllByText('15');
+      expect(toFillForOneBye).toHaveLength(1);
     })
     it('should render grid cells', () => { 
       render(<BracketGrid {...mockBrktGridProps} />);

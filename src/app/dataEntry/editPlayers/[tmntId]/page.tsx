@@ -34,7 +34,7 @@ import {
 } from "../../playersForm/createColumns";
 import { getBrktOrElimName } from "@/lib/getName";
 import { Tab, Tabs } from "react-bootstrap";
-import { BracketList } from "@/components/brackets/bracketList";
+import { BracketList } from "@/components/brackets/bracketListClass";
 import BracketGrid, { BGDataType } from "@/components/brackets/bracketGrid";
 import { cloneDeep } from "lodash";
 import usePreventUnload from "@/components/preventUnload/preventUnload";
@@ -228,7 +228,7 @@ export default function EditPlayersPage() {
   //       initBrktsList[brkt.id] = brktList;
   //       const bgData: BGDataType = {          
   //         forFullValues: [],
-  //         for1ByeValues: [],
+  //         forOneByeValues: [],
   //       };   
   //       initBrktGridData[brkt.id] = (bgData);
   //     });      
@@ -297,7 +297,7 @@ export default function EditPlayersPage() {
         initBrktsList[brkt.id] = brktList;
         const bgData: BGDataType = {          
           forFullValues: [],
-          for1ByeValues: [],
+          forOneByeValues: [],
         };   
         initBrktGridData[brkt.id] = (bgData);
       });      
@@ -346,7 +346,7 @@ export default function EditPlayersPage() {
         // create a new brktList for each bracket        
         const oneBrktList = new BracketList(brktId, defaultPlayersPerMatch, defaultBrktGames, allBrktsList[brktId].brackets);
         // populate the new brktList
-        oneBrktList.rePopulateBrkts(brktEntRows);
+        oneBrktList.calcTotalBrkts(brktEntRows);
         updatedAllBrktsList[brktId] = oneBrktList;        
         updatedBGDataList[brktId] = oneBrktList.brktCounts;
       }

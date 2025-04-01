@@ -50,9 +50,10 @@ export const fetchOneSquadEntries = createAsyncThunk(
 
     noIdYet = (squadId === "" || squadId === undefined || squadId === null);
     
-    const state = getState() as RootState;
+    const state = getState() as RootState;    
     const currentSquad = state.allEntriesOneSquad.entryData?.origData.squadId;
-    if (currentSquad === squadId) {
+    if
+      (currentSquad === squadId) {
       // Return the current state if the tournament ID matches the one being fetched 
       return state.allEntriesOneSquad.entryData;
     }

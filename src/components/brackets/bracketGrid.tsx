@@ -3,10 +3,9 @@ import React, { useState, useEffect } from "react";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 
 export const BGNumberedColCount = 10;
-// export const initBGRowValues = [null, null, null, null, null, null, null, null, null, null]; 
 export const initBGNumbedColNames: string[] = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
-const brktColTitle = 'Brackets'
-const toFillColTitle = 'To Fill'
+export const brktColTitle = 'Brackets'
+export const toFillColTitle = 'To Fill'
 export const initBGColNames: string[] = [brktColTitle, ...initBGNumbedColNames, toFillColTitle]
 export type BGRowValueType = {
   id: number;
@@ -26,7 +25,7 @@ export type BGRowValueType = {
 
 export type BGDataType = {
   forFullValues: (number | null)[];  
-  for1ByeValues: (number | null)[];  
+  forOneByeValues: (number | null)[];  
 }
 
 interface ChildProps {    
@@ -48,12 +47,12 @@ export const initForFullValues: BGRowValueType = {
   v10: null,
   toFill: 0
 }
-export const initFor1ByeValues: BGRowValueType = {
+export const initForOneByeValues: BGRowValueType = {
   ...initForFullValues,
   id: 2,
   brktInfo: "For 1 Bye",  
 }
-const initRows: BGRowValueType[] = [initForFullValues, initFor1ByeValues];
+const initRows: BGRowValueType[] = [initForFullValues, initForOneByeValues];
 
 const BracketGrid: React.FC<ChildProps> = ({
   brktGridData
@@ -117,7 +116,7 @@ const BracketGrid: React.FC<ChildProps> = ({
 
     if (!brktGridData
       || !brktGridData.forFullValues
-      || !brktGridData.for1ByeValues
+      || !brktGridData.forOneByeValues
       || brktGridData.forFullValues.length === 0) return;
     const updatedRows: BGRowValueType[] = initRows.map(obj => ({ ...obj }));
     const updatedColNames: string[] = [];
@@ -133,7 +132,7 @@ const BracketGrid: React.FC<ChildProps> = ({
       const propName = 'v' + v.toString();
       if (j < brktGridData.forFullValues.length) {
         (updatedRows[0] as any)[propName] = brktGridData.forFullValues[j];
-        (updatedRows[1] as any)[propName] = brktGridData.for1ByeValues[j];
+        (updatedRows[1] as any)[propName] = brktGridData.forOneByeValues[j];
       }
       v++;
       j++;
@@ -145,7 +144,7 @@ const BracketGrid: React.FC<ChildProps> = ({
         ? acc + val : acc)
         : 0, 0);
     let toFillBye: number | null =
-      brktGridData.for1ByeValues.reduce((acc, val) => acc !== null
+      brktGridData.forOneByeValues.reduce((acc, val) => acc !== null
         ? (val !== null ? acc + val : acc)
         : 0, 0);    
     updatedRows[0].toFill = toFillFull ?? 0;    
