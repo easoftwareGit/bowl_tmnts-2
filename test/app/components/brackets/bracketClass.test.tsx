@@ -1,4 +1,4 @@
-import { BracketList } from "@/components/brackets/bracketList";
+import { BracketList } from "@/components/brackets/bracketListClass";
 import { Bracket } from "@/components/brackets/bracketClass";
 
 describe('Bracket', () => {
@@ -84,6 +84,37 @@ describe('Bracket', () => {
       bracket.addPlayer('player-2');
       const result = bracket.players;
       expect(result).toEqual(['player-1', 'player-2']);
+    })
+  })
+  describe('clearPlayers', () => { 
+    const bracket = new Bracket(mockBracketList);
+    bracket.addPlayer('player-1');
+    bracket.addPlayer('player-2');
+    bracket.addPlayer('player-3'); 
+    expect(bracket.players.length).toBe(3);
+    bracket.clearPlayers()
+    expect(bracket.players.length).toBe(0);
+  })
+  describe('emptySpots', () => { 
+    it('should return correct number of empty spots when bracket is not full', () => {
+      const bracket = new Bracket(mockBracketList);
+      bracket.addPlayer('player-1');
+      bracket.addPlayer('player-2');
+      const result = bracket.emptySpots();
+      expect(result).toBe(6);
+    });
+    it('should return 0 when bracket is full', () => {
+      const bracket = new Bracket(mockBracketList);
+      bracket.addPlayer('player-1');
+      bracket.addPlayer('player-2');
+      bracket.addPlayer('player-3');
+      bracket.addPlayer('player-4');
+      bracket.addPlayer('player-5');
+      bracket.addPlayer('player-6');
+      bracket.addPlayer('player-7');
+      bracket.addPlayer('player-8');      
+      const result = bracket.emptySpots();
+      expect(result).toBe(0);
     })
   })
   describe('findPlayerIndex', () => { 
