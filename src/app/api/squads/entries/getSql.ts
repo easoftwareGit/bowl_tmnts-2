@@ -46,7 +46,9 @@ const getBrktsSQL = (curData: dataOneTmntType): string => {
     if (brkt.id && isValidBtDbId(brkt.id, 'brk')) {
       sql +=
         `MAX(CASE WHEN public."Brkt_Entry".brkt_id = '${brkt.id}' ` +
-        `THEN public."Brkt_Entry".num_brackets END) AS ${brkt.id}_num_brackets, `
+        `THEN public."Brkt_Entry".num_brackets END) AS ${brkt.id}_num_brackets, ` +
+        `MAX(CASE WHEN public."Brkt_Entry".brkt_id = '${brkt.id}' ` +
+        `THEN public."Brkt".fee * public."Brkt_Entry".num_brackets END) AS ${brkt.id}_fee, `
     }
   });
   return sql

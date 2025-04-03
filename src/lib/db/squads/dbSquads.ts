@@ -3,7 +3,7 @@ import { baseSquadsApi } from "@/lib/db/apiPaths";
 import { testBaseSquadsApi } from "../../../../test/testApi";
 import { brktEntryType, brktType, dataOneSquadEntriesType, dataOneTmntType, divEntryType, divType, elimEntryType, elimType, playerType, potEntryType, potType, squadType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation";
-import { removeTimeFromISODateStr, startOfDayFromString } from "@/lib/dateTools";
+import { removeTimeFromISODateStr } from "@/lib/dateTools";
 import { blankBrktEntry, blankDivEntry, blankElimEntry, blankPlayer, blankPotEntry, blankSquad } from "../initVals";
 import { getAllPlayersForSquad } from "../players/dbPlayers";
 import { getAllDivEntriesForSquad } from "../divEntries/dbDivEntries";
@@ -11,8 +11,6 @@ import { getAllPotEntriesForSquad } from "../potEntries/dbPotEntries";
 import { getAllBrktEntriesForSquad } from "../brktEntries/dbBrktEntries";
 import { getAllElimEntriesForSquad } from "../elimEntries/dbElimEntries";
 import { btDbUuid } from "@/lib/uuid";
-import { ButtonToolbar } from "react-bootstrap";
-import { get } from "lodash";
 
 const url = testBaseSquadsApi.startsWith("undefined")
   ? baseSquadsApi
@@ -216,6 +214,7 @@ const getAllBrktEntriesForSquad2 = (squadEntries: any[], curData: dataOneTmntTyp
     squadEntries.forEach((entry: any) => {
       curData.brkts.forEach((brkt: brktType) => {
         const brktNumBrktsPropName = `${brkt.id}_num_brackets`;
+        const brktFeePropName =  `${brkt.id}_fee`;
         if (entry[brktNumBrktsPropName]) {
           const brktEntry: brktEntryType = {
             ...blankBrktEntry,
@@ -223,6 +222,7 @@ const getAllBrktEntriesForSquad2 = (squadEntries: any[], curData: dataOneTmntTyp
             brkt_id: brkt.id,
             player_id: entry.player_id,
             num_brackets: entry[brktNumBrktsPropName],
+            fee: entry[brktFeePropName],
           }
           brktEntries.push(brktEntry);
         }        
@@ -289,8 +289,8 @@ export const getAllEntriesForSquad2 = async (curData: dataOneTmntType): Promise<
       withCredentials: true,
       url: entriesUrl + squadID,        
       params: { curData: JSON.stringify(curData) }
-    });
-    expect(response.status).toBe(200);
+    });    
+    if (response.status !== 200) return null;
     const squadEntries = response.data.squadEntries;
     const allTmntEntries: dataOneSquadEntriesType = {      
       squadId: curData.squads[0].id,
