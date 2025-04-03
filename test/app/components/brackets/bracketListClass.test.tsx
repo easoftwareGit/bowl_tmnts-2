@@ -1,20 +1,18 @@
 import { Bracket } from "@/components/brackets/bracketClass"
 import { BGNumberedColCount, brktColTitle, initBGColNames, toFillColTitle } from "@/components/brackets/bracketGrid";
-import { BracketList, brktCountType, initBrktCountsType, playerBrktEntry, totalBrktsType } from "@/components/brackets/bracketListClass"
-import { mock } from "jest-mock-extended";
-import { before, cloneDeep } from "lodash";
+import { BracketList, brktCountType, initBrktCountsType, totalBrktsType } from "@/components/brackets/bracketListClass"
 
 describe('BracketList', () => { 
   
   const mockBracketList = new BracketList("mock", 2, 3);
   const playerData = [
-    { player_id: 'Al', mock_name: 10, createdAt: 100 },
-    { player_id: 'Bob', mock_name: 8, createdAt: 200 },
-    { player_id: 'Chad', mock_name: 6, createdAt: 300 },
-    { player_id: 'Don', mock_name: 7, createdAt: 400 },
-    { player_id: 'Ed', mock_name: 6, createdAt: 500 },
-    { player_id: 'Fred', mock_name: 4, createdAt: 600 },
-    { player_id: 'Greg', mock_name: 6, createdAt: 700 },
+    { player_id: 'Al', mock_name: 10, test_timeStamp: 100 },
+    { player_id: 'Bob', mock_name: 8, test_timeStamp: 200 },
+    { player_id: 'Chad', mock_name: 6, test_timeStamp: 300 },
+    { player_id: 'Don', mock_name: 7, test_timeStamp: 400 },
+    { player_id: 'Ed', mock_name: 6, test_timeStamp: 500 },
+    { player_id: 'Fred', mock_name: 4, test_timeStamp: 600 },
+    { player_id: 'Greg', mock_name: 6, test_timeStamp: 700 },
   ];
 
   const clearBracketList = () => {
@@ -44,14 +42,6 @@ describe('BracketList', () => {
 
     it('should initialize with an empty brackets array when constructed', () => {
       expect(testBracketList.brackets).toHaveLength(0);
-    })
-    it('brktColTitles should return default values when constructed', () => {
-      const initBrktColTitles = [...initBGColNames]
-      const result = testBracketList.brktColTitles;
-      expect(result).toHaveLength(initBrktColTitles.length);
-      for (let i = 0; i < result.length; i++) {
-        expect(JSON.stringify(result[i])).toEqual(JSON.stringify(initBrktColTitles[i]));
-      }
     })
     it('brktCounts should return empty values when constructed', () => {
       const result: initBrktCountsType = testBracketList.brktCounts;
@@ -103,20 +93,21 @@ describe('BracketList', () => {
     
       // it('should make no adjustemnts wehn brackets are already balanced', () => {
         
-      //   const testBracketList = new BracketList('test', 2, 3);      
+      //   const testBracketList = new BracketList('test', 2, 3);
       //   // num brackets name = id + "_name" = 'test_name'
+      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   const playerData = [
-      //     { player_id: 'Al', test_name: 10, createdAt: 100 },
-      //     { player_id: 'Bob', test_name: 8, createdAt: 200 },
-      //     { player_id: 'Chad', test_name: 6, createdAt: 300 },
-      //     { player_id: 'Don', test_name: 7, createdAt: 400 },
-      //     { player_id: 'Ed', test_name: 6, createdAt: 500 },
-      //     { player_id: 'Fred', test_name: 5, createdAt: 600 },
-      //     { player_id: 'Greg', test_name: 6, createdAt: 700 },
-      //     { player_id: 'Hal', test_name: 8, createdAt: 800 },
-      //     { player_id: 'Ian', test_name: 8, createdAt: 900 },
-      //     { player_id: 'Jim', test_name: 10, createdAt: 1000 },
-      //     { player_id: 'Ken', test_name: 6, createdAt: 1100 },
+      //     { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+      //     { player_id: 'Bob', test_name: 8, test_timeStamp: 200 },
+      //     { player_id: 'Chad', test_name: 6, test_timeStamp: 300 },
+      //     { player_id: 'Don', test_name: 7, test_timeStamp: 400 },
+      //     { player_id: 'Ed', test_name: 6, test_timeStamp: 500 },
+      //     { player_id: 'Fred', test_name: 5, test_timeStamp: 600 },
+      //     { player_id: 'Greg', test_name: 6, test_timeStamp: 700 },
+      //     { player_id: 'Hal', test_name: 8, test_timeStamp: 800 },
+      //     { player_id: 'Ian', test_name: 8, test_timeStamp: 900 },
+      //     { player_id: 'Jim', test_name: 10, test_timeStamp: 1000 },
+      //     { player_id: 'Ken', test_name: 6, test_timeStamp: 1100 },
       //   ];
       //   const totalBrkts: totalBrktsType = { total: 0, full: 0, oneBye: 0 };
       //   playerData.sort((a, b) => {
@@ -146,28 +137,29 @@ describe('BracketList', () => {
       //   expect(playerData[10].test_name).toBe(5);
       // })
       // it('edge case high, should adjust Al to 19 brackets', () => {
-      //   const testBracketList = new BracketList('test', 2, 3);      
+      //   const testBracketList = new BracketList('test', 2, 3);
       //   // num brackets name = id + "_name" = 'test_name'
+      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   const playerData = [
-      //     { player_id: 'Al', test_name: 50, createdAt: 100 },
-      //     { player_id: 'Bob', test_name: 8, createdAt: 200 },
-      //     { player_id: 'Chad', test_name: 5, createdAt: 300 },
-      //     { player_id: 'Don', test_name: 10, createdAt: 400 },
-      //     { player_id: 'Ed', test_name: 12, createdAt: 500 },
-      //     { player_id: 'Fred', test_name: 6, createdAt: 600 },
-      //     { player_id: 'Greg', test_name: 6, createdAt: 700 },
-      //     { player_id: 'Hal', test_name: 8, createdAt: 800 },
-      //     { player_id: 'Ian', test_name: 8, createdAt: 900 },
-      //     { player_id: 'Jim', test_name: 10, createdAt: 1000 },
-      //     { player_id: 'Ken', test_name: 6, createdAt: 1100 },
-      //     { player_id: 'Lou', test_name: 5, createdAt: 1200 },
-      //     { player_id: 'Mike', test_name: 8, createdAt: 1300 },
-      //     { player_id: 'Nate', test_name: 10, createdAt: 1400 },
-      //     { player_id: 'Otto', test_name: 7, createdAt: 1500 },
-      //     { player_id: 'Paul', test_name: 4, createdAt: 1600 },
-      //     { player_id: 'Quin', test_name: 5, createdAt: 1700 },
-      //     { player_id: 'Rob', test_name: 10, createdAt: 1800 },
-      //   ];      
+      //     { player_id: 'Al', test_name: 50, test_timeStamp: 100 },
+      //     { player_id: 'Bob', test_name: 8, test_timeStamp: 200 },
+      //     { player_id: 'Chad', test_name: 5, test_timeStamp: 300 },
+      //     { player_id: 'Don', test_name: 10, test_timeStamp: 400 },
+      //     { player_id: 'Ed', test_name: 12, test_timeStamp: 500 },
+      //     { player_id: 'Fred', test_name: 6, test_timeStamp: 600 },
+      //     { player_id: 'Greg', test_name: 6, test_timeStamp: 700 },
+      //     { player_id: 'Hal', test_name: 8, test_timeStamp: 800 },
+      //     { player_id: 'Ian', test_name: 8, test_timeStamp: 900 },
+      //     { player_id: 'Jim', test_name: 10, test_timeStamp: 1000 },
+      //     { player_id: 'Ken', test_name: 6, test_timeStamp: 1100 },
+      //     { player_id: 'Lou', test_name: 5, test_timeStamp: 1200 },
+      //     { player_id: 'Mike', test_name: 8, test_timeStamp: 1300 },
+      //     { player_id: 'Nate', test_name: 10, test_timeStamp: 1400 },
+      //     { player_id: 'Otto', test_name: 7, test_timeStamp: 1500 },
+      //     { player_id: 'Paul', test_name: 4, test_timeStamp: 1600 },
+      //     { player_id: 'Quin', test_name: 5, test_timeStamp: 1700 },
+      //     { player_id: 'Rob', test_name: 10, test_timeStamp: 1800 },
+      //   ];
       //   const totalBrkts: totalBrktsType = { total: 0, full: 0, oneBye: 0 };
       //   playerData.sort((a, b) => {
       //     if (a.test_name !== b.test_name) {
@@ -203,27 +195,28 @@ describe('BracketList', () => {
       //   expect(playerData[17].test_name).toBe(4);
       // })
       // it('edge case high, should adjust Al and Bob tp 21 brackets', () => {
-      //   const testBracketList = new BracketList('test', 2, 3);      
+      //   const testBracketList = new BracketList('test', 2, 3);
       //   // num brackets name = id + "_name" = 'test_name'
+      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   const playerData = [
-      //     { player_id: 'Al', test_name: 50, createdAt: 100 },
-      //     { player_id: 'Bob', test_name: 50, createdAt: 200 },
-      //     { player_id: 'Chad', test_name: 5, createdAt: 300 },
-      //     { player_id: 'Don', test_name: 10, createdAt: 400 },
-      //     { player_id: 'Ed', test_name: 12, createdAt: 500 },
-      //     { player_id: 'Fred', test_name: 6, createdAt: 600 },
-      //     { player_id: 'Greg', test_name: 6, createdAt: 700 },
-      //     { player_id: 'Hal', test_name: 8, createdAt: 800 },
-      //     { player_id: 'Ian', test_name: 8, createdAt: 900 },
-      //     { player_id: 'Jim', test_name: 10, createdAt: 1000 },
-      //     { player_id: 'Ken', test_name: 6, createdAt: 1100 },
-      //     { player_id: 'Lou', test_name: 5, createdAt: 1200 },
-      //     { player_id: 'Mike', test_name: 8, createdAt: 1300 },
-      //     { player_id: 'Nate', test_name: 10, createdAt: 1400 },
-      //     { player_id: 'Otto', test_name: 7, createdAt: 1500 },
-      //     { player_id: 'Paul', test_name: 4, createdAt: 1600 },
-      //     { player_id: 'Quin', test_name: 5, createdAt: 1700 },
-      //     { player_id: 'Rob', test_name: 10, createdAt: 1800 },
+      //     { player_id: 'Al', test_name: 50, test_timeStamp: 100 },
+      //     { player_id: 'Bob', test_name: 50, test_timeStamp: 200 },
+      //     { player_id: 'Chad', test_name: 5, test_timeStamp: 300 },
+      //     { player_id: 'Don', test_name: 10, test_timeStamp: 400 },
+      //     { player_id: 'Ed', test_name: 12, test_timeStamp: 500 },
+      //     { player_id: 'Fred', test_name: 6, test_timeStamp: 600 },
+      //     { player_id: 'Greg', test_name: 6, test_timeStamp: 700 },
+      //     { player_id: 'Hal', test_name: 8, test_timeStamp: 800 },
+      //     { player_id: 'Ian', test_name: 8, test_timeStamp: 900 },
+      //     { player_id: 'Jim', test_name: 10, test_timeStamp: 1000 },
+      //     { player_id: 'Ken', test_name: 6, test_timeStamp: 1100 },
+      //     { player_id: 'Lou', test_name: 5, test_timeStamp: 1200 },
+      //     { player_id: 'Mike', test_name: 8, test_timeStamp: 1300 },
+      //     { player_id: 'Nate', test_name: 10, test_timeStamp: 1400 },
+      //     { player_id: 'Otto', test_name: 7, test_timeStamp: 1500 },
+      //     { player_id: 'Paul', test_name: 4, test_timeStamp: 1600 },
+      //     { player_id: 'Quin', test_name: 5, test_timeStamp: 1700 },
+      //     { player_id: 'Rob', test_name: 10, test_timeStamp: 1800 },
       //   ];      
       //   const totalBrkts: totalBrktsType = { total: 0, full: 0, oneBye: 0 };
       //   playerData.sort((a, b) => {
@@ -267,16 +260,16 @@ describe('BracketList', () => {
       //   const testBracketList = new BracketList('test', 2, 3);      
       //   // num brackets name = id + "_name" = 'test_name'
       //   const playerData = [
-      //     { player_id: 'Al', test_name: 2, createdAt: 100 },
-      //     { player_id: 'Bob', test_name: 2, createdAt: 200 },
-      //     { player_id: 'Chad', test_name: 2, createdAt: 300 },
-      //     { player_id: 'Don', test_name: 2, createdAt: 400 },
-      //     { player_id: 'Ed', test_name: 2, createdAt: 500 },
-      //     { player_id: 'Fred', test_name: 2, createdAt: 600 },
-      //     { player_id: 'Greg', test_name: 2, createdAt: 700 },
-      //     { player_id: 'Hal', test_name: 2, createdAt: 800 },
-      //     { player_id: 'Ian', test_name: 2, createdAt: 900 },
-      //     { player_id: 'Jim', test_name: 2, createdAt: 1000 },
+      //     { player_id: 'Al', test_name: 2, test_timeStamp: 100 },
+      //     { player_id: 'Bob', test_name: 2, test_timeStamp: 200 },
+      //     { player_id: 'Chad', test_name: 2, test_timeStamp: 300 },
+      //     { player_id: 'Don', test_name: 2, test_timeStamp: 400 },
+      //     { player_id: 'Ed', test_name: 2, test_timeStamp: 500 },
+      //     { player_id: 'Fred', test_name: 2, test_timeStamp: 600 },
+      //     { player_id: 'Greg', test_name: 2, test_timeStamp: 700 },
+      //     { player_id: 'Hal', test_name: 2, test_timeStamp: 800 },
+      //     { player_id: 'Ian', test_name: 2, test_timeStamp: 900 },
+      //     { player_id: 'Jim', test_name: 2, test_timeStamp: 1000 },
       //   ];      
       //   const totalBrkts: totalBrktsType = { total: 0, full: 0, oneBye: 0 };
       //   playerData.sort((a, b) => {
@@ -302,16 +295,17 @@ describe('BracketList', () => {
     describe('calculateNumBrackets', () => { 
 
       // it('should return the correct number of brackets (6, 5 Full, 1 OneBye)', () => {
-      //   const testBracketList = new BracketList('test', 2, 3);      
+      //   const testBracketList = new BracketList('test', 2, 3);
       //   // num brackets name = id + "_name" = 'test_name'
+      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   const playerData = [
-      //     { player_id: 'Al', test_name: 10, createdAt: 100 },
-      //     { player_id: 'Bob', test_name: 8, createdAt: 200 },
-      //     { player_id: 'Chad', test_name: 6, createdAt: 300 },
-      //     { player_id: 'Don', test_name: 7, createdAt: 400 },
-      //     { player_id: 'Ed', test_name: 6, createdAt: 500 },
-      //     { player_id: 'Fred', test_name: 4, createdAt: 600 },
-      //     { player_id: 'Greg', test_name: 6, createdAt: 700 },
+      //     { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+      //     { player_id: 'Bob', test_name: 8, test_timeStamp: 200 },
+      //     { player_id: 'Chad', test_name: 6, test_timeStamp: 300 },
+      //     { player_id: 'Don', test_name: 7, test_timeStamp: 400 },
+      //     { player_id: 'Ed', test_name: 6, test_timeStamp: 500 },
+      //     { player_id: 'Fred', test_name: 4, test_timeStamp: 600 },
+      //     { player_id: 'Greg', test_name: 6, test_timeStamp: 700 },
       //   ];
       //   const totalBrkts: totalBrktsType = { total: 0, full: 0, oneBye: 0 };
       //   testBracketList.calculateNumBrackets(playerData, totalBrkts);
@@ -320,18 +314,19 @@ describe('BracketList', () => {
       //   expect(totalBrkts.oneBye).toBe(1);
       // })
       // it('should return the correct number of brackets (7, 4 Full, 3 OneBye)', () => {
-      //   const testBracketList = new BracketList('test', 2, 3);      
+      //   const testBracketList = new BracketList('test', 2, 3);
       //   // num brackets name = id + "_name" = 'test_name'
+      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   const playerData = [
-      //     { player_id: 'Al', test_name: 10, createdAt: 100 },
-      //     { player_id: 'Bob', test_name: 8, createdAt: 200 },
-      //     { player_id: 'Chad', test_name: 6, createdAt: 300 },
-      //     { player_id: 'Don', test_name: 7, createdAt: 400 },
-      //     { player_id: 'Ed', test_name: 6, createdAt: 500 },
-      //     { player_id: 'Fred', test_name: 4, createdAt: 600 },
-      //     { player_id: 'Greg', test_name: 6, createdAt: 700 },
-      //     { player_id: 'Hal', test_name: 6, createdAt: 800 },
-      //   ];  
+      //     { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+      //     { player_id: 'Bob', test_name: 8, test_timeStamp: 200 },
+      //     { player_id: 'Chad', test_name: 6, test_timeStamp: 300 },
+      //     { player_id: 'Don', test_name: 7, test_timeStamp: 400 },
+      //     { player_id: 'Ed', test_name: 6, test_timeStamp: 500 },
+      //     { player_id: 'Fred', test_name: 4, test_timeStamp: 600 },
+      //     { player_id: 'Greg', test_name: 6, test_timeStamp: 700 },
+      //     { player_id: 'Hal', test_name: 6, test_timeStamp: 800 },
+      //   ];
       //   const totalBrkts: totalBrktsType = { total: 0, full: 0, oneBye: 0 };
       //   testBracketList.calculateNumBrackets(playerData, totalBrkts);
       //   expect(totalBrkts.total).toBe(7);
@@ -339,20 +334,21 @@ describe('BracketList', () => {
       //   expect(totalBrkts.oneBye).toBe(3);
       // })
       // it('should return the correct number of brackets (13, 9 Full, 4 OneBye)', () => {
-      //   const testBracketList = new BracketList('test', 2, 3);      
+      //   const testBracketList = new BracketList('test', 2, 3);
       //   // num brackets name = id + "_name" = 'test_name'
+      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   const playerData = [
-      //     { player_id: 'Al', test_name: 10, createdAt: 100 },
-      //     { player_id: 'Bob', test_name: 10, createdAt: 200 },
-      //     { player_id: 'Chad', test_name: 10, createdAt: 300 },
-      //     { player_id: 'Don', test_name: 10, createdAt: 400 },
-      //     { player_id: 'Ed', test_name: 10, createdAt: 500 },
-      //     { player_id: 'Fred', test_name: 10, createdAt: 600 },
-      //     { player_id: 'Greg', test_name: 10, createdAt: 700 },
-      //     { player_id: 'Hal', test_name: 10, createdAt: 800 },
-      //     { player_id: 'Ian', test_name: 10, createdAt: 900 },
-      //     { player_id: 'Jim', test_name: 10, createdAt: 1000 },
-      //   ];      
+      //     { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+      //     { player_id: 'Bob', test_name: 10, test_timeStamp: 200 },
+      //     { player_id: 'Chad', test_name: 10, test_timeStamp: 300 },
+      //     { player_id: 'Don', test_name: 10, test_timeStamp: 400 },
+      //     { player_id: 'Ed', test_name: 10, test_timeStamp: 500 },
+      //     { player_id: 'Fred', test_name: 10, test_timeStamp: 600 },
+      //     { player_id: 'Greg', test_name: 10, test_timeStamp: 700 },
+      //     { player_id: 'Hal', test_name: 10, test_timeStamp: 800 },
+      //     { player_id: 'Ian', test_name: 10, test_timeStamp: 900 },
+      //     { player_id: 'Jim', test_name: 10, test_timeStamp: 1000 },
+      //   ];
       //   const totalBrkts: totalBrktsType = { total: 0, full: 0, oneBye: 0 };
       //   testBracketList.calculateNumBrackets(playerData, totalBrkts);
       //   expect(totalBrkts.total).toBe(13);
@@ -360,28 +356,29 @@ describe('BracketList', () => {
       //   expect(totalBrkts.oneBye).toBe(4);
       // })
       // it('edge case high, should return the correct number of brackets (24, 4 Full, 4 OneBye)', () => {
-      //   const testBracketList = new BracketList('test', 2, 3);      
+      //   const testBracketList = new BracketList('test', 2, 3);
       //   // num brackets name = id + "_name" = 'test_name'
+      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   const playerData = [
-      //     { player_id: 'Al', test_name: 50, createdAt: 100 },
-      //     { player_id: 'Bob', test_name: 50, createdAt: 200 },
-      //     { player_id: 'Chad', test_name: 5, createdAt: 300 },
-      //     { player_id: 'Don', test_name: 10, createdAt: 400 },
-      //     { player_id: 'Ed', test_name: 12, createdAt: 500 },
-      //     { player_id: 'Fred', test_name: 6, createdAt: 600 },
-      //     { player_id: 'Greg', test_name: 6, createdAt: 700 },
-      //     { player_id: 'Hal', test_name: 8, createdAt: 800 },
-      //     { player_id: 'Ian', test_name: 8, createdAt: 900 },
-      //     { player_id: 'Jim', test_name: 10, createdAt: 1000 },
-      //     { player_id: 'Ken', test_name: 6, createdAt: 1100 },
-      //     { player_id: 'Lou', test_name: 5, createdAt: 1200 },
-      //     { player_id: 'Mike', test_name: 8, createdAt: 1300 },
-      //     { player_id: 'Nate', test_name: 10, createdAt: 1400 },
-      //     { player_id: 'Otto', test_name: 7, createdAt: 1500 },
-      //     { player_id: 'Paul', test_name: 4, createdAt: 1600 },
-      //     { player_id: 'Quin', test_name: 5, createdAt: 1700 },
-      //     { player_id: 'Rob', test_name: 10, createdAt: 1800 },
-      //   ];      
+      //     { player_id: 'Al', test_name: 50, test_timeStamp: 100 },
+      //     { player_id: 'Bob', test_name: 50, test_timeStamp: 200 },
+      //     { player_id: 'Chad', test_name: 5, test_timeStamp: 300 },
+      //     { player_id: 'Don', test_name: 10, test_timeStamp: 400 },
+      //     { player_id: 'Ed', test_name: 12, test_timeStamp: 500 },
+      //     { player_id: 'Fred', test_name: 6, test_timeStamp: 600 },
+      //     { player_id: 'Greg', test_name: 6, test_timeStamp: 700 },
+      //     { player_id: 'Hal', test_name: 8, test_timeStamp: 800 },
+      //     { player_id: 'Ian', test_name: 8, test_timeStamp: 900 },
+      //     { player_id: 'Jim', test_name: 10, test_timeStamp: 1000 },
+      //     { player_id: 'Ken', test_name: 6, test_timeStamp: 1100 },
+      //     { player_id: 'Lou', test_name: 5, test_timeStamp: 1200 },
+      //     { player_id: 'Mike', test_name: 8, test_timeStamp: 1300 },
+      //     { player_id: 'Nate', test_name: 10, test_timeStamp: 1400 },
+      //     { player_id: 'Otto', test_name: 7, test_timeStamp: 1500 },
+      //     { player_id: 'Paul', test_name: 4, test_timeStamp: 1600 },
+      //     { player_id: 'Quin', test_name: 5, test_timeStamp: 1700 },
+      //     { player_id: 'Rob', test_name: 10, test_timeStamp: 1800 },
+      //   ];
       //   const totalBrkts: totalBrktsType = { total: 0, full: 0, oneBye: 0 };
       //   testBracketList.calculateNumBrackets(playerData, totalBrkts);
       //   expect(totalBrkts.total).toBe(28);
@@ -389,20 +386,21 @@ describe('BracketList', () => {
       //   expect(totalBrkts.oneBye).toBe(4);
       // })
       // it('edge case low, should return the correct number of brackets (2, 6 Full, -4 OneBye)', () => {
-      //   const testBracketList = new BracketList('test', 2, 3);      
+      //   const testBracketList = new BracketList('test', 2, 3);
       //   // num brackets name = id + "_name" = 'test_name'
+      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   const playerData = [
-      //     { player_id: 'Al', test_name: 2, createdAt: 100 },
-      //     { player_id: 'Bob', test_name: 2, createdAt: 200 },
-      //     { player_id: 'Chad', test_name: 2, createdAt: 300 },
-      //     { player_id: 'Don', test_name: 2, createdAt: 400 },
-      //     { player_id: 'Ed', test_name: 2, createdAt: 500 },
-      //     { player_id: 'Fred', test_name: 2, createdAt: 600 },
-      //     { player_id: 'Greg', test_name: 2, createdAt: 700 },
-      //     { player_id: 'Hal', test_name: 2, createdAt: 800 },
-      //     { player_id: 'Ian', test_name: 2, createdAt: 900 },
-      //     { player_id: 'Jim', test_name: 2, createdAt: 1000 },
-      //   ];      
+      //     { player_id: 'Al', test_name: 2, test_timeStamp: 100 },
+      //     { player_id: 'Bob', test_name: 2, test_timeStamp: 200 },
+      //     { player_id: 'Chad', test_name: 2, test_timeStamp: 300 },
+      //     { player_id: 'Don', test_name: 2, test_timeStamp: 400 },
+      //     { player_id: 'Ed', test_name: 2, test_timeStamp: 500 },
+      //     { player_id: 'Fred', test_name: 2, test_timeStamp: 600 },
+      //     { player_id: 'Greg', test_name: 2, test_timeStamp: 700 },
+      //     { player_id: 'Hal', test_name: 2, test_timeStamp: 800 },
+      //     { player_id: 'Ian', test_name: 2, test_timeStamp: 900 },
+      //     { player_id: 'Jim', test_name: 2, test_timeStamp: 1000 },
+      //   ];
       //   const totalBrkts: totalBrktsType = { total: 0, full: 0, oneBye: 0 };
       //   testBracketList.calculateNumBrackets(playerData, totalBrkts);
       //   expect(totalBrkts.total).toBe(2);
@@ -410,8 +408,9 @@ describe('BracketList', () => {
       //   expect(totalBrkts.oneBye).toBe(-4);
       // })
       // it('should return 0 brackets when no player entries', () => {
-      //   const testBracketList = new BracketList('test', 2, 3);      
+      //   const testBracketList = new BracketList('test', 2, 3);
       //   // num brackets name = id + "_name" = 'test_name'
+      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   const playerData: playerBrktEntry[] = [];
       //   const totalBrkts: totalBrktsType = { total: 3, full: 2, oneBye: 1 };
       //   testBracketList.calculateNumBrackets(playerData, totalBrkts);
@@ -465,15 +464,16 @@ describe('BracketList', () => {
       // it('should set bracketCounts with [0, 0], for Full and One Bye with 2 full brackets ', () => {
       //   const testBracktList = new BracketList('test', 2, 3);
       //   // num brackets name = id + "_name" = 'test_name'
+      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   const testData = [
-      //     { player_id: 'Al', test_name: 2, createdAt: 100 },
-      //     { player_id: 'Bob', test_name: 2, createdAt: 200 },
-      //     { player_id: 'Chad', test_name: 2, createdAt: 300 },
-      //     { player_id: 'Don', test_name: 2, createdAt: 400 },
-      //     { player_id: 'Ed', test_name: 2, createdAt: 500 },
-      //     { player_id: 'Fred', test_name: 2, createdAt: 600 },
-      //     { player_id: 'Greg', test_name: 2, createdAt: 700 },
-      //     { player_id: 'Hal', test_name: 2, createdAt: 800 },
+      //     { player_id: 'Al', test_name: 2, test_timeStamp: 100 },
+      //     { player_id: 'Bob', test_name: 2, test_timeStamp: 200 },
+      //     { player_id: 'Chad', test_name: 2, test_timeStamp: 300 },
+      //     { player_id: 'Don', test_name: 2, test_timeStamp: 400 },
+      //     { player_id: 'Ed', test_name: 2, test_timeStamp: 500 },
+      //     { player_id: 'Fred', test_name: 2, test_timeStamp: 600 },
+      //     { player_id: 'Greg', test_name: 2, test_timeStamp: 700 },
+      //     { player_id: 'Hal', test_name: 2, test_timeStamp: 800 },
       //   ];
     
       //   testBracktList.rePopulateBrkts(testData);
@@ -487,14 +487,15 @@ describe('BracketList', () => {
       // it('should set bracketCounts with [0, 0], for Full and [1, 1] One Bye with 2 brackets with 7 players ', () => {
       //   const testBracktList = new BracketList('test', 2, 3);
       //   // num brackets name = id + "_name" = 'test_name'
+      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   const testData = [
-      //     { player_id: 'Al', test_name: 2, createdAt: 100 },
-      //     { player_id: 'Bob', test_name: 2, createdAt: 200 },
-      //     { player_id: 'Chad', test_name: 2, createdAt: 300 },
-      //     { player_id: 'Don', test_name: 2, createdAt: 400 },
-      //     { player_id: 'Ed', test_name: 2, createdAt: 500 },
-      //     { player_id: 'Fred', test_name: 2, createdAt: 600 },
-      //     { player_id: 'Greg', test_name: 2, createdAt: 700 },
+      //     { player_id: 'Al', test_name: 2, test_timeStamp: 100 },
+      //     { player_id: 'Bob', test_name: 2, test_timeStamp: 200 },
+      //     { player_id: 'Chad', test_name: 2, test_timeStamp: 300 },
+      //     { player_id: 'Don', test_name: 2, test_timeStamp: 400 },
+      //     { player_id: 'Ed', test_name: 2, test_timeStamp: 500 },
+      //     { player_id: 'Fred', test_name: 2, test_timeStamp: 600 },
+      //     { player_id: 'Greg', test_name: 2, test_timeStamp: 700 },
       //   ];
     
       //   testBracktList.rePopulateBrkts(testData);
@@ -508,6 +509,7 @@ describe('BracketList', () => {
       // it('should set bracketCounts to [] For Full and One Bye when no brackets', () => {
       //   const testBracktList = new BracketList('test', 2, 3);
       //   // num brackets name = id + "_name" = 'test_name'
+      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   const testData = [{}];
       
       //   testBracktList.rePopulateBrkts(testData);
@@ -562,14 +564,14 @@ describe('BracketList', () => {
       // it('should return updated bracket column titles when there are 12 brackets', () => { 
       //   const testBracketList = new BracketList("test", 2, 3);
       //   const testData = [
-      //     { player_id: 'Al', test_name: 12, createdAt: 100 },
-      //     { player_id: 'Bob', test_name: 12, createdAt: 200 },
-      //     { player_id: 'Chad', test_name: 12, createdAt: 300 },
-      //     { player_id: 'Don', test_name: 12, createdAt: 400 },
-      //     { player_id: 'Ed', test_name: 12, createdAt: 500 },
-      //     { player_id: 'Fred', test_name: 12, createdAt: 600 },
-      //     { player_id: 'Greg', test_name: 12, createdAt: 700 },
-      //     { player_id: 'Hal', test_name: 12, createdAt: 800 },        
+      //     { player_id: 'Al', test_name: 12, test_timeStamp: 100 },
+      //     { player_id: 'Bob', test_name: 12, test_timeStamp: 200 },
+      //     { player_id: 'Chad', test_name: 12, test_timeStamp: 300 },
+      //     { player_id: 'Don', test_name: 12, test_timeStamp: 400 },
+      //     { player_id: 'Ed', test_name: 12, test_timeStamp: 500 },
+      //     { player_id: 'Fred', test_name: 12, test_timeStamp: 600 },
+      //     { player_id: 'Greg', test_name: 12, test_timeStamp: 700 },
+      //     { player_id: 'Hal', test_name: 12, test_timeStamp: 800 },        
       //   ];
       //   testBracketList.rePopulateBrkts(testData);
       //   expect(testBracketList.brktColTitles).toHaveLength(12);
@@ -606,14 +608,14 @@ describe('BracketList', () => {
       // it('should return the correct merge start info - full brackets', () => { 
       //   const testBracketList = new BracketList("test", 2, 3);
       //   const testData = [
-      //     { player_id: 'Al', test_name: 8, createdAt: 100 },
-      //     { player_id: 'Bob', test_name: 8, createdAt: 200 },
-      //     { player_id: 'Chad', test_name: 8, createdAt: 300 },
-      //     { player_id: 'Don', test_name: 8, createdAt: 400 },
-      //     { player_id: 'Ed', test_name: 8, createdAt: 500 },
-      //     { player_id: 'Fred', test_name: 8, createdAt: 600 },
-      //     { player_id: 'Greg', test_name: 8, createdAt: 700 },
-      //     { player_id: 'Hal', test_name: 8, createdAt: 800 },        
+      //     { player_id: 'Al', test_name: 8, test_timeStamp: 100 },
+      //     { player_id: 'Bob', test_name: 8, test_timeStamp: 200 },
+      //     { player_id: 'Chad', test_name: 8, test_timeStamp: 300 },
+      //     { player_id: 'Don', test_name: 8, test_timeStamp: 400 },
+      //     { player_id: 'Ed', test_name: 8, test_timeStamp: 500 },
+      //     { player_id: 'Fred', test_name: 8, test_timeStamp: 600 },
+      //     { player_id: 'Greg', test_name: 8, test_timeStamp: 700 },
+      //     { player_id: 'Hal', test_name: 8, test_timeStamp: 800 },        
       //   ];
       //   testBracketList.rePopulateBrkts(testData);
       //   const result = testBracketList.findMergeStartInfo();
@@ -622,14 +624,14 @@ describe('BracketList', () => {
       // it('should return the correct merge start info - last 4 not full', () => { 
       //   const testBracketList = new BracketList("test", 2, 3);
       //   const testData = [
-      //     { player_id: 'Al', test_name: 8, createdAt: 100 },
-      //     { player_id: 'Bob', test_name: 8, createdAt: 200 },
-      //     { player_id: 'Chad', test_name: 8, createdAt: 300 },
-      //     { player_id: 'Don', test_name: 8, createdAt: 400 },
-      //     { player_id: 'Ed', test_name: 8, createdAt: 500 },
-      //     { player_id: 'Fred', test_name: 8, createdAt: 600 },
-      //     { player_id: 'Greg', test_name: 8, createdAt: 700 },
-      //     { player_id: 'Hal', test_name: 4, createdAt: 800 },        
+      //     { player_id: 'Al', test_name: 8, test_timeStamp: 100 },
+      //     { player_id: 'Bob', test_name: 8, test_timeStamp: 200 },
+      //     { player_id: 'Chad', test_name: 8, test_timeStamp: 300 },
+      //     { player_id: 'Don', test_name: 8, test_timeStamp: 400 },
+      //     { player_id: 'Ed', test_name: 8, test_timeStamp: 500 },
+      //     { player_id: 'Fred', test_name: 8, test_timeStamp: 600 },
+      //     { player_id: 'Greg', test_name: 8, test_timeStamp: 700 },
+      //     { player_id: 'Hal', test_name: 4, test_timeStamp: 800 },        
       //   ];
       //   testBracketList.rePopulateBrkts(testData);
       //   const result = testBracketList.findMergeStartInfo();
@@ -758,15 +760,15 @@ describe('BracketList', () => {
       // it('should merge a player instead of creating a new bracket - 9 players', () => { 
       //   const testBracketList = new BracketList("test", 2, 3);
       //   const testData = [
-      //     { player_id: 'Al', test_name: 10, createdAt: 100 },
-      //     { player_id: 'Bob', test_name: 8, createdAt: 200 },
-      //     { player_id: 'Chad', test_name: 6, createdAt: 300 },
-      //     { player_id: 'Don', test_name: 7, createdAt: 400 },
-      //     { player_id: 'Ed', test_name: 6, createdAt: 500 },
-      //     { player_id: 'Fred', test_name: 5, createdAt: 600 },
-      //     { player_id: 'Greg', test_name: 6, createdAt: 700 },
-      //     { player_id: 'Hal', test_name: 8, createdAt: 800 },
-      //     { player_id: 'Ian', test_name: 8, createdAt: 900 },
+      //     { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+      //     { player_id: 'Bob', test_name: 8, test_timeStamp: 200 },
+      //     { player_id: 'Chad', test_name: 6, test_timeStamp: 300 },
+      //     { player_id: 'Don', test_name: 7, test_timeStamp: 400 },
+      //     { player_id: 'Ed', test_name: 6, test_timeStamp: 500 },
+      //     { player_id: 'Fred', test_name: 5, test_timeStamp: 600 },
+      //     { player_id: 'Greg', test_name: 6, test_timeStamp: 700 },
+      //     { player_id: 'Hal', test_name: 8, test_timeStamp: 800 },
+      //     { player_id: 'Ian', test_name: 8, test_timeStamp: 900 },
       //   ];
       //   testBracketList.rePopulateBrkts(testData);
   
@@ -858,16 +860,16 @@ describe('BracketList', () => {
       // it('should merge a player instead of creating a new bracket - 10 players', () => { 
       //   const testBracketList = new BracketList("test", 2, 3);
       //   const testData = [
-      //     { player_id: 'Al', test_name: 10, createdAt: 100 },
-      //     { player_id: 'Bob', test_name: 8, createdAt: 200 },
-      //     { player_id: 'Chad', test_name: 6, createdAt: 300 },
-      //     { player_id: 'Don', test_name: 7, createdAt: 400 },
-      //     { player_id: 'Ed', test_name: 6, createdAt: 500 },
-      //     { player_id: 'Fred', test_name: 5, createdAt: 600 },
-      //     { player_id: 'Greg', test_name: 6, createdAt: 700 },
-      //     { player_id: 'Hal', test_name: 8, createdAt: 800 },
-      //     { player_id: 'Ian', test_name: 8, createdAt: 900 },
-      //     { player_id: 'Jim', test_name: 10, createdAt: 1000 },
+      //     { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+      //     { player_id: 'Bob', test_name: 8, test_timeStamp: 200 },
+      //     { player_id: 'Chad', test_name: 6, test_timeStamp: 300 },
+      //     { player_id: 'Don', test_name: 7, test_timeStamp: 400 },
+      //     { player_id: 'Ed', test_name: 6, test_timeStamp: 500 },
+      //     { player_id: 'Fred', test_name: 5, test_timeStamp: 600 },
+      //     { player_id: 'Greg', test_name: 6, test_timeStamp: 700 },
+      //     { player_id: 'Hal', test_name: 8, test_timeStamp: 800 },
+      //     { player_id: 'Ian', test_name: 8, test_timeStamp: 900 },
+      //     { player_id: 'Jim', test_name: 10, test_timeStamp: 1000 },
       //   ];
       //   testBracketList.rePopulateBrkts(testData);
   
@@ -969,16 +971,16 @@ describe('BracketList', () => {
       // it('should merge a player instead of creating a new bracket - 10 players 10 brackets each', () => { 
       //   const testBracketList = new BracketList("test", 2, 3);
       //   const testData = [
-      //     { player_id: 'Al', test_name: 10, createdAt: 100 },
-      //     { player_id: 'Bob', test_name: 10, createdAt: 200 },
-      //     { player_id: 'Chad', test_name: 10, createdAt: 300 },
-      //     { player_id: 'Don', test_name: 10, createdAt: 400 },
-      //     { player_id: 'Ed', test_name: 10, createdAt: 500 },
-      //     { player_id: 'Fred', test_name: 10, createdAt: 600 },
-      //     { player_id: 'Greg', test_name: 10, createdAt: 700 },
-      //     { player_id: 'Hal', test_name: 10, createdAt: 800 },
-      //     { player_id: 'Ian', test_name: 10, createdAt: 900 },
-      //     { player_id: 'Jim', test_name: 10, createdAt: 1000 },
+      //     { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+      //     { player_id: 'Bob', test_name: 10, test_timeStamp: 200 },
+      //     { player_id: 'Chad', test_name: 10, test_timeStamp: 300 },
+      //     { player_id: 'Don', test_name: 10, test_timeStamp: 400 },
+      //     { player_id: 'Ed', test_name: 10, test_timeStamp: 500 },
+      //     { player_id: 'Fred', test_name: 10, test_timeStamp: 600 },
+      //     { player_id: 'Greg', test_name: 10, test_timeStamp: 700 },
+      //     { player_id: 'Hal', test_name: 10, test_timeStamp: 800 },
+      //     { player_id: 'Ian', test_name: 10, test_timeStamp: 900 },
+      //     { player_id: 'Jim', test_name: 10, test_timeStamp: 1000 },
       //   ];
       //   testBracketList.rePopulateBrkts(testData);
   
@@ -1112,17 +1114,17 @@ describe('BracketList', () => {
       // it('should merge a player instead of creating a new bracket - 11 players filled all', () => { 
       //   const testBracketList = new BracketList("test", 2, 3);
       //   const testData = [
-      //     { player_id: 'Al', test_name: 10, createdAt: 100 },
-      //     { player_id: 'Bob', test_name: 8, createdAt: 200 },
-      //     { player_id: 'Chad', test_name: 6, createdAt: 300 },
-      //     { player_id: 'Don', test_name: 7, createdAt: 400 },
-      //     { player_id: 'Ed', test_name: 6, createdAt: 500 },
-      //     { player_id: 'Fred', test_name: 5, createdAt: 600 },
-      //     { player_id: 'Greg', test_name: 6, createdAt: 700 },
-      //     { player_id: 'Hal', test_name: 8, createdAt: 800 },
-      //     { player_id: 'Ian', test_name: 8, createdAt: 900 },
-      //     { player_id: 'Jim', test_name: 10, createdAt: 1000 },
-      //     { player_id: 'Ken', test_name: 6, createdAt: 1100 },
+      //     { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+      //     { player_id: 'Bob', test_name: 8, test_timeStamp: 200 },
+      //     { player_id: 'Chad', test_name: 6, test_timeStamp: 300 },
+      //     { player_id: 'Don', test_name: 7, test_timeStamp: 400 },
+      //     { player_id: 'Ed', test_name: 6, test_timeStamp: 500 },
+      //     { player_id: 'Fred', test_name: 5, test_timeStamp: 600 },
+      //     { player_id: 'Greg', test_name: 6, test_timeStamp: 700 },
+      //     { player_id: 'Hal', test_name: 8, test_timeStamp: 800 },
+      //     { player_id: 'Ian', test_name: 8, test_timeStamp: 900 },
+      //     { player_id: 'Jim', test_name: 10, test_timeStamp: 1000 },
+      //     { player_id: 'Ken', test_name: 6, test_timeStamp: 1100 },
       //   ];
       //   testBracketList.rePopulateBrkts(testData);
   
@@ -1230,17 +1232,17 @@ describe('BracketList', () => {
       // it('should merge a player and create a new bracket when needed - 11 players two over filled', () => { 
       //   const testBracketList = new BracketList("test", 2, 3);
       //   const testData = [
-      //     { player_id: 'Al', test_name: 10, createdAt: 100 },
-      //     { player_id: 'Bob', test_name: 8, createdAt: 200 },
-      //     { player_id: 'Chad', test_name: 6, createdAt: 300 },
-      //     { player_id: 'Don', test_name: 7, createdAt: 400 },
-      //     { player_id: 'Ed', test_name: 6, createdAt: 500 },
-      //     { player_id: 'Fred', test_name: 5, createdAt: 600 },
-      //     { player_id: 'Greg', test_name: 6, createdAt: 700 },
-      //     { player_id: 'Hal', test_name: 8, createdAt: 800 },
-      //     { player_id: 'Ian', test_name: 8, createdAt: 900 },
-      //     { player_id: 'Jim', test_name: 10, createdAt: 1000 },
-      //     { player_id: 'Ken', test_name: 8, createdAt: 1100 },
+      //     { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+      //     { player_id: 'Bob', test_name: 8, test_timeStamp: 200 },
+      //     { player_id: 'Chad', test_name: 6, test_timeStamp: 300 },
+      //     { player_id: 'Don', test_name: 7, test_timeStamp: 400 },
+      //     { player_id: 'Ed', test_name: 6, test_timeStamp: 500 },
+      //     { player_id: 'Fred', test_name: 5, test_timeStamp: 600 },
+      //     { player_id: 'Greg', test_name: 6, test_timeStamp: 700 },
+      //     { player_id: 'Hal', test_name: 8, test_timeStamp: 800 },
+      //     { player_id: 'Ian', test_name: 8, test_timeStamp: 900 },
+      //     { player_id: 'Jim', test_name: 10, test_timeStamp: 1000 },
+      //     { player_id: 'Ken', test_name: 8, test_timeStamp: 1100 },
       //   ];
       //   testBracketList.rePopulateBrkts(testData);
   
@@ -1363,7 +1365,6 @@ describe('BracketList', () => {
       expect(mockBracketList.brackets).toHaveLength(0);
       expect(mockBracketList.brktCounts.forFullValues).toHaveLength(0);
       expect(mockBracketList.brktCounts.forOneByeValues).toHaveLength(0);
-      expect(mockBracketList.brktColTitles).toStrictEqual(initBGColNames);
     })
   })
 
@@ -1372,25 +1373,26 @@ describe('BracketList', () => {
     it('should return correct number of empty spots for not full brackets', () => {
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const playerData = [
-        { player_id: 'Al', test_name: 10, createdAt: 100 },
-        { player_id: 'Bob', test_name: 8, createdAt: 200 },
-        { player_id: 'Chad', test_name: 5, createdAt: 300 },
-        { player_id: 'Don', test_name: 10, createdAt: 400 },
-        { player_id: 'Ed', test_name: 12, createdAt: 500 },
-        { player_id: 'Fred', test_name: 6, createdAt: 600 },
-        { player_id: 'Greg', test_name: 6, createdAt: 700 },
-        { player_id: 'Hal', test_name: 8, createdAt: 800 },
-        { player_id: 'Ian', test_name: 8, createdAt: 900 },
-        { player_id: 'Jim', test_name: 10, createdAt: 1000 },
-        { player_id: 'Ken', test_name: 6, createdAt: 1100 },
-        { player_id: 'Lou', test_name: 5, createdAt: 1200 },
-        { player_id: 'Mike', test_name: 8, createdAt: 1300 },
-        { player_id: 'Nate', test_name: 10, createdAt: 1400 },
-        { player_id: 'Otto', test_name: 7, createdAt: 1500 },
-        { player_id: 'Paul', test_name: 4, createdAt: 1600 },
-        { player_id: 'Quin', test_name: 5, createdAt: 1700 },
-        { player_id: 'Rob', test_name: 10, createdAt: 1800 },
+        { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 8, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 5, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 10, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 12, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 6, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 6, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 8, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 8, test_timeStamp: 900 },
+        { player_id: 'Jim', test_name: 10, test_timeStamp: 1000 },
+        { player_id: 'Ken', test_name: 6, test_timeStamp: 1100 },
+        { player_id: 'Lou', test_name: 5, test_timeStamp: 1200 },
+        { player_id: 'Mike', test_name: 8, test_timeStamp: 1300 },
+        { player_id: 'Nate', test_name: 10, test_timeStamp: 1400 },
+        { player_id: 'Otto', test_name: 7, test_timeStamp: 1500 },
+        { player_id: 'Paul', test_name: 4, test_timeStamp: 1600 },
+        { player_id: 'Quin', test_name: 5, test_timeStamp: 1700 },
+        { player_id: 'Rob', test_name: 10, test_timeStamp: 1800 },
       ];      
       testBracketList.calcTotalBrkts(playerData);            
       const result = testBracketList.emptySpotsCalculated();
@@ -1399,18 +1401,19 @@ describe('BracketList', () => {
     it('should retun 0 when all brackets are full', () => { 
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const testData = [
-        { player_id: 'Al', test_name: 10, createdAt: 100 },
-        { player_id: 'Bob', test_name: 8, createdAt: 200 },
-        { player_id: 'Chad', test_name: 6, createdAt: 300 },
-        { player_id: 'Don', test_name: 7, createdAt: 400 },
-        { player_id: 'Ed', test_name: 6, createdAt: 500 },
-        { player_id: 'Fred', test_name: 5, createdAt: 600 },
-        { player_id: 'Greg', test_name: 6, createdAt: 700 },
-        { player_id: 'Hal', test_name: 8, createdAt: 800 },
-        { player_id: 'Ian', test_name: 8, createdAt: 900 },
-        { player_id: 'Jim', test_name: 10, createdAt: 1000 },
-        { player_id: 'Ken', test_name: 6, createdAt: 1100 },
+        { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 8, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 6, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 7, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 6, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 5, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 6, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 8, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 8, test_timeStamp: 900 },
+        { player_id: 'Jim', test_name: 10, test_timeStamp: 1000 },
+        { player_id: 'Ken', test_name: 6, test_timeStamp: 1100 },
       ];
 
       testBracketList.calcTotalBrkts(testData);
@@ -1420,25 +1423,26 @@ describe('BracketList', () => {
     it('edge case high, Al and Bob - 50B, should return correct # of empty spots', () => { 
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const playerData = [
-        { player_id: 'Al', test_name: 50, createdAt: 100 },
-        { player_id: 'Bob', test_name: 50, createdAt: 200 },
-        { player_id: 'Chad', test_name: 5, createdAt: 300 },
-        { player_id: 'Don', test_name: 10, createdAt: 400 },
-        { player_id: 'Ed', test_name: 12, createdAt: 500 },
-        { player_id: 'Fred', test_name: 6, createdAt: 600 },
-        { player_id: 'Greg', test_name: 6, createdAt: 700 },
-        { player_id: 'Hal', test_name: 8, createdAt: 800 },
-        { player_id: 'Ian', test_name: 8, createdAt: 900 },
-        { player_id: 'Jim', test_name: 10, createdAt: 1000 },
-        { player_id: 'Ken', test_name: 6, createdAt: 1100 },
-        { player_id: 'Lou', test_name: 5, createdAt: 1200 },
-        { player_id: 'Mike', test_name: 8, createdAt: 1300 },
-        { player_id: 'Nate', test_name: 10, createdAt: 1400 },
-        { player_id: 'Otto', test_name: 7, createdAt: 1500 },
-        { player_id: 'Paul', test_name: 4, createdAt: 1600 },
-        { player_id: 'Quin', test_name: 5, createdAt: 1700 },
-        { player_id: 'Rob', test_name: 10, createdAt: 1800 },
+        { player_id: 'Al', test_name: 50, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 50, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 5, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 10, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 12, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 6, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 6, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 8, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 8, test_timeStamp: 900 },
+        { player_id: 'Jim', test_name: 10, test_timeStamp: 1000 },
+        { player_id: 'Ken', test_name: 6, test_timeStamp: 1100 },
+        { player_id: 'Lou', test_name: 5, test_timeStamp: 1200 },
+        { player_id: 'Mike', test_name: 8, test_timeStamp: 1300 },
+        { player_id: 'Nate', test_name: 10, test_timeStamp: 1400 },
+        { player_id: 'Otto', test_name: 7, test_timeStamp: 1500 },
+        { player_id: 'Paul', test_name: 4, test_timeStamp: 1600 },
+        { player_id: 'Quin', test_name: 5, test_timeStamp: 1700 },
+        { player_id: 'Rob', test_name: 10, test_timeStamp: 1800 },
       ];      
       testBracketList.calcTotalBrkts(playerData);      
       const result = testBracketList.emptySpotsCalculated();
@@ -1447,14 +1451,15 @@ describe('BracketList', () => {
     it('edge case - 10Px7B, no filled brackets, should return correct # of empty spots', () => { 
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const playerData = [
-        { player_id: 'Al', test_name: 10, createdAt: 100 },
-        { player_id: 'Bob', test_name: 10, createdAt: 200 },
-        { player_id: 'Chad', test_name: 10, createdAt: 300 },
-        { player_id: 'Don', test_name: 10, createdAt: 400 },
-        { player_id: 'Ed', test_name: 10, createdAt: 500 },
-        { player_id: 'Fred', test_name: 10, createdAt: 600 },
-        { player_id: 'Greg', test_name: 10, createdAt: 700 },
+        { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 10, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 10, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 10, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 10, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 10, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 10, test_timeStamp: 700 },
       ];      
       testBracketList.calcTotalBrkts(playerData);      
       const result = testBracketList.emptySpotsCalculated();
@@ -1463,17 +1468,18 @@ describe('BracketList', () => {
     it('edge case low, 10Px4B, should return correct # of empty spots', () => { 
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const playerData = [
-        { player_id: 'Al', test_name: 4, createdAt: 100 },
-        { player_id: 'Bob', test_name: 4, createdAt: 200 },
-        { player_id: 'Chad', test_name: 4, createdAt: 300 },
-        { player_id: 'Don', test_name: 4, createdAt: 400 },
-        { player_id: 'Ed', test_name: 4, createdAt: 500 },
-        { player_id: 'Fred', test_name: 4, createdAt: 600 },
-        { player_id: 'Greg', test_name: 4, createdAt: 700 },
-        { player_id: 'Hal', test_name: 4, createdAt: 800 },
-        { player_id: 'Ian', test_name: 4, createdAt: 900 },
-        { player_id: 'Jim', test_name: 4, createdAt: 1000 },
+        { player_id: 'Al', test_name: 4, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 4, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 4, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 4, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 4, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 4, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 4, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 4, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 4, test_timeStamp: 900 },
+        { player_id: 'Jim', test_name: 4, test_timeStamp: 1000 },
       ];      
       testBracketList.calcTotalBrkts(playerData);      
       const result = testBracketList.emptySpotsCalculated();
@@ -1482,17 +1488,18 @@ describe('BracketList', () => {
     it('edge case low, 10Px2B, should return correct # of empty spots', () => { 
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const playerData = [
-        { player_id: 'Al', test_name: 2, createdAt: 100 },
-        { player_id: 'Bob', test_name: 2, createdAt: 200 },
-        { player_id: 'Chad', test_name: 2, createdAt: 300 },
-        { player_id: 'Don', test_name: 2, createdAt: 400 },
-        { player_id: 'Ed', test_name: 2, createdAt: 500 },
-        { player_id: 'Fred', test_name: 2, createdAt: 600 },
-        { player_id: 'Greg', test_name: 2, createdAt: 700 },
-        { player_id: 'Hal', test_name: 2, createdAt: 800 },
-        { player_id: 'Ian', test_name: 2, createdAt: 900 },
-        { player_id: 'Jim', test_name: 2, createdAt: 1000 },
+        { player_id: 'Al', test_name: 2, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 2, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 2, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 2, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 2, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 2, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 2, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 2, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 2, test_timeStamp: 900 },
+        { player_id: 'Jim', test_name: 2, test_timeStamp: 1000 },
       ];      
       testBracketList.calcTotalBrkts(playerData);      
       const result = testBracketList.emptySpotsCalculated();
@@ -1510,25 +1517,26 @@ describe('BracketList', () => {
     it('should return coreect # of full and one bye brackets', () => {
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const playerData = [
-        { player_id: 'Al', test_name: 10, createdAt: 100 },
-        { player_id: 'Bob', test_name: 8, createdAt: 200 },
-        { player_id: 'Chad', test_name: 5, createdAt: 300 },
-        { player_id: 'Don', test_name: 10, createdAt: 400 },
-        { player_id: 'Ed', test_name: 12, createdAt: 500 },
-        { player_id: 'Fred', test_name: 6, createdAt: 600 },
-        { player_id: 'Greg', test_name: 6, createdAt: 700 },
-        { player_id: 'Hal', test_name: 8, createdAt: 800 },
-        { player_id: 'Ian', test_name: 8, createdAt: 900 },
-        { player_id: 'Jim', test_name: 10, createdAt: 1000 },
-        { player_id: 'Ken', test_name: 6, createdAt: 1100 },
-        { player_id: 'Lou', test_name: 5, createdAt: 1200 },
-        { player_id: 'Mike', test_name: 8, createdAt: 1300 },
-        { player_id: 'Nate', test_name: 10, createdAt: 1400 },
-        { player_id: 'Otto', test_name: 7, createdAt: 1500 },
-        { player_id: 'Paul', test_name: 4, createdAt: 1600 },
-        { player_id: 'Quin', test_name: 5, createdAt: 1700 },
-        { player_id: 'Rob', test_name: 10, createdAt: 1800 },
+        { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 8, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 5, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 10, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 12, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 6, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 6, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 8, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 8, test_timeStamp: 900 },
+        { player_id: 'Jim', test_name: 10, test_timeStamp: 1000 },
+        { player_id: 'Ken', test_name: 6, test_timeStamp: 1100 },
+        { player_id: 'Lou', test_name: 5, test_timeStamp: 1200 },
+        { player_id: 'Mike', test_name: 8, test_timeStamp: 1300 },
+        { player_id: 'Nate', test_name: 10, test_timeStamp: 1400 },
+        { player_id: 'Otto', test_name: 7, test_timeStamp: 1500 },
+        { player_id: 'Paul', test_name: 4, test_timeStamp: 1600 },
+        { player_id: 'Quin', test_name: 5, test_timeStamp: 1700 },
+        { player_id: 'Rob', test_name: 10, test_timeStamp: 1800 },
       ];      
       testBracketList.calcTotalBrkts(playerData);            
       expect(testBracketList.fullCount).toBe(12);
@@ -1537,18 +1545,19 @@ describe('BracketList', () => {
     it('should return coreect # of full and one bye brackets - 10 full brackets', () => {
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const playerData = [
-        { player_id: 'Al', test_name: 10, createdAt: 100 },
-        { player_id: 'Bob', test_name: 8, createdAt: 200 },
-        { player_id: 'Chad', test_name: 6, createdAt: 300 },
-        { player_id: 'Don', test_name: 7, createdAt: 400 },
-        { player_id: 'Ed', test_name: 6, createdAt: 500 },
-        { player_id: 'Fred', test_name: 5, createdAt: 600 },
-        { player_id: 'Greg', test_name: 6, createdAt: 700 },
-        { player_id: 'Hal', test_name: 8, createdAt: 800 },
-        { player_id: 'Ian', test_name: 8, createdAt: 900 },
-        { player_id: 'Jim', test_name: 10, createdAt: 1000 },
-        { player_id: 'Ken', test_name: 6, createdAt: 1100 },
+        { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 8, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 6, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 7, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 6, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 5, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 6, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 8, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 8, test_timeStamp: 900 },
+        { player_id: 'Jim', test_name: 10, test_timeStamp: 1000 },
+        { player_id: 'Ken', test_name: 6, test_timeStamp: 1100 },
       ];      
       testBracketList.calcTotalBrkts(playerData);            
       expect(testBracketList.fullCount).toBe(10);
@@ -1557,25 +1566,26 @@ describe('BracketList', () => {
     it('should return coreect # of full and one bye brackets 1Px10B, 17Px4B', () => {
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const playerData = [
-        { player_id: 'Al', test_name: 10, createdAt: 100 },
-        { player_id: 'Bob', test_name: 4, createdAt: 200 },
-        { player_id: 'Chad', test_name: 4, createdAt: 300 },
-        { player_id: 'Don', test_name: 4, createdAt: 400 },
-        { player_id: 'Ed', test_name: 4, createdAt: 500 },
-        { player_id: 'Fred', test_name: 4, createdAt: 600 },
-        { player_id: 'Greg', test_name: 4, createdAt: 700 },
-        { player_id: 'Hal', test_name: 4, createdAt: 800 },
-        { player_id: 'Ian', test_name: 4, createdAt: 900 },
-        { player_id: 'Jim', test_name: 4, createdAt: 1000 },
-        { player_id: 'Ken', test_name: 4, createdAt: 1100 },
-        { player_id: 'Lou', test_name: 4, createdAt: 1200 },
-        { player_id: 'Mike', test_name: 4, createdAt: 1300 },
-        { player_id: 'Nate', test_name: 4, createdAt: 1400 },
-        { player_id: 'Otto', test_name: 4, createdAt: 1500 },
-        { player_id: 'Paul', test_name: 4, createdAt: 1600 },
-        { player_id: 'Quin', test_name: 4, createdAt: 1700 },
-        { player_id: 'Rob', test_name: 4, createdAt: 1800 },
+        { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 4, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 4, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 4, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 4, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 4, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 4, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 4, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 4, test_timeStamp: 900 },
+        { player_id: 'Jim', test_name: 4, test_timeStamp: 1000 },
+        { player_id: 'Ken', test_name: 4, test_timeStamp: 1100 },
+        { player_id: 'Lou', test_name: 4, test_timeStamp: 1200 },
+        { player_id: 'Mike', test_name: 4, test_timeStamp: 1300 },
+        { player_id: 'Nate', test_name: 4, test_timeStamp: 1400 },
+        { player_id: 'Otto', test_name: 4, test_timeStamp: 1500 },
+        { player_id: 'Paul', test_name: 4, test_timeStamp: 1600 },
+        { player_id: 'Quin', test_name: 4, test_timeStamp: 1700 },
+        { player_id: 'Rob', test_name: 4, test_timeStamp: 1800 },
       ];      
       testBracketList.calcTotalBrkts(playerData);            
       expect(testBracketList.fullCount).toBe(8);
@@ -1584,19 +1594,20 @@ describe('BracketList', () => {
     it('should return coreect # of full and one bye brackets 10Px10B', () => {
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const playerData = [
-        { player_id: 'Al', test_name: 10, createdAt: 100 },
-        { player_id: 'Bob', test_name: 10, createdAt: 200 },
-        { player_id: 'Chad', test_name: 10, createdAt: 300 },
-        { player_id: 'Don', test_name: 10, createdAt: 400 },
-        { player_id: 'Ed', test_name: 10, createdAt: 500 },
-        { player_id: 'Fred', test_name: 10, createdAt: 600 },
-        { player_id: 'Greg', test_name: 10, createdAt: 700 },
-        { player_id: 'Hal', test_name: 10, createdAt: 800 },
-        { player_id: 'Ian', test_name: 5, createdAt: 900 },
-        { player_id: 'Jim', test_name: 5, createdAt: 1000 },
-        { player_id: 'Ken', test_name: 5, createdAt: 1100 },
-        { player_id: 'Lou', test_name: 5, createdAt: 1200 },
+        { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 10, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 10, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 10, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 10, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 10, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 10, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 10, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 5, test_timeStamp: 900 },
+        { player_id: 'Jim', test_name: 5, test_timeStamp: 1000 },
+        { player_id: 'Ken', test_name: 5, test_timeStamp: 1100 },
+        { player_id: 'Lou', test_name: 5, test_timeStamp: 1200 },
       ];      
       testBracketList.calcTotalBrkts(playerData);            
       expect(testBracketList.fullCount).toBe(9);
@@ -1605,17 +1616,18 @@ describe('BracketList', () => {
     it('should return coreect # of full and one bye brackets 8Px10B, 4Px5B', () => {
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const playerData = [
-        { player_id: 'Al', test_name: 10, createdAt: 100 },
-        { player_id: 'Bob', test_name: 10, createdAt: 200 },
-        { player_id: 'Chad', test_name: 10, createdAt: 300 },
-        { player_id: 'Don', test_name: 10, createdAt: 400 },
-        { player_id: 'Ed', test_name: 10, createdAt: 500 },
-        { player_id: 'Fred', test_name: 10, createdAt: 600 },
-        { player_id: 'Greg', test_name: 10, createdAt: 700 },
-        { player_id: 'Hal', test_name: 10, createdAt: 800 },
-        { player_id: 'Ian', test_name: 10, createdAt: 900 },
-        { player_id: 'Jim', test_name: 10, createdAt: 1000 },
+        { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 10, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 10, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 10, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 10, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 10, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 10, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 10, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 10, test_timeStamp: 900 },
+        { player_id: 'Jim', test_name: 10, test_timeStamp: 1000 },
       ];      
       testBracketList.calcTotalBrkts(playerData);            
       expect(testBracketList.fullCount).toBe(9);
@@ -1624,25 +1636,26 @@ describe('BracketList', () => {
     it('edge case high, Al 50 brackets', () => {
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const playerData = [
-        { player_id: 'Al', test_name: 50, createdAt: 100 },
-        { player_id: 'Bob', test_name: 8, createdAt: 200 },
-        { player_id: 'Chad', test_name: 5, createdAt: 300 },
-        { player_id: 'Don', test_name: 10, createdAt: 400 },
-        { player_id: 'Ed', test_name: 12, createdAt: 500 },
-        { player_id: 'Fred', test_name: 6, createdAt: 600 },
-        { player_id: 'Greg', test_name: 6, createdAt: 700 },
-        { player_id: 'Hal', test_name: 8, createdAt: 800 },
-        { player_id: 'Ian', test_name: 8, createdAt: 900 },
-        { player_id: 'Jim', test_name: 10, createdAt: 1000 },
-        { player_id: 'Ken', test_name: 6, createdAt: 1100 },
-        { player_id: 'Lou', test_name: 5, createdAt: 1200 },
-        { player_id: 'Mike', test_name: 8, createdAt: 1300 },
-        { player_id: 'Nate', test_name: 10, createdAt: 1400 },
-        { player_id: 'Otto', test_name: 7, createdAt: 1500 },
-        { player_id: 'Paul', test_name: 4, createdAt: 1600 },
-        { player_id: 'Quin', test_name: 5, createdAt: 1700 },
-        { player_id: 'Rob', test_name: 10, createdAt: 1800 },
+        { player_id: 'Al', test_name: 50, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 8, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 5, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 10, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 12, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 6, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 6, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 8, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 8, test_timeStamp: 900 },
+        { player_id: 'Jim', test_name: 10, test_timeStamp: 1000 },
+        { player_id: 'Ken', test_name: 6, test_timeStamp: 1100 },
+        { player_id: 'Lou', test_name: 5, test_timeStamp: 1200 },
+        { player_id: 'Mike', test_name: 8, test_timeStamp: 1300 },
+        { player_id: 'Nate', test_name: 10, test_timeStamp: 1400 },
+        { player_id: 'Otto', test_name: 7, test_timeStamp: 1500 },
+        { player_id: 'Paul', test_name: 4, test_timeStamp: 1600 },
+        { player_id: 'Quin', test_name: 5, test_timeStamp: 1700 },
+        { player_id: 'Rob', test_name: 10, test_timeStamp: 1800 },
       ];      
       testBracketList.calcTotalBrkts(playerData);      
       expect(testBracketList.fullCount).toBe(14);
@@ -1651,25 +1664,26 @@ describe('BracketList', () => {
     it('edge case high, Al and Bob 50 brackets', () => {
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const playerData = [
-        { player_id: 'Al', test_name: 50, createdAt: 100 },
-        { player_id: 'Bob', test_name: 50, createdAt: 200 },
-        { player_id: 'Chad', test_name: 5, createdAt: 300 },
-        { player_id: 'Don', test_name: 10, createdAt: 400 },
-        { player_id: 'Ed', test_name: 12, createdAt: 500 },
-        { player_id: 'Fred', test_name: 6, createdAt: 600 },
-        { player_id: 'Greg', test_name: 6, createdAt: 700 },
-        { player_id: 'Hal', test_name: 8, createdAt: 800 },
-        { player_id: 'Ian', test_name: 8, createdAt: 900 },
-        { player_id: 'Jim', test_name: 10, createdAt: 1000 },
-        { player_id: 'Ken', test_name: 6, createdAt: 1100 },
-        { player_id: 'Lou', test_name: 5, createdAt: 1200 },
-        { player_id: 'Mike', test_name: 8, createdAt: 1300 },
-        { player_id: 'Nate', test_name: 10, createdAt: 1400 },
-        { player_id: 'Otto', test_name: 7, createdAt: 1500 },
-        { player_id: 'Paul', test_name: 4, createdAt: 1600 },
-        { player_id: 'Quin', test_name: 5, createdAt: 1700 },
-        { player_id: 'Rob', test_name: 10, createdAt: 1800 },
+        { player_id: 'Al', test_name: 50, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 50, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 5, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 10, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 12, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 6, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 6, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 8, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 8, test_timeStamp: 900 },
+        { player_id: 'Jim', test_name: 10, test_timeStamp: 1000 },
+        { player_id: 'Ken', test_name: 6, test_timeStamp: 1100 },
+        { player_id: 'Lou', test_name: 5, test_timeStamp: 1200 },
+        { player_id: 'Mike', test_name: 8, test_timeStamp: 1300 },
+        { player_id: 'Nate', test_name: 10, test_timeStamp: 1400 },
+        { player_id: 'Otto', test_name: 7, test_timeStamp: 1500 },
+        { player_id: 'Paul', test_name: 4, test_timeStamp: 1600 },
+        { player_id: 'Quin', test_name: 5, test_timeStamp: 1700 },
+        { player_id: 'Rob', test_name: 10, test_timeStamp: 1800 },
       ];      
       testBracketList.calcTotalBrkts(playerData);      
       expect(testBracketList.fullCount).toBe(15);
@@ -1678,17 +1692,18 @@ describe('BracketList', () => {
     it('edge case high, 10 Players x 4 brkts', () => {
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const playerData = [
-        { player_id: 'Al', test_name: 4, createdAt: 100 },
-        { player_id: 'Bob', test_name: 4, createdAt: 200 },
-        { player_id: 'Chad', test_name: 4, createdAt: 300 },
-        { player_id: 'Don', test_name: 4, createdAt: 400 },
-        { player_id: 'Ed', test_name: 4, createdAt: 500 },
-        { player_id: 'Fred', test_name: 4, createdAt: 600 },
-        { player_id: 'Greg', test_name: 4, createdAt: 700 },
-        { player_id: 'Hal', test_name: 4, createdAt: 800 },
-        { player_id: 'Ian', test_name: 4, createdAt: 900 },
-        { player_id: 'Jim', test_name: 4, createdAt: 1000 },
+        { player_id: 'Al', test_name: 4, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 4, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 4, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 4, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 4, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 4, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 4, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 4, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 4, test_timeStamp: 900 },
+        { player_id: 'Jim', test_name: 4, test_timeStamp: 1000 },
       ];      
       testBracketList.calcTotalBrkts(playerData);      
       expect(testBracketList.fullCount).toBe(5);
@@ -1697,17 +1712,18 @@ describe('BracketList', () => {
     it('edge case low, 10 Players x 2 brkts', () => {
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const playerData = [
-        { player_id: 'Al', test_name: 2, createdAt: 100 },
-        { player_id: 'Bob', test_name: 2, createdAt: 200 },
-        { player_id: 'Chad', test_name: 2, createdAt: 300 },
-        { player_id: 'Don', test_name: 2, createdAt: 400 },
-        { player_id: 'Ed', test_name: 2, createdAt: 500 },
-        { player_id: 'Fred', test_name: 2, createdAt: 600 },
-        { player_id: 'Greg', test_name: 2, createdAt: 700 },
-        { player_id: 'Hal', test_name: 2, createdAt: 800 },
-        { player_id: 'Ian', test_name: 2, createdAt: 900 },
-        { player_id: 'Jim', test_name: 2, createdAt: 1000 },
+        { player_id: 'Al', test_name: 2, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 2, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 2, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 2, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 2, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 2, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 2, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 2, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 2, test_timeStamp: 900 },
+        { player_id: 'Jim', test_name: 2, test_timeStamp: 1000 },
       ];      
       testBracketList.calcTotalBrkts(playerData);      
       expect(testBracketList.fullCount).toBe(2);
@@ -1716,14 +1732,15 @@ describe('BracketList', () => {
     it('edge case - no full brackets, 7 Players x 10 brkts', () => {
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const playerData = [
-        { player_id: 'Al', test_name: 10, createdAt: 100 },
-        { player_id: 'Bob', test_name: 10, createdAt: 200 },
-        { player_id: 'Chad', test_name: 10, createdAt: 300 },
-        { player_id: 'Don', test_name: 10, createdAt: 400 },
-        { player_id: 'Ed', test_name: 10, createdAt: 500 },
-        { player_id: 'Fred', test_name: 10, createdAt: 600 },
-        { player_id: 'Greg', test_name: 10, createdAt: 700 },
+        { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 10, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 10, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 10, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 10, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 10, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 10, test_timeStamp: 700 },
       ];      
       testBracketList.calcTotalBrkts(playerData);      
       expect(testBracketList.fullCount).toBe(0);
@@ -1732,14 +1749,15 @@ describe('BracketList', () => {
     it('edge case low - no full brackets, 7 players with random brackets, 5 is min', () => {
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const playerData = [
-        { player_id: 'Al', test_name: 10, createdAt: 100 },
-        { player_id: 'Bob', test_name: 8, createdAt: 200 },
-        { player_id: 'Chad', test_name: 6, createdAt: 300 },
-        { player_id: 'Don', test_name: 7, createdAt: 400 },
-        { player_id: 'Ed', test_name: 6, createdAt: 500 },
-        { player_id: 'Fred', test_name: 5, createdAt: 600 },
-        { player_id: 'Greg', test_name: 6, createdAt: 700 },
+        { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 8, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 6, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 7, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 6, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 5, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 6, test_timeStamp: 700 },
       ];      
       testBracketList.calcTotalBrkts(playerData);      
       expect(testBracketList.fullCount).toBe(0);
@@ -1755,37 +1773,18 @@ describe('BracketList', () => {
     it('should exit when playerId is not found', () => {
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const testData = [
-        { player_id: 'Al', test_name: 2, createdAt: 100 },
-        { player_id: 'Bob', test_name: 2, createdAt: 200 },
-        { player_id: '', test_name: 2, createdAt: 300 },
-        { player_id: 'Don', test_name: 2, createdAt: 400 },
-        { player_id: 'Ed', test_name: 2, createdAt: 500 },
-        { player_id: 'Fred', test_name: 2, createdAt: 600 },
-        { player_id: 'Greg', test_name: 2, createdAt: 700 },
-        { player_id: 'Hal', test_name: 2, createdAt: 800 },
-        { player_id: 'Ian', test_name: 2, createdAt: 900 },
-        { player_id: 'Jim', test_name: 2, createdAt: 1000 },
-      ];
-
-      testBracketList.calcTotalBrkts(testData);
-      expect(testBracketList.fullCount).toBe(0);
-      expect(testBracketList.oneByeCount).toBe(0);
-    })
-    it('should exit when numBrkts is not found', () => {
-      const testBracketList = new BracketList('test', 2, 3);
-      // num brackets name = id + "_name" = 'test_name'
-      const testData = [
-        { player_id: 'Al', test_name: 2, createdAt: 100 },
-        { player_id: 'Bob', test_name: 2, createdAt: 200 },
-        { player_id: 'Chad', createdAt: 300 },
-        { player_id: 'Don', test_name: 2, createdAt: 400 },
-        { player_id: 'Ed', test_name: 2, createdAt: 500 },
-        { player_id: 'Fred', test_name: 2, createdAt: 600 },
-        { player_id: 'Greg', test_name: 2, createdAt: 700 },
-        { player_id: 'Hal', test_name: 2, createdAt: 800 },
-        { player_id: 'Ian', test_name: 2, createdAt: 900 },
-        { player_id: 'Jim', test_name: 2, createdAt: 1000 },
+        { player_id: 'Al', test_name: 2, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 2, test_timeStamp: 200 },
+        { player_id: '', test_name: 2, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 2, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 2, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 2, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 2, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 2, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 2, test_timeStamp: 900 },
+        { player_id: 'Jim', test_name: 2, test_timeStamp: 1000 },
       ];
 
       testBracketList.calcTotalBrkts(testData);
@@ -1795,17 +1794,18 @@ describe('BracketList', () => {
     it('should exit when numBrkts is not and integer', () => {
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const testData = [
-        { player_id: 'Al', test_name: 2, createdAt: 100 },
-        { player_id: 'Bob', test_name: 2, createdAt: 200 },
-        { player_id: 'Chad', test_name: 1.5, createdAt: 300 },
-        { player_id: 'Don', test_name: 2, createdAt: 400 },
-        { player_id: 'Ed', test_name: 2, createdAt: 500 },
-        { player_id: 'Fred', test_name: 2, createdAt: 600 },
-        { player_id: 'Greg', test_name: 2, createdAt: 700 },
-        { player_id: 'Hal', test_name: 2, createdAt: 800 },
-        { player_id: 'Ian', test_name: 2, createdAt: 900 },
-        { player_id: 'Jim', test_name: 2, createdAt: 1000 },
+        { player_id: 'Al', test_name: 2, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 2, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 1.5, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 2, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 2, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 2, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 2, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 2, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 2, test_timeStamp: 900 },
+        { player_id: 'Jim', test_name: 2, test_timeStamp: 1000 },
       ];
 
       testBracketList.calcTotalBrkts(testData);
@@ -1815,37 +1815,18 @@ describe('BracketList', () => {
     it('should exit when numBrkts is too high', () => {
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const testData = [
-        { player_id: 'Al', test_name: 2, createdAt: 100 },
-        { player_id: 'Bob', test_name: 2, createdAt: 200 },
-        { player_id: 'Chad', test_name: 1234, createdAt: 300 },
-        { player_id: 'Don', test_name: 2, createdAt: 400 },
-        { player_id: 'Ed', test_name: 2, createdAt: 500 },
-        { player_id: 'Fred', test_name: 2, createdAt: 600 },
-        { player_id: 'Greg', test_name: 2, createdAt: 700 },
-        { player_id: 'Hal', test_name: 2, createdAt: 800 },
-        { player_id: 'Ian', test_name: 2, createdAt: 900 },
-        { player_id: 'Jim', test_name: 2, createdAt: 1000 },
-      ];
-
-      testBracketList.calcTotalBrkts(testData);
-      expect(testBracketList.fullCount).toBe(0);
-      expect(testBracketList.oneByeCount).toBe(0);
-    })
-    it('should exit when numBrkts is too low', () => {
-      const testBracketList = new BracketList('test', 2, 3);
-      // num brackets name = id + "_name" = 'test_name'
-      const testData = [
-        { player_id: 'Al', test_name: 2, createdAt: 100 },
-        { player_id: 'Bob', test_name: 2, createdAt: 200 },
-        { player_id: 'Chad', test_name: -1, createdAt: 300 },
-        { player_id: 'Don', test_name: 2, createdAt: 400 },
-        { player_id: 'Ed', test_name: 2, createdAt: 500 },
-        { player_id: 'Fred', test_name: 2, createdAt: 600 },
-        { player_id: 'Greg', test_name: 2, createdAt: 700 },
-        { player_id: 'Hal', test_name: 2, createdAt: 800 },
-        { player_id: 'Ian', test_name: 2, createdAt: 900 },
-        { player_id: 'Jim', test_name: 2, createdAt: 1000 },
+        { player_id: 'Al', test_name: 2, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 2, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 1234, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 2, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 2, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 2, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 2, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 2, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 2, test_timeStamp: 900 },
+        { player_id: 'Jim', test_name: 2, test_timeStamp: 1000 },
       ];
 
       testBracketList.calcTotalBrkts(testData);
@@ -1855,17 +1836,18 @@ describe('BracketList', () => {
     it('should exit when createdAt is not found', () => {
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const testData = [
-        { player_id: 'Al', test_name: 2, createdAt: 100 },
-        { player_id: 'Bob', test_name: 2, createdAt: 200 },
+        { player_id: 'Al', test_name: 2, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 2, test_timeStamp: 200 },
         { player_id: 'Chad', test_name: 2 },
-        { player_id: 'Don', test_name: 2, createdAt: 400 },
-        { player_id: 'Ed', test_name: 2, createdAt: 500 },
-        { player_id: 'Fred', test_name: 2, createdAt: 600 },
-        { player_id: 'Greg', test_name: 2, createdAt: 700 },
-        { player_id: 'Hal', test_name: 2, createdAt: 800 },
-        { player_id: 'Ian', test_name: 2, createdAt: 900 },
-        { player_id: 'Jim', test_name: 2, createdAt: 1000 },
+        { player_id: 'Don', test_name: 2, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 2, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 2, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 2, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 2, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 2, test_timeStamp: 900 },
+        { player_id: 'Jim', test_name: 2, test_timeStamp: 1000 },
       ];
 
       testBracketList.calcTotalBrkts(testData);
@@ -1874,30 +1856,95 @@ describe('BracketList', () => {
     })
   })
 
+  describe('calcTotalBrkts - remove players with no bracket entries', () => { 
+
+    it('should ignore brackets with no value', () => {
+      const testBracketList = new BracketList('test', 2, 3);
+      // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
+      const testData = [
+        { player_id: 'Al', test_name: 8, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 8, test_timeStamp: 200 },
+        { player_id: 'Chad', test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 8, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 8, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 8, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 8, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 8, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 8, test_timeStamp: 900 },          
+      ];
+
+      testBracketList.calcTotalBrkts(testData);
+      expect(testBracketList.fullCount).toBe(8);
+      expect(testBracketList.oneByeCount).toBe(0);
+    })        
+    it('should ignore brackets with negative values', () => {
+      const testBracketList = new BracketList('test', 2, 3);
+      // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
+      const testData = [
+        { player_id: 'Al', test_name: 8, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 8, test_timeStamp: 200 },
+        { player_id: 'Chad',test_name: -1, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 8, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 8, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 8, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 8, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 8, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 8, test_timeStamp: 900 },          
+      ];
+
+      testBracketList.calcTotalBrkts(testData);
+      expect(testBracketList.fullCount).toBe(8);
+      expect(testBracketList.oneByeCount).toBe(0);
+    })        
+    it('should ignore brackets with 0 values', () => {
+      const testBracketList = new BracketList('test', 2, 3);
+      // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
+      const testData = [
+        { player_id: 'Al', test_name: 8, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 8, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 0, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 8, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 8, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 8, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 8, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 8, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 8, test_timeStamp: 900 },          
+      ];
+
+      testBracketList.calcTotalBrkts(testData);
+      expect(testBracketList.fullCount).toBe(8);
+      expect(testBracketList.oneByeCount).toBe(0);
+    })        
+  })
+
   describe('rePopulateBrkts - populateBrktCounts', () => { 
 
     it('should have correct full (12:0, 6:1) and one bye (18:0) bracket counts', () => {
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const testData = [
-        { player_id: 'Al', test_name: 10, createdAt: 100 },
-        { player_id: 'Bob', test_name: 8, createdAt: 200 },
-        { player_id: 'Chad', test_name: 5, createdAt: 300 },
-        { player_id: 'Don', test_name: 10, createdAt: 400 },
-        { player_id: 'Ed', test_name: 12, createdAt: 500 },
-        { player_id: 'Fred', test_name: 6, createdAt: 600 },
-        { player_id: 'Greg', test_name: 6, createdAt: 700 },
-        { player_id: 'Hal', test_name: 8, createdAt: 800 },
-        { player_id: 'Ian', test_name: 8, createdAt: 900 },
-        { player_id: 'Jim', test_name: 10, createdAt: 1000 },
-        { player_id: 'Ken', test_name: 6, createdAt: 1100 },
-        { player_id: 'Lou', test_name: 5, createdAt: 1200 },
-        { player_id: 'Mike', test_name: 8, createdAt: 1300 },
-        { player_id: 'Nate', test_name: 10, createdAt: 1400 },
-        { player_id: 'Otto', test_name: 7, createdAt: 1500 },
-        { player_id: 'Paul', test_name: 4, createdAt: 1600 },
-        { player_id: 'Quin', test_name: 5, createdAt: 1700 },
-        { player_id: 'Rob', test_name: 10, createdAt: 1800 },
+        { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 8, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 5, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 10, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 12, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 6, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 6, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 8, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 8, test_timeStamp: 900 },
+        { player_id: 'Jim', test_name: 10, test_timeStamp: 1000 },
+        { player_id: 'Ken', test_name: 6, test_timeStamp: 1100 },
+        { player_id: 'Lou', test_name: 5, test_timeStamp: 1200 },
+        { player_id: 'Mike', test_name: 8, test_timeStamp: 1300 },
+        { player_id: 'Nate', test_name: 10, test_timeStamp: 1400 },
+        { player_id: 'Otto', test_name: 7, test_timeStamp: 1500 },
+        { player_id: 'Paul', test_name: 4, test_timeStamp: 1600 },
+        { player_id: 'Quin', test_name: 5, test_timeStamp: 1700 },
+        { player_id: 'Rob', test_name: 10, test_timeStamp: 1800 },
       ];
   
       testBracketList.calcTotalBrkts(testData);
@@ -1915,18 +1962,19 @@ describe('BracketList', () => {
     it('should have correct full (10:0, 0:1) and one bye (10:0) bracket counts', () => {
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const testData = [
-        { player_id: 'Al', test_name: 10, createdAt: 100 },
-        { player_id: 'Bob', test_name: 8, createdAt: 200 },
-        { player_id: 'Chad', test_name: 6, createdAt: 300 },
-        { player_id: 'Don', test_name: 7, createdAt: 400 },
-        { player_id: 'Ed', test_name: 6, createdAt: 500 },
-        { player_id: 'Fred', test_name: 5, createdAt: 600 },
-        { player_id: 'Greg', test_name: 6, createdAt: 700 },
-        { player_id: 'Hal', test_name: 8, createdAt: 800 },
-        { player_id: 'Ian', test_name: 8, createdAt: 900 },
-        { player_id: 'Jim', test_name: 10, createdAt: 1000 },
-        { player_id: 'Ken', test_name: 6, createdAt: 1100 },
+        { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 8, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 6, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 7, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 6, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 5, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 6, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 8, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 8, test_timeStamp: 900 },
+        { player_id: 'Jim', test_name: 10, test_timeStamp: 1000 },
+        { player_id: 'Ken', test_name: 6, test_timeStamp: 1100 },
       ];
   
       testBracketList.calcTotalBrkts(testData);
@@ -1944,25 +1992,26 @@ describe('BracketList', () => {
     it('should have correct full (8:0, 2:1) and one bye (10:0) bracket counts', () => {
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const testData = [
-        { player_id: 'Al', test_name: 10, createdAt: 100 },
-        { player_id: 'Bob', test_name: 4, createdAt: 200 },
-        { player_id: 'Chad', test_name: 4, createdAt: 300 },
-        { player_id: 'Don', test_name: 4, createdAt: 400 },
-        { player_id: 'Ed', test_name: 4, createdAt: 500 },
-        { player_id: 'Fred', test_name: 4, createdAt: 600 },
-        { player_id: 'Greg', test_name: 4, createdAt: 700 },
-        { player_id: 'Hal', test_name: 4, createdAt: 800 },
-        { player_id: 'Ian', test_name: 4, createdAt: 900 },
-        { player_id: 'Jim', test_name: 4, createdAt: 1000 },
-        { player_id: 'Ken', test_name: 4, createdAt: 1100 },
-        { player_id: 'Lou', test_name: 4, createdAt: 1200 },
-        { player_id: 'Mike', test_name: 4, createdAt: 1300 },
-        { player_id: 'Nate', test_name: 4, createdAt: 1400 },
-        { player_id: 'Otto', test_name: 4, createdAt: 1500 },
-        { player_id: 'Paul', test_name: 4, createdAt: 1600 },
-        { player_id: 'Quin', test_name: 4, createdAt: 1700 },
-        { player_id: 'Rob', test_name: 4, createdAt: 1800 },
+        { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 4, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 4, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 4, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 4, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 4, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 4, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 4, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 4, test_timeStamp: 900 },
+        { player_id: 'Jim', test_name: 4, test_timeStamp: 1000 },
+        { player_id: 'Ken', test_name: 4, test_timeStamp: 1100 },
+        { player_id: 'Lou', test_name: 4, test_timeStamp: 1200 },
+        { player_id: 'Mike', test_name: 4, test_timeStamp: 1300 },
+        { player_id: 'Nate', test_name: 4, test_timeStamp: 1400 },
+        { player_id: 'Otto', test_name: 4, test_timeStamp: 1500 },
+        { player_id: 'Paul', test_name: 4, test_timeStamp: 1600 },
+        { player_id: 'Quin', test_name: 4, test_timeStamp: 1700 },
+        { player_id: 'Rob', test_name: 4, test_timeStamp: 1800 },
       ];
   
       testBracketList.calcTotalBrkts(testData);
@@ -1980,17 +2029,18 @@ describe('BracketList', () => {
     it('should have correct full (9:0, 4:1) and one bye (13:0) bracket counts (10 players, 10 brackets each)', () => {
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const testData = [
-        { player_id: 'Al', test_name: 10, createdAt: 100 },
-        { player_id: 'Bob', test_name: 10, createdAt: 200 },
-        { player_id: 'Chad', test_name: 10, createdAt: 300 },
-        { player_id: 'Don', test_name: 10, createdAt: 400 },
-        { player_id: 'Ed', test_name: 10, createdAt: 500 },
-        { player_id: 'Fred', test_name: 10, createdAt: 600 },
-        { player_id: 'Greg', test_name: 10, createdAt: 700 },
-        { player_id: 'Hal', test_name: 10, createdAt: 800 },
-        { player_id: 'Ian', test_name: 10, createdAt: 900 },
-        { player_id: 'Jim', test_name: 10, createdAt: 1000 },
+        { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 10, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 10, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 10, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 10, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 10, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 10, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 10, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 10, test_timeStamp: 900 },
+        { player_id: 'Jim', test_name: 10, test_timeStamp: 1000 },
       ];
   
       testBracketList.calcTotalBrkts(testData);
@@ -2008,19 +2058,20 @@ describe('BracketList', () => {
     it('should have correct full (9:0, 4:1) and one bye (13:0) bracket counts (14 Players, 8x10 + 4x5)', () => {
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const testData = [
-        { player_id: 'Al', test_name: 10, createdAt: 100 },
-        { player_id: 'Bob', test_name: 10, createdAt: 200 },
-        { player_id: 'Chad', test_name: 10, createdAt: 300 },
-        { player_id: 'Don', test_name: 10, createdAt: 400 },
-        { player_id: 'Ed', test_name: 10, createdAt: 500 },
-        { player_id: 'Fred', test_name: 10, createdAt: 600 },
-        { player_id: 'Greg', test_name: 10, createdAt: 700 },
-        { player_id: 'Hal', test_name: 10, createdAt: 800 },
-        { player_id: 'Ian', test_name: 5, createdAt: 900 },
-        { player_id: 'Jim', test_name: 5, createdAt: 1000 },
-        { player_id: 'Ken', test_name: 5, createdAt: 1100 },
-        { player_id: 'Lou', test_name: 5, createdAt: 1200 },
+        { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 10, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 10, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 10, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 10, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 10, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 10, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 10, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 5, test_timeStamp: 900 },
+        { player_id: 'Jim', test_name: 5, test_timeStamp: 1000 },
+        { player_id: 'Ken', test_name: 5, test_timeStamp: 1100 },
+        { player_id: 'Lou', test_name: 5, test_timeStamp: 1200 },
       ];
   
       testBracketList.calcTotalBrkts(testData);
@@ -2038,25 +2089,26 @@ describe('BracketList', () => {
     it('edge case high, adjust Al to 19 brackets, should have correct full (14:0. 5:1) and one bye (19:0)', () => {
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const playerData = [
-        { player_id: 'Al', test_name: 50, createdAt: 100 },
-        { player_id: 'Bob', test_name: 8, createdAt: 200 },
-        { player_id: 'Chad', test_name: 5, createdAt: 300 },
-        { player_id: 'Don', test_name: 10, createdAt: 400 },
-        { player_id: 'Ed', test_name: 12, createdAt: 500 },
-        { player_id: 'Fred', test_name: 6, createdAt: 600 },
-        { player_id: 'Greg', test_name: 6, createdAt: 700 },
-        { player_id: 'Hal', test_name: 8, createdAt: 800 },
-        { player_id: 'Ian', test_name: 8, createdAt: 900 },
-        { player_id: 'Jim', test_name: 10, createdAt: 1000 },
-        { player_id: 'Ken', test_name: 6, createdAt: 1100 },
-        { player_id: 'Lou', test_name: 5, createdAt: 1200 },
-        { player_id: 'Mike', test_name: 8, createdAt: 1300 },
-        { player_id: 'Nate', test_name: 10, createdAt: 1400 },
-        { player_id: 'Otto', test_name: 7, createdAt: 1500 },
-        { player_id: 'Paul', test_name: 4, createdAt: 1600 },
-        { player_id: 'Quin', test_name: 5, createdAt: 1700 },
-        { player_id: 'Rob', test_name: 10, createdAt: 1800 },
+        { player_id: 'Al', test_name: 50, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 8, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 5, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 10, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 12, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 6, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 6, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 8, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 8, test_timeStamp: 900 },
+        { player_id: 'Jim', test_name: 10, test_timeStamp: 1000 },
+        { player_id: 'Ken', test_name: 6, test_timeStamp: 1100 },
+        { player_id: 'Lou', test_name: 5, test_timeStamp: 1200 },
+        { player_id: 'Mike', test_name: 8, test_timeStamp: 1300 },
+        { player_id: 'Nate', test_name: 10, test_timeStamp: 1400 },
+        { player_id: 'Otto', test_name: 7, test_timeStamp: 1500 },
+        { player_id: 'Paul', test_name: 4, test_timeStamp: 1600 },
+        { player_id: 'Quin', test_name: 5, test_timeStamp: 1700 },
+        { player_id: 'Rob', test_name: 10, test_timeStamp: 1800 },
       ];
       testBracketList.calcTotalBrkts(playerData);
       expect(testBracketList.brktCounts.forFullValues.length).toBe(19);
@@ -2074,25 +2126,26 @@ describe('BracketList', () => {
     it('edge case high, adjust Al and Bob to 21 brackets, should have correct full (15:0. 6:1) and one bye (21:0)', () => {
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const playerData = [
-        { player_id: 'Al', test_name: 50, createdAt: 100 },
-        { player_id: 'Bob', test_name: 50, createdAt: 200 },
-        { player_id: 'Chad', test_name: 5, createdAt: 300 },
-        { player_id: 'Don', test_name: 10, createdAt: 400 },
-        { player_id: 'Ed', test_name: 12, createdAt: 500 },
-        { player_id: 'Fred', test_name: 6, createdAt: 600 },
-        { player_id: 'Greg', test_name: 6, createdAt: 700 },
-        { player_id: 'Hal', test_name: 8, createdAt: 800 },
-        { player_id: 'Ian', test_name: 8, createdAt: 900 },
-        { player_id: 'Jim', test_name: 10, createdAt: 1000 },
-        { player_id: 'Ken', test_name: 6, createdAt: 1100 },
-        { player_id: 'Lou', test_name: 5, createdAt: 1200 },
-        { player_id: 'Mike', test_name: 8, createdAt: 1300 },
-        { player_id: 'Nate', test_name: 10, createdAt: 1400 },
-        { player_id: 'Otto', test_name: 7, createdAt: 1500 },
-        { player_id: 'Paul', test_name: 4, createdAt: 1600 },
-        { player_id: 'Quin', test_name: 5, createdAt: 1700 },
-        { player_id: 'Rob', test_name: 10, createdAt: 1800 },
+        { player_id: 'Al', test_name: 50, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 50, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 5, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 10, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 12, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 6, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 6, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 8, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 8, test_timeStamp: 900 },
+        { player_id: 'Jim', test_name: 10, test_timeStamp: 1000 },
+        { player_id: 'Ken', test_name: 6, test_timeStamp: 1100 },
+        { player_id: 'Lou', test_name: 5, test_timeStamp: 1200 },
+        { player_id: 'Mike', test_name: 8, test_timeStamp: 1300 },
+        { player_id: 'Nate', test_name: 10, test_timeStamp: 1400 },
+        { player_id: 'Otto', test_name: 7, test_timeStamp: 1500 },
+        { player_id: 'Paul', test_name: 4, test_timeStamp: 1600 },
+        { player_id: 'Quin', test_name: 5, test_timeStamp: 1700 },
+        { player_id: 'Rob', test_name: 10, test_timeStamp: 1800 },
       ];
       testBracketList.calcTotalBrkts(playerData);
       expect(testBracketList.brktCounts.forFullValues.length).toBe(21);
@@ -2109,17 +2162,18 @@ describe('BracketList', () => {
     it('edge case high, 10 Players x 4 brkts, should have correct full (5:0, 5:8) and one bye (5:0, 5:7)', () => {
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const playerData = [
-        { player_id: 'Al', test_name: 4, createdAt: 100 },
-        { player_id: 'Bob', test_name: 4, createdAt: 200 },
-        { player_id: 'Chad', test_name: 4, createdAt: 300 },
-        { player_id: 'Don', test_name: 4, createdAt: 400 },
-        { player_id: 'Ed', test_name: 4, createdAt: 500 },
-        { player_id: 'Fred', test_name: 4, createdAt: 600 },
-        { player_id: 'Greg', test_name: 4, createdAt: 700 },
-        { player_id: 'Hal', test_name: 4, createdAt: 800 },
-        { player_id: 'Ian', test_name: 4, createdAt: 900 },
-        { player_id: 'Jim', test_name: 4, createdAt: 1000 },
+        { player_id: 'Al', test_name: 4, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 4, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 4, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 4, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 4, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 4, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 4, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 4, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 4, test_timeStamp: 900 },
+        { player_id: 'Jim', test_name: 4, test_timeStamp: 1000 },
       ];
       testBracketList.calcTotalBrkts(playerData);
       expect(testBracketList.brktCounts.forFullValues.length).toBe(10);
@@ -2138,17 +2192,18 @@ describe('BracketList', () => {
     it('edge case low, 10 Players x 2 brkts, should have correct full (2:1, 1:2. 7:8) and one bye (2:0, 1:1, 7:7)', () => {
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const playerData = [
-        { player_id: 'Al', test_name: 2, createdAt: 100 },
-        { player_id: 'Bob', test_name: 2, createdAt: 200 },
-        { player_id: 'Chad', test_name: 2, createdAt: 300 },
-        { player_id: 'Don', test_name: 2, createdAt: 400 },
-        { player_id: 'Ed', test_name: 2, createdAt: 500 },
-        { player_id: 'Fred', test_name: 2, createdAt: 600 },
-        { player_id: 'Greg', test_name: 2, createdAt: 700 },
-        { player_id: 'Hal', test_name: 2, createdAt: 800 },
-        { player_id: 'Ian', test_name: 2, createdAt: 900 },
-        { player_id: 'Jim', test_name: 2, createdAt: 1000 },
+        { player_id: 'Al', test_name: 2, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 2, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 2, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 2, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 2, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 2, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 2, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 2, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 2, test_timeStamp: 900 },
+        { player_id: 'Jim', test_name: 2, test_timeStamp: 1000 },
       ];
       testBracketList.calcTotalBrkts(playerData);
       expect(testBracketList.brktCounts.forFullValues.length).toBe(10);
@@ -2169,14 +2224,15 @@ describe('BracketList', () => {
     it('edge case high, 10 Players x 7 brkts, should have correct full (10:1) and one bye (10:0)', () => {
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const playerData = [
-        { player_id: 'Al', test_name: 10, createdAt: 100 },
-        { player_id: 'Bob', test_name: 10, createdAt: 200 },
-        { player_id: 'Chad', test_name: 10, createdAt: 300 },
-        { player_id: 'Don', test_name: 10, createdAt: 400 },
-        { player_id: 'Ed', test_name: 10, createdAt: 500 },
-        { player_id: 'Fred', test_name: 10, createdAt: 600 },
-        { player_id: 'Greg', test_name: 10, createdAt: 700 },
+        { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 10, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 10, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 10, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 10, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 10, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 10, test_timeStamp: 700 },
       ];
       testBracketList.calcTotalBrkts(playerData);
       expect(testBracketList.brktCounts.forFullValues.length).toBe(10);
@@ -2190,14 +2246,15 @@ describe('BracketList', () => {
     it('edge case low - no full brackets, 7 players with random brackets, 5 is min', () => {
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const playerData = [
-        { player_id: 'Al', test_name: 10, createdAt: 100 },
-        { player_id: 'Bob', test_name: 8, createdAt: 200 },
-        { player_id: 'Chad', test_name: 6, createdAt: 300 },
-        { player_id: 'Don', test_name: 7, createdAt: 400 },
-        { player_id: 'Ed', test_name: 6, createdAt: 500 },
-        { player_id: 'Fred', test_name: 5, createdAt: 600 },
-        { player_id: 'Greg', test_name: 6, createdAt: 700 },
+        { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 8, test_timeStamp: 200 },
+        { player_id: 'Chad', test_name: 6, test_timeStamp: 300 },
+        { player_id: 'Don', test_name: 7, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 6, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 5, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 6, test_timeStamp: 700 },
       ];      
       testBracketList.calcTotalBrkts(playerData);      
       expect(testBracketList.brktCounts.forFullValues.length).toBe(10);
@@ -2223,309 +2280,23 @@ describe('BracketList', () => {
     it('should set no brktCounts when brktEntries are not valid', () => {
       const testBracketList = new BracketList('test', 2, 3);
       // num brackets name = id + "_name" = 'test_name'
+      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       const testData = [
-        { player_id: 'Al', test_name: 2, createdAt: 100 },
-        { player_id: 'Bob', test_name: 2, createdAt: 200 },
-        { player_id: '', test_name: 2, createdAt: 300 }, // invalid
-        { player_id: 'Don', test_name: 2, createdAt: 400 },
-        { player_id: 'Ed', test_name: 2, createdAt: 500 },
-        { player_id: 'Fred', test_name: 2, createdAt: 600 },
-        { player_id: 'Greg', test_name: 2, createdAt: 700 },
-        { player_id: 'Hal', test_name: 2, createdAt: 800 },
-        { player_id: 'Ian', test_name: 2, createdAt: 900 },
-        { player_id: 'Jim', test_name: 2, createdAt: 1000 },
+        { player_id: 'Al', test_name: 2, test_timeStamp: 100 },
+        { player_id: 'Bob', test_name: 2, test_timeStamp: 200 },
+        { player_id: '', test_name: 2, test_timeStamp: 300 }, // invalid
+        { player_id: 'Don', test_name: 2, test_timeStamp: 400 },
+        { player_id: 'Ed', test_name: 2, test_timeStamp: 500 },
+        { player_id: 'Fred', test_name: 2, test_timeStamp: 600 },
+        { player_id: 'Greg', test_name: 2, test_timeStamp: 700 },
+        { player_id: 'Hal', test_name: 2, test_timeStamp: 800 },
+        { player_id: 'Ian', test_name: 2, test_timeStamp: 900 },
+        { player_id: 'Jim', test_name: 2, test_timeStamp: 1000 },
       ];
 
       testBracketList.calcTotalBrkts(testData);
       expect(testBracketList.brktCounts.forFullValues).toHaveLength(0);
       expect(testBracketList.brktCounts.forOneByeValues).toHaveLength(0);      
-    })
-  })
-
-  describe('calcTotalBrkts - populateBrktColTitles', () => { 
-
-    it('should have correct bracket column titles 12-21 18Px various B', () => {
-      const testBracketList = new BracketList('test', 2, 3);
-      // num brackets name = id + "_name" = 'test_name'
-      const testData = [
-        { player_id: 'Al', test_name: 10, createdAt: 100 },
-        { player_id: 'Bob', test_name: 8, createdAt: 200 },
-        { player_id: 'Chad', test_name: 5, createdAt: 300 },
-        { player_id: 'Don', test_name: 10, createdAt: 400 },
-        { player_id: 'Ed', test_name: 12, createdAt: 500 },
-        { player_id: 'Fred', test_name: 6, createdAt: 600 },
-        { player_id: 'Greg', test_name: 6, createdAt: 700 },
-        { player_id: 'Hal', test_name: 8, createdAt: 800 },
-        { player_id: 'Ian', test_name: 8, createdAt: 900 },
-        { player_id: 'Jim', test_name: 10, createdAt: 1000 },
-        { player_id: 'Ken', test_name: 6, createdAt: 1100 },
-        { player_id: 'Lou', test_name: 5, createdAt: 1200 },
-        { player_id: 'Mike', test_name: 8, createdAt: 1300 },
-        { player_id: 'Nate', test_name: 10, createdAt: 1400 },
-        { player_id: 'Otto', test_name: 7, createdAt: 1500 },
-        { player_id: 'Paul', test_name: 4, createdAt: 1600 },
-        { player_id: 'Quin', test_name: 5, createdAt: 1700 },
-        { player_id: 'Rob', test_name: 10, createdAt: 1800 },
-      ];
-  
-      testBracketList.calcTotalBrkts(testData);
-      expect(testBracketList.brktColTitles.length).toBe(12);
-      // expect(testBracketList.brktColTitles).toEqual(['Brackets', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'To Fill']);
-      expect(testBracketList.brktColTitles).toEqual(['Brackets', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', 'To Fill']);
-    });
-    it('should have correct bracket column titles 1-10 10P x various B', () => {
-      const testBracketList = new BracketList('test', 2, 3);
-      // num brackets name = id + "_name" = 'test_name'
-      const testData = [
-        { player_id: 'Al', test_name: 10, createdAt: 100 },
-        { player_id: 'Bob', test_name: 8, createdAt: 200 },
-        { player_id: 'Chad', test_name: 6, createdAt: 300 },
-        { player_id: 'Don', test_name: 7, createdAt: 400 },
-        { player_id: 'Ed', test_name: 6, createdAt: 500 },
-        { player_id: 'Fred', test_name: 5, createdAt: 600 },
-        { player_id: 'Greg', test_name: 6, createdAt: 700 },
-        { player_id: 'Hal', test_name: 8, createdAt: 800 },
-        { player_id: 'Ian', test_name: 8, createdAt: 900 },
-        { player_id: 'Jim', test_name: 10, createdAt: 1000 },
-        { player_id: 'Ken', test_name: 6, createdAt: 1100 },
-      ];
-  
-      testBracketList.calcTotalBrkts(testData);      
-      expect(testBracketList.brktColTitles.length).toBe(12);
-      // expect(testBracketList.brktColTitles).toEqual(['Brackets', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'To Fill']);
-      expect(testBracketList.brktColTitles).toEqual(['Brackets', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'To Fill']);
-    });
-    it('should have correct bracket column titles 1-10 for 1Px10, 17Px4', () => {
-      const testBracketList = new BracketList('test', 2, 3);
-      // num brackets name = id + "_name" = 'test_name'
-      const testData = [
-        { player_id: 'Al', test_name: 10, createdAt: 100 },
-        { player_id: 'Bob', test_name: 4, createdAt: 200 },
-        { player_id: 'Chad', test_name: 4, createdAt: 300 },
-        { player_id: 'Don', test_name: 4, createdAt: 400 },
-        { player_id: 'Ed', test_name: 4, createdAt: 500 },
-        { player_id: 'Fred', test_name: 4, createdAt: 600 },
-        { player_id: 'Greg', test_name: 4, createdAt: 700 },
-        { player_id: 'Hal', test_name: 4, createdAt: 800 },
-        { player_id: 'Ian', test_name: 4, createdAt: 900 },
-        { player_id: 'Jim', test_name: 4, createdAt: 1000 },
-        { player_id: 'Ken', test_name: 4, createdAt: 1100 },
-        { player_id: 'Lou', test_name: 4, createdAt: 1200 },
-        { player_id: 'Mike', test_name: 4, createdAt: 1300 },
-        { player_id: 'Nate', test_name: 4, createdAt: 1400 },
-        { player_id: 'Otto', test_name: 4, createdAt: 1500 },
-        { player_id: 'Paul', test_name: 4, createdAt: 1600 },
-        { player_id: 'Quin', test_name: 4, createdAt: 1700 },
-        { player_id: 'Rob', test_name: 4, createdAt: 1800 },
-      ];
-  
-      testBracketList.calcTotalBrkts(testData);
-      expect(testBracketList.brktColTitles.length).toBe(12);
-      // expect(testBracketList.brktColTitles).toEqual(['Brackets', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'To Fill']);
-      expect(testBracketList.brktColTitles).toEqual(['Brackets', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'To Fill']);
-    });
-    it('should have correct bracket column titles 4-13 for 10Px10', () => {
-      const testBracketList = new BracketList('test', 2, 3);
-      // num brackets name = id + "_name" = 'test_name'
-      const testData = [
-        { player_id: 'Al', test_name: 10, createdAt: 100 },
-        { player_id: 'Bob', test_name: 10, createdAt: 200 },
-        { player_id: 'Chad', test_name: 10, createdAt: 300 },
-        { player_id: 'Don', test_name: 10, createdAt: 400 },
-        { player_id: 'Ed', test_name: 10, createdAt: 500 },
-        { player_id: 'Fred', test_name: 10, createdAt: 600 },
-        { player_id: 'Greg', test_name: 10, createdAt: 700 },
-        { player_id: 'Hal', test_name: 10, createdAt: 800 },
-        { player_id: 'Ian', test_name: 10, createdAt: 900 },
-        { player_id: 'Jim', test_name: 10, createdAt: 1000 },
-      ];
-  
-      testBracketList.calcTotalBrkts(testData);
-      expect(testBracketList.brktColTitles.length).toBe(12);
-      // expect(testBracketList.brktColTitles).toEqual(['Brackets', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'To Fill']);
-      expect(testBracketList.brktColTitles).toEqual(['Brackets', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', 'To Fill']);
-    });
-    it('should have correct bracket column titles 4-12 for 8Px10, 4Px5', () => {
-      const testBracketList = new BracketList('test', 2, 3);
-      // num brackets name = id + "_name" = 'test_name'
-      const testData = [
-        { player_id: 'Al', test_name: 10, createdAt: 100 },
-        { player_id: 'Bob', test_name: 10, createdAt: 200 },
-        { player_id: 'Chad', test_name: 10, createdAt: 300 },
-        { player_id: 'Don', test_name: 10, createdAt: 400 },
-        { player_id: 'Ed', test_name: 10, createdAt: 500 },
-        { player_id: 'Fred', test_name: 10, createdAt: 600 },
-        { player_id: 'Greg', test_name: 10, createdAt: 700 },
-        { player_id: 'Hal', test_name: 10, createdAt: 800 },
-        { player_id: 'Ian', test_name: 5, createdAt: 900 },
-        { player_id: 'Jim', test_name: 5, createdAt: 1000 },
-        { player_id: 'Ken', test_name: 5, createdAt: 1100 },
-        { player_id: 'Lou', test_name: 5, createdAt: 1200 },
-      ];
-  
-      testBracketList.calcTotalBrkts(testData);
-      expect(testBracketList.brktColTitles.length).toBe(12);
-      // expect(testBracketList.brktColTitles).toEqual(['Brackets', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'To Fill']);
-      expect(testBracketList.brktColTitles).toEqual(['Brackets', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', 'To Fill']);
-    });
-    it('edge case high, should have correct bracket column titles 10-19 for Al 50B', () => {
-      const testBracketList = new BracketList('test', 2, 3);
-      // num brackets name = id + "_name" = 'test_name'
-      const playerData = [
-        { player_id: 'Al', test_name: 50, createdAt: 100 },
-        { player_id: 'Bob', test_name: 8, createdAt: 200 },
-        { player_id: 'Chad', test_name: 5, createdAt: 300 },
-        { player_id: 'Don', test_name: 10, createdAt: 400 },
-        { player_id: 'Ed', test_name: 12, createdAt: 500 },
-        { player_id: 'Fred', test_name: 6, createdAt: 600 },
-        { player_id: 'Greg', test_name: 6, createdAt: 700 },
-        { player_id: 'Hal', test_name: 8, createdAt: 800 },
-        { player_id: 'Ian', test_name: 8, createdAt: 900 },
-        { player_id: 'Jim', test_name: 10, createdAt: 1000 },
-        { player_id: 'Ken', test_name: 6, createdAt: 1100 },
-        { player_id: 'Lou', test_name: 5, createdAt: 1200 },
-        { player_id: 'Mike', test_name: 8, createdAt: 1300 },
-        { player_id: 'Nate', test_name: 10, createdAt: 1400 },
-        { player_id: 'Otto', test_name: 7, createdAt: 1500 },
-        { player_id: 'Paul', test_name: 4, createdAt: 1600 },
-        { player_id: 'Quin', test_name: 5, createdAt: 1700 },
-        { player_id: 'Rob', test_name: 10, createdAt: 1800 },
-      ];
-      testBracketList.calcTotalBrkts(playerData);
-      expect(testBracketList.brktColTitles.length).toBe(12);
-      // expect(testBracketList.brktColTitles).toEqual(['Brackets', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'To Fill']);
-      expect(testBracketList.brktColTitles).toEqual(['Brackets', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', 'To Fill']);
-    })
-    it('edge case high, should have correct bracket column titles 12-21 for Al and Bob 50B', () => {
-      const testBracketList = new BracketList('test', 2, 3);
-      // num brackets name = id + "_name" = 'test_name'
-      const playerData = [
-        { player_id: 'Al', test_name: 50, createdAt: 100 },
-        { player_id: 'Bob', test_name: 50, createdAt: 200 },
-        { player_id: 'Chad', test_name: 5, createdAt: 300 },
-        { player_id: 'Don', test_name: 10, createdAt: 400 },
-        { player_id: 'Ed', test_name: 12, createdAt: 500 },
-        { player_id: 'Fred', test_name: 6, createdAt: 600 },
-        { player_id: 'Greg', test_name: 6, createdAt: 700 },
-        { player_id: 'Hal', test_name: 8, createdAt: 800 },
-        { player_id: 'Ian', test_name: 8, createdAt: 900 },
-        { player_id: 'Jim', test_name: 10, createdAt: 1000 },
-        { player_id: 'Ken', test_name: 6, createdAt: 1100 },
-        { player_id: 'Lou', test_name: 5, createdAt: 1200 },
-        { player_id: 'Mike', test_name: 8, createdAt: 1300 },
-        { player_id: 'Nate', test_name: 10, createdAt: 1400 },
-        { player_id: 'Otto', test_name: 7, createdAt: 1500 },
-        { player_id: 'Paul', test_name: 4, createdAt: 1600 },
-        { player_id: 'Quin', test_name: 5, createdAt: 1700 },
-        { player_id: 'Rob', test_name: 10, createdAt: 1800 },
-      ];
-      testBracketList.calcTotalBrkts(playerData);
-      expect(testBracketList.brktColTitles.length).toBe(12);
-      // expect(testBracketList.brktColTitles).toEqual(['Brackets', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'To Fill']);
-      expect(testBracketList.brktColTitles).toEqual(['Brackets', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', 'To Fill']);
-    })
-    it('edge case high, should have correct bracket column titles 1-10 for 10Px4B', () => {
-      const testBracketList = new BracketList('test', 2, 3);
-      // num brackets name = id + "_name" = 'test_name'
-      const playerData = [
-        { player_id: 'Al', test_name: 4, createdAt: 100 },
-        { player_id: 'Bob', test_name: 4, createdAt: 200 },
-        { player_id: 'Chad', test_name: 4, createdAt: 300 },
-        { player_id: 'Don', test_name: 4, createdAt: 400 },
-        { player_id: 'Ed', test_name: 4, createdAt: 500 },
-        { player_id: 'Fred', test_name: 4, createdAt: 600 },
-        { player_id: 'Greg', test_name: 4, createdAt: 700 },
-        { player_id: 'Hal', test_name: 4, createdAt: 800 },
-        { player_id: 'Ian', test_name: 4, createdAt: 900 },
-        { player_id: 'Jim', test_name: 4, createdAt: 1000 },
-      ];
-      testBracketList.calcTotalBrkts(playerData);
-      expect(testBracketList.brktColTitles.length).toBe(12);
-      // expect(testBracketList.brktColTitles).toEqual(['Brackets', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'To Fill']);
-      expect(testBracketList.brktColTitles).toEqual(['Brackets', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'To Fill']);
-    })
-    it('edge case low, should have correct bracket column titles 1-10 for 1Px2B', () => {
-      const testBracketList = new BracketList('test', 2, 3);
-      // num brackets name = id + "_name" = 'test_name'
-      const playerData = [
-        { player_id: 'Al', test_name: 2, createdAt: 100 },
-        { player_id: 'Bob', test_name: 2, createdAt: 200 },
-        { player_id: 'Chad', test_name: 2, createdAt: 300 },
-        { player_id: 'Don', test_name: 2, createdAt: 400 },
-        { player_id: 'Ed', test_name: 2, createdAt: 500 },
-        { player_id: 'Fred', test_name: 2, createdAt: 600 },
-        { player_id: 'Greg', test_name: 2, createdAt: 700 },
-        { player_id: 'Hal', test_name: 2, createdAt: 800 },
-        { player_id: 'Ian', test_name: 2, createdAt: 900 },
-        { player_id: 'Jim', test_name: 2, createdAt: 1000 },
-      ];
-      testBracketList.calcTotalBrkts(playerData);
-      expect(testBracketList.brktColTitles.length).toBe(12);
-      // expect(testBracketList.brktColTitles).toEqual(['Brackets', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'To Fill']);
-      expect(testBracketList.brktColTitles).toEqual(['Brackets', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'To Fill']);
-    })
-    it('edge case high, should have correct bracket column titles 1-10 for 10Px7B', () => {
-      const testBracketList = new BracketList('test', 2, 3);
-      // num brackets name = id + "_name" = 'test_name'
-      const playerData = [
-        { player_id: 'Al', test_name: 10, createdAt: 100 },
-        { player_id: 'Bob', test_name: 10, createdAt: 200 },
-        { player_id: 'Chad', test_name: 10, createdAt: 300 },
-        { player_id: 'Don', test_name: 10, createdAt: 400 },
-        { player_id: 'Ed', test_name: 10, createdAt: 500 },
-        { player_id: 'Fred', test_name: 10, createdAt: 600 },
-        { player_id: 'Greg', test_name: 10, createdAt: 700 },
-      ];
-      testBracketList.calcTotalBrkts(playerData);
-      expect(testBracketList.brktColTitles.length).toBe(12);
-      // expect(testBracketList.brktColTitles).toEqual(['Brackets', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'To Fill']);
-      expect(testBracketList.brktColTitles).toEqual(['Brackets', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'To Fill']);
-    })
-    it('edge case low, should have correct bracket column titles 1-10 for 7 players with random brackets, 5 is min', () => {
-      const testBracketList = new BracketList('test', 2, 3);
-      // num brackets name = id + "_name" = 'test_name'
-      const playerData = [
-        { player_id: 'Al', test_name: 10, createdAt: 100 },
-        { player_id: 'Bob', test_name: 8, createdAt: 200 },
-        { player_id: 'Chad', test_name: 6, createdAt: 300 },
-        { player_id: 'Don', test_name: 7, createdAt: 400 },
-        { player_id: 'Ed', test_name: 6, createdAt: 500 },
-        { player_id: 'Fred', test_name: 5, createdAt: 600 },
-        { player_id: 'Greg', test_name: 6, createdAt: 700 },
-      ];      
-      testBracketList.calcTotalBrkts(playerData);      
-      expect(testBracketList.brktColTitles.length).toBe(12);
-      // expect(testBracketList.brktColTitles).toEqual(['Brackets', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'To Fill']);
-      expect(testBracketList.brktColTitles).toEqual(['Brackets', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'To Fill']);
-    })    
-    it('should have correct bracket column titles 1-10 when input array is empty', () => {
-      const testBracketList = new BracketList('test', 2, 3);
-
-      testBracketList.calcTotalBrkts([]);
-      expect(testBracketList.brktColTitles.length).toBe(12);
-      // expect(testBracketList.brktColTitles).toEqual(['Brackets', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'To Fill']);
-      expect(testBracketList.brktColTitles).toEqual(['Brackets', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'To Fill']);
-    });
-    it('should have correct bracket column titles when brktEntries are not valid', () => {
-      const testBracketList = new BracketList('test', 2, 3);
-      // num brackets name = id + "_name" = 'test_name'
-      const testData = [
-        { player_id: 'Al', test_name: 2, createdAt: 100 },
-        { player_id: 'Bob', test_name: 2, createdAt: 200 },
-        { player_id: '', test_name: 2, createdAt: 300 }, // invalid
-        { player_id: 'Don', test_name: 2, createdAt: 400 },
-        { player_id: 'Ed', test_name: 2, createdAt: 500 },
-        { player_id: 'Fred', test_name: 2, createdAt: 600 },
-        { player_id: 'Greg', test_name: 2, createdAt: 700 },
-        { player_id: 'Hal', test_name: 2, createdAt: 800 },
-        { player_id: 'Ian', test_name: 2, createdAt: 900 },
-        { player_id: 'Jim', test_name: 2, createdAt: 1000 },
-      ];
-
-      testBracketList.calcTotalBrkts(testData);
-      expect(testBracketList.brktColTitles.length).toBe(12);
-      // expect(testBracketList.brktColTitles).toEqual(['Brackets', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'To Fill']);
-      expect(testBracketList.brktColTitles).toEqual(['Brackets', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'To Fill']);
     })
   })
 
@@ -2691,14 +2462,14 @@ describe('BracketList', () => {
     // it('should return valid brackets - 8 players 10 brackets each', () => {
     //   const testBracketList = new BracketList("test", 2, 3);
     //   const testData = [
-    //     { player_id: 'Al', test_name: 10, createdAt: 100 },
-    //     { player_id: 'Bob', test_name: 10, createdAt: 200 },
-    //     { player_id: 'Chad', test_name: 10, createdAt: 300 },
-    //     { player_id: 'Don', test_name: 10, createdAt: 400 },
-    //     { player_id: 'Ed', test_name: 10, createdAt: 500 },
-    //     { player_id: 'Fred', test_name: 10, createdAt: 600 },
-    //     { player_id: 'Greg', test_name: 10, createdAt: 700 },
-    //     { player_id: 'Hal', test_name: 10, createdAt: 800 },
+    //     { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+    //     { player_id: 'Bob', test_name: 10, test_timeStamp: 200 },
+    //     { player_id: 'Chad', test_name: 10, test_timeStamp: 300 },
+    //     { player_id: 'Don', test_name: 10, test_timeStamp: 400 },
+    //     { player_id: 'Ed', test_name: 10, test_timeStamp: 500 },
+    //     { player_id: 'Fred', test_name: 10, test_timeStamp: 600 },
+    //     { player_id: 'Greg', test_name: 10, test_timeStamp: 700 },
+    //     { player_id: 'Hal', test_name: 10, test_timeStamp: 800 },
     //   ];
     //   testBracketList.rePopulateBrkts(testData);
     //   const result = testBracketList.validBrackets();
@@ -2714,14 +2485,14 @@ describe('BracketList', () => {
     // it('should return false and set error to "No bracket counts" when first bracket is missing a count', () => {
     //   const testBracketList = new BracketList("test", 2, 3);
     //   const testData = [
-    //     { player_id: 'Al', test_name: 10, createdAt: 100 },
-    //     { player_id: 'Bob', test_name: 10, createdAt: 200 },
-    //     { player_id: 'Chad', test_name: 10, createdAt: 300 },
-    //     { player_id: 'Don', test_name: 10, createdAt: 400 },
-    //     { player_id: 'Ed', test_name: 10, createdAt: 500 },
-    //     { player_id: 'Fred', test_name: 10, createdAt: 600 },
-    //     { player_id: 'Greg', test_name: 10, createdAt: 700 },
-    //     { player_id: 'Hal', test_name: 10, createdAt: 800 },
+    //     { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+    //     { player_id: 'Bob', test_name: 10, test_timeStamp: 200 },
+    //     { player_id: 'Chad', test_name: 10, test_timeStamp: 300 },
+    //     { player_id: 'Don', test_name: 10, test_timeStamp: 400 },
+    //     { player_id: 'Ed', test_name: 10, test_timeStamp: 500 },
+    //     { player_id: 'Fred', test_name: 10, test_timeStamp: 600 },
+    //     { player_id: 'Greg', test_name: 10, test_timeStamp: 700 },
+    //     { player_id: 'Hal', test_name: 10, test_timeStamp: 800 },
     //   ];
     //   testBracketList.rePopulateBrkts(testData);
     //   testBracketList.brktCounts.forFullValues.length = 0;
@@ -2732,14 +2503,14 @@ describe('BracketList', () => {
     // it('should return false and set error to "Bracket 10 count is missing" when first bracket is missing a count', () => {
     //   const testBracketList = new BracketList("test", 2, 3);
     //   const testData = [
-    //     { player_id: 'Al', test_name: 10, createdAt: 100 },
-    //     { player_id: 'Bob', test_name: 10, createdAt: 200 },
-    //     { player_id: 'Chad', test_name: 10, createdAt: 300 },
-    //     { player_id: 'Don', test_name: 10, createdAt: 400 },
-    //     { player_id: 'Ed', test_name: 10, createdAt: 500 },
-    //     { player_id: 'Fred', test_name: 10, createdAt: 600 },
-    //     { player_id: 'Greg', test_name: 10, createdAt: 700 },
-    //     { player_id: 'Hal', test_name: 10, createdAt: 800 },
+    //     { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+    //     { player_id: 'Bob', test_name: 10, test_timeStamp: 200 },
+    //     { player_id: 'Chad', test_name: 10, test_timeStamp: 300 },
+    //     { player_id: 'Don', test_name: 10, test_timeStamp: 400 },
+    //     { player_id: 'Ed', test_name: 10, test_timeStamp: 500 },
+    //     { player_id: 'Fred', test_name: 10, test_timeStamp: 600 },
+    //     { player_id: 'Greg', test_name: 10, test_timeStamp: 700 },
+    //     { player_id: 'Hal', test_name: 10, test_timeStamp: 800 },
     //   ];
     //   testBracketList.rePopulateBrkts(testData);
     //   testBracketList.brktCounts.forFullValues[9] = null;
@@ -2755,13 +2526,13 @@ describe('BracketList', () => {
     // it('should return false and set error to "More than 7 brackets with one bye"', () => {
     //   const testBracketList = new BracketList("test", 2, 3);
     //   const testData = [
-    //     { player_id: 'Al', test_name: 10, createdAt: 100 },
-    //     { player_id: 'Bob', test_name: 10, createdAt: 200 },
-    //     { player_id: 'Chad', test_name: 10, createdAt: 300 },
-    //     { player_id: 'Don', test_name: 10, createdAt: 400 },
-    //     { player_id: 'Ed', test_name: 10, createdAt: 500 },
-    //     { player_id: 'Fred', test_name: 10, createdAt: 600 },
-    //     { player_id: 'Greg', test_name: 10, createdAt: 700 },        
+    //     { player_id: 'Al', test_name: 10, test_timeStamp: 100 },
+    //     { player_id: 'Bob', test_name: 10, test_timeStamp: 200 },
+    //     { player_id: 'Chad', test_name: 10, test_timeStamp: 300 },
+    //     { player_id: 'Don', test_name: 10, test_timeStamp: 400 },
+    //     { player_id: 'Ed', test_name: 10, test_timeStamp: 500 },
+    //     { player_id: 'Fred', test_name: 10, test_timeStamp: 600 },
+    //     { player_id: 'Greg', test_name: 10, test_timeStamp: 700 },        
     //   ];
     //   testBracketList.rePopulateBrkts(testData);      
     //   const result = testBracketList.validBrackets();      

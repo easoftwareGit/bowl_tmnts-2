@@ -1,6 +1,7 @@
 import { configureStore, Store } from '@reduxjs/toolkit';
 import {
   fetchOneSquadEntries,
+  fetchOneSquadEntries2,
   SaveOneSquadEntries,
   allEntriesOneSquadSlice,  
   allEntriesOneSquadState,
@@ -16,8 +17,8 @@ import {
   getOneSquadEntriesUpdatedInfo,  
 } from '@/redux/features/allEntriesOneSquad/allEntriesOneSquadSlice';
 import { playerEntryData } from '@/app/dataEntry/playersForm/createColumns';
-import { allEntriesNoUpdates } from '@/lib/db/initVals';
-import { allEntriesOneSquadType, putManyEntriesReturnType } from '@/lib/types/types';
+import { allEntriesNoUpdates, initBrkt, initDiv, initElim, initEvent, initLane, initLanes, initPot, initSquad, initTmnt } from '@/lib/db/initVals';
+import { allEntriesOneSquadType, dataOneTmntType, putManyEntriesReturnType } from '@/lib/types/types';
 import { cloneDeep } from 'lodash';
 import { mockOrigData } from '../../mocks/tmnts/playerEntries/mockPlayerEntries';
 
@@ -149,6 +150,94 @@ describe('allEntriesOneSquadSlice', () => {
       const error = new Error('Something went wrong');
       const reason = 'Failed to fetch squad entries';
       const action = fetchOneSquadEntries.rejected(error, reason, 'some error message');
+
+      // Act
+      store.dispatch(action);
+
+      // Assert
+      const state = store.getState().allEntriesOneSquad;
+      expect(state.loadStatus).toEqual('failed');
+      expect(state.error).toEqual(error.message);
+    });
+  })
+
+  describe('fetchOneSquadEntries2', () => { 
+
+    beforeEach(() => {
+      store = configureStore({
+        reducer: {
+          allEntriesOneSquad: allEntriesOneSquadSlice.reducer,
+        },
+      });
+    });    
+
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    const tmntData: dataOneTmntType = {
+      tmnt: {...initTmnt, id: 'abc'},
+      events: [{...initEvent, id: '234', tmnt_id: 'abc'}],
+      divs: [{...initDiv, id: '345', tmnt_id: 'abc'}],
+      squads: [{...initSquad, id: '123', event_id: '234'}],
+      lanes: [{...initLane, id: '456', squad_id: '123'}, {...initLane, id: '457', squad_id: '123'}],
+      pots: [{...initPot, id: '567', squad_id: '123', div_id: '345'}],
+      brkts: [{...initBrkt, id: '678', squad_id: '123', div_id: '345'}],
+      elims: [{...initElim, id: '789', squad_id: '123', div_id: '345'}],
+    }
+
+    it('should handle fetchOneSquadEntries2 pending', async () => {
+      // Arrange
+      const squadId = '123';
+      // const action = fetchOneSquadEntries2.pending(squadId, 'pending');
+      const action = fetchOneSquadEntries2.pending(squadId, tmntData, 'pending');
+
+      // Act
+      store.dispatch(action);
+
+      // Assert
+      const state = store.getState().allEntriesOneSquad;
+      expect(state.loadStatus).toEqual('loading');
+      expect(state.error).toEqual('');
+    });
+
+    it('should handle fetchOneSquadEntries2 fulfilled', async () => {
+      // Arrange
+      const squadId = '123';
+      const data = {
+        origData: {
+          squadId: '123',
+          players: [],
+          divEntries: [],
+          potEntries: [],
+          brktEntries: [],
+          elimEntries: [],
+        },
+        curData: {
+          squadId: '123',
+          players: [],
+          divEntries: [],
+          potEntries: [],
+          brktEntries: [],
+          elimEntries: [],
+        },
+      };
+      const action = fetchOneSquadEntries2.fulfilled(data, squadId, tmntData, 'succeeded');
+
+      // Act
+      store.dispatch(action);
+
+      // Assert
+      const state = store.getState().allEntriesOneSquad;
+      expect(state.loadStatus).toEqual('succeeded');
+      expect(state.entryData).toEqual(data);
+    });
+
+    it('should handle fetchOneSquadEntries2 rejected', async () => {
+      // Arrange
+      const error = new Error('Something went wrong');
+      const reason = 'Failed to fetch squad entries';
+      const action = fetchOneSquadEntries2.rejected(error, reason, tmntData, 'some error message');
 
       // Act
       store.dispatch(action);

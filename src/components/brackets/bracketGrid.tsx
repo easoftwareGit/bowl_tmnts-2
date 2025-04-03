@@ -25,7 +25,7 @@ export type BGRowValueType = {
 
 export type BGDataType = {
   forFullValues: (number | null)[];  
-  forOneByeValues: (number | null)[];  
+  forOneByeValues: (number | null)[];    
 }
 
 interface ChildProps {    
@@ -117,7 +117,10 @@ const BracketGrid: React.FC<ChildProps> = ({
     if (!brktGridData
       || !brktGridData.forFullValues
       || !brktGridData.forOneByeValues
-      || brktGridData.forFullValues.length === 0) return;
+      || brktGridData.forFullValues.length === 0)
+    {
+      return;       
+    }
     const updatedRows: BGRowValueType[] = initRows.map(obj => ({ ...obj }));
     const updatedColNames: string[] = [];
 

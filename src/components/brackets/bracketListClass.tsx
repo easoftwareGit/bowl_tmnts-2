@@ -1,25 +1,19 @@
 import { Bracket } from "./bracketClass";
-import { entryNumBrktsColName, playerEntryData } from "@/app/dataEntry/playersForm/createColumns";
+import { entryNumBrktsColName, playerEntryData, timeStampColName } from "@/app/dataEntry/playersForm/createColumns";
 import { cloneDeep } from "lodash";
 import { BGNumberedColCount, brktColTitle, initBGColNames, toFillColTitle } from "./bracketGrid";
 import { maxBrackets } from "@/lib/validation";
-
-// test input
-// 10, 8, 6, 7, 6, 4, 6
-// test results
-// 1, 1, 1, 1, 2, 2, 5, 6, 7, 7, 33
-// 0, 0, 0, 0, 1, 1, 4, 5, 6, 6, 23
 
 export type findPlayerResult = {
   playerIndex: number,
   brktIndex: number
 }
 
-export type playerBrktEntry = {
-  player_id: string,
+export type brktEntryType = {
+  // player_id: string, // player_id is key in map, so no need to add it here
   num_brackets: number,
   createdAt: number,
-  usedCount: number
+  orig_num_brackets: number,
 }
 
 export interface brktCountType {
@@ -69,14 +63,17 @@ const initBrktCounts: initBrktCountsType = {
 export class BracketList { 
 
   private _copyFrom: Bracket[] = [];   
-  private _brktColTitles = cloneDeep(initBGColNames);
+  // private _brktColTitles = cloneDeep(initBGColNames);
   private _brktCounts: initBrktCountsType = cloneDeep(initBrktCounts) as initBrktCountsType;
+  // private _entries: playerBrktEntryType[] = [];   
   private _fullCount: number = 0;
   private _oneByeCount: number = 0;
   private _totalEntries: number = 0;
   // private _filledBrkts: Bracket[] = [];
+  
+  private entriesMap: Map<string, brktEntryType> = new Map();
 
-  brktId: string;
+  brktId: string;   
   errorMessage: string;
   games: number;
   playersPerMatch: number;
@@ -85,6 +82,7 @@ export class BracketList {
 
   constructor(brktId: string, playersPerMatch: number, games: number, copyFrom: Bracket[] = []) {
     this.brktId = brktId;
+    this.entriesMap = new Map();
     this.errorMessage = '';
     this.playersPerMatch = playersPerMatch;
     this.games = games;
@@ -97,9 +95,9 @@ export class BracketList {
   get allBrkts(): Bracket[] {
     return this.brackets;
   }
-  get brktColTitles() {
-    return this._brktColTitles;
-  }
+  // get brktColTitles() {
+  //   return this._brktColTitles;
+  // }
   get brktCounts() {
     return this._brktCounts;
   }
@@ -176,9 +174,10 @@ export class BracketList {
    */
   clear(): void {
     this.brackets = [];
-    this._brktColTitles = cloneDeep(initBGColNames);
+    // this._brktColTitles = cloneDeep(initBGColNames);
     this._brktCounts.forFullValues.length = 0;
     this._brktCounts.forOneByeValues.length = 0;
+    this.entriesMap.clear();
   }
 
   /**
@@ -341,12 +340,13 @@ export class BracketList {
   /**
    * calculates total # full and one bye brackets based on player bracket entry rows
    * 
-   * @param {typeof playerEntryData[]} brktEntries - array of player bracket entry rows
+   * @param {typeof playerEntryData[]} playerEntries - array of player entry rows for tmnt
    * @returns {void} - no return 
    */
-  calcTotalBrkts(brktEntries: (typeof playerEntryData)[]): void {  
+  calcTotalBrkts(playerEntries: (typeof playerEntryData)[]): void {  
    
     const numBrktsName = entryNumBrktsColName(this.brktId)
+    const timeStampName = timeStampColName(this.brktId)
     const totalBrkts = { total: 0, full: 0, oneBye: 0 }; 
     let totalEntries = 0;
     // /**
@@ -581,7 +581,10 @@ export class BracketList {
           }
           if (pIndex >= 0) {
             // new value is min of brktEntRows[pIndex][numBrktsName] and totalBrkts.total
-            brktEntries[pIndex][numBrktsName] = Math.min(newNumBrkts, brktEntries[pIndex][numBrktsName] - 1);
+            const newVal = Math.min(newNumBrkts, brktEntries[pIndex][numBrktsName] - 1);
+            updateEntry(brktEntries[pIndex].player_id, { [numBrktsName]: newVal });
+            brktEntries[pIndex][numBrktsName] = newVal;
+            // brktEntries[pIndex][numBrktsName] = Math.min(newNumBrkts, brktEntries[pIndex][numBrktsName] - 1);
             if (pIndexReset === -1) {
               pIndexReset = pIndex;
             }
@@ -684,20 +687,45 @@ export class BracketList {
      * 
      * @returns {void}
      */
-    const populateBrktColTitles = (): void => {        
-      let iStart = totalBrkts.total - (BGNumberedColCount - 1);
-      // if less than 10 brackets, use default column titles
-      if (iStart < 1) { 
-        this._brktColTitles = cloneDeep(initBGColNames);
-        return;
+    // const populateBrktColTitles = (): void => {        
+    //   let iStart = totalBrkts.total - (BGNumberedColCount - 1);
+    //   // if less than 10 brackets, use default column titles
+    //   if (iStart < 1) { 
+    //     this._brktColTitles = cloneDeep(initBGColNames);
+    //     return;
+    //   }
+    //   const iEnd = iStart + BGNumberedColCount - 1;
+    //   this._brktColTitles.length = 0;
+    //   this._brktColTitles.push(brktColTitle);    
+    //   for (let i = iStart; i <= iEnd; i++) {
+    //     this._brktColTitles.push(i + '');
+    //   }
+    //   this._brktColTitles.push(toFillColTitle);
+    // }
+
+    /**
+     * saves the original bracket entries 
+     * 
+     * @returns {void}
+     */
+    const saveOrigBrktEntries = (): void => {      
+      brktEntries.forEach(brktEntry => {
+        const { player_id, ...rest } = brktEntry;
+        const newBrktEntry: brktEntryType = {
+          num_brackets: rest[numBrktsName],
+          createdAt: rest.createdAt,
+          orig_num_brackets: rest[numBrktsName],
+        }
+        this.entriesMap.set(brktEntry.player_id, newBrktEntry);
+      })
+    }
+
+    
+    const updateEntry = (player_id: string, updated: Partial<brktEntryType>): void => {
+      const entry = this.entriesMap.get(player_id);
+      if (entry) {
+        Object.assign(entry, updated);
       }
-      const iEnd = iStart + BGNumberedColCount - 1;
-      this._brktColTitles.length = 0;
-      this._brktColTitles.push(brktColTitle);    
-      for (let i = iStart; i <= iEnd; i++) {
-        this._brktColTitles.push(i + '');
-      }
-      this._brktColTitles.push(toFillColTitle);
     }
 
     /**
@@ -715,7 +743,7 @@ export class BracketList {
           || brktEntries[b][numBrktsName] < 0
           || brktEntries[b][numBrktsName] > maxBrackets
           || !Number.isInteger(brktEntries[b][numBrktsName])
-          || !brktEntries[b].createdAt)
+          || !brktEntries[b][timeStampName])
         {
           return false;
         }        
@@ -724,21 +752,28 @@ export class BracketList {
       return true;
     }
 
-    // 1) clear all brackets
-    // 2) validate bracket entries
-    // 3) sort by # brackets (DESC), and createdAt (ASC)
-    // 4) calculate # of brackets
-    // 5) adjust player's # of brackets if/as needed    
-    // 6) populate full and oneBye brackets counts 
-    // 7) populate column titles
+    // 1) clear
+    // 2) remove all rows with no bracket entries
+    // 3) validate bracket entries
+    // 4) save original # of brackets
+    // 5) sort by # brackets (DESC), and createdAt (ASC)
+    // 6) calculate # of brackets
+    // 7) adjust player's # of brackets if/as needed    
+    // 8) populate full and oneBye brackets counts     
 
-    // 1) clear all brackets
+    // 1) clear and initialize brackets
     this.clear();
 
-    // 2) validate bracket entries    
+    // 2) remove all rows with no bracket entries
+    const brktEntries = cloneDeep(playerEntries.filter(entry => entry[numBrktsName] > 0));
+
+    // 3) validate bracket entries    
     if (validBrktEntries()) {
 
-      // 3) sort by # brackets (DESC), and createdAt (ASC)
+      // 4) save original # of brackets
+      saveOrigBrktEntries();
+
+      // 5) sort by # brackets (DESC), and createdAt (ASC)
       // sort by # brackets (DESC), usedCount (ASC) and createdAt (ASC)    
       brktEntries.sort((a, b) => {
         if (a[numBrktsName] !== b[numBrktsName]) {
@@ -748,18 +783,18 @@ export class BracketList {
         }
       });
 
-      // 4) calculate # of brackets
+      // 6) calculate # of brackets
       calculateNumBrackets();
 
-      // 5) adjust player's # of brackets if/as needed
+      // 7) adjust player's # of brackets if/as needed
       adjustPlayersNumBrkts();
     };
-    // 6) populate full and oneBye brackets counts 
+    // 8) populate full and oneBye brackets counts 
     populateBrktCounts();
     // this.populateFilledBrkts();    
 
-    // 7) populate column titles
-    populateBrktColTitles();
+    // 9) populate column titles
+    // populateBrktColTitles();
 
     this._fullCount = totalBrkts.full;
     this._oneByeCount = totalBrkts.oneBye;

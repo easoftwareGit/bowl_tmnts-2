@@ -19,6 +19,7 @@ import {
 } from "@/lib/types/types";
 import {
   fetchOneSquadEntries,
+  fetchOneSquadEntries2,
   getOneSquadEntriesError,
   getOneSquadEntriesLoadStatus,
   SaveOneSquadEntries,
@@ -39,9 +40,14 @@ import BracketGrid, { BGDataType } from "@/components/brackets/bracketGrid";
 import { cloneDeep } from "lodash";
 import usePreventUnload from "@/components/preventUnload/preventUnload";
 import WaitModal from "@/components/modal/waitModal";
-
-import "./editPlayers.css";
 import { defaultBrktGames, defaultPlayersPerMatch } from "@/lib/db/initVals";
+import "./editPlayers.css";
+
+// run tmnt:
+// http://localhost:3000/dataEntry/runTmnt/tmt_d237a388a8fc4641a2e37233f1d6bebd
+
+// edit bowlers:
+// http://localhost:3000/dataEntry/editPlayers/tmt_d237a388a8fc4641a2e37233f1d6bebd
 
 const populateRows = (formData: dataOneSquadEntriesType) => {
   const pRows: (typeof playerEntryData)[] = [];
@@ -160,13 +166,13 @@ export default function EditPlayersPage() {
   
   squadId = playerFormTmnt?.curData?.squads[0]?.id || "";
 
-  useEffect(() => {
-    dispatch(fetchOneSquadEntries(squadId));    
-  }, [squadId, dispatch]);
-
   // useEffect(() => {
-  //   dispatch(fetchOneSquadEntries(playerFormTmnt?.curData));    
-  // }, [playerFormTmnt?.curData, dispatch]);
+  //   dispatch(fetchOneSquadEntries(squadId));    
+  // }, [squadId, dispatch]);
+
+  useEffect(() => {
+    dispatch(fetchOneSquadEntries2(playerFormTmnt?.curData));    
+  }, [playerFormTmnt?.curData, dispatch]);
 
   const entriesLoadStatus = useSelector(getOneSquadEntriesLoadStatus);
   const entriesError = useSelector(getOneSquadEntriesError);    
@@ -286,18 +292,21 @@ export default function EditPlayersPage() {
       setEntriesCount(initCount);      
     };
     // sets brktsList
-    const setBrktsObjs = (brkts: brktType[]) => {
+    const setBrktsObjs = (brkts: brktType[], curRows: typeof playerEntryData[]) => {
       const initBrktsList = cloneDeep(emptyBrktsList)
       const initBrktGridData = cloneDeep(emptyBGDataList)
-      const playersPerMatch = 2; 
+      const playersPerMatch = defaultPlayersPerMatch; 
       brkts.forEach((brkt) => {    
         // right now only 2 players per match, 3 games in bracket
         // const playersPerMatch = Math.pow(brkt.players, 1 / brkt.games);        
         const brktList = new BracketList(brkt.id, playersPerMatch, brkt.games);
-        initBrktsList[brkt.id] = brktList;
+
+        brktList.calcTotalBrkts(curRows);
+
+        initBrktsList[brkt.id] = brktList;        
         const bgData: BGDataType = {          
           forFullValues: [],
-          forOneByeValues: [],
+          forOneByeValues: [],          
         };   
         initBrktGridData[brkt.id] = (bgData);
       });      
@@ -306,11 +315,12 @@ export default function EditPlayersPage() {
     } 
     
     setEntriesCountObj(playerFormTmnt.curData);
-    setBrktsObjs(playerFormTmnt.curData.brkts);
+    
+    const curRows = populateRows(playersFormData.curData);
 
-    const currRows = populateRows(playersFormData.curData);
-    setRows(currRows);   
-    setOrigRows(currRows);
+    setBrktsObjs(playerFormTmnt.curData.brkts, curRows);
+    setRows(curRows);   
+    setOrigRows(curRows);
     // DO NOT INCLUDE emptyBrktsList, emptyBGDataList, setRow in array
     // emptyBrktsList and emptyBGDataList are constants, never change
     // setRow is a function
@@ -467,8 +477,8 @@ export default function EditPlayersPage() {
 
     return (
       <>
-        <div className="container" id="brktCounts" style={{ float: "left", width: "100%"}}>
-        {/* <div className="container" id="brktCounts" style={{ float: "left", width: 760 }}>           */}
+        {/* <div className="container" id="brktCounts" style={{ float: "left", width: "100%"}}> */}
+        <div className="container" id="brktCounts" style={{ float: "left", width: 760 }}>
           {playerFormTmnt?.curData?.brkts.map((brkt) => (
             <div key={brkt.id}>
               <div className="row">
@@ -477,40 +487,20 @@ export default function EditPlayersPage() {
                     {getBrktOrElimName(brkt, playerFormTmnt?.curData?.divs)}
                   </label>
                 </div>
-                {/* <div className="col-6">
-                  Brackets Here
-                </div> */}
+                <div className="col-6">
+                  <label className="form-label">
+                    {BGDataList[brkt.id]?.forFullValues.length > 0 ? '' : "Need at least 7 players"}
+                  </label>
+                </div>
               </div>
               <div className="row mb-3">
-                <div className="col-6">
+                <div className="col">
                   <BracketGrid
                     brktGridData={BGDataList[brkt.id]}
                   />
                 </div>
-                {/* <div className="col-6">
-                  <PopBracketsGrid
-                    popBrkts={allBrktsList[brkt.id].allBrkts}
-                    entryRows={rows}
-                  />
-                </div> */}
               </div>
-            </div>              
-
-            
-            // <div key={brkt.id}>
-            //   <div className="row">
-            //     <label className="form-label">
-            //       {getBrktOrElimName(brkt, playerFormTmnt?.curData?.divs)}
-            //     </label>
-            //   </div>
-            //   <div className="row mb-3">
-            //     <BracketGrid
-            //       brktGridData={BGDataList[brkt.id]}
-            //     />
-            //   </div>
-            // </div>              
-          
-          
+            </div>                        
           ))}          
         </div>
       </>

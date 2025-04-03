@@ -74,39 +74,44 @@ export const fetchOneSquadEntries = createAsyncThunk(
   }
 )
 
-// export const fetchOneSquadEntries = createAsyncThunk(
-//   "allEntriesOneSquad/fetchOneSquadEntries",
-//   async (curData: dataOneTmntType, { getState }) => {
+export const fetchOneSquadEntries2 = createAsyncThunk(
+  "allEntriesOneSquad/fetchOneSquadEntries2",
+  async (curData: dataOneTmntType, { getState }) => {
 
-//     // noIdYet = (squadId === "" || squadId === undefined || squadId === null);
-//     noIdYet = (!curData || curData.squads.length === 0 || curData.squads[0].id === "" || curData.squads[0].id === undefined || curData.squads[0].id === null);
-//     let squadId = '';
-//     if (!noIdYet) {
-//       squadId = curData.squads[0].id;
-//     }
+    // noIdYet = (squadId === "" || squadId === undefined || squadId === null);
+    noIdYet = (!curData
+      || curData.squads.length === 0
+      || curData.squads[0].id === ""
+      || curData.squads[0].id === undefined
+      || curData.squads[0].id === null);
+    let squadId = '';
+    if (!noIdYet) {
+      squadId = curData.squads[0].id;
+    }
     
-//     const state = getState() as RootState;
-//     // const currentSquad = state.allDataOneTmnt.tmntData?.origData.squads[0].id;
-//     // if (currentSquad === squadId) {
-//     //   // Return the current state if the tournament ID matches the one being fetched 
-//     //   return state.allEntriesOneSquad.entryData;
-//     // }
+    const state = getState() as RootState;
+    const currentSquad = state.allEntriesOneSquad?.entryData?.origData?.squadId;
 
-//     // Do not use try / catch blocks here. Need the promise to be fulfilled or
-//     // rejected which will have the appropriate response in the extraReducers.    
-//     const gotData = await getAllEntriesForSquad2(curData); 
-//     if (!gotData) {
-//       return null;
-//     }
+    if (currentSquad === squadId && !state.allEntriesOneSquad === undefined && state.allEntriesOneSquad.entryData) {
+      // Return the current state if the tournament ID matches the one being fetched 
+      return state.allEntriesOneSquad.entryData;
+    }
 
-//     const allEnts: allEntriesOneSquadType = {
-//       origData: cloneDeep(gotData) as dataOneSquadEntriesType,
-//       curData: cloneDeep(gotData) as dataOneSquadEntriesType
-//     }
+    // Do not use try / catch blocks here. Need the promise to be fulfilled or
+    // rejected which will have the appropriate response in the extraReducers.    
+    const gotData = await getAllEntriesForSquad2(curData); 
+    if (!gotData) {
+      return null;
+    }
 
-//     return allEnts as allEntriesOneSquadType    
-//   }
-// )
+    const allEnts: allEntriesOneSquadType = {
+      origData: cloneDeep(gotData) as dataOneSquadEntriesType,
+      curData: cloneDeep(gotData) as dataOneSquadEntriesType
+    }
+
+    return allEnts as allEntriesOneSquadType    
+  }
+)
 
 export const SaveOneSquadEntries = createAsyncThunk(
   "allEntriesOneSquad/saveOneSquadEntries",    
@@ -152,6 +157,7 @@ export const allEntriesOneSquadSlice = createSlice({
     }    
   },
   extraReducers: (builder) => {
+    // fetchOneSquadEntries
     builder.addCase(fetchOneSquadEntries.pending, (state) => {      
       state.loadStatus = "loading";
     });
@@ -175,6 +181,31 @@ export const allEntriesOneSquadSlice = createSlice({
       state.loadStatus = "failed";
       state.error = action.error.message;
     });
+    // fetchOneSquadEntries2
+    builder.addCase(fetchOneSquadEntries2.pending, (state) => {      
+      state.loadStatus = "loading";
+    });
+    builder.addCase(fetchOneSquadEntries2.fulfilled, (state, action) => {
+      if (!action.payload) {
+        if (noIdYet) {
+          state.loadStatus = "pending";          
+          state.error = "";
+        } else {
+          state.loadStatus = "failed";          
+          state.error = "all entry data not found yet";
+        }
+        state.entryData = null;
+      } else {
+        state.loadStatus = "succeeded";
+        state.entryData = action.payload;
+        state.error = "";
+      }
+    });
+    builder.addCase(fetchOneSquadEntries2.rejected, (state, action) => {
+      state.loadStatus = "failed";
+      state.error = action.error.message;
+    });
+    // SaveOneSquadEntries
     builder.addCase(SaveOneSquadEntries.pending, (state) => {
       state.saveStatus = 'saving';
       state.error = '';      
