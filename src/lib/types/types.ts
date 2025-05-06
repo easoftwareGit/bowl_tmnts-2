@@ -2,7 +2,7 @@ import { ErrorCode } from "../validation"
 
 export type roleTypes = "ADMIN" | "DIRECTOR" | "USER"
 
-export type idTypes = 'usr' | 'bwl' | 'tmt' | 'evt' | 'div' | 'sqd' | 'lan' | 'hdc' | 'pot' | 'brk' | 'elm' | 'ply' | 'den' | 'pen' | 'ben' | 'een' | 'gam' 
+export type idTypes = 'usr' | 'bwl' | 'tmt' | 'evt' | 'div' | 'sqd' | 'lan' | 'hdc' | 'pot' | 'brk' | 'elm' | 'ply' | 'den' | 'pen' | 'ben' | 'een' | 'gam' | 'bib'
 
 export type userType = {
   id: string

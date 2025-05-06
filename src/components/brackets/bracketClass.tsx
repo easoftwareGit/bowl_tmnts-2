@@ -1,29 +1,37 @@
-import { isEven } from "@/lib/validation";
+import { isEven, isOdd } from "@/lib/validation";
 import { BracketList } from "./bracketListClass";
-import { v4 as uuidv4 } from 'uuid';
+import { btDbUuid } from "@/lib/uuid";
 
 export class Bracket { 
 
   static errInvalidPlayerId = -1;
   static errAlreadyInBracket = -2;
-  static errBracketIsFull = -3;                       
+  static errBracketIsFull = -3;    
+  static errInvalidMatch = -4;  
   static byePlayerId = 'ply_00000000000000000000000000000000';
 
-  private _id: string;
-  private _players: string[];
+  private _id: string = '';
+  // private _emptyIndexes: Set<number>;
   private _playersPerMatch: number;
+  private _players: string[];  
   
   parent: BracketList;
 
   constructor(parent: BracketList) {
-    this._id = uuidv4()
+    this._id = btDbUuid('bib')
     this.parent = parent;
-    this._playersPerMatch = parent.playersPerMatch;  
-    this._players = [];    
+    // this._emptyIndexes = Array.from({ length: parent.playersPerBrkt }, (_, i) => i);
+    // this._emptyIndexes = new Set(Array.from({ length: 8 }, (_, i) => i));
+    // this._players = new Array(parent.playersPerBrkt).fill(''); // array of empty strings
+    this._players = []; 
+    this._playersPerMatch = parent.playersPerMatch;    
   }
 
   get games(): number {
     return this.parent.games;
+  }
+  get id(): string {
+    return this._id;
   }
   get isFull(): boolean {
     return this._players.length >= this.playersPerBracket;
@@ -54,11 +62,51 @@ export class Bracket {
   }
 
   /**
+   * Add players in a match to bracket
+   * 
+   * @param {string[]} playerIds - array of players in match to add to bracket
+   * @returns {number} - number of players in bracket
+   */
+  addMatch(playerIds: string[]): number {
+    if (!playerIds || playerIds.length === 0) return Bracket.errInvalidPlayerId;
+    if (playerIds.length !== this.playersPerMatch) return Bracket.errInvalidMatch;
+    if (playerIds.length + this._players.length > this.playersPerBracket) return Bracket.errBracketIsFull;
+    for (let i = 0; i < playerIds.length; i++) {
+      if (this._players.includes(playerIds[i])) return Bracket.errAlreadyInBracket;
+    }
+    // DO NOT use addPlayer here
+    playerIds.forEach(playerId => {
+      this._players.push(playerId);      
+    })
+    return this._players.length;
+  }
+
+  // /**
+  //  * adds a player to a specific index in the bracket
+  //  * 
+  //  * @param {string} playerId - player id
+  //  * @param {number} index - index to add player
+  //  * @returns {void} 
+  //  */
+  // addPlayerAtIndex(playerId: string, index: number): number {
+  //   if (!playerId) return Bracket.errInvalidPlayerId;
+  //   if (index < 0 || index >= this.playersPerBracket) return Bracket.errInvalidAddIndex;
+  //   if (this._players.includes(playerId)) return Bracket.errAlreadyInBracket;
+  //   if (this.players[index] !== '') return Bracket.errAlreadyInBracket;
+  //   this._players[index] = playerId;
+  //   this._emptyIndexes.delete(index);    
+  //   return index;
+  // }
+
+  /**
    * clear all players from bracket
+   * also resets empty indexes
+   * 
    * note: called clearPlayers() not emptyPlayers(), to avoid confusion with emptySpots()
    */
   clearPlayers(): void { 
     this._players.length = 0;
+    // this._emptyIndexes = new Set(Array.from({ length: 8 }, (_, i) => i));
   }
 
   /**
@@ -71,16 +119,6 @@ export class Bracket {
   }
 
   /**
-   * finds the index of a player 
-   * 
-   * @param {string} playerId - player id to find
-   * @returns {number} - index of player 
-   */
-  findPlayerIndex(playerId: string): number {    
-    return this._players.indexOf(playerId);
-  }
-
-  /**
    * finds the index of the first player in a match
    * 
    * @param {string[]} playerIds - array of player ids
@@ -90,20 +128,20 @@ export class Bracket {
    *      - if matchIds.length !== playersPerMatch
    *      - if playerIds !== matchIds
    */
-  findMatch(playerIds: string[]): number {
-    const pIndex = this._players.indexOf(playerIds[0]); 
-    if (pIndex < 0) return -1;                        // if first player not in bracket return -1
-    const fpi = this.firstPlayerInMatchIndex(pIndex); // get first player index
-    const matchIds = this.playerIdsInMatch(fpi);      // get player ids in match (will be sorted)
-    // make sure matchIds is the correct length
-    if (matchIds.length === 0
-      || matchIds.length !== this._playersPerMatch
-      || matchIds.length !== playerIds.length) return -1;     
-    // make sure both arrays are the same
-    playerIds.sort();
-    if (playerIds.every((value, index) => value === matchIds[index])) return fpi;
-    return -1;
-  }
+  // findMatch(playerIds: string[]): number {
+  //   const pIndex = this._players.indexOf(playerIds[0]); 
+  //   if (pIndex < 0) return -1;                        // if first player not in bracket return -1
+  //   const fpi = this.firstPlayerInMatchIndex(pIndex); // get first player index
+  //   const matchIds = this.playerIdsInMatch(fpi);      // get player ids in match (will be sorted)
+  //   // make sure matchIds is the correct length
+  //   if (matchIds.length === 0
+  //     || matchIds.length !== this._playersPerMatch
+  //     || matchIds.length !== playerIds.length) return -1;     
+  //   // make sure both arrays are the same
+  //   playerIds.sort();
+  //   if (playerIds.every((value, index) => value === matchIds[index])) return fpi;
+  //   return -1;
+  // }
 
   /**
    * gets the index of the first player not in bracket
@@ -111,12 +149,12 @@ export class Bracket {
    * @param {string[]} playerIds - array of player ids to find
    * @returns {number} - index of first player not in bracket 
    */
-  findMissingPlayerIndex(playerIds: string[]): number {
-    for (let i = 0; i < this._players.length; i++) {
-      if (!this._players.includes(playerIds[i])) return i;
-    }
-    return -1;
-  }
+  // findMissingPlayerIndex(playerIds: string[]): number {
+  //   for (let i = 0; i < this._players.length; i++) {
+  //     if (!this._players.includes(playerIds[i])) return i;
+  //   }
+  //   return -1;
+  // }
 
   /**
    * gets the index of the first player in a match
@@ -124,11 +162,11 @@ export class Bracket {
    * @param {number} pIndex - player index in bracket
    * @returns {number} - index of opponent in first match or -1 
    */
-  firstMatchVs(pIndex: number): number {
-    if (pIndex < 0 || pIndex >= this._playersPerMatch) return -1;
-    if (isEven(pIndex)) return pIndex + 1;
-    return pIndex - 1;
-  }
+  // firstMatchVs(pIndex: number): number {
+  //   if (pIndex < 0 || pIndex >= this._playersPerMatch) return -1;
+  //   if (isEven(pIndex)) return pIndex + 1;
+  //   return pIndex - 1;
+  // }
 
   /**
    * gets the index of the first player any first match in the bracket
@@ -136,9 +174,39 @@ export class Bracket {
    * @param {number} pIndex - player index in bracket 
    * @returns {number} - index of first player in the match 
    */
-  firstPlayerInMatchIndex(pIndex: number): number {
-    if (pIndex < 0 || pIndex >= this.playersPerBracket) return -1;
-    return (pIndex - (pIndex % this._playersPerMatch));
+  // firstPlayerInMatchIndex(pIndex: number): number {
+  //   if (pIndex < 0 || pIndex >= this.playersPerBracket) return -1;
+  //   return (pIndex - (pIndex % this._playersPerMatch));
+  // }
+
+  /**
+   * gets the index of a random empty spot
+   * 
+   * @returns {number} - index of random empty spot, -1 if no empty spots
+   */
+  // getRandomEmptyIndex(): number {
+  //   if (this._emptyIndexes.size === 0) return -1;
+  //   return Array.from(this._emptyIndexes)[Math.floor(Math.random() * this._emptyIndexes.size)];
+  // }
+
+  /**
+   * gets the player ids in a match
+   * 
+   * @param {number} index - index of first player in match MUST BE 0 or EVEN
+   * @returns {string[]} - player ids in match or empty array if index is invalid 
+   */
+  getMatch(index: number): string[] {
+    // use index+1 because need two player ids, starting at index
+    // use isOdd to make sure index is a multiple of 2 or 0, first player in match
+
+    if (index < 0 || index > this._players.length) return [];
+    if (isOdd(index)) {
+      return [this._players[index - 1], this._players[index]];
+    } else { 
+      if (index + 1 >= this._players.length) return [];
+      return [this._players[index], this._players[index + 1]];
+    }
+    // return [this._players[index], this._players[index + 1]];
   }
 
   /**
@@ -147,16 +215,26 @@ export class Bracket {
    * @param matchStartIndex - index of first player in match 
    * @returns {boolean} - true if match is full
    */
-  isMatchFull(matchStartIndex: number): boolean {
-    if (matchStartIndex === 0 || (matchStartIndex % this._playersPerMatch) === 0) {
-      for (let i = matchStartIndex; i < matchStartIndex + this._playersPerMatch; i++) {
-        if (i > this._players.length - 1) return false;
-        if (this._players[i] === Bracket.byePlayerId) return false;
-      }
-      return true;
-    } else {
-      return false;
-    }
+  // isMatchFull(matchStartIndex: number): boolean {
+  //   if (matchStartIndex === 0 || (matchStartIndex % this._playersPerMatch) === 0) {
+  //     for (let i = matchStartIndex; i < matchStartIndex + this._playersPerMatch; i++) {
+  //       if (i > this._players.length - 1) return false;
+  //       if (this._players[i] === Bracket.byePlayerId) return false;
+  //     }
+  //     return true;
+  //   } else {
+  //     return false;
+  //   }
+  // }
+
+  /**
+   * gets the number of positions in players without a player id
+   * 
+   * @returns {number} - number of positions in players without a player id
+   */
+  numEmptySpots(): number {
+    // return this._emptyIndexes.size;
+    return this.playersPerBracket - this._players.length;
   }
 
   /**
@@ -165,14 +243,24 @@ export class Bracket {
    * @param {number} pIndex - player index in bracket
    * @returns {string[]} - array of player sorted ids 
    */
-  playerIdsInMatch(pIndex: number): string[] {
-    if (pIndex < 0 || pIndex >= this._players.length) return [];
-    const fpi: number = this.firstPlayerInMatchIndex(pIndex);
-    const playerIds: string[] = [];
-    playerIds.push(this._players[fpi]);
-    playerIds.push(this._players[fpi + 1]);
-    playerIds.sort();
-    return playerIds;
+  // playerIdsInMatch(pIndex: number): string[] {
+  //   if (pIndex < 0 || pIndex >= this._players.length) return [];
+  //   const fpi: number = this.firstPlayerInMatchIndex(pIndex);
+  //   const playerIds: string[] = [];
+  //   playerIds.push(this._players[fpi]);
+  //   playerIds.push(this._players[fpi + 1]);
+  //   playerIds.sort();
+  //   return playerIds;
+  // }
+
+  /**
+   * finds the index of a player 
+   * 
+   * @param {string} playerId - player id to find
+   * @returns {number} - index of player 
+   */
+  playerIndex(playerId: string): number {    
+    return this._players.indexOf(playerId);
   }
 
   /**

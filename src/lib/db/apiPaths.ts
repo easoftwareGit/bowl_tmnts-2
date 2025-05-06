@@ -1,4 +1,4 @@
-import { baseApi } from "@/lib/tools";
+import { baseApi } from "@/lib/baseApi";
 
 export const baseUsersApi = baseApi + '/users'
 

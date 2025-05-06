@@ -32,7 +32,7 @@ export const validPlayerLastName = (lastName: string): boolean => {
 
 export const validAverage = (average: number): boolean => {
   if (typeof average !== 'number') return false
-  return Number.isInteger(average) && average > 0 && average <= 300
+  return Number.isInteger(average) && average >= 0 && average <= 300
 }
 
 export const validLane = (lane: number): boolean => {

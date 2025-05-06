@@ -1,12 +1,15 @@
-const baseRoot = process.env.NEXT_PUBLIC_BASE_ROOT;
-const baseHost = process.env.NEXT_PUBLIC_BASE_HOST; 
-const basePort = process.env.NEXT_PUBLIC_BASE_PORT;
-export const baseOrigin = `${baseRoot}${baseHost}:${basePort}`
+/**
+ * shuffle an array using Fisher-Yates algorithm
+ * 
+ * @param {any[]} arr - array to shuffle. WILL BE MUTATED
+ * @returns {void} 
+ */
+export const shuffleArray = <T>(arr: T[]): void => {
 
-export const baseApi = baseOrigin + process.env.NEXT_PUBLIC_BASE_API;
-
-// export const postSecret = process.env.NEXT_PUBLIC_POST_SECRET!;
-
-export const postSecret = (typeof process.env.NEXT_PUBLIC_POST_SECRET! === 'undefined')
-  ? process.env.TEST_POST_SECRET!
-  : process.env.NEXT_PUBLIC_POST_SECRET!
+  if (!arr || !Array.isArray(arr) || arr.length < 2) return;
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1)); // random index
+    // swap
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+};

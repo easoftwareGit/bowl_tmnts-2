@@ -1,4 +1,4 @@
-import { baseOrigin, baseApi } from '@/lib/tools';
+import { baseOrigin, baseApi } from '@/lib/baseApi';
 
 export default function Home() {  
   return (
