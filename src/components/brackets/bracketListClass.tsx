@@ -1,6 +1,6 @@
 import { Bracket } from "./bracketClass";
 import { entryNumBrktsColName, playerEntryData, timeStampColName } from "@/app/dataEntry/playersForm/createColumns";
-import { cloneDeep, filter } from "lodash";
+import { cloneDeep } from "lodash";
 import { BGNumberedColCount, brktColTitle, initBGColNames, toFillColTitle } from "./bracketGrid";
 import { isOdd, maxBrackets } from "@/lib/validation";
 import { defaultBrktGames, defaultPlayersPerMatch } from "@/lib/db/initVals";
@@ -182,13 +182,6 @@ export class BracketList {
     return this._totalEntries;
   }
 
-  // get needToAddBrkt(): boolean {
-  //   if (this.brackets.length === 0) return true;
-  //   for (let i = 0; i < this.brackets.length; i++) { 
-  //     if (this.brackets[i].isFull) return false;
-  //   }
-  //   return true;
-  // }
   get playersPerBrkt(): number {
     // 2 bolwers per match ** 3 games = 2**3 = 8
     return this._playersPerMatch ** this._games;
@@ -229,6 +222,14 @@ export class BracketList {
    */
   calcTotalBrkts(playerEntries: (typeof playerEntryData)[]): void {  
        
+    // 1) clear
+    // 2) remove all rows with no bracket entries
+    // 3) validate bracket entries    
+    // 4) sort by # brackets (DESC), and createdAt (ASC)
+    // 5) calculate # of brackets
+    // 6) adjust player's # of brackets if/as needed    
+    // 7) populate full and oneBye brackets counts     
+
     const timeStampName = timeStampColName(this._brktId)
     const totalBrkts = { total: 0, full: 0, oneBye: 0 }; 
     let totalEntries = 0;
@@ -392,23 +393,6 @@ export class BracketList {
       }
     }  
 
-    // /**
-    //  * saves the original bracket entries 
-    //  * 
-    //  * @returns {void}
-    //  */
-    // const saveOrigBrktEntries = (): void => {      
-    //   this._brktEntries.forEach(brktEntry => {
-    //     const { player_id, ...rest } = brktEntry;
-    //     const newBrktEntry: brktEntryType = {
-    //       num_brackets: rest[this._numBrktsName],
-    //       createdAt: rest.createdAt,
-    //       orig_num_brackets: rest[this._numBrktsName],
-    //     }
-    //     // this.entriesMap.set(brktEntry.player_id, newBrktEntry);
-    //   })
-    // }
-
     /**
      * checks if bracket entries are valid before calculations
      * 
@@ -432,14 +416,6 @@ export class BracketList {
       }
       return true;
     }
-
-    // 1) clear
-    // 2) remove all rows with no bracket entries
-    // 3) validate bracket entries    
-    // 4) sort by # brackets (DESC), and createdAt (ASC)
-    // 5) calculate # of brackets
-    // 6) adjust player's # of brackets if/as needed    
-    // 7) populate full and oneBye brackets counts     
 
     // 1) clear and initialize brackets
     this.clear();
@@ -841,7 +817,7 @@ export class BracketList {
   // }
 
 // TEST FUNCTIONS FOR FUNCS IN RANDOMIZE - START, ENDS AT randomize
-
+  
   /**
    * 
    * @returns 
@@ -1333,7 +1309,22 @@ export class BracketList {
     // 1) check if valid brackets
     // 2) create needed # of brackets
     // 3) create array of all bracket entries (using sorted brktEntries)
+    //  3a) sort player entries by #Brackets (desc) & timestamp (asc)
+    //  3b) add needed bye entries and resort
+    //  3c) create array of all entries for all players
+    //      if a player has 10 entries, then player has 10 items in array
+    //  3d) shuffle the array of entries
     // 4) for each player in brktEntries
+    //  4a) create a map of how many times a player can face an opponent
+    //  4b) create a map of how many brackets a player has entered
+    // 5) for each player in entred into brackets (most entroes to least)
+    //  5a) get array of available brackets indexes for player
+    //  5b) shuffle the array of available brackets indexes
+    //  5c) get opponent for player from shuffled array in step 3d
+    //  5d) if impossible to assign a match
+    //   5d1) reshuffle array from step 3d
+    //   5d2) reset maps and sets
+    //   5d3) go to step 4
     
     this.randomizeErrors.length = 0;
     const neededCountMap = new Map<string, number>(); // map of how many brackerts player still needs
@@ -1812,6 +1803,15 @@ export class BracketList {
     }
   
     /**
+     * shuffles each individual bracket, keeps the matches in tact
+     */
+    const shuffleIndividualBrackets = (): void => { 
+      this._brackets.forEach((bracket) => { 
+        bracket.shuffle();
+      })      
+    }
+
+    /**
      * Updates player brackets set
      * 
      * @param {string} id - player or opponent id
@@ -1865,8 +1865,7 @@ export class BracketList {
       if (forTesting.length === 0) {
         // 3) create the shuffled array of all entries including byes
         // 3a) add needed bye entries to bracket entries
-        if (this._randomizeErrors.length === 0) {
-          // createByeEntry();          
+        if (this._randomizeErrors.length === 0) {             
           if (this._oneByeCount > 0 && !gotByeEntries() ) {           
             createByeEntry();
             this._brktEntries.push(this._byeEntry);
@@ -1874,12 +1873,6 @@ export class BracketList {
             // yes, resort. need sorted bracket entries to calculate # of byes
             this.sortBrktEntries();
           }
-          // if (!this._addedBye && this._oneByeCount > 0) {
-          //   this._brktEntries.push(this._byeEntry);
-          //   this._addedBye = true;
-          //   // yes, resort. need sorted bracket entries to calculate # of byes
-          //   this.sortBrktEntries();
-          // }
           // 3b) create array of all bracket entries (using sorted brktEntries)
           this._shuffled = this._brktEntries.flatMap(obj =>          
             Array(obj[this._numBrktsName]).fill(null).map(() => ({
@@ -2049,6 +2042,7 @@ export class BracketList {
                   totalMatches: currentNumMatches(),
                 }
                 this._randomizeErrors.push(randError);          
+                shuffleIndividualBrackets();
                 return;
               }
               if (!doneRandomizing && sIndex >= this._shuffled.length) {
@@ -2090,6 +2084,7 @@ export class BracketList {
             totalMatches: currentNumMatches(),
           }
           this._randomizeErrors.push(randError);          
+          shuffleIndividualBrackets();
         } else { 
           this._errorMessage = `Cannot randomize. Did not set all matches. Need to re-shuffle and re-randomize.`;
           this._errorCode = BracketList.resetMatches;
@@ -2106,7 +2101,7 @@ export class BracketList {
           this._randomizeErrors.push(randError);          
           reShuffleAndReset();  // reset all entries to not used
           sIndex = 0;           // reset index into shuffled array 
-          break outerLoop; // re-randomize
+          break outerLoop;      // re-randomize
         }
       }  
     }      

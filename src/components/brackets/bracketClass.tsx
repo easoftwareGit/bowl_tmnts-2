@@ -1,6 +1,7 @@
 import { isEven, isOdd } from "@/lib/validation";
 import { BracketList } from "./bracketListClass";
 import { btDbUuid } from "@/lib/uuid";
+import { shuffleArray } from "@/lib/tools";
 
 export class Bracket { 
 
@@ -80,23 +81,6 @@ export class Bracket {
     })
     return this._players.length;
   }
-
-  // /**
-  //  * adds a player to a specific index in the bracket
-  //  * 
-  //  * @param {string} playerId - player id
-  //  * @param {number} index - index to add player
-  //  * @returns {void} 
-  //  */
-  // addPlayerAtIndex(playerId: string, index: number): number {
-  //   if (!playerId) return Bracket.errInvalidPlayerId;
-  //   if (index < 0 || index >= this.playersPerBracket) return Bracket.errInvalidAddIndex;
-  //   if (this._players.includes(playerId)) return Bracket.errAlreadyInBracket;
-  //   if (this.players[index] !== '') return Bracket.errAlreadyInBracket;
-  //   this._players[index] = playerId;
-  //   this._emptyIndexes.delete(index);    
-  //   return index;
-  // }
 
   /**
    * clear all players from bracket
@@ -270,5 +254,34 @@ export class Bracket {
    */
   removePlayers(playerIds: string[]): void {    
     this._players = this._players.filter(id => !playerIds.includes(id));    
+  }
+
+  /**
+   * shuffles the players in the bracket, keeping the matches intact
+   * positions in a match are shuffled too
+   */
+  shuffle(): void {
+
+    // if players is empty or bracket is not full, do nothing
+    if (!this._players || !this.isFull) return;
+
+    // 1) split the players into the matches 
+    const matches = [];
+    for (let i = 0; i < this._players.length; i += 2) {
+      matches.push([this._players[i], this._players[i + 1]]);
+    }
+
+    // 2) shuffle each individual match
+    matches.forEach(match => { 
+      if (Math.random() > 0.5) {
+        match.reverse();
+      }
+    })
+
+    // 3) shuffle the matches using the Fisher-Yates shuffle algorithm
+    shuffleArray(matches);
+
+    // 4) flatten the matches back into a single array and save it to _players
+    this._players = matches.flat();
   }
 }
