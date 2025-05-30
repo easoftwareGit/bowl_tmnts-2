@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { ErrorCode } from "@/lib/validation";
 import { brktEntryType, brktEntryDataType, tmntEntryBrktEntryType } from "@/lib/types/types";
 import { validateBrktEntries } from "../validate";
-import { getDeleteManySQL, getInsertManySQL, getUpdateManySQL } from "./getSql";
+import { getDeleteManyRefundsSQL, getDeleteManySQL, getInsertManyRefundsSQL, getInsertManySQL, getUpdateManyRefundsSQL, getUpdateManySQL } from "./getSql";
 
 // routes /api/brktEntries/many 
 
@@ -24,13 +24,44 @@ export async function POST(request: NextRequest) {
         brkt_id: brktEntry.brkt_id,
         player_id: brktEntry.player_id,
         num_brackets: brktEntry.num_brackets,
+        num_refunds: brktEntry.num_refunds,
         time_stamp: new Date(brktEntry.time_stamp), // Convert to Date object             
       })
     });      
 
-    const manyBrktEntries = await prisma.brkt_Entry.createManyAndReturn({
-      data: [...brktEntriesToPost]
-    })
+    const createdBrktEntries = await prisma.$transaction(
+      brktEntriesToPost.map(brktEntry =>
+        prisma.brkt_Entry.create({
+          data: {
+            id: brktEntry.id,
+            brkt_id: brktEntry.brkt_id,
+            player_id: brktEntry.player_id,
+            num_brackets: brktEntry.num_brackets,
+            time_stamp: brktEntry.time_stamp,
+            brkt_refunds: (brktEntry.num_refunds != null && brktEntry.num_refunds > 0)
+              ? {
+                create: {
+                  num_refunds: brktEntry.num_refunds,
+                }
+              }
+              : undefined,
+          },
+          include: { brkt_refunds: true },
+        })
+      )
+    );
+
+    const manyBrktEntries = createdBrktEntries.map((brktEntry) => {
+      return {
+        id: brktEntry.id,
+        brkt_id: brktEntry.brkt_id,
+        player_id: brktEntry.player_id,
+        num_brackets: brktEntry.num_brackets,
+        num_refunds: brktEntry.brkt_refunds?.num_refunds,
+        time_stamp: brktEntry.time_stamp,
+      };
+    });
+
     return NextResponse.json({brktEntries: manyBrktEntries}, { status: 201 });    
   } catch (err: any) {
     let errStatus: number
@@ -67,8 +98,6 @@ export async function PUT(request: NextRequest) {
       if (foundBrktEntry) {
         const vteBrktEntry = {
           ...brktEntry,
-          // createdAt: foundBrktEntry.createdAt,
-          // updatedAt: foundBrktEntry.updatedAt,
           eType: foundBrktEntry.eType,
         }
         validTeBrktEntries.push(vteBrktEntry);
@@ -84,23 +113,94 @@ export async function PUT(request: NextRequest) {
       ? getUpdateManySQL(brktEntriesToUpdate)
       : "";
     
-    const divEntriesToInsert = validTeBrktEntries.filter((brktEntry) => brktEntry.eType === "i");
-    const insertManySQL = (divEntriesToInsert.length > 0)
-      ? getInsertManySQL(divEntriesToInsert)
+    const brktEntriesToInsert = validTeBrktEntries.filter((brktEntry) => brktEntry.eType === "i");
+    const insertManySQL = (brktEntriesToInsert.length > 0)
+      ? getInsertManySQL(brktEntriesToInsert)
       : "";
     
-    const divEntriesToDelete = validTeBrktEntries.filter((brktEntry) => brktEntry.eType === "d");
-    const deleteManySQL = (divEntriesToDelete.length > 0)
-      ? getDeleteManySQL(divEntriesToDelete)
+    const brktEntriesToDelete = validTeBrktEntries.filter((brktEntry) => brktEntry.eType === "d");
+    const deleteManySQL = (brktEntriesToDelete.length > 0)
+      ? getDeleteManySQL(brktEntriesToDelete)
       : "";
 
-    const [updates, inserts, deletes] = await prisma.$transaction([
+    const updateIds = brktEntriesToUpdate.map(brktEntry => brktEntry.id)
+    const insertIds = brktEntriesToInsert.map(brktEntry => brktEntry.id)
+    const deleteIds = brktEntriesToDelete.map(brktEntry => brktEntry.id)
+    
+    const brktRefundIds = [...updateIds, ...insertIds, ...deleteIds];
+    const curBrktEntries = await prisma.brkt_Entry.findMany({
+      where: {
+        id: { in: brktRefundIds },
+      },
+      include: { brkt_refunds: true },
+    });
+
+    const refundsToUpdate: brktEntryType[] = [];
+    const refundsToInsert: brktEntryType[] = [];
+    const refundsToDelete: brktEntryType[] = [];
+    brktEntriesToUpdate.forEach((brktEntry) => { 
+      const curBrktEntry = curBrktEntries.find((b) => b.id === brktEntry.id);
+      if (brktEntry.num_refunds == null || brktEntry.num_refunds === 0) { 
+        if (curBrktEntry 
+          && curBrktEntry.brkt_refunds?.num_refunds != null
+          && curBrktEntry.brkt_refunds?.num_refunds > 0
+        ) {
+          refundsToDelete.push(brktEntry);
+        }
+      } else if (brktEntry.num_refunds > 0) {       
+        if (curBrktEntry) { 
+          if (curBrktEntry.brkt_refunds?.num_refunds == null ||
+            curBrktEntry.brkt_refunds?.num_refunds === 0)
+          {
+            refundsToInsert.push(brktEntry);      
+          } else if (curBrktEntry.brkt_refunds?.num_refunds > 0 && 
+            curBrktEntry.brkt_refunds?.num_refunds !== brktEntry.num_refunds) 
+          {
+            refundsToUpdate.push(brktEntry);            
+          }
+        }
+      }
+    })
+    brktEntriesToInsert.forEach((brktEntry) => { 
+      const curBrktEntry = curBrktEntries.find((b) => b.id === brktEntry.id);
+      if (!curBrktEntry) { 
+        refundsToInsert.push(brktEntry);
+      }
+    })
+    brktEntriesToDelete.forEach((brktEntry) => { 
+      const curBrktEntry = curBrktEntries.find((b) => b.id === brktEntry.id);
+      if (curBrktEntry) { 
+        refundsToDelete.push(brktEntry);
+      }
+    })
+
+    const updateRefundsSQL = (refundsToUpdate.length > 0)
+      ? getUpdateManyRefundsSQL(refundsToUpdate) 
+      : "";
+    const insertRefundsSQL = (refundsToInsert.length > 0)
+      ? getInsertManyRefundsSQL(refundsToInsert)
+      : "";
+    const deleteRefundsSQL = (refundsToDelete.length > 0)
+      ? getDeleteManyRefundsSQL(refundsToDelete)
+      : "";
+
+    const [updates, inserts, deletes, rfUpdates, rfInserts, rfDeletes] = await prisma.$transaction([
       prisma.$executeRawUnsafe(updateManySQL),
       prisma.$executeRawUnsafe(insertManySQL),
-      prisma.$executeRawUnsafe(deleteManySQL),      
+      prisma.$executeRawUnsafe(deleteManySQL),
+      prisma.$executeRawUnsafe(updateRefundsSQL),
+      prisma.$executeRawUnsafe(insertRefundsSQL),
+      prisma.$executeRawUnsafe(deleteRefundsSQL),
     ])
 
-    const updateInfo = { updates: updates, inserts: inserts, deletes: deletes };    
+    const updateInfo = {
+      updates: updates,
+      inserts: inserts,
+      deletes: deletes,
+      rfUpdates: rfUpdates,
+      rfInserts: rfInserts,
+      rfDeletes: rfDeletes,
+    };    
     return NextResponse.json({updateInfo}, { status: 200 });
   } catch (err: any) {
     let errStatus: number
@@ -110,6 +210,9 @@ export async function PUT(request: NextRequest) {
         break;
       case 'P2003': // parent not found
         errStatus = 404
+        break;
+      case 'P2010': // foreign key constraint failed
+        errStatus = 409
         break;
       default:
         errStatus = 500

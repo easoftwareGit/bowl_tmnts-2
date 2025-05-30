@@ -29,6 +29,7 @@ import {
   divEntryHdcpColName,
   entryFeeColName,
   entryNumBrktsColName,
+  entryNumRefundsColName,
   feeColNameEnd,
   playerEntryData,
   timeStampColName,  
@@ -93,6 +94,7 @@ const populateRows = (formData: dataOneSquadEntriesType) => {
     if (pRow) {
       pRow[entryNumBrktsColName(brktEntry.brkt_id)] = brktEntry.num_brackets;
       pRow[entryFeeColName(brktEntry.brkt_id)] = brktEntry.fee;
+      // pRow[entryNumRefundsColName(brktEntry.brkt_id)] = brktEntry.num_refunds;
       pRow[timeStampColName(brktEntry.brkt_id)] = brktEntry.time_stamp;
     }
   });
@@ -354,7 +356,8 @@ export default function EditPlayersPage() {
         const brktId = key.slice(0, -5); // remove '_name'        
 
         // create a new brktList for each bracket        
-        const oneBrktList = new BracketList(brktId, defaultPlayersPerMatch, defaultBrktGames, allBrktsList[brktId].brackets);
+        // const oneBrktList = new BracketList(brktId, defaultPlayersPerMatch, defaultBrktGames, allBrktsList[brktId].brackets);
+        const oneBrktList = new BracketList(brktId, defaultPlayersPerMatch, defaultBrktGames);
         // populate the new brktList
         oneBrktList.calcTotalBrkts(brktEntRows);
         updatedAllBrktsList[brktId] = oneBrktList;        
@@ -617,6 +620,6 @@ export default function EditPlayersPage() {
   );
 }
 
-// export const exportedForTesting = {
-//   populateRows,
-// };
+export const exportedForTesting = {
+  populateRows,
+};

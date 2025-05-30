@@ -28,8 +28,6 @@ const url = testBaseBrktEntriesApi.startsWith("undefined")
   ? baseBrktEntriesApi
   : testBaseBrktEntriesApi;
 const oneBrktEntryUrl = url + "/brktEntry/";
-const oneSquadUrl = url + "/squad/";
-const brktUrl = url + "/brkt/";
 
 const brktEntriesToGet: brktEntryType[] = [
   {
@@ -38,6 +36,7 @@ const brktEntriesToGet: brktEntryType[] = [
     brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",          
     player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
     num_brackets: 8,
+    num_refunds: 2,
     fee: '40',
     time_stamp: 1739259269537
   },
@@ -47,6 +46,7 @@ const brktEntriesToGet: brktEntryType[] = [
     brkt_id: "brk_6ede2512c7d4409ca7b055505990a499",          
     player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
     num_brackets: 8,
+    num_refunds: 2,
     fee: '40',
     time_stamp: 1739259269537
   },
@@ -145,18 +145,22 @@ describe('dbBrktEntries', () => {
       for (let i = 0; i < brktEntries.length; i++) {
         if (brktEntries[i].id === brktEntriesToGet[0].id) { 
           expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[0].player_id);
+          expect(brktEntries[i].num_refunds).toEqual(brktEntriesToGet[0].num_refunds);
         } else if (brktEntries[i].id === brktEntriesToGet[1].id) {
           expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[1].player_id);
+          expect(brktEntries[i].num_refunds).toEqual(brktEntriesToGet[1].num_refunds);
         } else if (brktEntries[i].id === brktEntriesToGet[2].id) { 
           expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[2].player_id);
+          expect(brktEntries[i].num_refunds).toBeNull()
         } else if (brktEntries[i].id === brktEntriesToGet[3].id) {
           expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[3].player_id);
+          expect(brktEntries[i].num_refunds).toBeNull();
         } else {
           expect(true).toBe(false);
         }        
         expect(brktEntries[i].brkt_id === brkt1Id || brktEntries[i].brkt_id === brkt2Id).toBeTruthy();        
         expect(brktEntries[i].num_brackets).toEqual(brktEntriesToGet[i].num_brackets);        
-        expect(brktEntries[i].fee + '').toEqual(brktEntriesToGet[i].fee);
+        expect(brktEntries[i].fee + '').toEqual(brktEntriesToGet[i].fee);        
         expect(compareAsc(brktEntries[i].time_stamp, minDate)).toBe(1);
         expect(compareAsc(brktEntries[i].time_stamp, maxDate)).toBe(-1);
       }
@@ -192,12 +196,16 @@ describe('dbBrktEntries', () => {
       for (let i = 0; i < brktEntries.length; i++) {
         if (brktEntries[i].id === brktEntriesToGet[0].id) { 
           expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[0].player_id);
+          expect(brktEntries[i].num_refunds).toEqual(brktEntriesToGet[0].num_refunds);
         } else if (brktEntries[i].id === brktEntriesToGet[1].id) {
           expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[1].player_id);
+          expect(brktEntries[i].num_refunds).toEqual(brktEntriesToGet[1].num_refunds);
         } else if (brktEntries[i].id === brktEntriesToGet[2].id) { 
           expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[2].player_id);
+          expect(brktEntries[i].num_refunds).toBeNull()
         } else if (brktEntries[i].id === brktEntriesToGet[3].id) {
           expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[3].player_id);
+          expect(brktEntries[i].num_refunds).toBeNull();
         } else {
           expect(true).toBe(false);
         }        
@@ -239,12 +247,16 @@ describe('dbBrktEntries', () => {
       for (let i = 0; i < brktEntries.length; i++) {
         if (brktEntries[i].id === brktEntriesToGet[0].id) { 
           expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[0].player_id);
+          expect(brktEntries[i].num_refunds).toEqual(brktEntriesToGet[0].num_refunds);
         } else if (brktEntries[i].id === brktEntriesToGet[1].id) {
           expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[1].player_id);
+          expect(brktEntries[i].num_refunds).toEqual(brktEntriesToGet[1].num_refunds);
         } else if (brktEntries[i].id === brktEntriesToGet[2].id) { 
           expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[2].player_id);
+          expect(brktEntries[i].num_refunds).toBeNull()
         } else if (brktEntries[i].id === brktEntriesToGet[3].id) {
           expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[3].player_id);
+          expect(brktEntries[i].num_refunds).toBeNull();
         } else {
           expect(true).toBe(false);
         }        
@@ -286,12 +298,16 @@ describe('dbBrktEntries', () => {
       for (let i = 0; i < brktEntries.length; i++) {
         if (brktEntries[i].id === brktEntriesToGet[0].id) { 
           expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[0].player_id);
+          expect(brktEntries[i].num_refunds).toEqual(brktEntriesToGet[0].num_refunds);
         } else if (brktEntries[i].id === brktEntriesToGet[1].id) {
           expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[1].player_id);
+          expect(brktEntries[i].num_refunds).toEqual(brktEntriesToGet[1].num_refunds);
         } else if (brktEntries[i].id === brktEntriesToGet[2].id) { 
           expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[2].player_id);
+          expect(brktEntries[i].num_refunds).toBeNull()
         } else if (brktEntries[i].id === brktEntriesToGet[3].id) {
           expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[3].player_id);
+          expect(brktEntries[i].num_refunds).toBeNull();
         } else {
           expect(true).toBe(false);
         }        
@@ -332,7 +348,8 @@ describe('dbBrktEntries', () => {
       brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
       player_id: 'ply_a01758cff1cc4bab9d9133e661bd49b0',
       num_brackets: 7,
-      fee: '82',
+      num_refunds: 1,
+      fee: '45',
       time_stamp: 1739259269537
     }
 
@@ -340,8 +357,8 @@ describe('dbBrktEntries', () => {
 
     const deletePostedBrktEntry = async () => { 
       const response = await axios.get(url);
-      const brktEntrys = response.data.brktEntries;
-      const toDel = brktEntrys.find((b: brktEntryType) => b.fee === '82');
+      const brktEntries = response.data.brktEntries;
+      const toDel = brktEntries.find((b: brktEntryType) => b.id === 'ben_0123c6c5556e407291c4b5666b2dccd7');
       if (toDel) {
         try {
           const delResponse = await axios({
@@ -378,11 +395,14 @@ describe('dbBrktEntries', () => {
       expect(postedBrktEntry.brkt_id).toEqual(brktEntryToPost.brkt_id);
       expect(postedBrktEntry.player_id).toEqual(brktEntryToPost.player_id);
       expect(postedBrktEntry.num_brackets).toEqual(brktEntryToPost.num_brackets);
+      expect(postedBrktEntry.num_refunds).toEqual(brktEntryToPost.num_refunds);
       // no fee returned
       // expect(postedBrktEntry.fee + '').toEqual(brktEntryToPost.fee);
       expect(compareAsc(postedBrktEntry.time_stamp, minDate)).toBe(1);
       expect(compareAsc(postedBrktEntry.time_stamp, maxDate)).toBe(-1);
     })
+    // see test\app\api\brktEntries\validate_brktEntries.test.tsx 
+    // for full testing of sanitation and validation
     it('should not post a brktEntry with sanitized num_brackets (sanitized to 0)', async () => { 
       const toSanitizse = {
         ...brktEntryToPost,
@@ -434,15 +454,26 @@ describe('dbBrktEntries', () => {
         expect(brktEntries[i].brkt_id).toEqual(mockBrktEntriesToPost[i].brkt_id);
         expect(brktEntries[i].player_id).toEqual(mockBrktEntriesToPost[i].player_id);
         expect(brktEntries[i].num_brackets).toEqual(mockBrktEntriesToPost[i].num_brackets);
+        if (brktEntries[i].id === mockBrktEntriesToPost[0].id) { 
+          expect(brktEntries[i].num_refunds).toEqual(mockBrktEntriesToPost[0].num_refunds);
+        } else if (brktEntries[i].id === mockBrktEntriesToPost[1].id) {
+          expect(brktEntries[i].num_refunds).toBeUndefined();
+        } else if (brktEntries[i].id === mockBrktEntriesToPost[2].id) {
+          expect(brktEntries[i].num_refunds).toEqual(mockBrktEntriesToPost[2].num_refunds);
+        } else if (brktEntries[i].id === mockBrktEntriesToPost[3].id) {
+          expect(brktEntries[i].num_refunds).toBeUndefined();
+        }
         // does not return fee
         // expect(brktEntries[i].fee).toEqual(mockBrktEntriesToPost[i].fee);
         expect(compareAsc(brktEntries[i].time_stamp, minDate)).toBe(1);
         expect(compareAsc(brktEntries[i].time_stamp, maxDate)).toBe(-1);  
       }
     })
+    // see test\app\api\brktEntries\validate_brktEntries.test.tsx 
+    // for full testing of sanitation and validation
     it('should NOT post many brktEntries with sanitization, fee value sanitized to ""', async () => {
       const toSanitize = cloneDeep(mockBrktEntriesToPost)
-      toSanitize[0].fee = '  84  '      
+      toSanitize[0].fee = '  45  '      
       const brktEntries = await postManyBrktEntries(toSanitize);
       expect(brktEntries).toBeNull();
     })
@@ -467,7 +498,8 @@ describe('dbBrktEntries', () => {
       brkt_id: 'brk_5109b54c2cc44ff9a3721de42c80c8c1',
       player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
       num_brackets: 7,
-      fee: '83', 
+      num_refunds: 2,
+      fee: '45', 
       time_stamp: new Date('2023-01-01').getTime()
     }
 
@@ -479,6 +511,7 @@ describe('dbBrktEntries', () => {
       brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
       player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
       num_brackets: 8,
+      num_refunds: 2,
       fee: '40',
       time_stamp: 1739259269537
     }
@@ -512,7 +545,7 @@ describe('dbBrktEntries', () => {
       await doReset();
     });
 
-    it('should put a brktEntry', async () => {
+    it('should put a brktEntry - no chnage to num_refunds', async () => {
       const puttedBrktEntry = await putBrktEntry(brktEntryToPut);
       expect(puttedBrktEntry).not.toBeNull();
       if (!puttedBrktEntry) return;
@@ -520,11 +553,46 @@ describe('dbBrktEntries', () => {
       expect(puttedBrktEntry.brkt_id).toBe(brktEntryToPut.brkt_id);
       expect(puttedBrktEntry.player_id).toBe(brktEntryToPut.player_id);
       expect(puttedBrktEntry.num_brackets).toBe(brktEntryToPut.num_brackets);
+      expect(puttedBrktEntry.num_refunds).toBe(brktEntryToPut.num_refunds);
       // fee not returned
       // expect(puttedBrktEntry.fee + '').toBe(brktEntryToPut.fee);
       expect(compareAsc(puttedBrktEntry.time_stamp, minDate)).toBe(1);
       expect(compareAsc(puttedBrktEntry.time_stamp, maxDate)).toBe(-1);
     })
+    it('should put a brktEntry - change num_refunds to 1', async () => {
+      const tempBrktEntry = cloneDeep(brktEntryToPut);
+      tempBrktEntry.num_refunds = 1;
+      const puttedBrktEntry = await putBrktEntry(tempBrktEntry);
+      expect(puttedBrktEntry).not.toBeNull();
+      if (!puttedBrktEntry) return;
+      didPut = true;      
+      expect(puttedBrktEntry.brkt_id).toBe(tempBrktEntry.brkt_id);
+      expect(puttedBrktEntry.player_id).toBe(tempBrktEntry.player_id);
+      expect(puttedBrktEntry.num_brackets).toBe(tempBrktEntry.num_brackets);
+      expect(puttedBrktEntry.num_refunds).toBe(tempBrktEntry.num_refunds);
+      // fee not returned
+      // expect(puttedBrktEntry.fee + '').toBe(brktEntryToPut.fee);
+      expect(compareAsc(puttedBrktEntry.time_stamp, minDate)).toBe(1);
+      expect(compareAsc(puttedBrktEntry.time_stamp, maxDate)).toBe(-1);
+    })
+    it('should put a brktEntry - change num_refunds to 0', async () => {
+      const tempBrktEntry = cloneDeep(brktEntryToPut);
+      tempBrktEntry.num_refunds = 0;
+      const puttedBrktEntry = await putBrktEntry(tempBrktEntry);
+      expect(puttedBrktEntry).not.toBeNull();
+      if (!puttedBrktEntry) return;
+      didPut = true;      
+      expect(puttedBrktEntry.brkt_id).toBe(tempBrktEntry.brkt_id);
+      expect(puttedBrktEntry.player_id).toBe(tempBrktEntry.player_id);
+      expect(puttedBrktEntry.num_brackets).toBe(tempBrktEntry.num_brackets);
+      expect(puttedBrktEntry.num_refunds).toBeUndefined();
+      // fee not returned
+      // expect(puttedBrktEntry.fee + '').toBe(brktEntryToPut.fee);
+      expect(compareAsc(puttedBrktEntry.time_stamp, minDate)).toBe(1);
+      expect(compareAsc(puttedBrktEntry.time_stamp, maxDate)).toBe(-1);
+    })
+    // see test\app\api\brktEntries\validate_brktEntries.test.tsx 
+    // for full testing of sanitation and validation
     it('should NOT put a brktEntry with sanitization, num_brackets value sanitized to 0', async () => {
       const toSanitize = cloneDeep(brktEntryToPut)
       toSanitize.num_brackets = 1234567890
@@ -549,7 +617,7 @@ describe('dbBrktEntries', () => {
 
   describe('putManyBrktEntries()', () => { 
 
-    let createdBrktEntries = false;    
+    let createdBrktEntries = false;
 
     beforeAll(async () => {
       await deleteAllBrktEntriesForTmnt(tmntIdFormMockData);
@@ -594,6 +662,7 @@ describe('dbBrktEntries', () => {
         player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
         brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
         num_brackets: 6,
+        num_refunds: 1,
         fee: '30',
         time_stamp: 1739259269537
       },
@@ -603,6 +672,7 @@ describe('dbBrktEntries', () => {
         player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
         brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
         num_brackets: 6,
+        num_refunds: 1,
         fee: '30',
         time_stamp: 1739259269537
       },
@@ -612,6 +682,7 @@ describe('dbBrktEntries', () => {
         player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
         brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
         num_brackets: 8,
+        num_refunds: 3,
         fee: '40',
         time_stamp: 1739259269537
       },
@@ -621,6 +692,7 @@ describe('dbBrktEntries', () => {
         player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
         brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
         num_brackets: 8,
+        num_refunds: 3,
         fee: '40',
         time_stamp: 1739259269537
       },
@@ -646,18 +718,19 @@ describe('dbBrktEntries', () => {
       expect(postedBrktEntries).not.toBeNull();
       if (!postedBrktEntries) return;
       expect(postedBrktEntries.length).toBe(multiBrktEntriesTest.length);
+
       // set edits, set eType
       const brktEntriesToUpdate = [
         {
           ...multiBrktEntriesTest[0],
-          num_brackets: 3,
-          fee: '15',
+          num_brackets: 3,          
+          fee: '15',          
           time_stamp: new Date('2023-01-01').getTime(),
           eType: "u",
         },
         {
           ...multiBrktEntriesTest[1],
-          num_brackets: 3,
+          num_brackets: 3,          
           fee: '15',
           time_stamp: new Date('2023-01-01').getTime(),
           eType: "u",
@@ -685,9 +758,15 @@ describe('dbBrktEntries', () => {
       if (!updateInfo) return;
       expect(updateInfo.updates).toBe(2);
       expect(updateInfo.inserts).toBe(2);
-      expect(updateInfo.deletes).toBe(2);
-      await deleteAllBrktEntriesForTmnt(tmntIdFormMockData);
+      expect(updateInfo.deletes).toBe(2);        
+      expect(updateInfo.rfUpdates).toBe(0);
+      expect(updateInfo.rfInserts).toBe(2); 
+      // expect updateInfo.deletes to be 0, 
+      // because deleting brkyEntry row deletes brkt_refund row
+      expect(updateInfo.rfDeletes).toBe(0);
     })
+    // see test\app\api\brktEntries\validate_brktEntries.test.tsx 
+    // for full testing of sanitation and validation
     it('should return no updates, inserts or deletes when passed empty brkt entries', async () => { 
       const multiBrktEntriesTest = [
         {
@@ -716,6 +795,9 @@ describe('dbBrktEntries', () => {
       expect(updateInfo.updates).toBe(0);
       expect(updateInfo.inserts).toBe(0);
       expect(updateInfo.deletes).toBe(0);
+      expect(updateInfo.rfUpdates).toBe(0);
+      expect(updateInfo.rfInserts).toBe(0);
+      expect(updateInfo.rfDeletes).toBe(0);
       await deleteAllBrktEntriesForTmnt(tmntIdFormMockData);
     })
     it('should update no brkt entries when error in data', async () => { 
@@ -770,6 +852,7 @@ describe('dbBrktEntries', () => {
       brkt_id: "brk_12344698f47e4d64935547923e2bdbfb",          
       player_id: "ply_bb0fd8bbd9e34d34a7fa90b4111c6e40",
       num_brackets: 8,
+      num_refunds: 2,
       fee: '40',
       time_stamp: 1739259269537
     }
@@ -785,7 +868,7 @@ describe('dbBrktEntries', () => {
     });
 
     afterEach(async () => {
-      if (!didDel) {
+      if (didDel) {
         await rePostBrktEntry(toDel);
       }
     });

@@ -8,6 +8,22 @@ import { brktEntriesWithFee } from "../../feeCalc";
 
 // routes /api/brktEntries/brktEntry/:id
 
+const getErrMsg = (errorCode: ErrorCode) => {
+  let errMsg: string;
+  switch (errorCode) {
+    case ErrorCode.MissingData:
+      errMsg = "missing data";
+      break;
+    case ErrorCode.InvalidData:
+      errMsg = "invalid data";
+      break;
+    default:
+      errMsg = "unknown error";
+      break;
+  }
+  return errMsg;  
+}
+
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
@@ -24,6 +40,7 @@ export async function GET(
         player_id: true,
         num_brackets: true,
         time_stamp: true,
+        brkt_refunds: true,
         brkt: {
           select: {
             fee: true,
@@ -42,6 +59,7 @@ export async function GET(
     const brktEntriesNoFee: brktEntriesFromPrisa[] = [
       {
         ...brktEntryNoFee,
+        num_refunds: brktEntryNoFee.brkt_refunds ? brktEntryNoFee.brkt_refunds.num_refunds : null as any,
         brkt: {
           ...brktEntryNoFee.brkt,
           fee: Number(brktEntryNoFee.brkt.fee),
@@ -69,37 +87,44 @@ export async function PUT(
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
 
-    const { brkt_id, player_id, num_brackets, fee, time_stamp } = await request.json()
+    const { brkt_id, player_id, num_brackets, num_refunds, fee, time_stamp } = await request.json()
     const toCheck: brktEntryType = {
       ...initBrktEntry,      
       id,
       brkt_id,
       player_id,
       num_brackets,
+      num_refunds, 
       fee,
       time_stamp,
     };
-
-    const toPut = sanitizeBrktEntry(toCheck);
+    
+    const sanitizedObj = sanitizeBrktEntry(toCheck);
+    if (sanitizedObj.errorCode !== ErrorCode.None) {
+      const errMsg = getErrMsg(sanitizedObj.errorCode);
+      return NextResponse.json({ error: errMsg }, { status: 422 });
+    }
+    const toPut = sanitizedObj.brktEntry;
     const errCode = validateBrktEntry(toPut);
     if (errCode !== ErrorCode.None) {
-      let errMsg: string;
-      switch (errCode) {
-        case ErrorCode.MissingData:
-          errMsg = "missing data";
-          break;
-        case ErrorCode.InvalidData:
-          errMsg = "invalid data";
-          break;
-        default:
-          errMsg = "unknown error";
-          break;
-      }
+      const errMsg = getErrMsg(sanitizedObj.errorCode);
       return NextResponse.json({ error: errMsg }, { status: 422 });
     }
 
+    const existingBrktEntry = await prisma.brkt_Entry.findUnique({
+      where: { id },
+      include: { brkt_refunds: true },
+    })
+
+    if (!existingBrktEntry) {
+      return NextResponse.json(
+        { error: "error getting existing brktEntry" },
+        { status: 404 }
+      );
+    }
+
     // DO NOT PUT FEE
-    const brktEntry = await prisma.brkt_Entry.update({
+    const updatedbrktEntry = await prisma.brkt_Entry.update({
       where: {
         id: id,
       },
@@ -110,6 +135,42 @@ export async function PUT(
         time_stamp: new Date(toPut.time_stamp)
       },
     });
+
+    const oldNumRefunds = existingBrktEntry.brkt_refunds?.num_refunds ? existingBrktEntry.brkt_refunds.num_refunds : 0;
+    const newNumRefunds = toPut.num_refunds != null ? toPut.num_refunds : 0;
+    // if changed num_refunds
+    if (newNumRefunds !== oldNumRefunds) { 
+      // if now zero num refunds, delete row in num_refunds
+      if (newNumRefunds === 0 && oldNumRefunds !== 0) {
+        await prisma.brkt_Refund.delete({
+          where: {
+            brkt_entry_id: id,
+          },
+        });
+      } else { // else update or insert num_refunds
+        await prisma.brkt_Refund.upsert({
+          where: {
+            brkt_entry_id: id,
+          },
+          update: {
+            num_refunds: newNumRefunds,
+          },
+          create: {
+            brkt_entry_id: id,
+            num_refunds: newNumRefunds,
+          },
+        });
+      }
+    }
+    const brktEntry: brktEntryType = {
+      ...initBrktEntry,
+      id: updatedbrktEntry.id,
+      brkt_id: updatedbrktEntry.brkt_id,
+      player_id: updatedbrktEntry.player_id,
+      num_brackets: updatedbrktEntry.num_brackets,
+      num_refunds: newNumRefunds === 0 ? undefined as any : newNumRefunds,   
+      time_stamp: updatedbrktEntry.time_stamp.getTime(),
+    }
 
     return NextResponse.json({ brktEntry }, { status: 200 });
   } catch (error: any) {
@@ -136,17 +197,24 @@ export async function PATCH(
   request: Request,
   { params }: { params: { id: string } }
 ) {
+  // 1) get copy of data in database
+  // 2) update data in copy with data from json
+  // 3) sanitize and validate copy of data
+  // 4) patch data in database
+
   try {
     const id = params.id;
     if (!isValidBtDbId(id, "ben")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }  
+    // 1) get copy of data in database    
     const currentBrktEntryNoFee = await prisma.brkt_Entry.findUnique({
       select: {
         id: true,
         brkt_id: true,
         player_id: true,
         num_brackets: true,
+        brkt_refunds: true,
         time_stamp: true,
         brkt: {
           select: {
@@ -165,6 +233,7 @@ export async function PATCH(
     const currentBrktEntriesNoFee: brktEntriesFromPrisa[] = [
       {
         ...currentBrktEntryNoFee,
+        num_refunds: currentBrktEntryNoFee.brkt_refunds ? currentBrktEntryNoFee.brkt_refunds.num_refunds : 0,
         brkt: {
           ...currentBrktEntryNoFee.brkt,
           fee: Number(currentBrktEntryNoFee.brkt.fee),
@@ -179,11 +248,14 @@ export async function PATCH(
     const json = await request.json();
     // populate toCheck with json
     const jsonProps = Object.getOwnPropertyNames(json);
+
+    // 2) update data in copy with data from json
     const toCheck: brktEntryType = {
       ...initBrktEntry,      
       brkt_id: currentBrktEntry.brkt_id,
       player_id: currentBrktEntry.player_id,
       num_brackets: currentBrktEntry.num_brackets,
+      num_refunds: currentBrktEntry.num_refunds,
       fee: currentBrktEntry.fee + '',
       time_stamp: currentBrktEntry.time_stamp,
     };    
@@ -200,6 +272,10 @@ export async function PATCH(
       toCheck.num_brackets = json.num_brackets;
       gotDataToPatch = true;
     }
+    if (jsonProps.includes("num_refunds")) {
+      toCheck.num_refunds = json.num_refunds;
+      gotDataToPatch = true;
+    }
     if (jsonProps.includes("time_stamp")) {
       toCheck.time_stamp = json.time_stamp;
       gotDataToPatch = true;
@@ -208,18 +284,16 @@ export async function PATCH(
     if (!gotDataToPatch) {
       return NextResponse.json({ brktEntry: currentBrktEntry }, { status: 200 });
     }
-    const toBePatched = sanitizeBrktEntry(toCheck);
-    const errCode = validateBrktEntry(toBePatched);
+    // 3) sanitize and validate copy of data
+    const sanitizedObj = sanitizeBrktEntry(toCheck);
+    if (sanitizedObj.errorCode !== ErrorCode.None) {
+      const errMsg = getErrMsg(sanitizedObj.errorCode);
+      return NextResponse.json({ error: errMsg }, { status: 422 });
+    }
+    const toBePatched = sanitizedObj.brktEntry
+    const errCode = validateBrktEntry(toBePatched);    
     if (errCode !== ErrorCode.None) {
-      let errMsg: string;
-      switch (errCode) {
-        case ErrorCode.InvalidData:
-          errMsg = "invalid data";
-          break;
-        default:
-          errMsg = "unknown error";
-          break;
-      }
+      const errMsg = getErrMsg(sanitizedObj.errorCode);
       return NextResponse.json({ error: errMsg }, { status: 422 });
     }
 
@@ -235,12 +309,16 @@ export async function PATCH(
     if (jsonProps.includes("num_brackets")) {
       toPatch.num_brackets = toBePatched.num_brackets;
     }
+    if (jsonProps.includes("num_refunds")) {
+      toPatch.num_refunds = toBePatched.num_refunds;
+    }
     if (jsonProps.includes("time_stamp")) {
       toPatch.time_stamp = toBePatched.time_stamp;
     }
     
+    // 4) patch data in database
     // DO NOT PATCH FEE
-    const brktEntry = await prisma.brkt_Entry.update({
+    const brktEntryUpdate = await prisma.brkt_Entry.update({
       where: {
         id: id,
       },
@@ -251,6 +329,40 @@ export async function PATCH(
         time_stamp: new Date(toPatch.time_stamp) || undefined,
       },
     });
+
+    // if changed num_refunds
+    if ((jsonProps.includes("num_refunds")) && toBePatched.num_refunds !== currentBrktEntry.num_refunds) { 
+      // if now zero num refunds, delete row in num_refunds
+      if (toBePatched.num_refunds === 0 && currentBrktEntry.num_refunds !== 0) {
+        await prisma.brkt_Refund.delete({
+          where: {
+            brkt_entry_id: id,
+          },
+        });
+      } else { // else update or insert num_refunds
+        await prisma.brkt_Refund.upsert({
+          where: {
+            brkt_entry_id: id,
+          },
+          update: {
+            num_refunds: toBePatched.num_refunds,
+          },
+          create: {
+            brkt_entry_id: id,
+            num_refunds: toBePatched.num_refunds,
+          },
+        });
+      }
+    }
+    const brktEntry: brktEntryType = {
+      id: brktEntryUpdate.id,
+      brkt_id: brktEntryUpdate.brkt_id,  
+      player_id: brktEntryUpdate.player_id,
+      num_brackets: brktEntryUpdate.num_brackets,  
+      num_refunds: (toBePatched.num_refunds === 0 || toBePatched.num_refunds == null) ? undefined as any : toBePatched.num_refunds,
+      fee: currentBrktEntry.fee + '',        
+      time_stamp: brktEntryUpdate.time_stamp.getTime(),
+    }    
 
     return NextResponse.json({ brktEntry }, { status: 200 });
   } catch (error: any) {

@@ -1,7 +1,7 @@
-import { brktEntryType, brktType, divEntryType, divType, elimEntryType, elimType, gameType, laneType, playerType, potCategoriesTypes, potEntryType, potType, squadType } from "@/lib/types/types";
+import { brktEntryType, brktRefundType, brktType, divEntryType, divType, elimEntryType, elimType, gameType, laneType, playerType, potCategoriesTypes, potEntryType, potType, squadType } from "@/lib/types/types";
 import { startOfDayFromString, todayStr } from "@/lib/dateTools";
 import { Squad } from "@prisma/client";
-import { initBrkt, initBrktEntry, initDiv, initDivEntry, initElimEntry, initGame, initPlayer, initPot, initPotEntry, initSquad } from "@/lib/db/initVals";
+import { initBrkt, initBrktEntry, initBrktRefund, initDiv, initDivEntry, initElimEntry, initGame, initPlayer, initPot, initPotEntry, initSquad } from "@/lib/db/initVals";
 
 export const tmntToDelId = 'tmt_467e51d71659d2e412cbc64a0d19ecb4'
 
@@ -743,6 +743,7 @@ export const mockBrktEntriesToPost: brktEntryType[] = [
     brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
     player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
     num_brackets: 4,
+    num_refunds: 1,
     fee: '20',
     time_stamp: new Date().getTime(),
   },
@@ -761,6 +762,7 @@ export const mockBrktEntriesToPost: brktEntryType[] = [
     brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
     player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
     num_brackets: 4,
+    num_refunds: 1,
     fee: '20',
     time_stamp: new Date().getTime(),
   },

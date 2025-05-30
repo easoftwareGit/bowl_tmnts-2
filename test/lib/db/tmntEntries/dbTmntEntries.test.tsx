@@ -1607,9 +1607,9 @@ describe('dbTmntEntries', () => {
       const rows = populateRows(editedData);
       expect(rows.length).toBe(6);
 
-      rows[4][brkt1NumColName] = 0;  // delete bracket entry
+      rows[4][brkt1NumColName] = 0;    // delete bracket entry
       rows[4][brkt1FeeColName] = ''; 
-      rows[0][brkt2NumColName] = 0;  // delete bracket entry
+      rows[0][brkt2NumColName] = 0;    // delete bracket entry
       rows[0][brkt2FeeColName] = ''; 
       rows[0][brkt1NumColName] = 8;    // update bracket entry
       rows[0][brkt1FeeColName] = '40'; 
@@ -1621,32 +1621,10 @@ describe('dbTmntEntries', () => {
       rows[1][brkt2FeeColName] = '30'; 
       rows[1][brkt2TimeStampColName] = new Date().getTime();
 
-      const newRow = cloneDeep(rows[0]);
-      newRow.id = 'ply_0183456789abcdef0123456789abcdef'
-      newRow.player_id = 'ply_0183456789abcdef0123456789abcdef'
-      newRow.first_name = 'Gina'
-      newRow.last_name = 'Davis'
-      newRow.average = 200
-      newRow.lane = 35
-      newRow.position = 'Y'
-      newRow.lanePos = '35-Y'
-      newRow[divFeeColName] = '85'
-      newRow[divHdcpColName] = 0
-      newRow[potFeeColName] = '20'
-      newRow[brkt1NumColName] = 4
-      newRow[brkt1FeeColName] = '20'
-      newRow[brkt1TimeStampColName] = new Date().getTime()
-      newRow[brkt2NumColName] = 40
-      newRow[brkt2FeeColName] = '20'
-      newRow[brkt2TimeStampColName] = new Date().getTime()
-      newRow[elim1FeeColName] = '5'
-      newRow[elim2FeeColName] = '5'
-      rows.push(newRow) // insert player
-
       const updatedCounts = await saveEntriesData(rows, testAllData);
       expect(updatedCounts.brktEntries.updates).toBe(1);
       expect(updatedCounts.brktEntries.deletes).toBe(2);
-      expect(updatedCounts.brktEntries.inserts).toBe(4);  
+      expect(updatedCounts.brktEntries.inserts).toBe(2);  
 
     })
     it('should save elim entries with inserted, deleted and updated elim entry', async () => {

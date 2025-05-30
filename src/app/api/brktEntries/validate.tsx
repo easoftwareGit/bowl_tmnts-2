@@ -1,12 +1,12 @@
 import { validMoney } from "@/lib/currency/validate";
 import { blankBrktEntry} from "@/lib/db/initVals";
-import { brktEntryType, validBrktEntriesType } from "@/lib/types/types";
+import { brktEntrySanitizedResult, brktEntryType, validBrktEntriesType } from "@/lib/types/types";
 import { ErrorCode, isValidBtDbId, isValidTimeStamp, maxBrackets, maxDate, maxMoney, minDate, validTime } from "@/lib/validation";
-import { isValid } from "date-fns";
-import { cloneDeep, min } from "lodash";
+import { cloneDeep, isNumber } from "lodash";
 
 /**
  * checks if brktEntry object has missing data - DOES NOT SANITIZE OR VALIDATE
+ * NOTE: num_refunds can be 0 or null, so it is not checked here
  * 
  * @param {brktEntryType} brktEntry - brktEntry to check for missing data
  * @returns {ErrorCode.MissingData | ErrorCode.None | ErrorCode.OtherError} - error code
@@ -41,13 +41,27 @@ export const validBrktEntryNumBrackets = (numBrackets: number): boolean => {
 }
 
 /**
+ * checks if number of refunds is valid 
+ * NOTE: if num_refunds null or undefined it is valid
+ * 
+ * @param {number} numRefunds - number of refunds for one player
+ * @returns {boolean} - true if refunds is valid and not blank; else false
+ */
+export const validBrktEntryNumRefunds = (numRefunds: number): boolean => { 
+  if (numRefunds === null || numRefunds === undefined) return true;
+  if (typeof numRefunds !== 'number') return false;
+  return Number.isInteger(numRefunds) && numRefunds >= 0 && numRefunds <= maxBrackets;
+}
+
+/**
  * checks if fee is valid
  * 
  * @param moneyStr - money to check
- * @returns - true if amount is valid and not blank; else false
+ * @returns - true if amount is valid or blank; else false
  */
-export const validBrktEntryFee = (moneyStr: string): boolean => {
-  if (!moneyStr) return false;
+export const validBrktEntryFee = (moneyStr: string): boolean => {  
+  if (moneyStr == null) return false; // == tests for null and undefined
+  if (moneyStr === '') return true;   // blank is ok  
   return validMoney(moneyStr, 0, maxMoney);
 };
 
@@ -72,15 +86,21 @@ const validBrktEntryData = (brktEntry: brktEntryType): ErrorCode => {
     if (!validBrktEntryNumBrackets(brktEntry.num_brackets)) {
       return ErrorCode.InvalidData;
     }
+    if (!validBrktEntryNumRefunds(brktEntry.num_refunds)) {
+      return ErrorCode.InvalidData;
+    }
     if (!validBrktEntryFee(brktEntry.fee)) {
       return ErrorCode.InvalidData;
     }
-    if (brktEntry.num_brackets === 0 && (brktEntry.fee !== '' || Number(brktEntry.fee) !== 0)) {
+    if (brktEntry.num_brackets === 0 && (brktEntry.fee !== '' && Number(brktEntry.fee) !== 0)) {
       return ErrorCode.InvalidData;      
     }
     if ((brktEntry.fee === '' || Number(brktEntry.fee) === 0) && (brktEntry.num_brackets !== 0)) {
       return ErrorCode.InvalidData;
-    } 
+    }     
+    if (brktEntry.num_brackets < brktEntry.num_refunds) { 
+      return ErrorCode.InvalidData;
+    }
     if (brktEntry.time_stamp) {
       if (!isValidTimeStamp(brktEntry.time_stamp) || brktEntry.time_stamp < 0 || brktEntry.time_stamp > maxDate.getTime()) {
         return ErrorCode.InvalidData
@@ -96,11 +116,12 @@ const validBrktEntryData = (brktEntry: brktEntryType): ErrorCode => {
  * sanitizes brktEntry
  * 
  * @param {brktEntryType} brktEntry - brktEntry to sanitize
- * @returns {brktEntryType} - sanitized brktEntry
+ * @returns {brktEntrySanitizedResult} - sanitized brktEntry
  */
-export const sanitizeBrktEntry = (brktEntry: brktEntryType): brktEntryType => { 
-  if (!brktEntry) return null as any;
+export const sanitizeBrktEntry = (brktEntry: brktEntryType): brktEntrySanitizedResult => { 
+  if (!brktEntry) return { brktEntry: null as any, errorCode: ErrorCode.MissingData};
   const sanitziedBrktEntry: brktEntryType = cloneDeep(blankBrktEntry);
+  let errorCode = ErrorCode.None;
   sanitziedBrktEntry.time_stamp = 0;
   if (isValidBtDbId(brktEntry.id, "ben")) {
     sanitziedBrktEntry.id = brktEntry.id;
@@ -111,8 +132,28 @@ export const sanitizeBrktEntry = (brktEntry: brktEntryType): brktEntryType => {
   if (isValidBtDbId(brktEntry.player_id, "ply")) {
     sanitziedBrktEntry.player_id = brktEntry.player_id;
   }
-  if (validBrktEntryNumBrackets(brktEntry.num_brackets)) {
+  // if (brktEntry.num_brackets == null || isNumber(brktEntry.num_brackets)) {
+  //   sanitziedBrktEntry.num_brackets = brktEntry.num_brackets;
+  // }
+  // if (brktEntry.num_refunds == null || isNumber(brktEntry.num_refunds)) {
+  //   sanitziedBrktEntry.num_refunds = brktEntry.num_refunds;
+  // }
+  if (typeof brktEntry.num_brackets === 'number' && !isNaN(brktEntry.num_brackets)) {
     sanitziedBrktEntry.num_brackets = brktEntry.num_brackets;
+  } else if (typeof brktEntry.num_brackets === 'string'
+    && (brktEntry.num_brackets as string).trim() !== ''
+    && !isNaN(Number(brktEntry.num_brackets)))
+  {
+    sanitziedBrktEntry.num_brackets = Number(brktEntry.num_brackets);
+  }
+  if (brktEntry.num_refunds == null) {
+    sanitziedBrktEntry.num_refunds = brktEntry.num_refunds;
+  } else {
+    if (!isNaN(Number(brktEntry.num_refunds))) {
+      sanitziedBrktEntry.num_refunds = Number(brktEntry.num_refunds);
+    } else {
+      errorCode = ErrorCode.InvalidData;
+    }
   }
   if (validMoney(brktEntry.fee, 0, maxMoney)) {
     sanitziedBrktEntry.fee = brktEntry.fee;
@@ -120,7 +161,7 @@ export const sanitizeBrktEntry = (brktEntry: brktEntryType): brktEntryType => {
   if (brktEntry.time_stamp && isValidTimeStamp(brktEntry.time_stamp)) {
     sanitziedBrktEntry.time_stamp = brktEntry.time_stamp;
   }
-  return sanitziedBrktEntry;
+  return { brktEntry: sanitziedBrktEntry, errorCode };
 }
 
 /**
@@ -155,11 +196,15 @@ export const validateBrktEntries = (brktEntries: brktEntryType[]): validBrktEntr
   // cannot use forEach because if got an error need exit loop
   let i = 0;  
   while (i < brktEntries.length) {    
-    const errCode = validateBrktEntry(brktEntries[i]);
+    const sanitizedObj = sanitizeBrktEntry(brktEntries[i]);
+    if (sanitizedObj.errorCode !== ErrorCode.None) { 
+      return { brktEntries: okBrktEntries, errorCode: sanitizedObj.errorCode };
+    }
+    const errCode = validateBrktEntry(sanitizedObj.brktEntry);
     if (errCode !== ErrorCode.None) {
       return { brktEntries: okBrktEntries, errorCode: errCode };
     }
-    okBrktEntries.push(brktEntries[i]);
+    okBrktEntries.push(sanitizedObj.brktEntry);
     i++;
   }
   return { brktEntries: okBrktEntries, errorCode: ErrorCode.None };

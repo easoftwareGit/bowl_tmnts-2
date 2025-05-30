@@ -18,7 +18,7 @@
     "@emotion/styled": "^11.14.0",
     "@mui/x-data-grid": "^7.23.5",
     "@mui/x-data-grid-generator": "^7.23.5",
-    "@prisma/client": "^6.4.1",
+    "@prisma/client": "^6.8.2",
     "@reduxjs/toolkit": "^2.3.0",
     "axios": "^1.7.7",
     "bcrypt": "^5.1.1",
@@ -59,7 +59,7 @@
     "jest-mock-extended": "^4.0.0-beta1",
     "next-routes-list": "^1.1.5",
     "node-mocks-http": "^1.16.1",
-    "prisma": "^6.4.1",
+    "prisma": "^6.8.2",
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
     "typescript": "^5"

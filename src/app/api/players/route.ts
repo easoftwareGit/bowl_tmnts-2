@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const eventData: playerDataType = {
+    const playerData: playerDataType = {
       id: toPost.id,
       squad_id: toPost.squad_id,
       first_name: toPost.first_name,
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
       position: toPost.position,
     }
     const player = await prisma.player.create({
-      data: eventData
+      data: playerData
     })
     return NextResponse.json({ player }, { status: 201 });
   } catch (err: any) {

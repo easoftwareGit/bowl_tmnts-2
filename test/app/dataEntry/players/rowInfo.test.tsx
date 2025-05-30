@@ -3,7 +3,6 @@ import { findNextError, getRowPlayerName, exportedForTesting } from "@/app/dataE
 import { initBrkt, initDiv, initElim, initEvent, initLane, initPot, initSquad, initTmnt } from "@/lib/db/initVals";
 import { dataOneTmntType } from "@/lib/types/types";
 import { maxAverage, maxBrackets, maxMoney } from "@/lib/validation";
-import { max } from "lodash";
 
 const { validAverage, validLane, validPosition, validDivs, validPots, validBrkts, validElims } = exportedForTesting;
 

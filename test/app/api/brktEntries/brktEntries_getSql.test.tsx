@@ -1,10 +1,9 @@
-import { getUpdateManySQL, getDeleteManySQL, getInsertManySQL, exportedForTesting } from "@/app/api/brktEntries/many/getSql";
-import { deleteAllBrktEntriesForSquad, postManyBrktEntries } from "@/lib/db/brktEntries/dbBrktEntries";
+import { getUpdateManySQL, getDeleteManySQL, getInsertManySQL, exportedForTesting, getUpdateManyRefundsSQL, getInsertManyRefundsSQL, getDeleteManyRefundsSQL } from "@/app/api/brktEntries/many/getSql";
 import { initBrktEntry } from "@/lib/db/initVals";
 import { brktEntryType } from "@/lib/types/types";
 import { maxBrackets } from "@/lib/validation";
 
-const { getBrktIds } = exportedForTesting;
+const { getBrktIds, getBrktEntryIds } = exportedForTesting;
 
 describe('getSql', () => { 
 
@@ -49,6 +48,7 @@ describe('getSql', () => {
       brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
       player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
       num_brackets: 8,
+      num_refunds: 1,
       fee: '40'
     },
     {
@@ -57,6 +57,7 @@ describe('getSql', () => {
       brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
       player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
       num_brackets: 8,
+      num_refunds: 1,
       fee: '40'
     },
   ]
@@ -68,39 +69,24 @@ describe('getSql', () => {
     })
   })
 
+  describe('getBrktEntryIds()', () => { 
+    const expected = [
+      'ben_01ce0472be3d476ea1caa99dd05953fa',
+      'ben_02ce0472be3d476ea1caa99dd05953fa',
+      'ben_03ce0472be3d476ea1caa99dd05953fa',
+      'ben_04ce0472be3d476ea1caa99dd05953fa',
+      'ben_05ce0472be3d476ea1caa99dd05953fa',
+      'ben_06ce0472be3d476ea1caa99dd05953fa'
+    ]
+    it('should return array of unique brktEntryIds', () => {
+      const brktIds = getBrktEntryIds(testBrktEntries);
+      expect(brktIds).toEqual(expected);
+    })
+  })
+  
   describe('getUpdateManySQL()', () => { 
 
-    // beforeAll(async () => {
-    //   await deleteAllBrktEntriesForSquad(squadId);      
-    //   await postManyBrktEntries(testBrktEntries);
-    // })
-
-    // afterAll(async () => {
-    //   await deleteAllBrktEntriesForSquad(squadId);
-    // })
-
     it('should return valid update SQL - 1 player 2 brackets', () => {
-
-      const mockRows = [
-        {
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
-          brk_aa3da3a411b346879307831b6fdadd5f_name: 4,
-          brk_aa3da3a411b346879307831b6fdadd5f_fee: 20,
-          brk_aa3da3a411b346879307831b6fdadd5f_time_stamp: 1739259269537,
-          brk_37345eb6049946ad83feb9fdbb43a307_name: 4,
-          brk_37345eb6049946ad83feb9fdbb43a307_fee: 20,
-          brk_37345eb6049946ad83feb9fdbb43a307_time_stamp: 1739259269537
-        },
-        // {
-        //   player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
-        //   brk_aa3da3a411b346879307831b6fdadd5f_name: 6,
-        //   brk_aa3da3a411b346879307831b6fdadd5f_fee: 30,
-        //   brk_aa3da3a411b346879307831b6fdadd5f_time_stamp: 1739259269537,
-        //   brk_37345eb6049946ad83feb9fdbb43a307_name: 6,
-        //   brk_37345eb6049946ad83feb9fdbb43a307_fee: 30,
-        //   brk_37345eb6049946ad83feb9fdbb43a307__time_stamp: 1739259269537
-        // },
-      ];
 
       const mockBrktEntries: brktEntryType[] = [
         {
@@ -143,27 +129,6 @@ describe('getSql', () => {
     });
     it('should return valid update SQL - 2 player 1 brackets', () => {
 
-      const mockRows = [
-        {
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
-          brk_aa3da3a411b346879307831b6fdadd5f_name: 4,
-          brk_aa3da3a411b346879307831b6fdadd5f_fee: 20,
-          brk_aa3da3a411b346879307831b6fdadd5f_time_stamp: 1739259269537,
-          // brk_37345eb6049946ad83feb9fdbb43a307_name: 4,
-          // brk_37345eb6049946ad83feb9fdbb43a307_fee: 20,
-          // brk_37345eb6049946ad83feb9fdbb43a307_time_stamp: 1739259269537
-        },
-        {
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
-          brk_aa3da3a411b346879307831b6fdadd5f_name: 6,
-          brk_aa3da3a411b346879307831b6fdadd5f_fee: 30,
-          brk_aa3da3a411b346879307831b6fdadd5f_time_stamp: 1739259269537,
-          // brk_37345eb6049946ad83feb9fdbb43a307_name: 6,
-          // brk_37345eb6049946ad83feb9fdbb43a307_fee: 30,
-          // brk_37345eb6049946ad83feb9fdbb43a307__time_stamp: 1739259269537
-        },
-      ];
-
       const mockBrktEntries: brktEntryType[] = [
         {
           ...initBrktEntry,
@@ -202,27 +167,6 @@ describe('getSql', () => {
       expect(updatedSQL).toEqual(expected);
     });
     it('should return valid update SQL - 2 player 2 brackets', () => {
-
-      const mockRows = [
-        {
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
-          brk_aa3da3a411b346879307831b6fdadd5f_name: 4,
-          brk_aa3da3a411b346879307831b6fdadd5f_fee: 20,
-          brk_aa3da3a411b346879307831b6fdadd5f_time_stamp: 1739259269537,
-          brk_37345eb6049946ad83feb9fdbb43a307_name: 4,
-          brk_37345eb6049946ad83feb9fdbb43a307_fee: 20,
-          brk_37345eb6049946ad83feb9fdbb43a307_time_stamp: 1739259269537
-        },
-        {
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
-          brk_aa3da3a411b346879307831b6fdadd5f_name: 6,
-          brk_aa3da3a411b346879307831b6fdadd5f_fee: 30,
-          brk_aa3da3a411b346879307831b6fdadd5f_time_stamp: 1739259269537,
-          brk_37345eb6049946ad83feb9fdbb43a307_name: 6,
-          brk_37345eb6049946ad83feb9fdbb43a307_fee: 30,
-          brk_37345eb6049946ad83feb9fdbb43a307__time_stamp: 1739259269537
-        },
-      ];
 
       const mockBrktEntries: brktEntryType[] = [
         {
@@ -626,41 +570,11 @@ describe('getSql', () => {
       const updatedSQL = getUpdateManySQL(null as any);
       expect(updatedSQL).toEqual('');
     });
-
   })
 
   describe('getInsertManySQL()', () => { 
 
-    // beforeAll(async () => {
-    //   await deleteAllBrktEntriesForSquad(squadId);
-    // })
-
-    // afterEach(async () => {
-    //   await deleteAllBrktEntriesForSquad(squadId);
-    // })
-
     it('should return valid insert SQL - 1 player 2 brackets', () => {
-      const mockRows = [
-        {
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
-          brk_aa3da3a411b346879307831b6fdadd5f_name: 4,
-          brk_aa3da3a411b346879307831b6fdadd5f_fee: 20,
-          brk_aa3da3a411b346879307831b6fdadd5f_time_stamp: 1739259269537,
-          brk_37345eb6049946ad83feb9fdbb43a307_name: 4,
-          brk_37345eb6049946ad83feb9fdbb43a307_fee: 20,
-          brk_37345eb6049946ad83feb9fdbb43a307_time_stamp: 1739259269537
-        },
-        // {
-        //   player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
-        //   brk_aa3da3a411b346879307831b6fdadd5f_name: 6,
-        //   brk_aa3da3a411b346879307831b6fdadd5f_fee: 30,
-        //   brk_aa3da3a411b346879307831b6fdadd5f_time_stamp: 1739259269537,
-        //   brk_37345eb6049946ad83feb9fdbb43a307_name: 6,
-        //   brk_37345eb6049946ad83feb9fdbb43a307_fee: 30,
-        //   brk_37345eb6049946ad83feb9fdbb43a307_time_stamp: 1739259269537
-        // },
-      ];
-
       const mockBrktEntries: brktEntryType[] = [
         {
           ...initBrktEntry,
@@ -695,27 +609,6 @@ describe('getSql', () => {
       expect(insertSQL).toEqual(expected);
     });
     it('should return valid insert SQL - 2 player 1 brackets', () => {
-      const mockRows = [
-        {
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
-          brk_aa3da3a411b346879307831b6fdadd5f_name: 4,
-          brk_aa3da3a411b346879307831b6fdadd5f_fee: 20,
-          brk_aa3da3a411b346879307831b6fdadd5f_time_stamp: 1739259269537,
-          // brk_37345eb6049946ad83feb9fdbb43a307_name: 4,
-          // brk_37345eb6049946ad83feb9fdbb43a307_fee: 20,
-          // brk_37345eb6049946ad83feb9fdbb43a307_time_stamp: 1739259269537
-        },
-        {
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
-          brk_aa3da3a411b346879307831b6fdadd5f_name: 6,
-          brk_aa3da3a411b346879307831b6fdadd5f_fee: 30,
-          brk_aa3da3a411b346879307831b6fdadd5f_time_stamp: 1739259269537,
-          // brk_37345eb6049946ad83feb9fdbb43a307_name: 6,
-          // brk_37345eb6049946ad83feb9fdbb43a307_fee: 30,
-          // brk_37345eb6049946ad83feb9fdbb43a307_time_stamp: 1739259269537
-        },
-      ];
-
       const mockBrktEntries: brktEntryType[] = [
         {
           ...initBrktEntry,
@@ -750,27 +643,6 @@ describe('getSql', () => {
       expect(insertSQL).toEqual(expected);
     });
     it('should return valid insert SQL - 2 player 2 brackets', () => {
-      const mockRows = [
-        {
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
-          brk_aa3da3a411b346879307831b6fdadd5f_name: 4,
-          brk_aa3da3a411b346879307831b6fdadd5f_fee: 20,
-          brk_aa3da3a411b346879307831b6fdadd5f_time_stamp: 1739259269537,
-          brk_37345eb6049946ad83feb9fdbb43a307_name: 4,
-          brk_37345eb6049946ad83feb9fdbb43a307_fee: 20,
-          brk_37345eb6049946ad83feb9fdbb43a307_time_stamp: 1739259269537
-        },
-        {
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
-          brk_aa3da3a411b346879307831b6fdadd5f_name: 6,
-          brk_aa3da3a411b346879307831b6fdadd5f_fee: 30,
-          brk_aa3da3a411b346879307831b6fdadd5f_time_stamp: 1739259269537,
-          brk_37345eb6049946ad83feb9fdbb43a307_name: 6,
-          brk_37345eb6049946ad83feb9fdbb43a307_fee: 30,
-          brk_37345eb6049946ad83feb9fdbb43a307_time_stamp: 1739259269537
-        },
-      ];
-
       const mockBrktEntries: brktEntryType[] = [
         {
           ...initBrktEntry,
@@ -1148,28 +1020,6 @@ describe('getSql', () => {
   describe('getDeleteManySQL', () => { 
 
     it('should return valid update SQL - 1 player 2 brackets', () => {
-
-      const mockRows = [
-        {
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
-          brk_aa3da3a411b346879307831b6fdadd5f_name: 4,
-          brk_aa3da3a411b346879307831b6fdadd5f_fee: 20,
-          brk_aa3da3a411b346879307831b6fdadd5f_time_stamp: 1739259269537,
-          brk_37345eb6049946ad83feb9fdbb43a307_name: 4,
-          brk_37345eb6049946ad83feb9fdbb43a307_fee: 20,
-          brk_37345eb6049946ad83feb9fdbb43a307_time_stamp: 1739259269537
-        },
-        // {
-        //   player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
-        //   brk_aa3da3a411b346879307831b6fdadd5f_name: 6,
-        //   brk_aa3da3a411b346879307831b6fdadd5f_fee: 30,
-        //   brk_aa3da3a411b346879307831b6fdadd5f_time_stamp: 1739259269537,
-        //   brk_37345eb6049946ad83feb9fdbb43a307_name: 6,
-        //   brk_37345eb6049946ad83feb9fdbb43a307_fee: 30,
-        //   brk_37345eb6049946ad83feb9fdbb43a307__time_stamp: 1739259269537
-        // },
-      ];
-
       const mockBrktEntries: brktEntryType[] = [
         {
           ...initBrktEntry,
@@ -1199,28 +1049,6 @@ describe('getSql', () => {
       expect(deleteSQL).toEqual(expected);
     });
     it('should return valid update SQL - 2 player 1 brackets', () => {
-
-      const mockRows = [
-        {
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
-          brk_aa3da3a411b346879307831b6fdadd5f_name: 4,
-          brk_aa3da3a411b346879307831b6fdadd5f_fee: 20,
-          brk_aa3da3a411b346879307831b6fdadd5f_time_stamp: 1739259269537,
-          // brk_37345eb6049946ad83feb9fdbb43a307_name: 4,
-          // brk_37345eb6049946ad83feb9fdbb43a307_fee: 20,
-          // brk_37345eb6049946ad83feb9fdbb43a307_time_stamp: 1739259269537
-        },
-        {
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
-          brk_aa3da3a411b346879307831b6fdadd5f_name: 6,
-          brk_aa3da3a411b346879307831b6fdadd5f_fee: 30,
-          brk_aa3da3a411b346879307831b6fdadd5f_time_stamp: 1739259269537,
-          // brk_37345eb6049946ad83feb9fdbb43a307_name: 6,
-          // brk_37345eb6049946ad83feb9fdbb43a307_fee: 30,
-          // brk_37345eb6049946ad83feb9fdbb43a307__time_stamp: 1739259269537
-        },
-      ];
-
       const mockBrktEntries: brktEntryType[] = [
         {
           ...initBrktEntry,
@@ -1250,28 +1078,6 @@ describe('getSql', () => {
       expect(deleteSQL).toEqual(expected);
     });
     it('should return valid update SQL - 2 player 2 brackets', () => {
-
-      const mockRows = [
-        {
-          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
-          brk_aa3da3a411b346879307831b6fdadd5f_name: 4,
-          brk_aa3da3a411b346879307831b6fdadd5f_fee: 20,
-          brk_aa3da3a411b346879307831b6fdadd5f_time_stamp: 1739259269537,
-          brk_37345eb6049946ad83feb9fdbb43a307_name: 4,
-          brk_37345eb6049946ad83feb9fdbb43a307_fee: 20,
-          brk_37345eb6049946ad83feb9fdbb43a307_time_stamp: 1739259269537
-        },
-        {
-          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
-          brk_aa3da3a411b346879307831b6fdadd5f_name: 6,
-          brk_aa3da3a411b346879307831b6fdadd5f_fee: 30,
-          brk_aa3da3a411b346879307831b6fdadd5f_time_stamp: 1739259269537,
-          brk_37345eb6049946ad83feb9fdbb43a307_name: 6,
-          brk_37345eb6049946ad83feb9fdbb43a307_fee: 30,
-          brk_37345eb6049946ad83feb9fdbb43a307__time_stamp: 1739259269537
-        },
-      ];
-
       const mockBrktEntries: brktEntryType[] = [
         {
           ...initBrktEntry,
@@ -1588,6 +1394,7 @@ describe('getSql', () => {
           player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
           brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
           num_brackets: 4,
+          num_refunds: null as any,
           fee: '20',
           time_stamp: -8.65e15 - 1
         },
@@ -1596,6 +1403,7 @@ describe('getSql', () => {
           player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
           brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
           num_brackets: 4,
+          num_refunds: 0,
           fee: '20',
           time_stamp: 1739259269537
         },
@@ -1637,6 +1445,627 @@ describe('getSql', () => {
       const updatedSQL = getDeleteManySQL(null as any);
       expect(updatedSQL).toEqual('');
     });
+  })
+
+  describe('getUpdateManyRefundsSQL', () => {
+
+    it('should return valid update refunds SQL', () => {
+
+      const mockBrktEntries: brktEntryType[] = [
+        {
+          ...initBrktEntry,
+          id: 'ben_05ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 3,
+          fee: '40'
+        },
+        {
+          ...initBrktEntry,
+          id: 'ben_06ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 3,
+          fee: '40'
+        },
+      ];
+
+      const updatedSQL = getUpdateManyRefundsSQL(mockBrktEntries);
+
+      const expected =
+        `UPDATE public."Brkt_Refund" ` +
+        `SET num_refunds = CASE ` +
+          `WHEN public."Brkt_Refund".brkt_entry_id = 'ben_05ce0472be3d476ea1caa99dd05953fa' THEN b2Up.num_refunds ` +
+          `WHEN public."Brkt_Refund".brkt_entry_id = 'ben_06ce0472be3d476ea1caa99dd05953fa' THEN b2Up.num_refunds ` +
+        `END ` +
+        `FROM (VALUES ` +
+          `('ben_05ce0472be3d476ea1caa99dd05953fa', 3), ` +
+          `('ben_06ce0472be3d476ea1caa99dd05953fa', 3)` +
+          `) AS b2Up(brkt_entry_id, num_refunds) ` +
+        `WHERE public."Brkt_Refund".brkt_entry_id = b2Up.brkt_entry_id;`;
+      
+      expect(updatedSQL).toEqual(expected);
+    });
+    it('should return "" for invalid id', () => { 
+      const mockBrktEntries: brktEntryType[] = [
+        {
+          ...initBrktEntry,
+          id: '<script>alert("xss")</script>',
+          brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 3,
+          fee: '40'
+        },
+        {
+          ...initBrktEntry,
+          id: 'ben_06ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 3,
+          fee: '40'
+        },
+      ];
+
+      const updatedSQL = getUpdateManyRefundsSQL(mockBrktEntries);
+      expect(updatedSQL).toEqual('');
+    })
+    it('should return "" when is valid, but not a brkt_entry id', () => { 
+      const mockBrktEntries: brktEntryType[] = [
+        {
+          ...initBrktEntry,
+          id: squadId,
+          brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 3,
+          fee: '40'
+        },
+        {
+          ...initBrktEntry,
+          id: 'ben_06ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 3,
+          fee: '40'
+        },
+      ];
+
+      const updatedSQL = getUpdateManyRefundsSQL(mockBrktEntries);
+      expect(updatedSQL).toEqual('');
+    })
+    it('should return "" when num_refunds is too low', () => { 
+      const mockBrktEntries: brktEntryType[] = [
+        {
+          ...initBrktEntry,
+          id: 'ben_05ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: -1,
+          fee: '40'
+        },
+        {
+          ...initBrktEntry,
+          id: 'ben_06ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 3,
+          fee: '40'
+        },
+      ];
+
+      const updatedSQL = getUpdateManyRefundsSQL(mockBrktEntries);
+      expect(updatedSQL).toEqual(''); 
+    })
+    it('should return "" when num_refunds is too high', () => { 
+      const mockBrktEntries: brktEntryType[] = [
+        {
+          ...initBrktEntry,
+          id: 'ben_05ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 1234567890,
+          fee: '40'
+        },
+        {
+          ...initBrktEntry,
+          id: 'ben_06ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 3,
+          fee: '40'
+        },
+      ];
+
+      const updatedSQL = getUpdateManyRefundsSQL(mockBrktEntries);
+      expect(updatedSQL).toEqual(''); 
+    })
+    it('should return "" when num_refunds is higher than num_brackets', () => { 
+      const mockBrktEntries: brktEntryType[] = [
+        {
+          ...initBrktEntry,
+          id: 'ben_05ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 9,
+          fee: '40'
+        },
+        {
+          ...initBrktEntry,
+          id: 'ben_06ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 3,
+          fee: '40'
+        },
+      ];
+
+      const updatedSQL = getUpdateManyRefundsSQL(mockBrktEntries);
+      expect(updatedSQL).toEqual(''); 
+    })
+    it('should return "" when num_refunds is not a number', () => { 
+      const mockBrktEntries: brktEntryType[] = [
+        {
+          ...initBrktEntry,
+          id: 'ben_05ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 'abc' as any,
+          fee: '40'
+        },
+        {
+          ...initBrktEntry,
+          id: 'ben_06ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 3,
+          fee: '40'
+        },
+      ];
+
+      const updatedSQL = getUpdateManyRefundsSQL(mockBrktEntries);
+      expect(updatedSQL).toEqual(''); 
+    })
+    it('should return "" when num_refunds is not an integer', () => { 
+      const mockBrktEntries: brktEntryType[] = [
+        {
+          ...initBrktEntry,
+          id: 'ben_05ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 1.5,
+          fee: '40'
+        },
+        {
+          ...initBrktEntry,
+          id: 'ben_06ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 3,
+          fee: '40'
+        },
+      ];
+
+      const updatedSQL = getUpdateManyRefundsSQL(mockBrktEntries);
+      expect(updatedSQL).toEqual(''); 
+    })    
+    it('should return "" when no num_refunds', () => { 
+      const mockBrktEntries: brktEntryType[] = [
+        {
+          ...initBrktEntry,
+          id: 'ben_05ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,          
+          fee: '40'
+        },
+        {
+          ...initBrktEntry,
+          id: 'ben_06ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,          
+          fee: '40'
+        },
+      ];
+
+      const updatedSQL = getUpdateManyRefundsSQL(mockBrktEntries);
+      expect(updatedSQL).toEqual(''); 
+    })
+  })
+
+  describe('getInsertManyRefundsSQL', () => { 
+
+    it('should get valid insert SQL', () => { 
+      const mockBrktEntries: brktEntryType[] = [
+        {
+          ...initBrktEntry,
+          id: 'ben_a123456789abcdef0123456789abcdef',
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+          num_brackets: 10,
+          num_refunds: 3,
+          fee: '50',
+          time_stamp: 1739259269537
+        },
+        {
+          ...initBrktEntry,
+          id: 'ben_a133456789abcdef0123456789abcdef',
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+          num_brackets: 10,
+          num_refunds: 3,
+          fee: '50',
+          time_stamp: 1739259269537
+        },
+      ];
+
+      const insertSQL = getInsertManyRefundsSQL(mockBrktEntries);
+      const expected =
+        `INSERT INTO public."Brkt_Refund" (brkt_entry_id, num_refunds) ` +
+        `SELECT b2up.brkt_entry_id, b2up.num_refunds ` +
+        `FROM (VALUES ` +
+          `('ben_a123456789abcdef0123456789abcdef', 3), ` +
+          `('ben_a133456789abcdef0123456789abcdef', 3)` +
+          `) AS b2up(brkt_entry_id, num_refunds) ` +
+        `WHERE NOT EXISTS (SELECT 1 FROM public."Brkt_Refund" WHERE brkt_entry_id = b2up.brkt_entry_id);`;
+      
+      expect(insertSQL).toEqual(expected);
+    })
+    it('should return "" for invalid id', () => { 
+      const mockBrktEntries: brktEntryType[] = [
+        {
+          ...initBrktEntry,
+          id: '<script>alert("xss")</script>',
+          brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 3,
+          fee: '40'
+        },
+        {
+          ...initBrktEntry,
+          id: 'ben_06ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 3,
+          fee: '40'
+        },
+      ];
+
+      const insertSQL = getInsertManyRefundsSQL(mockBrktEntries);
+      expect(insertSQL).toEqual('');
+    })
+    it('should return "" when is valid, but not a brkt_entry id', () => { 
+      const mockBrktEntries: brktEntryType[] = [
+        {
+          ...initBrktEntry,
+          id: squadId,
+          brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 3,
+          fee: '40'
+        },
+        {
+          ...initBrktEntry,
+          id: 'ben_06ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 3,
+          fee: '40'
+        },
+      ];
+
+      const insertSQL = getInsertManyRefundsSQL(mockBrktEntries);
+      expect(insertSQL).toEqual('');
+    })
+    it('should return "" when num_refunds is too low', () => { 
+      const mockBrktEntries: brktEntryType[] = [
+        {
+          ...initBrktEntry,
+          id: 'ben_05ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: -1,
+          fee: '40'
+        },
+        {
+          ...initBrktEntry,
+          id: 'ben_06ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 3,
+          fee: '40'
+        },
+      ];
+
+      const insertSQL = getInsertManyRefundsSQL(mockBrktEntries);
+      expect(insertSQL).toEqual('');
+    })
+    it('should return "" when num_refunds is too high', () => { 
+      const mockBrktEntries: brktEntryType[] = [
+        {
+          ...initBrktEntry,
+          id: 'ben_05ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 1234567890,
+          fee: '40'
+        },
+        {
+          ...initBrktEntry,
+          id: 'ben_06ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 3,
+          fee: '40'
+        },
+      ];
+
+      const insertSQL = getInsertManyRefundsSQL(mockBrktEntries);
+      expect(insertSQL).toEqual('');
+    })
+    it('should return "" when num_refunds is higher than num_brackets', () => { 
+      const mockBrktEntries: brktEntryType[] = [
+        {
+          ...initBrktEntry,
+          id: 'ben_05ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 9,
+          fee: '40'
+        },
+        {
+          ...initBrktEntry,
+          id: 'ben_06ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 3,
+          fee: '40'
+        },
+      ];
+
+      const insertSQL = getInsertManyRefundsSQL(mockBrktEntries);
+      expect(insertSQL).toEqual('');
+    })
+
+    it('should return "" when num_refunds is not a number', () => { 
+      const mockBrktEntries: brktEntryType[] = [
+        {
+          ...initBrktEntry,
+          id: 'ben_05ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 'abc' as any,
+          fee: '40'
+        },
+        {
+          ...initBrktEntry,
+          id: 'ben_06ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 3,
+          fee: '40'
+        },
+      ];
+
+      const insertSQL = getInsertManyRefundsSQL(mockBrktEntries);
+      expect(insertSQL).toEqual('');
+    })
+    it('should return "" when num_refunds is not an integer', () => { 
+      const mockBrktEntries: brktEntryType[] = [
+        {
+          ...initBrktEntry,
+          id: 'ben_05ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 1.5,
+          fee: '40'
+        },
+        {
+          ...initBrktEntry,
+          id: 'ben_06ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 3,
+          fee: '40'
+        },
+      ];
+
+      const insertSQL = getInsertManyRefundsSQL(mockBrktEntries);
+      expect(insertSQL).toEqual('');
+    })    
+    it('should return "" when no num_refunds', () => { 
+      const mockBrktEntries: brktEntryType[] = [
+        {
+          ...initBrktEntry,
+          id: 'ben_05ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,          
+          fee: '40'
+        },
+        {
+          ...initBrktEntry,
+          id: 'ben_06ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,          
+          fee: '40'
+        },
+      ];
+
+      const insertSQL = getInsertManyRefundsSQL(mockBrktEntries);
+      expect(insertSQL).toEqual('');
+    })
 
   })
+
+  describe('getDeleteManyRefundsSQL', () => {
+
+    it('should return valid delete SQL', () => {
+
+      const mockBrktEntries: brktEntryType[] = [
+        {
+          ...initBrktEntry,
+          id: 'ben_05ce0472be3d476ea1caa99dd05953fa',
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+          num_brackets: 10,
+          num_refunds: 0,
+          fee: '50',
+          time_stamp: 1739259269537
+        },
+        {
+          ...initBrktEntry,
+          id: 'ben_06ce0472be3d476ea1caa99dd05953fa',
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+          num_brackets: 10,
+          num_refunds: 0,
+          fee: '50',
+          time_stamp: 1739259269537
+        },
+      ];
+
+      const deleteSQL = getDeleteManyRefundsSQL(mockBrktEntries);
+      const expected =
+        `DELETE FROM public."Brkt_Refund" ` +
+        `WHERE brkt_entry_id IN (` +
+        `'ben_05ce0472be3d476ea1caa99dd05953fa', ` +
+        `'ben_06ce0472be3d476ea1caa99dd05953fa'` +
+        `);`;
+      
+      expect(deleteSQL).toEqual(expected);
+    })
+    it('should return "" for invalid id', () => { 
+      const mockBrktEntries: brktEntryType[] = [
+        {
+          ...initBrktEntry,
+          id: '<script>alert("xss")</script>',
+          brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 3,
+          fee: '40'
+        },
+        {
+          ...initBrktEntry,
+          id: 'ben_06ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 3,
+          fee: '40'
+        },
+      ];
+
+      const deleteSQL = getDeleteManyRefundsSQL(mockBrktEntries);
+      expect(deleteSQL).toEqual('');
+    })
+    it('should return "" when is valid, but not a brkt_entry id', () => { 
+      const mockBrktEntries: brktEntryType[] = [
+        {
+          ...initBrktEntry,
+          id: squadId,
+          brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 3,
+          fee: '40'
+        },
+        {
+          ...initBrktEntry,
+          id: 'ben_06ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: 3,
+          fee: '40'
+        },
+      ];
+
+      const deleteSQL = getDeleteManyRefundsSQL(mockBrktEntries);
+      expect(deleteSQL).toEqual('');
+    })
+    it('should return "" when num_refunds is not 0 or null', () => { 
+      const mockBrktEntries: brktEntryType[] = [
+        {
+          ...initBrktEntry,
+          id: 'ben_05ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 8,
+          num_refunds: -1,
+          fee: '40'
+        },
+        {
+          ...initBrktEntry,
+          id: 'ben_06ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 0,
+          num_refunds: 3,
+          fee: '40'
+        },
+      ];
+
+      const deleteSQL = getDeleteManyRefundsSQL(mockBrktEntries);
+      expect(deleteSQL).toEqual('');
+    })
+    it('should return "" when num_refunds is not a number', () => { 
+      const mockBrktEntries: brktEntryType[] = [
+        {
+          ...initBrktEntry,
+          id: 'ben_05ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 'abc' as any,
+          num_refunds: -1,
+          fee: '40'
+        },
+        {
+          ...initBrktEntry,
+          id: 'ben_06ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+          num_brackets: 0,
+          num_refunds: 3,
+          fee: '40'
+        },
+      ];
+
+      const deleteSQL = getDeleteManyRefundsSQL(mockBrktEntries);
+      expect(deleteSQL).toEqual('');
+    })
+
+  })
+  
 })

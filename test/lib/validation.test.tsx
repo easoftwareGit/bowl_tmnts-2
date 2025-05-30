@@ -137,12 +137,6 @@ describe("tests for validation functions", () => {
       );
     });
 
-    it("valid BtDb id should return true for handicap (hdc) id", () => {
-      expect(isValidBtDbId("hdc_67c7a51bbd2d441da9bb20a3001795a9", "hdc")).toBe(
-        true
-      );
-    });
-
     it("valid BtDb id should return true for squad (sqd) id", () => {
       expect(isValidBtDbId("sqd_7116ce5f80164830830a7157eb093396", "sqd")).toBe(
         true
@@ -169,6 +163,54 @@ describe("tests for validation functions", () => {
 
     it("valid BtDb id should return true for player (ply) id", () => {
       expect(isValidBtDbId("ply_7116ce5f80164830830a7157eb093399", "ply")).toBe(
+        true
+      );
+    });
+
+    it("valid BtDb id should return true for game (gam) id", () => {
+      expect(isValidBtDbId("gam_7116ce5f80164830830a7157eb093399", "gam")).toBe(
+        true
+      );
+    });
+    
+    it("valid BtDb id should return true for divison entry (den) id", () => {
+      expect(isValidBtDbId("den_7116ce5f80164830830a7157eb093399", "den")).toBe(
+        true
+      );
+    });
+
+    it("valid BtDb id should return true for pot entry (pen) id", () => {
+      expect(isValidBtDbId("pen_7116ce5f80164830830a7157eb093399", "pen")).toBe(
+        true
+      );
+    });
+
+    it("valid BtDb id should return true for bracket entry (ben) id", () => {
+      expect(isValidBtDbId("ben_7116ce5f80164830830a7157eb093399", "ben")).toBe(
+        true
+      );
+    });
+
+    it("valid BtDb id should return true for eliminator entry (een) id", () => {
+      expect(isValidBtDbId("een_7116ce5f80164830830a7157eb093399", "een")).toBe(
+        true
+      );
+    });
+
+    it("valid BtDb id should return true for bracket refund (brf) id", () => {
+      expect(isValidBtDbId("brf_7116ce5f80164830830a7157eb093399", "brf")).toBe(
+        true
+      );
+    });
+
+    it("valid BtDb id should return true for bracket individual bracket (bib) id", () => {
+      expect(isValidBtDbId("bib_7116ce5f80164830830a7157eb093399", "bib")).toBe(
+        true
+      );
+    });
+    
+    it("valid BtDb id should return true for bracket seed (bsd) id", () => {
+      expect(isValidBtDbId("bsd_7116ce5f80164830830a7157eb093399", "bsd")).toBe(
         true
       );
     });

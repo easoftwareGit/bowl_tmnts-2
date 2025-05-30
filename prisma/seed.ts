@@ -6719,14 +6719,12 @@ async function brktEntriesUpsert() {
           brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
           player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
           num_brackets: 8,
-          // fee: 40,
         },
         create: {
           id: "ben_bc4c581d7b1c4fc99dbdbd46f4f7210a",
           brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
           player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
-          num_brackets: 8,
-          // fee: 40,
+          num_brackets: 8,          
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -6736,15 +6734,13 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_6ede2512c7d4409ca7b055505990a499",
           player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
-          num_brackets: 8,
-          // fee: 40,
+          num_brackets: 8,          
         },
         create: {
           id: "ben_8f039ee00dfa445c9e3aee0ca9a6391b",
           brkt_id: "brk_6ede2512c7d4409ca7b055505990a499",
           player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
-          num_brackets: 8,
-          // fee: 40,
+          num_brackets: 8,          
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -6754,15 +6750,13 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
           player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
-          num_brackets: 8,
-          // fee: 40,
+          num_brackets: 8,          
         },
         create: {
           id: "ben_2291bb31e72b4dc6b6fe9e76d135493d",
           brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
           player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
-          num_brackets: 8,
-          // fee: 40,
+          num_brackets: 8,          
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -6772,15 +6766,13 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_6ede2512c7d4409ca7b055505990a499",
           player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
-          num_brackets: 8,
-          // fee: 40,
+          num_brackets: 8,          
         },
         create: {
           id: "ben_0a6938d0a5b94dd789bd3b8663d1ee53",
           brkt_id: "brk_6ede2512c7d4409ca7b055505990a499",
           player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
-          num_brackets: 8,
-          // fee: 40,
+          num_brackets: 8,          
         },
       });
 
@@ -7017,474 +7009,422 @@ async function brktEntriesUpsert() {
           num_brackets: 6,
         },
       });
-      // brktEntry = await prisma.brkt_Entry.upsert({
-      //   where: {
-      //     id: "ben_c1526ba58d3f4a7d950101a5674ce595",
-      //   },
-      //   update: {
-      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-      //     player_id: "ply_a08758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 9,
-      //     fee: 45,
-      //   },
-      //   create: {
-      //     id: "ben_c1526ba58d3f4a7d950101a5674ce595",
-      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-      //     player_id: "ply_a08758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 9,
-      //     fee: 45,
-      //   },
-      // });
-      // brktEntry = await prisma.brkt_Entry.upsert({
-      //   where: {
-      //     id: "ben_c1626ba58d3f4a7d950101a5674ce595",
-      //   },
-      //   update: {
-      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-      //     player_id: "ply_a08758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 9,
-      //     fee: 45,
-      //   },
-      //   create: {
-      //     id: "ben_c1626ba58d3f4a7d950101a5674ce595",
-      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-      //     player_id: "ply_a08758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 9,
-      //     fee: 45,
-      //   },
-      // });
-      // brktEntry = await prisma.brkt_Entry.upsert({
-      //   where: {
-      //     id: "ben_c1726ba58d3f4a7d950101a5674ce595",
-      //   },
-      //   update: {
-      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-      //     player_id: "ply_a09758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 6,
-      //     fee: 30,
-      //   },
-      //   create: {
-      //     id: "ben_c1726ba58d3f4a7d950101a5674ce595",
-      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-      //     player_id: "ply_a09758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 6,
-      //     fee: 30,
-      //   },
-      // });
-      // brktEntry = await prisma.brkt_Entry.upsert({
-      //   where: {
-      //     id: "ben_c1826ba58d3f4a7d950101a5674ce595",
-      //   },
-      //   update: {
-      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-      //     player_id: "ply_a09758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 6,
-      //     fee: 30,
-      //   },
-      //   create: {
-      //     id: "ben_c1826ba58d3f4a7d950101a5674ce595",
-      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-      //     player_id: "ply_a09758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 6,
-      //     fee: 30,
-      //   },
-      // });
-      // brktEntry = await prisma.brkt_Entry.upsert({
-      //   where: {
-      //     id: "ben_c1926ba58d3f4a7d950101a5674ce595",
-      //   },
-      //   update: {
-      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-      //     player_id: "ply_a10758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 3,
-      //     fee: 15,
-      //   },
-      //   create: {
-      //     id: "ben_c1926ba58d3f4a7d950101a5674ce595",
-      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-      //     player_id: "ply_a10758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 3,
-      //     fee: 15,
-      //   },
-      // });
-      // brktEntry = await prisma.brkt_Entry.upsert({
-      //   where: {
-      //     id: "ben_c2026ba58d3f4a7d950101a5674ce595",
-      //   },
-      //   update: {
-      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-      //     player_id: "ply_a10758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 3,
-      //     fee: 15,
-      //   },
-      //   create: {
-      //     id: "ben_c2026ba58d3f4a7d950101a5674ce595",
-      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-      //     player_id: "ply_a10758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 3,
-      //     fee: 15,
-      //   },
-      // });
-      // brktEntry = await prisma.brkt_Entry.upsert({
-      //   where: {
-      //     id: "ben_c2126ba58d3f4a7d950101a5674ce595",
-      //   },
-      //   update: {
-      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-      //     player_id: "ply_a11758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 10,
-      //     fee: 50,
-      //   },
-      //   create: {
-      //     id: "ben_c2126ba58d3f4a7d950101a5674ce595",
-      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-      //     player_id: "ply_a11758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 10,
-      //     fee: 50,
-      //   },
-      // });
-      // brktEntry = await prisma.brkt_Entry.upsert({
-      //   where: {
-      //     id: "ben_c2226ba58d3f4a7d950101a5674ce595",
-      //   },
-      //   update: {
-      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-      //     player_id: "ply_a11758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 10,
-      //     fee: 50,
-      //   },
-      //   create: {
-      //     id: "ben_c2226ba58d3f4a7d950101a5674ce595",
-      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-      //     player_id: "ply_a11758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 10,
-      //     fee: 50,
-      //   },
-      // });
-      // brktEntry = await prisma.brkt_Entry.upsert({
-      //   where: {
-      //     id: "ben_c2326ba58d3f4a7d950101a5674ce595",
-      //   },
-      //   update: {
-      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-      //     player_id: "ply_a12758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 2,
-      //     fee: 10,
-      //   },
-      //   create: {
-      //     id: "ben_c2326ba58d3f4a7d950101a5674ce595",
-      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-      //     player_id: "ply_a12758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 2,
-      //     fee: 10,
-      //   },
-      // });
-      // brktEntry = await prisma.brkt_Entry.upsert({
-      //   where: {
-      //     id: "ben_c2426ba58d3f4a7d950101a5674ce595",
-      //   },
-      //   update: {
-      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-      //     player_id: "ply_a12758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 2,
-      //     fee: 10,
-      //   },
-      //   create: {
-      //     id: "ben_c2426ba58d3f4a7d950101a5674ce595",
-      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-      //     player_id: "ply_a12758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 2,
-      //     fee: 10,
-      //   },
-      // });
-      // brktEntry = await prisma.brkt_Entry.upsert({
-      //   where: {
-      //     id: "ben_c2526ba58d3f4a7d950101a5674ce595",
-      //   },
-      //   update: {
-      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-      //     player_id: "ply_a13758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 6,
-      //     fee: 30,
-      //   },
-      //   create: {
-      //     id: "ben_c2526ba58d3f4a7d950101a5674ce595",
-      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-      //     player_id: "ply_a13758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 6,
-      //     fee: 30,
-      //   },
-      // });
-      // brktEntry = await prisma.brkt_Entry.upsert({
-      //   where: {
-      //     id: "ben_c2626ba58d3f4a7d950101a5674ce595",
-      //   },
-      //   update: {
-      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-      //     player_id: "ply_a13758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 6,
-      //     fee: 30,
-      //   },
-      //   create: {
-      //     id: "ben_c2626ba58d3f4a7d950101a5674ce595",
-      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-      //     player_id: "ply_a13758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 6,
-      //     fee: 30,
-      //   },
-      // });
-      // brktEntry = await prisma.brkt_Entry.upsert({
-      //   where: {
-      //     id: "ben_c2726ba58d3f4a7d950101a5674ce595",
-      //   },
-      //   update: {
-      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-      //     player_id: "ply_a14758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 9,
-      //     fee: 45,
-      //   },
-      //   create: {
-      //     id: "ben_c2726ba58d3f4a7d950101a5674ce595",
-      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-      //     player_id: "ply_a14758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 9,
-      //     fee: 45,
-      //   },
-      // });
-      // brktEntry = await prisma.brkt_Entry.upsert({
-      //   where: {
-      //     id: "ben_c2826ba58d3f4a7d950101a5674ce595",
-      //   },
-      //   update: {
-      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-      //     player_id: "ply_a14758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 9,
-      //     fee: 45,
-      //   },
-      //   create: {
-      //     id: "ben_c2826ba58d3f4a7d950101a5674ce595",
-      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-      //     player_id: "ply_a14758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 9,
-      //     fee: 45,
-      //   },
-      // });
-      // brktEntry = await prisma.brkt_Entry.upsert({
-      //   where: {
-      //     id: "ben_c2926ba58d3f4a7d950101a5674ce595",
-      //   },
-      //   update: {
-      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-      //     player_id: "ply_a15758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 3,
-      //     fee: 15,
-      //   },
-      //   create: {
-      //     id: "ben_c2926ba58d3f4a7d950101a5674ce595",
-      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-      //     player_id: "ply_a15758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 3,
-      //     fee: 15,
-      //   },
-      // });
-      // brktEntry = await prisma.brkt_Entry.upsert({
-      //   where: {
-      //     id: "ben_c3026ba58d3f4a7d950101a5674ce595",
-      //   },
-      //   update: {
-      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-      //     player_id: "ply_a15758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 3,
-      //     fee: 15,
-      //   },
-      //   create: {
-      //     id: "ben_c3026ba58d3f4a7d950101a5674ce595",
-      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-      //     player_id: "ply_a15758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 3,
-      //     fee: 15,
-      //   },
-      // });
-      // brktEntry = await prisma.brkt_Entry.upsert({
-      //   where: {
-      //     id: "ben_c3126ba58d3f4a7d950101a5674ce595",
-      //   },
-      //   update: {
-      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-      //     player_id: "ply_a16758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 7,
-      //     fee: 35,
-      //   },
-      //   create: {
-      //     id: "ben_c3126ba58d3f4a7d950101a5674ce595",
-      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-      //     player_id: "ply_a16758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 7,
-      //     fee: 35,
-      //   },
-      // });
-      // brktEntry = await prisma.brkt_Entry.upsert({
-      //   where: {
-      //     id: "ben_c3226ba58d3f4a7d950101a5674ce595",
-      //   },
-      //   update: {
-      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-      //     player_id: "ply_a16758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 7,
-      //     fee: 35,
-      //   },
-      //   create: {
-      //     id: "ben_c3226ba58d3f4a7d950101a5674ce595",
-      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-      //     player_id: "ply_a16758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 7,
-      //     fee: 35,
-      //   },
-      // });
-      // brktEntry = await prisma.brkt_Entry.upsert({
-      //   where: {
-      //     id: "ben_c3326ba58d3f4a7d950101a5674ce595",
-      //   },
-      //   update: {
-      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-      //     player_id: "ply_a17758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 4,
-      //     fee: 20,
-      //   },
-      //   create: {
-      //     id: "ben_c3326ba58d3f4a7d950101a5674ce595",
-      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-      //     player_id: "ply_a17758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 4,
-      //     fee: 20,
-      //   },
-      // });
-      // brktEntry = await prisma.brkt_Entry.upsert({
-      //   where: {
-      //     id: "ben_c3426ba58d3f4a7d950101a5674ce595",
-      //   },
-      //   update: {
-      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-      //     player_id: "ply_a17758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 4,
-      //     fee: 20,
-      //   },
-      //   create: {
-      //     id: "ben_c3426ba58d3f4a7d950101a5674ce595",
-      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-      //     player_id: "ply_a17758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 4,
-      //     fee: 20,
-      //   },
-      // });
-      // brktEntry = await prisma.brkt_Entry.upsert({
-      //   where: {
-      //     id: "ben_c3526ba58d3f4a7d950101a5674ce595",
-      //   },
-      //   update: {
-      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-      //     player_id: "ply_a18758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 9,
-      //     fee: 45,
-      //   },
-      //   create: {
-      //     id: "ben_c3526ba58d3f4a7d950101a5674ce595",
-      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-      //     player_id: "ply_a18758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 9,
-      //     fee: 45,
-      //   },
-      // });
-      // brktEntry = await prisma.brkt_Entry.upsert({
-      //   where: {
-      //     id: "ben_c3626ba58d3f4a7d950101a5674ce595",
-      //   },
-      //   update: {
-      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-      //     player_id: "ply_a18758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 9,
-      //     fee: 45,
-      //   },
-      //   create: {
-      //     id: "ben_c3626ba58d3f4a7d950101a5674ce595",
-      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-      //     player_id: "ply_a18758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 9,
-      //     fee: 45,
-      //   },
-      // });
-      // brktEntry = await prisma.brkt_Entry.upsert({
-      //   where: {
-      //     id: "ben_c3726ba58d3f4a7d950101a5674ce595",
-      //   },
-      //   update: {
-      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-      //     player_id: "ply_a19758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 6,
-      //     fee: 30,
-      //   },
-      //   create: {
-      //     id: "ben_c3726ba58d3f4a7d950101a5674ce595",
-      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-      //     player_id: "ply_a19758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 6,
-      //     fee: 30,
-      //   },
-      // });
-      // brktEntry = await prisma.brkt_Entry.upsert({
-      //   where: {
-      //     id: "ben_c3826ba58d3f4a7d950101a5674ce595",
-      //   },
-      //   update: {
-      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-      //     player_id: "ply_a19758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 6,
-      //     fee: 30,
-      //   },
-      //   create: {
-      //     id: "ben_c3826ba58d3f4a7d950101a5674ce595",
-      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-      //     player_id: "ply_a19758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 6,
-      //     fee: 30,
-      //   },
-      // });
-      // brktEntry = await prisma.brkt_Entry.upsert({
-      //   where: {
-      //     id: "ben_c3926ba58d3f4a7d950101a5674ce595",
-      //   },
-      //   update: {
-      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-      //     player_id: "ply_a20758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 2,
-      //     fee: 10,
-      //   },
-      //   create: {
-      //     id: "ben_c3926ba58d3f4a7d950101a5674ce595",
-      //     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-      //     player_id: "ply_a20758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 2,
-      //     fee: 10,
-      //   },
-      // });
-      // brktEntry = await prisma.brkt_Entry.upsert({
-      //   where: {
-      //     id: "ben_c4026ba58d3f4a7d950101a5674ce595",
-      //   },
-      //   update: {
-      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-      //     player_id: "ply_a20758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 2,
-      //     fee: 10,
-      //   },
-      //   create: {
-      //     id: "ben_c4026ba58d3f4a7d950101a5674ce595",
-      //     brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-      //     player_id: "ply_a20758cff1cc4bab9d9133e661bd49b0",
-      //     num_brackets: 2,
-      //     fee: 10,
-      //   },
-      // });
+      brktEntry = await prisma.brkt_Entry.upsert({
+        where: {
+          id: "ben_c1526ba58d3f4a7d950101a5674ce595",
+        },
+        update: {
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          player_id: "ply_a08758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 9,
+        },
+        create: {
+          id: "ben_c1526ba58d3f4a7d950101a5674ce595",
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          player_id: "ply_a08758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 9,
+        },
+      });
+      brktEntry = await prisma.brkt_Entry.upsert({
+        where: {
+          id: "ben_c1626ba58d3f4a7d950101a5674ce595",
+        },
+        update: {
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          player_id: "ply_a08758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 9,
+        },
+        create: {
+          id: "ben_c1626ba58d3f4a7d950101a5674ce595",
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          player_id: "ply_a08758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 9,
+        },
+      });
+      brktEntry = await prisma.brkt_Entry.upsert({
+        where: {
+          id: "ben_c1726ba58d3f4a7d950101a5674ce595",
+        },
+        update: {
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          player_id: "ply_a09758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 6,
+        },
+        create: {
+          id: "ben_c1726ba58d3f4a7d950101a5674ce595",
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          player_id: "ply_a09758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 6,
+        },
+      });
+      brktEntry = await prisma.brkt_Entry.upsert({
+        where: {
+          id: "ben_c1826ba58d3f4a7d950101a5674ce595",
+        },
+        update: {
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          player_id: "ply_a09758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 6,
+        },
+        create: {
+          id: "ben_c1826ba58d3f4a7d950101a5674ce595",
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          player_id: "ply_a09758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 6,
+        },
+      });
+      brktEntry = await prisma.brkt_Entry.upsert({
+        where: {
+          id: "ben_c1926ba58d3f4a7d950101a5674ce595",
+        },
+        update: {
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          player_id: "ply_a10758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 3,
+        },
+        create: {
+          id: "ben_c1926ba58d3f4a7d950101a5674ce595",
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          player_id: "ply_a10758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 3,
+        },
+      });
+      brktEntry = await prisma.brkt_Entry.upsert({
+        where: {
+          id: "ben_c2026ba58d3f4a7d950101a5674ce595",
+        },
+        update: {
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          player_id: "ply_a10758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 3,
+        },
+        create: {
+          id: "ben_c2026ba58d3f4a7d950101a5674ce595",
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          player_id: "ply_a10758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 3,
+        },
+      });
+      brktEntry = await prisma.brkt_Entry.upsert({
+        where: {
+          id: "ben_c2126ba58d3f4a7d950101a5674ce595",
+        },
+        update: {
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          player_id: "ply_a11758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 21,
+        },
+        create: {
+          id: "ben_c2126ba58d3f4a7d950101a5674ce595",
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          player_id: "ply_a11758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 21,
+        },
+      });
+      brktEntry = await prisma.brkt_Entry.upsert({
+        where: {
+          id: "ben_c2226ba58d3f4a7d950101a5674ce595",
+        },
+        update: {
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          player_id: "ply_a11758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 21,
+        },
+        create: {
+          id: "ben_c2226ba58d3f4a7d950101a5674ce595",
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          player_id: "ply_a11758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 21,
+        },
+      });
+      brktEntry = await prisma.brkt_Entry.upsert({
+        where: {
+          id: "ben_c2326ba58d3f4a7d950101a5674ce595",
+        },
+        update: {
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          player_id: "ply_a12758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 2,
+        },
+        create: {
+          id: "ben_c2326ba58d3f4a7d950101a5674ce595",
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          player_id: "ply_a12758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 2,
+        },
+      });
+      brktEntry = await prisma.brkt_Entry.upsert({
+        where: {
+          id: "ben_c2426ba58d3f4a7d950101a5674ce595",
+        },
+        update: {
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          player_id: "ply_a12758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 2,
+        },
+        create: {
+          id: "ben_c2426ba58d3f4a7d950101a5674ce595",
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          player_id: "ply_a12758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 2,
+        },
+      });
+      brktEntry = await prisma.brkt_Entry.upsert({
+        where: {
+          id: "ben_c2526ba58d3f4a7d950101a5674ce595",
+        },
+        update: {
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          player_id: "ply_a13758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 6,
+        },
+        create: {
+          id: "ben_c2526ba58d3f4a7d950101a5674ce595",
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          player_id: "ply_a13758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 6,
+        },
+      });
+      brktEntry = await prisma.brkt_Entry.upsert({
+        where: {
+          id: "ben_c2626ba58d3f4a7d950101a5674ce595",
+        },
+        update: {
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          player_id: "ply_a13758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 6,
+        },
+        create: {
+          id: "ben_c2626ba58d3f4a7d950101a5674ce595",
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          player_id: "ply_a13758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 6,
+        },
+      });
+      brktEntry = await prisma.brkt_Entry.upsert({
+        where: {
+          id: "ben_c2726ba58d3f4a7d950101a5674ce595",
+        },
+        update: {
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          player_id: "ply_a14758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 9,
+        },
+        create: {
+          id: "ben_c2726ba58d3f4a7d950101a5674ce595",
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          player_id: "ply_a14758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 9,
+        },
+      });
+      brktEntry = await prisma.brkt_Entry.upsert({
+        where: {
+          id: "ben_c2826ba58d3f4a7d950101a5674ce595",
+        },
+        update: {
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          player_id: "ply_a14758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 9,
+        },
+        create: {
+          id: "ben_c2826ba58d3f4a7d950101a5674ce595",
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          player_id: "ply_a14758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 9,
+        },
+      });
+      brktEntry = await prisma.brkt_Entry.upsert({
+        where: {
+          id: "ben_c2926ba58d3f4a7d950101a5674ce595",
+        },
+        update: {
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          player_id: "ply_a15758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 3,
+        },
+        create: {
+          id: "ben_c2926ba58d3f4a7d950101a5674ce595",
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          player_id: "ply_a15758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 3,
+        },
+      });
+      brktEntry = await prisma.brkt_Entry.upsert({
+        where: {
+          id: "ben_c3026ba58d3f4a7d950101a5674ce595",
+        },
+        update: {
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          player_id: "ply_a15758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 3,
+        },
+        create: {
+          id: "ben_c3026ba58d3f4a7d950101a5674ce595",
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          player_id: "ply_a15758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 3,
+        },
+      });
+      brktEntry = await prisma.brkt_Entry.upsert({
+        where: {
+          id: "ben_c3126ba58d3f4a7d950101a5674ce595",
+        },
+        update: {
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          player_id: "ply_a16758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 7,
+        },
+        create: {
+          id: "ben_c3126ba58d3f4a7d950101a5674ce595",
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          player_id: "ply_a16758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 7,
+        },
+      });
+      brktEntry = await prisma.brkt_Entry.upsert({
+        where: {
+          id: "ben_c3226ba58d3f4a7d950101a5674ce595",
+        },
+        update: {
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          player_id: "ply_a16758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 7,
+        },
+        create: {
+          id: "ben_c3226ba58d3f4a7d950101a5674ce595",
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          player_id: "ply_a16758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 7,
+        },
+      });
+      brktEntry = await prisma.brkt_Entry.upsert({
+        where: {
+          id: "ben_c3326ba58d3f4a7d950101a5674ce595",
+        },
+        update: {
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          player_id: "ply_a17758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 4,
+        },
+        create: {
+          id: "ben_c3326ba58d3f4a7d950101a5674ce595",
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          player_id: "ply_a17758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 4,
+        },
+      });
+      brktEntry = await prisma.brkt_Entry.upsert({
+        where: {
+          id: "ben_c3426ba58d3f4a7d950101a5674ce595",
+        },
+        update: {
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          player_id: "ply_a17758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 4,
+        },
+        create: {
+          id: "ben_c3426ba58d3f4a7d950101a5674ce595",
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          player_id: "ply_a17758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 4,
+        },
+      });
+      brktEntry = await prisma.brkt_Entry.upsert({
+        where: {
+          id: "ben_c3526ba58d3f4a7d950101a5674ce595",
+        },
+        update: {
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          player_id: "ply_a18758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 9,
+        },
+        create: {
+          id: "ben_c3526ba58d3f4a7d950101a5674ce595",
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          player_id: "ply_a18758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 9,
+        },
+      });
+      brktEntry = await prisma.brkt_Entry.upsert({
+        where: {
+          id: "ben_c3626ba58d3f4a7d950101a5674ce595",
+        },
+        update: {
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          player_id: "ply_a18758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 9,
+        },
+        create: {
+          id: "ben_c3626ba58d3f4a7d950101a5674ce595",
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          player_id: "ply_a18758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 9,
+        },
+      });
+      brktEntry = await prisma.brkt_Entry.upsert({
+        where: {
+          id: "ben_c3726ba58d3f4a7d950101a5674ce595",
+        },
+        update: {
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          player_id: "ply_a19758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 6,
+        },
+        create: {
+          id: "ben_c3726ba58d3f4a7d950101a5674ce595",
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          player_id: "ply_a19758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 6,
+        },
+      });
+      brktEntry = await prisma.brkt_Entry.upsert({
+        where: {
+          id: "ben_c3826ba58d3f4a7d950101a5674ce595",
+        },
+        update: {
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          player_id: "ply_a19758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 6,
+        },
+        create: {
+          id: "ben_c3826ba58d3f4a7d950101a5674ce595",
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          player_id: "ply_a19758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 6,
+        },
+      });
+      brktEntry = await prisma.brkt_Entry.upsert({
+        where: {
+          id: "ben_c3926ba58d3f4a7d950101a5674ce595",
+        },
+        update: {
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          player_id: "ply_a20758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 2,
+        },
+        create: {
+          id: "ben_c3926ba58d3f4a7d950101a5674ce595",
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          player_id: "ply_a20758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 2,
+        },
+      });
+      brktEntry = await prisma.brkt_Entry.upsert({
+        where: {
+          id: "ben_c4026ba58d3f4a7d950101a5674ce595",
+        },
+        update: {
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          player_id: "ply_a20758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 2,
+        },
+        create: {
+          id: "ben_c4026ba58d3f4a7d950101a5674ce595",
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          player_id: "ply_a20758cff1cc4bab9d9133e661bd49b0",
+          num_brackets: 2,
+        },
+      });
 
       return 40;
     } catch (error) {
@@ -9650,6 +9590,151 @@ async function gamesUpsert() {
   }
 }
 
+async function brktRefundsUpsert() { 
+
+  async function brktRefundUpsert_GoldPin() {
+    try {
+      let brktRefund = await prisma.brkt_Refund.upsert({
+        where: {
+          brkt_entry_id: "ben_bc4c581d7b1c4fc99dbdbd46f4f7210a",
+        },
+        update: {          
+          num_refunds: 2,
+        },
+        create: {          
+          brkt_entry_id: "ben_bc4c581d7b1c4fc99dbdbd46f4f7210a",
+          num_refunds: 2,          
+        },
+      });
+      brktRefund = await prisma.brkt_Refund.upsert({
+        where: {
+          brkt_entry_id: "ben_8f039ee00dfa445c9e3aee0ca9a6391b",
+        },
+        update: {          
+          num_refunds: 2,
+        },
+        create: {          
+          brkt_entry_id: "ben_8f039ee00dfa445c9e3aee0ca9a6391b",
+          num_refunds: 2,
+        },
+      });
+      return 2;
+    } catch (error) {
+      console.log(error);
+      return -1;      
+    }
+  }
+
+  async function brktRefundUpsert_WholeTmnt() { 
+    try {
+      let brktRefund = await prisma.brkt_Refund.upsert({
+        where: {
+          brkt_entry_id: "ben_c0126ba58d3f4a7d950101a5674ce595",
+        },
+        update: {          
+          num_refunds: 4,
+        },
+        create: {          
+          brkt_entry_id: "ben_c0126ba58d3f4a7d950101a5674ce595",
+          num_refunds: 4,          
+        },
+      });
+      brktRefund = await prisma.brkt_Refund.upsert({
+        where: {
+          brkt_entry_id: 'ben_c0226ba58d3f4a7d950101a5674ce595',
+        },
+        update: {          
+          num_refunds: 4,
+        },
+        create: {          
+          brkt_entry_id: 'ben_c0226ba58d3f4a7d950101a5674ce595',
+          num_refunds: 4,
+        },
+      });
+      return 2;
+    } catch (error) {
+      console.log(error);
+      return -1;      
+    }
+  }
+
+  async function brktRefundUpsert_NewYearsEve() {
+    try {
+      let brktRefund = await prisma.brkt_Refund.upsert({
+        where: {
+          brkt_entry_id: 'ben_3a1eb5eef01d449eb444bfdf6b7d9035',
+        },
+        update: {          
+          num_refunds: 2,
+        },
+        create: {          
+          brkt_entry_id: 'ben_3a1eb5eef01d449eb444bfdf6b7d9035',
+          num_refunds: 2,          
+        },
+      });
+      brktRefund = await prisma.brkt_Refund.upsert({
+        where: {
+          brkt_entry_id: 'ben_3a2eb5eef01d449eb444bfdf6b7d9035',
+        },
+        update: {          
+          num_refunds: 2,
+        },
+        create: {          
+          brkt_entry_id: 'ben_3a2eb5eef01d449eb444bfdf6b7d9035',
+          num_refunds: 2,
+        },
+      });
+      return 2;
+    } catch (error) {
+      console.log(error);
+      return -1;      
+    }
+  }
+
+  async function brktRefundUpsert_ToDelete() {
+    try {
+      let brktRefund = await prisma.brkt_Refund.upsert({
+        where: {
+          brkt_entry_id: 'ben_093a0902e01e46dbbe9f111acefc17da',
+        },
+        update: {          
+          num_refunds: 2,
+        },
+        create: {          
+          brkt_entry_id: 'ben_093a0902e01e46dbbe9f111acefc17da',
+          num_refunds: 2,          
+        },
+      });
+      return 1;
+    } catch (error) {
+      console.log(error);
+      return -1;      
+    }
+  }
+
+  try {
+    const gpCount = await brktRefundUpsert_GoldPin();   
+    const wtCount = await brktRefundUpsert_WholeTmnt();
+    const nyCount = await brktRefundUpsert_NewYearsEve();
+    const delCount = await brktRefundUpsert_ToDelete();
+
+    console.log(
+      "Upserted brktRefunds: ",
+      gpCount + wtCount + nyCount + delCount
+    );
+    // console.log("Upserted potEntries: ", delCount);
+    // 2 + 2 + 2 + 1 = 7
+    return gpCount + wtCount + nyCount + delCount;    
+  } catch (error) {
+    console.log(error);
+    return -1;
+  }
+}
+
+async function brktMatchesUpsert() { 
+
+}
+
 async function testDateUpsert() {
   try {
     const nowTime = new Date();
@@ -9924,6 +10009,9 @@ async function main() {
   if (count < 0) return;
 
   count = await gamesUpsert();
+  if (count < 0) return;
+
+  count = await brktRefundsUpsert();
   if (count < 0) return;
 
   count = await testDateUpsert();
