@@ -21,6 +21,8 @@ import {
   updatedEntriesCountsType,
   gameType,
   divDataType,
+  brktRefundType,
+  putManyBrktEntriesReturnType,  
 } from "../types/types";
 import { User, Bowl, Tmnt } from "@prisma/client";
 import { todayStr } from "@/lib/dateTools";
@@ -407,15 +409,17 @@ export const blankPotEntry: potEntryType = {
 
 export const initBrktEntry: brktEntryType = {
   id: btDbUuid('ben'),
-  brkt_id: "",
-  brkt_id_err: "",
-  player_id: "",
-  player_id_err: "",
-  num_brackets: 0,
-  num_brackets_err: "",
-  fee: "",
-  fee_err: "",
+  brkt_id: "",  
+  player_id: "",  
+  num_brackets: 0,  
+  num_refunds: 0,
+  fee: "",  
   time_stamp: new Date().getTime(),
+}
+
+export const initBrktRefund: brktRefundType = {
+  brkt_entry_id: btDbUuid('ben'),
+  num_refunds: 0,
 }
 
 export const blankBrktEntry: brktEntryType = {
@@ -532,6 +536,15 @@ export const noUpdates: putManyReturnType = {
   updates: 0,
   inserts: 0,
   deletes: 0,
+}
+
+export const noBrktEntriesUpdates: putManyBrktEntriesReturnType = {
+  updates: 0,
+  inserts: 0,
+  deletes: 0,
+  rfUpdates: 0,
+  rfInserts: 0,
+  rfDeletes: 0
 }
 
 export const allEntriesNoUpdates: putManyEntriesReturnType = {

@@ -2,7 +2,34 @@ import { ErrorCode } from "../validation"
 
 export type roleTypes = "ADMIN" | "DIRECTOR" | "USER"
 
-export type idTypes = 'usr' | 'bwl' | 'tmt' | 'evt' | 'div' | 'sqd' | 'lan' | 'hdc' | 'pot' | 'brk' | 'elm' | 'ply' | 'den' | 'pen' | 'ben' | 'een' | 'gam' | 'bib'
+// usr - user
+// bwl - bowl
+// tmt - tournament
+// evt - event
+// div - division
+// sqd - squad
+// lan - lane  
+// pot - pot 
+// brk - bracket
+// elm - eliminator
+// ply - player
+// den - division entry
+// pen - pot entry
+// ben - bracket entry
+// een - eliminator entry
+// gam - game
+// bib - brackets individual bracket
+// bsd - bracket seed
+
+export const idTypesArray = [
+  'usr', 'bwl', 'tmt', 'evt', 'div', 'sqd', 'lan', 'hdc',
+  'pot', 'brk', 'elm', 'ply', 'den', 'pen', 'ben', 'een',
+  'gam', 'bib', 'bsd'
+] as const;
+
+export type idTypes = typeof idTypesArray[number];
+
+// export type idTypes = 'usr' | 'bwl' | 'tmt' | 'evt' | 'div' | 'sqd' | 'lan' | 'hdc' | 'pot' | 'brk' | 'elm' | 'ply' | 'den' | 'pen' | 'ben' | 'een' | 'gam'  | 'bmt' | 'bsd'; 
 
 export type userType = {
   id: string
@@ -442,15 +469,17 @@ export type validPotEntriesType = {
 
 export type brktEntryType = {
   id: string,
-  brkt_id: string,
-  brkt_id_err: string,
+  brkt_id: string,  
   player_id: string,
-  player_id_err: string,
-  num_brackets: number,
-  num_brackets_err: string,
-  fee: string,
-  fee_err: string,  
+  num_brackets: number,  
+  num_refunds: number,
+  fee: string,  
   time_stamp: number,
+}
+
+export type brktEntrySanitizedResult = {
+  brktEntry: brktEntryType,
+  errorCode: ErrorCode
 }
 
 export interface tmntEntryBrktEntryType extends brktEntryType {
@@ -466,6 +495,7 @@ export type brktEntryDataType = {
   brkt_id: string,
   player_id: string,
   num_brackets: number,
+  num_refunds: number,
   time_stamp: Date,  
 }
 
@@ -477,11 +507,23 @@ export interface brktEntryWithFeeDataType extends brktEntryDataType {
   fee: number,
 }
 
+export type brktRefundType = {
+  brkt_entry_id: string,  
+  num_refunds: number,
+}
+
+// export type brktRefundDataType = {
+//   brkt_entry_id: string,
+//   num_refunds: number,
+// }
+
+// brkt entry no fee
 export type brktEntryNfType = {
   id: string,
   brkt_id: string,  
   player_id: string,  
-  num_brackets: number,      
+  num_brackets: number, 
+  num_refunds: number,
   time_stamp: number,  
 }
 
@@ -612,6 +654,12 @@ export type putManyReturnType = {
   updates: number,
   inserts: number,
   deletes: number,
+}
+
+export interface putManyBrktEntriesReturnType extends putManyReturnType {
+  rfUpdates: number,
+  rfInserts: number,
+  rfDeletes: number,
 }
 
 export type updatedEntriesCountsType = {

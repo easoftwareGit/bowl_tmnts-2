@@ -13,26 +13,23 @@ export const baseTmntsYearsApi = baseApi + '/tmnts/years/'
 export const baseEventsApi = baseApi + '/events'
 
 export const baseDivsApi = baseApi + '/divs'
+export const baseDivEntriesApi = baseApi + '/divEntries'
 
 export const baseSquadsApi = baseApi + '/squads'
 
 export const baseLanesApi = baseApi + '/lanes'
 
 export const basePotsApi = baseApi + '/pots'
+export const basePotEntriesApi = baseApi + '/potEntries'
 
 export const baseBrktsApi = baseApi + '/brkts'
+export const baseBrktEntriesApi = baseApi + '/brktEntries'
+export const baseBrktRefundsApi = baseApi + '/brktRefunds'
 
 export const baseElimsApi = baseApi + '/elims'
-
-export const basePlayersApi = baseApi + '/players'
-
-export const baseDivEntriesApi = baseApi + '/divEntries'
-
-export const baseBrktEntriesApi = baseApi + '/brktEntries'
-
 export const baseElimEntriesApi = baseApi + '/elimEntries'
 
-export const basePotEntriesApi = baseApi + '/potEntries'
+export const basePlayersApi = baseApi + '/players'
 
 export const baseGamesApi = baseApi + '/games'
 

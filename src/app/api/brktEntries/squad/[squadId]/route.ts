@@ -22,6 +22,7 @@ export async function GET(
         brkt_id: true,
         player_id: true,
         num_brackets: true,
+        brkt_refunds: true,
         time_stamp: true,
         brkt: {
           select: {
@@ -46,6 +47,7 @@ export async function GET(
         brkt_id: brktEntry.brkt_id,
         player_id: brktEntry.player_id,
         num_brackets: brktEntry.num_brackets,
+        num_refunds: brktEntry.brkt_refunds ? brktEntry.brkt_refunds.num_refunds : null as any,
         time_stamp: brktEntry.time_stamp,
         brkt: {
           ...brktEntry.brkt,

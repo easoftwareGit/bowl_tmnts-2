@@ -19,26 +19,23 @@ export const testBaseTmntsYearsApi = testBaseApi + '/tmnts/years/'
 export const testBaseEventsApi = testBaseApi + '/events'
 
 export const testBaseDivsApi = testBaseApi + '/divs'
+export const testBaseDivEntriesApi = testBaseApi + '/divEntries'
 
 export const testBaseSquadsApi = testBaseApi + '/squads'
 
 export const testBaseLanesApi = testBaseApi + '/lanes'
 
 export const testBasePotsApi = testBaseApi + '/pots'
-
-export const testBaseBrktsApi = testBaseApi + '/brkts'
-
-export const testBaseElimsApi = testBaseApi + '/elims'
-
-export const testBasePlayersApi = testBaseApi + '/players'
-
-export const testBaseDivEntriesApi = testBaseApi + '/divEntries'
-
 export const testBasePotEntriesApi = testBaseApi + '/potEntries'
 
+export const testBaseBrktsApi = testBaseApi + '/brkts'
 export const testBaseBrktEntriesApi = testBaseApi + '/brktEntries'
+export const testBaseBrktRefundsApi = testBaseApi + '/brktRefunds'
 
+export const testBaseElimsApi = testBaseApi + '/elims'
 export const testBaseElimEntriesApi = testBaseApi + '/elimEntries'
+
+export const testBasePlayersApi = testBaseApi + '/players'
 
 export const testBaseGamesApi = testBaseApi + '/games'
 

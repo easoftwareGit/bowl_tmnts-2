@@ -13,9 +13,11 @@ import {
   tmntEntryPotEntryType,
 } from "@/lib/types/types";
 import {
+  brktsColNameEnd,
   // createdColName,
   divEntryHdcpColName,
   entryFeeColName,
+  feeColNameEnd,
   playerEntryData,
   timeStampColName,
   // updatedColName,
@@ -59,16 +61,16 @@ export const extractDataFromRows = (
     };
 
   const divFeeColNames = Object.keys(rows[0]).filter(
-    (key) => key.startsWith("div") && key.endsWith("_fee")
+    (key) => key.startsWith("div") && key.endsWith(feeColNameEnd)
   );
   const potFeeColNames = Object.keys(rows[0]).filter(
-    (key) => key.startsWith("pot") && key.endsWith("_fee")
+    (key) => key.startsWith("pot") && key.endsWith(feeColNameEnd)
   );
   const brktNumColNames = Object.keys(rows[0]).filter(
-    (key) => key.startsWith("brk") && key.endsWith("_name")
+    (key) => key.startsWith("brk") && key.endsWith(brktsColNameEnd)
   );
   const elimFeeColNames = Object.keys(rows[0]).filter(
-    (key) => key.startsWith("elm") && key.endsWith("_fee")
+    (key) => key.startsWith("elm") && key.endsWith(feeColNameEnd)
   );
 
   rows.forEach((row) => {
@@ -83,9 +85,11 @@ export const extractDataFromRows = (
       position: row.position,
     });
 
+    const feeTextLength = feeColNameEnd.length * -1;
+    const brktTextLength = brktsColNameEnd.length * -1;
     divFeeColNames.forEach((feeColName) => {
       if (row[feeColName]) {
-        const divId = feeColName.slice(0, -4); // remove "-fee" from column name
+        const divId = feeColName.slice(0, feeTextLength); // remove "_fee" from column name
         let feeForRow = row[feeColName];
         if (feeForRow === undefined || feeForRow === null || feeForRow === "") { 
           feeForRow = '0';
@@ -102,7 +106,7 @@ export const extractDataFromRows = (
     });
     potFeeColNames.forEach((feeColName) => {
       if (row[feeColName]) {
-        const potId = feeColName.slice(0, -4); // remove "-fee" from column name
+        const potId = feeColName.slice(0, feeTextLength); // remove "_fee" from column name
         potEntries.push({
           ...initPotEntry,
           pot_id: potId,
@@ -113,7 +117,7 @@ export const extractDataFromRows = (
     });
     brktNumColNames.forEach((brktNumColName) => {
       if (row[brktNumColName]) {
-        const brktId = brktNumColName.slice(0, -5); // remove "-name" from column name
+        const brktId = brktNumColName.slice(0, brktTextLength); // remove "_brkts" from column name
         brktEntries.push({
           ...initBrktEntry,
           brkt_id: brktId,
@@ -126,7 +130,7 @@ export const extractDataFromRows = (
     });
     elimFeeColNames.forEach((feeColName) => {
       if (row[feeColName]) {
-        const elimId = feeColName.slice(0, -4); // remove "-fee" from column name
+        const elimId = feeColName.slice(0, feeTextLength); // remove "_fee" from column name
         elimEntries.push({
           ...initElimEntry,
           elim_id: elimId,

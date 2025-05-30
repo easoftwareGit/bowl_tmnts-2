@@ -166,7 +166,8 @@ model Brkt {
   first        Decimal      @db.Decimal(9, 2)
   second       Decimal      @db.Decimal(9, 2)
   admin        Decimal      @db.Decimal(9, 2)
-  brkt_entries Brkt_Entry[]
+  brkt_entries Brkt_Entry[]  
+  brkt_matches Brkt_Match[]
   div          Div          @relation(fields: [div_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   squad        Squad        @relation(fields: [squad_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   createdAt    DateTime     @default(now())
@@ -204,7 +205,8 @@ model Player {
   div_entries  Div_Entry[]
   pot_entries  Pot_Entry[]
   brkt_entries Brkt_Entry[]
-  elim_entries Elim_Entry[]
+  elim_entries Elim_Entry[]  
+  brkt_seeds   Brkt_Seed[]
   games        Game[]
   squad        Squad        @relation(fields: [squad_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   createdAt    DateTime     @default(now())
@@ -240,15 +242,16 @@ model Pot_Entry {
 }
 
 model Brkt_Entry {
-  id           String   @id @default(dbgenerated("concat('bre_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
-  brkt_id      String   @db.Text
-  player_id    String   @db.Text
+  id           String       @id @default(dbgenerated("concat('bre_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  brkt_id      String       @db.Text
+  player_id    String       @db.Text
   num_brackets Int  
-  time_stamp   DateTime @default(now())
-  brkt         Brkt     @relation(fields: [brkt_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  player       Player   @relation(fields: [player_id], references: [id], onDelete: Cascade, onUpdate: NoAction)  
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt @default(now())
+  time_stamp   DateTime     @default(now())
+  brkt         Brkt         @relation(fields: [brkt_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  player       Player       @relation(fields: [player_id], references: [id], onDelete: Cascade, onUpdate: NoAction)    
+  brkt_refunds Brkt_Refund? 
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt @default(now())
 
   @@unique([brkt_id, player_id])
 }
@@ -278,6 +281,41 @@ model Game {
   updatedAt DateTime @updatedAt
 
   @@unique([squad_id, player_id, game_num])
+}
+
+model Brkt_Refund {
+  brkt_entry_id String     @id @db.Text
+  num_refunds   Int    
+  brkt_entry    Brkt_Entry @relation(fields: [brkt_entry_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt @default(now())
+
+  @@unique([brkt_entry_id])
+}
+
+model Brkt_Match {
+  id           String   @id @default(dbgenerated("concat('bmt_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  brkt_id      String   @db.Text
+  index        Int
+  brkt         Brkt     @relation(fields: [brkt_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  brkt_seeds   Brkt_Seed[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([brkt_id, index])
+}
+
+model Brkt_Seed {
+  id            String     @id @default(dbgenerated("concat('bsd_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  brkt_match_id String     @db.Text
+  player_id     String     @db.Text
+  index         Int    
+  brkt_match    Brkt_Match @relation(fields: [brkt_match_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  player        Player     @relation(fields: [player_id], references: [id], onDelete: Cascade, onUpdate: NoAction)  
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt @default(now())
+
+  @@unique([brkt_match_id, player_id, index])
 }
 
 model testDate {

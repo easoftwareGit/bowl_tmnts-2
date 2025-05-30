@@ -19,9 +19,25 @@ const getBrktIds = (brktEntries: brktEntryType[]) => {
 }
 
 /**
- * gets SQL query to update many brktEntries at once
+ * gets array of unique brktEntryIds
  * 
  * @param {brktEntryType[]} brktEntries - array of brktEntries
+ * @returns {string[]} - array of unique brktEntry ids
+ */
+const getBrktEntryIds = (brktEntries: brktEntryType[]) => {
+  const brktEntryIds: string[] = [];
+  brktEntries.forEach((brktEntry) => {
+    if (!brktEntryIds.includes(brktEntry.id)) {
+      brktEntryIds.push(brktEntry.id);
+    }    
+  })
+  return brktEntryIds;
+}
+
+/**
+ * gets SQL query to update many brktEntries at once
+ * 
+ * @param {brktEntryType[]} brktEntries - array of brktEntries to update
  * @returns {string} - SQL query to update many brktEntries at once or '' 
  */
 export const getUpdateManySQL = (brktEntries: brktEntryType[]) => {
@@ -62,7 +78,7 @@ export const getUpdateManySQL = (brktEntries: brktEntryType[]) => {
 /**
  * gets SQL query to insert many brktEntries at once
  * 
- * @param {brktEntryType[]} brktEntries - array of brktEntries
+ * @param {brktEntryType[]} brktEntries - array of brktEntries to insert
  * @returns {string} - SQL query to insert many brktEntries at once or '' 
  */
 export const getInsertManySQL = (brktEntries: brktEntryType[]) => {
@@ -73,8 +89,7 @@ export const getInsertManySQL = (brktEntries: brktEntryType[]) => {
 
   const getSqlValues = (brktEntries: brktEntryType[]) => {
     const values: string[] = [];
-    brktEntries.forEach((brktEntry) => {
-      // values.push(`('${brktEntry.brkt_id}', '${brktEntry.player_id}', ${brktEntry.fee}, ${brktEntry.num_brackets})`)
+    brktEntries.forEach((brktEntry) => {      
       values.push(`('${brktEntry.id}', '${brktEntry.brkt_id}', '${brktEntry.player_id}', ${brktEntry.num_brackets}, ${brktEntry.time_stamp})`)
     })    
     return values.join(`, `);
@@ -94,7 +109,7 @@ export const getInsertManySQL = (brktEntries: brktEntryType[]) => {
 /**
  * gets SQL query to delete many brktEntries at once
  * 
- * @param {brktEntryType[]} brktEntries - array of brktEntries
+ * @param {brktEntryType[]} brktEntries - array of brktEntries to delete
  * @returns {string} - SQL query to delete many brktEntries at once or '' 
  */
 export const getDeleteManySQL = (brktEntries: brktEntryType[]) => { 
@@ -120,6 +135,115 @@ export const getDeleteManySQL = (brktEntries: brktEntryType[]) => {
   return deleteManySQL
 }
 
+/**
+ * gets SQL query to update many brkt refunds at once
+ * 
+ * @param {brktEntryType[]} brktEntries - array of brktEntries to update refunds
+ * @returns {string} - SQL query to update many brktEntries at once or '' 
+ */
+export const getUpdateManyRefundsSQL = (brktEntries: brktEntryType[]) => {
+
+  if (!brktEntries || brktEntries.length === 0) return "";
+
+  const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntries);
+  if (validBrktEntries.errorCode !== ErrorCode.None) return "";
+
+  const brktEntryIds: string[] = getBrktEntryIds(brktEntries);
+  if (brktEntryIds.length === 0) return "";
+
+  const brktEntryRefunds = validBrktEntries.brktEntries.filter((brktEntry) => brktEntry.num_refunds > 0);
+  if (brktEntryRefunds.length === 0) return "";
+
+  const getSqlValues = (brktEntries: brktEntryType[]) => {
+    const values: string[] = [];
+    brktEntries.forEach((brktEntry) => {      
+      values.push(`('${brktEntry.id}', ${brktEntry.num_refunds})`)
+    })    
+    return values.join(`, `);
+  }
+
+  // create the SQL query  
+  const updateManyRefundsSQL =
+    `UPDATE public."Brkt_Refund" ` +
+    `SET num_refunds = CASE ` +
+      brktEntryIds.map((brktId) => `WHEN public."Brkt_Refund".brkt_entry_id = '${brktId}' THEN b2Up.num_refunds`).join(` `) + ' ' +
+    `END ` +    
+    `FROM (VALUES ` +
+      getSqlValues(brktEntryRefunds) +
+    `) AS b2Up(brkt_entry_id, num_refunds) ` +
+    `WHERE public."Brkt_Refund".brkt_entry_id = b2Up.brkt_entry_id;`
+    
+  return updateManyRefundsSQL  
+}
+
+
+/**
+ * gets SQL query to insert many brkt refunds at once
+ * 
+ * @param {brktEntryType[]} brktEntries - array of brktEntries to insert refunds
+ * @returns {string} - SQL query to insert many refunds at once or ''
+ */
+export const getInsertManyRefundsSQL = (brktEntries: brktEntryType[]) => {
+
+  if (!brktEntries || brktEntries.length === 0) return "";
+  const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntries);
+  if (validBrktEntries.errorCode !== ErrorCode.None) return "";
+
+  const brktEntryRefunds = validBrktEntries.brktEntries.filter((brktEntry) => brktEntry.num_refunds > 0);
+  if (brktEntryRefunds.length === 0) return "";
+
+  const getSqlValues = (brktEntries: brktEntryType[]) => {
+    const values: string[] = [];
+    brktEntries.forEach((brktEntry) => {      
+      values.push(`('${brktEntry.id}', ${brktEntry.num_refunds})`)
+    })    
+    return values.join(`, `);
+  }
+
+  const insertManyRefundSQL = 
+    `INSERT INTO public."Brkt_Refund" (brkt_entry_id, num_refunds) ` +
+    `SELECT b2up.brkt_entry_id, b2up.num_refunds ` +
+    `FROM (VALUES ` +
+      getSqlValues(brktEntryRefunds) +
+      `) AS b2up(brkt_entry_id, num_refunds) ` +
+    `WHERE NOT EXISTS (SELECT 1 FROM public."Brkt_Refund" WHERE brkt_entry_id = b2up.brkt_entry_id);`
+
+  return insertManyRefundSQL 
+}
+
+/**
+ * gets SQL query to delete many brkt refunds at once
+ * 
+ * @param {brktEntryType[]} brktEntries - array of brktEntries to delete refunds
+ * @returns {string} - SQL query to delete many refunds at once or ''
+ */
+export const getDeleteManyRefundsSQL = (brktEntries: brktEntryType[]) => { 
+
+  if (!brktEntries || brktEntries.length === 0) return "";
+  const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntries);
+  if (validBrktEntries.errorCode !== ErrorCode.None) return "";
+
+  const brktEntryRefunds = validBrktEntries.brktEntries.filter((brktEntry) => (brktEntry.num_refunds == null || brktEntry.num_refunds === 0));
+  if (brktEntryRefunds.length === 0) return "";
+
+  const getSqlValues = (brktEntries: brktEntryType[]) => {
+    const values: string[] = [];
+    brktEntries.forEach((brktEntry) => {
+      values.push(`'${brktEntry.id}'`)
+    })
+    return values.join(`, `);
+  }
+
+  const deleteManyRefundsSQL = 
+    `DELETE FROM public."Brkt_Refund" ` +
+    `WHERE brkt_entry_id IN (` +
+      getSqlValues(brktEntryRefunds) +
+    `);`
+
+  return deleteManyRefundsSQL
+}
+
 export const exportedForTesting = {
   getBrktIds,  
+  getBrktEntryIds,
 }

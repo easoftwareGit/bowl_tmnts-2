@@ -1,5 +1,5 @@
 import { sanitize } from "./sanitize";
-import { idTypes } from "./types/types";
+import { idTypes, idTypesArray } from "./types/types";
 
 export const maxFirstNameLength = 15;
 export const maxLastNameLength = 20;
@@ -86,30 +86,13 @@ export function isPassword8to20(str: string): boolean {
   return regex.test(str);
 }
 
-const validIdTypes = [
-  "usr",
-  "bwl",
-  "tmt",
-  "evt",
-  "div",
-  "sqd",
-  'lan',
-  "hdc",
-  "pot",
-  "brk",
-  "elm",
-  "ply",
-  "den",
-  "pen",
-  "ben",
-  "een",
-  "gam",
-];
-
 const validRoles = ["ADMIN", "DIRECTOR", "USER"]
 
+const validTypes = new Set(idTypesArray);
+
 export const isValidBtDbType = (str: string): boolean => {
-  return validIdTypes.includes(str);
+  // return validIdTypes.includes(str);
+  return validTypes.has(str as idTypes);
 }
 
 export const isValidRole = (str: string): boolean => {

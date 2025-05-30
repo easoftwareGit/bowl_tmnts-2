@@ -80,26 +80,26 @@ describe('BracketGrid', () => {
   describe('render 18 bracktes with test data, 138 entries', () => { 
 
     const testBracketList = new BracketList('test', 2, 3);
-    // num brackets name = id + "_name" = 'test_name'
+    // num brackets name = id + "_brkts" = 'test_brkts'
     const playerData = [
-      { player_id: 'Al', test_name: 10, createdAt: 100 },
-      { player_id: 'Bob', test_name: 8, createdAt: 200 },
-      { player_id: 'Chad', test_name: 5, createdAt: 300 },
-      { player_id: 'Don', test_name: 10, createdAt: 400 },
-      { player_id: 'Ed', test_name: 12, createdAt: 500 },
-      { player_id: 'Fred', test_name: 6, createdAt: 600 },
-      { player_id: 'Greg', test_name: 6, createdAt: 700 },
-      { player_id: 'Hal', test_name: 8, createdAt: 800 },
-      { player_id: 'Ian', test_name: 8, createdAt: 900 },
-      { player_id: 'Jim', test_name: 10, createdAt: 1000 },
-      { player_id: 'Ken', test_name: 6, createdAt: 1100 },
-      { player_id: 'Lou', test_name: 5, createdAt: 1200 },
-      { player_id: 'Mike', test_name: 8, createdAt: 1300 },
-      { player_id: 'Nate', test_name: 10, createdAt: 1400 },
-      { player_id: 'Otto', test_name: 7, createdAt: 1500 },
-      { player_id: 'Paul', test_name: 4, createdAt: 1600 },
-      { player_id: 'Quin', test_name: 5, createdAt: 1700 },
-      { player_id: 'Rob', test_name: 10, createdAt: 1800 },
+      { player_id: 'Al', test_brkts: 10, createdAt: 100 },
+      { player_id: 'Bob', test_brkts: 8, createdAt: 200 },
+      { player_id: 'Chad', test_brkts: 5, createdAt: 300 },
+      { player_id: 'Don', test_brkts: 10, createdAt: 400 },
+      { player_id: 'Ed', test_brkts: 12, createdAt: 500 },
+      { player_id: 'Fred', test_brkts: 6, createdAt: 600 },
+      { player_id: 'Greg', test_brkts: 6, createdAt: 700 },
+      { player_id: 'Hal', test_brkts: 8, createdAt: 800 },
+      { player_id: 'Ian', test_brkts: 8, createdAt: 900 },
+      { player_id: 'Jim', test_brkts: 10, createdAt: 1000 },
+      { player_id: 'Ken', test_brkts: 6, createdAt: 1100 },
+      { player_id: 'Lou', test_brkts: 5, createdAt: 1200 },
+      { player_id: 'Mike', test_brkts: 8, createdAt: 1300 },
+      { player_id: 'Nate', test_brkts: 10, createdAt: 1400 },
+      { player_id: 'Otto', test_brkts: 7, createdAt: 1500 },
+      { player_id: 'Paul', test_brkts: 4, createdAt: 1600 },
+      { player_id: 'Quin', test_brkts: 5, createdAt: 1700 },
+      { player_id: 'Rob', test_brkts: 10, createdAt: 1800 },
     ];      
     testBracketList.calcTotalBrkts(playerData);            
     const mockBrktGridData: BGDataType = {
@@ -172,19 +172,19 @@ describe('BracketGrid', () => {
   describe('render 10Px8B full bracktes with test data, 80 entries', () => { 
 
     const testBracketList = new BracketList('test', 2, 3);
-    // num brackets name = id + "_name" = 'test_name'
+    // num brackets name = id + "_brkts" = 'test_name'
     const playerData = [
-      { player_id: 'Al', test_name: 10, createdAt: 100 },
-      { player_id: 'Bob', test_name: 8, createdAt: 200 },
-      { player_id: 'Chad', test_name: 6, createdAt: 300 },
-      { player_id: 'Don', test_name: 7, createdAt: 400 },
-      { player_id: 'Ed', test_name: 6, createdAt: 500 },
-      { player_id: 'Fred', test_name: 5, createdAt: 600 },
-      { player_id: 'Greg', test_name: 6, createdAt: 700 },
-      { player_id: 'Hal', test_name: 8, createdAt: 800 },
-      { player_id: 'Ian', test_name: 8, createdAt: 900 },
-      { player_id: 'Jim', test_name: 10, createdAt: 1000 },
-      { player_id: 'Ken', test_name: 6, createdAt: 1100 },
+      { player_id: 'Al', test_brkts: 10, createdAt: 100 },
+      { player_id: 'Bob', test_brkts: 8, createdAt: 200 },
+      { player_id: 'Chad', test_brkts: 6, createdAt: 300 },
+      { player_id: 'Don', test_brkts: 7, createdAt: 400 },
+      { player_id: 'Ed', test_brkts: 6, createdAt: 500 },
+      { player_id: 'Fred', test_brkts: 5, createdAt: 600 },
+      { player_id: 'Greg', test_brkts: 6, createdAt: 700 },
+      { player_id: 'Hal', test_brkts: 8, createdAt: 800 },
+      { player_id: 'Ian', test_brkts: 8, createdAt: 900 },
+      { player_id: 'Jim', test_brkts: 10, createdAt: 1000 },
+      { player_id: 'Ken', test_brkts: 6, createdAt: 1100 },
     ];      
     testBracketList.calcTotalBrkts(playerData);            
     const mockBrktGridData: BGDataType = {
@@ -251,26 +251,26 @@ describe('BracketGrid', () => {
   describe('render 1Px10B, 17Px4B bracktes with test data, 78 entries', () => { 
 
     const testBracketList = new BracketList('test', 2, 3);
-    // num brackets name = id + "_name" = 'test_name'
+    // num brackets name = id + "_brkts" = 'test_name'
     const playerData = [
-      { player_id: 'Al', test_name: 10, createdAt: 100 },
-      { player_id: 'Bob', test_name: 4, createdAt: 200 },
-      { player_id: 'Chad', test_name: 4, createdAt: 300 },
-      { player_id: 'Don', test_name: 4, createdAt: 400 },
-      { player_id: 'Ed', test_name: 4, createdAt: 500 },
-      { player_id: 'Fred', test_name: 4, createdAt: 600 },
-      { player_id: 'Greg', test_name: 4, createdAt: 700 },
-      { player_id: 'Hal', test_name: 4, createdAt: 800 },
-      { player_id: 'Ian', test_name: 4, createdAt: 900 },
-      { player_id: 'Jim', test_name: 4, createdAt: 1000 },
-      { player_id: 'Ken', test_name: 4, createdAt: 1100 },
-      { player_id: 'Lou', test_name: 4, createdAt: 1200 },
-      { player_id: 'Mike', test_name: 4, createdAt: 1300 },
-      { player_id: 'Nate', test_name: 4, createdAt: 1400 },
-      { player_id: 'Otto', test_name: 4, createdAt: 1500 },
-      { player_id: 'Paul', test_name: 4, createdAt: 1600 },
-      { player_id: 'Quin', test_name: 4, createdAt: 1700 },
-      { player_id: 'Rob', test_name: 4, createdAt: 1800 },
+      { player_id: 'Al', test_brkts: 10, createdAt: 100 },
+      { player_id: 'Bob', test_brkts: 4, createdAt: 200 },
+      { player_id: 'Chad', test_brkts: 4, createdAt: 300 },
+      { player_id: 'Don', test_brkts: 4, createdAt: 400 },
+      { player_id: 'Ed', test_brkts: 4, createdAt: 500 },
+      { player_id: 'Fred', test_brkts: 4, createdAt: 600 },
+      { player_id: 'Greg', test_brkts: 4, createdAt: 700 },
+      { player_id: 'Hal', test_brkts: 4, createdAt: 800 },
+      { player_id: 'Ian', test_brkts: 4, createdAt: 900 },
+      { player_id: 'Jim', test_brkts: 4, createdAt: 1000 },
+      { player_id: 'Ken', test_brkts: 4, createdAt: 1100 },
+      { player_id: 'Lou', test_brkts: 4, createdAt: 1200 },
+      { player_id: 'Mike', test_brkts: 4, createdAt: 1300 },
+      { player_id: 'Nate', test_brkts: 4, createdAt: 1400 },
+      { player_id: 'Otto', test_brkts: 4, createdAt: 1500 },
+      { player_id: 'Paul', test_brkts: 4, createdAt: 1600 },
+      { player_id: 'Quin', test_brkts: 4, createdAt: 1700 },
+      { player_id: 'Rob', test_brkts: 4, createdAt: 1800 },
     ];      
     testBracketList.calcTotalBrkts(playerData);            
     const mockBrktGridData: BGDataType = {
@@ -344,18 +344,18 @@ describe('BracketGrid', () => {
   describe('render 10Px10B bracktes with test data, 100 entries', () => { 
 
     const testBracketList = new BracketList('test', 2, 3);
-    // num brackets name = id + "_name" = 'test_name'
+    // num brackets name = id + "_brkts" = 'test_name'
     const playerData = [
-      { player_id: 'Al', test_name: 10, createdAt: 100 },
-      { player_id: 'Bob', test_name: 10, createdAt: 200 },
-      { player_id: 'Chad', test_name: 10, createdAt: 300 },
-      { player_id: 'Don', test_name: 10, createdAt: 400 },
-      { player_id: 'Ed', test_name: 10, createdAt: 500 },
-      { player_id: 'Fred', test_name: 10, createdAt: 600 },
-      { player_id: 'Greg', test_name: 10, createdAt: 700 },
-      { player_id: 'Hal', test_name: 10, createdAt: 800 },
-      { player_id: 'Ian', test_name: 10, createdAt: 900 },
-      { player_id: 'Jim', test_name: 10, createdAt: 1000 },
+      { player_id: 'Al', test_brkts: 10, createdAt: 100 },
+      { player_id: 'Bob', test_brkts: 10, createdAt: 200 },
+      { player_id: 'Chad', test_brkts: 10, createdAt: 300 },
+      { player_id: 'Don', test_brkts: 10, createdAt: 400 },
+      { player_id: 'Ed', test_brkts: 10, createdAt: 500 },
+      { player_id: 'Fred', test_brkts: 10, createdAt: 600 },
+      { player_id: 'Greg', test_brkts: 10, createdAt: 700 },
+      { player_id: 'Hal', test_brkts: 10, createdAt: 800 },
+      { player_id: 'Ian', test_brkts: 10, createdAt: 900 },
+      { player_id: 'Jim', test_brkts: 10, createdAt: 1000 },
     ];
     testBracketList.calcTotalBrkts(playerData);
     const mockBrktGridData: BGDataType = {
@@ -429,20 +429,20 @@ describe('BracketGrid', () => {
   describe('render 10Px10B, 4Px5B bracktes with test data, 100 entries', () => {
 
     const testBracketList = new BracketList('test', 2, 3);
-    // num brackets name = id + "_name" = 'test_name'
+    // num brackets name = id + "_brkts" = 'test_name'
     const playerData = [
-      { player_id: 'Al', test_name: 10, createdAt: 100 },
-      { player_id: 'Bob', test_name: 10, createdAt: 200 },
-      { player_id: 'Chad', test_name: 10, createdAt: 300 },
-      { player_id: 'Don', test_name: 10, createdAt: 400 },
-      { player_id: 'Ed', test_name: 10, createdAt: 500 },
-      { player_id: 'Fred', test_name: 10, createdAt: 600 },
-      { player_id: 'Greg', test_name: 10, createdAt: 700 },
-      { player_id: 'Hal', test_name: 10, createdAt: 800 },
-      { player_id: 'Ian', test_name: 5, createdAt: 900 },
-      { player_id: 'Jim', test_name: 5, createdAt: 1000 },
-      { player_id: 'Ken', test_name: 5, createdAt: 1100 },
-      { player_id: 'Lou', test_name: 5, createdAt: 1200 },
+      { player_id: 'Al', test_brkts: 10, createdAt: 100 },
+      { player_id: 'Bob', test_brkts: 10, createdAt: 200 },
+      { player_id: 'Chad', test_brkts: 10, createdAt: 300 },
+      { player_id: 'Don', test_brkts: 10, createdAt: 400 },
+      { player_id: 'Ed', test_brkts: 10, createdAt: 500 },
+      { player_id: 'Fred', test_brkts: 10, createdAt: 600 },
+      { player_id: 'Greg', test_brkts: 10, createdAt: 700 },
+      { player_id: 'Hal', test_brkts: 10, createdAt: 800 },
+      { player_id: 'Ian', test_brkts: 5, createdAt: 900 },
+      { player_id: 'Jim', test_brkts: 5, createdAt: 1000 },
+      { player_id: 'Ken', test_brkts: 5, createdAt: 1100 },
+      { player_id: 'Lou', test_brkts: 5, createdAt: 1200 },
     ];
     testBracketList.calcTotalBrkts(playerData);
     const mockBrktGridData: BGDataType = {
@@ -516,26 +516,26 @@ describe('BracketGrid', () => {
   describe('edge case 1: render random bracktes with Al 50 entries', () => {
 
     const testBracketList = new BracketList('test', 2, 3);
-    // num brackets name = id + "_name" = 'test_name'
+    // num brackets name = id + "_brkts" = 'test_name'
     const playerData = [
-      { player_id: 'Al', test_name: 50, createdAt: 100 },
-      { player_id: 'Bob', test_name: 8, createdAt: 200 },
-      { player_id: 'Chad', test_name: 5, createdAt: 300 },
-      { player_id: 'Don', test_name: 10, createdAt: 400 },
-      { player_id: 'Ed', test_name: 12, createdAt: 500 },
-      { player_id: 'Fred', test_name: 6, createdAt: 600 },
-      { player_id: 'Greg', test_name: 6, createdAt: 700 },
-      { player_id: 'Hal', test_name: 8, createdAt: 800 },
-      { player_id: 'Ian', test_name: 8, createdAt: 900 },
-      { player_id: 'Jim', test_name: 10, createdAt: 1000 },
-      { player_id: 'Ken', test_name: 6, createdAt: 1100 },
-      { player_id: 'Lou', test_name: 5, createdAt: 1200 },
-      { player_id: 'Mike', test_name: 8, createdAt: 1300 },
-      { player_id: 'Nate', test_name: 10, createdAt: 1400 },
-      { player_id: 'Otto', test_name: 7, createdAt: 1500 },
-      { player_id: 'Paul', test_name: 4, createdAt: 1600 },
-      { player_id: 'Quin', test_name: 5, createdAt: 1700 },
-      { player_id: 'Rob', test_name: 10, createdAt: 1800 },
+      { player_id: 'Al', test_brkts: 50, createdAt: 100 },
+      { player_id: 'Bob', test_brkts: 8, createdAt: 200 },
+      { player_id: 'Chad', test_brkts: 5, createdAt: 300 },
+      { player_id: 'Don', test_brkts: 10, createdAt: 400 },
+      { player_id: 'Ed', test_brkts: 12, createdAt: 500 },
+      { player_id: 'Fred', test_brkts: 6, createdAt: 600 },
+      { player_id: 'Greg', test_brkts: 6, createdAt: 700 },
+      { player_id: 'Hal', test_brkts: 8, createdAt: 800 },
+      { player_id: 'Ian', test_brkts: 8, createdAt: 900 },
+      { player_id: 'Jim', test_brkts: 10, createdAt: 1000 },
+      { player_id: 'Ken', test_brkts: 6, createdAt: 1100 },
+      { player_id: 'Lou', test_brkts: 5, createdAt: 1200 },
+      { player_id: 'Mike', test_brkts: 8, createdAt: 1300 },
+      { player_id: 'Nate', test_brkts: 10, createdAt: 1400 },
+      { player_id: 'Otto', test_brkts: 7, createdAt: 1500 },
+      { player_id: 'Paul', test_brkts: 4, createdAt: 1600 },
+      { player_id: 'Quin', test_brkts: 5, createdAt: 1700 },
+      { player_id: 'Rob', test_brkts: 10, createdAt: 1800 },
     ];
     testBracketList.calcTotalBrkts(playerData);
     const mockBrktGridData: BGDataType = {
@@ -609,26 +609,26 @@ describe('BracketGrid', () => {
   describe('edge case 2: render random bracktes with Al and Bob 50 entries', () => {
 
     const testBracketList = new BracketList('test', 2, 3);
-    // num brackets name = id + "_name" = 'test_name'
+    // num brackets name = id + "_brkts" = 'test_name'
     const playerData = [
-      { player_id: 'Al', test_name: 50, createdAt: 100 },
-      { player_id: 'Bob', test_name: 50, createdAt: 200 },
-      { player_id: 'Chad', test_name: 5, createdAt: 300 },
-      { player_id: 'Don', test_name: 10, createdAt: 400 },
-      { player_id: 'Ed', test_name: 12, createdAt: 500 },
-      { player_id: 'Fred', test_name: 6, createdAt: 600 },
-      { player_id: 'Greg', test_name: 6, createdAt: 700 },
-      { player_id: 'Hal', test_name: 8, createdAt: 800 },
-      { player_id: 'Ian', test_name: 8, createdAt: 900 },
-      { player_id: 'Jim', test_name: 10, createdAt: 1000 },
-      { player_id: 'Ken', test_name: 6, createdAt: 1100 },
-      { player_id: 'Lou', test_name: 5, createdAt: 1200 },
-      { player_id: 'Mike', test_name: 8, createdAt: 1300 },
-      { player_id: 'Nate', test_name: 10, createdAt: 1400 },
-      { player_id: 'Otto', test_name: 7, createdAt: 1500 },
-      { player_id: 'Paul', test_name: 4, createdAt: 1600 },
-      { player_id: 'Quin', test_name: 5, createdAt: 1700 },
-      { player_id: 'Rob', test_name: 10, createdAt: 1800 },
+      { player_id: 'Al', test_brkts: 50, createdAt: 100 },
+      { player_id: 'Bob', test_brkts: 50, createdAt: 200 },
+      { player_id: 'Chad', test_brkts: 5, createdAt: 300 },
+      { player_id: 'Don', test_brkts: 10, createdAt: 400 },
+      { player_id: 'Ed', test_brkts: 12, createdAt: 500 },
+      { player_id: 'Fred', test_brkts: 6, createdAt: 600 },
+      { player_id: 'Greg', test_brkts: 6, createdAt: 700 },
+      { player_id: 'Hal', test_brkts: 8, createdAt: 800 },
+      { player_id: 'Ian', test_brkts: 8, createdAt: 900 },
+      { player_id: 'Jim', test_brkts: 10, createdAt: 1000 },
+      { player_id: 'Ken', test_brkts: 6, createdAt: 1100 },
+      { player_id: 'Lou', test_brkts: 5, createdAt: 1200 },
+      { player_id: 'Mike', test_brkts: 8, createdAt: 1300 },
+      { player_id: 'Nate', test_brkts: 10, createdAt: 1400 },
+      { player_id: 'Otto', test_brkts: 7, createdAt: 1500 },
+      { player_id: 'Paul', test_brkts: 4, createdAt: 1600 },
+      { player_id: 'Quin', test_brkts: 5, createdAt: 1700 },
+      { player_id: 'Rob', test_brkts: 10, createdAt: 1800 },
     ];
     testBracketList.calcTotalBrkts(playerData);
     const mockBrktGridData: BGDataType = {
@@ -702,18 +702,18 @@ describe('BracketGrid', () => {
   describe('edge case 3: render 10Px4B bracktes with test data, 40 entries', () => {
 
     const testBracketList = new BracketList('test', 2, 3);
-    // num brackets name = id + "_name" = 'test_name'
+    // num brackets name = id + "_brkts" = 'test_name'
     const playerData = [
-      { player_id: 'Al', test_name: 4, createdAt: 100 },
-      { player_id: 'Bob', test_name: 4, createdAt: 200 },
-      { player_id: 'Chad', test_name: 4, createdAt: 300 },
-      { player_id: 'Don', test_name: 4, createdAt: 400 },
-      { player_id: 'Ed', test_name: 4, createdAt: 500 },
-      { player_id: 'Fred', test_name: 4, createdAt: 600 },
-      { player_id: 'Greg', test_name: 4, createdAt: 700 },
-      { player_id: 'Hal', test_name: 4, createdAt: 800 },
-      { player_id: 'Ian', test_name: 4, createdAt: 900 },
-      { player_id: 'Jim', test_name: 4, createdAt: 1000 },
+      { player_id: 'Al', test_brkts: 4, createdAt: 100 },
+      { player_id: 'Bob', test_brkts: 4, createdAt: 200 },
+      { player_id: 'Chad', test_brkts: 4, createdAt: 300 },
+      { player_id: 'Don', test_brkts: 4, createdAt: 400 },
+      { player_id: 'Ed', test_brkts: 4, createdAt: 500 },
+      { player_id: 'Fred', test_brkts: 4, createdAt: 600 },
+      { player_id: 'Greg', test_brkts: 4, createdAt: 700 },
+      { player_id: 'Hal', test_brkts: 4, createdAt: 800 },
+      { player_id: 'Ian', test_brkts: 4, createdAt: 900 },
+      { player_id: 'Jim', test_brkts: 4, createdAt: 1000 },
     ];
     testBracketList.calcTotalBrkts(playerData);
     const mockBrktGridData: BGDataType = {
@@ -792,18 +792,18 @@ describe('BracketGrid', () => {
   describe('edge case 4: render 10Px2B bracktes with test data, 20 entries', () => {
 
     const testBracketList = new BracketList('test', 2, 3);
-    // num brackets name = id + "_name" = 'test_name'
+    // num brackets name = id + "_brkts" = 'test_name'
     const playerData = [
-      { player_id: 'Al', test_name: 2, createdAt: 100 },
-      { player_id: 'Bob', test_name: 2, createdAt: 200 },
-      { player_id: 'Chad', test_name: 2, createdAt: 300 },
-      { player_id: 'Don', test_name: 2, createdAt: 400 },
-      { player_id: 'Ed', test_name: 2, createdAt: 500 },
-      { player_id: 'Fred', test_name: 2, createdAt: 600 },
-      { player_id: 'Greg', test_name: 2, createdAt: 700 },
-      { player_id: 'Hal', test_name: 2, createdAt: 800 },
-      { player_id: 'Ian', test_name: 2, createdAt: 900 },
-      { player_id: 'Jim', test_name: 2, createdAt: 1000 },
+      { player_id: 'Al', test_brkts: 2, createdAt: 100 },
+      { player_id: 'Bob', test_brkts: 2, createdAt: 200 },
+      { player_id: 'Chad', test_brkts: 2, createdAt: 300 },
+      { player_id: 'Don', test_brkts: 2, createdAt: 400 },
+      { player_id: 'Ed', test_brkts: 2, createdAt: 500 },
+      { player_id: 'Fred', test_brkts: 2, createdAt: 600 },
+      { player_id: 'Greg', test_brkts: 2, createdAt: 700 },
+      { player_id: 'Hal', test_brkts: 2, createdAt: 800 },
+      { player_id: 'Ian', test_brkts: 2, createdAt: 900 },
+      { player_id: 'Jim', test_brkts: 2, createdAt: 1000 },
     ];
     testBracketList.calcTotalBrkts(playerData);
     const mockBrktGridData: BGDataType = {
@@ -889,15 +889,15 @@ describe('BracketGrid', () => {
   describe('edge case 5: render 7Px10B brackets bracktes with test data, 70 entries', () => {
 
     const testBracketList = new BracketList('test', 2, 3);
-    // num brackets name = id + "_name" = 'test_name'
+    // num brackets name = id + "_brkts" = 'test_name'
     const playerData = [
-      { player_id: 'Al', test_name: 10, createdAt: 100 },
-      { player_id: 'Bob', test_name: 10, createdAt: 200 },
-      { player_id: 'Chad', test_name: 10, createdAt: 300 },
-      { player_id: 'Don', test_name: 10, createdAt: 400 },
-      { player_id: 'Ed', test_name: 10, createdAt: 500 },
-      { player_id: 'Fred', test_name: 10, createdAt: 600 },
-      { player_id: 'Greg', test_name: 10, createdAt: 700 },
+      { player_id: 'Al', test_brkts: 10, createdAt: 100 },
+      { player_id: 'Bob', test_brkts: 10, createdAt: 200 },
+      { player_id: 'Chad', test_brkts: 10, createdAt: 300 },
+      { player_id: 'Don', test_brkts: 10, createdAt: 400 },
+      { player_id: 'Ed', test_brkts: 10, createdAt: 500 },
+      { player_id: 'Fred', test_brkts: 10, createdAt: 600 },
+      { player_id: 'Greg', test_brkts: 10, createdAt: 700 },
     ];
     testBracketList.calcTotalBrkts(playerData);
     const mockBrktGridData: BGDataType = {
@@ -971,15 +971,15 @@ describe('BracketGrid', () => {
   describe('edge case 6: render 7Px4B brackets bracktes with test data, 28 entries', () => {
 
     const testBracketList = new BracketList('test', 2, 3);
-    // num brackets name = id + "_name" = 'test_name'
+    // num brackets name = id + "_brkts" = 'test_name'
     const playerData = [
-      { player_id: 'Al', test_name: 4, createdAt: 100 },
-      { player_id: 'Bob', test_name: 4, createdAt: 200 },
-      { player_id: 'Chad', test_name: 4, createdAt: 300 },
-      { player_id: 'Don', test_name: 4, createdAt: 400 },
-      { player_id: 'Ed', test_name: 4, createdAt: 500 },
-      { player_id: 'Fred', test_name: 4, createdAt: 600 },
-      { player_id: 'Greg', test_name: 4, createdAt: 700 },
+      { player_id: 'Al', test_brkts: 4, createdAt: 100 },
+      { player_id: 'Bob', test_brkts: 4, createdAt: 200 },
+      { player_id: 'Chad', test_brkts: 4, createdAt: 300 },
+      { player_id: 'Don', test_brkts: 4, createdAt: 400 },
+      { player_id: 'Ed', test_brkts: 4, createdAt: 500 },
+      { player_id: 'Fred', test_brkts: 4, createdAt: 600 },
+      { player_id: 'Greg', test_brkts: 4, createdAt: 700 },
     ];
     testBracketList.calcTotalBrkts(playerData);
     const mockBrktGridData: BGDataType = {
@@ -1062,15 +1062,15 @@ describe('BracketGrid', () => {
   describe('edge case 7: render 7Px random B, min 5B bracktes with test data', () => { 
 
     const testBracketList = new BracketList('test', 2, 3);
-    // num brackets name = id + "_name" = 'test_name'
+    // num brackets name = id + "_brkts" = 'test_name'
     const playerData = [
-      { player_id: 'Al', test_name: 10, createdAt: 100 },
-      { player_id: 'Bob', test_name: 8, createdAt: 200 },
-      { player_id: 'Chad', test_name: 6, createdAt: 300 },
-      { player_id: 'Don', test_name: 7, createdAt: 400 },
-      { player_id: 'Ed', test_name: 6, createdAt: 500 },
-      { player_id: 'Fred', test_name: 5, createdAt: 600 },
-      { player_id: 'Greg', test_name: 6, createdAt: 700 },
+      { player_id: 'Al', test_brkts: 10, createdAt: 100 },
+      { player_id: 'Bob', test_brkts: 8, createdAt: 200 },
+      { player_id: 'Chad', test_brkts: 6, createdAt: 300 },
+      { player_id: 'Don', test_brkts: 7, createdAt: 400 },
+      { player_id: 'Ed', test_brkts: 6, createdAt: 500 },
+      { player_id: 'Fred', test_brkts: 5, createdAt: 600 },
+      { player_id: 'Greg', test_brkts: 6, createdAt: 700 },
     ];      
     testBracketList.calcTotalBrkts(playerData);            
     const mockBrktGridData: BGDataType = {
@@ -1153,18 +1153,18 @@ describe('BracketGrid', () => {
   describe('edge case 8: render 6Px2B, 4Px1B bracktes with test data, 16 entries', () => { 
 
     const testBracketList = new BracketList('test', 2, 3);
-    // num brackets name = id + "_name" = 'test_name'
+    // num brackets name = id + "_brkts" = 'test_name'
     const playerData = [
-      { player_id: 'Al', test_name: 2, createdAt: 100 },
-      { player_id: 'Bob', test_name: 2, createdAt: 200 },
-      { player_id: 'Chad', test_name: 2, createdAt: 300 },
-      { player_id: 'Don', test_name: 2, createdAt: 400 },
-      { player_id: 'Ed', test_name: 2, createdAt: 500 },
-      { player_id: 'Fred', test_name: 2, createdAt: 600 },
-      { player_id: 'Greg', test_name: 1, createdAt: 700 },
-      { player_id: 'Hal', test_name: 1, createdAt: 800 },
-      { player_id: 'Ian', test_name: 1, createdAt: 900 },
-      { player_id: 'Jim', test_name: 1, createdAt: 1000 },
+      { player_id: 'Al', test_brkts: 2, createdAt: 100 },
+      { player_id: 'Bob', test_brkts: 2, createdAt: 200 },
+      { player_id: 'Chad', test_brkts: 2, createdAt: 300 },
+      { player_id: 'Don', test_brkts: 2, createdAt: 400 },
+      { player_id: 'Ed', test_brkts: 2, createdAt: 500 },
+      { player_id: 'Fred', test_brkts: 2, createdAt: 600 },
+      { player_id: 'Greg', test_brkts: 1, createdAt: 700 },
+      { player_id: 'Hal', test_brkts: 1, createdAt: 800 },
+      { player_id: 'Ian', test_brkts: 1, createdAt: 900 },
+      { player_id: 'Jim', test_brkts: 1, createdAt: 1000 },
     ];      
     testBracketList.calcTotalBrkts(playerData);            
     const mockBrktGridData: BGDataType = {

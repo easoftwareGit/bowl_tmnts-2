@@ -1,11 +1,9 @@
 import axios from "axios";
 import { baseBrktEntriesApi } from "@/lib/db/apiPaths";
 import { testBaseBrktEntriesApi } from "../../../../test/testApi";
-import { brktEntryType, putManyReturnType } from "@/lib/types/types";
+import { brktEntryType, putManyBrktEntriesReturnType, putManyReturnType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation";
-import { blankBrktEntry, noUpdates } from "../initVals";
-import { dateStringToTimeStamp } from "@/lib/dateTools";
-import { time } from "console";
+import { blankBrktEntry, noBrktEntriesUpdates, noUpdates } from "../initVals";
 
 const url = testBaseBrktEntriesApi.startsWith("undefined")
   ? baseBrktEntriesApi
@@ -41,6 +39,7 @@ export const getAllBrktEntriesForTmnt = async (tmntId: string): Promise<brktEntr
         brkt_id: brktEntry.brkt_id,
         player_id: brktEntry.player_id,
         num_brackets: brktEntry.num_brackets,
+        num_refunds: brktEntry.num_refunds,
         fee: brktEntry.fee,
         time_stamp: brktEntry.time_stamp,
       }
@@ -74,6 +73,7 @@ export const getAllBrktEntriesForDiv = async (divId: string): Promise<brktEntryT
         brkt_id: brktEntry.brkt_id,
         player_id: brktEntry.player_id,
         num_brackets: brktEntry.num_brackets,
+        num_refunds: brktEntry.num_refunds,
         fee: brktEntry.fee,
         time_stamp: brktEntry.time_stamp,
       }
@@ -107,6 +107,7 @@ export const getAllBrktEntriesForBrkt = async (brktId: string): Promise<brktEntr
         brkt_id: brktEntry.brkt_id,
         player_id: brktEntry.player_id,
         num_brackets: brktEntry.num_brackets,
+        num_refunds: brktEntry.num_refunds,
         fee: brktEntry.fee,
         time_stamp: brktEntry.time_stamp,
       }
@@ -140,6 +141,7 @@ export const getAllBrktEntriesForSquad = async (squadId: string): Promise<brktEn
         brkt_id: brktEntry.brkt_id,
         player_id: brktEntry.player_id,
         num_brackets: brktEntry.num_brackets,
+        num_refunds: brktEntry.num_refunds,
         fee: brktEntry.fee,
         time_stamp: brktEntry.time_stamp,
       }
@@ -175,6 +177,7 @@ export const postBrktEntry = async (brktEntry: brktEntryType): Promise<brktEntry
       brkt_id: dbBrktEntry.brkt_id,
       player_id: dbBrktEntry.player_id,
       num_brackets: dbBrktEntry.num_brackets,
+      num_refunds: dbBrktEntry.num_refunds,
       fee: dbBrktEntry.fee,
     };
     return postedBrktEntry;
@@ -210,6 +213,7 @@ export const postManyBrktEntries = async (brktEntries: brktEntryType[]): Promise
         brkt_id: brktEntry.brkt_id,
         player_id: brktEntry.player_id,
         num_brackets: brktEntry.num_brackets,
+        num_refunds: brktEntry.num_refunds,
         fee: brktEntry.fee,
       }
     });
@@ -244,6 +248,7 @@ export const putBrktEntry = async (brktEntry: brktEntryType): Promise<brktEntryT
       brkt_id: dbBrktEntry.brkt_id,
       player_id: dbBrktEntry.player_id,
       num_brackets: dbBrktEntry.num_brackets,
+      num_refunds: dbBrktEntry.num_refunds,
       fee: dbBrktEntry.fee,
     };
     return puttedBrktEntry;
@@ -256,13 +261,13 @@ export const putBrktEntry = async (brktEntry: brktEntryType): Promise<brktEntryT
  * updates, inserts or deletes many brkt entries
  * 
  * @param {brktEntryType[]} brktEntries - array of brktEntries to update, insert or delete
- * @returns {putManyReturnType | null} - putManyReturnType has how many of each type updated or null 
+ * @returns {putManyBrktEntriesReturnType | null} - putManyBrktEntriesReturnType has how many of each type updated or null 
  */
-export const putManyBrktEntries = async (brktEntries: brktEntryType[]): Promise<putManyReturnType | null> => {
+export const putManyBrktEntries = async (brktEntries: brktEntryType[]): Promise<putManyBrktEntriesReturnType | null> => {
 
   try {
     if (!brktEntries) return null;
-    if (brktEntries.length === 0) return noUpdates;
+    if (brktEntries.length === 0) return noBrktEntriesUpdates;
     for (let i = 0; i < brktEntries.length; i++) {
       if (!isValidBtDbId(brktEntries[i].id, "ben")) return null;
     }
@@ -275,7 +280,7 @@ export const putManyBrktEntries = async (brktEntries: brktEntryType[]): Promise<
       url: manyUrl,
     });
     if (response.status !== 200) return null;
-    const updatedInfo: putManyReturnType = response.data.updateInfo;
+    const updatedInfo: putManyBrktEntriesReturnType = response.data.updateInfo;
     return updatedInfo;
   } catch (err) {
     return null;
