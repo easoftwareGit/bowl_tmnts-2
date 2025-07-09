@@ -1,19 +1,17 @@
 import { IntlConfig } from "@/lib/currency/components/CurrencyInputProps";
 import { getLocaleConfig } from "@/lib/currency/components/utils";
 import { mockBrkts, mockDivs, mockElims, mockEvents, mockLanes, mockPots, mockSquads, mockTmnt } from "../../../mocks/tmnts/newTmnt/mockNewTmnt";
-import { deleteAllTmntElims, getAllElimsForTmnt } from "@/lib/db/elims/dbElims";
-import { deleteAllTmntBrkts, getAllBrktsForTmnt } from "@/lib/db/brkts/dbBrkts";
-import { deleteAllTmntPots, getAllPotsForTmnt } from "@/lib/db/pots/dbPots";
-import { deleteAllTmntLanes, getAllLanesForTmnt } from "@/lib/db/lanes/dbLanes";
-import { deleteAllTmntSquads, getAllSquadsForTmnt } from "@/lib/db/squads/dbSquads";
-import { deleteAllTmntDivs, getAllDivsForTmnt } from "@/lib/db/divs/dbDivs";
-import { deleteAllTmntEvents, getAllEventsForTmnt } from "@/lib/db/events/dbEvents";
+import { deleteAllElimsForTmnt, getAllElimsForTmnt } from "@/lib/db/elims/dbElims";
+import { deleteAllBrktsForTmnt, getAllBrktsForTmnt } from "@/lib/db/brkts/dbBrkts";
+import { deleteAllPotsForTmnt, getAllPotsForTmnt } from "@/lib/db/pots/dbPots";
+import { deleteAllLanesForTmnt, getAllLanesForTmnt } from "@/lib/db/lanes/dbLanes";
+import { deleteAllSquadsForTmnt, getAllSquadsForTmnt } from "@/lib/db/squads/dbSquads";
+import { deleteAllDivsForTmnt, getAllDivsForTmnt } from "@/lib/db/divs/dbDivs";
+import { deleteAllEventsForTmnt, getAllEventsForTmnt } from "@/lib/db/events/dbEvents";
 import { deleteTmnt, getTmnt } from "@/lib/db/tmnts/dbTmnts";
 import { blankDataOneTmnt } from "@/lib/db/initVals";
 import { dataOneTmntType, ioDataError, allDataOneTmntType } from "@/lib/types/types";
 import { saveAllDataOneTmnt } from "@/lib/db/oneTmnt/dbOneTmnt";
-import { compareAsc } from "date-fns";
-import 'core-js/actual/structured-clone';
 import { cloneDeep } from "lodash";
 
 // before running this test, run the following commands in the terminal:
@@ -44,24 +42,24 @@ describe('Save New Tmnt', () => {
 
     beforeAll(async () => {
       // cleanup any existing tmnts
-      await deleteAllTmntElims(mockTmnt.id);
-      await deleteAllTmntBrkts(mockTmnt.id);
-      await deleteAllTmntPots(mockTmnt.id);
-      await deleteAllTmntLanes(mockTmnt.id);
-      await deleteAllTmntSquads(mockTmnt.id);
-      await deleteAllTmntDivs(mockTmnt.id);
-      await deleteAllTmntEvents(mockTmnt.id);
+      await deleteAllElimsForTmnt(mockTmnt.id);
+      await deleteAllBrktsForTmnt(mockTmnt.id);
+      await deleteAllPotsForTmnt(mockTmnt.id);
+      await deleteAllLanesForTmnt(mockTmnt.id);
+      await deleteAllSquadsForTmnt(mockTmnt.id);
+      await deleteAllDivsForTmnt(mockTmnt.id);
+      await deleteAllEventsForTmnt(mockTmnt.id);
       await deleteTmnt(mockTmnt.id);
     })
 
     afterEach(async () => {
-      await deleteAllTmntElims(mockTmnt.id);
-      await deleteAllTmntBrkts(mockTmnt.id);
-      await deleteAllTmntPots(mockTmnt.id);
-      await deleteAllTmntLanes(mockTmnt.id);
-      await deleteAllTmntSquads(mockTmnt.id);
-      await deleteAllTmntDivs(mockTmnt.id);
-      await deleteAllTmntEvents(mockTmnt.id);
+      await deleteAllElimsForTmnt(mockTmnt.id);
+      await deleteAllBrktsForTmnt(mockTmnt.id);
+      await deleteAllPotsForTmnt(mockTmnt.id);
+      await deleteAllLanesForTmnt(mockTmnt.id);
+      await deleteAllSquadsForTmnt(mockTmnt.id);
+      await deleteAllDivsForTmnt(mockTmnt.id);
+      await deleteAllEventsForTmnt(mockTmnt.id);
       await deleteTmnt(mockTmnt.id);
     })
 

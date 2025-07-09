@@ -23,7 +23,7 @@ const manyUrl = url + "/many";
 export const getAllBrktsForTmnt = async (tmntId: string): Promise<brktType[] | null> => {
 
   try {
-    if (!tmntId || !isValidBtDbId(tmntId, 'tmt')) return null
+    if (!isValidBtDbId(tmntId, 'tmt')) return null
     const response = await axios({
       method: "get",
       withCredentials: true,
@@ -188,7 +188,7 @@ export const putBrkt = async (brkt: brktType): Promise<brktType | null> => {
  */
 export const deleteBrkt = async (id: string): Promise<number> => {
   try {
-    if (!id || !isValidBtDbId(id, 'brk')) return -1
+    if (!isValidBtDbId(id, 'brk')) return -1
     const response = await axios({
       method: "delete",
       withCredentials: true,
@@ -206,9 +206,9 @@ export const deleteBrkt = async (id: string): Promise<number> => {
  * @param {string} squadId - id of squad to delete all brkts from
  * @returns {number} - # of brkts deleted, -1 if squadId is invalid or an error
  */
-export const deleteAllSquadBrkts = async (squadId: string): Promise<number> => {
+export const deleteAllBrktsForSquad = async (squadId: string): Promise<number> => {
   try {
-    if (!squadId || !isValidBtDbId(squadId, 'sqd')) return -1
+    if (!isValidBtDbId(squadId, 'sqd')) return -1
     const response = await axios({
       method: "delete",
       withCredentials: true,
@@ -226,9 +226,9 @@ export const deleteAllSquadBrkts = async (squadId: string): Promise<number> => {
  * @param {string} divId - id of div to delete all brkts from
  * @returns {number} - # of brkts deleted, -1 if divId is invalid or an error
  */
-export const deleteAllDivBrkts = async (divId: string): Promise<number> => {
+export const deleteAllBrktsForDiv = async (divId: string): Promise<number> => {
   try {
-    if (!divId || !isValidBtDbId(divId, 'div')) return -1
+    if (!isValidBtDbId(divId, 'div')) return -1
     const response = await axios({
       method: "delete",
       withCredentials: true,
@@ -246,9 +246,9 @@ export const deleteAllDivBrkts = async (divId: string): Promise<number> => {
  * @param {string} tmntId - id of tmnt to delete all brkts from
  * @returns {number} - # of brkts deleted, -1 if tmntId is invalid or an error
  */
-export const deleteAllTmntBrkts = async (tmntId: string): Promise<number> => {
+export const deleteAllBrktsForTmnt = async (tmntId: string): Promise<number> => {
   try {
-    if (!tmntId || !isValidBtDbId(tmntId, 'tmt')) return -1
+    if (!isValidBtDbId(tmntId, 'tmt')) return -1
     const response = await axios({
       method: "delete",
       withCredentials: true,

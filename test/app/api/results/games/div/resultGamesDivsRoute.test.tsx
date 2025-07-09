@@ -30,7 +30,8 @@ describe('Results - API: /api/results/games/divs/:divId', () => {
   describe('GET /api/results/games/divs/:divId', () => { 
 
     const divIdNoHdcp = 'div_578834e04e5e4885bbae79229d8b96e8';
-    const divIdHdcp = 'div_24b1cd5dee0542038a1244fc2978e862'   
+    // const divIdHdcp = 'div_24b1cd5dee0542038a1244fc2978e862';
+    const divIdHdcp = 'div_fe72ab97edf8407186c8e6df7f7fb741';
 
     it('should get game results for div - NO HDCP', async () => {
       const response = await axios.get(divUrl + divIdNoHdcp);

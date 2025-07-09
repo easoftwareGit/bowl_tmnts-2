@@ -21,7 +21,7 @@ const manyUrl = url + "/many";
 export const getAllEventsForTmnt = async (tmntId: string): Promise<eventType[] | null> => {
 
   try {
-    if (!tmntId || !isValidBtDbId(tmntId, "tmt")) return null
+    if (!isValidBtDbId(tmntId, "tmt")) return null
     const response = await axios({
       method: "get",
       withCredentials: true,
@@ -193,7 +193,7 @@ export const putEvent = async (event: eventType): Promise<eventType | null> => {
 export const deleteEvent = async (id: string): Promise<number> => { 
 
   try {
-    if (!id || !isValidBtDbId(id, "evt")) return -1
+    if (!isValidBtDbId(id, "evt")) return -1
     const response = await axios({
       method: "delete",
       withCredentials: true,
@@ -211,9 +211,9 @@ export const deleteEvent = async (id: string): Promise<number> => {
  * @param {string} tmntId - id of tmnt with events to delete
  * @returns - # of rows deleted, -1 if tmntId is invalid or an error
  */
-export const deleteAllTmntEvents = async (tmntId: string): Promise<number> => {
+export const deleteAllEventsForTmnt = async (tmntId: string): Promise<number> => {
   try {
-    if (!tmntId || !isValidBtDbId(tmntId, "tmt")) return -1
+    if (!isValidBtDbId(tmntId, "tmt")) return -1
     const response = await axios({
       method: "delete",
       withCredentials: true,

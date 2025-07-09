@@ -89,8 +89,8 @@ describe("save just tmnt data", () => {
 
       const allTmntsResponse = await axios.get(url);
       const allTmnts = allTmntsResponse.data.tmnts;
-      // 12 tmnts in prisma/seeds.ts
-      expect(allTmnts.length).toBe(13); // created, not updated 12 + 1 = 13
+      // 13 tmnts in prisma/seeds.ts
+      expect(allTmnts.length).toBe(14); // created, not updated 13 + 1 = 14
     });
 
     it("should return false when tmnt data is invalid", async () => {
@@ -169,8 +169,8 @@ describe("save just tmnt data", () => {
 
       const allTmntsResponse = await axios.get(url);
       const allTmnts = allTmntsResponse.data.tmnts;
-      // 12 tmnts in prisma/seeds.ts
-      expect(allTmnts.length).toBe(12); // updated, not created      
+      // 13 tmnts in prisma/seeds.ts
+      expect(allTmnts.length).toBe(13); // updated, not created      
     });
 
     it("should return false when data is invalid", async () => {

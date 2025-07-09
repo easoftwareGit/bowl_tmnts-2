@@ -3,7 +3,7 @@ import { baseEventsApi } from "@/lib/db/apiPaths";
 import { testBaseEventsApi } from "../../../testApi";
 import { mockEventsToPost, mockEventsToEdit } from "../../../mocks/tmnts/singlesAndDoubles/mockEvents";
 import { tmntSaveEvents, exportedForTesting } from "@/lib/db/oneTmnt/dbOneTmnt";
-import { deleteAllTmntEvents, deleteEvent, postEvent, putEvent } from "@/lib/db/events/dbEvents";
+import { deleteAllEventsForTmnt, deleteEvent, postEvent, putEvent } from "@/lib/db/events/dbEvents";
 import { eventType } from "@/lib/types/types";
 import { blankEvent } from "@/lib/db/initVals";
 import { cloneDeep } from "lodash";
@@ -223,7 +223,7 @@ describe("saveTmntEvents tests", () => {
     let createdEvent = false;
 
     beforeAll(async () => {
-      await deleteAllTmntEvents(mockEventsToPost[0].tmnt_id);
+      await deleteAllEventsForTmnt(mockEventsToPost[0].tmnt_id);
     });
 
     beforeEach(() => {
@@ -232,7 +232,7 @@ describe("saveTmntEvents tests", () => {
 
     afterEach(async () => {
       if (createdEvent) {
-        await deleteAllTmntEvents(mockEventsToPost[0].tmnt_id);
+        await deleteAllEventsForTmnt(mockEventsToPost[0].tmnt_id);
       }
     });
 

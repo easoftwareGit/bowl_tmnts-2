@@ -10,13 +10,13 @@ import { postManyDivs } from "@/lib/db/divs/dbDivs"
 import { postManyPots } from "@/lib/db/pots/dbPots"
 import { postManyBrkts } from "@/lib/db/brkts/dbBrkts"
 import { postManyElims } from "@/lib/db/elims/dbElims"
-import { deleteAllTmntPlayers, getAllPlayersForSquad, postManyPlayers } from "@/lib/db/players/dbPlayers"
+import { deleteAllPlayersForTmnt, getAllPlayersForSquad, postManyPlayers } from "@/lib/db/players/dbPlayers"
 import { postManyDivEntries } from "@/lib/db/divEntries/dbDivEntries"
 import { postManyPotEntries } from "@/lib/db/potEntries/dbPotEntries"
 import { postManyBrktEntries } from "@/lib/db/brktEntries/dbBrktEntries"
 import { postManyElimEntries } from "@/lib/db/elimEntries/dbElimEntries"
 import { postManySquads } from "@/lib/db/squads/dbSquads"
-import { allEntriesOneSquadType, putManyEntriesReturnType } from "@/lib/types/types"
+import { allEntriesOneSquadType } from "@/lib/types/types"
 import { isValidBtDbId } from "@/lib/validation"
 
 const {
@@ -1402,7 +1402,7 @@ describe('dbTmntEntries', () => {
 
     afterEach(async () => { 
       // deletes all tmnt players, divEntries, potEntries, brktEntries, elimEntries
-      await deleteAllTmntPlayers(mockDataOneTmnt.tmnt.id);
+      await deleteAllPlayersForTmnt(mockDataOneTmnt.tmnt.id);
     })
 
     afterAll(async () => { 
@@ -1947,7 +1947,7 @@ describe('dbTmntEntries', () => {
 
     afterEach(async () => { 
       // deletes all tmnt players, divEntries, potEntries, brktEntries, elimEntries
-      await deleteAllTmntPlayers(mockDataOneTmnt.tmnt.id);
+      await deleteAllPlayersForTmnt(mockDataOneTmnt.tmnt.id);
     })
 
     afterAll(async () => { 

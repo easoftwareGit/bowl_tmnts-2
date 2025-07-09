@@ -4,6 +4,7 @@ import { ErrorCode, isValidBtDbId } from "@/lib/validation";
 import { sanitizeElim, validateElim } from "@/app/api/elims/validate";
 import { elimType } from "@/lib/types/types";
 import { initElim } from "@/lib/db/initVals";
+import { getErrorStatus } from "@/app/api/errCodes";
 
 // routes /api/elims/:id
 
@@ -92,21 +93,7 @@ export async function PUT(
     });
     return NextResponse.json({ elim }, { status: 200 });    
   } catch (err: any) {
-    let errStatus: number;
-    switch (err.code) {
-      case "P2002": // unique constraint
-        errStatus = 404;
-        break;
-      case "P2003": // foreign key constraint
-        errStatus = 404;
-        break;
-      case "P2025": // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error updating elim" },
       { status: errStatus }
@@ -227,21 +214,7 @@ export async function PATCH(
     });
     return NextResponse.json({ elim }, { status: 200 });    
   } catch (err: any) {
-    let errStatus: number;
-    switch (err.code) {
-      case "P2002": // unique constraint
-        errStatus = 422;
-        break;
-      case "P2003": // foreign key constraint
-        errStatus = 422;
-        break;
-      case "P2025": // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error patching elim" },
       { status: errStatus }
@@ -265,18 +238,7 @@ export async function DELETE(
     });
     return NextResponse.json({ deleted }, { status: 200 });
   } catch (err: any) {
-    let errStatus: number;
-    switch (err.code) {
-      case "P2003": // parent has child rows
-        errStatus = 409;
-        break;
-      case "P2025": // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error deleting elim" },
       { status: errStatus }

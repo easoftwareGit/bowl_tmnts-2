@@ -22,13 +22,15 @@ import {
   gameType,
   divDataType,
   brktRefundType,
-  putManyBrktEntriesReturnType,  
+  putManyBrktEntriesReturnType,
+  oneBrktType,
+  brktSeedType,  
 } from "../types/types";
 import { User, Bowl, Tmnt } from "@prisma/client";
 import { todayStr } from "@/lib/dateTools";
 import { btDbUuid } from "../uuid";
 import { startOfToday } from "date-fns";
-import { clone, cloneDeep } from "lodash";
+import { cloneDeep } from "lodash";
 import { deepClone } from "@mui/x-data-grid/internals";
 
 export const initUser: userType = {
@@ -330,6 +332,27 @@ export const blankBrkt: brktType = {
 }
 
 export const initBrkts: brktType[] = [];
+
+export const initOneBrkt: oneBrktType = {
+  id: btDbUuid('obk'),
+  brkt_id: "",
+  bindex: undefined as any,
+}
+
+export const blankOneBrkt: oneBrktType = {
+  ...initOneBrkt,
+  id: "",
+}
+
+export const initBrktSeed: brktSeedType = {
+  one_brkt_id: "",
+  seed: undefined as any,
+  player_id: "",
+}
+
+export const blankBrktSeed: brktSeedType = {
+  ...initBrktSeed,  
+}
 
 export const defaultElimGames = 3;
 export const initElim: elimType = {

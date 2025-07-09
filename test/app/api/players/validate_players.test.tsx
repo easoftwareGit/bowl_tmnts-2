@@ -487,6 +487,13 @@ describe("player table data validation", () => {
       });
       expect(result.average).toBe(2.5); // not valid but sanitied
     })
+    it('should return a sanitized player when average is not', () => {
+      const result = sanitizePlayer({
+        ...mockPlayer,
+        average: '<script>alert(1)</script>' as any
+      });
+      expect(result.average).toBe(-1); // not valid but sanitied
+    })
     it('should return a sanitized player when lane is not sanitized', () => {
       const result = sanitizePlayer({
         ...mockPlayer,

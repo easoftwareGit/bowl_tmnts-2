@@ -23,7 +23,7 @@ const manyUrl = url + "/many";
 export const getAllElimsForTmnt = async (tmntId: string): Promise<elimType[] | null> => {
 
   try {
-    if (!tmntId || !isValidBtDbId(tmntId, 'tmt')) return null
+    if (!isValidBtDbId(tmntId, 'tmt')) return null
     const response = await axios({
       method: "get",
       withCredentials: true,
@@ -168,7 +168,7 @@ export const putElim = async (elim: elimType): Promise<elimType | null> => {
  */
 export const deleteElim = async (id: string): Promise<number> => {
   try {
-    if (!id || !isValidBtDbId(id, 'elm')) return -1
+    if (!isValidBtDbId(id, 'elm')) return -1
     const response = await axios({
       method: "delete",
       withCredentials: true,
@@ -186,9 +186,9 @@ export const deleteElim = async (id: string): Promise<number> => {
  * @param squadId - id of squad to delete all elims from
  * @returns - # of elims deleted, -1 if squadId is invalid or an error
  */
-export const deleteAllSquadElims = async (squadId: string): Promise<number> => {
+export const deleteAllElimsForSquad = async (squadId: string): Promise<number> => {
   try {
-    if (!squadId || !isValidBtDbId(squadId, 'sqd')) return -1
+    if (!isValidBtDbId(squadId, 'sqd')) return -1
     const response = await axios({
       method: "delete",
       withCredentials: true,
@@ -206,9 +206,9 @@ export const deleteAllSquadElims = async (squadId: string): Promise<number> => {
  * @param divId - id of div to delete all elims from
  * @returns - # of elims deleted, -1 if divId is invalid or an error
  */
-export const deleteAllDivElims = async (divId: string): Promise<number> => {
+export const deleteAllElimsForDiv = async (divId: string): Promise<number> => {
   try {
-    if (!divId || !isValidBtDbId(divId, 'div')) return -1
+    if (!isValidBtDbId(divId, 'div')) return -1
     const response = await axios({
       method: "delete",
       withCredentials: true,
@@ -226,9 +226,9 @@ export const deleteAllDivElims = async (divId: string): Promise<number> => {
  * @param tmntId - id of tmnt to delete all elims from
  * @returns - # of elims deleted, -1 if tmntId is invalid or an error
  */
-export const deleteAllTmntElims = async (tmntId: string): Promise<number> => {
+export const deleteAllElimsForTmnt = async (tmntId: string): Promise<number> => {
   try {
-    if (!tmntId || !isValidBtDbId(tmntId, 'tmt')) return -1
+    if (!isValidBtDbId(tmntId, 'tmt')) return -1
     const response = await axios({
       method: "delete",
       withCredentials: true,

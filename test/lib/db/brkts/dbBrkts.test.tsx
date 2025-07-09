@@ -4,9 +4,9 @@ import { testBaseBrktsApi } from "../../../testApi";
 import { brktType } from "@/lib/types/types";
 import { initBrkt } from "@/lib/db/initVals";
 import { mockBrktsToPost, mockSquadsToPost, tmntToDelId, mockDivs, mockDivsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllDivBrkts, deleteAllSquadBrkts, deleteAllTmntBrkts, deleteBrkt, getAllBrktsForTmnt, postBrkt, postManyBrkts, putBrkt } from "@/lib/db/brkts/dbBrkts";
-import { deleteAllTmntSquads, deleteSquad, postManySquads, postSquad } from "@/lib/db/squads/dbSquads";
-import { deleteAllTmntDivs, deleteDiv, postDiv, postManyDivs } from "@/lib/db/divs/dbDivs";
+import { deleteAllBrktsForDiv, deleteAllBrktsForSquad, deleteAllBrktsForTmnt, deleteBrkt, getAllBrktsForTmnt, postBrkt, postManyBrkts, putBrkt } from "@/lib/db/brkts/dbBrkts";
+import { deleteAllSquadsForTmnt, deleteSquad, postManySquads, postSquad } from "@/lib/db/squads/dbSquads";
+import { deleteAllDivsForTmnt, deleteDiv, postDiv, postManyDivs } from "@/lib/db/divs/dbDivs";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -222,9 +222,9 @@ describe('dbBrkts', () => {
     beforeAll(async () => { 
       
       // remove any old test data
-      await deleteAllTmntBrkts(tmntToDelId); 
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllBrktsForTmnt(tmntToDelId); 
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
 
       // make sure test squads in database
       await postManyDivs(mockDivsToPost);
@@ -237,14 +237,14 @@ describe('dbBrkts', () => {
 
     afterEach(async () => {
       if (createdBrkts) {
-        await deleteAllTmntBrkts(tmntToDelId);
+        await deleteAllBrktsForTmnt(tmntToDelId);
       }      
     })
 
     afterAll(async () => {
-      await deleteAllTmntBrkts(tmntToDelId);
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllBrktsForTmnt(tmntToDelId);
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
     })
 
     it('should post many brkts', async () => { 
@@ -479,7 +479,7 @@ describe('dbBrkts', () => {
 
     beforeAll(async () => {
       // cleanup before tests
-      await deleteAllSquadBrkts(multiBrkts[0].squad_id);
+      await deleteAllBrktsForSquad(multiBrkts[0].squad_id);
       await deleteSquad(mockSquadsToPost[0].id);
       await deleteDiv(mockDivsToPost[0].id);
       // setup for tests
@@ -499,26 +499,26 @@ describe('dbBrkts', () => {
     });
 
     afterAll(async () => {
-      await deleteAllSquadBrkts(multiBrkts[0].squad_id);
+      await deleteAllBrktsForSquad(multiBrkts[0].squad_id);
       await deleteSquad(mockSquadsToPost[0].id);
       await deleteDiv(mockDivsToPost[0].id);
     });
 
     it('should delete all brkts for a squad', async () => {
-      const deleted = await deleteAllSquadBrkts(multiBrkts[0].squad_id);
+      const deleted = await deleteAllBrktsForSquad(multiBrkts[0].squad_id);
       expect(deleted).toBe(multiBrkts.length);
       didDel = true;
     })
     it('should NOT delete all brkts for a squad when ID is invalid', async () => {
-      const deleted = await deleteAllSquadBrkts('test');
+      const deleted = await deleteAllBrktsForSquad('test');
       expect(deleted).toBe(-1);
     })
     it('should NOT delete all brkts for a squad when ID is not found', async () => {
-      const deleted = await deleteAllSquadBrkts('sqd_00000000000000000000000000000000');
+      const deleted = await deleteAllBrktsForSquad('sqd_00000000000000000000000000000000');
       expect(deleted).toBe(0);
     })
     it('should NOT delete all brkts for a squad when ID is valid, but not a squad ID', async () => {
-      const deleted = await deleteAllSquadBrkts(mockBrktsToPost[0].id);
+      const deleted = await deleteAllBrktsForSquad(mockBrktsToPost[0].id);
       expect(deleted).toBe(-1);
     })
 
@@ -555,7 +555,7 @@ describe('dbBrkts', () => {
 
     beforeAll(async () => {
       // cleanup before tests
-      await deleteAllSquadBrkts(multiBrkts[0].squad_id);
+      await deleteAllBrktsForSquad(multiBrkts[0].squad_id);
       await deleteSquad(mockSquadsToPost[0].id);
       await deleteDiv(mockDivsToPost[0].id);
       // setup for tests
@@ -575,26 +575,26 @@ describe('dbBrkts', () => {
     });
 
     afterAll(async () => {
-      await deleteAllSquadBrkts(multiBrkts[0].squad_id);
+      await deleteAllBrktsForSquad(multiBrkts[0].squad_id);
       await deleteSquad(mockSquadsToPost[0].id);
       await deleteDiv(mockDivsToPost[0].id);
     });
 
     it('should delete all brkts for a div', async () => {
-      const deleted = await deleteAllDivBrkts(multiBrkts[0].div_id);
+      const deleted = await deleteAllBrktsForDiv(multiBrkts[0].div_id);
       expect(deleted).toBe(multiBrkts.length);
       didDel = true;
     })
     it('should NOT delete all brkts for a div when ID is invalid', async () => {
-      const deleted = await deleteAllDivBrkts('test');
+      const deleted = await deleteAllBrktsForDiv('test');
       expect(deleted).toBe(-1);
     })
     it('should NOT delete all brkts for a div when ID is not found', async () => {
-      const deleted = await deleteAllDivBrkts('div_00000000000000000000000000000000');
+      const deleted = await deleteAllBrktsForDiv('div_00000000000000000000000000000000');
       expect(deleted).toBe(0);
     })
     it('should NOT delete all brkts for a div when ID is valid, but not a squad ID', async () => {
-      const deleted = await deleteAllDivBrkts(mockBrktsToPost[0].id);
+      const deleted = await deleteAllBrktsForDiv(mockBrktsToPost[0].id);
       expect(deleted).toBe(-1);
     })
 
@@ -610,10 +610,10 @@ describe('dbBrkts', () => {
 
     beforeAll(async () => {
       // cleanup before tests
-      await deleteAllSquadBrkts(toDelSquads[0].id);
-      await deleteAllSquadBrkts(toDelSquads[1].id);
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllBrktsForSquad(toDelSquads[0].id);
+      await deleteAllBrktsForSquad(toDelSquads[1].id);
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
       // setup for tests
       await postManyDivs(toDelDivs);
       await postManySquads(toDelSquads);
@@ -626,32 +626,32 @@ describe('dbBrkts', () => {
 
     afterEach(async () => {
       if (!didDel) return;
-      await deleteAllSquadBrkts(toDelSquads[0].id);
-      await deleteAllSquadBrkts(toDelSquads[1].id);
+      await deleteAllBrktsForSquad(toDelSquads[0].id);
+      await deleteAllBrktsForSquad(toDelSquads[1].id);
     })
 
     afterAll(async () => {
-      await deleteAllSquadBrkts(toDelSquads[0].id);
-      await deleteAllSquadBrkts(toDelSquads[1].id);
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllBrktsForSquad(toDelSquads[0].id);
+      await deleteAllBrktsForSquad(toDelSquads[1].id);
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
     })
 
     it('should delete all brkts for a tmnt', async () => {
-      const deleted = await deleteAllTmntBrkts(tmntToDelId);
+      const deleted = await deleteAllBrktsForTmnt(tmntToDelId);
       didDel = true;
       expect(deleted).toBe(toDelBrkts.length);
     })
     it('should NOT delete all brkts for a tmnt when ID is invalid', async () => {
-      const deleted = await deleteAllTmntBrkts('test');
+      const deleted = await deleteAllBrktsForTmnt('test');
       expect(deleted).toBe(-1);
     })
     it('should NOT delete all brkts for a tmnt when tmnt ID is not found', async () => {
-      const deleted = await deleteAllTmntBrkts(notFoundTmntId);
+      const deleted = await deleteAllBrktsForTmnt(notFoundTmntId);
       expect(deleted).toBe(0);
     })
     it('should NOT delete all brkts for a tmnt when tmnt ID is valid, but not a tmnt id', async () => {
-      const deleted = await deleteAllTmntBrkts(toDelBrkts[0].id);
+      const deleted = await deleteAllBrktsForTmnt(toDelBrkts[0].id);
       expect(deleted).toBe(-1);
     })
 

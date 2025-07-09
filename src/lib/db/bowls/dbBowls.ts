@@ -37,7 +37,7 @@ export const getBowls = async (): Promise<Bowl[]> => {
 export const getBowl = async (id: string): Promise<Bowl | null> => {
 
   try {
-    if (!id || !isValidBtDbId(id, 'bwl')) return null
+    if (!isValidBtDbId(id, 'bwl')) return null
     const response = await axios({
       method: "get",
       withCredentials: true,

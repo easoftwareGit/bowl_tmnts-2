@@ -4,7 +4,7 @@ import { testBasePlayersApi } from "../../../testApi";
 import { playerType, tmntEntryPlayerType } from "@/lib/types/types";
 import { initPlayer } from "@/lib/db/initVals";
 import { mockPlayersToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllSquadPlayers, deleteAllTmntPlayers, deletePlayer, getAllPlayersForSquad, getAllPlayersForTmnt, postManyPlayers, postPlayer, putManyPlayers, putPlayer } from "@/lib/db/players/dbPlayers";
+import { deleteAllPlayersForSquad, deleteAllPlayersForTmnt, deletePlayer, getAllPlayersForSquad, getAllPlayersForTmnt, postManyPlayers, postPlayer, putManyPlayers, putPlayer } from "@/lib/db/players/dbPlayers";
 import { cloneDeep } from "lodash";
 
 // before running this test, run the following commands in the terminal:
@@ -42,7 +42,7 @@ const playersToGet: playerType[] = [
     last_name: "Doe",
     average: 220,
     lane: 1,
-    position: 'A',
+    position: "A",
   },
   {
     ...initPlayer,
@@ -52,7 +52,7 @@ const playersToGet: playerType[] = [
     last_name: "Bennett",
     average: 221,
     lane: 1,
-    position: 'B',
+    position: "B",
   },
   {
     ...initPlayer,
@@ -61,29 +61,59 @@ const playersToGet: playerType[] = [
     first_name: "Olivia",
     last_name: "Morgan",
     average: 210,
-    lane: 2,
-    position: 'C',
+    lane: 1,
+    position: "C",
+  },
+  {
+    ...initPlayer,
+    id: "ply_89be0472be3d476ea1caa99dd05953fa",
+    squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+    first_name: "Joan",
+    last_name: "Doe",
+    average: 200,
+    lane: 1,
+    position: "D",
   },
   {
     ...initPlayer,
     id: "ply_8b0fd8bbd9e34d34a7fa90b4111c6e40",
     squad_id: "sqd_7116ce5f80164830830a7157eb093396",
-    first_name: "William", 
+    first_name: "William",
     last_name: "Harris",
     average: 211,
     lane: 2,
-    position: 'D',
+    position: "E",
   },
   {
     ...initPlayer,
     id: "ply_bb0fd8bbd9e34d34a7fa90b4111c6e40",
     squad_id: "sqd_7116ce5f80164830830a7157eb093396",
-    first_name: "John", 
+    first_name: "John",
     last_name: "Dope",
     average: 219,
     lane: 2,
-    position: 'E',
-  }
+    position: "F",
+  },
+  {
+    ...initPlayer,
+    id: "ply_bb1fd8bbd9e34d34a7fa90b4111c6e40",
+    squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+    first_name: "Jane",
+    last_name: "Dope",
+    average: 201,
+    lane: 2,
+    position: "G",
+  },
+  {
+    ...initPlayer,
+    id: "ply_bb2fd8bbd9e34d34a7fa90b4111c6e40",
+    squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+    first_name: "Bob",
+    last_name: "Smith",
+    average: 222,
+    lane: 2,
+    position: "H",
+  },
 ]
 
 describe('dbPlayers', () => { 
@@ -123,13 +153,71 @@ describe('dbPlayers', () => {
       expect(players).toHaveLength(playersToGet.length);
       if (!players) return;
       for (let i = 0; i < players.length; i++) {
-        expect(players[i].id).toEqual(playersToGet[i].id);
-        expect(players[i].squad_id).toEqual(playersToGet[i].squad_id);
-        expect(players[i].first_name).toEqual(playersToGet[i].first_name);
-        expect(players[i].last_name).toEqual(playersToGet[i].last_name);
-        expect(players[i].average).toEqual(playersToGet[i].average);
-        expect(players[i].lane).toEqual(playersToGet[i].lane);
-        expect(players[i].position).toEqual(playersToGet[i].position);
+        if (players[i].id === playersToGet[0].id) {
+          expect(players[i].id).toEqual(playersToGet[0].id);
+          expect(players[i].squad_id).toEqual(playersToGet[0].squad_id);
+          expect(players[i].first_name).toEqual(playersToGet[0].first_name);
+          expect(players[i].last_name).toEqual(playersToGet[0].last_name);
+          expect(players[i].average).toEqual(playersToGet[0].average);
+          expect(players[i].lane).toEqual(playersToGet[0].lane);
+          expect(players[i].position).toEqual(playersToGet[0].position);
+        } else if (players[i].id === playersToGet[1].id) {
+          expect(players[i].id).toEqual(playersToGet[1].id);
+          expect(players[i].squad_id).toEqual(playersToGet[1].squad_id);
+          expect(players[i].first_name).toEqual(playersToGet[1].first_name);
+          expect(players[i].last_name).toEqual(playersToGet[1].last_name);
+          expect(players[i].average).toEqual(playersToGet[1].average);
+          expect(players[i].lane).toEqual(playersToGet[1].lane);
+          expect(players[i].position).toEqual(playersToGet[1].position);
+        } else if (players[i].id === playersToGet[2].id) {
+          expect(players[i].id).toEqual(playersToGet[2].id);
+          expect(players[i].squad_id).toEqual(playersToGet[2].squad_id);
+          expect(players[i].first_name).toEqual(playersToGet[2].first_name);
+          expect(players[i].last_name).toEqual(playersToGet[2].last_name);
+          expect(players[i].average).toEqual(playersToGet[2].average);
+          expect(players[i].lane).toEqual(playersToGet[2].lane);
+          expect(players[i].position).toEqual(playersToGet[2].position);
+        } else if (players[i].id === playersToGet[3].id) {
+          expect(players[i].id).toEqual(playersToGet[3].id);
+          expect(players[i].squad_id).toEqual(playersToGet[3].squad_id);
+          expect(players[i].first_name).toEqual(playersToGet[3].first_name);
+          expect(players[i].last_name).toEqual(playersToGet[3].last_name);
+          expect(players[i].average).toEqual(playersToGet[3].average);
+          expect(players[i].lane).toEqual(playersToGet[3].lane);
+          expect(players[i].position).toEqual(playersToGet[3].position);
+        } else if (players[i].id === playersToGet[4].id) {
+          expect(players[i].id).toEqual(playersToGet[4].id);
+          expect(players[i].squad_id).toEqual(playersToGet[4].squad_id);
+          expect(players[i].first_name).toEqual(playersToGet[4].first_name);
+          expect(players[i].last_name).toEqual(playersToGet[4].last_name);
+          expect(players[i].average).toEqual(playersToGet[4].average);
+          expect(players[i].lane).toEqual(playersToGet[4].lane);
+          expect(players[i].position).toEqual(playersToGet[4].position);
+        } else if (players[i].id === playersToGet[5].id) {
+          expect(players[i].id).toEqual(playersToGet[5].id);
+          expect(players[i].squad_id).toEqual(playersToGet[5].squad_id);
+          expect(players[i].first_name).toEqual(playersToGet[5].first_name);
+          expect(players[i].last_name).toEqual(playersToGet[5].last_name);
+          expect(players[i].average).toEqual(playersToGet[5].average);
+          expect(players[i].lane).toEqual(playersToGet[5].lane);
+          expect(players[i].position).toEqual(playersToGet[5].position);
+        } else if (players[i].id === playersToGet[6].id) {
+          expect(players[i].id).toEqual(playersToGet[6].id);
+          expect(players[i].squad_id).toEqual(playersToGet[6].squad_id);
+          expect(players[i].first_name).toEqual(playersToGet[6].first_name);
+          expect(players[i].last_name).toEqual(playersToGet[6].last_name);
+          expect(players[i].average).toEqual(playersToGet[6].average);
+          expect(players[i].lane).toEqual(playersToGet[6].lane);
+          expect(players[i].position).toEqual(playersToGet[6].position);
+        } else if (players[i].id === playersToGet[7].id) {
+          expect(players[i].id).toEqual(playersToGet[7].id);
+          expect(players[i].squad_id).toEqual(playersToGet[7].squad_id);
+          expect(players[i].first_name).toEqual(playersToGet[7].first_name);
+          expect(players[i].last_name).toEqual(playersToGet[7].last_name);
+          expect(players[i].average).toEqual(playersToGet[7].average);
+          expect(players[i].lane).toEqual(playersToGet[7].lane);
+          expect(players[i].position).toEqual(playersToGet[7].position);
+        } else {expect(false).toBe(true)}
       }
     })
     it('should return 0 players for not found tmnt', async () => { 
@@ -205,7 +293,7 @@ describe('dbPlayers', () => {
       last_name: "Green",
       average: 201,
       lane: 3,
-      position: 'F',
+      position: 'Z',
   }
 
     let createdPlayer = false;
@@ -213,7 +301,7 @@ describe('dbPlayers', () => {
     const deletePostedPlayer = async () => { 
       const response = await axios.get(url);
       const players = response.data.players;
-      const toDel = players.find((p: playerType) => p.position === 'F');
+      const toDel = players.find((p: playerType) => p.position === 'Z');
       if (toDel) {
         try {
           const delResponse = await axios({
@@ -261,7 +349,7 @@ describe('dbPlayers', () => {
         last_name: '    abcdef***',
         average: 100,
         lane: 2,
-        position: ' F*'
+        position: ' Z*'
       }
       const postedPlayer = await postPlayer(toSanitizse);
       expect(postedPlayer).not.toBeNull();
@@ -273,7 +361,7 @@ describe('dbPlayers', () => {
       expect(postedPlayer.last_name).toEqual('abcdef');
       expect(postedPlayer.average).toEqual(toSanitizse.average);
       expect(postedPlayer.lane).toEqual(toSanitizse.lane);
-      expect(postedPlayer.position).toEqual('F');
+      expect(postedPlayer.position).toEqual('Z');
     })
     it('should not post a player if got invalid data', async () => { 
       const invalidPlayer = {
@@ -291,7 +379,7 @@ describe('dbPlayers', () => {
     const squadId = 'sqd_42be0f9d527e4081972ce8877190489d'
 
     beforeAll(async () => {
-      await deleteAllSquadPlayers(squadId);
+      await deleteAllPlayersForSquad(squadId);
     })
 
     beforeEach(() => {
@@ -300,12 +388,12 @@ describe('dbPlayers', () => {
 
     afterEach(async () => {
       if (createdPlayers) {
-        await deleteAllSquadPlayers(squadId);
+        await deleteAllPlayersForSquad(squadId);
       }
     })
 
     afterAll(async () => {
-      await deleteAllSquadPlayers(squadId);
+      await deleteAllPlayersForSquad(squadId);
     })
 
     it('should post many players', async () => {
@@ -437,7 +525,7 @@ describe('dbPlayers', () => {
     const playersToDelTmntId = 'tmt_d9b1af944d4941f65b2d2d4ac160cdea';
 
     beforeAll(async () => { 
-      await deleteAllTmntPlayers(playersToDelTmntId);
+      await deleteAllPlayersForTmnt(playersToDelTmntId);
     })
 
     beforeEach(() => {
@@ -446,7 +534,7 @@ describe('dbPlayers', () => {
 
     afterEach(async () => {
       if (createdPlayers) {
-        await deleteAllTmntPlayers(playersToDelTmntId);
+        await deleteAllPlayersForTmnt(playersToDelTmntId);
       }      
     })
 
@@ -762,28 +850,28 @@ describe('dbPlayers', () => {
     });
 
     it('should delete all players for a tmnt', async () => {
-      const deleted = await deleteAllTmntPlayers(delPlayerTmntId);
+      const deleted = await deleteAllPlayersForTmnt(delPlayerTmntId);
       expect(deleted).toBe(mockPlayersToPost.length);
       didDel = true;
     })
     it('should not delete all players for a tmnt when tmnt id is not found', async () => {
-      const deleted = await deleteAllTmntPlayers(notFoundTmntId);
+      const deleted = await deleteAllPlayersForTmnt(notFoundTmntId);
       expect(deleted).toBe(0);
     })
     it('should not delete all players for a tmnt when tmnt id is invalid', async () => {
-      const deleted = await deleteAllTmntPlayers("test");
+      const deleted = await deleteAllPlayersForTmnt("test");
       expect(deleted).toBe(-1);
     })
     it('should not delete all players for a tmnt when tmnt id is valid, but not a tmnt id', async () => {
-      const deleted = await deleteAllTmntPlayers(notFoundSquadId);
+      const deleted = await deleteAllPlayersForTmnt(notFoundSquadId);
       expect(deleted).toBe(-1);
     })
     it('should not delete all players for a tmnt when tmnt id is null', async () => {
-      const deleted = await deleteAllTmntPlayers(null as any);
+      const deleted = await deleteAllPlayersForTmnt(null as any);
       expect(deleted).toBe(-1);
     })
     it('should not delete all players for a tmnt when tmnt id is undefined', async () => {
-      const deleted = await deleteAllTmntPlayers(undefined as any);
+      const deleted = await deleteAllPlayersForTmnt(undefined as any);
       expect(deleted).toBe(-1);
     })
     
@@ -827,28 +915,28 @@ describe('dbPlayers', () => {
     });
 
     it('should delete all players for a squad', async () => { 
-      const deleted = await deleteAllSquadPlayers(mockPlayersToPost[0].squad_id);
+      const deleted = await deleteAllPlayersForSquad(mockPlayersToPost[0].squad_id);
       expect(deleted).toBe(mockPlayersToPost.length);
       didDel = true;
     })
     it('should not delete all players for a squad when squad id is not found', async () => {
-      const deleted = await deleteAllSquadPlayers(notFoundSquadId);
+      const deleted = await deleteAllPlayersForSquad(notFoundSquadId);
       expect(deleted).toBe(0);
     })  
     it('should not delete all players for a squad when squad id is invalid', async () => { 
-      const deleted = await deleteAllSquadPlayers("test");
+      const deleted = await deleteAllPlayersForSquad("test");
       expect(deleted).toBe(-1);
     })
     it('should not delete all players for a squad when squad id is valid, but not a squad id', async () => { 
-      const deleted = await deleteAllSquadPlayers(notFoundTmntId);
+      const deleted = await deleteAllPlayersForSquad(notFoundTmntId);
       expect(deleted).toBe(-1);
     })
     it('should not delete all players for a squad when squad id is null', async () => { 
-      const deleted = await deleteAllSquadPlayers(null as any);
+      const deleted = await deleteAllPlayersForSquad(null as any);
       expect(deleted).toBe(-1);
     })
     it('should not delete all players for a squad when squad id is undefined', async () => { 
-      const deleted = await deleteAllSquadPlayers(undefined as any);
+      const deleted = await deleteAllPlayersForSquad(undefined as any);
       expect(deleted).toBe(-1);
     })
 

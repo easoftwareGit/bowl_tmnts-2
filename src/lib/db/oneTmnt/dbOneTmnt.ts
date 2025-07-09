@@ -1,12 +1,12 @@
 import { brktType, divType, elimType, eventType, ioDataError, laneType, potType, allDataOneTmntType, squadType, tmntType } from "@/lib/types/types";
 import { deleteTmnt, postTmnt, putTmnt } from "../tmnts/dbTmnts";
 import { isValidBtDbId } from "@/lib/validation";
-import { deleteAllTmntEvents, deleteEvent, postEvent, postManyEvents, putEvent } from "../events/dbEvents";
-import { deleteAllTmntDivs, deleteDiv, postDiv, postManyDivs, putDiv } from "../divs/dbDivs";
-import { deleteAllTmntSquads, deleteSquad, postManySquads, postSquad, putSquad } from "../squads/dbSquads";
-import { deleteAllTmntLanes, deleteLane, postLane, postManyLanes, putLane } from "../lanes/dbLanes";
-import { deleteAllTmntPots, deletePot, postManyPots, postPot, putPot } from "../pots/dbPots";
-import { deleteAllTmntBrkts, deleteBrkt, postBrkt, postManyBrkts, putBrkt } from "../brkts/dbBrkts";
+import { deleteAllEventsForTmnt, deleteEvent, postEvent, postManyEvents, putEvent } from "../events/dbEvents";
+import { deleteAllDivsForTmnt, deleteDiv, postDiv, postManyDivs, putDiv } from "../divs/dbDivs";
+import { deleteAllSquadsForTmnt, deleteSquad, postManySquads, postSquad, putSquad } from "../squads/dbSquads";
+import { deleteAllLanesForTmnt, deleteLane, postLane, postManyLanes, putLane } from "../lanes/dbLanes";
+import { deleteAllPotsForTmnt, deletePot, postManyPots, postPot, putPot } from "../pots/dbPots";
+import { deleteAllBrktsForTmnt, deleteBrkt, postBrkt, postManyBrkts, putBrkt } from "../brkts/dbBrkts";
 import { deleteElim, postElim, postManyElims, putElim } from "../elims/dbElims";
 
 /**
@@ -66,7 +66,8 @@ const tmntPostPutOrDelEvents = async (origEvents: eventType[], events: eventType
           const puttedEvent = await putEvent(events[i]);
           if (!puttedEvent) return null
           savedEvents.push(puttedEvent);
-        } else { // else original event has not been edited
+        } else {
+          // else original event not edited, push to saved w/o updating db
           savedEvents.push(foundOrig);          
         }
       } else { // else a new event
@@ -120,7 +121,7 @@ const tmntPostPutOrDelDivs = async (origDivs: divType[], divs: divType[]): Promi
     }
   }
 
-  // if user has added an div, the div will be in divs
+  // if user has added a div, the div will be in divs
   for (let i = 0; i < divs.length; i++) {
     // if not a new div
     if (isValidBtDbId(divs[i].id, 'div')) {
@@ -132,6 +133,7 @@ const tmntPostPutOrDelDivs = async (origDivs: divType[], divs: divType[]): Promi
           if (!puttedDiv) return null
           savedDivs.push(puttedDiv);
         } else {
+          // else original div not edited, push to save w/o updating db
           savedDivs.push(foundOrig);
         }
       } else { // else a new div
@@ -197,6 +199,7 @@ const tmntPostPutOrDelSquads = async (origSquads: squadType[], squads: squadType
           if (!puttedSquad) return null
           savedSquads.push(puttedSquad);
         } else {
+          // else original squad not edited, push to save w/o updating db
           savedSquads.push(foundOrig);
         }
       } else { // else a new lane
@@ -266,6 +269,7 @@ const tmntPostPutOrDelLanes = async (origLanes: laneType[], lanes: laneType[]): 
           }
           savedLanes.push(puttedLane);
         } else {
+          // else original lane not edited, push to save w/o updating db
           savedLanes.push(foundOrig);
         }
       } else { // else a new lane
@@ -338,6 +342,7 @@ const tmntPostPutOrDelPots = async (origPots: potType[], pots: potType[]): Promi
           }
           savedPots.push(puttedPot);
         } else {
+          // else original pot not edited, push to save w/o updating db
           savedPots.push(foundOrig);
         }
       } else { // else a new pot
@@ -408,6 +413,7 @@ const tmntPostPutOrDelBrkts = async (origBrkts: brktType[], brkts: brktType[]): 
           }
           savedBrkts.push(puttedBrkt);
         } else {
+          // else original brkt not edited, push to save w/o updating db
           savedBrkts.push(foundOrig);
         }
       } else { // else a new brkt
@@ -478,6 +484,7 @@ const tmntPostPutOrDelElims = async (origElims: elimType[], elims: elimType[]): 
           }
           savedElims.push(puttedElim);
         } else {
+          // else original elim not edited, push to save w/o updating db
           savedElims.push(foundOrig);
         }
       } else { // else a new elim
@@ -538,57 +545,57 @@ export const saveAllDataOneTmnt = async (allTmntData: allDataOneTmntType): Promi
   const savedDivs = await tmntSaveDivs(origDivs, divs);
   if (!savedDivs) { 
     // delete saved tmnt data
-    await deleteAllTmntEvents(tmnt.id);   
+    await deleteAllEventsForTmnt(tmnt.id);   
     await deleteTmnt(tmnt.id);            
     return ioDataError.Divs;
   } 
   const savedSquads = await tmntSaveSquads(origSquads, squads);
   if (!savedSquads) { 
     // delete saved tmnt data
-    await deleteAllTmntDivs(tmnt.id);
-    await deleteAllTmntEvents(tmnt.id);   
+    await deleteAllDivsForTmnt(tmnt.id);
+    await deleteAllEventsForTmnt(tmnt.id);   
     await deleteTmnt(tmnt.id);            
     return ioDataError.Squads;
   }
   const savedLanes = await tmntSaveLanes(origLanes, lanes);
   if (!savedLanes) { 
     // delete saved tmnt data
-    await deleteAllTmntSquads(tmnt.id);
-    await deleteAllTmntDivs(tmnt.id);
-    await deleteAllTmntEvents(tmnt.id);   
+    await deleteAllSquadsForTmnt(tmnt.id);
+    await deleteAllDivsForTmnt(tmnt.id);
+    await deleteAllEventsForTmnt(tmnt.id);   
     await deleteTmnt(tmnt.id);
     return ioDataError.Lanes;
   }
   const savedPots = await tmntSavePots(origPots, pots);
   if (!savedPots) { 
     // delete saved tmnt data
-    await deleteAllTmntLanes(tmnt.id);
-    await deleteAllTmntSquads(tmnt.id);
-    await deleteAllTmntDivs(tmnt.id);
-    await deleteAllTmntEvents(tmnt.id);   
+    await deleteAllLanesForTmnt(tmnt.id);
+    await deleteAllSquadsForTmnt(tmnt.id);
+    await deleteAllDivsForTmnt(tmnt.id);
+    await deleteAllEventsForTmnt(tmnt.id);   
     await deleteTmnt(tmnt.id);
     return ioDataError.Pots;
   }
   const savedBrkts = await tmntSaveBrkts(origBrkts, brkts);
   if (!savedBrkts) { 
     // delete saved tmnt data
-    await deleteAllTmntPots(tmnt.id);
-    await deleteAllTmntLanes(tmnt.id);
-    await deleteAllTmntSquads(tmnt.id);
-    await deleteAllTmntDivs(tmnt.id);
-    await deleteAllTmntEvents(tmnt.id);   
+    await deleteAllPotsForTmnt(tmnt.id);
+    await deleteAllLanesForTmnt(tmnt.id);
+    await deleteAllSquadsForTmnt(tmnt.id);
+    await deleteAllDivsForTmnt(tmnt.id);
+    await deleteAllEventsForTmnt(tmnt.id);   
     await deleteTmnt(tmnt.id);
     return ioDataError.Brkts;
   }
   const savedElims = await tmntSaveElims(origElims, elims);
   if (!savedElims) { 
     // delete saved tmnt data
-    await deleteAllTmntBrkts(tmnt.id);
-    await deleteAllTmntPots(tmnt.id);
-    await deleteAllTmntLanes(tmnt.id);
-    await deleteAllTmntSquads(tmnt.id);
-    await deleteAllTmntDivs(tmnt.id);
-    await deleteAllTmntEvents(tmnt.id);   
+    await deleteAllBrktsForTmnt(tmnt.id);
+    await deleteAllPotsForTmnt(tmnt.id);
+    await deleteAllLanesForTmnt(tmnt.id);
+    await deleteAllSquadsForTmnt(tmnt.id);
+    await deleteAllDivsForTmnt(tmnt.id);
+    await deleteAllEventsForTmnt(tmnt.id);   
     await deleteTmnt(tmnt.id);
     return ioDataError.Elims;
   }

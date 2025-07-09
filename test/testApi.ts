@@ -31,6 +31,8 @@ export const testBasePotEntriesApi = testBaseApi + '/potEntries'
 export const testBaseBrktsApi = testBaseApi + '/brkts'
 export const testBaseBrktEntriesApi = testBaseApi + '/brktEntries'
 export const testBaseBrktRefundsApi = testBaseApi + '/brktRefunds'
+export const testBrktSeedsApi = testBaseApi + '/brktSeeds'
+export const testBaseOneBrktsApi = testBaseApi + '/oneBrkts'
 
 export const testBaseElimsApi = testBaseApi + '/elims'
 export const testBaseElimEntriesApi = testBaseApi + '/elimEntries'

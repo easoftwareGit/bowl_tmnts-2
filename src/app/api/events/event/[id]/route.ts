@@ -4,6 +4,7 @@ import { ErrorCode, isValidBtDbId } from "@/lib/validation";
 import { allEventMoneyValid, sanitizeEvent, validateEvent } from "@/app/api/events/validate";
 import { eventType } from "@/lib/types/types";
 import { initEvent } from "@/lib/db/initVals";
+import { getErrorStatus } from "@/app/api/errCodes";
 
 // routes /api/events/event/:id
 
@@ -122,21 +123,7 @@ export async function PUT(
     };
     return NextResponse.json({ event }, { status: 200 });
   } catch (err: any) {
-    let errStatus: number;
-    switch (err.code) {
-      case "P2002": // unique constraint
-        errStatus = 404;
-        break;
-      case "P2003": // parent not found
-        errStatus = 404;
-        break;
-      case "P2025": // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error updating event" },
       { status: errStatus }
@@ -331,21 +318,7 @@ export async function PATCH(
     }
     return NextResponse.json({ event }, { status: 200 });
   } catch (err: any) {
-    let errStatus: number;
-    switch (err.code) {
-      case "P2002": // unique constraint
-        errStatus = 422;
-        break;
-      case "P2003": // foreign key constraint
-        errStatus = 422;
-        break;
-      case "P2025": // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error patching event" },
       { status: errStatus }
@@ -374,18 +347,7 @@ export async function DELETE(
     };
     return NextResponse.json({ deleted }, { status: 200 });
   } catch (err: any) {
-    let errStatus: number;
-    switch (err.code) {
-      case "P2003": // parent has child rows
-        errStatus = 409;
-        break;
-      case "P2025": // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error deleting event" },
       { status: errStatus }

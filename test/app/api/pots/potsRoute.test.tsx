@@ -4,9 +4,9 @@ import { testBasePotsApi, testBaseSquadsApi, testBaseDivsApi } from "../../../te
 import { divType, potCategoriesTypes, potType, squadType } from "@/lib/types/types";
 import { initDiv, initPot, initSquad } from "@/lib/db/initVals";
 import { mockSquadsToPost, mockPotsToPost, mockDivs, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/dbSquads";
-import { deleteAllTmntDivs, postManyDivs } from "@/lib/db/divs/dbDivs";
-import { deleteAllTmntPots } from "@/lib/db/pots/dbPots";
+import { deleteAllSquadsForTmnt, postManySquads } from "@/lib/db/squads/dbSquads";
+import { deleteAllDivsForTmnt, postManyDivs } from "@/lib/db/divs/dbDivs";
+import { deleteAllPotsForTmnt } from "@/lib/db/pots/dbPots";
 import { isValidBtDbId } from "@/lib/validation";
 
 // before running this test, run the following commands in the terminal:
@@ -280,7 +280,7 @@ describe('Pots - API: /api/pots', () => {
       })
 
       expect(response.status).toBe(200);
-      // 2 rows for squad in prisma/seed.ts
+      // 2 rows for div in prisma/seed.ts
       expect(response.data.pots).toHaveLength(2);
       const pots: potType[] = response.data.pots;
       // query in /api/pots/div/ GET sorts by sort_order
@@ -841,9 +841,9 @@ describe('Pots - API: /api/pots', () => {
 
     beforeAll(async () => { 
       // remove any old test data      
-      await deleteAllTmntPots(tmntToDelId);
-      await deleteAllTmntSquads(tmntToDelId);      
-      await deleteAllTmntDivs(tmntToDelId);      
+      await deleteAllPotsForTmnt(tmntToDelId);
+      await deleteAllSquadsForTmnt(tmntToDelId);      
+      await deleteAllDivsForTmnt(tmntToDelId);      
 
       // make sure test data in database
       await postManyDivs(mockDivs)
@@ -856,14 +856,14 @@ describe('Pots - API: /api/pots', () => {
 
     afterEach(async () => {
       if (createdPots) {
-        await deleteAllTmntPots(tmntToDelId);
+        await deleteAllPotsForTmnt(tmntToDelId);
       }
     })
 
     afterAll(async () => {
-      await deleteAllTmntPots(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
-      await deleteAllTmntSquads(tmntToDelId);
+      await deleteAllPotsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
+      await deleteAllSquadsForTmnt(tmntToDelId);
     })
 
     it('should create many pots', async () => {
@@ -1349,10 +1349,10 @@ describe('Pots - API: /api/pots', () => {
           withCredentials: true,
           url: onePotUrl + invalidPot.id,
         })
-        expect(response.status).toBe(404);
+        expect(response.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(409);
         } else {
           expect(true).toBeFalsy();
         }
@@ -1818,6 +1818,7 @@ describe('Pots - API: /api/pots', () => {
 
   describe('DELETE by ID - API: /api/pots/:id', () => { 
 
+    // to delete from prisma/seeds.ts
     const toDelPot = {
       ...initPot,
       id: "pot_e3758d99c5494efabb3b0d273cf22e7a",
@@ -1914,23 +1915,6 @@ describe('Pots - API: /api/pots', () => {
         }
       }
     })
-    // it('should NOT delete a pot by ID when pot has child rows', async () => { 
-    //   try {
-    //     const delResponse = await axios({
-    //       method: "delete",
-    //       withCredentials: true,
-    //       url: onePotUrl + testPot.id
-    //     })  
-    //     expect(delResponse.status).toBe(409);
-    //   } catch (err) {
-    //     if (err instanceof AxiosError) {
-    //       expect(err.response?.status).toBe(409);
-    //     } else {
-    //       expect(true).toBeFalsy();
-    //     }
-    //   }
-    // })
-
   })  
 
   describe('DELETE all pots for a squad API: /api/pots/squad/:squadId', () => { 
@@ -2407,8 +2391,8 @@ describe('Pots - API: /api/pots', () => {
       await delOnePot(toDelPots[3].id);
       await delOnePot(toDelPots[4].id);
       await delOnePot(toDelPots[5].id);
-      await deleteAllTmntDivs(tmntToDelId)
-      await deleteAllTmntSquads(tmntToDelId)
+      await deleteAllDivsForTmnt(tmntToDelId)
+      await deleteAllSquadsForTmnt(tmntToDelId)
     })
 
     it('should delete all pots for a tmnt', async () => { 

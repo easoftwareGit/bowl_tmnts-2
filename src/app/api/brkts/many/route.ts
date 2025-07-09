@@ -4,6 +4,7 @@ import { ErrorCode } from "@/lib/validation";
 import { brktType, brktDataType } from "@/lib/types/types";
 import { validateBrkts } from "../validate";
 import { calcFSA } from "@/lib/currency/fsa";
+import { getErrorStatus } from "../../errCodes";
 
 // routes /api/brkts/many
 
@@ -44,18 +45,7 @@ export async function POST(request: NextRequest) {
     }))
     return NextResponse.json({brkts: manyBrkts}, { status: 201 });    
   } catch (err: any) {
-    let errStatus: number
-    switch (err.code) {
-      case 'P2002': // Unique constraint
-        errStatus = 409 
-        break;
-      case 'P2003': // parent not found
-        errStatus = 404
-        break;    
-      default:
-        errStatus = 500
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error creating many brkts" },
       { status: errStatus }

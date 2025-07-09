@@ -4,6 +4,7 @@ import { ErrorCode, isValidBtDbId } from "@/lib/validation";
 import { initPlayer } from "@/lib/db/initVals";
 import { playerType } from "@/lib/types/types";
 import { sanitizePlayer, validatePlayer } from "../../validate";
+import { getErrorStatus } from "@/app/api/errCodes";
 
 // routes /api/players/player/:id
 
@@ -84,19 +85,8 @@ export async function PUT(
     });
 
     return NextResponse.json({ player }, { status: 200 });
-  } catch (error: any) {
-    let errStatus: number;
-    switch (error.code) {
-      case "P2003":   // parent not found
-        errStatus = 404;
-        break;
-      case "P2025":   // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+  } catch (err: any) {
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "Error putting player" },
       { status: errStatus }
@@ -216,19 +206,8 @@ export async function PATCH(
     });
 
     return NextResponse.json({ player }, { status: 200 });
-  } catch (error: any) {
-    let errStatus: number;
-    switch (error.code) {
-      case "P2003":   // parent not found
-        errStatus = 404;
-        break;
-      case "P2025":   // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+  } catch (err: any) {
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "Error patching player" },
       { status: errStatus }
@@ -252,19 +231,8 @@ export async function DELETE(
       },
     });
     return NextResponse.json({ deleted }, { status: 200 });
-  } catch (error: any) {
-    let errStatus: number;
-    switch (error.code) {
-      case "P2003": // parent has child rows
-        errStatus = 409;
-        break;
-      case "P2025": // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+  } catch (err: any) {
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "Error deleting player" },
       { status: errStatus }

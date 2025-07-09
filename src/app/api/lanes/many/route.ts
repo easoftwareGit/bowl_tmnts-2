@@ -4,6 +4,7 @@ import { ErrorCode } from "@/lib/validation";
 import { laneType, laneDataType } from "@/lib/types/types";
 import { initLane } from "@/lib/db/initVals";
 import { validateLanes } from "../validate";
+import { getErrorStatus } from "../../errCodes";
 
 // routes /api/lanes/many
 
@@ -42,18 +43,7 @@ export async function POST(request: NextRequest) {
     })
     return NextResponse.json({lanes: manyLanes}, { status: 201 });    
   } catch (err: any) {
-    let errStatus: number
-    switch (err.code) {
-      case 'P2002': // Unique constraint
-        errStatus = 409 
-        break;
-      case 'P2003': // parent not found
-        errStatus = 404
-        break;    
-      default:
-        errStatus = 500
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error creating many lanes" },
       { status: errStatus }

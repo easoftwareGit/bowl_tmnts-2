@@ -266,7 +266,7 @@ export const deletePotEntry = async (id: string): Promise<number> => {
  */
 export const deleteAllPotEntriesForSquad = async (squadId: string): Promise<number> => {
   try {
-    if (!squadId || !isValidBtDbId(squadId, "sqd")) return -1;
+    if (!isValidBtDbId(squadId, "sqd")) return -1;
     const response = await axios({
       method: "delete",
       withCredentials: true,
@@ -286,6 +286,7 @@ export const deleteAllPotEntriesForSquad = async (squadId: string): Promise<numb
  */
 export const deleteAllPotEntriesForDiv = async (divId: string): Promise<number> => {
   try {
+    if (!isValidBtDbId(divId, "div")) return -1;
     const response = await axios({
       method: "delete",
       withCredentials: true,
@@ -305,7 +306,7 @@ export const deleteAllPotEntriesForDiv = async (divId: string): Promise<number> 
  */
 export const deleteAllPotEntriesForTmnt = async (tmntId: string): Promise<number> => {
   try {
-    if (!tmntId || !isValidBtDbId(tmntId, "tmt")) return -1;
+    if (!isValidBtDbId(tmntId, "tmt")) return -1;
     const response = await axios({
       method: "delete",
       withCredentials: true,

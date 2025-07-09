@@ -34,7 +34,7 @@ const gotPotData = (pot: potType): ErrorCode => {
  * @param {pot_type} pot_type - pot type to validate
  * @returns {boolean} - true if pot type is valid, else false
  */
-export const validPotType = (pot_type: potCategoriesTypes): boolean => {
+const validPotType = (pot_type: potCategoriesTypes): boolean => {
   if (!pot_type) return false;
   const sanitized = sanitize(pot_type);
   // "" is inclided in PotCategories type, but is not a valid value
@@ -47,7 +47,7 @@ export const validPotType = (pot_type: potCategoriesTypes): boolean => {
  * @param {string} moneyStr - money to check
  * @returns {boolean} - true if amount is valid and not blank; else false
  */
-export const validPotMoney = (moneyStr: string): boolean => {
+const validPotMoney = (moneyStr: string): boolean => {
   // min 1, max 999999
   return validBtdbMoney(moneyStr, 1);
 };
@@ -55,11 +55,11 @@ export const validPotMoney = (moneyStr: string): boolean => {
 /**
  * checks if foreign key is valid
  *
- * @param FkId - foreign key
- * @param idType - id type - 'div' or 'sqd'
+ * @param {string} FkId - foreign key
+ * @param {idTypes} idType - id type - 'div' or 'sqd'
  * @returns {boolean} - true if foreign key is valid
  */
-export const validPotFkId = (FkId: string, idType: idTypes): boolean => {
+const validPotFkId = (FkId: string, idType: idTypes): boolean => {
   if (!FkId || !isValidBtDbId(FkId, idType)) {
     return false;
   }
@@ -69,7 +69,7 @@ export const validPotFkId = (FkId: string, idType: idTypes): boolean => {
 /**
  * checks if pot data is valid
  *
- * @param pot - pot object to validate
+ * @param {potType} pot - pot object to validate
  * @returns {ErrorCode.None | ErrorCode.InvalidData | ErrorCode.OtherError} - error code
  */
 const validPotData = (pot: potType): ErrorCode => {
@@ -102,7 +102,7 @@ const validPotData = (pot: potType): ErrorCode => {
 /**
  * sanitizes a pot object
  *
- * @param pot - pot to sanitize
+ * @param {potType} pot - pot to sanitize
  * @returns {potType} - pot object with sanitized data
  */
 export const sanitizePot = (pot: potType): potType => {
@@ -136,7 +136,7 @@ export const sanitizePot = (pot: potType): potType => {
 /**
  * validates a pot object
  *
- * @param pot pot to validate
+ * @param {potType} pot - pot pot to validate
  * @returns {ErrorCode.None | ErrorCode.MissingData | ErrorCode.InvalidData | ErrorCode.OtherError} - error code
  */
 export function validatePot(pot: potType): ErrorCode {
@@ -154,7 +154,7 @@ export function validatePot(pot: potType): ErrorCode {
 /**
  * sanitizes and validates an array of pot objects
  * 
- * @param pots - array of pot objects to validate
+ * @param {potType[]} pots - array of pot objects to validate
  * @returns {validPotsType} - {pots:potType[], errorCode: ErrorCode.None | ErrorCode.MissingData | ErrorCode.InvalidData | ErrorCode.OtherError}
  */
 export const validatePots = (pots: potType[]): validPotsType => {
@@ -180,5 +180,8 @@ export const validatePots = (pots: potType[]): validPotsType => {
 
 export const exportedForTesting = {
   gotPotData,
-  validPotData,
+  validPotType,
+  validPotMoney,
+  validPotData,  
+  validPotFkId,
 };

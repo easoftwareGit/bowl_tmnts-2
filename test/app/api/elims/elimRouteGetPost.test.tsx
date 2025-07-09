@@ -3,10 +3,10 @@ import { baseElimsApi } from "@/lib/db/apiPaths";
 import { testBaseElimsApi } from "../../../testApi";
 import { elimType } from "@/lib/types/types";
 import { initElim } from "@/lib/db/initVals";
-import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/dbSquads";
-import { deleteAllTmntDivs, postManyDivs } from "@/lib/db/divs/dbDivs";
+import { deleteAllSquadsForTmnt, postManySquads } from "@/lib/db/squads/dbSquads";
+import { deleteAllDivsForTmnt, postManyDivs } from "@/lib/db/divs/dbDivs";
 import { mockElimsToPost, mockSquadsToPost, mockDivsToPost, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllTmntElims } from "@/lib/db/elims/dbElims";
+import { deleteAllElimsForTmnt } from "@/lib/db/elims/dbElims";
 import { btDbUuid } from "@/lib/uuid";
 
 // before running this test, run the following commands in the terminal:
@@ -902,10 +902,10 @@ describe("Elims - API: /api/elims", () => {
           withCredentials: true,
           url: url,
         });
-        expect(response.status).toBe(404);
+        expect(response.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(409);
         } else {
           expect(true).toBeFalsy();
         }
@@ -937,9 +937,9 @@ describe("Elims - API: /api/elims", () => {
 
     beforeAll(async () => { 
       // remove any old test data      
-      await deleteAllTmntElims(tmntToDelId);
-      await deleteAllTmntSquads(tmntToDelId);      
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllElimsForTmnt(tmntToDelId);
+      await deleteAllSquadsForTmnt(tmntToDelId);      
+      await deleteAllDivsForTmnt(tmntToDelId);
 
       // make sure test data in database
       await postManyDivs(mockDivsToPost)
@@ -952,14 +952,14 @@ describe("Elims - API: /api/elims", () => {
 
     afterEach(async () => {
       if (createdElims) {
-        await deleteAllTmntElims(tmntToDelId);
+        await deleteAllElimsForTmnt(tmntToDelId);
       }
     })
 
     afterAll(async () => {
-      await deleteAllTmntElims(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
-      await deleteAllTmntSquads(tmntToDelId);
+      await deleteAllElimsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
+      await deleteAllSquadsForTmnt(tmntToDelId);
     })
 
     it('should create many elims', async () => {

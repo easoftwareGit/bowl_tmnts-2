@@ -1,7 +1,7 @@
 import React, { useState, ChangeEvent } from "react";
 import { squadType, AcdnErrType, eventType, laneType, tmntActions } from "../../../lib/types/types";
 import { initSquad } from "../../../lib/db/initVals";
-import { Tabs, Tab } from "react-bootstrap";
+import { Tabs, Tab, OverlayTrigger, Tooltip } from "react-bootstrap";
 import ModalConfirm, { delConfTitle } from "@/components/modal/confirmModal";
 import { initModalObj } from "@/components/modal/modalObjType";
 import { 
@@ -598,6 +598,12 @@ const OneToNSquads: React.FC<ChildProps> = ({
     </option>
   ));
 
+  const renderLanesToolTip = (props: any) => (
+    <Tooltip id="button-tooltip" {...props}>
+      Number of lanes used in the squad
+    </Tooltip>
+  );
+
   return (
     <>
       <ModalConfirm
@@ -732,10 +738,18 @@ const OneToNSquads: React.FC<ChildProps> = ({
               <div className="col-sm-3">
                 <label
                   htmlFor={`inputLaneCount${squad.id}`}
-                  className="form-label"
-                  title="Number of lanes used in the squad"
+                  className="form-label"                  
                 >
-                  # of Lanes <span className="popup-help">&nbsp;?&nbsp;</span>
+                  # of Lanes&nbsp;
+                  <>
+                    <OverlayTrigger
+                      placement="right"
+                      delay={{ show: 250, hide: 1000 }}
+                      overlay={renderLanesToolTip}
+                    >
+                      <span className="popup-help">&nbsp;?&nbsp;</span>
+                    </OverlayTrigger>
+                  </>
                 </label>
                 <input
                   type="number"

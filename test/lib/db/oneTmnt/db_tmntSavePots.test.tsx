@@ -4,9 +4,9 @@ import { testBasePotsApi } from "../../../testApi";
 import { tmntSavePots, exportedForTesting } from "@/lib/db/oneTmnt/dbOneTmnt";
 import { mockPotsToPost, mockSquadsToPost, mockDivs, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { potCategoriesTypes, potType } from "@/lib/types/types";
-import { deleteAllTmntPots, deletePot, postManyPots, postPot, putPot } from "@/lib/db/pots/dbPots";
-import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/dbSquads";
-import { deleteAllTmntDivs, postManyDivs } from "@/lib/db/divs/dbDivs";
+import { deleteAllPotsForTmnt, deletePot, postManyPots, postPot, putPot } from "@/lib/db/pots/dbPots";
+import { deleteAllSquadsForTmnt, postManySquads } from "@/lib/db/squads/dbSquads";
+import { deleteAllDivsForTmnt, postManyDivs } from "@/lib/db/divs/dbDivs";
 import { blankPot } from "@/lib/db/initVals";
 import { cloneDeep } from "lodash";
 const { tmntPostPutOrDelPots } = exportedForTesting;
@@ -76,9 +76,9 @@ describe('saveTmntDivs test', () => {
 
     beforeAll(async () => {
       // cleanup if test left over from previous test
-      await deleteAllTmntPots(tmntToDelId);
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllPotsForTmnt(tmntToDelId);
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
       // setup for current tests
       await postManyDivs(mockDivs)
       await postManySquads(mockSquadsToPost)
@@ -110,9 +110,9 @@ describe('saveTmntDivs test', () => {
     });
 
     afterAll(async () => {      
-      await deleteAllTmntPots(tmntToDelId);
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllPotsForTmnt(tmntToDelId);
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
     })
 
     it('should save edited pots, one pot edited', async () => { 
@@ -227,9 +227,9 @@ describe('saveTmntDivs test', () => {
 
     beforeAll(async () => {
       // cleanup if test left over from previous test
-      await deleteAllTmntPots(tmntToDelId);      
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllPotsForTmnt(tmntToDelId);      
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
 
       // create temp squads for pots
       await postManyDivs(mockDivs);
@@ -242,14 +242,14 @@ describe('saveTmntDivs test', () => {
 
     afterEach(async () => {
       if (didCreate) {
-        await deleteAllTmntPots(tmntToDelId);
+        await deleteAllPotsForTmnt(tmntToDelId);
       }
     });
 
     afterAll(async () => {
-      await deleteAllTmntPots(tmntToDelId);
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllPotsForTmnt(tmntToDelId);
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
     })
 
     const origClone = cloneDeep(blankPot);
@@ -332,9 +332,9 @@ describe('saveTmntDivs test', () => {
 
     beforeAll(async () => {
       // cleanup if test left over from previous test
-      await deleteAllTmntPots(tmntToDelId);
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllPotsForTmnt(tmntToDelId);
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
       // setup for current tests
       await postManyDivs(mockDivs)
       await postManySquads(mockSquadsToPost)
@@ -366,9 +366,9 @@ describe('saveTmntDivs test', () => {
     });
 
     afterAll(async () => {      
-      await deleteAllTmntPots(tmntToDelId);
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllPotsForTmnt(tmntToDelId);
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
     })
 
     it('should save edited pots, one pot edited', async () => { 

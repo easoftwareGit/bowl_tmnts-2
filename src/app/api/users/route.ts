@@ -6,6 +6,7 @@ import { sanitizeUser, validateUser } from "./validate";
 import { userType } from "@/lib/types/types";
 import { initUser } from "@/lib/db/initVals";
 import { doHash } from "@/lib/hash";
+import { getErrorStatus } from "../errCodes";
 
 // routes /api/users
 
@@ -83,18 +84,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ user }, { status: 201 });        
   } catch (err: any) {
-    let errStatus: number;
-    switch (err.code) {
-      case 'P2002': // Unique constraint failed on the fields: (`email`)
-        errStatus = 409;
-        break;
-      case "P2025": // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "Error creating user" },
       { status: errStatus }

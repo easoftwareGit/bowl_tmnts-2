@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { testDateType } from "@/lib/types/types";
 import { initTestDate } from "@/lib/db/initVals";
+import { getErrorStatus } from "../errCodes";
 
 // routes /api/testdate
 
@@ -57,18 +58,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ td }, { status: 201 });
   } catch (err: any) {
-    let errStatus: number;
-    switch (err.code) {
-      case "P2002": // Unique constraint
-        errStatus = 422;
-        break;
-      case "P2003": // Foreign key constraint
-        errStatus = 422;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error creating testDate" },
       { status: errStatus }

@@ -1,9 +1,6 @@
 import {
   sanitizePot,
-  validatePot,
-  validPotType,
-  validPotMoney,
-  validPotFkId,
+  validatePot,    
   exportedForTesting,
   validatePots,
 } from "@/app/api/pots/validate";
@@ -12,7 +9,7 @@ import { potCategoriesTypes, potType, validPotsType } from "@/lib/types/types";
 import { ErrorCode } from "@/lib/validation";
 import { mockPotsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 
-const { gotPotData, validPotData } = exportedForTesting;
+const { gotPotData, validPotType, validPotMoney, validPotFkId, validPotData } = exportedForTesting;
 
 const potId = 'pot_b2a7b02d761b4f5ab5438be84f642c3b';
 
@@ -251,7 +248,7 @@ describe("tests for pot validation", () => {
       const sanitizedPot = sanitizePot(testPot)
       expect(sanitizedPot.pot_type).toEqual('Game')
     })
-    it('should return sanitized pot when pot has an invalidid', () => {
+    it('should return sanitized pot when pot has an invalid id', () => {
       const testPot = {
         ...validPot,
         id: 'test',
@@ -282,7 +279,7 @@ describe("tests for pot validation", () => {
       const sanitizedPot = sanitizePot(testPot)
       expect(sanitizedPot.sort_order).toBeNull()
     })
-    it('should return sanitized pot when pot numerical values are nit numbers', () => {
+    it('should return sanitized pot when pot numerical values are not numbers', () => {
       const testPot = {
         ...initPot,
         sort_order: 'abc' as any

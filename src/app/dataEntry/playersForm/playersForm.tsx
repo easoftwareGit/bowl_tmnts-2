@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { 
@@ -35,26 +35,28 @@ import { btDbUuid } from "@/lib/uuid";
 import ModalConfirm, { delConfTitle, cancelConfTitle } from "@/components/modal/confirmModal";
 import ModalErrorMsg from "@/components/modal/errorModal";
 import { initModalObj } from "@/components/modal/modalObjType";
-import { errInfoType, findNextError, getRowPlayerName } from "./rowInfo";
+import { CheckType, errInfoType, findNextError, getRowPlayerName } from "./rowInfo";
 import { useRouter } from "next/navigation"
-import { getOneSquadEntriesSaveStatus, getOneSquadEntriesUpdatedInfo, SaveOneSquadEntries, updateBrktEntries, updateDivEntries, updateElimEntries, updatePlayers, updatePotEntries } from "@/redux/features/allEntriesOneSquad/allEntriesOneSquadSlice";
+import { getOneSquadEntriesSaveStatus, SaveOneSquadEntries, updateBrktEntries, updateDivEntries, updateElimEntries, updatePlayers, updatePotEntries } from "@/redux/features/allEntriesOneSquad/allEntriesOneSquadSlice";
 import WaitModal from "@/components/modal/waitModal";
 import { getTotalUpdated, updateAllEntries } from "@/lib/db/tmntEntries/dbTmntEntries";
-import "./grid.css";
 import { cloneDeep } from "lodash";
 import { PayloadAction } from "@reduxjs/toolkit";
+import { useIsTouchDevice } from "@/hooks/useIsTouchDevice";
+import { OverlayTrigger, Tooltip } from "react-bootstrap";
+import { ButtonWithTooltip } from "@/components/mobile/mobileToolTipButton"; 
+import "./grid.css";
 
 // full tmnt
 // http://localhost:3000/dataEntry/runTmnt/tmt_d237a388a8fc4641a2e37233f1d6bebd
 // http://localhost:3000/dataEntry/editPlayers/tmt_d237a388a8fc4641a2e37233f1d6bebd
 // squadId: "sqd_8e4266e1174642c7a1bcec47a50f275f"
 //
-// new years eve 
+// new years eve
 // http://localhost:3000/dataEntry/runTmnt/tmt_fe8ac53dad0f400abe6354210a8f4cd1
 // http://localhost:3000/dataEntry/editPlayers/tmt_fe8ac53dad0f400abe6354210a8f4cd1
 // eventId: "evt_9a58f0a486cb4e6c92ca3348702b1a62"
 // squadId: "sqd_3397da1adc014cf58c44e07c19914f71"
-
 
 declare module "@mui/x-data-grid" {
   interface ToolbarPropsOverrides {
@@ -68,11 +70,13 @@ declare module "@mui/x-data-grid" {
 interface ChildProps {
   rows: (typeof playerEntryData)[];
   setRows: (rows: (typeof playerEntryData)[]) => void;
+  findCountError: () => errInfoType;
 }
 
-const PlayersEntryForm: React.FC<ChildProps> = ({   
+const PlayersEntryForm: React.FC<ChildProps> = ({
   rows,
-  setRows
+  setRows,
+  findCountError,
 }) => {
 
   const dispatch = useDispatch<AppDispatch>();
@@ -92,7 +96,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
   };
 
   const entriesSaveStatus = useSelector(getOneSquadEntriesSaveStatus);
-  const [saveCompleted, setSaveCompleted] = useState(false);      
+  const [saveCompleted, setSaveCompleted] = useState(false);
   const [resultAction, setResultAction] = useState<PayloadAction<{ data: allEntriesOneSquadType; updatedInfo: putManyEntriesReturnType; }, string, { arg: { rows: { [key: string]: any; }[]; data: allEntriesOneSquadType; }; requestId: string; requestStatus: "fulfilled"; }, never> | null>(null);
 
   const [gridEditMode, setGridEditMode] = useState<"cell" | "row">("cell");
@@ -109,7 +113,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
   }
   const entriesTotalsObj: entriesTotalsType = {
     feeTotal: 0,
-  };  
+  };
   const [entriesTotals, setEntriesTotals] =
     useState<typeof entriesTotalsObj>(entriesTotalsObj);
   
@@ -118,11 +122,18 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
     playerFormTmnt?.curData?.lanes[playerFormTmnt?.curData?.lanes.length - 1]
       ?.lane_number;
 
-  useEffect(() => {
-    // creates the entriesTotals object 
-    const addToEntriesTotalsObj = (tmntData: dataOneTmntType) => {            
+  const isTouchDevice = useIsTouchDevice();
+
+  const noErrorsTitle = 'No Errors Found';
+
+  // creates the entriesTotals object 
+  useEffect(() => {   
+    
+    console.log('PlayersEntryForm: useEffect 1 - [playerFormTmnt.curData]');
+
+    const addToEntriesTotalsObj = (tmntData: dataOneTmntType) => {
       
-      let initTotals = { ...entriesTotals };      
+      let initTotals = { ...entriesTotals };
       tmntData.divs.forEach((div) => {
         const divFeeName = entryFeeColName(div.id);
         initTotals = {
@@ -143,7 +154,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
           ...initTotals,
           [brktFeeName]: 0,
         };
-        const brktNameCol = entryNumBrktsColName(brkt.id);        
+        // const brktNameCol = entryNumBrktsColName(brkt.id);
       });
       tmntData.elims.forEach((elim) => {
         const elimFeeName = entryFeeColName(elim.id);
@@ -152,13 +163,13 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
           [elimFeeName]: 0,
         };
       });
-      setEntriesTotals(initTotals);      
+      setEntriesTotals(initTotals);
     };
 
     if (playerFormTmnt?.curData?.divs) {
       addToEntriesTotalsObj(playerFormTmnt?.curData);
-    }            
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playerFormTmnt.curData]); // DO NOT INCLUDE entriesTotals in array
 
   const playersColumns = createPlayerEntryColumns(
@@ -167,7 +178,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
     squadMinLane
   );
   const divsEntryCols = createDivEntryColumns(playerFormTmnt?.curData?.divs);
-  const potsEntryCols = createPotEntryColumns(playerFormTmnt?.curData?.pots);
+  const potsEntryCols = createPotEntryColumns(playerFormTmnt?.curData?.pots, playerFormTmnt?.curData?.divs);
   const brktEntryCols = createBrktEntryColumns(
     playerFormTmnt?.curData?.brkts,
     playerFormTmnt?.curData?.divs
@@ -198,7 +209,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
             headerName: "Column Totals->",
             headerAlign: "right",
             headerClassName: "playersHeader",
-            children: [              
+            children: [
               { field: "first_name" },
               { field: "last_name" },
               { field: "average" },
@@ -375,10 +386,13 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
   const columnGroupings = createColummnGroupings();
 
   useEffect(() => {
+
+    console.log('PlayersEntryForm: useEffect 2 - [rows]');
+
     const updatedTotals = { ...entriesTotals };
     let overAllTotal = 0;
     Object.keys(entriesTotals).forEach((key) => {
-      if (key !== "feeTotal") { 
+      if (key !== "feeTotal") {
         const colTotal = rows.reduce(
           (total, row) => total + (isNaN(row[key]) ? 0 : Number(row[key])),
           0
@@ -394,7 +408,10 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
   
   // this useEffect is if Next did not update playerFormTmnt.curData
   useEffect(() => {
-    const addToEntriesTotalsObj = (tmntData: dataOneTmntType) => {            
+
+    console.log('PlayersEntryForm: useEffect 3 - []');
+
+    const addToEntriesTotalsObj = (tmntData: dataOneTmntType) => {
       // if (Object.keys(entriesTotals).length > 1) return;
       let initialTotals = { ...entriesTotals };
       tmntData.divs.forEach((div) => {
@@ -403,7 +420,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
           initialTotals = {
             ...initialTotals,
             [divFeeName]: 0,
-          };          
+          };
         }
       });
       tmntData.pots.forEach((pot) => {
@@ -433,16 +450,13 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
           };
         }
       });
-
-      // console.log('No params', initialTotals);
-
       setEntriesTotals(initialTotals);
     };
 
     if (playerFormTmnt?.curData?.divs) {
       addToEntriesTotalsObj(playerFormTmnt?.curData);
-    }            
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // KEEP ARRAY EMPTY!
 
   const handleRowModesModelChange = (newRowModesModel: GridRowModesModel) => {
@@ -459,12 +473,12 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
   const handleCellEditStop: GridEventListener<"cellEditStop"> = (
     params,
     event
-  ) => {  
-  }  
+  ) => {
+  }
 
   const handleRowSelectionModelChange = (
     rowSelectionModel: GridRowSelectionModel
-  ) => {    
+  ) => {
     // const values = Object.values(rowSelectionModel);
     if (rowSelectionModel.length > 0) {
       setSelectedRowId(rowSelectionModel[0] as string);
@@ -493,7 +507,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
 
   const confirmYes = () => {
     // if confirmed delete
-    if (confModalObj.title === delConfTitle) { 
+    if (confModalObj.title === delConfTitle) {
       const idToDel = confModalObj.id;
       setConfModalObj(initModalObj); // reset modal object (hides modal)
 
@@ -501,11 +515,15 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
       setRows(rows.filter((row) => row.id !== selectedRowId));
       setSelectedRowId("");
 
-    // if confirmed cancel
-    } else if (confModalObj.title === cancelConfTitle) {      
+      // if confirmed cancel
+    } else if (confModalObj.title === cancelConfTitle) {
       setConfModalObj(initModalObj);  // reset modal object (hides modal)      
       // go back to run tournament page
       router.push(`/dataEntry/runTmnt/${playerFormTmnt.curData.tmnt.id}`);
+    } else if (confModalObj.title === noErrorsTitle) {
+      // if confirmed finalize check
+      setConfModalObj(initModalObj);  // reset modal object (hides modal)      
+      canFinalize(); // no need to used return value
     }
   };
 
@@ -521,7 +539,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
     if (rows.length === 0) {
       router.push(`/dataEntry/runTmnt/${playerFormTmnt.curData.tmnt.id}`);
       return;
-    }    
+    }
     setConfModalObj({
       show: true,
       title: cancelConfTitle,
@@ -567,27 +585,121 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
     setRows([...rows, newRow]);
   };
 
-  const handleFindErrorClick = () => {
-    const errInfo: errInfoType = findNextError(rows, playerFormTmnt.curData);
+  const canFinalize = (): boolean => { 
+    const errInfo: errInfoType = findNextError(rows, playerFormTmnt.curData, CheckType.Final);
+    if (errInfo.msg !== "") {
+      setErrModalObj({
+        show: true,
+        title: "Cannot Finalize",
+        message: errInfo.msg,
+        id: errInfo.id,
+      });
+      return false;
+    } else {
+      // now check if got divs, pots, brkts, elims
+      const countErrInfo = findCountError();
+      
+      if (countErrInfo.msg !== "") {
+        setErrModalObj({
+          show: true,
+          title: "Cannot Finalize",
+          message: countErrInfo.msg,
+          id: countErrInfo.id,
+        });
+        return false;
+      }              
+      return true;
+    }
+  }
+
+  // const handleFindFinalErrorClick = () => {
+    
+  //   const errInfo: errInfoType = findNextError(rows, playerFormTmnt.curData, CheckType.Final);
+  //   if (errInfo.msg !== "") {
+  //     setErrModalObj({
+  //       show: true,
+  //       title: "Error in Entries",
+  //       message: errInfo.msg,
+  //       id: errInfo.id,
+  //     });
+  //   } else {
+  //     setErrModalObj({
+  //       show: true,
+  //       title: "No Errors",
+  //       message: "Finalaize check found no errors in the entries.",
+  //       id: "none",
+  //     });
+  //   }
+  // }
+
+  const handleFindPrelimErrorClick = () => {
+
+    const errInfo: errInfoType = findNextError(rows, playerFormTmnt.curData, CheckType.Prelim);
     if (errInfo.msg !== "") {
       setErrModalObj({
         show: true,
         title: "Error in Entries",
         message: errInfo.msg,
         id: errInfo.id,
-      });
+      });      
     } else {
-      setErrModalObj({
+      setConfModalObj({
         show: true,
-        title: "No Errors",
-        message: "There are no errors in the entries",
-        id: "none",
-      });
+        title: 'No Errors Found',
+        message: `No errors found in preliminary check. You can save the entries. Do you want to run the finalize check?`,
+        id: 'prelimCheck'
+      }); // finalize check done in confirmYes      
     }
   };
 
+  const handleFinalizeClick = async () => {
+
+    if (canFinalize()) {       
+
+      
+
+      setSaveCompleted(false); // Reset state before dispatching
+      const saveResultAction = await dispatch(SaveOneSquadEntries({ rows: rows, data: playersFormData }));
+      if (SaveOneSquadEntries.fulfilled.match(saveResultAction)) {
+        setResultAction(saveResultAction);
+        setSaveCompleted(true);
+      }
+    }
+
+    // // check if any data entry errors
+    // const errInfo: errInfoType = findNextError(rows, playerFormTmnt.curData, CheckType.Final);
+    // if (errInfo.msg !== "") {
+    //   setErrModalObj({
+    //     show: true,
+    //     title: "Cannot Finalize",
+    //     message: errInfo.msg,
+    //     id: errInfo.id,
+    //   });
+    // } else {
+    //   // now check if got divs, pots, brkts, elims
+    //   const countErrInfo = findCountError();
+      
+    //   if (countErrInfo.msg !== "") {
+    //     setErrModalObj({
+    //       show: true,
+    //       title: "Cannot Finalize",
+    //       message: countErrInfo.msg,
+    //       id: countErrInfo.id,
+    //     });
+    //     return;
+    //   }              
+    //   // ok to save now
+    //   setSaveCompleted(false); // Reset state before dispatching
+    //   const saveResultAction = await dispatch(SaveOneSquadEntries({ rows: rows, data: playersFormData }));
+    //   if (SaveOneSquadEntries.fulfilled.match(saveResultAction)) {
+    //     setResultAction(saveResultAction);
+    //     setSaveCompleted(true);
+    //   }
+    // }
+  }
+
   const handleSaveClick = async () => {
-    const errInfo: errInfoType = findNextError(rows, playerFormTmnt.curData);
+    const errInfo: errInfoType = findNextError(rows, playerFormTmnt.curData, CheckType.Prelim);
     if (errInfo.msg !== "") {
       setErrModalObj({
         show: true,
@@ -596,10 +708,9 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
         id: errInfo.id,
       });
     } else {
-
       setSaveCompleted(false); // Reset state before dispatching
-      const saveResultAction = await dispatch(SaveOneSquadEntries({ rows: rows, data: playersFormData }));      
-      if (SaveOneSquadEntries.fulfilled.match(saveResultAction)) {        
+      const saveResultAction = await dispatch(SaveOneSquadEntries({ rows: rows, data: playersFormData }));
+      if (SaveOneSquadEntries.fulfilled.match(saveResultAction)) {
         setResultAction(saveResultAction);
         setSaveCompleted(true);
       }
@@ -619,10 +730,13 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
       lane: 40,
       position: 'G',
     }
-    setRows([...rows, addedRow]);    
+    setRows([...rows, addedRow]);
   }
 
   useEffect(() => {
+
+    console.log('PlayersEntryForm: useEffect 4 - [saveCompleted, entriesSaveStatus]');
+
     if (saveCompleted && entriesSaveStatus === "succeeded" && resultAction) {
       const updatedInfo = (resultAction.payload as any).updatedInfo;
   
@@ -642,8 +756,24 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
         }
       }
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [saveCompleted, entriesSaveStatus]); // ok for just saveCompleted and entriesSaveStatus
+
+  const renderSaveToolTip = (props: any) => (
+    <Tooltip id="button-tooltip" {...props}>
+      Save bowlers and entry info. Must finalize BEFORE you can enter scores.
+    </Tooltip>
+  );
+  const renderFinalizeToolTip = (props: any) => (
+    <Tooltip id="button-tooltip" {...props}>
+      Save bowlers and entry info. Additional error checks. Randomizes brackets. Must Finalize BEFORE you can enter scores.
+    </Tooltip>
+  );
+  const renderCancelToolTip = (props: any) => (
+    <Tooltip id="button-tooltip" {...props}>
+      Cancel edits. All changes will be lost.
+    </Tooltip>
+  );  
 
   return (
     <>
@@ -710,7 +840,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
             <button
               type="button"
               className="btn btn-warning"
-              onClick={handleFindErrorClick}
+              onClick={handleFindPrelimErrorClick}
             >
               <svg
                 xmlns="/exclamation-diamond.svg"
@@ -724,47 +854,74 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
                 <path d="M6.95.435c.58-.58 1.52-.58 2.1 0l6.515 6.516c.58.58.58 1.519 0 2.098L9.05 15.565c-.58.58-1.519.58-2.098 0L.435 9.05a1.48 1.48 0 0 1 0-2.098zm1.4.7a.495.495 0 0 0-.7 0L1.134 7.65a.495.495 0 0 0 0 .7l6.516 6.516a.495.495 0 0 0 .7 0l6.516-6.516a.495.495 0 0 0 0-.7L8.35 1.134z" />
                 <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z" />
               </svg>
-              &ensp;Find Next Error
+              &ensp;Find Error
             </button>
             {/* save button */}
-            <button
-              type="button"
-              className="btn btn-success"
+            <ButtonWithTooltip
               onClick={handleSaveClick}
-              title="Save bowlers. Must finalize BEFORE you can enter scores."
-            >
-              <svg
-                xmlns="/save.svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                className="bi bi-save"
-                viewBox="0 0 16 16"
-              >
-                <path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H9.5a1 1 0 0 0-1 1v7.293l2.646-2.647a.5.5 0 0 1 .708.708l-3.5 3.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L7.5 9.293V2a2 2 0 0 1 2-2H14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h2.5a.5.5 0 0 1 0 1z"/>
-              </svg>
-              &ensp;Save
-            </button> 
+              isTouchDevice={isTouchDevice}
+              renderTooltip={renderSaveToolTip}
+              buttonText="Save"
+              buttonColor="success" 
+              icon={ 
+                <svg
+                  xmlns="/save.svg"
+                  width="16"
+                  height="16"
+                  fill="currentColor"
+                  className="bi bi-save"
+                  viewBox="0 0 16 16"
+                >
+                  <path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H9.5a1 1 0 0 0-1 1v7.293l2.646-2.647a.5.5 0 0 1 .708.708l-3.5 3.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L7.5 9.293V2a2 2 0 0 1 2-2H14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h2.5a.5.5 0 0 1 0 1z"/>
+                </svg>
+              }
+            />
+            {/* finalize button */}
+            <ButtonWithTooltip
+              onClick={handleFinalizeClick}
+              isTouchDevice={isTouchDevice}
+              renderTooltip={renderFinalizeToolTip}
+              buttonText="Finalize"
+              buttonColor="info" 
+              icon={
+                <svg
+                  xmlns="/skip-end.svg"
+                  width="16"
+                  height="16"
+                  fill="currentColor"
+                  className="bi bi-skip-end"
+                  viewBox="0 0 16 16"
+                >
+                  <path d="M12.5 4a.5.5 0 0 0-1 0v3.248L5.233 3.612C4.713 3.31 4 3.655 4 4.308v7.384c0 .653.713.998 1.233.696L11.5 8.752V12a.5.5 0 0 0 1 0zM5 4.633 10.804 8 5 11.367z"/>
+                </svg>                
+              }
+            />
             {/* cancel button */}
-            <button
-              type="button"
-              className="btn btn-danger"
-              onClick={handleCancel}              
-              title="Cancel. All changes will be lost."
+            <OverlayTrigger
+              placement="right"
+              delay={{ show: 250, hide: 1000 }}
+              overlay={renderCancelToolTip}
             >
-              <svg
-                xmlns="/x-circle.svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                className="bi bi-x-circle"
-                viewBox="0 0 16 16"
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={handleCancel}              
+                // title="Cancel. All changes will be lost."
               >
-                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
-                <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
-              </svg>              
-              &ensp;Cancel
-            </button>
+                <svg
+                  xmlns="/x-circle.svg"
+                  width="16"
+                  height="16"
+                  fill="currentColor"
+                  className="bi bi-x-circle"
+                  viewBox="0 0 16 16"
+                >
+                  <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                  <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
+                </svg>              
+                &ensp;Cancel
+              </button>
+            </OverlayTrigger>
             {/* debug button  */}
             {/* <button
               type="button"
@@ -794,7 +951,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
             rowHeight={25}
             columnHeaderHeight={25}
             hideFooter
-            columnGroupingModel={columnGroupings}
+            columnGroupingModel={columnGroupings}              
           />
         </div>
       </div>

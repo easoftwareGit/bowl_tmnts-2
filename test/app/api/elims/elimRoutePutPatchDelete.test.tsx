@@ -3,9 +3,9 @@ import { baseElimsApi } from "@/lib/db/apiPaths";
 import { testBaseElimsApi } from "../../../testApi";
 import { elimType } from "@/lib/types/types";
 import { initElim } from "@/lib/db/initVals";
-import { deleteAllDivElims, deleteAllSquadElims, postManyElims } from "@/lib/db/elims/dbElims";
-import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/dbSquads";
-import { deleteAllTmntDivs, postManyDivs } from "@/lib/db/divs/dbDivs";
+import { deleteAllElimsForDiv, deleteAllElimsForSquad, postManyElims } from "@/lib/db/elims/dbElims";
+import { deleteAllSquadsForTmnt, postManySquads } from "@/lib/db/squads/dbSquads";
+import { deleteAllDivsForTmnt, postManyDivs } from "@/lib/db/divs/dbDivs";
 import { mockElimsToPost, mockSquadsToPost, mockDivsToPost, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 
 // before running this test, run the following commands in the terminal:
@@ -676,10 +676,10 @@ describe("Elims - PUT, PATCH, DELETE", () => {
           withCredentials: true,
           url: oneElimUrl + testElim.id,
         });
-        expect(response.status).toBe(404);
+        expect(response.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(409);
         } else {
           expect(true).toBeFalsy();
         }
@@ -1312,10 +1312,10 @@ describe("Elims - PUT, PATCH, DELETE", () => {
           withCredentials: true,
           url: oneElimUrl + testElim.id,
         });
-        expect(patchResponse.status).toBe(422);
+        expect(patchResponse.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
+          expect(err.response?.status).toBe(409);
         } else {
           expect(true).toBeFalsy();
         }
@@ -1459,7 +1459,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
     })
 
     afterAll(async () => {      
-      await deleteAllDivElims(toDelDivSquadElims[0].div_id);
+      await deleteAllElimsForDiv(toDelDivSquadElims[0].div_id);
     })
 
     it('should delete all elims for a squad', async () => {
@@ -1518,7 +1518,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
     })
 
     afterAll(async () => {      
-      await deleteAllSquadElims(toDelDivSquadElims[0].squad_id);
+      await deleteAllElimsForSquad(toDelDivSquadElims[0].squad_id);
     })
 
     it('should delete all elims for a div', async () => {
@@ -1567,10 +1567,10 @@ describe("Elims - PUT, PATCH, DELETE", () => {
 
     beforeAll(async () => {
       // clean up any left over data      
-      await deleteAllSquadElims(mockSquadsToPost[0].id);      
-      await deleteAllSquadElims(mockSquadsToPost[1].id);      
-      await deleteAllTmntSquads(tmntToDelId)
-      await deleteAllTmntDivs(tmntToDelId)
+      await deleteAllElimsForSquad(mockSquadsToPost[0].id);      
+      await deleteAllElimsForSquad(mockSquadsToPost[1].id);      
+      await deleteAllSquadsForTmnt(tmntToDelId)
+      await deleteAllDivsForTmnt(tmntToDelId)
 
       // setup data 
       await postManyDivs(mockDivsToPost)
@@ -1588,10 +1588,10 @@ describe("Elims - PUT, PATCH, DELETE", () => {
     })
 
     afterAll(async () => {      
-      await deleteAllSquadElims(mockSquadsToPost[0].id);      
-      await deleteAllSquadElims(mockSquadsToPost[1].id);      
-      await deleteAllTmntSquads(tmntToDelId)
-      await deleteAllTmntDivs(tmntToDelId)
+      await deleteAllElimsForSquad(mockSquadsToPost[0].id);      
+      await deleteAllElimsForSquad(mockSquadsToPost[1].id);      
+      await deleteAllSquadsForTmnt(tmntToDelId)
+      await deleteAllDivsForTmnt(tmntToDelId)
     })
 
     it('should delete all elims for a tmnt', async () => {

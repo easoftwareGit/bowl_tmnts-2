@@ -297,7 +297,7 @@ export const deleteElimEntry = async (id: string): Promise<number> => {
  */
 export const deleteAllElimEntriesForSquad = async (squadId: string): Promise<number> => {
   try {
-    if (!squadId || !isValidBtDbId(squadId, "sqd")) return -1;
+    if (!isValidBtDbId(squadId, "sqd")) return -1;
     const response = await axios({
       method: "delete",
       withCredentials: true,
@@ -317,7 +317,7 @@ export const deleteAllElimEntriesForSquad = async (squadId: string): Promise<num
  */
 export const deleteAllElimEntriesForDiv = async (divId: string): Promise<number> => {  
   try {
-    if (!divId || !isValidBtDbId(divId, "div")) return -1;
+    if (!isValidBtDbId(divId, "div")) return -1;
     const response = await axios({
       method: "delete",
       withCredentials: true,
@@ -337,7 +337,7 @@ export const deleteAllElimEntriesForDiv = async (divId: string): Promise<number>
  */
 export const deleteAllElimEntriesForElim = async (elimId: string): Promise<number> => {  
   try {
-    if (!elimId || !isValidBtDbId(elimId, "elm")) return -1;
+    if (!isValidBtDbId(elimId, "elm")) return -1;
     const response = await axios({
       method: "delete",
       withCredentials: true,
@@ -357,7 +357,7 @@ export const deleteAllElimEntriesForElim = async (elimId: string): Promise<numbe
  */
 export const deleteAllElimEntriesForTmnt = async (tmntId: string): Promise<number> => {
   try {
-    if (!tmntId || !isValidBtDbId(tmntId, "tmt")) return -1;
+    if (!isValidBtDbId(tmntId, "tmt")) return -1;
     const response = await axios({
       method: "delete",
       withCredentials: true,

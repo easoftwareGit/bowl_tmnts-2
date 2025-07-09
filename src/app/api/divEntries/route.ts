@@ -5,6 +5,7 @@ import { divEntryDataType, divEntryType } from "@/lib/types/types";
 import { sanitizeDivEntry, validateDivEntry } from "./validate";
 import { ErrorCode } from "@/lib/validation";
 import { divEntriesWithHdcp } from "./hdcpCalc";
+import { getErrorStatus } from "../errCodes";
 
 // routes /api/divEntries
 export async function GET(request: NextRequest) {
@@ -92,18 +93,7 @@ export const POST = async (request: NextRequest) => {
     })
     return NextResponse.json({ divEntry }, { status: 201 });
   } catch (err: any) {
-    let errStatus: number
-    switch (err.code) {
-      case 'P2002': // Unique constraint
-        errStatus = 409
-        break;
-      case 'P2003': // parent not found
-        errStatus = 404
-        break;
-      default:
-        errStatus = 500
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error creating divEntry" },
       { status: errStatus }

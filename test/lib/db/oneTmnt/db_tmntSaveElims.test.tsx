@@ -2,11 +2,11 @@ import axios from "axios";
 import { baseElimsApi } from "@/lib/db/apiPaths";
 import { testBaseElimsApi } from "../../../testApi";
 import { tmntSaveElims, exportedForTesting } from "@/lib/db/oneTmnt/dbOneTmnt";
-import { deleteAllTmntElims, deleteElim, postElim, postManyElims, putElim } from "@/lib/db/elims/dbElims";
+import { deleteAllElimsForTmnt, deleteElim, postElim, postManyElims, putElim } from "@/lib/db/elims/dbElims";
 import { mockElimsToPost, mockSquadsToPost, tmntToDelId, mockDivsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { elimType } from "@/lib/types/types";
-import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/dbSquads";
-import { deleteAllTmntDivs, postManyDivs } from "@/lib/db/divs/dbDivs";
+import { deleteAllSquadsForTmnt, postManySquads } from "@/lib/db/squads/dbSquads";
+import { deleteAllDivsForTmnt, postManyDivs } from "@/lib/db/divs/dbDivs";
 import { blankElim } from "@/lib/db/initVals";
 import { cloneDeep } from "lodash";
 const { tmntPostPutOrDelElims } = exportedForTesting;
@@ -75,9 +75,9 @@ describe('saveTmntDivs test', () => {
 
     beforeAll(async () => {
       // cleanup if test left over from previous test
-      await deleteAllTmntElims(tmntToDelId);      
-      await deleteAllTmntSquads(tmntToDelId);      
-      await deleteAllTmntDivs(tmntToDelId);      
+      await deleteAllElimsForTmnt(tmntToDelId);      
+      await deleteAllSquadsForTmnt(tmntToDelId);      
+      await deleteAllDivsForTmnt(tmntToDelId);      
       // setup for current tests
       await postManyDivs(mockDivsToPost)            
       await postManySquads(mockSquadsToPost)      
@@ -109,9 +109,9 @@ describe('saveTmntDivs test', () => {
     });
 
     afterAll(async () => {      
-      await deleteAllTmntElims(tmntToDelId);
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllElimsForTmnt(tmntToDelId);
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
     })
 
     it('should save edited elims, one elim edited', async () => { 
@@ -231,9 +231,9 @@ describe('saveTmntDivs test', () => {
 
     beforeAll(async () => {
       // cleanup if test left over from previous test
-      await deleteAllTmntElims(tmntToDelId);      
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllElimsForTmnt(tmntToDelId);      
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
 
       // create temp squads for elims
       await postManyDivs(mockDivsToPost);
@@ -246,14 +246,14 @@ describe('saveTmntDivs test', () => {
 
     afterEach(async () => {
       if (didCreate) {
-        await deleteAllTmntElims(tmntToDelId);
+        await deleteAllElimsForTmnt(tmntToDelId);
       }
     });
 
     afterAll(async () => {
-      await deleteAllTmntElims(tmntToDelId);
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllElimsForTmnt(tmntToDelId);
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
     })
 
     const origClone = cloneDeep(blankElim);
@@ -339,9 +339,9 @@ describe('saveTmntDivs test', () => {
 
     beforeAll(async () => {
       // cleanup if test left over from previous test
-      await deleteAllTmntElims(tmntToDelId);
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllElimsForTmnt(tmntToDelId);
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
       // setup for current tests
       await postManyDivs(mockDivsToPost)
       await postManySquads(mockSquadsToPost)
@@ -373,9 +373,9 @@ describe('saveTmntDivs test', () => {
     });
 
     afterAll(async () => {      
-      await deleteAllTmntElims(tmntToDelId);
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllElimsForTmnt(tmntToDelId);
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
     })
 
     it('should save edited elims, one elim edited', async () => { 

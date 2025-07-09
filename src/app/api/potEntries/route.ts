@@ -5,6 +5,7 @@ import { potEntryDataType, potEntryType } from "@/lib/types/types";
 import { sanitizePotEntry, validatePotEntry } from "./validate";
 import { ErrorCode, maxMoney } from "@/lib/validation";
 import { validMoney } from "@/lib/currency/validate";
+import { getErrorStatus } from "../errCodes";
 
 // routes /api/potEntries
 
@@ -63,18 +64,7 @@ export const POST = async (request: NextRequest) => {
     })
     return NextResponse.json({ potEntry }, { status: 201 });
   } catch (err: any) {
-    let errStatus: number
-    switch (err.code) {
-      case 'P2002': // Unique constraint
-        errStatus = 409
-        break;
-      case 'P2003': // parent not found
-        errStatus = 404
-        break;
-      default:
-        errStatus = 500
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error creating potEntry" },
       { status: errStatus }

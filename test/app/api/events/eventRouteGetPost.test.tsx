@@ -5,7 +5,7 @@ import { eventType } from "@/lib/types/types";
 import { initEvent } from "@/lib/db/initVals";
 import { btDbUuid } from "@/lib/uuid";
 import { mockEventsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockEvents";
-import { deleteAllTmntEvents } from "@/lib/db/events/dbEvents";
+import { deleteAllEventsForTmnt } from "@/lib/db/events/dbEvents";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -694,10 +694,10 @@ describe('Events - GETs and POST API: /api/events', () => {
           withCredentials: true,
           url: url,
         });
-        expect(response.status).toBe(404);
+        expect(response.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(409);
         } else {
           expect(true).toBeFalsy();
         }
@@ -1668,7 +1668,7 @@ describe('Events - GETs and POST API: /api/events', () => {
     let createdEvents = false;    
 
     beforeAll(async () => { 
-      await deleteAllTmntEvents(mockEventsToPost[0].tmnt_id);
+      await deleteAllEventsForTmnt(mockEventsToPost[0].tmnt_id);
     })
 
     beforeEach(() => {
@@ -1677,7 +1677,7 @@ describe('Events - GETs and POST API: /api/events', () => {
 
     afterEach(async () => {
       if (createdEvents) {
-        await deleteAllTmntEvents(mockEventsToPost[0].tmnt_id);
+        await deleteAllEventsForTmnt(mockEventsToPost[0].tmnt_id);
       }      
     })
 

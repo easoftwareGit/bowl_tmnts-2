@@ -230,7 +230,7 @@ export const putManyPlayers = async (players: playerType[]): Promise<putManyRetu
  */
 export const deletePlayer = async (id: string): Promise<number> => { 
   try {
-    if (!id || !isValidBtDbId(id, "ply")) return -1;
+    if (!isValidBtDbId(id, "ply")) return -1;
     const response = await axios({
       method: "delete",
       withCredentials: true,
@@ -248,9 +248,9 @@ export const deletePlayer = async (id: string): Promise<number> => {
  * @param {string} squadId - id of squad to delete
  * @returns {number} - number of players deleted on success, -1 on failure
  */
-export const deleteAllSquadPlayers = async (squadId: string): Promise<number> => {
+export const deleteAllPlayersForSquad = async (squadId: string): Promise<number> => {
   try {
-    if (!squadId || !isValidBtDbId(squadId, "sqd")) return -1;
+    if (!isValidBtDbId(squadId, "sqd")) return -1;
     const response = await axios({
       method: "delete",
       withCredentials: true,
@@ -268,9 +268,9 @@ export const deleteAllSquadPlayers = async (squadId: string): Promise<number> =>
  * @param {string} tmntId - id of tmnt to delete
  * @returns {number} - number of players deleted on success, -1 on failure
  */
-export const deleteAllTmntPlayers = async (tmntId: string): Promise<number> => {
+export const deleteAllPlayersForTmnt = async (tmntId: string): Promise<number> => {
   try {
-    if (!tmntId || !isValidBtDbId(tmntId, "tmt")) return -1;
+    if (!isValidBtDbId(tmntId, "tmt")) return -1;
     const response = await axios({
       method: "delete",
       withCredentials: true,

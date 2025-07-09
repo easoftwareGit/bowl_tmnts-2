@@ -32,9 +32,9 @@ describe("dbResults", () => {
   describe('getGameResultsForDiv', () => { 
 
     const divIdNoHdcp = 'div_578834e04e5e4885bbae79229d8b96e8';
-    const divIdHdcp = 'div_24b1cd5dee0542038a1244fc2978e862'   
+    const divIdHdcp = 'div_fe72ab97edf8407186c8e6df7f7fb741'   
 
-    it('should return game results for div', async () => { 
+    it('should return game results for div - scratch', async () => { 
       const results = await getGameResultsForDiv(divIdNoHdcp);
       expect(results).toBeDefined();
       if (!results) return
@@ -65,7 +65,7 @@ describe("dbResults", () => {
       expect(games[0]['Game 1']).toBe(games[0]['Game 1 + Hdcp']);
       expect(games[0].total).toBe(games[0]['total + Hdcp']);      
     })
-    it('should return game results for div', async () => { 
+    it('should return game results for div - hdcp', async () => { 
       const results = await getGameResultsForDiv(divIdHdcp);
       expect(results).toBeDefined();
       if (!results) return

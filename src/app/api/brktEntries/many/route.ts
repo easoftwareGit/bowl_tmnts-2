@@ -4,6 +4,7 @@ import { ErrorCode } from "@/lib/validation";
 import { brktEntryType, brktEntryDataType, tmntEntryBrktEntryType } from "@/lib/types/types";
 import { validateBrktEntries } from "../validate";
 import { getDeleteManyRefundsSQL, getDeleteManySQL, getInsertManyRefundsSQL, getInsertManySQL, getUpdateManyRefundsSQL, getUpdateManySQL } from "./getSql";
+import { getErrorStatus } from "../../errCodes";
 
 // routes /api/brktEntries/many 
 
@@ -64,18 +65,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({brktEntries: manyBrktEntries}, { status: 201 });    
   } catch (err: any) {
-    let errStatus: number
-    switch (err.code) {
-      case 'P2002': // Unique constraint
-        errStatus = 409 
-        break;
-      case 'P2003': // parent not found
-        errStatus = 404
-        break;    
-      default:
-        errStatus = 500
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error creating many brktEntries" },
       { status: errStatus }
@@ -203,21 +193,7 @@ export async function PUT(request: NextRequest) {
     };    
     return NextResponse.json({updateInfo}, { status: 200 });
   } catch (err: any) {
-    let errStatus: number
-    switch (err.code) {
-      case 'P2002': // Unique constraint
-        errStatus = 409
-        break;
-      case 'P2003': // parent not found
-        errStatus = 404
-        break;
-      case 'P2010': // foreign key constraint failed
-        errStatus = 409
-        break;
-      default:
-        errStatus = 500
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error updating many brktEntries" },
       { status: errStatus }

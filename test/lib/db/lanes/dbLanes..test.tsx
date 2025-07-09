@@ -3,9 +3,9 @@ import { baseLanesApi, baseSquadsApi } from "@/lib/db/apiPaths";
 import { testBaseLanesApi, testBaseSquadsApi } from "../../../testApi";
 import { laneType } from "@/lib/types/types";
 import { initLane } from "@/lib/db/initVals";
-import { deleteAllSquadLanes, deleteAllTmntLanes, deleteLane, getAllLanesForTmnt, postLane, postManyLanes, putLane } from "@/lib/db/lanes/dbLanes";
+import { deleteAllLanesForSquad, deleteAllLanesForTmnt, deleteLane, getAllLanesForTmnt, postLane, postManyLanes, putLane } from "@/lib/db/lanes/dbLanes";
 import { mockLanesToPost, mockSquadsToPost, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllTmntSquads, deleteSquad, postManySquads, postSquad } from "@/lib/db/squads/dbSquads";
+import { deleteAllSquadsForTmnt, deleteSquad, postManySquads, postSquad } from "@/lib/db/squads/dbSquads";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -245,8 +245,8 @@ describe('dbLanes', () => {
 
     beforeAll(async () => {       
       // remove any old test data
-      await deleteAllTmntLanes(tmntToDelId); 
-      await deleteAllTmntSquads(tmntToDelId);
+      await deleteAllLanesForTmnt(tmntToDelId); 
+      await deleteAllSquadsForTmnt(tmntToDelId);
       // make sure test squads in database
       await postManySquads(mockSquadsToPost); 
     })
@@ -257,13 +257,13 @@ describe('dbLanes', () => {
 
     afterEach(async () => {
       if (createdLanes) {
-        await deleteAllTmntLanes(tmntToDelId);
+        await deleteAllLanesForTmnt(tmntToDelId);
       }      
     })
 
     afterAll(async () => {
-      await deleteAllTmntLanes(tmntToDelId);
-      await deleteAllTmntSquads(tmntToDelId);
+      await deleteAllLanesForTmnt(tmntToDelId);
+      await deleteAllSquadsForTmnt(tmntToDelId);
     })
 
     it('should post many lanes', async () => { 
@@ -478,25 +478,25 @@ describe('dbLanes', () => {
     });
 
     afterAll(async () => {
-      await deleteAllSquadLanes(multiLanes[0].squad_id);
+      await deleteAllLanesForSquad(multiLanes[0].squad_id);
       await deleteSquad(mockSquadsToPost[0].id);
     });
 
     it('should delete all lanes for a squad', async () => {
-      const deleted = await deleteAllSquadLanes(multiLanes[0].squad_id);
+      const deleted = await deleteAllLanesForSquad(multiLanes[0].squad_id);
       expect(deleted).toBe(multiLanes.length);
       didDel = true;
     })
     it('should NOT delete all lanes for a squad when ID is invalid', async () => {
-      const deleted = await deleteAllSquadLanes('test');
+      const deleted = await deleteAllLanesForSquad('test');
       expect(deleted).toBe(-1);
     })
     it('should NOT delete all lanes for a squad when ID is not found', async () => {
-      const deleted = await deleteAllSquadLanes('sqd_00000000000000000000000000000000');
+      const deleted = await deleteAllLanesForSquad('sqd_00000000000000000000000000000000');
       expect(deleted).toBe(0);
     })
     it('should NOT delete all lanes for a squad when ID is valid, but not a squad ID', async () => {
-      const deleted = await deleteAllSquadLanes(mockLanesToPost[0].id);
+      const deleted = await deleteAllLanesForSquad(mockLanesToPost[0].id);
       expect(deleted).toBe(-1);
     })
 
@@ -511,9 +511,9 @@ describe('dbLanes', () => {
 
     beforeAll(async () => {
       // cleanup before tests
-      await deleteAllSquadLanes(toDelSquads[0].id);
-      await deleteAllSquadLanes(toDelSquads[1].id);
-      await deleteAllTmntSquads(tmntToDelId);
+      await deleteAllLanesForSquad(toDelSquads[0].id);
+      await deleteAllLanesForSquad(toDelSquads[1].id);
+      await deleteAllSquadsForTmnt(tmntToDelId);
       // setup for tests
       await postManySquads(toDelSquads);
       await postManyLanes(toDelLanes);
@@ -529,26 +529,26 @@ describe('dbLanes', () => {
     })
 
     afterAll(async () => {
-      await deleteAllSquadLanes(toDelSquads[0].id);
-      await deleteAllSquadLanes(toDelSquads[1].id);
-      await deleteAllTmntSquads(tmntToDelId);
+      await deleteAllLanesForSquad(toDelSquads[0].id);
+      await deleteAllLanesForSquad(toDelSquads[1].id);
+      await deleteAllSquadsForTmnt(tmntToDelId);
     })
 
     it('should delete all lanes for a tmnt', async () => {
-      const deleted = await deleteAllTmntLanes(tmntToDelId);
+      const deleted = await deleteAllLanesForTmnt(tmntToDelId);
       didDel = true;
       expect(deleted).toBe(toDelLanes.length);
     })
     it('should NOT delete all lanes for a tmnt when ID is invalid', async () => {
-      const deleted = await deleteAllTmntLanes('test');
+      const deleted = await deleteAllLanesForTmnt('test');
       expect(deleted).toBe(-1);
     })
     it('should NOT delete all lanes for a tmnt when tmnt ID is not found', async () => {
-      const deleted = await deleteAllTmntLanes(notFoundTmntId);
+      const deleted = await deleteAllLanesForTmnt(notFoundTmntId);
       expect(deleted).toBe(0);
     })
     it('should NOT delete all lanes for a tmnt when tmnt ID is valid, but not a tmnt id', async () => {
-      const deleted = await deleteAllTmntLanes(toDelLanes[0].id);
+      const deleted = await deleteAllLanesForTmnt(toDelLanes[0].id);
       expect(deleted).toBe(-1);
     })
 

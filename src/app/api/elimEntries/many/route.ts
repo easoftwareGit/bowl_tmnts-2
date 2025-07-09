@@ -4,6 +4,7 @@ import { ErrorCode } from "@/lib/validation";
 import { elimEntryType, elimEntryDataType, tmntEntryElimEntryType } from "@/lib/types/types";
 import { validateElimEntries } from "../validate";
 import { getDeleteManySQL, getInsertManySQL, getUpdateManySQL } from "./getSql";
+import { getErrorStatus } from "../../errCodes";
 
 // routes /api/elimEntries/many
 
@@ -32,18 +33,7 @@ export async function POST(request: NextRequest) {
     })
     return NextResponse.json({elimEntries: manyElimEntries}, { status: 201 });    
   } catch (err: any) {
-    let errStatus: number
-    switch (err.code) {
-      case 'P2002': // Unique constraint
-        errStatus = 409 
-        break;
-      case 'P2003': // parent not found
-        errStatus = 404
-        break;    
-      default:
-        errStatus = 500
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error creating many elimEntries" },
       { status: errStatus }
@@ -100,18 +90,7 @@ export async function PUT(request: NextRequest) {
     const updateInfo = { updates: updates, inserts: inserts, deletes: deletes };    
     return NextResponse.json({updateInfo}, { status: 200 });
   } catch (err: any) {
-    let errStatus: number
-    switch (err.code) {
-      case 'P2002': // Unique constraint
-        errStatus = 409
-        break;
-      case 'P2003': // parent not found
-        errStatus = 404
-        break;
-      default:
-        errStatus = 500
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error updating many elimEntries" },
       { status: errStatus }

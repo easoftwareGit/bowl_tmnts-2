@@ -5,6 +5,7 @@ import { squadType, squadDataType } from "@/lib/types/types";
 import { initSquad } from "@/lib/db/initVals";
 import { validateSquads } from "../validate";
 import { removeTimeFromISODateStr, startOfDayFromString } from "@/lib/dateTools";
+import { getErrorStatus } from "../../errCodes";
 
 // routes /api/squads/many
 
@@ -39,18 +40,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({squads: manySquads}, { status: 201 });
   } catch (err: any) {
-    let errStatus: number
-    switch (err.code) {
-      case 'P2002': // Unique constraint
-        errStatus = 409
-        break;
-      case 'P2003': // parent not found
-        errStatus = 404
-        break;    
-      default:
-        errStatus = 500
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error creating many squads" },
       { status: errStatus }

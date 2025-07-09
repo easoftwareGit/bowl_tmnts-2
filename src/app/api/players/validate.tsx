@@ -105,6 +105,7 @@ const validPlayerData = (player: playerType): ErrorCode => {
 export const sanitizePlayer = (player: playerType): playerType => { 
   if (!player) return null as any;
   const sanitizedPlayer: playerType = { ...blankPlayer }
+  sanitizedPlayer.average = -1;  // sanitize to invalid value, but not dangerous
   if (isValidBtDbId(player.id, 'ply')) {
     sanitizedPlayer.id = player.id
   }

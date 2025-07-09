@@ -4,6 +4,7 @@ import { ErrorCode, isValidBtDbId } from "@/lib/validation";
 import { validateLane, sanitizeLane } from "@/app/api/lanes/validate";
 import { laneType } from "@/lib/types/types";
 import { initLane } from "@/lib/db/initVals";
+import { getErrorStatus } from "@/app/api/errCodes";
 
 // routes /api/lanes/lane/:id
 
@@ -76,21 +77,7 @@ export async function PUT(
     });
     return NextResponse.json({ lane }, { status: 200 });
   } catch (err: any) {
-    let errStatus: number;
-    switch (err.code) {
-      case "P2002": // unique constraint
-        errStatus = 409;
-        break;
-      case "P2003": // foreign key constraint
-        errStatus = 409;
-        break;
-      case "P2025": // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error updating lane" },
       { status: errStatus }
@@ -174,21 +161,7 @@ export async function PATCH(
 
     return NextResponse.json({ lane }, { status: 200 });
   } catch (err: any) {
-    let errStatus: number;
-    switch (err.code) {
-      case "P2002": // unique constraint
-        errStatus = 422;
-        break;
-      case "P2003": // foreign key constraint
-        errStatus = 422;
-        break;
-      case "P2025": // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error patching lane" },
       { status: errStatus }
@@ -213,18 +186,7 @@ export async function DELETE(
     });
     return NextResponse.json({ deleted }, { status: 200 });
   } catch (err: any) {
-    let errStatus: number;
-    switch (err.code) {
-      case "P2003": // parent has child rows
-        errStatus = 409;
-        break;
-      case "P2025": // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error deleting lane" },
       { status: errStatus }

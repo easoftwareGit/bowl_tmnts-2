@@ -107,7 +107,7 @@ export const mockDivsToEdit: divType[] = [
   },
   {
     ...initDiv,
-    id: "div_24b1cd5dee0542038a1244fc2978e862",
+    id: "div_fe72ab97edf8407186c8e6df7f7fb741",
     tmnt_id: "tmt_fe8ac53dad0f400abe6354210a8f4cd1",
     div_name: "Hdcp",
     hdcp_per: 0.90,
@@ -117,8 +117,8 @@ export const mockDivsToEdit: divType[] = [
     sort_order: 2,
   },
   {
-    ...initDiv,
-    id: "div_fe72ab97edf8407186c8e6df7f7fb741",
+    ...initDiv,    
+    id: "div_24b1cd5dee0542038a1244fc2978e862",
     tmnt_id: "tmt_fe8ac53dad0f400abe6354210a8f4cd1",
     div_name: "Hdcp 50+",
     hdcp_per: 0.90,

@@ -36,10 +36,10 @@ const RunTmntPage = () => {
   return (
     <>
       <WaitModal show={tmntLoadStatus === 'loading'} message="Loading..." />
-      {tmntLoadStatus !== 'loading' && tmntLoadStatus !== 'succeeded' && tmntError
-        ? (<div>Error: {tmntError} tmntLoadStatus: {tmntLoadStatus}</div>
-        ) : null}     
-      {(tmntLoadStatus === 'succeeded') ? ( 
+      {(tmntLoadStatus !== 'loading' && tmntLoadStatus !== 'succeeded' && tmntError) && (
+        <>Error: {tmntError} tmntLoadStatus: {tmntLoadStatus}</>
+      )}     
+      {(tmntLoadStatus === 'succeeded') && ( 
         <div className="d-flex flex-column justify-content-center align-items-center">
           <div className="shadow p-3 m-3 rounded-3 container">
             <div className="row g-3">
@@ -97,7 +97,7 @@ const RunTmntPage = () => {
             <TmntDataForm tmntProps={tmntFormData} />
           </div>
         </div> 
-      ) : null}  
+      )}  
     </>
   )
 }

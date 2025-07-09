@@ -8,13 +8,13 @@ import { compareAsc } from "date-fns";
 import { removeTimeFromISODateStr, todayStr } from "@/lib/dateTools";
 import { mockTmnt, mockEvents, mockDivs, mockSquads, mockLanes, mockPots, mockBrkts, mockElims } from "../../../mocks/tmnts/newTmnt/mockNewTmnt";
 import { saveAllDataOneTmnt } from "@/lib/db/oneTmnt/dbOneTmnt";
-import { deleteAllTmntElims } from "@/lib/db/elims/dbElims";
-import { deleteAllTmntBrkts } from "@/lib/db/brkts/dbBrkts";
-import { deleteAllTmntPots } from "@/lib/db/pots/dbPots";
-import { deleteAllTmntLanes } from "@/lib/db/lanes/dbLanes";
-import { deleteAllTmntSquads } from "@/lib/db/squads/dbSquads";
-import { deleteAllTmntDivs } from "@/lib/db/divs/dbDivs";
-import { deleteAllTmntEvents } from "@/lib/db/events/dbEvents";
+import { deleteAllElimsForTmnt } from "@/lib/db/elims/dbElims";
+import { deleteAllBrktsForTmnt } from "@/lib/db/brkts/dbBrkts";
+import { deleteAllPotsForTmnt } from "@/lib/db/pots/dbPots";
+import { deleteAllLanesForTmnt } from "@/lib/db/lanes/dbLanes";
+import { deleteAllSquadsForTmnt } from "@/lib/db/squads/dbSquads";
+import { deleteAllDivsForTmnt } from "@/lib/db/divs/dbDivs";
+import { deleteAllEventsForTmnt } from "@/lib/db/events/dbEvents";
 import { cloneDeep } from "lodash";
 const { getTmntsForYear, getUpcomingTmnts } = exportedForTesting;
 
@@ -247,13 +247,13 @@ describe("dbTmnts", () => {
     });
 
     afterAll(async () => {
-      await deleteAllTmntElims(mockTmnt.id);
-      await deleteAllTmntBrkts(mockTmnt.id);
-      await deleteAllTmntPots(mockTmnt.id);
-      await deleteAllTmntLanes(mockTmnt.id);
-      await deleteAllTmntSquads(mockTmnt.id);
-      await deleteAllTmntDivs(mockTmnt.id);
-      await deleteAllTmntEvents(mockTmnt.id);
+      await deleteAllElimsForTmnt(mockTmnt.id);
+      await deleteAllBrktsForTmnt(mockTmnt.id);
+      await deleteAllPotsForTmnt(mockTmnt.id);
+      await deleteAllLanesForTmnt(mockTmnt.id);
+      await deleteAllSquadsForTmnt(mockTmnt.id);
+      await deleteAllDivsForTmnt(mockTmnt.id);
+      await deleteAllEventsForTmnt(mockTmnt.id);
       await deleteTmnt(mockTmnt.id);
     });
 
@@ -575,13 +575,13 @@ describe("dbTmnts", () => {
     }
 
     afterEach(async () => {
-      await deleteAllTmntElims(mockTmnt.id);
-      await deleteAllTmntBrkts(mockTmnt.id);
-      await deleteAllTmntPots(mockTmnt.id);
-      await deleteAllTmntLanes(mockTmnt.id);
-      await deleteAllTmntSquads(mockTmnt.id);
-      await deleteAllTmntDivs(mockTmnt.id);
-      await deleteAllTmntEvents(mockTmnt.id);
+      await deleteAllElimsForTmnt(mockTmnt.id);
+      await deleteAllBrktsForTmnt(mockTmnt.id);
+      await deleteAllPotsForTmnt(mockTmnt.id);
+      await deleteAllLanesForTmnt(mockTmnt.id);
+      await deleteAllSquadsForTmnt(mockTmnt.id);
+      await deleteAllDivsForTmnt(mockTmnt.id);
+      await deleteAllEventsForTmnt(mockTmnt.id);
       await deleteTmnt(mockTmnt.id);
     });
 

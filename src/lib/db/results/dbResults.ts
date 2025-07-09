@@ -19,7 +19,7 @@ const gameTmntUrl = url + "/games/tmnt/";
 export const getGameResultsForDiv = async (divId: string): Promise<[] | null> => { 
 
   try {
-    if (!divId || !isValidBtDbId(divId, 'div')) return null
+    if (!isValidBtDbId(divId, 'div')) return null
     const response = await axios({
       method: "get",
       withCredentials: true,
@@ -40,7 +40,7 @@ export const getGameResultsForDiv = async (divId: string): Promise<[] | null> =>
  */
 export const getGameResultsForTmnt = async (tmntId: string): Promise<[] | null> => { 
   try {
-    if (!tmntId || !isValidBtDbId(tmntId, 'tmt')) return null
+    if (!isValidBtDbId(tmntId, 'tmt')) return null
     const response = await axios({
       method: "get",
       withCredentials: true,

@@ -1,7 +1,7 @@
-import { brktEntryType, brktRefundType, brktType, divEntryType, divType, elimEntryType, elimType, gameType, laneType, playerType, potCategoriesTypes, potEntryType, potType, squadType } from "@/lib/types/types";
+import { brktEntryType, brktSeedType, brktType, divEntryType, divType, elimEntryType, elimType, gameType, laneType, oneBrktType, playerType, potCategoriesTypes, potEntryType, potType, squadType } from "@/lib/types/types";
 import { startOfDayFromString, todayStr } from "@/lib/dateTools";
 import { Squad } from "@prisma/client";
-import { initBrkt, initBrktEntry, initBrktRefund, initDiv, initDivEntry, initElimEntry, initGame, initPlayer, initPot, initPotEntry, initSquad } from "@/lib/db/initVals";
+import { initBrkt, initBrktEntry, initBrktSeed, initDiv, initDivEntry, initElimEntry, initGame, initOneBrkt, initPlayer, initPot, initPotEntry, initSquad } from "@/lib/db/initVals";
 
 export const tmntToDelId = 'tmt_467e51d71659d2e412cbc64a0d19ecb4'
 
@@ -805,6 +805,84 @@ export const mockElimEntriesToPost: elimEntryType[] = [
     elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
     player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
     fee: '5'
+  },
+]
+
+export const mockOneBrktsToPost: oneBrktType[] = [
+  {
+    ...initOneBrkt,
+    id: 'obk_b0b2bc5682f042269cf0aaa8c32b25b8',
+    brkt_id: 'brk_12344698f47e4d64935547923e2bdbfb',
+    bindex: 2,
+  },
+  {
+    ...initOneBrkt,
+    id: 'obk_b1b2bc5682f042269cf0aaa8c32b25b8',
+    brkt_id: 'brk_12344698f47e4d64935547923e2bdbfb',
+    bindex: 3,
+  },
+  {
+    ...initOneBrkt,
+    id: 'obk_b2b2bc5682f042269cf0aaa8c32b25b8',
+    brkt_id: 'brk_12344698f47e4d64935547923e2bdbfb',
+    bindex: 4,
+  },
+  {
+    ...initOneBrkt,
+    id: 'obk_b3b2bc5682f042269cf0aaa8c32b25b8',
+    brkt_id: 'brk_12344698f47e4d64935547923e2bdbfb',
+    bindex: 5,
+  },
+]
+
+export const mockBrktSeedsToPost: brktSeedType[] = [
+  {
+    ...initBrktSeed,
+    one_brkt_id: 'obk_b0b2bc5682f042269cf0aaa8c32b25b8',
+    seed: 0,
+    player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+  }, 
+  {
+    ...initBrktSeed,
+    one_brkt_id: 'obk_b0b2bc5682f042269cf0aaa8c32b25b8',
+    seed: 1,
+    player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+  },
+  {
+    ...initBrktSeed,
+    one_brkt_id: 'obk_b0b2bc5682f042269cf0aaa8c32b25b8',
+    seed: 2,
+    player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+  },
+  {
+    ...initBrktSeed,
+    one_brkt_id: 'obk_b0b2bc5682f042269cf0aaa8c32b25b8',
+    seed: 3,
+    player_id: 'ply_8b0fd8bbd9e34d34a7fa90b4111c6e40',
+  },
+  {
+    ...initBrktSeed,
+    one_brkt_id: 'obk_b0b2bc5682f042269cf0aaa8c32b25b8',
+    seed: 4,
+    player_id: 'ply_da674926088d4f739c69c2c72a465ccd',
+  }, 
+  {
+    ...initBrktSeed,
+    one_brkt_id: 'obk_b0b2bc5682f042269cf0aaa8c32b25b8',
+    seed: 5,
+    player_id: 'ply_8ffe9406fcc046508aa4b214ef16f647',
+  },
+  {
+    ...initBrktSeed,
+    one_brkt_id: 'obk_b0b2bc5682f042269cf0aaa8c32b25b8',
+    seed: 6,
+    player_id: 'ply_b830099ed18a4e9da06e345ec2320848',
+  },
+  {
+    ...initBrktSeed,
+    one_brkt_id: 'obk_b0b2bc5682f042269cf0aaa8c32b25b8',
+    seed: 7,
+    player_id: 'ply_92670d50aa7f44a487a172412bef8af5',
   },
 ]
 

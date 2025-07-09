@@ -25,6 +25,8 @@ export const basePotEntriesApi = baseApi + '/potEntries'
 export const baseBrktsApi = baseApi + '/brkts'
 export const baseBrktEntriesApi = baseApi + '/brktEntries'
 export const baseBrktRefundsApi = baseApi + '/brktRefunds'
+export const brktSeedsApi = baseApi + '/brktSeeds'
+export const baseOneBrktsApi = baseApi + '/oneBrkts'
 
 export const baseElimsApi = baseApi + '/elims'
 export const baseElimEntriesApi = baseApi + '/elimEntries'

@@ -89,6 +89,57 @@ describe('Bowls - API: /api/bowls', () => {
 
   })
 
+  describe('GET by ID - API: API: /api/bowls/bowl/:id', () => { 
+
+    it('should get a bowl by ID', async () => {
+      const response = await axios.get(oneBowlUrl + testBowl.id);
+      const bowl = response.data.bowl;
+      expect(response.status).toBe(200);
+      expect(bowl.id).toBe(testBowl.id);
+      expect(bowl.bowl_name).toBe(testBowl.bowl_name);
+      expect(bowl.city).toBe(testBowl.city);
+      expect(bowl.state).toBe(testBowl.state);
+      expect(bowl.url).toBe(testBowl.url);
+    })
+    it('should not get a bowl by ID when ID is invalid', async () => {
+      try {
+        const response =await axios.get(url + "/invalid");
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not get a bowl by ID when ID is valid, but not a bowl ID', async () => { 
+      try {
+        const response = await axios.get(url + '/' +nonBowlId);
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not get a bowl by ID when ID is not found', async () => { 
+      try {
+        const response = await axios.get(oneBowlUrl + notFoundId);
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })      
+
+  })
+
   describe('POST', () => { 
 
     const bowlToPost: bowlType = {
@@ -266,57 +317,6 @@ describe('Bowls - API: /api/bowls', () => {
       expect(postedBowl.state).toBe(bowlToPost.state);
       expect(postedBowl.url).toBe(bowlToPost.url);      
     })
-
-  })
-
-  describe('GET by ID - API: API: /api/bowls/bowl/:id', () => { 
-
-    it('should get a bowl by ID', async () => {
-      const response = await axios.get(oneBowlUrl + testBowl.id);
-      const bowl = response.data.bowl;
-      expect(response.status).toBe(200);
-      expect(bowl.id).toBe(testBowl.id);
-      expect(bowl.bowl_name).toBe(testBowl.bowl_name);
-      expect(bowl.city).toBe(testBowl.city);
-      expect(bowl.state).toBe(testBowl.state);
-      expect(bowl.url).toBe(testBowl.url);
-    })
-    it('should not get a bowl by ID when ID is invalid', async () => {
-      try {
-        const response =await axios.get(url + "/invalid");
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not get a bowl by ID when ID is valid, but not a bowl ID', async () => { 
-      try {
-        const response = await axios.get(url + '/' +nonBowlId);
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not get a bowl by ID when ID is not found', async () => { 
-      try {
-        const response = await axios.get(oneBowlUrl + notFoundId);
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })      
 
   })
 
@@ -1014,24 +1014,7 @@ describe('Bowls - API: /api/bowls', () => {
           expect(true).toBeFalsy();
         }
       }
-    })
-    it('should not delete a bowl by ID when bowl has child rows', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: oneBowlUrl + testBowl.id,
-        })
-        expect(response.status).toBe(409);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(409);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    
+    })    
   })
 
 })

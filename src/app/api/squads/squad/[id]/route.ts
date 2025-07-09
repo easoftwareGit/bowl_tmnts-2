@@ -5,6 +5,7 @@ import { sanitizeSquad, validateSquad } from "@/app/api/squads/validate";
 import { squadType } from "@/lib/types/types";
 import { initSquad } from "@/lib/db/initVals";
 import { dateTo_UTC_yyyyMMdd, removeTimeFromISODateStr, startOfDayFromString } from "@/lib/dateTools";
+import { getErrorStatus } from "@/app/api/errCodes";
 
 // routes /api/squads/:id
 
@@ -100,21 +101,7 @@ export async function PUT(
     });
     return NextResponse.json({ squad }, { status: 200 });
   } catch (err: any) {
-    let errStatus: number;
-    switch (err.code) {
-      case "P2002": // unique constraint
-        errStatus = 422;
-        break;
-      case "P2003": // foreign key constraint
-        errStatus = 422;
-        break;
-      case "P2025": // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error updating squad" },
       { status: errStatus }
@@ -256,21 +243,7 @@ export async function PATCH(
 
     return NextResponse.json({ squad }, { status: 200 });
   } catch (err: any) {
-    let errStatus: number;
-    switch (err.code) {
-      case "P2002": // unique constraint
-        errStatus = 422;
-        break;
-      case "P2003": // foreign key constraint
-        errStatus = 422;
-        break;
-      case "P2025": // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error patching squad" },
       { status: errStatus }
@@ -295,18 +268,7 @@ export async function DELETE(
     });
     return NextResponse.json({ deleted }, { status: 200 });
   } catch (err: any) {
-    let errStatus: number;
-    switch (err.code) {
-      case "P2003": // parent has child rows
-        errStatus = 409;
-        break;
-      case "P2025": // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error deleting squad" },
       { status: errStatus }

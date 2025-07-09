@@ -3,9 +3,9 @@ import { baseLanesApi, baseSquadsApi } from "@/lib/db/apiPaths";
 import { testBaseLanesApi, testBaseSquadsApi } from "../../../testApi";
 import { laneType, squadType } from "@/lib/types/types";
 import { initLane, initSquad } from "@/lib/db/initVals";
-import { deleteAllTmntLanes } from "@/lib/db/lanes/dbLanes";
+import { deleteAllLanesForTmnt } from "@/lib/db/lanes/dbLanes";
 import { mockLanesToPost, mockSquadsToPost, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/dbSquads";
+import { deleteAllSquadsForTmnt, postManySquads } from "@/lib/db/squads/dbSquads";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -537,8 +537,8 @@ describe('Lanes - API: /api/lanes', () => {
     beforeAll(async () => { 
       
       // remove any old test data
-      await deleteAllTmntLanes(tmntToDelId); 
-      await deleteAllTmntSquads(tmntToDelId);
+      await deleteAllLanesForTmnt(tmntToDelId); 
+      await deleteAllSquadsForTmnt(tmntToDelId);
       // make sure test squads in database
       await postManySquads(mockSquadsToPost); 
     })
@@ -549,13 +549,13 @@ describe('Lanes - API: /api/lanes', () => {
 
     afterEach(async () => {
       if (createdLanes) {
-        await deleteAllTmntLanes(tmntToDelId);
+        await deleteAllLanesForTmnt(tmntToDelId);
       }      
     })
 
     afterAll(async () => {
-      await deleteAllTmntLanes(tmntToDelId);
-      await deleteAllTmntSquads(tmntToDelId);
+      await deleteAllLanesForTmnt(tmntToDelId);
+      await deleteAllSquadsForTmnt(tmntToDelId);
     })
 
     it('should create many lanes', async () => { 
@@ -1019,10 +1019,10 @@ describe('Lanes - API: /api/lanes', () => {
           withCredentials: true,
           url: oneLaneUrl + invalidLane.id,
         })
-        expect(response.status).toBe(422);
+        expect(response.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
+          expect(err.response?.status).toBe(409);
         } else {
           expect(true).toBeFalsy();
         }

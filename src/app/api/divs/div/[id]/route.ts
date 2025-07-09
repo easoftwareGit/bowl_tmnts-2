@@ -4,6 +4,7 @@ import { ErrorCode, isValidBtDbId } from "@/lib/validation";
 import { sanitizeDiv, validateDiv, validIntHdcp } from "../../validate";
 import { divType, HdcpForTypes } from "@/lib/types/types";
 import { initDiv } from "@/lib/db/initVals";
+import { getErrorStatus } from "@/app/api/errCodes";
 
 // routes /api/divs/:id
 
@@ -56,6 +57,7 @@ export async function PUT(
     } = await request.json();
     const toCheck: divType = {
       ...initDiv,
+      id,
       tmnt_id,
       div_name,
       hdcp_per,
@@ -105,21 +107,7 @@ export async function PUT(
     };
     return NextResponse.json({ div }, { status: 200 });
   } catch (err: any) {
-    let errStatus: number;
-    switch (err.code) {
-      case "P2002": // unique constraint
-        errStatus = 404;
-        break;
-      case "P2003": // foreign key constraint
-        errStatus = 404;
-        break;
-      case "P2025": // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error updating div" },
       { status: errStatus }
@@ -254,18 +242,7 @@ export async function PATCH(
     };
     return NextResponse.json({ div }, { status: 200 });
   } catch (err: any) {
-    let errStatus: number;
-    switch (err.code) {
-      case "P2002": // unique constraint
-        errStatus = 404;
-        break;
-      case "P2003": // foreign key constraint
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error patching div" },
       { status: errStatus }
@@ -295,18 +272,7 @@ export async function DELETE(
     };
     return NextResponse.json({ deleted }, { status: 200 });
   } catch (err: any) {
-    let errStatus: number;
-    switch (err.code) {
-      case "P2003": // parent has child rows
-        errStatus = 409;
-        break;
-      case "P2025": // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error deleting div" },
       { status: errStatus }

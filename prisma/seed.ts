@@ -1031,6 +1031,30 @@ async function divUpsert() {
         sort_order: 2,
       },
     });
+    div = await prisma.div.upsert({
+      where: {
+        id: "div_24b1cd5dee0542038a1244fc2978e862",
+      },
+      update: {
+        tmnt_id: "tmt_fe8ac53dad0f400abe6354210a8f4cd1",
+        div_name: "Hdcp 50+",
+        hdcp_per: 0.90,
+        hdcp_from: 230,
+        int_hdcp: true, 
+        hdcp_for: 'Game',
+        sort_order: 3,
+      },
+      create: {
+        id: "div_24b1cd5dee0542038a1244fc2978e862",
+        tmnt_id: "tmt_fe8ac53dad0f400abe6354210a8f4cd1",
+        div_name: "Hdcp 50+",
+        hdcp_per: 0.90,
+        hdcp_from: 230,
+        int_hdcp: true, 
+        hdcp_for: 'Game',
+        sort_order: 3,
+      },
+    });
     // whole tmnt div
     div = await prisma.div.upsert({
       where: {
@@ -1106,8 +1130,8 @@ async function divUpsert() {
         sort_order: 4,
       },
     });
-    console.log("Upserted divs:", 11);
-    return 11;
+    console.log("Upserted divs:", 12);
+    return 12;
   } catch (error) {
     console.log(error);
     return -1;
@@ -3954,7 +3978,7 @@ async function playersUpsert() {
           first_name: "Olivia",
           last_name: "Morgan",
           average: 210,
-          lane: 2,
+          lane: 1,
           position: "C",
         },
         create: {
@@ -3963,10 +3987,32 @@ async function playersUpsert() {
           first_name: "Olivia",
           last_name: "Morgan",
           average: 210,
-          lane: 2,
+          lane: 1,
           position: "C",
         },
       });
+      player = await prisma.player.upsert({
+        where: {
+          id: "ply_89be0472be3d476ea1caa99dd05953fa",
+        },
+        update: {
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          first_name: "Joan",
+          last_name: "Doe",
+          average: 200,
+          lane: 1,
+          position: "D",
+        },
+        create: {
+          id: "ply_89be0472be3d476ea1caa99dd05953fa",
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          first_name: "Joan",
+          last_name: "Doe",
+          average: 200,
+          lane: 1,
+          position: "D",
+        },
+      });      
       player = await prisma.player.upsert({
         where: {
           id: "ply_8b0fd8bbd9e34d34a7fa90b4111c6e40",
@@ -3977,7 +4023,7 @@ async function playersUpsert() {
           last_name: "Harris",
           average: 211,
           lane: 2,
-          position: "D",
+          position: "E",
         },
         create: {
           id: "ply_8b0fd8bbd9e34d34a7fa90b4111c6e40",
@@ -3986,7 +4032,7 @@ async function playersUpsert() {
           last_name: "Harris",
           average: 211,
           lane: 2,
-          position: "D",
+          position: "E",
         },
       });
       player = await prisma.player.upsert({
@@ -3999,7 +4045,7 @@ async function playersUpsert() {
           last_name: "Dope",
           average: 211,
           lane: 2,
-          position: "E",
+          position: "F",
         },
         create: {
           id: "ply_bb0fd8bbd9e34d34a7fa90b4111c6e40",
@@ -4008,10 +4054,54 @@ async function playersUpsert() {
           last_name: "Dope",
           average: 219,
           lane: 2,
-          position: "E",
+          position: "F",
         },
       });
-      return 5;
+      player = await prisma.player.upsert({
+        where: {
+          id: "ply_bb1fd8bbd9e34d34a7fa90b4111c6e40",
+        },
+        update: {
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          first_name: "Jane",
+          last_name: "Dope",
+          average: 201,
+          lane: 2,
+          position: "G",
+        },
+        create: {
+          id: "ply_bb1fd8bbd9e34d34a7fa90b4111c6e40",
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          first_name: "Jane",
+          last_name: "Dope",
+          average: 201,
+          lane: 2,
+          position: "G",
+        },
+      });
+      player = await prisma.player.upsert({
+        where: {
+          id: "ply_bb2fd8bbd9e34d34a7fa90b4111c6e40",
+        },
+        update: {
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          first_name: "Bob",
+          last_name: "Smith",
+          average: 222,
+          lane: 2,
+          position: "H",
+        },
+        create: {
+          id: "ply_bb2fd8bbd9e34d34a7fa90b4111c6e40",
+          squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+          first_name: "Bob",
+          last_name: "Smith",
+          average: 222,
+          lane: 2,
+          position: "H",
+        },
+      });
+      return 8;
     } catch (error) {
       console.log(error);
       return -1;
@@ -5019,7 +5109,7 @@ async function playersUpsert() {
     const nyCount = await playersUpsert_NewYearsEve();
     const delCount = await playersUpsert_ToDelete();
     console.log("Upserted players: ", gpCount + wtCount + nyCount + delCount);
-    // 5 + 36 + 6 + 1 = 48
+    // 8 + 36 + 6 + 1 = 51
     return gpCount + wtCount + nyCount + delCount;
   } catch (error) {
     console.log(error);
@@ -6724,7 +6814,7 @@ async function brktEntriesUpsert() {
           id: "ben_bc4c581d7b1c4fc99dbdbd46f4f7210a",
           brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
           player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
-          num_brackets: 8,          
+          num_brackets: 8,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -6734,13 +6824,13 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_6ede2512c7d4409ca7b055505990a499",
           player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
-          num_brackets: 8,          
+          num_brackets: 8,
         },
         create: {
           id: "ben_8f039ee00dfa445c9e3aee0ca9a6391b",
           brkt_id: "brk_6ede2512c7d4409ca7b055505990a499",
           player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
-          num_brackets: 8,          
+          num_brackets: 8,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -6750,13 +6840,13 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
           player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
-          num_brackets: 8,          
+          num_brackets: 8,
         },
         create: {
           id: "ben_2291bb31e72b4dc6b6fe9e76d135493d",
           brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
           player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
-          num_brackets: 8,          
+          num_brackets: 8,
         },
       });
       brktEntry = await prisma.brkt_Entry.upsert({
@@ -6766,13 +6856,13 @@ async function brktEntriesUpsert() {
         update: {
           brkt_id: "brk_6ede2512c7d4409ca7b055505990a499",
           player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
-          num_brackets: 8,          
+          num_brackets: 8,
         },
         create: {
           id: "ben_0a6938d0a5b94dd789bd3b8663d1ee53",
           brkt_id: "brk_6ede2512c7d4409ca7b055505990a499",
           player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
-          num_brackets: 8,          
+          num_brackets: 8,
         },
       });
 
@@ -7610,6 +7700,533 @@ async function brktEntriesUpsert() {
     // 4 + 40 + 8 + 1 = 53
     return gpCount + wtCount + nyCount + delCount;
     // return delCount;
+  } catch (error) {
+    console.log(error);
+    return -1;
+  }
+}
+
+async function oneBrktsUpset() {
+  async function oneBrktsUpset_GoldPin() {
+    try {
+      let oneBrkt = await prisma.one_Brkt.upsert({
+        where: {
+          id: "obk_557f12f3875f42baa29fdbd22ee7f2f4",
+        },
+        update: {
+          brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
+          bindex: 0,
+        },
+        create: {
+          id: "obk_557f12f3875f42baa29fdbd22ee7f2f4",
+          brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
+          bindex: 0,
+        },
+      });
+      oneBrkt = await prisma.one_Brkt.upsert({
+        where: {
+          id: "obk_5423c16d58a948748f32c7c72c632297",
+        },
+        update: {
+          brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
+          bindex: 1,
+        },
+        create: {
+          id: "obk_5423c16d58a948748f32c7c72c632297",
+          brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
+          bindex: 1,
+        },
+      });
+      oneBrkt = await prisma.one_Brkt.upsert({
+        where: {
+          id: "obk_8d500123a07d46f9bb23db61e74ffc1b",
+        },
+        update: {
+          brkt_id: "brk_6ede2512c7d4409ca7b055505990a499",
+          bindex: 0,
+        },
+        create: {
+          id: "obk_8d500123a07d46f9bb23db61e74ffc1b",
+          brkt_id: "brk_6ede2512c7d4409ca7b055505990a499",
+          bindex: 0,
+        },
+      });
+      oneBrkt = await prisma.one_Brkt.upsert({
+        where: {
+          id: "obk_4ba9e037c86e494eb272efcd989dc9d0",
+        },
+        update: {
+          brkt_id: "brk_6ede2512c7d4409ca7b055505990a499",
+          bindex: 1,
+        },
+        create: {
+          id: "obk_4ba9e037c86e494eb272efcd989dc9d0",
+          brkt_id: "brk_6ede2512c7d4409ca7b055505990a499",
+          bindex: 1,
+        },
+      });
+
+      return 4;
+    } catch (error) {
+      console.log(error);
+      return -1;
+    }
+  }
+
+  async function oneBrktsUpset_NewYearsEve() {
+    try {
+      let oneBrkt = await prisma.one_Brkt.upsert({
+        where: {
+          id: "obk_103f595981364b77af163624528bdfda",
+        },
+        update: {
+          brkt_id: "brk_d017ea07dbc6453a8a705f4bb7599ed4",
+          bindex: 0,
+        },
+        create: {
+          id: "obk_103f595981364b77af163624528bdfda",
+          brkt_id: "brk_d017ea07dbc6453a8a705f4bb7599ed4",
+          bindex: 0,
+        },
+      });
+      oneBrkt = await prisma.one_Brkt.upsert({
+        where: {
+          id: "obk_6d6b6dd2e83242ac96b5a9298e21ae66",
+        },
+        update: {
+          brkt_id: "brk_d017ea07dbc6453a8a705f4bb7599ed4",
+          bindex: 1,
+        },
+        create: {
+          id: "obk_6d6b6dd2e83242ac96b5a9298e21ae66",
+          brkt_id: "brk_d017ea07dbc6453a8a705f4bb7599ed4",
+          bindex: 1,
+        },
+      });
+      oneBrkt = await prisma.one_Brkt.upsert({
+        where: {
+          id: "obk_46083c6d758f4166ad0f7647da1689fb",
+        },
+        update: {
+          brkt_id: "brk_d027ea07dbc6453a8a705f4bb7599ed4",
+          bindex: 0,
+        },
+        create: {
+          id: "obk_46083c6d758f4166ad0f7647da1689fb",
+          brkt_id: "brk_d027ea07dbc6453a8a705f4bb7599ed4",
+          bindex: 0,
+        },
+      });
+      oneBrkt = await prisma.one_Brkt.upsert({
+        where: {
+          id: "obk_1c6f7ba8f16047e6b2f87a2351316f8f",
+        },
+        update: {
+          brkt_id: "brk_d027ea07dbc6453a8a705f4bb7599ed4",
+          bindex: 1,
+        },
+        create: {
+          id: "obk_1c6f7ba8f16047e6b2f87a2351316f8f",
+          brkt_id: "brk_d027ea07dbc6453a8a705f4bb7599ed4",
+          bindex: 1,
+        },
+      });
+
+      return 4;
+    } catch (error) {
+      console.log(error);
+      return -1;
+    }
+  }
+
+  async function oneBrktsUpset_ToDelete() {
+    try {
+      let oneBrkt = await prisma.one_Brkt.upsert({
+        where: {
+          id: "obk_bbae841f36244b5ab5c0ec5793820d85",
+        },
+        update: {
+          brkt_id: "brk_d047ea07dbc6453a8a705f4bb7599ed4",
+          bindex: 0,
+        },
+        create: {
+          id: "obk_bbae841f36244b5ab5c0ec5793820d85",
+          brkt_id: "brk_d047ea07dbc6453a8a705f4bb7599ed4",
+          bindex: 0,
+        },
+      });
+
+      return 1;
+    } catch (error) {
+      console.log(error);
+      return -1;
+    }
+  }
+
+  try {
+    const gpCount = await oneBrktsUpset_GoldPin();    
+    const nyCount = await oneBrktsUpset_NewYearsEve();
+    const delCount = await oneBrktsUpset_ToDelete();
+
+    console.log(
+      "Upserted One Brackets: ",
+      gpCount + nyCount + delCount
+    );    
+    // 4 + 4 + 1 = 9
+    return gpCount + nyCount + delCount;    
+  } catch (error) {
+    console.log(error);
+    return -1;
+  }
+
+}
+
+async function brktSeedsUpsert() { 
+
+  async function brktSeedsUpset_GoldPin() {
+    try {
+      let brktSeed = await prisma.brkt_Seed.upsert({
+        where: {          
+          one_brkt_id_seed: {
+            one_brkt_id: "obk_557f12f3875f42baa29fdbd22ee7f2f4",
+            seed: 0,
+          },
+        },
+        update: {
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+        },
+        create: {
+          one_brkt_id: "obk_557f12f3875f42baa29fdbd22ee7f2f4",
+          seed: 0,
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+        },
+      });
+      brktSeed = await prisma.brkt_Seed.upsert({
+        where: {          
+          one_brkt_id_seed: {
+            one_brkt_id: "obk_557f12f3875f42baa29fdbd22ee7f2f4",
+            seed: 1,
+          },
+        },
+        update: {
+          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+        },
+        create: {
+          one_brkt_id: "obk_557f12f3875f42baa29fdbd22ee7f2f4",
+          seed: 1,
+          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+        },
+      });
+      brktSeed = await prisma.brkt_Seed.upsert({
+        where: {          
+          one_brkt_id_seed: {
+            one_brkt_id: "obk_557f12f3875f42baa29fdbd22ee7f2f4",
+            seed: 2,
+          },
+        },
+        update: {
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+        },
+        create: {
+          one_brkt_id: "obk_557f12f3875f42baa29fdbd22ee7f2f4",
+          seed: 2,
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+        },
+      });
+      brktSeed = await prisma.brkt_Seed.upsert({
+        where: {          
+          one_brkt_id_seed: {
+            one_brkt_id: "obk_557f12f3875f42baa29fdbd22ee7f2f4",
+            seed: 3,
+          },
+        },
+        update: {
+          player_id: 'ply_89be0472be3d476ea1caa99dd05953fa',
+        },
+        create: {
+          one_brkt_id: "obk_557f12f3875f42baa29fdbd22ee7f2f4",
+          seed: 3,
+          player_id: 'ply_89be0472be3d476ea1caa99dd05953fa',
+        },
+      });
+      brktSeed = await prisma.brkt_Seed.upsert({
+        where: {          
+          one_brkt_id_seed: {
+            one_brkt_id: "obk_557f12f3875f42baa29fdbd22ee7f2f4",
+            seed: 4,
+          },
+        },
+        update: {
+          player_id: 'ply_8b0fd8bbd9e34d34a7fa90b4111c6e40',
+        },
+        create: {
+          one_brkt_id: "obk_557f12f3875f42baa29fdbd22ee7f2f4",
+          seed: 4,
+          player_id: 'ply_8b0fd8bbd9e34d34a7fa90b4111c6e40',
+        },
+      });
+      brktSeed = await prisma.brkt_Seed.upsert({
+        where: {          
+          one_brkt_id_seed: {
+            one_brkt_id: "obk_557f12f3875f42baa29fdbd22ee7f2f4",
+            seed: 5,
+          },
+        },
+        update: {
+          player_id: 'ply_bb0fd8bbd9e34d34a7fa90b4111c6e40',
+        },
+        create: {
+          one_brkt_id: "obk_557f12f3875f42baa29fdbd22ee7f2f4",
+          seed: 5,
+          player_id: 'ply_bb0fd8bbd9e34d34a7fa90b4111c6e40',
+        },
+      });
+      brktSeed = await prisma.brkt_Seed.upsert({
+        where: {          
+          one_brkt_id_seed: {
+            one_brkt_id: "obk_557f12f3875f42baa29fdbd22ee7f2f4",
+            seed: 6,
+          },
+        },
+        update: {
+          player_id: 'ply_bb1fd8bbd9e34d34a7fa90b4111c6e40',
+        },
+        create: {
+          one_brkt_id: "obk_557f12f3875f42baa29fdbd22ee7f2f4",
+          seed: 6,
+          player_id: 'ply_bb1fd8bbd9e34d34a7fa90b4111c6e40',
+        },
+      });
+      brktSeed = await prisma.brkt_Seed.upsert({
+        where: {          
+          one_brkt_id_seed: {
+            one_brkt_id: "obk_557f12f3875f42baa29fdbd22ee7f2f4",
+            seed: 7,
+          },
+        },
+        update: {
+          player_id: 'ply_bb2fd8bbd9e34d34a7fa90b4111c6e40',
+        },
+        create: {
+          one_brkt_id: "obk_557f12f3875f42baa29fdbd22ee7f2f4",
+          seed: 7,
+          player_id: 'ply_bb2fd8bbd9e34d34a7fa90b4111c6e40',
+        },
+      });
+      brktSeed = await prisma.brkt_Seed.upsert({
+        where: {          
+          one_brkt_id_seed: {
+            one_brkt_id: "obk_5423c16d58a948748f32c7c72c632297",
+            seed: 0,
+          },
+        },
+        update: {
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+        },
+        create: {
+          one_brkt_id: "obk_5423c16d58a948748f32c7c72c632297",
+          seed: 0,
+          player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
+        },
+      });
+      brktSeed = await prisma.brkt_Seed.upsert({
+        where: {          
+          one_brkt_id_seed: {
+            one_brkt_id: "obk_5423c16d58a948748f32c7c72c632297",
+            seed: 1,
+          },
+        },
+        update: {
+          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+        },
+        create: {
+          one_brkt_id: "obk_5423c16d58a948748f32c7c72c632297",
+          seed: 1,
+          player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
+        },
+      });
+      brktSeed = await prisma.brkt_Seed.upsert({
+        where: {          
+          one_brkt_id_seed: {
+            one_brkt_id: "obk_5423c16d58a948748f32c7c72c632297",
+            seed: 2,
+          },
+        },
+        update: {
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+        },
+        create: {
+          one_brkt_id: "obk_5423c16d58a948748f32c7c72c632297",
+          seed: 2,
+          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
+        },
+      });
+      brktSeed = await prisma.brkt_Seed.upsert({
+        where: {          
+          one_brkt_id_seed: {
+            one_brkt_id: "obk_5423c16d58a948748f32c7c72c632297",
+            seed: 3,
+          },
+        },
+        update: {
+          player_id: 'ply_89be0472be3d476ea1caa99dd05953fa',
+        },
+        create: {
+          one_brkt_id: "obk_5423c16d58a948748f32c7c72c632297",
+          seed: 3,
+          player_id: 'ply_89be0472be3d476ea1caa99dd05953fa',
+        },
+      });
+      brktSeed = await prisma.brkt_Seed.upsert({
+        where: {          
+          one_brkt_id_seed: {
+            one_brkt_id: "obk_5423c16d58a948748f32c7c72c632297",
+            seed: 4,
+          },
+        },
+        update: {
+          player_id: 'ply_8b0fd8bbd9e34d34a7fa90b4111c6e40',
+        },
+        create: {
+          one_brkt_id: "obk_5423c16d58a948748f32c7c72c632297",
+          seed: 4,
+          player_id: 'ply_8b0fd8bbd9e34d34a7fa90b4111c6e40',
+        },
+      });
+      brktSeed = await prisma.brkt_Seed.upsert({
+        where: {          
+          one_brkt_id_seed: {
+            one_brkt_id: "obk_5423c16d58a948748f32c7c72c632297",
+            seed: 5,
+          },
+        },
+        update: {
+          player_id: 'ply_bb0fd8bbd9e34d34a7fa90b4111c6e40',
+        },
+        create: {
+          one_brkt_id: "obk_5423c16d58a948748f32c7c72c632297",
+          seed: 5,
+          player_id: 'ply_bb0fd8bbd9e34d34a7fa90b4111c6e40',
+        },
+      });
+      brktSeed = await prisma.brkt_Seed.upsert({
+        where: {          
+          one_brkt_id_seed: {
+            one_brkt_id: "obk_5423c16d58a948748f32c7c72c632297",
+            seed: 6,
+          },
+        },
+        update: {
+          player_id: 'ply_bb1fd8bbd9e34d34a7fa90b4111c6e40',
+        },
+        create: {
+          one_brkt_id: "obk_5423c16d58a948748f32c7c72c632297",
+          seed: 6,
+          player_id: 'ply_bb1fd8bbd9e34d34a7fa90b4111c6e40',
+        },
+      });
+      brktSeed = await prisma.brkt_Seed.upsert({
+        where: {          
+          one_brkt_id_seed: {
+            one_brkt_id: "obk_5423c16d58a948748f32c7c72c632297",
+            seed: 7,
+          },
+        },
+        update: {
+          player_id: 'ply_bb2fd8bbd9e34d34a7fa90b4111c6e40',
+        },
+        create: {
+          one_brkt_id: "obk_5423c16d58a948748f32c7c72c632297",
+          seed: 7,
+          player_id: 'ply_bb2fd8bbd9e34d34a7fa90b4111c6e40',
+        },
+      });
+
+      return 16;
+    } catch (error) {
+      console.log(error);
+      return -1;
+    }
+  }
+
+  async function brktSeedsUpset_NewYearsEve() {
+    try {
+      let brktSeed = await prisma.brkt_Seed.upsert({
+        where: {          
+          one_brkt_id_seed: {
+            one_brkt_id: "obk_103f595981364b77af163624528bdfda",
+            seed: 0,
+          },
+        },
+        update: {
+          player_id: 'ply_da674926088d4f739c69c2c72a465ccd',
+        },
+        create: {
+          one_brkt_id: "obk_103f595981364b77af163624528bdfda",
+          seed: 0,
+          player_id: 'ply_da674926088d4f739c69c2c72a465ccd',
+        },
+      });
+      brktSeed = await prisma.brkt_Seed.upsert({
+        where: {          
+          one_brkt_id_seed: {
+            one_brkt_id: "obk_103f595981364b77af163624528bdfda",
+            seed: 1,
+          },
+        },
+        update: {
+          player_id: 'ply_8ffe9406fcc046508aa4b214ef16f647',
+        },
+        create: {
+          one_brkt_id: "obk_103f595981364b77af163624528bdfda",
+          seed: 1,
+          player_id: 'ply_8ffe9406fcc046508aa4b214ef16f647',
+        },
+      });      
+      return 2;
+    } catch (error) {
+      console.log(error);
+      return -1;
+    }
+  }
+
+  async function brktSeedsUpset_ToDelete() {
+    try {
+      let brktSeed = await prisma.brkt_Seed.upsert({
+        where: {          
+          one_brkt_id_seed: {
+            one_brkt_id: "obk_6d6b6dd2e83242ac96b5a9298e21ae66",
+            seed: 0,
+          },
+        },
+        update: {
+          player_id: 'ply_b830099ed18a4e9da06e345ec2320848',
+        },
+        create: {
+          one_brkt_id: "obk_6d6b6dd2e83242ac96b5a9298e21ae66",
+          seed: 0,
+          player_id: 'ply_b830099ed18a4e9da06e345ec2320848',
+        },
+      });
+      return 1;
+    } catch (error) {
+      console.log(error);
+      return -1;
+    }
+  }
+
+
+  try {
+    const gpCount = await brktSeedsUpset_GoldPin();    
+    const nyCount = await brktSeedsUpset_NewYearsEve();
+    const delCount = await brktSeedsUpset_ToDelete();
+
+    console.log(
+      "Upserted One Brackets: ",
+      gpCount + nyCount + delCount
+    );    
+    // 16 + 2 + 1 = 19
+    return gpCount + nyCount + delCount;    
   } catch (error) {
     console.log(error);
     return -1;
@@ -9590,30 +10207,29 @@ async function gamesUpsert() {
   }
 }
 
-async function brktRefundsUpsert() { 
-
+async function brktRefundsUpsert() {
   async function brktRefundUpsert_GoldPin() {
     try {
       let brktRefund = await prisma.brkt_Refund.upsert({
         where: {
           brkt_entry_id: "ben_bc4c581d7b1c4fc99dbdbd46f4f7210a",
         },
-        update: {          
+        update: {
           num_refunds: 2,
         },
-        create: {          
+        create: {
           brkt_entry_id: "ben_bc4c581d7b1c4fc99dbdbd46f4f7210a",
-          num_refunds: 2,          
+          num_refunds: 2,
         },
       });
       brktRefund = await prisma.brkt_Refund.upsert({
         where: {
           brkt_entry_id: "ben_8f039ee00dfa445c9e3aee0ca9a6391b",
         },
-        update: {          
+        update: {
           num_refunds: 2,
         },
-        create: {          
+        create: {
           brkt_entry_id: "ben_8f039ee00dfa445c9e3aee0ca9a6391b",
           num_refunds: 2,
         },
@@ -9621,40 +10237,40 @@ async function brktRefundsUpsert() {
       return 2;
     } catch (error) {
       console.log(error);
-      return -1;      
+      return -1;
     }
   }
 
-  async function brktRefundUpsert_WholeTmnt() { 
+  async function brktRefundUpsert_WholeTmnt() {
     try {
       let brktRefund = await prisma.brkt_Refund.upsert({
         where: {
           brkt_entry_id: "ben_c0126ba58d3f4a7d950101a5674ce595",
         },
-        update: {          
+        update: {
           num_refunds: 4,
         },
-        create: {          
+        create: {
           brkt_entry_id: "ben_c0126ba58d3f4a7d950101a5674ce595",
-          num_refunds: 4,          
+          num_refunds: 4,
         },
       });
       brktRefund = await prisma.brkt_Refund.upsert({
         where: {
-          brkt_entry_id: 'ben_c0226ba58d3f4a7d950101a5674ce595',
+          brkt_entry_id: "ben_c0226ba58d3f4a7d950101a5674ce595",
         },
-        update: {          
+        update: {
           num_refunds: 4,
         },
-        create: {          
-          brkt_entry_id: 'ben_c0226ba58d3f4a7d950101a5674ce595',
+        create: {
+          brkt_entry_id: "ben_c0226ba58d3f4a7d950101a5674ce595",
           num_refunds: 4,
         },
       });
       return 2;
     } catch (error) {
       console.log(error);
-      return -1;      
+      return -1;
     }
   }
 
@@ -9662,32 +10278,32 @@ async function brktRefundsUpsert() {
     try {
       let brktRefund = await prisma.brkt_Refund.upsert({
         where: {
-          brkt_entry_id: 'ben_3a1eb5eef01d449eb444bfdf6b7d9035',
+          brkt_entry_id: "ben_3a1eb5eef01d449eb444bfdf6b7d9035",
         },
-        update: {          
+        update: {
           num_refunds: 2,
         },
-        create: {          
-          brkt_entry_id: 'ben_3a1eb5eef01d449eb444bfdf6b7d9035',
-          num_refunds: 2,          
+        create: {
+          brkt_entry_id: "ben_3a1eb5eef01d449eb444bfdf6b7d9035",
+          num_refunds: 2,
         },
       });
       brktRefund = await prisma.brkt_Refund.upsert({
         where: {
-          brkt_entry_id: 'ben_3a2eb5eef01d449eb444bfdf6b7d9035',
+          brkt_entry_id: "ben_3a2eb5eef01d449eb444bfdf6b7d9035",
         },
-        update: {          
+        update: {
           num_refunds: 2,
         },
-        create: {          
-          brkt_entry_id: 'ben_3a2eb5eef01d449eb444bfdf6b7d9035',
+        create: {
+          brkt_entry_id: "ben_3a2eb5eef01d449eb444bfdf6b7d9035",
           num_refunds: 2,
         },
       });
       return 2;
     } catch (error) {
       console.log(error);
-      return -1;      
+      return -1;
     }
   }
 
@@ -9695,25 +10311,25 @@ async function brktRefundsUpsert() {
     try {
       let brktRefund = await prisma.brkt_Refund.upsert({
         where: {
-          brkt_entry_id: 'ben_093a0902e01e46dbbe9f111acefc17da',
+          brkt_entry_id: "ben_093a0902e01e46dbbe9f111acefc17da",
         },
-        update: {          
+        update: {
           num_refunds: 2,
         },
-        create: {          
-          brkt_entry_id: 'ben_093a0902e01e46dbbe9f111acefc17da',
-          num_refunds: 2,          
+        create: {
+          brkt_entry_id: "ben_093a0902e01e46dbbe9f111acefc17da",
+          num_refunds: 2,
         },
       });
       return 1;
     } catch (error) {
       console.log(error);
-      return -1;      
+      return -1;
     }
   }
 
   try {
-    const gpCount = await brktRefundUpsert_GoldPin();   
+    const gpCount = await brktRefundUpsert_GoldPin();
     const wtCount = await brktRefundUpsert_WholeTmnt();
     const nyCount = await brktRefundUpsert_NewYearsEve();
     const delCount = await brktRefundUpsert_ToDelete();
@@ -9724,15 +10340,11 @@ async function brktRefundsUpsert() {
     );
     // console.log("Upserted potEntries: ", delCount);
     // 2 + 2 + 2 + 1 = 7
-    return gpCount + wtCount + nyCount + delCount;    
+    return gpCount + wtCount + nyCount + delCount;
   } catch (error) {
     console.log(error);
     return -1;
   }
-}
-
-async function brktMatchesUpsert() { 
-
 }
 
 async function testDateUpsert() {
@@ -10003,6 +10615,12 @@ async function main() {
   if (count < 0) return;
 
   count = await brktEntriesUpsert();
+  if (count < 0) return;
+
+  count = await oneBrktsUpset();
+  if (count < 0) return;
+
+  count = await brktSeedsUpsert()
   if (count < 0) return;
 
   count = await elimEntriesUpsert();

@@ -5,6 +5,7 @@ import { initDivEntry } from "@/lib/db/initVals";
 import { divEntryRawType, divEntryType } from "@/lib/types/types";
 import { sanitizeDivEntry, validateDivEntry } from "../../validate";
 import { divEntriesWithHdcp } from "../../hdcpCalc";
+import { getErrorStatus } from "@/app/api/errCodes";
 
 // routes /api/divEntries/divEntry/:id
 
@@ -110,19 +111,8 @@ export async function PUT(
     });
 
     return NextResponse.json({ divEntry }, { status: 200 });
-  } catch (error: any) {
-    let errStatus: number;
-    switch (error.code) {
-      case "P2003":   // parent not found
-        errStatus = 404;
-        break;
-      case "P2025":   // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+  } catch (err: any) {
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "Error putting divEntry" },
       { status: errStatus }
@@ -221,19 +211,8 @@ export async function PATCH(
     });
 
     return NextResponse.json({ divEntry }, { status: 200 });
-  } catch (error: any) {
-    let errStatus: number;
-    switch (error.code) {
-      case "P2003":   // parent not found
-        errStatus = 404;
-        break;
-      case "P2025":   // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+  } catch (err: any) {
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "Error patching divEntry" },
       { status: errStatus }
@@ -257,19 +236,8 @@ export async function DELETE(
       },
     });
     return NextResponse.json({ deleted }, { status: 200 });
-  } catch (error: any) {
-    let errStatus: number;
-    switch (error.code) {
-      case "P2003": // parent has child rows
-        errStatus = 409;
-        break;
-      case "P2025": // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+  } catch (err: any) {
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "Error deleting divEntry" },
       { status: errStatus }

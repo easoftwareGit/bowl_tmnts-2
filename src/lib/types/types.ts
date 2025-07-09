@@ -18,18 +18,18 @@ export type roleTypes = "ADMIN" | "DIRECTOR" | "USER"
 // ben - bracket entry
 // een - eliminator entry
 // gam - game
-// bib - brackets individual bracket
+// obk - one individual bracket
 // bsd - bracket seed
 
 export const idTypesArray = [
   'usr', 'bwl', 'tmt', 'evt', 'div', 'sqd', 'lan', 'hdc',
   'pot', 'brk', 'elm', 'ply', 'den', 'pen', 'ben', 'een',
-  'gam', 'bib', 'bsd'
+  'gam', 'obk', 'bsd'
 ] as const;
 
 export type idTypes = typeof idTypesArray[number];
 
-// export type idTypes = 'usr' | 'bwl' | 'tmt' | 'evt' | 'div' | 'sqd' | 'lan' | 'hdc' | 'pot' | 'brk' | 'elm' | 'ply' | 'den' | 'pen' | 'ben' | 'een' | 'gam'  | 'bmt' | 'bsd'; 
+// export type idTypes = 'usr' | 'bwl' | 'tmt' | 'evt' | 'div' | 'sqd' | 'lan' | 'hdc' | 'pot' | 'brk' | 'elm' | 'ply' | 'den' | 'pen' | 'ben' | 'een' | 'gam'  | 'obk' | 'bsd'; 
 
 export type userType = {
   id: string
@@ -323,6 +323,28 @@ export type validBrktsType = {
   errorCode: ErrorCode
 }
 
+export type oneBrktType = {
+  id: string,
+  brkt_id: string,
+  bindex: number,
+}
+
+export type validOneBrktsType = {
+  oneBrkts: oneBrktType[],
+  errorCode: ErrorCode
+}
+
+export type brktSeedType = {
+  one_brkt_id: string,
+  seed: number,
+  player_id: string,
+}
+
+export type validBrktSeedsType = {
+  brktSeeds: brktSeedType[],
+  errorCode: ErrorCode
+}
+
 export type elimType = {
   id: string,
   div_id: string,  
@@ -609,6 +631,7 @@ export type editedOneSquadEntriesType = {
 }
 
 export enum tmntActions {
+  Error = -1,
   None = 0,
   New = 1,
   Delete = 2,

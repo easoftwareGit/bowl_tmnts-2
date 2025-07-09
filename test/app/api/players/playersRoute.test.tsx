@@ -3,7 +3,7 @@ import { basePlayersApi } from "@/lib/db/apiPaths";
 import { testBasePlayersApi } from "../../../testApi";
 import { initPlayer } from "@/lib/db/initVals";
 import { playerType, tmntEntryPlayerType } from "@/lib/types/types";
-import { deleteAllSquadPlayers, deleteAllTmntPlayers, getAllPlayersForSquad, postManyPlayers } from "@/lib/db/players/dbPlayers";
+import { deleteAllPlayersForSquad, deleteAllPlayersForTmnt, getAllPlayersForSquad, postManyPlayers } from "@/lib/db/players/dbPlayers";
 import { mockPlayersToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { cloneDeep } from "lodash";
 
@@ -76,8 +76,8 @@ describe("Players - API's: /api/players", () => {
     it('should get all players', async () => {
       const response = await axios.get(url);
       expect(response.status).toBe(200);
-      // 48 rows in prisma/seed.ts
-      expect(response.data.players).toHaveLength(48);
+      // 51 rows in prisma/seed.ts
+      expect(response.data.players).toHaveLength(51);
     })
 
   })
@@ -154,16 +154,19 @@ describe("Players - API's: /api/players", () => {
       const response = await axios.get(squadUrl + squadId);
       expect(response.status).toBe(200);
       const players = response.data.players;
-      expect(players.length).toBe(5); // 5 players in prisma/seeds
+      expect(players.length).toBe(8); // 8 players in prisma/seeds
       for (let i = 0; i < players.length; i++) {
         expect(players[i].squad_id).toEqual(squadId);
       }
 
       expect(players[0].lane).toEqual(1);
       expect(players[1].lane).toEqual(1);
-      expect(players[2].lane).toEqual(2);
-      expect(players[3].lane).toEqual(2);
+      expect(players[2].lane).toEqual(1);
+      expect(players[3].lane).toEqual(1);
       expect(players[4].lane).toEqual(2);
+      expect(players[5].lane).toEqual(2);
+      expect(players[6].lane).toEqual(2);
+      expect(players[7].lane).toEqual(2);
 
 
       expect(players[0].position).toEqual('A');
@@ -171,6 +174,9 @@ describe("Players - API's: /api/players", () => {
       expect(players[2].position).toEqual('C');
       expect(players[3].position).toEqual('D');
       expect(players[4].position).toEqual('E');
+      expect(players[5].position).toEqual('F');
+      expect(players[6].position).toEqual('G');
+      expect(players[7].position).toEqual('H');
     })
     it('should NOT get all players for a squad when squad id is invalid', async () => {
       try {
@@ -670,7 +676,7 @@ describe("Players - API's: /api/players", () => {
     const playersToDelTmntId = 'tmt_d9b1af944d4941f65b2d2d4ac160cdea';
 
     beforeAll(async () => { 
-      await deleteAllTmntPlayers(playersToDelTmntId);
+      await deleteAllPlayersForTmnt(playersToDelTmntId);
     })
 
     beforeEach(() => {
@@ -679,7 +685,7 @@ describe("Players - API's: /api/players", () => {
 
     afterEach(async () => {
       if (createdPlayers) {
-        await deleteAllTmntPlayers(playersToDelTmntId);
+        await deleteAllPlayersForTmnt(playersToDelTmntId);
       }      
     })
 
@@ -1060,7 +1066,7 @@ describe("Players - API's: /api/players", () => {
     const playersToDelTmntId = 'tmt_d9b1af944d4941f65b2d2d4ac160cdea';
 
     beforeAll(async () => { 
-      await deleteAllTmntPlayers(playersToDelTmntId);
+      await deleteAllPlayersForTmnt(playersToDelTmntId);
     })
 
     beforeEach(() => {
@@ -1069,7 +1075,7 @@ describe("Players - API's: /api/players", () => {
 
     afterEach(async () => {
       if (createdPlayers) {
-        await deleteAllTmntPlayers(playersToDelTmntId);
+        await deleteAllPlayersForTmnt(playersToDelTmntId);
       }      
     })
 
@@ -2306,7 +2312,7 @@ describe("Players - API's: /api/players", () => {
     })
 
     afterAll(async () => {
-      await deleteAllSquadPlayers(squadIdForPlayers)
+      await deleteAllPlayersForSquad(squadIdForPlayers)
     })
 
     it('should delete all players for a squad', async () => {
@@ -2382,7 +2388,7 @@ describe("Players - API's: /api/players", () => {
     })
 
     afterAll(async () => {
-      await deleteAllTmntPlayers(tmntIdForPlayers)
+      await deleteAllPlayersForTmnt(tmntIdForPlayers)
     })
 
     it('should delete all players for a tmnt', async () => {

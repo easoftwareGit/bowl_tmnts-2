@@ -23,7 +23,7 @@ const manyUrl = url + "/many";
 export const getAllPotsForTmnt = async (tmntId: string): Promise<potType[] | null> => {
 
   try {
-    if (!tmntId || !isValidBtDbId(tmntId, 'tmt')) return null
+    if (!isValidBtDbId(tmntId, 'tmt')) return null
     const response = await axios({
       method: "get",
       withCredentials: true,
@@ -57,7 +57,7 @@ export const getAllPotsForTmnt = async (tmntId: string): Promise<potType[] | nul
 export const postPot = async (pot: potType): Promise<potType | null> => {  
 
   try {
-    if (!pot || !isValidBtDbId(pot.id, 'pot')) return null
+    if (!isValidBtDbId(pot.id, 'pot')) return null
     // further sanatation and validation done in POST route
     const potJSON = JSON.stringify(pot);
     const response = await axios({
@@ -164,7 +164,7 @@ export const putPot = async (pot: potType): Promise<potType | null> => {
  */
 export const deletePot = async (id: string): Promise<number> => {
   try {
-    if (!id || !isValidBtDbId(id, 'pot')) return -1
+    if (!isValidBtDbId(id, 'pot')) return -1
     const response = await axios({
       method: "delete",
       withCredentials: true,
@@ -182,9 +182,9 @@ export const deletePot = async (id: string): Promise<number> => {
  * @param {string} squadId - id of squad to delete all pots from
  * @returns {number} - # of pots deleted, -1 if squadId is invalid or an error
  */
-export const deleteAllSquadPots = async (squadId: string): Promise<number> => {
+export const deleteAllPotsForSquad = async (squadId: string): Promise<number> => {
   try {
-    if (!squadId || !isValidBtDbId(squadId, 'sqd')) return -1
+    if (!isValidBtDbId(squadId, 'sqd')) return -1
     const response = await axios({
       method: "delete",
       withCredentials: true,
@@ -201,9 +201,9 @@ export const deleteAllSquadPots = async (squadId: string): Promise<number> => {
  * @param {string} divId - id of div to delete all pots from
  * @returns {number} - # of pots deleted, -1 if divId is invalid or an error
  */
-export const deleteAllDivPots = async (divId: string): Promise<number> => {
+export const deleteAllPotsForDiv = async (divId: string): Promise<number> => {
   try {
-    if (!divId || !isValidBtDbId(divId, 'div')) return -1
+    if (!isValidBtDbId(divId, 'div')) return -1
     const response = await axios({
       method: "delete",
       withCredentials: true,
@@ -221,9 +221,9 @@ export const deleteAllDivPots = async (divId: string): Promise<number> => {
  * @param {string} tmntId - id of tmnt to delete all pots from
  * @returns {number} - # of pots deleted, -1 if tmntId is invalid or an error
  */
-export const deleteAllTmntPots = async (tmntId: string): Promise<number> => {
+export const deleteAllPotsForTmnt = async (tmntId: string): Promise<number> => {
   try {
-    if (!tmntId || !isValidBtDbId(tmntId, 'tmt')) return -1
+    if (!isValidBtDbId(tmntId, 'tmt')) return -1
     const response = await axios({
       method: "delete",
       withCredentials: true,

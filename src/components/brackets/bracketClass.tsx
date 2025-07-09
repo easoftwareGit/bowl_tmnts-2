@@ -18,7 +18,7 @@ export class Bracket {
   parent: BracketList;
 
   constructor(parent: BracketList) {
-    this._id = btDbUuid('bib') // bracket individual bracket id
+    this._id = btDbUuid('obk') // one bracket
     this.parent = parent;
     this._players = []; 
     this._playersPerMatch = parent.playersPerMatch;    

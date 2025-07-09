@@ -48,6 +48,12 @@ export const maxDate = new Date(Date.UTC(maxYear, 11, 31, 23, 59, 59, 999));
 
 export const minLane = 1;
 
+export const idTypeLength = 3; // length of id type, e.g. usr, bwl, div, pot, elm, brk
+export const idTypeSeparator = "_"; // separator between id type and id
+export const idTypeSeparatorLength = 1; // length of id type separator, e.g
+export const uuidLength = 32; // length of a uuid without hyphens, e.g. 123e4567e89b12d3a456426655440000
+export const baseIdLength = idTypeLength + idTypeSeparatorLength + uuidLength; // length of a base id, e.g. usr_123e4567e89b12d3a456426655440000
+
 export enum ErrorCode {
   None = 0,
   MissingData = -1,

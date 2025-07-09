@@ -21,6 +21,7 @@ const manyUrl = url + "/many";
 export const getAllDivsForTmnt = async (tmntId: string): Promise<divType[] | null> => {
 
   try {
+    if (!isValidBtDbId(tmntId, 'tmt')) return null
     const response = await axios({
       method: "get",
       withCredentials: true,
@@ -175,7 +176,7 @@ export const putDiv = async (div: divType): Promise<divType | null> => {
  */  
 export const deleteDiv = async (id: string): Promise<number> => {
   try {
-    if (!id || !isValidBtDbId(id, "div")) return -1
+    if (!isValidBtDbId(id, "div")) return -1
     const response = await axios({
       method: "delete",
       withCredentials: true,
@@ -193,9 +194,9 @@ export const deleteDiv = async (id: string): Promise<number> => {
  * @param {string} tmntId - id of tmnt with divs to delete
  * @returns - # of rows deleted, -1 if tmntId is invalid or an error
  */
-export const deleteAllTmntDivs = async (tmntId: string): Promise<number> => {
+export const deleteAllDivsForTmnt = async (tmntId: string): Promise<number> => {
   try {
-    if (!tmntId || !isValidBtDbId(tmntId, "tmt")) return -1
+    if (!isValidBtDbId(tmntId, "tmt")) return -1
     const response = await axios({
       method: "delete",
       withCredentials: true,

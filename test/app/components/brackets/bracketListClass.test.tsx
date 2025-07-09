@@ -4,9 +4,7 @@ import { BGNumberedColCount, brktColTitle, initBGColNames, toFillColTitle } from
 import { BracketList, brktCountType, initBrktCountsType, playerUsedType, totalBrktsType } from "@/components/brackets/bracketListClass"
 import { playerDataType } from "@/lib/types/types";
 import { isOdd, isValidBtDbId, maxBrackets } from "@/lib/validation";
-import { error } from "console";
-import { cloneDeep, get, random } from "lodash";
-import { p } from "msw/lib/core/GraphQLHandler-Pox7fIFM";
+import { cloneDeep } from "lodash";
 
 describe('BracketList', () => { 
 
@@ -42,57 +40,35 @@ describe('BracketList', () => {
     mockBracketList.calcTotalBrkts(playerData);  
   }
 
-  describe('constructor', () => {    
+  // describe('constructor', () => {    
     
-    // const testBracketList = new BracketList("test", 2, 3);
+  //   const testBracketList = new BracketList("test", 2, 3);
 
-    // it('should initialize with an empty brackets array when constructed', () => {
-    //   expect(testBracketList.brackets).toHaveLength(0);
-    // })
-    // it('brktCounts should return empty values when constructed', () => {
-    //   const result: initBrktCountsType = testBracketList.brktCounts;
-    //   expect(result.forFullValues).toHaveLength(0);
-    //   expect(result.forOneByeValues).toHaveLength(0);
-    // })
-    // it('NeedToAddBrkt should return true when brackets array is empty', () => {
-    //   const result = testBracketList.needToAddBrkt;
-    //   expect(result).toBe(true);
-    // })
-    // it('should return the correct # of games', () => {
-    //   const result = testBracketList.games;
-    //   expect(result).toBe(3);
-    // });
-    // it('should return the correct # of players per match', () => {
-    //   const result = testBracketList.playersPerMatch;
-    //   expect(result).toBe(2);
-    // })
-    // it('should return the correct # of players per bracket', () => {
-    //   const result = testBracketList.playersPerBrkt;
-    //   expect(result).toBe(8);
-    // })
-  })
-
-  describe('addBracket', () => {
-  
-    // it('should add a new bracket to the brackets array', () => {
-    //   const testBracketList = new BracketList("test", 2, 3);
-    //   let brkt1 = testBracketList.addBrkt();
-    //   expect(brkt1).not.toBeNull();
-    //   expect(testBracketList.brackets).toHaveLength(1);
-
-    //   const result = testBracketList.putPlayerInBrkt('Al');
-    //   expect(result).not.toBeNull();
-    //   if (!result) return;
-    //   expect(testBracketList.brackets).toHaveLength(1);
-    //   expect(testBracketList.brackets[0].players).toHaveLength(1);
-    //   expect(result.players).toHaveLength(1);
-    //   expect(result.players[0]).toBe('Al');
-    //   expect(result.players[0]).toBe(brkt1.players[0]);
-    // })
-  })
+  //   it('should initialize with an empty brackets array when constructed', () => {
+  //     expect(testBracketList.brackets).toHaveLength(0);
+  //   })
+  //   it('brktCounts should return empty values when constructed', () => {
+  //     const result: initBrktCountsType = testBracketList.brktCounts;
+  //     expect(result.forFullValues).toHaveLength(0);
+  //     expect(result.forOneByeValues).toHaveLength(0);
+  //   })
+  //   it('should return the correct # of games', () => {
+  //     const result = testBracketList.games;
+  //     expect(result).toBe(3);
+  //   });
+  //   it('should return the correct # of players per match', () => {
+  //     const result = testBracketList.playersPerMatch;
+  //     expect(result).toBe(2);
+  //   })
+  //   it('should return the correct # of players per bracket', () => {
+  //     const result = testBracketList.playersPerBrkt;
+  //     expect(result).toBe(8);
+  //   })
+  // })
 
   // moved from class function to function inside of rePopulateBrkts
   // start as class functions for testing
+  
   describe('class functions for testing only', () => { 
 
     describe('calcTotalBrkts - adjustPlayersNumBrkts', () => { 
@@ -100,8 +76,6 @@ describe('BracketList', () => {
       // it('should make no adjustemnts when brackets are already balanced', () => {
         
       //   const testBracketList = new BracketList('test', 2, 3);
-      //   // num brackets name = id + "_brkts" = 'test_name'
-      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   const playerData = [
       //     { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
       //     { player_id: 'Bob', test_brkts: 8, test_timeStamp: 200 },
@@ -117,8 +91,8 @@ describe('BracketList', () => {
       //   ];
       //   const totalBrkts: totalBrktsType = { total: 0, full: 0, oneBye: 0 };
       //   playerData.sort((a, b) => {
-      //     if (a.test_name !== b.test_name) {
-      //       return b.test_name - a.test_name; // descending
+      //     if (a.test_brkts !== b.test_brkts) {
+      //       return b.test_brkts - a.test_brkts; // descending
       //     } else {
       //       return a.createdAt - b.createdAt; // ascending
       //     }
@@ -130,22 +104,20 @@ describe('BracketList', () => {
       //   expect(totalBrkts.oneBye).toBe(0);
 
       //   testBracketList.adjustPlayersNumBrkts(playerData, totalBrkts);
-      //   expect(playerData[0].test_name).toBe(10);
-      //   expect(playerData[1].test_name).toBe(10);
-      //   expect(playerData[2].test_name).toBe(8);
-      //   expect(playerData[3].test_name).toBe(8);
-      //   expect(playerData[4].test_name).toBe(8);
-      //   expect(playerData[5].test_name).toBe(7);
-      //   expect(playerData[6].test_name).toBe(6);
-      //   expect(playerData[7].test_name).toBe(6);
-      //   expect(playerData[8].test_name).toBe(6);
-      //   expect(playerData[9].test_name).toBe(6);
-      //   expect(playerData[10].test_name).toBe(5);
+      //   expect(playerData[0].test_brkts).toBe(10);
+      //   expect(playerData[1].test_brkts).toBe(10);
+      //   expect(playerData[2].test_brkts).toBe(8);
+      //   expect(playerData[3].test_brkts).toBe(8);
+      //   expect(playerData[4].test_brkts).toBe(8);
+      //   expect(playerData[5].test_brkts).toBe(7);
+      //   expect(playerData[6].test_brkts).toBe(6);
+      //   expect(playerData[7].test_brkts).toBe(6);
+      //   expect(playerData[8].test_brkts).toBe(6);
+      //   expect(playerData[9].test_brkts).toBe(6);
+      //   expect(playerData[10].test_brkts).toBe(5);
       // })
       // it('edge case high, should adjust Al to 19 brackets', () => {
       //   const testBracketList = new BracketList('test', 2, 3);
-      //   // num brackets name = id + "_brkts" = 'test_name'
-      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   const playerData = [
       //     { player_id: 'Al', test_brkts: 50, test_timeStamp: 100 },
       //     { player_id: 'Bob', test_brkts: 8, test_timeStamp: 200 },
@@ -168,8 +140,8 @@ describe('BracketList', () => {
       //   ];
       //   const totalBrkts: totalBrktsType = { total: 0, full: 0, oneBye: 0 };
       //   playerData.sort((a, b) => {
-      //     if (a.test_name !== b.test_name) {
-      //       return b.test_name - a.test_name; // descending
+      //     if (a.test_brkts !== b.test_brkts) {
+      //       return b.test_brkts - a.test_brkts; // descending
       //     } else {
       //       return a.createdAt - b.createdAt; // ascending
       //     }
@@ -181,29 +153,27 @@ describe('BracketList', () => {
       //   expect(totalBrkts.oneBye).toBe(6);
 
       //   testBracketList.adjustPlayersNumBrkts(playerData, totalBrkts);
-      //   expect(playerData[0].test_name).toBe(19);
-      //   expect(playerData[1].test_name).toBe(12);
-      //   expect(playerData[2].test_name).toBe(10);
-      //   expect(playerData[3].test_name).toBe(10);
-      //   expect(playerData[4].test_name).toBe(10);
-      //   expect(playerData[5].test_name).toBe(10);
-      //   expect(playerData[6].test_name).toBe(8);
-      //   expect(playerData[7].test_name).toBe(8);
-      //   expect(playerData[8].test_name).toBe(8);
-      //   expect(playerData[9].test_name).toBe(8);
-      //   expect(playerData[10].test_name).toBe(7);
-      //   expect(playerData[11].test_name).toBe(6);
-      //   expect(playerData[12].test_name).toBe(6);
-      //   expect(playerData[13].test_name).toBe(6);
-      //   expect(playerData[14].test_name).toBe(5);
-      //   expect(playerData[15].test_name).toBe(5);
-      //   expect(playerData[16].test_name).toBe(5);
-      //   expect(playerData[17].test_name).toBe(4);
+      //   expect(playerData[0].test_brkts).toBe(19);
+      //   expect(playerData[1].test_brkts).toBe(12);
+      //   expect(playerData[2].test_brkts).toBe(10);
+      //   expect(playerData[3].test_brkts).toBe(10);
+      //   expect(playerData[4].test_brkts).toBe(10);
+      //   expect(playerData[5].test_brkts).toBe(10);
+      //   expect(playerData[6].test_brkts).toBe(8);
+      //   expect(playerData[7].test_brkts).toBe(8);
+      //   expect(playerData[8].test_brkts).toBe(8);
+      //   expect(playerData[9].test_brkts).toBe(8);
+      //   expect(playerData[10].test_brkts).toBe(7);
+      //   expect(playerData[11].test_brkts).toBe(6);
+      //   expect(playerData[12].test_brkts).toBe(6);
+      //   expect(playerData[13].test_brkts).toBe(6);
+      //   expect(playerData[14].test_brkts).toBe(5);
+      //   expect(playerData[15].test_brkts).toBe(5);
+      //   expect(playerData[16].test_brkts).toBe(5);
+      //   expect(playerData[17].test_brkts).toBe(4);
       // })
       // it('edge case high, should adjust Al and Bob tp 21 brackets', () => {
       //   const testBracketList = new BracketList('test', 2, 3);
-      //   // num brackets name = id + "_brkts" = 'test_name'
-      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   const playerData = [
       //     { player_id: 'Al', test_brkts: 50, test_timeStamp: 100 },
       //     { player_id: 'Bob', test_brkts: 50, test_timeStamp: 200 },
@@ -226,8 +196,8 @@ describe('BracketList', () => {
       //   ];      
       //   const totalBrkts: totalBrktsType = { total: 0, full: 0, oneBye: 0 };
       //   playerData.sort((a, b) => {
-      //     if (a.test_name !== b.test_name) {
-      //       return b.test_name - a.test_name; // descending
+      //     if (a.test_brkts !== b.test_brkts) {
+      //       return b.test_brkts - a.test_brkts; // descending
       //     } else {
       //       return a.createdAt - b.createdAt; // ascending
       //     }
@@ -239,24 +209,24 @@ describe('BracketList', () => {
       //   expect(totalBrkts.oneBye).toBe(4);
 
       //   testBracketList.adjustPlayersNumBrkts(playerData, totalBrkts);
-      //   expect(playerData[0].test_name).toBe(21);
-      //   expect(playerData[1].test_name).toBe(21);
-      //   expect(playerData[2].test_name).toBe(12);
-      //   expect(playerData[3].test_name).toBe(10);
-      //   expect(playerData[4].test_name).toBe(10);
-      //   expect(playerData[5].test_name).toBe(10);
-      //   expect(playerData[6].test_name).toBe(10);
-      //   expect(playerData[7].test_name).toBe(8);
-      //   expect(playerData[8].test_name).toBe(8);
-      //   expect(playerData[9].test_name).toBe(8);
-      //   expect(playerData[10].test_name).toBe(7);
-      //   expect(playerData[11].test_name).toBe(6);
-      //   expect(playerData[12].test_name).toBe(6);
-      //   expect(playerData[13].test_name).toBe(6);
-      //   expect(playerData[14].test_name).toBe(5);
-      //   expect(playerData[15].test_name).toBe(5);
-      //   expect(playerData[16].test_name).toBe(5);
-      //   expect(playerData[17].test_name).toBe(4);
+      //   expect(playerData[0].test_brkts).toBe(21);
+      //   expect(playerData[1].test_brkts).toBe(21);
+      //   expect(playerData[2].test_brkts).toBe(12);
+      //   expect(playerData[3].test_brkts).toBe(10);
+      //   expect(playerData[4].test_brkts).toBe(10);
+      //   expect(playerData[5].test_brkts).toBe(10);
+      //   expect(playerData[6].test_brkts).toBe(10);
+      //   expect(playerData[7].test_brkts).toBe(8);
+      //   expect(playerData[8].test_brkts).toBe(8);
+      //   expect(playerData[9].test_brkts).toBe(8);
+      //   expect(playerData[10].test_brkts).toBe(7);
+      //   expect(playerData[11].test_brkts).toBe(6);
+      //   expect(playerData[12].test_brkts).toBe(6);
+      //   expect(playerData[13].test_brkts).toBe(6);
+      //   expect(playerData[14].test_brkts).toBe(5);
+      //   expect(playerData[15].test_brkts).toBe(5);
+      //   expect(playerData[16].test_brkts).toBe(5);
+      //   expect(playerData[17].test_brkts).toBe(4);
 
       //   expect(totalBrkts.total).toBe(21);
       //   expect(totalBrkts.full).toBe(15);
@@ -264,7 +234,6 @@ describe('BracketList', () => {
       // })
       // it('edge case low, should return the correct number of brackets (2, 6 Full, -4 OneBye)', () => {
       //   const testBracketList = new BracketList('test', 2, 3);      
-      //   // num brackets name = id + "_brkts" = 'test_name'
       //   const playerData = [
       //     { player_id: 'Al', test_brkts: 2, test_timeStamp: 100 },
       //     { player_id: 'Bob', test_brkts: 2, test_timeStamp: 200 },
@@ -279,8 +248,8 @@ describe('BracketList', () => {
       //   ];      
       //   const totalBrkts: totalBrktsType = { total: 0, full: 0, oneBye: 0 };
       //   playerData.sort((a, b) => {
-      //     if (a.test_name !== b.test_name) {
-      //       return b.test_name - a.test_name; // descending
+      //     if (a.test_brkts !== b.test_brkts) {
+      //       return b.test_brkts - a.test_brkts; // descending
       //     } else {
       //       return a.createdAt - b.createdAt; // ascending
       //     }
@@ -302,8 +271,6 @@ describe('BracketList', () => {
 
       // it('should return the correct number of brackets (6, 5 Full, 1 OneBye)', () => {
       //   const testBracketList = new BracketList('test', 2, 3);
-      //   // num brackets name = id + "_brkts" = 'test_name'
-      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   const playerData = [
       //     { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
       //     { player_id: 'Bob', test_brkts: 8, test_timeStamp: 200 },
@@ -321,8 +288,6 @@ describe('BracketList', () => {
       // })
       // it('should return the correct number of brackets (7, 4 Full, 3 OneBye)', () => {
       //   const testBracketList = new BracketList('test', 2, 3);
-      //   // num brackets name = id + "_brkts" = 'test_name'
-      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   const playerData = [
       //     { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
       //     { player_id: 'Bob', test_brkts: 8, test_timeStamp: 200 },
@@ -341,8 +306,6 @@ describe('BracketList', () => {
       // })
       // it('should return the correct number of brackets (13, 9 Full, 4 OneBye)', () => {
       //   const testBracketList = new BracketList('test', 2, 3);
-      //   // num brackets name = id + "_brkts" = 'test_name'
-      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   const playerData = [
       //     { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
       //     { player_id: 'Bob', test_brkts: 10, test_timeStamp: 200 },
@@ -363,8 +326,6 @@ describe('BracketList', () => {
       // })
       // it('edge case high, should return the correct number of brackets (24, 4 Full, 4 OneBye)', () => {
       //   const testBracketList = new BracketList('test', 2, 3);
-      //   // num brackets name = id + "_brkts" = 'test_name'
-      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   const playerData = [
       //     { player_id: 'Al', test_brkts: 50, test_timeStamp: 100 },
       //     { player_id: 'Bob', test_brkts: 50, test_timeStamp: 200 },
@@ -393,8 +354,6 @@ describe('BracketList', () => {
       // })
       // it('edge case low, should return the correct number of brackets (2, 6 Full, -4 OneBye)', () => {
       //   const testBracketList = new BracketList('test', 2, 3);
-      //   // num brackets name = id + "_brkts" = 'test_name'
-      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   const playerData = [
       //     { player_id: 'Al', test_brkts: 2, test_timeStamp: 100 },
       //     { player_id: 'Bob', test_brkts: 2, test_timeStamp: 200 },
@@ -415,8 +374,6 @@ describe('BracketList', () => {
       // })
       // it('should return 0 brackets when no player entries', () => {
       //   const testBracketList = new BracketList('test', 2, 3);
-      //   // num brackets name = id + "_brkts" = 'test_name'
-      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   const playerData: playerBrktEntry[] = [];
       //   const totalBrkts: totalBrktsType = { total: 3, full: 2, oneBye: 1 };
       //   testBracketList.calculateNumBrackets(playerData, totalBrkts);
@@ -469,8 +426,6 @@ describe('BracketList', () => {
       // });
       // it('should set bracketCounts with [0, 0], for Full and One Bye with 2 full brackets ', () => {
       //   const testBracktList = new BracketList('test', 2, 3);
-      //   // num brackets name = id + "_brkts" = 'test_name'
-      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   const testData = [
       //     { player_id: 'Al', test_brkts: 2, test_timeStamp: 100 },
       //     { player_id: 'Bob', test_brkts: 2, test_timeStamp: 200 },
@@ -492,8 +447,6 @@ describe('BracketList', () => {
       // });
       // it('should set bracketCounts with [0, 0], for Full and [1, 1] One Bye with 2 brackets with 7 players ', () => {
       //   const testBracktList = new BracketList('test', 2, 3);
-      //   // num brackets name = id + "_brkts" = 'test_name'
-      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   const testData = [
       //     { player_id: 'Al', test_brkts: 2, test_timeStamp: 100 },
       //     { player_id: 'Bob', test_brkts: 2, test_timeStamp: 200 },
@@ -514,8 +467,6 @@ describe('BracketList', () => {
       // });
       // it('should set bracketCounts to [] For Full and One Bye when no brackets', () => {
       //   const testBracktList = new BracketList('test', 2, 3);
-      //   // num brackets name = id + "_brkts" = 'test_name'
-      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   const testData = [{}];
       
       //   testBracktList.rePopulateBrkts(testData);
@@ -601,8 +552,6 @@ describe('BracketList', () => {
             
       // it('should create a bye entry to fill brackets', () => { 
       //   const testBracketList = new BracketList('test', 2, 3);
-      //   // num brackets name = id + "_brkts" = 'test_name'
-      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   // use pre-sorted data for test
       //   const playerData = [
       //     { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
@@ -640,8 +589,6 @@ describe('BracketList', () => {
       // })
       // it('should NOT create a bye entry when all brackets are full', () => { 
       //   const testBracketList = new BracketList('test', 2, 3);
-      //   // num brackets name = id + "_brkts" = 'test_name'
-      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   // use pre-sorted data for test
       //   const playerData = [
       //     { player_id: 'Al', test_brkts: 7, test_timeStamp: 100 },
@@ -668,8 +615,6 @@ describe('BracketList', () => {
 
       // it('should set shuffled brackets for player set, 1st player', () => {
       //   const testBracketList = new BracketList('test', 2, 3);
-      //   // num brackets name = id + "_brkts" = 'test_name'
-      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   // use pre-sorted data for test
       //   const playerData = [
       //     { player_id: 'Al', test_brkts: 12, test_timeStamp: 100 },
@@ -710,8 +655,6 @@ describe('BracketList', () => {
       // })
       // it('should set shuffled brackets for player set, 2nd player has match vs 1st player', () => {
       //   const testBracketList = new BracketList('test', 2, 3);
-      //   // num brackets name = id + "_brkts" = 'test_name'
-      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   // use pre-sorted data for test
       //   const playerData = [
       //     { player_id: 'Al', test_brkts: 12, test_timeStamp: 100 },
@@ -757,8 +700,6 @@ describe('BracketList', () => {
       // })
       // it('should set shuffled brackets for player set, 3nd player has match vs 1st player and 2nd player', () => {
       //   const testBracketList = new BracketList('test', 2, 3);
-      //   // num brackets name = id + "_brkts" = 'test_name'
-      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   // use pre-sorted data for test
       //   const playerData = [
       //     { player_id: 'Al', test_brkts: 12, test_timeStamp: 100 },
@@ -812,15 +753,13 @@ describe('BracketList', () => {
       // const createNeededMapCount = (brktEntries: (typeof playerEntryData)[]): Map<string, number> => {
       //   const neededCountMap = new Map<string, number>();
       //   for (let i = 0; i < brktEntries.length; i++) {
-      //     neededCountMap.set(brktEntries[i].player_id, brktEntries[i]['test_name']);
+      //     neededCountMap.set(brktEntries[i].player_id, brktEntries[i]['test_brkts']);
       //   }      
       //   return neededCountMap;
       // }
   
       // it('should set oppoMaps for players: 8 Players 7 Brackets each', () => {
       //   const testBracketList = new BracketList('test', 2, 3);
-      //   // num brackets name = id + "_brkts" = 'test_name'
-      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   // use pre-sorted data for test
       //   const playerData = [
       //     { player_id: 'Al', test_brkts: 7, test_timeStamp: 100 },
@@ -834,7 +773,7 @@ describe('BracketList', () => {
       //   ];
       //   testBracketList.calcTotalBrkts(playerData);        
       //   let neededCountMap = createNeededMapCount(playerData);
-      //   let playerNumBrkts = playerData[0].test_name;
+      //   let playerNumBrkts = playerData[0].test_brkts;
       //   let result = testBracketList.createOppoMapForTesting2(0, playerNumBrkts, neededCountMap);
       //   expect(result).not.toBeNull();
       //   expect(result.size).toBe(playerData.length - 1); // all opponemnts except self
@@ -844,10 +783,10 @@ describe('BracketList', () => {
 
       //   const BobPlayerData = playerData.slice(1);        
       //   for (let i = 0; i < BobPlayerData.length; i++) {
-      //     BobPlayerData[i].test_name = BobPlayerData[i].test_name - 1;
+      //     BobPlayerData[i].test_brkts = BobPlayerData[i].test_brkts - 1;
       //   }
       //   neededCountMap = createNeededMapCount(BobPlayerData);
-      //   playerNumBrkts = playerData[1].test_name - 1;
+      //   playerNumBrkts = playerData[1].test_brkts - 1;
       //   result = testBracketList.createOppoMapForTesting2(1, playerNumBrkts, neededCountMap);
       //   expect(result).not.toBeNull();
       //   expect(result.size).toBe(BobPlayerData.length - 1); // all opponemnts except self
@@ -857,10 +796,10 @@ describe('BracketList', () => {
 
       //   const ChadPlayerData = playerData.slice(2);
       //   for (let i = 0; i < ChadPlayerData.length; i++) {
-      //     ChadPlayerData[i].test_name = ChadPlayerData[i].test_name - 2;
+      //     ChadPlayerData[i].test_brkts = ChadPlayerData[i].test_brkts - 2;
       //   }
       //   neededCountMap = createNeededMapCount(ChadPlayerData);
-      //   playerNumBrkts = playerData[2].test_name - 2;
+      //   playerNumBrkts = playerData[2].test_brkts - 2;
       //   result = testBracketList.createOppoMapForTesting2(2, playerNumBrkts, neededCountMap);
       //   expect(result).not.toBeNull();
       //   expect(result.size).toBe(ChadPlayerData.length - 1); // all opponemnts except self
@@ -870,8 +809,6 @@ describe('BracketList', () => {
       // })
       // it('should set oppoMaps for players: 8 Players 14 Brackets each', () => {
       //   const testBracketList = new BracketList('test', 2, 3);
-      //   // num brackets name = id + "_brkts" = 'test_name'
-      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   // use pre-sorted data for test
       //   const playerData = [
       //     { player_id: 'Al', test_brkts: 14, test_timeStamp: 100 },
@@ -885,7 +822,7 @@ describe('BracketList', () => {
       //   ];
       //   testBracketList.calcTotalBrkts(playerData);        
       //   let neededCountMap = createNeededMapCount(playerData);
-      //   let playerNumBrkts = playerData[0].test_name;
+      //   let playerNumBrkts = playerData[0].test_brkts;
       //   let result = testBracketList.createOppoMapForTesting2(0, playerNumBrkts, neededCountMap);
       //   expect(result).not.toBeNull();
       //   expect(result.size).toBe(playerData.length - 1); // all opponemnts except self
@@ -895,10 +832,10 @@ describe('BracketList', () => {
 
       //   const BobPlayerData = playerData.slice(1);        
       //   for (let i = 0; i < BobPlayerData.length; i++) {
-      //     BobPlayerData[i].test_name = BobPlayerData[i].test_name - 2;
+      //     BobPlayerData[i].test_brkts = BobPlayerData[i].test_brkts - 2;
       //   }
       //   neededCountMap = createNeededMapCount(BobPlayerData);
-      //   playerNumBrkts = playerData[1].test_name - 2;
+      //   playerNumBrkts = playerData[1].test_brkts - 2;
       //   result = testBracketList.createOppoMapForTesting2(1, playerNumBrkts, neededCountMap);
       //   expect(result).not.toBeNull();
       //   expect(result.size).toBe(BobPlayerData.length - 1); // all opponemnts except self
@@ -908,10 +845,10 @@ describe('BracketList', () => {
 
       //   const ChadPlayerData = playerData.slice(2);
       //   for (let i = 0; i < ChadPlayerData.length; i++) {
-      //     ChadPlayerData[i].test_name = ChadPlayerData[i].test_name - 4;
+      //     ChadPlayerData[i].test_brkts = ChadPlayerData[i].test_brkts - 4;
       //   }
       //   neededCountMap = createNeededMapCount(ChadPlayerData);
-      //   playerNumBrkts = playerData[2].test_name - 4;
+      //   playerNumBrkts = playerData[2].test_brkts - 4;
       //   result = testBracketList.createOppoMapForTesting2(2, playerNumBrkts, neededCountMap);
       //   expect(result).not.toBeNull();
       //   expect(result.size).toBe(ChadPlayerData.length - 1); // all opponemnts except self
@@ -922,8 +859,6 @@ describe('BracketList', () => {
 
       // it('should set oppoMap for players: 18 players x varuioius brackets ', () => {
       //   const testBracketList = new BracketList('test', 2, 3);
-      //   // num brackets name = id + "_brkts" = 'test_name'
-      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   // use pre-sorted data for test
       //   const playerData = [
       //     { player_id: 'Al', test_brkts: 14, test_timeStamp: 100 },
@@ -948,7 +883,7 @@ describe('BracketList', () => {
       //   ];
       //   testBracketList.calcTotalBrkts(playerData);        
       //   let neededCountMap = createNeededMapCount(playerData);
-      //   let playerNumBrkts = playerData[0].test_name;
+      //   let playerNumBrkts = playerData[0].test_brkts;
       //   let result = testBracketList.createOppoMapForTesting2(0, playerNumBrkts, neededCountMap);
       //   expect(result).not.toBeNull();
       //   expect(result.size).toBe(playerData.length - 1); // all opponemnts except self
@@ -962,22 +897,22 @@ describe('BracketList', () => {
 
       //   const BobPlayerData = playerData.slice(1);        
       //   // remove 14 matches from BobPlayerData
-      //   BobPlayerData[0].test_name = BobPlayerData[0].test_name - 2;
-      //   BobPlayerData[1].test_name = BobPlayerData[1].test_name - 1;
-      //   BobPlayerData[2].test_name = BobPlayerData[2].test_name - 1;
-      //   BobPlayerData[3].test_name = BobPlayerData[3].test_name - 1;
-      //   BobPlayerData[4].test_name = BobPlayerData[4].test_name - 1;
-      //   BobPlayerData[5].test_name = BobPlayerData[5].test_name - 1;
-      //   BobPlayerData[7].test_name = BobPlayerData[6].test_name - 1;
-      //   BobPlayerData[8].test_name = BobPlayerData[7].test_name - 1;
-      //   BobPlayerData[10].test_name = BobPlayerData[10].test_name - 1;
-      //   BobPlayerData[11].test_name = BobPlayerData[11].test_name - 1;
-      //   BobPlayerData[12].test_name = BobPlayerData[12].test_name - 1;
-      //   BobPlayerData[13].test_name = BobPlayerData[13].test_name - 1;
-      //   BobPlayerData[14].test_name = BobPlayerData[14].test_name - 1;
+      //   BobPlayerData[0].test_brkts = BobPlayerData[0].test_brkts - 2;
+      //   BobPlayerData[1].test_brkts = BobPlayerData[1].test_brkts - 1;
+      //   BobPlayerData[2].test_brkts = BobPlayerData[2].test_brkts - 1;
+      //   BobPlayerData[3].test_brkts = BobPlayerData[3].test_brkts - 1;
+      //   BobPlayerData[4].test_brkts = BobPlayerData[4].test_brkts - 1;
+      //   BobPlayerData[5].test_brkts = BobPlayerData[5].test_brkts - 1;
+      //   BobPlayerData[7].test_brkts = BobPlayerData[6].test_brkts - 1;
+      //   BobPlayerData[8].test_brkts = BobPlayerData[7].test_brkts - 1;
+      //   BobPlayerData[10].test_brkts = BobPlayerData[10].test_brkts - 1;
+      //   BobPlayerData[11].test_brkts = BobPlayerData[11].test_brkts - 1;
+      //   BobPlayerData[12].test_brkts = BobPlayerData[12].test_brkts - 1;
+      //   BobPlayerData[13].test_brkts = BobPlayerData[13].test_brkts - 1;
+      //   BobPlayerData[14].test_brkts = BobPlayerData[14].test_brkts - 1;
 
       //   neededCountMap = createNeededMapCount(BobPlayerData);
-      //   playerNumBrkts = BobPlayerData[0].test_name;
+      //   playerNumBrkts = BobPlayerData[0].test_brkts;
       //   result = testBracketList.createOppoMapForTesting2(1, playerNumBrkts, neededCountMap);
       //   expect(result).not.toBeNull();
       //   expect(result.size).toBe(BobPlayerData.length - 1); // all opponemnts except self
@@ -991,22 +926,22 @@ describe('BracketList', () => {
 
       //   const ChadPlayerData = BobPlayerData.slice(1);
       //   // remove 14 matches from ChadPlayerData
-      //   ChadPlayerData[0].test_name = ChadPlayerData[0].test_name - 2;
-      //   ChadPlayerData[1].test_name = ChadPlayerData[1].test_name - 1;
-      //   ChadPlayerData[2].test_name = ChadPlayerData[2].test_name - 1;
-      //   ChadPlayerData[3].test_name = ChadPlayerData[3].test_name - 1;
-      //   ChadPlayerData[4].test_name = ChadPlayerData[4].test_name - 1;
-      //   ChadPlayerData[5].test_name = ChadPlayerData[5].test_name - 1;
-      //   ChadPlayerData[7].test_name = ChadPlayerData[7].test_name - 1;
-      //   ChadPlayerData[9].test_name = ChadPlayerData[9].test_name - 1;
-      //   ChadPlayerData[10].test_name = ChadPlayerData[10].test_name - 1;
-      //   ChadPlayerData[11].test_name = ChadPlayerData[11].test_name - 1;
-      //   ChadPlayerData[13].test_name = ChadPlayerData[13].test_name - 1;
-      //   ChadPlayerData[15].test_name = ChadPlayerData[15].test_name - 1;
-      //   ChadPlayerData[16].test_name = ChadPlayerData[16].test_name - 1;        
+      //   ChadPlayerData[0].test_brkts = ChadPlayerData[0].test_brkts - 2;
+      //   ChadPlayerData[1].test_brkts = ChadPlayerData[1].test_brkts - 1;
+      //   ChadPlayerData[2].test_brkts = ChadPlayerData[2].test_brkts - 1;
+      //   ChadPlayerData[3].test_brkts = ChadPlayerData[3].test_brkts - 1;
+      //   ChadPlayerData[4].test_brkts = ChadPlayerData[4].test_brkts - 1;
+      //   ChadPlayerData[5].test_brkts = ChadPlayerData[5].test_brkts - 1;
+      //   ChadPlayerData[7].test_brkts = ChadPlayerData[7].test_brkts - 1;
+      //   ChadPlayerData[9].test_brkts = ChadPlayerData[9].test_brkts - 1;
+      //   ChadPlayerData[10].test_brkts = ChadPlayerData[10].test_brkts - 1;
+      //   ChadPlayerData[11].test_brkts = ChadPlayerData[11].test_brkts - 1;
+      //   ChadPlayerData[13].test_brkts = ChadPlayerData[13].test_brkts - 1;
+      //   ChadPlayerData[15].test_brkts = ChadPlayerData[15].test_brkts - 1;
+      //   ChadPlayerData[16].test_brkts = ChadPlayerData[16].test_brkts - 1;        
 
       //   neededCountMap = createNeededMapCount(ChadPlayerData);
-      //   playerNumBrkts = ChadPlayerData[0].test_name;
+      //   playerNumBrkts = ChadPlayerData[0].test_brkts;
       //   result = testBracketList.createOppoMapForTesting2(2, playerNumBrkts, neededCountMap);
       //   expect(result).not.toBeNull();
       //   expect(result.size).toBe(ChadPlayerData.length - 1); // all opponemnts except self
@@ -1020,22 +955,22 @@ describe('BracketList', () => {
 
       //   const DonPlayerData = ChadPlayerData.slice(1);
       //   // remove 13 matches from DonPlayerData
-      //   DonPlayerData[0].test_name = DonPlayerData[0].test_name - 1;
-      //   DonPlayerData[1].test_name = DonPlayerData[1].test_name - 1;
-      //   DonPlayerData[2].test_name = DonPlayerData[2].test_name - 1;
-      //   DonPlayerData[3].test_name = DonPlayerData[3].test_name - 1; 
-      //   DonPlayerData[4].test_name = DonPlayerData[4].test_name - 1;
-      //   DonPlayerData[5].test_name = DonPlayerData[5].test_name - 1;
-      //   DonPlayerData[7].test_name = DonPlayerData[7].test_name - 1;
-      //   DonPlayerData[8].test_name = DonPlayerData[8].test_name - 1;
-      //   DonPlayerData[9].test_name = DonPlayerData[9].test_name - 1;
-      //   DonPlayerData[10].test_name = DonPlayerData[10].test_name - 1;
-      //   DonPlayerData[11].test_name = DonPlayerData[11].test_name - 1;
-      //   DonPlayerData[13].test_name = DonPlayerData[13].test_name - 1;
-      //   DonPlayerData[14].test_name = DonPlayerData[14].test_name - 1;
+      //   DonPlayerData[0].test_brkts = DonPlayerData[0].test_brkts - 1;
+      //   DonPlayerData[1].test_brkts = DonPlayerData[1].test_brkts - 1;
+      //   DonPlayerData[2].test_brkts = DonPlayerData[2].test_brkts - 1;
+      //   DonPlayerData[3].test_brkts = DonPlayerData[3].test_brkts - 1; 
+      //   DonPlayerData[4].test_brkts = DonPlayerData[4].test_brkts - 1;
+      //   DonPlayerData[5].test_brkts = DonPlayerData[5].test_brkts - 1;
+      //   DonPlayerData[7].test_brkts = DonPlayerData[7].test_brkts - 1;
+      //   DonPlayerData[8].test_brkts = DonPlayerData[8].test_brkts - 1;
+      //   DonPlayerData[9].test_brkts = DonPlayerData[9].test_brkts - 1;
+      //   DonPlayerData[10].test_brkts = DonPlayerData[10].test_brkts - 1;
+      //   DonPlayerData[11].test_brkts = DonPlayerData[11].test_brkts - 1;
+      //   DonPlayerData[13].test_brkts = DonPlayerData[13].test_brkts - 1;
+      //   DonPlayerData[14].test_brkts = DonPlayerData[14].test_brkts - 1;
 
       //   neededCountMap = createNeededMapCount(DonPlayerData);
-      //   playerNumBrkts = DonPlayerData[0].test_name;
+      //   playerNumBrkts = DonPlayerData[0].test_brkts;
       //   result = testBracketList.createOppoMapForTesting2(3, playerNumBrkts, neededCountMap);
       //   expect(result).not.toBeNull();
       //   expect(result.size).toBe(DonPlayerData.length - 1); // all opponemnts except self
@@ -1049,8 +984,6 @@ describe('BracketList', () => {
 
       // it('should update correct oppoMap for 8 players x 14 brackets', () => { 
       //   const testBracketList = new BracketList('test', 2, 3);
-      //   // num brackets name = id + "_brkts" = 'test_name'
-      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   // use pre-sorted data for test
       //   const playerData = [
       //     { player_id: 'Al', test_brkts: 14, test_timeStamp: 100 },
@@ -1065,7 +998,7 @@ describe('BracketList', () => {
       //   testBracketList.calcTotalBrkts(playerData);        
       //   const neededCountMap = new Map<string, number>();
       //   for (let i = 0; i < playerData.length; i++) {
-      //     neededCountMap.set(playerData[i].player_id, playerData[i]['test_name']);
+      //     neededCountMap.set(playerData[i].player_id, playerData[i]['test_brkts']);
       //   }
       //   const oppoMap = testBracketList.createOppoMap(0, neededCountMap);
       //   expect(oppoMap).not.toBeNull();
@@ -1119,8 +1052,6 @@ describe('BracketList', () => {
       // it('should return correct matchTest code 8 players x 7 Brackets', () => {
 
       //   const testBracketList = new BracketList('test', 2, 3);
-      //   // num brackets name = id + "_brkts" = 'test_name'
-      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   // use pre-sorted data for test
       //   const playerData = [
       //     { player_id: 'Al', test_brkts: 7, test_timeStamp: 100 },
@@ -1421,8 +1352,6 @@ describe('BracketList', () => {
       // })    
       // it('should return correct matchTest code 8 players x 14 brackets', () => {
       //   const testBracketList = new BracketList('test', 2, 3);
-      //   // num brackets name = id + "_brkts" = 'test_name'
-      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   // use pre-sorted data for test
       //   const playerData = [
       //     { player_id: 'Al', test_brkts: 14, test_timeStamp: 100 },
@@ -1894,8 +1823,6 @@ describe('BracketList', () => {
 
       // it('should return true when a bracket index is available for a player', () => {
       //   const testBracketList = new BracketList('test', 2, 3);
-      //   // num brackets name = id + "_brkts" = 'test_name'
-      //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       //   // use pre-sorted data for test
       //   const playerData = [
       //     { player_id: 'Al', test_brkts: 12, test_timeStamp: 100 },
@@ -1948,8 +1875,6 @@ describe('BracketList', () => {
     describe('randomize - getRandomBracketIndexForMatch', () => {
 
       // const testBracketList = new BracketList('test', 2, 3);
-      // // num brackets name = id + "_brkts" = 'test_name'
-      // // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       // // use pre-sorted data for test
       // const playerData = [
       //   { player_id: 'Al', test_brkts: 12, test_timeStamp: 100 },
@@ -2075,8 +2000,6 @@ describe('BracketList', () => {
     describe('randomize - putMatchInBracket', () => {
       
       // const testBracketList = new BracketList('test', 2, 3);
-      // // num brackets name = id + "_brkts" = 'test_name'
-      // // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       // // use pre-sorted data for test
       // const playerData = [
       //   { player_id: 'Al', test_brkts: 12, test_timeStamp: 100 },
@@ -2167,8 +2090,6 @@ describe('BracketList', () => {
     describe('randomize - updatePlayerSet', () => {
 
       // const testBracketList = new BracketList('test', 2, 3);
-      // // num brackets name = id + "_brkts" = 'test_name'
-      // // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       // // use pre-sorted data for test
       // const playerData = [
       //   { player_id: 'Al', test_brkts: 12, test_timeStamp: 100 },
@@ -2246,8 +2167,6 @@ describe('BracketList', () => {
     describe('randomize - functions to swap matches', () => {
       
       const testBracketList = new BracketList('test', 2, 3);
-      // num brackets name = id + "_brkts" = 'test_name'
-      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
       // use pre-sorted data for test
       const playerData = [
         { player_id: 'Al', test_brkts: 7, test_timeStamp: 100 },
@@ -3015,8 +2934,6 @@ describe('BracketList', () => {
         // it('should run the for loop - Move Match for Chad', () => { 
 
         //   const testBracketList = new BracketList('test', 2, 3);
-        //   // num brackets name = id + "_brkts" = 'test_name'
-        //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
         //   // use pre-sorted data for test
         //   const playerData = [
         //     { player_id: 'Al', test_brkts: 7, test_timeStamp: 100 },
@@ -3037,7 +2954,7 @@ describe('BracketList', () => {
         //   const neededCountMap = new Map<string, number>();
         //   const playersBrktsMap = new Map<string, Set<number>>();
         //   for (let i = 0; i < playerData.length; i++) {
-        //     neededCountMap.set(playerData[i].player_id, playerData[i].test_name);
+        //     neededCountMap.set(playerData[i].player_id, playerData[i].test_brkts);
         //     playersBrktsMap.set(playerData[i].player_id, new Set<number>());
         //   }
       
@@ -3151,8 +3068,6 @@ describe('BracketList', () => {
         // it('should run the for loop - Move Match for Ed', () => { 
 
         //   const testBracketList = new BracketList('test', 2, 3);
-        //   // num brackets name = id + "_brkts" = 'test_name'
-        //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
         //   // use pre-sorted data for test
         //   const playerData = [
         //     { player_id: 'Al', test_brkts: 7, test_timeStamp: 100 },
@@ -3173,7 +3088,7 @@ describe('BracketList', () => {
         //   const neededCountMap = new Map<string, number>();
         //   const playersBrktsMap = new Map<string, Set<number>>();
         //   for (let i = 0; i < playerData.length; i++) {
-        //     neededCountMap.set(playerData[i].player_id, playerData[i].test_name);
+        //     neededCountMap.set(playerData[i].player_id, playerData[i].test_brkts);
         //     playersBrktsMap.set(playerData[i].player_id, new Set<number>());
         //   }
       
@@ -3362,8 +3277,6 @@ describe('BracketList', () => {
         // it('should run the for loop - CANNOT Move Match for Ed', () => { 
 
         //   const testBracketList = new BracketList('test', 2, 3);
-        //   // num brackets name = id + "_brkts" = 'test_name'
-        //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
         //   // use pre-sorted data for test
         //   const playerData = [
         //     { player_id: 'Al', test_brkts: 7, test_timeStamp: 100 },
@@ -3384,7 +3297,7 @@ describe('BracketList', () => {
         //   const neededCountMap = new Map<string, number>();
         //   const playersBrktsMap = new Map<string, Set<number>>();
         //   for (let i = 0; i < playerData.length; i++) {
-        //     neededCountMap.set(playerData[i].player_id, playerData[i].test_name);
+        //     neededCountMap.set(playerData[i].player_id, playerData[i].test_brkts);
         //     playersBrktsMap.set(playerData[i].player_id, new Set<number>());
         //   }
       
@@ -3553,626 +3466,588 @@ describe('BracketList', () => {
 
   })
 
-  describe('calcTotalBrkts', () => {    
+  // describe('calcTotalBrkts', () => {    
 
-    // it('should return the correct number of brackets 8 Players x 7Brackets (8 Full, 0 OneBye)', () => {
-    //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
-    //   const playerData = [
-    //     { player_id: 'Al', test_brkts: 7, test_timeStamp: 100 },
-    //     { player_id: 'Bob', test_brkts: 7, test_timeStamp: 200 },
-    //     { player_id: 'Chad', test_brkts: 7, test_timeStamp: 300 },
-    //     { player_id: 'Don', test_brkts: 7, test_timeStamp: 400 },
-    //     { player_id: 'Ed', test_brkts: 7, test_timeStamp: 500 },
-    //     { player_id: 'Fred', test_brkts: 7, test_timeStamp: 600 },
-    //     { player_id: 'Greg', test_brkts: 7, test_timeStamp: 700 },
-    //     { player_id: 'Hal', test_brkts: 7, test_timeStamp: 800 },
-    //   ];
-    //   testBracketList.calcTotalBrkts(playerData);
-    //   expect(testBracketList.fullCount).toBe(7);
-    //   expect(testBracketList.oneByeCount).toBe(0);
+  //   it('should return the correct number of brackets 8 Players x 7Brackets (8 Full, 0 OneBye)', () => {
+  //     const testBracketList = new BracketList('test', 2, 3);
+  //     const playerData = [
+  //       { player_id: 'Al', test_brkts: 7, test_timeStamp: 100 },
+  //       { player_id: 'Bob', test_brkts: 7, test_timeStamp: 200 },
+  //       { player_id: 'Chad', test_brkts: 7, test_timeStamp: 300 },
+  //       { player_id: 'Don', test_brkts: 7, test_timeStamp: 400 },
+  //       { player_id: 'Ed', test_brkts: 7, test_timeStamp: 500 },
+  //       { player_id: 'Fred', test_brkts: 7, test_timeStamp: 600 },
+  //       { player_id: 'Greg', test_brkts: 7, test_timeStamp: 700 },
+  //       { player_id: 'Hal', test_brkts: 7, test_timeStamp: 800 },
+  //     ];
+  //     testBracketList.calcTotalBrkts(playerData);
+  //     expect(testBracketList.fullCount).toBe(7);
+  //     expect(testBracketList.oneByeCount).toBe(0);
 
-    //   expect(testBracketList.brktCounts.forFullValues).toEqual([0, 0, 0, 0, 0, 0, 0, 8, 8, 8]);
-    //   expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 0, 0, 0, 0, 0, 7, 7, 7]);
-    // })
-    // it('should return the correct number of brackets 7 Players (0 Full, 4 OneBye)', () => {
-    //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
-    //   const playerData = [
-    //     { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
-    //     { player_id: 'Bob', test_brkts: 8, test_timeStamp: 200 },
-    //     { player_id: 'Chad', test_brkts: 6, test_timeStamp: 300 },
-    //     { player_id: 'Don', test_brkts: 7, test_timeStamp: 400 },
-    //     { player_id: 'Ed', test_brkts: 6, test_timeStamp: 500 },
-    //     { player_id: 'Fred', test_brkts: 4, test_timeStamp: 600 },
-    //     { player_id: 'Greg', test_brkts: 6, test_timeStamp: 700 },
-    //   ];
-    //   testBracketList.calcTotalBrkts(playerData);
-    //   expect(testBracketList.fullCount).toBe(0);
-    //   expect(testBracketList.oneByeCount).toBe(4);
+  //     expect(testBracketList.brktCounts.forFullValues).toEqual([0, 0, 0, 0, 0, 0, 0, 8, 8, 8]);
+  //     expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 0, 0, 0, 0, 0, 7, 7, 7]);
+  //   })
+  //   it('should return the correct number of brackets 7 Players (0 Full, 4 OneBye)', () => {
+  //     const testBracketList = new BracketList('test', 2, 3);
+  //     const playerData = [
+  //       { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
+  //       { player_id: 'Bob', test_brkts: 8, test_timeStamp: 200 },
+  //       { player_id: 'Chad', test_brkts: 6, test_timeStamp: 300 },
+  //       { player_id: 'Don', test_brkts: 7, test_timeStamp: 400 },
+  //       { player_id: 'Ed', test_brkts: 6, test_timeStamp: 500 },
+  //       { player_id: 'Fred', test_brkts: 4, test_timeStamp: 600 },
+  //       { player_id: 'Greg', test_brkts: 6, test_timeStamp: 700 },
+  //     ];
+  //     testBracketList.calcTotalBrkts(playerData);
+  //     expect(testBracketList.fullCount).toBe(0);
+  //     expect(testBracketList.oneByeCount).toBe(4);
 
-    //   expect(testBracketList.brktCounts.forFullValues).toEqual([1, 1, 1, 1, 8, 8, 8, 8, 8, 8]);
-    //   expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 0, 0, 7, 7, 7, 7, 7, 7]);
-    // })
-    // it('should return the correct number of brackets 8 players (4 Full, 2 OneBye)', () => {
-    //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
-    //   const playerData = [
-    //     { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
-    //     { player_id: 'Bob', test_brkts: 8, test_timeStamp: 200 },
-    //     { player_id: 'Chad', test_brkts: 6, test_timeStamp: 300 },
-    //     { player_id: 'Don', test_brkts: 7, test_timeStamp: 400 },
-    //     { player_id: 'Ed', test_brkts: 6, test_timeStamp: 500 },
-    //     { player_id: 'Fred', test_brkts: 4, test_timeStamp: 600 },
-    //     { player_id: 'Greg', test_brkts: 6, test_timeStamp: 700 },
-    //     { player_id: 'Hal', test_brkts: 6, test_timeStamp: 800 },
-    //   ];
-    //   testBracketList.calcTotalBrkts(playerData);
-    //   expect(testBracketList.fullCount).toBe(4);
-    //   expect(testBracketList.oneByeCount).toBe(2);
+  //     expect(testBracketList.brktCounts.forFullValues).toEqual([1, 1, 1, 1, 8, 8, 8, 8, 8, 8]);
+  //     expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 0, 0, 7, 7, 7, 7, 7, 7]);
+  //   })
+  //   it('should return the correct number of brackets 8 players (4 Full, 2 OneBye)', () => {
+  //     const testBracketList = new BracketList('test', 2, 3);
+  //     const playerData = [
+  //       { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
+  //       { player_id: 'Bob', test_brkts: 8, test_timeStamp: 200 },
+  //       { player_id: 'Chad', test_brkts: 6, test_timeStamp: 300 },
+  //       { player_id: 'Don', test_brkts: 7, test_timeStamp: 400 },
+  //       { player_id: 'Ed', test_brkts: 6, test_timeStamp: 500 },
+  //       { player_id: 'Fred', test_brkts: 4, test_timeStamp: 600 },
+  //       { player_id: 'Greg', test_brkts: 6, test_timeStamp: 700 },
+  //       { player_id: 'Hal', test_brkts: 6, test_timeStamp: 800 },
+  //     ];
+  //     testBracketList.calcTotalBrkts(playerData);
+  //     expect(testBracketList.fullCount).toBe(4);
+  //     expect(testBracketList.oneByeCount).toBe(2);
 
-    //   expect(testBracketList.brktCounts.forFullValues).toEqual([0, 0, 0, 0, 1, 1, 8, 8, 8, 8]);
-    //   expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 0, 0, 0, 0, 7, 7, 7, 7]);
-    // })    
-    // it('should return corect # of full and one bye brackets - 10 full brackets', () => {
-    //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
-    //   const playerData = [
-    //     { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
-    //     { player_id: 'Bob', test_brkts: 8, test_timeStamp: 200 },
-    //     { player_id: 'Chad', test_brkts: 6, test_timeStamp: 300 },
-    //     { player_id: 'Don', test_brkts: 7, test_timeStamp: 400 },
-    //     { player_id: 'Ed', test_brkts: 6, test_timeStamp: 500 },
-    //     { player_id: 'Fred', test_brkts: 5, test_timeStamp: 600 },
-    //     { player_id: 'Greg', test_brkts: 6, test_timeStamp: 700 },
-    //     { player_id: 'Hal', test_brkts: 8, test_timeStamp: 800 },
-    //     { player_id: 'Ian', test_brkts: 8, test_timeStamp: 900 },
-    //     { player_id: 'Jim', test_brkts: 10, test_timeStamp: 1000 },
-    //     { player_id: 'Ken', test_brkts: 6, test_timeStamp: 1100 },
-    //   ];
-    //   testBracketList.calcTotalBrkts(playerData);
-    //   expect(testBracketList.fullCount).toBe(10);
-    //   expect(testBracketList.oneByeCount).toBe(0);
+  //     expect(testBracketList.brktCounts.forFullValues).toEqual([0, 0, 0, 0, 1, 1, 8, 8, 8, 8]);
+  //     expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 0, 0, 0, 0, 7, 7, 7, 7]);
+  //   })    
+  //   it('should return corect # of full and one bye brackets - 10 full brackets', () => {
+  //     const testBracketList = new BracketList('test', 2, 3);
+  //     const playerData = [
+  //       { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
+  //       { player_id: 'Bob', test_brkts: 8, test_timeStamp: 200 },
+  //       { player_id: 'Chad', test_brkts: 6, test_timeStamp: 300 },
+  //       { player_id: 'Don', test_brkts: 7, test_timeStamp: 400 },
+  //       { player_id: 'Ed', test_brkts: 6, test_timeStamp: 500 },
+  //       { player_id: 'Fred', test_brkts: 5, test_timeStamp: 600 },
+  //       { player_id: 'Greg', test_brkts: 6, test_timeStamp: 700 },
+  //       { player_id: 'Hal', test_brkts: 8, test_timeStamp: 800 },
+  //       { player_id: 'Ian', test_brkts: 8, test_timeStamp: 900 },
+  //       { player_id: 'Jim', test_brkts: 10, test_timeStamp: 1000 },
+  //       { player_id: 'Ken', test_brkts: 6, test_timeStamp: 1100 },
+  //     ];
+  //     testBracketList.calcTotalBrkts(playerData);
+  //     expect(testBracketList.fullCount).toBe(10);
+  //     expect(testBracketList.oneByeCount).toBe(0);
 
-    //   expect(testBracketList.brktCounts.forFullValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-    //   expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-    // });
-    // it('should return the correct number of brackets (9 Full, 4 OneBye)', () => {
-    //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
-    //   const playerData = [
-    //     { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
-    //     { player_id: 'Bob', test_brkts: 10, test_timeStamp: 200 },
-    //     { player_id: 'Chad', test_brkts: 10, test_timeStamp: 300 },
-    //     { player_id: 'Don', test_brkts: 10, test_timeStamp: 400 },
-    //     { player_id: 'Ed', test_brkts: 10, test_timeStamp: 500 },
-    //     { player_id: 'Fred', test_brkts: 10, test_timeStamp: 600 },
-    //     { player_id: 'Greg', test_brkts: 10, test_timeStamp: 700 },
-    //     { player_id: 'Hal', test_brkts: 10, test_timeStamp: 800 },
-    //     { player_id: 'Ian', test_brkts: 10, test_timeStamp: 900 },
-    //     { player_id: 'Jim', test_brkts: 10, test_timeStamp: 1000 },
-    //   ];
-    //   testBracketList.calcTotalBrkts(playerData);
-    //   expect(testBracketList.fullCount).toBe(9);
-    //   expect(testBracketList.oneByeCount).toBe(4);
+  //     expect(testBracketList.brktCounts.forFullValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  //     expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  //   });
+  //   it('should return the correct number of brackets (9 Full, 4 OneBye)', () => {
+  //     const testBracketList = new BracketList('test', 2, 3);
+  //     const playerData = [
+  //       { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
+  //       { player_id: 'Bob', test_brkts: 10, test_timeStamp: 200 },
+  //       { player_id: 'Chad', test_brkts: 10, test_timeStamp: 300 },
+  //       { player_id: 'Don', test_brkts: 10, test_timeStamp: 400 },
+  //       { player_id: 'Ed', test_brkts: 10, test_timeStamp: 500 },
+  //       { player_id: 'Fred', test_brkts: 10, test_timeStamp: 600 },
+  //       { player_id: 'Greg', test_brkts: 10, test_timeStamp: 700 },
+  //       { player_id: 'Hal', test_brkts: 10, test_timeStamp: 800 },
+  //       { player_id: 'Ian', test_brkts: 10, test_timeStamp: 900 },
+  //       { player_id: 'Jim', test_brkts: 10, test_timeStamp: 1000 },
+  //     ];
+  //     testBracketList.calcTotalBrkts(playerData);
+  //     expect(testBracketList.fullCount).toBe(9);
+  //     expect(testBracketList.oneByeCount).toBe(4);
 
-    //   expect(testBracketList.brktCounts.forFullValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1]);
-    //   expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-    // })
-    // it('edge case high, should return the correct number of brackets Al and Bob 50 Brackets (15 Full, 6 OneBye)', () => {
-    //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
-    //   const playerData = [
-    //     { player_id: 'Al', test_brkts: 50, test_timeStamp: 100 },
-    //     { player_id: 'Bob', test_brkts: 50, test_timeStamp: 200 },
-    //     { player_id: 'Chad', test_brkts: 5, test_timeStamp: 300 },
-    //     { player_id: 'Don', test_brkts: 10, test_timeStamp: 400 },
-    //     { player_id: 'Ed', test_brkts: 12, test_timeStamp: 500 },
-    //     { player_id: 'Fred', test_brkts: 6, test_timeStamp: 600 },
-    //     { player_id: 'Greg', test_brkts: 6, test_timeStamp: 700 },
-    //     { player_id: 'Hal', test_brkts: 8, test_timeStamp: 800 },
-    //     { player_id: 'Ian', test_brkts: 8, test_timeStamp: 900 },
-    //     { player_id: 'Jim', test_brkts: 10, test_timeStamp: 1000 },
-    //     { player_id: 'Ken', test_brkts: 6, test_timeStamp: 1100 },
-    //     { player_id: 'Lou', test_brkts: 5, test_timeStamp: 1200 },
-    //     { player_id: 'Mike', test_brkts: 8, test_timeStamp: 1300 },
-    //     { player_id: 'Nate', test_brkts: 10, test_timeStamp: 1400 },
-    //     { player_id: 'Otto', test_brkts: 7, test_timeStamp: 1500 },
-    //     { player_id: 'Paul', test_brkts: 4, test_timeStamp: 1600 },
-    //     { player_id: 'Quin', test_brkts: 5, test_timeStamp: 1700 },
-    //     { player_id: 'Rob', test_brkts: 10, test_timeStamp: 1800 },
-    //   ];
-    //   testBracketList.calcTotalBrkts(playerData);
-    //   expect(testBracketList.fullCount).toBe(15);
-    //   expect(testBracketList.oneByeCount).toBe(6);
+  //     expect(testBracketList.brktCounts.forFullValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1]);
+  //     expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  //   })
+  //   it('edge case high, should return the correct number of brackets Al and Bob 50 Brackets (15 Full, 6 OneBye)', () => {
+  //     const testBracketList = new BracketList('test', 2, 3);
+  //     const playerData = [
+  //       { player_id: 'Al', test_brkts: 50, test_timeStamp: 100 },
+  //       { player_id: 'Bob', test_brkts: 50, test_timeStamp: 200 },
+  //       { player_id: 'Chad', test_brkts: 5, test_timeStamp: 300 },
+  //       { player_id: 'Don', test_brkts: 10, test_timeStamp: 400 },
+  //       { player_id: 'Ed', test_brkts: 12, test_timeStamp: 500 },
+  //       { player_id: 'Fred', test_brkts: 6, test_timeStamp: 600 },
+  //       { player_id: 'Greg', test_brkts: 6, test_timeStamp: 700 },
+  //       { player_id: 'Hal', test_brkts: 8, test_timeStamp: 800 },
+  //       { player_id: 'Ian', test_brkts: 8, test_timeStamp: 900 },
+  //       { player_id: 'Jim', test_brkts: 10, test_timeStamp: 1000 },
+  //       { player_id: 'Ken', test_brkts: 6, test_timeStamp: 1100 },
+  //       { player_id: 'Lou', test_brkts: 5, test_timeStamp: 1200 },
+  //       { player_id: 'Mike', test_brkts: 8, test_timeStamp: 1300 },
+  //       { player_id: 'Nate', test_brkts: 10, test_timeStamp: 1400 },
+  //       { player_id: 'Otto', test_brkts: 7, test_timeStamp: 1500 },
+  //       { player_id: 'Paul', test_brkts: 4, test_timeStamp: 1600 },
+  //       { player_id: 'Quin', test_brkts: 5, test_timeStamp: 1700 },
+  //       { player_id: 'Rob', test_brkts: 10, test_timeStamp: 1800 },
+  //     ];
+  //     testBracketList.calcTotalBrkts(playerData);
+  //     expect(testBracketList.fullCount).toBe(15);
+  //     expect(testBracketList.oneByeCount).toBe(6);
 
-    //   expect(testBracketList.brktCounts.forFullValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1]);
-    //   expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-    // })
-    // it('edge case high, Al 50 brackets (14 Full, 5 OneBye)', () => {
-    //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
-    //   const playerData = [
-    //     { player_id: 'Al', test_brkts: 50, test_timeStamp: 100 },
-    //     { player_id: 'Bob', test_brkts: 8, test_timeStamp: 200 },
-    //     { player_id: 'Chad', test_brkts: 5, test_timeStamp: 300 },
-    //     { player_id: 'Don', test_brkts: 10, test_timeStamp: 400 },
-    //     { player_id: 'Ed', test_brkts: 12, test_timeStamp: 500 },
-    //     { player_id: 'Fred', test_brkts: 6, test_timeStamp: 600 },
-    //     { player_id: 'Greg', test_brkts: 6, test_timeStamp: 700 },
-    //     { player_id: 'Hal', test_brkts: 8, test_timeStamp: 800 },
-    //     { player_id: 'Ian', test_brkts: 8, test_timeStamp: 900 },
-    //     { player_id: 'Jim', test_brkts: 10, test_timeStamp: 1000 },
-    //     { player_id: 'Ken', test_brkts: 6, test_timeStamp: 1100 },
-    //     { player_id: 'Lou', test_brkts: 5, test_timeStamp: 1200 },
-    //     { player_id: 'Mike', test_brkts: 8, test_timeStamp: 1300 },
-    //     { player_id: 'Nate', test_brkts: 10, test_timeStamp: 1400 },
-    //     { player_id: 'Otto', test_brkts: 7, test_timeStamp: 1500 },
-    //     { player_id: 'Paul', test_brkts: 4, test_timeStamp: 1600 },
-    //     { player_id: 'Quin', test_brkts: 5, test_timeStamp: 1700 },
-    //     { player_id: 'Rob', test_brkts: 10, test_timeStamp: 1800 },
-    //   ];
-    //   testBracketList.calcTotalBrkts(playerData);
-    //   expect(testBracketList.fullCount).toBe(14);
-    //   expect(testBracketList.oneByeCount).toBe(5);
+  //     expect(testBracketList.brktCounts.forFullValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1]);
+  //     expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  //   })
+  //   it('edge case high, Al 50 brackets (14 Full, 5 OneBye)', () => {
+  //     const testBracketList = new BracketList('test', 2, 3);
+  //     const playerData = [
+  //       { player_id: 'Al', test_brkts: 50, test_timeStamp: 100 },
+  //       { player_id: 'Bob', test_brkts: 8, test_timeStamp: 200 },
+  //       { player_id: 'Chad', test_brkts: 5, test_timeStamp: 300 },
+  //       { player_id: 'Don', test_brkts: 10, test_timeStamp: 400 },
+  //       { player_id: 'Ed', test_brkts: 12, test_timeStamp: 500 },
+  //       { player_id: 'Fred', test_brkts: 6, test_timeStamp: 600 },
+  //       { player_id: 'Greg', test_brkts: 6, test_timeStamp: 700 },
+  //       { player_id: 'Hal', test_brkts: 8, test_timeStamp: 800 },
+  //       { player_id: 'Ian', test_brkts: 8, test_timeStamp: 900 },
+  //       { player_id: 'Jim', test_brkts: 10, test_timeStamp: 1000 },
+  //       { player_id: 'Ken', test_brkts: 6, test_timeStamp: 1100 },
+  //       { player_id: 'Lou', test_brkts: 5, test_timeStamp: 1200 },
+  //       { player_id: 'Mike', test_brkts: 8, test_timeStamp: 1300 },
+  //       { player_id: 'Nate', test_brkts: 10, test_timeStamp: 1400 },
+  //       { player_id: 'Otto', test_brkts: 7, test_timeStamp: 1500 },
+  //       { player_id: 'Paul', test_brkts: 4, test_timeStamp: 1600 },
+  //       { player_id: 'Quin', test_brkts: 5, test_timeStamp: 1700 },
+  //       { player_id: 'Rob', test_brkts: 10, test_timeStamp: 1800 },
+  //     ];
+  //     testBracketList.calcTotalBrkts(playerData);
+  //     expect(testBracketList.fullCount).toBe(14);
+  //     expect(testBracketList.oneByeCount).toBe(5);
 
-    //   expect(testBracketList.brktCounts.forFullValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1]);
-    //   expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-    // })
-    // it('edge case low, should return the correct number of brackets 10Px4B (5 Full, 0 OneBye)', () => {
-    //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
-    //   const playerData = [
-    //     { player_id: 'Al', test_brkts: 4, test_timeStamp: 100 },
-    //     { player_id: 'Bob', test_brkts: 4, test_timeStamp: 200 },
-    //     { player_id: 'Chad', test_brkts: 4, test_timeStamp: 300 },
-    //     { player_id: 'Don', test_brkts: 4, test_timeStamp: 400 },
-    //     { player_id: 'Ed', test_brkts: 4, test_timeStamp: 500 },
-    //     { player_id: 'Fred', test_brkts: 4, test_timeStamp: 600 },
-    //     { player_id: 'Greg', test_brkts: 4, test_timeStamp: 700 },
-    //     { player_id: 'Hal', test_brkts: 4, test_timeStamp: 800 },
-    //     { player_id: 'Ian', test_brkts: 4, test_timeStamp: 900 },
-    //     { player_id: 'Jim', test_brkts: 4, test_timeStamp: 1000 },
-    //   ];      
-    //   testBracketList.calcTotalBrkts(playerData);      
-    //   expect(testBracketList.fullCount).toBe(5);
-    //   expect(testBracketList.oneByeCount).toBe(0);
+  //     expect(testBracketList.brktCounts.forFullValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1]);
+  //     expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  //   })
+  //   it('edge case low, should return the correct number of brackets 10Px4B (5 Full, 0 OneBye)', () => {
+  //     const testBracketList = new BracketList('test', 2, 3);
+  //     const playerData = [
+  //       { player_id: 'Al', test_brkts: 4, test_timeStamp: 100 },
+  //       { player_id: 'Bob', test_brkts: 4, test_timeStamp: 200 },
+  //       { player_id: 'Chad', test_brkts: 4, test_timeStamp: 300 },
+  //       { player_id: 'Don', test_brkts: 4, test_timeStamp: 400 },
+  //       { player_id: 'Ed', test_brkts: 4, test_timeStamp: 500 },
+  //       { player_id: 'Fred', test_brkts: 4, test_timeStamp: 600 },
+  //       { player_id: 'Greg', test_brkts: 4, test_timeStamp: 700 },
+  //       { player_id: 'Hal', test_brkts: 4, test_timeStamp: 800 },
+  //       { player_id: 'Ian', test_brkts: 4, test_timeStamp: 900 },
+  //       { player_id: 'Jim', test_brkts: 4, test_timeStamp: 1000 },
+  //     ];      
+  //     testBracketList.calcTotalBrkts(playerData);      
+  //     expect(testBracketList.fullCount).toBe(5);
+  //     expect(testBracketList.oneByeCount).toBe(0);
 
-    //   expect(testBracketList.brktCounts.forFullValues).toEqual([0, 0, 0, 0, 0, 8, 8, 8, 8, 8]);
-    //   expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 0, 0, 0, 7, 7, 7, 7, 7]);
-    // })    
-    // it('edge case low, should return the correct number of brackets 10Px2B (2 Full, 0 OneBye)', () => {
-    //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
-    //   const playerData = [
-    //     { player_id: 'Al', test_brkts: 2, test_timeStamp: 100 },
-    //     { player_id: 'Bob', test_brkts: 2, test_timeStamp: 200 },
-    //     { player_id: 'Chad', test_brkts: 2, test_timeStamp: 300 },
-    //     { player_id: 'Don', test_brkts: 2, test_timeStamp: 400 },
-    //     { player_id: 'Ed', test_brkts: 2, test_timeStamp: 500 },
-    //     { player_id: 'Fred', test_brkts: 2, test_timeStamp: 600 },
-    //     { player_id: 'Greg', test_brkts: 2, test_timeStamp: 700 },
-    //     { player_id: 'Hal', test_brkts: 2, test_timeStamp: 800 },
-    //     { player_id: 'Ian', test_brkts: 2, test_timeStamp: 900 },
-    //     { player_id: 'Jim', test_brkts: 2, test_timeStamp: 1000 },
-    //   ];      
-    //   testBracketList.calcTotalBrkts(playerData);      
-    //   expect(testBracketList.fullCount).toBe(2);
-    //   expect(testBracketList.oneByeCount).toBe(1);
+  //     expect(testBracketList.brktCounts.forFullValues).toEqual([0, 0, 0, 0, 0, 8, 8, 8, 8, 8]);
+  //     expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 0, 0, 0, 7, 7, 7, 7, 7]);
+  //   })    
+  //   it('edge case low, should return the correct number of brackets 10Px2B (2 Full, 0 OneBye)', () => {
+  //     const testBracketList = new BracketList('test', 2, 3);
+  //     const playerData = [
+  //       { player_id: 'Al', test_brkts: 2, test_timeStamp: 100 },
+  //       { player_id: 'Bob', test_brkts: 2, test_timeStamp: 200 },
+  //       { player_id: 'Chad', test_brkts: 2, test_timeStamp: 300 },
+  //       { player_id: 'Don', test_brkts: 2, test_timeStamp: 400 },
+  //       { player_id: 'Ed', test_brkts: 2, test_timeStamp: 500 },
+  //       { player_id: 'Fred', test_brkts: 2, test_timeStamp: 600 },
+  //       { player_id: 'Greg', test_brkts: 2, test_timeStamp: 700 },
+  //       { player_id: 'Hal', test_brkts: 2, test_timeStamp: 800 },
+  //       { player_id: 'Ian', test_brkts: 2, test_timeStamp: 900 },
+  //       { player_id: 'Jim', test_brkts: 2, test_timeStamp: 1000 },
+  //     ];      
+  //     testBracketList.calcTotalBrkts(playerData);      
+  //     expect(testBracketList.fullCount).toBe(2);
+  //     expect(testBracketList.oneByeCount).toBe(1);
 
-    //   expect(testBracketList.brktCounts.forFullValues).toEqual([1, 1, 2, 8, 8, 8, 8, 8, 8, 8]);
-    //   expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 1, 7, 7, 7, 7, 7, 7, 7]);
-    // })
-    // it('edge case low, should return the correct number of brackets 20Px1B (1 Full, 0 OneBye)', () => {
-    //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
-    //   const playerData = [
-    //     { player_id: 'Al', test_brkts: 1, test_timeStamp: 100 },
-    //     { player_id: 'Bob', test_brkts: 1, test_timeStamp: 200 },
-    //     { player_id: 'Chad', test_brkts: 1, test_timeStamp: 300 },
-    //     { player_id: 'Don', test_brkts: 1, test_timeStamp: 400 },
-    //     { player_id: 'Ed', test_brkts: 1, test_timeStamp: 500 },
-    //     { player_id: 'Fred', test_brkts: 1, test_timeStamp: 600 },
-    //     { player_id: 'Greg', test_brkts: 1, test_timeStamp: 700 },
-    //     { player_id: 'Hal', test_brkts: 1, test_timeStamp: 800 },
-    //     { player_id: 'Ian', test_brkts: 1, test_timeStamp: 900 },
-    //     { player_id: 'Jim', test_brkts: 1, test_timeStamp: 1000 },
-    //     { player_id: 'Ken', test_brkts: 1, test_timeStamp: 1100 },
-    //     { player_id: 'Lou', test_brkts: 1, test_timeStamp: 1200 },
-    //     { player_id: 'Mike', test_brkts: 1, test_timeStamp: 1300 },
-    //     { player_id: 'Nate', test_brkts: 1, test_timeStamp: 1400 },
-    //     { player_id: 'Otto', test_brkts: 1, test_timeStamp: 1500 },
-    //     { player_id: 'Paul', test_brkts: 1, test_timeStamp: 1600 },
-    //     { player_id: 'Quin', test_brkts: 1, test_timeStamp: 1700 },
-    //     { player_id: 'Rob', test_brkts: 1, test_timeStamp: 1800 },
-    //     { player_id: 'Sam', test_brkts: 1, test_timeStamp: 1900 },
-    //     { player_id: 'Tim', test_brkts: 1, test_timeStamp: 2000 },
-    //   ]
-    //   testBracketList.calcTotalBrkts(playerData);      
-    //   expect(testBracketList.fullCount).toBe(2);
-    //   expect(testBracketList.oneByeCount).toBe(1);
+  //     expect(testBracketList.brktCounts.forFullValues).toEqual([1, 1, 2, 8, 8, 8, 8, 8, 8, 8]);
+  //     expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 1, 7, 7, 7, 7, 7, 7, 7]);
+  //   })
+  //   it('edge case low, should return the correct number of brackets 20Px1B (1 Full, 0 OneBye)', () => {
+  //     const testBracketList = new BracketList('test', 2, 3);
+  //     const playerData = [
+  //       { player_id: 'Al', test_brkts: 1, test_timeStamp: 100 },
+  //       { player_id: 'Bob', test_brkts: 1, test_timeStamp: 200 },
+  //       { player_id: 'Chad', test_brkts: 1, test_timeStamp: 300 },
+  //       { player_id: 'Don', test_brkts: 1, test_timeStamp: 400 },
+  //       { player_id: 'Ed', test_brkts: 1, test_timeStamp: 500 },
+  //       { player_id: 'Fred', test_brkts: 1, test_timeStamp: 600 },
+  //       { player_id: 'Greg', test_brkts: 1, test_timeStamp: 700 },
+  //       { player_id: 'Hal', test_brkts: 1, test_timeStamp: 800 },
+  //       { player_id: 'Ian', test_brkts: 1, test_timeStamp: 900 },
+  //       { player_id: 'Jim', test_brkts: 1, test_timeStamp: 1000 },
+  //       { player_id: 'Ken', test_brkts: 1, test_timeStamp: 1100 },
+  //       { player_id: 'Lou', test_brkts: 1, test_timeStamp: 1200 },
+  //       { player_id: 'Mike', test_brkts: 1, test_timeStamp: 1300 },
+  //       { player_id: 'Nate', test_brkts: 1, test_timeStamp: 1400 },
+  //       { player_id: 'Otto', test_brkts: 1, test_timeStamp: 1500 },
+  //       { player_id: 'Paul', test_brkts: 1, test_timeStamp: 1600 },
+  //       { player_id: 'Quin', test_brkts: 1, test_timeStamp: 1700 },
+  //       { player_id: 'Rob', test_brkts: 1, test_timeStamp: 1800 },
+  //       { player_id: 'Sam', test_brkts: 1, test_timeStamp: 1900 },
+  //       { player_id: 'Tim', test_brkts: 1, test_timeStamp: 2000 },
+  //     ]
+  //     testBracketList.calcTotalBrkts(playerData);      
+  //     expect(testBracketList.fullCount).toBe(2);
+  //     expect(testBracketList.oneByeCount).toBe(1);
 
-    //   expect(testBracketList.brktCounts.forFullValues).toEqual([1, 1, 2, 8, 8, 8, 8, 8, 8, 8]);
-    //   expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 1, 7, 7, 7, 7, 7, 7, 7]);
-    // })
-    // it('edge case high and low, should return the correct number of brackets 1Px50B 17Px1B (1 Full, 0 OneBye)', () => {
-    //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
-    //   const playerData = [
-    //     { player_id: 'Al', test_brkts: 50, test_timeStamp: 100 },
-    //     { player_id: 'Bob', test_brkts: 1, test_timeStamp: 200 },
-    //     { player_id: 'Chad', test_brkts: 1, test_timeStamp: 300 },
-    //     { player_id: 'Don', test_brkts: 1, test_timeStamp: 400 },
-    //     { player_id: 'Ed', test_brkts: 1, test_timeStamp: 500 },
-    //     { player_id: 'Fred', test_brkts: 1, test_timeStamp: 600 },
-    //     { player_id: 'Greg', test_brkts: 1, test_timeStamp: 700 },
-    //     { player_id: 'Hal', test_brkts: 1, test_timeStamp: 800 },
-    //     { player_id: 'Ian', test_brkts: 1, test_timeStamp: 900 },
-    //     { player_id: 'Jim', test_brkts: 1, test_timeStamp: 1000 },
-    //     { player_id: 'Ken', test_brkts: 1, test_timeStamp: 1100 },
-    //     { player_id: 'Lou', test_brkts: 1, test_timeStamp: 1200 },
-    //     { player_id: 'Mike', test_brkts: 1, test_timeStamp: 1300 },
-    //     { player_id: 'Nate', test_brkts: 1, test_timeStamp: 1400 },
-    //     { player_id: 'Otto', test_brkts: 1, test_timeStamp: 1500 },
-    //     { player_id: 'Paul', test_brkts: 1, test_timeStamp: 1600 },
-    //     { player_id: 'Quin', test_brkts: 1, test_timeStamp: 1700 },
-    //     { player_id: 'Rob', test_brkts: 1, test_timeStamp: 1800 },
-    //   ]
-    //   testBracketList.calcTotalBrkts(playerData);      
-    //   expect(testBracketList.fullCount).toBe(2);
-    //   expect(testBracketList.oneByeCount).toBe(0);
+  //     expect(testBracketList.brktCounts.forFullValues).toEqual([1, 1, 2, 8, 8, 8, 8, 8, 8, 8]);
+  //     expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 1, 7, 7, 7, 7, 7, 7, 7]);
+  //   })
+  //   it('edge case high and low, should return the correct number of brackets 1Px50B 17Px1B (1 Full, 0 OneBye)', () => {
+  //     const testBracketList = new BracketList('test', 2, 3);
+  //     const playerData = [
+  //       { player_id: 'Al', test_brkts: 50, test_timeStamp: 100 },
+  //       { player_id: 'Bob', test_brkts: 1, test_timeStamp: 200 },
+  //       { player_id: 'Chad', test_brkts: 1, test_timeStamp: 300 },
+  //       { player_id: 'Don', test_brkts: 1, test_timeStamp: 400 },
+  //       { player_id: 'Ed', test_brkts: 1, test_timeStamp: 500 },
+  //       { player_id: 'Fred', test_brkts: 1, test_timeStamp: 600 },
+  //       { player_id: 'Greg', test_brkts: 1, test_timeStamp: 700 },
+  //       { player_id: 'Hal', test_brkts: 1, test_timeStamp: 800 },
+  //       { player_id: 'Ian', test_brkts: 1, test_timeStamp: 900 },
+  //       { player_id: 'Jim', test_brkts: 1, test_timeStamp: 1000 },
+  //       { player_id: 'Ken', test_brkts: 1, test_timeStamp: 1100 },
+  //       { player_id: 'Lou', test_brkts: 1, test_timeStamp: 1200 },
+  //       { player_id: 'Mike', test_brkts: 1, test_timeStamp: 1300 },
+  //       { player_id: 'Nate', test_brkts: 1, test_timeStamp: 1400 },
+  //       { player_id: 'Otto', test_brkts: 1, test_timeStamp: 1500 },
+  //       { player_id: 'Paul', test_brkts: 1, test_timeStamp: 1600 },
+  //       { player_id: 'Quin', test_brkts: 1, test_timeStamp: 1700 },
+  //       { player_id: 'Rob', test_brkts: 1, test_timeStamp: 1800 },
+  //     ]
+  //     testBracketList.calcTotalBrkts(playerData);      
+  //     expect(testBracketList.fullCount).toBe(2);
+  //     expect(testBracketList.oneByeCount).toBe(0);
 
-    //   expect(testBracketList.brktCounts.forFullValues).toEqual([0, 0, 5, 8, 8, 8, 8, 8, 8, 8]);
-    //   expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 4, 7, 7, 7, 7, 7, 7, 7]);
-    // })
-    // it('edge case low, should return the correct number of brackets 4Px4B (2 Full, 0 OneBye)', () => {
-    //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
-    //   const playerData = [
-    //     { player_id: 'Al', test_brkts: 4, test_timeStamp: 100 },
-    //     { player_id: 'Bob', test_brkts: 4, test_timeStamp: 200 },
-    //     { player_id: 'Chad', test_brkts: 4, test_timeStamp: 300 },
-    //     { player_id: 'Don', test_brkts: 4, test_timeStamp: 400 },
-    //   ];      
-    //   testBracketList.calcTotalBrkts(playerData);      
-    //   expect(testBracketList.fullCount).toBe(0);
-    //   expect(testBracketList.oneByeCount).toBe(0);
+  //     expect(testBracketList.brktCounts.forFullValues).toEqual([0, 0, 5, 8, 8, 8, 8, 8, 8, 8]);
+  //     expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 4, 7, 7, 7, 7, 7, 7, 7]);
+  //   })
+  //   it('edge case low, should return the correct number of brackets 4Px4B (2 Full, 0 OneBye)', () => {
+  //     const testBracketList = new BracketList('test', 2, 3);
+  //     const playerData = [
+  //       { player_id: 'Al', test_brkts: 4, test_timeStamp: 100 },
+  //       { player_id: 'Bob', test_brkts: 4, test_timeStamp: 200 },
+  //       { player_id: 'Chad', test_brkts: 4, test_timeStamp: 300 },
+  //       { player_id: 'Don', test_brkts: 4, test_timeStamp: 400 },
+  //     ];      
+  //     testBracketList.calcTotalBrkts(playerData);      
+  //     expect(testBracketList.fullCount).toBe(0);
+  //     expect(testBracketList.oneByeCount).toBe(0);
 
-    //   expect(testBracketList.brktCounts.forFullValues).toEqual([]);
-    //   expect(testBracketList.brktCounts.forOneByeValues).toEqual([]);
-    // })
-    // it('edge case - no full brackets, 7 Players x 10 brkts', () => {
-    //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
-    //   const playerData = [
-    //     { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
-    //     { player_id: 'Bob', test_brkts: 10, test_timeStamp: 200 },
-    //     { player_id: 'Chad', test_brkts: 10, test_timeStamp: 300 },
-    //     { player_id: 'Don', test_brkts: 10, test_timeStamp: 400 },
-    //     { player_id: 'Ed', test_brkts: 10, test_timeStamp: 500 },
-    //     { player_id: 'Fred', test_brkts: 10, test_timeStamp: 600 },
-    //     { player_id: 'Greg', test_brkts: 10, test_timeStamp: 700 },
-    //   ];
-    //   testBracketList.calcTotalBrkts(playerData);
-    //   expect(testBracketList.fullCount).toBe(0);
-    //   expect(testBracketList.oneByeCount).toBe(10);
+  //     expect(testBracketList.brktCounts.forFullValues).toEqual([]);
+  //     expect(testBracketList.brktCounts.forOneByeValues).toEqual([]);
+  //   })
+  //   it('edge case - no full brackets, 7 Players x 10 brkts', () => {
+  //     const testBracketList = new BracketList('test', 2, 3);
+  //     const playerData = [
+  //       { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
+  //       { player_id: 'Bob', test_brkts: 10, test_timeStamp: 200 },
+  //       { player_id: 'Chad', test_brkts: 10, test_timeStamp: 300 },
+  //       { player_id: 'Don', test_brkts: 10, test_timeStamp: 400 },
+  //       { player_id: 'Ed', test_brkts: 10, test_timeStamp: 500 },
+  //       { player_id: 'Fred', test_brkts: 10, test_timeStamp: 600 },
+  //       { player_id: 'Greg', test_brkts: 10, test_timeStamp: 700 },
+  //     ];
+  //     testBracketList.calcTotalBrkts(playerData);
+  //     expect(testBracketList.fullCount).toBe(0);
+  //     expect(testBracketList.oneByeCount).toBe(10);
 
-    //   expect(testBracketList.brktCounts.forFullValues).toEqual([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
-    //   expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-    // })
-    // it('edge case low - no full brackets, 7 players with random brackets, 5 is min', () => {
-    //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
-    //   const playerData = [
-    //     { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
-    //     { player_id: 'Bob', test_brkts: 8, test_timeStamp: 200 },
-    //     { player_id: 'Chad', test_brkts: 6, test_timeStamp: 300 },
-    //     { player_id: 'Don', test_brkts: 7, test_timeStamp: 400 },
-    //     { player_id: 'Ed', test_brkts: 6, test_timeStamp: 500 },
-    //     { player_id: 'Fred', test_brkts: 5, test_timeStamp: 600 },
-    //     { player_id: 'Greg', test_brkts: 6, test_timeStamp: 700 },
-    //   ];
-    //   testBracketList.calcTotalBrkts(playerData);
-    //   expect(testBracketList.fullCount).toBe(0);
-    //   expect(testBracketList.oneByeCount).toBe(5);
+  //     expect(testBracketList.brktCounts.forFullValues).toEqual([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+  //     expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  //   })
+  //   it('edge case low - no full brackets, 7 players with random brackets, 5 is min', () => {
+  //     const testBracketList = new BracketList('test', 2, 3);
+  //     const playerData = [
+  //       { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
+  //       { player_id: 'Bob', test_brkts: 8, test_timeStamp: 200 },
+  //       { player_id: 'Chad', test_brkts: 6, test_timeStamp: 300 },
+  //       { player_id: 'Don', test_brkts: 7, test_timeStamp: 400 },
+  //       { player_id: 'Ed', test_brkts: 6, test_timeStamp: 500 },
+  //       { player_id: 'Fred', test_brkts: 5, test_timeStamp: 600 },
+  //       { player_id: 'Greg', test_brkts: 6, test_timeStamp: 700 },
+  //     ];
+  //     testBracketList.calcTotalBrkts(playerData);
+  //     expect(testBracketList.fullCount).toBe(0);
+  //     expect(testBracketList.oneByeCount).toBe(5);
 
-    //   expect(testBracketList.brktCounts.forFullValues).toEqual([1, 1, 1, 1, 1, 8, 8, 8, 8, 8]);
-    //   expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 0, 0, 0, 7, 7, 7, 7, 7]);
-    // })    
-    // it('should return 0 brackets when no player entries', () => {
-    //   const testBracketList = new BracketList('test', 2, 3);
-    //   const playerData: typeof playerEntryData[] = [];
-    //   testBracketList.calcTotalBrkts(playerData);      
-    //   expect(testBracketList.fullCount).toBe(0);
-    //   expect(testBracketList.oneByeCount).toBe(0);
+  //     expect(testBracketList.brktCounts.forFullValues).toEqual([1, 1, 1, 1, 1, 8, 8, 8, 8, 8]);
+  //     expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 0, 0, 0, 7, 7, 7, 7, 7]);
+  //   })    
+  //   it('should return 0 brackets when no player entries', () => {
+  //     const testBracketList = new BracketList('test', 2, 3);
+  //     const playerData: typeof playerEntryData[] = [];
+  //     testBracketList.calcTotalBrkts(playerData);      
+  //     expect(testBracketList.fullCount).toBe(0);
+  //     expect(testBracketList.oneByeCount).toBe(0);
 
-    //   expect(testBracketList.brktCounts.forFullValues).toEqual([]);
-    //   expect(testBracketList.brktCounts.forOneByeValues).toEqual([]);
-    // })
-    // it('edge case invalid data - no player id, should return 0 brackets', () => {
-    //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
-    //   const playerData = [
-    //     { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
-    //     { player_id: '', test_brkts: 10, test_timeStamp: 200 },
-    //     { player_id: 'Chad', test_brkts: 10, test_timeStamp: 300 },
-    //     { player_id: 'Don', test_brkts: 10, test_timeStamp: 400 },
-    //     { player_id: 'Ed', test_brkts: 10, test_timeStamp: 500 },
-    //     { player_id: 'Fred', test_brkts: 10, test_timeStamp: 600 },
-    //     { player_id: 'Greg', test_brkts: 10, test_timeStamp: 700 },
-    //     { player_id: 'Hal', test_brkts: 10, test_timeStamp: 800 },
-    //     { player_id: 'Ian', test_brkts: 10, test_timeStamp: 900 },
-    //     { player_id: 'Jim', test_brkts: 10, test_timeStamp: 1000 },
-    //   ];      
-    //   testBracketList.calcTotalBrkts(playerData);      
-    //   expect(testBracketList.fullCount).toBe(0);
-    //   expect(testBracketList.oneByeCount).toBe(0);
+  //     expect(testBracketList.brktCounts.forFullValues).toEqual([]);
+  //     expect(testBracketList.brktCounts.forOneByeValues).toEqual([]);
+  //   })
+  //   it('edge case invalid data - no player id, should return 0 brackets', () => {
+  //     const testBracketList = new BracketList('test', 2, 3);
+  //     const playerData = [
+  //       { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
+  //       { player_id: '', test_brkts: 10, test_timeStamp: 200 },
+  //       { player_id: 'Chad', test_brkts: 10, test_timeStamp: 300 },
+  //       { player_id: 'Don', test_brkts: 10, test_timeStamp: 400 },
+  //       { player_id: 'Ed', test_brkts: 10, test_timeStamp: 500 },
+  //       { player_id: 'Fred', test_brkts: 10, test_timeStamp: 600 },
+  //       { player_id: 'Greg', test_brkts: 10, test_timeStamp: 700 },
+  //       { player_id: 'Hal', test_brkts: 10, test_timeStamp: 800 },
+  //       { player_id: 'Ian', test_brkts: 10, test_timeStamp: 900 },
+  //       { player_id: 'Jim', test_brkts: 10, test_timeStamp: 1000 },
+  //     ];      
+  //     testBracketList.calcTotalBrkts(playerData);      
+  //     expect(testBracketList.fullCount).toBe(0);
+  //     expect(testBracketList.oneByeCount).toBe(0);
 
-    //   expect(testBracketList.brktCounts.forFullValues).toEqual([]);
-    //   expect(testBracketList.brktCounts.forOneByeValues).toEqual([]);
-    // })
-    // it('edge case invalid data - number of brackets too high, should return 0 brackets', () => {
-    //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
-    //   const playerData = [
-    //     { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
-    //     { player_id: 'Bob', test_brkts: maxBrackets + 1, test_timeStamp: 200 },
-    //     { player_id: 'Chad', test_brkts: 10, test_timeStamp: 300 },
-    //     { player_id: 'Don', test_brkts: 10, test_timeStamp: 400 },
-    //     { player_id: 'Ed', test_brkts: 10, test_timeStamp: 500 },
-    //     { player_id: 'Fred', test_brkts: 10, test_timeStamp: 600 },
-    //     { player_id: 'Greg', test_brkts: 10, test_timeStamp: 700 },
-    //     { player_id: 'Hal', test_brkts: 10, test_timeStamp: 800 },
-    //     { player_id: 'Ian', test_brkts: 10, test_timeStamp: 900 },
-    //     { player_id: 'Jim', test_brkts: 10, test_timeStamp: 1000 },
-    //   ];      
-    //   testBracketList.calcTotalBrkts(playerData);      
-    //   expect(testBracketList.fullCount).toBe(0);
-    //   expect(testBracketList.oneByeCount).toBe(0);
+  //     expect(testBracketList.brktCounts.forFullValues).toEqual([]);
+  //     expect(testBracketList.brktCounts.forOneByeValues).toEqual([]);
+  //   })
+  //   it('edge case invalid data - number of brackets too high, should return 0 brackets', () => {
+  //     const testBracketList = new BracketList('test', 2, 3);
+  //     const playerData = [
+  //       { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
+  //       { player_id: 'Bob', test_brkts: maxBrackets + 1, test_timeStamp: 200 },
+  //       { player_id: 'Chad', test_brkts: 10, test_timeStamp: 300 },
+  //       { player_id: 'Don', test_brkts: 10, test_timeStamp: 400 },
+  //       { player_id: 'Ed', test_brkts: 10, test_timeStamp: 500 },
+  //       { player_id: 'Fred', test_brkts: 10, test_timeStamp: 600 },
+  //       { player_id: 'Greg', test_brkts: 10, test_timeStamp: 700 },
+  //       { player_id: 'Hal', test_brkts: 10, test_timeStamp: 800 },
+  //       { player_id: 'Ian', test_brkts: 10, test_timeStamp: 900 },
+  //       { player_id: 'Jim', test_brkts: 10, test_timeStamp: 1000 },
+  //     ];      
+  //     testBracketList.calcTotalBrkts(playerData);      
+  //     expect(testBracketList.fullCount).toBe(0);
+  //     expect(testBracketList.oneByeCount).toBe(0);
 
-    //   expect(testBracketList.brktCounts.forFullValues).toEqual([]);
-    //   expect(testBracketList.brktCounts.forOneByeValues).toEqual([]);
-    // })
-    // it('edge case invalid data - number of brackets non-integer, should return 0 brackets', () => {
-    //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
-    //   const playerData = [
-    //     { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
-    //     { player_id: 'Bob', test_brkts: 10.5, test_timeStamp: 200 },
-    //     { player_id: 'Chad', test_brkts: 10, test_timeStamp: 300 },
-    //     { player_id: 'Don', test_brkts: 10, test_timeStamp: 400 },
-    //     { player_id: 'Ed', test_brkts: 10, test_timeStamp: 500 },
-    //     { player_id: 'Fred', test_brkts: 10, test_timeStamp: 600 },
-    //     { player_id: 'Greg', test_brkts: 10, test_timeStamp: 700 },
-    //     { player_id: 'Hal', test_brkts: 10, test_timeStamp: 800 },
-    //     { player_id: 'Ian', test_brkts: 10, test_timeStamp: 900 },
-    //     { player_id: 'Jim', test_brkts: 10, test_timeStamp: 1000 },
-    //   ];      
-    //   testBracketList.calcTotalBrkts(playerData);      
-    //   expect(testBracketList.fullCount).toBe(0);
-    //   expect(testBracketList.oneByeCount).toBe(0);
+  //     expect(testBracketList.brktCounts.forFullValues).toEqual([]);
+  //     expect(testBracketList.brktCounts.forOneByeValues).toEqual([]);
+  //   })
+  //   it('edge case invalid data - number of brackets non-integer, should return 0 brackets', () => {
+  //     const testBracketList = new BracketList('test', 2, 3);
+  //     const playerData = [
+  //       { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
+  //       { player_id: 'Bob', test_brkts: 10.5, test_timeStamp: 200 },
+  //       { player_id: 'Chad', test_brkts: 10, test_timeStamp: 300 },
+  //       { player_id: 'Don', test_brkts: 10, test_timeStamp: 400 },
+  //       { player_id: 'Ed', test_brkts: 10, test_timeStamp: 500 },
+  //       { player_id: 'Fred', test_brkts: 10, test_timeStamp: 600 },
+  //       { player_id: 'Greg', test_brkts: 10, test_timeStamp: 700 },
+  //       { player_id: 'Hal', test_brkts: 10, test_timeStamp: 800 },
+  //       { player_id: 'Ian', test_brkts: 10, test_timeStamp: 900 },
+  //       { player_id: 'Jim', test_brkts: 10, test_timeStamp: 1000 },
+  //     ];      
+  //     testBracketList.calcTotalBrkts(playerData);      
+  //     expect(testBracketList.fullCount).toBe(0);
+  //     expect(testBracketList.oneByeCount).toBe(0);
 
-    //   expect(testBracketList.brktCounts.forFullValues).toEqual([]);
-    //   expect(testBracketList.brktCounts.forOneByeValues).toEqual([]);
-    // })
-    // it('edge case invalid data - no time stamp, should return 0 brackets', () => {
-    //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
-    //   const playerData = [
-    //     { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
-    //     { player_id: 'Bob', test_brkts: 10, test_timeStamp: null as any},
-    //     { player_id: 'Chad', test_brkts: 10, test_timeStamp: 300 },
-    //     { player_id: 'Don', test_brkts: 10, test_timeStamp: 400 },
-    //     { player_id: 'Ed', test_brkts: 10, test_timeStamp: 500 },
-    //     { player_id: 'Fred', test_brkts: 10, test_timeStamp: 600 },
-    //     { player_id: 'Greg', test_brkts: 10, test_timeStamp: 700 },
-    //     { player_id: 'Hal', test_brkts: 10, test_timeStamp: 800 },
-    //     { player_id: 'Ian', test_brkts: 10, test_timeStamp: 900 },
-    //     { player_id: 'Jim', test_brkts: 10, test_timeStamp: 1000 },
-    //   ];      
-    //   testBracketList.calcTotalBrkts(playerData);      
-    //   expect(testBracketList.fullCount).toBe(0);
-    //   expect(testBracketList.oneByeCount).toBe(0);
+  //     expect(testBracketList.brktCounts.forFullValues).toEqual([]);
+  //     expect(testBracketList.brktCounts.forOneByeValues).toEqual([]);
+  //   })
+  //   it('edge case invalid data - no time stamp, should return 0 brackets', () => {
+  //     const testBracketList = new BracketList('test', 2, 3);
+  //     const playerData = [
+  //       { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
+  //       { player_id: 'Bob', test_brkts: 10, test_timeStamp: null as any},
+  //       { player_id: 'Chad', test_brkts: 10, test_timeStamp: 300 },
+  //       { player_id: 'Don', test_brkts: 10, test_timeStamp: 400 },
+  //       { player_id: 'Ed', test_brkts: 10, test_timeStamp: 500 },
+  //       { player_id: 'Fred', test_brkts: 10, test_timeStamp: 600 },
+  //       { player_id: 'Greg', test_brkts: 10, test_timeStamp: 700 },
+  //       { player_id: 'Hal', test_brkts: 10, test_timeStamp: 800 },
+  //       { player_id: 'Ian', test_brkts: 10, test_timeStamp: 900 },
+  //       { player_id: 'Jim', test_brkts: 10, test_timeStamp: 1000 },
+  //     ];      
+  //     testBracketList.calcTotalBrkts(playerData);      
+  //     expect(testBracketList.fullCount).toBe(0);
+  //     expect(testBracketList.oneByeCount).toBe(0);
 
-    //   expect(testBracketList.brktCounts.forFullValues).toEqual([]);
-    //   expect(testBracketList.brktCounts.forOneByeValues).toEqual([]);
-    // })
-  })
+  //     expect(testBracketList.brktCounts.forFullValues).toEqual([]);
+  //     expect(testBracketList.brktCounts.forOneByeValues).toEqual([]);
+  //   })
+  // })
 
-  describe('canRandomize', () => { 
+  // describe('canRandomize', () => { 
 
-    // it('should return true when brackets can be randomized', () => {      
-    //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
-    //   const testData = [
-    //     { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
-    //     { player_id: 'Bob', test_brkts: 8, test_timeStamp: 200 },
-    //     { player_id: 'Chad', test_brkts: 5, test_timeStamp: 300 },
-    //     { player_id: 'Don', test_brkts: 10, test_timeStamp: 400 },
-    //     { player_id: 'Ed', test_brkts: 12, test_timeStamp: 500 },
-    //     { player_id: 'Fred', test_brkts: 6, test_timeStamp: 600 },
-    //     { player_id: 'Greg', test_brkts: 6, test_timeStamp: 700 },
-    //     { player_id: 'Hal', test_brkts: 8, test_timeStamp: 800 },
-    //     { player_id: 'Ian', test_brkts: 8, test_timeStamp: 900 },
-    //     { player_id: 'Jim', test_brkts: 10, test_timeStamp: 1000 },
-    //     { player_id: 'Ken', test_brkts: 6, test_timeStamp: 1100 },
-    //     { player_id: 'Lou', test_brkts: 5, test_timeStamp: 1200 },
-    //     { player_id: 'Mike', test_brkts: 8, test_timeStamp: 1300 },
-    //     { player_id: 'Nate', test_brkts: 10, test_timeStamp: 1400 },
-    //     { player_id: 'Otto', test_brkts: 7, test_timeStamp: 1500 },
-    //     { player_id: 'Paul', test_brkts: 4, test_timeStamp: 1600 },
-    //     { player_id: 'Quin', test_brkts: 5, test_timeStamp: 1700 },
-    //     { player_id: 'Rob', test_brkts: 10, test_timeStamp: 1800 },
-    //   ];
+  //   it('should return true when brackets can be randomized', () => {      
+  //     const testBracketList = new BracketList('test', 2, 3);
+  //     const testData = [
+  //       { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
+  //       { player_id: 'Bob', test_brkts: 8, test_timeStamp: 200 },
+  //       { player_id: 'Chad', test_brkts: 5, test_timeStamp: 300 },
+  //       { player_id: 'Don', test_brkts: 10, test_timeStamp: 400 },
+  //       { player_id: 'Ed', test_brkts: 12, test_timeStamp: 500 },
+  //       { player_id: 'Fred', test_brkts: 6, test_timeStamp: 600 },
+  //       { player_id: 'Greg', test_brkts: 6, test_timeStamp: 700 },
+  //       { player_id: 'Hal', test_brkts: 8, test_timeStamp: 800 },
+  //       { player_id: 'Ian', test_brkts: 8, test_timeStamp: 900 },
+  //       { player_id: 'Jim', test_brkts: 10, test_timeStamp: 1000 },
+  //       { player_id: 'Ken', test_brkts: 6, test_timeStamp: 1100 },
+  //       { player_id: 'Lou', test_brkts: 5, test_timeStamp: 1200 },
+  //       { player_id: 'Mike', test_brkts: 8, test_timeStamp: 1300 },
+  //       { player_id: 'Nate', test_brkts: 10, test_timeStamp: 1400 },
+  //       { player_id: 'Otto', test_brkts: 7, test_timeStamp: 1500 },
+  //       { player_id: 'Paul', test_brkts: 4, test_timeStamp: 1600 },
+  //       { player_id: 'Quin', test_brkts: 5, test_timeStamp: 1700 },
+  //       { player_id: 'Rob', test_brkts: 10, test_timeStamp: 1800 },
+  //     ];
   
-    //   testBracketList.calcTotalBrkts(testData);
-    //   expect(testBracketList.canRandomize()).toBe(true);
-    // })
-    // it('should return false when when not enough players', () => {
-    //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
-    //   const testData = [
-    //     { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
-    //     { player_id: 'Bob', test_brkts: 8, test_timeStamp: 200 },
-    //     { player_id: 'Chad', test_brkts: 5, test_timeStamp: 300 },
-    //     { player_id: 'Don', test_brkts: 10, test_timeStamp: 400 },
-    //     { player_id: 'Ed', test_brkts: 12, test_timeStamp: 500 },
-    //     { player_id: 'Fred', test_brkts: 6, test_timeStamp: 600 },
-    //   ];
+  //     testBracketList.calcTotalBrkts(testData);
+  //     expect(testBracketList.canRandomize()).toBe(true);
+  //   })
+  //   it('should return false when when not enough players', () => {
+  //     const testBracketList = new BracketList('test', 2, 3);
+  //     const testData = [
+  //       { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
+  //       { player_id: 'Bob', test_brkts: 8, test_timeStamp: 200 },
+  //       { player_id: 'Chad', test_brkts: 5, test_timeStamp: 300 },
+  //       { player_id: 'Don', test_brkts: 10, test_timeStamp: 400 },
+  //       { player_id: 'Ed', test_brkts: 12, test_timeStamp: 500 },
+  //       { player_id: 'Fred', test_brkts: 6, test_timeStamp: 600 },
+  //     ];
   
-    //   testBracketList.calcTotalBrkts(testData);
-    //   expect(testBracketList.canRandomize()).toBe(false);
-    // })
-    // it('edge case low - 16 players x 1 Bracket - should return true', () => {      
-    //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
-    //   const playerData = [
-    //     { player_id: 'Al', test_brkts: 1, test_timeStamp: 100 },
-    //     { player_id: 'Bob', test_brkts: 1, test_timeStamp: 200 },
-    //     { player_id: 'Chad', test_brkts: 1, test_timeStamp: 300 },
-    //     { player_id: 'Don', test_brkts: 1, test_timeStamp: 400 },
-    //     { player_id: 'Ed', test_brkts: 1, test_timeStamp: 500 },
-    //     { player_id: 'Fred', test_brkts: 1, test_timeStamp: 600 },
-    //     { player_id: 'Greg', test_brkts: 1, test_timeStamp: 700 },
-    //     { player_id: 'Hal', test_brkts: 1, test_timeStamp: 800 },
-    //     { player_id: 'Ian', test_brkts: 1, test_timeStamp: 900 },
-    //     { player_id: 'Jim', test_brkts: 1, test_timeStamp: 1000 },
-    //     { player_id: 'Ken', test_brkts: 1, test_timeStamp: 1100 },
-    //     { player_id: 'Lou', test_brkts: 1, test_timeStamp: 1200 },
-    //     { player_id: 'Mike', test_brkts: 1, test_timeStamp: 1300 },
-    //     { player_id: 'Nate', test_brkts: 1, test_timeStamp: 1400 },
-    //     { player_id: 'Otto', test_brkts: 1, test_timeStamp: 1500 },
-    //     { player_id: 'Paul', test_brkts: 1, test_timeStamp: 1600 },
-    //   ];      
-    //   testBracketList.calcTotalBrkts(playerData);            
-    //   expect(testBracketList.canRandomize()).toBe(true);
-    // })
-  })
+  //     testBracketList.calcTotalBrkts(testData);
+  //     expect(testBracketList.canRandomize()).toBe(false);
+  //   })
+  //   it('edge case low - 16 players x 1 Bracket - should return true', () => {      
+  //     const testBracketList = new BracketList('test', 2, 3);
+  //     const playerData = [
+  //       { player_id: 'Al', test_brkts: 1, test_timeStamp: 100 },
+  //       { player_id: 'Bob', test_brkts: 1, test_timeStamp: 200 },
+  //       { player_id: 'Chad', test_brkts: 1, test_timeStamp: 300 },
+  //       { player_id: 'Don', test_brkts: 1, test_timeStamp: 400 },
+  //       { player_id: 'Ed', test_brkts: 1, test_timeStamp: 500 },
+  //       { player_id: 'Fred', test_brkts: 1, test_timeStamp: 600 },
+  //       { player_id: 'Greg', test_brkts: 1, test_timeStamp: 700 },
+  //       { player_id: 'Hal', test_brkts: 1, test_timeStamp: 800 },
+  //       { player_id: 'Ian', test_brkts: 1, test_timeStamp: 900 },
+  //       { player_id: 'Jim', test_brkts: 1, test_timeStamp: 1000 },
+  //       { player_id: 'Ken', test_brkts: 1, test_timeStamp: 1100 },
+  //       { player_id: 'Lou', test_brkts: 1, test_timeStamp: 1200 },
+  //       { player_id: 'Mike', test_brkts: 1, test_timeStamp: 1300 },
+  //       { player_id: 'Nate', test_brkts: 1, test_timeStamp: 1400 },
+  //       { player_id: 'Otto', test_brkts: 1, test_timeStamp: 1500 },
+  //       { player_id: 'Paul', test_brkts: 1, test_timeStamp: 1600 },
+  //     ];      
+  //     testBracketList.calcTotalBrkts(playerData);            
+  //     expect(testBracketList.canRandomize()).toBe(true);
+  //   })
+  // })
 
   describe('randomize', () => {
 
-    type errorInfoType = {
-      error: number;
-      bracketCount: number;
-      invalidBracketIndex: number;
-      oppoId: string;
-    }
+    // // since randomize is just that - random, test the function by calling
+    // // it 250 times with each data set to test to further test for errors
+    // // that might occur during randomization
+
+    // type errorInfoType = {
+    //   error: number;
+    //   bracketCount: number;
+    //   invalidBracketIndex: number;
+    //   oppoId: string;
+    // }
     
-    const inBracketMoreThanOnce = -1001
-    const incorrectBracketCount = -1002
-    const tooManyVsOppo = -1003
+    // const inBracketMoreThanOnce = -1001
+    // const incorrectBracketCount = -1002
+    // const tooManyVsOppo = -1003
 
-    const validBracketsForPlayer = (
-      brktList: BracketList,
-      playerEntries: (typeof playerEntryData)[],
-      playerIndex: number,
-      playerOppoMap: Map<string, number>
-    ): errorInfoType => {
-      const errorInfo: errorInfoType = {
-        error: 0,
-        bracketCount: 0,
-        invalidBracketIndex: -1,
-        oppoId: ''
-      }      
+    // const validBracketsForPlayer = (
+    //   brktList: BracketList,
+    //   playerEntries: (typeof playerEntryData)[],
+    //   playerIndex: number,
+    //   playerOppoMap: Map<string, number>
+    // ): errorInfoType => {
+    //   const errorInfo: errorInfoType = {
+    //     error: 0,
+    //     bracketCount: 0,
+    //     invalidBracketIndex: -1,
+    //     oppoId: ''
+    //   }      
 
-      const playerId = playerEntries[playerIndex].player_id;
-      const numBrkts = playerEntries[playerIndex]['test_name'];
-      const oppoMap = new Map<string, number>();
-      for (let b = 0; b < brktList.brackets.length; b++) {
-        const filtered = brktList.brackets[b].players.filter(p => p === playerId);
-        if (filtered.length > 1) {
-          errorInfo.invalidBracketIndex = b;
-          errorInfo.error = inBracketMoreThanOnce
-          return errorInfo
-        }
-        if (filtered.length === 1) {
-          errorInfo.bracketCount++;
-          const playerIndex = brktList.brackets[b].players.findIndex(p => p === playerId);
-          const match = brktList.brackets[b].getMatch(playerIndex);
-          const oppoId = match[0] === playerId ? match[1] : match[0];
-          if (!oppoMap.has(oppoId)) {
-            oppoMap.set(oppoId, 1);
-          } else {
-            oppoMap.set(oppoId, oppoMap.get(oppoId)! + 1);
-          }
-        }
-      }
+    //   const playerId = playerEntries[playerIndex].player_id;
+    //   const numBrkts = playerEntries[playerIndex]['test_brkts'];
+    //   const oppoMap = new Map<string, number>();
+    //   for (let b = 0; b < brktList.brackets.length; b++) {
+    //     const filtered = brktList.brackets[b].players.filter(p => p === playerId);
+    //     if (filtered.length > 1) {
+    //       errorInfo.invalidBracketIndex = b;
+    //       errorInfo.error = inBracketMoreThanOnce
+    //       return errorInfo
+    //     }
+    //     if (filtered.length === 1) {
+    //       errorInfo.bracketCount++;
+    //       const playerIndex = brktList.brackets[b].players.findIndex(p => p === playerId);
+    //       const match = brktList.brackets[b].getMatch(playerIndex);
+    //       const oppoId = match[0] === playerId ? match[1] : match[0];
+    //       if (!oppoMap.has(oppoId)) {
+    //         oppoMap.set(oppoId, 1);
+    //       } else {
+    //         oppoMap.set(oppoId, oppoMap.get(oppoId)! + 1);
+    //       }
+    //     }
+    //   }
 
-      if (errorInfo.bracketCount !== numBrkts) {
-        errorInfo.error = incorrectBracketCount
-        return errorInfo
-      }
+    //   if (errorInfo.bracketCount !== numBrkts) {
+    //     errorInfo.error = incorrectBracketCount
+    //     return errorInfo
+    //   }
 
-      const mapArr = Array.from(oppoMap);
-      for(let i = 0; i < oppoMap.size; i++) {
-        const [key, value] = mapArr[i];
-        if (playerOppoMap.has(key)) {
-          const playerMaxOppoCount = playerOppoMap.get(key)!;
-          if (value > playerMaxOppoCount) {            
-            const debugStr = getDebugBrackets(brktList);
-            errorInfo.error = tooManyVsOppo;
-            errorInfo.oppoId = key;
-            errorInfo.bracketCount = value;
-            console.log('DEBUG: ' + debugStr);
-            console.log('numBrkts: ' + numBrkts);
-            console.log('oppoMap: ' + oppoMap);
-            console.log('playerOppoMap: ' + playerOppoMap);
-            console.log('playerMaxOppoCount: ' + playerMaxOppoCount);
-            console.log('value: ' + value);
-            console.log('key: ' + key);
-            return errorInfo
-          }
-        }
-      }
-      return errorInfo
-    }
+    //   const mapArr = Array.from(oppoMap);
+    //   for(let i = 0; i < oppoMap.size; i++) {
+    //     const [key, value] = mapArr[i];
+    //     if (playerOppoMap.has(key)) {
+    //       const playerMaxOppoCount = playerOppoMap.get(key)!;
+    //       if (value > playerMaxOppoCount) {            
+    //         const debugStr = getDebugBrackets(brktList);
+    //         errorInfo.error = tooManyVsOppo;
+    //         errorInfo.oppoId = key;
+    //         errorInfo.bracketCount = value;
+    //         console.log('DEBUG: ' + debugStr);
+    //         console.log('numBrkts: ' + numBrkts);
+    //         console.log('oppoMap: ' + oppoMap);
+    //         console.log('playerOppoMap: ' + playerOppoMap);
+    //         console.log('playerMaxOppoCount: ' + playerMaxOppoCount);
+    //         console.log('value: ' + value);
+    //         console.log('key: ' + key);
+    //         return errorInfo
+    //       }
+    //     }
+    //   }
+    //   return errorInfo
+    // }
 
-    const createNeededMapCount = (brktEntries: (typeof playerEntryData)[]): Map<string, number> => {
-      const neededCountMap = new Map<string, number>();
-      for (let i = 0; i < brktEntries.length; i++) {
-        neededCountMap.set(brktEntries[i].player_id, brktEntries[i]['test_name']);
-      }      
-      return neededCountMap;
-    }
+    // const createNeededMapCount = (brktEntries: (typeof playerEntryData)[]): Map<string, number> => {
+    //   const neededCountMap = new Map<string, number>();
+    //   for (let i = 0; i < brktEntries.length; i++) {
+    //     neededCountMap.set(brktEntries[i].player_id, brktEntries[i]['test_brkts']);
+    //   }      
+    //   return neededCountMap;
+    // }
 
-    const getDebugBrackets = (bl: BracketList): string => {
-      let debugStr = '';
-      for (let i = 0; i < bl.playersPerBrkt; i++) {
-        for (let b = 0; b < bl.brackets.length; b++) {
-          if (i < bl.brackets[b].players.length) {
-            debugStr += bl.brackets[b].players[i]
-            if (b < bl.brackets.length - 1) {
-              debugStr += '\t'  
-            }              
-          } else {
-            debugStr += '\t'
-          }          
-        }
-        debugStr += '\r\n'
-      }
-      return debugStr
-    }
+    // const getDebugBrackets = (bl: BracketList): string => {
+    //   let debugStr = '';
+    //   for (let i = 0; i < bl.playersPerBrkt; i++) {
+    //     for (let b = 0; b < bl.brackets.length; b++) {
+    //       if (i < bl.brackets[b].players.length) {
+    //         debugStr += bl.brackets[b].players[i]
+    //         if (b < bl.brackets.length - 1) {
+    //           debugStr += '\t'  
+    //         }              
+    //       } else {
+    //         debugStr += '\t'
+    //       }          
+    //     }
+    //     debugStr += '\r\n'
+    //   }
+    //   return debugStr
+    // }
 
     // it('should randomize brackets 8 Players x 7 Brackets (7 Full, 0 OneBye) pass shuffled entries', () => {    
     //   const poc_shuffledEntries: string[] = ['Chad', 'Ed', 'Bob', 'Fred', 'Don', 'Hal', 'Al', 'Fred', 'Greg', 'Al', 'Bob', 'Chad', 'Don', 'Hal', 'Hal', 'Fred', 'Ed', 'Al', 'Bob', 'Greg', 'Don', 'Ed', 'Hal', 'Bob', 'Chad', 'Al', 'Chad', 'Don', 'Greg', 'Ed', 'Chad', 'Don', 'Hal', 'Bob', 'Fred', 'Al', 'Fred', 'Greg', 'Hal', 'Ed', 'Al', 'Chad', 'Bob', 'Greg', 'Don', 'Fred', 'Al', 'Ed', 'Greg', 'Don', 'Bob', 'Hal', 'Ed', 'Greg', 'Chad', 'Fred'];
@@ -4186,8 +4061,6 @@ describe('BracketList', () => {
     //     used: false
     //   }));
     //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
     //   const playerData = [
     //     { player_id: 'Al', test_brkts: 7, test_timeStamp: 100 },
     //     { player_id: 'Bob', test_brkts: 7, test_timeStamp: 200 },
@@ -4207,6 +4080,7 @@ describe('BracketList', () => {
 
     //   const neededCountMap = createNeededMapCount(testBracketList.brktEntries);
 
+    //   // Performance test & ramdomize test - randomize 250 times
     //   let resultsStr = '';
     //   for (let i = 1; i <= 250; i++) {
     //     const startTime = Date.now();
@@ -4220,7 +4094,7 @@ describe('BracketList', () => {
         
     //     for (let p = 0; p < playerData.length; p++) {
     //       const playerNumBrkts = testBracketList.count1stPosBrktsForPlayer(playerData[p].player_id);
-    //       const oppoMap = testBracketList.createOppoMapForTesting2(p, playerNumBrkts, neededCountMap)
+    //       const oppoMap = testBracketList.createOppoMapForTesting(p, playerNumBrkts, neededCountMap)
     //       const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, playerData, p, oppoMap);
     //       if (errorInfo.error !== 0) {
     //         console.log(`player: ${playerData[p].player_id} error: ${errorInfo.error}`);
@@ -4242,7 +4116,7 @@ describe('BracketList', () => {
       
     //   // for (let p = 0; p < playerData.length; p++) {
     //   //   const playerNumBrkts = testBracketList.count1stPosBrktsForPlayer(playerData[p].player_id);
-    //   //   const oppoMap = testBracketList.createOppoMapForTesting2(p, playerNumBrkts, neededCountMap)
+    //   //   const oppoMap = testBracketList.createOppoMapForTesting(p, playerNumBrkts, neededCountMap)
     //   //   const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, playerData, p, oppoMap);
     //   //   if (errorInfo.error !== 0) {
     //   //     console.log(`player: ${playerData[p].player_id} error: ${errorInfo.error}`);
@@ -4252,8 +4126,6 @@ describe('BracketList', () => {
     // })
     // it('should randomize brackets 8 Players x 7 Brackets (7 Full, 0 OneBye) - randomize shuffles entries', () => {
     //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
     //   const playerData = [
     //     { player_id: 'Al', test_brkts: 7, test_timeStamp: 100 },
     //     { player_id: 'Bob', test_brkts: 7, test_timeStamp: 200 },
@@ -4273,6 +4145,7 @@ describe('BracketList', () => {
 
     //   const neededCountMap = createNeededMapCount(testBracketList.brktEntries);
 
+    //   // Performance test & ramdomize test - randomize 250 times
     //   let resultsStr = '';
     //   for (let i = 1; i <= 250; i++) {
     //     const startTime = Date.now();
@@ -4286,7 +4159,7 @@ describe('BracketList', () => {
         
     //     for (let p = 0; p < playerData.length; p++) {
     //       const playerNumBrkts = testBracketList.count1stPosBrktsForPlayer(playerData[p].player_id);
-    //       const oppoMap = testBracketList.createOppoMapForTesting2(p, playerNumBrkts, neededCountMap)
+    //       const oppoMap = testBracketList.createOppoMapForTesting(p, playerNumBrkts, neededCountMap)
     //       const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, playerData, p, oppoMap);
     //       if (errorInfo.error !== 0) {
     //         console.log(`player: ${playerData[p].player_id} error: ${errorInfo.error}`);
@@ -4298,6 +4171,7 @@ describe('BracketList', () => {
     //   }
     //   // console.log(resultsStr);
 
+    //   // // run once for error checking
     //   // testBracketList.randomize([]);
     //   // const lastIndex = testBracketList.randomizeErrors.length - 1;
     //   // if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
@@ -4308,7 +4182,7 @@ describe('BracketList', () => {
 
     //   // for (let p = 0; p < playerData.length; p++) {
     //   //   const playerNumBrkts = testBracketList.count1stPosBrktsForPlayer(playerData[p].player_id);
-    //   //   const oppoMap = testBracketList.createOppoMapForTesting2(p, playerNumBrkts, neededCountMap)
+    //   //   const oppoMap = testBracketList.createOppoMapForTesting(p, playerNumBrkts, neededCountMap)
     //   //   const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, playerData, p, oppoMap);
     //   //   if (errorInfo.error !== 0) {
     //   //     console.log(`player: ${playerData[p].player_id} error: ${errorInfo.error}`);
@@ -4330,8 +4204,6 @@ describe('BracketList', () => {
     //   }));
 
     //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
     //   const playerData = [
     //     { player_id: 'Al', test_brkts: 14, test_timeStamp: 100 },
     //     { player_id: 'Bob', test_brkts: 14, test_timeStamp: 200 },
@@ -4351,6 +4223,7 @@ describe('BracketList', () => {
 
     //   const neededCountMap = createNeededMapCount(testBracketList.brktEntries);
 
+    //   // Performance test & ramdomize test - randomize 250 times
     //   for (let i = 1; i <= 250; i++) {
     //     testBracketList.randomize(poc_shuffledEntriesObjArr);
     //     const lastIndex = testBracketList.randomizeErrors.length - 1;
@@ -4362,7 +4235,7 @@ describe('BracketList', () => {
         
     //     for (let p = 0; p < playerData.length; p++) {
     //       const playerNumBrkts = testBracketList.count1stPosBrktsForPlayer(playerData[p].player_id);
-    //       const oppoMap = testBracketList.createOppoMapForTesting2(p, playerNumBrkts, neededCountMap)
+    //       const oppoMap = testBracketList.createOppoMapForTesting(p, playerNumBrkts, neededCountMap)
     //       const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, playerData, p, oppoMap);
     //       if (errorInfo.error !== 0) {
     //         console.log(`player: ${playerData[p].player_id} error: ${errorInfo.error}`);
@@ -4371,6 +4244,7 @@ describe('BracketList', () => {
     //     }
     //   }
 
+    //   // // run once for error checking
     //   // testBracketList.randomize(poc_shuffledEntriesObjArr);
     //   // const lastIndex = testBracketList.randomizeErrors.length - 1;
     //   // if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
@@ -4379,10 +4253,9 @@ describe('BracketList', () => {
     //   // expect(testBracketList.randomizeErrors[lastIndex].error).toBe(0);
     //   // expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);
       
-    //   // for (let p = 0; p < playerData.length; p++) {
-    //   //   // const playerNumBrkts = playerData[p]['test_name'] - (p * 2);
+    //   // for (let p = 0; p < playerData.length; p++) {        
     //   //   const playerNumBrkts = testBracketList.count1stPosBrktsForPlayer(playerData[p].player_id);
-    //   //   const oppoMap = testBracketList.createOppoMapForTesting2(p, playerNumBrkts, neededCountMap)
+    //   //   const oppoMap = testBracketList.createOppoMapForTesting(p, playerNumBrkts, neededCountMap)
     //   //   const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, playerData, p, oppoMap);
     //   //   if (errorInfo.error !== 0) {
     //   //     console.log(`player: ${playerData[p].player_id} error: ${errorInfo.error}`);
@@ -4404,8 +4277,6 @@ describe('BracketList', () => {
     //   }));
 
     //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
     //   const playerData = [
     //     { player_id: 'Al', test_brkts: 14, test_timeStamp: 100 },
     //     { player_id: 'Bob', test_brkts: 14, test_timeStamp: 200 },
@@ -4425,6 +4296,7 @@ describe('BracketList', () => {
 
     //   const neededCountMap = createNeededMapCount(testBracketList.brktEntries);
 
+    //   // Performance test & ramdomize test - randomize 250 times
     //   for (let i = 1; i <= 250; i++) {
     //     testBracketList.randomize(poc_shuffledEntriesObjArr);
     //     const lastIndex = testBracketList.randomizeErrors.length - 1;
@@ -4436,7 +4308,7 @@ describe('BracketList', () => {
         
     //     for (let p = 0; p < playerData.length; p++) {
     //       const playerNumBrkts = testBracketList.count1stPosBrktsForPlayer(playerData[p].player_id);
-    //       const oppoMap = testBracketList.createOppoMapForTesting2(p, playerNumBrkts, neededCountMap)
+    //       const oppoMap = testBracketList.createOppoMapForTesting(p, playerNumBrkts, neededCountMap)
     //       const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, playerData, p, oppoMap);
     //       if (errorInfo.error !== 0) {
     //         console.log(`player: ${playerData[p].player_id} error: ${errorInfo.error}`);
@@ -4445,6 +4317,7 @@ describe('BracketList', () => {
     //     }
     //   }
 
+    //   // // run once for error checking
     //   // testBracketList.randomize(poc_shuffledEntriesObjArr);
     //   // const lastIndex = testBracketList.randomizeErrors.length - 1;
     //   // if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
@@ -4454,9 +4327,8 @@ describe('BracketList', () => {
     //   // expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);
       
     //   // for (let p = 0; p < playerData.length; p++) {
-    //   //   // const playerNumBrkts = playerData[p]['test_name'] - (p * 2);
     //   //   const playerNumBrkts = testBracketList.count1stPosBrktsForPlayer(playerData[p].player_id);
-    //   //   const oppoMap = testBracketList.createOppoMapForTesting2(p, playerNumBrkts, neededCountMap)
+    //   //   const oppoMap = testBracketList.createOppoMapForTesting(p, playerNumBrkts, neededCountMap)
     //   //   const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, playerData, p, oppoMap);
     //   //   if (errorInfo.error !== 0) {
     //   //     console.log(`player: ${playerData[p].player_id} error: ${errorInfo.error}`);
@@ -4466,8 +4338,6 @@ describe('BracketList', () => {
     // })
     // it('should randomize brackets 8 Players x 14 Brackets (14 Full, 0 OneBye) - randomize shuffles entries', () => {
     //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
     //   const playerData = [
     //     { player_id: 'Al', test_brkts: 14, test_timeStamp: 100 },
     //     { player_id: 'Bob', test_brkts: 14, test_timeStamp: 200 },
@@ -4487,6 +4357,7 @@ describe('BracketList', () => {
 
     //   const neededCountMap = createNeededMapCount(testBracketList.brktEntries);
 
+    //   // Performance test & ramdomize test - randomize 250 times
     //   let resultsStr = '';
     //   for (let i = 1; i <= 250; i++) {
     //     const startTime = Date.now();
@@ -4499,9 +4370,8 @@ describe('BracketList', () => {
     //     expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);
         
     //     for (let p = 0; p < playerData.length; p++) {
-    //       // const playerNumBrkts = playerData[p]['test_name'] - (p * 2);
     //       const playerNumBrkts = testBracketList.count1stPosBrktsForPlayer(playerData[p].player_id);
-    //       const oppoMap = testBracketList.createOppoMapForTesting2(p, playerNumBrkts, neededCountMap)
+    //       const oppoMap = testBracketList.createOppoMapForTesting(p, playerNumBrkts, neededCountMap)
     //       const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, playerData, p, oppoMap);
     //       if (errorInfo.error !== 0) {
     //         console.log(`player: ${playerData[p].player_id} error: ${errorInfo.error}`);
@@ -4513,6 +4383,7 @@ describe('BracketList', () => {
     //   }
     //   // console.log(resultsStr);
 
+    //   // // run once for error checking
     //   // testBracketList.randomize([]);
     //   // const lastIndex = testBracketList.randomizeErrors.length - 1;
     //   // if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
@@ -4521,10 +4392,9 @@ describe('BracketList', () => {
     //   // expect(testBracketList.randomizeErrors[lastIndex].error).toBe(0);
     //   // expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);
       
-    //   // for (let p = 0; p < playerData.length; p++) {
-    //   //   // const playerNumBrkts = playerData[p]['test_name'] - (p * 2);
+    //   // for (let p = 0; p < playerData.length; p++) {        
     //   //   const playerNumBrkts = testBracketList.count1stPosBrktsForPlayer(playerData[p].player_id);
-    //   //   const oppoMap = testBracketList.createOppoMapForTesting2(p, playerNumBrkts, neededCountMap)
+    //   //   const oppoMap = testBracketList.createOppoMapForTesting(p, playerNumBrkts, neededCountMap)
     //   //   const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, playerData, p, oppoMap);
     //   //   if (errorInfo.error !== 0) {
     //   //     console.log(`player: ${playerData[p].player_id} error: ${errorInfo.error}`);
@@ -4545,8 +4415,6 @@ describe('BracketList', () => {
     //   }));
 
     //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
     //   const playerData = [
     //     { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
     //     { player_id: 'Bob', test_brkts: 8, test_timeStamp: 200 },
@@ -4576,6 +4444,7 @@ describe('BracketList', () => {
       
     //   const neededCountMap = createNeededMapCount(testBracketList.brktEntries);
 
+    //   // Performance test & ramdomize test - randomize 250 times
     //   for (let i = 1; i <= 250; i++) {
     //     testBracketList.randomize(poc_shuffledEntriesObjArr);
     //     const lastIndex = testBracketList.randomizeErrors.length - 1;
@@ -4587,15 +4456,18 @@ describe('BracketList', () => {
               
     //     for (let p = 0; p < playerData.length; p++) {
     //       const priorCount = testBracketList.count1stPosBrktsForPlayer(playerData[p].player_id);
-    //       const oppoMap = testBracketList.createOppoMapForTesting2(p, priorCount, neededCountMap)
+    //       const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
     //       const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, playerData, p, oppoMap);
     //       if (errorInfo.error !== 0) {
+    //         const debugStr = getDebugBrackets(testBracketList);
     //         console.log(`player: ${playerData[p].player_id} error: ${errorInfo.error}`);
+    //         console.log(debugStr);
     //       }
     //       expect(errorInfo.error).toBe(0);
     //     }
     //   }
 
+    //   // // run once for error checking
     //   // testBracketList.randomize(poc_shuffledEntriesObjArr);
     //   // const lastIndex = testBracketList.randomizeErrors.length - 1;
     //   // if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
@@ -4606,7 +4478,7 @@ describe('BracketList', () => {
             
     //   // for (let p = 0; p < playerData.length; p++) {
     //   //   const priorCount = testBracketList.count1stPosBrktsForPlayer(playerData[p].player_id);
-    //   //   const oppoMap = testBracketList.createOppoMapForTesting2(p, priorCount, neededCountMap)
+    //   //   const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
     //   //   const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, playerData, p, oppoMap);
     //   //   if (errorInfo.error !== 0) {
     //   //     console.log(`player: ${playerData[p].player_id} error: ${errorInfo.error}`);
@@ -4626,8 +4498,7 @@ describe('BracketList', () => {
     //     used: false
     //   }));
 
-    //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
+    //   const testBracketList = new BracketList('test', 2, 3);      
     //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
     //   const playerData = [
     //     { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
@@ -4658,6 +4529,7 @@ describe('BracketList', () => {
       
     //   const neededCountMap = createNeededMapCount(testBracketList.brktEntries);
 
+    //   // Performance test & ramdomize test - randomize 250 times
     //   for (let i = 1; i <= 250; i++) {
     //     testBracketList.randomize(poc_shuffledEntriesObjArr);
     //     const lastIndex = testBracketList.randomizeErrors.length - 1;
@@ -4669,7 +4541,7 @@ describe('BracketList', () => {
               
     //     for (let p = 0; p < playerData.length; p++) {
     //       const priorCount = testBracketList.count1stPosBrktsForPlayer(playerData[p].player_id);
-    //       const oppoMap = testBracketList.createOppoMapForTesting2(p, priorCount, neededCountMap)
+    //       const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
     //       const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, playerData, p, oppoMap);
     //       if (errorInfo.error !== 0) {
     //         console.log(`player: ${playerData[p].player_id} error: ${errorInfo.error}`);
@@ -4678,6 +4550,7 @@ describe('BracketList', () => {
     //     }
     //   }
 
+    //   // // run once for error checking 
     //   // testBracketList.randomize(poc_shuffledEntriesObjArr);
     //   // const lastIndex = testBracketList.randomizeErrors.length - 1;
     //   // if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
@@ -4688,7 +4561,7 @@ describe('BracketList', () => {
             
     //   // for (let p = 0; p < playerData.length; p++) {
     //   //   const priorCount = testBracketList.count1stPosBrktsForPlayer(playerData[p].player_id);
-    //   //   const oppoMap = testBracketList.createOppoMapForTesting2(p, priorCount, neededCountMap)
+    //   //   const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
     //   //   const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, playerData, p, oppoMap);
     //   //   if (errorInfo.error !== 0) {
     //   //     console.log(`player: ${playerData[p].player_id} error: ${errorInfo.error}`);
@@ -4709,8 +4582,6 @@ describe('BracketList', () => {
     //   }));
 
     //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
     //   const playerData = [
     //     { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
     //     { player_id: 'Bob', test_brkts: 8, test_timeStamp: 200 },
@@ -4741,6 +4612,7 @@ describe('BracketList', () => {
 
     //   const neededCountMap = createNeededMapCount(testBracketList.brktEntries);
 
+    //   // Performance test & ramdomize test - randomize 250 times
     //   for (let i = 1; i <= 250; i++) {
     //     testBracketList.randomize(poc_shuffledEntriesObjArr);
     //     const lastIndex = testBracketList.randomizeErrors.length - 1;
@@ -4752,7 +4624,7 @@ describe('BracketList', () => {
               
     //     for (let p = 0; p < playerData.length; p++) {
     //       const priorCount = testBracketList.count1stPosBrktsForPlayer(playerData[p].player_id);
-    //       const oppoMap = testBracketList.createOppoMapForTesting2(p, priorCount, neededCountMap)
+    //       const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
     //       const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, playerData, p, oppoMap);
     //       if (errorInfo.error !== 0) {
     //         console.log(`player: ${playerData[p].player_id} error: ${errorInfo.error}`);
@@ -4762,7 +4634,8 @@ describe('BracketList', () => {
     //       expect(errorInfo.error).toBe(0);
     //     }
     //   }
-      
+
+    //   // // run once to check for errors
     //   // testBracketList.randomize(poc_shuffledEntriesObjArr);
     //   // const lastIndex = testBracketList.randomizeErrors.length - 1;
     //   // if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
@@ -4773,7 +4646,7 @@ describe('BracketList', () => {
             
     //   // for (let p = 0; p < playerData.length; p++) {
     //   //   const priorCount = testBracketList.count1stPosBrktsForPlayer(playerData[p].player_id);
-    //   //   const oppoMap = testBracketList.createOppoMapForTesting2(p, priorCount, neededCountMap)
+    //   //   const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
     //   //   const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, playerData, p, oppoMap);
     //   //   if (errorInfo.error !== 0) {
     //   //     console.log(`player: ${playerData[p].player_id} error: ${errorInfo.error}`);
@@ -4796,8 +4669,6 @@ describe('BracketList', () => {
     //   }));
 
     //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
     //   const playerData = [
     //     { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
     //     { player_id: 'Bob', test_brkts: 8, test_timeStamp: 200 },
@@ -4828,6 +4699,7 @@ describe('BracketList', () => {
 
     //   const neededCountMap = createNeededMapCount(testBracketList.brktEntries);
 
+    //   // Performance test & ramdomize test - randomize 250 times
     //   for (let i = 1; i <= 250; i++) {
     //     testBracketList.randomize(poc_shuffledEntriesObjArr);
     //     const lastIndex = testBracketList.randomizeErrors.length - 1;
@@ -4839,7 +4711,7 @@ describe('BracketList', () => {
               
     //     for (let p = 0; p < playerData.length; p++) {
     //       const priorCount = testBracketList.count1stPosBrktsForPlayer(playerData[p].player_id);
-    //       const oppoMap = testBracketList.createOppoMapForTesting2(p, priorCount, neededCountMap)
+    //       const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
     //       const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, playerData, p, oppoMap);
     //       if (errorInfo.error !== 0) {
     //         console.log(`player: ${playerData[p].player_id} error: ${errorInfo.error}`);
@@ -4849,7 +4721,8 @@ describe('BracketList', () => {
     //       expect(errorInfo.error).toBe(0);
     //     }
     //   }
-      
+
+    //   // // run once to check for errors
     //   // testBracketList.randomize(poc_shuffledEntriesObjArr);
     //   // const lastIndex = testBracketList.randomizeErrors.length - 1;
     //   // if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
@@ -4860,7 +4733,7 @@ describe('BracketList', () => {
             
     //   // for (let p = 0; p < playerData.length; p++) {
     //   //   const priorCount = testBracketList.count1stPosBrktsForPlayer(playerData[p].player_id);
-    //   //   const oppoMap = testBracketList.createOppoMapForTesting2(p, priorCount, neededCountMap)
+    //   //   const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
     //   //   const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, playerData, p, oppoMap);
     //   //   if (errorInfo.error !== 0) {
     //   //     console.log(`player: ${playerData[p].player_id} error: ${errorInfo.error}`);
@@ -4883,8 +4756,6 @@ describe('BracketList', () => {
     //   }));
 
     //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
     //   const playerData = [
     //     { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
     //     { player_id: 'Bob', test_brkts: 8, test_timeStamp: 200 },
@@ -4915,6 +4786,7 @@ describe('BracketList', () => {
 
     //   const neededCountMap = createNeededMapCount(testBracketList.brktEntries);
 
+    //   // Performance test & ramdomize test - randomize 250 times
     //   for (let i = 1; i <= 250; i++) {
     //     testBracketList.randomize(poc_shuffledEntriesObjArr);
     //     const lastIndex = testBracketList.randomizeErrors.length - 1;
@@ -4926,7 +4798,7 @@ describe('BracketList', () => {
               
     //     for (let p = 0; p < playerData.length; p++) {
     //       const priorCount = testBracketList.count1stPosBrktsForPlayer(playerData[p].player_id);
-    //       const oppoMap = testBracketList.createOppoMapForTesting2(p, priorCount, neededCountMap)
+    //       const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
     //       const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, playerData, p, oppoMap);
     //       if (errorInfo.error !== 0) {
     //         console.log(`player: ${playerData[p].player_id} error: ${errorInfo.error}`);
@@ -4937,6 +4809,7 @@ describe('BracketList', () => {
     //     }
     //   }
       
+    //   // // run once to check for errors
     //   // testBracketList.randomize(poc_shuffledEntriesObjArr);
     //   // const lastIndex = testBracketList.randomizeErrors.length - 1;
     //   // if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
@@ -4947,7 +4820,7 @@ describe('BracketList', () => {
             
     //   // for (let p = 0; p < playerData.length; p++) {
     //   //   const priorCount = testBracketList.count1stPosBrktsForPlayer(playerData[p].player_id);
-    //   //   const oppoMap = testBracketList.createOppoMapForTesting2(p, priorCount, neededCountMap)
+    //   //   const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
     //   //   const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, playerData, p, oppoMap);
     //   //   if (errorInfo.error !== 0) {
     //   //     console.log(`player: ${playerData[p].player_id} error: ${errorInfo.error}`);
@@ -4957,11 +4830,19 @@ describe('BracketList', () => {
     //   //   expect(errorInfo.error).toBe(0);
     //   // }
     // })
-    // it('should randomize brackets 18 Players x random Brackets (12 Full, 6 OneBye) - randomize shuffles entries', () => {
+    // it('should randomize brackets 18 Players x random Brackets (12 Full, 6 OneBye) - pass shuffled entries #5', () => {
+    //   const poc_shuffledEntries: string[] = ['Don', 'Hal', 'Bob', 'Hal', 'Chad', 'Ken', 'Mike', 'Rob', 'Bye', 'Mike', 'Rob', 'Mike', 'Mike', 'Fred', 'Lou', 'Hal', 'Quin', 'Al', 'Bob', 'Chad', 'Paul', 'Nate', 'Ken', 'Greg', 'Hal', 'Rob', 'Jim', 'Bye', 'Ian', 'Ian', 'Jim', 'Ian', 'Bye', 'Bob', 'Fred', 'Jim', 'Ed', 'Ed', 'Otto', 'Greg', 'Hal', 'Al', 'Ken', 'Bye', 'Ed', 'Don', 'Don', 'Ed', 'Chad', 'Ed', 'Al', 'Al', 'Fred', 'Rob', 'Nate', 'Hal', 'Ed', 'Mike', 'Ed', 'Al', 'Ian', 'Ian', 'Otto', 'Ken', 'Bob', 'Chad', 'Al', 'Ed', 'Ian', 'Don', 'Rob', 'Don', 'Mike', 'Ed', 'Ed', 'Jim', 'Greg', 'Jim', 'Otto', 'Jim', 'Ken', 'Greg', 'Greg', 'Ian', 'Don', 'Ed', 'Fred', 'Fred', 'Hal', 'Fred', 'Otto', 'Ed', 'Hal', 'Quin', 'Lou', 'Al', 'Jim', 'Otto', 'Bye', 'Ian', 'Mike', 'Rob', 'Quin', 'Rob', 'Otto', 'Nate', 'Greg', 'Nate', 'Jim', 'Chad', 'Bob', 'Rob', 'Otto', 'Nate', 'Bob', 'Bye', 'Nate', 'Lou', 'Don', 'Paul', 'Paul', 'Don', 'Mike', 'Don', 'Nate', 'Al', 'Bob', 'Rob', 'Lou', 'Al', 'Don', 'Quin', 'Paul', 'Bob', 'Jim', 'Jim', 'Nate', 'Quin', 'Al', 'Rob', 'Nate', 'Nate', 'Lou', 'Ken'];
+      
+    //   let poc_shuffledEntriesObjArr: playerUsedType[];
+
+    //   // create playerUsedType array
+    //   poc_shuffledEntriesObjArr = [];
+    //   poc_shuffledEntriesObjArr = poc_shuffledEntries.map(playerId => ({
+    //     playerId,
+    //     used: false
+    //   }));
 
     //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
     //   const playerData = [
     //     { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
     //     { player_id: 'Bob', test_brkts: 8, test_timeStamp: 200 },
@@ -4992,6 +4873,85 @@ describe('BracketList', () => {
 
     //   const neededCountMap = createNeededMapCount(testBracketList.brktEntries);
 
+    //   // Performance test & ramdomize test - randomize 250 times
+    //   let resultsStr = '';
+    //   for (let i = 1; i <= 250; i++) {
+    //     const startTime = Date.now();
+    //     testBracketList.randomize(poc_shuffledEntriesObjArr);
+    //     const lastIndex = testBracketList.randomizeErrors.length - 1;
+    //     if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
+    //       console.log(testBracketList.randomizeErrors);
+    //     }
+    //     expect(testBracketList.randomizeErrors[lastIndex].error).toBe(0);
+    //     expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);
+              
+    //     for (let p = 0; p < playerData.length; p++) {
+    //       const priorCount = testBracketList.count1stPosBrktsForPlayer(playerData[p].player_id);
+    //       const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
+    //       const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, playerData, p, oppoMap);
+    //       if (errorInfo.error !== 0) {
+    //         console.log(`player: ${playerData[p].player_id} error: ${errorInfo.error}`);
+    //       }
+    //       expect(errorInfo.error).toBe(0);
+    //     }
+    //     const endTime = Date.now();
+    //     resultsStr += `${i}\t${endTime - startTime}\t${testBracketList.randomizeErrors[lastIndex].tryCount}\n`;
+    //   }
+    //   // console.log(resultsStr);
+
+    //   // // run once for error checking
+    //   // testBracketList.randomize([]);
+    //   // const lastIndex = testBracketList.randomizeErrors.length - 1;
+    //   // if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
+    //   //   console.log(testBracketList.randomizeErrors);
+    //   // }
+    //   // expect(testBracketList.randomizeErrors[lastIndex].error).toBe(0);
+    //   // expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);
+            
+    //   // for (let p = 0; p < playerData.length; p++) {
+    //   //   const priorCount = testBracketList.count1stPosBrktsForPlayer(playerData[p].player_id);
+    //   //   const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
+    //   //   const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, playerData, p, oppoMap);
+    //   //   if (errorInfo.error !== 0) {
+    //   //     console.log(`player: ${playerData[p].player_id} error: ${errorInfo.error}`);
+    //   //   }
+    //   //   expect(errorInfo.error).toBe(0);
+    //   // }
+    // })
+    // it('should randomize brackets 18 Players x random Brackets (12 Full, 6 OneBye) - randomize shuffles entries', () => {
+
+    //   const testBracketList = new BracketList('test', 2, 3);
+    //   const playerData = [
+    //     { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
+    //     { player_id: 'Bob', test_brkts: 8, test_timeStamp: 200 },
+    //     { player_id: 'Chad', test_brkts: 5, test_timeStamp: 300 },
+    //     { player_id: 'Don', test_brkts: 10, test_timeStamp: 400 },
+    //     { player_id: 'Ed', test_brkts: 12, test_timeStamp: 500 },
+    //     { player_id: 'Fred', test_brkts: 6, test_timeStamp: 600 },
+    //     { player_id: 'Greg', test_brkts: 6, test_timeStamp: 700 },
+    //     { player_id: 'Hal', test_brkts: 8, test_timeStamp: 800 },
+    //     { player_id: 'Ian', test_brkts: 8, test_timeStamp: 900 },
+    //     { player_id: 'Jim', test_brkts: 10, test_timeStamp: 1000 },
+    //     { player_id: 'Ken', test_brkts: 6, test_timeStamp: 1100 },
+    //     { player_id: 'Lou', test_brkts: 5, test_timeStamp: 1200 },
+    //     { player_id: 'Mike', test_brkts: 8, test_timeStamp: 1300 },
+    //     { player_id: 'Nate', test_brkts: 10, test_timeStamp: 1400 },
+    //     { player_id: 'Otto', test_brkts: 7, test_timeStamp: 1500 },
+    //     { player_id: 'Paul', test_brkts: 4, test_timeStamp: 1600 },
+    //     { player_id: 'Quin', test_brkts: 5, test_timeStamp: 1700 },
+    //     { player_id: 'Rob', test_brkts: 10, test_timeStamp: 1800 },
+    //   ];
+
+    //   testBracketList.calcTotalBrkts(playerData);
+    //   expect(testBracketList.fullCount).toBe(12);
+    //   expect(testBracketList.oneByeCount).toBe(6);
+
+    //   expect(testBracketList.brktCounts.forFullValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1]);
+    //   expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+
+    //   const neededCountMap = createNeededMapCount(testBracketList.brktEntries);
+
+    //   // Performance test & ramdomize test - randomize 250 times
     //   let resultsStr = '';
     //   for (let i = 1; i <= 250; i++) {
     //     const startTime = Date.now();
@@ -5005,7 +4965,7 @@ describe('BracketList', () => {
               
     //     for (let p = 0; p < playerData.length; p++) {
     //       const priorCount = testBracketList.count1stPosBrktsForPlayer(playerData[p].player_id);
-    //       const oppoMap = testBracketList.createOppoMapForTesting2(p, priorCount, neededCountMap)
+    //       const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
     //       const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, playerData, p, oppoMap);
     //       if (errorInfo.error !== 0) {
     //         console.log(`player: ${playerData[p].player_id} error: ${errorInfo.error}`);
@@ -5017,6 +4977,7 @@ describe('BracketList', () => {
     //   }
     //   // console.log(resultsStr);
 
+    //   // // run once for error checking
     //   // testBracketList.randomize([]);
     //   // const lastIndex = testBracketList.randomizeErrors.length - 1;
     //   // if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
@@ -5027,7 +4988,7 @@ describe('BracketList', () => {
             
     //   // for (let p = 0; p < playerData.length; p++) {
     //   //   const priorCount = testBracketList.count1stPosBrktsForPlayer(playerData[p].player_id);
-    //   //   const oppoMap = testBracketList.createOppoMapForTesting2(p, priorCount, neededCountMap)
+    //   //   const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
     //   //   const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, playerData, p, oppoMap);
     //   //   if (errorInfo.error !== 0) {
     //   //     console.log(`player: ${playerData[p].player_id} error: ${errorInfo.error}`);
@@ -5035,11 +4996,20 @@ describe('BracketList', () => {
     //   //   expect(errorInfo.error).toBe(0);
     //   // }
     // })
-    // it('should randomize brackets 18 Players x random Brackets, 1 players 50 entries (15 Full, 6 OneBye) - randomize shuffles entries', () => {
+    // it('should randomize brackets 18 Players x random Brackets, 1 players 50 entries (15 Full, 6 OneBye) - passed shuffled entries #1', () => {
+
+    //   const poc_shuffledEntries: string[] = ['Don', 'Ed', 'Nate', 'Nate', 'Rob', 'Chad', 'Al', 'Otto', 'Hal', 'Al', 'Otto', 'Mike', 'Lou', 'Mike', 'Lou', 'Bob', 'Al', 'Jim', 'Ian', 'Mike', 'Otto', 'Ian', 'Rob', 'Chad', 'Ian', 'Lou', 'Chad', 'Ken', 'Fred', 'Ed', 'Ken', 'Al', 'Mike', 'Mike', 'Rob', 'Al', 'Paul', 'Al', 'Ken', 'Quin', 'Ian', 'Nate', 'Ian', 'Al', 'Mike', 'Ed', 'Jim', 'Al', 'Jim', 'Ken', 'Mike', 'Al', 'Hal', 'Bob', 'Lou', 'Paul', 'Jim', 'Al', 'Don', 'Jim', 'Ed', 'Paul', 'Otto', 'Greg', 'Ed', 'Hal', 'Al', 'Jim', 'Chad', 'Rob', 'Don', 'Nate', 'Quin', 'Fred', 'Fred', 'Jim', 'Fred', 'Greg', 'Ed', 'Fred', 'Ed', 'Hal', 'Ed', 'Bob', 'Greg', 'Jim', 'Bye', 'Al', 'Ken', 'Bob', 'Mike', 'Ed', 'Al', 'Chad', 'Quin', 'Nate', 'Fred', 'Don', 'Rob', 'Ed', 'Rob', 'Ian', 'Al', 'Bob', 'Bob', 'Otto', 'Jim', 'Ken', 'Hal', 'Rob', 'Nate', 'Quin', 'Bob', 'Nate', 'Greg', 'Don', 'Quin', 'Ed', 'Don', 'Otto', 'Al', 'Otto', 'Nate', 'Hal', 'Greg', 'Don', 'Hal', 'Bob', 'Hal', 'Al', 'Ian', 'Bob', 'Bob', 'Nate', 'Al', 'Lou', 'Ed', 'Don', 'Rob', 'Don', 'Bye', 'Jim', 'Greg', 'Al', 'Paul', 'Ian', 'Al', 'Nate', 'Rob', 'Rob', 'Bye', 'Don'];
+      
+    //   let poc_shuffledEntriesObjArr: playerUsedType[];
+
+    //   // create playerUsedType array
+    //   poc_shuffledEntriesObjArr = [];
+    //   poc_shuffledEntriesObjArr = poc_shuffledEntries.map(playerId => ({
+    //     playerId,
+    //     used: false
+    //   }));
 
     //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
     //   const playerData = [
     //     { player_id: 'Al', test_brkts: 50, test_timeStamp: 100 },
     //     { player_id: 'Bob', test_brkts: 10, test_timeStamp: 200 },
@@ -5069,9 +5039,10 @@ describe('BracketList', () => {
     //   expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
     //   const neededCountMap = createNeededMapCount(testBracketList.brktEntries);
-      
+
+    //   // Performance test & ramdomize test - randomize 1500 times
     //   for (let i = 1; i <= 500; i++) {
-    //     testBracketList.randomize([]);
+    //     testBracketList.randomize(poc_shuffledEntriesObjArr);
     //     const lastIndex = testBracketList.randomizeErrors.length - 1;
     //     if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
     //       console.log(testBracketList.randomizeErrors);
@@ -5079,10 +5050,10 @@ describe('BracketList', () => {
     //     expect(testBracketList.randomizeErrors[lastIndex].error).toBe(0);
     //     expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);
     //     const adjustedEntries = cloneDeep(playerData)
-    //     adjustedEntries[0].test_name = 19; // adjusted entries for Al
+    //     adjustedEntries[0].test_brkts = 19; // adjusted entries for Al
     //     for (let p = 0; p < adjustedEntries.length; p++) {
     //       const priorCount = testBracketList.count1stPosBrktsForPlayer(adjustedEntries[p].player_id);
-    //       const oppoMap = testBracketList.createOppoMapForTesting2(p, priorCount, neededCountMap)
+    //       const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
     //       const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, adjustedEntries, p, oppoMap);
     //       if (errorInfo.error !== 0) {
     //         console.log(`player: ${adjustedEntries[p].player_id} error: ${errorInfo.error}`);
@@ -5091,28 +5062,30 @@ describe('BracketList', () => {
     //     }
     //   }
 
-    // //   testBracketList.randomize([]);
-    // //   const lastIndex = testBracketList.randomizeErrors.length - 1;
-    // //   if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
-    // //     console.log(testBracketList.randomizeErrors);
-    // //   }
-    // //   expect(testBracketList.randomizeErrors[lastIndex].error).toBe(0);
-    // //   expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);
+    //   // // run once for error checking
+    //   // testBracketList.randomize([]);
+    //   // const lastIndex = testBracketList.randomizeErrors.length - 1;
+    //   // if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
+    //   //   console.log(testBracketList.randomizeErrors);
+    //   // }
+    //   // expect(testBracketList.randomizeErrors[lastIndex].error).toBe(0);
+    //   // expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);
             
-    // //   const adjustedEntries = cloneDeep(playerData)
-    // //   adjustedEntries[0].test_name = 19; // adjusted entries for Al
-    // //   for (let p = 0; p < adjustedEntries.length; p++) {
-    // //     const priorCount = testBracketList.count1stPosBrktsForPlayer(adjustedEntries[p].player_id);
-    // //     const oppoMap = testBracketList.createOppoMapForTesting2(p, priorCount, neededCountMap)
-    // //     const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, adjustedEntries, p, oppoMap);
-    // //   if (errorInfo.error !== 0) {
-    // //       console.log(`player: ${adjustedEntries[p].player_id} error: ${errorInfo.error}`);
-    // //     }
-    // //     expect(errorInfo.error).toBe(0);
-    // //   }
-    // })
-    // it('should randomize brackets 18 Players x random Brackets, 2 players 50 entries (15 Full, 6 OneBye) - pass shuffles entries', () => {
-    //   const poc_shuffledEntries: string[] = ['Al', 'Bob', 'Bob', 'Don', 'Otto', 'Al', 'Hal', 'Mike', 'Quin', 'Fred', 'Al', 'Mike', 'Al', 'Al', 'Ed', 'Don', 'Al', 'Ian', 'Mike', 'Paul', 'Bob', 'Al', 'Ian', 'Mike', 'Nate', 'Fred', 'Ed', 'Ken', 'Lou', 'Don', 'Otto', 'Fred', 'Al', 'Quin', 'Bob', 'Ian', 'Lou', 'Al', 'Jim', 'Fred', 'Nate', 'Greg', 'Greg', 'Bob', 'Ed', 'Greg', 'Bob', 'Bye', 'Greg', 'Mike', 'Ed', 'Rob', 'Ken', 'Jim', 'Bob', 'Hal', 'Otto', 'Bob', 'Hal', 'Bob', 'Ed', 'Bye', 'Bye', 'Don', 'Al', 'Ed', 'Quin', 'Don', 'Mike', 'Al', 'Nate', 'Don', 'Jim', 'Quin', 'Rob', 'Jim', 'Bob', 'Al', 'Nate', 'Bye', 'Jim', 'Bob', 'Al', 'Quin', 'Paul', 'Rob', 'Nate', 'Chad', 'Bob', 'Ed', 'Ken', 'Rob', 'Bob', 'Chad', 'Bob', 'Hal', 'Greg', 'Bob', 'Nate', 'Chad', 'Lou', 'Ian', 'Ian', 'Mike', 'Rob', 'Al', 'Jim', 'Bob', 'Hal', 'Al', 'Otto', 'Nate', 'Hal', 'Lou', 'Jim', 'Otto', 'Al', 'Paul', 'Al', 'Paul', 'Nate', 'Bye', 'Ian', 'Bob', 'Chad', 'Rob', 'Jim', 'Mike', 'Hal', 'Ken', 'Bye', 'Greg', 'Lou', 'Ed', 'Don', 'Ed', 'Fred', 'Al', 'Al', 'Ian', 'Jim', 'Bob', 'Rob', 'Rob', 'Ken', 'Bob', 'Otto', 'Hal', 'Rob', 'Bob', 'Bob', 'Jim', 'Fred', 'Don', 'Nate', 'Don', 'Rob', 'Ed', 'Don', 'Chad', 'Al', 'Ed', 'Nate', 'Otto', 'Ed', 'Al', 'Ken', 'Ian'];
+    //   // const adjustedEntries = cloneDeep(playerData)
+    //   // adjustedEntries[0].test_brkts = 19; // adjusted entries for Al
+    //   // for (let p = 0; p < adjustedEntries.length; p++) {
+    //   //   const priorCount = testBracketList.count1stPosBrktsForPlayer(adjustedEntries[p].player_id);
+    //   //   const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
+    //   //   const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, adjustedEntries, p, oppoMap);
+    //   // if (errorInfo.error !== 0) {
+    //   //     console.log(`player: ${adjustedEntries[p].player_id} error: ${errorInfo.error}`);
+    //   //   }
+    //   //   expect(errorInfo.error).toBe(0);
+    //   // }
+    // })    
+    // it('should randomize brackets 18 Players x random Brackets, 1 players 50 entries (15 Full, 6 OneBye) - passed shuffled entries #2', () => {
+
+    //   const poc_shuffledEntries: string[] = ['Paul', 'Mike', 'Al', 'Otto', 'Hal', 'Otto', 'Lou', 'Rob', 'Al', 'Hal', 'Fred', 'Bob', 'Don', 'Bob', 'Otto', 'Ian', 'Ed', 'Don', 'Quin', 'Hal', 'Rob', 'Chad', 'Mike', 'Nate', 'Fred', 'Bob', 'Jim', 'Ken', 'Ed', 'Mike', 'Mike', 'Quin', 'Jim', 'Greg', 'Bye', 'Paul', 'Al', 'Mike', 'Chad', 'Al', 'Don', 'Ken', 'Quin', 'Ed', 'Al', 'Nate', 'Jim', 'Mike', 'Jim', 'Rob', 'Al', 'Ian', 'Quin', 'Lou', 'Ken', 'Ed', 'Al', 'Bye', 'Ian', 'Ian', 'Don', 'Rob', 'Ed', 'Don', 'Ed', 'Chad', 'Hal', 'Nate', 'Hal', 'Chad', 'Rob', 'Ed', 'Lou', 'Rob', 'Bob', 'Al', 'Al', 'Mike', 'Rob', 'Jim', 'Ian', 'Fred', 'Bob', 'Ed', 'Lou', 'Paul', 'Ian', 'Al', 'Ian', 'Al', 'Quin', 'Al', 'Nate', 'Jim', 'Don', 'Al', 'Fred', 'Otto', 'Fred', 'Lou', 'Ian', 'Al', 'Greg', 'Ken', 'Nate', 'Ed', 'Ed', 'Al', 'Al', 'Ken', 'Ed', 'Fred', 'Al', 'Greg', 'Bob', 'Al', 'Don', 'Otto', 'Jim', 'Rob', 'Jim', 'Jim', 'Greg', 'Don', 'Don', 'Al', 'Nate', 'Ken', 'Greg', 'Bob', 'Rob', 'Nate', 'Nate', 'Don', 'Bob', 'Chad', 'Nate', 'Hal', 'Rob', 'Bye', 'Nate', 'Hal', 'Jim', 'Mike', 'Otto', 'Greg', 'Ed', 'Bob', 'Bob', 'Paul', 'Hal', 'Otto'];
       
     //   let poc_shuffledEntriesObjArr: playerUsedType[];
 
@@ -5124,8 +5097,168 @@ describe('BracketList', () => {
     //   }));
 
     //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
+    //   const playerData = [
+    //     { player_id: 'Al', test_brkts: 50, test_timeStamp: 100 },
+    //     { player_id: 'Bob', test_brkts: 10, test_timeStamp: 200 },
+    //     { player_id: 'Chad', test_brkts: 5, test_timeStamp: 300 },
+    //     { player_id: 'Don', test_brkts: 10, test_timeStamp: 400 },
+    //     { player_id: 'Ed', test_brkts: 12, test_timeStamp: 500 },
+    //     { player_id: 'Fred', test_brkts: 6, test_timeStamp: 600 },
+    //     { player_id: 'Greg', test_brkts: 6, test_timeStamp: 700 },
+    //     { player_id: 'Hal', test_brkts: 8, test_timeStamp: 800 },
+    //     { player_id: 'Ian', test_brkts: 8, test_timeStamp: 900 },
+    //     { player_id: 'Jim', test_brkts: 10, test_timeStamp: 1000 },
+    //     { player_id: 'Ken', test_brkts: 6, test_timeStamp: 1100 },
+    //     { player_id: 'Lou', test_brkts: 5, test_timeStamp: 1200 },
+    //     { player_id: 'Mike', test_brkts: 8, test_timeStamp: 1300 },
+    //     { player_id: 'Nate', test_brkts: 10, test_timeStamp: 1400 },
+    //     { player_id: 'Otto', test_brkts: 7, test_timeStamp: 1500 },
+    //     { player_id: 'Paul', test_brkts: 4, test_timeStamp: 1600 },
+    //     { player_id: 'Quin', test_brkts: 5, test_timeStamp: 1700 },
+    //     { player_id: 'Rob', test_brkts: 10, test_timeStamp: 1800 },
+    //   ];
+
+    //   testBracketList.calcTotalBrkts(playerData);
+    //   expect(testBracketList.fullCount).toBe(16);
+    //   expect(testBracketList.oneByeCount).toBe(3);
+    //                                                         //  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19
+    //   expect(testBracketList.brktCounts.forFullValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]);
+    //   expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+
+    //   const neededCountMap = createNeededMapCount(testBracketList.brktEntries);
+
+    //   // Performance test & ramdomize test - randomize 1500 times
+    //   for (let i = 1; i <= 500; i++) {
+    //     testBracketList.randomize(poc_shuffledEntriesObjArr);
+    //     const lastIndex = testBracketList.randomizeErrors.length - 1;
+    //     if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
+    //       console.log(testBracketList.randomizeErrors);
+    //     }
+    //     expect(testBracketList.randomizeErrors[lastIndex].error).toBe(0);
+    //     expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);
+    //     const adjustedEntries = cloneDeep(playerData)
+    //     adjustedEntries[0].test_brkts = 19; // adjusted entries for Al
+    //     for (let p = 0; p < adjustedEntries.length; p++) {
+    //       const priorCount = testBracketList.count1stPosBrktsForPlayer(adjustedEntries[p].player_id);
+    //       const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
+    //       const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, adjustedEntries, p, oppoMap);
+    //       if (errorInfo.error !== 0) {
+    //         console.log(`player: ${adjustedEntries[p].player_id} error: ${errorInfo.error}`);
+    //       }
+    //       expect(errorInfo.error).toBe(0);
+    //     }
+    //   }
+
+    //   // // run once for error checking
+    //   // testBracketList.randomize([]);
+    //   // const lastIndex = testBracketList.randomizeErrors.length - 1;
+    //   // if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
+    //   //   console.log(testBracketList.randomizeErrors);
+    //   // }
+    //   // expect(testBracketList.randomizeErrors[lastIndex].error).toBe(0);
+    //   // expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);
+            
+    //   // const adjustedEntries = cloneDeep(playerData)
+    //   // adjustedEntries[0].test_brkts = 19; // adjusted entries for Al
+    //   // for (let p = 0; p < adjustedEntries.length; p++) {
+    //   //   const priorCount = testBracketList.count1stPosBrktsForPlayer(adjustedEntries[p].player_id);
+    //   //   const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
+    //   //   const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, adjustedEntries, p, oppoMap);
+    //   // if (errorInfo.error !== 0) {
+    //   //     console.log(`player: ${adjustedEntries[p].player_id} error: ${errorInfo.error}`);
+    //   //   }
+    //   //   expect(errorInfo.error).toBe(0);
+    //   // }
+    // })    
+    // it('should randomize brackets 18 Players x random Brackets, 1 players 50 entries (15 Full, 6 OneBye) - randomize shuffles entries', () => {
+
+    //   const testBracketList = new BracketList('test', 2, 3);
+    //   const playerData = [
+    //     { player_id: 'Al', test_brkts: 50, test_timeStamp: 100 },
+    //     { player_id: 'Bob', test_brkts: 10, test_timeStamp: 200 },
+    //     { player_id: 'Chad', test_brkts: 5, test_timeStamp: 300 },
+    //     { player_id: 'Don', test_brkts: 10, test_timeStamp: 400 },
+    //     { player_id: 'Ed', test_brkts: 12, test_timeStamp: 500 },
+    //     { player_id: 'Fred', test_brkts: 6, test_timeStamp: 600 },
+    //     { player_id: 'Greg', test_brkts: 6, test_timeStamp: 700 },
+    //     { player_id: 'Hal', test_brkts: 8, test_timeStamp: 800 },
+    //     { player_id: 'Ian', test_brkts: 8, test_timeStamp: 900 },
+    //     { player_id: 'Jim', test_brkts: 10, test_timeStamp: 1000 },
+    //     { player_id: 'Ken', test_brkts: 6, test_timeStamp: 1100 },
+    //     { player_id: 'Lou', test_brkts: 5, test_timeStamp: 1200 },
+    //     { player_id: 'Mike', test_brkts: 8, test_timeStamp: 1300 },
+    //     { player_id: 'Nate', test_brkts: 10, test_timeStamp: 1400 },
+    //     { player_id: 'Otto', test_brkts: 7, test_timeStamp: 1500 },
+    //     { player_id: 'Paul', test_brkts: 4, test_timeStamp: 1600 },
+    //     { player_id: 'Quin', test_brkts: 5, test_timeStamp: 1700 },
+    //     { player_id: 'Rob', test_brkts: 10, test_timeStamp: 1800 },
+    //   ];
+
+    //   testBracketList.calcTotalBrkts(playerData);
+    //   expect(testBracketList.fullCount).toBe(16);
+    //   expect(testBracketList.oneByeCount).toBe(3);
+    //                                                         //  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19
+    //   expect(testBracketList.brktCounts.forFullValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]);
+    //   expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+
+    //   const neededCountMap = createNeededMapCount(testBracketList.brktEntries);
+
+    //   // Performance test & ramdomize test - randomize 1500 times
+    //   for (let i = 1; i <= 1500; i++) {
+    //     testBracketList.randomize([]);
+    //     const lastIndex = testBracketList.randomizeErrors.length - 1;
+    //     if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
+    //       console.log(testBracketList.randomizeErrors);
+    //     }
+    //     expect(testBracketList.randomizeErrors[lastIndex].error).toBe(0);
+    //     expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);
+    //     const adjustedEntries = cloneDeep(playerData)
+    //     adjustedEntries[0].test_brkts = 19; // adjusted entries for Al
+    //     for (let p = 0; p < adjustedEntries.length; p++) {
+    //       const priorCount = testBracketList.count1stPosBrktsForPlayer(adjustedEntries[p].player_id);
+    //       const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
+    //       const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, adjustedEntries, p, oppoMap);
+    //       if (errorInfo.error !== 0) {
+    //         console.log(`player: ${adjustedEntries[p].player_id} error: ${errorInfo.error}`);
+    //       }
+    //       expect(errorInfo.error).toBe(0);
+    //     }
+    //   }
+
+    //   // // run once for error checking
+    //   // testBracketList.randomize([]);
+    //   // const lastIndex = testBracketList.randomizeErrors.length - 1;
+    //   // if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
+    //   //   console.log(testBracketList.randomizeErrors);
+    //   // }
+    //   // expect(testBracketList.randomizeErrors[lastIndex].error).toBe(0);
+    //   // expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);
+            
+    //   // const adjustedEntries = cloneDeep(playerData)
+    //   // adjustedEntries[0].test_brkts = 19; // adjusted entries for Al
+    //   // for (let p = 0; p < adjustedEntries.length; p++) {
+    //   //   const priorCount = testBracketList.count1stPosBrktsForPlayer(adjustedEntries[p].player_id);
+    //   //   const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
+    //   //   const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, adjustedEntries, p, oppoMap);
+    //   // if (errorInfo.error !== 0) {
+    //   //     console.log(`player: ${adjustedEntries[p].player_id} error: ${errorInfo.error}`);
+    //   //   }
+    //   //   expect(errorInfo.error).toBe(0);
+    //   // }
+    // })
+    // it('should randomize brackets 18 Players x random Brackets, 2 players 50 entries (15 Full, 6 OneBye) - pass shuffles entries', () => {
+    //   const poc_shuffledEntries: string[] = ['Rob', 'Ken', 'Don', 'Greg', 'Bob', 'Paul', 'Al', 'Hal', 'Ed', 'Mike', 'Nate', 'Otto', 'Mike', 'Bob', 'Jim', 'Ian', 'Hal', 'Mike', 'Nate', 'Ed', 'Hal', 'Bob', 'Chad', 'Al', 'Nate', 'Paul', 'Hal', 'Al', 'Ed', 'Jim', 'Ken', 'Mike', 'Lou', 'Al', 'Bye', 'Chad', 'Mike', 'Bob', 'Rob', 'Al', 'Greg', 'Bob', 'Otto', 'Bob', 'Bye', 'Greg', 'Al', 'Greg', 'Rob', 'Otto', 'Mike', 'Don', 'Don', 'Bob', 'Lou', 'Rob', 'Jim', 'Jim', 'Bob', 'Rob', 'Otto', 'Don', 'Ed', 'Jim', 'Ian', 'Ian', 'Greg', 'Nate', 'Al', 'Al', 'Al', 'Quin', 'Al', 'Ian', 'Chad', 'Bob', 'Ian', 'Nate', 'Greg', 'Lou', 'Ed', 'Bob', 'Rob', 'Jim', 'Don', 'Jim', 'Ed', 'Bob', 'Paul', 'Bye', 'Nate', 'Rob', 'Ken', 'Chad', 'Al', 'Bye', 'Mike', 'Nate', 'Hal', 'Nate', 'Ed', 'Rob', 'Paul', 'Mike', 'Ed', 'Quin', 'Fred', 'Bob', 'Hal', 'Lou', 'Bob', 'Al', 'Lou', 'Hal', 'Fred', 'Bob', 'Al', 'Al', 'Fred', 'Ken', 'Otto', 'Ken', 'Ed', 'Bye', 'Bob', 'Don', 'Nate', 'Al', 'Ian', 'Don', 'Bob', 'Al', 'Don', 'Bye', 'Rob', 'Don', 'Otto', 'Ed', 'Ed', 'Quin', 'Ken', 'Al', 'Jim', 'Bob', 'Fred', 'Jim', 'Ian', 'Hal', 'Rob', 'Nate', 'Chad', 'Bob', 'Al', 'Bob', 'Quin', 'Otto', 'Al', 'Fred', 'Ed', 'Fred', 'Bob', 'Ian', 'Don', 'Al', 'Al', 'Bob', 'Quin', 'Jim'];
+      
+    //   let poc_shuffledEntriesObjArr: playerUsedType[];
+
+    //   // create playerUsedType array
+    //   poc_shuffledEntriesObjArr = [];
+    //   poc_shuffledEntriesObjArr = poc_shuffledEntries.map(playerId => ({
+    //     playerId,
+    //     used: false
+    //   }));
+
+    //   const testBracketList = new BracketList('test', 2, 3);
     //   const playerData = [
     //     { player_id: 'Al', test_brkts: 50, test_timeStamp: 100 },
     //     { player_id: 'Bob', test_brkts: 50, test_timeStamp: 200 },
@@ -5156,10 +5289,12 @@ describe('BracketList', () => {
 
     //   const neededCountMap = createNeededMapCount(testBracketList.brktEntries);
 
-    //   // let resultsStr = '';
+    //   // Performance test & ramdomize test - randomize 250 times
+    //   let resultsStr = '';
     //   for (let i = 1; i <=250; i++) {   
-    //     // const startTime = Date.now();
-    //     testBracketList.randomize([]);     
+    //     const startTime = Date.now();
+    //     // testBracketList.randomize([]);  
+    //     testBracketList.randomize(poc_shuffledEntriesObjArr);
     //     const lastIndex = testBracketList.randomizeErrors.length - 1;
     //     if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
     //       console.log(testBracketList.randomizeErrors);
@@ -5167,22 +5302,23 @@ describe('BracketList', () => {
     //     expect(testBracketList.randomizeErrors[lastIndex].error).toBe(0);
     //     expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);             
     //     const adjustedEntries = cloneDeep(playerData)
-    //     adjustedEntries[0].test_name = 21; // adjusted entries for Al      
-    //     adjustedEntries[1].test_name = 21; // adjusted entries for Bob
+    //     adjustedEntries[0].test_brkts = 21; // adjusted entries for Al      
+    //     adjustedEntries[1].test_brkts = 21; // adjusted entries for Bob
     //     for (let p = 0; p < adjustedEntries.length; p++) {
     //       const priorCount = testBracketList.count1stPosBrktsForPlayer(adjustedEntries[p].player_id);
-    //       const oppoMap = testBracketList.createOppoMapForTesting2(p, priorCount, neededCountMap)
+    //       const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
     //       const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, adjustedEntries, p, oppoMap);
     //     if (errorInfo.error !== 0) {
     //         console.log(`player: ${adjustedEntries[p].player_id} error: ${errorInfo.error}`);
     //       }
     //       expect(errorInfo.error).toBe(0);
     //     }
-    //     // const endTime = Date.now();
-    //     // resultsStr += `${i}\t${endTime - startTime}\t${testBracketList.randomizeErrors[lastIndex].tryCount}\n`;
+    //     const endTime = Date.now();
+    //     resultsStr += `${i}\t${endTime - startTime}\t${testBracketList.randomizeErrors[lastIndex].tryCount}\n`;
     //   }
     //   // console.log(resultsStr);
 
+    //   // // run once for error checking
     //   // testBracketList.randomize(poc_shuffledEntriesObjArr);     
     //   // const lastIndex = testBracketList.randomizeErrors.length - 1;
     //   // if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
@@ -5192,11 +5328,11 @@ describe('BracketList', () => {
     //   // expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);
             
     //   // const adjustedEntries = cloneDeep(playerData)
-    //   // adjustedEntries[0].test_name = 21; // adjusted entries for Al 
-    //   // adjustedEntries[1].test_name = 21; // adjusted entries for Bob
+    //   // adjustedEntries[0].test_brkts = 21; // adjusted entries for Al 
+    //   // adjustedEntries[1].test_brkts = 21; // adjusted entries for Bob
     //   // for (let p = 0; p < adjustedEntries.length; p++) {
     //   //   const priorCount = testBracketList.count1stPosBrktsForPlayer(adjustedEntries[p].player_id);
-    //   //   const oppoMap = testBracketList.createOppoMapForTesting2(p, priorCount, neededCountMap)
+    //   //   const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
     //   //   const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, adjustedEntries, p, oppoMap);
     //   // if (errorInfo.error !== 0) {
     //   //     console.log(`player: ${adjustedEntries[p].player_id} error: ${errorInfo.error}`);
@@ -5207,8 +5343,6 @@ describe('BracketList', () => {
     // it('should randomize brackets 18 Players x random Brackets, 2 players 50 entries (15 Full, 6 OneBye) - randomize shuffles entries', () => {
 
     //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
     //   const playerData = [
     //     { player_id: 'Al', test_brkts: 50, test_timeStamp: 100 },
     //     { player_id: 'Bob', test_brkts: 50, test_timeStamp: 200 },
@@ -5239,9 +5373,10 @@ describe('BracketList', () => {
 
     //   const neededCountMap = createNeededMapCount(testBracketList.brktEntries);
       
-    //   // let resultsStr = '';
+    //   // Performance test & ramdomize test - randomize 250 times
+    //   let resultsStr = '';
     //   for (let i = 1; i <= 250; i++) {     
-    //     // const startTime = Date.now();
+    //     const startTime = Date.now();
     //     testBracketList.randomize([]);     
     //     const lastIndex = testBracketList.randomizeErrors.length - 1;
     //     if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
@@ -5250,49 +5385,47 @@ describe('BracketList', () => {
     //     expect(testBracketList.randomizeErrors[lastIndex].error).toBe(0);
     //     expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);             
     //     const adjustedEntries = cloneDeep(playerData)
-    //     adjustedEntries[0].test_name = 21; // adjusted entries for Al      
-    //     adjustedEntries[1].test_name = 21; // adjusted entries for Bob
+    //     adjustedEntries[0].test_brkts = 21; // adjusted entries for Al      
+    //     adjustedEntries[1].test_brkts = 21; // adjusted entries for Bob
     //     for (let p = 0; p < adjustedEntries.length; p++) {
     //       const priorCount = testBracketList.count1stPosBrktsForPlayer(adjustedEntries[p].player_id);
-    //       const oppoMap = testBracketList.createOppoMapForTesting2(p, priorCount, neededCountMap)
+    //       const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
     //       const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, adjustedEntries, p, oppoMap);
     //       if (errorInfo.error !== 0) {
     //         console.log(`player: ${adjustedEntries[p].player_id} error: ${errorInfo.error}`);
     //       }
     //       expect(errorInfo.error).toBe(0);
     //     }
-    //     // const endTime = Date.now();
-    //     // resultsStr += `${i}\t${endTime - startTime}\t${testBracketList.randomizeErrors[lastIndex].tryCount}\n`;
+    //     const endTime = Date.now();
+    //     resultsStr += `${i}\t${endTime - startTime}\t${testBracketList.randomizeErrors[lastIndex].tryCount}\n`;
     //   }
     //   // console.log(resultsStr);
 
-    // //   testBracketList.randomize([]);     
-    // //   const lastIndex = testBracketList.randomizeErrors.length - 1;
-    // //   if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
-    // //     console.log(testBracketList.randomizeErrors);
-    // //   }
-    // //   expect(testBracketList.randomizeErrors[lastIndex].error).toBe(0);
-    // //   expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);
+    //   // // run once to check for errors
+    //   // testBracketList.randomize([]);     
+    //   // const lastIndex = testBracketList.randomizeErrors.length - 1;
+    //   // if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
+    //   //   console.log(testBracketList.randomizeErrors);
+    //   // }
+    //   // expect(testBracketList.randomizeErrors[lastIndex].error).toBe(0);
+    //   // expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);
             
-    // //   const adjustedEntries = cloneDeep(playerData)
-    // //   adjustedEntries[0].test_name = 21; // adjusted entries for Al 
-    // //   adjustedEntries[1].test_name = 21; // adjusted entries for Bob
-    // //   for (let p = 0; p < adjustedEntries.length; p++) {
-    // //     const priorCount = testBracketList.count1stPosBrktsForPlayer(adjustedEntries[p].player_id);
-    // //     const oppoMap = testBracketList.createOppoMapForTesting2(p, priorCount, neededCountMap)
-    // //     const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, adjustedEntries, p, oppoMap);
-    // //     if (errorInfo.error !== 0) {
-    // //       console.log(`player: ${adjustedEntries[p].player_id} error: ${errorInfo.error}`);
-    // //     }
-    // //     expect(errorInfo.error).toBe(0);
-    // //   }
+    //   // const adjustedEntries = cloneDeep(playerData)
+    //   // adjustedEntries[0].test_brkts = 21; // adjusted entries for Al 
+    //   // adjustedEntries[1].test_brkts = 21; // adjusted entries for Bob
+    //   // for (let p = 0; p < adjustedEntries.length; p++) {
+    //   //   const priorCount = testBracketList.count1stPosBrktsForPlayer(adjustedEntries[p].player_id);
+    //   //   const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
+    //   //   const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, adjustedEntries, p, oppoMap);
+    //   //   if (errorInfo.error !== 0) {
+    //   //     console.log(`player: ${adjustedEntries[p].player_id} error: ${errorInfo.error}`);
+    //   //   }
+    //   //   expect(errorInfo.error).toBe(0);
+    //   // }
     // })
-
     // it('should randomize brackets 18 Players x random Brackets, 3 players 50 entries (15 Full, 6 OneBye) - randomize shuffles entries', () => {
 
     //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
     //   const playerData = [
     //     { player_id: 'Al', test_brkts: 50, test_timeStamp: 100 },
     //     { player_id: 'Bob', test_brkts: 50, test_timeStamp: 200 },
@@ -5323,9 +5456,10 @@ describe('BracketList', () => {
 
     //   const neededCountMap = createNeededMapCount(testBracketList.brktEntries);
       
-    //   // let resultsStr = '';
+    //   // Performance test & ramdomize test - randomize 250 times
+    //   let resultsStr = '';
     //   for (let i = 1; i <= 250; i++) {     
-    //     // const startTime = Date.now();
+    //     const startTime = Date.now();
     //     testBracketList.randomize([]);     
     //     const lastIndex = testBracketList.randomizeErrors.length - 1;
     //     if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
@@ -5334,9 +5468,9 @@ describe('BracketList', () => {
     //     expect(testBracketList.randomizeErrors[lastIndex].error).toBe(0);
     //     expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);             
     //     const adjustedEntries = cloneDeep(playerData)
-    //     adjustedEntries[0].test_name = 23; // adjusted entries for Al      
-    //     adjustedEntries[1].test_name = 23; // adjusted entries for Bob
-    //     adjustedEntries[3].test_name = 23; // adjusted entries for Don
+    //     adjustedEntries[0].test_brkts = 23; // adjusted entries for Al      
+    //     adjustedEntries[1].test_brkts = 23; // adjusted entries for Bob
+    //     adjustedEntries[3].test_brkts = 23; // adjusted entries for Don
     //     for (let p = 0; p < adjustedEntries.length; p++) {
     //       const priorCount = testBracketList.count1stPosBrktsForPlayer(adjustedEntries[p].player_id);
     //       const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
@@ -5346,39 +5480,37 @@ describe('BracketList', () => {
     //       }
     //       expect(errorInfo.error).toBe(0);
     //     }
-    //     // const endTime = Date.now();
-    //     // resultsStr += `${i}\t${endTime - startTime}\t${testBracketList.randomizeErrors[lastIndex].tryCount}\n`;
+    //     const endTime = Date.now();
+    //     resultsStr += `${i}\t${endTime - startTime}\t${testBracketList.randomizeErrors[lastIndex].tryCount}\n`;
     //   }
     //   // console.log(resultsStr);
 
-    // //   testBracketList.randomize([]);     
-    // //   const lastIndex = testBracketList.randomizeErrors.length - 1;
-    // //   if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
-    // //     console.log(testBracketList.randomizeErrors);
-    // //   }
-    // //   expect(testBracketList.randomizeErrors[lastIndex].error).toBe(0);
-    // //   expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);
+    //   // // run test one to check for errors
+    //   // testBracketList.randomize([]);     
+    //   // const lastIndex = testBracketList.randomizeErrors.length - 1;
+    //   // if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
+    //   //   console.log(testBracketList.randomizeErrors);
+    //   // }
+    //   // expect(testBracketList.randomizeErrors[lastIndex].error).toBe(0);
+    //   // expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);
             
-    // //   const adjustedEntries = cloneDeep(playerData)
-    // //   adjustedEntries[0].test_name = 23; // adjusted entries for Al      
-    // //   adjustedEntries[1].test_name = 23; // adjusted entries for Bob
-    // //   adjustedEntries[3].test_name = 23; // adjusted entries for don
-    // //   for (let p = 0; p < adjustedEntries.length; p++) {
-    // //     const priorCount = testBracketList.count1stPosBrktsForPlayer(adjustedEntries[p].player_id);
-    // //     const oppoMap = testBracketList.createOppoMapForTesting2(p, priorCount, neededCountMap)
-    // //     const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, adjustedEntries, p, oppoMap);
-    // //   if (errorInfo.error !== 0) {
-    // //       console.log(`player: ${adjustedEntries[p].player_id} error: ${errorInfo.error}`);
-    // //     }
-    // //     expect(errorInfo.error).toBe(0);
-    // //   }
+    //   // const adjustedEntries = cloneDeep(playerData)
+    //   // adjustedEntries[0].test_brkts = 23; // adjusted entries for Al      
+    //   // adjustedEntries[1].test_brkts = 23; // adjusted entries for Bob
+    //   // adjustedEntries[3].test_brkts = 23; // adjusted entries for don
+    //   // for (let p = 0; p < adjustedEntries.length; p++) {
+    //   //   const priorCount = testBracketList.count1stPosBrktsForPlayer(adjustedEntries[p].player_id);
+    //   //   const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
+    //   //   const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, adjustedEntries, p, oppoMap);
+    //   // if (errorInfo.error !== 0) {
+    //   //     console.log(`player: ${adjustedEntries[p].player_id} error: ${errorInfo.error}`);
+    //   //   }
+    //   //   expect(errorInfo.error).toBe(0);
+    //   // }
     // })
-
     // it('should randomize brackets 18 Players x 10 Brackets, (19 Full, 4 OneBye) - check bracket entries sort', () => {
 
     //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
     //   const playerData = [
     //     { player_id: 'Paul', test_brkts: 10, test_timeStamp: 1600 },
     //     { player_id: 'Don', test_brkts: 10, test_timeStamp: 400 },
@@ -5408,50 +5540,49 @@ describe('BracketList', () => {
     //   expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
     //   const neededCountMap = createNeededMapCount(testBracketList.brktEntries);
-            
-    //   // for (let i = 1; i <= 250; i++) {           
-    //   //   testBracketList.randomize([]);     
-    //   //   const lastIndex = testBracketList.randomizeErrors.length - 1;
-    //   //   if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
-    //   //     console.log(testBracketList.randomizeErrors);
-    //   //   }
-    //   //   expect(testBracketList.randomizeErrors[lastIndex].error).toBe(0);
-    //   //   expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);             
-    //   //   for (let p = 0; p < playerData.length; p++) {
-    //   //     const priorCount = testBracketList.count1stPosBrktsForPlayer(playerData[p].player_id);
-    //   //     const oppoMap = testBracketList.createOppoMapForTesting2(p, priorCount, neededCountMap)
-    //   //     const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, playerData, p, oppoMap);
-    //   //     if (errorInfo.error !== 0) {
-    //   //       console.log(`player: ${playerData[p].player_id} error: ${errorInfo.error}`);
-    //   //     }
-    //   //     expect(errorInfo.error).toBe(0);
-    //   //   }
-    //   // }
-
-    //   testBracketList.randomize([]);     
-    //   const lastIndex = testBracketList.randomizeErrors.length - 1;
-    //   if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
-    //     console.log(testBracketList.randomizeErrors);
-    //   }
-    //   expect(testBracketList.randomizeErrors[lastIndex].error).toBe(0);
-    //   expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);
-            
-    //   for (let p = 0; p < playerData.length; p++) {
-    //     const priorCount = testBracketList.count1stPosBrktsForPlayer(playerData[p].player_id);
-    //     const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
-    //     const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, playerData, p, oppoMap);
-    //     if (errorInfo.error !== 0) {
-    //       console.log(`player: ${playerData[p].player_id} error: ${errorInfo.error}`);
+        
+    //   // Performance test & ramdomize test - randomize 250 times
+    //   for (let i = 1; i <= 250; i++) {           
+    //     testBracketList.randomize([]);     
+    //     const lastIndex = testBracketList.randomizeErrors.length - 1;
+    //     if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
+    //       console.log(testBracketList.randomizeErrors);
     //     }
-    //     expect(errorInfo.error).toBe(0);
+    //     expect(testBracketList.randomizeErrors[lastIndex].error).toBe(0);
+    //     expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);             
+    //     for (let p = 0; p < playerData.length; p++) {
+    //       const priorCount = testBracketList.count1stPosBrktsForPlayer(playerData[p].player_id);
+    //       const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
+    //       const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, playerData, p, oppoMap);
+    //       if (errorInfo.error !== 0) {
+    //         console.log(`player: ${playerData[p].player_id} error: ${errorInfo.error}`);
+    //       }
+    //       expect(errorInfo.error).toBe(0);
+    //     }
     //   }
-    // })
 
+    //   // // run test once to check for errors
+    //   // testBracketList.randomize([]);     
+    //   // const lastIndex = testBracketList.randomizeErrors.length - 1;
+    //   // if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
+    //   //   console.log(testBracketList.randomizeErrors);
+    //   // }
+    //   // expect(testBracketList.randomizeErrors[lastIndex].error).toBe(0);
+    //   // expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);
+            
+    //   // for (let p = 0; p < playerData.length; p++) {
+    //   //   const priorCount = testBracketList.count1stPosBrktsForPlayer(playerData[p].player_id);
+    //   //   const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
+    //   //   const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, playerData, p, oppoMap);
+    //   //   if (errorInfo.error !== 0) {
+    //   //     console.log(`player: ${playerData[p].player_id} error: ${errorInfo.error}`);
+    //   //   }
+    //   //   expect(errorInfo.error).toBe(0);
+    //   // }
+    // })
     // it('should randomize brackets 60 Players x random Brackets, 1 Player 100 entries (64 Full, 7 OneBye) - randomize shuffles entries', () => {
 
     //   const testBracketList = new BracketList('test', 2, 3);
-    //   // num brackets name = id + "_brkts" = 'test_name'
-    //   // time stamp name = id + "_timeStamp" = 'test_timeStamp'
     //   const playerData = [
     //     { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
     //     { player_id: 'Bob', test_brkts: 10, test_timeStamp: 200 },
@@ -5524,6 +5655,7 @@ describe('BracketList', () => {
 
     //   const neededCountMap = createNeededMapCount(testBracketList.brktEntries);
             
+    //   // Performance test & ramdomize test - randomize 250 times
     //   for (let i = 1; i <= 250; i++) {           
     //     testBracketList.randomize([]);     
     //     const lastIndex = testBracketList.randomizeErrors.length - 1;
@@ -5533,7 +5665,7 @@ describe('BracketList', () => {
     //     expect(testBracketList.randomizeErrors[lastIndex].error).toBe(0);
     //     expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);             
     //     const adjustedEntries = cloneDeep(playerData)
-    //     adjustedEntries[54].test_name = 71; // adjusted entries for Eric              
+    //     adjustedEntries[54].test_brkts = 71; // adjusted entries for Eric              
     //     for (let p = 0; p < adjustedEntries.length; p++) {
     //       const priorCount = testBracketList.count1stPosBrktsForPlayer(adjustedEntries[p].player_id);
     //       const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
@@ -5545,6 +5677,7 @@ describe('BracketList', () => {
     //     }
     //   }
 
+    //   // // run test once to check for errors
     //   // testBracketList.randomize([]);     
     //   // const lastIndex = testBracketList.randomizeErrors.length - 1;
     //   // if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
@@ -5554,7 +5687,7 @@ describe('BracketList', () => {
     //   // expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);
 
     //   // const adjustedEntries = cloneDeep(playerData)
-    //   // adjustedEntries[54].test_name = 71; // adjusted entries for Eric            
+    //   // adjustedEntries[54].test_brkts = 71; // adjusted entries for Eric            
     //   // for (let p = 0; p < adjustedEntries.length; p++) {
     //   //   const priorCount = testBracketList.count1stPosBrktsForPlayer(adjustedEntries[p].player_id);
     //   //   const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
@@ -5565,137 +5698,170 @@ describe('BracketList', () => {
     //   //   expect(errorInfo.error).toBe(0);
     //   // }
     // })
+    // it('should randomize brackets 60 Players x random Brackets, shuffle individual brackets after randomize', () => {
 
-    it('should randomize brackets 60 Players x random Brackets, shuffle individual brackets after randomize', () => {
-
-      const testBracketList = new BracketList('test', 2, 3);
-      // num brackets name = id + "_brkts" = 'test_name'
-      // time stamp name = id + "_timeStamp" = 'test_timeStamp'
-      const playerData = [
-        { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
-        { player_id: 'Bob', test_brkts: 10, test_timeStamp: 200 },
-        { player_id: 'Chad', test_brkts: 10, test_timeStamp: 300 },
-        { player_id: 'Don', test_brkts: 10, test_timeStamp: 400 },
-        { player_id: 'Ed', test_brkts: 10, test_timeStamp: 500 },
-        { player_id: 'Fred', test_brkts: 10, test_timeStamp: 600 },
-        { player_id: 'Greg', test_brkts: 10, test_timeStamp: 700 },
-        { player_id: 'Hal', test_brkts: 10, test_timeStamp: 800 },
-        { player_id: 'Ian', test_brkts: 10, test_timeStamp: 900 },
-        { player_id: 'Jim', test_brkts: 10, test_timeStamp: 1000 },
-        { player_id: 'Ken', test_brkts: 10, test_timeStamp: 1100 },
-        { player_id: 'Lou', test_brkts: 10, test_timeStamp: 1200 },
-        { player_id: 'Mike', test_brkts: 10, test_timeStamp: 1300 },
-        { player_id: 'Nate', test_brkts: 10, test_timeStamp: 1400 },
-        { player_id: 'Otto', test_brkts: 10, test_timeStamp: 1500 },
-        { player_id: 'Paul', test_brkts: 10, test_timeStamp: 1600 },
-        { player_id: 'Quin', test_brkts: 10, test_timeStamp: 1700 },
-        { player_id: 'Rob', test_brkts: 10, test_timeStamp: 1800 },
-        { player_id: 'Sam', test_brkts: 6, test_timeStamp: 1900 },
-        { player_id: 'Tom', test_brkts: 4, test_timeStamp: 2000 },
-        { player_id: 'Umar', test_brkts: 8, test_timeStamp: 2100 },
-        { player_id: 'Vince', test_brkts: 5, test_timeStamp: 2200 },
-        { player_id: 'Will', test_brkts: 9, test_timeStamp: 2300 },
-        { player_id: 'Xander', test_brkts: 7, test_timeStamp: 2400 },
-        { player_id: 'Yuri', test_brkts: 6, test_timeStamp: 2500 },
-        { player_id: 'Zane', test_brkts: 8, test_timeStamp: 2600 },
-        { player_id: 'Adam', test_brkts: 4, test_timeStamp: 2700 },
-        { player_id: 'Ben', test_brkts: 5, test_timeStamp: 2800 },
-        { player_id: 'Carl', test_brkts: 7, test_timeStamp: 2900 },
-        { player_id: 'Dave', test_brkts: 6, test_timeStamp: 3000 },
-        { player_id: 'Eli', test_brkts: 8, test_timeStamp: 3100 },
-        { player_id: 'Finn', test_brkts: 9, test_timeStamp: 3200 },
-        { player_id: 'Gabe', test_brkts: 10, test_timeStamp: 3300 },
-        { player_id: 'Hank', test_brkts: 5, test_timeStamp: 3400 },
-        { player_id: 'Isaac', test_brkts: 9, test_timeStamp: 3500 },
-        { player_id: 'Joe', test_brkts: 4, test_timeStamp: 3600 },
-        { player_id: 'Kyle', test_brkts: 8, test_timeStamp: 3700 },
-        { player_id: 'Liam', test_brkts: 6, test_timeStamp: 3800 },
-        { player_id: 'Mark', test_brkts: 5, test_timeStamp: 3900 },
-        { player_id: 'Noah', test_brkts: 4, test_timeStamp: 4000 },
-        { player_id: 'Owen', test_brkts: 7, test_timeStamp: 4100 },
-        { player_id: 'Pete', test_brkts: 9, test_timeStamp: 4200 },
-        { player_id: 'Ric', test_brkts: 6, test_timeStamp: 4300 },
-        { player_id: 'Stu', test_brkts: 8, test_timeStamp: 4400 },
-        { player_id: 'Ted', test_brkts: 10, test_timeStamp: 4500 },
-        { player_id: 'Vic', test_brkts: 5, test_timeStamp: 4600 },
-        { player_id: 'Wes', test_brkts: 4, test_timeStamp: 4700 },
-        { player_id: 'Xavier', test_brkts: 9, test_timeStamp: 4800 },
-        { player_id: 'Yann', test_brkts: 7, test_timeStamp: 4900 },
-        { player_id: 'Zeke', test_brkts: 6, test_timeStamp: 5000 },
-        { player_id: 'Aaron', test_brkts: 10, test_timeStamp: 5100 },
-        { player_id: 'Bill', test_brkts: 8, test_timeStamp: 5200 },
-        { player_id: 'Cam', test_brkts: 20, test_timeStamp: 5300 },
-        { player_id: 'Dick', test_brkts: 20, test_timeStamp: 5400 },
-        { player_id: 'Eric', test_brkts: 100, test_timeStamp: 5500 },
-        { player_id: 'Felix', test_brkts: 7, test_timeStamp: 5600 },
-        { player_id: 'Gary', test_brkts: 9, test_timeStamp: 5700 },
-        { player_id: 'Harry', test_brkts: 10, test_timeStamp: 5800 },
-        { player_id: 'Ivan', test_brkts: 7, test_timeStamp: 5900 },
-        { player_id: 'John', test_brkts: 9, test_timeStamp: 6000 },
-      ];
+    //   const testBracketList = new BracketList('test', 2, 3);
+    //   const playerData = [
+    //     { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
+    //     { player_id: 'Bob', test_brkts: 10, test_timeStamp: 200 },
+    //     { player_id: 'Chad', test_brkts: 10, test_timeStamp: 300 },
+    //     { player_id: 'Don', test_brkts: 10, test_timeStamp: 400 },
+    //     { player_id: 'Ed', test_brkts: 10, test_timeStamp: 500 },
+    //     { player_id: 'Fred', test_brkts: 10, test_timeStamp: 600 },
+    //     { player_id: 'Greg', test_brkts: 10, test_timeStamp: 700 },
+    //     { player_id: 'Hal', test_brkts: 10, test_timeStamp: 800 },
+    //     { player_id: 'Ian', test_brkts: 10, test_timeStamp: 900 },
+    //     { player_id: 'Jim', test_brkts: 10, test_timeStamp: 1000 },
+    //     { player_id: 'Ken', test_brkts: 10, test_timeStamp: 1100 },
+    //     { player_id: 'Lou', test_brkts: 10, test_timeStamp: 1200 },
+    //     { player_id: 'Mike', test_brkts: 10, test_timeStamp: 1300 },
+    //     { player_id: 'Nate', test_brkts: 10, test_timeStamp: 1400 },
+    //     { player_id: 'Otto', test_brkts: 10, test_timeStamp: 1500 },
+    //     { player_id: 'Paul', test_brkts: 10, test_timeStamp: 1600 },
+    //     { player_id: 'Quin', test_brkts: 10, test_timeStamp: 1700 },
+    //     { player_id: 'Rob', test_brkts: 10, test_timeStamp: 1800 },
+    //     { player_id: 'Sam', test_brkts: 6, test_timeStamp: 1900 },
+    //     { player_id: 'Tom', test_brkts: 4, test_timeStamp: 2000 },
+    //     { player_id: 'Umar', test_brkts: 8, test_timeStamp: 2100 },
+    //     { player_id: 'Vince', test_brkts: 5, test_timeStamp: 2200 },
+    //     { player_id: 'Will', test_brkts: 9, test_timeStamp: 2300 },
+    //     { player_id: 'Xander', test_brkts: 7, test_timeStamp: 2400 },
+    //     { player_id: 'Yuri', test_brkts: 6, test_timeStamp: 2500 },
+    //     { player_id: 'Zane', test_brkts: 8, test_timeStamp: 2600 },
+    //     { player_id: 'Adam', test_brkts: 4, test_timeStamp: 2700 },
+    //     { player_id: 'Ben', test_brkts: 5, test_timeStamp: 2800 },
+    //     { player_id: 'Carl', test_brkts: 7, test_timeStamp: 2900 },
+    //     { player_id: 'Dave', test_brkts: 6, test_timeStamp: 3000 },
+    //     { player_id: 'Eli', test_brkts: 8, test_timeStamp: 3100 },
+    //     { player_id: 'Finn', test_brkts: 9, test_timeStamp: 3200 },
+    //     { player_id: 'Gabe', test_brkts: 10, test_timeStamp: 3300 },
+    //     { player_id: 'Hank', test_brkts: 5, test_timeStamp: 3400 },
+    //     { player_id: 'Isaac', test_brkts: 9, test_timeStamp: 3500 },
+    //     { player_id: 'Joe', test_brkts: 4, test_timeStamp: 3600 },
+    //     { player_id: 'Kyle', test_brkts: 8, test_timeStamp: 3700 },
+    //     { player_id: 'Liam', test_brkts: 6, test_timeStamp: 3800 },
+    //     { player_id: 'Mark', test_brkts: 5, test_timeStamp: 3900 },
+    //     { player_id: 'Noah', test_brkts: 4, test_timeStamp: 4000 },
+    //     { player_id: 'Owen', test_brkts: 7, test_timeStamp: 4100 },
+    //     { player_id: 'Pete', test_brkts: 9, test_timeStamp: 4200 },
+    //     { player_id: 'Ric', test_brkts: 6, test_timeStamp: 4300 },
+    //     { player_id: 'Stu', test_brkts: 8, test_timeStamp: 4400 },
+    //     { player_id: 'Ted', test_brkts: 10, test_timeStamp: 4500 },
+    //     { player_id: 'Vic', test_brkts: 5, test_timeStamp: 4600 },
+    //     { player_id: 'Wes', test_brkts: 4, test_timeStamp: 4700 },
+    //     { player_id: 'Xavier', test_brkts: 9, test_timeStamp: 4800 },
+    //     { player_id: 'Yann', test_brkts: 7, test_timeStamp: 4900 },
+    //     { player_id: 'Zeke', test_brkts: 6, test_timeStamp: 5000 },
+    //     { player_id: 'Aaron', test_brkts: 10, test_timeStamp: 5100 },
+    //     { player_id: 'Bill', test_brkts: 8, test_timeStamp: 5200 },
+    //     { player_id: 'Cam', test_brkts: 20, test_timeStamp: 5300 },
+    //     { player_id: 'Dick', test_brkts: 20, test_timeStamp: 5400 },
+    //     { player_id: 'Eric', test_brkts: 100, test_timeStamp: 5500 },
+    //     { player_id: 'Felix', test_brkts: 7, test_timeStamp: 5600 },
+    //     { player_id: 'Gary', test_brkts: 9, test_timeStamp: 5700 },
+    //     { player_id: 'Harry', test_brkts: 10, test_timeStamp: 5800 },
+    //     { player_id: 'Ivan', test_brkts: 7, test_timeStamp: 5900 },
+    //     { player_id: 'John', test_brkts: 9, test_timeStamp: 6000 },
+    //   ];
             
-      testBracketList.calcTotalBrkts(playerData);
-      expect(testBracketList.fullCount).toBe(68);
-      expect(testBracketList.oneByeCount).toBe(3);
-                                                            //  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71
-      expect(testBracketList.brktCounts.forFullValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]);
-      expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    //   testBracketList.calcTotalBrkts(playerData);
+    //   expect(testBracketList.fullCount).toBe(68);
+    //   expect(testBracketList.oneByeCount).toBe(3);
+    //                                                         //  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71
+    //   expect(testBracketList.brktCounts.forFullValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1]);
+    //   expect(testBracketList.brktCounts.forOneByeValues).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
-      const neededCountMap = createNeededMapCount(testBracketList.brktEntries);
+    //   const neededCountMap = createNeededMapCount(testBracketList.brktEntries);
             
-      testBracketList.randomize([]);     
-      const lastIndex = testBracketList.randomizeErrors.length - 1;
-      if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
-        console.log(testBracketList.randomizeErrors);
-      }
-      expect(testBracketList.randomizeErrors[lastIndex].error).toBe(0);
-      expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);
+    //   // Performance test & ramdomize test - randomize 250 times
+    //   for (let i = 1; i <= 250; i++) {
+    //     testBracketList.randomize([]);
+    //     const lastIndex = testBracketList.randomizeErrors.length - 1;
+    //     if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
+    //       console.log(testBracketList.randomizeErrors);
+    //     }
+    //     expect(testBracketList.randomizeErrors[lastIndex].error).toBe(0);
+    //     expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);
 
-      const adjustedEntries = cloneDeep(playerData)
-      adjustedEntries[54].test_brkts = 71; // adjusted entries for Eric            
-      for (let p = 0; p < adjustedEntries.length; p++) {
-        const priorCount = testBracketList.count1stPosBrktsForPlayer(adjustedEntries[p].player_id);
-        const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
-        const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, adjustedEntries, p, oppoMap);
-        if (errorInfo.error !== 0) {
-          console.log(`player: ${adjustedEntries[p].player_id} error: ${errorInfo.error}`);
-        }
-        expect(errorInfo.error).toBe(0);
-      }
+    //     const adjustedEntries = cloneDeep(playerData)
+    //     adjustedEntries[54].test_brkts = 71; // adjusted entries for Eric            
+    //     for (let p = 0; p < adjustedEntries.length; p++) {
+    //       const priorCount = testBracketList.count1stPosBrktsForPlayer(adjustedEntries[p].player_id);
+    //       const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
+    //       const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, adjustedEntries, p, oppoMap);
+    //       if (errorInfo.error !== 0) {
+    //         console.log(`player: ${adjustedEntries[p].player_id} error: ${errorInfo.error}`);
+    //       }
+    //       expect(errorInfo.error).toBe(0);
+    //     }
 
-      // eric is going to be entred first in all brackets
-      // check to see eric's positions in each bracket
-      const positions: number[] = Array(8).fill(0);      
-      testBracketList.brackets.forEach((brkt) => { 
-        expect(brkt.players.length).toBe(testBracketList.playersPerBrkt);
-        const playerIndex = brkt.players.indexOf(adjustedEntries[54].player_id);
-        if (playerIndex !== -1) {
-          positions[playerIndex] += 1;
-        }        
-      })
-      for (let i = 0; i < positions.length; i++) {        
-        expect(positions[i]).toBeLessThan(testBracketList.brackets.length);
-        expect(positions[i]).toBeGreaterThan(0);
-      }
+    //     // eric is going to be entred first in all brackets
+    //     // check to see eric's positions in each bracket
+    //     const positions: number[] = Array(8).fill(0);      
+    //     testBracketList.brackets.forEach((brkt) => { 
+    //       expect(brkt.players.length).toBe(testBracketList.playersPerBrkt);
+    //       const playerIndex = brkt.players.indexOf(adjustedEntries[54].player_id);
+    //       if (playerIndex !== -1) {
+    //         positions[playerIndex] += 1;
+    //       }        
+    //     })
+    //     for (let i = 0; i < positions.length; i++) {        
+    //       expect(positions[i]).toBeLessThan(testBracketList.brackets.length);
+    //       expect(positions[i]).toBeGreaterThan(0);
+    //     }
+    //   }
 
-    })
+    //   // // run test once to check for errors
+    //   // testBracketList.randomize([]);
+    //   // const lastIndex = testBracketList.randomizeErrors.length - 1;
+    //   // if (testBracketList.randomizeErrors[lastIndex].error !== 0) {
+    //   //   console.log(testBracketList.randomizeErrors);
+    //   // }
+    //   // expect(testBracketList.randomizeErrors[lastIndex].error).toBe(0);
+    //   // expect(testBracketList.brackets.length).toBe(testBracketList.fullCount + testBracketList.oneByeCount);
 
+    //   // const adjustedEntries = cloneDeep(playerData)
+    //   // adjustedEntries[54].test_brkts = 71; // adjusted entries for Eric            
+    //   // for (let p = 0; p < adjustedEntries.length; p++) {
+    //   //   const priorCount = testBracketList.count1stPosBrktsForPlayer(adjustedEntries[p].player_id);
+    //   //   const oppoMap = testBracketList.createOppoMapForTesting(p, priorCount, neededCountMap)
+    //   //   const errorInfo: errorInfoType = validBracketsForPlayer(testBracketList, adjustedEntries, p, oppoMap);
+    //   //   if (errorInfo.error !== 0) {
+    //   //     console.log(`player: ${adjustedEntries[p].player_id} error: ${errorInfo.error}`);
+    //   //   }
+    //   //   expect(errorInfo.error).toBe(0);
+    //   // }
 
+    //   // // eric is going to be entred first in all brackets
+    //   // // check to see eric's positions in each bracket
+    //   // const positions: number[] = Array(8).fill(0);      
+    //   // testBracketList.brackets.forEach((brkt) => { 
+    //   //   expect(brkt.players.length).toBe(testBracketList.playersPerBrkt);
+    //   //   const playerIndex = brkt.players.indexOf(adjustedEntries[54].player_id);
+    //   //   if (playerIndex !== -1) {
+    //   //     positions[playerIndex] += 1;
+    //   //   }        
+    //   // })
+    //   // for (let i = 0; i < positions.length; i++) {        
+    //   //   expect(positions[i]).toBeLessThan(testBracketList.brackets.length);
+    //   //   expect(positions[i]).toBeGreaterThan(0);
+    //   // }
+    // })
   })
 
-  describe('clear', () => { 
+  // describe('clear', () => { 
 
-    // beforeAll(() => {
-    //   populateBrackets();
-    // })
+  //   beforeAll(() => {
+  //     populateBrackets();
+  //   })
 
-    // it('should clear the brackets array', () => {
-    //   mockBracketList.clear();
-    //   expect(mockBracketList.brackets).toHaveLength(0);
-    //   expect(mockBracketList.brktCounts.forFullValues).toHaveLength(0);
-    //   expect(mockBracketList.brktCounts.forOneByeValues).toHaveLength(0);
-    // })
-  })
+  //   it('should clear the brackets array', () => {
+  //     mockBracketList.clear();
+  //     expect(mockBracketList.brackets).toHaveLength(0);
+  //     expect(mockBracketList.brktCounts.forFullValues).toHaveLength(0);
+  //     expect(mockBracketList.brktCounts.forOneByeValues).toHaveLength(0);
+  //   })
+  // })
 
   describe('findPlayer', () => { 
 

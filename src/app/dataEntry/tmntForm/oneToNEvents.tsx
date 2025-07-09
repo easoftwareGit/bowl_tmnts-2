@@ -1,7 +1,7 @@
 import React, { useState, ChangeEvent } from "react";
 import { eventType, AcdnErrType, squadType, lpoxValidTypes, tmntActions } from "../../../lib/types/types";
 import { initEvent } from "../../../lib/db/initVals";
-import { Tabs, Tab } from "react-bootstrap";
+import { Tabs, Tab, OverlayTrigger, Tooltip } from "react-bootstrap";
 import ModalConfirm, { delConfTitle } from "@/components/modal/confirmModal";
 import ModalErrorMsg, { cannotDeleteTitle } from "@/components/modal/errorModal";
 import { initModalObj } from "@/components/modal/modalObjType";
@@ -666,6 +666,22 @@ const OneToNEvents: React.FC<ChildProps> = ({
     }
   };
 
+  const renderTeamSizeToolTip = (props: any) => (
+    <Tooltip id="button-tooltip" {...props}>
+      Singles = 1, Doubles = 2...
+    </Tooltip>
+  );
+  const renderAddedToolTip = (props: any) => (
+    <Tooltip id="button-tooltip" {...props}>
+      Total Prize Fund = Added $ + (Entry Prize Fund * Number of Entries)
+    </Tooltip>
+  );
+  const renderLpoxToolTip = (props: any) => (
+    <Tooltip id="button-tooltip" {...props}>
+      Lineage + Prize Fund + Other + eXpeses must equal Entry Fee
+    </Tooltip>
+  );
+
   return (
     <>
       <ModalConfirm
@@ -725,12 +741,20 @@ const OneToNEvents: React.FC<ChildProps> = ({
                 </div>
               </div>
               <div className="col-sm-2">
-                <label                  
+                <label
                   htmlFor={`inputTeamSize${event.id}`}
-                  className="form-label"
-                  title="Singles = 1, Doubles = 2..."
+                  className="form-label"                  
                 >
-                  Team Size <span className="popup-help">&nbsp;?&nbsp;</span>
+                  Team Size&nbsp;
+                  <>
+                    <OverlayTrigger
+                      placement="right"
+                      delay={{ show: 250, hide: 1000 }}
+                      overlay={renderTeamSizeToolTip}
+                    >
+                      <span className="popup-help">&nbsp;?&nbsp;</span>
+                    </OverlayTrigger>
+                  </>
                 </label>
                 <input
                   type="number"
@@ -778,10 +802,18 @@ const OneToNEvents: React.FC<ChildProps> = ({
               <div className="col-sm-2">
                 <label
                   htmlFor={`inputEventAddedMoney${event.id}`}
-                  className="form-label"
-                  title="Total Prize Fund = Added $ + (Entry Prize Fund * Number of Entries)"
+                  className="form-label"                  
                 >
-                  Added $ <span className="popup-help">&nbsp;?&nbsp;</span>
+                  Added $&nbsp;
+                  <>
+                    <OverlayTrigger
+                      placement="right"
+                      delay={{ show: 250, hide: 1000 }}
+                      overlay={renderAddedToolTip}
+                    >
+                      <span className="popup-help">&nbsp;?&nbsp;</span>
+                    </OverlayTrigger>
+                  </>
                 </label>
                 <EaCurrencyInput
                   id={`inputEventAddedMoney${event.id}`}                  
@@ -918,10 +950,18 @@ const OneToNEvents: React.FC<ChildProps> = ({
               <div className="col-sm-2">
                 <label
                   htmlFor={`inputEventLPOX${event.id}`}
-                  className="form-label"
-                  title="Lineage + Prize Fund + Other + eXpeses must equal Entry Fee"
+                  className="form-label"                  
                 >
-                  L+P+O+X <span className="popup-help">&nbsp;?&nbsp;</span>
+                  L+P+O+X&nbsp;
+                  <>
+                    <OverlayTrigger
+                      placement="right"
+                      delay={{ show: 250, hide: 1000 }}
+                      overlay={renderLpoxToolTip}
+                    >
+                      <span className="popup-help">&nbsp;?&nbsp;</span>
+                    </OverlayTrigger>
+                  </>
                 </label>
                 <EaCurrencyInput
                   id={`inputEventLPOX${event.id}`}                  

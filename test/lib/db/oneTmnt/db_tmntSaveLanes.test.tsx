@@ -4,8 +4,8 @@ import { testBaseLanesApi } from "../../../testApi";
 import { tmntSaveLanes, exportedForTesting } from "@/lib/db/oneTmnt/dbOneTmnt";
 import { mockLanesToPost, mockLanesToEdit, mockSquadsToPost, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { laneType } from "@/lib/types/types";
-import { deleteAllTmntLanes, deleteLane, postLane, postManyLanes, putLane } from "@/lib/db/lanes/dbLanes";
-import { deleteAllEventSquads, postManySquads } from "@/lib/db/squads/dbSquads";
+import { deleteAllLanesForTmnt, deleteLane, postLane, postManyLanes, putLane } from "@/lib/db/lanes/dbLanes";
+import { deleteAllSquadsForEvent, postManySquads } from "@/lib/db/squads/dbSquads";
 import { blankLane } from "@/lib/db/initVals";
 import { cloneDeep } from "lodash";
 const { tmntPostPutOrDelLanes } = exportedForTesting;
@@ -61,8 +61,8 @@ describe('saveTmntDivs test', () => {
 
     beforeAll(async () => {
       // cleanup if test left over from previous test
-      await deleteAllTmntLanes(tmntToDelId);
-      await deleteAllEventSquads(mockSquadsToPost[0].event_id);
+      await deleteAllLanesForTmnt(tmntToDelId);
+      await deleteAllSquadsForEvent(mockSquadsToPost[0].event_id);
       // setup for current tests
       await postManySquads(mockSquadsToPost)
       await postManyLanes(mockLanesToEdit)
@@ -93,8 +93,8 @@ describe('saveTmntDivs test', () => {
     });
 
     afterAll(async () => {      
-      await deleteAllTmntLanes(tmntToDelId);
-      await deleteAllEventSquads(mockSquadsToPost[0].event_id);
+      await deleteAllLanesForTmnt(tmntToDelId);
+      await deleteAllSquadsForEvent(mockSquadsToPost[0].event_id);
     })
 
     it('should save edited lanes, one lane edited', async () => { 
@@ -196,8 +196,8 @@ describe('saveTmntDivs test', () => {
 
     beforeAll(async () => {
       // cleanup if test left over from previous test
-      await deleteAllTmntLanes(tmntToDelId);
-      await deleteAllEventSquads(mockSquadsToPost[0].event_id);
+      await deleteAllLanesForTmnt(tmntToDelId);
+      await deleteAllSquadsForEvent(mockSquadsToPost[0].event_id);
 
       // create temp squads for lanes
       await postManySquads(mockSquadsToPost)
@@ -209,13 +209,13 @@ describe('saveTmntDivs test', () => {
 
     afterEach(async () => {
       if (didCreate) {
-        await deleteAllTmntLanes(tmntToDelId);
+        await deleteAllLanesForTmnt(tmntToDelId);
       }
     });
 
     afterAll(async () => {
-      await deleteAllTmntLanes(tmntToDelId);
-      await deleteAllEventSquads(mockSquadsToPost[0].event_id);
+      await deleteAllLanesForTmnt(tmntToDelId);
+      await deleteAllSquadsForEvent(mockSquadsToPost[0].event_id);
     })
 
     const origClone = cloneDeep(blankLane);
@@ -286,8 +286,8 @@ describe('saveTmntDivs test', () => {
 
     beforeAll(async () => {
       // cleanup if test left over from previous test
-      await deleteAllTmntLanes(tmntToDelId);
-      await deleteAllEventSquads(mockSquadsToPost[0].event_id);
+      await deleteAllLanesForTmnt(tmntToDelId);
+      await deleteAllSquadsForEvent(mockSquadsToPost[0].event_id);
       // setup for current tests
       await postManySquads(mockSquadsToPost)
       await postManyLanes(mockLanesToEdit)
@@ -318,8 +318,8 @@ describe('saveTmntDivs test', () => {
     });
 
     afterAll(async () => {      
-      await deleteAllTmntLanes(tmntToDelId);
-      await deleteAllEventSquads(mockSquadsToPost[0].event_id);
+      await deleteAllLanesForTmnt(tmntToDelId);
+      await deleteAllSquadsForEvent(mockSquadsToPost[0].event_id);
     })
 
     it('should save edited lanes, one lane edited', async () => { 

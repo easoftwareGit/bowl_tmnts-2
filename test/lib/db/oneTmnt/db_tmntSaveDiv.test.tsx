@@ -4,7 +4,7 @@ import { testBaseDivsApi } from "../../../testApi";
 import { tmntSaveDivs, exportedForTesting } from "@/lib/db/oneTmnt/dbOneTmnt";
 import { mockDivsToPost, mockDivsToEdit } from "../../../mocks/tmnts/twoDivs/mockDivs";
 import { divType, HdcpForTypes } from "@/lib/types/types";
-import { deleteAllTmntDivs, deleteDiv, postDiv, putDiv } from "@/lib/db/divs/dbDivs";
+import { deleteAllDivsForTmnt, deleteDiv, postDiv, putDiv } from "@/lib/db/divs/dbDivs";
 import { blankDiv } from "@/lib/db/initVals";
 import { cloneDeep } from "lodash";
 
@@ -31,14 +31,14 @@ describe('saveTmntDivs test', () => {
     : testBaseDivsApi;
 
   const deleteTestDivs = async () => {
-    await deleteAllTmntDivs(mockDivsToPost[0].tmnt_id);
+    await deleteAllDivsForTmnt(mockDivsToPost[0].tmnt_id);
   };
 
   describe('tmntPostPutOrDelDivs(): edited div(s)', () => { 
     const clonedDiv = cloneDeep(mockDivsToEdit[0]);
     const toAddDiv = {
       ...clonedDiv,
-      id: 'div_24b1cd5dee0542038a1244fc2978e863', // added one to last diget
+      id: 'div_01abcdefee0542038a1244fc2978e863',
       div_name: "Test Div",
       hdcp_per: .95,
       hdcp_from: 225,
@@ -97,7 +97,7 @@ describe('saveTmntDivs test', () => {
     });
 
     it('should saved edited divs, one div edited', async () => {
-      const divsToEdit = cloneDeep(mockDivsToEdit);
+      const divsToEdit = cloneDeep(mockDivsToEdit);      
       divsToEdit[1].div_name = "Edited Div";
       divsToEdit[1].hdcp_per = .87;
       divsToEdit[1].hdcp_from = 222;
@@ -106,7 +106,7 @@ describe('saveTmntDivs test', () => {
         expect(savedDivs).not.toBeNull();
         return;
       }
-      expect(savedDivs).toHaveLength(3);
+      expect(savedDivs).toHaveLength(mockDivsToEdit.length);
       didPut = true;
       const found = savedDivs.find((e) => e.id === divsToEdit[1].id);
       if (!found) {
@@ -127,7 +127,7 @@ describe('saveTmntDivs test', () => {
         return;
       }
       didPost = true;
-      expect(savedDivs).toHaveLength(4);
+      expect(savedDivs).toHaveLength(mockDivsToEdit.length + 1);
       const found = savedDivs.find((e) => e.id === toAddDiv.id);
       if (!found) {
         expect(found).not.toBeUndefined();
@@ -147,7 +147,7 @@ describe('saveTmntDivs test', () => {
         return;
       }
       didDel = true;
-      expect(savedDivs).toHaveLength(2);
+      expect(savedDivs).toHaveLength(mockDivsToEdit.length - 1);
       const found = savedDivs.find((e) => e.id === mockDivsToEdit[2].id);
       if (found) {
         expect(found).toBeUndefined();
@@ -170,7 +170,7 @@ describe('saveTmntDivs test', () => {
         expect(savedDivs).not.toBeNull();
         return;
       }
-      expect(savedDivs).toHaveLength(3);
+      expect(savedDivs).toHaveLength(mockDivsToEdit.length); // +1 and -1 
       didPut = true;
       didPost = true;
       didDel = true;
@@ -276,7 +276,7 @@ describe('saveTmntDivs test', () => {
     const clonedDiv = cloneDeep(mockDivsToEdit[0]);
     const toAddDiv = {
       ...clonedDiv,
-      id: 'div_24b1cd5dee0542038a1244fc2978e863', // added one to last diget
+      id: 'div_01abcdefee0542038a1244fc2978e863',
       div_name: "Test Div",
       hdcp_per: .95,
       hdcp_from: 225,

@@ -1,19 +1,19 @@
 import axios from "axios";
 import { baseBrktEntriesApi } from "@/lib/db/apiPaths";
 import { testBaseBrktEntriesApi } from "../../../../test/testApi";
-import { brktEntryType, putManyBrktEntriesReturnType, putManyReturnType } from "@/lib/types/types";
+import { brktEntryType, putManyBrktEntriesReturnType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation";
-import { blankBrktEntry, noBrktEntriesUpdates, noUpdates } from "../initVals";
+import { blankBrktEntry, noBrktEntriesUpdates } from "../initVals";
 
 const url = testBaseBrktEntriesApi.startsWith("undefined")
   ? baseBrktEntriesApi
   : testBaseBrktEntriesApi; 
 
-const oneBrktEntryUrl = url + "/brktEntry/";
-const oneBrktUrl = url + "/brkt/";
-const oneDivUrl = url + "/div/";
-const oneSquadUrl = url + "/squad/";
-const oneTmntUrl = url + "/tmnt/";
+const brktEntryUrl = url + "/brktEntry/";
+const brktUrl = url + "/brkt/";
+const divUrl = url + "/div/";
+const squadUrl = url + "/squad/";
+const tmntUrl = url + "/tmnt/";
 const manyUrl = url + "/many";   
 
 /**
@@ -28,7 +28,7 @@ export const getAllBrktEntriesForTmnt = async (tmntId: string): Promise<brktEntr
     const response = await axios({
       method: "get",
       withCredentials: true,
-      url: oneTmntUrl + tmntId,
+      url: tmntUrl + tmntId,
     });
     if (response.status !== 200) return null;
     const tmntBrktEntries = response.data.brktEntries;
@@ -62,7 +62,7 @@ export const getAllBrktEntriesForDiv = async (divId: string): Promise<brktEntryT
     const response = await axios({
       method: "get",
       withCredentials: true,
-      url: oneDivUrl + divId,
+      url: divUrl + divId,
     });
     if (response.status !== 200) return null;
     const divBrktEntries = response.data.brktEntries;
@@ -96,7 +96,7 @@ export const getAllBrktEntriesForBrkt = async (brktId: string): Promise<brktEntr
     const response = await axios({
       method: "get",
       withCredentials: true,
-      url: oneBrktUrl + brktId,
+      url: brktUrl + brktId,
     });
     if (response.status !== 200) return null;
     const dbBrktEntries = response.data.brktEntries;
@@ -130,7 +130,7 @@ export const getAllBrktEntriesForSquad = async (squadId: string): Promise<brktEn
     const response = await axios({
       method: "get",
       withCredentials: true,
-      url: oneSquadUrl + squadId,
+      url: squadUrl + squadId,
     });
     if (response.status !== 200) return null;
     const squadBrktEntries = response.data.brktEntries;
@@ -238,7 +238,7 @@ export const putBrktEntry = async (brktEntry: brktEntryType): Promise<brktEntryT
       method: "put",
       data: brktEntryJSON,
       withCredentials: true,
-      url: oneBrktEntryUrl + brktEntry.id,
+      url: brktEntryUrl + brktEntry.id,
     });
     if (response.status !== 200) return null;
     const dbBrktEntry = response.data.brktEntry;
@@ -299,7 +299,7 @@ export const deleteBrktEntry = async (id: string): Promise<number> => {
     const response = await axios({
       method: "delete",
       withCredentials: true,
-      url: oneBrktEntryUrl + id,
+      url: brktEntryUrl + id,
     });
     return (response.status === 200) ? 1 : -1    
   } catch (err) {
@@ -315,11 +315,11 @@ export const deleteBrktEntry = async (id: string): Promise<number> => {
  */
 export const deleteAllBrktEntriesForSquad = async (squadId: string): Promise<number> => {
   try {
-    if (!squadId || !isValidBtDbId(squadId, "sqd")) return -1;
+    if (!isValidBtDbId(squadId, "sqd")) return -1;
     const response = await axios({
       method: "delete",
       withCredentials: true,
-      url: oneSquadUrl + squadId,
+      url: squadUrl + squadId,
     });    
     return (response.status === 200) ? response.data.deleted.count : -1
   } catch (err) {
@@ -335,11 +335,11 @@ export const deleteAllBrktEntriesForSquad = async (squadId: string): Promise<num
  */
 export const deleteAllBrktEntriesForDiv = async (divId: string): Promise<number> => {  
   try {
-    if (!divId || !isValidBtDbId(divId, "div")) return -1;
+    if (!isValidBtDbId(divId, "div")) return -1;
     const response = await axios({
       method: "delete",
       withCredentials: true,
-      url: oneDivUrl + divId,
+      url: divUrl + divId,
     });    
     return (response.status === 200) ? response.data.deleted.count : -1
   } catch (err) {
@@ -355,11 +355,11 @@ export const deleteAllBrktEntriesForDiv = async (divId: string): Promise<number>
  */
 export const deleteAllBrktEntriesForBrkt = async (brktId: string): Promise<number> => {  
   try {
-    if (!brktId || !isValidBtDbId(brktId, "brk")) return -1;
+    if (!isValidBtDbId(brktId, "brk")) return -1;
     const response = await axios({
       method: "delete",
       withCredentials: true,
-      url: oneBrktUrl + brktId,
+      url: brktUrl + brktId,
     });    
     return (response.status === 200) ? response.data.deleted.count : -1
   } catch (err) {
@@ -375,11 +375,11 @@ export const deleteAllBrktEntriesForBrkt = async (brktId: string): Promise<numbe
  */
 export const deleteAllBrktEntriesForTmnt = async (tmntId: string): Promise<number> => {
   try {
-    if (!tmntId || !isValidBtDbId(tmntId, "tmt")) return -1;
+    if (!isValidBtDbId(tmntId, "tmt")) return -1;
     const response = await axios({
       method: "delete",
       withCredentials: true,
-      url: oneTmntUrl + tmntId,
+      url: tmntUrl + tmntId,
     });    
     return (response.status === 200) ? response.data.deleted.count : -1
   } catch (err) {

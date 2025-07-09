@@ -3,10 +3,10 @@ import { baseBrktsApi } from "@/lib/db/apiPaths";
 import { testBaseBrktsApi } from "../../../testApi";
 import { brktType } from "@/lib/types/types";
 import { initBrkt } from "@/lib/db/initVals";
-import { deleteAllDivBrkts, deleteAllSquadBrkts, postManyBrkts } from "@/lib/db/brkts/dbBrkts";
+import { deleteAllBrktsForDiv, deleteAllBrktsForSquad, postManyBrkts } from "@/lib/db/brkts/dbBrkts";
 import { mockBrktsToPost, mockDivsToPost, mockSquadsToPost, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/dbSquads";
-import { deleteAllTmntDivs, postManyDivs } from "@/lib/db/divs/dbDivs";
+import { deleteAllSquadsForTmnt, postManySquads } from "@/lib/db/squads/dbSquads";
+import { deleteAllDivsForTmnt, postManyDivs } from "@/lib/db/divs/dbDivs";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -2319,7 +2319,7 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     })
 
     afterAll(async () => {      
-      await deleteAllDivBrkts(toDelDivSquadBrkts[0].div_id);
+      await deleteAllBrktsForDiv(toDelDivSquadBrkts[0].div_id);
     })
 
     it('should delete all brkts for a squad', async () => {
@@ -2378,7 +2378,7 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     })
 
     afterAll(async () => {      
-      await deleteAllSquadBrkts(toDelDivSquadBrkts[0].squad_id);
+      await deleteAllBrktsForSquad(toDelDivSquadBrkts[0].squad_id);
     })
 
     it('should delete all brkts for a div', async () => {
@@ -2427,10 +2427,10 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
 
     beforeAll(async () => {
       // clean up any left over data      
-      await deleteAllSquadBrkts(mockSquadsToPost[0].id);      
-      await deleteAllSquadBrkts(mockSquadsToPost[1].id);      
-      await deleteAllTmntSquads(tmntToDelId)
-      await deleteAllTmntDivs(tmntToDelId)
+      await deleteAllBrktsForSquad(mockSquadsToPost[0].id);      
+      await deleteAllBrktsForSquad(mockSquadsToPost[1].id);      
+      await deleteAllSquadsForTmnt(tmntToDelId)
+      await deleteAllDivsForTmnt(tmntToDelId)
 
       // setup data 
       await postManyDivs(mockDivsToPost)
@@ -2448,10 +2448,10 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     })
 
     afterAll(async () => {      
-      await deleteAllSquadBrkts(mockSquadsToPost[0].id);      
-      await deleteAllSquadBrkts(mockSquadsToPost[1].id);      
-      await deleteAllTmntSquads(tmntToDelId)
-      await deleteAllTmntDivs(tmntToDelId)
+      await deleteAllBrktsForSquad(mockSquadsToPost[0].id);      
+      await deleteAllBrktsForSquad(mockSquadsToPost[1].id);      
+      await deleteAllSquadsForTmnt(tmntToDelId)
+      await deleteAllDivsForTmnt(tmntToDelId)
     })
 
     it('should delete all brkts for a tmnt', async () => {

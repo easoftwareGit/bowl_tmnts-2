@@ -29,7 +29,8 @@ const manyUrl = url + "/many";
  */
 export const getAllSquadsForTmnt = async (tmntId: string): Promise<squadType[] | null> => {
 
-  try {
+  if (!isValidBtDbId(tmntId, 'tmt')) return null
+  try {    
     const response = await axios({
       method: "get",
       withCredentials: true,
@@ -65,7 +66,7 @@ export const getAllSquadsForTmnt = async (tmntId: string): Promise<squadType[] |
  * @returns {dataOneSquadEntriesType | null} - all entries for squad
  */
 export const getAllEntriesForSquad = async (squadId: string): Promise<dataOneSquadEntriesType | null> => { 
-  if (!squadId || !isValidBtDbId(squadId, 'sqd')) return null
+  if (!isValidBtDbId(squadId, 'sqd')) return null
   try {
     const allTmntEntries: dataOneSquadEntriesType = {      
       squadId: squadId,
@@ -269,7 +270,7 @@ const getAllElimEntriesForSquad2 = (squadEntries: any[], curData: dataOneTmntTyp
 /**
  * get all entries for a squad
  *  
- * @param {string} squadId - id of squad
+ * @param {dataOneTmntType} curData - current tournament data
  * @returns {dataOneSquadEntriesType | null} - all entries for squad
  */
 export const getAllEntriesForSquad2 = async (curData: dataOneTmntType): Promise<dataOneSquadEntriesType | null> => {
@@ -283,7 +284,7 @@ export const getAllEntriesForSquad2 = async (curData: dataOneTmntType): Promise<
     || !curData.brkts
     || !curData.elims) return null
   try {
-    const squadID = curData.squads[0].id;
+    const squadID = curData.squads[0].id; // already checked for validity above
     const response = await axios({
       method: "get",
       withCredentials: true,
@@ -433,7 +434,7 @@ export const putSquad = async (squad: squadType): Promise<squadType | null> => {
 export const deleteSquad = async (id: string): Promise<number> => {
 
   try {
-    if (!id || !isValidBtDbId(id, "sqd")) return -1
+    if (!isValidBtDbId(id, "sqd")) return -1
     const response = await axios({
       method: "delete",
       withCredentials: true,
@@ -446,14 +447,14 @@ export const deleteSquad = async (id: string): Promise<number> => {
 }
 
 /**
- * deletes all event squads
+ * deletes all squads for an event
  * 
  * @param {string} eventId - id of event to delete all event squads 
  * @returns {number} - # of squads deleted, -1 if tmntId is invalid or an error
  */
-export const deleteAllEventSquads = async (eventId: string): Promise<number> => {
+export const deleteAllSquadsForEvent = async (eventId: string): Promise<number> => {
   try {
-    if (!eventId || !isValidBtDbId(eventId, "evt")) return -1
+    if (!isValidBtDbId(eventId, "evt")) return -1
     const response = await axios({
       method: "delete",
       withCredentials: true,
@@ -466,14 +467,14 @@ export const deleteAllEventSquads = async (eventId: string): Promise<number> => 
 }
 
 /**
- * deletes all tmnt squads
+ * deletes all squads for a tmnt
  * 
  * @param tmntId - id of tmnt with squads to delete
  * @returns {number} - # of squads deleted, -1 if tmntId is invalid or an error
  */
-export const deleteAllTmntSquads = async (tmntId: string): Promise<number> => {
+export const deleteAllSquadsForTmnt = async (tmntId: string): Promise<number> => {
   try {
-    if (!tmntId || !isValidBtDbId(tmntId, "tmt")) return -1
+    if (!isValidBtDbId(tmntId, "tmt")) return -1
     const response = await axios({
       method: "delete",
       withCredentials: true,

@@ -5,13 +5,13 @@ import { dataOneTmntType, ioDataError, tmntsListType, tmntType, YearObj } from "
 import { isValidBtDbId, validYear } from "@/lib/validation";
 import { removeTimeFromISODateStr, todayYearStr } from "@/lib/dateTools";
 import { blankTmnt } from "../initVals";
-import { deleteAllTmntEvents, getAllEventsForTmnt } from "../events/dbEvents";
-import { deleteAllTmntDivs, getAllDivsForTmnt } from "../divs/dbDivs";
-import { deleteAllTmntSquads, getAllSquadsForTmnt } from "../squads/dbSquads";
-import { deleteAllTmntLanes, getAllLanesForTmnt } from "../lanes/dbLanes";
-import { deleteAllTmntPots, getAllPotsForTmnt } from "../pots/dbPots";
-import { deleteAllTmntBrkts, getAllBrktsForTmnt } from "../brkts/dbBrkts";
-import { deleteAllTmntElims, getAllElimsForTmnt } from "../elims/dbElims";
+import { deleteAllEventsForTmnt, getAllEventsForTmnt } from "../events/dbEvents";
+import { deleteAllDivsForTmnt, getAllDivsForTmnt } from "../divs/dbDivs";
+import { deleteAllSquadsForTmnt, getAllSquadsForTmnt } from "../squads/dbSquads";
+import { deleteAllLanesForTmnt, getAllLanesForTmnt } from "../lanes/dbLanes";
+import { deleteAllPotsForTmnt, getAllPotsForTmnt } from "../pots/dbPots";
+import { deleteAllBrktsForTmnt, getAllBrktsForTmnt } from "../brkts/dbBrkts";
+import { deleteAllElimsForTmnt, getAllElimsForTmnt } from "../elims/dbElims";
 
 const url = testBaseTmntsApi.startsWith("undefined")
   ? baseTmntsApi
@@ -31,7 +31,7 @@ const resultsUrl = url + "/results/"
 export const getTmnt = async (id: string): Promise<tmntType | null> => { 
 
   try {
-    if (!id || !isValidBtDbId(id, 'tmt')) return null
+    if (!isValidBtDbId(id, 'tmt')) return null
     const response = await axios({
       method: "get",
       withCredentials: true,
@@ -70,7 +70,7 @@ export const getTmnt = async (id: string): Promise<tmntType | null> => {
  */
 export const getUserTmnts = async (userId: string): Promise<tmntsListType[]> => {
 
-  if (!userId || !isValidBtDbId(userId, 'usr')) return []
+  if (!isValidBtDbId(userId, 'usr')) return []
   try {
     const response = await axios({
       method: "get",
@@ -134,16 +134,31 @@ const getTmntsForYear = async (
   take?: number
 ): Promise<tmntsListType[]> => {  
   // validate the year as a number
-  if (!validYear(year)) return [];
+  if (!validYear(year)) return [];  
+  // Validate pagination
+  const validSkip = typeof skip === "number" && Number.isInteger(skip) && skip >= 0;
+  const validTake = typeof take === "number" && Number.isInteger(take) && take > 0 && take <= 100;
+  // Build params conditionally
+  const params: any = {};
+  if (validSkip) params.skip = skip;
+  if (validTake) params.take = take;  
+  
+  // const response = await axios({
+  //   method: "get",
+  //   withCredentials: true,
+  //   url: resultsUrl + year,
+  //   params: {
+  //     skip: skip,
+  //     take: take
+  //   }
+  // });
   const response = await axios({
     method: "get",
     withCredentials: true,
     url: resultsUrl + year,
-    params: {
-      skip: skip,
-      take: take
-    }
+    params: params
   });
+  
   if (response.status !== 200) return [];
   const dbTmnts = response.data.tmnts
   const tmntsForYear = dbTmnts.map((tmnt: any) => {
@@ -175,15 +190,30 @@ const getTmntsForYear = async (
  */
 const getUpcomingTmnts = async (skip?: number, take?: number): Promise<tmntsListType[]> => { 
 
+  // Validate pagination
+  const validSkip = typeof skip === "number" && Number.isInteger(skip) && skip >= 0;
+  const validTake = typeof take === "number" && Number.isInteger(take) && take > 0 && take <= 100;
+  // Build params conditionally
+  const params: any = {};
+  if (validSkip) params.skip = skip;
+  if (validTake) params.take = take;  
+
+  // const response = await axios({
+  //   method: "get",
+  //   withCredentials: true,
+  //   url: upcomingUrl,
+  //   params: {
+  //     skip: skip,
+  //     take: take
+  //   }
+  // });
   const response = await axios({
     method: "get",
     withCredentials: true,
     url: upcomingUrl,
-    params: {
-      skip: skip,
-      take: take
-    }
+    params: params
   });
+
   if (response.status !== 200) return [];
   const dbUpcoming = response.data.tmnts
   const upcomingTmnts = dbUpcoming.map((tmnt: any) => {
@@ -231,7 +261,7 @@ export const getTmnts = async (
  */
 export const getAllDataForTmnt = async (tmntId: string): Promise<dataOneTmntType | null> => {
 
-  if (!tmntId || !isValidBtDbId(tmntId, 'tmt')) return null
+  if (!isValidBtDbId(tmntId, 'tmt')) return null
   try {
     const allTmntData: dataOneTmntType = {
       tmnt: { ...blankTmnt },
@@ -378,7 +408,7 @@ export const putTmnt = async (tmnt: tmntType): Promise<tmntType | null> => {
 export const deleteTmnt = async (id: string): Promise<boolean> => {
 
   try {
-    if (!id || !isValidBtDbId(id, 'tmt')) return false
+    if (!isValidBtDbId(id, 'tmt')) return false
     const response = await axios({
       method: "delete",
       withCredentials: true,
@@ -397,13 +427,14 @@ export const deleteTmnt = async (id: string): Promise<boolean> => {
  * @returns {ioDataError} - save code: 0 for good delete, <0 for error
  */
 export const deleteAllDataForTmnt = async (tmntId: string): Promise<ioDataError> => {
-  const elimDelCount = await deleteAllTmntElims(tmntId);
-  const brktsDelCount = await deleteAllTmntBrkts(tmntId);  
-  const potsDelCount = await deleteAllTmntPots(tmntId);
-  const lanesDelCount = await deleteAllTmntLanes(tmntId);
-  const squadsDelCount = await deleteAllTmntSquads(tmntId);
-  const divsDelCount = await deleteAllTmntDivs(tmntId);
-  const eventsDelCount = await deleteAllTmntEvents(tmntId);
+  if (!isValidBtDbId(tmntId, 'tmt')) return ioDataError.Tmnt;
+  const elimDelCount = await deleteAllElimsForTmnt(tmntId);
+  const brktsDelCount = await deleteAllBrktsForTmnt(tmntId);  
+  const potsDelCount = await deleteAllPotsForTmnt(tmntId);
+  const lanesDelCount = await deleteAllLanesForTmnt(tmntId);
+  const squadsDelCount = await deleteAllSquadsForTmnt(tmntId);
+  const divsDelCount = await deleteAllDivsForTmnt(tmntId);
+  const eventsDelCount = await deleteAllEventsForTmnt(tmntId);
   const tmntDel = await deleteTmnt(tmntId);
 
   if (elimDelCount < 0) return ioDataError.Elims;

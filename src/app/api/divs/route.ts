@@ -4,6 +4,7 @@ import { validateDiv, sanitizeDiv, validIntHdcp } from "./validate";
 import { ErrorCode } from "@/lib/validation";
 import { divDataType, divType, HdcpForTypes } from "@/lib/types/types";
 import { initDiv } from "@/lib/db/initVals";
+import { getErrorStatus } from "../errCodes";
 
 // routes /api/divs
 
@@ -79,18 +80,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ div }, { status: 201 });
   } catch (err: any) {
-    let errStatus: number;
-    switch (err.code) {
-      case "P2002": // Unique constraint
-        errStatus = 404;
-        break;
-      case "P2003": // Foreign key constraint
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json({ error: "error creating div" }, { status: errStatus });
   }
 }

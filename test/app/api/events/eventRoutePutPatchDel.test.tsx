@@ -1460,10 +1460,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
           withCredentials: true,
           url: oneEventUrl + event5Id,
         });
-        expect(response.status).toBe(404);
+        expect(response.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(409);
         } else {
           expect(true).toBeFalsy();
         }
@@ -2512,10 +2512,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
           withCredentials: true,
           url: oneEventUrl + event5Id,
         });
-        expect(response.status).toBe(422);
+        expect(response.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
+          expect(err.response?.status).toBe(409);
         } else {
           expect(true).toBeFalsy();
         }

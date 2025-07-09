@@ -3,10 +3,10 @@ import { baseElimsApi } from "@/lib/db/apiPaths";
 import { testBaseElimsApi } from "../../../testApi";
 import { elimType } from "@/lib/types/types";
 import { initElim } from "@/lib/db/initVals";
-import { deleteAllDivElims, deleteAllSquadElims, deleteAllTmntElims, deleteElim, getAllElimsForTmnt, postElim, postManyElims, putElim } from "@/lib/db/elims/dbElims";
+import { deleteAllElimsForDiv, deleteAllElimsForSquad, deleteAllElimsForTmnt, deleteElim, getAllElimsForTmnt, postElim, postManyElims, putElim } from "@/lib/db/elims/dbElims";
 import { mockElimsToPost, mockSquadsToPost, tmntToDelId, mockDivsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllTmntSquads, deleteSquad, postManySquads, postSquad } from "@/lib/db/squads/dbSquads";
-import { deleteAllTmntDivs, deleteDiv, postDiv, postManyDivs } from "@/lib/db/divs/dbDivs";
+import { deleteAllSquadsForTmnt, deleteSquad, postManySquads, postSquad } from "@/lib/db/squads/dbSquads";
+import { deleteAllDivsForTmnt, deleteDiv, postDiv, postManyDivs } from "@/lib/db/divs/dbDivs";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -192,9 +192,9 @@ describe('elimsAxios', () => {
     beforeAll(async () => { 
       
       // remove any old test data
-      await deleteAllTmntElims(tmntToDelId); 
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllElimsForTmnt(tmntToDelId); 
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
 
       // make sure test squads in database
       await postManyDivs(mockDivsToPost);
@@ -207,14 +207,14 @@ describe('elimsAxios', () => {
 
     afterEach(async () => {
       if (createdElims) {
-        await deleteAllTmntElims(tmntToDelId);
+        await deleteAllElimsForTmnt(tmntToDelId);
       }      
     })
 
     afterAll(async () => {
-      await deleteAllTmntElims(tmntToDelId);
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllElimsForTmnt(tmntToDelId);
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
     })
 
     it('should post many elims', async () => { 
@@ -430,7 +430,7 @@ describe('elimsAxios', () => {
 
     beforeAll(async () => {
       // cleanup before tests
-      await deleteAllSquadElims(multiElims[0].squad_id);
+      await deleteAllElimsForSquad(multiElims[0].squad_id);
       await deleteSquad(mockSquadsToPost[0].id);
       await deleteDiv(mockDivsToPost[0].id);
       // setup for tests
@@ -450,26 +450,26 @@ describe('elimsAxios', () => {
     });
 
     afterAll(async () => {
-      await deleteAllSquadElims(multiElims[0].squad_id);
+      await deleteAllElimsForSquad(multiElims[0].squad_id);
       await deleteSquad(mockSquadsToPost[0].id);
       await deleteDiv(mockDivsToPost[0].id);
     });
 
     it('should delete all elims for a squad', async () => {
-      const deleted = await deleteAllSquadElims(multiElims[0].squad_id);
+      const deleted = await deleteAllElimsForSquad(multiElims[0].squad_id);
       expect(deleted).toBe(multiElims.length);
       didDel = true;
     })
     it('should NOT delete all elims for a squad when ID is invalid', async () => {
-      const deleted = await deleteAllSquadElims('test');
+      const deleted = await deleteAllElimsForSquad('test');
       expect(deleted).toBe(-1);
     })
     it('should NOT delete all elims for a squad when ID is not found', async () => {
-      const deleted = await deleteAllSquadElims('sqd_00000000000000000000000000000000');
+      const deleted = await deleteAllElimsForSquad('sqd_00000000000000000000000000000000');
       expect(deleted).toBe(0);
     })
     it('should NOT delete all elims for a squad when ID is valid, but not a squad ID', async () => {
-      const deleted = await deleteAllSquadElims(mockElimsToPost[0].id);
+      const deleted = await deleteAllElimsForSquad(mockElimsToPost[0].id);
       expect(deleted).toBe(-1);
     })
 
@@ -506,7 +506,7 @@ describe('elimsAxios', () => {
 
     beforeAll(async () => {
       // cleanup before tests
-      await deleteAllSquadElims(multiElims[0].squad_id);
+      await deleteAllElimsForSquad(multiElims[0].squad_id);
       await deleteSquad(mockSquadsToPost[0].id);
       await deleteDiv(mockDivsToPost[0].id);
       // setup for tests
@@ -526,26 +526,26 @@ describe('elimsAxios', () => {
     });
 
     afterAll(async () => {
-      await deleteAllSquadElims(multiElims[0].squad_id);
+      await deleteAllElimsForSquad(multiElims[0].squad_id);
       await deleteSquad(mockSquadsToPost[0].id);
       await deleteDiv(mockDivsToPost[0].id);
     });
 
     it('should delete all elims for a div', async () => {
-      const deleted = await deleteAllDivElims(multiElims[0].div_id);
+      const deleted = await deleteAllElimsForDiv(multiElims[0].div_id);
       expect(deleted).toBe(multiElims.length);
       didDel = true;
     })
     it('should NOT delete all elims for a div when ID is invalid', async () => {
-      const deleted = await deleteAllDivElims('test');
+      const deleted = await deleteAllElimsForDiv('test');
       expect(deleted).toBe(-1);
     })
     it('should NOT delete all elims for a div when ID is not found', async () => {
-      const deleted = await deleteAllDivElims('div_00000000000000000000000000000000');
+      const deleted = await deleteAllElimsForDiv('div_00000000000000000000000000000000');
       expect(deleted).toBe(0);
     })
     it('should NOT delete all elims for a div when ID is valid, but not a squad ID', async () => {
-      const deleted = await deleteAllDivElims(mockElimsToPost[0].id);
+      const deleted = await deleteAllElimsForDiv(mockElimsToPost[0].id);
       expect(deleted).toBe(-1);
     })
 
@@ -561,10 +561,10 @@ describe('elimsAxios', () => {
 
     beforeAll(async () => {
       // cleanup before tests
-      await deleteAllSquadElims(toDelSquads[0].id);
-      await deleteAllSquadElims(toDelSquads[1].id);
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllElimsForSquad(toDelSquads[0].id);
+      await deleteAllElimsForSquad(toDelSquads[1].id);
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
       // setup for tests
       await postManyDivs(toDelDivs);
       await postManySquads(toDelSquads);
@@ -577,32 +577,32 @@ describe('elimsAxios', () => {
 
     afterEach(async () => {
       if (!didDel) return;
-      await deleteAllSquadElims(toDelSquads[0].id);
-      await deleteAllSquadElims(toDelSquads[1].id);
+      await deleteAllElimsForSquad(toDelSquads[0].id);
+      await deleteAllElimsForSquad(toDelSquads[1].id);
     })
 
     afterAll(async () => {
-      await deleteAllSquadElims(toDelSquads[0].id);
-      await deleteAllSquadElims(toDelSquads[1].id);
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllElimsForSquad(toDelSquads[0].id);
+      await deleteAllElimsForSquad(toDelSquads[1].id);
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
     })
 
     it('should delete all elims for a tmnt', async () => {
-      const deleted = await deleteAllTmntElims(tmntToDelId);
+      const deleted = await deleteAllElimsForTmnt(tmntToDelId);
       didDel = true;
       expect(deleted).toBe(toDelElims.length);
     })
     it('should NOT delete all elims for a tmnt when ID is invalid', async () => {
-      const deleted = await deleteAllTmntElims('test');
+      const deleted = await deleteAllElimsForTmnt('test');
       expect(deleted).toBe(-1);
     })
     it('should NOT delete all elims for a tmnt when tmnt ID is not found', async () => {
-      const deleted = await deleteAllTmntElims(notFoundTmntId);
+      const deleted = await deleteAllElimsForTmnt(notFoundTmntId);
       expect(deleted).toBe(0);
     })
     it('should NOT delete all elims for a tmnt when tmnt ID is valid, but not a tmnt id', async () => {
-      const deleted = await deleteAllTmntElims(toDelElims[0].id);
+      const deleted = await deleteAllElimsForTmnt(toDelElims[0].id);
       expect(deleted).toBe(-1);
     })
 

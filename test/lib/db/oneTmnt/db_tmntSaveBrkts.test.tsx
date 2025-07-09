@@ -4,9 +4,9 @@ import { testBaseBrktsApi } from "../../../testApi";
 import { tmntSaveBrkts, exportedForTesting } from "@/lib/db/oneTmnt/dbOneTmnt";
 import { mockBrktsToPost, mockSquadsToPost, tmntToDelId, mockDivsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { brktType } from "@/lib/types/types";
-import { deleteAllTmntBrkts, deleteBrkt, postManyBrkts, postBrkt, putBrkt } from "@/lib/db/brkts/dbBrkts";
-import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/dbSquads";
-import { deleteAllTmntDivs, postManyDivs } from "@/lib/db/divs/dbDivs";
+import { deleteAllBrktsForTmnt, deleteBrkt, postManyBrkts, postBrkt, putBrkt } from "@/lib/db/brkts/dbBrkts";
+import { deleteAllSquadsForTmnt, postManySquads } from "@/lib/db/squads/dbSquads";
+import { deleteAllDivsForTmnt, postManyDivs } from "@/lib/db/divs/dbDivs";
 import { blankBrkt } from "@/lib/db/initVals";
 import { cloneDeep } from "lodash";
 const { tmntPostPutOrDelBrkts } = exportedForTesting;
@@ -75,9 +75,9 @@ describe('saveTmntDivs test', () => {
 
     beforeAll(async () => {
       // cleanup if test left over from previous test
-      await deleteAllTmntBrkts(tmntToDelId);
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllBrktsForTmnt(tmntToDelId);
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
       // setup for current tests
       await postManyDivs(mockDivsToPost)
       await postManySquads(mockSquadsToPost)
@@ -109,9 +109,9 @@ describe('saveTmntDivs test', () => {
     });
 
     afterAll(async () => {      
-      await deleteAllTmntBrkts(tmntToDelId);
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllBrktsForTmnt(tmntToDelId);
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
     })
 
     it('should save edited brkts, one brkt edited', async () => { 
@@ -251,9 +251,9 @@ describe('saveTmntDivs test', () => {
 
     beforeAll(async () => {
       // cleanup if test left over from previous test
-      await deleteAllTmntBrkts(tmntToDelId);      
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllBrktsForTmnt(tmntToDelId);      
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
 
       // create temp squads for brkts
       await postManyDivs(mockDivsToPost);
@@ -266,14 +266,14 @@ describe('saveTmntDivs test', () => {
 
     afterEach(async () => {
       if (didCreate) {
-        await deleteAllTmntBrkts(tmntToDelId);
+        await deleteAllBrktsForTmnt(tmntToDelId);
       }
     });
 
     afterAll(async () => {
-      await deleteAllTmntBrkts(tmntToDelId);
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllBrktsForTmnt(tmntToDelId);
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
     })
 
     const origClone = cloneDeep(blankBrkt);
@@ -369,9 +369,9 @@ describe('saveTmntDivs test', () => {
 
     beforeAll(async () => {
       // cleanup if test left over from previous test
-      await deleteAllTmntBrkts(tmntToDelId);
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllBrktsForTmnt(tmntToDelId);
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
       // setup for current tests
       await postManyDivs(mockDivsToPost)
       await postManySquads(mockSquadsToPost)
@@ -403,9 +403,9 @@ describe('saveTmntDivs test', () => {
     });
 
     afterAll(async () => {      
-      await deleteAllTmntBrkts(tmntToDelId);
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllBrktsForTmnt(tmntToDelId);
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
     })
 
     it('should save edited brkts, one brkt edited', async () => { 

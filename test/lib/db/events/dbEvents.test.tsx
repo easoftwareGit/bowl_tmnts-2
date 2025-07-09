@@ -3,7 +3,7 @@ import { baseEventsApi } from "@/lib/db/apiPaths";
 import { testBaseEventsApi } from "../../../testApi";
 import { eventType } from "@/lib/types/types";
 import { initEvent } from "@/lib/db/initVals";
-import { deleteAllTmntEvents, deleteEvent, getAllEventsForTmnt, postEvent, postManyEvents, putEvent } from "@/lib/db/events/dbEvents";
+import { deleteAllEventsForTmnt, deleteEvent, getAllEventsForTmnt, postEvent, postManyEvents, putEvent } from "@/lib/db/events/dbEvents";
 import { mockEventsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockEvents";
 
 // before running this test, run the following commands in the terminal:
@@ -183,7 +183,7 @@ describe("dbEvents", () => {
     let didPost = false;
     
     beforeAll(async () => {
-      await deleteAllTmntEvents(mockEventsToPost[0].tmnt_id);
+      await deleteAllEventsForTmnt(mockEventsToPost[0].tmnt_id);
     });
 
     beforeEach(() => {
@@ -192,7 +192,7 @@ describe("dbEvents", () => {
 
     afterEach(async () => {
       if (didPost) {
-        await deleteAllTmntEvents(mockEventsToPost[0].tmnt_id);
+        await deleteAllEventsForTmnt(mockEventsToPost[0].tmnt_id);
       }
     });
 
@@ -448,7 +448,7 @@ describe("dbEvents", () => {
     })
   });
 
-  describe("deleteAllTmntEvents", () => { 
+  describe("deleteAllEventsForTmnt", () => { 
 
     const multiEvents = [...mockEventsToPost]
 
@@ -489,24 +489,24 @@ describe("dbEvents", () => {
     });
 
     afterAll(async () => {
-      await deleteAllTmntEvents(multiEvents[0].tmnt_id);
+      await deleteAllEventsForTmnt(multiEvents[0].tmnt_id);
     });
 
     it("should delete all events for a tmnt", async () => {
-      const deleted = await deleteAllTmntEvents(multiEvents[0].tmnt_id);
+      const deleted = await deleteAllEventsForTmnt(multiEvents[0].tmnt_id);
       expect(deleted).toBe(2);
       didDel = true;
     });
     it("should NOT delete all events for a tmnt when ID is invalid", async () => {
-      const deleted = await deleteAllTmntEvents("test");
+      const deleted = await deleteAllEventsForTmnt("test");
       expect(deleted).toBe(-1);
     })
     it("should NOT delete all events for a tmnt when ID is not found", async () => {
-      const deleted = await deleteAllTmntEvents(notFoundTmntId);
+      const deleted = await deleteAllEventsForTmnt(notFoundTmntId);
       expect(deleted).toBe(0);
     })
     it('should NOT delete all events for a tmnt when ID is valid, but not a tmnt id', async () => { 
-      const deleted = await deleteAllTmntEvents(multiEvents[0].id); // event it
+      const deleted = await deleteAllEventsForTmnt(multiEvents[0].id); // event it
       expect(deleted).toBe(-1);
     })
   })

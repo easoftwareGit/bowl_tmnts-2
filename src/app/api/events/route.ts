@@ -4,6 +4,7 @@ import { validateEvent, sanitizeEvent, allEventMoneyValid } from "@/app/api/even
 import { ErrorCode } from "@/lib/validation";
 import { eventDataType, eventType } from "@/lib/types/types";
 import { initEvent } from "@/lib/db/initVals";
+import { getErrorStatus } from "../errCodes";
 
 // routes /api/events
 
@@ -102,18 +103,7 @@ export async function POST(request: Request) {
     }    
     return NextResponse.json({ event }, { status: 201 });    
   } catch (err: any) {
-    let errStatus: number
-    switch (err.code) {
-      case 'P2002': // Unique constraint
-        errStatus = 409
-        break;
-      case 'P2003': // parent not found
-        errStatus = 404
-        break;    
-      default:
-        errStatus = 500
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error creating event" },
       { status: errStatus }

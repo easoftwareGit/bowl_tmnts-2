@@ -22,7 +22,7 @@ const manyUrl = url + "/many";
 export const getAllLanesForTmnt = async (tmntId: string): Promise<laneType[] | null> => {
 
   try {
-    if (!tmntId || !isValidBtDbId(tmntId, "tmt")) return null
+    if (!isValidBtDbId(tmntId, "tmt")) return null
     const response = await axios({
       method: "get",
       withCredentials: true,
@@ -154,7 +154,7 @@ export const putLane = async (lane: laneType): Promise<laneType | null> => {
  */
 export const deleteLane = async (id: string): Promise<number> => {
   try {
-    if (!id || !isValidBtDbId(id, "lan")) return -1    
+    if (!isValidBtDbId(id, "lan")) return -1    
     const response = await axios({
       method: "delete",
       withCredentials: true,
@@ -172,9 +172,9 @@ export const deleteLane = async (id: string): Promise<number> => {
  * @param {string} squadId - id of squad to delete all lanes from
  * @returns {number} - # of lanes deleted, -1 if squadId is invalid or an error
  */
-export const deleteAllSquadLanes = async (squadId: string): Promise<number> => {
+export const deleteAllLanesForSquad = async (squadId: string): Promise<number> => {
   try {
-    if (!squadId || !isValidBtDbId(squadId, "sqd")) return -1
+    if (!isValidBtDbId(squadId, "sqd")) return -1
     const response = await axios({
       method: "delete",
       withCredentials: true,
@@ -192,9 +192,9 @@ export const deleteAllSquadLanes = async (squadId: string): Promise<number> => {
  * @param {string} tmntId - id of tmnt with lanes to delete
  * @returns {number} - # of lanes deleted, -1 if tmntId is invalid or an error
  */
-export const deleteAllTmntLanes = async (tmntId: string): Promise<number> => {
+export const deleteAllLanesForTmnt = async (tmntId: string): Promise<number> => {
   try {
-    if (!tmntId || !isValidBtDbId(tmntId, "tmt")) return -1
+    if (!isValidBtDbId(tmntId, "tmt")) return -1
     const response = await axios({
       method: "delete",
       withCredentials: true,

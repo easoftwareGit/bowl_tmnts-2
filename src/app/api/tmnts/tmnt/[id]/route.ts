@@ -5,6 +5,7 @@ import { sanitizeTmnt, validateTmnt } from "@/app/api/tmnts/valildate";
 import { tmntType } from "@/lib/types/types";
 import { initTmnt } from "@/lib/db/initVals";
 import { dateTo_UTC_yyyyMMdd, dateTo_yyyyMMdd, removeTimeFromISODateStr, startOfDayFromString } from "@/lib/dateTools";
+import { getErrorStatus } from "@/app/api/errCodes";
 
 // routes /api/tmnts/tmnt/:id
 
@@ -100,19 +101,8 @@ export async function PUT(
       },
     });
     return NextResponse.json({ tmnt }, { status: 200 });
-  } catch (error: any) {
-    let errStatus: number;
-    switch (error.code) {
-      case "P2003":   // parent not found
-        errStatus = 404;
-        break;
-      case "P2025":   // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+  } catch (err: any) {
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "Error putting tmnt" },
       { status: errStatus }
@@ -224,19 +214,8 @@ export async function PATCH(
       },
     });
     return NextResponse.json({ tmnt }, { status: 200 });
-  } catch (error: any) {
-    let errStatus: number;
-    switch (error.code) {
-      case "P2003":   // parent not found
-        errStatus = 404;
-        break;
-      case "P2025":   // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+  } catch (err: any) {
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "Error patching tmnt" },
       { status: errStatus }
@@ -260,19 +239,8 @@ export async function DELETE(
       },
     });
     return NextResponse.json({ deleted }, { status: 200 });
-  } catch (error: any) {
-    let errStatus: number;
-    switch (error.code) {
-      case "P2003": // parent has child rows
-        errStatus = 409;
-        break;
-      case "P2025": // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+  } catch (err: any) {
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "Error deleting tmnt" },
       { status: errStatus }

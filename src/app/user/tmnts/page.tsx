@@ -73,13 +73,13 @@ export default function UserTmntsPage() {
         onCancel={canceledDelete}
       />
       <WaitModal show={userTmntsStatus === 'loading' || bowlsStatus === 'loading'} message="Loading..." />      
-      {userTmntsStatus !== 'loading' && userTmntsStatus !== 'succeeded' && userTmntsError
-        ? (<div>Error: {userTmntsError}</div>
-        ) : null}
-      {bowlsStatus !== 'loading' && bowlsStatus !== 'succeeded' && bowlsError
-        ? (<div>Error: {bowlsError}</div>
-        ) : null}
-      {(userTmntsStatus === 'succeeded' && bowlsStatus === 'succeeded') ? ( 
+      {(userTmntsStatus !== 'loading' && userTmntsStatus !== 'succeeded' && userTmntsError) && 
+        (<>Error: {userTmntsError}</>
+      )}
+      {(bowlsStatus !== 'loading' && bowlsStatus !== 'succeeded' && bowlsError) &&
+        (<>Error: {bowlsError}</>
+      )}
+      {(userTmntsStatus === 'succeeded' && bowlsStatus === 'succeeded') && ( 
         <div className="container">
           <div className="row g-3 mb-3 justify-content-md-center align-items-center">      
             <div className="col-md-auto">
@@ -146,7 +146,7 @@ export default function UserTmntsPage() {
             </div>
           </div>
         </div>          
-      ) : null}
+      )}
     </>
   );
 

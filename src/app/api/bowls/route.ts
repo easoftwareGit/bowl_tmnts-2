@@ -4,6 +4,7 @@ import { bowlType } from "@/lib/types/types";
 import { initBowl } from "@/lib/db/initVals";
 import { sanitizeBowl, validateBowl } from "./validate";
 import { ErrorCode } from "@/lib/validation";
+import { getErrorStatus } from "../errCodes";
 
 // routes /api/bowls
 
@@ -79,19 +80,8 @@ export async function POST(request: NextRequest) {
       data: bowlData
     })
     return NextResponse.json({bowl}, {status: 201});
-  } catch (error: any) {
-    let errStatus: number
-    switch (error.code) {
-      case 'P2002': // unique constraint violation
-        errStatus = 400
-        break;
-      case 'P2003': // parent row not found
-        errStatus = 404
-        break;    
-      default:
-        errStatus = 500
-        break;
-    }
+  } catch (err: any) {
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error creating bowl" },
       { status: errStatus }

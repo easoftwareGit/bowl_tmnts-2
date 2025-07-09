@@ -1,4 +1,4 @@
-import { getPotName, getBrktOrElimName, exportedForTesting, getDivName, fullName } from "@/lib/getName";
+import { getPotName, getBrktOrElimName, exportedForTesting, getDivName, fullName, getPotShortName } from "@/lib/getName";
 import {
   mockDivs,
   mockPots,
@@ -6,6 +6,7 @@ import {
   mockElims,  
 } from "../mocks/tmnts/twoDivs/mockDivs";
 import { initDivs } from "@/lib/db/initVals";
+import { cloneDeep } from "lodash";
 
 const { findDiv } = exportedForTesting;
 
@@ -46,7 +47,7 @@ describe("getName functions", () => {
   describe('getPotName', () => {
     it("getPotName returns the correct name", () => {
       const potName = getPotName(mockPots[1], mockDivs);
-      expect(potName).toBe("Last Game - Scratch");
+      expect(potName).toBe("Scratch: Last Game");
     });
     
     it("getPotName returns an empty string if the pot is not found", () => {
@@ -60,6 +61,35 @@ describe("getName functions", () => {
 
     it("getPotName returns an empty string if the divs array is empty", () => {
       const potName = getPotName(mockPots[1], []);
+      expect(potName).toBe("");
+    }); 
+  })
+
+  describe('getPotShortName', () => {
+    it("getPotName returns the correct short name for Game", () => {
+      const potName = getPotShortName(mockPots[0], mockDivs);
+      expect(potName).toBe("Scratch: Gm");
+    });    
+    it("getPotName returns the correct short name for Last Game", () => {
+      const potName = getPotShortName(mockPots[1], mockDivs);
+      expect(potName).toBe("Scratch: LG");
+    });    
+    it("getPotName returns the correct short name for series", () => {
+      const testPots = cloneDeep(mockPots);
+      testPots[1].pot_type = "Series"; // Change pot type to Series
+      const potName = getPotShortName(testPots[1], mockDivs);
+      expect(potName).toBe("Scratch: Sr");
+    });    
+    it("getPotName returns an empty string if the pot is not found", () => {
+      const testPot = {
+        ...mockPots[1],
+        div_id: "div_123"
+      };
+      const potName = getPotShortName(testPot, mockDivs);
+      expect(potName).toBe("");
+    });
+    it("getPotName returns an empty string if the divs array is empty", () => {
+      const potName = getPotShortName(mockPots[1], []);
       expect(potName).toBe("");
     }); 
   })

@@ -4,10 +4,10 @@ import { testBaseBrktsApi } from "../../../testApi";
 import { brktType } from "@/lib/types/types";
 import { initBrkt } from "@/lib/db/initVals";
 import { btDbUuid } from "@/lib/uuid";
-import { mockBrktsToPost, tmntToDelId, mockDivs, mockSquadsToPost, mockDivsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllTmntSquads, postManySquads } from "@/lib/db/squads/dbSquads";
-import { deleteAllTmntDivs, postManyDivs } from "@/lib/db/divs/dbDivs";
-import { deleteAllTmntBrkts } from "@/lib/db/brkts/dbBrkts";
+import { mockBrktsToPost, tmntToDelId, mockSquadsToPost, mockDivsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
+import { deleteAllSquadsForTmnt, postManySquads } from "@/lib/db/squads/dbSquads";
+import { deleteAllDivsForTmnt, postManyDivs } from "@/lib/db/divs/dbDivs";
+import { deleteAllBrktsForTmnt } from "@/lib/db/brkts/dbBrkts";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -1513,9 +1513,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
 
     beforeAll(async () => { 
       // remove any old test data      
-      await deleteAllTmntBrkts(tmntToDelId);
-      await deleteAllTmntSquads(tmntToDelId);      
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllBrktsForTmnt(tmntToDelId);
+      await deleteAllSquadsForTmnt(tmntToDelId);      
+      await deleteAllDivsForTmnt(tmntToDelId);
 
       await deletePostedBrkt();
 
@@ -1530,16 +1530,16 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
 
     afterEach(async () => {
       if (createdBrkts) {
-        await deleteAllTmntBrkts(tmntToDelId);
+        await deleteAllBrktsForTmnt(tmntToDelId);
 
         await deletePostedBrkt();
       }
     })
 
     afterAll(async () => {
-      await deleteAllTmntBrkts(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
-      await deleteAllTmntSquads(tmntToDelId);
+      await deleteAllBrktsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
+      await deleteAllSquadsForTmnt(tmntToDelId);
     })
 
     it('should create many brkts', async () => {  

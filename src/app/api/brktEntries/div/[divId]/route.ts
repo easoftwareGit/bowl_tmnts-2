@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { isValidBtDbId } from "@/lib/validation";
 import { brktEntriesFromPrisa } from "@/lib/types/types";
 import { brktEntriesWithFee } from "../../feeCalc";
+import { getErrorStatus } from "@/app/api/errCodes";
 
 // routes /api/brktEntries/div/:divId
 
@@ -88,19 +89,8 @@ export async function DELETE(
       },
     });
     return NextResponse.json({ deleted }, { status: 200 });
-  } catch (error: any) {
-    let errStatus: number;
-    switch (error.code) {
-      case "P2003": // parent has child rows
-        errStatus = 409;
-        break;
-      case "P2025": // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+  } catch (err: any) {
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "Error deleting brktEntries for div" },
       { status: errStatus }

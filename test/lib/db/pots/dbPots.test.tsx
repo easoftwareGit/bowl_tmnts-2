@@ -4,9 +4,9 @@ import { testBasePotsApi } from "../../../testApi";
 import { potCategoriesTypes, potType } from "@/lib/types/types";
 import { initPot } from "@/lib/db/initVals";
 import { mockDivs, mockPotsToPost, mockSquadsToPost, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllDivPots, deleteAllSquadPots, deleteAllTmntPots, deletePot, getAllPotsForTmnt, postManyPots, postPot, putPot } from "@/lib/db/pots/dbPots";
-import { deleteAllTmntSquads, deleteSquad, postManySquads, postSquad } from "@/lib/db/squads/dbSquads";
-import { deleteAllTmntDivs, deleteDiv, postDiv, postManyDivs } from "@/lib/db/divs/dbDivs";
+import { deleteAllPotsForDiv, deleteAllPotsForSquad, deleteAllPotsForTmnt, deletePot, getAllPotsForTmnt, postManyPots, postPot, putPot } from "@/lib/db/pots/dbPots";
+import { deleteAllSquadsForTmnt, deleteSquad, postManySquads, postSquad } from "@/lib/db/squads/dbSquads";
+import { deleteAllDivsForTmnt, deleteDiv, postDiv, postManyDivs } from "@/lib/db/divs/dbDivs";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -185,9 +185,9 @@ describe('dbPots', () => {
     beforeAll(async () => { 
       
       // remove any old test data
-      await deleteAllTmntPots(tmntToDelId); 
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllPotsForTmnt(tmntToDelId); 
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
 
       // make sure test squads in database
       await postManyDivs(mockDivs);
@@ -200,14 +200,14 @@ describe('dbPots', () => {
 
     afterEach(async () => {
       if (createdPots) {
-        await deleteAllTmntPots(tmntToDelId);
+        await deleteAllPotsForTmnt(tmntToDelId);
       }      
     })
 
     afterAll(async () => {
-      await deleteAllTmntPots(tmntToDelId);
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllPotsForTmnt(tmntToDelId);
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
     })
 
     it('should post many pots', async () => { 
@@ -440,7 +440,7 @@ describe('dbPots', () => {
 
     beforeAll(async () => {
       // cleanup before tests
-      await deleteAllSquadPots(multiPots[0].squad_id);
+      await deleteAllPotsForSquad(multiPots[0].squad_id);
       await deleteSquad(mockSquadsToPost[0].id);
       await deleteDiv(mockDivs[0].id);
       // setup for tests
@@ -460,26 +460,26 @@ describe('dbPots', () => {
     });
 
     afterAll(async () => {
-      await deleteAllSquadPots(multiPots[0].squad_id);
+      await deleteAllPotsForSquad(multiPots[0].squad_id);
       await deleteSquad(mockSquadsToPost[0].id);
       await deleteDiv(mockDivs[0].id);
     });
 
     it('should delete all pots for a squad', async () => {
-      const deleted = await deleteAllSquadPots(multiPots[0].squad_id);
+      const deleted = await deleteAllPotsForSquad(multiPots[0].squad_id);
       expect(deleted).toBe(multiPots.length);
       didDel = true;
     })
     it('should NOT delete all pots for a squad when ID is invalid', async () => {
-      const deleted = await deleteAllSquadPots('test');
+      const deleted = await deleteAllPotsForSquad('test');
       expect(deleted).toBe(-1);
     })
     it('should NOT delete all pots for a squad when ID is not found', async () => {
-      const deleted = await deleteAllSquadPots('sqd_00000000000000000000000000000000');
+      const deleted = await deleteAllPotsForSquad('sqd_00000000000000000000000000000000');
       expect(deleted).toBe(0);
     })
     it('should NOT delete all pots for a squad when ID is valid, but not a squad ID', async () => {
-      const deleted = await deleteAllSquadPots(mockPotsToPost[0].id);
+      const deleted = await deleteAllPotsForSquad(mockPotsToPost[0].id);
       expect(deleted).toBe(-1);
     })
 
@@ -519,7 +519,7 @@ describe('dbPots', () => {
 
     beforeAll(async () => {
       // cleanup before tests
-      await deleteAllDivPots(multiPots[0].div_id);
+      await deleteAllPotsForDiv(multiPots[0].div_id);
       await deleteSquad(mockSquadsToPost[0].id);
       await deleteDiv(mockDivs[0].id);
       // setup for tests
@@ -539,26 +539,26 @@ describe('dbPots', () => {
     });
 
     afterAll(async () => {
-      await deleteAllDivPots(multiPots[0].div_id);
+      await deleteAllPotsForDiv(multiPots[0].div_id);
       await deleteSquad(mockSquadsToPost[0].id);
       await deleteDiv(mockDivs[0].id);
     });
 
     it('should delete all pots for a div', async () => {
-      const deleted = await deleteAllDivPots(multiPots[0].div_id);
+      const deleted = await deleteAllPotsForDiv(multiPots[0].div_id);
       expect(deleted).toBe(3);
       didDel = true;
     })
     it('should NOT delete all pots for a div when ID is invalid', async () => {
-      const deleted = await deleteAllDivPots('test');
+      const deleted = await deleteAllPotsForDiv('test');
       expect(deleted).toBe(-1);
     })
     it('should NOT delete all pots for a div when ID is not found', async () => {
-      const deleted = await deleteAllDivPots('div_00000000000000000000000000000000');
+      const deleted = await deleteAllPotsForDiv('div_00000000000000000000000000000000');
       expect(deleted).toBe(0);
     })
     it('should NOT delete all pots for a div when ID is valid, but not a div ID', async () => {
-      const deleted = await deleteAllDivPots(mockPotsToPost[0].id);
+      const deleted = await deleteAllPotsForDiv(mockPotsToPost[0].id);
       expect(deleted).toBe(-1);
     })
 
@@ -573,10 +573,10 @@ describe('dbPots', () => {
 
     beforeAll(async () => {
       // cleanup before tests
-      await deleteAllSquadPots(toDelSquads[0].id);
-      await deleteAllSquadPots(toDelSquads[1].id);
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllPotsForSquad(toDelSquads[0].id);
+      await deleteAllPotsForSquad(toDelSquads[1].id);
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
       // setup for tests
       await postManyDivs(toDelDivs);
       await postManySquads(toDelSquads);
@@ -589,32 +589,32 @@ describe('dbPots', () => {
 
     afterEach(async () => {
       if (!didDel) return;
-      await deleteAllSquadPots(toDelSquads[0].id);
-      await deleteAllSquadPots(toDelSquads[1].id);
+      await deleteAllPotsForSquad(toDelSquads[0].id);
+      await deleteAllPotsForSquad(toDelSquads[1].id);
     })
 
     afterAll(async () => {
-      await deleteAllSquadPots(toDelSquads[0].id);
-      await deleteAllSquadPots(toDelSquads[1].id);
-      await deleteAllTmntSquads(tmntToDelId);
-      await deleteAllTmntDivs(tmntToDelId);
+      await deleteAllPotsForSquad(toDelSquads[0].id);
+      await deleteAllPotsForSquad(toDelSquads[1].id);
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
     })
 
     it('should delete all pots for a tmnt', async () => {
-      const deleted = await deleteAllTmntPots(tmntToDelId);
+      const deleted = await deleteAllPotsForTmnt(tmntToDelId);
       didDel = true;
       expect(deleted).toBe(toDelPots.length);
     })
     it('should NOT delete all pots for a tmnt when ID is invalid', async () => {
-      const deleted = await deleteAllTmntPots('test');
+      const deleted = await deleteAllPotsForTmnt('test');
       expect(deleted).toBe(-1);
     })
     it('should NOT delete all pots for a tmnt when tmnt ID is not found', async () => {
-      const deleted = await deleteAllTmntPots(notFoundTmntId);
+      const deleted = await deleteAllPotsForTmnt(notFoundTmntId);
       expect(deleted).toBe(0);
     })
     it('should NOT delete all pots for a tmnt when tmnt ID is valid, but not a tmnt id', async () => {
-      const deleted = await deleteAllTmntPots(toDelPots[0].id);
+      const deleted = await deleteAllPotsForTmnt(toDelPots[0].id);
       expect(deleted).toBe(-1);
     })
 

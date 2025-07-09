@@ -1,7 +1,7 @@
 import React, { useState, ChangeEvent } from "react";
 import { divType, AcdnErrType, potType, brktType, elimType, HdcpForTypes, tmntActions } from "../../../lib/types/types";
 import { defaultHdcpFrom, initDiv } from "../../../lib/db/initVals";
-import { Tabs, Tab } from "react-bootstrap";
+import { Tabs, Tab, OverlayTrigger, Tooltip } from "react-bootstrap";
 import ModalConfirm, { delConfTitle } from "@/components/modal/confirmModal";
 import ModalErrorMsg, { cannotDeleteTitle } from "@/components/modal/errorModal";
 import { initModalObj } from "@/components/modal/modalObjType";
@@ -463,6 +463,13 @@ const OneToNDivs: React.FC<ChildProps> = ({
     }
   };
 
+  const renderHdcpToolTip = (props: any) => (
+    <Tooltip id="button-tooltip" {...props}>
+      Enter Hdcp % 0 for scratch
+    </Tooltip>
+  );
+
+
   return (
     <>
       <ModalConfirm
@@ -521,10 +528,18 @@ const OneToNDivs: React.FC<ChildProps> = ({
               <div className="col-sm-3">
                 <label
                   htmlFor={`inputHdcpPer${div.id}`}
-                  className="form-label"
-                  title="Enter Hdcp % 0 for scratch"
+                  className="form-label"                  
                 >
-                  Hdcp % <span className="popup-help">&nbsp;?&nbsp;</span>
+                  Hdcp %&nbsp;
+                  <>
+                    <OverlayTrigger
+                      placement="right"
+                      delay={{ show: 250, hide: 1000 }}
+                      overlay={renderHdcpToolTip}
+                    >
+                      <span className="popup-help">&nbsp;?&nbsp;</span>
+                    </OverlayTrigger>
+                  </>
                 </label>
                 <EaPercentInput
                   id={`inputHdcpPer${div.id}`}

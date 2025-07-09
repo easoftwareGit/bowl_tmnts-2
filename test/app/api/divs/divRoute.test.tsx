@@ -4,7 +4,7 @@ import { testBaseDivsApi } from "../../../testApi";
 import { divType } from "@/lib/types/types";
 import { initDiv } from "@/lib/db/initVals";
 import { mockDivsToPost, tmntToDelId } from "../../../mocks/tmnts/twoDivs/mockDivs";
-import { deleteAllTmntDivs, postDiv } from "@/lib/db/divs/dbDivs";
+import { deleteAllDivsForTmnt, postDiv } from "@/lib/db/divs/dbDivs";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -91,8 +91,8 @@ describe('Divs - API: /api/divs', () => {
     it('should get all divs', async () => { 
       const response = await axios.get(url);
       expect(response.status).toBe(200);
-      // 11 rows in prisma/seed.ts
-      expect(response.data.divs).toHaveLength(11);
+      // 12 rows in prisma/seed.ts
+      expect(response.data.divs).toHaveLength(12);
     })
 
   })
@@ -258,10 +258,10 @@ describe('Divs - API: /api/divs', () => {
           withCredentials: true,
           url: url
         })
-        expect(response.status).toBe(404);
+        expect(response.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(409);
         } else {
           expect(true).toBeFalsy();
         }
@@ -787,10 +787,10 @@ describe('Divs - API: /api/divs', () => {
           withCredentials: true,
           url: url
         })
-        expect(response.status).toBe(404);
+        expect(response.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(409);
         } else {
           expect(true).toBeFalsy();
         } 
@@ -821,7 +821,7 @@ describe('Divs - API: /api/divs', () => {
     let createdEvents = false;    
 
     beforeAll(async () => { 
-      await deleteAllTmntDivs(mockDivsToPost[0].tmnt_id);
+      await deleteAllDivsForTmnt(mockDivsToPost[0].tmnt_id);
     })
 
     beforeEach(() => {
@@ -830,7 +830,7 @@ describe('Divs - API: /api/divs', () => {
 
     afterEach(async () => {
       if (createdEvents) {
-        await deleteAllTmntDivs(mockDivsToPost[0].tmnt_id);
+        await deleteAllDivsForTmnt(mockDivsToPost[0].tmnt_id);
       }      
     })
 
@@ -1511,10 +1511,10 @@ describe('Divs - API: /api/divs', () => {
           withCredentials: true,
           url: oneDivUrl + invalidDiv.id,
         })
-        expect(response.status).toBe(404);
+        expect(response.status).toBe(409);
       } catch (err) { 
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(409);
         } else {
           expect(true).toBeFalsy();
         } 
@@ -2203,10 +2203,10 @@ describe('Divs - API: /api/divs', () => {
           withCredentials: true,
           url: oneDivUrl + patchTmnt.id,
         })
-        expect(patchResponse.status).toBe(404);
+        expect(patchResponse.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(409);
         } else {
           expect(true).toBeFalsy();
         }

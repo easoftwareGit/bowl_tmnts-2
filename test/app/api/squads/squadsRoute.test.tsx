@@ -4,7 +4,7 @@ import { testBaseSquadsApi, testBaseEventsApi } from "../../../testApi";
 import { eventType, squadType } from "@/lib/types/types";
 import { initEvent, initSquad } from "@/lib/db/initVals";
 import { removeTimeFromISODateStr, startOfDayFromString } from "@/lib/dateTools";
-import { deleteAllTmntSquads } from "@/lib/db/squads/dbSquads";
+import { deleteAllSquadsForTmnt } from "@/lib/db/squads/dbSquads";
 import { mockSquadsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { mockCurData } from "../../../mocks/tmnts/playerEntries/mockOneSquadEntries";
 import { cloneDeep } from "lodash";
@@ -788,10 +788,10 @@ describe('Squads - API: /api/squads', () => {
           withCredentials: true,
           url: url
         })
-        expect(response.status).toBe(404);
+        expect(response.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(409);
         } else {
           expect(true).toBeFalsy();
         }
@@ -1283,7 +1283,7 @@ describe('Squads - API: /api/squads', () => {
     let createdSquads = false;    
 
     beforeAll(async () => { 
-      await deleteAllTmntSquads(tmntId);
+      await deleteAllSquadsForTmnt(tmntId);
     })
 
     beforeEach(() => {
@@ -1292,7 +1292,7 @@ describe('Squads - API: /api/squads', () => {
 
     afterEach(async () => {
       if (createdSquads) {
-        await deleteAllTmntSquads(tmntId);
+        await deleteAllSquadsForTmnt(tmntId);
       }      
     })
 
@@ -2088,10 +2088,10 @@ describe('Squads - API: /api/squads', () => {
           withCredentials: true,
           url: oneSquadUrl + invalidSquad.id,
         })
-        expect(response.status).toBe(422);
+        expect(response.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
+          expect(err.response?.status).toBe(409);
         } else {
           expect(true).toBeFalsy();
         }
@@ -2885,10 +2885,10 @@ describe('Squads - API: /api/squads', () => {
           withCredentials: true,
           url: oneSquadUrl + invalidSquad.id,
         })
-        expect(response.status).toBe(422);
+        expect(response.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
+          expect(err.response?.status).toBe(409);
         } else {
           expect(true).toBeFalsy();
         }

@@ -4,6 +4,7 @@ import { ErrorCode } from "@/lib/validation";
 import { divDataType, divType, HdcpForTypes } from "@/lib/types/types";
 import { initDiv } from "@/lib/db/initVals";
 import { validateDivs } from "../validate";
+import { getErrorStatus } from "../../errCodes";
 
 // routes /api/divs/many
 
@@ -54,18 +55,7 @@ export async function POST(request: NextRequest) {
     })
     return NextResponse.json({divs: manyDivs}, { status: 201 });    
   } catch (err: any) {
-    let errStatus: number
-    switch (err.code) {
-      case 'P2002': // Unique constraint
-        errStatus = 409 
-        break;
-      case 'P2003': // parent not found
-        errStatus = 404
-        break;    
-      default:
-        errStatus = 500
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error creating many divs" },
       { status: errStatus }

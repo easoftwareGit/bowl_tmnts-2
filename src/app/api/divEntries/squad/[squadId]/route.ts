@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isValidBtDbId } from "@/lib/validation";
 import { divEntriesWithHdcp } from "../../hdcpCalc";
+import { getErrorStatus } from "@/app/api/errCodes";
 
 // routes /api/divEntries/squad/:squadId
 
@@ -70,19 +71,8 @@ export async function DELETE(
       },
     });
     return NextResponse.json({ deleted }, { status: 200 });
-  } catch (error: any) {
-    let errStatus: number;
-    switch (error.code) {
-      case "P2003": // parent has child rows
-        errStatus = 409;
-        break;
-      case "P2025": // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+  } catch (err: any) {
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "Error deleting divEntries for squad" },
       { status: errStatus }

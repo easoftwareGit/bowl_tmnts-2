@@ -4,9 +4,8 @@ import { testBaseSquadsApi } from "../../../testApi";
 import { tmntSaveSquads, exportedForTesting } from "@/lib/db/oneTmnt/dbOneTmnt";
 import { mockSquadsToPost, mockSquadsToEdit, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { squadType } from "@/lib/types/types";
-import { deleteAllTmntSquads, deleteSquad, postManySquads, postSquad, putSquad } from "@/lib/db/squads/dbSquads";
+import { deleteAllSquadsForTmnt, deleteSquad, postManySquads, postSquad, putSquad } from "@/lib/db/squads/dbSquads";
 import { blankSquad } from "@/lib/db/initVals";
-import { compareAsc } from "date-fns";
 import { cloneDeep } from "lodash";
 
 const { tmntPostPutOrDelSquads } = exportedForTesting;
@@ -32,7 +31,7 @@ describe('saveTmntDivs test', () => {
     : testBaseSquadsApi;
 
   const deleteTestSquads = async () => {
-    await deleteAllTmntSquads(tmntToDelId);
+    await deleteAllSquadsForTmnt(tmntToDelId);
   };
 
   describe('tmntPostPutOrDelSquads(): edited div(s)', () => {   

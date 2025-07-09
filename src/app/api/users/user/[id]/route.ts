@@ -5,6 +5,7 @@ import { initUser } from "@/lib/db/initVals";
 import { sanitizeUser, validateUser } from "../../validate";
 import { ErrorCode, isValidBtDbId } from "@/lib/validation";
 import { doHash } from "@/lib/hash";
+import { getErrorStatus } from "@/app/api/errCodes";
 
 export async function GET(
   request: Request,
@@ -81,19 +82,8 @@ export async function PUT(
       },
     });
     return NextResponse.json({ user }, { status: 200 });
-  } catch (error: any) {
-    let errStatus: number;
-    switch (error.code) {
-      case 'P2002': // Unique constraint failed on the fields: (`email`)
-        errStatus = 409;
-        break;
-      case "P2025": // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+  } catch (err: any) {
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "Error putting user" },
       { status: errStatus }
@@ -210,22 +200,8 @@ export async function PATCH(
       },
     });
     return NextResponse.json({ user }, { status: 200 });
-  } catch (error: any) {
-    let errStatus: number;
-    switch (error.code) {
-      case 'P2002': // Unique constraint failed on the fields: (`email`)
-        errStatus = 409;
-        break;
-      case "P2003": // parent has child rows
-        errStatus = 404;
-        break;
-      case "P2025": // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+  } catch (err: any) {
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "Error pasting user" },
       { status: errStatus }
@@ -249,19 +225,8 @@ export async function DELETE(
       },
     });
     return NextResponse.json({ deleted }, { status: 200 });
-  } catch (error: any) {
-    let errStatus: number;
-    switch (error.code) {
-      case "P2003": // parent has child rows
-        errStatus = 409;
-        break;
-      case "P2025": // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+  } catch (err: any) {
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "Error deleting user" },
       { status: errStatus }

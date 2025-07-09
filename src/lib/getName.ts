@@ -14,7 +14,17 @@ export const getDivName = (id: string, divs: divType[]): string => {
 export const getPotName = (pot: potType, divs: divType[]): string => {
   const foundDiv: divType | undefined = findDiv(pot.div_id, divs)
   return (foundDiv)
-    ? pot.pot_type + ' - ' + foundDiv.div_name
+    ? foundDiv.div_name + ': ' + pot.pot_type
+    : '';
+}
+
+export const getPotShortName = (pot: potType, divs: divType[]): string => {
+  const foundDiv: divType | undefined = findDiv(pot.div_id, divs)
+  const potShort = (pot.pot_type === 'Game')
+    ? 'Gm'
+    : (pot.pot_type === 'Last Game') ? 'LG' : 'Sr';    
+  return (foundDiv)
+    ? foundDiv.div_name + ': ' + potShort
     : '';
 }
 

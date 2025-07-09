@@ -5,6 +5,7 @@ import { tmntDataType, tmntType } from "@/lib/types/types";
 import { sanitizeTmnt, validateTmnt } from "./valildate";
 import { initTmnt } from "@/lib/db/initVals";
 import { removeTimeFromISODateStr, startOfDayFromString } from "@/lib/dateTools";
+import { getErrorStatus } from "../errCodes";
 
 // routes /api/tmnts
 
@@ -77,22 +78,8 @@ export async function POST(request: Request) {
       data: tmntData
     })
     return NextResponse.json({ tmnt }, { status: 201 });
-  } catch (error: any) {
-    let errStatus: number
-    switch (error.code) {
-      case 'P2002': //unique constraint failed
-        errStatus = 400
-        break;
-      case 'P2003': //parent row not found
-        errStatus = 409
-        break;    
-      case "P2025": // record not found
-        errStatus = 404;
-        break;      
-      default:
-        errStatus = 500
-        break;
-    }
+  } catch (err: any) {
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error creating tmnt" },
       { status: errStatus }

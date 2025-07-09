@@ -5,6 +5,7 @@ import { initPotEntry } from "@/lib/db/initVals";
 import { potEntryType } from "@/lib/types/types";
 import { sanitizePotEntry, validatePotEntry } from "../../validate";
 import { validMoney } from "@/lib/currency/validate";
+import { getErrorStatus } from "@/app/api/errCodes";
 
 // routes /api/potEntries/potEntry/:id
 
@@ -78,19 +79,8 @@ export async function PUT(
     });
 
     return NextResponse.json({ potEntry }, { status: 200 });
-  } catch (error: any) {
-    let errStatus: number;
-    switch (error.code) {
-      case "P2003":   // parent not found
-        errStatus = 404;
-        break;
-      case "P2025":   // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+  } catch (err: any) {
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "Error putting potEntry" },
       { status: errStatus }
@@ -180,19 +170,8 @@ export async function PATCH(
     });
 
     return NextResponse.json({ potEntry }, { status: 200 });
-  } catch (error: any) {
-    let errStatus: number;
-    switch (error.code) {
-      case "P2003":   // parent not found
-        errStatus = 404;
-        break;
-      case "P2025":   // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+  } catch (err: any) {
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "Error patching potEntry" },
       { status: errStatus }
@@ -216,19 +195,8 @@ export async function DELETE(
       },
     });
     return NextResponse.json({ deleted }, { status: 200 });
-  } catch (error: any) {
-    let errStatus: number;
-    switch (error.code) {
-      case "P2003": // parent has child rows
-        errStatus = 409;
-        break;
-      case "P2025": // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+  } catch (err: any) {
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "Error deleting potEntry" },
       { status: errStatus }

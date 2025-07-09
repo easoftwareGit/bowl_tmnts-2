@@ -3,7 +3,7 @@ import { baseSquadsApi, baseEventsApi } from "@/lib/db/apiPaths";
 import { testBaseSquadsApi, testBaseEventsApi } from "../../../testApi";
 import { eventType, squadType } from "@/lib/types/types";
 import { initEvent, initSquad } from "@/lib/db/initVals";
-import { deleteAllEventSquads, deleteAllTmntSquads, deleteSquad, getAllEntriesForSquad, getAllEntriesForSquad2, getAllSquadsForTmnt, postManySquads, postSquad, putSquad } from "@/lib/db/squads/dbSquads";
+import { deleteAllSquadsForEvent, deleteAllSquadsForTmnt, deleteSquad, getAllEntriesForSquad, getAllEntriesForSquad2, getAllSquadsForTmnt, postManySquads, postSquad, putSquad } from "@/lib/db/squads/dbSquads";
 import { startOfDayFromString } from "@/lib/dateTools";
 import { mockSquadsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { mockCurData, mockSquadEntries, mockSquadEntriesData } from "../../../mocks/tmnts/playerEntries/mockOneSquadEntries";
@@ -163,8 +163,8 @@ describe('dbSquads', () => {
       expect(allEntries.divEntries.length).toBe(36);
       // 30 potEntries in prisma/seeds.ts
       expect(allEntries.potEntries.length).toBe(30);
-      // 14 brktEntries in prisma/seeds.ts (7 each for 2 brackets)
-      expect(allEntries.brktEntries.length).toBe(14);
+      // 40 brktEntries in prisma/seeds.ts (20 each for 2 brackets)
+      expect(allEntries.brktEntries.length).toBe(40);
       // 32 elimEntries in prisma/seeds.ts (16 each for 2 brackets)
       expect(allEntries.elimEntries.length).toBe(32);
   
@@ -275,7 +275,7 @@ describe('dbSquads', () => {
       expect(allEntries.elimEntries.length).toBe(0);
     })
     it('should return null if passed null', async () => { 
-      const allEntries = await getAllEntriesForSquad2(null as any);
+      const allEntries = await getAllEntriesForSquad(null as any);
       expect(allEntries).toBeNull();
     })
     it('should return null if squads is null in current data', async () => { 
@@ -415,7 +415,7 @@ describe('dbSquads', () => {
     let didPost = false;
 
     beforeAll(async () => {
-      await deleteAllTmntSquads(tmntId);
+      await deleteAllSquadsForTmnt(tmntId);
     });
 
     beforeEach(() => {
@@ -424,7 +424,7 @@ describe('dbSquads', () => {
 
     afterEach(async () => {
       if (didPost) {
-        await deleteAllTmntSquads(tmntId);
+        await deleteAllSquadsForTmnt(tmntId);
       }
     });
 
@@ -667,24 +667,24 @@ describe('dbSquads', () => {
     });
 
     afterAll(async () => {
-      await deleteAllEventSquads(multiSquads[0].event_id);
+      await deleteAllSquadsForEvent(multiSquads[0].event_id);
     });
 
     it('should delete all squads for an event', async () => {
-      const deleted = await deleteAllEventSquads(multiSquads[0].event_id);
+      const deleted = await deleteAllSquadsForEvent(multiSquads[0].event_id);
       expect(deleted).toBe(2);
       didDel = true;
     })
     it('should NOT delete all squads for an event when ID is invalid', async () => {
-      const deleted = await deleteAllEventSquads('test');
+      const deleted = await deleteAllSquadsForEvent('test');
       expect(deleted).toBe(-1);
     })
     it('should NOT delete all squads for an event when ID is not found', async () => {
-      const deleted = await deleteAllEventSquads('evt_00000000000000000000000000000000');
+      const deleted = await deleteAllSquadsForEvent('evt_00000000000000000000000000000000');
       expect(deleted).toBe(0);
     })
     it('should NOT delete all squads for an event when ID is valid, but not an event ID', async () => {
-      const deleted = await deleteAllEventSquads(mockSquadsToPost[0].id);
+      const deleted = await deleteAllSquadsForEvent(mockSquadsToPost[0].id);
       expect(deleted).toBe(-1);
     })
     
@@ -825,20 +825,20 @@ describe('dbSquads', () => {
     })
 
     it('should delete all squads for a tmnt', async () => {
-      const deleted = await deleteAllTmntSquads(toDelEvents[0].tmnt_id);
+      const deleted = await deleteAllSquadsForTmnt(toDelEvents[0].tmnt_id);
       didDel = true;
       expect(deleted).toBe(3);
     })
     it('should NOT delete all squads for a tmnt when ID is invalid', async () => {
-      const deleted = await deleteAllTmntSquads('test');
+      const deleted = await deleteAllSquadsForTmnt('test');
       expect(deleted).toBe(-1);
     })
     it('should NOT delete all squads for a tmnt when tmnt ID is not found', async () => {
-      const deleted = await deleteAllTmntSquads(notFoundTmntId);
+      const deleted = await deleteAllSquadsForTmnt(notFoundTmntId);
       expect(deleted).toBe(0);
     })
     it('should NOT delete all squads for a tmnt when tmnt ID is valid, but not a tmnt id', async () => {
-      const deleted = await deleteAllTmntSquads(toDelEvents[0].id);
+      const deleted = await deleteAllSquadsForTmnt(toDelEvents[0].id);
       expect(deleted).toBe(-1);
     })
     

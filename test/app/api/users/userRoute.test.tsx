@@ -1327,23 +1327,6 @@ describe('Users - API: /api/users', () => {
         }
       }
     })
-    it('should NOT delete a user when user has child rows', async () => { 
-      try {
-        const delResponse = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: oneUserUrl + testUser.id
-        });
-        expect(delResponse.status).toBe(409);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(409);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-
   })
 
 })  

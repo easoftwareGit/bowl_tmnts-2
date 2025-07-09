@@ -2,16 +2,17 @@ import { brktType, divType, elimType, potType } from "@/lib/types/types";
 import { maxAverage, maxBrackets, maxMoney } from "@/lib/validation";
 import {
   GridColDef,
-  GridEditInputCell,
-  GridRenderCellParams,
+  GridEditInputCell,  
   GridRowModel,
   GridRowModesModel,
 } from "@mui/x-data-grid";
 import { currencyFormatter } from "@/lib/currency/formatValue";
-import { getBrktOrElimName } from "@/lib/getName";
+import { getBrktOrElimName, getDivName, getPotShortName } from "@/lib/getName";
 import { convertToString } from "@/lib/convert";
 import { validAverage } from "@/app/api/players/validate";
 import { sanitize } from "@/lib/sanitize";
+import { validPosChars } from "./rowInfo";
+import { isTouchDevice } from "@/lib/mobileDevices/mobileDevices";
 
 export const brktsColNameEnd = "_brkts";
 export const feeColNameEnd = "_fee";
@@ -19,7 +20,12 @@ export const hdcpColNameEnd = "_hdcp";
 export const intHdcpColNameEnd = "_intHdcp";
 export const refundsColNameEnd = "_refunds";
 export const timeStampColNameEnd = "_timeStamp";
-export const feeColWidth = 95;
+
+const isTouch = isTouchDevice();
+
+export const feeColWidth = isTouch ? 125 : 95;
+export const potColWidth = isTouch ? 160 : 105;
+export const nameWidth = isTouch ? 150 : 120;
 
 export const playerEntryData: { [key: string]: any } = {
   id: "",
@@ -104,7 +110,9 @@ export const createPlayerEntryColumns = (
 ): GridColDef[] => {
 
   const firstNameSettter = (value: string, row: GridRowModel) => { 
-    if (!value) return row;
+    if (value == null) { 
+      value === "";
+    };
     let firstName = sanitize(value)
     return {
       ...row,
@@ -113,7 +121,9 @@ export const createPlayerEntryColumns = (
   }
 
   const lastNameSettter = (value: string, row: GridRowModel) => { 
-    if (!value) return row;
+    if (value == null) { 
+      value === "";
+    };
     let lastName = sanitize(value)
     return {
       ...row,
@@ -122,10 +132,10 @@ export const createPlayerEntryColumns = (
   }
 
   const setHdcps = (value: number, row: GridRowModesModel) => {
-    const average = value ? Math.trunc(Number(value)) : 0;
+    let average = value ? Math.trunc(Number(value)) : 0;        
     if (!validAverage(average)) return row;
-
     let newRow = { ...row };
+    let aveRowValue = average === 0 ? null : average;
     divs?.forEach((div) => {
       let hdcp = 0;
       if (div.hdcp_per > 0 && average < div.hdcp_from) {
@@ -137,7 +147,7 @@ export const createPlayerEntryColumns = (
       const divHdcpName = divEntryHdcpColName(div.id);
       newRow = {
         ...newRow,
-        average: average,
+        average: aveRowValue,
         [divHdcpName]: hdcp,
       } as typeof playerEntryData;
     });
@@ -147,37 +157,78 @@ export const createPlayerEntryColumns = (
   const isValidLane = (value: number) => value >= minLane && value <= maxLane;
   const applyLaneCellColor = (value: number) => {
     if (
-      value === null ||
-      value === undefined ||
+      value == null ||      
       (typeof value === "string" && (value as string) === "")
     )
       return "";
     if (typeof value !== "number" || !isValidLane(value)) return "cellError";
     return "";
   };
+  const isValidPosition = (value: string): boolean => { 
+    if (value == null || typeof value !== "string" && value === "") return false;
+    return (value.length === 1 && validPosChars.test(value[0]));
+  }    
+  const applyPositionCellColor = (value: string) => {
+    if (
+      value == null ||      
+      (typeof value === "string" && (value as string) === "")
+    )
+      return "";
+    if (typeof value !== "string" || !isValidPosition(value)) return "cellError";
+    return "";
+  }
   const setLaneAndLanePos = (value: number, row: GridRowModel) => {
     let lane = (value) ? Math.trunc(value) : null;
     if (lane === 0) lane = null;
     const position = row.position;
-    const lanePos = (lane && isValidLane(lane) && position) ? lane + "-" + position : "";
-    return {
-      ...row,
-      lane,
-      lanePos,
-    };
-  };
-  const setPositionAndLanePos = (value: string, row: GridRowModel) => {
-    const lane = (row.lane && isValidLane(row.lane)) ? row.lane : null;
-    let position = value ? value.toString() : null;
-    if (position && position.length >= 1) {
-      position = position[0] === " " ? null : position[0];
+    if (isValidLane(lane as number)) {
+      if (isValidPosition(position)) {
+        const lanePos = lane + "-" + position;
+        return {
+          ...row,
+          lane,
+          lanePos,
+        };
+      }
+      return {
+        ...row,
+        lane,
+        lanePos: "",
+      };
+    } else { 
+      return {
+        ...row,  
+        lane,
+        lanePos: "",
+      };
     }
-    const lanePos = lane && position ? lane + "-" + position : "";
-    return {
-      ...row,
-      position,
-      lanePos,
-    };
+  };
+
+  const setPositionAndLanePos = (value: string, row: GridRowModel) => {  
+
+    let position = value ? value.toString()[0] : null
+    if (isValidPosition(position as string)) {
+      if (isValidLane(row.lane)) {
+        const lanePos = row.lane + "-" + position;
+        return {
+          ...row,
+          position,
+          lanePos,
+        };
+      } else { 
+        return {
+          ...row,
+          position,
+          lanePos: "",
+        }
+      }
+    } else { 
+      return {
+        ...row,
+        position: value,
+        lanePos: "",
+      }
+    }
   };
 
   const playersColumns: GridColDef[] = [
@@ -187,7 +238,7 @@ export const createPlayerEntryColumns = (
       description: "First Name",
       headerClassName: "playersHeader",
       editable: true,
-      width: 120,
+      width: nameWidth,
       valueSetter: firstNameSettter
     },
     {
@@ -196,7 +247,7 @@ export const createPlayerEntryColumns = (
       description: "Last Name",
       headerClassName: "playersHeader",
       editable: true,
-      width: 120,
+      width: nameWidth,
       valueSetter: lastNameSettter
     },
     {
@@ -206,7 +257,7 @@ export const createPlayerEntryColumns = (
       headerClassName: "playersHeader",
       headerAlign: "center",
       editable: true,
-      width: 80,
+      width: isTouch ? 130 : 80,
       type: "number",
       align: "center",
       renderEditCell: (params) => (
@@ -219,8 +270,7 @@ export const createPlayerEntryColumns = (
         />
       ),
       cellClassName: (params) => applyAverageCellColor(params.value as number),
-      valueGetter: (value: any) =>
-        Math.round((Number(value) + Number.EPSILON) * 100) / 100,
+      valueGetter: getOnlyIntegerOrNull,
       valueSetter: setHdcps,
     },
     {
@@ -230,7 +280,7 @@ export const createPlayerEntryColumns = (
       headerClassName: "playersHeader",
       headerAlign: "center",
       editable: true,
-      width: 70,
+      width: isTouch ? 120 : 70,
       type: "number",
       align: "center",
       renderEditCell: (params) => (
@@ -253,8 +303,9 @@ export const createPlayerEntryColumns = (
       headerClassName: "playersHeader",
       headerAlign: "center",
       editable: true,
-      width: 80,
+      width: isTouch ? 130 : 80,
       align: "center",
+      cellClassName: (params) => applyPositionCellColor(params.value as string),
       valueGetter: getPosition,
       valueSetter: setPositionAndLanePos,
     },
@@ -264,7 +315,7 @@ export const createPlayerEntryColumns = (
       description: "Lane Position",
       headerClassName: "playersHeader",
       headerAlign: "center",
-      width: 80,
+      width: isTouch ? 140 : 80,
       align: "center",
     },
   ];
@@ -279,6 +330,7 @@ export const timeStampColName = (id: string) => id + timeStampColNameEnd;
 
 /**
  * check if column name is a division entry fee column
+ * NOTE: does not check for valid uuid in middle of column name
  * 
  * @param {string} colName - column name to check
  * @returns {boolean} - true if column name is a division entry fee column
@@ -364,7 +416,7 @@ export const createDivEntryColumns = (divs: divType[]): GridColDef[] => {
       headerClassName: "divsHeader",
       headerAlign: "center",
       type: "number",
-      width: 80,
+      width: isTouch ? 120 : 80,
       align: "center",      
       valueFormatter: formatHdcp,       
       disableExport: div.int_hdcp, // cant export Hdcp column, so stick intHdcp value here
@@ -373,6 +425,20 @@ export const createDivEntryColumns = (divs: divType[]): GridColDef[] => {
   });
   return divColumns;
 };
+
+/**
+ * check if column name is a pot fee column
+ * NOTE: does not check for valid uuid in middle of column name
+ * 
+ * @param {string} colName - column name to check
+ * @returns {boolean} - true if column name is a pot fee column
+ */
+export const isPotFeeColumnName = (colName: string): boolean => { 
+  if (!colName) return false;
+  return (colName.startsWith('pot')
+    && colName.endsWith(feeColNameEnd)) 
+    ? true : false;  
+}
 
 /**
  * gets the pot fee
@@ -395,7 +461,7 @@ export const getPotFee = (pots: potType[], potId: string): number => {
  * @returns {boolean} - true if entry fee === 0 || entry fee === fee
  */
 export const isValidFee = (value: number, fee: number) => {
-  if (value === null || value === undefined) return true;
+  if (value == null) return true;
   if (isNaN(value)) return false;
   if (typeof value !== "number") value = Number(value);
   return value === 0 || value === fee ? true : false;
@@ -413,17 +479,19 @@ const applyPotOrElimFeeCellColor = (value: number, fee: number) => {
  * @param {potType[]} pots - array of tournament pots to create columns for
  * @returns {GridColDef[]} - array of column definitions for pot section
  */
-export const createPotEntryColumns = (pots: potType[]): GridColDef[] => {
+export const createPotEntryColumns = (pots: potType[], divs: divType[]): GridColDef[] => {
   const potColumns: GridColDef[] = [];
   pots.forEach((pot) => {
+    const divName = getDivName(pot.div_id, divs);
+    const potHeader = getPotShortName(pot, divs);    
     const feeColumn: GridColDef = {
       field: entryFeeColName(pot.id),
-      headerName: pot.pot_type,
-      description: pot.pot_type,
+      headerName: potHeader,
+      description: divName + ': ' + pot.pot_type,
       headerClassName: "potsHeader",
-      headerAlign: "center",
+      headerAlign: "right",
       type: "number",
-      width: feeColWidth,
+      width: potColWidth,
       editable: true,
       align: "right",
       renderEditCell: (params: any) => (
@@ -449,6 +517,20 @@ export const createPotEntryColumns = (pots: potType[]): GridColDef[] => {
 
 export const entryNumBrktsColName = (id: string) => id + brktsColNameEnd;
 export const entryNumRefundsColName = (id: string) => id + refundsColNameEnd;
+
+/**
+ * check if column name is a number of brackets column
+ * NOTE: does not check for valid uuid in middle of column name
+ * 
+ * @param {string} colName - column name to check
+ * @returns {boolean} - true if column name is a number of brackets column
+ */
+export const isBrktsColumnName = (colName: string): boolean => { 
+  if (!colName) return false;
+  return (colName.startsWith('brk')
+    && colName.endsWith(brktsColNameEnd)) 
+    ? true : false;  
+}
 
 const validBrkts = (value: number) => value >= 0 && value <= maxBrackets;
 const applyNumBrktsCellColor = (value: number) => {
@@ -477,8 +559,9 @@ export const createBrktEntryColumns = (
   ) => {
     const numBrkts = value ? Math.trunc(Number(value)) : 0;
     if (!validBrkts(numBrkts)) return row;
-    const brktId = column.field.slice(0, -5); // remove '_name'
-    const feeName = entryFeeColName(brktId);  // get fee per brkt field name
+    const sliceLength = brktsColNameEnd.length * -1;   // *-1 because remove '_brkts'
+    const brktId = column.field.slice(0, sliceLength); // remove '_brkts'
+    const feeName = entryFeeColName(brktId);           // get fee per brkt field name
     if (isNaN(numBrkts) || isNaN(feePerBrkt)) return row;
     const fee = numBrkts * feePerBrkt;
     const tsColName = timeStampColName(brktId);
@@ -502,7 +585,7 @@ export const createBrktEntryColumns = (
       description: getBrktOrElimName(brkt, divs),
       headerAlign: "center",
       headerClassName: "brktsHeader",
-      width: 110,
+      width: isTouch ? 155 : 120,
       editable: true,
       align: "center",
       renderEditCell: (params: any) => (
@@ -538,6 +621,20 @@ export const createBrktEntryColumns = (
 };
 
 /**
+ * check if column name is an eliminator fee column
+ * NOTE: does not check for valid uuid in middle of column name
+ * 
+ * @param {string} colName - column name to check
+ * @returns {boolean} - true if column name is an eliminator fee column
+ */
+export const isElimFeeColumnName = (colName: string): boolean => { 
+  if (!colName) return false;
+  return (colName.startsWith('elm')
+    && colName.endsWith(feeColNameEnd)) 
+    ? true : false;  
+}
+
+/**
  * gets the eliminator fee
  * 
  * @param {elimType[]} elims - array of tournament eliminators
@@ -560,7 +657,7 @@ export const getElimFee = (elims: elimType[], elimId: string) => {
 export const createElimEntryColumns = (
   elims: elimType[],
   divs: divType[]
-): GridColDef[] => {
+): GridColDef[] => {  
   const elimColumns: GridColDef[] = [];
   elims.forEach((elim) => {
     const feeColumn: GridColDef = {
@@ -570,7 +667,7 @@ export const createElimEntryColumns = (
       headerClassName: "elimsHeader",
       headerAlign: "center",
       type: "number",
-      width: feeColWidth,
+      width: isTouch ? 160 : feeColWidth,
       editable: true,
       align: "right",
       renderEditCell: (params: any) => (
@@ -607,7 +704,7 @@ export const feeTotalColumn = (): GridColDef[] => {
       description: "Total Fee",
       headerClassName: "totalHeader",
       headerAlign: "center",
-      width: feeColWidth,
+      width: isTouch ? 160 : feeColWidth,
       align: "right",
       valueFormatter: formatFeeBlankAsZero,
     },

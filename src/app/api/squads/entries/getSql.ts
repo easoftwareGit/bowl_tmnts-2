@@ -9,7 +9,7 @@ const getDivAndHdcpSQL = (curData: dataOneTmntType): string => {
   }
   let sql = '';
   curData.divs.forEach((div) => {
-    if (div.id && isValidBtDbId(div.id, 'div')) {
+    if (isValidBtDbId(div.id, 'div')) {
       sql +=
         `MAX(CASE WHEN public."Div_Entry".div_id = '${div.id}' ` +
         `THEN public."Div_Entry".fee END) AS ${div.id}_fee, ` + 
@@ -27,7 +27,7 @@ const getPotsSQL = (curData: dataOneTmntType): string => {
   }
   let sql = '';
   curData.pots.forEach((pot) => {
-    if (pot.id && isValidBtDbId(pot.id, 'pot')) {
+    if (isValidBtDbId(pot.id, 'pot')) {
       sql +=
         `MAX(CASE WHEN public."Pot".id = '${pot.id}' ` +
         `THEN public."Pot_Entry".fee END) AS ${pot.id}_fee, `
@@ -43,7 +43,7 @@ const getBrktsSQL = (curData: dataOneTmntType): string => {
   }
   let sql = '';
   curData.brkts.forEach((brkt) => {
-    if (brkt.id && isValidBtDbId(brkt.id, 'brk')) {
+    if (isValidBtDbId(brkt.id, 'brk')) {
       sql +=
         `MAX(CASE WHEN public."Brkt_Entry".brkt_id = '${brkt.id}' ` +
         `THEN public."Brkt_Entry".num_brackets END) AS ${brkt.id}_num_brackets, ` +
@@ -61,7 +61,7 @@ const getElimsSQL = (curData: dataOneTmntType): string => {
   }
   let sql = '';
   curData.elims.forEach((elim) => {
-    if (elim.id && isValidBtDbId(elim.id, 'elm')) {
+    if (isValidBtDbId(elim.id, 'elm')) {
       sql +=
         `MAX(CASE WHEN public."Elim_Entry".elim_id = '${elim.id}' ` +
         `THEN public."Elim_Entry".fee END) AS ${elim.id}_fee, `

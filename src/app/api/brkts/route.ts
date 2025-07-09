@@ -5,6 +5,7 @@ import { ErrorCode } from "@/lib/validation";
 import { brktDataType, brktType } from "@/lib/types/types";
 import { initBrkt } from "@/lib/db/initVals";
 import { calcFSA } from "@/lib/currency/fsa";
+import { getErrorStatus } from "../errCodes";
 
 // routes /api/brkts
 
@@ -105,18 +106,7 @@ export async function POST(request: Request) {
     };
     return NextResponse.json({ brkt }, { status: 201 });
   } catch (err: any) {
-    let errStatus: number;
-    switch (err.code) {
-      case "P2002": // Unique constraint
-        errStatus = 409;
-        break;
-      case "P2003": // Foreign key constraint
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error creating brkt" },
       { status: errStatus }

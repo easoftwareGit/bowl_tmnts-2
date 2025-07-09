@@ -19,7 +19,7 @@ const oneSquadUrl = url + "/squad/";
 export const getAllGamesForSquad = async (squadId: string): Promise<gameType[] | null> => { 
 
   try {
-    if (!squadId || !isValidBtDbId(squadId, 'sqd')) return null
+    if (!isValidBtDbId(squadId, 'sqd')) return null
     const response = await axios({
       method: "get",
       withCredentials: true,

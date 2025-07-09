@@ -3,7 +3,7 @@ import { baseDivsApi } from "@/lib/db/apiPaths";
 import { testBaseDivsApi } from "../../../testApi";
 import { divType, HdcpForTypes } from "@/lib/types/types";
 import { initDiv } from "@/lib/db/initVals";
-import { deleteAllTmntDivs, deleteDiv, getAllDivsForTmnt, postDiv, postManyDivs, putDiv } from "@/lib/db/divs/dbDivs";
+import { deleteAllDivsForTmnt, deleteDiv, getAllDivsForTmnt, postDiv, postManyDivs, putDiv } from "@/lib/db/divs/dbDivs";
 import { mockDivsToPost } from "../../../mocks/tmnts/twoDivs/mockDivs";
 
 // before running this test, run the following commands in the terminal:
@@ -159,7 +159,7 @@ describe("dbDivs", () => {
     let didPost = false;
     
     beforeAll(async () => {
-      await deleteAllTmntDivs(mockDivsToPost[0].tmnt_id);
+      await deleteAllDivsForTmnt(mockDivsToPost[0].tmnt_id);
     });
 
     beforeEach(() => {
@@ -168,7 +168,7 @@ describe("dbDivs", () => {
 
     afterEach(async () => {
       if (didPost) {
-        await deleteAllTmntDivs(mockDivsToPost[0].tmnt_id);
+        await deleteAllDivsForTmnt(mockDivsToPost[0].tmnt_id);
       }
     });
 
@@ -440,24 +440,24 @@ describe("dbDivs", () => {
     });
 
     afterAll(async () => {
-      await deleteAllTmntDivs(multiDivs[0].tmnt_id);
+      await deleteAllDivsForTmnt(multiDivs[0].tmnt_id);
     });
 
     it('should delete all divs for a tmnt', async () => { 
-      const deleted = await deleteAllTmntDivs(multiDivs[0].tmnt_id);
+      const deleted = await deleteAllDivsForTmnt(multiDivs[0].tmnt_id);
       expect(deleted).toBe(2);
       didDel = true;
     })
     it('should NOT delete all divs for a tmnt when ID is invalid', async () => { 
-      const deleted = await deleteAllTmntDivs('test');
+      const deleted = await deleteAllDivsForTmnt('test');
       expect(deleted).toBe(-1);
     })
     it("should NOT delete all divs for a tmnt when ID is not found", async () => {
-      const deleted = await deleteAllTmntDivs(notFoundTmntId);
+      const deleted = await deleteAllDivsForTmnt(notFoundTmntId);
       expect(deleted).toBe(0);
     })
     it('should NOT delete all divs for a tmnt when ID is valid, but not a tmnt id', async () => { 
-      const deleted = await deleteAllTmntDivs(multiDivs[0].id); // event it
+      const deleted = await deleteAllDivsForTmnt(multiDivs[0].id); // event it
       expect(deleted).toBe(-1);
     })
 

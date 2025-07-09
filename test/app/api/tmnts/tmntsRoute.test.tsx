@@ -827,10 +827,10 @@ describe('Tmnts - API: /api/tmnts', () => {
           withCredentials: true,
           url: url,
         })
-        expect(response2.status).toBe(400);
+        expect(response2.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(400);
+          expect(err.response?.status).toBe(409);
         } else {
           expect(true).toBeFalsy();
         }
@@ -1162,10 +1162,10 @@ describe('Tmnts - API: /api/tmnts', () => {
           withCredentials: true,
           url: oneTmntUrl + testTmnt.id,
         })
-        expect(putResponse.status).toBe(404);
+        expect(putResponse.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(409);
         } else {
           expect(true).toBeFalsy();
         } 
@@ -1690,10 +1690,10 @@ describe('Tmnts - API: /api/tmnts', () => {
           withCredentials: true,
           url: oneTmntUrl  + toPatchTmnt.id,
         })
-        expect(patchResponse.status).toBe(404);
+        expect(patchResponse.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(409);
         } else {
           expect(true).toBeFalsy();
         }

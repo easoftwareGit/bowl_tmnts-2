@@ -5,6 +5,7 @@ import { sanitizeBrkt, validateBrkt } from "../../validate";
 import { brktType } from "@/lib/types/types";
 import { initBrkt } from "@/lib/db/initVals";
 import { calcFSA } from "@/lib/currency/fsa";
+import { getErrorStatus } from "@/app/api/errCodes";
 
 // routes /api/brkts/brkt/:id
 
@@ -117,21 +118,7 @@ export async function PUT(
     };
     return NextResponse.json({ brkt }, { status: 200 });    
   } catch (err: any) {
-    let errStatus: number;
-    switch (err.code) {
-      case "P2002": // unique constraint
-        errStatus = 409;
-        break;
-      case "P2003": // parent not found
-        errStatus = 409;
-        break;
-      case "P2025": // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error updating brkt" },
       { status: errStatus }
@@ -301,21 +288,7 @@ export async function PATCH(
     }
     return NextResponse.json({ brkt }, { status: 200 });    
   } catch (err: any) {
-    let errStatus: number;
-    switch (err.code) {
-      case "P2002": // unique constraint
-        errStatus = 422;
-        break;
-      case "P2003": // foreign key constraint
-        errStatus = 422;
-        break;
-      case "P2025": // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error patching brkt" },
       { status: errStatus }
@@ -344,18 +317,7 @@ export async function DELETE(
     };
     return NextResponse.json({ deleted }, { status: 200 });
   } catch (err: any) {
-    let errStatus: number;
-    switch (err.code) {
-      case "P2003": // parent has child rows
-        errStatus = 409;
-        break;
-      case "P2025": // record not found
-        errStatus = 404;
-        break;
-      default:
-        errStatus = 500;
-        break;
-    }
+    const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
       { error: "error deleting brkt" },
       { status: errStatus }
