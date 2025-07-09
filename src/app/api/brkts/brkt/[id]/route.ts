@@ -123,7 +123,7 @@ export async function PUT(
         errStatus = 409;
         break;
       case "P2003": // parent not found
-        errStatus = 404;
+        errStatus = 409;
         break;
       case "P2025": // record not found
         errStatus = 404;
