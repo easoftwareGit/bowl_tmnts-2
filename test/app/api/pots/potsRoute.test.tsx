@@ -128,7 +128,12 @@ const rePostPot = async (pot: potType) => {
       data: potJSON
     });    
   } catch (err) {
-    if (err instanceof AxiosError) console.log(err.message);
+    if (err instanceof AxiosError) { 
+      if (err.status !== 404 && err.status !== 409) {
+        console.log(err.message);
+        return;
+      }
+    }
   }
 }
 
@@ -2274,7 +2279,12 @@ describe('Pots - API: /api/pots', () => {
           url: urlForSquads
         })
       } catch (err) {
-        if (err instanceof AxiosError) console.log(err.message);
+        if (err instanceof AxiosError) { 
+          if (err.status !== 404 && err.status !== 409) {
+            console.log(err.message);
+            return;
+          }
+        }
       }
     }
 
@@ -2303,7 +2313,7 @@ describe('Pots - API: /api/pots', () => {
         })
       } catch (err) {
         if (err instanceof AxiosError) { 
-          if (err.status !== 404) {
+          if (err.status !== 404 && err.status !== 409) {
             console.log(err.message);
             return;
           }

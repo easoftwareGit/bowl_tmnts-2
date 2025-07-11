@@ -6,17 +6,17 @@ import { isValidBtDbId } from "@/lib/validation";
 
 export async function GET(
   request: Request,
-  { params }: { params: { squadId: string } }
+  { params }: { params: Promise<{ squadId: string }> }
 ) {
   try {
-    const id = params.squadId;
+    const { squadId } = await params;
     // check if id is a valid squad id
-    if (!isValidBtDbId(id, "sqd")) {
+    if (!isValidBtDbId(squadId, "sqd")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
     const pots = await prisma.pot.findMany({
       where: {
-        squad_id: id,
+        squad_id: squadId,
       },
       orderBy:{
         sort_order: 'asc',
@@ -34,10 +34,10 @@ export async function GET(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { squadId: string } }
+  { params }: { params: Promise<{ squadId: string }> }
 ) {
   try {
-    const squadId = params.squadId;
+    const { squadId } = await params;
     // check if squadId is a valid squad id
     if (!isValidBtDbId(squadId, "sqd")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });

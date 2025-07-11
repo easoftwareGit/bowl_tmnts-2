@@ -6,10 +6,10 @@ import { isValidBtDbId } from "@/lib/validation";
 
 export async function GET(
   request: Request,
-  { params }: { params: { brktId: string } }
+  { params }: { params: Promise<{ brktId: string }> }
 ) {
   try {
-    const brktId = params.brktId;
+    const {brktId} = await params;
     // check if brktId is a valid brkt id
     if (!isValidBtDbId(brktId, "brk")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
@@ -37,10 +37,10 @@ export async function GET(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { brktId: string } }
-) { 
+  { params }: { params: Promise<{ brktId: string }> }
+) {
   try {
-    const brktId = params.brktId;
+    const {brktId} = await params;
     // check if id is a valid brkt id
     if (!isValidBtDbId(brktId, "brk")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });

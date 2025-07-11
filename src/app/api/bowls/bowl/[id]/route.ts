@@ -8,10 +8,10 @@ import { getErrorStatus } from "@/app/api/errCodes";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = params.id;
+    const { id } = await params;
     if (!isValidBtDbId(id, "bwl")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
@@ -32,10 +32,10 @@ export async function GET(
 
 export async function PUT(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = params.id;
+    const { id } = await params;
     if (!isValidBtDbId(id, "bwl")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
@@ -66,7 +66,7 @@ export async function PUT(
       }
       return NextResponse.json({ error: errMsg }, { status: 422 });
     }
-
+    
     const bowl = await prisma.bowl.update({
       where: {
         id: id,
@@ -90,10 +90,10 @@ export async function PUT(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = params.id;
+    const { id } = await params;    
     if (!isValidBtDbId(id, "bwl")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
@@ -102,7 +102,7 @@ export async function PATCH(
       where: {
         id: id,
       },
-    });
+    });    
     if (!currentBowl) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
@@ -148,24 +148,24 @@ export async function PATCH(
       }
       return NextResponse.json({ error: errMsg }, { status: 422 });
     }
-
+           
     const toPatch = {
-      bowl_name: "",
-      city: "",
-      state: "",
-      url: "",
-    };
+      bowl_name: '',
+      city: '',
+      state: '',
+      url: '',
+    }
     if (jsonProps.includes("bowl_name")) {
-      toPatch.bowl_name = toBePatched.bowl_name;
+      toPatch.bowl_name = toBePatched.bowl_name
     }
     if (jsonProps.includes("city")) {
-      toPatch.city = toBePatched.city;
+      toPatch.city = toBePatched.city
     }
     if (jsonProps.includes("state")) {
-      toPatch.state = toBePatched.state;
+      toPatch.state = toBePatched.state
     }
     if (jsonProps.includes("url")) {
-      toPatch.url = toBePatched.url;
+      toPatch.url = toBePatched.url
     }
     const bowl = await prisma.bowl.update({
       where: {
@@ -191,10 +191,10 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = params.id;
+    const { id } = await params;    
     if (!isValidBtDbId(id, "bwl")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }

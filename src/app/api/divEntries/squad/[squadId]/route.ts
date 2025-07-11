@@ -8,10 +8,10 @@ import { getErrorStatus } from "@/app/api/errCodes";
 
 export async function GET(
   request: Request,
-  { params }: { params: { squadId: string } }
+  { params }: { params: Promise<{ squadId: string }> }
 ) {
   try {
-    const squadId = params.squadId;
+    const { squadId } = await params;    
     // check if squadId is a valid tmnt id
     if (!isValidBtDbId(squadId, "sqd")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
@@ -57,10 +57,10 @@ export async function GET(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { squadId: string } }
+  { params }: { params: Promise<{ squadId: string }> }
 ) {
   try {
-    const squadId = params.squadId;
+    const { squadId } = await params;    
     // check if squadId is a valid tmnt id
     if (!isValidBtDbId(squadId, "sqd")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });

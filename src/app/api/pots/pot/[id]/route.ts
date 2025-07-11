@@ -10,10 +10,10 @@ import { getErrorStatus } from "@/app/api/errCodes";
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
-) {
+	{ params }: { params: Promise<{ id: string }> }
+) { 
   try {
-    const id = params.id;
+    const { id } = await params;
     if (!isValidBtDbId(id, "pot")) {
       return NextResponse.json({ error: "invalid request" }, { status: 404 });
     }
@@ -33,10 +33,10 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
-) {
+	{ params }: { params: Promise<{ id: string }> }
+) { 
   try {
-    const id = params.id;
+    const { id } = await params;
     if (!isValidBtDbId(id, "pot")) {
       return NextResponse.json({ error: "invalid request" }, { status: 404 });
     }
@@ -96,10 +96,10 @@ export async function PUT(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+	{ params }: { params: Promise<{ id: string }> }
 ) { 
   try {
-    const id = params.id;
+    const { id } = await params;
     if (!isValidBtDbId(id, "pot")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
@@ -209,10 +209,10 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+	{ params }: { params: Promise<{ id: string }> }
 ) { 
   try {
-    const id = params.id;
+    const { id } = await params;
     if (!isValidBtDbId(id, "pot")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }

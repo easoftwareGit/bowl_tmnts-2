@@ -13,10 +13,11 @@ const validId = (id: number): boolean => {
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const idNum = Number(params.id);
+    const { id } = await params;
+    const idNum = Number(id);
     if (!validId(idNum)) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
@@ -36,10 +37,11 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
-) { 
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const idNum = Number(params.id);
+    const { id } = await params;
+    const idNum = Number(id);
     if (!validId(idNum)) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
@@ -79,10 +81,11 @@ export async function PUT(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
-) { 
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const idNum = Number(params.id);
+    const { id } = await params;
+    const idNum = Number(id);
     if (!validId(idNum)) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
@@ -158,10 +161,11 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const idNum = Number(params.id);
+    const { id } = await params;
+    const idNum = Number(id);
     if (!validId(idNum)) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }

@@ -7,12 +7,12 @@ import { getTmntGamesSql } from "../../getSql";
 
 export async function GET(
   request: Request,
-  { params }: { params: { tmntId: string } }
+  { params }: { params: Promise<{ tmntId: string }> }
 ) {
   try {
-    const id = params.tmntId;
+    const { tmntId } = await params;
     // check if id is a valid tmnt id
-    if (!isValidBtDbId(id, "tmt")) {
+    if (!isValidBtDbId(tmntId, "tmt")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
 
@@ -22,7 +22,7 @@ export async function GET(
       },
       where: {
         events: {
-          tmnt_id: id,
+          tmnt_id: tmntId,
         },
       },
       distinct: ['games'],
@@ -31,7 +31,7 @@ export async function GET(
     if (!squads || squads.length === 0 || !squads[0].games) {    
       return NextResponse.json({ games: [] }, { status: 200 });
     }    
-    const tmntGamesSql = getTmntGamesSql(id, squads[0].games);    
+    const tmntGamesSql = getTmntGamesSql(tmntId, squads[0].games);    
     // ok to use queryRaw because call to sanitizing in getDivGamesSql
     const games = await prisma.$queryRawUnsafe(tmntGamesSql);
     

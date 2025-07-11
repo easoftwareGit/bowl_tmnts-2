@@ -4,17 +4,16 @@ import { ErrorCode, isValidBtDbId, maxMoney } from "@/lib/validation";
 import { initPotEntry } from "@/lib/db/initVals";
 import { potEntryType } from "@/lib/types/types";
 import { sanitizePotEntry, validatePotEntry } from "../../validate";
-import { validMoney } from "@/lib/currency/validate";
 import { getErrorStatus } from "@/app/api/errCodes";
 
 // routes /api/potEntries/potEntry/:id
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+	{ params }: { params: Promise<{ id: string }> }
 ) { 
   try {
-    const id = params.id;
+    const { id } = await params;
     if (!isValidBtDbId(id, "pen")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
@@ -34,10 +33,10 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
-) {
+	{ params }: { params: Promise<{ id: string }> }
+) { 
   try {
-    const id = params.id;
+    const { id } = await params;
     if (!isValidBtDbId(id, "pen")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
@@ -90,10 +89,10 @@ export async function PUT(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
-) {
+	{ params }: { params: Promise<{ id: string }> }
+) { 
   try {
-    const id = params.id;
+    const { id } = await params;
     if (!isValidBtDbId(id, "pen")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }  
@@ -181,10 +180,10 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
-) {
+	{ params }: { params: Promise<{ id: string }> }
+) { 
   try {
-    const id = params.id;
+    const { id } = await params;
     if (!isValidBtDbId(id, "pen")) {
       return NextResponse.json({ error: "invalid request" }, { status: 404 });
     }

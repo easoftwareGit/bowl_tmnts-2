@@ -5,12 +5,12 @@ import { isValidBtDbId } from "@/lib/validation";
 // routes /api/tmnts/user/:userId
 
 export async function GET(
-  request: Request,
-  { params }: { params: { userId: string } }
+  request: Request,  
+  { params }: { params: Promise<{ userId: string }> }
 ) {
 
   try {
-    const userId = params.userId;
+    const { userId } = await params;    
     if (!isValidBtDbId(userId, "usr")) {
       return NextResponse.json({ error: "invalid request" }, { status: 404 });
     }

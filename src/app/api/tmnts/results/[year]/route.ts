@@ -6,16 +6,16 @@ import { endOfToday, endOfDay } from "date-fns";
 // routes /api/tmnts/results/year
 
 export async function GET(
-  request: NextRequest, 
-  { params }: {params: { year: string}}
+  request: NextRequest,   
+  { params }: { params: Promise<{ year: string }> }
 ) {
-  const yearStr = params.year;
+  const { year } = await params;  
 
-  if (!validYear(yearStr)) {
+  if (!validYear(year)) {
     return NextResponse.json({ error: 'Invalid parameter' }, { status: 400 });
   }
   
-  const paramYear = parseInt(yearStr);
+  const paramYear = parseInt(year, 10);
   const todayYear = endOfToday().getFullYear();
   let maxDate
   if (todayYear === paramYear) {

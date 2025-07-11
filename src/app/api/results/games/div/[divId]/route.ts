@@ -7,12 +7,12 @@ import { getDivGamesSql } from "../../getSql";
 
 export async function GET(
   request: Request,
-  { params }: { params: { divId: string } }
+  { params }: { params: Promise<{ divId: string }> }
 ) {
   try {
-    const id = params.divId;
+    const { divId } = await params;
     // check if id is a valid div id
-    if (!isValidBtDbId(id, "div")) {
+    if (!isValidBtDbId(divId, "div")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
 
@@ -23,7 +23,7 @@ export async function GET(
       where: {
         dviEntries: {
           some: {
-            div_id: id
+            div_id: divId
           }
         }
       },
@@ -33,7 +33,7 @@ export async function GET(
       return NextResponse.json({ games: [] }, { status: 200 });
     }
 
-    const divGamesSql = getDivGamesSql(id, squads.games);
+    const divGamesSql = getDivGamesSql(divId, squads.games);
     // ok to use queryRaw because call to sanitizing in getDivGamesSql
     const games = await prisma.$queryRawUnsafe(divGamesSql);
     

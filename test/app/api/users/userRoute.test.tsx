@@ -73,9 +73,9 @@ describe('Users - API: /api/users', () => {
 
   describe('GET', () => { 
 
-    beforeAll(async () => {
-      await deletePostedUser();
-    })
+    // beforeAll(async () => {
+    //   await deletePostedUser();
+    // })
 
     it('should get all users', async () => {
       const response = await axios.get(url);

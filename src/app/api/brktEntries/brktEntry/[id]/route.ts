@@ -27,10 +27,10 @@ const getErrMsg = (errorCode: ErrorCode) => {
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) { 
   try {
-    const id = params.id;
+    const { id } = await params;
     if (!isValidBtDbId(id, "ben")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
@@ -80,10 +80,10 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
-) {
+  { params }: { params: Promise<{ id: string }> }
+) { 
   try {
-    const id = params.id;
+    const { id } = await params;
     if (!isValidBtDbId(id, "ben")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
@@ -185,7 +185,7 @@ export async function PUT(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   // 1) get copy of data in database
   // 2) update data in copy with data from json
@@ -193,7 +193,7 @@ export async function PATCH(
   // 4) patch data in database
 
   try {
-    const id = params.id;
+    const { id } = await params;
     if (!isValidBtDbId(id, "ben")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }  
@@ -366,10 +366,10 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = params.id;
+    const { id } = await params;
     if (!isValidBtDbId(id, "ben")) {
       return NextResponse.json({ error: "invalid request" }, { status: 404 });
     }

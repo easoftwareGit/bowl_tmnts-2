@@ -6,11 +6,11 @@ import { isValidBtDbId } from "@/lib/validation";
 
 export async function GET(
   request: Request,
-  { params }: { params: { eventId: string } }
-) {   
+  { params }: { params: Promise<{ eventId: string }> }
+) {
   try {
-    const evevntId = params.eventId;
-    if (!isValidBtDbId(evevntId, 'evt')) {
+    const { eventId } = await params;
+    if (!isValidBtDbId(eventId, 'evt')) {
       return NextResponse.json(
         { error: "invalid request" },
         { status: 404 }
@@ -18,7 +18,7 @@ export async function GET(
     }
     const squads = await prisma.squad.findMany({
       where: {
-        event_id: evevntId
+        event_id: eventId
       },
       orderBy: { sort_order: 'asc' }
     })    
@@ -34,10 +34,10 @@ export async function GET(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { eventId: string } }
+  { params }: { params: Promise<{ eventId: string }> }
 ) {
   try {
-    const eventId = params.eventId;
+    const { eventId } = await params;
     // check if id is a valid tmnt id
     if (!isValidBtDbId(eventId, 'evt')) {
       return NextResponse.json(

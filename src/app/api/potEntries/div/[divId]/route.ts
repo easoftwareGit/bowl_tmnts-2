@@ -6,10 +6,10 @@ import { isValidBtDbId } from "@/lib/validation";
 
 export async function GET(
   request: Request,
-  { params }: { params: { divId: string } }
-) { 
+  { params }: { params: Promise<{ divId: string }> }
+) {
   try {
-    const divId = params.divId;
+    const { divId } = await params;
     // check if divId is a valid div id
     if (!isValidBtDbId(divId, "div")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
@@ -34,10 +34,10 @@ export async function GET(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { divId: string } }
-) { 
+  { params }: { params: Promise<{ divId: string }> }
+) {
   try {
-    const divId = params.divId;
+    const { divId } = await params;
     // check if id is a valid div id
     if (!isValidBtDbId(divId, "div")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });

@@ -6,16 +6,16 @@ import { endOfDayFromString } from "@/lib/dateTools";
 // routes /api/tmnts/years/year
 
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { year: string } }
+  request: NextRequest,  
+  { params }: { params: Promise<{ year: string }> }
 ) {
   try {
-    const paramYear = params.year;
-    if (!validYear(paramYear)) {
+    const { year } = await params;    
+    if (!validYear(year)) {
       return NextResponse.json({ error: 'Invalid parameter' }, { status: 400 });
     }
     
-    const yearNum = Number(paramYear)
+    const yearNum = Number(year)
     const lastDOY = endOfDayFromString(`${yearNum}-12-31`)    
 
     // ok to use queryRawUnsafe because call to validYear 

@@ -7,10 +7,10 @@ import { getErrorStatus } from "@/app/api/errCodes";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { oneBrktId: string; seed: string } }
+  { params }: { params: Promise<{ oneBrktId: string; seed: string }> }
 ) {
   try {
-    const { oneBrktId, seed } = params; 
+    const { oneBrktId, seed } = await params; 
     if (!validCompositKey(oneBrktId, seed)) {
       return NextResponse.json({ error: "invalid request" }, { status: 404 });
     }  
@@ -37,10 +37,10 @@ export async function GET(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { oneBrktId: string; seed: string } }
+  { params }: { params: Promise<{ oneBrktId: string; seed: string }> }
 ) {
   try {
-    const { oneBrktId, seed } = params; 
+    const { oneBrktId, seed } = await params; 
     if (!validCompositKey(oneBrktId, seed)) {
       return NextResponse.json({ error: "invalid request" }, { status: 404 });
     }  

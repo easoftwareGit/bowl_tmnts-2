@@ -7,37 +7,20 @@ import { getSquadGamesSql } from "../../getSql";
 
 export async function GET(
   request: Request,
-  { params }: { params: { squadId: string } }
+  { params }: { params: Promise<{ squadId: string }> }
 ) {
   try {
-    const id = params.squadId;
+    const { squadId } = await params;
     // check if id is a valid squad id
-    if (!isValidBtDbId(id, "sqd")) {
+    if (!isValidBtDbId(squadId, "sqd")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
 
     const games = await prisma.game.findMany({
       where: {
-        squad_id: id
+        squad_id: squadId
       }   
     })
-
-    // const squads = await prisma.squad.findUnique({  
-    //   select: {
-    //     games: true
-    //   },
-    //   where: {
-    //     id: id
-    //   }
-    // })
-    // if (!squads || !squads.games) {
-    //   return NextResponse.json({ games: [] }, { status: 200 });
-    // }
-
-    // const squadGamesSql = getSquadGamesSql(id, squads.games);
-    // // ok to use queryRaw because call to sanitizing in getSquadGamesSql
-    // const games = await prisma.$queryRawUnsafe(squadGamesSql);
-    // console.log(games);
 
     // no matching rows is ok
     return NextResponse.json({ games }, { status: 200 });
@@ -51,10 +34,10 @@ export async function GET(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { squadId: string } }
+  { params }: { params: Promise<{ squadId: string }> }
 ) {
   try {
-    const squadId = params.squadId;
+    const { squadId } = await params;
     // check if squadId is a valid squad id
     if (!isValidBtDbId(squadId, "sqd")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });

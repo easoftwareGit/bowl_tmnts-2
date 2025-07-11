@@ -6,11 +6,11 @@ import { calcFSA } from "@/lib/currency/fsa";
 // routes /api/brkts/div/:divId
 
 export async function GET(
-  request: Request,
-  { params }: { params: { divId: string } }
+  request: Request,  
+  { params }: { params: Promise<{ divId: string }> }
 ) {
   try {
-    const divId = params.divId;
+    const { divId } = await params;    
     // check if id is a valid div id
     if (!isValidBtDbId(divId, "div")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
@@ -40,17 +40,17 @@ export async function GET(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { divId: string } }
-) { 
+  { params }: { params: Promise<{ divId: string }> }
+) {
   try {
-    const id = params.divId;
+    const { divId } = await params;    
     // check if id is a valid div id
-    if (!isValidBtDbId(id, "div")) {
+    if (!isValidBtDbId(divId, "div")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
     const deleted = await prisma.brkt.deleteMany({
       where: {
-        div_id: id,
+        div_id: divId,
       },
     });
     return NextResponse.json({ deleted }, { status: 200 });
