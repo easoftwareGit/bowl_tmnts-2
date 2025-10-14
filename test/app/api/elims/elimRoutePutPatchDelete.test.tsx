@@ -1466,7 +1466,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       const response = await axios({
         method: "delete",
         withCredentials: true,
-        url: squadUrl + toDelDivSquadElims[0].squad_id
+        url: squadUrl + toDelDivSquadElims[0].squad_id        
       })
       expect(response.status).toBe(200);
       didDel = true;

@@ -1,0 +1,13 @@
+.lanesTable {
+  width: 175px;                /* fixed width */
+  max-height: 250px;           /* constrain height */
+  overflow-y: auto;            /* scroll inside here */
+  -webkit-overflow-scrolling: touch;
+}
+
+.lanesHeaderCell {
+  position: sticky;
+  top: 0;
+  background-color: #fff;        /* prevent text bleed-through */
+  z-index: 5;
+}

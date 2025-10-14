@@ -11,16 +11,15 @@ import {
   tmntEntryElimEntryType,
   tmntEntryPlayerType,
   tmntEntryPotEntryType,
+  gridTmntEntryDataType,
 } from "@/lib/types/types";
 import {
   brktsColNameEnd,
-  // createdColName,
   divEntryHdcpColName,
   entryFeeColName,
   feeColNameEnd,
   playerEntryData,
-  timeStampColName,
-  // updatedColName,
+  timeStampColName,  
 } from "./createColumns";
 import {  
   blankElimEntry,  
@@ -31,6 +30,7 @@ import {
   initPotEntry,
   initBrktEntry,  
 } from "@/lib/db/initVals";
+import { btDbUuid } from "@/lib/uuid";
 
 /**
  * extarcts data from rows in grid
@@ -38,12 +38,12 @@ import {
  * DATA IS ASSUMED TO BE VALID
  *
  * @param {typeof playerEntryData[]} rows - array of playerEntryData in data grid
- * @returns {dataOneSquadEntriesType} - dataOneSquadEntriesType object
+ * @returns {gridTmntEntryDataType} - gridTmntEntryDataType object
  */
 export const extractDataFromRows = (
   rows: (typeof playerEntryData)[],
   squadId: string
-): dataOneSquadEntriesType => {
+): gridTmntEntryDataType => {
   const players: playerType[] = [];
   const divEntries: divEntryType[] = [];
   const potEntries: potEntryType[] = [];
@@ -51,12 +51,11 @@ export const extractDataFromRows = (
   const elimEntries: elimEntryType[] = [];
 
   if (!rows || rows.length === 0)
-    return {
-      squadId,
+    return {      
       players: players,
       divEntries: divEntries,
       potEntries: potEntries,
-      brktEntries: brktEntries,
+      brktEntries: brktEntries,      
       elimEntries: elimEntries,
     };
 
@@ -96,6 +95,7 @@ export const extractDataFromRows = (
         }
         divEntries.push({
           ...initDivEntry,
+          id: btDbUuid('den'),
           div_id: divId,
           squad_id: squadId,
           player_id: row.player_id,        
@@ -109,6 +109,7 @@ export const extractDataFromRows = (
         const potId = feeColName.slice(0, feeTextLength); // remove "_fee" from column name
         potEntries.push({
           ...initPotEntry,
+          id: btDbUuid('pen'),
           pot_id: potId,
           player_id: row.player_id,
           fee: row[feeColName],
@@ -120,6 +121,7 @@ export const extractDataFromRows = (
         const brktId = brktNumColName.slice(0, brktTextLength); // remove "_brkts" from column name
         brktEntries.push({
           ...initBrktEntry,
+          id: btDbUuid('ben'),
           brkt_id: brktId,
           player_id: row.player_id,
           num_brackets: row[brktNumColName],
@@ -133,6 +135,7 @@ export const extractDataFromRows = (
         const elimId = feeColName.slice(0, feeTextLength); // remove "_fee" from column name
         elimEntries.push({
           ...initElimEntry,
+          id: btDbUuid('een'),
           elim_id: elimId,
           player_id: row.player_id,
           fee: row[feeColName],
@@ -140,12 +143,11 @@ export const extractDataFromRows = (
       }
     });
   });
-  return {
-    squadId,
+  return {    
     players: players,
     divEntries: divEntries,
     potEntries: potEntries,
-    brktEntries: brktEntries,
+    brktEntries: brktEntries,    
     elimEntries: elimEntries,
   };
 };

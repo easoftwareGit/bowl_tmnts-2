@@ -4,7 +4,7 @@ import { testBaseDivEntriesApi } from "../../../testApi";
 import { initDiv, initDivEntry } from "@/lib/db/initVals";
 import { divEntryRawWithHdcpType, divEntryType, HdcpForTypes } from "@/lib/types/types";
 import { mockDivEntriesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllDivEntriesForTmnt, postManyDivEntries } from "@/lib/db/divEntries/dbDivEntries";
+import { deleteAllDivEntriesForTmnt, getAllDivEntriesForSquad, getAllDivEntriesForTmnt, postManyDivEntries } from "@/lib/db/divEntries/dbDivEntries";
 import { cloneDeep } from "lodash";
 import { putDiv } from "@/lib/db/divs/dbDivs";
 
@@ -922,7 +922,7 @@ describe("DivEntries - API's: /api/divEntries", () => {
       }      
     })
 
-    it('should create many divEntries', async () => {
+    it('should create many divEntries', async () => {      
       const divEntryJSON = JSON.stringify(mockDivEntriesToPost);
       const response = await axios({
         method: "post",
@@ -930,9 +930,16 @@ describe("DivEntries - API's: /api/divEntries", () => {
         withCredentials: true,
         url: manyUrl,        
       })
-      const postedDivEntries = response.data.divEntries;
       expect(response.status).toBe(201);
       createdDivEntries = true;
+      expect(response.data.count).toBe(mockDivEntriesToPost.length);
+
+      const postedDivEntries = await getAllDivEntriesForSquad(mockDivEntriesToPost[0].squad_id);      
+      expect(response.status).toBe(201);      
+      if (!postedDivEntries) {
+        expect(true).toBeFalsy();
+        return
+      }
       expect(postedDivEntries).not.toBeNull();
       expect(postedDivEntries.length).toBe(mockDivEntriesToPost.length);
       for (let i = 0; i < mockDivEntriesToPost.length; i++) {
@@ -942,6 +949,17 @@ describe("DivEntries - API's: /api/divEntries", () => {
         expect(postedDivEntries[i].player_id).toBe(mockDivEntriesToPost[i].player_id);
         expect(postedDivEntries[i].fee).toBe(mockDivEntriesToPost[i].fee);        
       }
+    })
+    it('should return 0 if passed an empty array', async () => { 
+      const divEntryJSON = JSON.stringify([]);
+      const response = await axios({
+        method: "post",
+        data: divEntryJSON,
+        withCredentials: true,
+        url: manyUrl,        
+      })
+      expect(response.status).toBe(200);      
+      expect(response.data.count).toBe(0);
     })
     it('should NOT create many divEntries with sanitzied data, fee sanitized to ""', async () => { 
       const toSanitize = cloneDeep(mockDivEntriesToPost);
@@ -1299,10 +1317,14 @@ describe("DivEntries - API's: /api/divEntries", () => {
         withCredentials: true,
         url: manyUrl,        
       })
-      const postedDivEntries = response.data.divEntries;
       expect(response.status).toBe(201);
       createdDivEntries = true;
-      expect(postedDivEntries).not.toBeNull();
+      expect(response.data.count).toBe(mockMultiDivEntriesToPost.length);
+      const postedDivEntries = await getAllDivEntriesForSquad(mockMultiDivEntriesToPost[0].squad_id);
+      if (!postedDivEntries) {
+        expect(true).toBeFalsy();
+        return
+      }            
       expect(postedDivEntries.length).toBe(mockMultiDivEntriesToPost.length);
       
       // change fee 
@@ -1342,10 +1364,14 @@ describe("DivEntries - API's: /api/divEntries", () => {
         withCredentials: true,
         url: manyUrl,        
       })
-      const postedDivEntries = response.data.divEntries;
       expect(response.status).toBe(201);
       createdDivEntries = true;
-      expect(postedDivEntries).not.toBeNull();
+      expect(response.data.count).toBe(mockMultiDivEntriesToPost.length);
+      const postedDivEntries = await getAllDivEntriesForSquad(mockMultiDivEntriesToPost[0].squad_id);
+      if (!postedDivEntries) {
+        expect(true).toBeFalsy();
+        return
+      }            
       expect(postedDivEntries.length).toBe(mockMultiDivEntriesToPost.length);
       // change fee 
       // change average, add eType = 'u'
@@ -1384,10 +1410,14 @@ describe("DivEntries - API's: /api/divEntries", () => {
         withCredentials: true,
         url: manyUrl,        
       })
-      const postedDivEntries = response.data.divEntries;
       expect(response.status).toBe(201);
       createdDivEntries = true;
-      expect(postedDivEntries).not.toBeNull();
+      expect(response.data.count).toBe(mockMultiDivEntriesToPost.length);
+      const postedDivEntries = await getAllDivEntriesForSquad(mockMultiDivEntriesToPost[0].squad_id);
+      if (!postedDivEntries) {
+        expect(true).toBeFalsy();
+        return
+      }            
       expect(postedDivEntries.length).toBe(mockMultiDivEntriesToPost.length);
       // change fee 
       // change average, add eType = 'u'
@@ -1528,11 +1558,15 @@ describe("DivEntries - API's: /api/divEntries", () => {
         withCredentials: true,
         url: manyUrl,        
       })
-      const postedDivEntries = response.data.divEntries;
       expect(response.status).toBe(201);
       createdDivEntries = true;
-      expect(postedDivEntries).not.toBeNull();
-      expect(postedDivEntries.length).toBe(mockMultiDivEntriesToPost.length);      
+      expect(response.data.count).toBe(mockMultiDivEntriesToPost.length);
+      const postedDivEntries = await getAllDivEntriesForSquad(mockMultiDivEntriesToPost[0].squad_id);
+      if (!postedDivEntries) {
+        expect(true).toBeFalsy();
+        return
+      }            
+      expect(postedDivEntries.length).toBe(mockMultiDivEntriesToPost.length);
       // set eType = 'd'
       const divEntriesToUpdate = [
         {
@@ -1567,11 +1601,15 @@ describe("DivEntries - API's: /api/divEntries", () => {
         withCredentials: true,
         url: manyUrl,        
       })
-      const postedDivEntries = response.data.divEntries;
       expect(response.status).toBe(201);
       createdDivEntries = true;
-      expect(postedDivEntries).not.toBeNull();
-      expect(postedDivEntries.length).toBe(mockMultiDivEntriesToPost.length);      
+      expect(response.data.count).toBe(mockMultiDivEntriesToPost.length);
+      const postedDivEntries = await getAllDivEntriesForSquad(mockMultiDivEntriesToPost[0].squad_id);
+      if (!postedDivEntries) {
+        expect(true).toBeFalsy();
+        return
+      }            
+      expect(postedDivEntries.length).toBe(mockMultiDivEntriesToPost.length);
       // set eType = 'd'
       const divEntriesToUpdate = [
         {
@@ -1606,11 +1644,15 @@ describe("DivEntries - API's: /api/divEntries", () => {
         withCredentials: true,
         url: manyUrl,        
       })
-      const postedDivEntries = response.data.divEntries;
       expect(response.status).toBe(201);
       createdDivEntries = true;
-      expect(postedDivEntries).not.toBeNull();
-      expect(postedDivEntries.length).toBe(mockMultiDivEntriesToPost.length);      
+      expect(response.data.count).toBe(mockMultiDivEntriesToPost.length);
+      const postedDivEntries = await getAllDivEntriesForSquad(mockMultiDivEntriesToPost[0].squad_id);
+      if (!postedDivEntries) {
+        expect(true).toBeFalsy();
+        return
+      }            
+      expect(postedDivEntries.length).toBe(mockMultiDivEntriesToPost.length);
       // set eType = 'd'
       const divEntriesToUpdate = [
         {
@@ -1653,11 +1695,15 @@ describe("DivEntries - API's: /api/divEntries", () => {
         withCredentials: true,
         url: manyUrl,        
       })
-      const postedDivEntries = response.data.divEntries;
       expect(response.status).toBe(201);
       createdDivEntries = true;
-      expect(postedDivEntries).not.toBeNull();
-      expect(postedDivEntries.length).toBe(mockDivEntriesToPost.length);      
+      expect(response.data.count).toBe(mockMultiDivEntriesToPost.length);
+      const postedDivEntries = await getAllDivEntriesForSquad(mockMultiDivEntriesToPost[0].squad_id);
+      if (!postedDivEntries) {
+        expect(true).toBeFalsy();
+        return
+      }            
+      expect(postedDivEntries.length).toBe(mockMultiDivEntriesToPost.length);
       // set divs edits, set eType
       const divEntriesToUpdate = [
         {
@@ -1720,11 +1766,15 @@ describe("DivEntries - API's: /api/divEntries", () => {
         withCredentials: true,
         url: manyUrl,        
       })
-      const postedDivEntries = response.data.divEntries;
       expect(response.status).toBe(201);
       createdDivEntries = true;
-      expect(postedDivEntries).not.toBeNull();
-      expect(postedDivEntries.length).toBe(mockDivEntriesToPost.length);      
+      expect(response.data.count).toBe(mockMultiDivEntriesToPost.length);
+      const postedDivEntries = await getAllDivEntriesForSquad(mockMultiDivEntriesToPost[0].squad_id);
+      if (!postedDivEntries) {
+        expect(true).toBeFalsy();
+        return
+      }            
+      expect(postedDivEntries.length).toBe(mockMultiDivEntriesToPost.length);
       // set divs edits, set eType
       const divEntriesToUpdate = [
         {

@@ -1,5 +1,5 @@
 import React, { useState, ChangeEvent } from "react";
-import { eventType, AcdnErrType, squadType, lpoxValidTypes, tmntActions } from "../../../lib/types/types";
+import { eventType, AcdnErrType, squadType, validTypeStrings, tmntActions } from "../../../lib/types/types";
 import { initEvent } from "../../../lib/db/initVals";
 import { Tabs, Tab, OverlayTrigger, Tooltip } from "react-bootstrap";
 import ModalConfirm, { delConfTitle } from "@/components/modal/confirmModal";
@@ -25,6 +25,7 @@ import {
 import EaCurrencyInput, { minMoneyText, maxMoneyText } from "@/components/currency/eaCurrencyInput";
 import { localConfig, currRexEx } from "@/lib/currency/const";
 import { btDbUuid } from "@/lib/uuid";
+import { calcLpox, calcLpoxValid } from "@/lib/db/events/calcLpox";
 
 interface ChildProps {
   events: eventType[];
@@ -529,29 +530,37 @@ const OneToNEvents: React.FC<ChildProps> = ({
       [name]: formattedValue,
       [nameErr]: '',
     }
-    let lpoxStr = ''
-    let lpoxValid: lpoxValidTypes = ''
-    if (!temp_event.entry_fee
-        && !temp_event.lineage
-        && !temp_event.prize_fund
-        && !temp_event.other
-        && !temp_event.expenses) {
-    } else {
-      const lpoxNum = Number(temp_event.lineage)
-        + Number(temp_event.prize_fund)
-        + Number(temp_event.other)
-        + Number(temp_event.expenses);
-      lpoxStr = formatValue2Dec(lpoxNum.toString(), localConfig)
-      if (Number(temp_event.entry_fee) === lpoxNum) {
-        lpoxValid = 'is-valid'        
-      } else {
-        lpoxValid = 'is-invalid'      
-      }
-    }
+    // let lpoxStr = ''
+    // let lpoxValid: lpoxValidTypes = ''
+    const lpoxStr = calcLpox(temp_event);
+    temp_event.lpox = lpoxStr;
+    const lpoxValid = calcLpoxValid(temp_event);
+    // if (Number(temp_event.entry_fee) === Number(lpoxStr)) {
+    //   lpoxValid = 'is-valid'        
+    // } else {
+    //   lpoxValid = 'is-invalid'      
+    // }
+    // if (!temp_event.entry_fee
+    //     && !temp_event.lineage
+    //     && !temp_event.prize_fund
+    //     && !temp_event.other
+    //     && !temp_event.expenses) {
+    // } else {
+    //   const lpoxNum = Number(temp_event.lineage)
+    //     + Number(temp_event.prize_fund)
+    //     + Number(temp_event.other)
+    //     + Number(temp_event.expenses);
+    //   lpoxStr = formatValue2Dec(lpoxNum.toString(), localConfig)
+    //   if (Number(temp_event.entry_fee) === lpoxNum) {
+    //     lpoxValid = 'is-valid'        
+    //   } else {
+    //     lpoxValid = 'is-invalid'      
+    //   }
+    // }
     return {
       ...temp_event,
       lpox: lpoxStr,
-      lpox_valid: lpoxValid
+      lpox_valid: lpoxValid 
     } 
   }
 
@@ -725,7 +734,7 @@ const OneToNEvents: React.FC<ChildProps> = ({
                 <input
                   type="text"                  
                   name="event_name"
-                  className={`form-control ${event.event_name_err && "is-invalid"}`}
+                  className={`form-control ${event.event_name_err && "invalid"}`}
                   id={`inputEventName${event.id}`}                                                  
                   value={event.event_name}
                   maxLength={maxEventLength}

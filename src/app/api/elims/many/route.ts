@@ -5,6 +5,7 @@ import { elimType, elimDataType } from "@/lib/types/types";
 import { initElim } from "@/lib/db/initVals";
 import { validateElims } from "../validate";
 import { getErrorStatus } from "../../errCodes";
+import { elimDataForPrisma } from "../dataForPrisma";
 
 // routes /api/elims/many
 
@@ -12,43 +13,23 @@ export async function POST(request: NextRequest) {
 
   try {
     const elims: elimType[] = await request.json();
+    if (Array.isArray(elims) && elims.length === 0) {
+      return NextResponse.json({ count: 0 }, { status: 200 });
+    }
     // sanitize and validate elims
     const validElims = await validateElims(elims); // need to use await! or else returns a promise
     if (validElims.errorCode !== ErrorCode.None) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
-    // convert valid pots into potData to post
-    const elimsToPost: elimDataType[] = []
-    validElims.elims.forEach(elim => {
-      elimsToPost.push({
-        id: elim.id,
-        div_id: elim.div_id,
-        squad_id: elim.squad_id,
-        start: elim.start,
-        games: elim.games,
-        fee: elim.fee,
-        sort_order: elim.sort_order
-      })
-    });      
-
-    const prismaElims = await prisma.elim.createManyAndReturn({
-      data: [...elimsToPost]
+    // convert valid elims to elims to post
+    const elimsToPost: elimDataType[] = validElims.elims
+      .map(elim => elimDataForPrisma(elim))
+      .filter((data): data is elimDataType => data !== null); 
+    const result = await prisma.elim.createMany({
+      data: elimsToPost,
+      skipDuplicates: false, // or true if you want to silently skip existing rows
     })
-    // convert prismaElims to elims
-    const manyElims: elimType[] = [];
-    prismaElims.map((elim) => {
-      manyElims.push({
-        ...initElim,
-        id: elim.id,
-        div_id: elim.div_id,
-        squad_id: elim.squad_id,
-        start: elim.start,
-        games: elim.games,
-        fee: elim.fee + '',
-        sort_order: elim.sort_order,
-      })
-    })
-    return NextResponse.json({elims: manyElims}, { status: 201 });    
+    return NextResponse.json({ count: result.count }, { status: 201 });
   } catch (err: any) {
     const errStatus = getErrorStatus(err.code);
     return NextResponse.json(

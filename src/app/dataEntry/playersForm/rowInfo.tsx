@@ -1,4 +1,4 @@
-import { allDataOneTmntType, dataOneTmntType } from "@/lib/types/types";
+import { tmntFullType } from "@/lib/types/types";
 import {
   brktsColNameEnd,
   entryFeeColName,
@@ -6,10 +6,6 @@ import {
   feeColNameEnd,
   getElimFee,
   getPotFee,
-  isBrktsColumnName,
-  isDivEntryFeeColumnName,
-  isElimFeeColumnName,
-  isPotFeeColumnName,
   isValidFee,
   playerEntryData,
 } from "./createColumns";
@@ -148,7 +144,7 @@ const validPosition = (
  * gets an error message if a player's fee(s) for a division(s) is/are invalid
  *
  * @param {typeof playerEntryData} row - current row
- * @param {dataOneTmntType} tmntData - current tournament data
+ * @param {tmntFullType} tmntData - current tournament data
  * @param {string} errPlayer - name of player
  * @param {number} i - row's index
  * @param {CheckType} checkType - type of check (Prelim or Final)
@@ -156,7 +152,7 @@ const validPosition = (
  */
 const validDivs = (
   row: typeof playerEntryData,
-  tmntData: dataOneTmntType,
+  tmntData: tmntFullType,
   errPlayer: string,
   i: number,
   checkType: CheckType
@@ -192,7 +188,7 @@ const validDivs = (
  * gets an error message if a player's pot fee(s) is/are invalid
  *
  * @param {typeof playerEntryData} row - current row
- * @param {dataOneTmntType} tmntData - current tournament data
+ * @param {tmntFullType} tmntData - current tournament data
  * @param {string[]} playerDivIds - player's division ids
  * @param {string} errPlayer - name of player
  * @param {number} i - row's index
@@ -200,7 +196,7 @@ const validDivs = (
  */
 const validPots = (
   row: typeof playerEntryData,
-  tmntData: dataOneTmntType,
+  tmntData: tmntFullType,
   playerDivIds: string[],
   errPlayer: string,
   i: number
@@ -231,7 +227,7 @@ const validPots = (
  * gets an error message if a player's bracket(s) is/are invalid
  *
  * @param {typeof playerEntryData} row - current row
- * @param {dataOneTmntType} tmntData - current tournament data
+ * @param {tmntFullType} tmntData - current tournament data
  * @param {string[]} playerDivIds - player's division ids
  * @param {string} errPlayer - name of player
  * @param {number} i - row's index
@@ -239,7 +235,7 @@ const validPots = (
  */
 const validBrkts = (
   row: typeof playerEntryData,
-  tmntData: dataOneTmntType,
+  tmntData: tmntFullType,
   playerDivIds: string[],
   errPlayer: string,
   i: number
@@ -282,7 +278,7 @@ const validBrkts = (
  * gets an error message if a player's elim(s) fee(s) is/are invalid
  *
  * @param {typeof playerEntryData} row - current row
- * @param {dataOneTmntType} tmntData - current tournament data
+ * @param {tmntFullType} tmntData - current tournament data
  * @param {string[]} playerDivIds - player's division ids
  * @param {string} errPlayer - name of player
  * @param {number} i - row's index
@@ -290,7 +286,7 @@ const validBrkts = (
  */
 const validElims = (
   row: typeof playerEntryData,
-  tmntData: dataOneTmntType,
+  tmntData: tmntFullType,
   playerDivIds: string[],
   errPlayer: string,
   i: number
@@ -323,13 +319,13 @@ const validElims = (
  * finds the next error in the rows
  *
  * @param {typeof playerEntryData[]} rows - array of playerEntryData
- * @param {dataOneTmntType} tmntData - current tournament data
+ * @param {tmntFullType} tmntData - current tournament data
  * @param {CheckType} checkType - type of check (Prelim or Final)
  * @returns {errInfoType} - error info object - if no error, id = "", errMsg = ""
  */
 export const findNextError = (
   rows: (typeof playerEntryData)[],
-  tmntData: dataOneTmntType,
+  tmntData: tmntFullType,
   checkType: CheckType
 ): errInfoType => {
   // for prelim check, all rows must have:
@@ -470,34 +466,34 @@ export const getDivsPotsBrktsElimsCounts = (
  * returns error message if any of the divs, pots, brkts or elims don't have entries
  *
  * @param {Record<string, number>} counts - counts of divs, pots, brkts and elims entries
- * @param {allDataOneTmntType} playerFormTmnt - current tournament data
+ * @param {tmntFullType} tmntData - tournament data
  * @returns {string} - error message if any of the divs, pots, brkts don't have entries, or if divs are missing, otherwise empty string
  */
 export const getDivsPotsBrktsElimsCountErrMsg = (
   counts: Record<string, number>,
-  playerFormTmnt: allDataOneTmntType
+  tmntData: tmntFullType
 ): string => {
   let errMsg = "";
   for (const key in counts) {
     if (key.startsWith("div") && counts[key] === 0) {
       const divId = key.slice(0, -feeColNameEnd.length); // remove '_fee'
-      const divName = getDivName(divId, playerFormTmnt?.curData?.divs);
+      const divName = getDivName(divId, tmntData?.divs);
       errMsg = divName
         ? `No division entries for ${divName}`
         : `No division entries for unknown division ${divId}`;
       break;
     } else if (key.startsWith("pot") && counts[key] === 0) {
       const potId = key.slice(0, -feeColNameEnd.length);
-      const pot = playerFormTmnt?.curData?.pots.find((p) => p.id === potId);
+      const pot = tmntData?.pots.find((p) => p.id === potId);
       errMsg = pot
         ? `No pot entries for ${pot.pot_type}`
         : `No pot entries for unknown pot ${potId}`;
       break;
     } else if (key.startsWith("elm") && counts[key] === 0) {
       const elmId = key.slice(0, -feeColNameEnd.length);
-      const elim = playerFormTmnt?.curData?.elims.find((e) => e.id === elmId);
+      const elim = tmntData?.elims.find((e) => e.id === elmId);
       if (elim) {
-        const elimName = getBrktOrElimName(elim, playerFormTmnt?.curData?.divs);
+        const elimName = getBrktOrElimName(elim, tmntData?.divs);
         errMsg = `No elim entries for ${elimName}`;
       } else {
         errMsg = `No elim entries for unknown elim ${elmId}`;
@@ -508,9 +504,9 @@ export const getDivsPotsBrktsElimsCountErrMsg = (
       counts[key] < defaultBrktPlayers - 1
     ) {
       const brktId = key.slice(0, -brktsColNameEnd.length);
-      const brkt = playerFormTmnt?.curData?.brkts.find((b) => b.id === brktId);
+      const brkt = tmntData?.brkts.find((b) => b.id === brktId);
       if (brkt) {
-        const brktName = getBrktOrElimName(brkt, playerFormTmnt?.curData?.divs);
+        const brktName = getBrktOrElimName(brkt, tmntData?.divs);
         errMsg = `Not enough bracket entries for ${brktName}`;
       } else {
         errMsg = `Not enough bracket entries for unknown bracket ${brktId}`;

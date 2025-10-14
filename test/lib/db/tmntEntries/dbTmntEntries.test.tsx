@@ -1,7 +1,7 @@
 import { cloneDeep } from "lodash"
 import { mockOrigData, mockDataOneTmnt } from "../../../mocks/tmnts/playerEntries/mockPlayerEntries"
 import { saveEntriesData, getTotalUpdated, gotUpdateErrors, exportedForTesting, updateAllEntries } from "@/lib/db/tmntEntries/dbTmntEntries"
-import { allEntriesNoUpdates, initBrktEntry, initDivEntry, initElimEntry, initPlayer, initPotEntry, noUpdates } from "@/lib/db/initVals"
+import { allEntriesNoUpdates, initBrktEntry, initDivEntry, initElimEntry, initPlayer, initPotEntry } from "@/lib/db/initVals"
 import { exportedForTesting as exportedForTestingEditPlayers } from "@/app/dataEntry/editPlayers/[tmntId]/page"
 import { divEntryHdcpColName, entryFeeColName, entryNumBrktsColName, timeStampColName } from "@/app/dataEntry/playersForm/createColumns"
 import { deleteTmnt, postTmnt } from "@/lib/db/tmnts/dbTmnts"
@@ -1378,6 +1378,8 @@ describe('dbTmntEntries', () => {
       return savedTmnt
     }
     const saveMockEntries = async () => {
+      let count = await postManyPlayers(mockOrigData.players);
+      if (count <= 0) return -1;
       const savedPlayers = await postManyPlayers(mockOrigData.players);
       if (!savedPlayers) return null;
       const savedDivEntries = await postManyDivEntries(mockOrigData.divEntries);

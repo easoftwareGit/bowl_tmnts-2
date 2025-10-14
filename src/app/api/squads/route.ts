@@ -4,8 +4,9 @@ import { sanitizeSquad, validateSquad } from "./validate";
 import { ErrorCode } from "@/lib/validation";
 import { squadDataType, squadType } from "@/lib/types/types";
 import { initSquad } from "@/lib/db/initVals";
-import { removeTimeFromISODateStr, startOfDayFromString } from "@/lib/dateTools";
+import { startOfDayFromString } from "@/lib/dateTools";
 import { getErrorStatus } from "../errCodes";
+import { squadDataForPrisma } from "./dataForPrisma";
 
 // routes /api/squads
 
@@ -71,18 +72,16 @@ export async function POST(request: Request) {
     }
     
     const squadDate = startOfDayFromString(toPost.squad_date_str) as Date
-    let squadData: squadDataType = {
-      id: toPost.id,
-      event_id: toPost.event_id,            
-      squad_name: toPost.squad_name,      
-      games: toPost.games,        
-      lane_count: toPost.lane_count,      
-      starting_lane: toPost.starting_lane,      
-      squad_date: squadDate,
-      squad_time: toPost.squad_time,      
-      sort_order: toPost.sort_order
+    if (!squadDate) {
+      return NextResponse.json(
+        { error: "invalid data" },
+        { status: 422 }
+      );
     }
-
+    const squadData = squadDataForPrisma(toPost);
+    if (!squadData) {
+      return NextResponse.json({ error: "invalid data" }, { status: 422 });
+    }
     const squad = await prisma.squad.create({
       data: squadData
     })

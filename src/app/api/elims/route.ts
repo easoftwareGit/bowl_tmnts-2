@@ -5,6 +5,7 @@ import { ErrorCode } from "@/lib/validation";
 import { elimDataType, elimType } from "@/lib/types/types";
 import { initElim } from "@/lib/db/initVals";
 import { getErrorStatus } from "../errCodes";
+import { elimDataForPrisma } from "./dataForPrisma";
 
 // routes /api/elims
 
@@ -67,15 +68,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: errMsg }, { status: 422 });
     }
     
-    let elimData: elimDataType = {
-      id: toPost.id,
-      div_id: toPost.div_id, 
-      squad_id: toPost.squad_id,
-      fee: toPost.fee,
-      start: toPost.start,
-      games: toPost.games,
-      sort_order: toPost.sort_order,
-    };
+    const elimData = elimDataForPrisma(toPost);
+    if (!elimData) {
+      return NextResponse.json({ error: "error creating elim" }, { status: 422 });
+    }
     const elim = await prisma.elim.create({
       data: elimData,
     });

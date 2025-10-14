@@ -96,8 +96,7 @@ const validRoles = ["ADMIN", "DIRECTOR", "USER"]
 
 const validTypes = new Set(idTypesArray);
 
-export const isValidBtDbType = (str: string): boolean => {
-  // return validIdTypes.includes(str);
+export const isValidBtDbType = (str: string): boolean => {  
   return validTypes.has(str as idTypes);
 }
 

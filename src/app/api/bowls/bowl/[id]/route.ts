@@ -37,12 +37,13 @@ export async function PUT(
   try {
     const { id } = await params;
     if (!isValidBtDbId(id, "bwl")) {
-      return NextResponse.json({ error: "not found" }, { status: 404 });
+      return NextResponse.json({ error: "Invalid bowl id" }, { status: 404 });
     }
-
+    
     const { bowl_name, city, state, url } = await req.json();
     const toCheck: bowlType = {
       ...initBowl,
+      id,
       bowl_name,
       city,
       state,
@@ -52,37 +53,38 @@ export async function PUT(
     const toPut = sanitizeBowl(toCheck);
     const errCode = validateBowl(toPut);
     if (errCode !== ErrorCode.None) {
-      let errMsg: string;
-      switch (errCode) {
-        case ErrorCode.MissingData:
-          errMsg = "missing data";
-          break;
-        case ErrorCode.InvalidData:
-          errMsg = "invalid data";
-          break;
-        default:
-          errMsg = "unknown error";
-          break;
-      }
-      return NextResponse.json({ error: errMsg }, { status: 422 });
+      const errorMessages = {
+        [ErrorCode.MissingData]: "missing data",
+        [ErrorCode.InvalidData]: "invalid data",
+        [ErrorCode.OtherError]: "unknown error",
+      };
+      return NextResponse.json(
+        { error: errorMessages[errCode] },
+        { status: 422 }
+      );      
     }
-    
-    const bowl = await prisma.bowl.update({
-      where: {
-        id: id,
+    const bowl = await prisma.bowl.upsert({
+      where: { id },
+      update: {
+        bowl_name: toPut.bowl_name,
+        city: toPut.city,
+        state: toPut.state,
+        url: toPut.url,
       },
-      data: {
+      create: {
+        id,
         bowl_name: toPut.bowl_name,
         city: toPut.city,
         state: toPut.state,
         url: toPut.url,
       },
     });
+
     return NextResponse.json({ bowl }, { status: 200 });
   } catch (err: any) {
     const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
-      { error: "Error putting bowl" },
+      { error: "Error upserting bowl" },
       { status: errStatus }
     );
   }

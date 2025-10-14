@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { baseBowlsApi } from "@/lib/db/apiPaths";
 import { testBaseBowlsApi } from "../../../testApi";
-import { getBowl, getBowls, postBowl, putBowl } from "@/lib/db/bowls/dbBowls";
+import { getBowl, getBowls, postBowl, putBowl, upsertBowl } from "@/lib/db/bowls/dbBowls";
 import { initBowl } from "@/lib/db/initVals";
 import { bowlType } from "@/lib/types/types";
 
@@ -25,11 +25,10 @@ const url = testBaseBowlsApi.startsWith("undefined")
   : testBaseBowlsApi;
 const oneBowlUrl = url + "/bowl/";
 
+const testBowlId = 'bwl_012342f8b85942929f2584318b3d49a2' // not in database
 const notFoundId = "bwl_00000000000000000000000000000000";
-const user1Id = "usr_5bcefb5d314fff1ff5da6521a2fa7bde";
+const userId = "usr_5bcefb5d314fff1ff5da6521a2fa7bde";
 const notFoundUserId = "usr_00000000000000000000000000000000";
-
-const testBowlName = "Test Bowl";
 
 describe('dbBowls', () => { 
 
@@ -43,10 +42,28 @@ describe('dbBowls', () => {
     url: "https://www.earlanthonysdublinbowl.com",
   }
 
+  const bowlToPost: bowlType = {
+    ...initBowl,   
+    id: testBowlId,
+    bowl_name: "Test Bowl",
+    city: "Somehwere",
+    state: "CA",
+    url: "https://www.google.com",
+  }
+
+  const bowlToPut = {
+    ...initBowl,
+    id: bowlToPost.id,
+    bowl_name: "Updated Bowl Name",
+    city: "Updated City",
+    state: "US",
+    url: "https://www.updated.com",
+  }
+
   const deletePostedBowl = async () => { 
     const response = await axios.get(url);
     const bowls = response.data.bowls;
-    const toDel = bowls.find((b: bowlType) => b.bowl_name === testBowlName);
+    const toDel = bowls.find((b: bowlType) => b.id === testBowlId);
     if (toDel) {
       try {
         const delResponse = await axios({
@@ -60,11 +77,84 @@ describe('dbBowls', () => {
     }
   }
 
+  const resetBowl = async () => { 
+    // make sure test user is reset in database
+    // do not use put command, use delete and post
+    const bowlJSON = JSON.stringify(bowlToPost);
+    try { 
+      await deletePostedBowl();
+      await axios.post(url, bowlJSON, {withCredentials: true,});      
+    } catch (err) { 
+      // do nothing      
+    }
+  }
+
   describe('getBowls()', () => {
 
+    const bowlsToGet: bowlType[] = [
+      {
+        ...initBowl,
+        id: "bwl_561540bd64974da9abdd97765fdb3659",
+        bowl_name: "Earl Anthony's Dublin Bowl",
+        city: "Dublin",
+        state: "CA",
+        url: "https://www.earlanthonysdublinbowl.com",
+      }, 
+      {
+        ...initBowl,
+        id: "bwl_8b4a5c35ad1247049532ff53a12def0a",
+        bowl_name: "Yosemite Lanes",
+        city: "Modesto",
+        state: "CA",
+        url: "http://yosemitelanes.com",
+      },
+      {
+        ...initBowl,
+        id: "bwl_ff4cd62b03f24017beea81c1d6e047e7",
+        bowl_name: "Coconut Bowl",
+        city: "Sparks",
+        state: "NV",
+        url: "https://wildisland.com/bowl",
+      },
+      {
+        ...initBowl,
+        id: "bwl_91c6f24db58349e8856fe1d919e54b9e",
+        bowl_name: "Diablo Lanes",
+        city: "Concord",
+        state: "CA",
+        url: "http://diablolanes.com",
+      },
+    ];
+
     it('should return all bowls data', async () => {      
-      const result = await getBowls();
-      expect(result).toHaveLength(4); // from prisma/seed.ts      
+      const bowls = await getBowls();
+      expect(bowls).toHaveLength(4); // from prisma/seed.ts      
+      if (!bowls) return;
+      for (let i = 0; i < bowls.length; i++) {
+        if (bowls[i].id === bowlsToGet[0].id) {
+          expect(bowls[i].bowl_name).toBe(bowlsToGet[0].bowl_name);
+          expect(bowls[i].city).toBe(bowlsToGet[0].city);
+          expect(bowls[i].state).toBe(bowlsToGet[0].state);
+          expect(bowls[i].url).toBe(bowlsToGet[0].url);
+        } else if (bowls[i].id === bowlsToGet[1].id) {
+          expect(bowls[i].bowl_name).toBe(bowlsToGet[1].bowl_name);
+          expect(bowls[i].city).toBe(bowlsToGet[1].city);
+          expect(bowls[i].state).toBe(bowlsToGet[1].state);
+          expect(bowls[i].url).toBe(bowlsToGet[1].url);
+        } else if (bowls[i].id === bowlsToGet[2].id) {
+          expect(bowls[i].bowl_name).toBe(bowlsToGet[2].bowl_name);
+          expect(bowls[i].city).toBe(bowlsToGet[2].city);
+          expect(bowls[i].state).toBe(bowlsToGet[2].state);
+          expect(bowls[i].url).toBe(bowlsToGet[2].url);
+        } else if (bowls[i].id === bowlsToGet[3].id) {
+          expect(bowls[i].bowl_name).toBe(bowlsToGet[3].bowl_name);
+          expect(bowls[i].city).toBe(bowlsToGet[3].city);
+          expect(bowls[i].state).toBe(bowlsToGet[3].state);
+          expect(bowls[i].url).toBe(bowlsToGet[3].url);
+        } else { 
+          expect(true).toBeFalsy();
+        }
+      }
     });
   })
 
@@ -81,29 +171,33 @@ describe('dbBowls', () => {
       expect(gotBowl.url).toBe(firstBowl.url);
     })
     it('should not get a bowl that does not exist', async () => { 
-      const gotBowl = await getBowl(notFoundId);
-      expect(gotBowl).toBeNull();      
+      try { 
+        await getBowl(notFoundId);        
+      } catch (err) { 
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('getBowl failed: Request failed with status code 404');
+      }
     })
-    it('should not get a bowl when bowl id is not valid', async () => { 
-      const gotBowl = await getBowl("test");
-      expect(gotBowl).toBeNull();
+    it('should throw an error when bowl id is not valid', async () => { 
+      try { 
+        await getBowl("test");
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('Invalid bowl id');
+      }
     })
-    it('should not get a bowl when bowl id is valid, but not a bowl id', async () => { 
-      const gotBowl = await getBowl(user1Id);
-      expect(gotBowl).toBeNull();
+    it('should throw an error when bowl id is valid, but not a bowl id', async () => { 
+      try { 
+        await getBowl(notFoundUserId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('Invalid bowl id');
+      }
     })
 
   })
 
   describe('postBowl()', () => { 
-
-    const bowlToPost: bowlType = {
-      ...initBowl,      
-      bowl_name: testBowlName,
-      city: "Somehwere",
-      state: "CA",
-      url: "https://www.google.com",
-    }
 
     let createdBowl = false
 
@@ -134,49 +228,26 @@ describe('dbBowls', () => {
     })
 
     it("should NOT post a bowl with invalid data", async () => {
-      const invalidTmnt = {
-        ...bowlToPost,
-        bowl_name: "  ",
-      };
-      const postedTmnt = await postBowl(invalidTmnt);
-      expect(postedTmnt).toBeNull();
+      try { 
+        const invalidTmnt = {
+          ...bowlToPost,
+          bowl_name: "  ",
+        };
+        await postBowl(invalidTmnt);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('postBowl failed: Request failed with status code 422');
+      }
     });
 
   })
 
   describe('putBowl()', () => { 
-    const bowlToPut = {
-      ...initBowl,
-      id: firstBowl.id,
-      bowl_name: "Updated Bowl Name",
-      city: "Updated City",
-      state: "US",
-      url: "https://www.updated.com",
-    }
-
-    const sampleBowl = {
-      ...bowlToPut,
-      id: '',
-      bowl_name: "Test Bowl Name",
-      city: "Test City",
-      state: "TS",
-      url: "https://www.test.com",
-    }
-
-    const doResetBowl = async () => {
-      const tmntJSON = JSON.stringify(firstBowl);
-      const response = await axios({
-        method: "put",
-        data: tmntJSON,
-        withCredentials: true,
-        url: oneBowlUrl + firstBowl.id,
-      });
-    };
 
     let didPut = false;
 
     beforeAll(async () => {
-      await doResetBowl();
+      await resetBowl();
     });
 
     beforeEach = () => {
@@ -185,8 +256,12 @@ describe('dbBowls', () => {
 
     afterEach(async () => {
       if (didPut) {
-        await doResetBowl();
+        await resetBowl();
       }
+    });
+
+    afterAll(async () => {
+      await deletePostedBowl();
     });
 
     it('should update a bowl by ID', async () => {
@@ -201,13 +276,109 @@ describe('dbBowls', () => {
       expect(puttedBowl.url).toBe(bowlToPut.url);
     })
     it('should  NOT update a bowl with invalid data', async () => { 
-      const invalidTmnt = {
-        ...bowlToPut,
-        bowl_name: "",
-      };
-      const puttedTmnt = await putBowl(invalidTmnt);
-      expect(puttedTmnt).toBeNull();
+      try { 
+        const invalidTmnt = {
+          ...bowlToPut,
+          bowl_name: "",
+        };
+        await putBowl(invalidTmnt);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('putBowl failed: Request failed with status code 422');
+      }
     })
   })
+
+  describe('upsertBowl() - insert', () => {
+
+    beforeAll(async () => {
+      await deletePostedBowl();
+    });
+
+    afterAll(async () => {
+      await deletePostedBowl();
+    });
+
+    it('should upsert (insert) a bowl', async () => {
+      const upsertedBowl = await upsertBowl(bowlToPost);
+      expect(upsertedBowl).not.toBeNull();
+      if (!upsertedBowl) return;
+      expect(upsertedBowl.id).toBe(bowlToPost.id);
+      expect(upsertedBowl.bowl_name).toBe(bowlToPost.bowl_name);
+      expect(upsertedBowl.city).toBe(bowlToPost.city);
+      expect(upsertedBowl.state).toBe(bowlToPost.state);
+      expect(upsertedBowl.url).toBe(bowlToPost.url);
+    });
+  });
+
+  describe('upsertBowl() - update', () => {
+
+    beforeAll(async () => {
+      await resetBowl();
+    });
+
+    afterEach(async () => {
+      await resetBowl();
+    });
+
+    afterAll(async () => {
+      await deletePostedBowl();
+    });
+
+    it('should upsert (update) a bowl', async () => {
+      const upsertedBowl = await upsertBowl(bowlToPut);
+      expect(upsertedBowl).not.toBeNull();
+      if (!upsertedBowl) return;
+      expect(upsertedBowl.id).toBe(bowlToPut.id);
+      expect(upsertedBowl.bowl_name).toBe(bowlToPut.bowl_name);
+      expect(upsertedBowl.city).toBe(bowlToPut.city);
+      expect(upsertedBowl.state).toBe(bowlToPut.state);
+      expect(upsertedBowl.url).toBe(bowlToPut.url);
+    });
+    it('should NOT upsert a bowl with invalid data', async () => {
+      try {
+        const invalidTmnt = {
+          ...bowlToPut,
+          bowl_name: "",
+        };
+        await upsertBowl(invalidTmnt);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('upsertBowl failed: Request failed with status code 422');
+      }
+    });
+    it('should not upsert a bowl with invalid ID', async () => {
+      try {
+        const invalidTmnt = {
+          ...bowlToPut,
+          id: "invalid",
+        };
+        await upsertBowl(invalidTmnt);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('Invalid bowl data');
+      }
+    });
+    it('should not upsert a bowl with valid id, but not a bowl id', async () => {
+      try {
+        const invalidTmnt = {
+          ...bowlToPut,
+          id: userId,
+        };
+        await upsertBowl(invalidTmnt);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('Invalid bowl data');
+      }
+    })
+    it('shoudl not upsert a bowl when passed null', async () => {
+      try {
+        await upsertBowl(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('Invalid bowl data');
+      }
+    });
+  });
 
 })

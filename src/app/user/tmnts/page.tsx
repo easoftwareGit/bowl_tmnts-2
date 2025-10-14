@@ -11,7 +11,8 @@ import ModalConfirm from "@/components/modal/confirmModal";
 import WaitModal from "@/components/modal/waitModal";
 import { initModalObj } from "@/components/modal/modalObjType";
 import { fetchBowls, getBowlsError, getBowlsLoadStatus } from "@/redux/features/bowls/bowlsSlice";
-import "./userTmnts.css";
+// import "./userTmnts.css";
+import styles from "./userTmnts.module.css";
 
 export default function UserTmntsPage() { 
   const dispatch = useDispatch<AppDispatch>();
@@ -20,7 +21,9 @@ export default function UserTmntsPage() {
   const userId = data?.user?.id || ""; 
 
   useEffect(() => {
-    dispatch(fetchUserTmnts(userId));
+    if (userId !== "") {
+      dispatch(fetchUserTmnts(userId));
+    }
   }, [userId, dispatch]);
 
   useEffect(() => { 
@@ -54,7 +57,7 @@ export default function UserTmntsPage() {
     setConfModalObj({
       show: true,
       title: "Delete Tournament",
-      message: "Are you sure you want to delete the tournament: \n" + 
+      message: "Are you sure you want to delete the tournament?\n" + 
                "Name: " + toDel.tmnt_name + "\n" + 
                "Start Date: " + toDel.start_date_str + "\n" +
                "Center: " + toDel.bowls.bowl_name + "\n" +
@@ -97,7 +100,7 @@ export default function UserTmntsPage() {
             >              
               <table className="table table-striped table-hover w-100">              
                 <thead>
-                  <tr className="tmnts-header-row">
+                  <tr className={styles.tmnts_header_row}>
                     <th className="align-middle" style={{ width: 210 }}>
                       Tournament
                     </th>

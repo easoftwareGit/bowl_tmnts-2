@@ -1,6 +1,7 @@
 import { getSquadEntriesSQL, exportedForTesting } from "@/app/api/squads/entries/getSql";
 import { mockCurData } from "../../../mocks/tmnts/playerEntries/mockOneSquadEntries";
 import { cloneDeep } from "lodash";
+import { getSquadOneBrktsAndSeedsSQL } from "@/app/api/squads/oneBrkts/getSql";
 
 const { getDivAndHdcpSQL, getPotsSQL, getBrktsSQL, getElimsSQL } = exportedForTesting;
 
@@ -422,4 +423,33 @@ describe('getSql', () => {
       expect(squadEntriesSql).toBe('');
     });
   });
+
+  describe('getSquadOneBrktsAndSeedsSQL', () => { 
+    it("should return correct sql for a squads's one brkts and seeds", () => {
+      const oneBrktsAndSeedsSql = getSquadOneBrktsAndSeedsSQL(mockCurData.squads[0].id);
+      const expected = 
+        `SELECT ` +
+        `public."One_Brkt".id as one_brkt_id, ` + 
+        `public."One_Brkt".brkt_id, ` +
+        `public."One_Brkt".bindex, ` + 
+        `public."Brkt_Seed".seed, ` +
+        `public."Brkt_Seed".player_id ` +
+        `FROM public."One_Brkt" ` +
+        `INNER JOIN public."Brkt_Seed" ON "Brkt_Seed".one_brkt_id = "One_Brkt".id ` + 
+        `INNER JOIN public."Brkt" ON "Brkt".id = "One_Brkt".brkt_id ` +
+        `WHERE "squad_id" = '${mockCurData.squads[0].id}' ` +
+        `ORDER BY brkt_id, bindex, one_brkt_id, seed`;
+      expect(oneBrktsAndSeedsSql).toBe(expected);
+    });
+    it('should return empty string if invalid squad id', () => {
+      const oneBrktsAndSeedsSql = getSquadOneBrktsAndSeedsSQL('test');
+      expect(oneBrktsAndSeedsSql).toBe('');
+    });
+    it('should return empty string if a valid id, not not a squad id', () => {      
+      const userId = "usr_01234567890123456789012345678901";
+      const oneBrktsAndSeedsSql = getSquadOneBrktsAndSeedsSQL(userId);
+      expect(oneBrktsAndSeedsSql).toBe('');
+    })
+
+  })
 })

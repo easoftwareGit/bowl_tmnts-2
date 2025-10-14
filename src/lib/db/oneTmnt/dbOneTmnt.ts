@@ -1,6 +1,6 @@
 import { brktType, divType, elimType, eventType, ioDataError, laneType, potType, allDataOneTmntType, squadType, tmntType } from "@/lib/types/types";
 import { deleteTmnt, postTmnt, putTmnt } from "../tmnts/dbTmnts";
-import { isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation";
 import { deleteAllEventsForTmnt, deleteEvent, postEvent, postManyEvents, putEvent } from "../events/dbEvents";
 import { deleteAllDivsForTmnt, deleteDiv, postDiv, postManyDivs, putDiv } from "../divs/dbDivs";
 import { deleteAllSquadsForTmnt, deleteSquad, postManySquads, postSquad, putSquad } from "../squads/dbSquads";
@@ -8,6 +8,13 @@ import { deleteAllLanesForTmnt, deleteLane, postLane, postManyLanes, putLane } f
 import { deleteAllPotsForTmnt, deletePot, postManyPots, postPot, putPot } from "../pots/dbPots";
 import { deleteAllBrktsForTmnt, deleteBrkt, postBrkt, postManyBrkts, putBrkt } from "../brkts/dbBrkts";
 import { deleteElim, postElim, postManyElims, putElim } from "../elims/dbElims";
+import { validateEvents } from "@/app/api/events/validate";
+import { validateSquads } from "@/app/api/squads/validate";
+import { validateDivs } from "@/app/api/divs/validate";
+import { validateLanes } from "@/app/api/lanes/validate";
+import { validatePots } from "@/app/api/pots/validate";
+import { validateBrkts } from "@/app/api/brkts/validate";
+import { validateElims } from "@/app/api/elims/validate";
 
 /**
  * saves a tournament
@@ -85,14 +92,26 @@ const tmntPostPutOrDelEvents = async (origEvents: eventType[], events: eventType
  * 
  * @param {eventType[]} origEvents - original events in tmnt
  * @param {eventType[]} events - current events to save 
- * @returns - array of saved current events or null (if an event is not edited, it will be included in the returned array)  
+ * @returns {eventType[] | null} - array of saved current events or null (if an event is not edited, it will be included in the returned array)  
  */
 export const tmntSaveEvents = async (origEvents: eventType[], events: eventType[]): Promise<eventType[] | null> => { 
 
   if (!origEvents || !events) return null;
   // if no original id, then a new events are being created
-  if (origEvents.length === 1 && origEvents[0].id === '') {    
-    return await postManyEvents(events) 
+  if (origEvents.length === 1 && origEvents[0].id === '') {
+    // postManyEvents validation confirms all events items are valid
+    // and have a valid event id
+    const count = await postManyEvents(events);
+    if (count === -1) return null
+    // if no events to save, return the empty array
+    if (count === 0 && events.length === 0) return events;
+    // sanitize and validate events before return
+    // postManeyEvents sanitizes and validates before saving
+    const validEvents = await validateEvents(events); // need to use await! or else returns a promise    
+    if (validEvents.errorCode !== ErrorCode.None) {
+      return null
+    }
+    return validEvents.events;
   } else {
     return await tmntPostPutOrDelEvents(origEvents, events)
   }
@@ -158,7 +177,19 @@ export const tmntSaveDivs = async (origDivs: divType[], divs: divType[]): Promis
   if (!origDivs || !divs) return null;
   // if no original id, then a new events are being created
   if (origDivs.length === 1 && origDivs[0].id === '') {
-    return await postManyDivs(divs); 
+    // postManyDivs validation confirms all div items are valid
+    // and have a valid div id
+    const count = await postManyDivs(divs);
+    if (count === -1) return null    
+    // if no divs to save, return the empty array
+    if (count === 0 && divs.length === 0) return divs;
+    // sanitize and validate divs before return
+    // postManyDivs sanitizes and validates before saving
+    const validDivs = await validateDivs(divs); // need to use await! or else returns a promise    
+    if (validDivs.errorCode !== ErrorCode.None) {
+      return null
+    }
+    return validDivs.divs;
   } else {
     return await tmntPostPutOrDelDivs(origDivs, divs)
   }
@@ -224,7 +255,20 @@ export const tmntSaveSquads = async (origSquads: squadType[], squads: squadType[
   if (!origSquads || !squads) return null;
   // if no original id, then a new events are being created
   if (origSquads.length === 1 && origSquads[0].id === '') {
-    return await postManySquads(squads)
+    // postManySquads validation confirms all squad items are valid
+    // and have a valid squad id
+    const count = await postManySquads(squads);
+    if (count === -1) return null
+    // if no squads to save, return the empty array
+    if (count === 0 && squads.length === 0) return squads;
+    // sanitize and validate squads before return
+    // postManeySquads sanitizes and validates before saving
+    // do it here so dont have to access db
+    const validSquads = await validateSquads(squads); // need to use await! or else returns a promise
+    if (validSquads.errorCode !== ErrorCode.None) {
+      return null
+    }
+    return validSquads.squads;
   } else {
     return await tmntPostPutOrDelSquads(origSquads, squads)
   }
@@ -297,7 +341,20 @@ export const tmntSaveLanes = async (origLanes: laneType[], lanes: laneType[]): P
   // if no original id, then a new events are being created
   // origLanes will have even # of rows 
   if (origLanes.length === 2 && origLanes[0].id === '' && origLanes[1].id === '') {
-    return await postManyLanes(lanes)
+    // postManyLanes validation confirms all lane items are valid
+    // and have a valid lane id
+    const count = await postManyLanes(lanes);
+    if (count === -1) return null    
+    // if no lanes to save, return the empty array
+    if (count === 0 && lanes.length === 0) return lanes;
+    // sanitize and validate lanes before return
+    // postManyLanes sanitizes and validates before saving
+    // do it here so dont have to access db
+    const validLanes = await validateLanes(lanes); // need to use await! or else returns a promise
+    if (validLanes.errorCode !== ErrorCode.None) {
+      return null
+    }
+    return validLanes.lanes;
   } else {
     return await tmntPostPutOrDelLanes(origLanes, lanes)
   }
@@ -368,7 +425,20 @@ export const tmntSavePots = async (origPots: potType[], pots: potType[]): Promis
 
   if (!origPots || !pots) return null;
   if (origPots.length === 0) {
-    return await postManyPots(pots)
+    // postManyPots validation confirms all pot items are valid
+    // and have a valid pot id
+    const count = await postManyPots(pots);
+    if (count === -1) return null
+    // if no pots to save, return the empty array
+    if (count === 0 && pots.length === 0) return pots;
+    // sanitize and validate pots before return
+    // postManyPots sanitizes and validates before saving
+    // do it here so dont have to access db
+    const validPots = await validatePots(pots); // need to use await! or else returns a promise
+    if (validPots.errorCode !== ErrorCode.None) {
+      return null
+    }
+    return validPots.pots;
   } else {
     return await tmntPostPutOrDelPots(origPots, pots)
   }
@@ -439,7 +509,20 @@ export const tmntSaveBrkts = async (origBrkts: brktType[], brkts: brktType[]): P
 
   if (!origBrkts || !brkts) return null;
   if (origBrkts.length === 0) {
-    return await postManyBrkts(brkts)
+    // postManyBrkts validation confirms all brkt items are valid
+    // and have a valid brkt id
+    const count = await postManyBrkts(brkts);
+    if (count === -1) return null
+    // if no brkts to save, return the empty array
+    if (count === 0 && brkts.length === 0) return brkts;
+    // sanitize and validate brkts before return
+    // postManyBrkts sanitizes and validates before saving
+    // do it here so dont have to access db
+    const validBrkts = await validateBrkts(brkts); // need to use await! or else returns a promise
+    if (validBrkts.errorCode !== ErrorCode.None) {
+      return null
+    }
+    return validBrkts.brkts;
   } else {
     return await tmntPostPutOrDelBrkts(origBrkts, brkts)
   }
@@ -510,7 +593,20 @@ export const tmntSaveElims = async (origElims: elimType[], elims: elimType[]): P
 
   if (!origElims || !elims) return null;
   if (origElims.length === 0) {
-    return await postManyElims(elims)
+    // postManyElims validation confirms all elim items are valid
+    // and have a valid elim id
+    const count = await postManyElims(elims);
+    if (count === -1) return null
+    // if no elims to save, return the empty array
+    if (count === 0 && elims.length === 0) return elims;
+    // sanitize and validate elims before return
+    // postManyElims sanitizes and validates before saving
+    // do it here so dont have to access db
+    const validElims = await validateElims(elims); // need to use await! or else returns a promise
+    if (validElims.errorCode !== ErrorCode.None) {
+      return null
+    }
+    return validElims.elims;
   } else {
     return await tmntPostPutOrDelElims(origElims, elims)
   }

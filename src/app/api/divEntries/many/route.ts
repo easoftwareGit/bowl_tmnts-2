@@ -5,6 +5,7 @@ import { divEntryType, divEntryDataType, tmntEntryDivEntryType } from "@/lib/typ
 import { validateDivEntries } from "../validate";
 import { getDeleteManySQL, getInsertManySQL, getUpdateManySQL } from "./getSql";
 import { getErrorStatus } from "../../errCodes";
+import { divEntryDataForPrisma } from "../dataForPrisma";
 
 // routes /api/divEntries/many
 
@@ -12,28 +13,24 @@ export async function POST(request: NextRequest) {
 
   try {    
     const divEntries: divEntryType[] = await request.json();
+    if (Array.isArray(divEntries) && divEntries.length === 0) {
+      return NextResponse.json({ count: 0 }, { status: 200 });
+    }    
     // sanitize and validate divEntries
     const validDivEntries = await validateDivEntries(divEntries); // need to use await! or else returns a promise
     if (validDivEntries.errorCode !== ErrorCode.None) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
-
     // convert valid divEntries into divEntryData to post
-    const divEntriesToPost: divEntryDataType[] = []
-    validDivEntries.divEntries.forEach(divEntry => {
-      divEntriesToPost.push({
-        id: divEntry.id,
-        squad_id: divEntry.squad_id,
-        div_id: divEntry.div_id,
-        player_id: divEntry.player_id,
-        fee: divEntry.fee,
-      })
-    });      
-
-    const manyDivEntries = await prisma.div_Entry.createManyAndReturn({
-      data: [...divEntriesToPost]
+    const divEntriesToPost: divEntryDataType[] = validDivEntries.divEntries
+      .map(divEntry => divEntryDataForPrisma(divEntry))
+      .filter((data): data is divEntryDataType => data !== null);
+    const result = await prisma.div_Entry.createMany({
+      data: divEntriesToPost,
+      skipDuplicates: false, // or true if you want to silently skip existing rows
     })
-    return NextResponse.json({divEntries: manyDivEntries}, { status: 201 });    
+
+    return NextResponse.json({ count: result.count }, { status: 201 });   
   } catch (err: any) {
     const errStatus = getErrorStatus(err.code);
     return NextResponse.json(

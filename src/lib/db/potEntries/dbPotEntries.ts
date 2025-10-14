@@ -2,318 +2,302 @@ import axios from "axios";
 import { basePotEntriesApi } from "@/lib/db/apiPaths";
 import { testBasePotEntriesApi } from "../../../../test/testApi";
 import { potEntryType, putManyReturnType } from "@/lib/types/types";
-import { isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation";
 import { blankPotEntry, noUpdates } from "../initVals";
+import { validatePotEntries } from "@/app/api/potEntries/validate";
 
 const url = testBasePotEntriesApi.startsWith("undefined")
   ? basePotEntriesApi
   : testBasePotEntriesApi; 
 
-const onePotEntryUrl = url + "/potEntry/";
-const oneDivUrl = url + "/div/";
-const oneSquadUrl = url + "/squad/";
-const oneTmntUrl = url + "/tmnt/";
-const manyUrl = url + "/many";   
+const divUrl = url + "/div/";
+const manyUrl = url + "/many";
+const potEntryUrl = url + "/potEntry/";
+const squadUrl = url + "/squad/";
+const tmntUrl = url + "/tmnt/";
+
+/**
+ * Extracts potEntries from GET API response
+ * 
+ * @param {any} potEntries - array of potEntries from GET API response
+ * @returns {potEntryType[]} - array of potEntries with extracted data 
+ */
+export const extractPotEntries = (potEntries: any): potEntryType[] => {
+  if (!potEntries || !Array.isArray(potEntries)) return [];
+  return potEntries.map((potEntry: any) => ({
+    ...blankPotEntry,
+    id: potEntry.id,        
+    pot_id: potEntry.pot_id,
+    player_id: potEntry.player_id,
+    fee: potEntry.fee + '',
+  }));
+}
 
 /**
  * Get all pot entries for a tmnt
  * 
  * @param {string} tmntId - id of tmnt to get pot entries for
- * @returns {potEntryType[] | null} - array of pot entries
+ * @returns {potEntryType} - array of pot entries
+ * @throws {Error} - if tmntId is invalid or API call fails
  */
-export const getAllPotEntriesForTmnt = async (tmntId: string): Promise<potEntryType[] | null> => {
-  try {
-    if (!isValidBtDbId(tmntId, "tmt")) return null;
-    const response = await axios({
-      method: "get",
-      withCredentials: true,
-      url: oneTmntUrl + tmntId,
-    });
-    if (response.status !== 200) return null;
-    const tmntPotEntries = response.data.potEntries;
-    const potEntries: potEntryType[] = tmntPotEntries.map((potEntry: potEntryType) => {
-      return {
-        ...blankPotEntry,
-        id: potEntry.id,        
-        pot_id: potEntry.pot_id,
-        player_id: potEntry.player_id,
-        fee: potEntry.fee,
-      }
-    });
-    return potEntries;
-  } catch (err) {
-    return null;
+export const getAllPotEntriesForTmnt = async (tmntId: string): Promise<potEntryType[]> => {
+  if (!isValidBtDbId(tmntId, "tmt")) { 
+    throw new Error("Invalid tmnt id");
   }
+  let response;
+  try {
+    response = await axios.get(tmntUrl + tmntId, { withCredentials: true });    
+  } catch (err) {
+    throw new Error(`getAllPotEntriesForTmnt failed: ${err instanceof Error ? err.message : err}`);
+  }
+  if (response.status !== 200) { 
+    throw new Error(`Unexpected status ${response.status} when fetching potEntries`)
+  }
+  return extractPotEntries(response.data.potEntries);
 }
 
 /**
  * Get all pot entries for a div
  * 
  * @param {string} divId - id of div to get pot entries for
- * @returns {potEntryType[] | null} - array of pot entries
+ * @returns {potEntryType[]} - array of pot entries
+ * @throws {Error} - if divId is invalid or API call fails
  */
-export const getAllPotEntriesForDiv = async (divId: string): Promise<potEntryType[] | null> => {
-  try {
-    if (!isValidBtDbId(divId, "div")) return null;
-    const response = await axios({
-      method: "get",
-      withCredentials: true,
-      url: oneDivUrl + divId,
-    });
-    if (response.status !== 200) return null;
-    const divPotEntries = response.data.potEntries;
-    const potEntries: potEntryType[] = divPotEntries.map((potEntry: potEntryType) => {
-      return {
-        ...blankPotEntry,
-        id: potEntry.id,        
-        pot_id: potEntry.pot_id,
-        player_id: potEntry.player_id,
-        fee: potEntry.fee,
-      }
-    });
-    return potEntries;
-  } catch (err) {
-    return null;
+export const getAllPotEntriesForDiv = async (divId: string): Promise<potEntryType[]> => {
+  if (!isValidBtDbId(divId, "div")) { 
+    throw new Error("Invalid div id");
   }
+  let response;
+  try {
+    response = await axios.get(divUrl + divId, { withCredentials: true });    
+  } catch (err) {
+    throw new Error(`getAllPotEntriesForDiv failed: ${err instanceof Error ? err.message : err}`);
+  }
+  if (response.status !== 200) { 
+    throw new Error(`Unexpected status ${response.status} when fetching potEntries`)
+  }
+  return extractPotEntries(response.data.potEntries);
 }
 
 /**
  * Get all pot entries for a squad
  * 
  * @param {string} squadId - id of squad to get pot entries for
- * @returns {potEntryType[] | null} - array of pot entries
+ * @returns {potEntryType[]} - array of pot entries
  */
-export const getAllPotEntriesForSquad = async (squadId: string): Promise<potEntryType[] | null> => {
-  try {
-    if (!isValidBtDbId(squadId, "sqd")) return null;
-    const response = await axios({
-      method: "get",
-      withCredentials: true,
-      url: oneSquadUrl + squadId,
-    });
-    if (response.status !== 200) return null;
-    const squadPotEntries = response.data.potEntries;
-    const potEntries: potEntryType[] = squadPotEntries.map((potEntry: potEntryType) => {
-      return {
-        ...blankPotEntry,
-        id: potEntry.id,        
-        pot_id: potEntry.pot_id,
-        player_id: potEntry.player_id,
-        fee: potEntry.fee,
-      }
-    });
-    return potEntries;
-  } catch (err) {
-    return null;
+export const getAllPotEntriesForSquad = async (squadId: string): Promise<potEntryType[]> => {
+  if (!isValidBtDbId(squadId, "sqd")) { 
+    throw new Error("Invalid squad id");
   }
+  let response;
+  try {
+    response = await axios.get(squadUrl + squadId, { withCredentials: true });    
+  } catch (err) {
+    throw new Error(`getAllPotEntriesForSquad failed: ${err instanceof Error ? err.message : err}`);
+  }
+  if (response.status !== 200) { 
+    throw new Error(`Unexpected status ${response.status} when fetching potEntries`)
+  }
+  return extractPotEntries(response.data.potEntries);
 }
 
 /**
- * posts a div entry
+ * posts a pot entry
  * 
  * @param {potEntryType} potEntry - potEntry to post
- * @returns {potEntryType | null} - potEntry that was posted or null
+ * @returns {potEntryType} - potEntry that was posted
+ * @throws {Error} - if potEntry is invalid or API call fails
  */
-export const postPotEntry = async (potEntry: potEntryType): Promise<potEntryType | null> => {
+export const postPotEntry = async (potEntry: potEntryType): Promise<potEntryType> => {
+  if (!potEntry || !isValidBtDbId(potEntry.id, "pen")) { 
+    throw new Error("Invalid potEntry data");
+  }
+  let response;
   try {
-    if (!potEntry || !isValidBtDbId(potEntry.id, "pen")) return null;
     // further sanatation and validation done in POST route
     const potEntryJSON = JSON.stringify(potEntry);
-    const response = await axios({
-      method: "post",
-      data: potEntryJSON,
-      withCredentials: true,
-      url: url,
-    });
-    if (response.status !== 201) return null;
-    const dbPotEntry = response.data.potEntry;
-    const postedPotEntry: potEntryType = {
-      ...blankPotEntry,
-      id: dbPotEntry.id,      
-      pot_id: dbPotEntry.pot_id,
-      player_id: dbPotEntry.player_id,
-      fee: dbPotEntry.fee,
-    };
-    return postedPotEntry;
+    response = await axios.post(url, potEntryJSON, { withCredentials: true });    
   } catch (err) {
-    return null;
+    throw new Error(`postPotEntry failed: ${err instanceof Error ? err.message : err}`);
   }
+  if (response.status !== 201 || !response.data?.potEntry) {
+    throw new Error('Error posting potEntry');
+  }
+  return response.data.potEntry;
 }
 
 /**
  * posts many pot entries
  * 
  * @param {potEntryType[]} potEntries - array of potEntries to post
- * @returns {potEntryType[] | null} - array of potEntries that were posted or null
+ * @returns {number} - number of potEntries that were posted
+ * @throws {Error} - if potEntries are invalid or API call fails
  */
-export const postManyPotEntries = async (potEntries: potEntryType[]): Promise<potEntryType[] | null> => {
-  try {
-    if (!potEntries) return null;
-    if (potEntries.length === 0) return [];
-    // further sanatation and validation done in POST route
-    const potEntryJSON = JSON.stringify(potEntries);
-    const response = await axios({
-      method: "post",
-      data: potEntryJSON,
-      withCredentials: true,
-      url: manyUrl,
-    });
-    if (response.status !== 201) return null;
-    const dbPotEntries = response.data.potEntries;
-    const postedPotEntries: potEntryType[] = dbPotEntries.map((potEntry: any) => {
-      return {
-        ...blankPotEntry,
-        id: potEntry.id,
-        squad_id: potEntry.squad_id,
-        pot_id: potEntry.pot_id,
-        player_id: potEntry.player_id,
-        fee: potEntry.fee,
-      }
-    });
-    return postedPotEntries;
-  } catch (err) {
-    return null;
+export const postManyPotEntries = async (potEntries: potEntryType[]): Promise<number> => {
+  if (!potEntries || !Array.isArray(potEntries)) { 
+    throw new Error("Invalid potEntries data");
   }
+  if (potEntries.length === 0) return 0; // not an error, just no potEntries to post
+  const validPotEntries = validatePotEntries(potEntries);
+  if (validPotEntries.errorCode !== ErrorCode.None
+    || validPotEntries.potEntries.length !== potEntries.length)
+  { 
+    if (validPotEntries.potEntries.length === 0) {      
+      throw new Error('Invalid potEntry data at index 0');
+    }
+    const errorIndex = potEntries.findIndex(potEntry => !isValidBtDbId(potEntry.id, "pen"));
+    if (errorIndex < 0) {
+      throw new Error(`Invalid potEntry data at index ${validPotEntries.potEntries.length}`);
+    } else {
+      throw new Error(`Invalid potEntry data at index ${errorIndex}`);
+    }
+  }
+  let response;
+  try {  
+    const potEntriesJSON = JSON.stringify(potEntries);  
+    response = await axios.post(manyUrl, potEntriesJSON, {    
+      withCredentials: true,    
+    });
+  } catch (err) {
+    throw new Error(`postManyPotEntries failed: ${err instanceof Error ? err.message : err}`);
+  }
+  if (response.status !== 201 || typeof response.data?.count !== "number") {
+    throw new Error("Error posting potEntries");
+  }
+  return response.data.count;
 }
 
 /**
- * updates a div entry
+ * puts a div entry
  * 
  * @param {potEntryType} potEntry - potEntry to update
- * @returns {potEntryType | null} - potEntry that was updated
+ * @returns {potEntryType} - potEntry that was updated
+ * @throws {Error} - if potEntry is invalid or API call fails
  */
-export const putPotEntry = async (potEntry: potEntryType): Promise<potEntryType | null> => {
-  try {
-    if (!potEntry || !isValidBtDbId(potEntry.id, "pen")) return null;
-    // further sanatation and validation done in POST route
-    const potEntryJSON = JSON.stringify(potEntry);
-    const response = await axios({
-      method: "put",
-      data: potEntryJSON,
-      withCredentials: true,
-      url: onePotEntryUrl + potEntry.id,
-    });
-    if (response.status !== 200) return null;
-    const dbPotEntry = response.data.potEntry;
-    const puttedPotEntry: potEntryType = {
-      ...blankPotEntry,
-      id: dbPotEntry.id,      
-      pot_id: dbPotEntry.pot_id,
-      player_id: dbPotEntry.player_id,
-      fee: dbPotEntry.fee,
-    };
-    return puttedPotEntry;
-  } catch (err) {
-    return null;
+export const putPotEntry = async (potEntry: potEntryType): Promise<potEntryType> => {
+  if (!potEntry || !isValidBtDbId(potEntry.id, "pen")) { 
+    throw new Error("Invalid potEntry data");
   }
-}
-
-/**
- * updates, inserts or deletes many pot entries
- * 
- * @param {potEntryType[]} potEntries - array of potEntries to update, insert or delete
- * @returns {putManyReturnType | null} - putManyReturnType has how many of each type updated or null 
- */
-export const putManyPotEntries = async (potEntries: potEntryType[]): Promise<putManyReturnType | null> => {
-
+  let response;
   try {
-    if (!potEntries) return null;
-    if (potEntries.length === 0) return noUpdates;
-    for (let i = 0; i < potEntries.length; i++) {
-      if (!isValidBtDbId(potEntries[i].id, "pen")) return null;
-    }
     // further sanatation and validation done in PUT route
-    const divEntriesJSON = JSON.stringify(potEntries);
-    const response = await axios({
-      method: "put",
-      data: divEntriesJSON,
-      withCredentials: true,
-      url: manyUrl,
-    });
-    if (response.status !== 200) return null;
-    const updatedInfo: putManyReturnType = response.data.updateInfo;
-    return updatedInfo;
+    const potEntryJSON = JSON.stringify(potEntry);
+    response = await axios.put(potEntryUrl + potEntry.id, potEntryJSON, {
+      withCredentials: true
+    });    
   } catch (err) {
-    return null;
+    throw new Error(`putPotEntry failed: ${err instanceof Error ? err.message : err}`);
   }
+  if (response.status !== 200 || !response.data?.potEntry) {
+    throw new Error("Error putting potEntry");
+  }
+  const dbPotEntry = response.data.potEntry;
+  const puttedPotEntry: potEntryType = {
+    ...blankPotEntry,
+    id: dbPotEntry.id,      
+    pot_id: dbPotEntry.pot_id,
+    player_id: dbPotEntry.player_id,
+    fee: dbPotEntry.fee,
+  };
+  return puttedPotEntry;
 }
 
 /**
- * deletes a div entry
+ * deletes a pot entry
  * 
- * @param {string} id - id of div entry to delete 
- * @returns {number} - 1 if deleted, -1 on failure
+ * @param {string} id - id of pot entry to delete 
+ * @returns {number} - 1 if deleted
+ * @throws {Error} - if id is invalid or API call fails
  */
 export const deletePotEntry = async (id: string): Promise<number> => {
-  try {
-    if (!isValidBtDbId(id, "pen")) return -1;
-    const response = await axios({
-      method: "delete",
-      withCredentials: true,
-      url: onePotEntryUrl + id,
-    });
-    return (response.status === 200) ? 1 : -1    
-  } catch (err) {
-    return -1;
+  if (!isValidBtDbId(id, "pen")) { 
+    throw new Error("Invalid potEntry id");
   }
+  let response;
+  try {
+    response = await axios.delete(potEntryUrl + id, {
+      withCredentials: true,
+    });
+  } catch (err) {
+    throw new Error(`deletePotEntry failed: ${err instanceof Error ? err.message : err}`);
+  }
+  if (response.status !== 200) { 
+    throw new Error("Error deleting potEntry");
+  }
+  return 1;
 }
 
 /**
  * deletes all pot entries for a squad
  * 
  * @param {string} squadId - id of squad to delete
- * @returns {number} - number of pot entries deleted, -1 on failure
+ * @returns {number} - number of pot entries deleted
+ * @throws {Error} - if squadId is invalid or API call fails
  */
 export const deleteAllPotEntriesForSquad = async (squadId: string): Promise<number> => {
-  try {
-    if (!isValidBtDbId(squadId, "sqd")) return -1;
-    const response = await axios({
-      method: "delete",
-      withCredentials: true,
-      url: oneSquadUrl + squadId,
-    });    
-    return (response.status === 200) ? response.data.deleted.count : -1
-  } catch (err) {
-    return -1;
+  if (!isValidBtDbId(squadId, "sqd")) {
+    throw new Error("Invalid squad id");
   }
+  let response;
+  try { 
+    response = await axios.delete(squadUrl + squadId, {
+      withCredentials: true,
+    });
+  } catch (err) {
+    throw new Error(`deleteAllPotEntriesForSquad failed: ${err instanceof Error ? err.message : err}`);
+  }
+  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+    throw new Error("Error deleting potEntries for squad");
+  }
+  return response.data.deleted.count;
 }
 
 /**
  * deletes all pot entries for a div
  * 
  * @param {string} divId - id of div to delete
- * @returns {number} - number of pot entries deleted, -1 on failure
+ * @returns {number} - number of pot entries deleted
+ * @throws {Error} - if divId is invalid or API call fails
  */
 export const deleteAllPotEntriesForDiv = async (divId: string): Promise<number> => {
-  try {
-    if (!isValidBtDbId(divId, "div")) return -1;
-    const response = await axios({
-      method: "delete",
-      withCredentials: true,
-      url: oneDivUrl + divId,
-    });    
-    return (response.status === 200) ? response.data.deleted.count : -1
-  } catch (err) {
-    return -1;
+  if (!isValidBtDbId(divId, "div")) {
+    throw new Error("Invalid div id");
   }
+  let response;
+  try { 
+    response = await axios.delete(divUrl + divId, {
+      withCredentials: true,
+    });
+  } catch (err) {
+    throw new Error(`deleteAllPotEntriesForDiv failed: ${err instanceof Error ? err.message : err}`);
+  }
+  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+    throw new Error("Error deleting potEntries for div");
+  }
+  return response.data.deleted.count;
 }
 
 /**
  * deletes all pot entries for a tournament
  * 
  * @param {string} tmntId - id of tmnt to delete
- * @returns {number} - number of pot entries deleted, -1 on failure
+ * @returns {number} - number of pot entries deleted
+ * @throws {Error} - if tmntId is invalid or API call fails
  */
 export const deleteAllPotEntriesForTmnt = async (tmntId: string): Promise<number> => {
-  try {
-    if (!isValidBtDbId(tmntId, "tmt")) return -1;
-    const response = await axios({
-      method: "delete",
-      withCredentials: true,
-      url: oneTmntUrl + tmntId,
-    });    
-    return (response.status === 200) ? response.data.deleted.count : -1
-  } catch (err) {
-    return -1;
+  if (!isValidBtDbId(tmntId, "tmt")) { 
+    throw new Error("Invalid tmnt id");
   }
+  let response;
+  try { 
+    response = await axios.delete(tmntUrl + tmntId, {
+      withCredentials: true,
+    });
+  } catch (err) {
+    throw new Error(`deleteAllPotEntriesForTmnt failed: ${err instanceof Error ? err.message : err}`);
+  }
+  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+    throw new Error("Error deleting potEntries for tmnt");
+  }
+  return response.data.deleted.count;
 }

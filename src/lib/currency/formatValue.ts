@@ -1,6 +1,5 @@
 import { formatValue } from "@/lib/currency";
 import { LocaleConfig } from "@/lib/currency/components/utils";
-import { localConfig } from "./const";
 
 /**
  * formats a string value into a local formatted money string 
@@ -28,7 +27,7 @@ export const formatValueSymbSep2Dec = (value: string, localConfig: LocaleConfig)
  * @param {LocaleConfig} localConfig - locale config object 
  * @returns a formatted money string with decimal separator, group separator NO prefix/suffix
  */
-export const formatValue2Dec = (value: string, localConfig: LocaleConfig): string => {
+export const formatValue2Dec = (value: string, localConfig: LocaleConfig): string => {  
   return formatValue({
     value,
     decimalSeparator: localConfig.decimalSeparator,

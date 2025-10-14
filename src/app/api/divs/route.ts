@@ -5,6 +5,7 @@ import { ErrorCode } from "@/lib/validation";
 import { divDataType, divType, HdcpForTypes } from "@/lib/types/types";
 import { initDiv } from "@/lib/db/initVals";
 import { getErrorStatus } from "../errCodes";
+import { divDataForPrisma } from "./dataForPrisma";
 
 // routes /api/divs
 
@@ -20,10 +21,6 @@ export async function GET(request: NextRequest) {
         },
       ],
     });
-    // const divs = gotDivs.map((gotDiv) => ({
-    //   ...gotDiv,
-    //   hdcp_per_str: (gotDiv.hdcp_per * 100).toFixed(2),
-    // }));
     return NextResponse.json({ divs }, { status: 200 });
   } catch (err: any) {
     return NextResponse.json({ error: "error getting divs" }, { status: 500 });
@@ -64,16 +61,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: errMsg }, { status: 422 });
     }
 
-    let divData: divDataType = {
-      id: toPost.id,
-      tmnt_id: toPost.tmnt_id,
-      div_name: toPost.div_name,
-      hdcp_per: toPost.hdcp_per,
-      hdcp_from: toPost.hdcp_from,
-      int_hdcp: toPost.int_hdcp,
-      hdcp_for: toPost.hdcp_for,
-      sort_order: toPost.sort_order,
-    };
+    const divData = divDataForPrisma(toPost);
+    if (!divData) {
+      return NextResponse.json({ error: "invalid data" }, { status: 422 });
+    }
+
+    // let divData: divDataType = {
+    //   id: toPost.id,
+    //   tmnt_id: toPost.tmnt_id,
+    //   div_name: toPost.div_name,
+    //   hdcp_per: toPost.hdcp_per,
+    //   hdcp_from: toPost.hdcp_from,
+    //   int_hdcp: toPost.int_hdcp,
+    //   hdcp_for: toPost.hdcp_for,
+    //   sort_order: toPost.sort_order,
+    // };
     const div = await prisma.div.create({
       data: divData,
     });

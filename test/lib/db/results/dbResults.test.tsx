@@ -21,8 +21,8 @@ const url = testBaseResultsApi.startsWith("undefined")
   ? baseResultsApi
   : testBaseResultsApi; 
 
-const divUrl = url + "/games/div/";  
-const tmntUrl = url + "/games/tmnt/";  
+// const divUrl = url + "/games/div/";  
+// const tmntUrl = url + "/games/tmnt/";  
 
 const notFoundDivId = "div_01234567890123456789012345678901";
 const userId = "usr_01234567890123456789012345678901";
@@ -98,32 +98,43 @@ describe("dbResults", () => {
       expect(games[0]['total + Hdcp']).toBe(games[0].total + (games[0].hdcp * 6));
     })
     it('should return empty game results for div with no games', async () => { 
-      const noGamesSquadId = 'sqd_42be0f9d527e4081972ce8877190489d';
-      const games = await getGameResultsForDiv(noGamesSquadId);
+      const divIdNoGames = 'div_18997d3fd7ef4eb7ad2b53a9e93f9ce5'
+      const games = await getGameResultsForDiv(divIdNoGames);
       expect(games).toBeDefined();
       if (!games) return      
       expect(games).toBeInstanceOf(Array);
       expect(games.length).toBe(0);
     })
-    it('should return empty game results for div with not in database', async () => { 
-      const noGamesSquadId = 'div_01234567890123456789012345678901';
-      const games = await getGameResultsForDiv(noGamesSquadId);
+    it('should return empty game results for div with not in database', async () => {       
+      const games = await getGameResultsForDiv(notFoundDivId);
       expect(games).toBeDefined();
       if (!games) return      
       expect(games).toBeInstanceOf(Array);
       expect(games.length).toBe(0);
     })
-    it('should return null if div id is invalid', async () => { 
-      const result = await getGameResultsForDiv('test');
-      expect(result).toBeNull();
+    it('should throw error if div id is invalid', async () => { 
+      try {
+        await getGameResultsForDiv("test");
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid div id");
+      }
     })
-    it('should return null if div id is valid, but not a div id', async () => { 
-      const result = await getGameResultsForDiv(userId);
-      expect(result).toBeNull();
+    it('should throw error if div id is valid, but not a div id', async () => { 
+      try {
+        await getGameResultsForDiv(userId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid div id");
+      }
     })
     it('should return null if div id is null', async () => { 
-      const result = await getGameResultsForDiv(null as any);
-      expect(result).toBeNull();
+      try {
+        await getGameResultsForDiv(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid div id");
+      }
     })
   })
 
@@ -207,17 +218,29 @@ describe("dbResults", () => {
       expect(games).toBeInstanceOf(Array);
       expect(games.length).toBe(0);
     })
-    it('should return null if tmnt id is invalid', async () => { 
-      const result = await getGameResultsForTmnt('test');
-      expect(result).toBeNull();
+    it('should throw error if tmnt id is invalid', async () => { 
+      try {
+        await getGameResultsForTmnt("test");
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid tmnt id");
+      }
     })
-    it('should return null if tmnt id is valid, but not a tmnt id', async () => { 
-      const result = await getGameResultsForTmnt(userId);
-      expect(result).toBeNull();
+    it('should throw error if tmnt id is valid, but not a tmnt id', async () => { 
+      try {
+        await getGameResultsForTmnt(userId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid tmnt id");
+      }
     })
-    it('should return null if tmnt id is null', async () => { 
-      const result = await getGameResultsForTmnt(null as any);
-      expect(result).toBeNull();
+    it('should throw error if tmnt id is null', async () => { 
+      try {
+        await getGameResultsForTmnt(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid tmnt id");
+      }
     })
 
   })

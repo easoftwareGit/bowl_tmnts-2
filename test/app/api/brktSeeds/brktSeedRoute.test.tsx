@@ -8,11 +8,8 @@ import {
   mockOneBrktsToPost,
 } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { cloneDeep } from "lodash";
-import {  
-  deleteOneBrkt,
-  postOneBrkt,
-} from "@/lib/db/oneBrkts/dbOneBrkts";
-import { postManyBrktSeeds } from "@/lib/db/brktSeeds/dbBrktSeeds";
+import { deleteOneBrkt, postOneBrkt } from "@/lib/db/oneBrkts/dbOneBrkts";
+import { getAllBrktSeedsForBrkt, postManyBrktSeeds } from "@/lib/db/brktSeeds/dbBrktSeeds";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -46,8 +43,10 @@ const notFoundDivId = "div_01234567890123456789012345678901";
 const notFoundSquadId = "sqd_01234567890123456789012345678901";
 const notFoundTmntId = "tmt_01234567890123456789012345678901";
 
-const goldPinkOneBrktId1 = "obk_557f12f3875f42baa29fdbd22ee7f2f4";
-const goldPinkOneBrktId2 = "obk_5423c16d58a948748f32c7c72c632297";
+const goldPinkOneBrktId1 = 'obk_557f12f3875f42baa29fdbd22ee7f2f4';
+const goldPinkOneBrktId2 = 'obk_5423c16d58a948748f32c7c72c632297';
+const goldPinkOneBrktId3 = 'obk_8d500123a07d46f9bb23db61e74ffc1b';
+const goldPinkOneBrktId4 = 'obk_4ba9e037c86e494eb272efcd989dc9d0';
 const newYearsEveOneBrktId = "obk_103f595981364b77af163624528bdfda";
 const ToDelOneBrktId = "obk_6d6b6dd2e83242ac96b5a9298e21ae66";
 
@@ -111,24 +110,17 @@ describe("brktSeeds - API: /api/brktSeed", () => {
       expect(response.status).toBe(200);
       expect(response.data.brktSeeds).toBeDefined();
       expect(Array.isArray(response.data.brktSeeds)).toBe(true);
-      // 19 rows in prisma/seed.ts
-      expect(response.data.brktSeeds).toHaveLength(19);
-      expect(response.data.brktSeeds[0].one_brkt_id).toBe(newYearsEveOneBrktId);
-      expect(response.data.brktSeeds[0].seed).toBe(0);
-      expect(response.data.brktSeeds[2].one_brkt_id).toBe(goldPinkOneBrktId2);
-      expect(response.data.brktSeeds[2].seed).toBe(0);
-      expect(response.data.brktSeeds[3].one_brkt_id).toBe(goldPinkOneBrktId2);
-      expect(response.data.brktSeeds[3].seed).toBe(1);
-      expect(response.data.brktSeeds[9].one_brkt_id).toBe(goldPinkOneBrktId2);
-      expect(response.data.brktSeeds[9].seed).toBe(7);
-      expect(response.data.brktSeeds[10].one_brkt_id).toBe(goldPinkOneBrktId1);
-      expect(response.data.brktSeeds[10].seed).toBe(0);
-      expect(response.data.brktSeeds[11].one_brkt_id).toBe(goldPinkOneBrktId1);
-      expect(response.data.brktSeeds[11].seed).toBe(1);
-      expect(response.data.brktSeeds[17].one_brkt_id).toBe(goldPinkOneBrktId1);
-      expect(response.data.brktSeeds[17].seed).toBe(7);
-      expect(response.data.brktSeeds[18].one_brkt_id).toBe(ToDelOneBrktId);
-      expect(response.data.brktSeeds[18].seed).toBe(0);
+      // 35 rows in prisma/seed.ts
+      expect(response.data.brktSeeds).toHaveLength(35);
+      for (let i = 0; i < response.data.brktSeeds.length; i++) {
+        expect(response.data.brktSeeds[i].one_brkt_id).toBeDefined();
+        expect(response.data.brktSeeds[i].one_brkt_id.startsWith("obk_")).toBeTruthy();
+        expect(response.data.brktSeeds[i].seed).toBeDefined();
+        expect(response.data.brktSeeds[i].seed).toBeGreaterThanOrEqual(0)
+        expect(response.data.brktSeeds[i].seed).toBeLessThanOrEqual(7)
+        expect(response.data.brktSeeds[i].player_id).toBeDefined();
+        expect(response.data.brktSeeds[i].player_id.startsWith("ply_")).toBeTruthy();
+      }
     });
   });
 
@@ -349,26 +341,45 @@ describe("brktSeeds - API: /api/brktSeed", () => {
       expect(response.status).toBe(200);
       expect(response.data.brktSeeds).toBeDefined();
       expect(Array.isArray(response.data.brktSeeds)).toBe(true);
-      // 16 rows in prisma/seed.ts
-      expect(response.data.brktSeeds).toHaveLength(16);
-      // 2 brktSeeds for each of the 8 oneBrkts
-      // goldPinkOneBrktId2 sorts before goldPinkOneBrktId1
-      expect(response.data.brktSeeds[0].one_brkt_id).toBe(goldPinkOneBrktId2);
+      // 32 rows in prisma/seed.ts      
+      expect(response.data.brktSeeds).toHaveLength(32)
+      // 8 brktSeeds for each of the 4 oneBrkts
+      // sorts goldPinkOneBrktId4, 2, 1, 3
+      expect(response.data.brktSeeds[0].one_brkt_id).toBe(goldPinkOneBrktId4);
       expect(response.data.brktSeeds[0].seed).toBe(0);
-      expect(response.data.brktSeeds[1].one_brkt_id).toBe(goldPinkOneBrktId2);
+      expect(response.data.brktSeeds[1].one_brkt_id).toBe(goldPinkOneBrktId4);
       expect(response.data.brktSeeds[1].seed).toBe(1);
-      expect(response.data.brktSeeds[6].one_brkt_id).toBe(goldPinkOneBrktId2);
+      expect(response.data.brktSeeds[6].one_brkt_id).toBe(goldPinkOneBrktId4);
       expect(response.data.brktSeeds[6].seed).toBe(6);
-      expect(response.data.brktSeeds[7].one_brkt_id).toBe(goldPinkOneBrktId2);
+      expect(response.data.brktSeeds[7].one_brkt_id).toBe(goldPinkOneBrktId4);
       expect(response.data.brktSeeds[7].seed).toBe(7);
-      expect(response.data.brktSeeds[8].one_brkt_id).toBe(goldPinkOneBrktId1);
+
+      expect(response.data.brktSeeds[8].one_brkt_id).toBe(goldPinkOneBrktId2);
       expect(response.data.brktSeeds[8].seed).toBe(0);
-      expect(response.data.brktSeeds[9].one_brkt_id).toBe(goldPinkOneBrktId1);
+      expect(response.data.brktSeeds[9].one_brkt_id).toBe(goldPinkOneBrktId2);
       expect(response.data.brktSeeds[9].seed).toBe(1);
-      expect(response.data.brktSeeds[14].one_brkt_id).toBe(goldPinkOneBrktId1);
+      expect(response.data.brktSeeds[14].one_brkt_id).toBe(goldPinkOneBrktId2);
       expect(response.data.brktSeeds[14].seed).toBe(6);
-      expect(response.data.brktSeeds[15].one_brkt_id).toBe(goldPinkOneBrktId1);
-      expect(response.data.brktSeeds[15].seed).toBe(7);
+      expect(response.data.brktSeeds[15].one_brkt_id).toBe(goldPinkOneBrktId2);
+      expect(response.data.brktSeeds[15].seed).toBe(7);    
+
+      expect(response.data.brktSeeds[16].one_brkt_id).toBe(goldPinkOneBrktId1);
+      expect(response.data.brktSeeds[16].seed).toBe(0);
+      expect(response.data.brktSeeds[17].one_brkt_id).toBe(goldPinkOneBrktId1);
+      expect(response.data.brktSeeds[17].seed).toBe(1);
+      expect(response.data.brktSeeds[22].one_brkt_id).toBe(goldPinkOneBrktId1);
+      expect(response.data.brktSeeds[22].seed).toBe(6);
+      expect(response.data.brktSeeds[23].one_brkt_id).toBe(goldPinkOneBrktId1);
+      expect(response.data.brktSeeds[23].seed).toBe(7);
+
+      expect(response.data.brktSeeds[24].one_brkt_id).toBe(goldPinkOneBrktId3);
+      expect(response.data.brktSeeds[24].seed).toBe(0);
+      expect(response.data.brktSeeds[25].one_brkt_id).toBe(goldPinkOneBrktId3);
+      expect(response.data.brktSeeds[25].seed).toBe(1);
+      expect(response.data.brktSeeds[30].one_brkt_id).toBe(goldPinkOneBrktId3);
+      expect(response.data.brktSeeds[30].seed).toBe(6);
+      expect(response.data.brktSeeds[31].one_brkt_id).toBe(goldPinkOneBrktId3);
+      expect(response.data.brktSeeds[31].seed).toBe(7);    
     })
     it('should return 404 for invalid divId', async () => {
       try {
@@ -412,26 +423,45 @@ describe("brktSeeds - API: /api/brktSeed", () => {
       expect(response.status).toBe(200);
       expect(response.data.brktSeeds).toBeDefined();
       expect(Array.isArray(response.data.brktSeeds)).toBe(true);
-      // 16 rows in prisma/seed.ts
-      expect(response.data.brktSeeds).toHaveLength(16);
-      // 2 brktSeeds for each of the 8 oneBrkts
-      // goldPinkOneBrktId2 sorts before goldPinkOneBrktId1
-      expect(response.data.brktSeeds[0].one_brkt_id).toBe(goldPinkOneBrktId2);
+      // 32 rows in prisma/seed.ts      
+      expect(response.data.brktSeeds).toHaveLength(32)
+      // 8 brktSeeds for each of the 4 oneBrkts
+      // sorts goldPinkOneBrktId4, 2, 1, 3
+      expect(response.data.brktSeeds[0].one_brkt_id).toBe(goldPinkOneBrktId4);
       expect(response.data.brktSeeds[0].seed).toBe(0);
-      expect(response.data.brktSeeds[1].one_brkt_id).toBe(goldPinkOneBrktId2);
+      expect(response.data.brktSeeds[1].one_brkt_id).toBe(goldPinkOneBrktId4);
       expect(response.data.brktSeeds[1].seed).toBe(1);
-      expect(response.data.brktSeeds[6].one_brkt_id).toBe(goldPinkOneBrktId2);
+      expect(response.data.brktSeeds[6].one_brkt_id).toBe(goldPinkOneBrktId4);
       expect(response.data.brktSeeds[6].seed).toBe(6);
-      expect(response.data.brktSeeds[7].one_brkt_id).toBe(goldPinkOneBrktId2);
+      expect(response.data.brktSeeds[7].one_brkt_id).toBe(goldPinkOneBrktId4);
       expect(response.data.brktSeeds[7].seed).toBe(7);
-      expect(response.data.brktSeeds[8].one_brkt_id).toBe(goldPinkOneBrktId1);
+
+      expect(response.data.brktSeeds[8].one_brkt_id).toBe(goldPinkOneBrktId2);
       expect(response.data.brktSeeds[8].seed).toBe(0);
-      expect(response.data.brktSeeds[9].one_brkt_id).toBe(goldPinkOneBrktId1);
+      expect(response.data.brktSeeds[9].one_brkt_id).toBe(goldPinkOneBrktId2);
       expect(response.data.brktSeeds[9].seed).toBe(1);
-      expect(response.data.brktSeeds[14].one_brkt_id).toBe(goldPinkOneBrktId1);
+      expect(response.data.brktSeeds[14].one_brkt_id).toBe(goldPinkOneBrktId2);
       expect(response.data.brktSeeds[14].seed).toBe(6);
-      expect(response.data.brktSeeds[15].one_brkt_id).toBe(goldPinkOneBrktId1);
-      expect(response.data.brktSeeds[15].seed).toBe(7);
+      expect(response.data.brktSeeds[15].one_brkt_id).toBe(goldPinkOneBrktId2);
+      expect(response.data.brktSeeds[15].seed).toBe(7);    
+
+      expect(response.data.brktSeeds[16].one_brkt_id).toBe(goldPinkOneBrktId1);
+      expect(response.data.brktSeeds[16].seed).toBe(0);
+      expect(response.data.brktSeeds[17].one_brkt_id).toBe(goldPinkOneBrktId1);
+      expect(response.data.brktSeeds[17].seed).toBe(1);
+      expect(response.data.brktSeeds[22].one_brkt_id).toBe(goldPinkOneBrktId1);
+      expect(response.data.brktSeeds[22].seed).toBe(6);
+      expect(response.data.brktSeeds[23].one_brkt_id).toBe(goldPinkOneBrktId1);
+      expect(response.data.brktSeeds[23].seed).toBe(7);
+
+      expect(response.data.brktSeeds[24].one_brkt_id).toBe(goldPinkOneBrktId3);
+      expect(response.data.brktSeeds[24].seed).toBe(0);
+      expect(response.data.brktSeeds[25].one_brkt_id).toBe(goldPinkOneBrktId3);
+      expect(response.data.brktSeeds[25].seed).toBe(1);
+      expect(response.data.brktSeeds[30].one_brkt_id).toBe(goldPinkOneBrktId3);
+      expect(response.data.brktSeeds[30].seed).toBe(6);
+      expect(response.data.brktSeeds[31].one_brkt_id).toBe(goldPinkOneBrktId3);
+      expect(response.data.brktSeeds[31].seed).toBe(7);    
     })
     it('should return 404 for invalid squadId', async () => {
       try {
@@ -475,26 +505,45 @@ describe("brktSeeds - API: /api/brktSeed", () => {
       expect(response.status).toBe(200);
       expect(response.data.brktSeeds).toBeDefined();
       expect(Array.isArray(response.data.brktSeeds)).toBe(true);
-      // 16 rows in prisma/seed.ts
-      expect(response.data.brktSeeds).toHaveLength(16);
-      // 2 brktSeeds for each of the 8 oneBrkts
-      // goldPinkOneBrktId2 sorts before goldPinkOneBrktId1
-      expect(response.data.brktSeeds[0].one_brkt_id).toBe(goldPinkOneBrktId2);
+      // 32 rows in prisma/seed.ts      
+      expect(response.data.brktSeeds).toHaveLength(32)
+      // 8 brktSeeds for each of the 4 oneBrkts
+      // sorts goldPinkOneBrktId4, 2, 1, 3
+      expect(response.data.brktSeeds[0].one_brkt_id).toBe(goldPinkOneBrktId4);
       expect(response.data.brktSeeds[0].seed).toBe(0);
-      expect(response.data.brktSeeds[1].one_brkt_id).toBe(goldPinkOneBrktId2);
+      expect(response.data.brktSeeds[1].one_brkt_id).toBe(goldPinkOneBrktId4);
       expect(response.data.brktSeeds[1].seed).toBe(1);
-      expect(response.data.brktSeeds[6].one_brkt_id).toBe(goldPinkOneBrktId2);
+      expect(response.data.brktSeeds[6].one_brkt_id).toBe(goldPinkOneBrktId4);
       expect(response.data.brktSeeds[6].seed).toBe(6);
-      expect(response.data.brktSeeds[7].one_brkt_id).toBe(goldPinkOneBrktId2);
+      expect(response.data.brktSeeds[7].one_brkt_id).toBe(goldPinkOneBrktId4);
       expect(response.data.brktSeeds[7].seed).toBe(7);
-      expect(response.data.brktSeeds[8].one_brkt_id).toBe(goldPinkOneBrktId1);
+
+      expect(response.data.brktSeeds[8].one_brkt_id).toBe(goldPinkOneBrktId2);
       expect(response.data.brktSeeds[8].seed).toBe(0);
-      expect(response.data.brktSeeds[9].one_brkt_id).toBe(goldPinkOneBrktId1);
+      expect(response.data.brktSeeds[9].one_brkt_id).toBe(goldPinkOneBrktId2);
       expect(response.data.brktSeeds[9].seed).toBe(1);
-      expect(response.data.brktSeeds[14].one_brkt_id).toBe(goldPinkOneBrktId1);
+      expect(response.data.brktSeeds[14].one_brkt_id).toBe(goldPinkOneBrktId2);
       expect(response.data.brktSeeds[14].seed).toBe(6);
-      expect(response.data.brktSeeds[15].one_brkt_id).toBe(goldPinkOneBrktId1);
-      expect(response.data.brktSeeds[15].seed).toBe(7);
+      expect(response.data.brktSeeds[15].one_brkt_id).toBe(goldPinkOneBrktId2);
+      expect(response.data.brktSeeds[15].seed).toBe(7);    
+
+      expect(response.data.brktSeeds[16].one_brkt_id).toBe(goldPinkOneBrktId1);
+      expect(response.data.brktSeeds[16].seed).toBe(0);
+      expect(response.data.brktSeeds[17].one_brkt_id).toBe(goldPinkOneBrktId1);
+      expect(response.data.brktSeeds[17].seed).toBe(1);
+      expect(response.data.brktSeeds[22].one_brkt_id).toBe(goldPinkOneBrktId1);
+      expect(response.data.brktSeeds[22].seed).toBe(6);
+      expect(response.data.brktSeeds[23].one_brkt_id).toBe(goldPinkOneBrktId1);
+      expect(response.data.brktSeeds[23].seed).toBe(7);
+
+      expect(response.data.brktSeeds[24].one_brkt_id).toBe(goldPinkOneBrktId3);
+      expect(response.data.brktSeeds[24].seed).toBe(0);
+      expect(response.data.brktSeeds[25].one_brkt_id).toBe(goldPinkOneBrktId3);
+      expect(response.data.brktSeeds[25].seed).toBe(1);
+      expect(response.data.brktSeeds[30].one_brkt_id).toBe(goldPinkOneBrktId3);
+      expect(response.data.brktSeeds[30].seed).toBe(6);
+      expect(response.data.brktSeeds[31].one_brkt_id).toBe(goldPinkOneBrktId3);
+      expect(response.data.brktSeeds[31].seed).toBe(7);    
     })
     it('should return 404 for invalid tmntId', async () => {
       try {
@@ -857,23 +906,41 @@ describe("brktSeeds - API: /api/brktSeed", () => {
       // deletes all mock brktSeeds too
       await deleteOneBrkt(mockOneBrktsToPost[0].id);
     })
-    it('should create many brktSeeds', async () => {
-      const brktSeedsJSON = JSON.stringify(mockBrktSeedsToPost);
+
+    it('should create many brktSeeds', async () => {      
+      const brktSeedsJSON = JSON.stringify(mockBrktSeedsToPost);      
       const response = await axios({
         method: "post",
         data: brktSeedsJSON,
         withCredentials: true,
         url: manyUrl
       })
-      expect(response.status).toBe(201);
-      const postedBrktSeeds = response.data.brktSeeds;
+      expect(response.status).toBe(201);      
       createdMany = true;
+      expect(response.data.count).toBe(mockBrktSeedsToPost.length);
+      // check that the brktSeeds were created
+      const postedBrktSeeds = await getAllBrktSeedsForBrkt(mockOneBrktsToPost[0].brkt_id);
+      if (!postedBrktSeeds) {
+        expect(true).toBe(false);
+        return;
+      }
       expect(postedBrktSeeds.length).toBe(mockBrktSeedsToPost.length);
       for (let i = 0; i < postedBrktSeeds.length; i++) {
         expect(postedBrktSeeds[i].one_brkt_id).toEqual(mockBrktSeedsToPost[i].one_brkt_id);
         expect(postedBrktSeeds[i].seed).toEqual(mockBrktSeedsToPost[i].seed);
         expect(postedBrktSeeds[i].player_id).toEqual(mockBrktSeedsToPost[i].player_id);
       }
+    })
+    it('should return 0 count and status 200 when passsed empty array', async () => { 
+      const brktSeedsJSON = JSON.stringify([]);
+      const response = await axios({
+        method: "post",
+        data: brktSeedsJSON,
+        withCredentials: true,
+        url: manyUrl
+      });
+      expect(response.status).toBe(200);
+      expect(response.data.count).toBe(0);
     })
     it('should not post brktSeeds with invalid data', async () => {
       const invalidBrktSeeds = cloneDeep(mockBrktSeedsToPost);
@@ -921,25 +988,6 @@ describe("brktSeeds - API: /api/brktSeed", () => {
       const invalidBrktSeeds = cloneDeep(mockBrktSeedsToPost);
       invalidBrktSeeds[1].player_id = userId;
       const brktSeedsJSON = JSON.stringify(invalidBrktSeeds);
-      try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: manyUrl,
-          data: brktSeedsJSON,
-        });
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-          expect(err.response?.data.error).toBe("invalid data");
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not post brktSeeds with invalid data in 3rd element', async () => {
-      const brktSeedsJSON = JSON.stringify([]);
       try {
         const response = await axios({
           method: "post",

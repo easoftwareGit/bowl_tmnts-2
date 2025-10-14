@@ -5,7 +5,7 @@ import { eventType } from "@/lib/types/types";
 import { initEvent } from "@/lib/db/initVals";
 import { btDbUuid } from "@/lib/uuid";
 import { mockEventsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockEvents";
-import { deleteAllEventsForTmnt } from "@/lib/db/events/dbEvents";
+import { deleteAllEventsForTmnt, getAllEventsForTmnt } from "@/lib/db/events/dbEvents";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -1689,9 +1689,14 @@ describe('Events - GETs and POST API: /api/events', () => {
         withCredentials: true,
         url: manyUrl,
       })
-      const postedEvents = response.data.events;      
       expect(response.status).toBe(201);
       createdEvents = true
+      expect(response.data.count).toBe(mockEventsToPost.length);
+      const postedEvents = await getAllEventsForTmnt(mockEventsToPost[0].tmnt_id);
+      if (!postedEvents) { 
+        expect(true).toBe(false);
+        return;
+      };
       expect(postedEvents.length).toEqual(mockEventsToPost.length);
       // the "POST" returns json'ed data, so decimal values return as strings
       for (let i = 0; i < postedEvents.length; i++) {
@@ -1709,6 +1714,17 @@ describe('Events - GETs and POST API: /api/events', () => {
         expect(postedEvents[i].lpox).toEqual(mockEventsToPost[i].lpox);
         expect(postedEvents[i].sort_order).toEqual(mockEventsToPost[i].sort_order);        
       } 
+    })
+    it('should retirn 0 and statuscode 200 if passed an empty array', async () => { 
+      const eventsJSON = JSON.stringify([]);
+      const response = await axios({
+        method: "post",
+        data: eventsJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      expect(response.status).toBe(200);
+      expect(response.data.count).toBe(0);
     })
     it('should create many events with sanitized data', async () => {
       const toSanitzie = [
@@ -1728,9 +1744,14 @@ describe('Events - GETs and POST API: /api/events', () => {
         withCredentials: true,
         url: manyUrl,
       })
-      const postedEvents = response.data.events;      
       expect(response.status).toBe(201);
       createdEvents = true
+      expect(response.data.count).toBe(toSanitzie.length);      
+      const postedEvents = await getAllEventsForTmnt(mockEventsToPost[0].tmnt_id);
+      if (!postedEvents) {
+        expect(true).toBe(false);
+        return;
+      }
       expect(postedEvents.length).toEqual(toSanitzie.length);
       expect(postedEvents[0].event_name).toEqual(mockEventsToPost[0].event_name);
       expect(postedEvents[1].event_name).toEqual(mockEventsToPost[1].event_name);

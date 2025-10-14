@@ -38,24 +38,42 @@ describe('dbGames', () => {
         expect(game.squad_id).toBe(squadId);        
       })
     })
-    it('should return null if squadId is invalid', async () => { 
-      const games = await getAllGamesForSquad("invalidId");
-      expect(games).toBeNull();
-    })
-    it('should return null if squadId is valid, but not a squad id', async () => { 
-      const games = await getAllGamesForSquad(tmntId);
-      expect(games).toBeNull();
-    })
-    it('should return null if squadId is null', async () => { 
-      const games = await getAllGamesForSquad(null as any);
-      expect(games).toBeNull();
-    })
     it('should return an empty array if squad has no games', async () => { 
       const noGamesSquadId = 'sqd_42be0f9d527e4081972ce8877190489d';
       const games = await getAllGamesForSquad(noGamesSquadId);
       expect(games).toBeDefined();
       if (!games) return
       expect(games.length).toBe(0);
+    })
+    it('should return an empty array if squad not found', async () => {       
+      const games = await getAllGamesForSquad(squadNotFoundId);
+      expect(games).toBeDefined();
+      if (!games) return
+      expect(games.length).toBe(0);
+    })
+    it('should throw error if squadId is invalid', async () => { 
+      try { 
+        await getAllGamesForSquad("invalidId");
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid squad id");
+      }
+    })
+    it('should return null if squadId is valid, but not a squad id', async () => { 
+      try { 
+        await getAllGamesForSquad(tmntId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid squad id");
+      }
+    })
+    it('should return null if squadId is null', async () => { 
+      try { 
+        await getAllGamesForSquad(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid squad id");
+      }
     })
     it('should return an empty array if squad has no games', async () => {       
       const games = await getAllGamesForSquad(squadNotFoundId);

@@ -1,21 +1,15 @@
 "use client";
 import React, { useEffect } from "react";
-import {
-  allDataOneTmntType,
-  tmntActions,
-  tmntFormDataType,
-} from "@/lib/types/types";
+import { tmntActions, tmntFormDataType } from "@/lib/types/types";
 import TmntDataForm from "../../tmntForm/tmntForm";
 import { useParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  fetchOneTmnt,
-  getOneTmntError,
-  getOneTmntLoadStatus,
-} from "@/redux/features/allDataOneTmnt/allDataOneTmntSlice";
+import { fetchTmntFullData, getTmntFullDataLoadStatus, getTmntFullDataError } from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import { AppDispatch, RootState } from "@/redux/store";
 import WaitModal from "@/components/modal/waitModal";
-import { blankDataOneTmnt } from "@/lib/db/initVals";
+import { getBlankTmntFullData } from "../../tmntForm/tmntTools";
+
+// http://localhost:3000/dataEntry/editTmnt/tmt_d237a388a8fc4641a2e37233f1d6bebd
 
 export default function EditTmntPage() {
   const params = useParams();
@@ -24,24 +18,22 @@ export default function EditTmntPage() {
   const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
-    dispatch(fetchOneTmnt(tmntId));
+    dispatch(fetchTmntFullData(tmntId));
   }, [tmntId, dispatch]);
 
-  const tmntLoadStatus = useSelector(getOneTmntLoadStatus);
-  const tmntError = useSelector(getOneTmntError);
+  const tmntLoadStatus = useSelector(getTmntFullDataLoadStatus);
+  const tmntError = useSelector(getTmntFullDataError);
 
   const tmntFormData: tmntFormDataType = {
-    origData: blankDataOneTmnt(),
-    curData: blankDataOneTmnt(),
+    tmntFullData: getBlankTmntFullData(),
     tmntAction: tmntActions.None,
   };
 
-  const dataOneTmnt = useSelector(
-    (state: RootState) => state.allDataOneTmnt.tmntData
-  ) as allDataOneTmntType;
-  if (dataOneTmnt) {
-    tmntFormData.origData = dataOneTmnt.origData;
-    tmntFormData.curData = dataOneTmnt.curData;
+  const stateTmntFullData = useSelector(
+    (state: RootState) => state.tmntFullData.tmntFullData
+  ) 
+  if (stateTmntFullData) {
+    tmntFormData.tmntFullData = stateTmntFullData;
     tmntFormData.tmntAction = tmntActions.Edit;
   }
 

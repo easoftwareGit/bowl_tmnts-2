@@ -4,8 +4,9 @@ import { initDivEntry } from "@/lib/db/initVals";
 import { divEntryDataType, divEntryType } from "@/lib/types/types";
 import { sanitizeDivEntry, validateDivEntry } from "./validate";
 import { ErrorCode } from "@/lib/validation";
-import { divEntriesWithHdcp } from "./hdcpCalc";
+import { divEntriesWithHdcp } from "./calcHdcp";
 import { getErrorStatus } from "../errCodes";
+import { divEntryDataForPrisma } from "./dataForPrisma";
 
 // routes /api/divEntries
 export async function GET(request: NextRequest) {
@@ -81,12 +82,9 @@ export const POST = async (request: NextRequest) => {
       );
     }
 
-    const divEntryData: divEntryDataType = {
-      id: toPost.id,
-      squad_id: toPost.squad_id,
-      div_id: toPost.div_id,
-      player_id: toPost.player_id,
-      fee: toPost.fee,
+    const divEntryData = divEntryDataForPrisma(toPost);
+    if (!divEntryData) {
+      return NextResponse.json({ error: "invalid data" },{ status: 422 });
     }
     const divEntry = await prisma.div_Entry.create({
       data: divEntryData

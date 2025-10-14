@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { ErrorCode, isValidBtDbId } from "@/lib/validation";
 import { initPlayer } from "@/lib/db/initVals";
 import { playerType } from "@/lib/types/types";
-import { sanitizePlayer, validatePlayer } from "../../validate";
+import { sanitizePlayer, validatePlayer, validPlayerId } from "../../validate";
 import { getErrorStatus } from "@/app/api/errCodes";
 
 // routes /api/players/player/:id
@@ -14,9 +14,12 @@ export async function GET(
 ) { 
   try {
     const { id } = await params;
-    if (!isValidBtDbId(id, "ply")) {
-      return NextResponse.json({ error: "not found" }, { status: 404 });
+    if (!validPlayerId(id)) {
+      return NextResponse.json({ error: "invalid request" }, { status: 404 });
     }
+    // if (!isValidBtDbId(id, "ply")) {
+    //   return NextResponse.json({ error: "not found" }, { status: 404 });
+    // }
     const player = await prisma.player.findUnique({
       where: {
         id: id,
@@ -37,6 +40,7 @@ export async function PUT(
 ) { 
   try {
     const { id } = await params;
+    // do not use validPlayerId() here, cannot PUT Bye player
     if (!isValidBtDbId(id, "ply")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
@@ -100,6 +104,7 @@ export async function PATCH(
 ) { 
   try {
     const { id } = await params;
+    // do not use validPlayerId() here, cannot PATCH Bye player
     if (!isValidBtDbId(id, "ply")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }  
@@ -117,11 +122,11 @@ export async function PATCH(
       ...initPlayer,
       squad_id: currentPlayer.squad_id,
       first_name: currentPlayer.first_name,
-      last_name: currentPlayer.last_name,
       average: currentPlayer.average,
-      lane: currentPlayer.lane,
-      position: currentPlayer.position,
     };
+    if (currentPlayer.last_name) toCheck.last_name = currentPlayer.last_name;
+    if (currentPlayer.lane) toCheck.lane = currentPlayer.lane;
+    if (currentPlayer.position) toCheck.position = currentPlayer.position;
     
     let gotDataToPatch = false;
     if (jsonProps.includes("squad_id")) {
@@ -221,10 +226,9 @@ export async function DELETE(
 ) { 
   try {
     const { id } = await params;
-    if (!isValidBtDbId(id, "ply")) {
+    if (!validPlayerId(id)) {
       return NextResponse.json({ error: "invalid request" }, { status: 404 });
     }
-
     const deleted = await prisma.player.delete({
       where: {
         id: id,

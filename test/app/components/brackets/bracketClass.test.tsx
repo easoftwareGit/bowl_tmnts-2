@@ -28,6 +28,7 @@ describe('Bracket', () => {
       expect(result).toBe(8);
     })  
   })
+
   describe('addPlayer', () => {
     it('should return new player count when valid player added', () => {
       const bracket = new Bracket(mockBracketList);
@@ -87,7 +88,8 @@ describe('Bracket', () => {
       const result = bracket.players;
       expect(result).toEqual(['player-1', 'player-2']);
     })
-  })
+  }) 
+  
   describe('addMatch', () => { 
     it('should add match to bracket', () => { 
       const bracket = new Bracket(mockBracketList);
@@ -159,6 +161,7 @@ describe('Bracket', () => {
       expect(result2).toEqual(['player-1', 'player-2', 'player-3', 'player-4']);
     })
   })
+
   describe('clearPlayers', () => { 
     const bracket = new Bracket(mockBracketList);
     bracket.addPlayer('player-1');
@@ -168,6 +171,7 @@ describe('Bracket', () => {
     bracket.clearPlayers()
     expect(bracket.players.length).toBe(0);
   })
+
   describe('emptySpots', () => { 
     it('should return correct number of empty spots when bracket is not full', () => {
       const bracket = new Bracket(mockBracketList);
@@ -190,6 +194,50 @@ describe('Bracket', () => {
       expect(result).toBe(0);
     })
   })
+
+  describe('fillBracket', () => {
+    
+    const testPlayers = ['player-1', 'player-2', 'player-3', 'player-4', 'player-5', 'player-6', 'player-7', 'player-8'];
+
+    it('should fill bracket with players', () => {
+      const bracket = new Bracket(mockBracketList);
+      bracket.fillBracket(testPlayers);      
+      expect(bracket.players).toEqual(testPlayers);
+    })
+    it('should not fill bracket with incorrect number of players', () => {
+      const bracket = new Bracket(mockBracketList);
+      bracket.fillBracket(testPlayers.slice(0, 7));      
+      expect(bracket.players).toEqual([]);
+    })
+    it('should not fill bracket with null players', () => {
+      const bracket = new Bracket(mockBracketList);
+      bracket.fillBracket(null as any);      
+      expect(bracket.players).toEqual([]);
+    })
+    it('should not fill bracket with empty players array', () => {
+      const bracket = new Bracket(mockBracketList);
+      bracket.fillBracket([]);      
+      expect(bracket.players).toEqual([]);
+    })
+    it('should not fill bracket with undefined players', () => {
+      const bracket = new Bracket(mockBracketList);
+      bracket.fillBracket(undefined as any);      
+      expect(bracket.players).toEqual([]);
+    })
+    it('should not fill bracket when passed a non array', () => {
+      const bracket = new Bracket(mockBracketList);
+      bracket.fillBracket('test' as any);      
+      expect(bracket.players).toEqual([]);
+    })
+    it('should not fill bracket when bracket has players', () => {
+      const bracket = new Bracket(mockBracketList);
+      bracket.addPlayer('player-9');
+      bracket.addPlayer('player-10');
+      bracket.fillBracket(testPlayers);      
+      expect(bracket.players).toEqual(['player-9', 'player-10']);
+    })
+  })
+
   describe('getMatch', () => {
     const bracket = new Bracket(mockBracketList);
     bracket.addPlayer('player-1');
@@ -230,6 +278,7 @@ describe('Bracket', () => {
       expect(result).toEqual(['player-3', 'player-4']);
     })
   })
+
   // describe('findMatch', () => { 
   //   // const bracket = new Bracket(mockBracketList); 
   //   // const player1Id = 'player1';
@@ -410,6 +459,7 @@ describe('Bracket', () => {
   //   //   expect(result2).toHaveLength(0);
   //   // })
   // })
+  
   describe('playerIndex', () => { 
     it('should return correct index when player exists in array', () => {
       const bracket = new Bracket(mockBracketList);
@@ -433,6 +483,7 @@ describe('Bracket', () => {
       expect(result).toBe(-1);
     })
   })
+
   describe('removePlayer', () => { 
     it('should remove player from bracket', () => { 
       const bracket = new Bracket(mockBracketList);
@@ -488,6 +539,7 @@ describe('Bracket', () => {
       expect(bracket.playerIndex('player-4')).toBe(3);
     });
   })
+
   describe('shuffle', () => { 
     const baseBracket = new Bracket(mockBracketList);
     baseBracket.addPlayer('player-1');

@@ -1,4 +1,6 @@
+import { BracketList } from "@/components/brackets/bracketListClass";
 import { ErrorCode } from "../validation"
+import { PrismaClient } from "@prisma/client";
 
 export type roleTypes = "ADMIN" | "DIRECTOR" | "USER"
 
@@ -22,14 +24,13 @@ export type roleTypes = "ADMIN" | "DIRECTOR" | "USER"
 // bsd - bracket seed
 
 export const idTypesArray = [
-  'usr', 'bwl', 'tmt', 'evt', 'div', 'sqd', 'lan', 'hdc',
-  'pot', 'brk', 'elm', 'ply', 'den', 'pen', 'ben', 'een',
-  'gam', 'obk', 'bsd'
+  'usr', 'bwl', 'tmt', 'evt', 'div', 'sqd', 'lan', 'pot', 'brk', 'elm',
+  'ply', 'bye', 'den', 'pen', 'ben', 'een', 'gam', 'obk', 'bsd'
 ] as const;
 
 export type idTypes = typeof idTypesArray[number];
 
-// export type idTypes = 'usr' | 'bwl' | 'tmt' | 'evt' | 'div' | 'sqd' | 'lan' | 'hdc' | 'pot' | 'brk' | 'elm' | 'ply' | 'den' | 'pen' | 'ben' | 'een' | 'gam'  | 'obk' | 'bsd'; 
+// export type idTypes = 'usr' | 'bwl' | 'tmt' | 'evt' | 'div' | 'sqd' | 'lan' | 'pot' | 'brk' | 'elm' | 'ply' | 'bye' | 'den' | 'pen' | 'ben' | 'een' | 'gam'  | 'obk' | 'bsd'; 
 
 export type userType = {
   id: string
@@ -92,7 +93,7 @@ export type tmntDataType = {
   bowl_id: string      
 }
 
-export type lpoxValidTypes = "is-valid" | "is-invalid" | "";
+export type validTypeStrings = "is-valid" | "is-invalid" | "";
 
 export type eventType = {
   id: string,
@@ -117,7 +118,7 @@ export type eventType = {
   added_money: string,
   added_money_err: string,
   lpox: string,
-  lpox_valid: lpoxValidTypes,
+  lpox_valid: validTypeStrings,
   lpox_err: string,
   sort_order: number,
   errClassName: string,  
@@ -345,6 +346,11 @@ export type validBrktSeedsType = {
   errorCode: ErrorCode
 }
 
+export interface oneBrktsAndSeedsType extends brktSeedType {
+  brkt_id: string,
+  bindex: number,
+}
+
 export type elimType = {
   id: string,
   div_id: string,  
@@ -521,6 +527,16 @@ export type brktEntryDataType = {
   time_stamp: Date,  
 }
 
+export type brktEntryDataWithRefundsType = brktEntryDataType & {
+  id: string,  
+  brkt_id: string,
+  player_id: string,
+  num_brackets: number,
+  num_refunds: number,
+  time_stamp: Date,  
+  brkt_refunds: brktRefundType | undefined,
+}
+
 export interface brktEntriesFromPrisa extends brktEntryDataType {
   brkt: BrktInBbrktEntryType,  
 }
@@ -534,10 +550,10 @@ export type brktRefundType = {
   num_refunds: number,
 }
 
-// export type brktRefundDataType = {
-//   brkt_entry_id: string,
-//   num_refunds: number,
-// }
+export type validBrktRefundsType = {
+  brktRefunds: brktRefundType[],
+  errorCode: ErrorCode
+}
 
 // brkt entry no fee
 export type brktEntryNfType = {
@@ -612,12 +628,21 @@ export type dataOneTmntType = {
   elims: elimType[];
 }
 
+export type gridTmntEntryDataType = {
+  players: playerType[];
+  divEntries: divEntryType[];    
+  potEntries: potEntryType[];    
+  brktEntries: brktEntryType[];  
+  elimEntries: elimEntryType[];  
+}
+
 export type dataOneSquadEntriesType = {  
   squadId: string;
   players: playerType[];
   divEntries: divEntryType[];    
   potEntries: potEntryType[];    
   brktEntries: brktEntryType[];
+  brktLists: BracketList[];
   elimEntries: elimEntryType[];
 }
 
@@ -639,19 +664,19 @@ export enum tmntActions {
   Run = 4,
 }
 
-export type allDataOneTmntType = {      
-  origData: dataOneTmntType;
-  curData: dataOneTmntType;  
-}
+// export type allDataOneTmntType = {
+//   origData: dataOneTmntType;
+//   curData: dataOneTmntType;
+// }
 
-export type allEntriesOneSquadType = {      
-  origData: dataOneSquadEntriesType;
-  curData: dataOneSquadEntriesType;  
-}
+// export type allEntriesOneSquadType = {
+//   origData: dataOneSquadEntriesType;
+//   curData: dataOneSquadEntriesType;
+// }
 
-export type tmntFormDataType = allDataOneTmntType & {
-  tmntAction: tmntActions;
-}
+// export type tmntFormDataType = allDataOneTmntType & {
+//   tmntAction: tmntActions;
+// }
 
 export type tmntPropsType = {  
   tmnt: tmntType;
@@ -670,13 +695,18 @@ export type tmntPropsType = {
   setElims: (elims: elimType[]) => void;
   brkts: brktType[];
   setBrkts: (brkts: brktType[]) => void;  
-  origData: dataOneTmntType;  
+  // origData: dataOneTmntType;  
 }
 
 export type putManyReturnType = {
   updates: number,
   inserts: number,
   deletes: number,
+}
+
+export type putManyReturnType2 = {
+  count: number,
+  error: string,
 }
 
 export interface putManyBrktEntriesReturnType extends putManyReturnType {
@@ -694,17 +724,67 @@ export type updatedEntriesCountsType = {
   total: number,
 }
 
-export type putManyEntriesReturnType = {
-  players: putManyReturnType,
-  divEntries: putManyReturnType,
-  potEntries: putManyReturnType,
-  brktEntries: putManyReturnType,
-  elimEntries: putManyReturnType,  
-  playersToUpdate: tmntEntryPlayerType[],
-  divEntriesToUpdate: tmntEntryDivEntryType[],
-  potEntriesToUpdate: tmntEntryPotEntryType[],
-  brktEntriesToUpdate: tmntEntryBrktEntryType[],
-  elimEntriesToUpdate: tmntEntryElimEntryType[],
+// export type putManyEntriesReturnType = {
+//   players: putManyReturnType,
+//   divEntries: putManyReturnType,
+//   potEntries: putManyReturnType,
+//   brktEntries: putManyReturnType,
+//   brcktListEntries: putManyReturnType,
+//   elimEntries: putManyReturnType,  
+//   playersToUpdate: tmntEntryPlayerType[],
+//   divEntriesToUpdate: tmntEntryDivEntryType[],
+//   potEntriesToUpdate: tmntEntryPotEntryType[],
+//   brktEntriesToUpdate: tmntEntryBrktEntryType[],
+//   brcktListsToUpdate: BracketList[],
+//   elimEntriesToUpdate: tmntEntryElimEntryType[],
+// }
+
+export type tmntFullType = {
+  tmnt: tmntType;
+  brktEntries: brktEntryType[];  
+  brktSeeds: brktSeedType[];  
+  brkts: brktType[];
+  divs: divType[];
+  divEntries: divEntryType[];
+  elimEntries: elimEntryType[];
+  elims: elimType[];
+  events: eventType[];    
+  lanes: laneType[];
+  oneBrkts: oneBrktType[];
+  players: playerType[];
+  potEntries: potEntryType[];
+  pots: potType[];
+  squads: squadType[];  
+}
+
+export type tmntFullDataForPrismaType = {
+  tmntData: tmntDataType;
+  brktEntriesData: brktEntryDataType[];
+  brktSeedsData: brktSeedType[];
+  brktsData: brktDataType[];
+  divsData: divDataType[];
+  divEntriesData: divEntryDataType[];
+  elimEntriesData: elimEntryDataType[];
+  elimsData: elimDataType[];
+  eventsData: eventDataType[];
+  lanesData: laneDataType[];
+  oneBrktsData: oneBrktType[];
+  playersData: playerDataType[];
+  potEntriesData: potEntryDataType[];
+  potsData: potDataType[];
+  squadsData: squadDataType[];
+}
+
+export type tmntFormDataType = {
+  tmntFullData: tmntFullType;
+  tmntAction: tmntActions;
+}
+
+export type tmntFullDataErrType = {
+  errorCode: ErrorCode,
+  errorTable: string,
+  errorIndex: number,
+  message: string
 }
 
 export enum ioDataError {  

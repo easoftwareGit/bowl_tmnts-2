@@ -151,7 +151,7 @@ describe("tests for brktEntry validation", () => {
       expect(validBrktEntryNumBrackets('abc' as any)).toBe(false);
     })
     it('should return false when num_brackets is too low', () => {      
-      expect(validBrktEntryNumBrackets(-1)).toBe(false);
+      expect(validBrktEntryNumBrackets(0)).toBe(false);
     })
     it('should return false when num_brackets is too big', () => {       
       expect(validBrktEntryNumBrackets(1234567890)).toBe(false);
@@ -194,23 +194,23 @@ describe("tests for brktEntry validation", () => {
       const errorCode = validBrktEntryData(validBrktEntry);
       expect(errorCode).toBe(ErrorCode.None);
     })
-    it('should return ErrorCode.None when num_brackets is 0 and fee is 0', () => {
+    it('should return ErrorCode.InvalidData when num_brackets is 0 and fee is 0', () => {
       const testBrktEntry = {
         ...validBrktEntry,
         num_brackets: 0,
         fee: '0'
       } 
       const errorCode = validBrktEntryData(testBrktEntry);
-      expect(errorCode).toBe(ErrorCode.None);      
+      expect(errorCode).toBe(ErrorCode.InvalidData);      
     })
-    it('should return ErrorCode.None when num_brackets is 0 and fee is ""', () => {
+    it('should return ErrorCode.InvalidData when num_brackets is 0 and fee is ""', () => {
       const testBrktEntry = {
         ...validBrktEntry,
         num_brackets: 0,
         fee: ''
       } 
       const errorCode = validBrktEntryData(testBrktEntry);
-      expect(errorCode).toBe(ErrorCode.None);      
+      expect(errorCode).toBe(ErrorCode.InvalidData);      
     })
     it('should return ErrorCode.None when num_refunds is null', () => {
       const testBrktEntry = {

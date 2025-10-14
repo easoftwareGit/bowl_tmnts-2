@@ -25,7 +25,7 @@ const gotBrktSeedData = (brktSeed: brktSeedType): ErrorCode => {
 }
 
 /**
- * checks if brktSeed data is valid
+ * checks if seed value is valid
  * 
  * @param {number} seed - seed to validate
  * @returns {boolean} - true if valid, else false 

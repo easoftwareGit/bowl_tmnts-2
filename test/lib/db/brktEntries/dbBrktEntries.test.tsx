@@ -1,12 +1,28 @@
 import axios, { AxiosError } from "axios";
 import { baseBrktEntriesApi } from "@/lib/db/apiPaths";
 import { testBaseBrktEntriesApi } from "../../../testApi";
-import { brktEntryType } from "@/lib/types/types";
-import { initBrktEntry } from "@/lib/db/initVals";
+import { brktEntryType, brktRefundType } from "@/lib/types/types";
+import { initBrktEntry, initBrktRefund } from "@/lib/db/initVals";
 import { mockBrktEntriesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllBrktEntriesForBrkt, deleteAllBrktEntriesForDiv, deleteAllBrktEntriesForSquad, deleteAllBrktEntriesForTmnt, deleteBrktEntry, getAllBrktEntriesForBrkt, getAllBrktEntriesForDiv, getAllBrktEntriesForSquad, getAllBrktEntriesForTmnt, postBrktEntry, postManyBrktEntries, putBrktEntry, putManyBrktEntries } from "@/lib/db/brktEntries/dbBrktEntries";
+import {
+  deleteAllBrktEntriesForBrkt,
+  deleteAllBrktEntriesForDiv,
+  deleteAllBrktEntriesForSquad,
+  deleteAllBrktEntriesForTmnt,
+  deleteBrktEntry,
+  getAllBrktEntriesForBrkt,
+  getAllBrktEntriesForDiv,
+  getAllBrktEntriesForSquad,
+  getAllBrktEntriesForTmnt,
+  postBrktEntry,
+  postManyBrktEntries,
+  putBrktEntry,
+  extractBrktEntries,
+  extractBrktRefunds,
+} from "@/lib/db/brktEntries/dbBrktEntries";
+import { replaceManyBrktEntries } from "@/lib/db/brktEntries/dbBrktEntriesReplaceMany";
 import { cloneDeep } from "lodash";
-import { maxBrackets, maxDate, minDate } from "@/lib/validation";
+import { maxDate, minDate } from "@/lib/validation";
 import { compareAsc } from "date-fns";
 
 // before running this test, run the following commands in the terminal:
@@ -14,15 +30,15 @@ import { compareAsc } from "date-fns";
 //    a) clear the database
 //       npx prisma db push --force-reset
 //    b) re-seed
-//       npx prisma db seed  
+//       npx prisma db seed
 //    if just need to re-seed, then only need step 1b
 // 2) make sure the server is running
-//    in the VS activity bar, 
+//    in the VS activity bar,
 //      a) click on "Run and Debug" (Ctrl+Shift+D)
 //      b) at the top of the window, click on the drop-down arrow
 //      c) select "Node.js: debug server-side"
 //      d) directly to the left of the drop down select, click the green play button
-//         This will start the server in debug mode. 
+//         This will start the server in debug mode.
 
 const url = testBaseBrktEntriesApi.startsWith("undefined")
   ? baseBrktEntriesApi
@@ -33,66 +49,66 @@ const brktEntriesToGet: brktEntryType[] = [
   {
     ...initBrktEntry,
     id: "ben_bc4c581d7b1c4fc99dbdbd46f4f7210a",
-    brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",          
+    brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
     player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
     num_brackets: 8,
     num_refunds: 2,
-    fee: '40',
-    time_stamp: 1739259269537
+    fee: "40",
+    time_stamp: 1739259269537,
   },
   {
     ...initBrktEntry,
     id: "ben_8f039ee00dfa445c9e3aee0ca9a6391b",
-    brkt_id: "brk_6ede2512c7d4409ca7b055505990a499",          
+    brkt_id: "brk_6ede2512c7d4409ca7b055505990a499",
     player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
     num_brackets: 8,
     num_refunds: 2,
-    fee: '40',
-    time_stamp: 1739259269537
+    fee: "40",
+    time_stamp: 1739259269537,
   },
   {
     ...initBrktEntry,
     id: "ben_2291bb31e72b4dc6b6fe9e76d135493d",
-    brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",          
+    brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
     player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
     num_brackets: 8,
-    fee: '40',
-    time_stamp: 1739259269537
+    num_refunds: undefined as any,
+    fee: "40",
+    time_stamp: 1739259269537,
   },
   {
     ...initBrktEntry,
     id: "ben_0a6938d0a5b94dd789bd3b8663d1ee53",
-    brkt_id: "brk_6ede2512c7d4409ca7b055505990a499",          
+    brkt_id: "brk_6ede2512c7d4409ca7b055505990a499",
     player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
     num_brackets: 8,
-    fee: '40',
-    time_stamp: 1739259269537
-  }
-]
+    num_refunds: undefined as any,
+    fee: "40",
+    time_stamp: 1739259269537,
+  },
+];
 
-const tmntIdForBrktEntries = 'tmt_fd99387c33d9c78aba290286576ddce5';
-const squadIdForBrktEntries = 'sqd_7116ce5f80164830830a7157eb093396';
-const divIdForBrktEntries = 'div_f30aea2c534f4cfe87f4315531cef8ef';
-const brktIdForBrktEntries = 'brk_5109b54c2cc44ff9a3721de42c80c8c1';
+const tmntIdForBrktEntries = "tmt_fd99387c33d9c78aba290286576ddce5";
+const squadIdForBrktEntries = "sqd_7116ce5f80164830830a7157eb093396";
+const divIdForBrktEntries = "div_f30aea2c534f4cfe87f4315531cef8ef";
+const brktIdForBrktEntries = "brk_5109b54c2cc44ff9a3721de42c80c8c1";
 
-const tmntIdFormMockData = 'tmt_56d916ece6b50e6293300248c6792316';
-const divIdForMockData = 'div_1f42042f9ef24029a0a2d48cc276a087';
-const squadIdForMockData = 'sqd_1a6c885ee19a49489960389193e8f819';
-const brktIdForMockData = 'brk_aa3da3a411b346879307831b6fdadd5f';
+const tmntIdFormMockData = "tmt_56d916ece6b50e6293300248c6792316";
+const divIdForMockData = "div_1f42042f9ef24029a0a2d48cc276a087";
+const squadIdForMockData = "sqd_1a6c885ee19a49489960389193e8f819";
+const brktIdForMockData = "brk_aa3da3a411b346879307831b6fdadd5f";
 
 const notFoundId = "ben_01234567890123456789012345678901";
 const notFoundBrktId = "brk_01234567890123456789012345678901";
 const notFoundDivId = "div_01234567890123456789012345678901";
-const notFoundPlayerId = "ply_01234567890123456789012345678901";
 const notFoundSquadId = "sqd_01234567890123456789012345678901";
 const notFoundTmntId = "tmt_01234567890123456789012345678901";
 const userId = "usr_01234567890123456789012345678901";
 
-const brkt1Id = 'brk_5109b54c2cc44ff9a3721de42c80c8c1';
-const brkt2Id = 'brk_6ede2512c7d4409ca7b055505990a499';
+const brkt1Id = "brk_5109b54c2cc44ff9a3721de42c80c8c1";
+const brkt2Id = "brk_6ede2512c7d4409ca7b055505990a499";
 
-describe('dbBrktEntries', () => { 
-
+describe("dbBrktEntries", () => {
   const rePostBrktEntry = async (brktEntry: brktEntryType) => {
     try {
       // if brktEntry already in database, then don't re-post
@@ -100,7 +116,7 @@ describe('dbBrktEntries', () => {
       const found = getResponse.data.brktEntry;
       if (found) return;
     } catch (err) {
-      if (err instanceof AxiosError) { 
+      if (err instanceof AxiosError) {
         if (err.status !== 404) {
           console.log(err.message);
           return;
@@ -114,12 +130,12 @@ describe('dbBrktEntries', () => {
         method: "post",
         withCredentials: true,
         url: url,
-        data: brktEntryJSON
-      });    
+        data: brktEntryJSON,
+      });
     } catch (err) {
       if (err instanceof AxiosError) console.log(err.message);
     }
-  }  
+  };
 
   const rePostToDel = async () => {
     const response = await axios.get(url);
@@ -134,175 +150,501 @@ describe('dbBrktEntries', () => {
         if (err instanceof AxiosError) console.log(err.message);
       }
     }
-  }
+  };
 
-  describe('getAllBrktEntriesForTmnt()', () => {
+  describe("extractBrktEntries", () => {
+    it("should return an empty array when given an empty array", () => {
+      const result = extractBrktEntries([]);
+      expect(result).toEqual([]);
+    });
+    it("should correctly map raw brktEntries to extractBrktEntries", () => {
+      const rawBrktEntry = [
+        {
+          id: "ben_2291bb31e72b4dc6b6fe9e76d135493d",
+          brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
+          brkt_refunds: null,
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
+          num_brackets: 8,
+          fee: "40",
+          time_stamp: 1739259269537,
+          extraField: "ignore me", // should be ignored
+        },
+      ];
 
-    it('should get all brktEntries for tournament', async () => { 
+      const result = extractBrktEntries(rawBrktEntry);
+
+      const expected: brktEntryType = {
+        ...initBrktEntry,
+        id: "ben_2291bb31e72b4dc6b6fe9e76d135493d",
+        brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
+        player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
+        num_brackets: 8,
+        fee: "40",
+        num_refunds: undefined as any,
+        time_stamp: 1739259269537,
+      };
+
+      expect(result).toEqual([expected]);
+    });
+    it("should correctly map raw brktEntries with refunds to extractBrktEntries", () => {
+      const rawBrktEntry = [
+        {
+          id: "ben_2291bb31e72b4dc6b6fe9e76d135493d",
+          brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
+          brkt_refunds: {
+            brkt_entry_id: "ben_2291bb31e72b4dc6b6fe9e76d135493d",
+            num_refunds: 4,
+          },
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
+          num_brackets: 8,
+          fee: "40",
+          time_stamp: 1739259269537,          
+          extraField: "ignore me", // should be ignored
+        },
+      ];
+
+      const result = extractBrktEntries(rawBrktEntry);
+
+      const expected: brktEntryType = {
+        ...initBrktEntry,
+        id: "ben_2291bb31e72b4dc6b6fe9e76d135493d",
+        brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
+        player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
+        num_brackets: 8,
+        fee: "40",
+        num_refunds: 4,
+        time_stamp: 1739259269537,
+      };
+
+      expect(result).toEqual([expected]);
+    });
+    it("should process multiple brktEntries", () => {
+      const rawBrktEntry = [
+        {
+          ...initBrktEntry,
+          id: "ben_2291bb31e72b4dc6b6fe9e76d135493d",
+          brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
+          brkt_refunds: null,
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
+          num_brackets: 8,
+          fee: "40",
+          time_stamp: 1739259269537,
+        },
+        {
+          ...initBrktEntry,
+          id: "ben_2291bb31e72b4dc6b6fe9e76d135493d",
+          brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
+          brkt_refunds: {
+            brkt_entry_id: "ben_2291bb31e72b4dc6b6fe9e76d135493d",
+            num_refunds: 2,
+          },
+          player_id: "ply_ce57bef21fc64d199c2f6de4408bd136",
+          num_brackets: 10,
+          fee: "50",
+          time_stamp: 1739259269538,
+        },
+      ];
+
+      const result = extractBrktEntries(rawBrktEntry);
+
+      expect(result).toHaveLength(2);
+      expect(result[0].num_brackets).toBe(8);
+      expect(result[0].fee).toBe('40');
+      expect(result[0].num_refunds).toBeUndefined();
+      expect(result[1].num_brackets).toBe(10);
+      expect(result[1].fee).toBe('50');
+      expect(result[1].num_refunds).toBe(2);
+    });
+    it('should return an empty array when given null', () => {
+      const result = extractBrktEntries(null);
+      expect(result).toEqual([]);
+    });
+    it('should return an empty array when given a non array', () => {
+      const result = extractBrktEntries('not an array');
+      expect(result).toEqual([]);
+    })
+  });
+
+  describe("extractBrktRefunds", () => { 
+
+    it("should return an empty array when given an empty array", () => {
+      const result = extractBrktRefunds([]);
+      expect(result).toEqual([]);
+    });
+    it("should correctly map raw brktRefunds to extractbrktRefunds", () => {
+      const rawBrktEntry = [
+        {
+          id: "ben_2291bb31e72b4dc6b6fe9e76d135493d",
+          brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
+          brkt_refunds: {
+            brkt_entry_id: "ben_2291bb31e72b4dc6b6fe9e76d135493d",
+            num_refunds: 2,
+          },
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
+          num_brackets: 8,          
+          fee: "40",
+          time_stamp: 1739259269537,
+          extraField: "ignore me", // should be ignored
+        },
+      ];
+
+      const result = extractBrktRefunds(rawBrktEntry);
+
+      const expected: brktRefundType = {
+        ...initBrktRefund,
+        brkt_entry_id: "ben_2291bb31e72b4dc6b6fe9e76d135493d",
+        num_refunds: 2,        
+      };
+
+      expect(result).toEqual([expected]);
+    });
+    it("should process multiple brktEntries with refunds", () => {
+      const rawBrktEntry = [
+        {
+          ...initBrktEntry,
+          id: "ben_2291bb31e72b4dc6b6fe9e76d135493d",
+          brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
+          brkt_refunds: {
+            brkt_entry_id: "ben_2291bb31e72b4dc6b6fe9e76d135493d",
+            num_refunds: 2,
+          },          
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
+          num_brackets: 8,          
+          fee: "40",
+          time_stamp: 1739259269537,
+        },
+        {
+          ...initBrktEntry,
+          id: "ben_2391bb31e72b4dc6b6fe9e76d135493d",
+          brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
+          brkt_refunds: {
+            brkt_entry_id: "ben_2391bb31e72b4dc6b6fe9e76d135493d",
+            num_refunds: 4,
+          },          
+          player_id: "ply_ce57bef21fc64d199c2f6de4408bd136",
+          num_brackets: 10,          
+          fee: "50",
+          time_stamp: 1739259269538,
+        },
+      ];
+
+      const result = extractBrktRefunds(rawBrktEntry);
+
+      expect(result).toHaveLength(2);      
+      expect(result[0].brkt_entry_id).toBe("ben_2291bb31e72b4dc6b6fe9e76d135493d");
+      expect(result[0].num_refunds).toBe(2);
+      expect(result[1].brkt_entry_id).toBe("ben_2391bb31e72b4dc6b6fe9e76d135493d");
+      expect(result[1].num_refunds).toBe(4);
+    });
+    it("should process multiple brktEntries when not all have refunds", () => {
+      const rawBrktEntry = [
+        {
+          ...initBrktEntry,
+          id: "ben_2291bb31e72b4dc6b6fe9e76d135493d",
+          brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
+          brkt_refunds: {
+            brkt_entry_id: "ben_2291bb31e72b4dc6b6fe9e76d135493d",
+            num_refunds: 2,
+          },
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
+          num_brackets: 8,          
+          fee: "40",
+          time_stamp: 1739259269537,
+        },
+        {
+          ...initBrktEntry,
+          id: "ben_2391bb31e72b4dc6b6fe9e76d135493d",
+          brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
+          brkt_refunds: null,
+          player_id: "ply_ce57bef21fc64d199c2f6de4408bd137",
+          num_brackets: 6,          
+          fee: "50",
+          time_stamp: 1739259269538,
+        },
+        {
+          ...initBrktEntry,
+          id: "ben_2491bb31e72b4dc6b6fe9e76d135493d",
+          brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
+          brkt_refunds: {
+            brkt_entry_id: "ben_2491bb31e72b4dc6b6fe9e76d135493d",
+            num_refunds: 4,
+          },          
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd138",
+          num_brackets: 10,          
+          fee: "40",
+          time_stamp: 1739259269539,
+        },
+        {
+          ...initBrktEntry,
+          id: "ben_2591bb31e72b4dc6b6fe9e76d135493d",
+          brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
+          brkt_refunds: null,
+          player_id: "ply_ce57bef21fc64d199c2f6de4408bd139",
+          num_brackets: 6,          
+          fee: "50",
+          time_stamp: 1739259269540,
+        },
+      ];
+
+      const result = extractBrktRefunds(rawBrktEntry);
+
+      expect(result).toHaveLength(2);    
+      expect(result[0].brkt_entry_id).toBe("ben_2291bb31e72b4dc6b6fe9e76d135493d");
+      expect(result[0].num_refunds).toBe(2);      
+      expect(result[1].brkt_entry_id).toBe("ben_2491bb31e72b4dc6b6fe9e76d135493d");
+      expect(result[1].num_refunds).toBe(4);
+    });
+    it('should return an empty array when given null', () => {
+      const result = extractBrktEntries(null);
+      expect(result).toEqual([]);
+    });
+    it('should return an empty array when given a non array', () => {
+      const result = extractBrktEntries('not an array');
+      expect(result).toEqual([]);
+    })
+  })
+
+  describe("getAllBrktEntriesForTmnt()", () => {
+    it("should get all brktEntries for tournament", async () => {
       const brktEntries = await getAllBrktEntriesForTmnt(tmntIdForBrktEntries);
       expect(brktEntries).toHaveLength(brktEntriesToGet.length);
       if (!brktEntries) return;
       for (let i = 0; i < brktEntries.length; i++) {
-        if (brktEntries[i].id === brktEntriesToGet[0].id) { 
-          expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[0].player_id);
-          expect(brktEntries[i].num_refunds).toEqual(brktEntriesToGet[0].num_refunds);
+        if (brktEntries[i].id === brktEntriesToGet[0].id) {
+          expect(brktEntries[i].player_id).toEqual(
+            brktEntriesToGet[0].player_id
+          );
+          expect(brktEntries[i].num_refunds).toEqual(
+            brktEntriesToGet[0].num_refunds
+          );
         } else if (brktEntries[i].id === brktEntriesToGet[1].id) {
-          expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[1].player_id);
-          expect(brktEntries[i].num_refunds).toEqual(brktEntriesToGet[1].num_refunds);
-        } else if (brktEntries[i].id === brktEntriesToGet[2].id) { 
-          expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[2].player_id);
-          expect(brktEntries[i].num_refunds).toBeNull()
+          expect(brktEntries[i].player_id).toEqual(
+            brktEntriesToGet[1].player_id
+          );
+          expect(brktEntries[i].num_refunds).toEqual(
+            brktEntriesToGet[1].num_refunds
+          );
+        } else if (brktEntries[i].id === brktEntriesToGet[2].id) {
+          expect(brktEntries[i].player_id).toEqual(
+            brktEntriesToGet[2].player_id
+          );
+          expect(brktEntries[i].num_refunds).toBeNull();
         } else if (brktEntries[i].id === brktEntriesToGet[3].id) {
-          expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[3].player_id);
+          expect(brktEntries[i].player_id).toEqual(
+            brktEntriesToGet[3].player_id
+          );
           expect(brktEntries[i].num_refunds).toBeNull();
         } else {
           expect(true).toBe(false);
-        }        
-        expect(brktEntries[i].brkt_id === brkt1Id || brktEntries[i].brkt_id === brkt2Id).toBeTruthy();        
-        expect(brktEntries[i].num_brackets).toEqual(brktEntriesToGet[i].num_brackets);        
-        expect(brktEntries[i].fee + '').toEqual(brktEntriesToGet[i].fee);        
+        }
+        expect(
+          brktEntries[i].brkt_id === brkt1Id ||
+            brktEntries[i].brkt_id === brkt2Id
+        ).toBeTruthy();
+        expect(brktEntries[i].num_brackets).toEqual(
+          brktEntriesToGet[i].num_brackets
+        );
+        expect(brktEntries[i].fee + "").toEqual(brktEntriesToGet[i].fee);
         expect(compareAsc(brktEntries[i].time_stamp, minDate)).toBe(1);
         expect(compareAsc(brktEntries[i].time_stamp, maxDate)).toBe(-1);
       }
-    })
-    it('should return 0 brktEntries for not found tournament', async () => { 
+    });
+    it("should return 0 brktEntries for not found tournament", async () => {
       const brktEntries = await getAllBrktEntriesForTmnt(notFoundTmntId);
       expect(brktEntries).toHaveLength(0);
-    })
-    it('should return null if tmnt id is invalid', async () => { 
-      const brktEntries = await getAllBrktEntriesForTmnt("test");
-      expect(brktEntries).toBeNull();
-    })
-    it('should return null if tmnt id is a valid id, but not a tmnt id', async () => {
-      const brktEntries = await getAllBrktEntriesForTmnt(notFoundSquadId);
-      expect(brktEntries).toBeNull();
-    })
-    it('should return null if tmnt id is null', async () => { 
-      const brktEntries = await getAllBrktEntriesForTmnt(null as any);
-      expect(brktEntries).toBeNull();
-    })
-    it('should return null if tmnt id is undefined', async () => { 
-      const brktEntries = await getAllBrktEntriesForTmnt(undefined as any);
-      expect(brktEntries).toBeNull();
-    })
-  })
+    });
+    it("should throw error if tmnt id is invalid", async () => {
+      try {
+        await getAllBrktEntriesForTmnt("test");
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid tmnt id");
+      }
+    });
+    it("should return null if tmnt id is a valid id, but not a tmnt id", async () => {
+      try {
+        await getAllBrktEntriesForTmnt(userId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid tmnt id");
+      }
+    });
+    it("should return null if tmnt id is null", async () => {
+      try {
+        await getAllBrktEntriesForTmnt(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid tmnt id");
+      }
+    });
+  });
 
-  describe('getAllBrktEntriesForSquad()', () => {
-
-    it('should get all brktEntries for squad', async () => { 
-      const brktEntries = await getAllBrktEntriesForSquad(squadIdForBrktEntries);  
+  describe("getAllBrktEntriesForSquad()", () => {
+    it("should get all brktEntries for squad", async () => {
+      const brktEntries = await getAllBrktEntriesForSquad(
+        squadIdForBrktEntries
+      );
       expect(brktEntries).toHaveLength(brktEntriesToGet.length);
       if (!brktEntries) return;
       for (let i = 0; i < brktEntries.length; i++) {
-        if (brktEntries[i].id === brktEntriesToGet[0].id) { 
-          expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[0].player_id);
-          expect(brktEntries[i].num_refunds).toEqual(brktEntriesToGet[0].num_refunds);
+        if (brktEntries[i].id === brktEntriesToGet[0].id) {
+          expect(brktEntries[i].player_id).toEqual(
+            brktEntriesToGet[0].player_id
+          );
+          expect(brktEntries[i].num_refunds).toEqual(
+            brktEntriesToGet[0].num_refunds
+          );
         } else if (brktEntries[i].id === brktEntriesToGet[1].id) {
-          expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[1].player_id);
-          expect(brktEntries[i].num_refunds).toEqual(brktEntriesToGet[1].num_refunds);
-        } else if (brktEntries[i].id === brktEntriesToGet[2].id) { 
-          expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[2].player_id);
-          expect(brktEntries[i].num_refunds).toBeNull()
+          expect(brktEntries[i].player_id).toEqual(
+            brktEntriesToGet[1].player_id
+          );
+          expect(brktEntries[i].num_refunds).toEqual(
+            brktEntriesToGet[1].num_refunds
+          );
+        } else if (brktEntries[i].id === brktEntriesToGet[2].id) {
+          expect(brktEntries[i].player_id).toEqual(
+            brktEntriesToGet[2].player_id
+          );
+          expect(brktEntries[i].num_refunds).toBeNull();
         } else if (brktEntries[i].id === brktEntriesToGet[3].id) {
-          expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[3].player_id);
+          expect(brktEntries[i].player_id).toEqual(
+            brktEntriesToGet[3].player_id
+          );
           expect(brktEntries[i].num_refunds).toBeNull();
         } else {
           expect(true).toBe(false);
-        }        
-        expect(brktEntries[i].brkt_id === brkt1Id || brktEntries[i].brkt_id === brkt2Id).toBeTruthy();        
-        expect(brktEntries[i].num_brackets).toEqual(brktEntriesToGet[i].num_brackets);        
-        expect(brktEntries[i].fee + '').toEqual(brktEntriesToGet[i].fee);
+        }
+        expect(
+          brktEntries[i].brkt_id === brkt1Id ||
+            brktEntries[i].brkt_id === brkt2Id
+        ).toBeTruthy();
+        expect(brktEntries[i].num_brackets).toEqual(
+          brktEntriesToGet[i].num_brackets
+        );
+        expect(brktEntries[i].fee + "").toEqual(brktEntriesToGet[i].fee);
         expect(compareAsc(brktEntries[i].time_stamp, minDate)).toBe(1);
         expect(compareAsc(brktEntries[i].time_stamp, maxDate)).toBe(-1);
       }
-    })
-    it('should return 0 brktEntries for not found squad', async () => { 
+    });
+    it("should return 0 brktEntries for not found squad", async () => {
       const brktEntries = await getAllBrktEntriesForSquad(notFoundSquadId);
       expect(brktEntries).toHaveLength(0);
-    })
-    it('should return null if squad id is invalid', async () => { 
-      const brktEntries = await getAllBrktEntriesForSquad("test");
-      expect(brktEntries).toBeNull();
-    })
-    it('should return null if squad id is a valid id, but not a squad id', async () => {
-      const brktEntries = await getAllBrktEntriesForSquad(notFoundTmntId);
-      expect(brktEntries).toBeNull();
-    })
-    it('should return null if squad id is null', async () => { 
-      const brktEntries = await getAllBrktEntriesForSquad(null as any);
-      expect(brktEntries).toBeNull();
-    })
-    it('should return null if squad id is undefined', async () => { 
-      const brktEntries = await getAllBrktEntriesForSquad(undefined as any);
-      expect(brktEntries).toBeNull();
-    })
-  })
+    });
+    it("should return null if squad id is invalid", async () => {
+      try {
+        await getAllBrktEntriesForSquad("test");
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid squad id");
+      }
+    });
+    it("should return null if squad id is a valid id, but not a squad id", async () => {
+      try {
+        await getAllBrktEntriesForSquad(userId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid squad id");
+      }
+    });
+    it("should return null if squad id is null", async () => {
+      try {
+        await getAllBrktEntriesForSquad(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid squad id");
+      }
+    });
+  });
 
-  describe('getAllBrktEntriesForDiv()', () => {
-
-    it('should get all brktEntries for div', async () => { 
-      const brktEntries = await getAllBrktEntriesForDiv(divIdForBrktEntries);  
+  describe("getAllBrktEntriesForDiv()", () => {
+    it("should get all brktEntries for div", async () => {
+      const brktEntries = await getAllBrktEntriesForDiv(divIdForBrktEntries);
       expect(brktEntries).toHaveLength(brktEntriesToGet.length);
       if (!brktEntries) return;
       for (let i = 0; i < brktEntries.length; i++) {
-        if (brktEntries[i].id === brktEntriesToGet[0].id) { 
-          expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[0].player_id);
-          expect(brktEntries[i].num_refunds).toEqual(brktEntriesToGet[0].num_refunds);
+        if (brktEntries[i].id === brktEntriesToGet[0].id) {
+          expect(brktEntries[i].player_id).toEqual(
+            brktEntriesToGet[0].player_id
+          );
+          expect(brktEntries[i].num_refunds).toEqual(
+            brktEntriesToGet[0].num_refunds
+          );
         } else if (brktEntries[i].id === brktEntriesToGet[1].id) {
-          expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[1].player_id);
-          expect(brktEntries[i].num_refunds).toEqual(brktEntriesToGet[1].num_refunds);
-        } else if (brktEntries[i].id === brktEntriesToGet[2].id) { 
-          expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[2].player_id);
-          expect(brktEntries[i].num_refunds).toBeNull()
+          expect(brktEntries[i].player_id).toEqual(
+            brktEntriesToGet[1].player_id
+          );
+          expect(brktEntries[i].num_refunds).toEqual(
+            brktEntriesToGet[1].num_refunds
+          );
+        } else if (brktEntries[i].id === brktEntriesToGet[2].id) {
+          expect(brktEntries[i].player_id).toEqual(
+            brktEntriesToGet[2].player_id
+          );
+          expect(brktEntries[i].num_refunds).toBeNull();
         } else if (brktEntries[i].id === brktEntriesToGet[3].id) {
-          expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[3].player_id);
+          expect(brktEntries[i].player_id).toEqual(
+            brktEntriesToGet[3].player_id
+          );
           expect(brktEntries[i].num_refunds).toBeNull();
         } else {
           expect(true).toBe(false);
-        }        
-        expect(brktEntries[i].brkt_id === brkt1Id || brktEntries[i].brkt_id === brkt2Id).toBeTruthy();        
-        expect(brktEntries[i].num_brackets).toEqual(brktEntriesToGet[i].num_brackets);        
-        expect(brktEntries[i].fee + '').toEqual(brktEntriesToGet[i].fee);
+        }
+        expect(
+          brktEntries[i].brkt_id === brkt1Id ||
+            brktEntries[i].brkt_id === brkt2Id
+        ).toBeTruthy();
+        expect(brktEntries[i].num_brackets).toEqual(
+          brktEntriesToGet[i].num_brackets
+        );
+        expect(brktEntries[i].fee + "").toEqual(brktEntriesToGet[i].fee);
         expect(compareAsc(brktEntries[i].time_stamp, minDate)).toBe(1);
         expect(compareAsc(brktEntries[i].time_stamp, maxDate)).toBe(-1);
       }
-    })
-    it('should return 0 brktEntries for not found div', async () => { 
+    });
+    it("should return 0 brktEntries for not found div", async () => {
       const brktEntries = await getAllBrktEntriesForDiv(notFoundDivId);
       expect(brktEntries).toHaveLength(0);
-    })
-    it('should return null if div id is invalid', async () => { 
-      const brktEntries = await getAllBrktEntriesForDiv("test");
-      expect(brktEntries).toBeNull();
-    })
-    it('should return null if div id is a valid id, but not a div id', async () => {
-      const brktEntries = await getAllBrktEntriesForDiv(userId);
-      expect(brktEntries).toBeNull();
-    })
-    it('should return null if div id is null', async () => { 
-      const brktEntries = await getAllBrktEntriesForDiv(null as any);
-      expect(brktEntries).toBeNull();
-    })
-    it('should return null if div id is undefined', async () => { 
-      const brktEntries = await getAllBrktEntriesForDiv(undefined as any);
-      expect(brktEntries).toBeNull();
-    })
-  })
+    });
+    it("should return null if div id is invalid", async () => {
+      try {
+        await getAllBrktEntriesForDiv("test");
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid div id");
+      }
+    });
+    it("should return null if div id is a valid id, but not a div id", async () => {
+      try {
+        await getAllBrktEntriesForDiv(userId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid div id");
+      }
+    });
+    it("should return null if div id is null", async () => {
+      try {
+        await getAllBrktEntriesForDiv(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid div id");
+      }
+    });
+  });
 
   describe('getAllBrktEntriesForBrkt()', () => {
 
-    it('should get all brktEntries for brkt', async () => { 
-      const brktEntries = await getAllBrktEntriesForBrkt(brktIdForBrktEntries);  
+    it('should get all brktEntries for brkt', async () => {
+      const brktEntries = await getAllBrktEntriesForBrkt(brktIdForBrktEntries);
       expect(brktEntries).toHaveLength(2);
       if (!brktEntries) return;
       for (let i = 0; i < brktEntries.length; i++) {
-        if (brktEntries[i].id === brktEntriesToGet[0].id) { 
+        if (brktEntries[i].id === brktEntriesToGet[0].id) {
           expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[0].player_id);
           expect(brktEntries[i].num_refunds).toEqual(brktEntriesToGet[0].num_refunds);
         } else if (brktEntries[i].id === brktEntriesToGet[1].id) {
           expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[1].player_id);
           expect(brktEntries[i].num_refunds).toEqual(brktEntriesToGet[1].num_refunds);
-        } else if (brktEntries[i].id === brktEntriesToGet[2].id) { 
+        } else if (brktEntries[i].id === brktEntriesToGet[2].id) {
           expect(brktEntries[i].player_id).toEqual(brktEntriesToGet[2].player_id);
           expect(brktEntries[i].num_refunds).toBeNull()
         } else if (brktEntries[i].id === brktEntriesToGet[3].id) {
@@ -310,41 +652,49 @@ describe('dbBrktEntries', () => {
           expect(brktEntries[i].num_refunds).toBeNull();
         } else {
           expect(true).toBe(false);
-        }        
-        expect(brktEntries[i].brkt_id === brkt1Id || brktEntries[i].brkt_id === brkt2Id).toBeTruthy();        
-        expect(brktEntries[i].num_brackets).toEqual(brktEntriesToGet[i].num_brackets);        
+        }
+        expect(brktEntries[i].brkt_id === brkt1Id || brktEntries[i].brkt_id === brkt2Id).toBeTruthy();
+        expect(brktEntries[i].num_brackets).toEqual(brktEntriesToGet[i].num_brackets);
         expect(brktEntries[i].fee + '').toEqual(brktEntriesToGet[i].fee);
         expect(compareAsc(brktEntries[i].time_stamp, minDate)).toBe(1);
         expect(compareAsc(brktEntries[i].time_stamp, maxDate)).toBe(-1);
       }
     })
-    it('should return 0 brktEntries for not found brkt', async () => { 
+    it('should return 0 brktEntries for not found brkt', async () => {
       const brktEntries = await getAllBrktEntriesForBrkt(notFoundBrktId);
       expect(brktEntries).toHaveLength(0);
     })
-    it('should return null if brkt id is invalid', async () => { 
-      const brktEntries = await getAllBrktEntriesForBrkt("test");
-      expect(brktEntries).toBeNull();
+    it('should return null if brkt id is invalid', async () => {
+      try {
+        await getAllBrktEntriesForBrkt("test");
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid brkt id");
+      }
     })
     it('should return null if brkt id is a valid id, but not a div id', async () => {
-      const brktEntries = await getAllBrktEntriesForBrkt(userId);
-      expect(brktEntries).toBeNull();
+      try {
+        await getAllBrktEntriesForBrkt(userId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid brkt id");
+      }
     })
-    it('should return null if brkt id is null', async () => { 
-      const brktEntries = await getAllBrktEntriesForBrkt(null as any);
-      expect(brktEntries).toBeNull();
-    })
-    it('should return null if brkt id is undefined', async () => { 
-      const brktEntries = await getAllBrktEntriesForBrkt(undefined as any);
-      expect(brktEntries).toBeNull();
+    it('should return null if brkt id is null', async () => {
+      try {
+        await getAllBrktEntriesForBrkt(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid brkt id");
+      }
     })
   })
 
-  describe('postBrktEntry()', () => { 
+  describe('postBrktEntry()', () => {
 
     const brktEntryToPost = {
-      ...initBrktEntry,    
-      id: 'ben_0123c6c5556e407291c4b5666b2dccd7',      
+      ...initBrktEntry,
+      id: 'ben_0123c6c5556e407291c4b5666b2dccd7',
       brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
       player_id: 'ply_a01758cff1cc4bab9d9133e661bd49b0',
       num_brackets: 7,
@@ -355,7 +705,7 @@ describe('dbBrktEntries', () => {
 
     let createdBrktEntry = false;
 
-    const deletePostedBrktEntry = async () => { 
+    const deletePostedBrktEntry = async () => {
       const response = await axios.get(url);
       const brktEntries = response.data.brktEntries;
       const toDel = brktEntries.find((b: brktEntryType) => b.id === 'ben_0123c6c5556e407291c4b5666b2dccd7');
@@ -364,15 +714,15 @@ describe('dbBrktEntries', () => {
           const delResponse = await axios({
             method: "delete",
             withCredentials: true,
-            url: oneBrktEntryUrl + toDel.id          
-          });        
+            url: oneBrktEntryUrl + toDel.id
+          });
         } catch (err) {
           if (err instanceof AxiosError) console.log(err.message);
         }
       }
     }
 
-    beforeAll(async () => { 
+    beforeAll(async () => {
       await deletePostedBrktEntry();
     })
 
@@ -386,12 +736,12 @@ describe('dbBrktEntries', () => {
       }
     })
 
-    it('should post one brktEntry', async () => { 
+    it('should post one brktEntry', async () => {
       const postedBrktEntry = await postBrktEntry(brktEntryToPost);
       expect(postedBrktEntry).not.toBeNull();
       if (!postedBrktEntry) return;
       createdBrktEntry = true;
-      expect(postedBrktEntry.id).toEqual(brktEntryToPost.id);      
+      expect(postedBrktEntry.id).toEqual(brktEntryToPost.id);
       expect(postedBrktEntry.brkt_id).toEqual(brktEntryToPost.brkt_id);
       expect(postedBrktEntry.player_id).toEqual(brktEntryToPost.player_id);
       expect(postedBrktEntry.num_brackets).toEqual(brktEntryToPost.num_brackets);
@@ -401,29 +751,36 @@ describe('dbBrktEntries', () => {
       expect(compareAsc(postedBrktEntry.time_stamp, minDate)).toBe(1);
       expect(compareAsc(postedBrktEntry.time_stamp, maxDate)).toBe(-1);
     })
-    // see test\app\api\brktEntries\validate_brktEntries.test.tsx 
-    // for full testing of sanitation and validation
-    it('should not post a brktEntry with sanitized num_brackets (sanitized to 0)', async () => { 
-      const toSanitizse = {
-        ...brktEntryToPost,
-        num_brackets: 1234567890
+    it('should not post a brktEntry with sanitized num_brackets (sanitized to 0)', async () => {
+      try { 
+        const toSanitizse = {
+          ...brktEntryToPost,
+          num_brackets: 1234567890
+        }
+        await postBrktEntry(toSanitizse);
+      } catch (err) { 
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('postBrktEntry failed: Request failed with status code 422');
       }
-      const postedBrktEntry = await postBrktEntry(toSanitizse);
-      expect(postedBrktEntry).toBeNull();
     })
-    it('should not post a brktEntry if got invalid data', async () => { 
-      const invalidBrktEntry = {
-        ...brktEntryToPost,
-        fee: '-1'
+    it('should not post a brktEntry if got invalid data', async () => {
+      try { 
+        const invalidBrktEntry = {
+          ...brktEntryToPost,
+          fee: '-1'
+        }
+        await postBrktEntry(invalidBrktEntry);
       }
-      const postedBrktEntry = await postBrktEntry(invalidBrktEntry);
-      expect(postedBrktEntry).toBeNull();
+      catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('postBrktEntry failed: Request failed with status code 422');
+      }
     })
   })
 
-  describe('postManyBrktEntries()', () => { 
+  describe('postManyBrktEntries()', () => {
 
-    let createdBrktEntries = false;    
+    let createdBrktEntries = false;
 
     beforeAll(async () => {
       await deleteAllBrktEntriesForTmnt(tmntIdFormMockData);
@@ -444,51 +801,78 @@ describe('dbBrktEntries', () => {
     })
 
     it('should post many brktEntries', async () => {
-      const brktEntries = await postManyBrktEntries(mockBrktEntriesToPost);
+      const count = await postManyBrktEntries(mockBrktEntriesToPost);
+      expect(count).toEqual(mockBrktEntriesToPost.length);
+      createdBrktEntries = true;
+
+      const brktEntries = await getAllBrktEntriesForSquad(squadIdForMockData);      
       expect(brktEntries).not.toBeNull();
       if (!brktEntries) return;
       createdBrktEntries = true;
       expect(brktEntries.length).toEqual(mockBrktEntriesToPost.length);
       for (let i = 0; i < mockBrktEntriesToPost.length; i++) {
-        expect(brktEntries[i].id).toEqual(mockBrktEntriesToPost[i].id);
-        expect(brktEntries[i].brkt_id).toEqual(mockBrktEntriesToPost[i].brkt_id);
-        expect(brktEntries[i].player_id).toEqual(mockBrktEntriesToPost[i].player_id);
-        expect(brktEntries[i].num_brackets).toEqual(mockBrktEntriesToPost[i].num_brackets);
-        if (brktEntries[i].id === mockBrktEntriesToPost[0].id) { 
+        if (brktEntries[i].id === mockBrktEntriesToPost[0].id) {          
+          expect(brktEntries[i].brkt_id).toEqual(mockBrktEntriesToPost[0].brkt_id);
+          expect(brktEntries[i].player_id).toEqual(mockBrktEntriesToPost[0].player_id);
+          expect(brktEntries[i].num_brackets).toEqual(mockBrktEntriesToPost[0].num_brackets);
           expect(brktEntries[i].num_refunds).toEqual(mockBrktEntriesToPost[0].num_refunds);
-        } else if (brktEntries[i].id === mockBrktEntriesToPost[1].id) {
-          expect(brktEntries[i].num_refunds).toBeUndefined();
+        } else if (brktEntries[i].id === mockBrktEntriesToPost[1].id) {          
+          expect(brktEntries[i].brkt_id).toEqual(mockBrktEntriesToPost[1].brkt_id);
+          expect(brktEntries[i].player_id).toEqual(mockBrktEntriesToPost[1].player_id);
+          expect(brktEntries[i].num_brackets).toEqual(mockBrktEntriesToPost[1].num_brackets);
+          expect(brktEntries[i].num_refunds).toBeNull();
         } else if (brktEntries[i].id === mockBrktEntriesToPost[2].id) {
+          expect(brktEntries[i].brkt_id).toEqual(mockBrktEntriesToPost[2].brkt_id);
+          expect(brktEntries[i].player_id).toEqual(mockBrktEntriesToPost[2].player_id);
+          expect(brktEntries[i].num_brackets).toEqual(mockBrktEntriesToPost[2].num_brackets);
           expect(brktEntries[i].num_refunds).toEqual(mockBrktEntriesToPost[2].num_refunds);
         } else if (brktEntries[i].id === mockBrktEntriesToPost[3].id) {
-          expect(brktEntries[i].num_refunds).toBeUndefined();
+          expect(brktEntries[i].brkt_id).toEqual(mockBrktEntriesToPost[3].brkt_id);
+          expect(brktEntries[i].player_id).toEqual(mockBrktEntriesToPost[3].player_id);
+          expect(brktEntries[i].num_brackets).toEqual(mockBrktEntriesToPost[3].num_brackets);
+          expect(brktEntries[i].num_refunds).toBeNull();
         }
         // does not return fee
         // expect(brktEntries[i].fee).toEqual(mockBrktEntriesToPost[i].fee);
         expect(compareAsc(brktEntries[i].time_stamp, minDate)).toBe(1);
-        expect(compareAsc(brktEntries[i].time_stamp, maxDate)).toBe(-1);  
+        expect(compareAsc(brktEntries[i].time_stamp, maxDate)).toBe(-1);
       }
     })
-    // see test\app\api\brktEntries\validate_brktEntries.test.tsx 
+    it('should return 0 when passed an empty array', async () => {
+      const count = await postManyBrktEntries([]);
+      expect(count).toBe(0);
+    })
+    // see test\app\api\brktEntries\validate_brktEntries.test.tsx
     // for full testing of sanitation and validation
-    it('should NOT post many brktEntries with sanitization, fee value sanitized to ""', async () => {
-      const toSanitize = cloneDeep(mockBrktEntriesToPost)
-      toSanitize[0].fee = '  45  '      
-      const brktEntries = await postManyBrktEntries(toSanitize);
-      expect(brktEntries).toBeNull();
+    it('should throw error when many brktEntries with sanitization, fee value sanitized to ""', async () => {
+      try { 
+        const toSanitize = cloneDeep(mockBrktEntriesToPost)
+        toSanitize[0].fee = '  45  ';
+        await postManyBrktEntries(toSanitize);
+      } catch (err) { 
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('Invalid brktEntry data at index 0');
+      }
     })
-    it('should not post many brktEntries with no data', async () => {
-      const postedBrktEntries = await postManyBrktEntries([]);
-      expect(postedBrktEntries).not.toBeNull();
-      expect(postedBrktEntries).toHaveLength(0);
+    it('should throw error when many brktEntries with invalid data', async () => {
+      try { 
+        const invalidBrktEntries = cloneDeep(mockBrktEntriesToPost);
+        invalidBrktEntries[1].fee = '-1';
+        await postManyBrktEntries(invalidBrktEntries);
+      } catch (err) { 
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('Invalid brktEntry data at index 1');
+      }
     })
-    it('should not post many brktEntries with invalid data', async () => {
-      const invalidBrktEntries = cloneDeep(mockBrktEntriesToPost);
-      invalidBrktEntries[1].fee = '-1';
-      const postedBrktEntrys = await postManyBrktEntries(invalidBrktEntries);
-      expect(postedBrktEntrys).toBeNull();
-    })    
-  })    
+    it('should throw error when pass a non-array', async () => {
+      try { 
+        await postManyBrktEntries('not an array' as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('Invalid brktEntries data');        
+      }
+    })
+  })
 
   describe('putBrktEntry()', () => {
 
@@ -499,7 +883,7 @@ describe('dbBrktEntries', () => {
       player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
       num_brackets: 7,
       num_refunds: 2,
-      fee: '45', 
+      fee: '45',
       time_stamp: new Date('2023-01-01').getTime()
     }
 
@@ -549,7 +933,7 @@ describe('dbBrktEntries', () => {
       const puttedBrktEntry = await putBrktEntry(brktEntryToPut);
       expect(puttedBrktEntry).not.toBeNull();
       if (!puttedBrktEntry) return;
-      didPut = true;      
+      didPut = true;
       expect(puttedBrktEntry.brkt_id).toBe(brktEntryToPut.brkt_id);
       expect(puttedBrktEntry.player_id).toBe(brktEntryToPut.player_id);
       expect(puttedBrktEntry.num_brackets).toBe(brktEntryToPut.num_brackets);
@@ -565,7 +949,7 @@ describe('dbBrktEntries', () => {
       const puttedBrktEntry = await putBrktEntry(tempBrktEntry);
       expect(puttedBrktEntry).not.toBeNull();
       if (!puttedBrktEntry) return;
-      didPut = true;      
+      didPut = true;
       expect(puttedBrktEntry.brkt_id).toBe(tempBrktEntry.brkt_id);
       expect(puttedBrktEntry.player_id).toBe(tempBrktEntry.player_id);
       expect(puttedBrktEntry.num_brackets).toBe(tempBrktEntry.num_brackets);
@@ -581,7 +965,7 @@ describe('dbBrktEntries', () => {
       const puttedBrktEntry = await putBrktEntry(tempBrktEntry);
       expect(puttedBrktEntry).not.toBeNull();
       if (!puttedBrktEntry) return;
-      didPut = true;      
+      didPut = true;
       expect(puttedBrktEntry.brkt_id).toBe(tempBrktEntry.brkt_id);
       expect(puttedBrktEntry.player_id).toBe(tempBrktEntry.player_id);
       expect(puttedBrktEntry.num_brackets).toBe(tempBrktEntry.num_brackets);
@@ -591,31 +975,41 @@ describe('dbBrktEntries', () => {
       expect(compareAsc(puttedBrktEntry.time_stamp, minDate)).toBe(1);
       expect(compareAsc(puttedBrktEntry.time_stamp, maxDate)).toBe(-1);
     })
-    // see test\app\api\brktEntries\validate_brktEntries.test.tsx 
+    // see test\app\api\brktEntries\validate_brktEntries.test.tsx
     // for full testing of sanitation and validation
-    it('should NOT put a brktEntry with sanitization, num_brackets value sanitized to 0', async () => {
-      const toSanitize = cloneDeep(brktEntryToPut)
-      toSanitize.num_brackets = 1234567890
-      const puttedBrktEntry = await putBrktEntry(toSanitize);
-      expect(puttedBrktEntry).toBeNull();
+    it('should throw error when brktEntry with sanitization, num_brackets value sanitized to 0', async () => {
+      try {
+        const toSanitize = cloneDeep(brktEntryToPut)
+        toSanitize.num_brackets = 1234567890
+        await putBrktEntry(toSanitize);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('putBrktEntry failed: Request failed with status code 422');
+      }          
     })
-    it('should NOT put a brktEntry with sanitization, fee value sanitized to ""', async () => {
-      const toSanitize = cloneDeep(brktEntryToPut)
-      toSanitize.fee = '  84  '      
-      const puttedBrktEntry = await putBrktEntry(toSanitize);
-      expect(puttedBrktEntry).toBeNull();
-    })
-    it('shouyld NOT put a brktEntry with invalid data', async () => {
-      const invalidBrktEntry = {
-        ...brktEntryToPut,
-        fee: '-1',
+    it('should throw error when brktEntry with sanitization, fee value sanitized to ""', async () => {
+      try {
+        const toSanitize = cloneDeep(brktEntryToPut)
+        toSanitize.fee = '  84  '
+        await putBrktEntry(toSanitize);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('putBrktEntry failed: Request failed with status code 422');
       }
-      const puttedBrktEntry = await putBrktEntry(invalidBrktEntry);
-      expect(puttedBrktEntry).toBeNull();
-    })    
+    })
+    it('shouyld throw error when brktEntry with invalid data', async () => {
+      try { 
+        const invalidBrktEntry = cloneDeep(brktEntryToPut);
+        invalidBrktEntry.fee = '-1';
+        await putBrktEntry(invalidBrktEntry);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('putBrktEntry failed: Request failed with status code 422');
+      }
+    })
   })
 
-  describe('putManyBrktEntries()', () => { 
+  describe('replaceManyBrktEntries()', () => {
 
     let createdBrktEntries = false;
 
@@ -698,149 +1092,372 @@ describe('dbBrktEntries', () => {
       },
     ];
 
-    it('should update, insert and delete many brktEntries', async () => { 
-      const multiBrktEntriesTest = [
-        {
-          ...testBrktEntries[0],
-        },
-        {
-          ...testBrktEntries[1],
-        },
-        {
-          ...testBrktEntries[2],
-        },
-        {
-          ...testBrktEntries[3],
-        },
-      ]
-      createdBrktEntries = true;
-      const postedBrktEntries = await postManyBrktEntries(multiBrktEntriesTest);
-      expect(postedBrktEntries).not.toBeNull();
-      if (!postedBrktEntries) return;
-      expect(postedBrktEntries.length).toBe(multiBrktEntriesTest.length);
+    it('should update, insert, delete many brktEntries', async () => {
 
-      // set edits, set eType
+      const toInsert: brktEntryType[] = [
+        {
+          ...initBrktEntry,
+          id: 'ben_05ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_aa3da3a411b346879307831b6fdadd5f',
+          player_id: 'ply_8b0fd8bbd9e34d34a7fa90b4111c6e40',
+          num_brackets: 8,
+          num_refunds: 2,
+          fee: '40',
+          time_stamp: new Date().getTime(),
+        },
+        {
+          ...initBrktEntry,
+          id: 'ben_06ce0472be3d476ea1caa99dd05953fa',
+          brkt_id: 'brk_37345eb6049946ad83feb9fdbb43a307',
+          player_id: 'ply_8b0fd8bbd9e34d34a7fa90b4111c6e40',
+          num_brackets: 8,
+          num_refunds: 2,
+          fee: '40',
+          time_stamp: new Date().getTime(),
+        }
+      ]
+
+      const count = await postManyBrktEntries(mockBrktEntriesToPost);
+      expect(count).toEqual(mockBrktEntriesToPost.length);
+      createdBrktEntries = true;
+      const brktEntries = await getAllBrktEntriesForSquad(squadIdForMockData);
+      if (!brktEntries) {
+        expect(true).toBeFalsy();
+        return;
+      }
+      expect(brktEntries.length).toEqual(mockBrktEntriesToPost.length);
+
       const brktEntriesToUpdate = [
         {
-          ...multiBrktEntriesTest[0],
-          num_brackets: 3,          
-          fee: '15',          
-          time_stamp: new Date('2023-01-01').getTime(),
-          eType: "u",
+          ...mockBrktEntriesToPost[0],
+          num_brackets: 10,
+          num_refunds: 5,
+          fee: '50',
         },
         {
-          ...multiBrktEntriesTest[1],
-          num_brackets: 3,          
-          fee: '15',
-          time_stamp: new Date('2023-01-01').getTime(),
-          eType: "u",
+          ...mockBrktEntriesToPost[1],
+          num_brackets: 10,
+          num_refunds: 5,
+          fee: '50',
         },
         {
-          ...multiBrktEntriesTest[2],
-          eType: "d",
+          ...toInsert[0],
         },
         {
-          ...multiBrktEntriesTest[3],          
-          eType: "d",
-        },
-        {
-          ...testBrktEntries[4],
-          eType: "i",
-        },
-        {
-          ...testBrktEntries[5],
-          eType: "i",
-        },
-      ]
+          ...toInsert[1],
+        }
+      ];
+      
+      const putCount = await replaceManyBrktEntries(brktEntriesToUpdate, squadIdForMockData);
+      expect(putCount).toEqual(brktEntriesToUpdate.length);
 
-      const updateInfo = await putManyBrktEntries(brktEntriesToUpdate);
-      expect(updateInfo).not.toBeNull();
-      if (!updateInfo) return;
-      expect(updateInfo.updates).toBe(2);
-      expect(updateInfo.inserts).toBe(2);
-      expect(updateInfo.deletes).toBe(2);        
-      expect(updateInfo.rfUpdates).toBe(0);
-      expect(updateInfo.rfInserts).toBe(2); 
-      // expect updateInfo.deletes to be 0, 
-      // because deleting brkyEntry row deletes brkt_refund row
-      expect(updateInfo.rfDeletes).toBe(0);
+      const updatedBrktEntries = await getAllBrktEntriesForSquad(squadIdForMockData);
+      if (!updatedBrktEntries) {
+        expect(true).toBeFalsy();
+        return;
+      }
+      expect(updatedBrktEntries.length).toEqual(brktEntriesToUpdate.length);
+      for (let i = 0; i < updatedBrktEntries.length; i++) {
+        if (updatedBrktEntries[i].id === brktEntriesToUpdate[0].id) {
+          expect(updatedBrktEntries[i].brkt_id).toEqual(brktEntriesToUpdate[0].brkt_id);
+          expect(updatedBrktEntries[i].player_id).toEqual(brktEntriesToUpdate[0].player_id);
+          expect(updatedBrktEntries[i].num_brackets).toEqual(brktEntriesToUpdate[0].num_brackets);
+          expect(updatedBrktEntries[i].num_refunds).toEqual(brktEntriesToUpdate[0].num_refunds);
+          expect(updatedBrktEntries[i].fee + '').toEqual(brktEntriesToUpdate[0].fee);
+        } else if (updatedBrktEntries[i].id === brktEntriesToUpdate[1].id) {
+          expect(updatedBrktEntries[i].brkt_id).toEqual(brktEntriesToUpdate[1].brkt_id);
+          expect(updatedBrktEntries[i].player_id).toEqual(brktEntriesToUpdate[1].player_id);
+          expect(updatedBrktEntries[i].num_brackets).toEqual(brktEntriesToUpdate[1].num_brackets);
+          expect(updatedBrktEntries[i].num_refunds).toEqual(brktEntriesToUpdate[1].num_refunds);
+          expect(updatedBrktEntries[i].fee + '').toEqual(brktEntriesToUpdate[1].fee);
+        } else if (updatedBrktEntries[i].id === brktEntriesToUpdate[2].id) {
+          expect(updatedBrktEntries[i].brkt_id).toEqual(brktEntriesToUpdate[2].brkt_id);
+          expect(updatedBrktEntries[i].player_id).toEqual(brktEntriesToUpdate[2].player_id);
+          expect(updatedBrktEntries[i].num_brackets).toEqual(brktEntriesToUpdate[2].num_brackets);
+          expect(updatedBrktEntries[i].num_refunds).toEqual(brktEntriesToUpdate[2].num_refunds);
+          expect(updatedBrktEntries[i].fee + '').toEqual(brktEntriesToUpdate[2].fee);
+        } else if (updatedBrktEntries[i].id === brktEntriesToUpdate[3].id) {
+          expect(updatedBrktEntries[i].brkt_id).toEqual(brktEntriesToUpdate[3].brkt_id);
+          expect(updatedBrktEntries[i].player_id).toEqual(brktEntriesToUpdate[3].player_id);
+          expect(updatedBrktEntries[i].num_brackets).toEqual(brktEntriesToUpdate[3].num_brackets);
+          expect(updatedBrktEntries[i].num_refunds).toEqual(brktEntriesToUpdate[3].num_refunds);
+          expect(updatedBrktEntries[i].fee + '').toEqual(brktEntriesToUpdate[3].fee);
+        } else { 
+          expect(true).toBeFalsy();
+        }
+      }
+    });
+    it('should return 0 when passsed and empty array', async () => { 
+      const count = await replaceManyBrktEntries([], squadIdForMockData);
+      expect(count).toEqual(0);
     })
-    // see test\app\api\brktEntries\validate_brktEntries.test.tsx 
+    it('should throw error when passsed an null for brktEntries', async () => { 
+      try { 
+        await replaceManyBrktEntries(null as any, squadIdForMockData);
+      } catch (err) { 
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('No brktEntries provided');        
+      }      
+    })
+    it('should throw error when passsed a non array for brktEntries', async () => { 
+      try { 
+        await replaceManyBrktEntries('not an array' as any, squadIdForMockData);
+      } catch (err) { 
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('No brktEntries provided');        
+      }      
+    })
+    it('should throw error when passsed an invalid squadId', async () => { 
+      try { 
+        await replaceManyBrktEntries(mockBrktEntriesToPost, 'invalidSquadId');
+      } catch (err) { 
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('Invalid squad id');        
+      }      
+    })
+    it('should throw error when many brktEntries with invalid brktEntry id in 2nd entry', async () => { 
+      const count = await postManyBrktEntries(mockBrktEntriesToPost);
+      expect(count).toEqual(mockBrktEntriesToPost.length);
+      createdBrktEntries = true;
+      const brktEntries = await getAllBrktEntriesForSquad(squadIdForMockData);
+      if (!brktEntries) {
+        expect(true).toBeFalsy();
+        return;
+      }
+      expect(brktEntries.length).toEqual(mockBrktEntriesToPost.length);
+
+      const brktEntriesToUpdate = [
+        {
+          ...mockBrktEntriesToPost[0],
+        },
+        {
+          ...mockBrktEntriesToPost[1],
+          id: 'invalidId',
+        },
+        {
+          ...mockBrktEntriesToPost[2],          
+        },
+        {
+          ...mockBrktEntriesToPost[3],
+        }
+      ];
+      await expect(replaceManyBrktEntries(brktEntriesToUpdate, squadIdForMockData)).rejects.toThrow('Invalid brktEntry data at index 1');
+    })
+    it('should throw error when many brktEntries with sanitized data to invlaid values', async () => { 
+      const count = await postManyBrktEntries(mockBrktEntriesToPost);
+      expect(count).toEqual(mockBrktEntriesToPost.length);
+      createdBrktEntries = true;
+      const brktEntries = await getAllBrktEntriesForSquad(squadIdForMockData);
+      if (!brktEntries) {
+        expect(true).toBeFalsy();
+        return;
+      }
+      expect(brktEntries.length).toEqual(mockBrktEntriesToPost.length);
+
+      const brktEntriesToUpdate = [
+        {
+          ...mockBrktEntriesToPost[0],
+          num_brackets: 1234567890,
+          num_refunds: 0,
+          fee: '6172839450',
+        },
+        {
+          ...mockBrktEntriesToPost[1],
+        },
+        {
+          ...mockBrktEntriesToPost[2],
+        },
+        {
+          ...mockBrktEntriesToPost[3],
+        }
+      ];
+      await expect(replaceManyBrktEntries(brktEntriesToUpdate, squadIdForMockData)).rejects.toThrow('Invalid brktEntry data at index 0');
+    })
+    it('should throw error when many brktEntries with invalid data in 3rd brktEntry', async () => { 
+      const count = await postManyBrktEntries(mockBrktEntriesToPost);
+      expect(count).toEqual(mockBrktEntriesToPost.length);
+      createdBrktEntries = true;
+      const brktEntries = await getAllBrktEntriesForSquad(squadIdForMockData);
+      if (!brktEntries) {
+        expect(true).toBeFalsy();
+        return;
+      }
+      expect(brktEntries.length).toEqual(mockBrktEntriesToPost.length);
+
+      const brktEntriesToUpdate = [
+        {
+          ...mockBrktEntriesToPost[0],
+        },
+        {
+          ...mockBrktEntriesToPost[1],
+        },
+        {
+          ...mockBrktEntriesToPost[2],
+          player_id: 'invalidPlayerId',
+        },
+        {
+          ...mockBrktEntriesToPost[3],
+        }
+      ];
+      await expect(replaceManyBrktEntries(brktEntriesToUpdate, squadIdForMockData)).rejects.toThrow('Invalid brktEntry data at index 2');
+    })
+
+    // it('should update, insert and delete many brktEntries', async () => {
+    //   const multiBrktEntriesTest = [
+    //     {
+    //       ...testBrktEntries[0],
+    //     },
+    //     {
+    //       ...testBrktEntries[1],
+    //     },
+    //     {
+    //       ...testBrktEntries[2],
+    //     },
+    //     {
+    //       ...testBrktEntries[3],
+    //     },
+    //   ]
+    //   const count = await postManyBrktEntries(multiBrktEntriesTest);
+    //   expect(count).toBe(multiBrktEntriesTest.length);
+    //   createdBrktEntries = true;
+
+    //   // const postedBrktEntries = await postManyBrktEntries(multiBrktEntriesTest);
+    //   // expect(postedBrktEntries).not.toBeNull();
+    //   // if (!postedBrktEntries) return;
+    //   // expect(postedBrktEntries.length).toBe(multiBrktEntriesTest.length);
+
+    //   // set edits, set eType
+    //   const brktEntriesToUpdate = [
+    //     {
+    //       ...multiBrktEntriesTest[0],
+    //       num_brackets: 3,
+    //       fee: '15',
+    //       time_stamp: new Date('2023-01-01').getTime(),
+    //       eType: "u",
+    //     },
+    //     {
+    //       ...multiBrktEntriesTest[1],
+    //       num_brackets: 3,
+    //       fee: '15',
+    //       time_stamp: new Date('2023-01-01').getTime(),
+    //       eType: "u",
+    //     },
+    //     {
+    //       ...multiBrktEntriesTest[2],
+    //       eType: "d",
+    //     },
+    //     {
+    //       ...multiBrktEntriesTest[3],
+    //       eType: "d",
+    //     },
+    //     {
+    //       ...testBrktEntries[4],
+    //       eType: "i",
+    //     },
+    //     {
+    //       ...testBrktEntries[5],
+    //       eType: "i",
+    //     },
+    //   ]
+
+    //   const updateInfo = await putManyBrktEntries(brktEntriesToUpdate);
+    //   expect(updateInfo).not.toBeNull();
+    //   if (!updateInfo) return;
+    //   expect(updateInfo.updates).toBe(2);
+    //   expect(updateInfo.inserts).toBe(2);
+    //   expect(updateInfo.deletes).toBe(2);
+    //   expect(updateInfo.rfUpdates).toBe(0);
+    //   expect(updateInfo.rfInserts).toBe(2);
+    //   // expect updateInfo.deletes to be 0,
+    //   // because deleting brkyEntry row deletes brkt_refund row
+    //   expect(updateInfo.rfDeletes).toBe(0);
+    // })
+    // see test\app\api\brktEntries\validate_brktEntries.test.tsx
     // for full testing of sanitation and validation
-    it('should return no updates, inserts or deletes when passed empty brkt entries', async () => { 
-      const multiBrktEntriesTest = [
-        {
-          ...testBrktEntries[0],
-        },
-        {
-          ...testBrktEntries[1],
-        },
-        {
-          ...testBrktEntries[2],
-        },
-        {
-          ...testBrktEntries[3],
-        },
-      ]
-      createdBrktEntries = true;
-      const postedBrktEntries = await postManyBrktEntries(multiBrktEntriesTest);
-      expect(postedBrktEntries).not.toBeNull();
-      if (!postedBrktEntries) return;
-      expect(postedBrktEntries.length).toBe(multiBrktEntriesTest.length);
-      // set empty edits
-      const brktEntriesToUpdate: brktEntryType[] = []
-      const updateInfo = await putManyBrktEntries(brktEntriesToUpdate);
-      expect(updateInfo).not.toBeNull();
-      if (!updateInfo) return;
-      expect(updateInfo.updates).toBe(0);
-      expect(updateInfo.inserts).toBe(0);
-      expect(updateInfo.deletes).toBe(0);
-      expect(updateInfo.rfUpdates).toBe(0);
-      expect(updateInfo.rfInserts).toBe(0);
-      expect(updateInfo.rfDeletes).toBe(0);
-      await deleteAllBrktEntriesForTmnt(tmntIdFormMockData);
-    })
-    it('should update no brkt entries when error in data', async () => { 
-      createdBrktEntries = true;
-      const postedBrktEntries = await postManyBrktEntries(testBrktEntries);
-      expect(postedBrktEntries).not.toBeNull();
-      if (!postedBrktEntries) return;
-      expect(postedBrktEntries.length).toBe(testBrktEntries.length);
-      // set edits, set eType
-      const brktEntriesToUpdate = [
-        {
-          ...testBrktEntries[0],
-          num_brackets: maxBrackets + 1, // invalid num_brackets
-          fee: '1234567890',             // invalid fee
-          eType: "u",
-        },
-        {
-          ...testBrktEntries[1],
-          num_brackets: 3,
-          fee: '15',
-          eType: "u",
-        },
-        {
-          ...testBrktEntries[2],
-          eType: "d",
-        },
-        {
-          ...testBrktEntries[3],          
-          eType: "d",
-        },
-        {
-          ...testBrktEntries[4],
-          eType: "i",
-        },
-        {
-          ...testBrktEntries[5],
-          eType: "i",
-        },
-      ]
+    // it('should return no updates, inserts or deletes when passed empty brkt entries', async () => {
+    //   const multiBrktEntriesTest = [
+    //     {
+    //       ...testBrktEntries[0],
+    //     },
+    //     {
+    //       ...testBrktEntries[1],
+    //     },
+    //     {
+    //       ...testBrktEntries[2],
+    //     },
+    //     {
+    //       ...testBrktEntries[3],
+    //     },
+    //   ]
+    //   const count = await postManyBrktEntries(multiBrktEntriesTest);
+    //   expect(count).toBe(multiBrktEntriesTest.length);
+    //   createdBrktEntries = true;
 
-      const updateInfo = await putManyBrktEntries(brktEntriesToUpdate);
-      expect(updateInfo).toBeNull();
-    })
+    //   // createdBrktEntries = true;
+    //   // const postedBrktEntries = await postManyBrktEntries(multiBrktEntriesTest);
+    //   // expect(postedBrktEntries).not.toBeNull();
+    //   // if (!postedBrktEntries) return;
+    //   // expect(postedBrktEntries.length).toBe(multiBrktEntriesTest.length);
+
+    //   // set empty edits
+    //   const brktEntriesToUpdate: brktEntryType[] = []
+    //   const updateInfo = await putManyBrktEntries(brktEntriesToUpdate);
+    //   expect(updateInfo).not.toBeNull();
+    //   if (!updateInfo) return;
+    //   expect(updateInfo.updates).toBe(0);
+    //   expect(updateInfo.inserts).toBe(0);
+    //   expect(updateInfo.deletes).toBe(0);
+    //   expect(updateInfo.rfUpdates).toBe(0);
+    //   expect(updateInfo.rfInserts).toBe(0);
+    //   expect(updateInfo.rfDeletes).toBe(0);
+    //   await deleteAllBrktEntriesForTmnt(tmntIdFormMockData);
+    // })
+    // it('should update no brkt entries when error in data', async () => {
+    //   const count = await postManyBrktEntries(testBrktEntries);
+    //   expect(count).toBe(testBrktEntries.length);
+    //   createdBrktEntries = true;
+
+    //   // createdBrktEntries = true;
+    //   // const postedBrktEntries = await postManyBrktEntries(testBrktEntries);
+    //   // expect(postedBrktEntries).not.toBeNull();
+    //   // if (!postedBrktEntries) return;
+    //   // expect(postedBrktEntries.length).toBe(testBrktEntries.length);
+
+    //   // set edits, set eType
+    //   const brktEntriesToUpdate = [
+    //     {
+    //       ...testBrktEntries[0],
+    //       num_brackets: maxBrackets + 1, // invalid num_brackets
+    //       fee: '1234567890',             // invalid fee
+    //       eType: "u",
+    //     },
+    //     {
+    //       ...testBrktEntries[1],
+    //       num_brackets: 3,
+    //       fee: '15',
+    //       eType: "u",
+    //     },
+    //     {
+    //       ...testBrktEntries[2],
+    //       eType: "d",
+    //     },
+    //     {
+    //       ...testBrktEntries[3],
+    //       eType: "d",
+    //     },
+    //     {
+    //       ...testBrktEntries[4],
+    //       eType: "i",
+    //     },
+    //     {
+    //       ...testBrktEntries[5],
+    //       eType: "i",
+    //     },
+    //   ]
+
+    //   const updateInfo = await putManyBrktEntries(brktEntriesToUpdate);
+    //   expect(updateInfo).toBeNull();
+    // })
   })
 
   describe('deleteBrktEntry()', () => {
@@ -849,7 +1466,7 @@ describe('dbBrktEntries', () => {
     const toDel = {
       ...initBrktEntry,
       id: "ben_093a0902e01e46dbbe9f111acefc17da",
-      brkt_id: "brk_12344698f47e4d64935547923e2bdbfb",          
+      brkt_id: "brk_12344698f47e4d64935547923e2bdbfb",
       player_id: "ply_bb0fd8bbd9e34d34a7fa90b4111c6e40",
       num_brackets: 8,
       num_refunds: 2,
@@ -859,7 +1476,7 @@ describe('dbBrktEntries', () => {
 
     let didDel = false;
 
-    beforeAll(async () => {     
+    beforeAll(async () => {
       await rePostBrktEntry(toDel);
     });
 
@@ -878,32 +1495,48 @@ describe('dbBrktEntries', () => {
       expect(deleted).toBe(1);
       didDel = true;
     })
-    it('should not delete a brktEntry when id is not found', async () => {
-      const deleted = await deleteBrktEntry(notFoundId);
-      expect(deleted).toBe(-1);
+    it('should throw error and not delete a brktEntry when id is not found', async () => {
+      try { 
+        await deleteBrktEntry(notFoundId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('deleteBrktEntry failed: Request failed with status code 404');
+      }
     })
-    it('should not delete a brktEntry when id is invalid', async () => {
-      const deleted = await deleteBrktEntry("test");
-      expect(deleted).toBe(-1);
+    it('should throw error and not delete a brktEntry when id is invalid', async () => {
+      try { 
+        await deleteBrktEntry("test");
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('Invalid brktEntry id');
+      }
     })
-    it('should not delete a brktEntry when id is null', async () => {
-      const deleted = await deleteBrktEntry(null as any);
-      expect(deleted).toBe(-1);
+    it('should throw error and not delete a brktEntry when id is valid, but not a brktEntry id', async () => {
+      try { 
+        await deleteBrktEntry(userId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('Invalid brktEntry id');
+      }
     })
-    it('should not delete a brktEntry when id is undefined', async () => {
-      const deleted = await deleteBrktEntry(undefined as any);
-      expect(deleted).toBe(-1);   
-    })    
+    it('should throw error and not delete a brktEntry when id is null', async () => {
+      try { 
+        await deleteBrktEntry(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('Invalid brktEntry id');
+      }
+    })
   })
 
-  describe('deleteAllBrktEntriesForSquad()', () => { 
+  describe('deleteAllBrktEntriesForSquad()', () => {
 
     let didDel = false;
 
     beforeAll(async () => {
       await rePostToDel();
     })
-    
+
     beforeEach(async () => {
       if (didDel) {
         await rePostToDel();
@@ -915,10 +1548,10 @@ describe('dbBrktEntries', () => {
     });
 
     afterAll(async () => {
-      // cleanup after tests      
+      // cleanup after tests
     });
 
-    it('should delete all brktEntries for a squad', async () => { 
+    it('should delete all brktEntries for a squad', async () => {
       const deleted = await deleteAllBrktEntriesForSquad(squadIdForMockData);
       expect(deleted).toBe(mockBrktEntriesToPost.length);
       didDel = true;
@@ -926,33 +1559,41 @@ describe('dbBrktEntries', () => {
     it('should not delete all brktEntries for a squad when squad id is not found', async () => {
       const deleted = await deleteAllBrktEntriesForSquad(notFoundSquadId);
       expect(deleted).toBe(0);
-    })  
-    it('should not delete all brktEntries for a squad when squad id is invalid', async () => { 
-      const deleted = await deleteAllBrktEntriesForSquad("test");
-      expect(deleted).toBe(-1);
     })
-    it('should not delete all brktEntries for a squad when squad id is valid, but not a squad id', async () => { 
-      const deleted = await deleteAllBrktEntriesForSquad(userId);
-      expect(deleted).toBe(-1);
+    it('should not delete all brktEntries for a squad when squad id is invalid', async () => {
+      try { 
+        await deleteAllBrktEntriesForSquad("test");
+      } catch (err) { 
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('Invalid squad id');
+      }      
     })
-    it('should not delete all brktEntries for a squad when squad id is null', async () => { 
-      const deleted = await deleteAllBrktEntriesForSquad(null as any);
-      expect(deleted).toBe(-1);
+    it('should not delete all brktEntries for a squad when squad id is valid, but not a squad id', async () => {
+      try { 
+        await deleteAllBrktEntriesForSquad(userId);
+      } catch (err) { 
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('Invalid squad id');
+      }      
     })
-    it('should not delete all brktEntries for a squad when squad id is undefined', async () => { 
-      const deleted = await deleteAllBrktEntriesForSquad(undefined as any);
-      expect(deleted).toBe(-1);
+    it('should not delete all brktEntries for a squad when squad id is null', async () => {
+      try { 
+        await deleteAllBrktEntriesForSquad(null as any);
+      } catch (err) { 
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('Invalid squad id');
+      }      
     })
   })
 
-  describe('deleteAllBrktEntriesForDiv()', () => { 
+  describe('deleteAllBrktEntriesForDiv()', () => {
 
     let didDel = false;
 
     beforeAll(async () => {
       await rePostToDel();
     })
-    
+
     beforeEach(async () => {
       if (didDel) {
         await rePostToDel();
@@ -964,10 +1605,10 @@ describe('dbBrktEntries', () => {
     });
 
     afterAll(async () => {
-      // cleanup after tests      
+      // cleanup after tests
     });
 
-    it('should delete all brktEntries for a div', async () => { 
+    it('should delete all brktEntries for a div', async () => {
       const deleted = await deleteAllBrktEntriesForDiv(divIdForMockData);
       expect(deleted).toBe(mockBrktEntriesToPost.length);
       didDel = true;
@@ -975,33 +1616,41 @@ describe('dbBrktEntries', () => {
     it('should not delete all brktEntries for a div when div id is not found', async () => {
       const deleted = await deleteAllBrktEntriesForDiv(notFoundDivId);
       expect(deleted).toBe(0);
-    })  
-    it('should not delete all brktEntries for a div when div id is invalid', async () => { 
-      const deleted = await deleteAllBrktEntriesForDiv("test");
-      expect(deleted).toBe(-1);
     })
-    it('should not delete all brktEntries for a div when div id is valid, but not a div id', async () => { 
-      const deleted = await deleteAllBrktEntriesForDiv(userId);
-      expect(deleted).toBe(-1);
+    it('should not delete all brktEntries for a div when div id is invalid', async () => {
+      try { 
+        await deleteAllBrktEntriesForDiv("test");
+      } catch (err) { 
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('Invalid div id');
+      }      
     })
-    it('should not delete all brktEntries for a div when div id is null', async () => { 
-      const deleted = await deleteAllBrktEntriesForDiv(null as any);
-      expect(deleted).toBe(-1);
+    it('should not delete all brktEntries for a div when div id is valid, but not a div id', async () => {
+      try { 
+        await deleteAllBrktEntriesForDiv(userId);
+      } catch (err) { 
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('Invalid div id');
+      }      
     })
-    it('should not delete all brktEntries for a div when div id is undefined', async () => { 
-      const deleted = await deleteAllBrktEntriesForDiv(undefined as any);
-      expect(deleted).toBe(-1);
+    it('should not delete all brktEntries for a div when div id is null', async () => {
+      try { 
+        await deleteAllBrktEntriesForDiv(null as any);
+      } catch (err) { 
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('Invalid div id');
+      }      
     })
   })
 
-  describe('deleteAllBrktEntriesForBrkt()', () => { 
+  describe('deleteAllBrktEntriesForBrkt()', () => {
 
     let didDel = false;
 
     beforeAll(async () => {
       await rePostToDel();
     })
-    
+
     beforeEach(async () => {
       if (didDel) {
         await rePostToDel();
@@ -1017,7 +1666,7 @@ describe('dbBrktEntries', () => {
       await deleteAllBrktEntriesForTmnt(tmntIdFormMockData)
     });
 
-    it('should delete all brktEntries for a brkt', async () => { 
+    it('should delete all brktEntries for a brkt', async () => {
       const deleted = await deleteAllBrktEntriesForBrkt(brktIdForMockData);
       expect(deleted).toBe(2); // only 2 of the 4 mock brktEntries were deleted
       didDel = true;
@@ -1025,33 +1674,41 @@ describe('dbBrktEntries', () => {
     it('should not delete all brktEntries for a brkt when brkt id is not found', async () => {
       const deleted = await deleteAllBrktEntriesForBrkt(notFoundBrktId);
       expect(deleted).toBe(0);
-    })  
-    it('should not delete all brktEntries for a brkt when brkt id is invalid', async () => { 
-      const deleted = await deleteAllBrktEntriesForBrkt("test");
-      expect(deleted).toBe(-1);
     })
-    it('should not delete all brktEntries for a brkt when brkt id is valid, but not a brkt id', async () => { 
-      const deleted = await deleteAllBrktEntriesForBrkt(userId);
-      expect(deleted).toBe(-1);
+    it('should not delete all brktEntries for a brkt when brkt id is invalid', async () => {
+      try { 
+        await deleteAllBrktEntriesForBrkt("test");
+      } catch (err) { 
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('Invalid brkt id');
+      }      
     })
-    it('should not delete all brktEntries for a brkt when brkt id is null', async () => { 
-      const deleted = await deleteAllBrktEntriesForBrkt(null as any);
-      expect(deleted).toBe(-1);
+    it('should not delete all brktEntries for a brkt when brkt id is valid, but not a brkt id', async () => {
+      try { 
+        await deleteAllBrktEntriesForBrkt(userId);
+      } catch (err) { 
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('Invalid brkt id');
+      }      
     })
-    it('should not delete all brktEntries for a brkt when brkt id is undefined', async () => { 
-      const deleted = await deleteAllBrktEntriesForBrkt(undefined as any);
-      expect(deleted).toBe(-1);
+    it('should not delete all brktEntries for a brkt when brkt id is null', async () => {
+      try { 
+        await deleteAllBrktEntriesForBrkt(null as any);
+      } catch (err) { 
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('Invalid brkt id');
+      }      
     })
   })
 
-  describe('deleteAllBrktEntriesForTmnt()', () => {     
+  describe('deleteAllBrktEntriesForTmnt()', () => {
 
     let didDel = false;
 
     beforeAll(async () => {
       await rePostToDel();
     })
-    
+
     beforeEach(async () => {
       if (didDel) {
         await rePostToDel();
@@ -1066,7 +1723,7 @@ describe('dbBrktEntries', () => {
       deleteAllBrktEntriesForTmnt(tmntIdFormMockData)
     });
 
-    it('should delete all brktEntries for a tmnt', async () => { 
+    it('should delete all brktEntries for a tmnt', async () => {
       const deleted = await deleteAllBrktEntriesForTmnt(tmntIdFormMockData);
       expect(deleted).toBe(mockBrktEntriesToPost.length);
       didDel = true;
@@ -1074,23 +1731,30 @@ describe('dbBrktEntries', () => {
     it('should not delete all brktEntries for a tmnt when tmnt id is not found', async () => {
       const deleted = await deleteAllBrktEntriesForTmnt(notFoundTmntId);
       expect(deleted).toBe(0);
-    })  
-    it('should not delete all brktEntries for a tmnt when tmnt id is invalid', async () => { 
-      const deleted = await deleteAllBrktEntriesForTmnt("test");
-      expect(deleted).toBe(-1);
     })
-    it('should not delete all brktEntries for a tmnt when tmnt id is valid, but not a tmnt id', async () => { 
-      const deleted = await deleteAllBrktEntriesForTmnt(userId);
-      expect(deleted).toBe(-1);
+    it('should not delete all brktEntries for a tmnt when tmnt id is invalid', async () => {
+      try { 
+        await deleteAllBrktEntriesForTmnt("test");
+      } catch (err) { 
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('Invalid tmnt id');
+      }      
     })
-    it('should not delete all brktEntries for a tmnt when tmnt id is null', async () => { 
-      const deleted = await deleteAllBrktEntriesForTmnt(null as any);
-      expect(deleted).toBe(-1);
+    it('should not delete all brktEntries for a tmnt when tmnt id is valid, but not a tmnt id', async () => {
+      try { 
+        await deleteAllBrktEntriesForTmnt(userId);
+      } catch (err) { 
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('Invalid tmnt id');
+      }      
     })
-    it('should not delete all brktEntries for a tmnt when tmnt id is undefined', async () => { 
-      const deleted = await deleteAllBrktEntriesForTmnt(undefined as any);
-      expect(deleted).toBe(-1);
+    it('should not delete all brktEntries for a tmnt when tmnt id is null', async () => {
+      try { 
+        await deleteAllBrktEntriesForTmnt(null as any);
+      } catch (err) { 
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('Invalid tmnt id');
+      }      
     })
   })
-
-})
+});

@@ -2,209 +2,222 @@ import axios from "axios";
 import { baseElimEntriesApi } from "@/lib/db/apiPaths";
 import { testBaseElimEntriesApi } from "../../../../test/testApi";
 import { elimEntryType, putManyReturnType } from "@/lib/types/types";
-import { isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation";
 import { blankElimEntry, noUpdates } from "../initVals";
+import { validateElimEntries } from "@/app/api/elimEntries/validate";
 
 const url = testBaseElimEntriesApi.startsWith("undefined")
   ? baseElimEntriesApi
   : testBaseElimEntriesApi; 
 
-const oneElimEntryUrl = url + "/elimEntry/";
-const oneElimUrl = url + "/elim/";
-const oneDivUrl = url + "/div/";
-const oneSquadUrl = url + "/squad/";
-const oneTmntUrl = url + "/tmnt/";
+const elimEntryUrl = url + "/elimEntry/";
+const elimUrl = url + "/elim/";
+const divUrl = url + "/div/";
 const manyUrl = url + "/many";   
+const squadUrl = url + "/squad/";
+const tmntUrl = url + "/tmnt/";
+
+export const extractElimEntries = (elimEntries: any): elimEntryType[] => {
+  if (!elimEntries || !Array.isArray(elimEntries)) return [];
+  return elimEntries.map((elimEntry: any) => ({
+    ...blankElimEntry,
+    id: elimEntry.id,        
+    elim_id: elimEntry.elim_id,
+    player_id: elimEntry.player_id,        
+    fee: elimEntry.fee + "",
+  }));
+}
 
 /**
  * Get all elim entries for a tmnt
  * 
  * @param {string} tmntId - id of tmnt to get elim entries for
- * @returns {elimEntryType[] | null} - array of elim entries
+ * @returns {elimEntryType[]} - array of elim entries
+ * @throws {Error} - if tmntId is invalid or API call fails
  */
-export const getAllElimEntriesForTmnt = async (tmntId: string): Promise<elimEntryType[] | null> => {
-  try {
-    if (!isValidBtDbId(tmntId, "tmt")) return null;
-    const response = await axios({
-      method: "get",
-      withCredentials: true,
-      url: oneTmntUrl + tmntId,
-    });
-    if (response.status !== 200) return null;
-    const tmntElimEntries = response.data.elimEntries;
-    const elimEntries: elimEntryType[] = tmntElimEntries.map((elimEntry: elimEntryType) => {
-      return {
-        ...blankElimEntry,
-        id: elimEntry.id,        
-        elim_id: elimEntry.elim_id,
-        player_id: elimEntry.player_id,        
-        fee: elimEntry.fee,
-      }
-    });
-    return elimEntries;
-  } catch (err) {
-    return null;
+export const getAllElimEntriesForTmnt = async (tmntId: string): Promise<elimEntryType[]> => {
+  if (!isValidBtDbId(tmntId, "tmt")) {
+    throw new Error('Invalid tmnt id');
   }
+  let response;
+  try {
+    response = await axios.get(tmntUrl + tmntId, { withCredentials: true });    
+  } catch (err) {
+    throw new Error(`getAllElimEntriesForTmnt failed: ${err instanceof Error ? err.message : err}`);
+  }
+  if (response.status !== 200) { 
+    throw new Error(`Unexpected status ${response.status} when fetching elimEntries`)
+  }    
+  return extractElimEntries(response.data.elimEntries);
+  // return response.data.elimEntries.map((elimEntry: elimEntryType) => ({   
+  //   ...blankElimEntry,
+  //   id: elimEntry.id,        
+  //   elim_id: elimEntry.elim_id,
+  //   player_id: elimEntry.player_id,        
+  //   fee: elimEntry.fee,
+  // }));
 }
 
 /**
  * Get all elim entries for a div
  * 
  * @param {string} divId - id of div to get elim entries for
- * @returns {elimEntryType[] | null} - array of elim entries
+ * @returns {elimEntryType[]} - array of elim entries
+ * @throws {Error} - if divId is invalid or API call fails
  */
-export const getAllElimEntriesForDiv = async (divId: string): Promise<elimEntryType[] | null> => {
-  try {
-    if (!isValidBtDbId(divId, "div")) return null;
-    const response = await axios({
-      method: "get",
-      withCredentials: true,
-      url: oneDivUrl + divId,
-    });
-    if (response.status !== 200) return null;
-    const divElimEntries = response.data.elimEntries;
-    const elimEntries: elimEntryType[] = divElimEntries.map((elimEntry: elimEntryType) => {
-      return {
-        ...blankElimEntry,
-        id: elimEntry.id,        
-        elim_id: elimEntry.elim_id,
-        player_id: elimEntry.player_id,        
-        fee: elimEntry.fee,
-      }
-    });
-    return elimEntries;
-  } catch (err) {
-    return null;
+export const getAllElimEntriesForDiv = async (divId: string): Promise<elimEntryType[]> => {
+  if (!isValidBtDbId(divId, "div")) { 
+    throw new Error('Invalid div id');
   }
+  let response;
+  try { 
+    response = await axios.get(divUrl + divId, { withCredentials: true });
+  } catch (err) {
+    throw new Error(`getAllElimEntriesForDiv failed: ${err instanceof Error ? err.message : err}`);
+  }
+  if (response.status !== 200) {
+    throw new Error(`Unexpected status ${response.status} when fetching elimEntries`)
+  }
+  return extractElimEntries(response.data.elimEntries);
+  // return response.data.elimEntries.map((elimEntry: elimEntryType) => ({
+  //   ...blankElimEntry,
+  //   id: elimEntry.id,        
+  //   elim_id: elimEntry.elim_id,
+  //   player_id: elimEntry.player_id,        
+  //   fee: elimEntry.fee,
+  // }));
 }
 
 /**
  * Get all elim entries for a elim
  * 
  * @param {string} elimId - id of elim to get elim entries for
- * @returns {elimEntryType[] | null} - array of elim entries
+ * @returns {elimEntryType[]} - array of elim entries
+ * @throws {Error} - if elimId is invalid or API call fails
  */
-export const getAllElimEntriesForElim = async (elimId: string): Promise<elimEntryType[] | null> => {
-  try {
-    if (!isValidBtDbId(elimId, "elm")) return null;
-    const response = await axios({
-      method: "get",
-      withCredentials: true,
-      url: oneElimUrl + elimId,
-    });
-    if (response.status !== 200) return null;
-    const divElimEntries = response.data.elimEntries;
-    const elimEntries: elimEntryType[] = divElimEntries.map((elimEntry: elimEntryType) => {
-      return {
-        ...blankElimEntry,
-        id: elimEntry.id,        
-        elim_id: elimEntry.elim_id,
-        player_id: elimEntry.player_id,        
-        fee: elimEntry.fee,
-      }
-    });
-    return elimEntries;
-  } catch (err) {
-    return null;
+export const getAllElimEntriesForElim = async (elimId: string): Promise<elimEntryType[]> => {
+  if (!isValidBtDbId(elimId, "elm")) {
+    throw new Error('Invalid elim id');
   }
+  let response;
+  try { 
+    response = await axios.get(elimUrl + elimId, { withCredentials: true });
+  } catch (err) {
+    throw new Error(`getAllElimEntriesForElim failed: ${err instanceof Error ? err.message : err}`);
+  }
+  if (response.status !== 200) {
+    throw new Error(`Unexpected status ${response.status} when fetching elimEntries`)
+  }
+  return extractElimEntries(response.data.elimEntries);
+  // return response.data.elimEntries.map((elimEntry: elimEntryType) => ({
+  //   ...blankElimEntry,
+  //   id: elimEntry.id,        
+  //   elim_id: elimEntry.elim_id,
+  //   player_id: elimEntry.player_id,        
+  //   fee: elimEntry.fee,
+  // }));
 }
 
 /**
  * Get all elim entries for a squad
  * 
  * @param {string} squadId - id of squad to get elim entries for
- * @returns {elimEntryType[] | null} - array of elim entries
+ * @returns {elimEntryType[]} - array of elim entries
+ * @throws {Error} - if squadId is invalid or API call fails
  */
-export const getAllElimEntriesForSquad = async (squadId: string): Promise<elimEntryType[] | null> => {
-  try {
-    if (!isValidBtDbId(squadId, "sqd")) return null;
-    const response = await axios({
-      method: "get",
-      withCredentials: true,
-      url: oneSquadUrl + squadId,
-    });
-    if (response.status !== 200) return null;
-    const divElimEntries = response.data.elimEntries;
-    const elimEntries: elimEntryType[] = divElimEntries.map((elimEntry: elimEntryType) => {
-      return {
-        ...blankElimEntry,
-        id: elimEntry.id,        
-        elim_id: elimEntry.elim_id,
-        player_id: elimEntry.player_id,        
-        fee: elimEntry.fee,
-      }
-    });
-    return elimEntries;
-  } catch (err) {
-    return null;
+export const getAllElimEntriesForSquad = async (squadId: string): Promise<elimEntryType[]> => {
+  if (!isValidBtDbId(squadId, "sqd")) { 
+    throw new Error('Invalid squad id');
   }
+  let response;
+  try { 
+    response = await axios.get(squadUrl + squadId, { withCredentials: true });
+  } catch (err) {
+    throw new Error(`getAllElimEntriesForSquad failed: ${err instanceof Error ? err.message : err}`);
+  }
+  if (response.status !== 200) {
+    throw new Error(`Unexpected status ${response.status} when fetching elimEntries`)
+  }        
+  return response.data.elimEntries.map((elimEntry: elimEntryType) => ({
+    ...blankElimEntry,
+    id: elimEntry.id,        
+    elim_id: elimEntry.elim_id,
+    player_id: elimEntry.player_id,        
+    fee: elimEntry.fee,
+  }));
 }
 
 /**
  * posts a elim entry
  * 
  * @param {elimEntryType} elimEntry - elimEntry to post
- * @returns {elimEntryType | null} - elimEntry that was posted or null
+ * @returns {elimEntryType} - elimEntry that was posted
+ * @throws {Error} - if elimEntry is invalid or API call fails
  */
-export const postElimEntry = async (elimEntry: elimEntryType): Promise<elimEntryType | null> => {
-  try {
-    if (!elimEntry || !isValidBtDbId(elimEntry.id, "een")) return null;
-    // further sanatation and validation done in POST route
-    const elimEntryJSON = JSON.stringify(elimEntry);
-    const response = await axios({
-      method: "post",
-      data: elimEntryJSON,
-      withCredentials: true,
-      url: url,
-    });
-    if (response.status !== 201) return null;
-    const dbElimEntry = response.data.elimEntry;
-    const postedElimEntry: elimEntryType = {
-      ...blankElimEntry,
-      id: dbElimEntry.id,      
-      elim_id: dbElimEntry.elim_id,
-      player_id: dbElimEntry.player_id,      
-      fee: dbElimEntry.fee,
-    };
-    return postedElimEntry;
-  } catch (err) {
-    return null;
+export const postElimEntry = async (elimEntry: elimEntryType): Promise<elimEntryType> => {
+  if (!elimEntry || !isValidBtDbId(elimEntry.id, "een")) { 
+    throw new Error('Invalid elimEntry data');
   }
+  let response;
+  try {
+    const elemEntryJSON = JSON.stringify(elimEntry);
+    response = await axios.post(url, elemEntryJSON, { withCredentials: true });
+  } catch (err) {
+    throw new Error(`postElimEntry failed: ${err instanceof Error ? err.message : err}`);
+  }
+  if (response.status !== 201 || !response.data.elimEntry) {
+    throw new Error("Error posting elimEntry");
+  }
+  const dbElimEntry = response.data.elimEntry;
+  const postedElimEntry: elimEntryType = {
+    ...blankElimEntry,
+    id: dbElimEntry.id,      
+    elim_id: dbElimEntry.elim_id,
+    player_id: dbElimEntry.player_id,      
+    fee: dbElimEntry.fee,
+  };
+  return postedElimEntry;
 }
 
 /**
  * posts many elim entries
  * 
  * @param {elimEntryType[]} elimEntries - array of elimEntries to post
- * @returns {elimEntryType[] | null} - array of elimEntries that were posted or null
+ * @returns {number} - number of elimEntries that were posted
+ * @throws {Error} - if elimEntries is invalid or API call fails
  */
-export const postManyElimEntries = async (elimEntries: elimEntryType[]): Promise<elimEntryType[] | null> => {
-  try {
-    if (!elimEntries) return null;
-    if (elimEntries.length === 0) return [];
-    // further sanatation and validation done in POST route
-    const elimEntryJSON = JSON.stringify(elimEntries);
-    const response = await axios({
-      method: "post",
-      data: elimEntryJSON,
-      withCredentials: true,
-      url: manyUrl,
-    });
-    if (response.status !== 201) return null;
-    const dbElimEntries = response.data.elimEntries;
-    const postedElimEntries: elimEntryType[] = dbElimEntries.map((elimEntry: any) => {
-      return {
-        ...blankElimEntry,
-        id: elimEntry.id,        
-        elim_id: elimEntry.elim_id,
-        player_id: elimEntry.player_id,        
-        fee: elimEntry.fee,
-      }
-    });
-    return postedElimEntries;
-  } catch (err) {
-    return null;
+export const postManyElimEntries = async (elimEntries: elimEntryType[]): Promise<number> => {
+  if (!elimEntries || !Array.isArray(elimEntries)) { 
+    throw new Error('Invalid elimEntries data');
   }
+  if (elimEntries.length === 0) return 0; // not an error, just no data to post
+  const validElimEntries = validateElimEntries(elimEntries);
+  if (validElimEntries.errorCode !== ErrorCode.None
+    || validElimEntries.elimEntries.length !== elimEntries.length)
+  { 
+    if (validElimEntries.elimEntries.length === 0) {      
+      throw new Error('Invalid elimEntry data at index 0');
+    }
+    const errorIndex = elimEntries.findIndex(elimEntry => !isValidBtDbId(elimEntry.id, "een"));
+    if (errorIndex < 0) {
+      throw new Error(`Invalid elimEntry data at index ${validElimEntries.elimEntries.length}`);
+    } else {
+      throw new Error(`Invalid elimEntry data at index ${errorIndex}`);
+    }
+  }
+  let response;
+  try {  
+    const elimEntriesJSON = JSON.stringify(elimEntries);  
+    response = await axios.post(manyUrl, elimEntriesJSON, {    
+      withCredentials: true,    
+    });
+  } catch (err) {
+    throw new Error(`postManyElimEntries failed: ${err instanceof Error ? err.message : err}`);
+  }
+  if (response.status !== 201 || typeof response.data?.count !== "number") {
+    throw new Error("Error posting elimEntries");
+  }
+  return response.data.count;
 }
 
 /**
@@ -212,159 +225,155 @@ export const postManyElimEntries = async (elimEntries: elimEntryType[]): Promise
  * 
  * @param {elimEntryType} elimEntry - elimEntry to update
  * @returns {elimEntryType | null} - elimEntry that was updated
+ * @throws {Error} - if elimEntry is invalid or API call fails
  */
 export const putElimEntry = async (elimEntry: elimEntryType): Promise<elimEntryType | null> => {
-  try {
-    if (!elimEntry || !isValidBtDbId(elimEntry.id, "een")) return null;
-    // further sanatation and validation done in POST route
-    const elimEntryJSON = JSON.stringify(elimEntry);
-    const response = await axios({
-      method: "put",
-      data: elimEntryJSON,
-      withCredentials: true,
-      url: oneElimEntryUrl + elimEntry.id,
-    });
-    if (response.status !== 200) return null;
-    const dbElimEntry = response.data.elimEntry;
-    const puttedElimEntry: elimEntryType = {
-      ...blankElimEntry,
-      id: dbElimEntry.id,      
-      elim_id: dbElimEntry.elim_id,
-      player_id: dbElimEntry.player_id,      
-      fee: dbElimEntry.fee,
-    };
-    return puttedElimEntry;
-  } catch (err) {
-    return null;
+  if (!elimEntry || !isValidBtDbId(elimEntry.id, "een")) { 
+    throw new Error('Invalid elimEntry data');
   }
-}
-
-/**
- * updates, inserts or deletes many elim entries
- * 
- * @param {elimEntryType[]} elimEntries - array of elimEntries to update, insert or delete
- * @returns {putManyReturnType | null} - putManyReturnType has how many of each type updated or null 
- */
-export const putManyElimEntries = async (elimEntries: elimEntryType[]): Promise<putManyReturnType | null> => {
-
-  try {
-    if (!elimEntries) return null;
-    if (elimEntries.length === 0) return noUpdates;
-    for (let i = 0; i < elimEntries.length; i++) {
-      if (!isValidBtDbId(elimEntries[i].id, "een")) return null;
-    }
+  let response;
+  try { 
     // further sanatation and validation done in PUT route
-    const elimEntriesJSON = JSON.stringify(elimEntries);
-    const response = await axios({
-      method: "put",
-      data: elimEntriesJSON,
-      withCredentials: true,
-      url: manyUrl,
+    const elimEntryJSON = JSON.stringify(elimEntry);
+    response = await axios.put(elimEntryUrl + elimEntry.id, elimEntryJSON, {
+      withCredentials: true
     });
-    if (response.status !== 200) return null;
-    const updatedInfo: putManyReturnType = response.data.updateInfo;
-    return updatedInfo;
   } catch (err) {
-    return null;
+    throw new Error(`putElimEntry failed: ${err instanceof Error ? err.message : err}`);
   }
+  if (response.status !== 200 || !response.data.elimEntry) {
+    throw new Error("Error putting elimEntry")
+  }        
+  const dbElimEntry = response.data.elimEntry;
+  const puttedElimEntry: elimEntryType = {
+    ...blankElimEntry,
+    id: dbElimEntry.id,      
+    elim_id: dbElimEntry.elim_id,
+    player_id: dbElimEntry.player_id,      
+    fee: dbElimEntry.fee,
+  };
+  return puttedElimEntry;
 }
 
 /**
  * deletes a elim entry
  * 
  * @param {string} id - id of elim entry to delete 
- * @returns {number} - 1 if deleted, -1 on failure
+ * @returns {number} - 1 if deleted
+ * @throws {Error} - if id is invalid or API call fails
  */
 export const deleteElimEntry = async (id: string): Promise<number> => {
-  try {
-    if (!isValidBtDbId(id, "een")) return -1;
-    const response = await axios({
-      method: "delete",
-      withCredentials: true,
-      url: oneElimEntryUrl + id,
-    });
-    return (response.status === 200) ? 1 : -1    
-  } catch (err) {
-    return -1;
+  if (!isValidBtDbId(id, "een")) { 
+    throw new Error('Invalid elimEntry id');
   }
+  let response;
+  try {
+    response = await axios.delete(elimEntryUrl + id, {
+      withCredentials: true
+    });
+  } catch (err) {
+    throw new Error(`deleteElimEntry failed: ${err instanceof Error ? err.message : err}`);
+  }
+  if (response.status !== 200) {
+    throw new Error("Error deleting elimEntry");
+  };
+  return 1;
 }
 
 /**
  * deletes all elim entries for a squad
  * 
  * @param {string} squadId - id of squad to delete
- * @returns {number} - number of elim entries deleted, -1 on failure
+ * @returns {number} - number of elim entries deleted
+ * @throws {Error} - if id is invalid or API call fails
  */
 export const deleteAllElimEntriesForSquad = async (squadId: string): Promise<number> => {
-  try {
-    if (!isValidBtDbId(squadId, "sqd")) return -1;
-    const response = await axios({
-      method: "delete",
+  if (!isValidBtDbId(squadId, "sqd")) { 
+    throw new Error('Invalid squad id');
+  } 
+  let response;
+  try { 
+    response = await axios.delete(squadUrl + squadId, {
       withCredentials: true,
-      url: oneSquadUrl + squadId,
-    });    
-    return (response.status === 200) ? response.data.deleted.count : -1
+    });
   } catch (err) {
-    return -1;
+    throw new Error(`deleteAllElimEntriesForSquad failed: ${err instanceof Error ? err.message : err}`);
   }
+  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+    throw new Error("Error deleting elimEntries for squad");
+  }
+  return response.data.deleted.count;
 }
 
 /**
  * deletes all elim entries for a div
  * 
  * @param {string} divId - id of div to delete
- * @returns {number} - number of elim entries deleted, -1 on failure
+ * @returns {number} - number of elim entries deleted
+ * @throws {Error} - if id is invalid or API call fails
  */
 export const deleteAllElimEntriesForDiv = async (divId: string): Promise<number> => {  
-  try {
-    if (!isValidBtDbId(divId, "div")) return -1;
-    const response = await axios({
-      method: "delete",
-      withCredentials: true,
-      url: oneDivUrl + divId,
-    });    
-    return (response.status === 200) ? response.data.deleted.count : -1
-  } catch (err) {
-    return -1;
+  if (!isValidBtDbId(divId, "div")) { 
+    throw new Error('Invalid div id');
   }
+  let response;
+  try {
+    response = await axios.delete(divUrl + divId, { withCredentials: true });    
+  } catch (err) {
+    throw new Error(`deleteAllElimEntriesForDiv failed: ${err instanceof Error ? err.message : err}`);
+  }
+  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+    throw new Error("Error deleting elimEntries for div");
+  }
+  return response.data.deleted.count;
 }
 
 /**
  * deletes all elim entries for a elim
  * 
  * @param {string} elimId - id of elim to delete
- * @returns {number} - number of elim entries deleted, -1 on failure
+ * @returns {number} - number of elim entries deleted
+ * @throws {Error} - if id is invalid or API call fails
  */
 export const deleteAllElimEntriesForElim = async (elimId: string): Promise<number> => {  
-  try {
-    if (!isValidBtDbId(elimId, "elm")) return -1;
-    const response = await axios({
-      method: "delete",
-      withCredentials: true,
-      url: oneElimUrl + elimId,
-    });    
-    return (response.status === 200) ? response.data.deleted.count : -1
-  } catch (err) {
-    return -1;
+  if (!isValidBtDbId(elimId, "elm")) {
+    throw new Error('Invalid elim id');
   }
+  let response;
+  try {
+    response = await axios.delete(elimUrl + elimId, { withCredentials: true });    
+  } catch (err) {
+    throw new Error(`deleteAllElimEntriesForElim failed: ${err instanceof Error ? err.message : err}`);
+  }
+  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+    throw new Error("Error deleting elimEntries for elim");
+  }
+  return response.data.deleted.count;
 }
 
 /**
  * deletes all elim entries for a tournament
  * 
  * @param {string} tmntId - id of tmnt to delete
- * @returns {number} - number of elim entries deleted, -1 on failure
+ * @returns {number} - number of elim entries deleted
+ * @throws {Error} - if id is invalid or API call fails
  */
 export const deleteAllElimEntriesForTmnt = async (tmntId: string): Promise<number> => {
-  try {
-    if (!isValidBtDbId(tmntId, "tmt")) return -1;
-    const response = await axios({
-      method: "delete",
-      withCredentials: true,
-      url: oneTmntUrl + tmntId,
-    });    
-    return (response.status === 200) ? response.data.deleted.count : -1
-  } catch (err) {
-    return -1;
+  if (!isValidBtDbId(tmntId, "tmt")) {
+    throw new Error('Invalid tmnt id');
   }
+  let response;
+  try {
+    response = await axios.delete(tmntUrl + tmntId, { withCredentials: true });    
+  } catch (err) {
+    throw new Error(`deleteAllElimEntriesForTmnt failed: ${err instanceof Error ? err.message : err}`);
+  }
+  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+    throw new Error("Error deleting elimEntries for tmnt");
+  }
+  return response.data.deleted.count;
+}
+
+export const exportedForTesting = {
+  extractElimEntries,
 }

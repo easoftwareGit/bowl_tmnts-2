@@ -1,11 +1,23 @@
-import { validPlayerFirstName, validPlayerLastName, validAverage, validLane, validPosition, exportedForTesting, validPlayerFkId, sanitizePlayer, validatePlayer } from "@/app/api/players/validate";
+import { validPlayerFirstName, validPlayerLastName, validAverage, validLane, validPosition, exportedForTesting, validPlayerFkId, sanitizePlayer, validatePlayer, validatePlayers } from "@/app/api/players/validate";
 import { mockPlayers } from "../../../mocks/tmnts/newTmnt/mockNewTmnt";
-import { ErrorCode, maxFirstNameLength, maxLaneCount, maxLastNameLength } from "@/lib/validation";
+import { ErrorCode, maxAverage, maxFirstNameLength, maxLaneCount, maxLastNameLength, maxStartLane } from "@/lib/validation";
+import { cloneDeep } from "lodash";
+import { playerType } from "@/lib/types/types";
+import { initPlayer } from "@/lib/db/initVals";
 const { gotPlayerData, validPlayerData } = exportedForTesting;
 
 const playerId = 'ply_88be0472be3d476ea1caa99dd05953fa';
 const nonPlayerId = 'bwl_5bcefb5d314fff1ff5da6521a2fa7bde';
 const mockPlayer = mockPlayers[0];
+const testByeId = 'bye_0123456789abcdef0123456789abcdef';
+
+const byePlayer = cloneDeep(mockPlayer);
+byePlayer.id = testByeId;
+byePlayer.first_name = 'Bye';
+byePlayer.last_name = null as any;
+byePlayer.average = 0;
+byePlayer.lane = null as any;
+byePlayer.position = null as any;
 
 jest.mock("../../../../src/app/api/players/validate", () => ({
   ...jest.requireActual("../../../../src/app/api/players/validate"),
@@ -15,7 +27,7 @@ jest.mock("../../../../src/app/api/players/validate", () => ({
 
 describe("player table data validation", () => { 
 
-  describe("gotPlayerData function - check for missing data", () => { 
+  describe("gotPlayerData function - regular player", () => { 
     it('should return ErrorCode.None if no player data is missing', () => { 
       expect(gotPlayerData(mockPlayer)).toBe(ErrorCode.None);
     })
@@ -121,6 +133,73 @@ describe("player table data validation", () => {
       const testPlayer = {
         ...mockPlayer,
         position: '<>[]'
+      }
+      expect(gotPlayerData(testPlayer)).toBe(ErrorCode.MissingData);
+    })
+  })
+
+  describe('gotPlayerData function - bye player', () => { 
+    
+    const testByeId = 'bye_0123456789abcdef0123456789abcdef';
+    const byePlayer: playerType = {
+      ...initPlayer,
+      id: testByeId,
+      squad_id: mockPlayers[0].squad_id,
+      first_name: 'Bye',
+      last_name: null as any,
+      average: 0,
+      lane: null as any,
+      position: null as any
+    }
+    it('should return ErrorCode.None if no player data is missing', () => { 
+      expect(gotPlayerData(byePlayer)).toBe(ErrorCode.None);
+    })
+    it('should return ErrorCode.MissingData if player id is missing', () => {
+      const testPlayer = {
+        ...byePlayer,
+        id: null as any
+      }
+      expect(gotPlayerData(testPlayer)).toBe(ErrorCode.MissingData);
+    })
+    it('should return ErrorCode.MissingData if squad id is missing', () => {
+      const testPlayer = {
+        ...byePlayer,
+        squad_id: null as any
+      }
+      expect(gotPlayerData(testPlayer)).toBe(ErrorCode.MissingData);
+    })
+    it('should return ErrorCode.MissingData if first name is missing', () => {
+      const testPlayer = {
+        ...byePlayer,
+        first_name: null as any
+      }
+      expect(gotPlayerData(testPlayer)).toBe(ErrorCode.MissingData);
+    })
+    it('should return ErrorCode.MissingData if average is missing', () => {
+      const testPlayer = {
+        ...byePlayer,
+        average: null as any
+      }
+      expect(gotPlayerData(testPlayer)).toBe(ErrorCode.MissingData);  
+    })
+    it('should return ErrorCode.MissingData if id is blank', () => { 
+      const testPlayer = {
+        ...byePlayer,
+        id: ''
+      }
+      expect(gotPlayerData(testPlayer)).toBe(ErrorCode.MissingData);
+    })
+    it('should return ErrorCode.MissingData if squad id is blank', () => { 
+      const testPlayer = {
+        ...byePlayer,
+        squad_id: ''
+      }
+      expect(gotPlayerData(testPlayer)).toBe(ErrorCode.MissingData);
+    })
+    it('should return ErrorCode.MissingData if first name is blank', () => { 
+      const testPlayer = {
+        ...byePlayer,
+        first_name: ''
       }
       expect(gotPlayerData(testPlayer)).toBe(ErrorCode.MissingData);
     })
@@ -289,7 +368,7 @@ describe("player table data validation", () => {
     });
   })
 
-  describe("validPlayerData function", () => { 
+  describe("validPlayerData function - regular player", () => { 
     it("should return ErrorCode.None when valid player data is passed", () => { 
       const result = validPlayerData(mockPlayer);
       expect(result).toBe(ErrorCode.None);
@@ -447,7 +526,113 @@ describe("player table data validation", () => {
     })
   })
 
-  describe('sanitizePlayer function', () => { 
+  describe("validPlayerData function - bye player", () => { 
+
+    it("should return ErrorCode.None when valid player data is passed", () => { 
+      const result = validPlayerData(byePlayer);
+      expect(result).toBe(ErrorCode.None);
+    })
+    it("should return ErrorCode.InvalidData when player.id is missing", () => {
+      const result = validPlayerData({
+        ...byePlayer,
+        id: null as any
+      });      
+      expect(result).toBe(ErrorCode.InvalidData);
+    })
+    it("should return ErrorCode.InvalidData when squad_id is missing", () => {
+      const result = validPlayerData({
+        ...byePlayer,
+        squad_id: null as any
+      });
+      expect(result).toBe(ErrorCode.InvalidData);
+    })
+    it("should return ErrorCode.InvalidData when first_name is missing", () => {
+      const result = validPlayerData({
+        ...byePlayer,
+        first_name: null as any
+      });
+      expect(result).toBe(ErrorCode.InvalidData);
+    })
+    it("should return ErrorCode.InvalidData when last_name is NOT missing", () => {
+      const result = validPlayerData({
+        ...byePlayer,
+        last_name: 'test'
+      });
+      expect(result).toBe(ErrorCode.InvalidData);
+    })
+    it("should return ErrorCode.InvalidData when average is missing", () => {
+      const result = validPlayerData({
+        ...byePlayer,
+        average: null as any
+      });
+      expect(result).toBe(ErrorCode.InvalidData);
+    })
+    it("should return ErrorCode.InvalidData when lane is NOT missing", () => {
+      const result = validPlayerData({
+        ...byePlayer,
+        lane: 1
+      });
+      expect(result).toBe(ErrorCode.InvalidData);
+    })
+    it("should return ErrorCode.InvalidData when position is NOT missing", () => {
+      const result = validPlayerData({
+        ...byePlayer,
+        position: 'A'
+      });
+      expect(result).toBe(ErrorCode.InvalidData);
+    })    
+    it('should return ErrorCode.InvalidData when player_id is blank', () => {
+      const result = validPlayerData({
+        ...byePlayer,
+        id: ''
+      });
+      expect(result).toBe(ErrorCode.InvalidData);      
+    })
+    it('should return ErrorCode.InvalidData when squad_id is blank', () => {
+      const result = validPlayerData({
+        ...byePlayer,
+        squad_id: ''
+      });
+      expect(result).toBe(ErrorCode.InvalidData);      
+    })
+    it('should return ErrorCode.InvalidData when first_name is blank', () => {
+      const result = validPlayerData({
+        ...byePlayer,
+        first_name: ''
+      });
+      expect(result).toBe(ErrorCode.InvalidData);      
+    })
+    it('should return ErrorCode.InvalidData when squad_id is invalid', () => { 
+      const result = validPlayerData({
+        ...byePlayer,
+        squad_id: 'abc_123'
+      });
+      expect(result).toBe(ErrorCode.InvalidData);
+    })
+    it('should return ErrorCode.InvalidData when squad id is a valid id, but not a squad id', () => { 
+      const result = validPlayerData({
+        ...byePlayer,
+        squad_id: playerId
+      });
+      expect(result).toBe(ErrorCode.InvalidData);
+    })
+    it('should return ErrorCode.InvalidData when first_name is NOT "Bye"', () => { 
+      const result = validPlayerData({
+        ...byePlayer,
+        first_name: "abc"
+      });
+      expect(result).toBe(ErrorCode.InvalidData);
+    })
+    it('should return ErrorCode.InvalidData when average is invalid', () => {
+      const result = validPlayerData({
+        ...byePlayer,
+        average: 123
+      });
+      expect(result).toBe(ErrorCode.InvalidData);
+    })
+  })
+
+  describe('sanitizePlayer function - regular player', () => { 
     it('should return a sanitized player when player is already sanitized', () => {
       const result = sanitizePlayer(mockPlayer);
       expect(result).toEqual(mockPlayer);
@@ -514,7 +699,70 @@ describe("player table data validation", () => {
     })    
   })
 
-  describe('validatePlayer function', () => { 
+  describe('sanitizePlayer function - bye player', () => { 
+    it('should return a sanitized player when player is already sanitized', () => {
+      const result = sanitizePlayer(byePlayer);
+      expect(result).toEqual(byePlayer);
+    })
+    it('should return a sanitized player when player when id is invalid', () => {
+      const result = sanitizePlayer({
+        ...byePlayer,
+        id: 'abc_123'
+      });
+      expect(result.id).toBe('');
+    })
+    it('should return a sanitized player when squad_id is invalid', () => {
+      const result = sanitizePlayer({
+        ...byePlayer,
+        squad_id: 'abc_123'
+      });
+      expect(result.squad_id).toBe('');
+    })
+    it('should return a sanitized player when first_name is not sanitized', () => {
+      const result = sanitizePlayer({
+        ...byePlayer,
+        first_name: '<script>alert(1)</script>'
+      });
+      expect(result.first_name).toBe('alert1');
+    })
+    it('should return a sanitized player when last_name is not sanitized', () => {
+      const result = sanitizePlayer({
+        ...byePlayer,
+        last_name: '<script>alert(1)</script>'
+      });
+      expect(result.last_name).toBe('alert1');
+    })
+    it('should return a sanitized player when average is not sanitized', () => {
+      const result = sanitizePlayer({
+        ...byePlayer,
+        average: 2.5
+      });
+      expect(result.average).toBe(2.5); // not valid but sanitied
+    })
+    it('should return a sanitized player when average is not', () => {
+      const result = sanitizePlayer({
+        ...byePlayer,
+        average: '<script>alert(1)</script>' as any
+      });
+      expect(result.average).toBe(-1); // not valid but sanitied
+    })
+    it('should return a sanitized player when lane is not sanitized', () => {
+      const result = sanitizePlayer({
+        ...byePlayer,
+        lane: 'abc' as any
+      });
+      expect(result.lane).toBe(0); // not valid but sanitied
+    })
+    it('should return a sanitized player when position is not sanitized', () => {
+      const result = sanitizePlayer({
+        ...byePlayer,
+        position: '<script>alert(1)</script>'
+      });
+      expect(result.position).toBe('alert1'); // not valid but sanitied
+    })
+  })
+
+  describe('validatePlayer function - regular player', () => { 
 
     beforeEach(() => {
       jest.clearAllMocks();
@@ -550,4 +798,214 @@ describe("player table data validation", () => {
     })
   })
 
+  describe('validatePlayer function - bye player', () => { 
+
+    it('should return ErrorCode.None when passed a valid bye player', () => {
+      const result = validatePlayer(byePlayer);
+      expect(result).toBe(ErrorCode.None);
+    })
+    // no sanitization - only valid values are:
+    //   id - valid bye id
+    //   first_name - Bye
+    //   last_name - null
+    //   average - 0
+    //   lane - null
+    //   position - null
+    it('should return ErrorCode.MissingData when id is missing', () => { 
+      const result = validatePlayer({
+        ...byePlayer,
+        id: null as any
+      });
+      expect(result).toBe(ErrorCode.MissingData);
+    })
+    it('should return ErrorCode.InvalidData when id is invalid', () => { 
+      const result = validatePlayer({
+        ...byePlayer,
+        id: 'abc_123'
+      });
+      expect(result).toBe(ErrorCode.InvalidData);
+    })
+  })
+
+  describe('validatePlayers function', () => { 
+
+    const allPlayers = [...mockPlayers, byePlayer];
+    const byeIndex = allPlayers.length - 1;
+
+    it('should return ErrorCode.None when passed valid players', () => {
+      const result = validatePlayers(allPlayers);
+      expect(result.errorCode).toBe(ErrorCode.None);
+      expect(result.players.length).toBe(allPlayers.length);
+    })
+    it('should return ErrorCode.None when properly sanitize players', () => { 
+      const toSanitize = cloneDeep(allPlayers);
+      toSanitize[0].first_name = '<script>alert(1)</script>';
+      toSanitize[0].last_name = '   Last Name ***';
+      toSanitize[0].position = '<a>A';
+      const result = validatePlayers(toSanitize);
+      expect(result.errorCode).toBe(ErrorCode.None);
+      expect(result.players.length).toBe(allPlayers.length);
+    })
+    it('should return ErrorCode.InvalidData when all squad ids do not match', () => {
+      const invalidData = cloneDeep(allPlayers);
+      invalidData[1].squad_id = 'sqd_0123456789abcdef0123456789abcdef'
+      const result = validatePlayers(invalidData);
+      expect(result.errorCode).toBe(ErrorCode.InvalidData);
+      expect(result.players.length).toBe(1);
+    })
+    it('should return ErrorCode.MissingData when id is missing', () => {
+      const invalidData = cloneDeep(allPlayers);
+      invalidData[0].id = null as any;
+      const result = validatePlayers(invalidData);
+      expect(result.errorCode).toBe(ErrorCode.MissingData);
+      expect(result.players.length).toBe(0);
+    })
+    it('should return ErrorCode.MissingData when id is invalid', () => {
+      const invalidData = cloneDeep(allPlayers);
+      invalidData[1].id = 'abc_123';
+      const result = validatePlayers(invalidData);
+      expect(result.errorCode).toBe(ErrorCode.MissingData);
+      expect(result.players.length).toBe(1);
+    })
+    it('should return ErrorCode.MissingData when first_name is missing', () => {
+      const invalidData = cloneDeep(allPlayers);
+      invalidData[0].first_name = null as any;
+      const result = validatePlayers(invalidData);
+      expect(result.errorCode).toBe(ErrorCode.MissingData);
+      expect(result.players.length).toBe(0);  
+    })    
+    it('should return ErrorCode.MissingData when first_name is blank', () => {
+      const invalidData = cloneDeep(allPlayers);
+      invalidData[0].first_name = '';
+      const result = validatePlayers(invalidData);
+      expect(result.errorCode).toBe(ErrorCode.MissingData);
+      expect(result.players.length).toBe(0);  
+    })
+    it('should return ErrorCode.MissingData when last_name is missing', () => {
+      const invalidData = cloneDeep(allPlayers);
+      invalidData[0].last_name = null as any;
+      const result = validatePlayers(invalidData);
+      expect(result.errorCode).toBe(ErrorCode.MissingData);
+      expect(result.players.length).toBe(0);  
+    })    
+    it('should return ErrorCode.MissingData when last_name is blank', () => {
+      const invalidData = cloneDeep(allPlayers);
+      invalidData[0].last_name = '';
+      const result = validatePlayers(invalidData);
+      expect(result.errorCode).toBe(ErrorCode.MissingData);
+      expect(result.players.length).toBe(0);  
+    })
+    it('should return ErrorCode.MissingData when average is missing', () => {
+      const invalidData = cloneDeep(allPlayers);
+      invalidData[0].average = null as any;
+      const result = validatePlayers(invalidData);
+      expect(result.errorCode).toBe(ErrorCode.MissingData);
+      expect(result.players.length).toBe(0);  
+    })
+    it('should return ErrorCode.MissingData when lane is missing', () => {
+      const invalidData = cloneDeep(allPlayers);
+      invalidData[0].lane = null as any;
+      const result = validatePlayers(invalidData);
+      expect(result.errorCode).toBe(ErrorCode.MissingData);
+      expect(result.players.length).toBe(0);  
+    })
+    it('should return ErrorCode.MissingData when position is missing', () => {
+      const invalidData = cloneDeep(allPlayers);
+      invalidData[0].position = null as any;
+      const result = validatePlayers(invalidData);
+      expect(result.errorCode).toBe(ErrorCode.MissingData);
+      expect(result.players.length).toBe(0);  
+    })
+    it('should return ErrorCode.MissingData when position is blank', () => {
+      const invalidData = cloneDeep(allPlayers);
+      invalidData[0].position = '';
+      const result = validatePlayers(invalidData);
+      expect(result.errorCode).toBe(ErrorCode.MissingData);
+      expect(result.players.length).toBe(0);  
+    })
+    it('should return ErrorCode.InvalidData when first name is too long', () => { 
+      const invalidData = cloneDeep(allPlayers);
+      invalidData[0].first_name = 'a'.repeat(maxFirstNameLength + 1);
+      const result = validatePlayers(invalidData);
+      expect(result.errorCode).toBe(ErrorCode.InvalidData);
+      expect(result.players.length).toBe(0);
+    })
+    it('should return ErrorCode.InvalidData when last name is too long', () => {
+      const invalidData = cloneDeep(allPlayers);
+      invalidData[0].last_name = 'a'.repeat(maxLastNameLength + 1);
+      const result = validatePlayers(invalidData);
+      expect(result.errorCode).toBe(ErrorCode.InvalidData);
+      expect(result.players.length).toBe(0);
+    })
+    it('should return ErrorCode.InvalidData when average is too high', () => { 
+      const invalidData = cloneDeep(allPlayers);
+      invalidData[0].average = maxAverage + 1;
+      const result = validatePlayers(invalidData);
+      expect(result.errorCode).toBe(ErrorCode.InvalidData);
+      expect(result.players.length).toBe(0);      
+    })
+    it('should return ErrorCode.InvalidData when average is too low', () => {
+      const invalidData = cloneDeep(allPlayers);
+      invalidData[0].average = -1;
+      const result = validatePlayers(invalidData);
+      expect(result.errorCode).toBe(ErrorCode.InvalidData);
+      expect(result.players.length).toBe(0);
+    })
+    it('should return ErrorCode.InvalidData when lane is too high', () => {
+      const invalidData = cloneDeep(allPlayers);
+      invalidData[0].lane = maxStartLane + 1;
+      const result = validatePlayers(invalidData);
+      expect(result.errorCode).toBe(ErrorCode.InvalidData);
+      expect(result.players.length).toBe(0);
+    })
+    it('should return ErrorCode.InvalidData when lane is too low', () => {
+      const invalidData = cloneDeep(allPlayers);
+      invalidData[0].lane = 0;
+      const result = validatePlayers(invalidData);
+      expect(result.errorCode).toBe(ErrorCode.InvalidData);
+      expect(result.players.length).toBe(0);
+    })
+    it('should return ErrorCode.InvalidData when position is too long', () => { 
+      const invalidData = cloneDeep(allPlayers);
+      invalidData[0].position = 'AA';
+      const result = validatePlayers(invalidData);
+      expect(result.errorCode).toBe(ErrorCode.InvalidData);
+      expect(result.players.length).toBe(0);
+    })
+    it('should return ErrorCode.InvalidData when bye player first name is not "Bye"', () => {
+      const invalidData = cloneDeep(allPlayers);
+      invalidData[byeIndex].first_name = 'Not Bye';
+      const result = validatePlayers(invalidData);
+      expect(result.errorCode).toBe(ErrorCode.InvalidData);
+      expect(result.players.length).toBe(invalidData.length - 1);
+    })
+    it('should return ErroCode.InvalidData when bye player last name is not null', () => {
+      const invalidData = cloneDeep(allPlayers);
+      invalidData[byeIndex].last_name = 'Not null';
+      const result = validatePlayers(invalidData);
+      expect(result.errorCode).toBe(ErrorCode.InvalidData);
+      expect(result.players.length).toBe(invalidData.length - 1);
+    })
+    it('should return ErrorCode.InvalidData when bye player average is not 0', () => { 
+      const invalidData = cloneDeep(allPlayers);
+      invalidData[byeIndex].average = 1;
+      const result = validatePlayers(invalidData);
+      expect(result.errorCode).toBe(ErrorCode.InvalidData);
+      expect(result.players.length).toBe(invalidData.length - 1);
+    })
+    it('should return ErrorCode.InvalidData when bye player lane is not null', () => { 
+      const invalidData = cloneDeep(allPlayers);
+      invalidData[byeIndex].lane = 1;
+      const result = validatePlayers(invalidData);
+      expect(result.errorCode).toBe(ErrorCode.InvalidData);
+      expect(result.players.length).toBe(invalidData.length - 1);
+    })
+    it('should return ErrorCode.InvalidData when bye player position is not null', () => { 
+      const invalidData = cloneDeep(allPlayers);
+      invalidData[byeIndex].position = 'A';
+      const result = validatePlayers(invalidData);
+      expect(result.errorCode).toBe(ErrorCode.InvalidData);
+      expect(result.players.length).toBe(invalidData.length - 1);
+    })
+  })
 })

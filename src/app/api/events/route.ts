@@ -5,6 +5,7 @@ import { ErrorCode } from "@/lib/validation";
 import { eventDataType, eventType } from "@/lib/types/types";
 import { initEvent } from "@/lib/db/initVals";
 import { getErrorStatus } from "../errCodes";
+import { eventDataForPrisma } from "./dataForPrisma";
 
 // routes /api/events
 
@@ -79,19 +80,9 @@ export async function POST(request: Request) {
       );
     }
             
-    let eventData: eventDataType = {
-      id: toPost.id,
-      tmnt_id: toPost.tmnt_id,
-      event_name: toPost.event_name,
-      team_size: toPost.team_size,
-      games: toPost.games,
-      entry_fee: toPost.entry_fee,
-      lineage: toPost.lineage,
-      prize_fund: toPost.prize_fund,
-      other: toPost.other,
-      expenses: toPost.expenses,
-      added_money: toPost.added_money,      
-      sort_order: toPost.sort_order,          
+    const eventData = eventDataForPrisma(toPost);
+    if (!eventData) {
+      return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
     const postedEvent = await prisma.event.create({
       data: eventData

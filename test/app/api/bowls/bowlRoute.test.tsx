@@ -3,7 +3,7 @@ import { baseBowlsApi } from "@/lib/db/apiPaths";
 import { testBaseBowlsApi } from "../../../testApi";
 import { bowlType } from "@/lib/types/types";
 import { initBowl } from "@/lib/db/initVals";
-import { btDbUuid } from "@/lib/uuid";
+import { userId } from "../../../mocks/tmnts/tmntFulldata/mockTmntFullData";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -26,30 +26,27 @@ const url = testBaseBowlsApi.startsWith("undefined")
 const oneBowlUrl = url + "/bowl/"
 
 describe('Bowls - API: /api/bowls', () => { 
+  
+  const postBowlId = 'bwl_012342f8b85942929f2584318b3d49a2' // not in database
 
-  const bowlId = 'bwl_ca8872f8b85942929f2584318b3d49a2'; // not in database  
+  const testBowlName = "Test Bowl";
 
-  const testBowl: bowlType = {
+  const bowlToPost: bowlType = {
     ...initBowl,
-    id: "bwl_561540bd64974da9abdd97765fdb3659",
-    bowl_name: "Earl Anthony's Dublin Bowl",
-    city: "Dublin",
+    id: postBowlId,
+    bowl_name: testBowlName,
+    city: "Somehwere",
     state: "CA",
-    url: "https://www.earlanthonysdublinbowl.com",
+    url: "https://www.google.com",
   }
 
   const notFoundId = "bwl_01234567890123456789012345678901"; 
-  const notfoundUserId = "usr_01234567890123456789012345678901";
   const nonBowlId = "tmt_01234567890123456789012345678901";
-
-  const bowl2Id = "bwl_8b4a5c35ad1247049532ff53a12def0a"
-
-  const testBowlName = "Test Bowl";
 
   const deletePostedBowl = async () => { 
     const response = await axios.get(url);
     const bowls = response.data.bowls;
-    const toDel = bowls.find((b: bowlType) => b.bowl_name === testBowlName);
+    const toDel = bowls.find((b: bowlType) => b.id === postBowlId);
     if (toDel) {
       try {
         const delResponse = await axios({
@@ -65,13 +62,14 @@ describe('Bowls - API: /api/bowls', () => {
 
   const resetBowl = async () => { 
     // make sure test user is reset in database
-    const bowlJSON = JSON.stringify(testBowl);
-    const putResponse = await axios({
-      method: "put",
-      data: bowlJSON,
-      withCredentials: true,
-      url: oneBowlUrl + testBowl.id,
-    })
+    // do not use put command, use delete and post
+    const bowlJSON = JSON.stringify(bowlToPost);
+    try { 
+      await deletePostedBowl();
+      await axios.post(url, bowlJSON, {withCredentials: true,});      
+    } catch (err) { 
+      // do nothing      
+    }
   }
 
   describe('GET', () => { 
@@ -90,16 +88,25 @@ describe('Bowls - API: /api/bowls', () => {
   })
 
   describe('GET by ID - API: API: /api/bowls/bowl/:id', () => { 
+    
+    const getBowl: bowlType = {
+      ...initBowl,
+      id: "bwl_561540bd64974da9abdd97765fdb3659",
+      bowl_name: "Earl Anthony's Dublin Bowl",
+      city: "Dublin",
+      state: "CA",
+      url: "https://www.earlanthonysdublinbowl.com",
+    }
 
     it('should get a bowl by ID', async () => {
-      const response = await axios.get(oneBowlUrl + testBowl.id);
+      const response = await axios.get(oneBowlUrl + getBowl.id);
       const bowl = response.data.bowl;
       expect(response.status).toBe(200);
-      expect(bowl.id).toBe(testBowl.id);
-      expect(bowl.bowl_name).toBe(testBowl.bowl_name);
-      expect(bowl.city).toBe(testBowl.city);
-      expect(bowl.state).toBe(testBowl.state);
-      expect(bowl.url).toBe(testBowl.url);
+      expect(bowl.id).toBe(getBowl.id);
+      expect(bowl.bowl_name).toBe(getBowl.bowl_name);
+      expect(bowl.city).toBe(getBowl.city);
+      expect(bowl.state).toBe(getBowl.state);
+      expect(bowl.url).toBe(getBowl.url);
     })
     it('should not get a bowl by ID when ID is invalid', async () => {
       try {
@@ -140,15 +147,7 @@ describe('Bowls - API: /api/bowls', () => {
 
   })
 
-  describe('POST', () => { 
-
-    const bowlToPost: bowlType = {
-      ...initBowl,      
-      bowl_name: testBowlName,
-      city: "Somehwere",
-      state: "CA",
-      url: "https://www.google.com",
-    }
+  describe('POST API: /api/bowls', () => { 
 
     let createdBowl = false
 
@@ -165,15 +164,14 @@ describe('Bowls - API: /api/bowls', () => {
         await deletePostedBowl();
       }      
     })
+
+    afterAll(async () => { 
+      await deletePostedBowl();
+    })
     
     it('should create a new bowl', async () => { 
       const bowlJSON = JSON.stringify(bowlToPost);
-      const response = await axios({
-        method: "post",
-        data: bowlJSON,
-        withCredentials: true,
-        url: url
-      });
+      const response = await axios.post(url, bowlJSON, {withCredentials: true});
       expect(response.status).toBe(201);
       const postedBowl = response.data.bowl;
       createdBowl = true;
@@ -190,12 +188,7 @@ describe('Bowls - API: /api/bowls', () => {
       }
       const bowlJSON = JSON.stringify(invalidBowl);
       try {
-        const response = await axios({
-          method: "post",
-          data: bowlJSON,
-          withCredentials: true,
-          url: url
-        });
+        const response = await axios.post(url, bowlJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -212,12 +205,7 @@ describe('Bowls - API: /api/bowls', () => {
       }
       const bowlJSON = JSON.stringify(invalidBowl);
       try {
-        const response = await axios({
-          method: "post",
-          data: bowlJSON,
-          withCredentials: true,
-          url: url
-        });
+        const response = await axios.post(url, bowlJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -234,12 +222,7 @@ describe('Bowls - API: /api/bowls', () => {
       }
       const bowlJSON = JSON.stringify(invalidBowl);
       try {
-        const response = await axios({
-          method: "post",
-          data: bowlJSON,
-          withCredentials: true,
-          url: url
-        });
+        const response = await axios.post(url, bowlJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -256,12 +239,7 @@ describe('Bowls - API: /api/bowls', () => {
       }
       const bowlJSON = JSON.stringify(invalidBowl);
       try {
-        const response = await axios({
-          method: "post",
-          data: bowlJSON,
-          withCredentials: true,
-          url: url
-        });
+        const response = await axios.post(url, bowlJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -278,12 +256,7 @@ describe('Bowls - API: /api/bowls', () => {
       }
       const bowlJSON = JSON.stringify(invalidBowl);
       try {
-        const response = await axios({
-          method: "post",
-          data: bowlJSON,
-          withCredentials: true,
-          url: url
-        });
+        const response = await axios.post(url, bowlJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -295,23 +268,17 @@ describe('Bowls - API: /api/bowls', () => {
     })
     it('should create a new bowl with sanitized data', async () => {
       const toSanitizeBowl = {
-        ...bowlToPost,
-        id: btDbUuid('bwl'),
+        ...bowlToPost,        
         bowl_name: "  <script>" + bowlToPost.bowl_name + "</script>  ",
         city: "%3Cdiv%3E" + bowlToPost.city + "%3C/div%3E%20%3Cp%3E!%3C/p%3E",
         state: "***" + bowlToPost.state + " **** ",
       }
       const bowlJSON = JSON.stringify(toSanitizeBowl);
-      const response = await axios({
-        method: "post",
-        data: bowlJSON,
-        withCredentials: true,
-        url: url
-      });
+      const response = await axios.post(url, bowlJSON, {withCredentials: true});
       const postedBowl = response.data.bowl;
       createdBowl = true;
       expect(response.status).toBe(201);
-      expect(postedBowl.id).toBe(toSanitizeBowl.id); // use the sanitized id
+      expect(postedBowl.id).toBe(bowlToPost.id); // use the original id
       expect(postedBowl.bowl_name).toBe(bowlToPost.bowl_name);
       expect(postedBowl.city).toBe(bowlToPost.city);
       expect(postedBowl.state).toBe(bowlToPost.state);
@@ -320,10 +287,12 @@ describe('Bowls - API: /api/bowls', () => {
 
   })
 
-  describe('PUT by ID - API: API: /api/bowls/bowl/:id', () => { 
+  describe('PUT by ID - update - API: API: /api/bowls/bowl/:id', () => { 
+
+    let updated = true;
 
     const putBowl = {
-      ...testBowl,
+      ...bowlToPost,      
       bowl_name: "Updated Bowl Name",
       city: "Updated City",
       state: "US",
@@ -343,18 +312,26 @@ describe('Bowls - API: /api/bowls', () => {
       await resetBowl();
     })
 
+    beforeEach(() => {
+      updated = false;
+    })
+
     afterEach(async () => {
-      await resetBowl();
+      if (updated) {
+        await resetBowl();
+      }
+    })
+
+    afterAll(async () => {
+      await deletePostedBowl();
     })
 
     it('should update a bowl by ID', async () => { 
       const bowlJSON = JSON.stringify(putBowl);
-      const response = await axios({
-        method: "put",
-        data: bowlJSON,
+      const response = await axios.put(oneBowlUrl + putBowl.id, bowlJSON, {
         withCredentials: true,
-        url: oneBowlUrl + testBowl.id,
-      })
+      });
+      updated = true;
       const bowl = response.data.bowl;
       expect(response.status).toBe(200);
       expect(bowl.id).toBe(putBowl.id);
@@ -365,13 +342,14 @@ describe('Bowls - API: /api/bowls', () => {
     })
     it('should not update a bowl by ID when ID is invalid', async () => {
       try {
-        const bowlJSON = JSON.stringify(putBowl);
-        const response = await axios({
-          method: "put",
-          data: bowlJSON,
-          withCredentials: true,
-          url: url + "/test",
-        })
+        const invalidBowl = {
+          ...putBowl,
+          id: "invalid",
+        }
+        const bowlJSON = JSON.stringify(invalidBowl);
+        const response = await axios.put(oneBowlUrl + invalidBowl.id, bowlJSON, {
+          withCredentials: true
+        }); 
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -383,13 +361,14 @@ describe('Bowls - API: /api/bowls', () => {
     })
     it('should not update a bowl by ID when ID is valid, but not a bowl ID', async () => { 
       try {
-        const bowlJSON = JSON.stringify(putBowl);
-        const response = await axios({
-          method: "put",
-          data: bowlJSON,
-          withCredentials: true,
-          url: oneBowlUrl + nonBowlId,
-        })
+        const invalidBowl = {
+          ...putBowl,
+          id: userId,
+        }
+        const bowlJSON = JSON.stringify(invalidBowl);
+        const response = await axios.put(oneBowlUrl + invalidBowl.id, bowlJSON, {
+          withCredentials: true
+        }); 
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -399,24 +378,7 @@ describe('Bowls - API: /api/bowls', () => {
         }
       }
     })
-    it('should not update a bowl by ID when ID is not found', async () => { 
-      try {
-        const bowlJSON = JSON.stringify(putBowl);
-        const response = await axios({
-          method: "put",
-          data: bowlJSON,
-          withCredentials: true,
-          url: oneBowlUrl + notFoundId,
-        })
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
+    // no error check for NOT found, because PUT uses upsert, and will create a new bowl
     it('should not update a bowl by ID when bowl name is missing', async () => {
       const invalidBowl = {
         ...putBowl,
@@ -424,12 +386,9 @@ describe('Bowls - API: /api/bowls', () => {
       }
       const bowlJSON = JSON.stringify(invalidBowl);
       try {
-        const response = await axios({
-          method: "put",
-          data: bowlJSON,
-          withCredentials: true,
-          url: oneBowlUrl + testBowl.id,
-        })
+        const response = await axios.put(oneBowlUrl + invalidBowl.id, bowlJSON, {
+          withCredentials: true
+        }); 
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -446,12 +405,9 @@ describe('Bowls - API: /api/bowls', () => {
       }
       const bowlJSON = JSON.stringify(invalidBowl);
       try {
-        const response = await axios({
-          method: "put",
-          data: bowlJSON,
-          withCredentials: true,
-          url: oneBowlUrl + testBowl.id,
-        })
+        const response = await axios.put(oneBowlUrl + invalidBowl.id, bowlJSON, {
+          withCredentials: true
+        }); 
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -468,12 +424,9 @@ describe('Bowls - API: /api/bowls', () => {
       }
       const bowlJSON = JSON.stringify(invalidBowl);
       try {
-        const response = await axios({
-          method: "put",
-          data: bowlJSON,
-          withCredentials: true,
-          url: oneBowlUrl + testBowl.id,
-        })
+        const response = await axios.put(oneBowlUrl + invalidBowl.id, bowlJSON, {
+          withCredentials: true
+        }); 
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -490,12 +443,9 @@ describe('Bowls - API: /api/bowls', () => {
       }
       const bowlJSON = JSON.stringify(invalidBowl);
       try {
-        const response = await axios({
-          method: "put",
-          data: bowlJSON,
-          withCredentials: true,
-          url: oneBowlUrl + testBowl.id,
-        })
+        const response = await axios.put(oneBowlUrl + invalidBowl.id, bowlJSON, {
+          withCredentials: true
+        }); 
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -512,12 +462,9 @@ describe('Bowls - API: /api/bowls', () => {
       }
       const bowlJSON = JSON.stringify(invalidBowl);
       try {
-        const response = await axios({
-          method: "put",
-          data: bowlJSON,
-          withCredentials: true,
-          url: oneBowlUrl + testBowl.id,
-        })
+        const response = await axios.put(oneBowlUrl + invalidBowl.id, bowlJSON, {
+          withCredentials: true
+        }); 
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -536,12 +483,9 @@ describe('Bowls - API: /api/bowls', () => {
         url: "http://example.com/<script>alert('XSS')</script>"
       }
       const bowlJSON = JSON.stringify(sanitizedBowl);
-      const response = await axios({
-        method: "put",
-        data: bowlJSON,
-        withCredentials: true,
-        url: oneBowlUrl + testBowl.id,
-      })
+      const response = await axios.put(oneBowlUrl + sanitizedBowl.id, bowlJSON, {
+        withCredentials: true
+      }); 
       expect(response.status).toBe(200);
       const bowl = response.data.bowl;
       expect(bowl.bowl_name).toBe(sampleBowl.bowl_name);
@@ -549,7 +493,57 @@ describe('Bowls - API: /api/bowls', () => {
       expect(bowl.state).toBe(sampleBowl.state);
       expect(bowl.url).toBe("http://example.com/%3Cscript%3Ealert('XSS')%3C/script%3E");
     })
+  })
 
+  describe('PUT by ID - insert - API: /api/bowls/bowl/:id', () => { 
+
+    let didInsert = false;  
+
+    beforeAll(async () => {
+      await deletePostedBowl();
+    })
+
+    beforeEach(() => {
+      didInsert = false;
+    })
+
+    afterEach(async () => {
+      if (didInsert) {
+        await deletePostedBowl();
+      }
+    })
+
+    afterAll(async () => {
+      await deletePostedBowl();
+    })
+
+    it('should insert a new bowl via PUT API ', async () => {
+      const bowlJSON = JSON.stringify(bowlToPost);
+      // use put command
+      const response = await axios.put(oneBowlUrl + bowlToPost.id, bowlJSON, {
+        withCredentials: true,
+      });
+      expect(response.status).toBe(200);
+      const postedBowl = response.data.bowl;
+      didInsert = true;
+      expect(postedBowl.id).toBe(bowlToPost.id);
+      expect(postedBowl.bowl_name).toBe(bowlToPost.bowl_name);
+      expect(postedBowl.city).toBe(bowlToPost.city);
+      expect(postedBowl.state).toBe(bowlToPost.state);
+      expect(postedBowl.url).toBe(bowlToPost.url);
+
+      const getResponse = await axios.get(oneBowlUrl + bowlToPost.id, {
+        withCredentials: true,
+      });
+      expect(getResponse.status).toBe(200);
+      const gotBowl = getResponse.data.bowl;
+      expect(gotBowl.id).toBe(bowlToPost.id);
+      expect(gotBowl.bowl_name).toBe(bowlToPost.bowl_name);
+      expect(gotBowl.city).toBe(bowlToPost.city);
+      expect(gotBowl.state).toBe(bowlToPost.state);
+      expect(gotBowl.url).toBe(bowlToPost.url);
+    });
+    // all error cases are tested in the 'PUT by ID - update - API: /api/bowls/bowl/:id'
   })
 
   describe('PATCH by ID - API: API: /api/bowls/bowl/:id', () => {     
@@ -562,78 +556,68 @@ describe('Bowls - API: /api/bowls', () => {
       await resetBowl();
     })
 
+    afterAll(async () => {
+      await deletePostedBowl();
+    })
+
     it('should patch a bowl name in a bowl by ID', async () => {
       const bowlJSON = JSON.stringify({
-        ...testBowl,
+        ...bowlToPost,
         bowl_name: "new name",
       })
-      const response = await axios({
-        method: "patch",
-        data: bowlJSON,
+      const response = await axios.patch(oneBowlUrl + bowlToPost.id, bowlJSON, {
         withCredentials: true,
-        url: oneBowlUrl + testBowl.id,
-      })
+      });
       const patchedBowl = response.data.bowl;
       expect(response.status).toBe(200);
       expect(patchedBowl.bowl_name).toBe("new name");
     })
     it('should patch a bowl city in a bowl by ID', async () => {
       const bowlJSON = JSON.stringify({
-        ...testBowl,
+        ...bowlToPost,
         city: "new city",
-      })
-      const response = await axios({
-        method: "patch",
-        data: bowlJSON,
+      });
+      const response = await axios.patch(oneBowlUrl + bowlToPost.id, bowlJSON, {
         withCredentials: true,
-        url: oneBowlUrl + testBowl.id,
-      })
+      });
       const patchedBowl = response.data.bowl;
       expect(response.status).toBe(200);
       expect(patchedBowl.city).toBe("new city");
     })
     it('should patch a bowl state in a bowl by ID', async () => {
       const bowlJSON = JSON.stringify({
-        ...testBowl,
+        ...bowlToPost,
         state: "NS",
-      })
-      const response = await axios({
-        method: "patch",
-        data: bowlJSON,
+      });
+      const response = await axios.patch(oneBowlUrl + bowlToPost.id, bowlJSON, {
         withCredentials: true,
-        url: oneBowlUrl + testBowl.id,
-      })
+      });
       const patchedBowl = response.data.bowl;
       expect(response.status).toBe(200);
       expect(patchedBowl.state).toBe("NS");
     })
     it('should patch a bowl url in a bowl by ID', async () => {
       const bowlJSON = JSON.stringify({
-        ...testBowl,
+        ...bowlToPost,
         url: "http://newurl.com",
-      })
-      const response = await axios({
-        method: "patch",
-        data: bowlJSON,
+      });
+      const response = await axios.patch(oneBowlUrl + bowlToPost.id, bowlJSON, {
         withCredentials: true,
-        url: oneBowlUrl + testBowl.id,
-      })
+      });
       const patchedBowl = response.data.bowl;
       expect(response.status).toBe(200);
       expect(patchedBowl.url).toBe("http://newurl.com");
     })
     it('should not patch a bowl by ID when ID is invalid', async () => {
       try {
-        const bowlJSON = JSON.stringify({
-          ...testBowl,
-          bowl_name: "new name",
-        })
-        const response = await axios({
-          method: "patch",
-          data: bowlJSON,
+        const invalidBowl = {
+          ...bowlToPost,
+          id: "invalid",
+        }
+        const bowlJSON = JSON.stringify(invalidBowl);
+        const response = await axios.patch(oneBowlUrl + invalidBowl.id, bowlJSON, {
           withCredentials: true,
-          url: url + "/test",
-        })
+        });
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -645,16 +629,14 @@ describe('Bowls - API: /api/bowls', () => {
     })
     it('should not patch a bowl by ID when ID is not found', async () => {
       try {
-        const bowlJSON = JSON.stringify({
-          ...testBowl,
-          bowl_name: "new name",
-        })
-        const response = await axios({
-          method: "patch",
-          data: bowlJSON,
+        const invalidBowl = {
+          ...bowlToPost,
+          id: notFoundId,
+        }
+        const bowlJSON = JSON.stringify(invalidBowl);
+        const response = await axios.patch(oneBowlUrl + invalidBowl.id, bowlJSON, {
           withCredentials: true,
-          url: oneBowlUrl + nonBowlId,
-        })
+        });
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -666,16 +648,14 @@ describe('Bowls - API: /api/bowls', () => {
     })
     it('should not patch a bowl by ID when ID is valid, but not a bowl ID', async () => {
       try {
-        const bowlJSON = JSON.stringify({
-          ...testBowl,
-          bowl_name: "new name",
-        })
-        const response = await axios({
-          method: "patch",
-          data: bowlJSON,
+        const invalidBowl = {
+          ...bowlToPost,
+          id: userId,
+        }
+        const bowlJSON = JSON.stringify(invalidBowl);
+        const response = await axios.patch(oneBowlUrl + invalidBowl.id, bowlJSON, {
           withCredentials: true,
-          url: url + '/' + nonBowlId,
-        })
+        });
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -688,15 +668,12 @@ describe('Bowls - API: /api/bowls', () => {
     it('should not patch a bowl by ID when bowl name is missing', async () => {
       try {
         const bowlJSON = JSON.stringify({
-          ...testBowl,
+          ...bowlToPost,
           bowl_name: "",
-        })
-        const response = await axios({
-          method: "patch",
-          data: bowlJSON,
+        });
+        const response = await axios.patch(oneBowlUrl + bowlToPost.id, bowlJSON, {
           withCredentials: true,
-          url: oneBowlUrl + testBowl.id,
-        })
+        });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -709,15 +686,12 @@ describe('Bowls - API: /api/bowls', () => {
     it('should not patch a bowl by ID when city is missing', async () => {
       try {
         const bowlJSON = JSON.stringify({
-          ...testBowl,
+          ...bowlToPost,
           city: "",
-        })
-        const response = await axios({
-          method: "patch",
-          data: bowlJSON,
+        });
+        const response = await axios.patch(oneBowlUrl + bowlToPost.id, bowlJSON, {
           withCredentials: true,
-          url: oneBowlUrl + testBowl.id,
-        })
+        });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -730,15 +704,12 @@ describe('Bowls - API: /api/bowls', () => {
     it('should not patch a bowl by ID when state is missing', async () => {
       try {
         const bowlJSON = JSON.stringify({
-          ...testBowl,
+          ...bowlToPost,
           state: "",
-        })
-        const response = await axios({
-          method: "patch",
-          data: bowlJSON,
+        });
+        const response = await axios.patch(oneBowlUrl + bowlToPost.id, bowlJSON, {
           withCredentials: true,
-          url: oneBowlUrl + testBowl.id,
-        })
+        });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -751,15 +722,12 @@ describe('Bowls - API: /api/bowls', () => {
     it('should not patch a bowl by ID when url is missing', async () => {
       try {
         const bowlJSON = JSON.stringify({
-          ...testBowl,
+          ...bowlToPost,
           url: "",
-        })
-        const response = await axios({
-          method: "patch",
-          data: bowlJSON,
+        });
+        const response = await axios.patch(oneBowlUrl + bowlToPost.id, bowlJSON, {
           withCredentials: true,
-          url: oneBowlUrl + testBowl.id,
-        })
+        });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -772,15 +740,12 @@ describe('Bowls - API: /api/bowls', () => {
     it('should not patch a bowl by ID when bowl name is too long', async () => {
       try {
         const bowlJSON = JSON.stringify({
-          ...testBowl,
+          ...bowlToPost,
           bowl_name: "a".repeat(51),
-        })
-        const response = await axios({
-          method: "patch",
-          data: bowlJSON,
+        });
+        const response = await axios.patch(oneBowlUrl + bowlToPost.id, bowlJSON, {
           withCredentials: true,
-          url: oneBowlUrl + testBowl.id,
-        })
+        });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -793,15 +758,12 @@ describe('Bowls - API: /api/bowls', () => {
     it('should not patch a bowl by ID when city is too long', async () => {
       try {
         const bowlJSON = JSON.stringify({
-          ...testBowl,
+          ...bowlToPost,
           city: "a".repeat(51),
-        })
-        const response = await axios({
-          method: "patch",
-          data: bowlJSON,
+        });
+        const response = await axios.patch(oneBowlUrl + bowlToPost.id, bowlJSON, {
           withCredentials: true,
-          url: oneBowlUrl + testBowl.id,
-        })
+        });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -814,15 +776,12 @@ describe('Bowls - API: /api/bowls', () => {
     it('should not patch a bowl by ID when state is too long', async () => {
       try {
         const bowlJSON = JSON.stringify({
-          ...testBowl,
+          ...bowlToPost,
           state: "a".repeat(51),
-        })
-        const response = await axios({
-          method: "patch",
-          data: bowlJSON,
+        });
+        const response = await axios.patch(oneBowlUrl + bowlToPost.id, bowlJSON, {
           withCredentials: true,
-          url: oneBowlUrl + testBowl.id,
-        })
+        });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -835,15 +794,12 @@ describe('Bowls - API: /api/bowls', () => {
     it('should not patch a bowl by ID when url is too long', async () => {
       try {
         const bowlJSON = JSON.stringify({
-          ...testBowl,
+          ...bowlToPost,
           url: "a".repeat(2500),
-        })
-        const response = await axios({
-          method: "patch",
-          data: bowlJSON,
+        });
+        const response = await axios.patch(oneBowlUrl + bowlToPost.id, bowlJSON, {
           withCredentials: true,
-          url: oneBowlUrl + testBowl.id,
-        })
+        });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -855,60 +811,48 @@ describe('Bowls - API: /api/bowls', () => {
     })
     it('should patch a bowl by ID with sanitized bowl name', async () => {
       const bowlJSON = JSON.stringify({
-        ...testBowl,
+        ...bowlToPost,
         bowl_name: "<script>alert(1)</script>",
-      })
-      const response = await axios({
-        method: "patch",
-        data: bowlJSON,
+      });
+      const response = await axios.patch(oneBowlUrl + bowlToPost.id, bowlJSON, {
         withCredentials: true,
-        url: oneBowlUrl + testBowl.id,
-      })
+      });
       const patchedBowl = response.data.bowl;
       expect(response.status).toBe(200);
       expect(patchedBowl.bowl_name).toBe("alert1");
     })
     it('should patch a bowl by ID with sanitized city', async () => {
       const bowlJSON = JSON.stringify({
-        ...testBowl,
+        ...bowlToPost,
         city: "   test city  ****",
       })
-      const response = await axios({
-        method: "patch",
-        data: bowlJSON,
+      const response = await axios.patch(oneBowlUrl + bowlToPost.id, bowlJSON, {
         withCredentials: true,
-        url: oneBowlUrl + testBowl.id,
-      })
+      });
       const patchedBowl = response.data.bowl;
       expect(response.status).toBe(200);
       expect(patchedBowl.city).toBe("test city");
     })
     it('should patch a bowl by ID with sanitized state', async () => {
       const bowlJSON = JSON.stringify({
-        ...testBowl,
+        ...bowlToPost,
         state: "   TS  ****",
-      })
-      const response = await axios({
-        method: "patch",
-        data: bowlJSON,
+      });
+      const response = await axios.patch(oneBowlUrl + bowlToPost.id, bowlJSON, {
         withCredentials: true,
-        url: oneBowlUrl + testBowl.id,
-      })
+      });
       const patchedBowl = response.data.bowl;
       expect(response.status).toBe(200);
       expect(patchedBowl.state).toBe("TS");
     })
     it('should patch a bowl by ID with sanitized url', async () => {
       const bowlJSON = JSON.stringify({
-        ...testBowl,
+        ...bowlToPost,
         url: "http://example.com/<script>alert('XSS')</script>",
       })
-      const response = await axios({
-        method: "patch",
-        data: bowlJSON,
+      const response = await axios.patch(oneBowlUrl + bowlToPost.id, bowlJSON, {
         withCredentials: true,
-        url: oneBowlUrl + testBowl.id,
-      })
+      });
       const patchedBowl = response.data.bowl;
       expect(response.status).toBe(200);
       expect(patchedBowl.url).toBe("http://example.com/%3Cscript%3Ealert('XSS')%3C/script%3E");
@@ -937,14 +881,8 @@ describe('Bowls - API: /api/bowls', () => {
       if (!didDel) return;
       // if deleted bowl, add bowl back
       try {
-        const bowlJSON = JSON.stringify(toDelBowl);
-        const response = await axios({
-          method: "post",
-          data: bowlJSON,
-          withCredentials: true,
-          url: url,
-        });
-        console.log('response.status: ', response.status)
+        const bowlJSON = JSON.stringify(toDelBowl);        
+        await axios.post(url, bowlJSON, {withCredentials: true});
       } catch (err) {
         if (err instanceof Error) console.log(err.message);
       }
@@ -952,11 +890,9 @@ describe('Bowls - API: /api/bowls', () => {
 
     it('should delete a bowl by ID', async () => {
       try {
-        const response = await axios({
-          method: "delete",
+        const response = await axios.delete(oneBowlUrl + toDelBowl.id, {
           withCredentials: true,
-          url: oneBowlUrl + toDelBowl.id,
-        })
+        });
         expect(response.status).toBe(200);
         didDel = true;
       } catch (err) {
@@ -969,11 +905,9 @@ describe('Bowls - API: /api/bowls', () => {
     })
     it('should not delete a bowl by ID when ID is invalid', async () => {
       try {
-        const response = await axios({
-          method: "delete",
+        const response = await axios.delete(oneBowlUrl + "/invalid", {
           withCredentials: true,
-          url: url + "/invalid",
-        })
+        });
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -985,11 +919,9 @@ describe('Bowls - API: /api/bowls', () => {
     })
     it('should not delete a bowl by ID when ID is valid, but not a bowl ID', async () => {
       try {
-        const response = await axios({
-          method: "delete",
+        const response = await axios.delete(oneBowlUrl + '/' + nonBowlId, {
           withCredentials: true,
-          url: url + '/' + nonBowlId,
-        })
+        });
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1001,11 +933,9 @@ describe('Bowls - API: /api/bowls', () => {
     })
     it('should not delete a bowl by ID when ID is not found', async () => {
       try {
-        const response = await axios({
-          method: "delete",
+        const response = await axios.delete(oneBowlUrl + '/' + notFoundId, {
           withCredentials: true,
-          url: oneBowlUrl + notFoundId,
-        })
+        });
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {

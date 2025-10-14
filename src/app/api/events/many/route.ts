@@ -4,6 +4,7 @@ import { ErrorCode } from "@/lib/validation";
 import { eventDataType, eventType } from "@/lib/types/types";
 import { validateEvents } from "../validate";
 import { getErrorStatus } from "../../errCodes";
+import { eventDataForPrisma } from "../dataForPrisma";
 
 // routes /api/events/many
 
@@ -11,41 +12,24 @@ export async function POST(request: NextRequest) {
 
   try { 
     const events: eventType[] = await request.json();
-
+    if (Array.isArray(events) && events.length === 0) {
+      return NextResponse.json({ count: 0 }, { status: 200 });
+    }
     // sanitize and validate events
-    const validEvents = await validateEvents(events); // need to use await! or else returns a promise
+    const validEvents = await validateEvents(events); // need to use await! or else returns a promise    
     if (validEvents.errorCode !== ErrorCode.None) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
     // convert valid events into eventData to post
-    const eventsToPost: eventDataType[] = []
-    validEvents.events.forEach(event => {
-      eventsToPost.push({
-        id: event.id,
-        tmnt_id: event.tmnt_id,        
-        event_name: event.event_name,
-        team_size: event.team_size,
-        games: event.games,
-        added_money: event.added_money,
-        entry_fee: event.entry_fee,
-        lineage: event.lineage,
-        prize_fund: event.prize_fund,
-        expenses: event.expenses,
-        other: event.other,        
-        sort_order: event.sort_order,
-      })
-    });      
+    const eventsToPost: eventDataType[] = validEvents.events
+      .map(event => eventDataForPrisma(event))
+      .filter((data): data is eventDataType => data !== null);
 
-    const prismaEvents = await prisma.event.createManyAndReturn({
-      data: [...eventsToPost]
+    const result = await prisma.event.createMany({
+      data: eventsToPost,
+      skipDuplicates: false, // or true if you want to silently skip existing rows
     })
-    const manyEvents = prismaEvents.map((event) => {
-      return {
-        ...event,
-        lpox: event.entry_fee,
-      }
-    })
-    return NextResponse.json({events: manyEvents}, { status: 201 });
+    return NextResponse.json({ count: result.count }, { status: 201 });
   } catch (err: any) {
     const errStatus = getErrorStatus(err.code);
     return NextResponse.json(

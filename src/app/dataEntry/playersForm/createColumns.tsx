@@ -13,6 +13,7 @@ import { validAverage } from "@/app/api/players/validate";
 import { sanitize } from "@/lib/sanitize";
 import { validPosChars } from "./rowInfo";
 import { isTouchDevice } from "@/lib/mobileDevices/mobileDevices";
+import styles from './grid.module.css';
 
 export const brktsColNameEnd = "_brkts";
 export const feeColNameEnd = "_fee";
@@ -68,7 +69,8 @@ export const isValidAverage = (value: number) => {
  */
 export const applyAverageCellColor = (value: number) => {
   if (!value) return "";
-  if (!isValidAverage(value)) return "cellError";
+  // if (!isValidAverage(value)) return "cellError";
+  if (!isValidAverage(value)) return styles.cellError;
   return "";
 };
 
@@ -93,6 +95,35 @@ export const getPosition = (value: string) => {
 export const formatIntZeroAsBlank = (value: number) => {
   if (!value || value === 0) return "";
   return value.toString();
+};
+
+/**
+ * Ensures a numeric value, rounded to 2 decimal places.
+ * Returns 0 if value is NaN or invalid.
+ * 
+ * @param {any} value - params object
+ * @returns {number} - rounded value
+ */
+export const valueGetterForMoney = (value: any): number => {  
+  const num = Number(value);
+  if (isNaN(num)) return 0;
+  return Math.round((num + Number.EPSILON) * 100) / 100;
+};
+
+/**
+ * Parses user input (e.g. "$12.34", "15", etc.) into a float.
+ * Returns 0 if input is invalid.
+ * 
+ * @param {any} value - value to parse
+ * @returns {number} - parsed value
+ */
+export const valueParserForMoney = (value: any): number => {
+  if (typeof value === "string") {
+    const parsed = parseFloat(value.replace("$", "").trim());
+    return isNaN(parsed) ? 0 : parsed;
+  }
+  if (typeof value === "number") return value;
+  return 0;
 };
 
 /**
@@ -161,7 +192,8 @@ export const createPlayerEntryColumns = (
       (typeof value === "string" && (value as string) === "")
     )
       return "";
-    if (typeof value !== "number" || !isValidLane(value)) return "cellError";
+    // if (typeof value !== "number" || !isValidLane(value)) return "cellError";
+    if (typeof value !== "number" || !isValidLane(value)) return styles.cellError;
     return "";
   };
   const isValidPosition = (value: string): boolean => { 
@@ -174,7 +206,8 @@ export const createPlayerEntryColumns = (
       (typeof value === "string" && (value as string) === "")
     )
       return "";
-    if (typeof value !== "string" || !isValidPosition(value)) return "cellError";
+    // if (typeof value !== "string" || !isValidPosition(value)) return "cellError";
+    if (typeof value !== "string" || !isValidPosition(value)) return styles.cellError;
     return "";
   }
   const setLaneAndLanePos = (value: number, row: GridRowModel) => {
@@ -235,8 +268,8 @@ export const createPlayerEntryColumns = (
     {
       field: "first_name",
       headerName: "First Name",
-      description: "First Name",
-      headerClassName: "playersHeader",
+      description: "First Name",      
+      headerClassName: styles.playersHeader,
       editable: true,
       width: nameWidth,
       valueSetter: firstNameSettter
@@ -244,8 +277,8 @@ export const createPlayerEntryColumns = (
     {
       field: "last_name",
       headerName: "Last Name",
-      description: "Last Name",
-      headerClassName: "playersHeader",
+      description: "Last Name",      
+      headerClassName: styles.playersHeader,
       editable: true,
       width: nameWidth,
       valueSetter: lastNameSettter
@@ -254,7 +287,7 @@ export const createPlayerEntryColumns = (
       field: "average",
       headerName: "Average",
       description: "Average",
-      headerClassName: "playersHeader",
+      headerClassName: styles.playersHeader,
       headerAlign: "center",
       editable: true,
       width: isTouch ? 130 : 80,
@@ -277,7 +310,7 @@ export const createPlayerEntryColumns = (
       field: "lane",
       headerName: "Lane #",
       description: "Lane #",
-      headerClassName: "playersHeader",
+      headerClassName: styles.playersHeader,
       headerAlign: "center",
       editable: true,
       width: isTouch ? 120 : 70,
@@ -300,7 +333,7 @@ export const createPlayerEntryColumns = (
       field: "position",
       headerName: "Position",
       description: "Position",
-      headerClassName: "playersHeader",
+      headerClassName: styles.playersHeader,
       headerAlign: "center",
       editable: true,
       width: isTouch ? 130 : 80,
@@ -313,7 +346,7 @@ export const createPlayerEntryColumns = (
       field: "lanePos",
       headerName: "Lane-Pos",
       description: "Lane Position",
-      headerClassName: "playersHeader",
+      headerClassName: styles.playersHeader,
       headerAlign: "center",
       width: isTouch ? 140 : 80,
       align: "center",
@@ -372,7 +405,8 @@ export const createDivEntryColumns = (divs: divType[]): GridColDef[] => {
       (typeof value === "number" && isNaN(value))
     )
       return "";
-    if (typeof value !== "number" || !isValidDivFee(value)) return "cellError";
+    // if (typeof value !== "number" || !isValidDivFee(value)) return "cellError";
+    if (typeof value !== "number" || !isValidDivFee(value)) return styles.cellError;
     return "";
   };
   const formatHdcp = (value: number, row: GridRowModel, colDef: GridColDef) => {
@@ -387,8 +421,8 @@ export const createDivEntryColumns = (divs: divType[]): GridColDef[] => {
     const feeColumn: GridColDef = {
       field: entryFeeColName(div.id),
       headerName: div.div_name,
-      description: div.div_name,
-      headerClassName: "divsHeader",
+      description: div.div_name,      
+      headerClassName: styles.divsHeader,
       headerAlign: "right",
       type: "number",
       width: feeColWidth,
@@ -404,8 +438,8 @@ export const createDivEntryColumns = (divs: divType[]): GridColDef[] => {
         />
       ),
       cellClassName: (params: any) => applyDivFeeCellColor(params.value as number),
-      valueGetter: (value: any) => Math.round((Number(value) + Number.EPSILON) * 100) / 100,
-      valueParser: (value: any) => value.replace("$", ""),      
+      valueGetter: valueGetterForMoney,
+      valueParser: valueParserForMoney,
       valueFormatter: formatFee,
     };
     divColumns.push(feeColumn);    
@@ -413,7 +447,7 @@ export const createDivEntryColumns = (divs: divType[]): GridColDef[] => {
       field: divEntryHdcpColName(div.id),
       headerName: "HDCP",
       description: "HDCP",
-      headerClassName: "divsHeader",
+      headerClassName: styles.divsHeader,
       headerAlign: "center",
       type: "number",
       width: isTouch ? 120 : 80,
@@ -434,7 +468,7 @@ export const createDivEntryColumns = (divs: divType[]): GridColDef[] => {
  * @returns {boolean} - true if column name is a pot fee column
  */
 export const isPotFeeColumnName = (colName: string): boolean => { 
-  if (!colName) return false;
+  if (!colName || typeof colName !== "string") return false;
   return (colName.startsWith('pot')
     && colName.endsWith(feeColNameEnd)) 
     ? true : false;  
@@ -469,7 +503,8 @@ export const isValidFee = (value: number, fee: number) => {
 
 const applyPotOrElimFeeCellColor = (value: number, fee: number) => {
   if (!value) return "";
-  if (!isValidFee(value, fee)) return "cellError";
+  // if (!isValidFee(value, fee)) return "cellError";
+  if (!isValidFee(value, fee)) return styles.cellError;
   return "";
 };
 
@@ -488,7 +523,7 @@ export const createPotEntryColumns = (pots: potType[], divs: divType[]): GridCol
       field: entryFeeColName(pot.id),
       headerName: potHeader,
       description: divName + ': ' + pot.pot_type,
-      headerClassName: "potsHeader",
+      headerClassName: styles.potsHeader,
       headerAlign: "right",
       type: "number",
       width: potColWidth,
@@ -505,9 +540,8 @@ export const createPotEntryColumns = (pots: potType[], divs: divType[]): GridCol
       ),
       cellClassName: (params: any) =>
         applyPotOrElimFeeCellColor(params.value as number, Number(pot.fee)),
-      valueGetter: (value: any) =>
-        Math.round((Number(value) + Number.EPSILON) * 100) / 100,
-      valueParser: (value: any) => value.replace("$", ""),
+      valueGetter: valueGetterForMoney,
+      valueParser: valueParserForMoney,
       valueFormatter: formatFee,
     };
     potColumns.push(feeColumn);
@@ -526,16 +560,29 @@ export const entryNumRefundsColName = (id: string) => id + refundsColNameEnd;
  * @returns {boolean} - true if column name is a number of brackets column
  */
 export const isBrktsColumnName = (colName: string): boolean => { 
-  if (!colName) return false;
+  if (!colName || typeof colName !== "string") return false;
   return (colName.startsWith('brk')
     && colName.endsWith(brktsColNameEnd)) 
     ? true : false;  
 }
 
+/**
+ * gets the bracket id from a # of brackets entered column name
+ * 
+ * @param {string} colName - number brackets entered column name 
+ * @returns {string} - bracket id or ""
+ */
+export const getBrktIdFromColName = (colName: string): string => {
+  if (!isBrktsColumnName(colName)) return "";       
+  const sliceLength = brktsColNameEnd.length * -1;  // *-1 because remove '_brkts'
+  return colName.slice(0, sliceLength);             // remove '_brkts'  
+}
+
 const validBrkts = (value: number) => value >= 0 && value <= maxBrackets;
 const applyNumBrktsCellColor = (value: number) => {
   if (!value) return "";
-  if (!validBrkts(value)) return "cellError";
+  // if (!validBrkts(value)) return "cellError";
+  if (!validBrkts(value)) return styles.cellError;
   return "";
 };
 
@@ -559,8 +606,7 @@ export const createBrktEntryColumns = (
   ) => {
     const numBrkts = value ? Math.trunc(Number(value)) : 0;
     if (!validBrkts(numBrkts)) return row;
-    const sliceLength = brktsColNameEnd.length * -1;   // *-1 because remove '_brkts'
-    const brktId = column.field.slice(0, sliceLength); // remove '_brkts'
+    const brktId = getBrktIdFromColName(column.field);
     const feeName = entryFeeColName(brktId);           // get fee per brkt field name
     if (isNaN(numBrkts) || isNaN(feePerBrkt)) return row;
     const fee = numBrkts * feePerBrkt;
@@ -583,8 +629,8 @@ export const createBrktEntryColumns = (
       field: entryNumBrktsColName(brkt.id),
       headerName: getBrktOrElimName(brkt, divs),
       description: getBrktOrElimName(brkt, divs),
-      headerAlign: "center",
-      headerClassName: "brktsHeader",
+      headerAlign: "center",      
+      headerClassName: styles.brktsHeader,
       width: isTouch ? 155 : 120,
       editable: true,
       align: "center",
@@ -609,7 +655,7 @@ export const createBrktEntryColumns = (
       headerName: "Fee",
       description: "Fee",
       headerAlign: "right",
-      headerClassName: "brktsHeader",
+      headerClassName: styles.brktsHeader,
       width: feeColWidth,
       align: "right",
       valueFormatter: formatFee,
@@ -628,7 +674,7 @@ export const createBrktEntryColumns = (
  * @returns {boolean} - true if column name is an eliminator fee column
  */
 export const isElimFeeColumnName = (colName: string): boolean => { 
-  if (!colName) return false;
+  if (!colName || typeof colName !== "string") return false;
   return (colName.startsWith('elm')
     && colName.endsWith(feeColNameEnd)) 
     ? true : false;  
@@ -663,8 +709,8 @@ export const createElimEntryColumns = (
     const feeColumn: GridColDef = {
       field: entryFeeColName(elim.id),
       headerName: getBrktOrElimName(elim, divs),
-      description: getBrktOrElimName(elim, divs),
-      headerClassName: "elimsHeader",
+      description: getBrktOrElimName(elim, divs),      
+      headerClassName: styles.elimsHeader,
       headerAlign: "center",
       type: "number",
       width: isTouch ? 160 : feeColWidth,
@@ -681,9 +727,8 @@ export const createElimEntryColumns = (
       ),
       cellClassName: (params: any) =>
         applyPotOrElimFeeCellColor(params.value as number, Number(elim.fee)),
-      valueGetter: (value: any) =>
-        Math.round((Number(value) + Number.EPSILON) * 100) / 100,
-      valueParser: (value: any) => value.replace("$", ""),
+      valueGetter: valueGetterForMoney,
+      valueParser: valueParserForMoney,
       valueFormatter: formatFee,
     };
     elimColumns.push(feeColumn);
@@ -701,8 +746,8 @@ export const feeTotalColumn = (): GridColDef[] => {
     {
       field: "feeTotal", // don't end with "fee"
       headerName: "Total Fee",
-      description: "Total Fee",
-      headerClassName: "totalHeader",
+      description: "Total Fee",      
+      headerClassName: styles.totalHeader,
       headerAlign: "center",
       width: isTouch ? 160 : feeColWidth,
       align: "right",

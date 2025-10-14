@@ -3,7 +3,7 @@ import { baseBrktsApi } from "@/lib/db/apiPaths";
 import { testBaseBrktsApi } from "../../../testApi";
 import { brktType } from "@/lib/types/types";
 import { initBrkt } from "@/lib/db/initVals";
-import { deleteAllBrktsForDiv, deleteAllBrktsForSquad, postManyBrkts } from "@/lib/db/brkts/dbBrkts";
+import { deleteAllBrktsForSquad, deleteAllBrktsForTmnt, postManyBrkts } from "@/lib/db/brkts/dbBrkts";
 import { mockBrktsToPost, mockDivsToPost, mockSquadsToPost, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { deleteAllSquadsForTmnt, postManySquads } from "@/lib/db/squads/dbSquads";
 import { deleteAllDivsForTmnt, postManyDivs } from "@/lib/db/divs/dbDivs";
@@ -2185,8 +2185,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     const toDelBrkt = {
       ...initBrkt,
       id: "brk_400737cab3584ab7a59b7a4411da4474",
-      squad_id: "sqd_1a6c885ee19a49489960389193e8f819",
-      div_id: "div_1f42042f9ef24029a0a2d48cc276a087",
+      squad_id: "sqd_853edbcc963745b091829e3eadfcf064",
+      div_id: "div_621bfee84e774d5a9dc2e9b6bdc5d31c",
       start: 2,
       games: 3,
       players: 8,
@@ -2213,27 +2213,21 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
           data: brktJSON,
           withCredentials: true,
           url: url
-        })        
+        })
       } catch (err) {
         if (err instanceof Error) console.log(err.message);
       }
     })
+    
     it('should delete a brkt by ID', async () => {
-      try {
-        const delResponse = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: oneBrktUrl + toDelBrkt.id,
-        })  
-        didDel = true;
-        expect(delResponse.status).toBe(200);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(200);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
+      const response = await axios({
+        method: "delete",
+        withCredentials: true,
+        url: oneBrktUrl + toDelBrkt.id,
+      })  
+      didDel = true;
+      expect(response.status).toBe(200);
+      expect(response.data.deleted.id).toBe(toDelBrkt.id)
     })
     it('should NOT delete a brkt by ID when ID is invalid', async () => { 
       try {
@@ -2283,30 +2277,31 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
         }
       }
     })    
-    // it('should NOT delete a brkt by ID when brkt has child rows', async () => { 
-    //   try {
-    //     const delResponse = await axios({
-    //       method: "delete",
-    //       withCredentials: true,
-    //       url: oneBrktUrl + testBrkt.id
-    //     })  
-    //     expect(delResponse.status).toBe(409);
-    //   } catch (err) {
-    //     if (err instanceof AxiosError) {
-    //       expect(err.response?.status).toBe(409);
-    //     } else {
-    //       expect(true).toBeFalsy();
-    //     }
-    //   }
-    // })
   })
 
   describe('DELETE all brkts for a squad API: /api/brkts/squad/:squadId', () => { 
     
     let didDel = false
 
+    const squadBrktsToDel: brktType[] = [
+      {
+        ...mockBrktsToPost[0],
+      }, 
+      {
+        ...mockBrktsToPost[1]
+      }
+    ]
+
     beforeAll(async () => {
-      await postManyBrkts(toDelDivSquadBrkts);
+      // clean up any left over data      
+      await deleteAllBrktsForTmnt(tmntToDelId);      
+      await deleteAllSquadsForTmnt(tmntToDelId)
+      await deleteAllDivsForTmnt(tmntToDelId)
+
+      // setup data 
+      await postManyDivs(mockDivsToPost)
+      await postManySquads(mockSquadsToPost)
+      await postManyBrkts(squadBrktsToDel);
     })
 
     beforeEach(() => {
@@ -2314,24 +2309,26 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     })
 
     afterEach(async () => {
-      if (!didDel) return;
-      await postManyBrkts(toDelDivSquadBrkts);
+      if (!didDel) return;      
+      await postManyBrkts(squadBrktsToDel);
     })
 
     afterAll(async () => {      
-      await deleteAllBrktsForDiv(toDelDivSquadBrkts[0].div_id);
+      await deleteAllBrktsForTmnt(tmntToDelId);      
+      await deleteAllSquadsForTmnt(tmntToDelId)
+      await deleteAllDivsForTmnt(tmntToDelId)
     })
 
     it('should delete all brkts for a squad', async () => {
       const response = await axios({
         method: "delete",
         withCredentials: true,
-        url: squadUrl + toDelDivSquadBrkts[0].squad_id
+        url: squadUrl + mockBrktsToPost[0].squad_id,
       })
       expect(response.status).toBe(200);
       didDel = true;
       const count = response.data.deleted.count;
-      expect(count).toBe(toDelDivSquadBrkts.length);
+      expect(count).toBe(2);
     })
     it('should return 404 when squad id is invalid', async () => { 
       try {
@@ -2427,8 +2424,7 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
 
     beforeAll(async () => {
       // clean up any left over data      
-      await deleteAllBrktsForSquad(mockSquadsToPost[0].id);      
-      await deleteAllBrktsForSquad(mockSquadsToPost[1].id);      
+      await deleteAllBrktsForTmnt(tmntToDelId);      
       await deleteAllSquadsForTmnt(tmntToDelId)
       await deleteAllDivsForTmnt(tmntToDelId)
 
@@ -2448,8 +2444,7 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     })
 
     afterAll(async () => {      
-      await deleteAllBrktsForSquad(mockSquadsToPost[0].id);      
-      await deleteAllBrktsForSquad(mockSquadsToPost[1].id);      
+      await deleteAllBrktsForTmnt(tmntToDelId);          
       await deleteAllSquadsForTmnt(tmntToDelId)
       await deleteAllDivsForTmnt(tmntToDelId)
     })

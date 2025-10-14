@@ -1,9 +1,8 @@
 import { FC, useState, useEffect, ChangeEvent } from "react";
 import { laneType, pairsOfLanesType, tmntActions } from "@/lib/types/types"
 import { isOdd } from "@/lib/validation";
-
-import "./lanesList.css";
 import { btDbUuid } from "@/lib/uuid";
+import styles from "./lanesList.module.css";
 
 interface LanesListProps {
   squadId: string,
@@ -117,13 +116,12 @@ const LanesList: FC<LanesListProps> = (props) => {
           return pair
         }
       })        
-      tempPairs.pop();                // always remove the last one
+      tempPairs.pop();   // always remove the last one
       // while there is a pair that at the end of the array that is not in use
       while (tempPairs.length > 0 && !tempPairs[tempPairs.length - 1].in_use) {
         tempPairs.pop();    
       }
-      setPairs(tempPairs);
-      // setLanes(pairsToLanes(tempPairs));
+      setPairs(tempPairs);      
       setLanes(getLanesFromPairs(tempPairs, squadId));
     } else {
       const newPairs = pairs.map((pair) => {
@@ -145,25 +143,18 @@ const LanesList: FC<LanesListProps> = (props) => {
         in_use: true,
       }
       newPairs.push(newPair);
-      setPairs(newPairs);
-      // setLanes(pairsToLanes(newPairs));
+      setPairs(newPairs);      
       setLanes(getLanesFromPairs(newPairs, squadId));
     }
   }
 
   return (
-    <>
-      {/* style width is in pixels */}
-      <div
-        className="d-flex justify-content-start lanes_table"
-        style={{ width: 175 }}
-      >
-        <table className="table table-striped table-hover w-100">
-          <thead>
-            <tr className="lanes-header-row">
-              <th scope="col">
-                Lanes
-              </th>
+    <>      
+      <div className={styles.lanesTable}>
+        <table className="table table-striped table-hover">
+          <thead className={styles.lanesHeaderCell}>
+            <tr>            
+              <th scope="col">Lanes</th>
               <th scope="col" className="text-center">
                 In Use
               </th>

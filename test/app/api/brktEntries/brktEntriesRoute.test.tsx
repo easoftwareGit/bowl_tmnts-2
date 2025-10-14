@@ -4,7 +4,7 @@ import { testBaseBrktEntriesApi } from "../../../testApi";
 import { initBrktEntry } from "@/lib/db/initVals";
 import { brktEntryType } from "@/lib/types/types";
 import { mockBrktEntriesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllBrktEntriesForTmnt, postManyBrktEntries } from "@/lib/db/brktEntries/dbBrktEntries";
+import { deleteAllBrktEntriesForTmnt, getAllBrktEntriesForSquad, postManyBrktEntries } from "@/lib/db/brktEntries/dbBrktEntries";
 import { cloneDeep } from "lodash";
 import { compareAsc } from "date-fns";
 import { maxDate, minDate } from "@/lib/validation";
@@ -986,6 +986,7 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
   describe('POST many brktEntries for one tmnt API: /api/brktEntries/many', () => { 
 
     const brktIdWithRefunds = 'brk_aa3da3a411b346879307831b6fdadd5f';
+    const brktSquadId = 'sqd_1a6c885ee19a49489960389193e8f819';
 
     let createdBrktEntries = false;    
 
@@ -1011,9 +1012,18 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         withCredentials: true,
         url: manyUrl,        
       })
-      const postedBrktEntries = response.data.brktEntries;
+
+      const count = response.data.count;
       expect(response.status).toBe(201);
       createdBrktEntries = true;
+      expect(count).toBe(mockBrktEntriesToPost.length);
+
+      // const postedBrktEntries = response.data.brktEntries;
+      const postedBrktEntries = await getAllBrktEntriesForSquad(brktSquadId);
+      if (!postedBrktEntries) {
+        expect(true).toBeFalsy();
+        return;
+      }
       expect(postedBrktEntries).not.toBeNull();
       expect(postedBrktEntries.length).toBe(mockBrktEntriesToPost.length);
       for (let i = 0; i < mockBrktEntriesToPost.length; i++) {
@@ -1024,12 +1034,31 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         if (postedBrktEntries[i].brkt_id === brktIdWithRefunds) {
           expect(postedBrktEntries[i].num_refunds).toBe(mockBrktEntriesToPost[i].num_refunds);
         } else { 
-          expect(postedBrktEntries[i].num_refunds).toBeUndefined();
+          expect(postedBrktEntries[i].num_refunds).toBeNull();
         }
         // expect(postedBrktEntries[i].fee).toBe(mockBrktEntriesToPost[i].fee);        
         expect(postedBrktEntries[i].time_stamp).not.toBeNull();
         expect(compareAsc(postedBrktEntries[i].time_stamp, minDate)).toBe(1);
         expect(compareAsc(postedBrktEntries[i].time_stamp, maxDate)).toBe(-1);
+      }
+    })
+    it('should 0 count and status 200 with passed empty bracket entries', async () => { 
+      const brktEntryJSON = JSON.stringify([]);      
+      try {
+        const response = await axios({
+          method: "post",
+          data: brktEntryJSON,
+          withCredentials: true,
+          url: manyUrl,        
+        })        
+        expect(response.status).toBe(200);        
+        expect(response.data.count).toBe(0);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
       }
     })
     it('should NOT create many brktEntries with sanitzied num_brackets data, num_brackets sanitized to 0', async () => { 
@@ -2157,11 +2186,9 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         withCredentials: true,
         url: manyUrl,
       })
-      const postedBrktEntries = response.data.brktEntries;
       expect(response.status).toBe(201);
       createdBrktEntries = true;
-      expect(postedBrktEntries).not.toBeNull();
-      expect(postedBrktEntries.length).toBe(testBrktEntries.length);
+      expect(response.data.count).toBe(testBrktEntries.length);      
       
       // change number of brackets, fee, add eType = 'u'
       const brktEntriesToUpdate = [
@@ -2206,11 +2233,9 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         withCredentials: true,
         url: manyUrl,
       })
-      const postedBrktEntries = response.data.brktEntries;
       expect(response.status).toBe(201);
       createdBrktEntries = true;
-      expect(postedBrktEntries).not.toBeNull();
-      expect(postedBrktEntries.length).toBe(testBrktEntries.length);
+      expect(response.data.count).toBe(testBrktEntries.length);      
       
       // change number of brackets, fee, add eType = 'u'
       const brktEntriesToUpdate = [
@@ -2254,11 +2279,9 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         withCredentials: true,
         url: manyUrl,
       })
-      const postedBrktEntries = response.data.brktEntries;
       expect(response.status).toBe(201);
       createdBrktEntries = true;
-      expect(postedBrktEntries).not.toBeNull();
-      expect(postedBrktEntries.length).toBe(testBrktEntries.length);
+      expect(response.data.count).toBe(testBrktEntries.length);      
       
       // change number of brackets, fee, add eType = 'u'
       const brktEntriesToUpdate = [
@@ -2317,11 +2340,9 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         withCredentials: true,
         url: manyUrl,
       })
-      const postedBrktEntries = response.data.brktEntries;
       expect(response.status).toBe(201);
       createdBrktEntries = true;
-      expect(postedBrktEntries).not.toBeNull();
-      expect(postedBrktEntries.length).toBe(testBrktEntries.length);
+      expect(response.data.count).toBe(testBrktEntries.length);      
       
       // change number of brackets, fee, add eType = 'u'
       // change number of refunds, 1st to undefined, 2nd to 0
@@ -2367,11 +2388,9 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         withCredentials: true,
         url: manyUrl,
       })
-      const postedBrktEntries = response.data.brktEntries;
       expect(response.status).toBe(201);
       createdBrktEntries = true;
-      expect(postedBrktEntries).not.toBeNull();
-      expect(postedBrktEntries.length).toBe(testBrktEntries.length);
+      expect(response.data.count).toBe(testBrktEntries.length);      
       
       // change number of brackets, fee, add eType = 'u'
       // use the same num_refunds as in testBrktEntries
@@ -2522,11 +2541,9 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         withCredentials: true,
         url: manyUrl,
       })
-      const postedBrktEntries = response.data.brktEntries;
       expect(response.status).toBe(201);
       createdBrktEntries = true;
-      expect(postedBrktEntries).not.toBeNull();
-      expect(postedBrktEntries.length).toBe(testBrktEntries.length);
+      expect(response.data.count).toBe(testBrktEntries.length);      
       
       // add eType = 'd'
       const brktEntriesToUpdate = [
@@ -2565,11 +2582,9 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         withCredentials: true,
         url: manyUrl,
       })
-      const postedBrktEntries = response.data.brktEntries;
       expect(response.status).toBe(201);
       createdBrktEntries = true;
-      expect(postedBrktEntries).not.toBeNull();
-      expect(postedBrktEntries.length).toBe(testBrktEntries.length);
+      expect(response.data.count).toBe(testBrktEntries.length);      
       
       // add eType = 'd'
       const brktEntriesToUpdate = [
@@ -2610,11 +2625,9 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         withCredentials: true,
         url: manyUrl,
       })
-      const postedBrktEntries = response.data.brktEntries;
       expect(response.status).toBe(201);
       createdBrktEntries = true;
-      expect(postedBrktEntries).not.toBeNull();
-      expect(postedBrktEntries.length).toBe(testBrktEntries.length);
+      expect(response.data.count).toBe(testBrktEntries.length);      
       
       // add eType = 'd'
       const brktEntriesToUpdate = [
@@ -2677,11 +2690,9 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         withCredentials: true,
         url: manyUrl,
       })
-      const postedBrktEntries = response.data.brktEntries;
       expect(response.status).toBe(201);
       createdBrktEntries = true;
-      expect(postedBrktEntries).not.toBeNull();
-      expect(postedBrktEntries.length).toBe(multiBrktEntriesTest.length);
+      expect(response.data.count).toBe(multiBrktEntriesTest.length);      
 
       // set edits, set eType
       const brktEntriesToUpdate = [
@@ -2756,11 +2767,9 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         withCredentials: true,
         url: manyUrl,
       })
-      const postedBrktEntries = response.data.brktEntries;
       expect(response.status).toBe(201);
       createdBrktEntries = true;
-      expect(postedBrktEntries).not.toBeNull();
-      expect(postedBrktEntries.length).toBe(multiBrktEntriesTest.length);
+      expect(response.data.count).toBe(multiBrktEntriesTest.length);      
 
       // set edits, set eType
       const brktEntriesToUpdate = [
@@ -2837,11 +2846,9 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         withCredentials: true,
         url: manyUrl,
       })
-      const postedBrktEntries = response.data.brktEntries;
       expect(response.status).toBe(201);
       createdBrktEntries = true;
-      expect(postedBrktEntries).not.toBeNull();
-      expect(postedBrktEntries.length).toBe(multiBrktEntriesTest.length);
+      expect(response.data.count).toBe(multiBrktEntriesTest.length);      
 
       // set edits, set eType
       const brktEntriesToUpdate = [
@@ -2913,11 +2920,9 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         withCredentials: true,
         url: manyUrl,
       })
-      const postedBrktEntries = response.data.brktEntries;
       expect(response.status).toBe(201);
       createdBrktEntries = true;
-      expect(postedBrktEntries).not.toBeNull();
-      expect(postedBrktEntries.length).toBe(multiBrktEntriesTest.length);
+      expect(response.data.count).toBe(multiBrktEntriesTest.length);      
 
       // set edits, set eType
       const brktEntriesToUpdate = [

@@ -12,6 +12,7 @@ const tooPastDateStr = '1899-12-31';
 const tooFutureDateStr = '2201-02-01';
 
 const tmntId = 'tmt_fd99387c33d9c78aba290286576ddce5';
+const userId = "usr_5bcefb5d314fff1ff5da6521a2fa7bde";
 const nonTmntId = 'evt_5bcefb5d314fff1ff5da6521a2fa7bde';
 
 describe('tmnt table data validation', () => { 

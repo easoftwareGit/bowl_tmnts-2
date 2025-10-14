@@ -1,11 +1,11 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { initPotEntry } from "@/lib/db/initVals";
-import { potEntryDataType, potEntryType } from "@/lib/types/types";
+import { potEntryType } from "@/lib/types/types";
 import { sanitizePotEntry, validatePotEntry } from "./validate";
-import { ErrorCode, maxMoney } from "@/lib/validation";
-import { validMoney } from "@/lib/currency/validate";
+import { ErrorCode } from "@/lib/validation";
 import { getErrorStatus } from "../errCodes";
+import { potEntryDataForPrisma } from "./dataForPrisma";
 
 // routes /api/potEntries
 
@@ -53,11 +53,9 @@ export const POST = async (request: NextRequest) => {
       );
     }
 
-    const potEntryData: potEntryDataType = {
-      id: toPost.id,      
-      pot_id: toPost.pot_id,
-      player_id: toPost.player_id,
-      fee: toPost.fee
+    const potEntryData = potEntryDataForPrisma(toPost);
+    if (!potEntryData) {
+      return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
     const potEntry = await prisma.pot_Entry.create({
       data: potEntryData

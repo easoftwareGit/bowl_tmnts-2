@@ -1,11 +1,20 @@
 import { sanitize } from "@/lib/sanitize";
 import { eventType, divType, squadType, AcdnErrType, elimType, brktType } from "@/lib/types/types";
-export const objErrClassName = 'objError';
-export const acdnErrClassName = 'acdnError';
+import styles from "./tmntForm.module.css";
+export const objErrClassName = styles.objError;
+export const acdnErrClassName = styles.acdnError;
 
+/**
+ * formats an error message
+ * 
+ * @param {string} objName - object name
+ * @param {string} objErrMsg - error message
+ * @returns {string} - formatted error message 
+ */
 export const getAcdnErrMsg = (objName: string, objErrMsg: string): string => {
   return `: Error in ${objName} - ${objErrMsg}`
 }
+
 /**
  * checks if the event_name property of an event has been used in another event
  * 

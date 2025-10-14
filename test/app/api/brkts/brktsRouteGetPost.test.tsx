@@ -7,7 +7,7 @@ import { btDbUuid } from "@/lib/uuid";
 import { mockBrktsToPost, tmntToDelId, mockSquadsToPost, mockDivsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { deleteAllSquadsForTmnt, postManySquads } from "@/lib/db/squads/dbSquads";
 import { deleteAllDivsForTmnt, postManyDivs } from "@/lib/db/divs/dbDivs";
-import { deleteAllBrktsForTmnt } from "@/lib/db/brkts/dbBrkts";
+import { deleteAllBrktsForTmnt, getAllBrktsForTmnt } from "@/lib/db/brkts/dbBrkts";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -1551,8 +1551,15 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         url: manyUrl        
       })
       expect(response.status).toBe(201);
-      const postedBrkts = response.data.brkts;
-      createdBrkts = true;      
+      createdBrkts = true;
+      expect(response.data.count).toBe(mockBrktsToPost.length);
+
+      // check that the brkts were created
+      const postedBrkts = await getAllBrktsForTmnt(tmntToDelId);
+      if (!postedBrkts) {
+        expect(true).toBe(false);
+        return
+      }
       expect(postedBrkts.length).toBe(mockBrktsToPost.length);
       for (let i = 0; i < postedBrkts.length; i++) {
         expect(postedBrkts[i].id).toBe(mockBrktsToPost[i].id);
@@ -1567,6 +1574,25 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         expect(postedBrkts[i].admin).toBe(mockBrktsToPost[i].admin);
         expect(postedBrkts[i].fsa + '').toBe(mockBrktsToPost[i].fsa);
         expect(postedBrkts[i].sort_order).toBe(mockBrktsToPost[i].sort_order);
+      }
+    })
+    it('should return 0 count and status 200 when passed empty array', async () => {
+      const brktsJSON = JSON.stringify([]);
+      try {
+        const response = await axios({
+          method: "post",
+          data: brktsJSON,
+          withCredentials: true,
+          url: manyUrl
+        })
+        expect(response.status).toBe(200);
+        expect(response.data.count).toBe(0);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
       }
     })
     // no text values to sanitize

@@ -3,7 +3,7 @@ import React, { ChangeEvent, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { Accordion, AccordionItem } from "react-bootstrap";
-import { allDataOneTmntType, dataOneTmntType, ioDataError, tmntActions, tmntFormDataType } from "@/lib/types/types";
+import { ioDataError, tmntActions, tmntFormDataType } from "@/lib/types/types";
 import ModalErrorMsg, { cannotSaveTitle } from "@/components/modal/errorModal";
 import { initModalObj } from "@/components/modal/modalObjType";
 import { maxTmntNameLength } from "@/lib/validation";
@@ -17,12 +17,11 @@ import ZeroToNPots, { validatePots } from "./zeroToNPots";
 import ZeroToNBrackets, { validateBrkts } from "./zeroToNBrkts";
 import ZeroToNElims, { validateElims } from "./zeroToNElims";
 import { compareAsc } from "date-fns";
-import { saveAllDataOneTmnt } from "@/lib/db/oneTmnt/dbOneTmnt";
 import ModalConfirm from "@/components/modal/confirmModal";
 import { useRouter } from "next/navigation"
-import { getOneTmntIoError, getOneTmntSaveStatus, saveOneTmnt } from "@/redux/features/allDataOneTmnt/allDataOneTmntSlice";
-import "./tmntForm.css";
+import { getTmntFullDataLoadStatus, getTmntFullDataIoError, saveTmntFullData } from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import WaitModal from "@/components/modal/waitModal";
+import styles from "./tmntForm.module.css";
 
 interface FormProps {  
   tmntProps: tmntFormDataType
@@ -33,11 +32,10 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
 
-  const tmntSaveStatus = useSelector(getOneTmntSaveStatus);
-  const ioError = useSelector(getOneTmntIoError);
+  const tmntSaveStatus = useSelector(getTmntFullDataLoadStatus);
+  const ioError = useSelector(getTmntFullDataIoError);
 
-  let origData = tmntProps.origData;
-  let curData = tmntProps.curData;  
+  const tmntFullData = tmntProps.tmntFullData;
   const tmntAction = tmntProps.tmntAction;
 
   const cancelAction = (tmntAction === tmntActions.New)
@@ -54,14 +52,14 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
   const [errModalObj, setErrModalObj] = useState(initModalObj);
   const [showingModal, setShowingModal] = useState(false);
 
-  const [tmnt, setTmnt] = useState(curData.tmnt);
-  const [events, setEvents] = useState(curData.events);
-  const [divs, setDivs] = useState(curData.divs);
-  const [squads, setSquads] = useState(curData.squads);
-  const [lanes, setLanes] = useState(curData.lanes);
-  const [pots, setPots] = useState(curData.pots);
-  const [brkts, setBrkts] = useState(curData.brkts);
-  const [elims, setElims] = useState(curData.elims);
+  const [tmnt, setTmnt] = useState(tmntFullData.tmnt);
+  const [events, setEvents] = useState(tmntFullData.events);
+  const [divs, setDivs] = useState(tmntFullData.divs);
+  const [squads, setSquads] = useState(tmntFullData.squads);
+  const [lanes, setLanes] = useState(tmntFullData.lanes);
+  const [pots, setPots] = useState(tmntFullData.pots);
+  const [brkts, setBrkts] = useState(tmntFullData.brkts);
+  const [elims, setElims] = useState(tmntFullData.elims);
 
   const [eventAcdnErr, setEventAcdnErr] = useState(noAcdnErr);
   const [divAcdnErr, setDivAcdnErr] = useState(noAcdnErr);
@@ -102,7 +100,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
         ...tmnt,
         [name]: value,
         [nameErr]: "",
-      })
+      });
     } else if ((name === "start_date") || (name === "end_date")) {      
       if (!e.target.valueAsDate) return;
       let startDate: Date;
@@ -158,35 +156,8 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
     }
   };
 
-  const handleBlur = (e: ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-
-    // if (!value.trim()) {      
-    //   if (name === "start_date" || name === "end_date") {               
-    //     const ymd = getYearMonthDays(value);
-    //     if (ymd.year === 0 || ymd.month === 0 || ymd.days === 0) {
-    //       let updatedData: tmntType;
-    //       if (name === "start_date") {
-    //         updatedData = {
-    //           ...tmnt,
-    //           start_date: new Date(Date.UTC(ymd.year, ymd.month, ymd.days)),
-    //           start_date_err: "",
-    //         };
-    //       } else {
-    //         updatedData = {
-    //           ...tmnt,
-    //           end_date: new Date(Date.UTC(ymd.year, ymd.month, ymd.days)),
-    //           end_date_err: "",
-    //         };
-    //       }
-    //       setTmnt(updatedData);
-    //     }
-    //   }
-    // }
-  };
-
   const validateTmntInfo = (): boolean => {
-    let istmntInfoValid = true;
+    let isTmntInfoValid = true;
 
     let nameErr = '';
     let bowlErr = '';
@@ -195,26 +166,26 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
 
     if (!tmnt.tmnt_name.trim()) {
       nameErr = "Tournament Name is required";
-      istmntInfoValid = false;
+      isTmntInfoValid = false;
     }
     if (!tmnt.bowl_id) {
       bowlErr = "Bowl Name is required";
-      istmntInfoValid = false;
+      isTmntInfoValid = false;
     }
     if (!tmnt.start_date_str) {
       startErr = "Start date is required";
-      istmntInfoValid = false;
+      isTmntInfoValid = false;
     }    
     if (!tmnt.end_date_str) {
       endErr = "End date is required";
-      istmntInfoValid = false;
+      isTmntInfoValid = false;
     }    
     if (!startErr && !endErr) {
       const startDate = startOfDayFromString(tmnt.start_date_str) as Date;
       const endDate = startOfDayFromString(tmnt.end_date_str) as Date;
       if (compareAsc(startDate, endDate) > 0) {
         endErr = "End date cannot be before start date";
-        istmntInfoValid = false;
+        isTmntInfoValid = false;
       }
     }
     if (nameErr || bowlErr || startErr || endErr) {
@@ -227,7 +198,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
       });
     }
 
-    return istmntInfoValid;
+    return isTmntInfoValid;
   }
 
   const validateTmnt = (): boolean => {
@@ -246,6 +217,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
     if (!validateSquads(squads, setSquads, events, setSquadAcdnErr, startDate, endDate)) {
       isTmntValid = false;
     }
+    // no validate lanes. user cannot create errors
     if (!validatePots(pots, setPots, divs, setPotAcdnErr)) {
       isTmntValid = false;
     }
@@ -264,7 +236,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
     console.log('Handled debug button');
   };
 
-  const getLanesTabTilte = (): string => {
+  const getLanesTabTitle = (): string => {
     let lanesTitle = '';
     squads.forEach((squad) => {
       if (lanesTitle === '') {
@@ -277,7 +249,9 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
   }  
 
   const save = async () => { 
-    const curDataToSave: dataOneTmntType = {
+    
+    const tmntFullDataToSave = {
+      ...tmntFullData,
       tmnt,
       events,
       divs,
@@ -286,101 +260,36 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
       pots,
       brkts,
       elims
-    }    
-    const toSaveData: allDataOneTmntType = {
-      origData: origData,
-      curData: curDataToSave
     }
-    dispatch(saveOneTmnt(toSaveData));
-    
-    if (tmntSaveStatus === 'failed') {       
-      switch (ioError) {
-        case ioDataError.Tmnt:
-          setErrModalObj({
-            show: true,
-            title: cannotSaveTitle,
-            message: `Cannot save Tournament "${tmnt.tmnt_name}".`,
-            id: initModalObj.id
-          })
-          return false;
-          break;
-        case ioDataError.Events:
-          setErrModalObj({
-            show: true,
-            title: cannotSaveTitle,
-            message: `Cannot save Events.`,
-            id: initModalObj.id
-          })
-          return false;
-          break;
-        case ioDataError.Divs:
-          setErrModalObj({
-            show: true,
-            title: cannotSaveTitle,
-            message: `Cannot save Divisions.`,
-            id: initModalObj.id
-          })
-          return false;
-          break;
-        case ioDataError.Squads:
-          setErrModalObj({
-            show: true,
-            title: cannotSaveTitle,
-            message: `Cannot save Squads.`,
-            id: initModalObj.id
-          })
-          return false;
-          break;
-        case ioDataError.Lanes:
-          setErrModalObj({
-            show: true,
-            title: cannotSaveTitle,
-            message: `Cannot save Lanes.`,
-            id: initModalObj.id
-          })
-          return false;
-          break;
-        case ioDataError.Pots:
-          setErrModalObj({
-            show: true,
-            title: cannotSaveTitle,
-            message: `Cannot save Pots.`,
-            id: initModalObj.id
-          })
-          return false;
-          break;
-        case ioDataError.Brkts:
-          setErrModalObj({
-            show: true,
-            title: cannotSaveTitle,
-            message: `Cannot save Brackets.`,
-            id: initModalObj.id
-          })
-          return false;
-          break;
-        case ioDataError.Elims:
-          setErrModalObj({
-            show: true,
-            title: cannotSaveTitle,
-            message: `Cannot save Eliminations.`,
-            id: initModalObj.id
-          })
-          return false;
-          break;
-        default:
-          break;
-      }      
-    } else if (tmntSaveStatus === 'succeeded') {
-      curData = { ...curDataToSave }
-      origData = { ...curDataToSave }
+
+    try {
+      await dispatch(saveTmntFullData(tmntFullDataToSave)).unwrap();
       setErrModalObj({
         show: true,
         title: 'Tournament Saved',
-        message: `Tournament: ${curDataToSave.tmnt.tmnt_name} saved.`,
+        message: `Tournament: ${tmnt.tmnt_name} saved.`,
         id: initModalObj.id
       })
-      // router.push('/user/tmnts'); // back to list of tournaments          
-    }
+    } catch (err: any) {      
+      const errorType = err?.errorType as ioDataError | undefined;
+      const msgMap = {
+        [ioDataError.Tmnt]: `Cannot save Tournament "${tmnt.tmnt_name}".`,
+        [ioDataError.Events]: `Cannot save Events.`,
+        [ioDataError.Divs]: `Cannot save Divisions.`,
+        [ioDataError.Squads]: `Cannot save Squads.`,
+        [ioDataError.Lanes]: `Cannot save Lanes.`,
+        [ioDataError.Pots]: `Cannot save Pots.`,
+        [ioDataError.Brkts]: `Cannot save Breakouts.`,
+        [ioDataError.Elims]: `Cannot save Eliminations.`,
+      };
+      const errMsg = msgMap[errorType as keyof typeof msgMap] || "Unknown error saving Tournament."
+      setErrModalObj({
+        show: true,
+        title: cannotSaveTitle,
+        message: errMsg,
+        id: initModalObj.id
+      });
+    };
   };
 
   const confirmedCancel = () => {    
@@ -393,12 +302,6 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
     setShowingModal(false);
     setModalObj(initModalObj); // reset modal object (hides modal)
   };
-
-  // const handleKeyDown = (e: React.KeyboardEvent) => {
-  //   if (e.key === 'Enter') {
-  //     e.preventDefault();
-  //   }
-  // }
 
   const handleCancel = (e: React.FormEvent) => {   
     e.preventDefault();
@@ -423,7 +326,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
       save();      
     }
   };
-
+ 
   return (
     <>
       <ModalConfirm
@@ -505,8 +408,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
               name="start_date"
               data-testid="inputStartDate"                  
               value={tmnt.start_date_str}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
+              onChange={handleInputChange}              
               disabled={isDisabled}
             />
             <div
@@ -529,8 +431,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
               name="end_date"
               data-testid="inputEndDate"                  
               value={tmnt.end_date_str}
-              onChange={handleInputChange}
-              onBlur={handleBlur}
+              onChange={handleInputChange}              
               disabled={isDisabled}
             />
             <div
@@ -615,9 +516,9 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
           <AccordionItem eventKey="lanes">
             {/* <no errors in Lanes */}
             <Accordion.Header>
-              Lanes - {getLanesTabTilte()}
+              Lanes - {getLanesTabTitle()}
             </Accordion.Header>
-            <Accordion.Body>
+            <Accordion.Body className={styles.lanesAccordionBody}>
               <OneToNLanes  
                 lanes={lanes} 
                 setLanes={setLanes}

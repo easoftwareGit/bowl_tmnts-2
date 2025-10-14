@@ -4,8 +4,9 @@ import { ErrorCode, isValidBtDbId } from "@/lib/validation";
 import { sanitizeTmnt, validateTmnt } from "@/app/api/tmnts/valildate";
 import { tmntType } from "@/lib/types/types";
 import { initTmnt } from "@/lib/db/initVals";
-import { dateTo_UTC_yyyyMMdd, dateTo_yyyyMMdd, removeTimeFromISODateStr, startOfDayFromString } from "@/lib/dateTools";
+import { dateTo_UTC_yyyyMMdd, startOfDayFromString } from "@/lib/dateTools";
 import { getErrorStatus } from "@/app/api/errCodes";
+import { tmntDataForPrisma } from "../../dataForPrisma";
 
 // routes /api/tmnts/tmnt/:id
 
@@ -86,18 +87,23 @@ export async function PUT(
       }
       return NextResponse.json({ error: errMsg }, { status: 422 });
     }
-    const startDate = startOfDayFromString(toPut.start_date_str) as Date
-    const endDate = startOfDayFromString(toPut.end_date_str) as Date    
+
+    const prismaToPut = tmntDataForPrisma(toPut);
+    if (!prismaToPut) {
+      return NextResponse.json({ error: "invalid data" }, { status: 422 });
+    }
+    // const startDate = startOfDayFromString(toPut.start_date_str) as Date
+    // const endDate = startOfDayFromString(toPut.end_date_str) as Date    
     const tmnt = await prisma.tmnt.update({
       where: {
         id: id,
       },
       data: {
-        tmnt_name: toPut.tmnt_name,
-        start_date: startDate,
-        end_date: endDate,
-        // user_id: toPut.user_id, // not allowed to update user_id
-        bowl_id: toPut.bowl_id,
+        tmnt_name: prismaToPut.tmnt_name,
+        start_date: prismaToPut.start_date,
+        end_date: prismaToPut.end_date,
+        // user_id: prismaToPut.user_id, // not allowed to update user_id
+        bowl_id: prismaToPut.bowl_id,
       },
     });
     return NextResponse.json({ tmnt }, { status: 200 });

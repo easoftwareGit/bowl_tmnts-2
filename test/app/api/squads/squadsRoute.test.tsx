@@ -4,10 +4,11 @@ import { testBaseSquadsApi, testBaseEventsApi } from "../../../testApi";
 import { eventType, squadType } from "@/lib/types/types";
 import { initEvent, initSquad } from "@/lib/db/initVals";
 import { removeTimeFromISODateStr, startOfDayFromString } from "@/lib/dateTools";
-import { deleteAllSquadsForTmnt } from "@/lib/db/squads/dbSquads";
+import { deleteAllSquadsForTmnt, getAllSquadsForTmnt } from "@/lib/db/squads/dbSquads";
 import { mockSquadsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { mockCurData } from "../../../mocks/tmnts/playerEntries/mockOneSquadEntries";
 import { cloneDeep } from "lodash";
+import { isValidBtDbId } from "@/lib/validation";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -27,11 +28,12 @@ import { cloneDeep } from "lodash";
 const url = testBaseSquadsApi.startsWith("undefined")
   ? baseSquadsApi
   : testBaseSquadsApi;   
-const oneSquadUrl = url + "/squad/";
 const entriesUrl = url + '/entries/';
 const eventUrl = url + '/event/';
-const tmntUrl = url + '/tmnt/';
 const manyUrl = url + "/many";
+const oneBrktsUrl = url + "/oneBrkts/";
+const oneSquadUrl = url + "/squad/";
+const tmntUrl = url + '/tmnt/';
 
 const urlForEvents = testBaseEventsApi.startsWith("undefined")
   ? baseEventsApi
@@ -440,9 +442,68 @@ describe('Squads - API: /api/squads', () => {
           expect(true).toBeFalsy();
         }
       }
-    })
-    
+    })    
   })
+
+  describe("GET squad's one brkts and seeds API: /api/squads/oneBrkts/squad/:id", () => { 
+    // from prisma/seeds.ts
+    const squadId = 'sqd_7116ce5f80164830830a7157eb093396';
+    const brktId = 'brk_5109b54c2cc44ff9a3721de42c80c8c1';
+    const oneBrktId1 = 'obk_557f12f3875f42baa29fdbd22ee7f2f4';
+    const oneBrktId2 = 'obk_5423c16d58a948748f32c7c72c632297';
+
+    it('should get squad one brkts and seeds', async () => { 
+      const response = await axios.get(oneBrktsUrl + squadId);
+      expect(response.status).toBe(200);
+      const oneBrktsAndSeeds = response.data.oneBrktsAndSeeds;
+      expect(oneBrktsAndSeeds).toHaveLength(32);
+      for (let i = 0; i < oneBrktsAndSeeds.length; i++) {
+        const oneBrktAndSeed = oneBrktsAndSeeds[i];
+        expect(isValidBtDbId(oneBrktAndSeed.one_brkt_id, "obk")).toBe(true);
+        expect(isValidBtDbId(oneBrktAndSeed.brkt_id, "brk")).toBe(true);
+        if (i <= 7 || (i >= 16 && i <= 23)) expect(oneBrktAndSeed.bindex).toBe(0)
+        else expect(oneBrktAndSeed.bindex).toBe(1);
+        expect(oneBrktAndSeed.seed).toBe(i % 8)
+      }
+    })
+    it('should return code 404 when passed invalid squad id', async () => { 
+      const invalidSquadId = 'test';
+      try {
+       const response = await axios.get(oneBrktsUrl + invalidSquadId);
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should return code 404 when passed valid id, but not a squad id', async () => {       
+      try {
+       const response = await axios.get(oneBrktsUrl + brktId);
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should return code 404 when passed empty string', async () => {       
+      try {
+       const response = await axios.get(oneBrktsUrl);
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+  })  
 
   describe('POST', () => {
 
@@ -1304,9 +1365,14 @@ describe('Squads - API: /api/squads', () => {
         withCredentials: true,
         url: manyUrl
       })
-      const postedSquads = response.data.squads;
       expect(response.status).toBe(201);
       createdSquads = true;
+      expect(response.data.count).toBe(mockSquadsToPost.length);      
+      const postedSquads = await getAllSquadsForTmnt(tmntId);
+      if (!postedSquads) { 
+        expect(true).toBeFalsy();
+        return;
+      }
       expect(postedSquads.length).toEqual(mockSquadsToPost.length);
       for (let i = 0; i < postedSquads.length; i++) {
         expect(postedSquads[i].id).toEqual(mockSquadsToPost[i].id);
@@ -1315,7 +1381,7 @@ describe('Squads - API: /api/squads', () => {
         expect(postedSquads[i].games).toEqual(mockSquadsToPost[i].games);
         expect(postedSquads[i].lane_count).toEqual(mockSquadsToPost[i].lane_count);
         expect(postedSquads[i].starting_lane).toEqual(mockSquadsToPost[i].starting_lane);
-        expect(removeTimeFromISODateStr(postedSquads[i].squad_date)).toEqual(mockSquadsToPost[i].squad_date_str);
+        expect(postedSquads[i].squad_date_str).toEqual(mockSquadsToPost[i].squad_date_str);
         expect(postedSquads[i].squad_time).toEqual(mockSquadsToPost[i].squad_time);
         expect(postedSquads[i].sort_order).toEqual(mockSquadsToPost[i].sort_order);
       }
@@ -1338,12 +1404,28 @@ describe('Squads - API: /api/squads', () => {
         withCredentials: true,
         url: manyUrl,
       })
-      const postedSquads = response.data.squads;      
       expect(response.status).toBe(201);
-      createdSquads = true
+      createdSquads = true;
+      expect(response.data.count).toBe(toSanitzie.length);      
+      const postedSquads = await getAllSquadsForTmnt(tmntId);
+      if (!postedSquads) { 
+        expect(true).toBeFalsy();
+        return;
+      }      
       expect(postedSquads.length).toEqual(toSanitzie.length);
       expect(postedSquads[0].squad_name).toEqual(mockSquadsToPost[0].squad_name);
       expect(postedSquads[1].squad_name).toEqual(mockSquadsToPost[1].squad_name);
+    })
+    it('should return 0 and status code 200 when passed an empty array', async () => {  
+      const squadsJSON = JSON.stringify([]);
+      const response = await axios({
+        method: "post",
+        data: squadsJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      expect(response.status).toBe(200);
+      expect(response.data.count).toBe(0);
     })
     it('should not post squads with invalid data in first squad', async () => {
       const invalidSquads = [
@@ -1401,7 +1483,6 @@ describe('Squads - API: /api/squads', () => {
         }
       }
     })
-
   })
 
   describe('PUT by ID - API: /api/squads/squad/[id]', () => { 
@@ -3023,23 +3104,6 @@ describe('Squads - API: /api/squads', () => {
         }
       }
     })
-    // it('should NOT delete a squad by ID when squad has child rows', async () => { 
-    //   try {
-    //     const response = await axios({
-    //       method: 'delete',
-    //       withCredentials: true,
-    //       url: oneSquadUrl + testSquad.id
-    //     })
-    //     expect(response.status).toBe(409);
-    //   } catch (err) {
-    //     if (err instanceof AxiosError) {
-    //       expect(err.response?.status).toBe(409);
-    //     } else {
-    //       expect(true).toBeFalsy();
-    //     }
-    //   }
-    // })
-
   })
 
   describe('DELETE all squads for an event - API: /api/squads/event/:eventId', () => { 

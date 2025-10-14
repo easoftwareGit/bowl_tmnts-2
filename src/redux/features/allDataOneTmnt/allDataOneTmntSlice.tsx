@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ioStatusType } from "@/redux/statusTypes";
 import { RootState } from "@/redux/store";
 import { allDataOneTmntType, dataOneTmntType, ioDataError } from "@/lib/types/types";
-import { blankTmnt  } from "@/lib/db/initVals";
+import { blankTmnt } from "@/lib/db/initVals";
 import { getAllDataForTmnt } from "@/lib/db/tmnts/dbTmnts";
 import { saveAllDataOneTmnt } from "@/lib/db/oneTmnt/dbOneTmnt";
 import { cloneDeep } from 'lodash';

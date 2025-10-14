@@ -4,7 +4,7 @@ import { ErrorCode, isValidBtDbId } from "@/lib/validation";
 import { sanitizeSquad, validateSquad } from "@/app/api/squads/validate";
 import { squadType } from "@/lib/types/types";
 import { initSquad } from "@/lib/db/initVals";
-import { dateTo_UTC_yyyyMMdd, removeTimeFromISODateStr, startOfDayFromString } from "@/lib/dateTools";
+import { dateTo_UTC_yyyyMMdd, startOfDayFromString } from "@/lib/dateTools";
 import { getErrorStatus } from "@/app/api/errCodes";
 
 // routes /api/squads/:id
@@ -84,6 +84,9 @@ export async function PUT(
     }
     
     const squadDate = startOfDayFromString(toPut.squad_date_str) as Date
+    if (!squadDate) {
+      return NextResponse.json({ error: "invalid data" }, { status: 422 });
+    }
     const squad = await prisma.squad.update({
       where: {
         id: id,

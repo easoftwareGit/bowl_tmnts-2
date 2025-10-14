@@ -4,7 +4,7 @@ import { testBaseDivsApi } from "../../../testApi";
 import { divType } from "@/lib/types/types";
 import { initDiv } from "@/lib/db/initVals";
 import { mockDivsToPost, tmntToDelId } from "../../../mocks/tmnts/twoDivs/mockDivs";
-import { deleteAllDivsForTmnt, postDiv } from "@/lib/db/divs/dbDivs";
+import { deleteAllDivsForTmnt, getAllDivsForTmnt, postDiv } from "@/lib/db/divs/dbDivs";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -842,10 +842,15 @@ describe('Divs - API: /api/divs', () => {
         withCredentials: true,
         url: manyUrl
       })
-      const postedDivs = response.data.divs;      
       expect(response.status).toBe(201);
       createdEvents = true;
-      expect(postedDivs.length).toBe(mockDivsToPost.length);
+      expect(response.data.count).toBe(mockDivsToPost.length);
+      const postedDivs = await getAllDivsForTmnt(mockDivsToPost[0].tmnt_id);
+      if (!postedDivs) {
+        expect(true).toBeFalsy();
+        return;
+      }      
+      expect(postedDivs.length).toBe(mockDivsToPost.length);      
       for (let i = 0; i < postedDivs.length; i++) {
         expect(postedDivs[i].id).toBe(mockDivsToPost[i].id);
         expect(postedDivs[i].tmnt_id).toBe(mockDivsToPost[i].tmnt_id);
@@ -856,6 +861,17 @@ describe('Divs - API: /api/divs', () => {
         expect(postedDivs[i].hdcp_for).toBe(mockDivsToPost[i].hdcp_for);
         expect(postedDivs[i].sort_order).toBe(mockDivsToPost[i].sort_order);
       }
+    })
+    it('should return 0 and code 200 when passed empty array', async () => {
+      const divsJSON = JSON.stringify([]);
+      const response = await axios({
+        method: "post",
+        data: divsJSON,
+        withCredentials: true,
+        url: manyUrl
+      });
+      expect(response.status).toBe(200);
+      expect(response.data.count).toBe(0);
     })
     it('should create many divs with sanitized data', async () => { 
       const toSanitizeDiv = [
@@ -870,14 +886,21 @@ describe('Divs - API: /api/divs', () => {
       ]
       const divsJSON = JSON.stringify(toSanitizeDiv);
       const response = await axios({
-        method: "post",
+        method: "post", 
         data: divsJSON,
         withCredentials: true,
         url: manyUrl
       })
-      const postedDivs = response.data.divs;      
       expect(response.status).toBe(201);
       createdEvents = true;
+      expect(response.data.count).toBe(toSanitizeDiv.length);
+
+      const postedDivs = await getAllDivsForTmnt(mockDivsToPost[0].tmnt_id);
+      expect(response.status).toBe(201);
+      if (!postedDivs) {
+        expect(true).toBeFalsy();
+        return;
+      }
       expect(postedDivs.length).toBe(toSanitizeDiv.length);
       expect(postedDivs[0].div_name).toBe(mockDivsToPost[0].div_name);
       expect(postedDivs[1].div_name).toBe(mockDivsToPost[1].div_name);

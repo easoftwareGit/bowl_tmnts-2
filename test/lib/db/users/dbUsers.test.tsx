@@ -23,7 +23,7 @@ import { patchUser } from "@/lib/db/users/dbUsers";
 const url = testBaseUsersApi.startsWith("undefined")
   ? baseUsersApi
   : testBaseUsersApi;
-const oneUserUrl = url + "/user/";
+const userUrl = url + "/user/";
 
 const testUser: userType = {
   ...initUser,
@@ -36,9 +36,10 @@ const testUser: userType = {
   role: "ADMIN",
 };
 const notFoundId = "usr_01234567890123456789012345678901";
-const nonUserId = "tmt_01234567890123456789012345678901";
+const tmntId = "tmt_01234567890123456789012345678901";
 
 describe("dbUsers.tsx", () => {
+
   describe("patchUsers()", () => {
 
     const toPatchUser = {
@@ -53,7 +54,7 @@ describe("dbUsers.tsx", () => {
         method: "put",
         data: userJSON,
         withCredentials: true,
-        url: oneUserUrl + testUser.id,
+        url: userUrl + testUser.id,
       });
     });
 
@@ -64,7 +65,7 @@ describe("dbUsers.tsx", () => {
           method: "put",
           data: userJSON,
           withCredentials: true,
-          url: oneUserUrl + testUser.id,
+          url: userUrl + testUser.id,
         });
       } catch (err) {
         if (err instanceof AxiosError) console.log(err.message);
@@ -128,47 +129,84 @@ describe("dbUsers.tsx", () => {
       expect(patchedUser.phone).toEqual(testUser.phone);
       expect(patchedUser.role).toEqual(testUser.role);
     });
+    it("should not patch a user by ID when id is not found", async () => {
+      try { 
+        const toBePatched = {
+          ...toPatchUser,
+          id: notFoundId,
+          first_name: "Zach",
+        };
+        await patchUser(toBePatched);
+      } catch (err) { 
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe(
+          "patchUser failed: Request failed with status code 404"
+        );
+      }      
+    });
+    it("should not patch a user by ID when email is a duplicate", async () => {      
+      try { 
+        const toBePatched = {
+          ...toPatchUser,
+          email: "chad@email.com", // from prisma/seed.ts
+        };
+        await patchUser(toBePatched);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe(
+          "patchUser failed: Request failed with status code 409"
+        );
+      }      
+    });
     it("should not patch a user by ID when id is invalid", async () => {
-      const toBePatched = {
-        ...toPatchUser,
-        id: "test",
-        first_name: "Zach",
-      };
-      const patchedUser = await patchUser(toBePatched);
-      expect(patchedUser).toBeNull();
+      try { 
+        const toBePatched = {
+          ...toPatchUser,
+          id: "test",
+          first_name: "Zach",
+        };
+        await patchUser(toBePatched);
+      } catch (err) { 
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid user data");
+      }      
     });
     it("should not patch a user by ID when id is valid, but not a user ID", async () => {
-      const toBePatched = {
-        ...toPatchUser,
-        id: nonUserId,
-        first_name: "Zach",
-      };
-      const patchedUser = await patchUser(toBePatched);
-      expect(patchedUser).toBeNull();
+      try { 
+        const toBePatched = {
+          ...toPatchUser,
+          id: tmntId,
+          first_name: "Zach",
+        };
+        await patchUser(toBePatched);
+      } catch (err) { 
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid user data");
+      }      
     });
-    it("should not patch a user by ID when id is not found", async () => {
-      const toBePatched = {
-        ...toPatchUser,
-        id: notFoundId,
-        first_name: "Zach",
-      };
-      const patchedUser = await patchUser(toBePatched);
-      expect(patchedUser).toBeNull();
-    });
-    it("should not patch a user by ID when email is a duplicate", async () => {
-      const toBePatched = {
-        ...toPatchUser,
-        email: "chad@email.com", // from prisma/seed.ts
-      };
-      const patchedUser = await patchUser(toBePatched);
-      expect(patchedUser).toBeNull();
+    it("should not patch a user by ID when id null", async () => {
+      try { 
+        const toBePatched = {
+          ...toPatchUser,
+          id: null as any,
+          first_name: "Zach",
+        };
+        await patchUser(toBePatched);
+      } catch (err) { 
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid user data");
+      }      
     });
     it("should not patch a user if ID is not in passed object", async () => {
-      const toBePatched = {
-        first_name: "Zach",
-      };
-      const patchedUser = await patchUser(toBePatched);
-      expect(patchedUser).toBeNull();
+      try { 
+        const toBePatched = {
+          first_name: "Zach",
+        };
+        await patchUser(toBePatched);        
+      } catch (err) { 
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid user data");
+      }      
     });
   });
 });

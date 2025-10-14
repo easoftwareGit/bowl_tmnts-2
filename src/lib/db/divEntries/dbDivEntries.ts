@@ -1,188 +1,186 @@
 import axios from "axios";
 import { baseDivEntriesApi } from "@/lib/db/apiPaths";
 import { testBaseDivEntriesApi } from "../../../../test/testApi";
-import { divEntryType, putManyReturnType } from "@/lib/types/types";
-import { isValidBtDbId } from "@/lib/validation";
-import { blankDivEntry, noUpdates } from "../initVals";
+import { divEntryType } from "@/lib/types/types";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { blankDivEntry } from "../initVals";
+import { validateDivEntries } from "@/app/api/divEntries/validate";
+import { calcHandicap } from "@/app/api/divEntries/calcHdcp";
 
 const url = testBaseDivEntriesApi.startsWith("undefined")
   ? baseDivEntriesApi
   : testBaseDivEntriesApi; 
 
-const oneDivEntryUrl = url + "/divEntry/";
-const oneDivUrl = url + "/div/";
-const oneSquadUrl = url + "/squad/";
-const oneTmntUrl = url + "/tmnt/";
+const divEntryUrl = url + "/divEntry/";
+const divUrl = url + "/div/";
+const squadUrl = url + "/squad/";
+const tmntUrl = url + "/tmnt/";
 const manyUrl = url + "/many";   
+
+/**
+ * Extract div entries from GET API response
+ * 
+ * @param {any} divEntries - array of divEntries from GET API response
+ * @returns {divEntryType[]} - array of divEntries with extracted data 
+ */
+export const extractDivEntries = (divEntries: any): divEntryType[] => {
+  if (!divEntries || !Array.isArray(divEntries)) return [];      
+  return divEntries.map((divEntry: any) => ({
+    ...blankDivEntry,
+    id: divEntry.id,
+    squad_id: divEntry.squad_id,
+    div_id: divEntry.div_id,
+    player_id: divEntry.player_id,
+    fee: divEntry.fee + '', 
+    hdcp: calcHandicap(divEntry.player.average, divEntry.div.hdcp_from, divEntry.div.hdcp_per, divEntry.div.int_hdcp),
+    // hdcp: divEntry.hdcp,
+  }));
+}
 
 /**
  * Get all div entries for a tmnt
  * 
  * @param {string} tmntId - id of tmnt to get div entries for
- * @returns {divEntryType[] | null} - array of div entries
+ * @returns {divEntryType[]} - array of div entries
+ * @throws {Error} - if tmntId is invalid or API call fails
  */
-export const getAllDivEntriesForTmnt = async (tmntId: string): Promise<divEntryType[] | null> => {
-  try {
-    if (!isValidBtDbId(tmntId, "tmt")) return null;
-    const response = await axios({
-      method: "get",
-      withCredentials: true,
-      url: oneTmntUrl + tmntId,
-    });
-    if (response.status !== 200) return null;
-    const tmntDivEntries = response.data.divEntries;
-    const divEntries: divEntryType[] = tmntDivEntries.map((divEntry: divEntryType) => {
-      return {
-        ...blankDivEntry,
-        id: divEntry.id,
-        squad_id: divEntry.squad_id,
-        div_id: divEntry.div_id,
-        player_id: divEntry.player_id,
-        fee: divEntry.fee + '', 
-        hdcp: divEntry.hdcp,
-      }
-    });
-    return divEntries;
-  } catch (err) {
-    return null;
+export const getAllDivEntriesForTmnt = async (tmntId: string): Promise<divEntryType[]> => {
+  if (!isValidBtDbId(tmntId, "tmt")) { 
+    throw new Error('Invalid tmnt id');
   }
+  let response;
+  try {
+    response = await axios.get(tmntUrl + tmntId, { withCredentials: true });
+  } catch (err) {
+    throw new Error(`getAllDivEntriesForTmnt failed: ${err instanceof Error ? err.message : err}`);
+  }
+  if (response.status !== 200) { 
+    throw new Error(`Unexpected status ${response.status} when fetching divEntries`)
+  }  
+  return extractDivEntries(response.data.divEntries);
 }
 
 /**
  * Get all div entries for a div
  * 
  * @param {string} divId - id of div to get div entries for
- * @returns {divEntryType[] | null} - array of div entries
+ * @returns {divEntryType[]} - array of div entries
+ * @throws {Error} - if divId is invalid or API call fails
  */
-export const getAllDivEntriesForDiv = async (divId: string): Promise<divEntryType[] | null> => {
-  try {
-    if (!isValidBtDbId(divId, "div")) return null;
-    const response = await axios({
-      method: "get",
-      withCredentials: true,
-      url: oneDivUrl + divId,
-    });
-    if (response.status !== 200) return null;
-    const divDivEntries = response.data.divEntries;
-    const divEntries: divEntryType[] = divDivEntries.map((divEntry: divEntryType) => {
-      return {
-        ...blankDivEntry,
-        id: divEntry.id,
-        squad_id: divEntry.squad_id,
-        div_id: divEntry.div_id,
-        player_id: divEntry.player_id,
-        fee: divEntry.fee + '',
-        hdcp: divEntry.hdcp,
-      }
-    });
-    return divEntries;
-  } catch (err) {
-    return null;
+export const getAllDivEntriesForDiv = async (divId: string): Promise<divEntryType[]> => {
+  if (!isValidBtDbId(divId, "div")) { 
+    throw new Error('Invalid div id');
   }
+  let response;
+  try { 
+    response = await axios.get(divUrl + divId, { withCredentials: true });
+  } catch (err) {
+    throw new Error(`getAllDivEntriesForDiv failed: ${err instanceof Error ? err.message : err}`);
+  }
+  if (response.status !== 200) {
+    throw new Error(`Unexpected status ${response.status} when fetching divEntries`)
+  }        
+  return extractDivEntries(response.data.divEntries);
 }
 
 /**
  * Get all div entries for a squad
  * 
  * @param {string} squadId - id of squad to get div entries for
- * @returns {divEntryType[] | null} - array of div entries
+ * @returns {divEntryType[]} - array of div entries
+ * @throws {Error} - if squadId is invalid or API call fails
  */
-export const getAllDivEntriesForSquad = async (squadId: string): Promise<divEntryType[] | null> => {
-  try {
-    if (!isValidBtDbId(squadId, "sqd")) return null;
-    const response = await axios({
-      method: "get",
-      withCredentials: true,
-      url: oneSquadUrl + squadId,
-    });
-    if (response.status !== 200) return null;
-    const divDivEntries = response.data.divEntries;
-    const divEntries: divEntryType[] = divDivEntries.map((divEntry: divEntryType) => {
-      return {
-        ...blankDivEntry,
-        id: divEntry.id,
-        squad_id: divEntry.squad_id,
-        div_id: divEntry.div_id,
-        player_id: divEntry.player_id,
-        fee: divEntry.fee + '',
-        hdcp: divEntry.hdcp,
-      }
-    });
-    return divEntries;
-  } catch (err) {
-    return null;
+export const getAllDivEntriesForSquad = async (squadId: string): Promise<divEntryType[]> => {
+  if (!isValidBtDbId(squadId, "sqd")) { 
+    throw new Error('Invalid squad id');
   }
+  let response;
+  try {
+    response = await axios.get(squadUrl + squadId, { withCredentials: true });
+  } catch (err) {
+    throw new Error(`getAllDivEntriesForSquad failed: ${err instanceof Error ? err.message : err}`);
+  }
+  if (response.status !== 200) { 
+    throw new Error(`Unexpected status ${response.status} when fetching divEntries`)
+  };    
+  return extractDivEntries(response.data.divEntries);
 }
 
 /**
  * posts a div entry
  * 
  * @param {divEntryType} divEntry - divEntry to post
- * @returns {divEntryType | null} - divEntry that was posted or null
+ * @returns {divEntryType} - divEntry that was posted 
+ * @throws {Error} - if divEntry is invalid or API call fails
  */
-export const postDivEntry = async (divEntry: divEntryType): Promise<divEntryType | null> => {
-  try {
-    if (!divEntry || !isValidBtDbId(divEntry.id, "den")) return null;
+export const postDivEntry = async (divEntry: divEntryType): Promise<divEntryType> => {
+  if (!divEntry || !isValidBtDbId(divEntry.id, "den")) { 
+    throw new Error("Invalid divEntry data");
+  }
+  let response;
+  try {    
     // further sanatation and validation done in POST route
     const divEntryJSON = JSON.stringify(divEntry);
-    const response = await axios({
-      method: "post",
-      data: divEntryJSON,
-      withCredentials: true,
-      url: url,
-    });
-    if (response.status !== 201) return null;
-    const dbDivEntry = response.data.divEntry;
-    const postedDivEntry: divEntryType = {
-      ...blankDivEntry,
-      id: dbDivEntry.id,
-      squad_id: dbDivEntry.squad_id,
-      div_id: dbDivEntry.div_id,
-      player_id: dbDivEntry.player_id,
-      fee: dbDivEntry.fee,   
-      hdcp: divEntry.hdcp,
-    };
-    return postedDivEntry;
+    response = await axios.post(url, divEntryJSON, { withCredentials: true });
   } catch (err) {
-    return null;
+    throw new Error(`postDivEntry failed: ${err instanceof Error ? err.message : err}`);
   }
+  if (response.status !== 201 || !response.data?.divEntry) { 
+    throw new Error("Error posting divEntry");
+  }
+  const dbDivEntry = response.data.divEntry;
+  const postedDivEntry: divEntryType = {
+    ...blankDivEntry,
+    id: dbDivEntry.id,
+    squad_id: dbDivEntry.squad_id,
+    div_id: dbDivEntry.div_id,
+    player_id: dbDivEntry.player_id,
+    fee: dbDivEntry.fee,   
+    hdcp: divEntry.hdcp,
+  };
+  return postedDivEntry;
 }
 
 /**
  * posts many div entries
  * 
  * @param {divEntryType[]} divEntries - array of divEntries to post
- * @returns {divEntryType[] | null} - array of divEntries that were posted or null
+ * @returns {number} - number of divEntries posted 
+ * @throws {Error} - if divEntries are invalid or API call fails
  */
-export const postManyDivEntries = async (divEntries: divEntryType[]): Promise<divEntryType[] | null> => {
-  try {
-    if (!divEntries) return null;
-    if (divEntries.length === 0) return [];
-    // further sanatation and validation done in POST route
-    const divEntryJSON = JSON.stringify(divEntries);
-    const response = await axios({
-      method: "post",
-      data: divEntryJSON,
-      withCredentials: true,
-      url: manyUrl,
-    });
-    if (response.status !== 201) return null;
-    const dbDivEntries = response.data.divEntries;
-    const postedDivEntries: divEntryType[] = dbDivEntries.map((divEntry: any) => {
-      return {
-        ...blankDivEntry,
-        id: divEntry.id,
-        squad_id: divEntry.squad_id,
-        div_id: divEntry.div_id,
-        player_id: divEntry.player_id,
-        fee: divEntry.fee,
-        hdcp: divEntry.hdcp,
-      }
-    });
-    return postedDivEntries;
-  } catch (err) {
-    return null;
+export const postManyDivEntries = async (divEntries: divEntryType[]): Promise<number> => {
+  if (!divEntries || !Array.isArray(divEntries)) { 
+    throw new Error("Invalid divEntries data");
+  };
+  if (divEntries.length === 0) return 0; // not an error, no divEntries to post  
+  // further sanatation and validation done in POST route
+  const validDivEntries = validateDivEntries(divEntries);
+  if (validDivEntries.errorCode !== ErrorCode.None
+    || validDivEntries.divEntries.length !== divEntries.length)
+  {
+    if (validDivEntries.divEntries.length === 0) {      
+      throw new Error('Invalid divEntry data at index 0');
+    }
+    const errorIndex = divEntries.findIndex(divEntry => !isValidBtDbId(divEntry.id, "den"));
+    if (errorIndex < 0) {
+      throw new Error(`Invalid divEntry data at index ${validDivEntries.divEntries.length}`);
+    } else {
+      throw new Error(`Invalid divEntry data at index ${errorIndex}`);
+    }
   }
+  let response;
+  try {  
+    const divEntryJSON = JSON.stringify(divEntries);
+    response = await axios.post(manyUrl, divEntryJSON, {
+      withCredentials: true
+    });
+  } catch (err) {
+    throw new Error(`postManyDivEntries failed: ${err instanceof Error ? err.message : err}`);
+  }
+  if (response.status !== 201 || typeof response.data?.count !== "number") { 
+    throw new Error("Error posting divEntries");
+  }
+  return response.data.count;
 }
 
 /**
@@ -190,123 +188,105 @@ export const postManyDivEntries = async (divEntries: divEntryType[]): Promise<di
  * 
  * @param {divEntryType} divEntry - divEntry to update
  * @returns {divEntryType | null} - divEntry that was updated
+ * @throws {Error} - if divEntry is invalid or API call fails
  */
 export const putDivEntry = async (divEntry: divEntryType): Promise<divEntryType | null> => {
-  try {
-    if (!divEntry || !isValidBtDbId(divEntry.id, "den")) return null;
-    // further sanatation and validation done in POST route
-    const divEntryJSON = JSON.stringify(divEntry);
-    const response = await axios({
-      method: "put",
-      data: divEntryJSON,
-      withCredentials: true,
-      url: oneDivEntryUrl + divEntry.id,
-    });
-    if (response.status !== 200) return null;
-    const dbDivEntry = response.data.divEntry;
-    const puttedDivEntry: divEntryType = {
-      ...blankDivEntry,
-      id: dbDivEntry.id,
-      squad_id: dbDivEntry.squad_id,
-      div_id: dbDivEntry.div_id,
-      player_id: dbDivEntry.player_id,
-      fee: dbDivEntry.fee,      
-      hdcp: divEntry.hdcp,
-    };
-    return puttedDivEntry;
-  } catch (err) {
-    return null;
+  if (!divEntry || !isValidBtDbId(divEntry.id, "den")) { 
+    throw new Error("Invalid divEntry data");
   }
-}
-
-/**
- * updates, inserts or deletes many div entries
- * 
- * @param {divEntryType[]} divEntries - array of divEntries to update, insert or delete
- * @returns {putManyReturnType | null} - putManyReturnType has how many of each type updated or null 
- */
-export const putManyDivEntries = async (divEntries: divEntryType[]): Promise<putManyReturnType | null> => {
-
+  let response;
   try {
-    if (!divEntries) return null;
-    if (divEntries.length === 0) return noUpdates;
-    for (let i = 0; i < divEntries.length; i++) {
-      if (!isValidBtDbId(divEntries[i].id, "den")) return null;
-    }
     // further sanatation and validation done in PUT route
-    const divEntriesJSON = JSON.stringify(divEntries);
-    const response = await axios({
-      method: "put",
-      data: divEntriesJSON,
-      withCredentials: true,
-      url: manyUrl,
+    const divEntryJSON = JSON.stringify(divEntry);
+    response = await axios.put(divEntryUrl + divEntry.id, divEntryJSON, {
+      withCredentials: true
     });
-    if (response.status !== 200) return null;
-    const updatedInfo: putManyReturnType = response.data.updateInfo;
-    return updatedInfo;
   } catch (err) {
-    return null;
+    throw new Error(`putDivEntry failed: ${err instanceof Error ? err.message : err}`);
   }
+  if (response.status !== 200 || !response.data?.divEntry) { 
+    throw new Error("Error putting divEntry");
+  }
+  const dbDivEntry = response.data.divEntry;
+  const puttedDivEntry: divEntryType = {
+    ...blankDivEntry,
+    id: dbDivEntry.id,
+    squad_id: dbDivEntry.squad_id,
+    div_id: dbDivEntry.div_id,
+    player_id: dbDivEntry.player_id,
+    fee: dbDivEntry.fee,      
+    hdcp: divEntry.hdcp,
+  };
+  return puttedDivEntry;
 }
 
 /**
  * deletes a div entry
  * 
  * @param {string} id - id of div entry to delete 
- * @returns {number} - 1 if deleted, -1 on failure
+ * @returns {number} - 1 if deleted
+ * @throws {Error} - if id is invalid or API call fails
  */
 export const deleteDivEntry = async (id: string): Promise<number> => {
-  try {
-    if (!isValidBtDbId(id, "den")) return -1;
-    const response = await axios({
-      method: "delete",
-      withCredentials: true,
-      url: oneDivEntryUrl + id,
-    });
-    return (response.status === 200) ? 1 : -1    
-  } catch (err) {
-    return -1;
+  if (!isValidBtDbId(id, "den")) { 
+    throw new Error("Invalid divEntry id");
   }
+  let response;
+  try {
+    response = await axios.delete(divEntryUrl + id, { withCredentials: true });    
+  } catch (err) {
+    throw new Error(`deleteDivEntry failed: ${err instanceof Error ? err.message : err}`);
+  }
+    if (response.status !== 200) { 
+    throw new Error("Error deleting divEntry");
+  }
+  return 1;
 }
 
 /**
  * deletes all div entries for a squad
  * 
  * @param {string} squadId - id of squad to delete
- * @returns {number} - number of div entries deleted, -1 on failure
+ * @returns {number} - number of div entries deleted
+ * @throws {Error} - if squadId is invalid or API call fails
  */
 export const deleteAllDivEntriesForSquad = async (squadId: string): Promise<number> => {
-  try {
-    if (!isValidBtDbId(squadId, "sqd")) return -1;
-    const response = await axios({
-      method: "delete",
-      withCredentials: true,
-      url: oneSquadUrl + squadId,
-    });    
-    return (response.status === 200) ? response.data.deleted.count : -1
-  } catch (err) {
-    return -1;
+  if (!isValidBtDbId(squadId, "sqd")) { 
+    throw new Error("Invalid squad id");
   }
+  let response;
+  try {
+    response = await axios.delete(squadUrl + squadId, { withCredentials: true });    
+  } catch (err) {
+    throw new Error(`deleteAllDivEntriesForSquad failed: ${err instanceof Error ? err.message : err}`);
+  }
+  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+    throw new Error("Error deleting divEntries for squad");
+  }
+  return response.data.deleted.count;
 }
 
 /**
  * deletes all div entries for a div
  * 
  * @param {string} divId - id of div to delete
- * @returns {number} - number of div entries deleted, -1 on failure
+ * @returns {number} - number of div entries deleted
+ * @throws {Error} - if divId is invalid or API call fails
  */
 export const deleteAllDivEntriesForDiv = async (divId: string): Promise<number> => {  
-  try {
-    if (!isValidBtDbId(divId, "div")) return -1;
-    const response = await axios({
-      method: "delete",
-      withCredentials: true,
-      url: oneDivUrl + divId,
-    });    
-    return (response.status === 200) ? response.data.deleted.count : -1
-  } catch (err) {
-    return -1;
+  if (!isValidBtDbId(divId, "div")) { 
+    throw new Error("Invalid div id");
   }
+  let response;
+  try {
+    response = await axios.delete(divUrl + divId, { withCredentials: true });    
+  } catch (err) {
+    throw new Error(`deleteAllDivEntriesForDiv failed: ${err instanceof Error ? err.message : err}`);
+  }
+  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+    throw new Error("Error deleting divEntries for div");
+  }
+  return response.data.deleted.count;
 }
 
 /**
@@ -316,15 +296,17 @@ export const deleteAllDivEntriesForDiv = async (divId: string): Promise<number> 
  * @returns {number} - number of div entries deleted, -1 on failure
  */
 export const deleteAllDivEntriesForTmnt = async (tmntId: string): Promise<number> => {
-  try {
-    if (!isValidBtDbId(tmntId, "tmt")) return -1;
-    const response = await axios({
-      method: "delete",
-      withCredentials: true,
-      url: oneTmntUrl + tmntId,
-    });    
-    return (response.status === 200) ? response.data.deleted.count : -1
-  } catch (err) {
-    return -1;
+  if (!isValidBtDbId(tmntId, "tmt")) { 
+    throw new Error("Invalid tmnt id");
   }
+  let response;
+  try {
+    response = await axios.delete(tmntUrl + tmntId, { withCredentials: true });    
+  } catch (err) {
+    throw new Error(`deleteAllDivEntriesForTmnt failed: ${err instanceof Error ? err.message : err}`);
+  }
+  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+    throw new Error("Error deleting divEntries for tmnt");
+  }
+  return response.data.deleted.count;
 }

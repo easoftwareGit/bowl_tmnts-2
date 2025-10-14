@@ -16,11 +16,6 @@ export async function GET(
     }
 
     const oneBrkts = await prisma.one_Brkt.findMany({
-      select: {
-        id: true,
-        brkt_id: true,
-        bindex: true,
-      },
       where: { brkt_id: brktId },
       orderBy: { bindex: "asc" },
     });

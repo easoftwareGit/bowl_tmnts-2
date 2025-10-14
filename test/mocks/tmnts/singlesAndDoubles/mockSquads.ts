@@ -1,9 +1,29 @@
-import { brktEntryType, brktSeedType, brktType, divEntryType, divType, elimEntryType, elimType, gameType, laneType, oneBrktType, playerType, potCategoriesTypes, potEntryType, potType, squadType } from "@/lib/types/types";
+import { brktEntryType, brktRefundType, brktSeedType, brktType, divEntryType, divType, elimEntryType, elimType, eventType, gameType, laneType, oneBrktType, playerType, potCategoriesTypes, potEntryType, potType, squadType } from "@/lib/types/types";
 import { startOfDayFromString, todayStr } from "@/lib/dateTools";
 import { Squad } from "@prisma/client";
-import { initBrkt, initBrktEntry, initBrktSeed, initDiv, initDivEntry, initElimEntry, initGame, initOneBrkt, initPlayer, initPot, initPotEntry, initSquad } from "@/lib/db/initVals";
+import { initBrkt, initBrktEntry, initBrktRefund, initBrktSeed, initDiv, initDivEntry, initElim, initElimEntry, initEvent, initGame, initOneBrkt, initPlayer, initPot, initPotEntry, initSquad } from "@/lib/db/initVals";
 
-export const tmntToDelId = 'tmt_467e51d71659d2e412cbc64a0d19ecb4'
+export const tmntToDelId = 'tmt_467e51d71659d2e412cbc64a0d19ecb4';
+
+export const mockEventsToPost: eventType[] = [
+  {
+    ...initEvent,
+    id: "evt_bd63777a6aee43be8372e4d008c1d6d0",
+    tmnt_id: 'tmt_e134ac14c5234d708d26037ae812ac33',
+    event_name: "Test 1",
+    tab_title: "Test 1",
+    team_size: 1,
+    games: 6,
+    entry_fee: '80',
+    lineage: '18',
+    prize_fund: '55',
+    other: '2',
+    expenses: '5',
+    added_money: '0',    
+    lpox: '80',
+    sort_order: 1,
+  }
+]
 
 export const mockDivs: divType[] = [
   {
@@ -43,9 +63,9 @@ export const mockDivs: divType[] = [
 export const mockDivsToPost: divType[] = [
   {
     ...initDiv,
-    id: "div_1f42042f9ef24029a0a2d48cc276a088", // changed last digit to make unique
-    tmnt_id: tmntToDelId,
-    div_name: "Scratch",
+    id: "div_1112042f9ef24029a0a2d48cc276a088", 
+    tmnt_id: 'tmt_467e51d71659d2e412cbc64a0d19ecb4',
+    div_name: "Test Div",
     hdcp_per: 0,
     hdcp_from: 230,
     int_hdcp: true, 
@@ -54,9 +74,9 @@ export const mockDivsToPost: divType[] = [
   },
   {
     ...initDiv,
-    id: "div_29b9225d8dd44a4eae276f8bde855728", // changed last digit to make unique
-    tmnt_id: tmntToDelId,
-    div_name: "50+ Scratch",
+    id: "div_1122042f9ef24029a0a2d48cc276a088", 
+    tmnt_id: 'tmt_467e51d71659d2e412cbc64a0d19ecb4',
+    div_name: "50+ Test Div",
     hdcp_per: 0,
     hdcp_from: 230,
     int_hdcp: true, 
@@ -199,7 +219,7 @@ export const mockSquadsToPost: squadType[] = [
     games: 6,
     lane_count: 12, 
     starting_lane: 1,
-    sort_order: 1,
+    sort_order: 2,
   },
 ]
 
@@ -417,49 +437,49 @@ export const mockLanesToPost: laneType[] = [
   {
     id: 'lan_20c24199328447f8bbe95c05e1b84601',
     lane_number: 1,
-    squad_id: 'sqd_20c24199328447f8bbe95c05e1b84645',
+    squad_id: 'sqd_1234ec18b3d44c0189c83f6ac5fd4ad6',
     in_use: true,
   },
   {
     id: 'lan_20c24199328447f8bbe95c05e1b84602',
     lane_number: 2,
-    squad_id: 'sqd_20c24199328447f8bbe95c05e1b84645',
+    squad_id: 'sqd_1234ec18b3d44c0189c83f6ac5fd4ad6',
     in_use: true,
   },
   {
     id: 'lan_20c24199328447f8bbe95c05e1b84603',
     lane_number: 3,
-    squad_id: 'sqd_20c24199328447f8bbe95c05e1b84645',
+    squad_id: 'sqd_1234ec18b3d44c0189c83f6ac5fd4ad6',
     in_use: true,
   },
   {
     id: 'lan_20c24199328447f8bbe95c05e1b84604',
     lane_number: 4,
-    squad_id: 'sqd_20c24199328447f8bbe95c05e1b84645',
+    squad_id: 'sqd_1234ec18b3d44c0189c83f6ac5fd4ad6',
     in_use: true,
   },
   {
     id: 'lan_20c24199328447f8bbe95c05e1b84605',
     lane_number: 5,
-    squad_id: 'sqd_20c24199328447f8bbe95c05e1b84646',
+    squad_id: 'sqd_1234ec18b3d44c0189c83f6ac5fd4ad6',
     in_use: true,
   },
   {
     id: 'lan_20c24199328447f8bbe95c05e1b84606',
     lane_number: 6,
-    squad_id: 'sqd_20c24199328447f8bbe95c05e1b84646',
+    squad_id: 'sqd_1234ec18b3d44c0189c83f6ac5fd4ad6',
     in_use: true,
   },
   {
     id: 'lan_20c24199328447f8bbe95c05e1b84607',
     lane_number: 7,
-    squad_id: 'sqd_20c24199328447f8bbe95c05e1b84646', 
+    squad_id: 'sqd_1234ec18b3d44c0189c83f6ac5fd4ad6', 
     in_use: true,
   },
   {
     id: 'lan_20c24199328447f8bbe95c05e1b84608',
     lane_number: 8,
-    squad_id: 'sqd_20c24199328447f8bbe95c05e1b84646',
+    squad_id: 'sqd_1234ec18b3d44c0189c83f6ac5fd4ad6',
     in_use: true,
   },
 ]
@@ -468,8 +488,8 @@ export const mockPotsToPost: potType[] = [
   {
     ...initPot, 
     id: "pot_01758d99c5494efabb3b0d273cf22e7a",
-    squad_id: mockSquadsToPost[0].id,
-    div_id: mockDivs[0].id,
+    squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
+    div_id: 'div_18997d3fd7ef4eb7ad2b53a9e93f9ce5',
     sort_order: 1,
     fee: '20',
     pot_type: "Game" as potCategoriesTypes,
@@ -477,8 +497,8 @@ export const mockPotsToPost: potType[] = [
   {
     ...initPot, 
     id: "pot_02758d99c5494efabb3b0d273cf22e7a",
-    squad_id: mockSquadsToPost[0].id,
-    div_id: mockDivs[0].id,
+    squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
+    div_id: 'div_18997d3fd7ef4eb7ad2b53a9e93f9ce5',
     sort_order: 2,
     fee: '10',
     pot_type: "Last Game" as potCategoriesTypes,
@@ -486,36 +506,9 @@ export const mockPotsToPost: potType[] = [
   {
     ...initPot, 
     id: "pot_03758d99c5494efabb3b0d273cf22e7a",
-    squad_id: mockSquadsToPost[0].id,
-    div_id: mockDivs[0].id,
+    squad_id: 'sqd_42be0f9d527e4081972ce8877190489d',
+    div_id: 'div_18997d3fd7ef4eb7ad2b53a9e93f9ce5',
     sort_order: 3,
-    fee: '5',
-    pot_type: "Series" as potCategoriesTypes,
-  },
-  {
-    ...initPot, 
-    id: "pot_04758d99c5494efabb3b0d273cf22e7a",
-    squad_id: mockSquadsToPost[1].id,
-    div_id: mockDivs[1].id,
-    sort_order: 4,
-    fee: '20',
-    pot_type: "Game" as potCategoriesTypes,
-  },
-  {
-    ...initPot, 
-    id: "pot_05758d99c5494efabb3b0d273cf22e7a",
-    squad_id: mockSquadsToPost[1].id,
-    div_id: mockDivs[1].id,
-    sort_order: 5,
-    fee: '10',
-    pot_type: "Last Game" as potCategoriesTypes,
-  },
-  {
-    ...initPot, 
-    id: "pot_06758d99c5494efabb3b0d273cf22e7a",
-    squad_id: mockSquadsToPost[1].id,
-    div_id: mockDivs[1].id,
-    sort_order: 6,
     fee: '5',
     pot_type: "Series" as potCategoriesTypes,
   },
@@ -586,7 +579,7 @@ export const mockBrktsToPost: brktType[] = [
 
 export const mockElimsToPost: elimType[] = [
   {
-    ...initBrkt,
+    ...initElim,
     id: "elm_01758d99c5494efabb3b0d273cf22e7b",
     squad_id: mockSquadsToPost[0].id,
     div_id: mockDivsToPost[0].id,
@@ -596,7 +589,7 @@ export const mockElimsToPost: elimType[] = [
     fee: '5',
   },
   {
-    ...initBrkt,
+    ...initElim,
     id: "elm_02758d99c5494efabb3b0d273cf22e7b",
     squad_id: mockSquadsToPost[0].id,
     div_id: mockDivsToPost[0].id,
@@ -606,7 +599,7 @@ export const mockElimsToPost: elimType[] = [
     fee: '5',
   },
   {
-    ...initBrkt,
+    ...initElim,
     id: "elm_03758d99c5494efabb3b0d273cf22e7b",
     squad_id: mockSquadsToPost[1].id,
     div_id: mockDivsToPost[1].id,
@@ -616,7 +609,7 @@ export const mockElimsToPost: elimType[] = [
     fee: '5',
   },
   {
-    ...initBrkt,
+    ...initElim,
     id: "elm_04758d99c5494efabb3b0d273cf22e7b",
     squad_id: mockSquadsToPost[1].id,
     div_id: mockDivsToPost[1].id,
@@ -708,28 +701,28 @@ export const mockDivEntriesToPost: divEntryType[] = [
 export const mockPotEntriesToPost: potEntryType[] = [
   {
     ...initPotEntry,
-    id: 'pen_01be0472be3d476ea1caa99dd05953fa',
+    id: 'pen_a1be0472be3d476ea1caa99dd05953ff',
     pot_id: 'pot_98b3a008619b43e493abf17d9f462a65',
     player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
     fee: '20'
   },
   {
     ...initPotEntry,
-    id: 'pen_02be0472be3d476ea1caa99dd05953fa',
+    id: 'pen_a2be0472be3d476ea1caa99dd05953ff',
     pot_id: 'pot_98b3a008619b43e493abf17d9f462a65',
     player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
     fee: '20'
   },
   {
     ...initPotEntry,
-    id: 'pen_03be0472be3d476ea1caa99dd05953fa',
+    id: 'pen_a3be0472be3d476ea1caa99dd05953ff',
     pot_id: 'pot_98b3a008619b43e493abf17d9f462a65',
     player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
     fee: '20'
   },
   {
     ...initPotEntry,
-    id: 'pen_04be0472be3d476ea1caa99dd05953fa',
+    id: 'pen_a4be0472be3d476ea1caa99dd05953ff',
     pot_id: 'pot_98b3a008619b43e493abf17d9f462a65',
     player_id: 'ply_8b0fd8bbd9e34d34a7fa90b4111c6e40',
     fee: '20'
@@ -774,6 +767,19 @@ export const mockBrktEntriesToPost: brktEntryType[] = [
     num_brackets: 4,
     fee: '20',
     time_stamp: new Date().getTime(),
+  },
+]
+
+export const mockBrktRefundsToPost: brktRefundType[] = [
+  {
+    ...initBrktRefund,
+    brkt_entry_id: 'ben_01ce0472be3d476ea1caa99dd05953fa',
+    num_refunds: 2,
+  },
+  {
+    ...initBrktRefund,
+    brkt_entry_id: 'ben_02ce0472be3d476ea1caa99dd05953fa',
+    num_refunds: 2,
   },
 ]
 

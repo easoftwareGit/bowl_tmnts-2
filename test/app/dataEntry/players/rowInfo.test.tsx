@@ -1,185 +1,27 @@
 import { brktsColNameEnd, entryFeeColName, entryNumBrktsColName, feeColNameEnd, isBrktsColumnName, isDivEntryFeeColumnName, isElimFeeColumnName, isPotFeeColumnName, playerEntryData } from "@/app/dataEntry/playersForm/createColumns";
 import { findNextError, getRowPlayerName, exportedForTesting, CheckType, getDivsPotsBrktsElimsCounts, getDivsPotsBrktsElimsCountErrMsg } from "@/app/dataEntry/playersForm/rowInfo";
 import { BracketList } from "@/components/brackets/bracketListClass";
-import { defaultBrktPlayers, initBrkt, initDiv, initElim, initEvent, initLane, initPot, initSquad, initTmnt } from "@/lib/db/initVals";
 import { getBrktOrElimName, getDivName } from "@/lib/getName";
-import { allDataOneTmntType, brktType, dataOneTmntType, elimType } from "@/lib/types/types";
+import { brktType, elimType } from "@/lib/types/types";
 import { maxAverage, maxBrackets, maxMoney } from "@/lib/validation";
 import { cloneDeep } from "lodash";
+import { mockTmntFullData } from "../../../mocks/tmnts/tmntFulldata/mockTmntFullData";
+import { defaultBrktPlayers } from "@/lib/db/initVals";
 
 const { validAverage, validLane, validPosition, validDivs, validPots, validBrkts, validElims } = exportedForTesting;
 
-describe('findError', () => {
+describe('rowInfo tests', () => { 
 
-  const tmntData: dataOneTmntType = {
-    tmnt: {
-      ...initTmnt,
-      id: "tmt_d237a388a8fc4641a2e37233f1d6bebd",
-      user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
-      tmnt_name: "Full Tournament",
-      bowl_id: "bwl_561540bd64974da9abdd97765fdb3659",
-    },
-    events: [{    
-      ...initEvent,
-      id: "evt_aff710c8493f4a218d2e2b045442974a",
-      tmnt_id: "tmt_a237a388a8fc4641a2e37233f1d6bebd",
-      event_name: "Singles",
-      team_size: 1,
-      games: 6,
-      entry_fee: '85',
-      lineage: '21',
-      prize_fund: '57',
-      other: '2',
-      expenses: '5',
-      added_money: '0',
-      sort_order: 1,
-    }],
-    divs: [{     
-      ...initDiv,
-      id: "div_99a3cae28786485bb7a036935f0f6a0a",
-      tmnt_id: "tmt_d237a388a8fc4641a2e37233f1d6bebd",
-      div_name: "Scratch",
-      hdcp_per: 0,
-      hdcp_from: 230,
-      int_hdcp: true,
-      hdcp_for: "Game",
-      sort_order: 1,
-    },
-    {
-      ...initDiv,
-      id: "div_66d39a83d7a84a8c85d28d8d1b2c7a90",
-      tmnt_id: "tmt_d237a388a8fc4641a2e37233f1d6bebd",
-      div_name: "HDCP",
-      hdcp_per: 0.90,
-      hdcp_from: 230,
-      int_hdcp: true,
-      hdcp_for: "Game",
-      sort_order: 2,
-    },],
-    squads: [{ 
-      ...initSquad,
-      id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-      event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
-      squad_name: "Squad 1",        
-      squad_time: null,
-      games: 6,
-      lane_count: 12,
-      starting_lane: 29,
-      sort_order: 1,
-    }],
-    lanes: [
-      {
-        ...initLane,
-        id: "lan_aa019d9e6b6e4c5b9f6b7d9e7f9b6c5d",
-        lane_number: 29,
-        squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-        in_use: true,
-      },
-      {
-        ...initLane,
-        id: "lan_aa029d9e6b6e4c5b9f6b7d9e7f9b6c5d",
-        lane_number: 30,
-        squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-        in_use: true,          
-      },
-      {
-        ...initLane,
-        id: "lan_aa039d9e6b6e4c5b9f6b7d9e7f9b6c5d",
-        lane_number: 31,
-        squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-        in_use: true,
-      },
-      {
-        ...initLane,
-        id: "lan_aa049d9e6b6e4c5b9f6b7d9e7f9b6c5d",
-        lane_number: 32,
-        squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-        in_use: true,
-      },
-    ],
-    pots: [
-      { 
-        ...initPot,
-        id: "pot_a9fd8f787de942a1a92aaa2df3e7c185",
-        squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-        div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
-        sort_order: 1,
-        fee: '20',
-        pot_type: "Game",
-      },
-      { 
-        ...initPot,
-        id: "pot_a9fd8f787de942a1a92aaa2df3e7c186",
-        squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-        div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
-        sort_order: 2,
-        fee: '10',
-        pot_type: "Last Game",
-      }
-    ],
-    brkts: [
-      {
-        ...initBrkt,
-        id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
-        squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-        div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
-        sort_order: 1,
-        start: 1,
-        games: 3,
-        players: 8,
-        fee: '5',
-        first: '25',
-        second: '10',
-        admin: '5',  
-      },
-      {
-        ...initBrkt,
-        id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
-        squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-        div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
-        sort_order: 2,
-        start: 4,
-        games: 3,
-        players: 8,
-        fee: '5',
-        first: '25',
-        second: '10',
-        admin: '5',  
-      }
-    ],
-    elims: [
-      {
-        ...initElim,
-        id: "elm_a47a4ec07f824b0e93169ae78e8b4b1e",
-        squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-        div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
-        sort_order: 1,
-        start: 1,
-        games: 3,
-        fee: '5',  
-      },
-      {
-        ...initElim,
-        id: "elm_a61eece3c50241e9925e9a520730ac7e",
-        squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-        div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
-        sort_order: 2,
-        start: 4,
-        games: 3,
-        fee: '5',  
-      }
-    ]
-  };
-  const div1FeeColName = entryFeeColName(tmntData.divs[0].id);
-  const div2FeeColName = entryFeeColName(tmntData.divs[1].id);
-  const pot1FeeColName = entryFeeColName(tmntData.pots[0].id);
-  const pot2FeeColName = entryFeeColName(tmntData.pots[1].id);
-  const brkt1NumColName = entryNumBrktsColName(tmntData.brkts[0].id);    
-  const brkt1FeeColName = entryFeeColName(tmntData.brkts[0].id);
-  const brkt2NumColName = entryNumBrktsColName(tmntData.brkts[1].id);
-  const brkt2FeeColName = entryFeeColName(tmntData.brkts[1].id);
-  const elim1FeeColName = entryFeeColName(tmntData.elims[0].id);
-  const elim2FeeColName = entryFeeColName(tmntData.elims[1].id);
+  const div1FeeColName = entryFeeColName(mockTmntFullData.divs[0].id);
+  const div2FeeColName = entryFeeColName(mockTmntFullData.divs[1].id);
+  const pot1FeeColName = entryFeeColName(mockTmntFullData.pots[0].id);
+  const pot2FeeColName = entryFeeColName(mockTmntFullData.pots[1].id);
+  const brkt1NumColName = entryNumBrktsColName(mockTmntFullData.brkts[0].id);    
+  const brkt1FeeColName = entryFeeColName(mockTmntFullData.brkts[0].id);
+  const brkt2NumColName = entryNumBrktsColName(mockTmntFullData.brkts[1].id);
+  const brkt2FeeColName = entryFeeColName(mockTmntFullData.brkts[1].id);
+  const elim1FeeColName = entryFeeColName(mockTmntFullData.elims[0].id);
+  const elim2FeeColName = entryFeeColName(mockTmntFullData.elims[1].id);
 
   const validRow = {
     id: 'player1',
@@ -224,8 +66,8 @@ describe('findError', () => {
   }
 
   const mockAllBrktsList: Record<string, BracketList> = {
-    [tmntData.brkts[0].id]: new BracketList(tmntData.brkts[0].id, 2, 3),
-    [tmntData.brkts[1].id]: new BracketList(tmntData.brkts[1].id, 2, 3),
+    [mockTmntFullData.brkts[0].id]: new BracketList(mockTmntFullData.brkts[0].id, 2, 3),
+    [mockTmntFullData.brkts[1].id]: new BracketList(mockTmntFullData.brkts[1].id, 2, 3),
   }
   const row3 = cloneDeep(validRow);
   row3.id = 'player3';
@@ -278,9 +120,9 @@ describe('findError', () => {
     row6,
     row7,
     row8]
-  mockAllBrktsList[tmntData.brkts[0].id].calcTotalBrkts(eightPlayers);
-  mockAllBrktsList[tmntData.brkts[1].id].calcTotalBrkts(eightPlayers);
-  
+  mockAllBrktsList[mockTmntFullData.brkts[0].id].calcTotalBrkts(eightPlayers);
+  mockAllBrktsList[mockTmntFullData.brkts[1].id].calcTotalBrkts(eightPlayers);
+    
   describe('getRowPlayerName', () => {
 
     it('should return concatenated full name when first and last names exist', () => {
@@ -663,257 +505,257 @@ describe('findError', () => {
 
     it('should return empty error message when fee is valid number within range and checkType is Prelim', () => {
       const validRows = [validRow, row2];
-      const result = validDivs(validRows[0], tmntData, errPlayer, 0, CheckType.Prelim);
+      const result = validDivs(validRows[0], mockTmntFullData, errPlayer, 0, CheckType.Prelim);
       expect(result).toBe('');
     });
     it('should return empty error message when fee is valid number within range and checkType is Final', () => {
       const validRows = [validRow, row2];
-      const result = validDivs(validRows[0], tmntData, errPlayer, 0, CheckType.Final);
+      const result = validDivs(validRows[0], mockTmntFullData, errPlayer, 0, CheckType.Final);
       expect(result).toBe('');
     });
     it('should return error message when fee1 exceeds maxMoney and checkType is Prelim', () => {
       const row = { ...invalidBaseRow, [div1FeeColName]: maxMoney + 1 };
-      const result = validDivs(row, tmntData, errPlayer, 0, CheckType.Prelim);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Prelim);
       expect(result).toBe('Invalid Fee for Tom Jones in row 1');
     });
     it('should return error message when fee2 exceeds maxMoney and checkType is Prelim', () => {
       const row = { ...invalidBaseRow, [div2FeeColName]: maxMoney + 1 };
-      const result = validDivs(row, tmntData, errPlayer, 0, CheckType.Prelim);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Prelim);
       expect(result).toBe('Invalid Fee for Tom Jones in row 1');
     });
     it('should return error message when fee1 exceeds maxMoney and checkType is Final', () => {
       const row = { ...invalidBaseRow, [div1FeeColName]: maxMoney + 1 };
-      const result = validDivs(row, tmntData, errPlayer, 0, CheckType.Final);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Final);
       expect(result).toBe('Invalid Fee for Tom Jones in row 1');
     });
     it('should return error message when fee2 exceeds maxMoney and checkType is Final', () => {
       const row = { ...invalidBaseRow, [div2FeeColName]: maxMoney + 1 };
-      const result = validDivs(row, tmntData, errPlayer, 0, CheckType.Final);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Final);
       expect(result).toBe('Invalid Fee for Tom Jones in row 1');
     });
     it('should return error message when fee1 less than 0 and checkType is Prelim', () => {
       const row = { ...invalidBaseRow, [div1FeeColName]: -1 };
-      const result = validDivs(row, tmntData, errPlayer, 0, CheckType.Prelim);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Prelim);
       expect(result).toBe('Invalid Fee for Tom Jones in row 1');
     });
     it('should return error message when fee2 less than 0 and checkType is Prelim', () => {
       const row = { ...invalidBaseRow, [div2FeeColName]: -1 };
-      const result = validDivs(row, tmntData, errPlayer, 0, CheckType.Prelim);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Prelim);
       expect(result).toBe('Invalid Fee for Tom Jones in row 1');
     });
     it('should return error message when fee1 less than 0 and checkType is Final', () => {
       const row = { ...invalidBaseRow, [div1FeeColName]: -1 };
-      const result = validDivs(row, tmntData, errPlayer, 0, CheckType.Final);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Final);
       expect(result).toBe('Invalid Fee for Tom Jones in row 1');
     });
     it('should return error message when fee2 less than 0 and checkType is Final', () => {
       const row = { ...invalidBaseRow, [div2FeeColName]: -1 };
-      const result = validDivs(row, tmntData, errPlayer, 0, CheckType.Final);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Final);
       expect(result).toBe('Invalid Fee for Tom Jones in row 1');
     });
     it('should return error message when fee is not a number and checkType is Prelim', () => {
       const row = { ...invalidBaseRow, [div2FeeColName]: "abc" };
-      const result = validDivs(row, tmntData, errPlayer, 0, CheckType.Prelim);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Prelim);
       expect(result).toBe('Invalid Fee for Tom Jones in row 1');
     });
     it('should return error message when fee not a number and checkType is Final', () => {
       const row = { ...invalidBaseRow, [div2FeeColName]: "abc" };
-      const result = validDivs(row, tmntData, errPlayer, 0, CheckType.Final);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Final);
       expect(result).toBe('Invalid Fee for Tom Jones in row 1');
     });
     it('should return empty error message when fee1 is null and checkType is Prelim', () => {
       const row = { ...invalidBaseRow, [div1FeeColName]: null };
-      const result = validDivs(row, tmntData, errPlayer, 0, CheckType.Prelim);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Prelim);
       expect(result).toBe('');
     });
     it('should return empty error message when fee2 is null and checkType is Prelim', () => {
       const row = { ...invalidBaseRow, [div2FeeColName]: null };
-      const result = validDivs(row, tmntData, errPlayer, 0, CheckType.Prelim);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Prelim);
       expect(result).toBe('');
     });
     it('should return empty error message when fee1 and fee2 are null and checkType is Prelim', () => {
       const row = { ...invalidBaseRow, [div1FeeColName]: null, [div2FeeColName]: null };
-      const result = validDivs(row, tmntData, errPlayer, 0, CheckType.Prelim);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Prelim);
       expect(result).toBe('');
     });
     it('should return empty error message when fee1 is null, fee2 is valid and checkType is Final', () => {
       const row = { ...invalidBaseRow, [div1FeeColName]: null };
-      const result = validDivs(row, tmntData, errPlayer, 0, CheckType.Final);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Final);
       expect(result).toBe('');
     });
     it('should return empty error message when fee1 is valid, fee2 is null and checkType is Final', () => {
       const row = { ...invalidBaseRow, [div2FeeColName]: null };
-      const result = validDivs(row, tmntData, errPlayer, 0, CheckType.Final);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Final);
       expect(result).toBe('');
     });
     it('should return error message when fee1 and fee2 are null and checkType is Final', () => {
       const row = { ...invalidBaseRow, [div1FeeColName]: null, [div2FeeColName]: null };
-      const result = validDivs(row, tmntData, errPlayer, 0, CheckType.Final);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Final);
       expect(result).toBe('Missing Division Fee for Tom Jones in row 1');
     });
   });
 
   describe('validPots', () => {
-    const playerDivs = [tmntData.divs[0].id];
+    const playerDivs = [mockTmntFullData.divs[0].id];
     it('should return empty string when all pot fees are valid', () => {
       const validRows = [validRow, row2];
-      const result = validPots(validRows[0], tmntData, playerDivs, errPlayer, 0);
+      const result = validPots(validRows[0], mockTmntFullData, playerDivs, errPlayer, 0);
       expect(result).toBe("");
     });
     it('should return empty string when pot fee is null or undefined', () => {
       const row = { ...invalidBaseRow, [pot1FeeColName]: null, [pot2FeeColName]: undefined };
-      const result = validPots(row, tmntData, playerDivs, errPlayer, 0);
+      const result = validPots(row, mockTmntFullData, playerDivs, errPlayer, 0);
       expect(result).toBe("");
     });
     it('should return empty string when pot fee is 0', () => {
       const row = { ...invalidBaseRow, [pot1FeeColName]: 0, [pot2FeeColName]: 0 };
-      const result = validPots(row, tmntData, playerDivs, errPlayer, 0);
+      const result = validPots(row, mockTmntFullData, playerDivs, errPlayer, 0);
       expect(result).toBe("");
     });
     it('should return empty string when all pot fees are valid', () => {
       const row = { ...invalidBaseRow, [pot1FeeColName]: 20, [pot2FeeColName]: 10 };
-      const result = validPots(row, tmntData, playerDivs, errPlayer, 0);
+      const result = validPots(row, mockTmntFullData, playerDivs, errPlayer, 0);
       expect(result).toBe("");
     });
     it('should return error message with player name when pot 1 fee is invalid', () => {
       const row = { ...invalidBaseRow, [pot1FeeColName]: 15, [pot2FeeColName]: 10 };
-      const result = validPots(row, tmntData, playerDivs, errPlayer, 0);
+      const result = validPots(row, mockTmntFullData, playerDivs, errPlayer, 0);
       expect(result).toBe("Invalid pot fee in Scratch: Gm for Tom Jones in row 1");
     });
     it('should return error message with player name when pot 2 fee is invalid', () => {
       const row = { ...invalidBaseRow, [pot1FeeColName]: 20, [pot2FeeColName]: 15 };
-      const result = validPots(row, tmntData, playerDivs, errPlayer, 0);
+      const result = validPots(row, mockTmntFullData, playerDivs, errPlayer, 0);
       expect(result).toBe("Invalid pot fee in Scratch: LG for Tom Jones in row 1");
     });
     it('should return error message with player name when pot fee is negative', () => {
       const row = { ...invalidBaseRow, [pot1FeeColName]: -1, [pot2FeeColName]: 10 };
-      const result = validPots(row, tmntData, playerDivs, errPlayer, 0);
+      const result = validPots(row, mockTmntFullData, playerDivs, errPlayer, 0);
       expect(result).toBe("Invalid pot fee in Scratch: Gm for Tom Jones in row 1");
     });
     it('should return error message with player name when pot fee is more than max money', () => {
       const row = { ...invalidBaseRow, [pot1FeeColName]: maxMoney + 1, [pot2FeeColName]: 10 };
-      const result = validPots(row, tmntData, playerDivs, errPlayer, 0);
+      const result = validPots(row, mockTmntFullData, playerDivs, errPlayer, 0);
       expect(result).toBe("Invalid pot fee in Scratch: Gm for Tom Jones in row 1");
     });
     it('should return error message when player entred in a pot they are not eligible for', () => { 
       const row = { ...invalidBaseRow, [div1FeeColName]: undefined as any, [pot1FeeColName]: 20, [pot2FeeColName]: 10 };
-      const onlyOneDiv = [tmntData.divs[1].id];
-      const result = validPots(row, tmntData, onlyOneDiv, errPlayer, 0);
+      const onlyOneDiv = [mockTmntFullData.divs[1].id];
+      const result = validPots(row, mockTmntFullData, onlyOneDiv, errPlayer, 0);
       expect(result).toBe("Tom Jones is not entered in the division for pot Scratch: Gm in row 1");      
     })
   });
 
   describe('validBrkts', () => {
-    const playerDivs = [tmntData.divs[0].id];
+    const playerDivs = [mockTmntFullData.divs[0].id];
     it('should return empty string when bracket numbers are within valid range', () => {
       const row = { ...invalidBaseRow, [brkt1NumColName]: 4, [brkt2NumColName]: 4 };
-      const result = validBrkts(row, tmntData, playerDivs, errPlayer, 0);
+      const result = validBrkts(row, mockTmntFullData, playerDivs, errPlayer, 0);
       expect(result).toBe('');
     });
     it('should return empty string when bracket numbers are 0', () => {
       const row = { ...invalidBaseRow, [brkt1NumColName]: 0, [brkt2NumColName]: 0 };
-      const result = validBrkts(row, tmntData, playerDivs, errPlayer, 0);
+      const result = validBrkts(row, mockTmntFullData, playerDivs, errPlayer, 0);
       expect(result).toBe('');
     });
     it('should return empty string when bracket numbers are null', () => {
       const row = { ...invalidBaseRow, [brkt1NumColName]: null, [brkt2NumColName]: null };
-      const result = validBrkts(row, tmntData, playerDivs, errPlayer, 0);
+      const result = validBrkts(row, mockTmntFullData, playerDivs, errPlayer, 0);
       expect(result).toBe('');
     });
     it('should return empty string when bracket numbers are undefined', () => {
       const row = { ...invalidBaseRow, [brkt1NumColName]: undefined, [brkt2NumColName]: undefined };
-      const result = validBrkts(row, tmntData, playerDivs, errPlayer, 0);
+      const result = validBrkts(row, mockTmntFullData, playerDivs, errPlayer, 0);
       expect(result).toBe('');
     });
     it('should return error message when bracket 1 number is negative', () => {
       const row = { ...invalidBaseRow, [brkt1NumColName]: -1, [brkt2NumColName]: 4 };
-      const result = validBrkts(row, tmntData, playerDivs, errPlayer, 0);      
+      const result = validBrkts(row, mockTmntFullData, playerDivs, errPlayer, 0);      
       expect(result).toBe('Number of brackets in Scratch: 1-3 is less than 0 for Tom Jones in row 1');
     });
     it('should return error message when bracket 2 number is negative', () => {
       const row = { ...invalidBaseRow, [brkt1NumColName]: 4, [brkt2NumColName]: -1 };
-      const result = validBrkts(row, tmntData, playerDivs, errPlayer, 0);      
+      const result = validBrkts(row, mockTmntFullData, playerDivs, errPlayer, 0);      
       expect(result).toBe('Number of brackets in Scratch: 4-6 is less than 0 for Tom Jones in row 1');
     });
     it('should return error message when bracket 1 number is too large', () => {
       const row = { ...invalidBaseRow, [brkt1NumColName]: maxBrackets + 1, [brkt2NumColName]: 4 };
-      const result = validBrkts(row, tmntData, playerDivs, errPlayer, 0);      
+      const result = validBrkts(row, mockTmntFullData, playerDivs, errPlayer, 0);      
       expect(result).toBe('Number of brackets in Scratch: 1-3 is more than 999 for Tom Jones in row 1');
     });
     it('should return error message when bracket 2 number is too large', () => {
       const row = { ...invalidBaseRow, [brkt1NumColName]: 4, [brkt2NumColName]: maxBrackets + 1 };
-      const result = validBrkts(row, tmntData, playerDivs, errPlayer, 0);      
+      const result = validBrkts(row, mockTmntFullData, playerDivs, errPlayer, 0);      
       expect(result).toBe('Number of brackets in Scratch: 4-6 is more than 999 for Tom Jones in row 1');
     });
     it('should return error message when player entred in a bracket they are not eligible for', () => { 
       const row = { ...invalidBaseRow, [div1FeeColName]: undefined as any, [brkt1NumColName]: 4, [brkt2NumColName]: 4 };
-      const onlyOneDiv = [tmntData.divs[1].id];
-      const result = validBrkts(row, tmntData, onlyOneDiv, errPlayer, 0);
+      const onlyOneDiv = [mockTmntFullData.divs[1].id];
+      const result = validBrkts(row, mockTmntFullData, onlyOneDiv, errPlayer, 0);
       expect(result).toBe("Tom Jones is not entered in the division for bracket Scratch: 1-3 in row 1");
     })
   });
 
   describe('validElims', () => {
-    const playerDivs = [tmntData.divs[0].id];
+    const playerDivs = [mockTmntFullData.divs[0].id];
     it('should return empty string when all elim fees are valid', () => {
       const validRows = [validRow, row2];
-      const result = validElims(validRows[0], tmntData, playerDivs, errPlayer, 0);
+      const result = validElims(validRows[0], mockTmntFullData, playerDivs, errPlayer, 0);
       expect(result).toBe("");
     });
     it('should return empty string when elim fee is null or undefined', () => {
       const row = { ...invalidBaseRow, [elim1FeeColName]: null, [elim2FeeColName]: undefined };
-      const result = validElims(row, tmntData, playerDivs, errPlayer, 0);
+      const result = validElims(row, mockTmntFullData, playerDivs, errPlayer, 0);
       expect(result).toBe("");
     });
     it('should return empty string when elim fee 0', () => {
       const row = { ...invalidBaseRow, [elim1FeeColName]: 0, [elim2FeeColName]: 0 };
-      const result = validElims(row, tmntData, playerDivs, errPlayer, 0);
+      const result = validElims(row, mockTmntFullData, playerDivs, errPlayer, 0);
       expect(result).toBe("");
     });
     it('should return empty string when elim fee are valid', () => {
       const row = { ...invalidBaseRow, [elim1FeeColName]: 5, [elim2FeeColName]: 5 };
-      const result = validElims(row, tmntData, playerDivs, errPlayer, 0);
+      const result = validElims(row, mockTmntFullData, playerDivs, errPlayer, 0);
       expect(result).toBe("");
     });
     it('should return error message with player name when elim 1 fee invalid', () => {
       const row = { ...invalidBaseRow, [elim1FeeColName]: 15, [elim2FeeColName]: 5 };
-      const result = validElims(row, tmntData, playerDivs, errPlayer, 0);
+      const result = validElims(row, mockTmntFullData, playerDivs, errPlayer, 0);
       expect(result).toBe("Invalid eliminator fee in Scratch: 1-3 for Tom Jones in row 1");
     });
     it('should return error message with player name when elim 2 fee invalid', () => {
       const row = { ...invalidBaseRow, [elim1FeeColName]: 5, [elim2FeeColName]: 15 };
-      const result = validElims(row, tmntData, playerDivs, errPlayer, 0);
+      const result = validElims(row, mockTmntFullData, playerDivs, errPlayer, 0);
       expect(result).toBe("Invalid eliminator fee in Scratch: 4-6 for Tom Jones in row 1");
     });
     it('should return error message with player name when elim 1 fee is negative', () => {
       const row = { ...invalidBaseRow, [elim1FeeColName]: -1, [elim2FeeColName]: 5 };
-      const result = validElims(row, tmntData, playerDivs, errPlayer, 0);
+      const result = validElims(row, mockTmntFullData, playerDivs, errPlayer, 0);
       expect(result).toBe("Invalid eliminator fee in Scratch: 1-3 for Tom Jones in row 1");
     });
     it('should return error message with player name when elim 2 fee is negative', () => {
       const row = { ...invalidBaseRow, [elim1FeeColName]: 5, [elim2FeeColName]: -5 };
-      const result = validElims(row, tmntData, playerDivs, errPlayer, 0);
+      const result = validElims(row, mockTmntFullData, playerDivs, errPlayer, 0);
       expect(result).toBe("Invalid eliminator fee in Scratch: 4-6 for Tom Jones in row 1");
     });
     it('should return error message with player name when elim 1 fee is too large', () => {
       const row = { ...invalidBaseRow, [elim1FeeColName]: maxMoney + 1, [elim2FeeColName]: 5 };
-      const result = validElims(row, tmntData, playerDivs, errPlayer, 0);
+      const result = validElims(row, mockTmntFullData, playerDivs, errPlayer, 0);
       expect(result).toBe("Invalid eliminator fee in Scratch: 1-3 for Tom Jones in row 1");
     });
     it('should return error message with player name when elim 2 fee is too large', () => {
       const row = { ...invalidBaseRow, [elim1FeeColName]: 5, [elim2FeeColName]: maxMoney + 1 };
-      const result = validElims(row, tmntData, playerDivs, errPlayer, 0);
+      const result = validElims(row, mockTmntFullData, playerDivs, errPlayer, 0);
       expect(result).toBe("Invalid eliminator fee in Scratch: 4-6 for Tom Jones in row 1");
     });
     it('should return error message with player name when elim 2 fee is too large', () => {
       const row = { ...invalidBaseRow, [elim1FeeColName]: 5, [elim2FeeColName]: maxMoney + 1 };
-      const result = validElims(row, tmntData, playerDivs, errPlayer, 0);
+      const result = validElims(row, mockTmntFullData, playerDivs, errPlayer, 0);
       expect(result).toBe("Invalid eliminator fee in Scratch: 4-6 for Tom Jones in row 1");
     });
     it('should return error message when player entred in an elim they are not eligible for', () => { 
       const row = { ...invalidBaseRow, [div1FeeColName]: undefined as any, [elim1FeeColName]: 5, [elim2FeeColName]: 5 };
-      const onlyOneDiv = [tmntData.divs[1].id];
-      const result = validElims(row, tmntData, onlyOneDiv, errPlayer, 0);
+      const onlyOneDiv = [mockTmntFullData.divs[1].id];
+      const result = validElims(row, mockTmntFullData, onlyOneDiv, errPlayer, 0);
       expect(result).toBe("Tom Jones is not entered in the division for eliminator Scratch: 1-3 in row 1");
     })
 
@@ -923,14 +765,14 @@ describe('findError', () => {
 
     it('should return empty string when all row data is valid', () => {      
       const validRows = [validRow, row2];
-      const result = findNextError(validRows, tmntData, CheckType.Prelim);
+      const result = findNextError(validRows, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('');
     });
     it('should return empty string when all row data is valid - no average', () => {      
       const row2a = cloneDeep(row2);
       row2a.average = null as any;
       const validRows = [validRow, row2a];
-      const result = findNextError(validRows, tmntData, CheckType.Prelim);
+      const result = findNextError(validRows, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('');
     });
     it('should return empty string when all row data is valid - no lane', () => {      
@@ -938,7 +780,7 @@ describe('findError', () => {
       row2a.lane = null as any;
       row2a.lanePos = null as any;
       const validRows = [validRow, row2a];
-      const result = findNextError(validRows, tmntData, CheckType.Prelim);
+      const result = findNextError(validRows, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('');
     });
     it('should return empty string when all row data is valid - no position', () => {      
@@ -946,7 +788,7 @@ describe('findError', () => {
       row2a.position = null as any;
       row2a.lanePos = null as any;
       const validRows = [validRow, row2a];
-      const result = findNextError(validRows, tmntData, CheckType.Prelim);
+      const result = findNextError(validRows, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('');
     });
     it('should return empty string when all row data is valid - no division, no Pots, no Brackets, no Elims', () => {      
@@ -962,7 +804,7 @@ describe('findError', () => {
       row2a[elim1FeeColName] = null as any;
       row2a[elim2FeeColName] = null as any;
       const validRows = [validRow, row2a];
-      const result = findNextError(validRows, tmntData, CheckType.Prelim);
+      const result = findNextError(validRows, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('');
     });
     it('should return empty string when all row data is valid - no pots', () => {      
@@ -970,7 +812,7 @@ describe('findError', () => {
       row2a[pot1FeeColName] = null as any;
       row2a[pot2FeeColName] = null as any;
       const validRows = [validRow, row2a];
-      const result = findNextError(validRows, tmntData, CheckType.Prelim);
+      const result = findNextError(validRows, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('');
     });
     it('should return empty string when all row data is valid - no brackets', () => {      
@@ -980,7 +822,7 @@ describe('findError', () => {
       row2a[brkt2FeeColName] = null as any;
       row2a[brkt2NumColName] = null as any;
       const validRows = [validRow, row2a];
-      const result = findNextError(validRows, tmntData, CheckType.Prelim);
+      const result = findNextError(validRows, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('');
     });
     it('should return empty string when all row data is valid - no elims', () => {      
@@ -988,130 +830,130 @@ describe('findError', () => {
       row2a[elim1FeeColName] = null as any;
       row2a[elim2FeeColName] = null as any;
       const validRows = [validRow, row2a];
-      const result = findNextError(validRows, tmntData, CheckType.Prelim);
+      const result = findNextError(validRows, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('');
     });    
     it('should return empty string when rows array is empty', () => {
       const emptyRows: typeof playerEntryData[] = [];
-      const result = findNextError(emptyRows, tmntData, CheckType.Prelim);
+      const result = findNextError(emptyRows, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('');
     });
     it('should return error message when rows array is null', () => {      
-      const result = findNextError(null as any, tmntData, CheckType.Prelim);
+      const result = findNextError(null as any, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('No players in the tournament');
     });
     it('should return error message when first name is missing', () => {
       const invalidRow = { ...invalidBaseRow, first_name: '' };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('Missing First Name in row 2');
     });
     it('should return error message when last name is missing', () => {
       const invalidRow = { ...invalidBaseRow, last_name: '' };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('Missing Last Name in row 2');
     });
     it('should return error message when average is invalid', () => { 
       const invalidRow = { ...invalidBaseRow, average: maxAverage + 1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('Invalid Average for Tom Jones in row 2');
     })
     it('should return no error message when average is blank and checkType is Prelim', () => { 
       const invalidRow = { ...invalidBaseRow, average: undefined as any};
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('');
     })    
     it('should return error message when lane is invalid', () => {
       const invalidRow = { ...invalidBaseRow, lane: -1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('Invalid Lane for Tom Jones in row 2');
     });
     it('should return no error message when lane is undefined and checkType is Prelim', () => {
       const invalidRow = { ...invalidBaseRow, lane: undefined as any};
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('');
     });
     it('should return error message when position is invalid and checkType is Prelim', () => {
       const invalidRow = { ...invalidBaseRow, position: '*' };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('Invalid Position for Tom Jones in row 2');
     });
     it('should return no error message when position is undefined and checkType is Prelim', () => {
       const invalidRow = { ...invalidBaseRow, position: undefined as any};
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('');
     });
     it('should return no error message when position is null and checkType is Prelim', () => {
       const invalidRow = { ...invalidBaseRow, position: null as any};
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('');
     });
     it('should return no error message when position is blank and checkType is Prelim', () => {
       const invalidRow = { ...invalidBaseRow, position: ''};
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('');
     });
     it('should return no error message when position is valid and checkType is Prelim', () => {
       const invalidRow = { ...invalidBaseRow, position: 'A'};
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('');
     });
     it('should return error message when division too low', () => {
       const invalidRow = { ...invalidBaseRow, [div1FeeColName]: -1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('Invalid Fee for Tom Jones in row 2');
     });
     it('should return error message when division too high', () => {
       const invalidRow = { ...invalidBaseRow, [div1FeeColName]: maxMoney + 1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('Invalid Fee for Tom Jones in row 2');
     });
     it('should return error message when pot fee is invalid', () => {
       const invalidRow = { ...invalidBaseRow, [pot1FeeColName]: 1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('Invalid pot fee in Scratch: Gm for Tom Jones in row 2');
     });
     it('should return error message when 2nd pot fee is invalid', () => {
       const invalidRow = { ...invalidBaseRow, [pot2FeeColName]: 1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('Invalid pot fee in Scratch: LG for Tom Jones in row 2');
     });
     it('should return error message when number of brackets is too low', () => {
       const invalidRow = { ...invalidBaseRow, [brkt1NumColName]: -1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('Number of brackets in Scratch: 1-3 is less than 0 for Tom Jones in row 2');
     });
     it('should return error message when number of brackets is too high', () => {
       const invalidRow = { ...invalidBaseRow, [brkt1NumColName]: maxBrackets + 1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('Number of brackets in Scratch: 1-3 is more than 999 for Tom Jones in row 2');
     });
     it('should return error message when eliminator fee is invalid', () => {
       const invalidRow = { ...invalidBaseRow, [elim1FeeColName]: 1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('Invalid eliminator fee in Scratch: 1-3 for Tom Jones in row 2');
     });
     it('should return error message when 2nd pot fee is invalid', () => {
       const invalidRow = { ...invalidBaseRow, [elim2FeeColName]: 1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
       expect(result.msg).toBe('Invalid eliminator fee in Scratch: 4-6 for Tom Jones in row 2');
     });
   });
@@ -1120,14 +962,14 @@ describe('findError', () => {
 
     it('should return empty string when all row data is valid', () => {      
       const validRows = [validRow, row2];
-      const result = findNextError(validRows, tmntData, CheckType.Final);
+      const result = findNextError(validRows, mockTmntFullData, CheckType.Final);
       expect(result.msg).toBe('');
     });
     it('should return error message - no average', () => {      
       const row2a = cloneDeep(row2);
       row2a.average = null as any;
       const validRows = [validRow, row2a];
-      const result = findNextError(validRows, tmntData, CheckType.Final);
+      const result = findNextError(validRows, mockTmntFullData, CheckType.Final);
       expect(result.msg).toBe('Missing Average for Jane Doe in row 2');
     });
     it('should return error message - no lane', () => {      
@@ -1135,7 +977,7 @@ describe('findError', () => {
       row2a.lane = null as any;
       row2a.lanePos = null as any;
       const validRows = [validRow, row2a];
-      const result = findNextError(validRows, tmntData, CheckType.Final);
+      const result = findNextError(validRows, mockTmntFullData, CheckType.Final);
       expect(result.msg).toBe('Missing Lane for Jane Doe in row 2');
     });
     it('should return error message - no position', () => {      
@@ -1143,7 +985,7 @@ describe('findError', () => {
       row2a.position = null as any;
       row2a.lanePos = null as any;
       const validRows = [validRow, row2a];
-      const result = findNextError(validRows, tmntData, CheckType.Final);
+      const result = findNextError(validRows, mockTmntFullData, CheckType.Final);
       expect(result.msg).toBe('Missing Position for Jane Doe in row 2');
     });
     it('should return error message - no division', () => {      
@@ -1151,94 +993,94 @@ describe('findError', () => {
       row2a[div1FeeColName] = null as any;   
       row2a[div2FeeColName] = null as any;
       const validRows = [validRow, row2a];
-      const result = findNextError(validRows, tmntData, CheckType.Final);
+      const result = findNextError(validRows, mockTmntFullData, CheckType.Final);
       expect(result.msg).toBe('Missing Division Fee for Jane Doe in row 2');
     });
     it('should return error message when rows array is empty', () => {
       const emptyRows: typeof playerEntryData[] = [];
-      const result = findNextError(emptyRows, tmntData, CheckType.Final);
+      const result = findNextError(emptyRows, mockTmntFullData, CheckType.Final);
       expect(result.msg).toBe('No players in the tournament');
     });
     it('should return error message when rows array is null', () => {      
-      const result = findNextError(null as any, tmntData, CheckType.Final);
+      const result = findNextError(null as any, mockTmntFullData, CheckType.Final);
       expect(result.msg).toBe('No players in the tournament');
     });
     it('should return error message when first name is missing', () => {
       const invalidRow = { ...invalidBaseRow, first_name: '' };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Final);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Final);
       expect(result.msg).toBe('Missing First Name in row 2');
     });
     it('should return error message when last name is missing', () => {
       const invalidRow = { ...invalidBaseRow, last_name: '' };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Final);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Final);
       expect(result.msg).toBe('Missing Last Name in row 2');
     });
     it('should return error message when average is invalid', () => { 
       const invalidRow = { ...invalidBaseRow, average: maxAverage + 1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Final);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Final);
       expect(result.msg).toBe('Invalid Average for Tom Jones in row 2');
     })
     it('should return error message when lane is invalid', () => {
       const invalidRow = { ...invalidBaseRow, lane: -1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Final);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Final);
       expect(result.msg).toBe('Invalid Lane for Tom Jones in row 2');
     });
     it('should return error message when position is invalid and checkType is Final', () => {
       const invalidRow = { ...invalidBaseRow, position: '*' };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Final);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Final);
       expect(result.msg).toBe('Invalid Position for Tom Jones in row 2');
     });
     it('should return error message when division too low', () => {
       const invalidRow = { ...invalidBaseRow, [div1FeeColName]: -1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Final);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Final);
       expect(result.msg).toBe('Invalid Fee for Tom Jones in row 2');
     });
     it('should return error message when division too high', () => {
       const invalidRow = { ...invalidBaseRow, [div1FeeColName]: maxMoney + 1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Final);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Final);
       expect(result.msg).toBe('Invalid Fee for Tom Jones in row 2');
     });
     it('should return error message when pot fee is invalid', () => {
       const invalidRow = { ...invalidBaseRow, [pot1FeeColName]: 1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Final);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Final);
       expect(result.msg).toBe('Invalid pot fee in Scratch: Gm for Tom Jones in row 2');
     });
     it('should return error message when 2nd pot fee is invalid', () => {
       const invalidRow = { ...invalidBaseRow, [pot2FeeColName]: 1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Final);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Final);
       expect(result.msg).toBe('Invalid pot fee in Scratch: LG for Tom Jones in row 2');
     });
     it('should return error message when number of brackets is too low', () => {
       const invalidRow = { ...invalidBaseRow, [brkt1NumColName]: -1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Final);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Final);
       expect(result.msg).toBe('Number of brackets in Scratch: 1-3 is less than 0 for Tom Jones in row 2');
     });
     it('should return error message when number of brackets is too high', () => {
       const invalidRow = { ...invalidBaseRow, [brkt1NumColName]: maxBrackets + 1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Final);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Final);
       expect(result.msg).toBe('Number of brackets in Scratch: 1-3 is more than 999 for Tom Jones in row 2');
     });
     it('should return error message when eliminator fee is invalid', () => {
       const invalidRow = { ...invalidBaseRow, [elim1FeeColName]: 1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Final);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Final);
       expect(result.msg).toBe('Invalid eliminator fee in Scratch: 1-3 for Tom Jones in row 2');
     });
     it('should return error message when 2nd pot fee is invalid', () => {
       const invalidRow = { ...invalidBaseRow, [elim2FeeColName]: 1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, tmntData, CheckType.Final);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Final);
       expect(result.msg).toBe('Invalid eliminator fee in Scratch: 4-6 for Tom Jones in row 2');
     });
 
@@ -1296,8 +1138,8 @@ describe('findError', () => {
       sixOfEightPlayers[7][brkt1NumColName] = undefined as any;
       sixOfEightPlayers[7][brkt1FeeColName] = undefined as any;
       const sixOfEightBrkts = cloneDeep(mockAllBrktsList);
-      sixOfEightBrkts[tmntData.brkts[0].id].calcTotalBrkts(sixOfEightPlayers);
-      sixOfEightBrkts[tmntData.brkts[1].id].calcTotalBrkts(sixOfEightPlayers);    
+      sixOfEightBrkts[mockTmntFullData.brkts[0].id].calcTotalBrkts(sixOfEightPlayers);
+      sixOfEightBrkts[mockTmntFullData.brkts[1].id].calcTotalBrkts(sixOfEightPlayers);    
       const counts = getDivsPotsBrktsElimsCounts(mockEntriesCount, sixOfEightBrkts);
       expect(Object.keys(counts)).toHaveLength(8);      
       expect(counts[brkt1NumColName]).toBe(6);
@@ -1305,49 +1147,45 @@ describe('findError', () => {
   })
 
   describe('getDivsPotsBrktsElimsCountErrMsg', () => { 
-    const allTmntData: allDataOneTmntType = {
-      origData: cloneDeep(tmntData),
-      curData: cloneDeep(tmntData), 
-    }
     it('should return empty string when all counts are valid', () => {
       const counts = getDivsPotsBrktsElimsCounts(mockEntriesCount, mockAllBrktsList);
-      const result = getDivsPotsBrktsElimsCountErrMsg(counts, allTmntData);
+      const result = getDivsPotsBrktsElimsCountErrMsg(counts, mockTmntFullData);
       expect(result).toBe('');
     });
     it('should return error message when division count is invalid', () => {
       const invalidCounts = cloneDeep(mockEntriesCount);
       invalidCounts[div1FeeColName] = 0;
-      const result = getDivsPotsBrktsElimsCountErrMsg(invalidCounts, allTmntData);
+      const result = getDivsPotsBrktsElimsCountErrMsg(invalidCounts, mockTmntFullData);
       const divId = div1FeeColName.slice(0, -feeColNameEnd.length); 
-      const divName = getDivName(divId, allTmntData.curData.divs);
+      const divName = getDivName(divId, mockTmntFullData.divs);
       expect(result).toBe(`No division entries for ${divName}`);
     });
     it('should return error message when pot count is invalid', () => {
       const invalidCounts = cloneDeep(mockEntriesCount);
       invalidCounts[pot1FeeColName] = 0;
-      const result = getDivsPotsBrktsElimsCountErrMsg(invalidCounts, allTmntData);
+      const result = getDivsPotsBrktsElimsCountErrMsg(invalidCounts, mockTmntFullData);
       const potId = pot1FeeColName.slice(0, -feeColNameEnd.length); 
-      const pot = allTmntData.curData.pots.find((p) => p.id === potId);
+      const pot = mockTmntFullData.pots.find((p) => p.id === potId);
       expect(result).toBe(`No pot entries for ${pot?.pot_type}`);
     });
     it('should return error message when bracket count is invalid', () => {
       const invalidCounts = cloneDeep(mockEntriesCount);
       invalidCounts[brkt1NumColName] = defaultBrktPlayers - 2; // defaultBrktPlayers-1 is valid
-      const result = getDivsPotsBrktsElimsCountErrMsg(invalidCounts, allTmntData);
+      const result = getDivsPotsBrktsElimsCountErrMsg(invalidCounts, mockTmntFullData);
       const brktId = brkt1NumColName.slice(0, -brktsColNameEnd.length);
-      const brkt = allTmntData.curData.brkts.find((b) => b.id === brktId);
-      const brktName = getBrktOrElimName(brkt as brktType, allTmntData.curData.divs);
+      const brkt = mockTmntFullData.brkts.find((b) => b.id === brktId);
+      const brktName = getBrktOrElimName(brkt as brktType, mockTmntFullData.divs);
       expect(result).toBe(`Not enough bracket entries for ${brktName}`);
     });
     it('should return error message when eliminator count is invalid', () => {
       const invalidCounts = cloneDeep(mockEntriesCount);
       invalidCounts[elim1FeeColName] = 0;
-      const result = getDivsPotsBrktsElimsCountErrMsg(invalidCounts, allTmntData);
+      const result = getDivsPotsBrktsElimsCountErrMsg(invalidCounts, mockTmntFullData);
       const elimId = elim1FeeColName.slice(0, -feeColNameEnd.length);
-      const elim = allTmntData.curData.elims.find((e) => e.id === elimId);
-      const elimName = getBrktOrElimName(elim as elimType, allTmntData.curData.divs);      
+      const elim = mockTmntFullData.elims.find((e) => e.id === elimId);
+      const elimName = getBrktOrElimName(elim as elimType, mockTmntFullData.divs);      
       expect(result).toBe(`No elim entries for ${elimName}`);
     });
   })
-  
+
 })

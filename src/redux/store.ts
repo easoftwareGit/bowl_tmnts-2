@@ -1,10 +1,9 @@
 import { configureStore } from '@reduxjs/toolkit'
 import { TypedUseSelectorHook, useSelector } from 'react-redux';
-import allDataOneTmntReducer from './features/allDataOneTmnt/allDataOneTmntSlice';
-import allEntriesOneSquadReducer from './features/allEntriesOneSquad/allEntriesOneSquadSlice';
 import bowlsReducer from './features/bowls/bowlsSlice';
 import oneDivGameResultsReducer from './features/oneDivGameResults/oneDivGameResultsSlice';
 import oneTmntGameResultsReducer from './features/oneTmntGameResults/oneTmntGameResultsSlice';
+import tmntFullDataReducer from './features/tmntFullData/tmntFullDataSlice';
 import tmntsReducer from './features/tmnts/tmntsSlice';
 import tmntYearsReducer from './features/tmnts/yearsSlice';
 import userTmntsReducer from './features/userTmnts/userTmntsSlice';
@@ -13,11 +12,10 @@ import testdatesReducer from './features/testdates/testdatesSlice';
 // create the store, include reduces in object
 export const store = configureStore({
   reducer: {
-    allDataOneTmnt: allDataOneTmntReducer,
-    allEntriesOneSquad: allEntriesOneSquadReducer,
-    bowls: bowlsReducer,
+    bowls: bowlsReducer,    
     oneDivGameResults: oneDivGameResultsReducer,
     oneTmntGameResults: oneTmntGameResultsReducer,
+    tmntFullData: tmntFullDataReducer,
     tmnts: tmntsReducer,
     tmntYears: tmntYearsReducer,
     userTmnts: userTmntsReducer,

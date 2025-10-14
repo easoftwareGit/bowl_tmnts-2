@@ -2,8 +2,8 @@ import axios, { AxiosError } from "axios";
 import { basePlayersApi } from "@/lib/db/apiPaths";
 import { testBasePlayersApi } from "../../../testApi";
 import { initPlayer } from "@/lib/db/initVals";
-import { playerType, tmntEntryPlayerType } from "@/lib/types/types";
-import { deleteAllPlayersForSquad, deleteAllPlayersForTmnt, getAllPlayersForSquad, postManyPlayers } from "@/lib/db/players/dbPlayers";
+import { playerType } from "@/lib/types/types";
+import { deleteAllPlayersForSquad, deleteAllPlayersForTmnt, getAllPlayersForSquad, getAllPlayersForTmnt, postManyPlayers } from "@/lib/db/players/dbPlayers";
 import { mockPlayersToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { cloneDeep } from "lodash";
 
@@ -43,6 +43,7 @@ describe("Players - API's: /api/players", () => {
     position: 'A',
   }
 
+  const byeId = 'bye_ad8539071682476db842c59a4ec62dc7';
   const notFoundId = "ply_01234567890123456789012345678901";
   const notFoundSquadId = "sqd_01234567890123456789012345678901";
   const notFoundTmntId = "tmt_01234567890123456789012345678901";
@@ -50,10 +51,39 @@ describe("Players - API's: /api/players", () => {
 
   const squadId = "sqd_7116ce5f80164830830a7157eb093396";  
 
+  const testByeId = 'bye_0123456789abcdef0123456789abcdef';
+  const byePlayerToPost: playerType = {
+    ...initPlayer,
+    id: testByeId,
+    squad_id: squadId,
+    first_name: 'Bye',
+    last_name: null as any,
+    average: 0,
+    lane: null as any,
+    position: null as any
+  }
+
   const deletePostedPlayer = async () => {
     const response = await axios.get(url);
     const players = response.data.players;
     const toDel = players.find((p: playerType) => p.position === 'Z');
+    if (toDel) {
+      try {
+        const delResponse = await axios({
+          method: "delete",
+          withCredentials: true,
+          url: onePlayerUrl + toDel.id
+        });
+      } catch (err) {
+        if (err instanceof AxiosError) console.log(err.message);
+      }
+    }
+  }
+
+  const deletePostedByePlayer = async () => {
+    const response = await axios.get(url);
+    const players = response.data.players;
+    const toDel = players.find((p: playerType) => p.id === testByeId);
     if (toDel) {
       try {
         const delResponse = await axios({
@@ -76,8 +106,8 @@ describe("Players - API's: /api/players", () => {
     it('should get all players', async () => {
       const response = await axios.get(url);
       expect(response.status).toBe(200);
-      // 51 rows in prisma/seed.ts
-      expect(response.data.players).toHaveLength(51);
+      // 52 rows in prisma/seed.ts
+      expect(response.data.players).toHaveLength(52);
     })
 
   })
@@ -97,6 +127,25 @@ describe("Players - API's: /api/players", () => {
         expect(player.average).toEqual(testPlayer.average);
         expect(player.lane).toEqual(testPlayer.lane);
         expect(player.position).toEqual(testPlayer.position);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('it should get a Bye player', async () => {
+      try {
+        const response = await axios.get(onePlayerUrl + byeId);
+        const player = response.data.player;
+        expect(response.status).toBe(200);
+        expect(player.id).toEqual(byeId);
+        expect(player.first_name).toEqual("Bye");
+        expect(player.last_name).toBeNull();
+        expect(player.average).toBe(0);
+        expect(player.lane).toBeNull();
+        expect(player.position).toBeNull();
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -154,7 +203,7 @@ describe("Players - API's: /api/players", () => {
       const response = await axios.get(squadUrl + squadId);
       expect(response.status).toBe(200);
       const players = response.data.players;
-      expect(players.length).toBe(8); // 8 players in prisma/seeds
+      expect(players.length).toBe(9); // 9 players in prisma/seeds
       for (let i = 0; i < players.length; i++) {
         expect(players[i].squad_id).toEqual(squadId);
       }
@@ -167,7 +216,7 @@ describe("Players - API's: /api/players", () => {
       expect(players[5].lane).toEqual(2);
       expect(players[6].lane).toEqual(2);
       expect(players[7].lane).toEqual(2);
-
+      expect(players[8].lane).toBeNull();
 
       expect(players[0].position).toEqual('A');
       expect(players[1].position).toEqual('B');
@@ -177,6 +226,7 @@ describe("Players - API's: /api/players", () => {
       expect(players[5].position).toEqual('F');
       expect(players[6].position).toEqual('G');
       expect(players[7].position).toEqual('H');
+      expect(players[8].position).toBeNull();
     })
     it('should NOT get all players for a squad when squad id is invalid', async () => {
       try {
@@ -262,7 +312,7 @@ describe("Players - API's: /api/players", () => {
     
   })
 
-  describe('POST one player API: /api/players', () => { 
+  describe('POST one player - regular player, API: /api/players', () => { 
 
     const playerToPost: playerType = {
       ...initPlayer,
@@ -669,6 +719,221 @@ describe("Players - API's: /api/players", () => {
 
   })
 
+  describe('POST one player - bye player, API: /api/players', () => { 
+        
+    let createdPlayer = false;
+
+    beforeAll(async () => {
+      await deletePostedByePlayer();
+    })
+
+    beforeEach(() => {
+      createdPlayer = false;
+    })
+
+    afterEach(async () => {
+      if (createdPlayer) {
+        await deletePostedByePlayer();
+      }      
+    })
+
+    it('should post one bye player', async () => {
+      const playerJson = JSON.stringify(byePlayerToPost);
+      const response = await axios({
+        method: "post",
+        withCredentials: true,
+        url: url,
+        data: playerJson
+      });
+      expect(response.status).toBe(201);
+      createdPlayer = true;
+      const player = response.data.player;
+      expect(player.id).toEqual(byePlayerToPost.id);
+      expect(player.squad_id).toEqual(byePlayerToPost.squad_id);
+      expect(player.first_name).toEqual(byePlayerToPost.first_name);
+      expect(player.last_name).toBeNull();
+      expect(player.average).toEqual(byePlayerToPost.average);
+      expect(player.lane).toBeNull()
+      expect(player.position).toBeNull();
+    })
+    it('should NOT post a sanitized bye player - only acceptable name is Bye', async () => { 
+      const sanitizedPlayer = {
+        ...byePlayerToPost,
+        first_name: '<script>alert("xss")</script>',        
+      }
+      try {
+        const playerJson = JSON.stringify(sanitizedPlayer);
+        const response = await axios({
+          method: "post",
+          withCredentials: true,
+          url: url,
+          data: playerJson
+        });
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should NOT post a bye player when first name is blank', async () => {
+      const invalidPlayer = {
+        ...byePlayerToPost,
+        first_name: ''
+      }
+      const playerJson = JSON.stringify(invalidPlayer);
+      try {
+        const response = await axios({
+          method: "post",
+          withCredentials: true,
+          url: url,
+          data: playerJson
+        });
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should NOT post a player when last name is not blank', async () => {
+      const invalidPlayer = {
+        ...byePlayerToPost,
+        last_name: 'Bye'
+      }
+      const playerJson = JSON.stringify(invalidPlayer);
+      try {
+        const response = await axios({
+          method: "post",
+          withCredentials: true,
+          url: url,
+          data: playerJson
+        });
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should NOT post a bye player when first name is not "Bye"', async () => { 
+      const invalidPlayer = {
+        ...byePlayerToPost,
+        first_name: 'test' 
+      }
+      const playerJson = JSON.stringify(invalidPlayer);
+      try {
+        const response = await axios({
+          method: "post",
+          withCredentials: true,
+          url: url,
+          data: playerJson
+        });
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should NOT post a bye player when average is missing', async () => { 
+      const invalidPlayer = {
+        ...byePlayerToPost,
+        average: null
+      }
+      const playerJson = JSON.stringify(invalidPlayer);
+      try {
+        const response = await axios({
+          method: "post",
+          withCredentials: true,
+          url: url,
+          data: playerJson
+        });
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should NOT post a bye player when average is not 0', async () => { 
+      const invalidPlayer = {
+        ...byePlayerToPost,
+        average: 123
+      }
+      const playerJson = JSON.stringify(invalidPlayer);
+      try {
+        const response = await axios({
+          method: "post",
+          withCredentials: true,
+          url: url,
+          data: playerJson
+        });
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should NOT post a bye player when lane is NOT missing', async () => { 
+      const invalidPlayer = {
+        ...byePlayerToPost,
+        lane: 1
+      }
+      const playerJson = JSON.stringify(invalidPlayer);
+      try {
+        const response = await axios({
+          method: "post",
+          withCredentials: true,
+          url: url,
+          data: playerJson
+        });
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should NOT post a bye player when position is NOT blank', async () => { 
+      const invalidPlayer = {
+        ...byePlayerToPost,
+        position: 'A'
+      }
+      const playerJson = JSON.stringify(invalidPlayer);
+      try {
+        const response = await axios({
+          method: "post",
+          withCredentials: true,
+          url: url,
+          data: playerJson
+        });
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+  })
+
   describe('POST many players API: /api/players/many', () => { 
 
     let createdPlayers = false;    
@@ -689,52 +954,89 @@ describe("Players - API's: /api/players", () => {
       }      
     })
 
+    const mockPlayersWithBye = cloneDeep(mockPlayersToPost);
+    mockPlayersWithBye.push(cloneDeep(byePlayerToPost));
+    mockPlayersWithBye[mockPlayersWithBye.length - 1].squad_id = mockPlayersWithBye[0].squad_id;
+
     it('should create many players', async () => {
-      const playerJSON = JSON.stringify(mockPlayersToPost);
+      const playerJSON = JSON.stringify(mockPlayersWithBye);
       const response = await axios({
         method: "post",
         data: playerJSON,
         withCredentials: true,
         url: manyUrl,        
       })
-      const postedPlayers = response.data.players;
       expect(response.status).toBe(201);
       createdPlayers = true;
-      expect(postedPlayers).not.toBeNull();
-      expect(postedPlayers.length).toBe(mockPlayersToPost.length);
-      for (let i = 0; i < mockPlayersToPost.length; i++) {
-        expect(postedPlayers[i].first_name).toBe(mockPlayersToPost[i].first_name);
-        expect(postedPlayers[i].last_name).toBe(mockPlayersToPost[i].last_name);
-        expect(postedPlayers[i].average).toBe(mockPlayersToPost[i].average);
-        expect(postedPlayers[i].lane).toBe(mockPlayersToPost[i].lane);
-        expect(postedPlayers[i].position).toBe(mockPlayersToPost[i].position);
+      expect(response.data.count).toBe(mockPlayersWithBye.length);
+      const postedPlayers = await getAllPlayersForTmnt(playersToDelTmntId);
+      if (!postedPlayers) {
+        expect(true).toBeFalsy();
+        return
+      }
+      expect(postedPlayers.length).toBe(mockPlayersWithBye.length);
+      for (let i = 0; i < mockPlayersWithBye.length; i++) {
+        expect(postedPlayers[i].first_name).toBe(mockPlayersWithBye[i].first_name);
+        if (postedPlayers[i].id.startsWith('bye')) {
+          expect(postedPlayers[i].last_name).toBeNull();
+          expect(postedPlayers[i].average).toBe(0);
+          expect(postedPlayers[i].lane).toBeNull();
+          expect(postedPlayers[i].position).toBeNull();
+        } else { 
+          expect(postedPlayers[i].last_name).toBe(mockPlayersWithBye[i].last_name);
+          expect(postedPlayers[i].average).toBe(mockPlayersWithBye[i].average);
+          expect(postedPlayers[i].lane).toBe(mockPlayersWithBye[i].lane);
+          expect(postedPlayers[i].position).toBe(mockPlayersWithBye[i].position);
+        }
       }
     })
     it('should create many players with sanitized data', async () => { 
-      const toSanitize = cloneDeep(mockPlayersToPost);
+      const toSanitize = cloneDeep(mockPlayersWithBye);
       toSanitize[0].first_name = '<script>' + toSanitize[0].first_name + '</script>';
       toSanitize[0].last_name = '    ' + toSanitize[0].last_name + '****';
       toSanitize[0].position = '  ' + toSanitize[0].position + '*';
 
-      const playerJSON = JSON.stringify(mockPlayersToPost);
+      const playerJSON = JSON.stringify(mockPlayersWithBye);
       const response = await axios({
         method: "post",
         data: playerJSON,
         withCredentials: true,
         url: manyUrl,        
       })
-      const postedPlayers = response.data.players;
       expect(response.status).toBe(201);
       createdPlayers = true;
-      expect(postedPlayers).not.toBeNull();
-      expect(postedPlayers.length).toBe(mockPlayersToPost.length);
-      for (let i = 0; i < mockPlayersToPost.length; i++) {
-        expect(postedPlayers[i].first_name).toBe(mockPlayersToPost[i].first_name);
-        expect(postedPlayers[i].last_name).toBe(mockPlayersToPost[i].last_name);
-        expect(postedPlayers[i].average).toBe(mockPlayersToPost[i].average);
-        expect(postedPlayers[i].lane).toBe(mockPlayersToPost[i].lane);
-        expect(postedPlayers[i].position).toBe(mockPlayersToPost[i].position);
+      expect(response.data.count).toBe(mockPlayersWithBye.length);
+      const postedPlayers = await getAllPlayersForTmnt(playersToDelTmntId);
+      if (!postedPlayers) {
+        expect(true).toBeFalsy();
+        return
       }
+      expect(postedPlayers.length).toBe(mockPlayersWithBye.length);
+      for (let i = 0; i < mockPlayersWithBye.length; i++) {
+        expect(postedPlayers[i].first_name).toBe(mockPlayersWithBye[i].first_name);
+        if (postedPlayers[i].id.startsWith('bye')) {
+          expect(postedPlayers[i].last_name).toBeNull();
+          expect(postedPlayers[i].average).toBe(0);
+          expect(postedPlayers[i].lane).toBeNull();
+          expect(postedPlayers[i].position).toBeNull();
+        } else { 
+          expect(postedPlayers[i].last_name).toBe(mockPlayersWithBye[i].last_name);
+          expect(postedPlayers[i].average).toBe(mockPlayersWithBye[i].average);
+          expect(postedPlayers[i].lane).toBe(mockPlayersWithBye[i].lane);
+          expect(postedPlayers[i].position).toBe(mockPlayersWithBye[i].position);
+        }
+      }
+    })
+    it('should return 0 and status 200 when passed an empty array', async () => { 
+      const playerJSON = JSON.stringify([]);
+      const response = await axios({
+        method: "post",
+        data: playerJSON,
+        withCredentials: true,
+        url: manyUrl,        
+      })
+      expect(response.status).toBe(200);
+      expect(response.data.count).toBe(0);
     })
     it('should NOT create many players with blank id', async () => { 
       const invalidData = cloneDeep(mockPlayersToPost);
@@ -1056,311 +1358,16 @@ describe("Players - API's: /api/players", () => {
         }
       }
     })
-
-  })
-
-  describe('PUT many players - API: /api/players/many', () => { 
-
-    let createdPlayers = false;    
-    
-    const playersToDelTmntId = 'tmt_d9b1af944d4941f65b2d2d4ac160cdea';
-
-    beforeAll(async () => { 
-      await deleteAllPlayersForTmnt(playersToDelTmntId);
-    })
-
-    beforeEach(() => {
-      createdPlayers = false;
-    })
-
-    afterEach(async () => {
-      if (createdPlayers) {
-        await deleteAllPlayersForTmnt(playersToDelTmntId);
-      }      
-    })
-
-    it('should update many players - just update', async () => {      
-      const playerJSON = JSON.stringify(mockPlayersToPost);
-      const response = await axios({
-        method: "post",
-        data: playerJSON,
-        withCredentials: true,
-        url: manyUrl,        
-      })
-      const postedPlayers = response.data.players;
-      expect(response.status).toBe(201);
-      createdPlayers = true;
-      expect(postedPlayers).not.toBeNull();
-      expect(postedPlayers.length).toBe(mockPlayersToPost.length);
-
-      // change average, add eType = 'u'
-      const playersToUpdate = [
-        {
-          ...mockPlayersToPost[0],
-          average: 200,
-          eType: "u",
-        },
-        {
-          ...mockPlayersToPost[1],
-          average: 201,
-          eType: "u",
-        },
-      ]
-      const toUpdateJSON = JSON.stringify(playersToUpdate) 
-      const updateResponse = await axios({
-        method: "put",
-        data: toUpdateJSON,
-        withCredentials: true,
-        url: manyUrl,
-      })
-
-      expect(updateResponse.status).toBe(200);
-      const updateInfo = updateResponse.data.updateInfo;
-      expect(updateInfo).not.toBeNull();
-      expect(updateInfo.updates).toBe(2);
-      expect(updateInfo.inserts).toBe(0);
-      expect(updateInfo.deletes).toBe(0);
-    })
-    it('should insert many players - just insert', async () => {      
-      createdPlayers = true;
-
-      // set eType = 'i'
-      const playersToInsert = [
-        {
-          ...mockPlayersToPost[0],          
-          eType: "i",
-        },
-        {
-          ...mockPlayersToPost[1],          
-          eType: "i",
-        },
-      ]
-      const toUpdateJSON = JSON.stringify(playersToInsert) 
-      const updateResponse = await axios({
-        method: "put",
-        data: toUpdateJSON,
-        withCredentials: true,
-        url: manyUrl,
-      })
-
-      expect(updateResponse.status).toBe(200);
-      const updateInfo = updateResponse.data.updateInfo;
-      expect(updateInfo).not.toBeNull();
-      expect(updateInfo.inserts).toBe(2);
-      expect(updateInfo.updates).toBe(0);
-      expect(updateInfo.deletes).toBe(0);
-    })
-    it('should delete many players - just delete', async () => {      
-      const playerJSON = JSON.stringify(mockPlayersToPost);
-      const response = await axios({
-        method: "post",
-        data: playerJSON,
-        withCredentials: true,
-        url: manyUrl,        
-      })
-      const postedPlayers = response.data.players;
-      expect(response.status).toBe(201);
-      createdPlayers = true;
-      expect(postedPlayers).not.toBeNull();
-      expect(postedPlayers.length).toBe(mockPlayersToPost.length);
-
-      // change average, add eType = 'd'
-      const playersToDelete = [
-        {
-          ...mockPlayersToPost[0],
-          eType: "d",
-        },
-        {
-          ...mockPlayersToPost[1],
-          eType: "d",
-        },
-      ]
-      const toUpdateJSON = JSON.stringify(playersToDelete) 
-      const updateResponse = await axios({
-        method: "put",
-        data: toUpdateJSON,
-        withCredentials: true,
-        url: manyUrl,
-      })
-
-      expect(updateResponse.status).toBe(200);
-      const updateInfo = updateResponse.data.updateInfo;
-      expect(updateInfo).not.toBeNull();
-      expect(updateInfo.deletes).toBe(2);
-      expect(updateInfo.updates).toBe(0);
-      expect(updateInfo.inserts).toBe(0);
-    })
-    it('should update, insert, delete many players', async () => {      
-      const toInsert: playerType[] = [              
-        {
-          ...initPlayer,
-          id: "ply_05be0472be3d476ea1caa99dd05953fa",
-          squad_id: "sqd_42be0f9d527e4081972ce8877190489d",
-          first_name: "Art",
-          last_name: "Smith",
-          average: 222,
-          lane: 3,
-          position: 'C',
-        },
-        {
-          ...initPlayer,
-          id: "ply_06be0472be3d476ea1caa99dd05953fa",
-          squad_id: "sqd_42be0f9d527e4081972ce8877190489d",
-          first_name: "Bob",
-          last_name: "Rees",
-          average: 223,
-          lane: 4,
-          position: 'C',
-        }
-      ];
-    
-      const playerJSON = JSON.stringify(mockPlayersToPost);
-      const response = await axios({
-        method: "post",
-        data: playerJSON,
-        withCredentials: true,
-        url: manyUrl,        
-      })
-      const postedPlayers = response.data.players;
-      expect(response.status).toBe(201);
-      createdPlayers = true;
-      expect(postedPlayers).not.toBeNull();
-      expect(postedPlayers.length).toBe(mockPlayersToPost.length);
-
-      // change average, add eType = 'u'
-      const playersToUpdate = [
-        {
-          ...mockPlayersToPost[0],
-          average: 200,
-          eType: "u",
-        },
-        {
-          ...mockPlayersToPost[1],
-          average: 201,
-          eType: "u",
-        },
-      ]
-
-      // add eType = 'i'
-      const playersToInsert = [
-        {
-          ...toInsert[0],
-          eType: "i",
-        },
-        {
-          ...toInsert[1],
-          eType: "i",
-        },
-      ]
-
-      // add eType = 'd'
-      const playersToDelete = [
-        {
-          ...mockPlayersToPost[2],
-          eType: "d",
-        },
-        {
-          ...mockPlayersToPost[3],
-          eType: "d",
-        },
-      ]
-      const allToUpdate = [...playersToUpdate, ...playersToInsert, ...playersToDelete];
-      const toUpdateJSON = JSON.stringify(allToUpdate) 
-      const updateResponse = await axios({
-        method: "put",
-        data: toUpdateJSON,
-        withCredentials: true,
-        url: manyUrl,
-      })
-
-      expect(updateResponse.status).toBe(200);
-      const updateInfo = updateResponse.data.updateInfo;
-      expect(updateInfo).not.toBeNull();
-      expect(updateInfo.updates).toBe(2);
-      expect(updateInfo.inserts).toBe(2);
-      expect(updateInfo.deletes).toBe(2);
-    })
-    it('should update many players - sanitized first and last names', async () => {      
-      const playerJSON = JSON.stringify(mockPlayersToPost);
-      const response = await axios({
-        method: "post",
-        data: playerJSON,
-        withCredentials: true,
-        url: manyUrl,        
-      })
-      const postedPlayers = response.data.players;
-      expect(response.status).toBe(201);
-      createdPlayers = true;
-      expect(postedPlayers).not.toBeNull();
-      expect(postedPlayers.length).toBe(mockPlayersToPost.length);
-
-      // change average, add eType = 'u'
-      const playersToUpdate = [
-        {
-          ...mockPlayersToPost[0],
-          first_name: "<script>alert(1)</script>",
-          last_name: "    abcdef***",
-          eType: "u",
-        },
-      ]
-      const toUpdateJSON = JSON.stringify(playersToUpdate) 
-      const updateResponse = await axios({
-        method: "put",
-        data: toUpdateJSON,
-        withCredentials: true,
-        url: manyUrl,
-      })
-
-      expect(updateResponse.status).toBe(200);
-      const updateInfo = updateResponse.data.updateInfo;
-      expect(updateInfo).not.toBeNull();
-      expect(updateInfo.updates).toBe(1);
-      expect(updateInfo.inserts).toBe(0);
-      expect(updateInfo.deletes).toBe(0);
-
-      const squadPlayers = await getAllPlayersForSquad(mockPlayersToPost[0].squad_id);
-      expect(squadPlayers).not.toBeNull();
-      if (!squadPlayers) return
-      const updatedPlayer = squadPlayers.find(p => p.id === mockPlayersToPost[0].id);
-      expect(updatedPlayer).not.toBeNull();
-      if (!updatedPlayer) return
-      expect(updatedPlayer.first_name).toBe("alert1");
-      expect(updatedPlayer.last_name).toBe("abcdef");
-    })
-    it('should not update any players if any data is invalid - invalid average', async () => {      
-      const playerJSON = JSON.stringify(mockPlayersToPost);
-      const response = await axios({
-        method: "post",
-        data: playerJSON,
-        withCredentials: true,
-        url: manyUrl,        
-      })
-      const postedPlayers = response.data.players;
-      expect(response.status).toBe(201);
-      createdPlayers = true;
-      expect(postedPlayers).not.toBeNull();
-      expect(postedPlayers.length).toBe(mockPlayersToPost.length);
-
-      // change average, add eType = 'u'
-      const playersToUpdate = [
-        {
-          ...mockPlayersToPost[0],
-          average: -1,    // invalid average
-          eType: "u",
-        },
-        {
-          ...mockPlayersToPost[1],
-          average: 201,
-          eType: "u",
-        },
-      ]      
-      const toUpdateJSON = JSON.stringify(playersToUpdate) 
+    it('should not create many players with bye player having first name !== "Bye"', async () => { 
+      const invalidData = cloneDeep(mockPlayersWithBye);
+      invalidData[invalidData.length - 1].first_name = 'NotBye';
+      const playerJSON = JSON.stringify(invalidData);
       try {
-        const updateResponse = await axios({
-          method: "put",
-          data: toUpdateJSON,
+        const response = await axios({
+          method: "post",
+          data: playerJSON,
           withCredentials: true,
-          url: manyUrl,
+          url: manyUrl,        
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1371,29 +1378,76 @@ describe("Players - API's: /api/players", () => {
         }
       }
     })
-    it('should not update if no data is provided', async () => {      
-      const playerJSON = JSON.stringify(mockPlayersToPost);
-      const response = await axios({
-        method: "post",
-        data: playerJSON,
-        withCredentials: true,
-        url: manyUrl,        
-      })
-      const postedPlayers = response.data.players;
-      expect(response.status).toBe(201);
-      createdPlayers = true;
-      expect(postedPlayers).not.toBeNull();
-      expect(postedPlayers.length).toBe(mockPlayersToPost.length);
-
-      // change average, add eType = 'u'
-      const playersToUpdate: tmntEntryPlayerType[] = [];
-      const toUpdateJSON = JSON.stringify(playersToUpdate) 
+    it('should not create many players with bye player having last name !== null', async () => { 
+      const invalidData = cloneDeep(mockPlayersWithBye);
+      invalidData[invalidData.length - 1].last_name = 'anything';
+      const playerJSON = JSON.stringify(invalidData);
       try {
-        const updateResponse = await axios({
-          method: "put",
-          data: toUpdateJSON,
+        const response = await axios({
+          method: "post",
+          data: playerJSON,
           withCredentials: true,
-          url: manyUrl,
+          url: manyUrl,        
+        })
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not create many players with bye player having average !== 0', async () => { 
+      const invalidData = cloneDeep(mockPlayersWithBye);
+      invalidData[invalidData.length - 1].average = 123;
+      const playerJSON = JSON.stringify(invalidData);
+      try {
+        const response = await axios({
+          method: "post",
+          data: playerJSON,
+          withCredentials: true,
+          url: manyUrl,        
+        })
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not create many players with bye player having lane !== null', async () => { 
+      const invalidData = cloneDeep(mockPlayersWithBye);
+      invalidData[invalidData.length - 1].lane = 1;
+      const playerJSON = JSON.stringify(invalidData);
+      try {
+        const response = await axios({
+          method: "post",
+          data: playerJSON,
+          withCredentials: true,
+          url: manyUrl,        
+        })
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not create many players with bye player having position !== null', async () => { 
+      const invalidData = cloneDeep(mockPlayersWithBye);
+      invalidData[invalidData.length - 1].position = 'A';
+      const playerJSON = JSON.stringify(invalidData);
+      try {
+        const response = await axios({
+          method: "post",
+          data: playerJSON,
+          withCredentials: true,
+          url: manyUrl,        
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1405,6 +1459,377 @@ describe("Players - API's: /api/players", () => {
       }
     })
   })
+
+  // describe('PUT many players - API: /api/players/many', () => { 
+
+  //   let createdPlayers = false;    
+    
+  //   const playersToDelTmntId = 'tmt_d9b1af944d4941f65b2d2d4ac160cdea';
+
+  //   beforeAll(async () => { 
+  //     await deleteAllPlayersForTmnt(playersToDelTmntId);
+  //   })
+
+  //   beforeEach(() => {
+  //     createdPlayers = false;
+  //   })
+
+  //   afterEach(async () => {
+  //     if (createdPlayers) {
+  //       await deleteAllPlayersForTmnt(playersToDelTmntId);
+  //     }      
+  //   })
+
+  //   it('should update many players - just update', async () => {      
+  //     const playerJSON = JSON.stringify(mockPlayersToPost);
+  //     const response = await axios({
+  //       method: "post",
+  //       data: playerJSON,
+  //       withCredentials: true,
+  //       url: manyUrl,        
+  //     })
+  //     expect(response.status).toBe(201);
+  //     createdPlayers = true;
+  //     expect(response.data.count).toBe(mockPlayersToPost.length);
+  //     const postedPlayers = await getAllPlayersForTmnt(playersToDelTmntId);
+  //     if (!postedPlayers) {
+  //       expect(true).toBeFalsy();
+  //       return
+  //     }
+  //     expect(postedPlayers.length).toBe(mockPlayersToPost.length);
+
+  //     // change average, add eType = 'u'
+  //     const playersToUpdate = [
+  //       {
+  //         ...mockPlayersToPost[0],
+  //         average: 200,
+  //         eType: "u",
+  //       },
+  //       {
+  //         ...mockPlayersToPost[1],
+  //         average: 201,
+  //         eType: "u",
+  //       },
+  //     ]
+  //     const toUpdateJSON = JSON.stringify(playersToUpdate) 
+  //     const updateResponse = await axios({
+  //       method: "put",
+  //       data: toUpdateJSON,
+  //       withCredentials: true,
+  //       url: manyUrl,
+  //     })
+
+  //     expect(updateResponse.status).toBe(200);
+  //     const updateInfo = updateResponse.data.updateInfo;
+  //     expect(updateInfo).not.toBeNull();
+  //     expect(updateInfo.updates).toBe(2);
+  //     expect(updateInfo.inserts).toBe(0);
+  //     expect(updateInfo.deletes).toBe(0);
+  //   })
+  //   it('should insert many players - just insert', async () => {      
+  //     createdPlayers = true;
+
+  //     // set eType = 'i'
+  //     const playersToInsert = [
+  //       {
+  //         ...mockPlayersToPost[0],          
+  //         eType: "i",
+  //       },
+  //       {
+  //         ...mockPlayersToPost[1],          
+  //         eType: "i",
+  //       },
+  //     ]
+  //     const toUpdateJSON = JSON.stringify(playersToInsert) 
+  //     const updateResponse = await axios({
+  //       method: "put",
+  //       data: toUpdateJSON,
+  //       withCredentials: true,
+  //       url: manyUrl,
+  //     })
+
+  //     expect(updateResponse.status).toBe(200);
+  //     const updateInfo = updateResponse.data.updateInfo;
+  //     expect(updateInfo).not.toBeNull();
+  //     expect(updateInfo.inserts).toBe(2);
+  //     expect(updateInfo.updates).toBe(0);
+  //     expect(updateInfo.deletes).toBe(0);
+  //   })
+  //   it('should delete many players - just delete', async () => {      
+  //     const playerJSON = JSON.stringify(mockPlayersToPost);
+  //     const response = await axios({
+  //       method: "post",
+  //       data: playerJSON,
+  //       withCredentials: true,
+  //       url: manyUrl,        
+  //     })
+  //     expect(response.status).toBe(201);
+  //     createdPlayers = true;
+  //     expect(response.data.count).toBe(mockPlayersToPost.length);
+  //     const postedPlayers = await getAllPlayersForTmnt(playersToDelTmntId);
+  //     if (!postedPlayers) {
+  //       expect(true).toBeFalsy();
+  //       return
+  //     }
+  //     expect(postedPlayers.length).toBe(mockPlayersToPost.length);
+
+  //     // change average, add eType = 'd'
+  //     const playersToDelete = [
+  //       {
+  //         ...mockPlayersToPost[0],
+  //         eType: "d",
+  //       },
+  //       {
+  //         ...mockPlayersToPost[1],
+  //         eType: "d",
+  //       },
+  //     ]
+  //     const toUpdateJSON = JSON.stringify(playersToDelete) 
+  //     const updateResponse = await axios({
+  //       method: "put",
+  //       data: toUpdateJSON,
+  //       withCredentials: true,
+  //       url: manyUrl,
+  //     })
+
+  //     expect(updateResponse.status).toBe(200);
+  //     const updateInfo = updateResponse.data.updateInfo;
+  //     expect(updateInfo).not.toBeNull();
+  //     expect(updateInfo.deletes).toBe(2);
+  //     expect(updateInfo.updates).toBe(0);
+  //     expect(updateInfo.inserts).toBe(0);
+  //   })
+  //   it('should update, insert, delete many players', async () => {      
+  //     const toInsert: playerType[] = [              
+  //       {
+  //         ...initPlayer,
+  //         id: "ply_05be0472be3d476ea1caa99dd05953fa",
+  //         squad_id: "sqd_42be0f9d527e4081972ce8877190489d",
+  //         first_name: "Art",
+  //         last_name: "Smith",
+  //         average: 222,
+  //         lane: 3,
+  //         position: 'C',
+  //       },
+  //       {
+  //         ...initPlayer,
+  //         id: "ply_06be0472be3d476ea1caa99dd05953fa",
+  //         squad_id: "sqd_42be0f9d527e4081972ce8877190489d",
+  //         first_name: "Bob",
+  //         last_name: "Rees",
+  //         average: 223,
+  //         lane: 4,
+  //         position: 'C',
+  //       }
+  //     ];
+    
+  //     const playerJSON = JSON.stringify(mockPlayersToPost);
+  //     const response = await axios({
+  //       method: "post",
+  //       data: playerJSON,
+  //       withCredentials: true,
+  //       url: manyUrl,        
+  //     })
+  //     expect(response.status).toBe(201);
+  //     createdPlayers = true;
+  //     expect(response.data.count).toBe(mockPlayersToPost.length);
+  //     const postedPlayers = await getAllPlayersForTmnt(playersToDelTmntId);
+  //     if (!postedPlayers) {
+  //       expect(true).toBeFalsy();
+  //       return
+  //     }
+  //     expect(postedPlayers.length).toBe(mockPlayersToPost.length);
+
+  //     // change average, add eType = 'u'
+  //     const playersToUpdate = [
+  //       {
+  //         ...mockPlayersToPost[0],
+  //         average: 200,
+  //         eType: "u",
+  //       },
+  //       {
+  //         ...mockPlayersToPost[1],
+  //         average: 201,
+  //         eType: "u",
+  //       },
+  //     ]
+
+  //     // add eType = 'i'
+  //     const playersToInsert = [
+  //       {
+  //         ...toInsert[0],
+  //         eType: "i",
+  //       },
+  //       {
+  //         ...toInsert[1],
+  //         eType: "i",
+  //       },
+  //     ]
+
+  //     // add eType = 'd'
+  //     const playersToDelete = [
+  //       {
+  //         ...mockPlayersToPost[2],
+  //         eType: "d",
+  //       },
+  //       {
+  //         ...mockPlayersToPost[3],
+  //         eType: "d",
+  //       },
+  //     ]
+  //     const allToUpdate = [...playersToUpdate, ...playersToInsert, ...playersToDelete];
+  //     const toUpdateJSON = JSON.stringify(allToUpdate) 
+  //     const updateResponse = await axios({
+  //       method: "put",
+  //       data: toUpdateJSON,
+  //       withCredentials: true,
+  //       url: manyUrl,
+  //     })
+
+  //     expect(updateResponse.status).toBe(200);
+  //     const updateInfo = updateResponse.data.updateInfo;
+  //     expect(updateInfo).not.toBeNull();
+  //     expect(updateInfo.updates).toBe(2);
+  //     expect(updateInfo.inserts).toBe(2);
+  //     expect(updateInfo.deletes).toBe(2);
+  //   })
+  //   it('should update many players - sanitized first and last names', async () => {      
+  //     const playerJSON = JSON.stringify(mockPlayersToPost);
+  //     const response = await axios({
+  //       method: "post",
+  //       data: playerJSON,
+  //       withCredentials: true,
+  //       url: manyUrl,        
+  //     })
+  //     expect(response.status).toBe(201);
+  //     createdPlayers = true;
+  //     expect(response.data.count).toBe(mockPlayersToPost.length);
+  //     const postedPlayers = await getAllPlayersForTmnt(playersToDelTmntId);
+  //     if (!postedPlayers) {
+  //       expect(true).toBeFalsy();
+  //       return
+  //     }
+  //     expect(postedPlayers.length).toBe(mockPlayersToPost.length);
+
+  //     // change average, add eType = 'u'
+  //     const playersToUpdate = [
+  //       {
+  //         ...mockPlayersToPost[0],
+  //         first_name: "<script>alert(1)</script>",
+  //         last_name: "    abcdef***",
+  //         eType: "u",
+  //       },
+  //     ]
+  //     const toUpdateJSON = JSON.stringify(playersToUpdate) 
+  //     const updateResponse = await axios({
+  //       method: "put",
+  //       data: toUpdateJSON,
+  //       withCredentials: true,
+  //       url: manyUrl,
+  //     })
+
+  //     expect(updateResponse.status).toBe(200);
+  //     const updateInfo = updateResponse.data.updateInfo;
+  //     expect(updateInfo).not.toBeNull();
+  //     expect(updateInfo.updates).toBe(1);
+  //     expect(updateInfo.inserts).toBe(0);
+  //     expect(updateInfo.deletes).toBe(0);
+
+  //     const squadPlayers = await getAllPlayersForSquad(mockPlayersToPost[0].squad_id);
+  //     expect(squadPlayers).not.toBeNull();
+  //     if (!squadPlayers) return
+  //     const updatedPlayer = squadPlayers.find(p => p.id === mockPlayersToPost[0].id);
+  //     expect(updatedPlayer).not.toBeNull();
+  //     if (!updatedPlayer) return
+  //     expect(updatedPlayer.first_name).toBe("alert1");
+  //     expect(updatedPlayer.last_name).toBe("abcdef");
+  //   })
+  //   it('should not update any players if any data is invalid - invalid average', async () => {      
+  //     const playerJSON = JSON.stringify(mockPlayersToPost);
+  //     const response = await axios({
+  //       method: "post",
+  //       data: playerJSON,
+  //       withCredentials: true,
+  //       url: manyUrl,        
+  //     })
+  //     expect(response.status).toBe(201);
+  //     createdPlayers = true;
+  //     expect(response.data.count).toBe(mockPlayersToPost.length);
+  //     const postedPlayers = await getAllPlayersForTmnt(playersToDelTmntId);
+  //     if (!postedPlayers) {
+  //       expect(true).toBeFalsy();
+  //       return
+  //     }
+  //     expect(postedPlayers.length).toBe(mockPlayersToPost.length);
+
+  //     // change average, add eType = 'u'
+  //     const playersToUpdate = [
+  //       {
+  //         ...mockPlayersToPost[0],
+  //         average: -1,    // invalid average
+  //         eType: "u",
+  //       },
+  //       {
+  //         ...mockPlayersToPost[1],
+  //         average: 201,
+  //         eType: "u",
+  //       },
+  //     ]      
+  //     const toUpdateJSON = JSON.stringify(playersToUpdate) 
+  //     try {
+  //       const updateResponse = await axios({
+  //         method: "put",
+  //         data: toUpdateJSON,
+  //         withCredentials: true,
+  //         url: manyUrl,
+  //       })
+  //       expect(response.status).toBe(422);
+  //     } catch (err) {
+  //       if (err instanceof AxiosError) {
+  //         expect(err.response?.status).toBe(422);
+  //       } else {
+  //         expect(true).toBeFalsy();
+  //       }
+  //     }
+  //   })
+  //   it('should not update if no data is provided', async () => {      
+  //     const playerJSON = JSON.stringify(mockPlayersToPost);
+  //     const response = await axios({
+  //       method: "post",
+  //       data: playerJSON,
+  //       withCredentials: true,
+  //       url: manyUrl,        
+  //     })
+  //     expect(response.status).toBe(201);
+  //     createdPlayers = true;
+  //     expect(response.data.count).toBe(mockPlayersToPost.length);
+  //     const postedPlayers = await getAllPlayersForTmnt(playersToDelTmntId);
+  //     if (!postedPlayers) {
+  //       expect(true).toBeFalsy();
+  //       return
+  //     }
+  //     expect(postedPlayers.length).toBe(mockPlayersToPost.length);
+
+  //     // change average, add eType = 'u'
+  //     const playersToUpdate: tmntEntryPlayerType[] = [];
+  //     const toUpdateJSON = JSON.stringify(playersToUpdate) 
+  //     try {
+  //       const updateResponse = await axios({
+  //         method: "put",
+  //         data: toUpdateJSON,
+  //         withCredentials: true,
+  //         url: manyUrl,
+  //       })
+  //       expect(response.status).toBe(422);
+  //     } catch (err) {
+  //       if (err instanceof AxiosError) {
+  //         expect(err.response?.status).toBe(422);
+  //       } else {
+  //         expect(true).toBeFalsy();
+  //       }
+  //     }
+  //   })
+  // })
 
   describe('PUT by ID - API: /api/players/player/:id', () => {
     
@@ -1486,6 +1911,31 @@ describe("Players - API's: /api/players", () => {
       expect(puttedPlayer.lane).toBe(toSanitizse.lane);
       expect(puttedPlayer.position).toBe('Z');
     })
+    it('should NOT put a bye player', async () => { 
+      const putByePlayer = cloneDeep(putPlayer);
+      putPlayer.id = testByeId;
+      putPlayer.first_name = 'Bye';
+      putPlayer.last_name = null as any;
+      putPlayer.average = 0;
+      putPlayer.lane = null as any;
+      putPlayer.position = null as any;
+      const playerJSON = JSON.stringify(putByePlayer);
+      try {
+        const response = await axios({
+          method: "put",
+          data: playerJSON,
+          withCredentials: true,
+          url: onePlayerUrl + testByeId,
+        });
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
     it('should NOT update a player when ID is invalid', async () => {
       const playerJSON = JSON.stringify(putPlayer);  
       try {
@@ -1531,10 +1981,10 @@ describe("Players - API's: /api/players", () => {
           withCredentials: true,
           url: onePlayerUrl + notFoundId,
         });
-        expect(response.status).toBe(404);
+        expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(422);
         } else {
           expect(true).toBeFalsy();
         }
@@ -1978,6 +2428,33 @@ describe("Players - API's: /api/players", () => {
       expect(patchedPlayer.id).toBe(toPatch.id);
       expect(patchedPlayer.position).toBe("W");
     })
+    it('should NOT patch a bye player', async () => { 
+      const patchByePlayer = cloneDeep(byePlayerToPost);
+      // values from prisma/seed.ts
+      patchByePlayer.id = 'bye_ad8539071682476db842c59a4ec62dc7';
+      patchByePlayer.squad_id = 'sqd_7116ce5f80164830830a7157eb093396'
+      patchByePlayer.first_name = 'Bye';
+      patchByePlayer.last_name = null as any;
+      patchByePlayer.average = 0;
+      patchByePlayer.lane = null as any;
+      patchByePlayer.position = null as any;
+      const playerJSON = JSON.stringify(patchByePlayer);
+      try {
+        const response = await axios({
+          method: "patch",
+          data: playerJSON,
+          withCredentials: true,
+          url: onePlayerUrl + testByeId,
+        });
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
     it('should NOT patch when player id is invalid', async () => {
       try {
         const patchPlayer = {
@@ -2215,24 +2692,29 @@ describe("Players - API's: /api/players", () => {
     }
 
     let didDel = false
+    let didInsertBye = false;
 
     beforeEach(() => {
       didDel = false;
     })
 
     afterEach(async () => {
-      if (!didDel) return;
-      // if deleted event, add event back
-      try {
-        const playerJSON = JSON.stringify(toDelPlayer);
-        const response = await axios({
-          method: "post",
-          data: playerJSON,
-          withCredentials: true,
-          url: url,
-        });
-      } catch (err) {
-        if (err instanceof Error) console.log(err.message);
+      if (didDel) { 
+        // if deleted player, add player back
+        try {
+          const playerJSON = JSON.stringify(toDelPlayer);
+          const response = await axios({
+            method: "post",
+            data: playerJSON,
+            withCredentials: true,
+            url: url,
+          });
+        } catch (err) {
+          if (err instanceof Error) console.log(err.message);
+        }
+      }
+      if (didInsertBye) { 
+        deletePostedByePlayer();
       }
     })
 
@@ -2245,6 +2727,31 @@ describe("Players - API's: /api/players", () => {
         });
         expect(response.status).toBe(200);
         didDel = true;
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should delete a bye player by id', async () => {
+      try {
+        const playerJson = JSON.stringify(byePlayerToPost);
+        const insertResponse = await axios({
+          method: "post",
+          withCredentials: true,
+          url: url,
+          data: playerJson
+        });
+        expect(insertResponse.status).toBe(201);
+        didInsertBye = true;
+        const response = await axios({
+          method: "delete",
+          withCredentials: true,
+          url: onePlayerUrl + byePlayerToPost.id
+        })
+        expect(response.status).toBe(200);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);

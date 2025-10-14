@@ -1,8 +1,9 @@
-import { divType, squadType, potType, brktType, elimType } from "@/lib/types/types";
+import { divType, squadType, potType, brktType, elimType, eventType } from "@/lib/types/types";
 import { defaultBrktGames, defaultBrktPlayers, defaultElimGames, initDiv, initElim } from "@/lib/db/initVals";
 import { todayStr } from "@/lib/dateTools";
 import { Div, Pot, Brkt, Elim } from "@prisma/client";
 import { Decimal } from "@prisma/client/runtime/library";
+import { mock } from "node:test";
 
 export const mockDivs: divType[] = [
   {
@@ -67,6 +68,37 @@ export const mockPrismaDivs: Div[] = [
 ]
 
 export const tmntToDelId = 'tmt_e134ac14c5234d708d26037ae812ac33';
+
+export const mockEventToPost: eventType[] = [
+  {
+    id: "evt_6ff6774e94884658be5bdebc68a6aa7c",
+    tmnt_id: tmntToDelId,
+    tab_title: "Singles",
+    event_name: "Singles",
+    event_name_err: '',
+    team_size: 1,
+    team_size_err: '',
+    games: 6,
+    games_err: '',
+    entry_fee: '80',
+    entry_fee_err: '',
+    lineage: '21',
+    lineage_err: '',
+    prize_fund: '55',
+    prize_fund_err: '',
+    other: '',
+    other_err: '',
+    expenses: '4',
+    expenses_err: '',
+    added_money: '0',
+    added_money_err: '',
+    lpox: '80',
+    lpox_valid: 'valid',
+    lpox_err: '',
+    sort_order: 1,
+    errClassName: "",
+  },
+]
 
 export const mockDivsToPost: divType[] = [
   {
@@ -248,9 +280,9 @@ export const mockPrismaPots: Pot[] = [
 
 export const mockBrkts: brktType[] = [
   {
-    id: "brk_4ecc214095784c39a913137bd42737b6",
+    id: "brk_0001214095784c39a913137bd42737b6",
     div_id: "div_578834e04e5e4885bbae79229d8b96e8",  
-    squad_id: '',    
+    squad_id: '',
     div_err: '',
     start: 1,
     start_err: '',
@@ -273,7 +305,7 @@ export const mockBrkts: brktType[] = [
     errClassName: '',
   },
   {
-    id: "brk_6c972ea92dea41b79bc36e35ee7f63ea",
+    id: "brk_0002214095784c39a913137bd42737b6",
     div_id: "div_578834e04e5e4885bbae79229d8b96e8",  
     squad_id: '',    
     div_err: '',
@@ -298,7 +330,7 @@ export const mockBrkts: brktType[] = [
     errClassName: '',
   },
   {
-    id: "brk_a8886a6ef4ff4824aea699485a685bd2",
+    id: "brk_0003214095784c39a913137bd42737b6",
     div_id: "div_24b1cd5dee0542038a1244fc2978e862",
     squad_id: '',    
     div_err: '',
@@ -323,7 +355,7 @@ export const mockBrkts: brktType[] = [
     errClassName: '',
   },
   {
-    id: "brk_8f4c85855b9a4576ba09435962bd3714",
+    id: "brk_0004214095784c39a913137bd42737b6",
     div_id: "div_24b1cd5dee0542038a1244fc2978e862",
     squad_id: '',      
     div_err: '',
@@ -348,6 +380,59 @@ export const mockBrkts: brktType[] = [
     errClassName: '',
   }
 ]
+
+export const mockBrktsToPost: brktType[] = [
+  {
+    id: "brk_000c214095784c39a913137bd42737b6",
+    div_id: mockDivsToPost[0].id,
+    squad_id: mockSquads[0].id,
+    div_err: '',
+    start: 1,
+    start_err: '',
+    games: defaultBrktGames,
+    games_err: '',
+    players: defaultBrktPlayers,
+    players_err: '',
+    fee: '5',
+    fee_err: '',
+    first: '25',
+    first_err: '',
+    second: '10',
+    second_err: '',
+    admin: '5',
+    admin_err: '',
+    fsa: '40',
+    fsa_valid: '',
+    fsa_err: '',
+    sort_order: 1,
+    errClassName: '',
+  },
+  {
+    id: "brk_00072ea92dea41b79bc36e35ee7f63ea",
+    div_id: mockDivsToPost[0].id,
+    squad_id: mockSquads[0].id,
+    div_err: '',
+    start: 4,
+    start_err: '',
+    games: defaultBrktGames,
+    games_err: '',
+    players: defaultBrktPlayers,
+    players_err: '',
+    fee: '5',
+    fee_err: '',
+    first: '25',
+    first_err: '',
+    second: '10',
+    second_err: '',
+    admin: '5',
+    admin_err: '',
+    fsa: '40',
+    fsa_valid: '',
+    fsa_err: '',
+    sort_order: 2,
+    errClassName: '',
+  },
+];
 
 export const mockPrismaBrkts: Brkt[] = [
   {

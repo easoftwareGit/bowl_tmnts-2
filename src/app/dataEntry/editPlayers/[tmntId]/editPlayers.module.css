@@ -1,0 +1,15 @@
+/* .nav-pills .nav-link.active {
+  background-color: #cfe2ff;
+  color: #000000;
+  font-weight: bold;
+} */
+
+.createBackground {    
+  background-color: #cfe2ff;
+  color: #000000;
+}
+
+.deleteInput {
+  text-align: right;
+  border-style: none;
+}

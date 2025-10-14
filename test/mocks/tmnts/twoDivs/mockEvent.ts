@@ -26,7 +26,7 @@ export const mockEvent: eventType[] = [
     added_money: '0',
     added_money_err: '',
     lpox: '80',
-    lpox_valid: 'is-valid',
+    lpox_valid: 'valid',
     lpox_err: '',
     sort_order: 1,
     errClassName: "",

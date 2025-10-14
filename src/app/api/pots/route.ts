@@ -5,6 +5,7 @@ import { ErrorCode } from "@/lib/validation";
 import { potType, potDataType } from "@/lib/types/types";
 import { initPot } from "@/lib/db/initVals";
 import { getErrorStatus } from "../errCodes";
+import { potDataForPrisma } from "./dataForPrisma";
 
 // routes /api/pots
 export async function GET(request: NextRequest) {
@@ -62,13 +63,9 @@ export async function POST(request: Request) {
       );
     }
 
-    let potData: potDataType = {
-      id: toPost.id,
-      div_id: toPost.div_id,
-      squad_id: toPost.squad_id,
-      pot_type: toPost.pot_type,
-      fee: toPost.fee,            
-      sort_order: toPost.sort_order
+    const potData = potDataForPrisma(toPost);
+    if (!potData) {
+      return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
     const pot = await prisma.pot.create({
       data: potData

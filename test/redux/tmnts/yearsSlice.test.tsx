@@ -1,68 +1,93 @@
-import { configureStore, Store } from '@reduxjs/toolkit';
-import { tmntYearsSlice, fetchTmntYears } from '@/redux/features/tmnts/yearsSlice';
-import { YearObj } from '@/lib/types/types';
+import reducer, { fetchTmntYears, tmntYearsSliceState } from "@/redux/features/tmnts/yearsSlice";
+import { getTmntYears } from "@/lib/db/tmnts/dbTmnts";
+// import { getTmntYears } from "../../../src/lib/db/tmnts/dbTmnts";
+import { YearObj } from "@/lib/types/types";
+import { configureStore } from "@reduxjs/toolkit";
 
-const initialState = {
-  data: [],  
-  status: 'idle',    
-  error: ''
-} 
+jest.mock("../../../src/lib/db/tmnts/dbTmnts", () => ({
+  getTmntYears: jest.fn(),
+}));
 
-describe("tmntYearsSlice", () => {
-  let store: Store;
 
-  beforeEach(() => {
-    store = configureStore({
-      reducer: {
-        tmntYears: tmntYearsSlice.reducer,
-      },
+describe("tmntYearsSlice reducer + thunk", () => {
+  const initialState: tmntYearsSliceState = {
+    data: [],
+    status: "idle",
+    error: "",
+  };
+
+  //
+  // --- Reducer unit tests ---
+  //
+  
+  it("should return the initial state", () => {
+    expect(reducer(undefined, { type: undefined as any })).toEqual(initialState);
+  });
+
+  it("should handle fetchTmntYears.pending", () => {
+    const state = reducer(initialState, { type: fetchTmntYears.pending.type });
+    expect(state).toEqual({
+      data: [],
+      status: "loading",
+      error: "",
     });
   });
 
-  it("should handle initial state", () => {
-    expect(store.getState().tmntYears).toEqual(initialState);
+  it("should handle fetchTmntYears.fulfilled", () => {
+    const mockData: YearObj[] = [{ year: '2024' }];
+    const state = reducer(initialState, {
+      type: fetchTmntYears.fulfilled.type,
+      payload: mockData,
+    });
+    expect(state).toEqual({
+      data: mockData,
+      status: "succeeded",
+      error: "",
+    });
   });
 
-  it('should handle fetchTmntYears.pending', () => {
-    // Arrange
-    const action = fetchTmntYears.pending('pending');
+  it("should handle fetchTmntYears.rejected", () => {
+    const errorMessage = "DB error";
+    const state = reducer(initialState, {
+      type: fetchTmntYears.rejected.type,
+      error: { message: errorMessage },
+    });
+    expect(state).toEqual({
+      data: [],
+      status: "failed",
+      error: errorMessage,
+    });
+  });
 
-    // Act
-    store.dispatch(action);    
+  //
+  // --- Thunk tests ---
+  //
+  it("dispatches fulfilled when getTmntYears resolves", async () => {
+    const mockData: YearObj[] = [{ year: '2022' }];
+    (getTmntYears as jest.Mock).mockResolvedValueOnce(mockData);
 
-    // Assert   
+    const store = configureStore({
+      reducer: { tmntYears: reducer },
+    });
+
+    await store.dispatch(fetchTmntYears() as any);
+
     const state = store.getState().tmntYears;
-    expect(state.status).toBe('loading');
-    expect(state.error).toBe('');
+    expect(state.status).toBe("succeeded");
+    expect(state.data).toEqual(mockData);
   });
 
-  it('should handle fetchTmntYears.fulfilled', () => {
-    // Arrange
-    const data: YearObj[] = [{year:'2023'}, {year: '2022'}, {year:'2021'}];
-    const action = fetchTmntYears.fulfilled(data, 'succeeded');
+  it("dispatches rejected when getTmntYears rejects", async () => {
+    (getTmntYears as jest.Mock).mockRejectedValueOnce(new Error("DB failed"));
 
-    // Act
-    store.dispatch(action);    
+    const store = configureStore({
+      reducer: { tmntYears: reducer },
+    });
 
-    // Assert   
+    await store.dispatch(fetchTmntYears() as any);
+
     const state = store.getState().tmntYears;
-    expect(state.status).toBe('succeeded');
-    expect(state.data).toEqual(data);
-    expect(state.error).toBe('');
+    expect(state.status).toBe("failed");
+    expect(state.error).toBe("DB failed");
   });
-
-  it('should handle fetchTmntYears.rejected', () => {
-    // Arrange
-    const error = new Error('Something went wrong');  
-    const action = fetchTmntYears.rejected(error, 'rejected');
-
-    // Act
-    store.dispatch(action);    
-
-    // Assert   
-    const state = store.getState().tmntYears;
-    expect(state.status).toBe('failed');
-    expect(state.error).toBe(error.message);
-  });
-
-})
+});

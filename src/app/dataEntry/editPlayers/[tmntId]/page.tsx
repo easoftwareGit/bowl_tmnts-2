@@ -1,32 +1,15 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch } from "@/redux/store";
-import { useParams } from "next/navigation";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 import PlayersEntryForm from "../../playersForm/playersForm";
 import {
-  fetchOneTmnt,
-  getOneTmntError,
-  getOneTmntLoadStatus,
-  selectOneTmnt,
-} from "@/redux/features/allDataOneTmnt/allDataOneTmntSlice";
-import {
-  allDataOneTmntType,
-  allEntriesOneSquadType,
-  brktType,
-  dataOneSquadEntriesType,
-  dataOneTmntType,  
+  brktType,  
+  tmntActions,
+  tmntFullType,
+  tmntFormDataType,
 } from "@/lib/types/types";
-import {
-  fetchOneSquadEntries,
-  fetchOneSquadEntries2,
-  getOneSquadEntriesError,
-  getOneSquadEntriesLoadStatus,
-  SaveOneSquadEntries,
-  selectOneSquadEntries,
-} from "@/redux/features/allEntriesOneSquad/allEntriesOneSquadSlice";
-import {
-  brktsColNameEnd,
+import {  
   divEntryHdcpColName,
   entryFeeColName,
   entryNumBrktsColName,
@@ -37,12 +20,18 @@ import {
 import { getBrktOrElimName, getPotName } from "@/lib/getName";
 import { OverlayTrigger, Tooltip, Tab, Tabs } from "react-bootstrap";
 import { BracketList } from "@/components/brackets/bracketListClass";
-import { cloneDeep } from "lodash";
 import usePreventUnload from "@/components/preventUnload/preventUnload";
 import WaitModal from "@/components/modal/waitModal";
 import { defaultBrktGames, defaultPlayersPerMatch } from "@/lib/db/initVals";
-import { errInfoType, getDivsPotsBrktsElimsCountErrMsg, getDivsPotsBrktsElimsCounts } from "../../playersForm/rowInfo";
-import "./editPlayers.css";
+import {
+  errInfoType,
+  getDivsPotsBrktsElimsCountErrMsg,
+  getDivsPotsBrktsElimsCounts,
+} from "../../playersForm/rowInfo";
+import {
+  getTmntFullDataError,
+  getTmntFullDataLoadStatus,
+} from "@/redux/features/tmntFullData/tmntFullDataSlice";
 
 // run tmnt:
 // http://localhost:3000/dataEntry/runTmnt/tmt_d237a388a8fc4641a2e37233f1d6bebd
@@ -50,10 +39,44 @@ import "./editPlayers.css";
 // edit bowlers:
 // http://localhost:3000/dataEntry/editPlayers/tmt_d237a388a8fc4641a2e37233f1d6bebd
 
-const populateRows = (formData: dataOneSquadEntriesType) => {
+/**
+ * builds brkts list map
+ *
+ * @param {brktType[]} brkts - array of brkts
+ * @param {typeof playerEntryData[]} rows - array of playerEntryData, current data entry rows
+ * @param {Record<string, BracketList>} prevAllBrktsList - prior brkts list
+ * @returns {Record<string, BracketList>} - brkts list map
+ */
+const buildBrktList = (
+  brkts: brktType[],
+  rows: (typeof playerEntryData)[] = [],
+  prevAllBrktsList?: Record<string, BracketList>
+): Record<string, BracketList> => {
+  const bList: Record<string, BracketList> = {};
+  brkts.forEach((brkt) => {
+    const prev = prevAllBrktsList?.[brkt.id]; // get prev brkt list for brkt if have it
+    const brktList = new BracketList(
+      brkt.id,
+      defaultPlayersPerMatch,
+      defaultBrktGames,
+      prev?.brackets
+    );
+    brktList.calcTotalBrkts(rows);
+    bList[brkt.id] = brktList;
+  });
+  return bList;
+};
+
+/**
+ * populates rows for data entry grid
+ *
+ * @param {tmntFullType} tmntFullData - tmnt full data
+ * @returns {typeof playerEntryData[]} - array of playerEntryData
+ */
+const populateRows = (tmntFullData: tmntFullType) => {
   const pRows: (typeof playerEntryData)[] = [];
   // populate all players
-  formData?.players?.forEach((player) => {
+  tmntFullData?.players?.forEach((player) => {
     const pRow: typeof playerEntryData = { ...playerEntryData };
     pRow.id = player.id;
     pRow.player_id = player.id;
@@ -66,7 +89,7 @@ const populateRows = (formData: dataOneSquadEntriesType) => {
     pRows.push(pRow);
   });
   // populate division fee(s) and hdcp(s)
-  formData?.divEntries?.forEach((divEntry) => {
+  tmntFullData?.divEntries?.forEach((divEntry) => {
     // find player row
     const pRow = pRows.find(
       (row) => row.player_id === divEntry.player_id
@@ -78,7 +101,7 @@ const populateRows = (formData: dataOneSquadEntriesType) => {
     }
   });
   // populate pot fees
-  formData?.potEntries?.forEach((potEntry) => {
+  tmntFullData?.potEntries?.forEach((potEntry) => {
     const pRow = pRows.find(
       (row) => row.player_id === potEntry.player_id
     ) as typeof playerEntryData;
@@ -87,7 +110,7 @@ const populateRows = (formData: dataOneSquadEntriesType) => {
     }
   });
   // populate bracket entries & fee(s)
-  formData?.brktEntries?.forEach((brktEntry) => {
+  tmntFullData?.brktEntries?.forEach((brktEntry) => {
     const pRow = pRows.find(
       (row) => row.player_id === brktEntry.player_id
     ) as typeof playerEntryData;
@@ -98,7 +121,7 @@ const populateRows = (formData: dataOneSquadEntriesType) => {
     }
   });
   // populate elimination fee(s)
-  formData?.elimEntries?.forEach((elimEntry) => {
+  tmntFullData?.elimEntries?.forEach((elimEntry) => {
     const pRow = pRows.find(
       (row) => row.player_id === elimEntry.player_id
     ) as typeof playerEntryData;
@@ -119,207 +142,127 @@ const populateRows = (formData: dataOneSquadEntriesType) => {
 };
 
 export default function EditPlayersPage() {
-  const params = useParams();
-  const tmntId = params.tmntId as string;
-
-  const dispatch = useDispatch<AppDispatch>();
 
   const [rows, setRows] = useState<(typeof playerEntryData)[]>([]);
-  const [origRows, setOrigRows] = useState<(typeof playerEntryData)[]>([]);
-
   const [entriesCount, setEntriesCount] = useState<Record<string, number>>({});
   const [priorCount, setPriorCount] = useState<Record<string, number>>({});
+  const [allBrktsList, setAllBrktsList] = useState<Record<string, BracketList>>(
+    {}
+  );
+  const [gotRefunds, setGotRefunds] = useState<Record<string, boolean>>({});
 
-  const emptyBrktsList: Record<string, BracketList> = useMemo(() => ({}), []);
-  const [allBrktsList, setAllBrktsList] =
-    useState<Record<string, BracketList>>(emptyBrktsList);
+  // get original rows for change detection (useRef -> no re-renders)
+  const origRowsRef = useRef<(typeof playerEntryData)[]>([]);
+  // so only initialize state once when data first becomes available
+  const initializedRef = useRef(false);
 
-  const emptyGotRefunds: Record<string, boolean> = useMemo(() => ({}), []);
-  const [gotRefunds, setGotRefunds] =
-    useState<Record<string, boolean>>(emptyGotRefunds);
+  // redux selectors
+  const tmntLoadStatus = useSelector(getTmntFullDataLoadStatus);
+  const tmntError = useSelector(getTmntFullDataError);
+  const stateTmntFullData = useSelector(
+    (state: RootState) => state.tmntFullData.tmntFullData
+  );
+  const tmntFormData: tmntFormDataType = {
+    tmntFullData: stateTmntFullData,
+    tmntAction: tmntActions.Run,
+  };
+
+  const initValues = useMemo(() => {
+    const entriesCountInit: Record<string, number> = {};
+    const priorCountInit: Record<string, number> = {};
+    if (!stateTmntFullData) {
+      return {
+        entriesCountInit,
+        priorCountInit,
+        currRows: [] as (typeof playerEntryData)[],
+        allBrktsListInit: {} as Record<string, BracketList>,
+        gotRefundsInit: {} as Record<string, boolean>,
+      };
+    }
+
+    // init counts
+    stateTmntFullData.divs.forEach((div) => {
+      entriesCountInit[entryFeeColName(div.id)] = 0;
+    });
+    stateTmntFullData.pots.forEach((pot) => {
+      entriesCountInit[entryFeeColName(pot.id)] = 0;
+    });
+    stateTmntFullData.brkts.forEach((brkt) => {
+      const name = entryNumBrktsColName(brkt.id);
+      entriesCountInit[name] = 0;
+      priorCountInit[name] = -1;
+    });
+    stateTmntFullData.elims.forEach((elim) => {
+      entriesCountInit[entryFeeColName(elim.id)] = 0;
+    });
+
+    // build rows - most of the work
+    const curRows = populateRows(stateTmntFullData);
+    /// build brkt lists
+    const allBrktsListInit = buildBrktList(stateTmntFullData.brkts, curRows);
+    // got refunds for initial stte
+    const gotRefundsInit: Record<string, boolean> = {};
+    Object.keys(allBrktsListInit).forEach((id) => {
+      gotRefundsInit[id] = allBrktsListInit[id].playersWithRefunds;
+    });
+
+    return {
+      entriesCountInit,
+      priorCountInit,
+      currRows: curRows,
+      allBrktsListInit,
+      gotRefundsInit,
+    };
+  }, [stateTmntFullData]);
+
+  // write init values into state "once", when tmnt data finishes loading
+  // guard with initializedRef to avoid overwriting user edits if redux data updates later
+  useEffect(() => {
+    if (tmntLoadStatus !== "succeeded") return;
+    if (initializedRef.current) return; // run only once
+
+    const {
+      entriesCountInit,
+      priorCountInit,
+      currRows,
+      allBrktsListInit,
+      gotRefundsInit,
+    } = initValues;
+    setEntriesCount(entriesCountInit);
+    setPriorCount(priorCountInit);
+    setRows(currRows);
+    origRowsRef.current = currRows;
+    setAllBrktsList(allBrktsListInit);
+    setGotRefunds(gotRefundsInit);
+
+    initializedRef.current = true;
+  }, [tmntLoadStatus, initValues]);
 
   const defaultTabKey = "divs";
   const [tabKey, setTabKey] = useState(defaultTabKey);
 
-  useEffect(() => {
-    dispatch(fetchOneTmnt(tmntId));
-  }, [tmntId, dispatch]);
-
-  const tmntLoadStatus = useSelector(getOneTmntLoadStatus);
-  const tmntError = useSelector(getOneTmntError);
-  const dataOneTmnt = useSelector(selectOneTmnt) as allDataOneTmntType;
-
-  const playerFormTmnt = {
-    origData: dataOneTmnt.origData,
-    curData: dataOneTmnt.curData,
-  } as allDataOneTmntType;
-
-  useEffect(() => {
-    dispatch(fetchOneSquadEntries2(playerFormTmnt?.curData));
-  }, [playerFormTmnt?.curData, dispatch]);
-
-  const entriesLoadStatus = useSelector(getOneSquadEntriesLoadStatus);
-  const entriesError = useSelector(getOneSquadEntriesError);
-  const dataEntriesOneSquad = useSelector(
-    selectOneSquadEntries
-  ) as allEntriesOneSquadType;
-
-  const playersFormData: allEntriesOneSquadType = {
-    origData: dataEntriesOneSquad?.origData,
-    curData: dataEntriesOneSquad?.curData,
-  };
-
-  // useEffect(() => {
-  //   // sets entriesCountObj and priorCount
-  //   const setEntriesCountObj = (tmntData: dataOneTmntType) => {
-  //     let initCount: entriesCountType = {};
-  //     let initPriorCount: entriesCountType = {};
-  //     tmntData.divs.forEach((div) => {
-  //       const divFeeName = entryFeeColName(div.id);
-  //       initCount = {
-  //         ...initCount,
-  //         [divFeeName]: 0,
-  //       };
-  //     });
-  //     tmntData.pots.forEach((pot) => {
-  //       const potFeeName = entryFeeColName(pot.id);
-  //       initCount = {
-  //         ...initCount,
-  //         [potFeeName]: 0,
-  //       };
-  //     });
-  //     tmntData.brkts.forEach((brkt) => {
-  //       const numBrktsName = entryNumBrktsColName(brkt.id);
-  //       initCount = {
-  //         ...initCount,
-  //         [numBrktsName]: 0,
-  //       };
-  //       initPriorCount = {
-  //         ...initPriorCount,
-  //         [numBrktsName]: -1,
-  //       }
-  //     });
-  //     tmntData.elims.forEach((elim) => {
-  //       const elimFeeName = entryFeeColName(elim.id);
-  //       initCount = {
-  //         ...initCount,
-  //         [elimFeeName]: 0,
-  //       };
-  //     });
-  //     setEntriesCount(initCount);
-  //   };
-  //   // sets brktsList
-  //   const setBrktsObjs = (brkts: brktType[]) => {
-  //     const initBrktsList = cloneDeep(emptyBrktsList)
-  //     const initBrktGridData = cloneDeep(emptyBGDataList)
-  //     const playersPerMatch = 2;
-  //     brkts.forEach((brkt) => {
-  //       // right now only 2 players per match, 3 games in bracket
-  //       // const playersPerMatch = Math.pow(brkt.players, 1 / brkt.games);
-  //       const brktList = new BracketList(brkt.id, playersPerMatch, brkt.games);
-  //       initBrktsList[brkt.id] = brktList;
-  //       const bgData: BGDataType = {
-  //         forFullValues: [],
-  //         forOneByeValues: [],
-  //       };
-  //       initBrktGridData[brkt.id] = (bgData);
-  //     });
-  //     setAllBrktsList(initBrktsList);
-  //     setBGDataList(initBrktGridData);
-  //   }
-
-  //   setEntriesCountObj(playerFormTmnt.curData);
-  //   setBrktsObjs(playerFormTmnt.curData.brkts);
-  // }, [emptyBGDataList, emptyBrktsList, playerFormTmnt.curData]);
-
-  // useEffect(() => {
-  //   const currRows = populateRows(playersFormData.curData);
-  //   setRows(currRows);
-  //   setOrigRows(currRows);
-  // }, [playersFormData.curData]); // DO NOT INCLUDE setRow in array
-  
-  useEffect(() => {
-    // sets entriesCountObj and priorCount
-    const setEntriesCountObj = (tmntData: dataOneTmntType) => {
-      // let initCount: entriesCountType = {};
-      // let initPriorCount: entriesCountType = {};
-      let initCount: Record<string, number> = {};
-      let initPriorCount: Record<string, number> = {};
-      tmntData.divs.forEach((div) => {
-        const divFeeName = entryFeeColName(div.id);
-        initCount = {
-          ...initCount,
-          [divFeeName]: 0,
-        };
-      });
-      tmntData.pots.forEach((pot) => {
-        const potFeeName = entryFeeColName(pot.id);
-        initCount = {
-          ...initCount,
-          [potFeeName]: 0,
-        };
-      });
-      tmntData.brkts.forEach((brkt) => {
-        const numBrktsName = entryNumBrktsColName(brkt.id);
-        initCount = {
-          ...initCount,
-          [numBrktsName]: 0,
-        };
-        initPriorCount = {
-          ...initPriorCount,
-          [numBrktsName]: -1,
-        };
-      });
-      tmntData.elims.forEach((elim) => {
-        const elimFeeName = entryFeeColName(elim.id);
-        initCount = {
-          ...initCount,
-          [elimFeeName]: 0,
-        };
-      });
-      setEntriesCount(initCount);
-    };
-    // sets brktsList
-    const setBrktsObjs = (
-      brkts: brktType[],
-      curRows: (typeof playerEntryData)[]
-    ) => {
-      const initBrktsList = cloneDeep(emptyBrktsList);
-      // const initBrktGridData = cloneDeep(emptyBGDataList);
-      const playersPerMatch = defaultPlayersPerMatch;
-      brkts.forEach((brkt) => {
-        // right now only 2 players per match, 3 games in bracket
-        // const playersPerMatch = Math.pow(brkt.players, 1 / brkt.games);
-        const brktList = new BracketList(brkt.id, playersPerMatch, brkt.games);
-
-        brktList.calcTotalBrkts(curRows);
-
-        initBrktsList[brkt.id] = brktList;
-      });
-      setAllBrktsList(initBrktsList);
-    };
-
-    setEntriesCountObj(playerFormTmnt.curData);
-
-    const curRows = populateRows(playersFormData.curData);
-
-    setBrktsObjs(playerFormTmnt.curData.brkts, curRows);
-    setRows(curRows);
-    setOrigRows(curRows);
-    // DO NOT INCLUDE emptyBrktsList, emptyBGDataList, setRow in array
-    // emptyBrktsList and emptyBGDataList are constants, never change
-    // setRow is a function
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playersFormData.curData]); // DO NOT INCLUDE emptyBrktsList, emptyBGDataList, setRow in array
-
   // when grid data is changed
   useEffect(() => {
     if (Object.keys(entriesCount).length === 0) return;
+
+    // Copy counts for updates
     const updatedCount = { ...entriesCount };
     const updatedPriorCount = { ...priorCount };
-    const updatedAllBrktsList = cloneDeep(emptyBrktsList);
-    const updatedGotRefunds = cloneDeep(emptyGotRefunds);
 
+    // Compute updated bracket lists based on current rows
+    const updatedAllBrktsList = buildBrktList(
+      stateTmntFullData.brkts,
+      rows,
+      allBrktsList
+    );
+
+    // get gotRefunds from new lists
+    const updatedGotRefunds: Record<string, boolean> = {};
+    Object.keys(updatedAllBrktsList).forEach((id) => {
+      updatedGotRefunds[id] = updatedAllBrktsList[id].playersWithRefunds;
+    });
+
+    // recalculate counts
     Object.keys(entriesCount).forEach((key) => {
       if (key.endsWith(feeColNameEnd)) {
         // fee count is number of non-zero rows
@@ -331,27 +274,11 @@ export default function EditPlayersPage() {
         // num brackts count is total of all rows
         updatedPriorCount[key] = updatedCount[key];
         const colTotal = rows.reduce(
-          (total, row) => total + (isNaN(row[key]) ? 0 : row[key]),
+          (total, row) =>
+            total + (isNaN(Number(row[key])) ? 0 : Number(row[key])),
           0
         );
         updatedCount[key] = colTotal;
-
-        // get a filtered COPY of rows for each bracket
-        const brktEntRows = rows.filter((row) => row[key] > 0);
-        const sliceLength = brktsColNameEnd.length * -1; // * -1 to remove from end
-        const brktId = key.slice(0, sliceLength); // remove '_brkts'
-
-        // create a new brktList for each bracket
-        const oneBrktList = new BracketList(
-          brktId,
-          defaultPlayersPerMatch,
-          defaultBrktGames,
-          allBrktsList[brktId].brackets
-        );
-        // populate the new brktList
-        oneBrktList.calcTotalBrkts(brktEntRows);
-        updatedAllBrktsList[brktId] = oneBrktList;        
-        updatedGotRefunds[brktId] = oneBrktList.playersWithRefunds;
       }
     });
 
@@ -362,17 +289,14 @@ export default function EditPlayersPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rows]); // DO NOT INCLUDE entriesCount or priorCount in array
 
-  const dataWasChanged = (): boolean => {
-    if (rows.length !== origRows.length) return true;
+  const dataWasChanged = useCallback(() => {
+    const orig = origRowsRef.current || [];
+    if (rows.length !== orig.length) return true;
     for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
-      const origRow = origRows[i];
-      if (JSON.stringify(row) !== JSON.stringify(origRow)) {
-        return true;
-      }
+      if (JSON.stringify(rows[i]) !== JSON.stringify(orig[i])) return true;
     }
     return false;
-  };
+  }, [rows]);  
 
   usePreventUnload(dataWasChanged);
 
@@ -396,7 +320,8 @@ export default function EditPlayersPage() {
               </label>
             </div>
           </div>
-          {playerFormTmnt?.curData?.divs.map((div) => (
+          {/* {playerFormTmnt?.curData?.divs.map((div) => ( */}
+          {tmntFormData?.tmntFullData?.divs.map((div) => (
             <div className="row g-2" key={div.id}>
               <div className="col-10">
                 <input
@@ -424,8 +349,7 @@ export default function EditPlayersPage() {
     );
   };
 
-  const PotCounts: React.FC = ({ }) => {
-
+  const PotCounts: React.FC = ({}) => {
     return (
       <>
         <div
@@ -445,7 +369,8 @@ export default function EditPlayersPage() {
               </label>
             </div>
           </div>
-          {playerFormTmnt?.curData?.pots.map((pot) => (
+          {/* {playerFormTmnt?.curData?.pots.map((pot) => ( */}
+          {tmntFormData?.tmntFullData?.pots.map((pot) => (
             <div className="row g-2" key={pot.id}>
               <div className="col-10">
                 <input
@@ -453,7 +378,7 @@ export default function EditPlayersPage() {
                   className="form-control"
                   id={`inputPotNameCount${pot.id}`}
                   // value={pot.pot_type}
-                  value={getPotName(pot, playerFormTmnt?.curData?.divs)}
+                  value={getPotName(pot, tmntFormData?.tmntFullData?.divs)}
                   disabled
                 />
               </div>
@@ -506,7 +431,7 @@ export default function EditPlayersPage() {
               <label className="form-label">Total</label>
             </div>
           </div>
-          {playerFormTmnt?.curData?.brkts.map((brkt) => (
+          {tmntFormData?.tmntFullData?.brkts.map((brkt) => (
             <div key={brkt.id}>
               <div className="row g-2">
                 <div className="col-4">
@@ -517,7 +442,7 @@ export default function EditPlayersPage() {
                       id={`inputBrktNameCount${brkt.id}`}
                       value={getBrktOrElimName(
                         brkt,
-                        playerFormTmnt?.curData?.divs
+                        tmntFormData?.tmntFullData?.divs
                       )}
                       disabled
                     />
@@ -539,7 +464,7 @@ export default function EditPlayersPage() {
                     type="text"
                     className="form-control"
                     id={`inputPlayersCount${brkt.id}`}
-                    value={allBrktsList[brkt.id]?.brktEntries.length}
+                    value={allBrktsList[brkt.id]?.brktEntries.length ?? 0}
                     disabled
                     style={{ textAlign: "center" }}
                   />
@@ -549,7 +474,7 @@ export default function EditPlayersPage() {
                     type="text"
                     className="form-control"
                     id={`inputFullCount${brkt.id}`}
-                    value={allBrktsList[brkt.id]?.fullCount}
+                    value={allBrktsList[brkt.id]?.fullCount ?? 0}
                     disabled
                     style={{ textAlign: "center" }}
                   />
@@ -559,7 +484,7 @@ export default function EditPlayersPage() {
                     type="text"
                     className="form-control"
                     id={`inputOneByeCount${brkt.id}`}
-                    value={allBrktsList[brkt.id]?.oneByeCount}
+                    value={allBrktsList[brkt.id]?.oneByeCount ?? 0}
                     disabled
                     style={{ textAlign: "center" }}
                   />
@@ -570,8 +495,8 @@ export default function EditPlayersPage() {
                     className="form-control"
                     id={`inputTotalCount${brkt.id}`}
                     value={
-                      allBrktsList[brkt.id]?.fullCount +
-                      allBrktsList[brkt.id]?.oneByeCount
+                      (allBrktsList[brkt.id]?.fullCount ?? 0) +
+                      (allBrktsList[brkt.id]?.oneByeCount ?? 0)
                     }
                     disabled
                     style={{ textAlign: "center" }}
@@ -605,14 +530,18 @@ export default function EditPlayersPage() {
               </label>
             </div>
           </div>
-          {playerFormTmnt?.curData?.elims.map((elim) => (
+          {/* {playerFormTmnt?.curData?.elims.map((elim) => ( */}
+          {tmntFormData?.tmntFullData?.elims.map((elim) => (
             <div className="row g-2" key={elim.id}>
               <div className="col-10">
                 <input
                   type="text"
                   className="form-control"
                   id={`inputElimNameCount${elim.id}`}
-                  value={getBrktOrElimName(elim, playerFormTmnt?.curData?.divs)}
+                  value={getBrktOrElimName(
+                    elim,
+                    tmntFormData?.tmntFullData?.divs
+                  )}
                   disabled
                 />
               </div>
@@ -637,29 +566,27 @@ export default function EditPlayersPage() {
    * find and return any count errors for divisions, pots, brackets, and eliminations.
    * must have at last 1 in each division, pot, and elimination.
    * must have (defaultBrktPlayers - 1) players in each bracket.
-   * 
+   *
    * @returns {errInfoType} - returns an object with id and msg properties.
    */
-  const findCountError = (): errInfoType => { 
-
+  const findCountError = (): errInfoType => {
     const errInfo: errInfoType = {
       id: "",
       msg: "",
     };
-    
+
     const counts = getDivsPotsBrktsElimsCounts(entriesCount, allBrktsList);
-    const errMsg = getDivsPotsBrktsElimsCountErrMsg(counts, playerFormTmnt);
+    const errMsg = getDivsPotsBrktsElimsCountErrMsg(
+      counts,
+      tmntFormData?.tmntFullData
+    );
     if (errMsg) {
-      errInfo.id = 'counts';
+      errInfo.id = "counts";
       errInfo.msg = errMsg;
     }
 
-    return errInfo
-  }
-
-  const randomizeBrkts = () => { 
-    
-  }
+    return errInfo;
+  };
 
   const handleTabSelect = (key: string | null) => {
     if (key) {
@@ -670,67 +597,54 @@ export default function EditPlayersPage() {
   return (
     <>
       <div>
-        {(tmntLoadStatus === "loading" ||
-          entriesLoadStatus === "loading" ||
-          entriesLoadStatus === "pending") && (
+        {tmntLoadStatus === "loading" && (
           <>
-            {tmntLoadStatus === "loading" ? (
-              <WaitModal
-                show={tmntLoadStatus === "loading"}
-                message="Loading Tournament configuration..."
-              />
-            ) : (
-              <WaitModal
-                show={entriesLoadStatus === "loading"}
-                message="Loading Entries..."
-              />
-            )}
+            <WaitModal
+              show={tmntLoadStatus === "loading"}
+              message="Loading Tournament configuration..."
+            />
           </>
         )}
 
-        {((tmntLoadStatus !== "loading" &&
+        {tmntLoadStatus !== "loading" &&
           tmntLoadStatus !== "succeeded" &&
-          tmntError) ||
-          (entriesLoadStatus !== "loading" &&
-            entriesLoadStatus !== "succeeded" &&
-            entriesError)) && (
-          <>
-            <div>Tmnt Error: {tmntError}</div>
-            <div>Entries Error: {entriesError}</div>
-          </>
-        )}
-
-        {tmntLoadStatus === "succeeded" &&
-          entriesLoadStatus === "succeeded" && (
+          tmntError && (
             <>
-              <h2>Bowlers</h2>
-              <PlayersEntryForm
-                rows={rows}
-                setRows={setRows}
-                findCountError={findCountError}
-              />
-              <Tabs
-                defaultActiveKey={defaultTabKey}
-                id="entries-tabs"
-                variant="pills"
-                activeKey={tabKey}
-                onSelect={handleTabSelect}
-              >
-                <Tab key="divs" eventKey="divs" title="Divisions">
-                  <DivCounts />
-                </Tab>
-                <Tab key="pots" eventKey="pots" title="Pots">
-                  <PotCounts />
-                </Tab>
-                <Tab key="brkts" eventKey="brkts" title="Brackets">
-                  <BrktCounts />
-                </Tab>
-                <Tab key="elims" eventKey="elims" title="Elims">
-                  <ElimCounts />
-                </Tab>
-              </Tabs>
+              <div>Tmnt Error: {tmntError}</div>
             </>
           )}
+
+        {tmntLoadStatus === "succeeded" && (
+          <>
+            <h2>Bowlers</h2>
+            <PlayersEntryForm
+              tmntFullData={tmntFormData?.tmntFullData}
+              rows={rows}
+              setRows={setRows}
+              findCountError={findCountError}
+            />
+            <Tabs
+              defaultActiveKey={defaultTabKey}
+              id="entries-tabs"
+              variant="pills"
+              activeKey={tabKey}
+              onSelect={handleTabSelect}
+            >
+              <Tab key="divs" eventKey="divs" title="Divisions">
+                <DivCounts />
+              </Tab>
+              <Tab key="pots" eventKey="pots" title="Pots">
+                <PotCounts />
+              </Tab>
+              <Tab key="brkts" eventKey="brkts" title="Brackets">
+                <BrktCounts />
+              </Tab>
+              <Tab key="elims" eventKey="elims" title="Elims">
+                <ElimCounts />
+              </Tab>
+            </Tabs>
+          </>
+        )}
       </div>
     </>
   );

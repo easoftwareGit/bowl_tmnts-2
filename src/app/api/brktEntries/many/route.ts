@@ -5,6 +5,7 @@ import { brktEntryType, brktEntryDataType, tmntEntryBrktEntryType } from "@/lib/
 import { validateBrktEntries } from "../validate";
 import { getDeleteManyRefundsSQL, getDeleteManySQL, getInsertManyRefundsSQL, getInsertManySQL, getUpdateManyRefundsSQL, getUpdateManySQL } from "./getSql";
 import { getErrorStatus } from "../../errCodes";
+import { brktEntryDataForPrisma } from "../dataForPrisma";
 
 // routes /api/brktEntries/many 
 
@@ -12,23 +13,18 @@ export async function POST(request: NextRequest) {
 
   try {
     const brktEntries: brktEntryType[] = await request.json();
+    if (Array.isArray(brktEntries) && brktEntries.length === 0) {
+      return NextResponse.json({ count: 0 }, { status: 200 });
+    }    
     // sanitize and validate brktEntries
     const validBrktEntries = await validateBrktEntries(brktEntries); // need to use await! or else returns a promise
     if (validBrktEntries.errorCode !== ErrorCode.None) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
-    // convert valid brktEntries into brktEntryData to post
-    const brktEntriesToPost: brktEntryDataType[] = []
-    validBrktEntries.brktEntries.forEach(brktEntry => {
-      brktEntriesToPost.push({
-        id: brktEntry.id,        
-        brkt_id: brktEntry.brkt_id,
-        player_id: brktEntry.player_id,
-        num_brackets: brktEntry.num_brackets,
-        num_refunds: brktEntry.num_refunds,
-        time_stamp: new Date(brktEntry.time_stamp), // Convert to Date object             
-      })
-    });      
+    // convert valid brktEntries into brktEntryData to post and filter out nulls 
+    const brktEntriesToPost = validBrktEntries.brktEntries
+      .map(brktEntry => brktEntryDataForPrisma(brktEntry))
+      .filter((brktEntry): brktEntry is brktEntryDataType => brktEntry !== null);   
 
     const createdBrktEntries = await prisma.$transaction(
       brktEntriesToPost.map(brktEntry =>
@@ -52,18 +48,8 @@ export async function POST(request: NextRequest) {
       )
     );
 
-    const manyBrktEntries = createdBrktEntries.map((brktEntry) => {
-      return {
-        id: brktEntry.id,
-        brkt_id: brktEntry.brkt_id,
-        player_id: brktEntry.player_id,
-        num_brackets: brktEntry.num_brackets,
-        num_refunds: brktEntry.brkt_refunds?.num_refunds,
-        time_stamp: brktEntry.time_stamp,
-      };
-    });
-
-    return NextResponse.json({brktEntries: manyBrktEntries}, { status: 201 });    
+    return NextResponse.json({count: createdBrktEntries.length}, { status: 201 });
+    // return NextResponse.json({brktEntries: manyBrktEntries}, { status: 201 });    
   } catch (err: any) {
     const errStatus = getErrorStatus(err.code);
     return NextResponse.json(

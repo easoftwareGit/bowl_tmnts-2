@@ -1,12 +1,12 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
-import { 
-  allDataOneTmntType,
-  allEntriesOneSquadType,  
+import {
   dataOneTmntType,
-  putManyEntriesReturnType,  
+  tmntActions,
+  tmntFullType,
+  tmntFormDataType,
 } from "@/lib/types/types";
 import {
   DataGrid,
@@ -29,23 +29,42 @@ import {
   createElimEntryColumns,
   feeTotalColumn,
   createPlayerEntryColumns,
+  isBrktsColumnName,
+  getBrktIdFromColName,
 } from "./createColumns";
 import { currencyFormatter } from "@/lib/currency/formatValue";
 import { btDbUuid } from "@/lib/uuid";
-import ModalConfirm, { delConfTitle, cancelConfTitle } from "@/components/modal/confirmModal";
+import ModalConfirm, {
+  delConfTitle,
+  cancelConfTitle,
+} from "@/components/modal/confirmModal";
 import ModalErrorMsg from "@/components/modal/errorModal";
 import { initModalObj } from "@/components/modal/modalObjType";
-import { CheckType, errInfoType, findNextError, getRowPlayerName } from "./rowInfo";
-import { useRouter } from "next/navigation"
-import { getOneSquadEntriesSaveStatus, SaveOneSquadEntries, updateBrktEntries, updateDivEntries, updateElimEntries, updatePlayers, updatePotEntries } from "@/redux/features/allEntriesOneSquad/allEntriesOneSquadSlice";
+import {
+  CheckType,
+  errInfoType,
+  findNextError,
+  getRowPlayerName,
+} from "./rowInfo";
+import { useRouter } from "next/navigation";
+import {
+  getTmntDataSaveStatus,
+  saveTmntEntriesData,
+} from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import WaitModal from "@/components/modal/waitModal";
-import { getTotalUpdated, updateAllEntries } from "@/lib/db/tmntEntries/dbTmntEntries";
-import { cloneDeep } from "lodash";
+import {
+  getTotalUpdated,
+  updateAllEntries,
+} from "@/lib/db/tmntEntries/dbTmntEntries";
 import { PayloadAction } from "@reduxjs/toolkit";
 import { useIsTouchDevice } from "@/hooks/useIsTouchDevice";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
-import { ButtonWithTooltip } from "@/components/mobile/mobileToolTipButton"; 
-import "./grid.css";
+import { ButtonWithTooltip } from "@/components/mobile/mobileToolTipButton";
+import { BracketList } from "@/components/brackets/bracketListClass";
+import { defaultBrktGames, defaultPlayersPerMatch } from "@/lib/db/initVals";
+import { extractDataFromRows } from "./extractData";
+import { cloneDeep } from "lodash";
+import styles from "./grid.module.css";
 
 // full tmnt
 // http://localhost:3000/dataEntry/runTmnt/tmt_d237a388a8fc4641a2e37233f1d6bebd
@@ -68,36 +87,34 @@ declare module "@mui/x-data-grid" {
 }
 
 interface ChildProps {
+  tmntFullData: tmntFullType;
   rows: (typeof playerEntryData)[];
   setRows: (rows: (typeof playerEntryData)[]) => void;
   findCountError: () => errInfoType;
 }
 
 const PlayersEntryForm: React.FC<ChildProps> = ({
+  tmntFullData,
   rows,
   setRows,
   findCountError,
 }) => {
-
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
-  
-  const playerFormTmnt = useSelector(
-    (state: RootState) => state.allDataOneTmnt.tmntData
-  ) as allDataOneTmntType;
 
-  const dataEntriesOneSquad = useSelector(
-    (state: RootState) => state.allEntriesOneSquad.entryData
-  ) as allEntriesOneSquadType;
-
-  const playersFormData: allEntriesOneSquadType = {
-    origData: dataEntriesOneSquad?.origData,
-    curData: dataEntriesOneSquad?.curData,
+  const stateTmntFullData = useSelector(
+    (state: RootState) => state.tmntFullData.tmntFullData
+  );
+  const playersFormData: tmntFormDataType = {
+    tmntFullData: stateTmntFullData,
+    tmntAction: tmntActions.Run,
   };
+  const tmntData = playersFormData.tmntFullData;
 
-  const entriesSaveStatus = useSelector(getOneSquadEntriesSaveStatus);
+  const entriesSaveStatus = useSelector(getTmntDataSaveStatus);
   const [saveCompleted, setSaveCompleted] = useState(false);
-  const [resultAction, setResultAction] = useState<PayloadAction<{ data: allEntriesOneSquadType; updatedInfo: putManyEntriesReturnType; }, string, { arg: { rows: { [key: string]: any; }[]; data: allEntriesOneSquadType; }; requestId: string; requestStatus: "fulfilled"; }, never> | null>(null);
+  const [resultAction, setResultAction] =
+    useState<PayloadAction<tmntFullType> | null>(null);
 
   const [gridEditMode, setGridEditMode] = useState<"cell" | "row">("cell");
   const [rowModesModel, setRowModesModel] = React.useState<GridRowModesModel>(
@@ -111,82 +128,112 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
   interface entriesTotalsType {
     [key: string]: number;
   }
-  const entriesTotalsObj: entriesTotalsType = {
-    feeTotal: 0,
-  };
-  const [entriesTotals, setEntriesTotals] =
-    useState<typeof entriesTotalsObj>(entriesTotalsObj);
-  
-  const squadMinLane = playerFormTmnt?.curData?.lanes[0]?.lane_number;
-  const squadMaxLane =
-    playerFormTmnt?.curData?.lanes[playerFormTmnt?.curData?.lanes.length - 1]
-      ?.lane_number;
+  // const entriesTotalsObj: entriesTotalsType = {
+  //   feeTotal: 0,
+  // };
+  // const [entriesTotals, setEntriesTotals] =
+  //   useState<typeof entriesTotalsObj>(entriesTotalsObj);
+
+  const squadMinLane = tmntData?.lanes[0]?.lane_number;
+  const squadMaxLane = tmntData?.lanes[tmntData?.lanes.length - 1]?.lane_number;
 
   const isTouchDevice = useIsTouchDevice();
 
-  const noErrorsTitle = 'No Errors Found';
+  const noErrorsTitle = "No Errors Found";
 
-  // creates the entriesTotals object 
-  useEffect(() => {   
-    
-    console.log('PlayersEntryForm: useEffect 1 - [playerFormTmnt.curData]');
+  // creates the entriesTotals object
+  // useEffect(() => {
+  //   const addToEntriesTotalsObj = (tmntData: tmntFullType) => {
+  //     let initTotals = { ...entriesTotals };
+  //     tmntData.divs.forEach((div) => {
+  //       const divFeeName = entryFeeColName(div.id);
+  //       initTotals = {
+  //         ...initTotals,
+  //         [divFeeName]: 0,
+  //       };
+  //     });
+  //     tmntData.pots.forEach((pot) => {
+  //       const potFeeName = entryFeeColName(pot.id);
+  //       initTotals = {
+  //         ...initTotals,
+  //         [potFeeName]: 0,
+  //       };
+  //     });
+  //     tmntData.brkts.forEach((brkt) => {
+  //       const brktFeeName = entryFeeColName(brkt.id);
+  //       initTotals = {
+  //         ...initTotals,
+  //         [brktFeeName]: 0,
+  //       };
+  //       // const brktNameCol = entryNumBrktsColName(brkt.id);
+  //     });
+  //     tmntData.elims.forEach((elim) => {
+  //       const elimFeeName = entryFeeColName(elim.id);
+  //       initTotals = {
+  //         ...initTotals,
+  //         [elimFeeName]: 0,
+  //       };
+  //     });
+  //     setEntriesTotals(initTotals);
+  //   };
 
-    const addToEntriesTotalsObj = (tmntData: dataOneTmntType) => {
-      
-      let initTotals = { ...entriesTotals };
-      tmntData.divs.forEach((div) => {
-        const divFeeName = entryFeeColName(div.id);
-        initTotals = {
-          ...initTotals,
-          [divFeeName]: 0,
-        };
-      });
-      tmntData.pots.forEach((pot) => {
-        const potFeeName = entryFeeColName(pot.id);
-        initTotals = {
-          ...initTotals,
-          [potFeeName]: 0,
-        };
-      });
-      tmntData.brkts.forEach((brkt) => {
-        const brktFeeName = entryFeeColName(brkt.id);
-        initTotals = {
-          ...initTotals,
-          [brktFeeName]: 0,
-        };
-        // const brktNameCol = entryNumBrktsColName(brkt.id);
-      });
-      tmntData.elims.forEach((elim) => {
-        const elimFeeName = entryFeeColName(elim.id);
-        initTotals = {
-          ...initTotals,
-          [elimFeeName]: 0,
-        };
-      });
-      setEntriesTotals(initTotals);
-    };
+  //   if (tmntData?.divs) {
+  //     addToEntriesTotalsObj(tmntData);
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [tmntData]); // DO NOT INCLUDE entriesTotals in array
 
-    if (playerFormTmnt?.curData?.divs) {
-      addToEntriesTotalsObj(playerFormTmnt?.curData);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playerFormTmnt.curData]); // DO NOT INCLUDE entriesTotals in array
+  // build initial totals object whenever tmntData changes
+  const baseTotals = useMemo(() => {
+    if (!tmntData) return {};
+
+    let initTotals: { [key: string]: number } = { feeTotal: 0 };
+    tmntData.divs.forEach((div) => {
+      initTotals[entryFeeColName(div.id)] = 0;
+    });
+    tmntData.pots.forEach((pot) => {
+      initTotals[entryFeeColName(pot.id)] = 0;
+    });
+    tmntData.brkts.forEach((brkt) => {
+      initTotals[entryFeeColName(brkt.id)] = 0;
+    });
+    tmntData.elims.forEach((elim) => {
+      initTotals[entryFeeColName(elim.id)] = 0;
+    });
+    return initTotals;
+  }, [tmntData]);
+
+  // recompute totals wheneverrows OR baseTotals change
+  const entriesTotals = useMemo(() => {
+    if (!rows || Object.keys(baseTotals).length === 0) return baseTotals;
+
+    const updatedTotals = { ...baseTotals };
+    let overallTotal = 0;
+
+    Object.keys(baseTotals).forEach((key) => {
+      if (key !== "feeTotal") {
+        const colTotal = rows.reduce(
+          (total, row) => total + (isNaN(row[key]) ? 0 : Number(row[key])),
+          0
+        );
+        overallTotal += colTotal;
+        updatedTotals[key] = colTotal;
+      }
+    });
+
+    updatedTotals.feeTotal = overallTotal;
+    return updatedTotals;
+  }, [rows, baseTotals]);
 
   const playersColumns = createPlayerEntryColumns(
-    playerFormTmnt?.curData?.divs,
+    tmntData?.divs,
     squadMaxLane,
     squadMinLane
   );
-  const divsEntryCols = createDivEntryColumns(playerFormTmnt?.curData?.divs);
-  const potsEntryCols = createPotEntryColumns(playerFormTmnt?.curData?.pots, playerFormTmnt?.curData?.divs);
-  const brktEntryCols = createBrktEntryColumns(
-    playerFormTmnt?.curData?.brkts,
-    playerFormTmnt?.curData?.divs
-  );
-  const elimEntryCols = createElimEntryColumns(
-    playerFormTmnt?.curData?.elims,
-    playerFormTmnt?.curData?.divs
-  );
+  const divsEntryCols = createDivEntryColumns(tmntData?.divs);
+  const potsEntryCols = createPotEntryColumns(tmntData?.pots, tmntData?.divs);
+  const brktEntryCols = createBrktEntryColumns(tmntData?.brkts, tmntData?.divs);
+  const elimEntryCols = createElimEntryColumns(tmntData?.elims, tmntData?.divs);
   const feeTotalCol = feeTotalColumn();
   const columns = playersColumns.concat(
     divsEntryCols,
@@ -202,13 +249,13 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
         groupId: "players",
         headerName: "Players",
         headerAlign: "center",
-        headerClassName: "playersHeader",
+        headerClassName: styles.playersHeader,
         children: [
           {
             groupId: "totals",
             headerName: "Column Totals->",
             headerAlign: "right",
-            headerClassName: "playersHeader",
+            headerClassName: styles.playersHeader,
             children: [
               { field: "first_name" },
               { field: "last_name" },
@@ -229,26 +276,26 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
           groupId: "divisions",
           headerName: "Divsions",
           headerAlign: "center",
-          headerClassName: "divsHeader",
+          headerClassName: styles.divsHeader,
           children: [],
         },
       ];
       // add the fee totals
-      playerFormTmnt?.curData?.divs.forEach((div) => {
+      tmntData?.divs.forEach((div) => {
         const totalGroupName = div.id + "_total";
         const divFeeName = entryFeeColName(div.id);
         const divFeeTotalChild = {
           groupId: totalGroupName,
           headerName: currencyFormatter.format(entriesTotals[divFeeName]),
           headerAlign: "right" as GridAlignment,
-          headerClassName: "divsHeader",
+          headerClassName: styles.divsHeader,
           children: [{ field: divFeeName }],
         };
         divsGroup[0].children?.push(divFeeTotalChild);
         const hdcpChild = {
           groupId: divEntryHdcpColName(div.id),
           headerName: " ",
-          headerClassName: "divsHeader",
+          headerClassName: styles.divsHeader,
           children: [{ field: divEntryHdcpColName(div.id) }],
         };
         divsGroup[0].children?.push(hdcpChild);
@@ -263,19 +310,19 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
           groupId: "pots",
           headerName: "Pots",
           headerAlign: "center",
-          headerClassName: "potsHeader",
+          headerClassName: styles.potsHeader,
           children: [],
         },
       ];
       // add the fee totals
-      playerFormTmnt?.curData?.pots.forEach((pot) => {
+      tmntData?.pots.forEach((pot) => {
         const totalGroupName = pot.id + "_total";
         const potFeeName = entryFeeColName(pot.id);
         const potFeeTotalChild = {
           groupId: totalGroupName,
           headerName: currencyFormatter.format(entriesTotals[potFeeName]),
           headerAlign: "right" as GridAlignment,
-          headerClassName: "potsHeader",
+          headerClassName: styles.potsHeader,
           children: [{ field: potFeeName }],
         };
         potsGroup[0].children?.push(potFeeTotalChild);
@@ -290,17 +337,17 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
           groupId: "brkts",
           headerName: "Brackets",
           headerAlign: "center",
-          headerClassName: "brktsHeader",
+          headerClassName: styles.brktsHeader,
           children: [],
         },
       ];
       // add the fee totals
-      playerFormTmnt?.curData?.brkts.forEach((brkt) => {
+      tmntData?.brkts.forEach((brkt) => {
         const brktsColName = entryNumBrktsColName(brkt.id);
         const nameChild = {
           groupId: brktsColName,
           headerName: " ",
-          headerClassName: "brktsHeader",
+          headerClassName: styles.brktsHeader,
           children: [{ field: brktsColName }],
         };
         brktsGroup[0].children?.push(nameChild);
@@ -311,7 +358,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
           groupId: totalGroupName,
           headerName: currencyFormatter.format(entriesTotals[brktFeeName]),
           headerAlign: "right" as GridAlignment,
-          headerClassName: "brktsHeader",
+          headerClassName: styles.brktsHeader,
           children: [{ field: brktFeeName }],
         };
         brktsGroup[0].children?.push(brktFeeTotalChild);
@@ -326,19 +373,19 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
           groupId: "elims",
           headerName: "Eliminators",
           headerAlign: "center",
-          headerClassName: "elimsHeader",
+          headerClassName: styles.elimsHeader,
           children: [],
         },
       ];
       // add the fee totals
-      playerFormTmnt?.curData?.elims.forEach((elim) => {
+      tmntData?.elims.forEach((elim) => {
         const totalGroupName = elim.id + "_total";
         const elimFeeName = entryFeeColName(elim.id);
         const elimFeeTotalChild = {
           groupId: totalGroupName,
           headerName: currencyFormatter.format(entriesTotals[elimFeeName]),
           headerAlign: "right" as GridAlignment,
-          headerClassName: "elimsHeader",
+          headerClassName: styles.elimsHeader,
           children: [{ field: elimFeeName }],
         };
         elimsGroup[0].children?.push(elimFeeTotalChild);
@@ -353,13 +400,13 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
           groupId: "total",
           headerName: "Total",
           headerAlign: "center",
-          headerClassName: "totalHeader",
+          headerClassName: styles.totalHeader,
           children: [
             {
               groupId: "playerTotal",
               headerName: currencyFormatter.format(entriesTotals.feeTotal),
               headerAlign: "right" as GridAlignment,
-              headerClassName: "totalHeader",
+              headerClassName: styles.totalHeader,
               children: [{ field: "feeTotal" }],
             },
           ],
@@ -382,82 +429,78 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
       totalColGroup
     );
   };
-  
+
   const columnGroupings = createColummnGroupings();
 
-  useEffect(() => {
+  // for data entry in grid
+  // useEffect(() => {
+  //   const updatedTotals = { ...entriesTotals };
+  //   let overAllTotal = 0;
+  //   Object.keys(entriesTotals).forEach((key) => {
+  //     if (key !== "feeTotal") {
+  //       const colTotal = rows.reduce(
+  //         (total, row) => total + (isNaN(row[key]) ? 0 : Number(row[key])),
+  //         0
+  //       );
+  //       overAllTotal += colTotal;
+  //       updatedTotals[key] = colTotal;
+  //     }
+  //   });
+  //   updatedTotals.feeTotal = overAllTotal;
+  //   setEntriesTotals(updatedTotals);
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [rows]); // DO NOT INCLUDE entriesTotals in array
 
-    console.log('PlayersEntryForm: useEffect 2 - [rows]');
+  // this useEffect is if Next did not update tmntData
+  // useEffect(() => {
 
-    const updatedTotals = { ...entriesTotals };
-    let overAllTotal = 0;
-    Object.keys(entriesTotals).forEach((key) => {
-      if (key !== "feeTotal") {
-        const colTotal = rows.reduce(
-          (total, row) => total + (isNaN(row[key]) ? 0 : Number(row[key])),
-          0
-        );
-        overAllTotal += colTotal;
-        updatedTotals[key] = colTotal;
-      };
-    });
-    updatedTotals.feeTotal = overAllTotal;
-    setEntriesTotals(updatedTotals);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows]); // DO NOT INCLUDE entriesTotals in array
-  
-  // this useEffect is if Next did not update playerFormTmnt.curData
-  useEffect(() => {
+  //   const addToEntriesTotalsObj = (tmntData: dataOneTmntType) => {
+  //     // if (Object.keys(entriesTotals).length > 1) return;
+  //     let initialTotals = { ...entriesTotals };
+  //     tmntData.divs.forEach((div) => {
+  //       const divFeeName = entryFeeColName(div.id);
+  //       if (!Object.keys(initialTotals).includes(divFeeName)) {
+  //         initialTotals = {
+  //           ...initialTotals,
+  //           [divFeeName]: 0,
+  //         };
+  //       }
+  //     });
+  //     tmntData.pots.forEach((pot) => {
+  //       const potFeeName = entryFeeColName(pot.id);
+  //       if (!Object.keys(initialTotals).includes(potFeeName)) {
+  //         initialTotals = {
+  //           ...initialTotals,
+  //           [potFeeName]: 0,
+  //         };
+  //       }
+  //     });
+  //     tmntData.brkts.forEach((brkt) => {
+  //       const brktFeeName = entryFeeColName(brkt.id);
+  //       if (!Object.keys(initialTotals).includes(brktFeeName)) {
+  //         initialTotals = {
+  //           ...initialTotals,
+  //           [brktFeeName]: 0,
+  //         };
+  //       }
+  //     });
+  //     tmntData.elims.forEach((elim) => {
+  //       const elimFeeName = entryFeeColName(elim.id);
+  //       if (!Object.keys(initialTotals).includes(elimFeeName)) {
+  //         initialTotals = {
+  //           ...initialTotals,
+  //           [elimFeeName]: 0,
+  //         };
+  //       }
+  //     });
+  //     setEntriesTotals(initialTotals);
+  //   };
 
-    console.log('PlayersEntryForm: useEffect 3 - []');
-
-    const addToEntriesTotalsObj = (tmntData: dataOneTmntType) => {
-      // if (Object.keys(entriesTotals).length > 1) return;
-      let initialTotals = { ...entriesTotals };
-      tmntData.divs.forEach((div) => {
-        const divFeeName = entryFeeColName(div.id);
-        if (!Object.keys(initialTotals).includes(divFeeName)) {
-          initialTotals = {
-            ...initialTotals,
-            [divFeeName]: 0,
-          };
-        }
-      });
-      tmntData.pots.forEach((pot) => {
-        const potFeeName = entryFeeColName(pot.id);
-        if (!Object.keys(initialTotals).includes(potFeeName)) {
-          initialTotals = {
-            ...initialTotals,
-            [potFeeName]: 0,
-          };
-        }
-      });
-      tmntData.brkts.forEach((brkt) => {
-        const brktFeeName = entryFeeColName(brkt.id);
-        if (!Object.keys(initialTotals).includes(brktFeeName)) {
-          initialTotals = {
-            ...initialTotals,
-            [brktFeeName]: 0,
-          };
-        }
-      });
-      tmntData.elims.forEach((elim) => {
-        const elimFeeName = entryFeeColName(elim.id);
-        if (!Object.keys(initialTotals).includes(elimFeeName)) {
-          initialTotals = {
-            ...initialTotals,
-            [elimFeeName]: 0,
-          };
-        }
-      });
-      setEntriesTotals(initialTotals);
-    };
-
-    if (playerFormTmnt?.curData?.divs) {
-      addToEntriesTotalsObj(playerFormTmnt?.curData);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // KEEP ARRAY EMPTY!
+  //   if (tmntData?.divs) {
+  //     addToEntriesTotalsObj(tmntData);
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, []); // KEEP ARRAY EMPTY!
 
   const handleRowModesModelChange = (newRowModesModel: GridRowModesModel) => {
     setRowModesModel(newRowModesModel);
@@ -473,8 +516,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
   const handleCellEditStop: GridEventListener<"cellEditStop"> = (
     params,
     event
-  ) => {
-  }
+  ) => {};
 
   const handleRowSelectionModelChange = (
     rowSelectionModel: GridRowSelectionModel
@@ -487,7 +529,11 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
     }
   };
 
-  const processRowUpdate = (newRow: GridRowModel, oldRow: GridRowModel, params: any) => {
+  const processRowUpdate = (
+    newRow: GridRowModel,
+    oldRow: GridRowModel,
+    params: any
+  ) => {
     setGridEditMode("cell");
 
     let total = 0;
@@ -517,12 +563,12 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
 
       // if confirmed cancel
     } else if (confModalObj.title === cancelConfTitle) {
-      setConfModalObj(initModalObj);  // reset modal object (hides modal)      
+      setConfModalObj(initModalObj); // reset modal object (hides modal)
       // go back to run tournament page
-      router.push(`/dataEntry/runTmnt/${playerFormTmnt.curData.tmnt.id}`);
+      router.push(`/dataEntry/runTmnt/${tmntData.tmnt.id}`);
     } else if (confModalObj.title === noErrorsTitle) {
       // if confirmed finalize check
-      setConfModalObj(initModalObj);  // reset modal object (hides modal)      
+      setConfModalObj(initModalObj); // reset modal object (hides modal)
       canFinalize(); // no need to used return value
     }
   };
@@ -537,16 +583,16 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
 
   const handleCancel = () => {
     if (rows.length === 0) {
-      router.push(`/dataEntry/runTmnt/${playerFormTmnt.curData.tmnt.id}`);
+      router.push(`/dataEntry/runTmnt/${tmntData.tmnt.id}`);
       return;
     }
     setConfModalObj({
       show: true,
       title: cancelConfTitle,
       message: `Do you want to cancel editing bowlers for this tournament?`,
-      id: '0'
-    }); // cancel done in confirmYes    
-  }
+      id: "0",
+    }); // cancel done in confirmYes
+  };
 
   const handleDelete = () => {
     if (selectedRowId === "") {
@@ -585,8 +631,8 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
     setRows([...rows, newRow]);
   };
 
-  const canFinalize = (): boolean => { 
-    const errInfo: errInfoType = findNextError(rows, playerFormTmnt.curData, CheckType.Final);
+  const canFinalize = (): boolean => {
+    const errInfo: errInfoType = findNextError(rows, tmntData, CheckType.Final);
     if (errInfo.msg !== "") {
       setErrModalObj({
         show: true,
@@ -598,7 +644,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
     } else {
       // now check if got divs, pots, brkts, elims
       const countErrInfo = findCountError();
-      
+
       if (countErrInfo.msg !== "") {
         setErrModalObj({
           show: true,
@@ -607,13 +653,13 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
           id: countErrInfo.id,
         });
         return false;
-      }              
+      }
       return true;
     }
-  }
+  };
 
   // const handleFindFinalErrorClick = () => {
-    
+
   //   const errInfo: errInfoType = findNextError(rows, playerFormTmnt.curData, CheckType.Final);
   //   if (errInfo.msg !== "") {
   //     setErrModalObj({
@@ -633,37 +679,99 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
   // }
 
   const handleFindPrelimErrorClick = () => {
-
-    const errInfo: errInfoType = findNextError(rows, playerFormTmnt.curData, CheckType.Prelim);
+    const errInfo: errInfoType = findNextError(
+      rows,
+      tmntData,
+      CheckType.Prelim
+    );
     if (errInfo.msg !== "") {
       setErrModalObj({
         show: true,
         title: "Error in Entries",
         message: errInfo.msg,
         id: errInfo.id,
-      });      
+      });
     } else {
       setConfModalObj({
         show: true,
-        title: 'No Errors Found',
+        title: "No Errors Found",
         message: `No errors found in preliminary check. You can save the entries. Do you want to run the finalize check?`,
-        id: 'prelimCheck'
-      }); // finalize check done in confirmYes      
+        id: "prelimCheck",
+      }); // finalize check done in confirmYes
     }
   };
 
   const handleFinalizeClick = async () => {
-
-    if (canFinalize()) {       
-
-      
+    if (canFinalize()) {
+      // get brackt id's and corresponding bracket names
+      const numBrktsCols = columns.filter((col) =>
+        isBrktsColumnName(col.field)
+      );
+      if (numBrktsCols && numBrktsCols.length > 0) {
+        const brktLists: BracketList[] = [];
+        for (let b = 0; b < numBrktsCols.length; b++) {
+          const brktId = getBrktIdFromColName(numBrktsCols[b].field);
+          // right now only 2 players per match, 3 games in bracket
+          const brktList = new BracketList(
+            brktId,
+            defaultPlayersPerMatch,
+            defaultBrktGames
+          );
+          brktList.calcTotalBrkts(rows); // calc total brkts - simple math calc
+          if (brktList.canRandomize()) {
+            brktList.randomize([]);
+            if (brktList.errorCode !== BracketList.noError) {
+              // empty array of brackets
+              brktLists.length = 0;
+              // show error message why could not randomize
+              const brktName = numBrktsCols[b].headerName;
+              setErrModalObj({
+                show: true,
+                title: "Cannot Randomize Brackets",
+                message: "Error in " + brktName + ": " + brktList.errorMessage,
+                id: brktId,
+              });
+              // exit for loop
+              return;
+            }
+          } else {
+            // empty array of brackets
+            brktLists.length = 0;
+            // show error message why can not randomize
+            const brktName = numBrktsCols[b].headerName;
+            setErrModalObj({
+              show: true,
+              title: "Cannot Randomize Brackets",
+              message: "Error in " + brktName + ": " + brktList.errorMessage,
+              id: brktId,
+            });
+            // exit for loop
+            return;
+          }
+          brktLists.push(brktList);
+        }
+      }
 
       setSaveCompleted(false); // Reset state before dispatching
-      const saveResultAction = await dispatch(SaveOneSquadEntries({ rows: rows, data: playersFormData }));
-      if (SaveOneSquadEntries.fulfilled.match(saveResultAction)) {
+      const entriesData = extractDataFromRows(rows, tmntFullData.squads[0].id);
+      tmntFullData.players = entriesData.players;
+      tmntFullData.divEntries = entriesData.divEntries;
+      tmntFullData.elimEntries = entriesData.elimEntries;
+      tmntFullData.brktEntries = entriesData.brktEntries;
+      tmntFullData.potEntries = entriesData.potEntries;
+
+      const saveResultAction = await dispatch(
+        saveTmntEntriesData(tmntFullData)
+      );
+      if (saveTmntEntriesData.fulfilled.match(saveResultAction)) {
         setResultAction(saveResultAction);
         setSaveCompleted(true);
       }
+      // const saveResultAction = await dispatch(saveTmntEntriesData({ rows: rows, data: playersFormData }));
+      // if (SaveOneSquadEntries.fulfilled.match(saveResultAction)) {
+      //   setResultAction(saveResultAction);
+      //   setSaveCompleted(true);
+      // }
     }
 
     // // check if any data entry errors
@@ -678,7 +786,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
     // } else {
     //   // now check if got divs, pots, brkts, elims
     //   const countErrInfo = findCountError();
-      
+
     //   if (countErrInfo.msg !== "") {
     //     setErrModalObj({
     //       show: true,
@@ -687,7 +795,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
     //       id: countErrInfo.id,
     //     });
     //     return;
-    //   }              
+    //   }
     //   // ok to save now
     //   setSaveCompleted(false); // Reset state before dispatching
     //   const saveResultAction = await dispatch(SaveOneSquadEntries({ rows: rows, data: playersFormData }));
@@ -696,10 +804,14 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
     //     setSaveCompleted(true);
     //   }
     // }
-  }
+  };
 
   const handleSaveClick = async () => {
-    const errInfo: errInfoType = findNextError(rows, playerFormTmnt.curData, CheckType.Prelim);
+    const errInfo: errInfoType = findNextError(
+      rows,
+      tmntData,
+      CheckType.Prelim
+    );
     if (errInfo.msg !== "") {
       setErrModalObj({
         show: true,
@@ -709,13 +821,15 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
       });
     } else {
       setSaveCompleted(false); // Reset state before dispatching
-      const saveResultAction = await dispatch(SaveOneSquadEntries({ rows: rows, data: playersFormData }));
-      if (SaveOneSquadEntries.fulfilled.match(saveResultAction)) {
+      const saveResultAction = await dispatch(
+        saveTmntEntriesData(tmntFullData)
+      );
+      if (saveTmntEntriesData.fulfilled.match(saveResultAction)) {
         setResultAction(saveResultAction);
         setSaveCompleted(true);
       }
     }
-  }
+  };
 
   const handleDebug1Click = () => {
     const newId = btDbUuid("ply");
@@ -724,35 +838,34 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
       ...newRow,
       id: newId,
       player_id: newId,
-      first_name: 'Linda',
-      last_name: 'Lindgren',
+      first_name: "Linda",
+      last_name: "Lindgren",
       average: 201,
       lane: 40,
-      position: 'G',
-    }
+      position: "G",
+    };
     setRows([...rows, addedRow]);
-  }
+  };
 
-  useEffect(() => {
-
-    console.log('PlayersEntryForm: useEffect 4 - [saveCompleted, entriesSaveStatus]');
+  // after saved
+  useEffect(() => {    
 
     if (saveCompleted && entriesSaveStatus === "succeeded" && resultAction) {
       const updatedInfo = (resultAction.payload as any).updatedInfo;
-  
+
       if (updatedInfo) {
         const updatedPlayers = updateAllEntries(updatedInfo, playersFormData);
         if (!updatedPlayers) return;
-        
-        dispatch(updatePlayers(updatedPlayers.players));
-        dispatch(updateDivEntries(updatedPlayers.divEntries));
-        dispatch(updatePotEntries(updatedPlayers.potEntries));
-        dispatch(updateBrktEntries(updatedPlayers.brktEntries));
-        dispatch(updateElimEntries(updatedPlayers.elimEntries));
-  
+
+        // dispatch(updatePlayers(updatedPlayers.players));
+        // dispatch(updateDivEntries(updatedPlayers.divEntries));
+        // dispatch(updatePotEntries(updatedPlayers.potEntries));
+        // dispatch(updateBrktEntries(updatedPlayers.brktEntries));
+        // dispatch(updateElimEntries(updatedPlayers.elimEntries));
+
         const totalUpdates: number = getTotalUpdated(updatedInfo);
         if (totalUpdates >= 0) {
-          router.push(`/dataEntry/runTmnt/${playerFormTmnt.curData.tmnt.id}`);
+          router.push(`/dataEntry/runTmnt/${tmntData.tmnt.id}`);
         }
       }
     }
@@ -766,14 +879,15 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
   );
   const renderFinalizeToolTip = (props: any) => (
     <Tooltip id="button-tooltip" {...props}>
-      Save bowlers and entry info. Additional error checks. Randomizes brackets. Must Finalize BEFORE you can enter scores.
+      Save bowlers and entry info. Additional error checks. Randomizes brackets.
+      Must Finalize BEFORE you can enter scores.
     </Tooltip>
   );
   const renderCancelToolTip = (props: any) => (
     <Tooltip id="button-tooltip" {...props}>
       Cancel edits. All changes will be lost.
     </Tooltip>
-  );  
+  );
 
   return (
     <>
@@ -791,9 +905,12 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
           message={errModalObj.message}
           onCancel={canceledModalErr}
         />
-        <WaitModal show={entriesSaveStatus === 'saving' && !errModalObj.show} message="Saving..." />
+        <WaitModal
+          show={entriesSaveStatus === "saving" && !errModalObj.show}
+          message="Saving..."
+        />
         <div>
-          <h5>Tournament: {playerFormTmnt?.curData?.tmnt.tmnt_name}</h5>
+          <h5>Tournament: {tmntData?.tmnt.tmnt_name}</h5>
           <h6>Entries: {rows.length}</h6>
           <div className="d-flex gap-2 mb-2">
             {/* add button */}
@@ -862,8 +979,8 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
               isTouchDevice={isTouchDevice}
               renderTooltip={renderSaveToolTip}
               buttonText="Save"
-              buttonColor="success" 
-              icon={ 
+              buttonColor="success"
+              icon={
                 <svg
                   xmlns="/save.svg"
                   width="16"
@@ -872,7 +989,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
                   className="bi bi-save"
                   viewBox="0 0 16 16"
                 >
-                  <path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H9.5a1 1 0 0 0-1 1v7.293l2.646-2.647a.5.5 0 0 1 .708.708l-3.5 3.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L7.5 9.293V2a2 2 0 0 1 2-2H14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h2.5a.5.5 0 0 1 0 1z"/>
+                  <path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H9.5a1 1 0 0 0-1 1v7.293l2.646-2.647a.5.5 0 0 1 .708.708l-3.5 3.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L7.5 9.293V2a2 2 0 0 1 2-2H14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h2.5a.5.5 0 0 1 0 1z" />
                 </svg>
               }
             />
@@ -882,7 +999,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
               isTouchDevice={isTouchDevice}
               renderTooltip={renderFinalizeToolTip}
               buttonText="Finalize"
-              buttonColor="info" 
+              buttonColor="info"
               icon={
                 <svg
                   xmlns="/skip-end.svg"
@@ -892,8 +1009,8 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
                   className="bi bi-skip-end"
                   viewBox="0 0 16 16"
                 >
-                  <path d="M12.5 4a.5.5 0 0 0-1 0v3.248L5.233 3.612C4.713 3.31 4 3.655 4 4.308v7.384c0 .653.713.998 1.233.696L11.5 8.752V12a.5.5 0 0 0 1 0zM5 4.633 10.804 8 5 11.367z"/>
-                </svg>                
+                  <path d="M12.5 4a.5.5 0 0 0-1 0v3.248L5.233 3.612C4.713 3.31 4 3.655 4 4.308v7.384c0 .653.713.998 1.233.696L11.5 8.752V12a.5.5 0 0 0 1 0zM5 4.633 10.804 8 5 11.367z" />
+                </svg>
               }
             />
             {/* cancel button */}
@@ -905,7 +1022,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
               <button
                 type="button"
                 className="btn btn-danger"
-                onClick={handleCancel}              
+                onClick={handleCancel}
                 // title="Cancel. All changes will be lost."
               >
                 <svg
@@ -917,8 +1034,8 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
                   viewBox="0 0 16 16"
                 >
                   <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
-                  <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>
-                </svg>              
+                  <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708" />
+                </svg>
                 &ensp;Cancel
               </button>
             </OverlayTrigger>
@@ -935,7 +1052,12 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
         </div>
         <div
           id="playerEntryGrid"
-          style={{ height: 350, width: "100%", overflow: "auto", marginBottom: 10 }}
+          style={{
+            height: 350,
+            width: "100%",
+            overflow: "auto",
+            marginBottom: 10,
+          }}
           tabIndex={90}
         >
           <DataGrid
@@ -946,17 +1068,17 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
             onRowModesModelChange={handleRowModesModelChange}
             onRowSelectionModelChange={handleRowSelectionModelChange}
             onRowEditStop={handleRowEditStop}
-            onCellEditStop={handleCellEditStop}            
+            onCellEditStop={handleCellEditStop}
             processRowUpdate={processRowUpdate}
             rowHeight={25}
             columnHeaderHeight={25}
             hideFooter
-            columnGroupingModel={columnGroupings}              
+            columnGroupingModel={columnGroupings}
           />
         </div>
       </div>
     </>
   );
-}
+};
 
 export default PlayersEntryForm;

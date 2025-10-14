@@ -5,6 +5,7 @@ import { playerDataType, playerType } from "@/lib/types/types";
 import { sanitizePlayer, validatePlayer } from "./validate";
 import { ErrorCode } from "@/lib/validation";
 import { getErrorStatus } from "../errCodes";
+import { playerDataForPrisma } from "./dataForPrisma";
 
 // routes /api/players
 
@@ -68,14 +69,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const playerData: playerDataType = {
-      id: toPost.id,
-      squad_id: toPost.squad_id,
-      first_name: toPost.first_name,
-      last_name: toPost.last_name,
-      average: toPost.average,
-      lane: toPost.lane,
-      position: toPost.position,
+    const playerData = playerDataForPrisma(toPost);
+    if (!playerData) {
+      return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
     const player = await prisma.player.create({
       data: playerData

@@ -6,7 +6,7 @@ import { initOneBrkt } from "@/lib/db/initVals";
 import { mockOneBrktsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { isValidBtDbId } from "@/lib/validation";
 import { cloneDeep } from "lodash";
-import { deleteAllOneBrktsForTmnt, postManyOneBrkts } from "@/lib/db/oneBrkts/dbOneBrkts";
+import { deleteAllOneBrktsForTmnt, getAllOneBrktsForBrkt, postManyOneBrkts } from "@/lib/db/oneBrkts/dbOneBrkts";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -87,45 +87,6 @@ const deletePostedOneBrkt = async () => {
   const toDel = oneBrkts.find((o: oneBrktType) => o.bindex === 99);
   if (toDel) {
     await delOneOneBrkt(toDel.id);
-  }
-}
-
-const resetOneBrkt = async () => { 
-  // make sure test oneBrkt is reset in database
-  const oneBrktJSON = JSON.stringify(testOneBrkt);
-  const response = await axios({
-    method: "put",
-    data: oneBrktJSON,
-    withCredentials: true,
-    url: oneOneBrktUrl + testOneBrkt.id,
-  })
-}
-
-const rePostOneBrkt = async (oneBrkt: oneBrktType) => {
-  try {
-    // if oneBrkt already in database, then don't re-post
-    const getResponse = await axios.get(oneOneBrktUrl + oneBrkt.id);
-    const found = getResponse.data.oneBrkt;
-    if (found) return;
-  } catch (err) {
-    if (err instanceof AxiosError) { 
-      if (err.status !== 404) {
-        console.log(err.message);
-        return;
-      }
-    }
-  }
-  try {
-    // if not in database, then re-post
-    const oneBrktJSON = JSON.stringify(oneBrkt);
-    const response = await axios({
-      method: "post",
-      withCredentials: true,
-      url: url,
-      data: oneBrktJSON
-    });    
-  } catch (err) {
-    if (err instanceof AxiosError) console.log(err.message);
   }
 }
 
@@ -386,7 +347,7 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
         }
       }
     });
-    it('should NOT get all oneBrkts when div_id is valid, but not a divId', async () => {
+    it('should NOT get all oneBrkts when squad id is valid, but not a squad id', async () => {
       try {
         const response = await axios({
           method: "get",
@@ -808,14 +769,32 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
         url: manyUrl
       })
       expect(response.status).toBe(201);
-      const postedOneBrkts = response.data.oneBrkts;
+      // const postedOneBrkts = response.data.oneBrkts;
       createdMany = true;
+      expect(response.data.count).toBe(mockOneBrktsToPost.length);
+
+      const postedOneBrkts = await getAllOneBrktsForBrkt(mockOneBrktsToPost[0].brkt_id);
+      if (!postedOneBrkts) {
+        expect(true).toBeFalsy();
+        return;
+      } 
       expect(postedOneBrkts.length).toBe(mockOneBrktsToPost.length);
       for (let i = 0; i < postedOneBrkts.length; i++) {
         expect(postedOneBrkts[i].id).toEqual(mockOneBrktsToPost[i].id);
         expect(postedOneBrkts[i].brkt_id).toEqual(mockOneBrktsToPost[i].brkt_id);
         expect(postedOneBrkts[i].bindex).toEqual(mockOneBrktsToPost[i].bindex);
-      }
+      }  
+    })
+    it('should return 0 and status 200 when passed empty array', async () => { 
+      const oneBrktsJSON = JSON.stringify([]);
+      const response = await axios({
+        method: "post",
+        data: oneBrktsJSON,
+        withCredentials: true,
+        url: manyUrl
+      })
+      expect(response.status).toBe(200);
+      expect(response.data.count).toBe(0);
     })
     it('should not post oneBrkts with invalid data', async () => { 
       const invalidOneBrkts = cloneDeep(mockOneBrktsToPost);
@@ -869,26 +848,6 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
         const response =await axios({
           method: "post",
           data: potsJSON,
-          withCredentials: true,
-          url: manyUrl
-        });
-        expect(response.status).toBe(422);
-      }
-      catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-          expect(err.response?.data.error).toBe("invalid data");
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should return error code 422 when passed empty array', async () => { 
-      const oneBrktsJSON = JSON.stringify([]);
-      try {
-        const response =await axios({
-          method: "post",
-          data: oneBrktsJSON,
           withCredentials: true,
           url: manyUrl
         });

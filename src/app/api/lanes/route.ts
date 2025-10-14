@@ -59,14 +59,8 @@ export const POST = async (request: NextRequest) => {
       );
     }
     
-    let laneData: laneDataType = {
-      id: toPost.id,
-      squad_id: toPost.squad_id,
-      lane_number: toPost.lane_number,
-      in_use: toPost.in_use
-    }
     const lane = await prisma.lane.create({
-      data: laneData      
+      data: toPost
     })
     return NextResponse.json({ lane }, { status: 201 });    
   } catch (err: any) {

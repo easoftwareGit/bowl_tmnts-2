@@ -3,10 +3,12 @@ import { baseBrktsApi } from "@/lib/db/apiPaths";
 import { testBaseBrktsApi } from "../../../testApi";
 import { brktType } from "@/lib/types/types";
 import { initBrkt } from "@/lib/db/initVals";
-import { mockBrktsToPost, mockSquadsToPost, tmntToDelId, mockDivs, mockDivsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllBrktsForDiv, deleteAllBrktsForSquad, deleteAllBrktsForTmnt, deleteBrkt, getAllBrktsForTmnt, postBrkt, postManyBrkts, putBrkt } from "@/lib/db/brkts/dbBrkts";
-import { deleteAllSquadsForTmnt, deleteSquad, postManySquads, postSquad } from "@/lib/db/squads/dbSquads";
-import { deleteAllDivsForTmnt, deleteDiv, postDiv, postManyDivs } from "@/lib/db/divs/dbDivs";
+import { mockBrktsToPost, mockSquadsToPost, tmntToDelId, mockDivsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
+import { deleteAllBrktsForDiv, deleteAllBrktsForSquad, deleteAllBrktsForTmnt, deleteBrkt, getAllBrktsForSquad, getAllBrktsForTmnt, postBrkt, postManyBrkts, putBrkt, extractBrkts } from "@/lib/db/brkts/dbBrkts";
+import { deleteAllSquadsForTmnt, postManySquads, postSquad } from "@/lib/db/squads/dbSquads";
+import { deleteAllDivsForTmnt, postDiv, postManyDivs } from "@/lib/db/divs/dbDivs";
+import { cloneDeep } from "lodash";
+import { replaceManyBrkts } from "@/lib/db/brkts/dbBrktsReplaceMany";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -28,7 +30,54 @@ const url = testBaseBrktsApi.startsWith("undefined")
   : testBaseBrktsApi;    
 const oneBrktUrl = url + "/brkt/";
 
+const squadId = 'sqd_7116ce5f80164830830a7157eb093396';
+const tmntId = 'tmt_fd99387c33d9c78aba290286576ddce5';
+
+const notFoundDivId = 'div_00000000000000000000000000000000';
+const notFoundSquadId = 'sqd_00000000000000000000000000000000';
 const notFoundTmntId = 'tmt_00000000000000000000000000000000';
+
+const brktsToGet: brktType[] = [
+  {
+    ...initBrkt,
+    id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
+    squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+    div_id: "div_f30aea2c534f4cfe87f4315531cef8ef",
+    sort_order: 1,
+    start: 1,
+    games: 3,
+    players: 8,
+    fee: '5',
+    first: '25',
+    second: '10',
+    admin: '5',
+    fsa: '40',
+  },
+  {
+    ...initBrkt,
+    id: "brk_6ede2512c7d4409ca7b055505990a499",
+    squad_id: "sqd_7116ce5f80164830830a7157eb093396",
+    div_id: "div_f30aea2c534f4cfe87f4315531cef8ef",
+    sort_order: 2,
+    start: 4,
+    games: 3,
+    players: 8,
+    fee: '5',
+    first: '25',
+    second: '10',
+    admin: '5',
+    fsa: '40',
+  },
+]
+
+const multiBrkts = [
+  {
+    ...mockBrktsToPost[0],
+  },
+  {
+    ...mockBrktsToPost[1],
+  },
+]
 
 describe('dbBrkts', () => { 
 
@@ -60,42 +109,116 @@ describe('dbBrkts', () => {
     }
   }  
   
-  describe('getAllBrktsForTmnt', () => {
+  const rePostToDel = async () => {
+    const response = await axios.get(url);
+    const brkts = response.data.brkts;
+    // find first test brkt
+    const foundToDel = brkts.find(
+      (b: brktType) => b.id === multiBrkts[0].id
+    );
+    if (!foundToDel) {
+      try {
+        await postManyBrkts(multiBrkts);
+      } catch (err) {
+        if (err instanceof AxiosError) console.log(err.message);
+      }
+    }
+  }
 
-    // from prisma/seed.ts
-    const tmntId = 'tmt_fd99387c33d9c78aba290286576ddce5';
-    const brktsToGet: brktType[] = [
-      {
+  describe("extractBrkts()", () => {
+    it("should return an empty array when given an empty array", () => {
+      const result = extractBrkts([]);
+      expect(result).toEqual([]);
+    });
+    it("should correctly map raw brkts to brktType", () => {
+      const rawBrkts = [
+        {
+          ...initBrkt,
+          id: "brk_123",
+          div_id:"div_123",
+          squad_id: "sqd_123",
+          fee: '5',
+          start: 1,
+          games: 3,
+          players: 8,
+          first: '25',
+          second: '10',
+          admin: '5',
+          sort_order: 1,
+          extraField: "ignore me", // should be ignored
+        },
+      ];
+
+      const result = extractBrkts(rawBrkts);
+
+      const expected: brktType = {
         ...initBrkt,
-        id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
-        squad_id: "sqd_7116ce5f80164830830a7157eb093396",
-        div_id: "div_f30aea2c534f4cfe87f4315531cef8ef",
-        sort_order: 1,
+        id: "brk_123",
+        div_id:"div_123",
+        squad_id: "sqd_123",
+        fee: '5',
         start: 1,
         games: 3,
         players: 8,
-        fee: '5',
         first: '25',
         second: '10',
         admin: '5',
-        fsa: '40',
-      },
-      {
-        ...initBrkt,
-        id: "brk_6ede2512c7d4409ca7b055505990a499",
-        squad_id: "sqd_7116ce5f80164830830a7157eb093396",
-        div_id: "div_f30aea2c534f4cfe87f4315531cef8ef",
-        sort_order: 2,
-        start: 4,
-        games: 3,
-        players: 8,
-        fee: '5',
-        first: '25',
-        second: '10',
-        admin: '5',
-        fsa: '40',
-      },
-    ]
+        sort_order: 1,
+      };
+
+      expect(result).toEqual([expected]);
+    });    
+    it("should process multiple brkts", () => {
+      const rawBrkts = [
+        {
+          ...initBrkt,
+          id: "brk_123",
+          div_id:"div_123",
+          squad_id: "sqd_123",
+          fee: '5',
+          start: 1,
+          games: 3,
+          players: 8,
+          first: '25',
+          second: '10',
+          admin: '5',
+          sort_order: 1,          
+        },
+        {
+          ...initBrkt,
+          id: "brk_124",
+          div_id:"div_123",
+          squad_id: "sqd_123",
+          fee: '5',
+          start: 4,
+          games: 3,
+          players: 8,
+          first: '25',
+          second: '10',
+          admin: '5',
+          sort_order: 2,
+        },
+      ];
+
+      const result = extractBrkts(rawBrkts);
+
+      expect(result).toHaveLength(2);
+      expect(result[0].id).toBe("brk_123");
+      expect(result[0].start).toBe(1);
+      expect(result[1].id).toBe("brk_124");
+      expect(result[1].start).toBe(4);
+    });
+    it('should return empty array when given null', () => {      
+      const result = extractBrkts(null);
+      expect(result).toEqual([]);
+    });
+    it('should return empty array when given non-array', () => {
+      const result = extractBrkts('not an array');
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('getAllBrktsForTmnt', () => {
 
     it('should get all brkts for tmnt', async () => { 
       const brkts = await getAllBrktsForTmnt(tmntId);
@@ -119,22 +242,81 @@ describe('dbBrkts', () => {
     it("should return 0 brkts for not found tmnt", async () => { 
       const brkts = await getAllBrktsForTmnt(notFoundTmntId);
       expect(brkts).toHaveLength(0);
+    })    
+    it('should throw error if if tmnt id is invalid', async () => { 
+      try {
+        await getAllBrktsForTmnt("test");
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid tmnt id");
+      }
     })
-    it('should return null if tmnt id is invalid', async () => { 
-      const brkts = await getAllBrktsForTmnt('test');
-      expect(brkts).toBeNull();
+    it('should throw error if if tmnt id is valid, but not a tmnt id', async () => { 
+      try {
+        await getAllBrktsForTmnt(brktsToGet[0].id);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid tmnt id");
+      }
     })
-    it('should return null if tmnt id is valid, but not a tmnt id', async () => { 
-      const brkts = await getAllBrktsForTmnt(brktsToGet[0].id);
-      expect(brkts).toBeNull();
+    it('should throw error if if tmnt id is null', async () => { 
+      try {
+        await getAllBrktsForTmnt(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid tmnt id");
+      }
     })
-    it('should return null if tmnt id is undefined', async () => { 
-      const brkts = await getAllBrktsForTmnt(undefined as any);  
-      expect(brkts).toBeNull();
+  })
+
+  describe('getAllBrktsForSquad', () => {
+
+    it('should get all brkts for squad', async () => { 
+      const brkts = await getAllBrktsForSquad(squadId);
+      expect(brkts).toHaveLength(brktsToGet.length);
+      if (!brkts) return;
+      for (let i = 0; i < brkts.length; i++) {
+        expect(brkts[i].id).toEqual(brktsToGet[i].id);
+        expect(brkts[i].squad_id).toEqual(brktsToGet[i].squad_id);
+        expect(brkts[i].div_id).toEqual(brktsToGet[i].div_id);
+        expect(brkts[i].sort_order).toEqual(brktsToGet[i].sort_order);
+        expect(brkts[i].start).toEqual(brktsToGet[i].start);
+        expect(brkts[i].games).toEqual(brktsToGet[i].games);
+        expect(brkts[i].players).toEqual(brktsToGet[i].players);
+        expect(brkts[i].fee).toEqual(brktsToGet[i].fee);
+        expect(brkts[i].first).toEqual(brktsToGet[i].first);
+        expect(brkts[i].second).toEqual(brktsToGet[i].second);
+        expect(brkts[i].admin).toEqual(brktsToGet[i].admin);
+        expect(brkts[i].fsa + '').toEqual(brktsToGet[i].fsa);
+      }
     })
-    it('should return null if tmnt id is null', async () => { 
-      const brkts = await getAllBrktsForTmnt(null as any);  
-      expect(brkts).toBeNull();
+    it("should return 0 brkts for not found squad", async () => { 
+      const brkts = await getAllBrktsForSquad(notFoundSquadId);
+      expect(brkts).toHaveLength(0);
+    })    
+    it('should throw error if if squad id is invalid', async () => { 
+      try {
+        await getAllBrktsForSquad("test");
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid squad id");
+      }
+    })
+    it('should throw error if if squad id is valid, but not a squad id', async () => { 
+      try {
+        await getAllBrktsForSquad(brktsToGet[0].id);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid squad id");
+      }
+    })
+    it('should throw error if if squad id is null', async () => { 
+      try {
+        await getAllBrktsForSquad(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid squad id");
+      }
     })
   })
 
@@ -205,12 +387,16 @@ describe('dbBrkts', () => {
       expect(postedBrkt.sort_order).toBe(brktToPost.sort_order);    
     })
     it('should NOT post a brkt with invalid data', async () => { 
-      const invalidBrkt = {
-        ...brktToPost,
-        games: -1,
+      try {
+        const invalidBrkt = {
+          ...brktToPost,
+          games: -1,
+        }
+        await postBrkt(invalidBrkt);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("postBrkt failed: Request failed with status code 422");
       }
-      const postedBrkt = await postBrkt(invalidBrkt);
-      expect(postedBrkt).toBeNull();
     })
 
   })
@@ -222,7 +408,7 @@ describe('dbBrkts', () => {
     beforeAll(async () => { 
       
       // remove any old test data
-      await deleteAllBrktsForTmnt(tmntToDelId); 
+      // await deleteAllBrktsForTmnt(tmntToDelId); 
       await deleteAllSquadsForTmnt(tmntToDelId);
       await deleteAllDivsForTmnt(tmntToDelId);
 
@@ -242,53 +428,92 @@ describe('dbBrkts', () => {
     })
 
     afterAll(async () => {
-      await deleteAllBrktsForTmnt(tmntToDelId);
+      // await deleteAllBrktsForTmnt(tmntToDelId);
       await deleteAllSquadsForTmnt(tmntToDelId);
       await deleteAllDivsForTmnt(tmntToDelId);
     })
 
     it('should post many brkts', async () => { 
-      const postedBrkts = await postManyBrkts(mockBrktsToPost);
+      const count = await postManyBrkts(mockBrktsToPost);      
+      expect(count).toBe(mockBrktsToPost.length);
+      createdBrkts = true;
+      // check that all brkts were posted      
+      const postedBrkts = await getAllBrktsForTmnt(tmntToDelId);
       expect(postedBrkts).not.toBeNull();
       if (!postedBrkts) return;
       createdBrkts = true;
       expect(postedBrkts.length).toBe(mockBrktsToPost.length);
       for (let i = 0; i < postedBrkts.length; i++) {
-        expect(postedBrkts[i].id).toEqual(mockBrktsToPost[i].id);
-        expect(postedBrkts[i].squad_id).toEqual(mockBrktsToPost[i].squad_id);
-        expect(postedBrkts[i].div_id).toEqual(mockBrktsToPost[i].div_id);
         expect(postedBrkts[i].fee).toEqual(mockBrktsToPost[i].fee);
         expect(postedBrkts[i].first).toEqual(mockBrktsToPost[i].first);
         expect(postedBrkts[i].second).toEqual(mockBrktsToPost[i].second);
         expect(postedBrkts[i].admin).toEqual(mockBrktsToPost[i].admin);
         expect(postedBrkts[i].fsa + '').toEqual(mockBrktsToPost[i].fsa);        
-        expect(postedBrkts[i].sort_order).toEqual(mockBrktsToPost[i].sort_order);        
+        if (postedBrkts[i].id === mockBrktsToPost[0].id) {
+          expect(postedBrkts[i].start).toEqual(mockBrktsToPost[0].start);
+          expect(postedBrkts[i].squad_id).toEqual(mockBrktsToPost[0].squad_id);
+          expect(postedBrkts[i].div_id).toEqual(mockBrktsToPost[0].div_id);
+          expect(postedBrkts[i].sort_order).toEqual(mockBrktsToPost[0].sort_order);
+        } else if (postedBrkts[i].id === mockBrktsToPost[1].id) {
+          expect(postedBrkts[i].start).toEqual(mockBrktsToPost[1].start);
+          expect(postedBrkts[i].squad_id).toEqual(mockBrktsToPost[1].squad_id);
+          expect(postedBrkts[i].div_id).toEqual(mockBrktsToPost[1].div_id);
+          expect(postedBrkts[i].sort_order).toEqual(mockBrktsToPost[1].sort_order);
+        } else if (postedBrkts[i].id === mockBrktsToPost[2].id) {
+          expect(postedBrkts[i].start).toEqual(mockBrktsToPost[2].start);
+          expect(postedBrkts[i].squad_id).toEqual(mockBrktsToPost[2].squad_id);
+          expect(postedBrkts[i].div_id).toEqual(mockBrktsToPost[2].div_id);
+          expect(postedBrkts[i].sort_order).toEqual(mockBrktsToPost[2].sort_order);
+        } else if (postedBrkts[i].id === mockBrktsToPost[3].id) {
+          expect(postedBrkts[i].start).toEqual(mockBrktsToPost[3].start);
+          expect(postedBrkts[i].squad_id).toEqual(mockBrktsToPost[3].squad_id);
+          expect(postedBrkts[i].div_id).toEqual(mockBrktsToPost[3].div_id);
+          expect(postedBrkts[i].sort_order).toEqual(mockBrktsToPost[3].sort_order);
+        } else { 
+          expect(true).toBeFalsy();
+        }        
       }
     })
     // no text values to sanitize
-    it('should not post many brkts with no data', async () => { 
-      const postedBrkts = await postManyBrkts([]);
-      expect(postedBrkts).not.toBeNull();
-      expect(postedBrkts).toHaveLength(0);
+    it('should return 0 when passed an empty array', async () => { 
+      const count = await postManyBrkts([]);
+      expect(count).toBe(0);
     })
-    it('should NOT post many brkts with invalid data', async () => { 
-      const invalidBrkts = [
-        {
-          ...mockBrktsToPost[0],
-          games: -1
-        },
-        {
-          ...mockBrktsToPost[1],
-        },
-        {
-          ...mockBrktsToPost[2],
-        },
-        {
-          ...mockBrktsToPost[3],
-        },
-      ]
-      const postedBrkts = await postManyBrkts(invalidBrkts);
-      expect(postedBrkts).toBeNull();
+    it('should throw error when posting many brkts with invalid data in first item ', async () => { 
+      try {
+        const invalidBrkts = cloneDeep(mockBrktsToPost);
+        invalidBrkts[0].games = -1;
+        await postManyBrkts(invalidBrkts);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid brkt data at index 0");
+      }
+    })
+    it('should throw error when posting many brkts with invalid data in second item ', async () => { 
+      try {
+        const invalidBrkts = cloneDeep(mockBrktsToPost);
+        invalidBrkts[1].start = 0;
+        await postManyBrkts(invalidBrkts);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid brkt data at index 1");
+      }
+    })
+    it('should throw error when passed a non-array', async () => { 
+      try {
+        await postManyBrkts('not an array' as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid brkts data");
+      }
+    })
+    it('should throw error when passed null', async () => { 
+      try {
+        await postManyBrkts(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid brkts data");
+      }
     })
   })
 
@@ -372,15 +597,316 @@ describe('dbBrkts', () => {
       expect(puttedBrkt.fsa + '').toEqual(brktToPut.fsa);
       expect(puttedBrkt.sort_order).toEqual(brktToPut.sort_order);      
     });
-    it('should not put a brkt with invalid data', async () => { 
-      const invalidBrkt = {
-        ...brktToPut,
-        fee: '-13',
+    it('should throw error when trying to update a brkt with invalid data', async () => { 
+      try {
+        const invalidBrkt = {
+          ...brktToPut,
+          fee: '-13',
+        }
+        await putBrkt(invalidBrkt);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe(
+          "putBrkt failed: Request failed with status code 422"
+        );
       }
-      const puttedBrkt = await putBrkt(invalidBrkt);
-      expect(puttedBrkt).toBeNull();
     })
+    it('should throw error when passed a brkt with invalid id', async () => { 
+      try {
+        const invalidBrkt = {
+          ...brktToPut,
+          id: 'test',
+        }
+        await putBrkt(invalidBrkt);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid brkt data");        
+      }
+    })
+    it('should throw error when passed null', async () => { 
+      try {
+        await putBrkt(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid brkt data");
+      }
+    })
+  })
 
+  describe('replaceManyBrkts()', () => { 
+
+    const rmSquadId = mockBrktsToPost[0].squad_id;
+    let createdBrkts = false;
+  
+    const manyBrktsOneSquad: brktType[] = [
+      {
+        ...mockBrktsToPost[0],
+      },
+      {
+        ...mockBrktsToPost[1],
+      },
+    ];
+
+    beforeAll(async () => {
+      // remove any old test data      
+      await deleteAllSquadsForTmnt(tmntToDelId); // deletes all brkts for squad too
+      await deleteAllDivsForTmnt(tmntToDelId);
+
+      // make sure test squads in database
+      await postManyDivs(mockDivsToPost);
+      await postManySquads(mockSquadsToPost);       
+    });
+
+    beforeEach(() => {
+      createdBrkts = false;
+      // Reset the mocks before each test to ensure test isolation
+    });
+
+    afterEach(async () => {
+      if (createdBrkts) {
+        await deleteAllBrktsForTmnt(tmntToDelId);
+      }
+    });
+
+    afterAll(async () => {      
+      await deleteAllSquadsForTmnt(tmntToDelId); // deletes all brkts for squad too
+      await deleteAllDivsForTmnt(tmntToDelId);
+    });
+    
+    it("should update, insert, delete many brkts", async () => {
+      const toInsert: brktType[] = [
+        {
+          ...initBrkt,
+          id: "brk_05758d99c5494efabb3b0d273cf22e7a",
+          squad_id: rmSquadId,
+          div_id: mockBrktsToPost[0].div_id,
+          sort_order: 5,
+          start: 2,
+          games: 3,
+          players: 8,
+          fee: '5',
+          first: '25',
+          second: '10',
+          admin: '5',
+          fsa: '40',
+        },
+        {
+          ...initBrkt,
+          id: "brk_06758d99c5494efabb3b0d273cf22e7a",
+          squad_id: rmSquadId,
+          div_id: mockBrktsToPost[0].div_id,
+          sort_order: 6,
+          start: 3,
+          games: 3,
+          players: 8,
+          fee: '5',
+          first: '25',
+          second: '10',
+          admin: '5',
+          fsa: '40',
+        },
+      ];
+
+      const count = await postManyBrkts(manyBrktsOneSquad);
+      expect(count).toBe(manyBrktsOneSquad.length);
+      createdBrkts = true;
+      const brkts = await getAllBrktsForSquad(rmSquadId);
+      if (!brkts) {
+        expect(true).toBeFalsy();
+        return;
+      }
+      expect(brkts.length).toEqual(manyBrktsOneSquad.length);
+
+      const brktsToUpdate = [
+        {
+          ...manyBrktsOneSquad[0],
+          fee: '10',
+          first: '50',
+          second: '20',
+          admin: '10',
+          fsa: '80',
+        },
+        {
+          ...toInsert[0],
+        },
+        {
+          ...toInsert[1],
+        },
+      ];
+
+      const replaceCount = await replaceManyBrkts(brktsToUpdate, rmSquadId);
+      expect(replaceCount).toBe(brktsToUpdate.length);
+      const replacedBrkts = await getAllBrktsForSquad(rmSquadId);
+      if (!replacedBrkts) {
+        expect(true).toBeFalsy();
+        return;
+      }
+      expect(replacedBrkts.length).toEqual(brktsToUpdate.length);
+      for (let i = 0; i < replacedBrkts.length; i++) {
+        if (replacedBrkts[i].id === brktsToUpdate[0].id) {
+          expect(replacedBrkts[i].fee).toEqual(brktsToUpdate[0].fee);
+          expect(replacedBrkts[i].first).toEqual(brktsToUpdate[0].first);
+          expect(replacedBrkts[i].second).toEqual(brktsToUpdate[0].second);
+          expect(replacedBrkts[i].admin).toEqual(brktsToUpdate[0].admin);
+          expect(replacedBrkts[i].fsa + '').toEqual(brktsToUpdate[0].fsa);
+        } else if (replacedBrkts[i].id === brktsToUpdate[1].id) {
+          expect(replacedBrkts[i].fee).toEqual(brktsToUpdate[1].fee);
+          expect(replacedBrkts[i].first).toEqual(brktsToUpdate[1].first);
+          expect(replacedBrkts[i].second).toEqual(brktsToUpdate[1].second);
+          expect(replacedBrkts[i].admin).toEqual(brktsToUpdate[1].admin);
+          expect(replacedBrkts[i].fsa + '').toEqual(brktsToUpdate[1].fsa);
+        } else if (replacedBrkts[i].id === brktsToUpdate[2].id) {
+          expect(replacedBrkts[i].fee).toEqual(brktsToUpdate[2].fee);
+          expect(replacedBrkts[i].first).toEqual(brktsToUpdate[2].first);
+          expect(replacedBrkts[i].second).toEqual(brktsToUpdate[2].second);
+          expect(replacedBrkts[i].admin).toEqual(brktsToUpdate[2].admin);
+          expect(replacedBrkts[i].fsa + '').toEqual(brktsToUpdate[2].fsa);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    });
+    it("should return 0 when passed an empty array", async () => {
+      const count = await postManyBrkts(manyBrktsOneSquad);
+      expect(count).toBe(manyBrktsOneSquad.length);
+      createdBrkts = true;
+      const brkts = await getAllBrktsForSquad(rmSquadId);
+      if (!brkts) {
+        expect(true).toBeFalsy();
+        return;
+      }
+      expect(brkts.length).toEqual(manyBrktsOneSquad.length);
+
+      const replaceCount = await replaceManyBrkts([], rmSquadId);
+      expect(replaceCount).toBe(0);
+      const replacedBrkts = await getAllBrktsForSquad(rmSquadId);
+      if (!replacedBrkts) {
+        expect(true).toBeFalsy();
+        return;
+      }
+      expect(replacedBrkts.length).toEqual(0);
+    });
+    it("should throw an error for invalid brkt ID in first item", async () => {
+      const count = await postManyBrkts(manyBrktsOneSquad);
+      expect(count).toBe(manyBrktsOneSquad.length);
+      createdBrkts = true;
+      const brkts = await getAllBrktsForSquad(rmSquadId);
+      if (!brkts) {
+        expect(true).toBeFalsy();
+        return;
+      }
+      expect(brkts.length).toEqual(manyBrktsOneSquad.length);
+
+      const brktsToUpdate = [
+        {
+          ...manyBrktsOneSquad[0],
+          id: "",
+        },
+        {
+          ...manyBrktsOneSquad[1],
+        },
+      ];
+      await expect(
+        replaceManyBrkts(brktsToUpdate, rmSquadId)
+      ).rejects.toThrow("Invalid brkt data at index 0");
+    });
+    it("should throw an error for invalid brkt ID in second item", async () => {
+      const count = await postManyBrkts(manyBrktsOneSquad);
+      expect(count).toBe(manyBrktsOneSquad.length);
+      createdBrkts = true;
+      const brkts = await getAllBrktsForSquad(rmSquadId);
+      if (!brkts) {
+        expect(true).toBeFalsy();
+        return;
+      }
+      expect(brkts.length).toEqual(manyBrktsOneSquad.length);
+
+      const brktsToUpdate = [
+        {
+          ...manyBrktsOneSquad[0],
+        },
+        {
+          ...manyBrktsOneSquad[1],
+          id: "invalid-id",
+        },
+      ];
+      await expect(
+        replaceManyBrkts(brktsToUpdate, rmSquadId)
+      ).rejects.toThrow("Invalid brkt data at index 1");
+    });
+    it("should throw an error for invalid brkt data in first item", async () => {
+      const count = await postManyBrkts(manyBrktsOneSquad);
+      expect(count).toBe(manyBrktsOneSquad.length);
+      createdBrkts = true;
+      const brkts = await getAllBrktsForSquad(rmSquadId);
+      if (!brkts) {
+        expect(true).toBeFalsy();
+        return;
+      }
+      expect(brkts.length).toEqual(manyBrktsOneSquad.length);
+
+      const brktsToUpdate = [
+        {
+          ...manyBrktsOneSquad[0],
+          games: -1,
+        },
+        {
+          ...manyBrktsOneSquad[1],
+        },
+      ];
+      await expect(
+        replaceManyBrkts(brktsToUpdate, rmSquadId)
+      ).rejects.toThrow("Invalid brkt data at index 0");
+    });
+    it("should throw an error for invalid brkt data in second item", async () => {
+      const count = await postManyBrkts(manyBrktsOneSquad);
+      expect(count).toBe(manyBrktsOneSquad.length);
+      createdBrkts = true;
+      const brkts = await getAllBrktsForSquad(rmSquadId);
+      if (!brkts) {
+        expect(true).toBeFalsy();
+        return;
+      }
+      expect(brkts.length).toEqual(manyBrktsOneSquad.length);
+
+      const brktsToUpdate = [
+        {
+          ...manyBrktsOneSquad[0],          
+        },
+        {
+          ...manyBrktsOneSquad[1],
+          games: 1234,
+        },
+      ];
+      await expect(
+        replaceManyBrkts(brktsToUpdate, rmSquadId)
+      ).rejects.toThrow("Invalid brkt data at index 1");
+    });
+    it("should throw an error if passed null as brkts", async () => {
+      await expect(replaceManyBrkts(null as any, rmSquadId)).rejects.toThrow(
+        "Invalid brkts"
+      );
+    });
+    it("should throw an error if brkts is not an array", async () => {
+      await expect(
+        replaceManyBrkts("not-an-array" as any, rmSquadId)
+      ).rejects.toThrow("Invalid brkts");
+    });
+    it("should throw an error if passed null as squadId", async () => {
+      await expect(
+        replaceManyBrkts(mockBrktsToPost, null as any)
+      ).rejects.toThrow("Invalid squad id");
+    });
+    it("should throw an error if passed invalid squadId", async () => {
+      await expect(
+        replaceManyBrkts(mockBrktsToPost, "test")
+      ).rejects.toThrow("Invalid squad id");
+    });
+    it("should throw an error if passed valid id, but not squad id", async () => {
+      await expect(
+        replaceManyBrkts(mockBrktsToPost, tmntId)
+      ).rejects.toThrow("Invalid squad id");
+    });        
   })
 
   describe('deleteBrkt', () => { 
@@ -402,7 +928,7 @@ describe('dbBrkts', () => {
       fsa: '40',
     }
 
-    const nonFoundId = "brk_00000000000000000000000000000000";
+    const notFoundId = "brk_00000000000000000000000000000000";
     
     let didDel = false;
 
@@ -425,66 +951,64 @@ describe('dbBrkts', () => {
       expect(deleted).toBe(1);
       didDel = true;
     });
-    it("should NOT delete a brkt when ID is not found", async () => {
-      const deleted = await deleteBrkt(nonFoundId);
-      expect(deleted).toBe(-1);
+    it("should throw error when a brkt when ID is not found", async () => {
+      try {
+        await deleteBrkt(notFoundId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe(
+          "deleteBrkt failed: Request failed with status code 404"
+        );
+      }
     });
-    it("should NOT delete a brkt when ID is invalid", async () => {
-      const deleted = await deleteBrkt('test');
-      expect(deleted).toBe(-1);
+    it("should throw error when a brkt when ID is invalid", async () => {
+      try {
+        await deleteBrkt('test');
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid brkt id");
+      }
     });
-    it('should NOT delete a brkt when ID is valid, but not a brkt ID', async () => { 
-      const deleted = await deleteBrkt(toDel.squad_id);
-      expect(deleted).toBe(-1);
+    it('should throw error when a brkt when ID is valid, but not a brkt ID', async () => { 
+      try {
+        await deleteBrkt(tmntToDelId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid brkt id");
+      }
     })
-    it('should not delete a brkt when ID is blank', async () => {
-      const deleted = await deleteBrkt('');
-      expect(deleted).toBe(-1);
+    it('should throw error when a brkt when ID is blank', async () => {
+      try {
+        await deleteBrkt('');
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid brkt id");
+      }
     })
-    it('should not delete a brkt when ID is null', async () => {
-      const deleted = await deleteBrkt(null as any);
-      expect(deleted).toBe(-1);
+    it('should throw error when a brkt when ID is null', async () => {
+      try {
+        await deleteBrkt(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid brkt id");
+      }
     })
 
   })
 
-  describe('deleteAllSquadBrkts', () => { 
-
-    const multiBrkts = [
-      {
-        ...mockBrktsToPost[0],
-      },
-      {
-        ...mockBrktsToPost[1],
-      },
-    ]
-
-    const rePostToDel = async () => {
-      const response = await axios.get(url);
-      const brkts = response.data.brkts;
-      // find first test brkt
-      const foundToDel = brkts.find(
-        (b: brktType) => b.id === multiBrkts[0].id
-      );
-      if (!foundToDel) {
-        try {
-          await postManyBrkts(multiBrkts);
-        } catch (err) {
-          if (err instanceof AxiosError) console.log(err.message);
-        }
-      }
-    }
+  describe('deleteAllSquadBrkts', () => {       
 
     let didDel = false;
 
     beforeAll(async () => {
       // cleanup before tests
-      await deleteAllBrktsForSquad(multiBrkts[0].squad_id);
-      await deleteSquad(mockSquadsToPost[0].id);
-      await deleteDiv(mockDivsToPost[0].id);
-      // setup for tests
-      await postDiv(mockDivsToPost[0]);
-      await postSquad(mockSquadsToPost[0])
+      await deleteAllBrktsForTmnt(tmntToDelId);      
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
+
+      // // setup for tests
+      await postManyDivs(mockDivsToPost)
+      await postManySquads(mockSquadsToPost)
       await rePostToDel();
     });
 
@@ -499,65 +1023,56 @@ describe('dbBrkts', () => {
     });
 
     afterAll(async () => {
-      await deleteAllBrktsForSquad(multiBrkts[0].squad_id);
-      await deleteSquad(mockSquadsToPost[0].id);
-      await deleteDiv(mockDivsToPost[0].id);
+      await deleteAllBrktsForTmnt(tmntToDelId);      
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
     });
 
     it('should delete all brkts for a squad', async () => {
-      const deleted = await deleteAllBrktsForSquad(multiBrkts[0].squad_id);
-      expect(deleted).toBe(multiBrkts.length);
+      const deleted = await deleteAllBrktsForSquad(multiBrkts[0].squad_id);      
+      expect(deleted).toBe(2);
       didDel = true;
     })
-    it('should NOT delete all brkts for a squad when ID is invalid', async () => {
-      const deleted = await deleteAllBrktsForSquad('test');
-      expect(deleted).toBe(-1);
-    })
-    it('should NOT delete all brkts for a squad when ID is not found', async () => {
-      const deleted = await deleteAllBrktsForSquad('sqd_00000000000000000000000000000000');
+    it("should not delete all brkts for a squad when squad id is not found", async () => {
+      const deleted = await deleteAllBrktsForSquad(notFoundSquadId);
       expect(deleted).toBe(0);
+    });
+    it('should throw error deleting all brkts for a squad when ID is invalid', async () => {
+      try {
+        await deleteAllBrktsForSquad('test');
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid squad id");
+      }
     })
     it('should NOT delete all brkts for a squad when ID is valid, but not a squad ID', async () => {
-      const deleted = await deleteAllBrktsForSquad(mockBrktsToPost[0].id);
-      expect(deleted).toBe(-1);
+      try {
+        await deleteAllBrktsForSquad(tmntToDelId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid squad id");
+      }
     })
-
+    it('should NOT delete all brkts for a squad when passed null', async () => {
+      try {
+        await deleteAllBrktsForSquad(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid squad id");
+      }
+    })
   })
 
   describe('deleteAllDivBrkts', () => { 
-
-    const multiBrkts = [
-      {
-        ...mockBrktsToPost[0],
-      },
-      {
-        ...mockBrktsToPost[1],
-      },
-    ]
-
-    const rePostToDel = async () => {
-      const response = await axios.get(url);
-      const brkts = response.data.brkts;
-      // find first test brkt
-      const foundToDel = brkts.find(
-        (b: brktType) => b.id === multiBrkts[0].id
-      );
-      if (!foundToDel) {
-        try {
-          await postManyBrkts(multiBrkts);
-        } catch (err) {
-          if (err instanceof AxiosError) console.log(err.message);
-        }
-      }
-    }
-
+    
     let didDel = false;
 
     beforeAll(async () => {
       // cleanup before tests
-      await deleteAllBrktsForSquad(multiBrkts[0].squad_id);
-      await deleteSquad(mockSquadsToPost[0].id);
-      await deleteDiv(mockDivsToPost[0].id);
+      await deleteAllBrktsForTmnt(tmntToDelId);
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
+
       // setup for tests
       await postDiv(mockDivsToPost[0]);
       await postSquad(mockSquadsToPost[0])
@@ -575,9 +1090,9 @@ describe('dbBrkts', () => {
     });
 
     afterAll(async () => {
-      await deleteAllBrktsForSquad(multiBrkts[0].squad_id);
-      await deleteSquad(mockSquadsToPost[0].id);
-      await deleteDiv(mockDivsToPost[0].id);
+      await deleteAllBrktsForTmnt(tmntToDelId);
+      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllDivsForTmnt(tmntToDelId);
     });
 
     it('should delete all brkts for a div', async () => {
@@ -585,17 +1100,34 @@ describe('dbBrkts', () => {
       expect(deleted).toBe(multiBrkts.length);
       didDel = true;
     })
-    it('should NOT delete all brkts for a div when ID is invalid', async () => {
-      const deleted = await deleteAllBrktsForDiv('test');
-      expect(deleted).toBe(-1);
-    })
-    it('should NOT delete all brkts for a div when ID is not found', async () => {
-      const deleted = await deleteAllBrktsForDiv('div_00000000000000000000000000000000');
+    it('should not delete all brkts for a div when ID is not found', async () => {
+      const deleted = await deleteAllBrktsForDiv(notFoundDivId);
       expect(deleted).toBe(0);
     })
-    it('should NOT delete all brkts for a div when ID is valid, but not a squad ID', async () => {
-      const deleted = await deleteAllBrktsForDiv(mockBrktsToPost[0].id);
-      expect(deleted).toBe(-1);
+
+    it('should throw error when deleting all brkts for a div when ID is invalid', async () => {
+      try {
+        await deleteAllBrktsForDiv('test');
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid div id");
+      }
+    })
+    it('should throw error when deleting all brkts for a div when ID is valid, but not a div ID', async () => {
+      try {
+        await deleteAllBrktsForDiv(mockBrktsToPost[0].id);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid div id");
+      }
+    })
+    it('should throw error when deleting all brkts for a div when passed null', async () => {
+      try {
+        await deleteAllBrktsForDiv(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid div id");
+      }
     })
 
   })
@@ -610,14 +1142,14 @@ describe('dbBrkts', () => {
 
     beforeAll(async () => {
       // cleanup before tests
-      await deleteAllBrktsForSquad(toDelSquads[0].id);
-      await deleteAllBrktsForSquad(toDelSquads[1].id);
+      await deleteAllBrktsForTmnt(tmntToDelId);      
       await deleteAllSquadsForTmnt(tmntToDelId);
       await deleteAllDivsForTmnt(tmntToDelId);
-      // setup for tests
-      await postManyDivs(toDelDivs);
-      await postManySquads(toDelSquads);
-      await postManyBrkts(toDelBrkts);
+
+      // // setup for tests
+      await postManyDivs(mockDivsToPost)
+      await postManySquads(mockSquadsToPost)
+      await rePostToDel();
     })
 
     beforeEach(() => {
@@ -626,13 +1158,11 @@ describe('dbBrkts', () => {
 
     afterEach(async () => {
       if (!didDel) return;
-      await deleteAllBrktsForSquad(toDelSquads[0].id);
-      await deleteAllBrktsForSquad(toDelSquads[1].id);
+      await deleteAllBrktsForTmnt(tmntToDelId);      
     })
 
     afterAll(async () => {
-      await deleteAllBrktsForSquad(toDelSquads[0].id);
-      await deleteAllBrktsForSquad(toDelSquads[1].id);
+      await deleteAllBrktsForTmnt(tmntToDelId);
       await deleteAllSquadsForTmnt(tmntToDelId);
       await deleteAllDivsForTmnt(tmntToDelId);
     })
@@ -640,19 +1170,35 @@ describe('dbBrkts', () => {
     it('should delete all brkts for a tmnt', async () => {
       const deleted = await deleteAllBrktsForTmnt(tmntToDelId);
       didDel = true;
-      expect(deleted).toBe(toDelBrkts.length);
+      expect(deleted).toBe(multiBrkts.length);
     })
-    it('should NOT delete all brkts for a tmnt when ID is invalid', async () => {
-      const deleted = await deleteAllBrktsForTmnt('test');
-      expect(deleted).toBe(-1);
+    it('should not delete all brkts for a tmnt when tmnt ID is not found', async () => {
+      const count = await deleteAllBrktsForTmnt(notFoundTmntId);
+      expect(count).toBe(0);
     })
-    it('should NOT delete all brkts for a tmnt when tmnt ID is not found', async () => {
-      const deleted = await deleteAllBrktsForTmnt(notFoundTmntId);
-      expect(deleted).toBe(0);
+    it('should throw error when deleting all brkts for a tmnt when ID is invalid', async () => {
+      try {
+        await deleteAllBrktsForTmnt('test');
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid tmnt id");
+      }
     })
-    it('should NOT delete all brkts for a tmnt when tmnt ID is valid, but not a tmnt id', async () => {
-      const deleted = await deleteAllBrktsForTmnt(toDelBrkts[0].id);
-      expect(deleted).toBe(-1);
+    it('should throw error when deleting all brkts for a tmnt when tmnt ID is valid, but not a tmnt id', async () => {
+      try {
+        await deleteAllBrktsForTmnt(toDelBrkts[0].id);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid tmnt id");
+      }
+    })
+    it('should throw error when deleting all brkts for a tmnt when passed null', async () => {
+      try {
+        await deleteAllBrktsForTmnt(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid tmnt id");
+      }
     })
 
   })

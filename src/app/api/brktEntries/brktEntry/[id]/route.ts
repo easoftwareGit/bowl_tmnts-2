@@ -56,7 +56,7 @@ export async function GET(
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }   
 
-    // convert brkt.fee to a number
+    // get # of refunds and convert brkt.fee from decimal to number
     const brktEntriesNoFee: brktEntriesFromPrisa[] = [
       {
         ...brktEntryNoFee,

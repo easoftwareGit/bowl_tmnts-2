@@ -801,6 +801,20 @@ describe("tests for event validation", () => {
       const result = validEventData(noAddedMoneyEvent);
       expect(result).toBe(ErrorCode.None);
     });
+    it('should return ErrorCode.None all money fields are "0"', () => { 
+      const zeroMoney = {
+        ...validEvent,
+        added_money: "0",
+        entry_fee: "0",
+        lineage: "0",
+        prize_fund: "0",
+        other: "0",
+        expenses: "0",
+        lpox: "0",
+      }
+      const result = validEventData(zeroMoney);
+      expect(result).toBe(ErrorCode.None);
+    })
     it("should return ErrorCode.None when blank values for all money fields", () => {
       const noAddedMoneyEvent = {
         ...validEvent,
@@ -1038,6 +1052,26 @@ describe("tests for event validation", () => {
       expect(sanitizedEvent.other).toEqual("2");
       expect(sanitizedEvent.expenses).toEqual("5");
     });
+    it('should convert all "" values to "0"', () => {
+      const testEvent = {
+        ...validEvent,
+        added_money: "",
+        entry_fee: "",
+        lineage: "",
+        prize_fund: "",
+        other: "",
+        expenses: "",
+        lpox: "",
+      };
+      const sanitizedEvent = sanitizeEvent(testEvent);
+      expect(sanitizedEvent.added_money).toEqual("0");
+      expect(sanitizedEvent.entry_fee).toEqual("0");
+      expect(sanitizedEvent.lineage).toEqual("0");
+      expect(sanitizedEvent.prize_fund).toEqual("0");
+      expect(sanitizedEvent.other).toEqual("0");
+      expect(sanitizedEvent.expenses).toEqual("0");
+      expect(sanitizedEvent.lpox).toEqual("0");
+    })
     it('should return a sanitized event when event has an invalid id', () => { 
       const testEvent = {
         ...validEvent,

@@ -4,10 +4,10 @@ import TmntDataForm from "../../tmntForm/tmntForm";
 import { useParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
-import { fetchOneTmnt, getOneTmntError, getOneTmntLoadStatus } from "@/redux/features/allDataOneTmnt/allDataOneTmntSlice";
-import { allDataOneTmntType, allEntriesOneSquadType, tmntActions, tmntFormDataType } from "@/lib/types/types";
+import { tmntActions, tmntFormDataType } from "@/lib/types/types";
 import Link from "next/link";
 import WaitModal from "@/components/modal/waitModal";
+import { fetchTmntFullData, getTmntFullDataError, getTmntFullDataLoadStatus } from "@/redux/features/tmntFullData/tmntFullDataSlice";
 // import { selectOneSquadEntries } from "@/redux/features/allEntriesOneSquad/allEntriesOneSquadSlice";
 
 // http://localhost:3000/dataEntry/runTmnt/tmt_d237a388a8fc4641a2e37233f1d6bebd
@@ -20,16 +20,17 @@ const RunTmntPage = () => {
   const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {    
-    dispatch(fetchOneTmnt(tmntId));
+    dispatch(fetchTmntFullData(tmntId));
   }, [tmntId, dispatch]);
 
-  const tmntLoadStatus = useSelector(getOneTmntLoadStatus);
-  const tmntError = useSelector(getOneTmntError);  
+  const tmntLoadStatus = useSelector(getTmntFullDataLoadStatus);
+  const tmntError = useSelector(getTmntFullDataError);  
   
-  const dataOneTmnt = useSelector((state: RootState) => state.allDataOneTmnt.tmntData) as allDataOneTmntType;
+  const stateTmntFullData = useSelector(
+    (state: RootState) => state.tmntFullData.tmntFullData
+  )
   const tmntFormData: tmntFormDataType = {
-    origData: dataOneTmnt.origData,
-    curData: dataOneTmnt.curData,
+    tmntFullData: stateTmntFullData,
     tmntAction: tmntActions.Run,
   };  
   

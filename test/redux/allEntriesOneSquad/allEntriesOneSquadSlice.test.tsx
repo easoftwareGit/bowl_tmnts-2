@@ -1,6 +1,5 @@
 import { configureStore, Store } from '@reduxjs/toolkit';
-import {
-  fetchOneSquadEntries,
+import {  
   fetchOneSquadEntries2,
   SaveOneSquadEntries,
   allEntriesOneSquadSlice,  
@@ -45,7 +44,8 @@ describe('allEntriesOneSquadSlice', () => {
         players: [],
         divEntries: [],
         potEntries: [],
-        brktEntries: [],      
+        brktEntries: [], 
+        brktLists: [],
         elimEntries: [],
       },
       curData: {      
@@ -54,6 +54,7 @@ describe('allEntriesOneSquadSlice', () => {
         divEntries: [],
         potEntries: [],
         brktEntries: [],      
+        brktLists: [],
         elimEntries: [],
       }
     },
@@ -85,81 +86,81 @@ describe('allEntriesOneSquadSlice', () => {
 
   })
 
-  describe('fetchOneSquadEntries', () => { 
+  // describe('fetchOneSquadEntries', () => { 
 
-    beforeEach(() => {
-      store = configureStore({
-        reducer: {
-          allEntriesOneSquad: allEntriesOneSquadSlice.reducer,
-        },
-      });
-    });    
+  //   beforeEach(() => {
+  //     store = configureStore({
+  //       reducer: {
+  //         allEntriesOneSquad: allEntriesOneSquadSlice.reducer,
+  //       },
+  //     });
+  //   });    
 
-    afterEach(() => {
-      jest.clearAllMocks();
-    });
+  //   afterEach(() => {
+  //     jest.clearAllMocks();
+  //   });
 
-    it('should handle fetchOneSquadEntries pending', async () => {
-      // Arrange
-      const squadId = '123';
-      const action = fetchOneSquadEntries.pending(squadId, 'pending');
+  //   it('should handle fetchOneSquadEntries pending', async () => {
+  //     // Arrange
+  //     const squadId = '123';
+  //     const action = fetchOneSquadEntries.pending(squadId, 'pending');
 
-      // Act
-      store.dispatch(action);
+  //     // Act
+  //     store.dispatch(action);
 
-      // Assert
-      const state = store.getState().allEntriesOneSquad;
-      expect(state.loadStatus).toEqual('loading');
-      expect(state.error).toEqual('');
-    });
+  //     // Assert
+  //     const state = store.getState().allEntriesOneSquad;
+  //     expect(state.loadStatus).toEqual('loading');
+  //     expect(state.error).toEqual('');
+  //   });
 
-    it('should handle fetchOneSquadEntries fulfilled', async () => {
-      // Arrange
-      const squadId = '123';
-      const data = {
-        origData: {
-          squadId: '123',
-          players: [],
-          divEntries: [],
-          potEntries: [],
-          brktEntries: [],
-          elimEntries: [],
-        },
-        curData: {
-          squadId: '123',
-          players: [],
-          divEntries: [],
-          potEntries: [],
-          brktEntries: [],
-          elimEntries: [],
-        },
-      };
-      const action = fetchOneSquadEntries.fulfilled(data, squadId, 'succeeded');
+  //   it('should handle fetchOneSquadEntries fulfilled', async () => {
+  //     // Arrange
+  //     const squadId = '123';
+  //     const data = {
+  //       origData: {
+  //         squadId: '123',
+  //         players: [],
+  //         divEntries: [],
+  //         potEntries: [],
+  //         brktEntries: [],
+  //         elimEntries: [],
+  //       },
+  //       curData: {
+  //         squadId: '123',
+  //         players: [],
+  //         divEntries: [],
+  //         potEntries: [],
+  //         brktEntries: [],
+  //         elimEntries: [],
+  //       },
+  //     };
+  //     const action = fetchOneSquadEntries.fulfilled(data, squadId, 'succeeded');
 
-      // Act
-      store.dispatch(action);
+  //     // Act
+  //     store.dispatch(action);
 
-      // Assert
-      const state = store.getState().allEntriesOneSquad;
-      expect(state.loadStatus).toEqual('succeeded');
-      expect(state.entryData).toEqual(data);
-    });
+  //     // Assert
+  //     const state = store.getState().allEntriesOneSquad;
+  //     expect(state.loadStatus).toEqual('succeeded');
+  //     expect(state.entryData).toEqual(data);
+  //   });
 
-    it('should handle fetchOneSquadEntries rejected', async () => {
-      // Arrange
-      const error = new Error('Something went wrong');
-      const reason = 'Failed to fetch squad entries';
-      const action = fetchOneSquadEntries.rejected(error, reason, 'some error message');
+  //   it('should handle fetchOneSquadEntries rejected', async () => {
+  //     // Arrange
+  //     const error = new Error('Something went wrong');
+  //     const reason = 'Failed to fetch squad entries';
+  //     const action = fetchOneSquadEntries.rejected(error, reason, 'some error message');
 
-      // Act
-      store.dispatch(action);
+  //     // Act
+  //     store.dispatch(action);
 
-      // Assert
-      const state = store.getState().allEntriesOneSquad;
-      expect(state.loadStatus).toEqual('failed');
-      expect(state.error).toEqual(error.message);
-    });
-  })
+  //     // Assert
+  //     const state = store.getState().allEntriesOneSquad;
+  //     expect(state.loadStatus).toEqual('failed');
+  //     expect(state.error).toEqual(error.message);
+  //   });
+  // })
 
   describe('fetchOneSquadEntries2', () => { 
 
@@ -211,6 +212,7 @@ describe('allEntriesOneSquadSlice', () => {
           divEntries: [],
           potEntries: [],
           brktEntries: [],
+          brktLists: [],
           elimEntries: [],
         },
         curData: {
@@ -219,6 +221,7 @@ describe('allEntriesOneSquadSlice', () => {
           divEntries: [],
           potEntries: [],
           brktEntries: [],
+          brktLists: [],
           elimEntries: [],
         },
       };
@@ -273,6 +276,7 @@ describe('allEntriesOneSquadSlice', () => {
           divEntries: [],
           potEntries: [],
           brktEntries: [],
+          brktLists: [],
           elimEntries: [],
         },
         curData: {
@@ -281,6 +285,7 @@ describe('allEntriesOneSquadSlice', () => {
           divEntries: [],
           potEntries: [],
           brktEntries: [],
+          brktLists: [],
           elimEntries: [],
         },
       };    
@@ -305,6 +310,7 @@ describe('allEntriesOneSquadSlice', () => {
           divEntries: [],
           potEntries: [],
           brktEntries: [],
+          brktLists: [],
           elimEntries: [],
         },
         curData: {
@@ -313,6 +319,7 @@ describe('allEntriesOneSquadSlice', () => {
           divEntries: [],
           potEntries: [],
           brktEntries: [],
+          brktLists: [],
           elimEntries: [],
         },
       };    
@@ -340,6 +347,7 @@ describe('allEntriesOneSquadSlice', () => {
           divEntries: [],
           potEntries: [],
           brktEntries: [],
+          brktLists: [],
           elimEntries: [],
         },
         curData: {
@@ -348,6 +356,7 @@ describe('allEntriesOneSquadSlice', () => {
           divEntries: [],
           potEntries: [],
           brktEntries: [],
+          brktLists: [],
           elimEntries: [],
         },
       };    
@@ -535,6 +544,7 @@ describe('allEntriesOneSquadSlice', () => {
           divEntries: [],
           potEntries: [],
           brktEntries: [],
+          brktLists: [],
           elimEntries: [],
         },
         curData: {
@@ -543,6 +553,7 @@ describe('allEntriesOneSquadSlice', () => {
           divEntries: [],
           potEntries: [],
           brktEntries: [],
+          brktLists: [],
           elimEntries: [],
         },
       };    

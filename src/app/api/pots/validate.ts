@@ -1,4 +1,4 @@
-import { isValidBtDbId, ErrorCode, validSortOrder, isNumber } from "@/lib/validation";
+import { isValidBtDbId, ErrorCode, validSortOrder, isNumber, maxMoney } from "@/lib/validation";
 import { sanitize, sanitizeCurrency } from "@/lib/sanitize";
 import { validBtdbMoney, validMoney } from "@/lib/currency/validate";
 import { potType, potCategoriesTypes, idTypes, validPotsType } from "@/lib/types/types";

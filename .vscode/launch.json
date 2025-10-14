@@ -51,10 +51,8 @@
     // 🔹 Debug Next.js server-side code (new safe method)
     {
       "name": "Next.js: debug server-side",
-      // "type": "node-terminal",
       "type": "node",
-      "request": "launch",
-      // "command": "npm run dev",
+      "request": "launch",      
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "env": {

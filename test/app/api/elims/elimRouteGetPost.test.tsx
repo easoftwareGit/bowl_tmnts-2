@@ -6,7 +6,7 @@ import { initElim } from "@/lib/db/initVals";
 import { deleteAllSquadsForTmnt, postManySquads } from "@/lib/db/squads/dbSquads";
 import { deleteAllDivsForTmnt, postManyDivs } from "@/lib/db/divs/dbDivs";
 import { mockElimsToPost, mockSquadsToPost, mockDivsToPost, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllElimsForTmnt } from "@/lib/db/elims/dbElims";
+import { deleteAllElimsForTmnt, getAllElimsForSquad, getAllElimsForTmnt } from "@/lib/db/elims/dbElims";
 import { btDbUuid } from "@/lib/uuid";
 
 // before running this test, run the following commands in the terminal:
@@ -969,10 +969,15 @@ describe("Elims - API: /api/elims", () => {
         data: elimsJSON,
         withCredentials: true,
         url: manyUrl
-      })
+      })      
       expect(response.status).toBe(201);
-      const postedElims = response.data.elims;
       createdElims = true;
+      expect(response.data.count).toBe(mockElimsToPost.length);
+      const postedElims = await getAllElimsForTmnt(tmntToDelId);
+      if (!postedElims) { 
+        expect(true).toBeFalsy();
+        return;
+      }
       expect(postedElims.length).toBe(mockElimsToPost.length);
       for (let i = 0; i < postedElims.length; i++) {
         expect(postedElims[i].id).toBe(mockElimsToPost[i].id);
@@ -1038,6 +1043,17 @@ describe("Elims - API: /api/elims", () => {
           expect(true).toBeFalsy();
         }
       }
+    })
+    it('should return 0 and status code 200 when passed empty array', async () => {
+      const elimsJSON = JSON.stringify([]);
+      const response = await axios({
+        method: "post",
+        data: elimsJSON,
+        withCredentials: true,
+        url: manyUrl
+      })
+      expect(response.status).toBe(200);
+      expect(response.data.count).toBe(0);
     })
   })
 

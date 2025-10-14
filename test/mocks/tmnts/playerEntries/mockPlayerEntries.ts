@@ -175,6 +175,7 @@ export const mockOrigData: dataOneSquadEntriesType = {
       time_stamp: timeStamp,
     }
   ],
+  brktLists: [],
   elimEntries: [
     {
       ...initElimEntry,

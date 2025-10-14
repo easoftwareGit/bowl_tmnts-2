@@ -5,6 +5,7 @@ import { brktEntryDataType, brktEntryType } from "@/lib/types/types";
 import { sanitizeBrktEntry, validateBrktEntry } from "./validate";
 import { ErrorCode } from "@/lib/validation";
 import { getErrorStatus } from "../errCodes";
+import { brktEntryDataForPrisma } from "./dataForPrisma";
 
 // routes /api/brktEntries
 
@@ -64,15 +65,19 @@ export const POST = async (request: NextRequest) => {
       return NextResponse.json( { error: errMsg }, { status: 422 } );
     }
 
-    // DO NOT POST FEE
-    const brktEntryData: brktEntryDataType = {
-      id: toPost.id,      
-      brkt_id: toPost.brkt_id,
-      player_id: toPost.player_id,
-      num_brackets: toPost.num_brackets,
-      num_refunds: toPost.num_refunds,
-      time_stamp: new Date(toPost.time_stamp), // Convert to Date object      
+    const brktEntryData = brktEntryDataForPrisma(toPost);
+    if (!brktEntryData) {
+      return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
+    // const brktEntryData: brktEntryDataType = {
+    //   id: toPost.id,      
+    //   brkt_id: toPost.brkt_id,
+    //   player_id: toPost.player_id,
+    //   num_brackets: toPost.num_brackets,
+    //   num_refunds: toPost.num_refunds,
+    //   time_stamp: new Date(toPost.time_stamp), // Convert to Date object      
+    // }
+    // DO NOT POST FEE
     const postedBrktEntry = await prisma.brkt_Entry.create({
       data: {
         id: brktEntryData.id,

@@ -7,7 +7,7 @@ import EaCurrencyInput, {
   maxMoneyText,
   minFeeText,
 } from "@/components/currency/eaCurrencyInput";
-import { defaultBrktGames, defaultBrktPlayers, initBrkt } from "../../../lib/db/initVals";
+import { defaultBrktGames, initBrkt } from "../../../lib/db/initVals";
 import {  
   maxGames,
   maxMoney,
@@ -24,6 +24,8 @@ import { getBrktOrElimName, getDivName } from "@/lib/getName";
 import { currRexEx, localConfig } from "@/lib/currency/const";
 import { formatValue2Dec } from "@/lib/currency/formatValue";
 import { btDbUuid } from "@/lib/uuid";
+import clsx from "clsx";
+import styles from "./tmntForm.module.css";
 
 interface ChildProps {
   brkts: brktType[];
@@ -353,49 +355,49 @@ const ZeroToNBrackets: React.FC<ChildProps> = ({
   };
 
   const handleAmountValueChange = (id: string) => (value: string | undefined): void => {
-      let rawValue = value === undefined ? "undefined" : value;
-      rawValue = rawValue || " ";
+    let rawValue = value === undefined ? "undefined" : value;
+    rawValue = rawValue || " ";
 
-      setBrkts(
-        brkts.map((brkt) => {
-          if (brkt.id === id) {
-            if (rawValue && Number.isNaN(Number(rawValue))) {
-              rawValue = "";
-            }
-            let updatedBrkt: brktType;
-            updatedBrkt = {
-              ...brkt,
-              fee: rawValue,
-              fee_err: "",
-              errClassName: "",
-            };
-            const acdnErrMsg = getNextBrktAcdnErrMsg(updatedBrkt, brkts, divs);
-            if (acdnErrMsg) {
-              setAcdnErr({
-                errClassName: acdnErrClassName,
-                message: acdnErrMsg,
-              });
-            } else {
-              setAcdnErr(noAcdnErr);
-            }
-            const errMsg = getBrktErrMsg(updatedBrkt);
-            if (errMsg) {
-              return {
-                ...updatedBrkt,
-                errClassName: objErrClassName,
-              } 
-            } else {
-              return {
-                ...updatedBrkt,
-                errClassName: "",
-              }
-            }
-          } else {
-            return brkt;
+    setBrkts(
+      brkts.map((brkt) => {
+        if (brkt.id === id) {
+          if (rawValue && Number.isNaN(Number(rawValue))) {
+            rawValue = "";
           }
-        })
-      );
-    };
+          let updatedBrkt: brktType;
+          updatedBrkt = {
+            ...brkt,
+            fee: rawValue,
+            fee_err: "",
+            errClassName: "",
+          };
+          const acdnErrMsg = getNextBrktAcdnErrMsg(updatedBrkt, brkts, divs);
+          if (acdnErrMsg) {
+            setAcdnErr({
+              errClassName: acdnErrClassName,
+              message: acdnErrMsg,
+            });
+          } else {
+            setAcdnErr(noAcdnErr);
+          }
+          const errMsg = getBrktErrMsg(updatedBrkt);
+          if (errMsg) {
+            return {
+              ...updatedBrkt,
+              errClassName: objErrClassName,
+            } 
+          } else {
+            return {
+              ...updatedBrkt,
+              errClassName: "",
+            }
+          }
+        } else {
+          return brkt;
+        }
+      })
+    );
+  };
 
   const updateFSA = (brkt: brktType, value: string): brktType => {
     const valNoSymb = value.replace(currRexEx, "");
@@ -556,7 +558,8 @@ const ZeroToNBrackets: React.FC<ChildProps> = ({
             eventKey="createBrkt"
             title={createBrktTitle}
           >
-            <div className="container rounded-3 createBackground">
+            <div className={clsx("container", "rounded-3", styles.createBackground)}>
+            {/* <div className="container rounded-3 createBackground"> */}
               <div className="row g-3 mb-1">
                 <div className="col-sm-2">
                   <label className="form-label">

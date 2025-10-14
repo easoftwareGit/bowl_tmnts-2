@@ -1,19 +1,18 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { Bowl } from "@prisma/client";
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ioStatusType } from "@/redux/statusTypes";
 import { RootState } from "@/redux/store";
-import { getBowls, postBowl, putBowl } from "@/lib/db/bowls/dbBowls";
+import { getBowls, upsertBowl } from "@/lib/db/bowls/dbBowls";
 import { bowlType } from "@/lib/types/types";
 
-export interface bowlSliceState {
-  bowls: Bowl[];
+export interface bowlsSliceState {
+  bowls: bowlType[];
   loadStatus: ioStatusType;
   saveStatus: ioStatusType;
   error: string | undefined;
 }
 
 // initial state constant
-const initialState: bowlSliceState = {
+const initialState: bowlsSliceState = {
   bowls: [],
   loadStatus: "idle",
   saveStatus: "idle",
@@ -21,39 +20,60 @@ const initialState: bowlSliceState = {
 };
 
 export const fetchBowls = createAsyncThunk("bowls/fetchBowls", async () => {
-
+  
   // Do not use try / catch blocks here. Need the promise to be fulfilled or
   // rejected which will have the appropriate response in the extraReducers.
-
-  return await getBowls();
-});
-
-export const saveBowl = createAsyncThunk("bowls/saveBowl",
-  async (bowl: bowlType, { getState }) =>
-{
-  // Do not use try / catch blocks here. Need the promise to be fulfilled or
-  // rejected which will have the appropriate response in the extraReducers.    
-  const state = getState() as RootState;
-  const currentBowls = state.bowls.bowls;
-  const found = currentBowls.find((b) => b.id === bowl.id);
-  let success = false;
-  if (found) {
-    const updatedBowl = await putBowl(bowl);
-    if (updatedBowl) {
-      success = true;
-    }
-  } else {
-    const newBowl = await postBowl(bowl);
-    if (newBowl) {
-      success = true;
-    }
+  const bowls = await getBowls();
+  if (!bowls) {
+    throw new Error("Error fetching bowls");
   }
-  if (success) {
-    return await getBowls();
-  } else {
-    return currentBowls;
-  }  
+  return bowls;
 })
+
+export const saveBowl = createAsyncThunk(
+  "bowls/saveBowl",
+  async (bowl: bowlType) => {
+    const upserted = await upsertBowl(bowl);
+    return upserted;
+  }
+)
+
+// export const fetchBowls = createAsyncThunk<
+//   Bowl[],
+//   void,
+//   {
+//     rejectValue: string;
+//   }
+// >("bowls/fetchBowls", async (_, { rejectWithValue }) => {
+//   try {
+//     return await getBowls();
+//   } catch (err) {
+//     return rejectWithValue(err instanceof Error ? err.message : String(err));
+//   }
+
+//   // // Do not use try / catch blocks here. Need the promise to be fulfilled or
+//   // // rejected which will have the appropriate response in the extraReducers.
+
+//   // return await getBowls();
+// });
+
+// export const saveBowl = createAsyncThunk(
+//   "bowls/saveBowl",
+//   async (bowl: bowlType, { getState }) => {
+//     // Do not use try / catch blocks here. Need the promise to be fulfilled or
+//     // rejected which will have the appropriate response in the extraReducers.
+//     const state = getState() as RootState;
+//     const currentBowls = state.bowls.bowls;
+//     const found = currentBowls.find((b) => b.id === bowl.id);
+//     if (found) {
+//       const updatedBowl = await putBowl(bowl);
+//       return updatedBowl;
+//     } else {
+//       const newBowl = await postBowl(bowl);
+//       return newBowl;
+//     }
+//   }
+// );
 
 export const bowlsSlice = createSlice({
   name: "bowls",
@@ -64,29 +84,46 @@ export const bowlsSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(fetchBowls.pending, (state: bowlSliceState) => {
-      state.loadStatus = "loading";      
+    builder.addCase(fetchBowls.pending, (state: bowlsSliceState) => {
+      state.loadStatus = "loading";
       state.error = "";
     });
-    builder.addCase(fetchBowls.fulfilled, (state: bowlSliceState, action) => {
-      state.loadStatus = "succeeded";         
+    builder.addCase(fetchBowls.fulfilled, (state: bowlsSliceState, action: PayloadAction<bowlType[]>) => {
+      state.loadStatus = "succeeded";
       state.bowls = action.payload;
       state.error = "";
     });
-    builder.addCase(fetchBowls.rejected, (state: bowlSliceState, action) => {
+    builder.addCase(fetchBowls.rejected, (state: bowlsSliceState, action) => {
       state.loadStatus = "failed";
-      state.error = action.error.message;
+      // state.error = action.error.message;
+      state.error =
+        (action.payload as string) ||
+        action.error.message ||
+        "Unknown error fetching bowls";
     });
-    builder.addCase(saveBowl.pending, (state: bowlSliceState, action) => {
-      state.saveStatus = "saving";      
+    builder.addCase(saveBowl.pending, (state: bowlsSliceState, action) => {
+      state.saveStatus = "saving";
       state.error = "";
     });
-    builder.addCase(saveBowl.fulfilled, (state: bowlSliceState, action) => {
-      state.saveStatus = "succeeded";      
-      state.bowls = action.payload;
+    builder.addCase(saveBowl.fulfilled, (state: bowlsSliceState, action) => {
+      state.saveStatus = "succeeded";
       state.error = "";
+      const updatedBowl = action.payload;
+      // ok to use updatedBowl! because guaranteed to exist since fulfilled
+      const index = state.bowls.findIndex((b) => b.id === updatedBowl!.id);
+      if (index !== -1) {
+        state.bowls[index] = updatedBowl!;
+      } else {
+        state.bowls.push(updatedBowl!);
+      }
+      // resort bowls by bowl_name
+      state.bowls.sort((a, b) =>
+        a.bowl_name.localeCompare(b.bowl_name, undefined, {
+          sensitivity: "base",
+        })
+      );
     });
-    builder.addCase(saveBowl.rejected, (state: bowlSliceState, action) => {
+    builder.addCase(saveBowl.rejected, (state: bowlsSliceState, action) => {
       state.saveStatus = "failed";
       state.error = action.error.message;
     });

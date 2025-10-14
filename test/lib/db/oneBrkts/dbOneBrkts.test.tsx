@@ -4,13 +4,12 @@ import { testBaseOneBrktsApi } from "../../../testApi";
 import { oneBrktType } from "@/lib/types/types";
 import { initOneBrkt } from "@/lib/db/initVals";
 import { mockOneBrktsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { cloneDeep } from "lodash";
 import {
   deleteAllOneBrktsForBrkt,
   deleteAllOneBrktsForDiv,
   deleteAllOneBrktsForSquad,
-  deleteAllOneBrktsForTmnt,
-  deleteOneBrkt,
+  deleteAllOneBrktsForTmnt,  
+  extractOneBrkts,  
   getAllOneBrktsForBrkt,
   getAllOneBrktsForDiv,
   getAllOneBrktsForSquad,
@@ -19,6 +18,8 @@ import {
   postManyOneBrkts,
   postOneBrkt,
 } from "@/lib/db/oneBrkts/dbOneBrkts";
+import { replaceManyOneBrkts } from "@/lib/db/oneBrkts/dbOneBrktsReplaceMany";
+import { cloneDeep } from "lodash";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -38,7 +39,7 @@ import {
 const url = testBaseOneBrktsApi.startsWith("undefined")
   ? baseOneBrktsApi
   : testBaseOneBrktsApi;
-const oneOneBrktsUrl = url + "/oneBrkt/";
+const oneBrktsUrl = url + "/oneBrkt/";
 
 const oneBrktsToGet: oneBrktType[] = [
   {
@@ -97,6 +98,62 @@ describe("dbOneBrkts", () => {
     }
   };
 
+  describe("extractOneBrkts", () => {
+    it("should return an empty array when given an empty array", () => {
+      const result = extractOneBrkts([]);
+      expect(result).toEqual([]);
+    });
+    it("should correctly map raw oneBrkts to extractOneBrkts", () => {
+      const rawOneBrkt = [
+        {
+          id: "obk_2291bb31e72b4dc6b6fe9e76d135493d",
+          brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
+          bindex: 0,
+          extraField: "ignore me", // should be ignored
+        },
+      ];
+
+      const result = extractOneBrkts(rawOneBrkt);
+
+      const expected: oneBrktType = {
+        ...initOneBrkt,
+        id: "obk_2291bb31e72b4dc6b6fe9e76d135493d",
+        brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
+        bindex: 0,
+      };
+
+      expect(result).toEqual([expected]);
+    });
+    it("should process multiple oneBrkts", () => {
+      const rawOneBrkt = [
+        {
+          id: "obk_2291bb31e72b4dc6b6fe9e76d135493d",
+          brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
+          bindex: 0,
+        },
+        {
+          id: "obk_2291bb31e72b4dc6b6fe9e76d135493d",
+          brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
+          bindex: 1,
+        },
+      ];
+
+      const result = extractOneBrkts(rawOneBrkt);
+
+      expect(result).toHaveLength(2);
+      expect(result[0].bindex).toBe(0);            
+      expect(result[1].bindex).toBe(1);      
+    });
+    it('should return an empty array when given null', () => {
+      const result = extractOneBrkts(null);
+      expect(result).toEqual([]);
+    });
+    it('should return an empty array when given a non array', () => {
+      const result = extractOneBrkts('not an array');
+      expect(result).toEqual([]);
+    })
+  });
+
   describe('getAllOneBrktsForTmnt()', () => {
 
     it('should get all oneBrkts for tournament', async () => {
@@ -121,21 +178,29 @@ describe("dbOneBrkts", () => {
       const oneBrkts = await getAllOneBrktsForTmnt(notFoundTmntId);
       expect(oneBrkts).toHaveLength(0);
     })
-    it('should return null if tmnt id is invalid', async () => {
-      const oneBrkts = await getAllOneBrktsForTmnt("test");
-      expect(oneBrkts).toBeNull();
+    it('should throw error if tmnt id is invalid', async () => {
+      try {
+        await getAllOneBrktsForTmnt("test");
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid tmnt id");
+      }
     })
-    it('should return null if tmnt id is a valid id, but not a tmnt id', async () => {
-      const oneBrkts = await getAllOneBrktsForTmnt(userId);
-      expect(oneBrkts).toBeNull();
+    it('should throw error if tmnt id is a valid id, but not a tmnt id', async () => {
+      try {
+        await getAllOneBrktsForTmnt(userId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid tmnt id");
+      }
     })
-    it('should return null if tmnt id is null', async () => {
-      const oneBrkts = await getAllOneBrktsForTmnt(null as any);
-      expect(oneBrkts).toBeNull();
-    })
-    it('should return null if tmnt id is undefined', async () => {
-      const oneBrkts = await getAllOneBrktsForTmnt(undefined as any);
-      expect(oneBrkts).toBeNull();
+    it('should throw error if tmnt id is null', async () => {
+      try {
+        await getAllOneBrktsForTmnt(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid tmnt id");
+      }
     })
   })
 
@@ -163,21 +228,29 @@ describe("dbOneBrkts", () => {
       const oneBrkts = await getAllOneBrktsForSquad(notFoundSquadId);
       expect(oneBrkts).toHaveLength(0);
     })
-    it('should return null if squad id is invalid', async () => {
-      const oneBrkts = await getAllOneBrktsForSquad("test");
-      expect(oneBrkts).toBeNull();
+    it('should throw error if squad id is invalid', async () => {
+      try {
+        await getAllOneBrktsForSquad("test");
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid squad id");
+      }
     })
-    it('should return null if squad id is a valid id, but not a squad id', async () => {
-      const oneBrkts = await getAllOneBrktsForSquad(userId);
-      expect(oneBrkts).toBeNull();
+    it('should throw error if squad id is a valid id, but not a squad id', async () => {
+      try {
+        await getAllOneBrktsForSquad(userId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid squad id");
+      }
     })
-    it('should return null if squad id is null', async () => {
-      const oneBrkts = await getAllOneBrktsForSquad(null as any);
-      expect(oneBrkts).toBeNull();
-    })
-    it('should return null if squad id is undefined', async () => {
-      const oneBrkts = await getAllOneBrktsForSquad(undefined as any);
-      expect(oneBrkts).toBeNull();
+    it('should throw error if squad id is null', async () => {
+      try {
+        await getAllOneBrktsForSquad(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid squad id");
+      }
     })
   })
 
@@ -205,21 +278,29 @@ describe("dbOneBrkts", () => {
       const oneBrkts = await getAllOneBrktsForDiv(notFoundDivId);
       expect(oneBrkts).toHaveLength(0);
     })
-    it('should return null if div id is invalid', async () => {
-      const oneBrkts = await getAllOneBrktsForDiv("test");
-      expect(oneBrkts).toBeNull();
+    it('should throw error if div id is invalid', async () => {
+      try {
+        await getAllOneBrktsForDiv("test");
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid div id");
+      }
     })
-    it('should return null if div id is a valid id, but not a div id', async () => {
-      const oneBrkts = await getAllOneBrktsForDiv(userId);
-      expect(oneBrkts).toBeNull();
+    it('should throw error if div id is a valid id, but not a div id', async () => {
+      try {
+        await getAllOneBrktsForDiv(userId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid div id");
+      }
     })
-    it('should return null if div id is null', async () => {
-      const oneBrkts = await getAllOneBrktsForDiv(null as any);
-      expect(oneBrkts).toBeNull();
-    })
-    it('should return null if div id is undefined', async () => {
-      const oneBrkts = await getAllOneBrktsForDiv(undefined as any);
-      expect(oneBrkts).toBeNull();
+    it('should throw error if div id is null', async () => {
+      try {
+        await getAllOneBrktsForDiv(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid div id");
+      }
     })
   })
 
@@ -243,21 +324,29 @@ describe("dbOneBrkts", () => {
       const oneBrkts = await getAllOneBrktsForBrkt(notFoundBrktId);
       expect(oneBrkts).toHaveLength(0);
     })
-    it('should return null if brkt id is invalid', async () => {
-      const oneBrkts = await getAllOneBrktsForBrkt("test");
-      expect(oneBrkts).toBeNull();
+    it('should throw error if brkt id is invalid', async () => {
+      try {
+        await getAllOneBrktsForBrkt("test");
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid brkt id");
+      }
     })
-    it('should return null if brkt id is a valid id, but not a brkt id', async () => {
-      const oneBrkts = await getAllOneBrktsForBrkt(userId);
-      expect(oneBrkts).toBeNull();
+    it('should throw error if brkt id is a valid id, but not a brkt id', async () => {
+      try {
+        await getAllOneBrktsForBrkt(userId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid brkt id");
+      }
     })
-    it('should return null if brkt id is null', async () => {
-      const oneBrkts = await getAllOneBrktsForBrkt(null as any);
-      expect(oneBrkts).toBeNull();
-    })
-    it('should return null if brkt id is undefined', async () => {
-      const oneBrkts = await getAllOneBrktsForBrkt(undefined as any);
-      expect(oneBrkts).toBeNull();
+    it('should throw error if brkt id is null', async () => {
+      try {
+        await getAllOneBrktsForBrkt(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid brkt id");
+      }
     })
   })
 
@@ -270,25 +359,37 @@ describe("dbOneBrkts", () => {
       expect(oneBrkt.brkt_id).toEqual(oneBrktsToGet[0].brkt_id);
       expect(oneBrkt.bindex).toEqual(oneBrktsToGet[0].bindex);      
     })
-    it('should return 0 oneBrkts for not found oneBrkt', async () => { 
-      const oneBrkt = await getOneBrkt(notFoundId);
-      expect(oneBrkt).toBeNull();
+    it('should throw error if oneBrkts for not found oneBrkt', async () => { 
+      try {
+        await getOneBrkt(notFoundId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("getOneBrkt failed: Request failed with status code 404");
+      }
     })
-    it('should return null if oneBrkt id is invalid', async () => { 
-      const oneBrkt = await getOneBrkt("test");
-      expect(oneBrkt).toBeNull();
+    it('should throw error if oneBrkt id is invalid', async () => { 
+      try {
+        await getOneBrkt("test");
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid oneBrkt id");
+      }
     })
-    it('should return null if oneBrkt id is a valid id, but not a oneBrkt id', async () => { 
-      const oneBrkt = await getOneBrkt(userId);
-      expect(oneBrkt).toBeNull();
+    it('should throw error if oneBrkt id is a valid id, but not a oneBrkt id', async () => { 
+      try {
+        await getOneBrkt(userId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid oneBrkt id");
+      }
     })
-    it('should return null if oneBrkt id is null', async () => { 
-      const oneBrkt = await getOneBrkt(null as any);
-      expect(oneBrkt).toBeNull();
-    })
-    it('should return null if oneBrkt id is undefined', async () => { 
-      const oneBrkt = await getOneBrkt(undefined as any);
-      expect(oneBrkt).toBeNull();
+    it('should throw error if oneBrkt id is null', async () => { 
+      try {
+        await getOneBrkt(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid oneBrkt id");
+      }
     })
   })
 
@@ -311,7 +412,7 @@ describe("dbOneBrkts", () => {
           const delResponse = await axios({
             method: "delete",
             withCredentials: true,
-            url: oneOneBrktsUrl + toDel.id
+            url: oneBrktsUrl + toDel.id
           });
         } catch (err) {
           if (err instanceof AxiosError) console.log(err.message);
@@ -342,16 +443,44 @@ describe("dbOneBrkts", () => {
     // see test\app\api\oneBrkts\validate_oneBrkts.test.tsx
     // for full testing of sanitation and validation
     it('should not post a oneBrkt with sanitized index (sanitized to undefined)', async () => {
-      const toSanitizse = cloneDeep(oneBrktToPost);
-      toSanitizse.bindex = Number.MAX_SAFE_INTEGER + 1;
-      const postedOneBrkt = await postOneBrkt(toSanitizse);
-      expect(postedOneBrkt).toBeNull();
+      try { 
+        const toSanitizse = cloneDeep(oneBrktToPost);
+        toSanitizse.bindex = Number.MAX_SAFE_INTEGER + 1;
+        await postOneBrkt(toSanitizse);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe(
+          "postOneBrkt failed: Request failed with status code 422"
+        );
+      }      
     })
     it('should not post a oneBrkt if got invalid data', async () => {
-      const invalidOneBrkt = cloneDeep(oneBrktToPost);
-      invalidOneBrkt.brkt_id = userId;
-      const postedBrktEntry = await postOneBrkt(invalidOneBrkt);
-      expect(postedBrktEntry).toBeNull();
+      try {
+        const invalidOneBrkt = cloneDeep(oneBrktToPost);
+        invalidOneBrkt.brkt_id = userId;
+        await postOneBrkt(invalidOneBrkt);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe(
+          "postOneBrkt failed: Request failed with status code 422"
+        );
+      }
+    })
+    it('should throw error if oneBrkt is null', async () => { 
+      try {
+        await postOneBrkt(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid oneBrkt data");
+      }
+    })
+    it('should throw error if oneBrkt is not an object', async () => { 
+      try {
+        await postOneBrkt("test" as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid oneBrkt data");
+      }
     })
   });
 
@@ -373,10 +502,13 @@ describe("dbOneBrkts", () => {
       await deleteAllOneBrktsForTmnt(tmntIdForMock);
     })
     it('should post many oneBrkts', async () => {
-      const oneBrkts = await postManyOneBrkts(mockOneBrktsToPost);
+      const postedCount = await postManyOneBrkts(mockOneBrktsToPost);
+      expect(postedCount).toBe(mockOneBrktsToPost.length);
+      createdMany = true;
+
+      const oneBrkts = await getAllOneBrktsForBrkt(mockOneBrktsToPost[0].brkt_id);
       expect(oneBrkts).not.toBeNull();
       if (!oneBrkts) return;
-      createdMany = true;
       expect(oneBrkts.length).toEqual(mockOneBrktsToPost.length);
       for (let i = 0; i < mockOneBrktsToPost.length; i++) {
         expect(oneBrkts[i].id).toEqual(mockOneBrktsToPost[i].id);
@@ -393,26 +525,324 @@ describe("dbOneBrkts", () => {
         }
       }
     })
+    it('should return 0 when pased and empty array', async () => {
+      const postedCount = await postManyOneBrkts([]);
+      expect(postedCount).toBe(0);
+    })
     // see test\app\api\oneBrkts\validate_oneBrkts.test.tsx
     // for full testing of sanitation and validation
     it('should NOT post many oneBrkts with sanitization, fee value sanitized to ""', async () => {
-      const toSanitize = cloneDeep(mockOneBrktsToPost)
-      toSanitize[0].bindex = Number.MAX_SAFE_INTEGER + 1;
-      const oneBrkts = await postManyOneBrkts(toSanitize);
-      expect(oneBrkts).toBeNull();
+      try {
+        const toSanitize = cloneDeep(mockOneBrktsToPost)
+        toSanitize[0].bindex = Number.MAX_SAFE_INTEGER + 1;
+        await postManyOneBrkts(toSanitize);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid oneBrkt data at index 0");
+      }      
     })
     it('should not post many oneBrkts with no data', async () => {
-      const postedOneBrkts = await postManyOneBrkts([]);
-      expect(postedOneBrkts).not.toBeNull();
-      expect(postedOneBrkts).toHaveLength(0);
+      const postedCount = await postManyOneBrkts([]);
+      expect(postedCount).toBe(0);
     })
-    it('should not post many oneBrkts with invalid data', async () => {
-      const invalidOneBrkts = cloneDeep(mockOneBrktsToPost);
-      invalidOneBrkts[1].brkt_id = userId;
-      const postedOneBrkts = await postManyOneBrkts(invalidOneBrkts);
-      expect(postedOneBrkts).toBeNull();
+    it('should throw error if post many oneBrkts with invalid oneBrkt id in first item', async () => {
+      try {
+        const invalidOneBrkts = cloneDeep(mockOneBrktsToPost);
+        invalidOneBrkts[0].id = 'test';
+        await postManyOneBrkts(invalidOneBrkts);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid oneBrkt data at index 0");
+      }
+    });
+    it('should throw error if post many oneBrkts with invalid oneBrkt id in second item', async () => {
+      try {
+        const invalidOneBrkts = cloneDeep(mockOneBrktsToPost);
+        invalidOneBrkts[1].id = 'test';
+        await postManyOneBrkts(invalidOneBrkts);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid oneBrkt data at index 1");
+      }
+    })
+    it('should throw error if post many oneBrkts with invalid oneBrkt data in first item', async () => {
+      try {
+        const invalidOneBrkts = cloneDeep(mockOneBrktsToPost);
+        invalidOneBrkts[0].brkt_id = 'test';
+        await postManyOneBrkts(invalidOneBrkts);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid oneBrkt data at index 0");
+      }
+    });
+    it('should throw error if post many oneBrkts when passed null', async () => {
+      try {
+        await postManyOneBrkts(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid oneBrkts data");
+      }
+    })
+    it('should throw error when passed a non array', async () => {
+      try {
+        await postManyOneBrkts(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid oneBrkts data");
+      }
     })
   });
+
+  describe("replaceManyOneBrkts()", () => { 
+    const rmSquadId = 'sqd_1234ec18b3d44c0189c83f6ac5fd4ad6';
+
+    let createdMany = false;
+    beforeAll(async () => {
+      await deleteAllOneBrktsForSquad(rmSquadId);      
+    })
+    beforeEach(() => {
+      createdMany = false;
+    })
+    afterEach(async () => {
+      if (createdMany) {
+        await deleteAllOneBrktsForSquad(rmSquadId);
+      }
+    })
+    afterAll(async () => {
+      await deleteAllOneBrktsForSquad(rmSquadId);      
+    })
+
+    it("should update, insert, delete many oneBrkts", async () => {
+      const toInsert: oneBrktType[] = [
+        {
+          ...initOneBrkt,
+          id: 'obk_b4b2bc5682f042269cf0aaa8c32b25b8',
+          brkt_id: 'brk_12344698f47e4d64935547923e2bdbfb',
+          bindex: 6,
+        },
+        {
+          ...initOneBrkt,
+          id: 'obk_b5b2bc5682f042269cf0aaa8c32b25b8',
+          brkt_id: 'brk_12344698f47e4d64935547923e2bdbfb',
+          bindex: 7,
+        },
+      ];
+      const count = await postManyOneBrkts(mockOneBrktsToPost);
+      expect(count).toBe(mockOneBrktsToPost.length);
+      createdMany = true;
+      const oneBrkts = await getAllOneBrktsForSquad(rmSquadId);
+      if (!oneBrkts) {
+        expect(true).toBeFalsy();
+        return;
+      }
+      expect(oneBrkts.length).toEqual(mockOneBrktsToPost.length);
+
+      const oneBrktsToUpdate = [
+        {
+          ...mockOneBrktsToPost[0],
+          bindex: 0,
+        },
+        {
+          ...mockOneBrktsToPost[1],
+          bindex: 1,
+        },
+        {
+          ...toInsert[0],          
+        },
+        {
+          ...toInsert[1],          
+        },
+      ]
+
+      const replacedCount = await replaceManyOneBrkts(oneBrktsToUpdate, rmSquadId);
+      expect(replacedCount).toBe(oneBrktsToUpdate.length);
+      const replacedOneBrkts = await getAllOneBrktsForSquad(rmSquadId);
+      if (!replacedOneBrkts) {
+        expect(true).toBeFalsy();
+        return;
+      }
+      expect(replacedOneBrkts.length).toEqual(oneBrktsToUpdate.length);
+      for (let i = 0; i < replacedOneBrkts.length; i++) {
+        if (replacedOneBrkts[i].id === oneBrktsToUpdate[0].id) {
+          expect(replacedOneBrkts[i].bindex).toEqual(oneBrktsToUpdate[0].bindex);
+        } else if (replacedOneBrkts[i].id === oneBrktsToUpdate[1].id) {
+          expect(replacedOneBrkts[i].bindex).toEqual(oneBrktsToUpdate[1].bindex);
+        } else if (replacedOneBrkts[i].id === oneBrktsToUpdate[2].id) {
+          expect(replacedOneBrkts[i].bindex).toEqual(oneBrktsToUpdate[2].bindex);
+        } else if (replacedOneBrkts[i].id === oneBrktsToUpdate[3].id) {
+          expect(replacedOneBrkts[i].bindex).toEqual(oneBrktsToUpdate[3].bindex);
+        } else { 
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it("should return 0 when passed an empty array", async () => { 
+      const count = await postManyOneBrkts(mockOneBrktsToPost);
+      expect(count).toBe(mockOneBrktsToPost.length);
+      createdMany = true;
+      const oneBrkts = await getAllOneBrktsForSquad(rmSquadId);
+      if (!oneBrkts) {
+        expect(true).toBeFalsy();
+        return;
+      }
+      expect(oneBrkts.length).toEqual(mockOneBrktsToPost.length);
+
+      const replacedCount = await replaceManyOneBrkts([], rmSquadId);
+      expect(replacedCount).toBe(0);
+      const replacedOneBrkts = await getAllOneBrktsForSquad(rmSquadId);
+      if (!replacedOneBrkts) {
+        expect(true).toBeFalsy();
+        return;
+      }
+      expect(replacedOneBrkts.length).toEqual(0);
+    })  
+    it('should throw error when sanitize values to invalid values', async () => { 
+      const count = await postManyOneBrkts(mockOneBrktsToPost);
+      expect(count).toBe(mockOneBrktsToPost.length);
+      createdMany = true;
+      const oneBrkts = await getAllOneBrktsForSquad(rmSquadId);
+      if (!oneBrkts) {
+        expect(true).toBeFalsy();
+        return;
+      }
+      expect(oneBrkts.length).toEqual(mockOneBrktsToPost.length);
+
+      const oneBrktsToUpdate = [
+        {
+          ...mockOneBrktsToPost[0],
+          bindex: Number.MAX_SAFE_INTEGER + 1,
+        },
+        {
+          ...mockOneBrktsToPost[1],
+          bindex: 1,
+        },
+      ]
+      await expect(
+        replaceManyOneBrkts(oneBrktsToUpdate, rmSquadId)
+      ).rejects.toThrow("Invalid oneBrkt data at index 0");
+    })
+    it("should throw an error for invalid oneBrkt ID in first item", async () => { 
+      const count = await postManyOneBrkts(mockOneBrktsToPost);
+      expect(count).toBe(mockOneBrktsToPost.length);
+      createdMany = true;
+      const oneBrkts = await getAllOneBrktsForSquad(rmSquadId);
+      if (!oneBrkts) {
+        expect(true).toBeFalsy();
+        return;
+      }
+      expect(oneBrkts.length).toEqual(mockOneBrktsToPost.length);
+      
+      const oneBrktsToUpdate = [
+        {
+          ...mockOneBrktsToPost[0],
+          id: 'invalid',
+        },
+        {
+          ...mockOneBrktsToPost[1],          
+        },
+      ]
+      await expect(
+        replaceManyOneBrkts(oneBrktsToUpdate, rmSquadId)
+      ).rejects.toThrow("Invalid oneBrkt data at index 0");
+    })
+    it("should throw an error for invalid oneBrkt ID in second item", async () => { 
+      const count = await postManyOneBrkts(mockOneBrktsToPost);
+      expect(count).toBe(mockOneBrktsToPost.length);
+      createdMany = true;
+      const oneBrkts = await getAllOneBrktsForSquad(rmSquadId);
+      if (!oneBrkts) {
+        expect(true).toBeFalsy();
+        return;
+      }
+      expect(oneBrkts.length).toEqual(mockOneBrktsToPost.length);
+      
+      const oneBrktsToUpdate = [
+        {
+          ...mockOneBrktsToPost[0],          
+        },
+        {
+          ...mockOneBrktsToPost[1],
+          id: 'invalid',
+        },
+      ]
+      await expect(
+        replaceManyOneBrkts(oneBrktsToUpdate, rmSquadId)
+      ).rejects.toThrow("Invalid oneBrkt data at index 1");
+    })
+    it("should throw an error for invalid oneBrkt data in first item", async () => { 
+      const count = await postManyOneBrkts(mockOneBrktsToPost);
+      expect(count).toBe(mockOneBrktsToPost.length);
+      createdMany = true;
+      const oneBrkts = await getAllOneBrktsForSquad(rmSquadId);
+      if (!oneBrkts) {
+        expect(true).toBeFalsy();
+        return;
+      }
+      expect(oneBrkts.length).toEqual(mockOneBrktsToPost.length);
+      
+      const oneBrktsToUpdate = [
+        {
+          ...mockOneBrktsToPost[0],
+          brkt_id: 'invalid',
+        },
+        {
+          ...mockOneBrktsToPost[1],          
+        },
+      ]
+      await expect(
+        replaceManyOneBrkts(oneBrktsToUpdate, rmSquadId)
+      ).rejects.toThrow("Invalid oneBrkt data at index 0");
+    })
+    it("should throw an error for invalid oneBrkt ID in second item", async () => { 
+      const count = await postManyOneBrkts(mockOneBrktsToPost);
+      expect(count).toBe(mockOneBrktsToPost.length);
+      createdMany = true;
+      const oneBrkts = await getAllOneBrktsForSquad(rmSquadId);
+      if (!oneBrkts) {
+        expect(true).toBeFalsy();
+        return;
+      }
+      expect(oneBrkts.length).toEqual(mockOneBrktsToPost.length);
+      
+      const oneBrktsToUpdate = [
+        {
+          ...mockOneBrktsToPost[0],          
+        },
+        {
+          ...mockOneBrktsToPost[1],
+          bindex: -1,
+        },
+      ]
+      await expect(
+        replaceManyOneBrkts(oneBrktsToUpdate, rmSquadId)
+      ).rejects.toThrow("Invalid oneBrkt data at index 1");
+    })
+    it("should throw an error if passed null as oneBrkts", async () => {
+      await expect(replaceManyOneBrkts(null as any, rmSquadId)).rejects.toThrow(
+        "Invalid oneBrkts"
+      );
+    });
+    it("should throw an error if oneBrkts is not an array", async () => {
+      await expect(
+        replaceManyOneBrkts("not-an-array" as any, rmSquadId)
+      ).rejects.toThrow("Invalid oneBrkts");
+    });
+    it("should throw an error if passed null as squadId", async () => {
+      await expect(
+        replaceManyOneBrkts(mockOneBrktsToPost, null as any)
+      ).rejects.toThrow("Invalid squad id");
+    });
+    it("should throw an error if passed invalid squadId", async () => {
+      await expect(
+        replaceManyOneBrkts(mockOneBrktsToPost, "test")
+      ).rejects.toThrow("Invalid squad id");
+    });
+    it("should throw an error if passed valid id, but not squad id", async () => {
+      await expect(
+        replaceManyOneBrkts(mockOneBrktsToPost, userId)
+      ).rejects.toThrow("Invalid squad id");
+    });
+  })
 
   describe("deleteAllOneBrktsForBrkt()", () => {
     let didDel = false;
@@ -444,22 +874,30 @@ describe("dbOneBrkts", () => {
       const deleted = await deleteAllOneBrktsForBrkt(notFoundBrktId);
       expect(deleted).toBe(0);
     });
-    it("should not delete all oneBrkts for a brkt when brkt id is invalid", async () => {
-      const deleted = await deleteAllOneBrktsForBrkt("test");
-      expect(deleted).toBe(-1);
+    it("should throw an error for delete all oneBrkts for a brkt when brkt id is invalid", async () => {
+      try {
+        await deleteAllOneBrktsForBrkt("test");
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid brkt id");
+      }
     });
-    it("should not delete all oneBrkts for a brkt when brkt id is valid, but not a brkt id", async () => {
-      const deleted = await deleteAllOneBrktsForBrkt(userId);
-      expect(deleted).toBe(-1);
+    it("should throw error for delete all oneBrkts for a brkt when brkt id is valid, but not a brkt id", async () => {
+      try {
+        await deleteAllOneBrktsForBrkt(userId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid brkt id");
+      }
     });
-    it("should not delete all oneBrkts for a brkt when brkt id is null", async () => {
-      const deleted = await deleteAllOneBrktsForBrkt(null as any);
-      expect(deleted).toBe(-1);
-    });
-    it("should not delete all oneBrkts for a brkt when brkt id is undefined", async () => {
-      const deleted = await deleteAllOneBrktsForBrkt(undefined as any);
-      expect(deleted).toBe(-1);
-    });
+    it("should throw error for delete all oneBrkts for a brkt when brkt id is null", async () => {
+      try {
+        await deleteAllOneBrktsForBrkt(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid brkt id");
+      }
+    });    
   });
 
   describe("deleteAllOneBrktsForDiv()", () => {
@@ -492,21 +930,29 @@ describe("dbOneBrkts", () => {
       const deleted = await deleteAllOneBrktsForDiv(notFoundDivId);
       expect(deleted).toBe(0);
     });
-    it("should not delete all oneBrkts for a div when div id is invalid", async () => {
-      const deleted = await deleteAllOneBrktsForDiv("test");
-      expect(deleted).toBe(-1);
+    it("should throw error for delete all oneBrkts for a div when div id is invalid", async () => {
+      try {
+        await deleteAllOneBrktsForDiv("test");
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid div id");
+      }
     });
-    it("should not delete all oneBrkts for a div when div id is valid, but not a brkt id", async () => {
-      const deleted = await deleteAllOneBrktsForDiv(userId);
-      expect(deleted).toBe(-1);
+    it("should throw error for delete all oneBrkts for a div when div id is valid, but not a brkt id", async () => {
+      try {
+        await deleteAllOneBrktsForDiv(userId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid div id");
+      }
     });
-    it("should not delete all oneBrkts for a div when div id is null", async () => {
-      const deleted = await deleteAllOneBrktsForDiv(null as any);
-      expect(deleted).toBe(-1);
-    });
-    it("should not delete all oneBrkts for a div when div id is undefined", async () => {
-      const deleted = await deleteAllOneBrktsForDiv(undefined as any);
-      expect(deleted).toBe(-1);
+    it("should throw error for delete all oneBrkts for a div when div id is null", async () => {
+      try {
+        await deleteAllOneBrktsForDiv(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid div id");
+      }
     });
   });
 
@@ -540,21 +986,29 @@ describe("dbOneBrkts", () => {
       const deleted = await deleteAllOneBrktsForSquad(notFoundSquadId);
       expect(deleted).toBe(0);
     });
-    it("should not delete all oneBrkts for a squad when squad id is invalid", async () => {
-      const deleted = await deleteAllOneBrktsForSquad("test");
-      expect(deleted).toBe(-1);
+    it("should throw error for delete all oneBrkts for a squad when squad id is invalid", async () => {
+      try {
+        await deleteAllOneBrktsForSquad("test");
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid squad id");
+      }
     });
-    it("should not delete all oneBrkts for a squad when squad id is valid, but not a brkt id", async () => {
-      const deleted = await deleteAllOneBrktsForSquad(userId);
-      expect(deleted).toBe(-1);
+    it("should throw error for delete all oneBrkts for a squad when squad id is valid, but not a brkt id", async () => {
+      try {
+        await deleteAllOneBrktsForSquad(userId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid squad id");
+      }
     });
-    it("should not delete all oneBrkts for a squad when squad id is null", async () => {
-      const deleted = await deleteAllOneBrktsForSquad(null as any);
-      expect(deleted).toBe(-1);
-    });
-    it("should not delete all oneBrkts for a squad when squad id is undefined", async () => {
-      const deleted = await deleteAllOneBrktsForSquad(undefined as any);
-      expect(deleted).toBe(-1);
+    it("should throw error for delete all oneBrkts for a squad when squad id is null", async () => {
+      try {
+        await deleteAllOneBrktsForSquad(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid squad id");
+      }
     });
   });
   
@@ -588,21 +1042,29 @@ describe("dbOneBrkts", () => {
       const deleted = await deleteAllOneBrktsForTmnt(notFoundTmntId);
       expect(deleted).toBe(0);
     });
-    it("should not delete all oneBrkts for a tmnt when tmnt id is invalid", async () => {
-      const deleted = await deleteAllOneBrktsForTmnt("test");
-      expect(deleted).toBe(-1);
+    it("should throw error for delete all oneBrkts for a tmnt when tmnt id is invalid", async () => {
+      try {
+        await deleteAllOneBrktsForTmnt("test");
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid tmnt id");
+      }
     });
-    it("should not delete all oneBrkts for a tmnt when tmnt id is valid, but not a tmnt id", async () => {
-      const deleted = await deleteAllOneBrktsForTmnt(userId);
-      expect(deleted).toBe(-1);
+    it("should throw error for delete all oneBrkts for a tmnt when tmnt id is valid, but not a tmnt id", async () => {
+      try {
+        await deleteAllOneBrktsForTmnt(userId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid tmnt id");
+      }
     });
-    it("should not delete all oneBrkts for a tmnt when tmnt id is null", async () => {
-      const deleted = await deleteAllOneBrktsForTmnt(null as any);
-      expect(deleted).toBe(-1);
-    });
-    it("should not delete all oneBrkts for a tmnt when tmnt id is undefined", async () => {
-      const deleted = await deleteAllOneBrktsForTmnt(undefined as any);
-      expect(deleted).toBe(-1);
+    it("should throw error for delete all oneBrkts for a tmnt when tmnt id is null", async () => {
+      try {
+        await deleteAllOneBrktsForTmnt(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("Invalid tmnt id");
+      }
     });
   });
 });

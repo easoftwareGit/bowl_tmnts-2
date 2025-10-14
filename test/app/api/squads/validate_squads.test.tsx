@@ -20,6 +20,7 @@ import { compareAsc } from "date-fns";
 import { mockSquadsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { validSquadsType } from "@/lib/types/types";
 import { mock } from "node:test";
+import { squadDataForPrisma } from "@/app/api/squads/dataForPrisma";
 
 const { gotSquadData, validSquadData } = exportedForTesting;
 

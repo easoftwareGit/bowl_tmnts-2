@@ -1,12 +1,13 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ioStatusType } from "@/redux/statusTypes";
-import { RootState } from "@/redux/store";
+import { RootState } from "@/redux/store"; 
 import { allEntriesOneSquadType, brktEntryType, dataOneSquadEntriesType, dataOneTmntType, divEntryType, elimEntryType, ioDataError, playerType, potEntryType, putManyEntriesReturnType, tmntEntryPlayerType, updatedEntriesCountsType } from "@/lib/types/types";
-import { getAllEntriesForSquad, getAllEntriesForSquad2 } from "@/lib/db/squads/dbSquads";
+import { getAllEntriesForSquad2 } from "@/lib/db/squads/dbSquads";
 import { cloneDeep } from "lodash";
 import { saveEntriesData } from "@/lib/db/tmntEntries/dbTmntEntries";
 import { playerEntryData } from "@/app/dataEntry/playersForm/createColumns";
 import { allEntriesAllErrors, allEntriesNoUpdates } from "@/lib/db/initVals";
+import { BracketList } from "@/components/brackets/bracketListClass";
 
 export interface allEntriesOneSquadState {
   entryData: allEntriesOneSquadType | null;  
@@ -26,8 +27,9 @@ const initialState: allEntriesOneSquadState = {
       players: [],
       divEntries: [],
       potEntries: [],
-      brktEntries: [],      
-      elimEntries: [],
+      brktEntries: [],
+      brktLists: [],
+      elimEntries: [],      
     },
     curData: {      
       squadId: "",
@@ -35,6 +37,7 @@ const initialState: allEntriesOneSquadState = {
       divEntries: [],
       potEntries: [],
       brktEntries: [],      
+      brktLists: [],
       elimEntries: [],
     }
   },
@@ -43,36 +46,6 @@ const initialState: allEntriesOneSquadState = {
   error: "",  
   updatedInfo: cloneDeep(allEntriesNoUpdates),  
 };
-
-export const fetchOneSquadEntries = createAsyncThunk(
-  "allEntriesOneSquad/fetchOneSquadEntries",
-  async (squadId: string, { getState }) => {
-
-    noIdYet = (squadId === "" || squadId === undefined || squadId === null);
-    
-    const state = getState() as RootState;    
-    const currentSquad = state.allEntriesOneSquad.entryData?.origData.squadId;
-    if
-      (currentSquad === squadId) {
-      // Return the current state if the tournament ID matches the one being fetched 
-      return state.allEntriesOneSquad.entryData;
-    }
-
-    // Do not use try / catch blocks here. Need the promise to be fulfilled or
-    // rejected which will have the appropriate response in the extraReducers.    
-    const gotData = await getAllEntriesForSquad(squadId); 
-    if (!gotData) {
-      return null;
-    }
-
-    const allEnts: allEntriesOneSquadType = {
-      origData: cloneDeep(gotData) as dataOneSquadEntriesType,
-      curData: cloneDeep(gotData) as dataOneSquadEntriesType
-    }
-
-    return allEnts as allEntriesOneSquadType    
-  }
-)
 
 export const fetchOneSquadEntries2 = createAsyncThunk(
   "allEntriesOneSquad/fetchOneSquadEntries2",
@@ -149,6 +122,12 @@ export const allEntriesOneSquadSlice = createSlice({
         state.entryData.origData.brktEntries = action.payload;
       }
     }, 
+    updateBrktLists: (state, action: PayloadAction<BracketList[]>) => {
+      if (state.entryData) {
+        state.entryData.curData.brktLists = action.payload;
+        state.entryData.origData.brktLists = action.payload;
+      }
+    },
     updateElimEntries: (state, action: PayloadAction<elimEntryType[]>) => {
       if (state.entryData) {
         state.entryData.curData.elimEntries = action.payload;
@@ -157,31 +136,6 @@ export const allEntriesOneSquadSlice = createSlice({
     }    
   },
   extraReducers: (builder) => {
-    // fetchOneSquadEntries
-    builder.addCase(fetchOneSquadEntries.pending, (state) => {      
-      state.loadStatus = "loading";
-    });
-    builder.addCase(fetchOneSquadEntries.fulfilled, (state, action) => {
-      if (!action.payload) {
-        if (noIdYet) {
-          state.loadStatus = "pending";          
-          state.error = "";
-        } else {
-          state.loadStatus = "failed";          
-          state.error = "all entry data not found yet";
-        }
-        state.entryData = null;
-      } else {
-        state.loadStatus = "succeeded";
-        state.entryData = action.payload;
-        state.error = "";
-      }
-    });
-    builder.addCase(fetchOneSquadEntries.rejected, (state, action) => {
-      state.loadStatus = "failed";
-      state.error = action.error.message;
-    });
-    // fetchOneSquadEntries2
     builder.addCase(fetchOneSquadEntries2.pending, (state) => {      
       state.loadStatus = "loading";
     });
@@ -211,13 +165,13 @@ export const allEntriesOneSquadSlice = createSlice({
       state.error = '';      
       state.updatedInfo = cloneDeep(allEntriesNoUpdates)
     });
-    builder.addCase(SaveOneSquadEntries.fulfilled, (state: allEntriesOneSquadState, action: PayloadAction<{ data: allEntriesOneSquadType; updatedInfo: putManyEntriesReturnType }>) => { 
+    builder.addCase(SaveOneSquadEntries.fulfilled, (state, action: PayloadAction<{ data: allEntriesOneSquadType; updatedInfo: putManyEntriesReturnType }>) => { 
       state.saveStatus = 'succeeded';
       state.entryData = action.payload.data;
       state.updatedInfo = action.payload.updatedInfo;      
       state.error = '';
-    });
-    builder.addCase(SaveOneSquadEntries.rejected, (state: allEntriesOneSquadState, action) => {
+    });    
+    builder.addCase(SaveOneSquadEntries.rejected, (state, action) => {
       state.saveStatus = 'failed';
       state.error = action.error.message;
       if (action.payload && (action.payload as { updatedInfo: putManyEntriesReturnType }).updatedInfo) {

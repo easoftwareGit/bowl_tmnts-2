@@ -3,14 +3,14 @@ import { loadStatusType } from '@/redux/statusTypes';
 import { getTmntYears } from '@/lib/db/tmnts/dbTmnts';
 import { YearObj } from '@/lib/types/types';
 
-export interface TmntYearsSliceState {
+export interface tmntYearsSliceState {
   data: YearObj[];  
   status: loadStatusType;  
   error: string | undefined;
 }
 
 // initial state constant
-const initialState: TmntYearsSliceState = {
+const initialState: tmntYearsSliceState = {
   data: [],  
   status: 'idle',    
   error: ''
@@ -30,16 +30,16 @@ export const tmntYearsSlice = createSlice({
   initialState,
   reducers: {},
   extraReducers: (builder) => {
-    builder.addCase(fetchTmntYears.pending, (state: TmntYearsSliceState) => {      
+    builder.addCase(fetchTmntYears.pending, (state: tmntYearsSliceState) => {      
       state.status = 'loading';      
       state.error = '';
     })
-    builder.addCase(fetchTmntYears.fulfilled, (state: TmntYearsSliceState, action) => {
+    builder.addCase(fetchTmntYears.fulfilled, (state: tmntYearsSliceState, action) => {
       state.status = 'succeeded';      
       state.data = action.payload;
       state.error = '';
     })
-    builder.addCase(fetchTmntYears.rejected, (state: TmntYearsSliceState, action) => {
+    builder.addCase(fetchTmntYears.rejected, (state: tmntYearsSliceState, action) => {
       state.status = 'failed';      
       state.error = action.error.message
     })

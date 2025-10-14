@@ -6,6 +6,7 @@ import { brktDataType, brktType } from "@/lib/types/types";
 import { initBrkt } from "@/lib/db/initVals";
 import { calcFSA } from "@/lib/currency/fsa";
 import { getErrorStatus } from "../errCodes";
+import { brktDataForPrisma } from "./dataForPrisma";
 
 // routes /api/brkts
 
@@ -82,20 +83,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: errMsg }, { status: 422 });
     }
     
-    // NO fsa in eventDataType
-    let brktData: brktDataType = {
-      id: toPost.id,
-      div_id: toPost.div_id,
-      squad_id: toPost.squad_id,
-      fee: toPost.fee,
-      start: toPost.start,
-      games: toPost.games,
-      players: toPost.players,
-      first: toPost.first,
-      second: toPost.second,
-      admin: toPost.admin,
-      sort_order: toPost.sort_order,
-    };
+    const brktData = brktDataForPrisma(toPost);
+    if (!brktData) {
+      return NextResponse.json({ error: "invalid data" }, { status: 422 });
+    }
+    // // NO fsa in eventDataType
+    // let brktData: brktDataType = {
+    //   id: toPost.id,
+    //   div_id: toPost.div_id,
+    //   squad_id: toPost.squad_id,
+    //   fee: toPost.fee,
+    //   start: toPost.start,
+    //   games: toPost.games,
+    //   players: toPost.players,
+    //   first: toPost.first,
+    //   second: toPost.second,
+    //   admin: toPost.admin,
+    //   sort_order: toPost.sort_order,
+    // };
     const postedBrkt = await prisma.brkt.create({
       data: brktData,
     });

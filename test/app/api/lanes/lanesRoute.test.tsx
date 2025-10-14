@@ -3,7 +3,7 @@ import { baseLanesApi, baseSquadsApi } from "@/lib/db/apiPaths";
 import { testBaseLanesApi, testBaseSquadsApi } from "../../../testApi";
 import { laneType, squadType } from "@/lib/types/types";
 import { initLane, initSquad } from "@/lib/db/initVals";
-import { deleteAllLanesForTmnt } from "@/lib/db/lanes/dbLanes";
+import { deleteAllLanesForSquad, deleteAllLanesForTmnt, getAllLanesForSquad, getAllLanesForTmnt } from "@/lib/db/lanes/dbLanes";
 import { mockLanesToPost, mockSquadsToPost, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { deleteAllSquadsForTmnt, postManySquads } from "@/lib/db/squads/dbSquads";
 
@@ -532,15 +532,13 @@ describe('Lanes - API: /api/lanes', () => {
 
   describe('POST many lanes API: /api/lanes/many', () => { 
     
+    const pmSquadId = 'sqd_1234ec18b3d44c0189c83f6ac5fd4ad6';
     let createdLanes = false;    
 
     beforeAll(async () => { 
       
       // remove any old test data
-      await deleteAllLanesForTmnt(tmntToDelId); 
-      await deleteAllSquadsForTmnt(tmntToDelId);
-      // make sure test squads in database
-      await postManySquads(mockSquadsToPost); 
+      await deleteAllLanesForSquad(pmSquadId); 
     })
 
     beforeEach(() => {
@@ -549,13 +547,8 @@ describe('Lanes - API: /api/lanes', () => {
 
     afterEach(async () => {
       if (createdLanes) {
-        await deleteAllLanesForTmnt(tmntToDelId);
+        await deleteAllLanesForSquad(pmSquadId); 
       }      
-    })
-
-    afterAll(async () => {
-      await deleteAllLanesForTmnt(tmntToDelId);
-      await deleteAllSquadsForTmnt(tmntToDelId);
     })
 
     it('should create many lanes', async () => { 
@@ -567,8 +560,14 @@ describe('Lanes - API: /api/lanes', () => {
         url: manyUrl
       })
       expect(response.status).toBe(201);
-      const postedLanes = response.data.lanes;      
       createdLanes = true;
+      expect(response.data.count).toEqual(mockLanesToPost.length);
+
+      const postedLanes = await getAllLanesForSquad(pmSquadId);
+      if (!postedLanes) {
+        expect(true).toBeFalsy();
+        return;
+      }
       expect(postedLanes.length).toEqual(mockLanesToPost.length);
       for (let i = 0; i < postedLanes.length; i++) {
         expect(postedLanes[i].id).toEqual(mockLanesToPost[i].id);
@@ -1125,25 +1124,7 @@ describe('Lanes - API: /api/lanes', () => {
           expect(true).toBeFalsy();
         }
       }
-    })    
-    
-    // it('should NOT delete a lane by ID when lane has child rows', async () => { 
-    //   try {
-    //     const delResponse = await axios({
-    //       method: "delete",
-    //       withCredentials: true,
-    //       url: oneLaneUrl + testLane.id
-    //     })
-    //     expect(delResponse.status).toBe(409);
-    //   } catch (err) {
-    //     if (err instanceof AxiosError) {
-    //       expect(err.response?.status).toBe(409);
-    //     } else {
-    //       expect(true).toBeFalsy();
-    //     }
-    //   }
-    // })
-    
+    })
   })
 
   describe('DELETE all lanes for a squad - API: /api/lanes/squad/:squadId', () => { 

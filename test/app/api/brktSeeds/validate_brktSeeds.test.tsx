@@ -124,7 +124,7 @@ describe("test for brktSeeds validation", () => {
     });
   })
 
-  describe("validBrktSeed function", () => {
+  describe("validBrktSeedData function", () => {
     it("should return ErrorCode.None for valid brktSeed", () => {
       expect(validBrktSeedData(validBrktSeed)).toEqual(ErrorCode.None);
     });

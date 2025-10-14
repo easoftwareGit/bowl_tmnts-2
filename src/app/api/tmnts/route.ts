@@ -6,6 +6,7 @@ import { sanitizeTmnt, validateTmnt } from "./valildate";
 import { initTmnt } from "@/lib/db/initVals";
 import { removeTimeFromISODateStr, startOfDayFromString } from "@/lib/dateTools";
 import { getErrorStatus } from "../errCodes";
+import { tmntDataForPrisma } from "./dataForPrisma";
 
 // routes /api/tmnts
 
@@ -63,15 +64,19 @@ export async function POST(request: Request) {
       );
     }
     
-    const startDate = startOfDayFromString(toPost.start_date_str) as Date
-    const endDate = startOfDayFromString(toPost.end_date_str) as Date
+    const prismaToPost = tmntDataForPrisma(toPost);
+    if (!prismaToPost) {
+      return NextResponse.json({ error: "invalid data" }, { status: 422 });
+    }
+    // const startDate = startOfDayFromString(toPost.start_date_str) as Date
+    // const endDate = startOfDayFromString(toPost.end_date_str) as Date
     let tmntData: tmntDataType = {
-      id: toPost.id,
-      tmnt_name: toPost.tmnt_name,
-      start_date: startDate,
-      end_date: endDate,
-      user_id: toPost.user_id,
-      bowl_id: toPost.bowl_id
+      id: prismaToPost.id,
+      tmnt_name: prismaToPost.tmnt_name,
+      start_date: prismaToPost.start_date,
+      end_date: prismaToPost.end_date,
+      user_id: prismaToPost.user_id,
+      bowl_id: prismaToPost.bowl_id
     }
 
     const tmnt = await prisma.tmnt.create({

@@ -17,14 +17,15 @@ import {
   brktEntryType,
   elimEntryType,  
   putManyReturnType,
-  putManyEntriesReturnType,
+  // putManyEntriesReturnType,
   updatedEntriesCountsType,
   gameType,
   divDataType,
   brktRefundType,
   putManyBrktEntriesReturnType,
   oneBrktType,
-  brktSeedType,  
+  brktSeedType,
+  tmntFullType,  
 } from "../types/types";
 import { User, Bowl, Tmnt } from "@prisma/client";
 import { todayStr } from "@/lib/dateTools";
@@ -32,6 +33,7 @@ import { btDbUuid } from "../uuid";
 import { startOfToday } from "date-fns";
 import { cloneDeep } from "lodash";
 import { deepClone } from "@mui/x-data-grid/internals";
+import { init } from "next/dist/compiled/webpack/webpack";
 
 export const initUser: userType = {
   id: btDbUuid('usr'),
@@ -156,6 +158,12 @@ export const blankEvent: eventType = {
   tmnt_id: "",
   event_name: "",
   tab_title: "",  
+  entry_fee: "0",
+  lineage: "0",
+  prize_fund: "0",
+  expenses: "0",
+  other: "0",
+  lpox: "0",
 };
 
 export const initEvents: eventType[] = [
@@ -442,7 +450,12 @@ export const initBrktEntry: brktEntryType = {
 
 export const initBrktRefund: brktRefundType = {
   brkt_entry_id: btDbUuid('ben'),
-  num_refunds: 0,
+  num_refunds: 0,  
+}
+
+export const blankBrktRefund: brktRefundType = {
+  ...initBrktRefund,
+  brkt_entry_id: "",
 }
 
 export const blankBrktEntry: brktEntryType = {
@@ -570,18 +583,20 @@ export const noBrktEntriesUpdates: putManyBrktEntriesReturnType = {
   rfDeletes: 0
 }
 
-export const allEntriesNoUpdates: putManyEntriesReturnType = {
-  players: deepClone(noUpdates),
-  divEntries: deepClone(noUpdates),
-  potEntries: deepClone(noUpdates),
-  brktEntries: deepClone(noUpdates),
-  elimEntries: deepClone(noUpdates),
-  playersToUpdate: [],
-  divEntriesToUpdate: [],
-  potEntriesToUpdate: [],
-  brktEntriesToUpdate: [],
-  elimEntriesToUpdate: [],
-}
+// export const allEntriesNoUpdates: putManyEntriesReturnType = {
+//   players: deepClone(noUpdates),
+//   divEntries: deepClone(noUpdates),
+//   potEntries: deepClone(noUpdates),
+//   brktEntries: deepClone(noUpdates),
+//   brcktListEntries: deepClone(noUpdates),
+//   elimEntries: deepClone(noUpdates),
+//   playersToUpdate: [],
+//   divEntriesToUpdate: [],
+//   potEntriesToUpdate: [],
+//   brktEntriesToUpdate: [],
+//   brcktListsToUpdate: [],
+//   elimEntriesToUpdate: [],
+// }
 
 export const zeroUdatedEntriesCounts: updatedEntriesCountsType = {
   players: 0,
@@ -598,15 +613,66 @@ export const errorUpdate: putManyReturnType = {
   deletes: -1,
 }
 
-export const allEntriesAllErrors: putManyEntriesReturnType = {
-  players: deepClone(errorUpdate),
-  divEntries: deepClone(errorUpdate),
-  potEntries: deepClone(errorUpdate),
-  brktEntries: deepClone(errorUpdate),
-  elimEntries: deepClone(errorUpdate),
-  playersToUpdate: [],
-  divEntriesToUpdate: [],
-  potEntriesToUpdate: [],
-  brktEntriesToUpdate: [],
-  elimEntriesToUpdate: [],
-}
+// export const allEntriesAllErrors: putManyEntriesReturnType = {
+//   players: deepClone(errorUpdate),
+//   divEntries: deepClone(errorUpdate),
+//   potEntries: deepClone(errorUpdate),
+//   brktEntries: deepClone(errorUpdate),
+//   brcktListEntries: deepClone(errorUpdate),
+//   elimEntries: deepClone(errorUpdate),
+//   playersToUpdate: [],
+//   divEntriesToUpdate: [],
+//   potEntriesToUpdate: [],
+//   brktEntriesToUpdate: [],
+//   brcktListsToUpdate: [],
+//   elimEntriesToUpdate: [],
+// }
+
+export const linkedInitTmntFullData = (userId: string): tmntFullType => {
+  const tmntId = btDbUuid('tmt');
+  const eventId = btDbUuid('evt');
+  const squadId = btDbUuid('sqd');
+  const divId = btDbUuid('div');
+  const initData: tmntFullType = {       
+    tmnt: {...cloneDeep(initTmnt), id: tmntId, user_id: userId},
+    brktEntries: [],    
+    brktSeeds: [],
+    brkts: [],
+    divs: [{
+      ...initDiv,
+      id: divId,
+      tmnt_id: tmntId,
+    }],
+    divEntries: [],
+    elimEntries: [],
+    elims: [],
+    events: [{
+      ...initEvent,    
+      id: eventId,
+      tmnt_id: tmntId,
+    }],
+    lanes: [
+      {
+        ...initLane,
+        squad_id: squadId,
+        lane_number: 1
+      },
+      {
+        ...initLane,
+        squad_id: squadId,
+        lane_number: 2
+      },
+    ],
+    oneBrkts: [],
+    players: [],
+    potEntries: [],
+    pots: [],
+    squads: [{
+      ...initSquad,
+      id: squadId,
+      event_id: eventId,
+    }],
+  }    
+
+  return initData;
+};

@@ -4,8 +4,9 @@ import { testBaseElimEntriesApi } from "../../../testApi";
 import { initElimEntry } from "@/lib/db/initVals";
 import { elimEntryType } from "@/lib/types/types";
 import { mockElimEntriesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllElimEntriesForTmnt, postManyElimEntries } from "@/lib/db/elimEntries/dbElimEntries";
+import { deleteAllElimEntriesForTmnt, getAllElimEntriesForSquad, postManyElimEntries } from "@/lib/db/elimEntries/dbElimEntries";
 import { cloneDeep } from "lodash";
+import { getAllBrktEntriesForSquad } from "@/lib/db/brktEntries/dbBrktEntries";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -697,10 +698,16 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         withCredentials: true,
         url: manyUrl,
       })
-      const postedElimEntries = response.data.elimEntries;
       expect(response.status).toBe(201);
       createdElimEntries = true;
-      expect(postedElimEntries).not.toBeNull();
+      expect(response.data.count).toBe(mockElimEntriesToPost.length);
+
+      const postedElimEntries = await getAllElimEntriesForSquad(squadIdForMockData);
+      expect(response.status).toBe(201);
+      if (!postedElimEntries) {
+        expect(true).toBeFalsy();
+        return;
+      }      
       expect(postedElimEntries.length).toBe(mockElimEntriesToPost.length);
       for (let i = 0; i < mockElimEntriesToPost.length; i++) {
         expect(postedElimEntries[i].id).toBe(mockElimEntriesToPost[i].id);
@@ -709,6 +716,17 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         expect(postedElimEntries[i].fee).toBe(mockElimEntriesToPost[i].fee);
       }
     })
+    it('should return 0 and code 200 when passed an empty array', async () => {
+      const elimEntryJSON = JSON.stringify([]);
+      const response = await axios({
+        method: "post",
+        data: elimEntryJSON,
+        withCredentials: true,
+        url: manyUrl,
+      })
+      expect(response.status).toBe(200);
+      expect(response.data.count).toBe(0);
+    });
     it('should NOT create many elimEntries with sanitzied data, fee sanitized to ""', async () => {
       const toSanitize = cloneDeep(mockElimEntriesToPost);
       toSanitize[0].fee = '   84  ';
@@ -968,7 +986,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
           expect(true).toBeFalsy();
         }
       }
-    })
+    })    
   })
 
   describe('PUT many elimEntries API: /api/elimEntries/many', () => {
@@ -1020,12 +1038,15 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         withCredentials: true,
         url: manyUrl,
       })
-      const postedElimEntries = response.data.elimEntries;
       expect(response.status).toBe(201);
       createdElimEntries = true;
-      expect(postedElimEntries).not.toBeNull();
-      expect(postedElimEntries.length).toBe(testElimEntries.length);
-            
+      expect(response.data.count).toBe(testElimEntries.length);
+      const postedElimEntries = await getAllElimEntriesForSquad(squadIdForMockData);
+      expect(response.status).toBe(201);
+      if (!postedElimEntries) {
+        expect(true).toBeFalsy();
+        return;
+      }
       // change fee, add eType = 'u'
       const elimEntriesToUpdate = [
         {
@@ -1061,12 +1082,15 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         withCredentials: true,
         url: manyUrl,
       })
-      const postedElimEntries = response.data.elimEntries;
       expect(response.status).toBe(201);
       createdElimEntries = true;
-      expect(postedElimEntries).not.toBeNull();
-      expect(postedElimEntries.length).toBe(testElimEntries.length);
-            
+      expect(response.data.count).toBe(testElimEntries.length);
+      const postedElimEntries = await getAllElimEntriesForSquad(squadIdForMockData);
+      expect(response.status).toBe(201);
+      if (!postedElimEntries) {
+        expect(true).toBeFalsy();
+        return;
+      }
       // change fee, add eType = 'u'
       const elimEntriesToUpdate = [
         {
@@ -1102,12 +1126,15 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         withCredentials: true,
         url: manyUrl,
       })
-      const postedElimEntries = response.data.elimEntries;
       expect(response.status).toBe(201);
       createdElimEntries = true;
-      expect(postedElimEntries).not.toBeNull();
-      expect(postedElimEntries.length).toBe(testElimEntries.length);
-            
+      expect(response.data.count).toBe(testElimEntries.length);
+      const postedElimEntries = await getAllElimEntriesForSquad(squadIdForMockData);
+      expect(response.status).toBe(201);
+      if (!postedElimEntries) {
+        expect(true).toBeFalsy();
+        return;
+      }
       // change fee, add eType = 'u'
       const elimEntriesToUpdate = [
         {
@@ -1242,12 +1269,15 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         withCredentials: true,
         url: manyUrl,
       })
-      const postedElimEntries = response.data.elimEntries;
       expect(response.status).toBe(201);
       createdElimEntries = true;
-      expect(postedElimEntries).not.toBeNull();
-      expect(postedElimEntries.length).toBe(testElimEntries.length);
-            
+      expect(response.data.count).toBe(testElimEntries.length);
+      const postedElimEntries = await getAllElimEntriesForSquad(squadIdForMockData);
+      expect(response.status).toBe(201);
+      if (!postedElimEntries) {
+        expect(true).toBeFalsy();
+        return;
+      }                        
       // add eType = 'd'
       const elimEntriesToUpdate = [
         {
@@ -1281,12 +1311,15 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         withCredentials: true,
         url: manyUrl,
       })
-      const postedElimEntries = response.data.elimEntries;
       expect(response.status).toBe(201);
       createdElimEntries = true;
-      expect(postedElimEntries).not.toBeNull();
-      expect(postedElimEntries.length).toBe(testElimEntries.length);
-            
+      expect(response.data.count).toBe(testElimEntries.length);
+      const postedElimEntries = await getAllElimEntriesForSquad(squadIdForMockData);
+      expect(response.status).toBe(201);
+      if (!postedElimEntries) {
+        expect(true).toBeFalsy();
+        return;
+      }
       // add eType = 'd'
       const elimEntriesToUpdate = [
         {
@@ -1320,12 +1353,15 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         withCredentials: true,
         url: manyUrl,
       })
-      const postedElimEntries = response.data.elimEntries;
       expect(response.status).toBe(201);
       createdElimEntries = true;
-      expect(postedElimEntries).not.toBeNull();
-      expect(postedElimEntries.length).toBe(testElimEntries.length);
-            
+      expect(response.data.count).toBe(testElimEntries.length);
+      const postedElimEntries = await getAllElimEntriesForSquad(squadIdForMockData);
+      expect(response.status).toBe(201);
+      if (!postedElimEntries) {
+        expect(true).toBeFalsy();
+        return;
+      }
       // add eType = 'd'
       const elimEntriesToUpdate = [
         {
@@ -1367,12 +1403,15 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         withCredentials: true,
         url: manyUrl,
       })
-      const postedElimEntries = response.data.elimEntries;
       expect(response.status).toBe(201);
       createdElimEntries = true;
-      expect(postedElimEntries).not.toBeNull();
-      expect(postedElimEntries.length).toBe(testElimEntries.length);
-            
+      expect(response.data.count).toBe(testElimEntries.length);
+      const postedElimEntries = await getAllElimEntriesForSquad(squadIdForMockData);
+      expect(response.status).toBe(201);
+      if (!postedElimEntries) {
+        expect(true).toBeFalsy();
+        return;
+      }            
       // set editsm,  eType 
       const elimEntriesToUpdate = [
         {
@@ -1432,12 +1471,15 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         withCredentials: true,
         url: manyUrl,
       })
-      const postedElimEntries = response.data.elimEntries;
       expect(response.status).toBe(201);
       createdElimEntries = true;
-      expect(postedElimEntries).not.toBeNull();
-      expect(postedElimEntries.length).toBe(testElimEntries.length);
-            
+      expect(response.data.count).toBe(testElimEntries.length);
+      const postedElimEntries = await getAllElimEntriesForSquad(squadIdForMockData);
+      expect(response.status).toBe(201);
+      if (!postedElimEntries) {
+        expect(true).toBeFalsy();
+        return;
+      }                        
       // change fee, add eType = 'u'
       const elimEntriesToUpdate = [
         {

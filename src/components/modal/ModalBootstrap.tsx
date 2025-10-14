@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Modal, Button } from 'react-bootstrap';
+import styles from "./model.module.css";
 
 interface ModalConfirmProps {
   show: boolean;
@@ -20,7 +21,7 @@ const ModelConfirm: React.FC<ModalConfirmProps> = ({ show, message, onConfirm, o
       <Modal.Header closeButton>
         <Modal.Title>Confirmation</Modal.Title>
       </Modal.Header>
-      <Modal.Body>
+      <Modal.Body className={styles.modalBody}>
         <p>{message}</p>
       </Modal.Body>
       <Modal.Footer>

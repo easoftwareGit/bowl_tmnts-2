@@ -10,25 +10,21 @@ import { getErrorStatus } from "../../errCodes";
 export async function POST(request: NextRequest) {
   try {
     const brktSeeds: brktSeedType[] = await request.json();
+    if (Array.isArray(brktSeeds) && brktSeeds.length === 0) {
+      return NextResponse.json({ count: 0 }, { status: 200 });
+    }
     // sanitize and validate brktSeeds
-    const validbrktSeeds = await validateBrktSeeds(brktSeeds) // need to use await! or else returns a promise
-    if (validbrktSeeds.errorCode !== ErrorCode.None) {
+    const validBrktSeeds = await validateBrktSeeds(brktSeeds) // need to use await! or else returns a promise
+    if (validBrktSeeds.errorCode !== ErrorCode.None) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
-    const brktSeedsToPost = validbrktSeeds.brktSeeds;
-    const createdBrktSeeds = await prisma.$transaction(
-      brktSeedsToPost.map((brktSeed) => {
-        return prisma.brkt_Seed.create({
-          data: {
-            one_brkt_id: brktSeed.one_brkt_id,
-            seed: brktSeed.seed,
-            player_id: brktSeed.player_id,
-          },
-        });
-      })
-    )
-      
-    return NextResponse.json({brktSeeds: createdBrktSeeds}, {status: 201});
+    const brktSeedsToPost = validBrktSeeds.brktSeeds;
+    const result = await prisma.brkt_Seed.createMany({
+      data: brktSeedsToPost,
+      skipDuplicates: false, // or true if you want to silently skip existing rows
+    });
+
+    return NextResponse.json({ count: result.count }, { status: 201 });    
   } catch (err: any) {
     const errStatus = getErrorStatus(err.code);
     return NextResponse.json(

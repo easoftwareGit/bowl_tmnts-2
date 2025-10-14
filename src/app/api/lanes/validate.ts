@@ -43,7 +43,7 @@ export const validLaneNumber = (laneNumber: number): boolean => {
  * @param idType - id type - 'sqd'
  * @returns {boolean} - true if foreign key is valid
  */
-export const validEventFkId = (FkId: string, idType: idTypes): boolean => { 
+export const validLaneFkId = (FkId: string, idType: idTypes): boolean => { 
 
   if (!(FkId) || !isValidBtDbId(FkId, idType)) {
     return false
@@ -93,7 +93,7 @@ export const sanitizeLane = (lane: laneType): laneType => {
   if (isValidBtDbId(lane.id, "lan")) {
     sanitizedLane.id = lane.id;
   }
-  if (validEventFkId(lane.squad_id, 'sqd')) {
+  if (validLaneFkId(lane.squad_id, 'sqd')) {
     sanitizedLane.squad_id = lane.squad_id
   }
   if ((lane.lane_number === null) || isNumber(lane.lane_number)) {
@@ -146,10 +146,21 @@ export const validateLanes = (lanes: laneType[]): validLanesType => {
     const toPost = sanitizeLane(lanes[i]);
     errCode = validateLane(toPost);
     if (errCode !== ErrorCode.None) { 
+      // remove current lane and everything after it
       return { lanes: okLanes, errorCode: errCode };
     }
     okLanes.push(toPost);
     i++;
+  }
+  const seenKeys = new Set<string>();
+  for (let i = 0; i < okLanes.length; i++) {
+    const lane = okLanes[i];
+    const key = `${lane.squad_id}-${lane.lane_number}`;
+    if (seenKeys.has(key)) {
+      okLanes.splice(i);
+      return { lanes: okLanes, errorCode: ErrorCode.InvalidData };
+    }
+    seenKeys.add(key);
   }
   return { lanes: okLanes, errorCode: ErrorCode.None };
 }

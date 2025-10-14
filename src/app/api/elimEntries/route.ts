@@ -5,6 +5,7 @@ import { elimEntryDataType, elimEntryType } from "@/lib/types/types";
 import { sanitizeElimEntry, validateElimEntry } from "./validate";
 import { ErrorCode } from "@/lib/validation";
 import { getErrorStatus } from "../errCodes";
+import { elimEntryDataForPrisma } from "./dataForPrisma";
 
 // routes /api/elimEntries
 export async function GET(request: NextRequest) {
@@ -50,13 +51,16 @@ export const POST = async (request: NextRequest) => {
         { status: 422 }
       );
     }
-
-    const elimEntryData: elimEntryDataType = {
-      id: toPost.id,      
-      elim_id: toPost.elim_id,
-      player_id: toPost.player_id,      
-      fee: toPost.fee,
+    const elimEntryData = elimEntryDataForPrisma(toPost);
+    if (!elimEntryData) {
+      return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
+    // const elimEntryData: elimEntryDataType = {
+    //   id: toPost.id,      
+    //   elim_id: toPost.elim_id,
+    //   player_id: toPost.player_id,      
+    //   fee: toPost.fee,
+    // }
     const elimEntry = await prisma.elim_Entry.create({
       data: elimEntryData
     })

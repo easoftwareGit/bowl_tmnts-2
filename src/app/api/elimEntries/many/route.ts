@@ -5,6 +5,7 @@ import { elimEntryType, elimEntryDataType, tmntEntryElimEntryType } from "@/lib/
 import { validateElimEntries } from "../validate";
 import { getDeleteManySQL, getInsertManySQL, getUpdateManySQL } from "./getSql";
 import { getErrorStatus } from "../../errCodes";
+import { elimEntryDataForPrisma } from "../dataForPrisma";
 
 // routes /api/elimEntries/many
 
@@ -12,26 +13,39 @@ export async function POST(request: NextRequest) {
 
   try {
     const elimEntries: elimEntryType[] = await request.json();
+    if (Array.isArray(elimEntries) && elimEntries.length === 0) {
+      return NextResponse.json({ count: 0 }, { status: 200 });
+    }
     // sanitize and validate elimEntries
     const validElimEntries = await validateElimEntries(elimEntries); // need to use await! or else returns a promise
     if (validElimEntries.errorCode !== ErrorCode.None) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
     // convert valid elimEntries into elimEntryData to post
-    const elimEntriesToPost: elimEntryDataType[] = []
-    validElimEntries.elimEntries.forEach(elimEntry => {
-      elimEntriesToPost.push({
-        id: elimEntry.id,        
-        elim_id: elimEntry.elim_id,
-        player_id: elimEntry.player_id,        
-        fee: elimEntry.fee,
-      })
-    });      
+    const elimEntriesToPost: elimEntryDataType[] = validElimEntries.elimEntries
+      .map(elimEntry => elimEntryDataForPrisma(elimEntry))
+      .filter(elimEntry => elimEntry !== null) as elimEntryDataType[];
+          
+    // const elimEntriesToPost: elimEntryDataType[] = []
+    // validElimEntries.elimEntries.forEach(elimEntry => {
+    //   elimEntriesToPost.push({
+    //     id: elimEntry.id,        
+    //     elim_id: elimEntry.elim_id,
+    //     player_id: elimEntry.player_id,        
+    //     fee: elimEntry.fee,
+    //   })
+    // });      
 
-    const manyElimEntries = await prisma.elim_Entry.createManyAndReturn({
-      data: [...elimEntriesToPost]
+    const result = await prisma.elim_Entry.createMany({
+      data: elimEntriesToPost,
+      skipDuplicates: false, // or true if you want to silently skip existing rows
     })
-    return NextResponse.json({elimEntries: manyElimEntries}, { status: 201 });    
+    return NextResponse.json({ count: result.count }, { status: 201 });
+
+    // const manyElimEntries = await prisma.elim_Entry.createManyAndReturn({
+    //   data: [...elimEntriesToPost]
+    // })
+    // return NextResponse.json({elimEntries: manyElimEntries}, { status: 201 });    
   } catch (err: any) {
     const errStatus = getErrorStatus(err.code);
     return NextResponse.json(

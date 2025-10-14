@@ -12,36 +12,20 @@ export async function POST(request: NextRequest) {
 
   try {
     const lanes: laneType[] = await request.json();
+    if (Array.isArray(lanes) && lanes.length === 0) {
+      return NextResponse.json({ count: 0 }, { status: 200 });
+    }
     // sanitize and validate squads
     const validLanes = await validateLanes(lanes); // need to use await! or else returns a promise
     if (validLanes.errorCode !== ErrorCode.None) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
-    // convert valid lanes into LaneData to post
-    const lanesToPost: laneDataType[] = []
-    validLanes.lanes.forEach(lane => {
-      lanesToPost.push({
-        id: lane.id,
-        squad_id: lane.squad_id,
-        lane_number: lane.lane_number,
-        in_use: lane.in_use
-      })
-    });      
-
-    const prismaLanes = await prisma.lane.createManyAndReturn({
-      data: [...lanesToPost]
+    const result = await prisma.lane.createMany({
+      // data: lanesToPost,
+      data: validLanes.lanes,
+      skipDuplicates: false, // or true if you want to silently skip existing rows
     })
-    // convert prismaLanes to lanes
-    const manyLanes: laneType[] = [];
-    prismaLanes.map((lane) => {
-      manyLanes.push({
-        ...initLane,
-        id: lane.id,
-        squad_id: lane.squad_id,        
-        lane_number: lane.lane_number,
-      })
-    })
-    return NextResponse.json({lanes: manyLanes}, { status: 201 });    
+    return NextResponse.json({ count: result.count }, { status: 201 });
   } catch (err: any) {
     const errStatus = getErrorStatus(err.code);
     return NextResponse.json(

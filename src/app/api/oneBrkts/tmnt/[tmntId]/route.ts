@@ -15,11 +15,6 @@ export async function GET(
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
     const oneBrkts = await prisma.one_Brkt.findMany({
-      select: {
-        id: true,
-        brkt_id: true,
-        bindex: true,
-      },
       where: {
         brkt_id: {
           in: await prisma.brkt.findMany({

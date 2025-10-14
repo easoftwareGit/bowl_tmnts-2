@@ -383,7 +383,7 @@ export const mockSquadEntries: dataOneSquadEntriesType = {
     pot_id: "pot_761fb6d8a9a04cb4b3372e212da2a3b0",
     player_id: "ply_f57669391b4c4405a4a4e0f40284712f",
     fee: '10',
-  }], 
+  }],   
   brktEntries: [{
     ...initBrktEntry,
     id: "ben_3a1eb5eef01d449eb444bfdf6b7d9035",
@@ -433,6 +433,7 @@ export const mockSquadEntries: dataOneSquadEntriesType = {
     player_id: "ply_92670d50aa7f44a487a172412bef8af5",
     num_brackets: 4,
   }],
+  brktLists: [],
   elimEntries: [{
     ...initElimEntry,
     id: "een_e01bedf38daf4b378425bc9931fffd0f",

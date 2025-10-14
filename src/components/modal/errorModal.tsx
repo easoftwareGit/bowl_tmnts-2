@@ -1,5 +1,6 @@
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
+import styles from "./model.module.css";
 
 export const cannotDeleteTitle = 'Cannot Delete'
 export const cannotSaveTitle = 'Cannot Save'
@@ -24,7 +25,7 @@ const ModalErrorMsg: React.FC<ChildProps> = ({
       <Modal.Header closeButton>
           <Modal.Title>{heading}</Modal.Title>
         </Modal.Header>
-        <Modal.Body>{message}</Modal.Body>
+        <Modal.Body className={styles.modalBody}>{message}</Modal.Body>
         <Modal.Footer>
           <Button className='me-2' variant="success" onClick={onCancel}>
             OK

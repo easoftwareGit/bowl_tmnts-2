@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isValidBtDbId } from "@/lib/validation";
-import { divEntriesWithHdcp } from "../../hdcpCalc";
+import { divEntriesWithHdcp } from "../../calcHdcp";
 
 // routes /api/divEntries/tmnt/:tmntId
 

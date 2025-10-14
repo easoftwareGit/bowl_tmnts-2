@@ -2,6 +2,7 @@ import { isEven, isOdd } from "@/lib/validation";
 import { BracketList } from "./bracketListClass";
 import { btDbUuid } from "@/lib/uuid";
 import { shuffleArray } from "@/lib/tools";
+import { cloneDeep } from "lodash";
 
 export class Bracket { 
 
@@ -17,8 +18,8 @@ export class Bracket {
   
   parent: BracketList;
 
-  constructor(parent: BracketList) {
-    this._id = btDbUuid('obk') // one bracket
+  constructor(parent: BracketList, id: string = '') {
+    this._id = id !== '' ? id : btDbUuid('obk') // one bracket
     this.parent = parent;
     this._players = []; 
     this._playersPerMatch = parent.playersPerMatch;    
@@ -95,6 +96,19 @@ export class Bracket {
    */
   emptySpots(): number {
     return this.playersPerBracket - this._players.length;
+  }
+
+  /**
+   * fill bracket with players
+   * 
+   * @param {string[]} players - array of player ids
+   */
+  fillBracket(players: string[]): void {
+    if (players === null
+      || !Array.isArray(players)      
+      || players.length !== this.playersPerBracket
+      || this.players.length > 0) return;            
+    this._players = cloneDeep(players);
   }
 
   /**

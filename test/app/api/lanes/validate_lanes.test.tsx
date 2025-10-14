@@ -2,7 +2,7 @@ import {
   sanitizeLane,
   validateLane,
   validLaneNumber,
-  validEventFkId,
+  validLaneFkId,
   exportedForTesting,
   validateLanes,
 } from "@/app/api/lanes/validate";
@@ -10,6 +10,7 @@ import { initLane } from "@/lib/db/initVals";
 import { ErrorCode, maxLaneCount } from "@/lib/validation";
 import { mockLanesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { validLanesType } from "@/lib/types/types";
+import { mock } from "jest-mock-extended";
 
 const { gotLaneData, validLaneData } = exportedForTesting;
 
@@ -73,24 +74,24 @@ describe("tests for lane validation", () => {
     })
   })
 
-  describe('validEventFkId function', () => { 
+  describe('validLaneFkId function', () => { 
     it('should return true for valid event_id', () => {
-      expect(validEventFkId(validLane.squad_id, 'sqd')).toBe(true)
+      expect(validLaneFkId(validLane.squad_id, 'sqd')).toBe(true)
     })
     it('should return false for invalid foreign key id', () => {
-      expect(validEventFkId('abc_def', 'sqd')).toBe(false)
+      expect(validLaneFkId('abc_def', 'sqd')).toBe(false)
     })
     it('should return false if foreign key id type does not match id type', () => { 
-      expect(validEventFkId(validLane.squad_id, 'usr')).toBe(false)
+      expect(validLaneFkId(validLane.squad_id, 'usr')).toBe(false)
     })
     it('should return false for an empty foreign key id', () => { 
-      expect(validEventFkId('', 'sqd')).toBe(false)      
+      expect(validLaneFkId('', 'sqd')).toBe(false)      
     })
     it('should return false for an null foreign key id', () => { 
-      expect(validEventFkId(null as any, 'sqd')).toBe(false)
+      expect(validLaneFkId(null as any, 'sqd')).toBe(false)
     })
     it('should return false for an null key type', () => { 
-      expect(validEventFkId(validLane.squad_id, null as any)).toBe(false)
+      expect(validLaneFkId(validLane.squad_id, null as any)).toBe(false)
     })
   })  
 
@@ -131,6 +132,15 @@ describe("tests for lane validation", () => {
         ...validLane,
         in_use: null as any 
       }
+      expect(validLaneData(testLane)).toBe(ErrorCode.InvalidData);
+    })
+    it('should return ErrorCode.InvalidData when in_use is not a boolean', () => {
+      const testLane = {
+        ...validLane,
+        in_use: 'test' as any
+      }
+      expect(validLaneData(testLane)).toBe(ErrorCode.InvalidData);
+      testLane.in_use = 1 as any
       expect(validLaneData(testLane)).toBe(ErrorCode.InvalidData);
     })
 
@@ -399,6 +409,26 @@ describe("tests for lane validation", () => {
       ]
       const validLanes = validateLanes(invalidLanes)
       expect(validLanes.errorCode).toEqual(ErrorCode.MissingData);
+      expect(validLanes.lanes.length).toEqual(1);
+    })
+    it('should return ErrorCode.InvalidData and return lanes length 1 when 2nd lane has duplicate lane_number', () => { 
+      const invalidLanes = [
+        {
+          ...mockLanesToPost[0],
+        },
+        {
+          ...mockLanesToPost[1],    
+          lane_number: mockLanesToPost[0].lane_number
+        },
+        {
+          ...mockLanesToPost[2],
+        },
+        {
+          ...mockLanesToPost[3],
+        },
+      ]
+      const validLanes = validateLanes(invalidLanes)
+      expect(validLanes.errorCode).toEqual(ErrorCode.InvalidData);
       expect(validLanes.lanes.length).toEqual(1);
     })
     it('should return ErrorCode.MissingData when passed an empty array', async () => { 

@@ -17,6 +17,8 @@ import {
 import { maxMoney, minFee } from "@/lib/validation";
 import { getDivName, getPotName } from "@/lib/getName";
 import { btDbUuid } from "@/lib/uuid";
+import clsx from "clsx";
+import styles from "./tmntForm.module.css";
 
 interface ChildProps {
   pots: potType[];
@@ -356,7 +358,8 @@ const ZeroToNPots: React.FC<ChildProps> = ({
             eventKey="createPot"
             title={createPotTitle}               
           >
-            <div className="container rounded-3 createBackground">
+            <div className={clsx("container", "rounded-3", styles.createBackground)}>
+            {/* <div className="container rounded-3 createBackground"> */}
               <div className="row g-3 mb-1">
                 <div className="col-sm-3">              
                   <label className="form-label">

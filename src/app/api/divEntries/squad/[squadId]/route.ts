@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isValidBtDbId } from "@/lib/validation";
-import { divEntriesWithHdcp } from "../../hdcpCalc";
+import { divEntriesWithHdcp } from "../../calcHdcp";
 import { getErrorStatus } from "@/app/api/errCodes";
 
 // routes /api/divEntries/squad/:squadId

@@ -4,7 +4,7 @@ import { ErrorCode, isValidBtDbId } from "@/lib/validation";
 import { initDivEntry } from "@/lib/db/initVals";
 import { divEntryRawType, divEntryType } from "@/lib/types/types";
 import { sanitizeDivEntry, validateDivEntry } from "../../validate";
-import { divEntriesWithHdcp } from "../../hdcpCalc";
+import { divEntriesWithHdcp } from "../../calcHdcp";
 import { getErrorStatus } from "@/app/api/errCodes";
 
 // routes /api/divEntries/divEntry/:id

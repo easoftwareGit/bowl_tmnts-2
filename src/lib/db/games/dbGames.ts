@@ -8,37 +8,36 @@ import { blankGame } from "../initVals";
 const url = testBaseGamesApi.startsWith("undefined")
   ? baseGamesApi
   : testBaseGamesApi;  
-const oneSquadUrl = url + "/squad/";
+const squadUrl = url + "/squad/";
 
 /**
  * gets all games for a squad
  * 
  * @param {squadId} squadId - id of squad to get games for
- * @returns {gameType[] | null} - array of games for squad or null
+ * @returns {gameType[]} - array of games for squad
+ * @throws {Error} - if squadId is invalid or API call fails
  */
-export const getAllGamesForSquad = async (squadId: string): Promise<gameType[] | null> => { 
-
-  try {
-    if (!isValidBtDbId(squadId, 'sqd')) return null
-    const response = await axios({
-      method: "get",
+export const getAllGamesForSquad = async (squadId: string): Promise<gameType[]> => { 
+  if (!isValidBtDbId(squadId, 'sqd')) { 
+    throw new Error('Invalid squad id');    
+  }
+  let response;
+  try { 
+    response = await axios.get(squadUrl + squadId, {
       withCredentials: true,
-      url: oneSquadUrl + squadId,
     });
-    if (response.status !== 200) return null
-    const squadGames = response.data.games;
-    const games: gameType[] = squadGames.map((game: any) => { 
-      return {
-        ...blankGame,
-        id: game.id,
-        player_id: game.player_id,
-        squad_id: game.squad_id,        
-        game_num: game.game_num,
-        score: game.score,
-      } 
-    })
-    return games        
   } catch (err) {
-    return null;
-  }  
+    throw new Error(`getAllGamesForSquad failed: ${err instanceof Error ? err.message : err}`);
+  }
+  if (response.status !== 200) { 
+    throw new Error(`Unexpected status ${response.status} when fetching games`)
+  }    
+  return response.data.games.map((game: any) => ({
+    ...blankGame,
+    id: game.id,
+    player_id: game.player_id,
+    squad_id: game.squad_id,
+    game_num: game.game_num,
+    score: game.score,
+  }));
 }

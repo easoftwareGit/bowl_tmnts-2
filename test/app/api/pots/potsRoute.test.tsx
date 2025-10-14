@@ -1,12 +1,10 @@
 import axios, { AxiosError } from "axios";
-import { basePotsApi, baseSquadsApi, baseDivsApi } from "@/lib/db/apiPaths";
-import { testBasePotsApi, testBaseSquadsApi, testBaseDivsApi } from "../../../testApi";
-import { divType, potCategoriesTypes, potType, squadType } from "@/lib/types/types";
-import { initDiv, initPot, initSquad } from "@/lib/db/initVals";
-import { mockSquadsToPost, mockPotsToPost, mockDivs, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllSquadsForTmnt, postManySquads } from "@/lib/db/squads/dbSquads";
-import { deleteAllDivsForTmnt, postManyDivs } from "@/lib/db/divs/dbDivs";
-import { deleteAllPotsForTmnt } from "@/lib/db/pots/dbPots";
+import { basePotsApi } from "@/lib/db/apiPaths";
+import { testBasePotsApi } from "../../../testApi";
+import { potCategoriesTypes, potType } from "@/lib/types/types";
+import { initPot} from "@/lib/db/initVals";
+import { mockPotsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
+import { deleteAllPotsForSquad, deleteAllPotsForTmnt, getAllPotsForTmnt, postManyPots } from "@/lib/db/pots/dbPots";
 import { isValidBtDbId } from "@/lib/validation";
 
 // before running this test, run the following commands in the terminal:
@@ -32,16 +30,6 @@ const squadUrl = url + "/squad/";
 const divUrl = url + "/div/";
 const tmntUrl = url + "/tmnt/";
 const manyUrl = url + "/many";
-
-const urlForSquads = testBaseSquadsApi.startsWith("undefined")
-  ? baseSquadsApi
-  : testBaseSquadsApi;
-const oneSquadUrl = urlForSquads + "/squad/";
-
-const urlForDivs = testBaseDivsApi.startsWith("undefined")
-  ? baseDivsApi
-  : testBaseDivsApi;
-const oneDivUrl = urlForSquads + "/div/";
 
 const notFoundId = "pot_01234567890123456789012345678901";
 const notFoundDivId = "div_01234567890123456789012345678901";
@@ -842,17 +830,12 @@ describe('Pots - API: /api/pots', () => {
 
   describe('POST many pots for one tmnt API: /api/pots/many', () => { 
 
-    let createdPots = false;    
+    let createdPots = false;   
+    const pmTmntId = 'tmt_d9b1af944d4941f65b2d2d4ac160cdea';
 
     beforeAll(async () => { 
       // remove any old test data      
-      await deleteAllPotsForTmnt(tmntToDelId);
-      await deleteAllSquadsForTmnt(tmntToDelId);      
-      await deleteAllDivsForTmnt(tmntToDelId);      
-
-      // make sure test data in database
-      await postManyDivs(mockDivs)
-      await postManySquads(mockSquadsToPost)
+      await deleteAllPotsForTmnt(pmTmntId);
     })
 
     beforeEach(() => {
@@ -861,14 +844,12 @@ describe('Pots - API: /api/pots', () => {
 
     afterEach(async () => {
       if (createdPots) {
-        await deleteAllPotsForTmnt(tmntToDelId);
+        await deleteAllPotsForTmnt(pmTmntId);
       }
     })
 
     afterAll(async () => {
-      await deleteAllPotsForTmnt(tmntToDelId);
-      await deleteAllDivsForTmnt(tmntToDelId);
-      await deleteAllSquadsForTmnt(tmntToDelId);
+      await deleteAllPotsForTmnt(pmTmntId);
     })
 
     it('should create many pots', async () => {
@@ -880,17 +861,48 @@ describe('Pots - API: /api/pots', () => {
         url: manyUrl
       })
       expect(response.status).toBe(201);
-      const postedPots = response.data.pots;
       createdPots = true;
+      expect(response.data.count).toBe(mockPotsToPost.length);
+      const postedPots = await getAllPotsForTmnt(pmTmntId);
+      if (!postedPots) { 
+        expect(true).toBeFalsy();
+        return;
+      }      
       expect(postedPots.length).toBe(mockPotsToPost.length);
       for (let i = 0; i < postedPots.length; i++) {
-        expect(postedPots[i].id).toEqual(mockPotsToPost[i].id);
-        expect(postedPots[i].div_id).toEqual(mockPotsToPost[i].div_id);
-        expect(postedPots[i].squad_id).toEqual(mockPotsToPost[i].squad_id);
-        expect(postedPots[i].fee).toEqual(mockPotsToPost[i].fee);
-        expect(postedPots[i].pot_type).toEqual(mockPotsToPost[i].pot_type);
-        expect(postedPots[i].sort_order).toEqual(mockPotsToPost[i].sort_order);
+        if (postedPots[i].id === mockPotsToPost[0].id) {
+          expect(postedPots[i].div_id).toEqual(mockPotsToPost[0].div_id);
+          expect(postedPots[i].squad_id).toEqual(mockPotsToPost[0].squad_id);
+          expect(postedPots[i].fee).toEqual(mockPotsToPost[0].fee);
+          expect(postedPots[i].pot_type).toEqual(mockPotsToPost[0].pot_type);
+          expect(postedPots[i].sort_order).toEqual(mockPotsToPost[0].sort_order);
+        } else if (postedPots[i].id === mockPotsToPost[1].id) {          
+          expect(postedPots[i].div_id).toEqual(mockPotsToPost[1].div_id);
+          expect(postedPots[i].squad_id).toEqual(mockPotsToPost[1].squad_id);
+          expect(postedPots[i].fee).toEqual(mockPotsToPost[1].fee);
+          expect(postedPots[i].pot_type).toEqual(mockPotsToPost[1].pot_type);
+          expect(postedPots[i].sort_order).toEqual(mockPotsToPost[1].sort_order);
+        } else if (postedPots[i].id === mockPotsToPost[2].id) {
+          expect(postedPots[i].div_id).toEqual(mockPotsToPost[2].div_id);
+          expect(postedPots[i].squad_id).toEqual(mockPotsToPost[2].squad_id);
+          expect(postedPots[i].fee).toEqual(mockPotsToPost[2].fee);
+          expect(postedPots[i].pot_type).toEqual(mockPotsToPost[2].pot_type);
+          expect(postedPots[i].sort_order).toEqual(mockPotsToPost[2].sort_order);
+        } else {
+          expect(true).toBeFalsy();
+        }
       }
+    })
+    it('should return 0 and status code 200 if passed an empty array', async () => {
+      const potsJSON = JSON.stringify([]);
+      const response = await axios({
+        method: "post",
+        data: potsJSON,
+        withCredentials: true,
+        url: manyUrl
+      })
+      expect(response.status).toBe(200);
+      expect(response.data.count).toBe(0);
     })
     it('should post many pots with sanitized pot type', async () => { 
       const manyPots = [
@@ -915,8 +927,13 @@ describe('Pots - API: /api/pots', () => {
         url: manyUrl
       })
       expect(response.status).toBe(201);
-      const postedPots = response.data.pots;
       createdPots = true;
+      expect(response.data.count).toBe(manyPots.length);
+      const postedPots = await getAllPotsForTmnt(pmTmntId);
+      if (!postedPots) { 
+        expect(true).toBeFalsy();
+        return;
+      }      
       expect(postedPots.length).toBe(manyPots.length);
       for (let i = 0; i < postedPots.length; i++) {
         expect(postedPots[i].id).toEqual(mockPotsToPost[i].id);
@@ -980,7 +997,6 @@ describe('Pots - API: /api/pots', () => {
         }      
       }
     })
-
   })
 
   describe('PUT by ID - API: /api/pots/pot/:id', () => { 
@@ -1827,8 +1843,8 @@ describe('Pots - API: /api/pots', () => {
     const toDelPot = {
       ...initPot,
       id: "pot_e3758d99c5494efabb3b0d273cf22e7a",
-      squad_id: "sqd_bb2de887bf274242af5d867476b029b8",
-      div_id: "div_29b9225d8dd44a4eae276f8bde855729",
+      squad_id: "sqd_853edbcc963745b091829e3eadfcf064",
+      div_id: "div_621bfee84e774d5a9dc2e9b6bdc5d31c",
       sort_order: 1,
       fee: '20',
       pot_type: "Game",
@@ -2152,58 +2168,15 @@ describe('Pots - API: /api/pots', () => {
   })
 
   describe('DELETE all pots for a tmnt API: /api/pots/tmnt/:tmntId', () => { 
-    
-    // div ids and tmnt id from squad to delete from prisma/seeds.ts        
-    const tmntId = 'tmt_467e51d71659d2e412cbc64a0d19ecb4';
-
-    const tempDivs = [
-      {
-        ...initDiv,
-        id: "div_66d39a83d7a84a8c85d28d8d1b2c7a91",
-        tmnt_id: tmntId,
-        div_name: "Del Div A",
-        hdcp_per: 0,        
-        sort_order: 1,
-      },
-      {
-        ...initDiv,
-        id: "div_66d39a83d7a84a8c85d28d8d1b2c7a92",
-        tmnt_id: tmntId,
-        div_name: "Del Div B",
-        hdcp_per: 1,        
-        sort_order: 2,
-      }
-    ]
-
-    const tempSquads = [
-      {
-        ...initSquad,
-        id: "sqd_c2be0f9d527e4081972ce8877190489d",
-        event_id: 'evt_bd63777a6aee43be8372e4d008c1d6d0',
-        squad_name: "Del Squad A",      
-        squad_time: '10:00 AM',
-        lane_count: 4,
-        starting_lane: 1,
-        sort_order: 1,
-      },
-      {
-        ...initSquad,
-        id: "sqd_d2be0f9d527e4081972ce8877190489d",
-        event_id: 'evt_bd63777a6aee43be8372e4d008c1d6d0',
-        squad_name: "Del Squad B",      
-        squad_time: '03:00 PM',
-        lane_count: 4,
-        starting_lane: 1,
-        sort_order: 1,
-      }  
-    ]
+        
+    const delPostTmntId = 'tmt_d9b1af944d4941f65b2d2d4ac160cdea';
 
     const toDelPots = [
       {
         ...initPot,
         id: "pot_ce24c5cc04f6463d89f24e6e19a12601",
-        squad_id: "sqd_c2be0f9d527e4081972ce8877190489d",
-        div_id: "div_66d39a83d7a84a8c85d28d8d1b2c7a91",
+        squad_id: "sqd_853edbcc963745b091829e3eadfcf064",
+        div_id: "div_621bfee84e774d5a9dc2e9b6bdc5d31c",
         sort_order: 1,
         fee: '20',
         pot_type: "Game" as potCategoriesTypes,
@@ -2211,8 +2184,8 @@ describe('Pots - API: /api/pots', () => {
       {
         ...initPot,
         id: "pot_ce24c5cc04f6463d89f24e6e19a12602",
-        squad_id: "sqd_c2be0f9d527e4081972ce8877190489d",
-        div_id: "div_66d39a83d7a84a8c85d28d8d1b2c7a91",
+        squad_id: "sqd_853edbcc963745b091829e3eadfcf064",
+        div_id: "div_621bfee84e774d5a9dc2e9b6bdc5d31c",
         sort_order: 2,
         fee: '10',
         pot_type: "Last Game" as potCategoriesTypes,
@@ -2220,196 +2193,38 @@ describe('Pots - API: /api/pots', () => {
       {
         ...initPot,
         id: "pot_ce24c5cc04f6463d89f24e6e19a12603",
-        squad_id: "sqd_c2be0f9d527e4081972ce8877190489d",
-        div_id: "div_66d39a83d7a84a8c85d28d8d1b2c7a91",
+        squad_id: "sqd_853edbcc963745b091829e3eadfcf064",
+        div_id: "div_621bfee84e774d5a9dc2e9b6bdc5d31c",
         sort_order: 3,
-        fee: '10',
-        pot_type: "Series" as potCategoriesTypes,
-      },
-      {
-        ...initPot,
-        id: "pot_ce24c5cc04f6463d89f24e6e19a12604",
-        squad_id: "sqd_d2be0f9d527e4081972ce8877190489d",
-        div_id: "div_66d39a83d7a84a8c85d28d8d1b2c7a92",
-        sort_order: 4,
-        fee: '20',
-        pot_type: "Game" as potCategoriesTypes,
-      },
-      {
-        ...initPot,
-        id: "pot_ce24c5cc04f6463d89f24e6e19a12605",
-        squad_id: "sqd_d2be0f9d527e4081972ce8877190489d",
-        div_id: "div_66d39a83d7a84a8c85d28d8d1b2c7a92",
-        sort_order: 5,
-        fee: '10',
-        pot_type: "Last Game" as potCategoriesTypes,
-      },
-      {
-        ...initPot,
-        id: "pot_ce24c5cc04f6463d89f24e6e19a12606",
-        squad_id: "sqd_d2be0f9d527e4081972ce8877190489d",
-        div_id: "div_66d39a83d7a84a8c85d28d8d1b2c7a92",
-        sort_order: 6,
         fee: '10',
         pot_type: "Series" as potCategoriesTypes,
       },
     ]
 
-    const rePostSquad = async (squad: squadType) => {
-      try {
-        // if squad already in database, then don't re-post
-        const getResponse = await axios.get(oneSquadUrl + squad.id);
-        const found = getResponse.data.squad;
-        if (found) return;
-      } catch (err) {
-        if (err instanceof AxiosError) { 
-          if (err.status !== 404) {
-            console.log(err.message);
-            return;
-          }
-        }
-      }
-      try {
-        // if not in database, then re-post
-        const squadJSON = JSON.stringify(squad);
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          data: squadJSON,
-          url: urlForSquads
-        })
-      } catch (err) {
-        if (err instanceof AxiosError) { 
-          if (err.status !== 404 && err.status !== 409) {
-            console.log(err.message);
-            return;
-          }
-        }
-      }
-    }
-
-    const rePostDiv = async (div: divType) => {
-      try {
-        // if squad already in database, then don't re-post
-        const getResponse = await axios.get(oneDivUrl + div.id);
-        const found = getResponse.data.div;
-        if (found) return;
-      } catch (err) {
-        if (err instanceof AxiosError) { 
-          if (err.status !== 404) {
-            console.log(err.message);
-            return;
-          }
-        }
-      }
-      try {
-        // if not in database, then re-post
-        const divJSON = JSON.stringify(div);
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          data: divJSON,
-          url: urlForDivs
-        })
-      } catch (err) {
-        if (err instanceof AxiosError) { 
-          if (err.status !== 404 && err.status !== 409) {
-            console.log(err.message);
-            return;
-          }
-        }
-      }
-    }
-
-    const delOneSquad = async (id: string) => {
-      try {
-        const getResponse = await axios.get(oneSquadUrl + id);
-        const found = getResponse.data.squad;
-        if (!found) return;
-        const response = await axios({
-          method: 'delete',
-          withCredentials: true,
-          url: oneSquadUrl + id
-        })
-      } catch (err) {
-        if (err instanceof AxiosError) { 
-          if (err.status !== 404) {
-            console.log(err.message);
-            return;
-          }
-        }
-      }
-    }
-
-    const delOneDiv = async (id: string) => {
-      try {
-        const getResponse = await axios.get(oneDivUrl + id);
-        const found = getResponse.data.div;
-        if (!found) return;
-        const response = await axios({
-          method: 'delete',
-          withCredentials: true,
-          url: oneDivUrl + id
-        })
-      } catch (err) {
-        if (err instanceof AxiosError) { 
-          if (err.status !== 404) {
-            console.log(err.message);
-            return;
-          }
-        }
-      }
-    }
-
     let didDel = false
 
-    beforeAll(async () => {      
-      await rePostSquad(tempSquads[0]);
-      await rePostSquad(tempSquads[1]);
-      await rePostDiv(tempDivs[0]);
-      await rePostDiv(tempDivs[1]);      
-      await rePostPot(toDelPots[0]);
-      await rePostPot(toDelPots[1]);
-      await rePostPot(toDelPots[2]);
-      await rePostPot(toDelPots[3]);
-      await rePostPot(toDelPots[4]);
-      await rePostPot(toDelPots[5]);
+    beforeAll(async () => {
+      await postManyPots(mockPotsToPost)
     })
 
     beforeEach(() => {
-      didDel = false
+      didDel = false;
     })
 
     afterEach(async () => {
       if (!didDel) return;
-      await rePostSquad(tempSquads[0]);
-      await rePostSquad(tempSquads[1]);
-      await rePostDiv(tempDivs[0]);
-      await rePostDiv(tempDivs[1]);      
-      await rePostPot(toDelPots[0]);
-      await rePostPot(toDelPots[1]);
-      await rePostPot(toDelPots[2]);
-      await rePostPot(toDelPots[3]);
-      await rePostPot(toDelPots[4]);
-      await rePostPot(toDelPots[5]);
+      await postManyPots(mockPotsToPost)
     })
 
-    afterAll(async () => {      
-      await delOnePot(toDelPots[0].id);
-      await delOnePot(toDelPots[1].id);
-      await delOnePot(toDelPots[2].id);
-      await delOnePot(toDelPots[3].id);
-      await delOnePot(toDelPots[4].id);
-      await delOnePot(toDelPots[5].id);
-      await deleteAllDivsForTmnt(tmntToDelId)
-      await deleteAllSquadsForTmnt(tmntToDelId)
+    afterAll(async () => {
+      await deleteAllPotsForSquad(mockPotsToPost[0].squad_id);
     })
 
     it('should delete all pots for a tmnt', async () => { 
       const response = await axios({
         method: "delete",
         withCredentials: true,
-        url: tmntUrl + tmntId
+        url: tmntUrl + delPostTmntId
       })
       expect(response.status).toBe(200);
       didDel = true
@@ -2438,8 +2253,7 @@ describe('Pots - API: /api/pots', () => {
         withCredentials: true,
         url: tmntUrl + notFoundTmntId
       })
-      expect(response.status).toBe(200);
-      didDel = true
+      expect(response.status).toBe(200);      
       const count = response.data.deleted.count;
       expect(count).toBe(0);
     })  
@@ -2459,7 +2273,6 @@ describe('Pots - API: /api/pots', () => {
         }
       }    
     })
-
   })
 
 })

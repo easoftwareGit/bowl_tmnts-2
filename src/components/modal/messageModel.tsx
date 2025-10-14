@@ -1,4 +1,5 @@
 import Modal from 'react-bootstrap/Modal';
+import styles from "./model.module.css";
 
 interface ChildProps {
   show: boolean,
@@ -18,7 +19,7 @@ const ModalMessage: React.FC<ChildProps> = ({
         <Modal.Header>
           <Modal.Title>{heading}</Modal.Title>
         </Modal.Header>
-        <Modal.Body>{message}</Modal.Body>
+        <Modal.Body className={styles.modalBody}>{message}</Modal.Body>
       </Modal>
     </>
   )

@@ -1,0 +1,24 @@
+.createBackground {    
+  background-color: #cfe2ff;
+  color: #000000;
+}
+
+.acdnError :global(.accordion-button) {
+  background-color: #fa8282;
+  color: #000000;
+}
+
+.objError {
+  background-color: #fa8282;  
+  color: #000000;
+}
+
+.deleteInput {
+  text-align: right;
+  border-style: none;
+}
+
+.lanesAccordionBody {
+  max-height: 250px;  
+  overflow-y: auto;  
+}

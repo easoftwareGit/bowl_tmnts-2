@@ -279,7 +279,7 @@ describe("OneToNEvents - Component", () => {
         mockEvents[1].other_err = "test other error";
         mockEvents[1].expenses_err = "test expenses error";
         mockEvents[1].added_money_err = "test added money error";
-        mockEvents[1].lpox_valid = 'is-invalid';
+        mockEvents[1].lpox_valid = 'invalid';
         mockEvents[1].lpox_err = "test lpox error";
       })
       afterAll(() => {
@@ -928,7 +928,7 @@ describe("OneToNEvents - Component", () => {
         sort_order: 3,
         event_name: "Trios",
         tab_title: "Trios",
-        lpox_valid: "is-invalid",
+        lpox_valid: "invalid",
       });
     });
 

@@ -580,8 +580,7 @@ const OneToNDivs: React.FC<ChildProps> = ({
                 </div>
               </div>
             </div>
-            <div className="row g-3">
-              {/* blank space under button */}
+            {/* <div className="row g-3">
               <div className="col-sm-3"></div>
               <div className="col-sm-3">
                 <input
@@ -628,7 +627,7 @@ const OneToNDivs: React.FC<ChildProps> = ({
                   &nbsp;Series
                 </label>
               </div>
-            </div>
+            </div> */}
           </Tab>
         ))}
       </Tabs>

@@ -37,7 +37,7 @@ const gotBrktEntryData = (brktEntry: brktEntryType): ErrorCode => {
  */
 export const validBrktEntryNumBrackets = (numBrackets: number): boolean => {
   if (typeof numBrackets !== 'number') return false
-  return Number.isInteger(numBrackets) && numBrackets >= 0 && numBrackets <= maxBrackets;
+  return Number.isInteger(numBrackets) && numBrackets > 0 && numBrackets <= maxBrackets;
 }
 
 /**
@@ -132,12 +132,6 @@ export const sanitizeBrktEntry = (brktEntry: brktEntryType): brktEntrySanitizedR
   if (isValidBtDbId(brktEntry.player_id, "ply")) {
     sanitziedBrktEntry.player_id = brktEntry.player_id;
   }
-  // if (brktEntry.num_brackets == null || isNumber(brktEntry.num_brackets)) {
-  //   sanitziedBrktEntry.num_brackets = brktEntry.num_brackets;
-  // }
-  // if (brktEntry.num_refunds == null || isNumber(brktEntry.num_refunds)) {
-  //   sanitziedBrktEntry.num_refunds = brktEntry.num_refunds;
-  // }
   if (typeof brktEntry.num_brackets === 'number' && !isNaN(brktEntry.num_brackets)) {
     sanitziedBrktEntry.num_brackets = brktEntry.num_brackets;
   } else if (typeof brktEntry.num_brackets === 'string'

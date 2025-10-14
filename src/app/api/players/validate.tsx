@@ -6,21 +6,42 @@ import { isNumber } from "lodash";
 
 const gotPlayerData = (player: playerType): ErrorCode => {
   try {
-    if (!player 
-        || !player.id
-        || !player.squad_id
+    if (!player || !player.id) {
+      return ErrorCode.MissingData
+    }
+    if (player.id.startsWith('ply')) { 
+      if (!player.squad_id
         || !sanitize(player.first_name)
         || !sanitize(player.last_name)
         || typeof player.average !== "number"
-        || typeof player.lane !== "number"  
-        || !sanitize(player.position)) 
-    {
-      return ErrorCode.MissingData
+        || typeof player.lane !== "number"
+        || !sanitize(player.position)) {
+        return ErrorCode.MissingData
+      }
+      // return ErrorCode.None
+    } else if (player.id.startsWith('bye')) {
+      if (!player.squad_id
+        || !sanitize(player.first_name)
+        || typeof player.average !== "number")
+      {
+        return ErrorCode.MissingData
+      }
+      // return ErrorCode.None
     }
-    return ErrorCode.None
+    return ErrorCode.None;
   } catch (error) {
     return ErrorCode.OtherError
   }
+}
+
+/**
+ * checks if player id is valid 'ply' = player, 'bye' = bye
+ * 
+ * @param {string} playerId - player id, can start with 'ply' or 'bye'
+ * @returns {boolean} - true if player id is valid 
+ */
+export const validPlayerId = (playerId: string): boolean => {
+  return (isValidBtDbId(playerId, 'ply') || isValidBtDbId(playerId, 'bye'))
 }
 
 export const validPlayerFirstName = (firstName: string): boolean => {  
@@ -69,26 +90,44 @@ export const validPlayerFkId = (FkId: string, idType: idTypes): boolean => {
 const validPlayerData = (player: playerType): ErrorCode => { 
   try {
     if (!player) return ErrorCode.InvalidData
-    if (!isValidBtDbId(player.id, 'ply')) {
+    if (!validPlayerId(player.id)) {
       return ErrorCode.InvalidData
     }
     if (!validPlayerFkId(player.squad_id, 'sqd')) {
       return ErrorCode.InvalidData
     }
-    if (!validPlayerFirstName(player.first_name)) {
-      return ErrorCode.InvalidData
-    }
-    if (!validPlayerLastName(player.last_name)) {
-      return ErrorCode.InvalidData
-    }
-    if (!validAverage(player.average)) {
-      return ErrorCode.InvalidData
-    }
-    if (!validLane(player.lane)) {
-      return ErrorCode.InvalidData
-    }
-    if (!validPosition(player.position)) {
-      return ErrorCode.InvalidData
+    if (player.id.startsWith('ply')) {
+      if (!validPlayerFirstName(player.first_name)) {
+        return ErrorCode.InvalidData
+      }
+      if (!validPlayerLastName(player.last_name)) {
+        return ErrorCode.InvalidData
+      }
+      if (!validAverage(player.average)) {
+        return ErrorCode.InvalidData
+      }
+      if (!validLane(player.lane)) {
+        return ErrorCode.InvalidData
+      }
+      if (!validPosition(player.position)) {
+        return ErrorCode.InvalidData
+      }
+    } else {  // else 'bye'
+      if (player.first_name !== 'Bye') {
+        return ErrorCode.InvalidData
+      }
+      if (player.last_name !== null) {
+        return ErrorCode.InvalidData
+      }
+      if (player.average !== 0) {
+        return ErrorCode.InvalidData
+      }
+      if (player.lane !== null) {
+        return ErrorCode.InvalidData
+      }
+      if (player.position !== null) {
+        return ErrorCode.InvalidData
+      }
     }
     return ErrorCode.None
   } catch (error) {
@@ -106,21 +145,42 @@ export const sanitizePlayer = (player: playerType): playerType => {
   if (!player) return null as any;
   const sanitizedPlayer: playerType = { ...blankPlayer }
   sanitizedPlayer.average = -1;  // sanitize to invalid value, but not dangerous
-  if (isValidBtDbId(player.id, 'ply')) {
+  if (validPlayerId(player.id)) {
     sanitizedPlayer.id = player.id
   }
   if (validPlayerFkId(player.squad_id, 'sqd')) {
     sanitizedPlayer.squad_id = player.squad_id
   }
   sanitizedPlayer.first_name = sanitize(player.first_name)
-  sanitizedPlayer.last_name = sanitize(player.last_name)
   if ((player.average === null) || isNumber(player.average)) {
     sanitizedPlayer.average = player.average;
+  }  
+  if (sanitizedPlayer.id && sanitizedPlayer.id.startsWith('bye')) {    
+    if (player.last_name === null) {
+      sanitizedPlayer.last_name = null as any
+    } else { 
+      sanitizedPlayer.last_name = sanitize(player.last_name)
+    }
+    if (player.lane === null) {
+      sanitizedPlayer.lane = null as any
+    } else {
+      if (isNumber(player.lane)) {
+        sanitizedPlayer.lane = player.lane;
+      }
+    }
+    if (player.position === null) {
+      sanitizedPlayer.position = null as any
+    } else {
+      sanitizedPlayer.position = sanitize(player.position)
+    }   
   }
-  if ((player.lane === null) || isNumber(player.lane)) {
-    sanitizedPlayer.lane = player.lane;
-  }
-  sanitizedPlayer.position = sanitize(player.position)
+  else {
+    sanitizedPlayer.last_name = sanitize(player.last_name)
+    if ((player.lane === null) || isNumber(player.lane)) {
+      sanitizedPlayer.lane = player.lane;
+    }
+    sanitizedPlayer.position = sanitize(player.position)
+  }  
   return sanitizedPlayer
 }
 

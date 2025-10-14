@@ -46,7 +46,7 @@ export async function GET(
       }
     })
 
-    // convert brkt.fee from decimal to number
+    // get # of refunds and convert brkt.fee from decimal to number
     const brktEntriesNoFee: brktEntriesFromPrisa[] = brktEntriesNoFeePrisa.map((brktEntry) => {
       return {
         id: brktEntry.id,
@@ -59,6 +59,7 @@ export async function GET(
           ...brktEntry.brkt,
           fee: Number(brktEntry.brkt.fee),
         },
+        // brkt_refunds: brktEntry.brkt_refunds
       }
     })
     // calc player fee

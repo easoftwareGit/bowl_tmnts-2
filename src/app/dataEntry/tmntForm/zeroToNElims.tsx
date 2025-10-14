@@ -9,6 +9,8 @@ import { acdnErrClassName, getAcdnErrMsg, noAcdnErr, objErrClassName } from './e
 import { maxGames, maxMoney, minFee, minGames } from '@/lib/validation';
 import { initElim } from '../../../lib/db/initVals';
 import { btDbUuid } from '@/lib/uuid';
+import clsx from "clsx";
+import styles from "./tmntForm.module.css";
 
 interface ChildProps {
   elims: elimType[];
@@ -425,7 +427,8 @@ const ZeroToNElims: React.FC<ChildProps> = ({
             eventKey={'createElim'}
             title={createElimTitle}            
           >          
-            <div className="container rounded-3 createBackground">
+            <div className={clsx("container", "rounded-3", styles.createBackground)}>
+            {/* <div className="container rounded-3 createBackground"> */}
               <div className="row g-3 mb-1">
                 <div className="col-sm-3">
                   <label
