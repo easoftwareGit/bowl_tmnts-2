@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { squadType, laneType, tmntActions } from "../../../lib/types/types";
 import { Tabs, Tab } from "react-bootstrap";
 import LanesList from "@/components/tmnts/lanesList";
+import { isArray } from "lodash";
 
 interface ChildProps {
   lanes: laneType[];  
@@ -14,13 +15,15 @@ interface ChildProps {
 // const defaultTabKey = 'squad1'
 
 const OneToNLanes: React.FC<ChildProps> = ({
-  lanes,  
+  lanes,
   setLanes,
   squads,
   tmntAction,
 }) => {
   
-  const defaultTabKey = `lane${squads[0].id}`; // need to have 'lane' in key
+  const defaultTabKey = (!squads || !isArray(squads) || squads.length === 0)
+    ? 'lane'
+    : `lane${squads[0].id}`; // need to have 'lane' in key
 
   const [tabKey, setTabKey] = useState(defaultTabKey); 
   

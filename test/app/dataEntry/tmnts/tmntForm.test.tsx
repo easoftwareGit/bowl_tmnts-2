@@ -282,5 +282,73 @@ describe('TmntDataForm - Component', () => {
       });
     });
 	
+    describe('getLanesTabTitle', () => {
+      beforeEach(() => {
+        jest.restoreAllMocks();
+        jest.clearAllMocks();        
+      });
+
+      it('renders "Lanes -" with a single lane_count', () => {
+        const tmntPropsOne: tmntFormDataType = {
+          tmntFullData: {
+            ...mockTmntFullData,
+            squads: [{ lane_count: 8 } as any],
+          },
+          tmntAction: tmntActions.New,
+        };
+        const store = makeStore([mockBowl]); 
+
+        render(
+          <Provider store={store}>
+            <TmntDataForm tmntProps={tmntPropsOne} />
+          </Provider>
+        );
+
+        expect(screen.getByText("Lanes - 8")).toBeInTheDocument();
+      });
+
+      it('renders comma-separated lane counts for multiple squads', () => {
+        const tmntPropsMulti: tmntFormDataType = {
+          tmntFullData: {
+            ...mockTmntFullData,
+            squads: [
+              { lane_count: 8 } as any,
+              { lane_count: 12 } as any,
+              { lane_count: 16 } as any,
+            ],
+          },
+          tmntAction: tmntActions.New,
+        };
+        const store = makeStore([mockBowl]); 
+
+        render(
+          <Provider store={store}>
+            <TmntDataForm tmntProps={tmntPropsMulti} />
+          </Provider>
+        );
+
+        expect(screen.getByText("Lanes - 8, 12, 16")).toBeInTheDocument();
+      });
+
+      it('renders empty after "Lanes -" when there are no squads', () => {
+        const tmntPropsEmpty: tmntFormDataType = {
+          tmntFullData: {
+            ...mockTmntFullData,
+            squads: [],
+          },
+          tmntAction: tmntActions.New,
+        };
+        const store = makeStore([mockBowl]); 
+
+        render(
+          <Provider store={store}>
+            <TmntDataForm tmntProps={tmntPropsEmpty} />
+          </Provider>
+        );
+
+        expect(screen.getByText("Lanes -")).toBeInTheDocument();
+      });
+    });
+
 	});	
 });
