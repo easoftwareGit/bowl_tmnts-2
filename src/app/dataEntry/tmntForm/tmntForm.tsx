@@ -279,8 +279,8 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
         [ioDataError.Squads]: `Cannot save Squads.`,
         [ioDataError.Lanes]: `Cannot save Lanes.`,
         [ioDataError.Pots]: `Cannot save Pots.`,
-        [ioDataError.Brkts]: `Cannot save Breakouts.`,
-        [ioDataError.Elims]: `Cannot save Eliminations.`,
+        [ioDataError.Brkts]: `Cannot save Brackets.`,
+        [ioDataError.Elims]: `Cannot save Eliminators.`,
       };
       const errMsg = msgMap[errorType as keyof typeof msgMap] || "Unknown error saving Tournament."
       setErrModalObj({
