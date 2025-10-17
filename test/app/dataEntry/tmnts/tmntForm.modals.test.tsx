@@ -460,8 +460,8 @@ describe('TmntDataForm - Save Modals', () => {
           },
           tmntFullData: {
             tmntFullData: mockTmntFullData,
-            loadStatus: "saving" as ioStatusType, // important
-            saveStatus: "idle" as ioStatusType,
+            loadStatus: "idle" as ioStatusType, // important
+            saveStatus: "saving" as ioStatusType,
             error: "",
             ioError: ioDataError.None,
           },
@@ -495,7 +495,7 @@ describe('TmntDataForm - Save Modals', () => {
           tmntFullData: {
             tmntFullData: mockTmntFullData,
             loadStatus: "idle" as ioStatusType,
-            saveStatus: "idle" as ioStatusType,
+            saveStatus: "success" as ioStatusType,
             error: "",
             ioError: ioDataError.None,
           },

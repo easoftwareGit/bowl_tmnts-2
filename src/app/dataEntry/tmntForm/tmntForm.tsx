@@ -19,7 +19,7 @@ import ZeroToNElims, { validateElims } from "./zeroToNElims";
 import { compareAsc } from "date-fns";
 import ModalConfirm from "@/components/modal/confirmModal";
 import { useRouter } from "next/navigation"
-import { getTmntFullDataLoadStatus, getTmntFullDataIoError, saveTmntFullData } from "@/redux/features/tmntFullData/tmntFullDataSlice";
+import { getTmntFullDataIoError, saveTmntFullData, getTmntDataSaveStatus } from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import WaitModal from "@/components/modal/waitModal";
 import styles from "./tmntForm.module.css";
 
@@ -32,7 +32,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
 
-  const tmntSaveStatus = useSelector(getTmntFullDataLoadStatus);
+  const tmntSaveStatus = useSelector(getTmntDataSaveStatus);
   const ioError = useSelector(getTmntFullDataIoError);
 
   const tmntFullData = tmntProps.tmntFullData;
