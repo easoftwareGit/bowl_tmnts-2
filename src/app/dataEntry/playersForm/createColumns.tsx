@@ -22,11 +22,8 @@ export const intHdcpColNameEnd = "_intHdcp";
 export const refundsColNameEnd = "_refunds";
 export const timeStampColNameEnd = "_timeStamp";
 
-const isTouch = isTouchDevice();
-
-export const feeColWidth = isTouch ? 125 : 95;
-export const potColWidth = isTouch ? 160 : 105;
-export const nameWidth = isTouch ? 150 : 120;
+export const feeColWidthTouch = 125;
+export const feeColWidthNoTouch = 95;
 
 export const playerEntryData: { [key: string]: any } = {
   id: "",
@@ -43,9 +40,9 @@ export const playerEntryData: { [key: string]: any } = {
  * gets the integer part of a number
  *
  * @param {number} value value to get integer from
- * @returns {integer | null} - integer or null
+ * @returns {number | null} - integer or null
  */
-export const getOnlyIntegerOrNull = (value: number) => {
+export const getOnlyIntegerOrNull = (value: number): number | null  => {
   if ((!value || isNaN(value) || typeof value === 'string') && value !== 0) return null;  
   return Math.trunc(value);
 };
@@ -56,8 +53,8 @@ export const getOnlyIntegerOrNull = (value: number) => {
  * @param {number} value - value to validate
  * @returns {boolean} - true if value is valid
  */
-export const isValidAverage = (value: number) => {
-  if (value === null || isNaN(value)) return false;
+export const isValidAverage = (value: number): boolean => {
+  if (typeof value != "number" || Number.isNaN(value)) return false;
   return value >= 0 && value <= maxAverage;
 };
 
@@ -67,9 +64,8 @@ export const isValidAverage = (value: number) => {
  * @param {number} value - current average value
  * @returns {string} - css class name
  */
-export const applyAverageCellColor = (value: number) => {
-  if (!value) return "";
-  // if (!isValidAverage(value)) return "cellError";
+export const applyAverageCellColor = (value: number): string => {
+  if (!value) return "";  
   if (!isValidAverage(value)) return styles.cellError;
   return "";
 };
@@ -80,7 +76,8 @@ export const applyAverageCellColor = (value: number) => {
  * @param {string} value - postion value
  * @returns {string} - position
  */
-export const getPosition = (value: string) => {
+export const getPosition = (value: string): string => {
+  if (!value) return "";
   const strValue = convertToString(value);
   if (strValue.length > 0) return strValue[0];
   return "";
@@ -92,7 +89,7 @@ export const getPosition = (value: string) => {
  * @param {number} value - value to format
  * @returns {string} - formatted value or empty string
  */
-export const formatIntZeroAsBlank = (value: number) => {
+export const formatIntZeroAsBlank = (value: number): string => {
   if (!value || value === 0) return "";
   return value.toString();
 };
@@ -139,6 +136,13 @@ export const createPlayerEntryColumns = (
   maxLane: number,
   minLane: number
 ): GridColDef[] => {
+
+  const isTouch = isTouchDevice();
+  const averageColWidth = isTouch ? 130 : 80;
+  const laneColWidth = isTouch ? 120 : 70;
+  const lanePosColWidth = isTouch ? 140 : 80;
+  const nameWidth = isTouch ? 150 : 120;
+  const positionColWidth = isTouch ? 130 : 80;
 
   const firstNameSettter = (value: string, row: GridRowModel) => { 
     if (value == null) { 
@@ -290,7 +294,7 @@ export const createPlayerEntryColumns = (
       headerClassName: styles.playersHeader,
       headerAlign: "center",
       editable: true,
-      width: isTouch ? 130 : 80,
+      width: averageColWidth,
       type: "number",
       align: "center",
       renderEditCell: (params) => (
@@ -313,7 +317,7 @@ export const createPlayerEntryColumns = (
       headerClassName: styles.playersHeader,
       headerAlign: "center",
       editable: true,
-      width: isTouch ? 120 : 70,
+      width: laneColWidth,
       type: "number",
       align: "center",
       renderEditCell: (params) => (
@@ -336,7 +340,7 @@ export const createPlayerEntryColumns = (
       headerClassName: styles.playersHeader,
       headerAlign: "center",
       editable: true,
-      width: isTouch ? 130 : 80,
+      width: positionColWidth,
       align: "center",
       cellClassName: (params) => applyPositionCellColor(params.value as string),
       valueGetter: getPosition,
@@ -348,7 +352,7 @@ export const createPlayerEntryColumns = (
       description: "Lane Position",
       headerClassName: styles.playersHeader,
       headerAlign: "center",
-      width: isTouch ? 140 : 80,
+      width: lanePosColWidth,
       align: "center",
     },
   ];
@@ -375,14 +379,33 @@ export const isDivEntryFeeColumnName = (colName: string): boolean => {
     ? true : false;  
 }
 
-const formatFee = (value: number) => {
-  if (!value) return "";
-  if (isNaN(value)) return currencyFormatter.format(0);
-  const roundedValue = Math.round((value) * 100) / 100
+/**
+ * format entry fee
+ * 
+ * @param {number} value - number to format
+ * @returns {string} - formatted number 
+ */
+const formatFee = (value: number | string): string => {
+  if (value == null || value === "") return ""; 
+  let numValue = 0;
+  if (typeof value === "number") { 
+    numValue = value;
+  } else {
+    numValue = Number(value);
+  }
+  if (isNaN(numValue)) return currencyFormatter.format(0);
+  if (numValue === 0) return "";
+  const roundedValue = Math.round((numValue) * 100) / 100
   return currencyFormatter.format(roundedValue);
 };
 
-const formatFeeBlankAsZero = (value: number) => {
+/**
+ * format entry fee to blank if 0, else format as currency
+ * 
+ * @param {number} value - number to format
+ * @returns {string} - formatted number
+ */
+const formatFeeBlankAsZero = (value: number): string => {
   if (!value || isNaN(value)) return currencyFormatter.format(0);
   const roundedValue = Math.round((value + Number.EPSILON) * 100) / 100;
   return currencyFormatter.format(roundedValue);
@@ -395,6 +418,10 @@ const formatFeeBlankAsZero = (value: number) => {
  * @returns {GridColDef[]} - array of column definitions for division section
  */
 export const createDivEntryColumns = (divs: divType[]): GridColDef[] => {
+
+  const isTouch = isTouchDevice();
+  const feeColWidth = isTouch ? feeColWidthTouch : feeColWidthNoTouch;
+  const hdcpColWidth = isTouch ? 120 : 80;
 
   const isValidDivFee = (value: number) => value >= 0 && value <= maxMoney;
   const applyDivFeeCellColor = (value: number) => {
@@ -450,7 +477,7 @@ export const createDivEntryColumns = (divs: divType[]): GridColDef[] => {
       headerClassName: styles.divsHeader,
       headerAlign: "center",
       type: "number",
-      width: isTouch ? 120 : 80,
+      width: hdcpColWidth,
       align: "center",      
       valueFormatter: formatHdcp,       
       disableExport: div.int_hdcp, // cant export Hdcp column, so stick intHdcp value here
@@ -490,22 +517,39 @@ export const getPotFee = (pots: potType[], potId: string): number => {
 /**
  * checks if fee is valid
  * 
- * @param {number} value - pot or elim entry fee
+ * @param {number | string} value - pot or elim entry fee
  * @param {number} fee - pot or elim fee
  * @returns {boolean} - true if entry fee === 0 || entry fee === fee
  */
-export const isValidFee = (value: number, fee: number) => {
+export const isValidFee = (value: number | string, fee: number): boolean => {
   if (value == null) return true;
-  if (isNaN(value)) return false;
-  if (typeof value !== "number") value = Number(value);
-  return value === 0 || value === fee ? true : false;
+  if (typeof value === "object") return false;
+  const num = typeof value === "number" ? value : Number(value);
+  if (isNaN(num)) return false;  
+  return num === 0 || num === fee ? true : false;
 };
 
-const applyPotOrElimFeeCellColor = (value: number, fee: number) => {
-  if (!value) return "";
-  // if (!isValidFee(value, fee)) return "cellError";
-  if (!isValidFee(value, fee)) return styles.cellError;
-  return "";
+/**
+ * applies pot or elim fee cell color
+ * 
+ * @param {number | string} value - value to format
+ * @param {number} fee - fee to check
+ * @returns {string} - cell class name or "" 
+ */
+const applyPotOrElimFeeCellColor = (value: number | string, fee: number): string => {
+  if (value == null || value === 0 || value === "0") return "";
+  // if a number type
+  if (typeof value === "number") {
+    if (isNaN(value)) return "";
+    const numValue = Number(value)  
+    if (!isValidFee(numValue, fee)) return styles.cellError;
+    return "";
+  };
+  // if a string type
+  const numValue = Number(value);
+  if (isNaN(numValue)) return styles.cellError; // non-numeric string → error
+  if (!isValidFee(numValue, fee)) return styles.cellError;
+  return "";  
 };
 
 /**
@@ -515,6 +559,10 @@ const applyPotOrElimFeeCellColor = (value: number, fee: number) => {
  * @returns {GridColDef[]} - array of column definitions for pot section
  */
 export const createPotEntryColumns = (pots: potType[], divs: divType[]): GridColDef[] => {
+
+  const isTouch = isTouchDevice();
+  const potColWidth = isTouch ? 160 : 105;
+
   const potColumns: GridColDef[] = [];
   pots.forEach((pot) => {
     const divName = getDivName(pot.div_id, divs);
@@ -579,9 +627,15 @@ export const getBrktIdFromColName = (colName: string): string => {
 }
 
 const validBrkts = (value: number) => value >= 0 && value <= maxBrackets;
-const applyNumBrktsCellColor = (value: number) => {
-  if (!value) return "";
-  // if (!validBrkts(value)) return "cellError";
+
+/**
+ * applies number of brackets cell color
+ * 
+ * @param {number} value - value to check
+ * @returns {string} - cell class name or "" 
+ */
+const applyNumBrktsCellColor = (value: number): string => {
+  if (!value) return "";  
   if (!validBrkts(value)) return styles.cellError;
   return "";
 };
@@ -597,6 +651,11 @@ export const createBrktEntryColumns = (
   brkts: brktType[],
   divs: divType[]
 ): GridColDef[] => {
+
+  const isTouch = isTouchDevice();
+  const numBrktsColWidth = isTouch ? 155 : 120;
+  const feeColWidth = isTouch ? feeColWidthTouch : feeColWidthNoTouch;
+
   let feePerBrkt = 0;
 
   const setBrktColsValues = (
@@ -631,7 +690,7 @@ export const createBrktEntryColumns = (
       description: getBrktOrElimName(brkt, divs),
       headerAlign: "center",      
       headerClassName: styles.brktsHeader,
-      width: isTouch ? 155 : 120,
+      width: numBrktsColWidth,
       editable: true,
       align: "center",
       renderEditCell: (params: any) => (
@@ -704,6 +763,10 @@ export const createElimEntryColumns = (
   elims: elimType[],
   divs: divType[]
 ): GridColDef[] => {  
+
+  const isTouch = isTouchDevice();
+  const feeColWidth = isTouch ? 160 : feeColWidthNoTouch;
+  
   const elimColumns: GridColDef[] = [];
   elims.forEach((elim) => {
     const feeColumn: GridColDef = {
@@ -713,7 +776,7 @@ export const createElimEntryColumns = (
       headerClassName: styles.elimsHeader,
       headerAlign: "center",
       type: "number",
-      width: isTouch ? 160 : feeColWidth,
+      width: feeColWidth,
       editable: true,
       align: "right",
       renderEditCell: (params: any) => (
@@ -742,6 +805,9 @@ export const createElimEntryColumns = (
  * @returns {GridColDef[]} - array of column definitions for fee total
  */
 export const feeTotalColumn = (): GridColDef[] => {
+  const isTouch = isTouchDevice();
+  const feeColWidth = isTouch ? 160 : feeColWidthNoTouch;
+
   const totalColumn: GridColDef[] = [
     {
       field: "feeTotal", // don't end with "fee"
@@ -749,10 +815,17 @@ export const feeTotalColumn = (): GridColDef[] => {
       description: "Total Fee",      
       headerClassName: styles.totalHeader,
       headerAlign: "center",
-      width: isTouch ? 160 : feeColWidth,
+      width: feeColWidth,
       align: "right",
       valueFormatter: formatFeeBlankAsZero,
     },
   ];
   return totalColumn;
 };
+
+export const exportedForTesting2 = {
+  formatFee,  
+  formatFeeBlankAsZero,
+  applyPotOrElimFeeCellColor,
+  applyNumBrktsCellColor,
+}

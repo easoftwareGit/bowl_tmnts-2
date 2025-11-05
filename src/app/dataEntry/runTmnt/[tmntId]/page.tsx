@@ -8,7 +8,6 @@ import { tmntActions, tmntFormDataType } from "@/lib/types/types";
 import Link from "next/link";
 import WaitModal from "@/components/modal/waitModal";
 import { fetchTmntFullData, getTmntFullDataError, getTmntFullDataLoadStatus } from "@/redux/features/tmntFullData/tmntFullDataSlice";
-// import { selectOneSquadEntries } from "@/redux/features/allEntriesOneSquad/allEntriesOneSquadSlice";
 
 // http://localhost:3000/dataEntry/runTmnt/tmt_d237a388a8fc4641a2e37233f1d6bebd
 

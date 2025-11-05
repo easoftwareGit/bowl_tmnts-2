@@ -1,6 +1,7 @@
-import { entryFeeColName, entryNumBrktsColName } from "@/app/dataEntry/playersForm/createColumns";
+import { divEntryHdcpColName, entryFeeColName, entryNumBrktsColName, timeStampColName } from "@/app/dataEntry/playersForm/createColumns";
 import { initBrkt, initDiv, initDivEntry, initElim, initElimEntry, initEvent, initLane, initPlayer, initPot, initPotEntry, initBrktEntry, initSquad, initTmnt } from "@/lib/db/initVals";
-import { dataOneSquadEntriesType, dataOneTmntType } from "@/lib/types/types";
+import { brktSeedType, dataOneSquadEntriesType, dataOneTmntType, oneBrktType } from "@/lib/types/types";
+import { brktId1, brktId2, oneBrktId1, oneBrktId2, oneBrktId3, oneBrktId4, playerId1, playerId2, playerId3, playerId4, playerId5, playerId6, playerId7, playerId8 } from "../tmntFulldata/mockTmntFullData";
 
 const timeStamp = new Date().getTime();
 export const mockOrigData: dataOneSquadEntriesType = {
@@ -232,17 +233,30 @@ export const mockDataOneTmnt: dataOneTmntType = {
     lpox: '85',
     sort_order: 1,
   }],
-  divs: [{     
-    ...initDiv,
-    id: "div_0123456789abcdef0123456789abcdef",
-    tmnt_id: "tmt_0123456789abcdef0123456789abcdef",
-    div_name: "Scratch",
-    hdcp_per: 0,
-    hdcp_from: 230,
-    int_hdcp: true,
-    hdcp_for: "Game",
-    sort_order: 1,
-  }],
+  divs: [
+    {     
+      ...initDiv,
+      id: "div_0123456789abcdef0123456789abcdef",
+      tmnt_id: "tmt_0123456789abcdef0123456789abcdef",
+      div_name: "Scratch",
+      hdcp_per: 0,
+      hdcp_from: 230,
+      int_hdcp: true,
+      hdcp_for: "Game",
+      sort_order: 1,
+    },
+    {
+      ...initDiv,
+      id: "div_0133456789abcdef0123456789abcdef",
+      tmnt_id: "tmt_0123456789abcdef0123456789abcdef",
+      div_name: "Handicap",
+      hdcp_per: 0.9,
+      hdcp_from: 230,
+      int_hdcp: true,
+      hdcp_for: "Game",
+      sort_order: 2,
+    }
+  ],
   squads: [{ 
     ...initSquad,
     id: "sqd_0123456789abcdef0123456789abcdef",
@@ -291,6 +305,15 @@ export const mockDataOneTmnt: dataOneTmntType = {
       squad_id: "sqd_0123456789abcdef0123456789abcdef",
       div_id: "div_0123456789abcdef0123456789abcdef",
       sort_order: 1,
+      fee: '20',
+      pot_type: "Game",
+    },
+    { 
+      ...initPot,
+      id: "pot_0133456789abcdef0123456789abcdef",
+      squad_id: "sqd_0123456789abcdef0123456789abcdef",
+      div_id: "div_0133456789abcdef0123456789abcdef",
+      sort_order: 2,
       fee: '20',
       pot_type: "Game",
     },
@@ -351,11 +374,17 @@ export const mockDataOneTmnt: dataOneTmntType = {
   ]
 };
 const div1FeeColName = entryFeeColName(mockDataOneTmnt.divs[0].id);
+const div2FeeColName = entryFeeColName(mockDataOneTmnt.divs[1].id);
+const hdcp1ColName = divEntryHdcpColName(mockDataOneTmnt.divs[0].id);
+const hdcp2ColName = divEntryHdcpColName(mockDataOneTmnt.divs[1].id);
 const pot1FeeColName = entryFeeColName(mockDataOneTmnt.pots[0].id);
-const brkt1NumColName = entryNumBrktsColName(mockDataOneTmnt.brkts[0].id);    
-const brkt1FeeColName = entryFeeColName(mockDataOneTmnt.brkts[0].id);
-const brkt2NumColName = entryNumBrktsColName(mockDataOneTmnt.brkts[1].id);
-const brkt2FeeColName = entryFeeColName(mockDataOneTmnt.brkts[1].id);
+const pot2FeeColName = entryFeeColName(mockDataOneTmnt.pots[1].id);
+export const brkt1NumColName = entryNumBrktsColName(mockDataOneTmnt.brkts[0].id);    
+export const brkt1FeeColName = entryFeeColName(mockDataOneTmnt.brkts[0].id);
+export const brkt1TimeStartColName = timeStampColName(mockDataOneTmnt.brkts[0].id);
+export const brkt2NumColName = entryNumBrktsColName(mockDataOneTmnt.brkts[1].id);
+export const brkt2FeeColName = entryFeeColName(mockDataOneTmnt.brkts[1].id);
+export const brkt2TimeStartColName = timeStampColName(mockDataOneTmnt.brkts[1].id);
 const elim1FeeColName = entryFeeColName(mockDataOneTmnt.elims[0].id);
 const elim2FeeColName = entryFeeColName(mockDataOneTmnt.elims[1].id);
 
@@ -367,11 +396,14 @@ const validRow = {
   lane: 29,
   position: 'Y',
   [div1FeeColName]: 85,
+  [hdcp1ColName]: 0,
   [pot1FeeColName]: 20,  
   [brkt1NumColName]: 4,
   [brkt1FeeColName]: 20,
+  [brkt1TimeStartColName]: new Date("2025-01-01").getTime(),
   [brkt2NumColName]: 40,
   [brkt2FeeColName]: 20,
+  [brkt2TimeStartColName]: new Date("2025-01-02").getTime(),
   [elim1FeeColName]: 5,
   [elim2FeeColName]: 5,
   feeTotal: 155
@@ -393,7 +425,11 @@ const validRow3 = {
   lane: 31,
   position: 'Y',
   [div1FeeColName]: 85,
+  [hdcp1ColName]: 0,
+  [div2FeeColName]: 85,
+  [hdcp2ColName]: 18,
   [pot1FeeColName]: 20,
+  [pot2FeeColName]: 20,
   feeTotal: 105
 }
 const validRow4 = {
@@ -404,7 +440,11 @@ const validRow4 = {
   lane: 32,
   position: 'Z',
   [div1FeeColName]: 85,
-  [pot1FeeColName]: 20,  
+  [hdcp1ColName]: 0,
+  [div2FeeColName]: 85,
+  [hdcp2ColName]: 22,
+  [pot1FeeColName]: 20,
+  [pot2FeeColName]: 20,
   feeTotal: 105
 }
 const validRow5 = {
@@ -415,10 +455,13 @@ const validRow5 = {
   lane: 33,
   position: 'Y',
   [div1FeeColName]: 85,
+  [hdcp1ColName]: 0,
   [brkt1NumColName]: 6,
   [brkt1FeeColName]: 30,
+  [brkt1TimeStartColName]: new Date("2025-01-01").getTime(),
   [brkt2NumColName]: 6,
   [brkt2FeeColName]: 30,
+  [brkt2TimeStartColName]: new Date("2025-01-02").getTime(),
   feeTotal: 145
 }
 const validRow6 = {
@@ -429,6 +472,7 @@ const validRow6 = {
   lane: 34,
   position: 'Z',
   [div1FeeColName]: 85,
+  [hdcp1ColName]: 0,
   [elim1FeeColName]: 5,
   [elim2FeeColName]: 5,
   feeTotal: 95
@@ -454,3 +498,189 @@ export const validRows = [
   ...validRow6
   }
 ]    
+
+export const validOneBrkts: oneBrktType[] = [
+  {
+    id: oneBrktId1,
+    brkt_id: brktId1,
+    bindex: 0
+  },
+  {
+    id: oneBrktId2,
+    brkt_id: brktId1,
+    bindex: 1
+  },
+  {
+    id: oneBrktId3,
+    brkt_id: brktId2,
+    bindex: 0
+  },
+  {
+    id: oneBrktId4,
+    brkt_id: brktId2,
+    bindex: 1
+  },
+];
+
+export const validBrktSeeds: brktSeedType[] = [
+  {
+    one_brkt_id: oneBrktId1,
+    seed: 0,
+    player_id: playerId1,
+  },
+  {
+    one_brkt_id: oneBrktId1,
+    seed: 1,
+    player_id: playerId2,
+  },
+  {
+    one_brkt_id: oneBrktId1,
+    seed: 2,
+    player_id: playerId3,
+  },
+  {
+    one_brkt_id: oneBrktId1,
+    seed: 3,
+    player_id: playerId4
+  },
+  {
+    one_brkt_id: oneBrktId1,
+    seed: 4,
+    player_id: playerId5,
+  },
+  {
+    one_brkt_id: oneBrktId1,
+    seed: 5,
+    player_id: playerId6,
+  },
+  {
+    one_brkt_id: oneBrktId1,
+    seed: 6,
+    player_id: playerId7,
+  },
+  {
+    one_brkt_id: oneBrktId1,
+    seed: 7,
+    player_id: playerId8,
+  },
+  {
+    one_brkt_id: oneBrktId2,
+    seed: 0,
+    player_id: playerId1,
+  },
+  {
+    one_brkt_id: oneBrktId2,
+    seed: 1,
+    player_id: playerId2,
+  },
+  {
+    one_brkt_id: oneBrktId2,
+    seed: 2,
+    player_id: playerId3,
+  },
+  {
+    one_brkt_id: oneBrktId2,
+    seed: 3,
+    player_id: playerId4
+  },
+  {
+    one_brkt_id: oneBrktId2,
+    seed: 4,
+    player_id: playerId5,
+  },
+  {
+    one_brkt_id: oneBrktId2,
+    seed: 5,
+    player_id: playerId6,
+  },
+  {
+    one_brkt_id: oneBrktId2,
+    seed: 6,
+    player_id: playerId7,
+  },
+  {
+    one_brkt_id: oneBrktId2,
+    seed: 7,
+    player_id: playerId8,
+  },
+  {
+    one_brkt_id: oneBrktId3,
+    seed: 0,
+    player_id: playerId1,
+  },
+  {
+    one_brkt_id: oneBrktId3,
+    seed: 1,
+    player_id: playerId2,
+  },
+  {
+    one_brkt_id: oneBrktId3,
+    seed: 2,
+    player_id: playerId3,
+  },
+  {
+    one_brkt_id: oneBrktId3,
+    seed: 3,
+    player_id: playerId4
+  },
+  {
+    one_brkt_id: oneBrktId3,
+    seed: 4,
+    player_id: playerId5,
+  },
+  {
+    one_brkt_id: oneBrktId3,
+    seed: 5,
+    player_id: playerId6,
+  },
+  {
+    one_brkt_id: oneBrktId3,
+    seed: 6,
+    player_id: playerId7,
+  },
+  {
+    one_brkt_id: oneBrktId3,
+    seed: 7,
+    player_id: playerId8,
+  },
+  {
+    one_brkt_id: oneBrktId4,
+    seed: 0,
+    player_id: playerId1,
+  },
+  {
+    one_brkt_id: oneBrktId4,
+    seed: 1,
+    player_id: playerId2,
+  },
+  {
+    one_brkt_id: oneBrktId4,
+    seed: 2,
+    player_id: playerId3,
+  },
+  {
+    one_brkt_id: oneBrktId4,
+    seed: 3,
+    player_id: playerId4
+  },
+  {
+    one_brkt_id: oneBrktId4,
+    seed: 4,
+    player_id: playerId5,
+  },
+  {
+    one_brkt_id: oneBrktId4,
+    seed: 5,
+    player_id: playerId6,
+  },
+  {
+    one_brkt_id: oneBrktId4,
+    seed: 6,
+    player_id: playerId7,
+  },
+  {
+    one_brkt_id: oneBrktId4,
+    seed: 7,
+    player_id: playerId8,
+  },  
+];

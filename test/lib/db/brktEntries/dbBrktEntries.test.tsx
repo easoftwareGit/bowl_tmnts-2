@@ -218,6 +218,64 @@ describe("dbBrktEntries", () => {
 
       expect(result).toEqual([expected]);
     });
+    it("should correctly map raw brktEntries with timestamp as text to extractBrktEntries", () => {
+      const rawBrktEntry = [
+        {
+          id: "ben_2291bb31e72b4dc6b6fe9e76d135493d",
+          brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
+          brkt_refunds: null,
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
+          num_brackets: 8,
+          fee: "40",
+          time_stamp: "2025-10-24T20:38:34.850Z",
+          extraField: "ignore me", // should be ignored
+        },
+      ];
+
+      const result = extractBrktEntries(rawBrktEntry);
+
+      const expected: brktEntryType = {
+        ...initBrktEntry,
+        id: "ben_2291bb31e72b4dc6b6fe9e76d135493d",
+        brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
+        player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
+        num_brackets: 8,
+        fee: "40",
+        num_refunds: undefined as any,
+        time_stamp: 1761338314850,
+      };
+
+      expect(result).toEqual([expected]);
+    });
+    it("should correctly map raw brktEntries with timestamp is not a string date to extractBrktEntries", () => {
+      const rawBrktEntry = [
+        {
+          id: "ben_2291bb31e72b4dc6b6fe9e76d135493d",
+          brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
+          brkt_refunds: null,
+          player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
+          num_brackets: 8,
+          fee: "40",
+          time_stamp: "Somthing else",
+          extraField: "ignore me", // should be ignored
+        },
+      ];
+
+      const result = extractBrktEntries(rawBrktEntry);
+
+      const expected: brktEntryType = {
+        ...initBrktEntry,
+        id: "ben_2291bb31e72b4dc6b6fe9e76d135493d",
+        brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
+        player_id: "ply_be57bef21fc64d199c2f6de4408bd136",
+        num_brackets: 8,
+        fee: "40",
+        num_refunds: undefined as any,
+        time_stamp: undefined as any,
+      };
+
+      expect(result).toEqual([expected]);
+    });
     it("should process multiple brktEntries", () => {
       const rawBrktEntry = [
         {

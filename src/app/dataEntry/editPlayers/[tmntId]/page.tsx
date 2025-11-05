@@ -73,7 +73,7 @@ const buildBrktList = (
  * @param {tmntFullType} tmntFullData - tmnt full data
  * @returns {typeof playerEntryData[]} - array of playerEntryData
  */
-const populateRows = (tmntFullData: tmntFullType) => {
+export const populateRows = (tmntFullData: tmntFullType) => {
   const pRows: (typeof playerEntryData)[] = [];
   // populate all players
   tmntFullData?.players?.forEach((player) => {
@@ -649,7 +649,3 @@ export default function EditPlayersPage() {
     </>
   );
 }
-
-// export const exportedForTesting = {
-//   populateRows,
-// };

@@ -1,17 +1,11 @@
-import {  
-  dataOneSquadEntriesType,
-  divEntryType,
-  editedOneSquadEntriesType,
+import {    
+  divEntryType,  
   elimEntryType,
   playerType,
   potEntryType,
   brktEntryType,
-  tmntEntryBrktEntryType,
-  tmntEntryDivEntryType,
-  tmntEntryElimEntryType,
-  tmntEntryPlayerType,
-  tmntEntryPotEntryType,
   gridTmntEntryDataType,
+  fullBrktsDataType,
 } from "@/lib/types/types";
 import {
   brktsColNameEnd,
@@ -22,8 +16,6 @@ import {
   timeStampColName,  
 } from "./createColumns";
 import {  
-  blankElimEntry,  
-  blankPotEntry,  
   initDivEntry,
   initElimEntry,
   initPlayer,
@@ -31,6 +23,7 @@ import {
   initBrktEntry,  
 } from "@/lib/db/initVals";
 import { btDbUuid } from "@/lib/uuid";
+import { BracketList } from "@/components/brackets/bracketListClass";
 
 /**
  * extarcts data from rows in grid
@@ -59,23 +52,24 @@ export const extractDataFromRows = (
       elimEntries: elimEntries,
     };
 
-  const divFeeColNames = Object.keys(rows[0]).filter(
-    (key) => key.startsWith("div") && key.endsWith(feeColNameEnd)
-  );
-  const potFeeColNames = Object.keys(rows[0]).filter(
-    (key) => key.startsWith("pot") && key.endsWith(feeColNameEnd)
-  );
-  const brktNumColNames = Object.keys(rows[0]).filter(
-    (key) => key.startsWith("brk") && key.endsWith(brktsColNameEnd)
-  );
-  const elimFeeColNames = Object.keys(rows[0]).filter(
-    (key) => key.startsWith("elm") && key.endsWith(feeColNameEnd)
-  );
-
   rows.forEach((row) => {
+
+    const divFeeColNames = Object.keys(row).filter(
+      (key) => key.startsWith("div") && key.endsWith(feeColNameEnd)
+    );
+    const potFeeColNames = Object.keys(row).filter(
+      (key) => key.startsWith("pot") && key.endsWith(feeColNameEnd)
+    );
+    const brktNumColNames = Object.keys(row).filter(
+      (key) => key.startsWith("brk") && key.endsWith(brktsColNameEnd)
+    );
+    const elimFeeColNames = Object.keys(row).filter(
+      (key) => key.startsWith("elm") && key.endsWith(feeColNameEnd)
+    );
+
     players.push({
       ...initPlayer,
-      id: row.player_id,
+      id: row.id,
       squad_id: squadId,
       first_name: row.first_name,
       last_name: row.last_name,
@@ -98,8 +92,8 @@ export const extractDataFromRows = (
           id: btDbUuid('den'),
           div_id: divId,
           squad_id: squadId,
-          player_id: row.player_id,        
-          fee: feeForRow,
+          player_id: row.id,        
+          fee: feeForRow + '',
           hdcp: row[divEntryHdcpColName(divId)],
         });
       }
@@ -111,8 +105,8 @@ export const extractDataFromRows = (
           ...initPotEntry,
           id: btDbUuid('pen'),
           pot_id: potId,
-          player_id: row.player_id,
-          fee: row[feeColName],
+          player_id: row.id,
+          fee: row[feeColName] + '',
         });
       }
     });
@@ -123,9 +117,9 @@ export const extractDataFromRows = (
           ...initBrktEntry,
           id: btDbUuid('ben'),
           brkt_id: brktId,
-          player_id: row.player_id,
+          player_id: row.id,
           num_brackets: row[brktNumColName],
-          fee: row[entryFeeColName(brktId)],
+          fee: row[entryFeeColName(brktId)] + '',
           time_stamp: row[timeStampColName(brktId)],
         });
       }
@@ -137,8 +131,8 @@ export const extractDataFromRows = (
           ...initElimEntry,
           id: btDbUuid('een'),
           elim_id: elimId,
-          player_id: row.player_id,
-          fee: row[feeColName],
+          player_id: row.id,
+          fee: row[feeColName] + '',
         });
       }
     });
@@ -152,272 +146,44 @@ export const extractDataFromRows = (
   };
 };
 
-const setPlayerEditType = (origData: playerType[], extractedData: playerType[]):tmntEntryPlayerType[] => {
-  
-  const tePlayers: tmntEntryPlayerType[] = [];
-  // players
-  // get deleted players
-  origData.forEach((player) => {
-    const found = extractedData.find((p) => p.id === player.id);
-    if (!found) {
-      const deletedPlayer = {
-        ...player,
-        eType: "d",
-      };
-      tePlayers.push(deletedPlayer);
-    }
-  });
-  // get updated or new players
-  extractedData.forEach((player) => {
-    const foundOrig = origData.find((p) => p.id === player.id);
-    if (foundOrig) {
-      // player in original data
-      // if changed data, then mark row as updated
-      if (JSON.stringify(player) !== JSON.stringify(foundOrig)) {
-        const updatedPlayer = {
-          ...player,
-          eType: "u",
+export const extractFullBrktsData = (brktLists: BracketList[]): fullBrktsDataType => { 
+
+  if (!brktLists || !Array.isArray(brktLists) || brktLists.length === 0)
+    return {
+      oneBrkts: [],
+      brktSeeds: [],
+    };
+
+  const fbData: fullBrktsDataType = {
+    oneBrkts: [],
+    brktSeeds: [],
+  }
+
+  try {
+    brktLists.forEach((brktList) => {
+      for (let bindex = 0; bindex < brktList.brackets.length; bindex++) {
+        const brkt = brktList.brackets[bindex];
+        const one_brkt_id = btDbUuid('obk');
+        for (let seed = 0; seed < brkt.players.length; seed++) {
+          const player = brkt.players[seed];
+          fbData.brktSeeds.push({
+            one_brkt_id: one_brkt_id,
+            seed: seed,
+            player_id: player
+          });
         };
-        tePlayers.push(updatedPlayer);
+        fbData.oneBrkts.push({        
+          id: one_brkt_id,
+          brkt_id: brkt.id,
+          bindex: bindex
+        });
       }
-    } else { // a new player
-      const newPlayer = {
-        ...player,
-        eType: "i",
-      };
-      tePlayers.push(newPlayer);
+    });
+    return fbData;
+  } catch (error) {
+    return {
+      oneBrkts: [],
+      brktSeeds: [],
     }
-  });
-  return tePlayers
-}
-
-const setDivEntryEditType = (origData: divEntryType[], extractedData: divEntryType[], squadId: string):tmntEntryDivEntryType[] => {
-  
-  const teDivEntries: tmntEntryDivEntryType[] = [];
-  origData.forEach((divEntry) => {
-    const found = extractedData.find(
-      (de) =>
-        de.player_id === divEntry.player_id &&
-        de.div_id === divEntry.div_id &&
-        de.squad_id === squadId
-    );
-    if (!found) {
-      const deletedDivEntry = {
-        ...divEntry,
-        eType: "d",
-      };
-      teDivEntries.push(deletedDivEntry);
-    }    
-  });
-  // get updated or new divEntries
-  extractedData.forEach((divEntry) => {
-    const foundOrig = origData.find(
-      (de) =>
-        de.player_id === divEntry.player_id &&
-        de.div_id === divEntry.div_id &&
-        de.squad_id === squadId
-    );
-    if (foundOrig) {
-      // player in original data
-      // if changed data, then mark row as updated
-      if (JSON.stringify(divEntry) !== JSON.stringify(foundOrig)) {
-        const updatedDivEntry = {
-          ...divEntry,
-          eType: "u",
-        };
-        teDivEntries.push(updatedDivEntry);
-      }
-    } else { // a new player
-      const newDivEntry = {
-        ...divEntry,
-        eType: "i",
-      };
-      teDivEntries.push(newDivEntry);
-    }
-  });
-  return teDivEntries
-}
-
-const setPotEntryEditType = (origData: potEntryType[], extractedData: potEntryType[]): tmntEntryPotEntryType[] => { 
-
-  const tePotEntries: tmntEntryPotEntryType[] = [];
-  
-  origData.forEach((potEntry) => {
-    const found = extractedData.find(
-      (pe) =>
-        pe.player_id === potEntry.player_id &&
-        pe.pot_id === potEntry.pot_id
-    );
-    if (!found) {
-      const deletedPotEntry = {        
-        ...blankPotEntry,
-        pot_id: potEntry.pot_id,
-        player_id: potEntry.player_id,
-        fee: potEntry.fee,
-        eType: "d",
-      };
-      tePotEntries.push(deletedPotEntry);
-    }
-  })
-  // get updated or new potEntries
-  extractedData.forEach((potEntry) => {
-    const foundOrig = origData.find(
-      (pe) =>
-        pe.player_id === potEntry.player_id &&
-        pe.pot_id === potEntry.pot_id
-    );
-    if (foundOrig) {
-      // player in original data
-      // if changed data, then mark row as updated
-      if (JSON.stringify(potEntry) !== JSON.stringify(foundOrig)) {
-        const updatedPotEntry = {
-          ...blankPotEntry,
-          pot_id: potEntry.pot_id,
-          player_id: potEntry.player_id,
-          fee: potEntry.fee,  
-          eType: "u",
-        };
-        tePotEntries.push(updatedPotEntry);
-      }
-    } else { // a new player
-      const newPotEntry = {
-        ...blankPotEntry,
-        pot_id: potEntry.pot_id,
-        player_id: potEntry.player_id,
-        fee: potEntry.fee,
-        eType: "i",
-      };
-      tePotEntries.push(newPotEntry);
-    }
-  })
-  return tePotEntries;
-}
-
-const setBrktEntryEditType = (origData: brktEntryType[], extractedData: brktEntryType[]): tmntEntryBrktEntryType[] => {
-
-  const teBrktEntries: tmntEntryBrktEntryType[] = [];
-  origData.forEach((brktEntry) => {
-    const found = extractedData.find(
-      (be) =>
-        be.player_id === brktEntry.player_id &&
-        be.brkt_id === brktEntry.brkt_id
-    );
-    if (!found) {
-      const deletedBrktEntry = {
-        ...brktEntry,
-        eType: "d",
-      };
-      teBrktEntries.push(deletedBrktEntry);
-    }
-  })
-  // get updated or new bracketEntries
-  extractedData.forEach((brktEntry) => {
-    const foundOrig = origData.find(
-      (be) =>
-        be.player_id === brktEntry.player_id &&
-        be.brkt_id === brktEntry.brkt_id
-    );
-    if (foundOrig) {
-      // player in original data
-      // if changed data, then mark row as updated
-      if (JSON.stringify(brktEntry) !== JSON.stringify(foundOrig)) {
-        const updatedBrktEntry = {
-          ...brktEntry,
-          eType: "u",
-        };
-        teBrktEntries.push(updatedBrktEntry);
-      }
-    } else { // a new player
-      const newBrktEntry = {
-        ...brktEntry,
-        eType: "i",
-      };
-      teBrktEntries.push(newBrktEntry);
-    }
-  })
-  return teBrktEntries
-}
-
-const setElimEntryEditType = (origData: elimEntryType[], extractedData: elimEntryType[]): tmntEntryElimEntryType[] => {
-
-  const teElimEntries: tmntEntryElimEntryType[] = [];
-
-  origData.forEach((elimEntry) => {
-    const found = extractedData.find(
-      (ee) =>
-        ee.player_id === elimEntry.player_id &&
-        ee.elim_id === elimEntry.elim_id
-    );
-    if (!found) {
-      const deletedElimEntry = {
-        ...blankElimEntry,
-        elim_id: elimEntry.elim_id,
-        player_id: elimEntry.player_id,
-        fee: elimEntry.fee,
-        eType: "d",
-      };
-      teElimEntries.push(deletedElimEntry);
-    }
-  })
-  // get updated or new elimEntries
-  extractedData.forEach((elimEntry) => {
-    const foundOrig = origData.find(
-      (ee) =>
-        ee.player_id === elimEntry.player_id &&
-        ee.elim_id === elimEntry.elim_id
-    );
-    if (foundOrig) {
-      // player in original data
-      // if changed data, then mark row as updated
-      if (JSON.stringify(elimEntry) !== JSON.stringify(foundOrig)) {
-        const updatedElimEntry = {
-          ...blankElimEntry,
-          elim_id: elimEntry.elim_id,
-          player_id: elimEntry.player_id,
-          fee: elimEntry.fee,  
-          eType: "u",
-        };
-        teElimEntries.push(updatedElimEntry);
-      }
-    } else { // a new player
-      const newElimEntry = {
-        ...blankElimEntry,
-        elim_id: elimEntry.elim_id,
-        player_id: elimEntry.player_id,
-        fee: elimEntry.fee,
-        eType: "i",
-      };
-      teElimEntries.push(newElimEntry);
-    }
-  })
-  return teElimEntries
-}
-
-export const setEditTypes = (
-  origData: dataOneSquadEntriesType,
-  extractedData: dataOneSquadEntriesType  
-): editedOneSquadEntriesType => {
-  const editedData: editedOneSquadEntriesType = {
-    squadId: extractedData.squadId,
-    players: [],
-    divEntries: [],
-    potEntries: [],
-    brktEntries: [],
-    elimEntries: [],
-  };
-
-  editedData.players = setPlayerEditType(origData.players, extractedData.players);  
-  editedData.divEntries = setDivEntryEditType(origData.divEntries, extractedData.divEntries, extractedData.squadId);
-  editedData.potEntries = setPotEntryEditType(origData.potEntries, extractedData.potEntries);  
-  editedData.brktEntries = setBrktEntryEditType(origData.brktEntries, extractedData.brktEntries);
-  editedData.elimEntries = setElimEntryEditType(origData.elimEntries, extractedData.elimEntries);
-  return editedData;
-};
-
-export const exportedForTesting = {
-  setPlayerEditType,
-  setDivEntryEditType, 
-  setPotEntryEditType,
-  setBrktEntryEditType,
-  setElimEntryEditType
+  }
 }

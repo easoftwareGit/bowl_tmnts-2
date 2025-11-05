@@ -3,7 +3,7 @@ import { bowlType, tmntFullType } from "@/lib/types/types";
 
 export const brktId1 = 'brk_0123f51cc1ca4748ad5e8abab88277ea';
 export const brktId2 = 'brk_0123f51cc1ca4748ad5e8abab88277eb';
-export const bowlId = 'bwl_561540bd64974da9abdd97765fdb3659';
+export const bowlId = 'bwl_0123388a8fc4641a2e37233f1d6bebd1';
 export const divId1 = 'div_0123cae28786485bb7a036935f0f6a0a';
 export const divId2 = 'div_0123cae28786485bb7a036935f0f6a0b';
 export const elimId1 = 'elm_01234ec07f824b0e93169ae78e8b4b1a';
@@ -11,10 +11,16 @@ export const elimId2 = 'elm_01234ec07f824b0e93169ae78e8b4b1b';
 export const eventId = 'evt_012310c8493f4a218d2e2b045442974a';
 export const oneBrktId1 = 'obk_01238f787de942a1a92aaa2df3e7c18a';
 export const oneBrktId2 = 'obk_01238f787de942a1a92aaa2df3e7c18b';
+export const oneBrktId3 = 'obk_01238f787de942a1a92aaa2df3e7c18c';
+export const oneBrktId4 = 'obk_01238f787de942a1a92aaa2df3e7c18d';
 export const playerId1 = 'ply_0123e9e6b6e4c5b9f6b7d9e7f9b6c5aa';
 export const playerId2 = 'ply_0123e9e6b6e4c5b9f6b7d9e7f9b6c5bb';
 export const playerId3 = 'ply_0123e9e6b6e4c5b9f6b7d9e7f9b6c5cc';
 export const playerId4 = 'ply_0123e9e6b6e4c5b9f6b7d9e7f9b6c5dd';
+export const playerId5 = 'ply_0123e9e6b6e4c5b9f6b7d9e7f9b6c5ee';
+export const playerId6 = 'ply_0123e9e6b6e4c5b9f6b7d9e7f9b6c5ff';
+export const playerId7 = 'ply_0123e9e6b6e4c5b9f6b7d9e7f9b6c5ab';
+export const playerId8 = 'ply_0123e9e6b6e4c5b9f6b7d9e7f9b6c5ac';
 export const potId1 = 'pot_01238f787de942a1a92aaa2df3e7c18a';
 export const potId2 = 'pot_01238f787de942a1a92aaa2df3e7c18b';
 export const squadId = 'sqd_012366e1174642c7a1bcec47a50f275f';
@@ -26,7 +32,7 @@ export const mockBowl: bowlType = {
     bowl_name: "Mock Bowl",
     city: "Somewhere",
     state: "CA",
-    url: "https://www.google.com/",
+    url: "https://www.google.com",
 }
 
 export const mockTmntFullData: tmntFullType = {
@@ -93,6 +99,42 @@ export const mockTmntFullData: tmntFullType = {
       one_brkt_id: oneBrktId1,
       seed: 1,
       player_id: playerId2,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId1,
+      seed: 2,
+      player_id: playerId3,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId1,
+      seed: 3,
+      player_id: playerId4,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId2,
+      seed: 0,
+      player_id: playerId4,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId2,
+      seed: 1,
+      player_id: playerId3,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId2,
+      seed: 2,
+      player_id: playerId2,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId2,
+      seed: 3,
+      player_id: playerId1,
     },
   ],
   brkts: [

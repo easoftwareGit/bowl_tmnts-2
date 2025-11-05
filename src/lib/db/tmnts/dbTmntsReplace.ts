@@ -3,7 +3,7 @@ import { baseTmntsApi } from "@/lib/db/apiPaths";
 import { testBaseTmntsApi } from "../../../../test/testApi";
 import { tmntFullType } from "@/lib/types/types";
 import { ErrorCode } from "@/lib/validation";
-import { validateFullTmnt } from "@/app/api/tmnts/full/validate";
+import { validateFullTmnt, validateFullTmntEntries } from "@/app/api/tmnts/full/validate";
 
 const url = testBaseTmntsApi.startsWith("undefined")
   ? baseTmntsApi
@@ -59,7 +59,7 @@ export const replaceTmntEntriesData = async (
   if (tmntFullData == null || typeof tmntFullData !== "object") {      
     throw new Error("invalid tmntFullData data");
   }
-  const validateResult = validateFullTmnt(tmntFullData);
+  const validateResult = validateFullTmntEntries(tmntFullData);
   if (validateResult.errorCode !== ErrorCode.None) {
     throw new Error(validateResult.message);
   }

@@ -1,7 +1,7 @@
 import axios from "axios";
 import { baseSquadsApi } from "@/lib/db/apiPaths";
 import { testBaseSquadsApi } from "../../../../test/testApi";
-import { brktEntryType, brktType, dataOneSquadEntriesType, dataOneTmntType, divEntryType, divType, elimEntryType, elimType, oneBrktsAndSeedsType, oneBrktType, playerType, potEntryType, potType, squadType } from "@/lib/types/types";
+import { brktEntryType, brktType, dataOneTmntType, divEntryType, divType, elimEntryType, elimType, oneBrktsAndSeedsType, oneBrktType, playerType, potEntryType, potType, squadType } from "@/lib/types/types";
 import { ErrorCode, isValidBtDbId } from "@/lib/validation";
 import { removeTimeFromISODateStr } from "@/lib/dateTools";
 import { blankBrktEntry, blankDivEntry, blankElimEntry, blankPlayer, blankPotEntry, blankSquad, defaultBrktGames, defaultPlayersPerMatch, initOneBrkt } from "../initVals";
@@ -65,6 +65,12 @@ export const getAllSquadsForTmnt = async (tmntId: string): Promise<squadType[]> 
   return extractSquads(response.data.squads);
 }
 
+/**
+ * gets bracket lists for a squad
+ * 
+ * @param {oneBrktsAndSeedsType[]} oneBrktsAndSeeds - array of oneBrkts and seeds 
+ * @returns {BracketList[]} - bracket lists for squad 
+ */
 const getBracketListForSquad = (oneBrktsAndSeeds: oneBrktsAndSeedsType[]): BracketList[] => {
 
   if (!oneBrktsAndSeeds || !Array.isArray(oneBrktsAndSeeds) || oneBrktsAndSeeds.length === 0) return [];
@@ -100,57 +106,6 @@ const getBracketListForSquad = (oneBrktsAndSeeds: oneBrktsAndSeedsType[]): Brack
   }
   return brktLists;
 }
-
-/**
- * get all entries for a squad
- *  
- * @param {string} squadId - id of squad
- * @returns {dataOneSquadEntriesType | null} - all entries for squad
- */
-// export const getAllEntriesForSquad = async (squadId: string): Promise<dataOneSquadEntriesType | null> => { 
-//   if (!isValidBtDbId(squadId, 'sqd')) return null
-//   try {
-//     const allTmntEntries: dataOneSquadEntriesType = {
-//       squadId: squadId,
-//       players: [],
-//       divEntries: [],
-//       potEntries: [],
-//       brktEntries: [],
-//       brktLists: [],
-//       elimEntries: [],
-//     }
-
-//     const aePlayers = await getAllPlayersForSquad(squadId);
-//     if (!aePlayers) return null
-//     allTmntEntries.players = [...aePlayers];
-
-//     const aeDivs = await getAllDivEntriesForSquad(squadId);
-//     if (!aeDivs) return null
-//     allTmntEntries.divEntries = [...aeDivs];
-
-//     const aePots = await getAllPotEntriesForSquad(squadId);
-//     if (!aePots) return null
-//     allTmntEntries.potEntries = [...aePots];
-
-//     const aeBrkts = await getAllBrktEntriesForSquad(squadId);
-//     if (!aeBrkts) return null
-//     allTmntEntries.brktEntries = [...aeBrkts];
-
-//     const aeElims = await getAllElimEntriesForSquad(squadId);
-//     if (!aeElims) return null
-//     allTmntEntries.elimEntries = [...aeElims];
-
-//     if (aeBrkts.length > 0) {
-//       const aeOneBrktsAndSeeds = await getAllOneBrktsAndSeedsForSquad(squadId);
-//       if (!aeOneBrktsAndSeeds) return null
-//       populateBracketList(aeOneBrktsAndSeeds);
-//     }
-
-//     return allTmntEntries
-//   } catch (err) {
-//     return null;
-//   }
-// }
 
 /**
  * gets all players for a squad from squad entries
@@ -351,68 +306,6 @@ export const getAllOneBrktsAndSeedsForSquad = async (squadId: string): Promise<o
 }
 
 /**
- * get all entries for a squad
- *  
- * @param {dataOneTmntType} curData - current tournament data
- * @returns {dataOneSquadEntriesType} - all entries for squad
- * @throws {Error} - if curData is invalid or API call fails
- */
-export const getAllEntriesForSquad2 = async (curData: dataOneTmntType): Promise<dataOneSquadEntriesType> => {
-
-  if (!curData) { 
-    throw new Error("Invalid curData data");
-  };
-  if (!curData.squads
-    || curData.squads.length === 0
-    || !isValidBtDbId(curData.squads[0].id, 'sqd')
-  ) { 
-    throw new Error("Invalid squad data");
-  }
-  if (!curData.divs || curData.divs.length === 0) { 
-    throw new Error("Invalid div data");
-  }
-  if (!curData.pots) { 
-    throw new Error("Invalid pot data");
-  }
-  if (!curData.brkts) { 
-    throw new Error("Invalid brkt data");
-  }
-  if (!curData.elims) { 
-    throw new Error("Invalid elim data");
-  }
-  let response;
-  const squadId = curData.squads[0].id; // already checked for validity above
-  try {
-    response = await axios.get(entriesUrl + squadId, {
-      withCredentials: true,
-      params: { curData: JSON.stringify(curData) }
-    });    
-  } catch (err) {
-    throw new Error(`getAllEntriesForSquad2 failed: ${err instanceof Error ? err.message : err}`);
-  }
-  if (response.status !== 200) { 
-    throw new Error(`Unexpected status ${response.status} when fetching entries`);
-  }
-  const squadEntries = response.data.squadEntries;
-
-  const oneBrktsAndSeeds = await getAllOneBrktsAndSeedsForSquad(squadId);
-  if (!oneBrktsAndSeeds) { 
-    throw new Error("Invalid oneBrktsAndSeeds data");
-  };
-
-  const allTmntEntries: dataOneSquadEntriesType = {      
-    squadId: curData.squads[0].id,
-    players: getAllPlayersForSquad2(squadEntries, curData.squads[0].id),
-    divEntries: getAllDivEntriesForSquad2(squadEntries, curData),
-    potEntries: getAllPotEntriesForSquad2(squadEntries, curData),     
-    brktEntries: getAllBrktEntriesForSquad2(squadEntries, curData),
-    brktLists: getBracketListForSquad(oneBrktsAndSeeds),
-    elimEntries: getAllElimEntriesForSquad2(squadEntries, curData)
-  }
-  return allTmntEntries
-}
-
-/**
  * post a new squad
  * 
  * @param {squadType} squad - squad to post
@@ -605,14 +498,4 @@ export const deleteAllSquadsForTmnt = async (tmntId: string): Promise<number> =>
     throw new Error("Error deleting squads for tmnt");
   }
   return response.data.deleted.count
-}
-
-export const exportedForTesting = {
-  getAllPlayersForSquad2,
-  getAllDivEntriesForSquad2,
-  getAllPotEntriesForSquad2, 
-  getAllBrktEntriesForSquad2,
-  getAllElimEntriesForSquad2,
-  getBracketListForSquad,  
-  testingGetAllEntriesForSquad2,
 }

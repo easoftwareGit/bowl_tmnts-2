@@ -5,7 +5,7 @@ import reducer, {
   tmntFullDataState
 } from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import { getTmntFullData } from "@/lib/db/tmnts/dbTmnts";
-import { replaceTmntFullData, replaceTmntEntriesData } from "@/lib/db/tmnts/dbTmntsReplaceFull";
+import { replaceTmntFullData, replaceTmntEntriesData } from "@/lib/db/tmnts/dbTmntsReplace";
 import { tmntFullType } from "@/lib/types/types";
 import { blankTmnt } from "@/lib/db/initVals";
 import { configureStore } from "@reduxjs/toolkit";

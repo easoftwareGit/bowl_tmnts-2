@@ -25,35 +25,61 @@ const tmntUrl = url + "/tmnt/";
  */
 export const extractBrktEntries = (brktEntries: any): brktEntryType[] => {
   if (!brktEntries || !Array.isArray(brktEntries) || brktEntries.length === 0) return [];
-  const brktsWithRefundObjs = brktEntries.filter((brktEntry: any) => brktEntry.brkt_refunds != null);
 
-  // if already calcualted num_refunds
-  if (brktsWithRefundObjs.length === 0) {
-    return brktEntries.map((brktEntry: any) => ({
-      ...blankBrktEntry,
-      id: brktEntry.id,
-      brkt_id: brktEntry.brkt_id,
-      player_id: brktEntry.player_id,
-      num_brackets: brktEntry.num_brackets,
-      num_refunds: brktEntry.num_refunds,
-      fee: brktEntry.fee,
-      time_stamp: brktEntry.time_stamp,
-    }));
-  } else { // else extract num refunds
-    return brktEntries.map((brktEntry: any) => ({
-      ...blankBrktEntry,
-      id: brktEntry.id,
-      brkt_id: brktEntry.brkt_id,
-      player_id: brktEntry.player_id,
-      num_brackets: brktEntry.num_brackets,
-      num_refunds:
-        brktEntry.brkt_refunds == null
-          ? undefined
-          : brktEntry.brkt_refunds.num_refunds,
-      fee: brktEntry.fee,
-      time_stamp: brktEntry.time_stamp,
-    }));
-  }
+  // Helper function to safely convert string → timestamp
+  const parseTimestamp = (value: any): number | undefined => {
+    if (typeof value === "number") return value; // already a timestamp
+    if (typeof value === "string") {
+      const date = new Date(value);
+      return isNaN(date.getTime()) ? undefined : date.getTime(); // Valid? Convert. Invalid? Keep original.
+    }
+    return undefined; // null or other → undefined
+  };
+
+  const hasRefundObjs = brktEntries.some((entry: any) => entry.brkt_refunds != null);
+
+  return brktEntries.map((brktEntry: any) => ({
+    ...blankBrktEntry,
+    id: brktEntry.id,
+    brkt_id: brktEntry.brkt_id,
+    player_id: brktEntry.player_id,
+    num_brackets: brktEntry.num_brackets,
+    num_refunds: hasRefundObjs
+      ? brktEntry.brkt_refunds?.num_refunds
+      : brktEntry.num_refunds,
+    fee: brktEntry.fee,
+    time_stamp: parseTimestamp(brktEntry.time_stamp) as number,
+  }));
+
+  // const brktsWithRefundObjs = brktEntries.filter((brktEntry: any) => brktEntry.brkt_refunds != null);
+
+  // // if already calcualted num_refunds
+  // if (brktsWithRefundObjs.length === 0) {
+  //   return brktEntries.map((brktEntry: any) => ({
+  //     ...blankBrktEntry,
+  //     id: brktEntry.id,
+  //     brkt_id: brktEntry.brkt_id,
+  //     player_id: brktEntry.player_id,
+  //     num_brackets: brktEntry.num_brackets,
+  //     num_refunds: brktEntry.num_refunds,
+  //     fee: brktEntry.fee,
+  //     time_stamp: brktEntry.time_stamp,
+  //   }));
+  // } else { // else extract num refunds
+  //   return brktEntries.map((brktEntry: any) => ({
+  //     ...blankBrktEntry,
+  //     id: brktEntry.id,
+  //     brkt_id: brktEntry.brkt_id,
+  //     player_id: brktEntry.player_id,
+  //     num_brackets: brktEntry.num_brackets,
+  //     num_refunds:
+  //       brktEntry.brkt_refunds == null
+  //         ? undefined
+  //         : brktEntry.brkt_refunds.num_refunds,
+  //     fee: brktEntry.fee,
+  //     time_stamp: brktEntry.time_stamp,
+  //   }));
+  // }
 };
 
 /**

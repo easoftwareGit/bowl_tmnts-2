@@ -3,14 +3,22 @@ import { baseSquadsApi } from "@/lib/db/apiPaths";
 import { testBaseSquadsApi } from "../../../testApi";
 import { squadType } from "@/lib/types/types";
 import { blankSquad } from "@/lib/db/initVals";
-import { deleteAllSquadsForEvent, deleteAllSquadsForTmnt, deleteSquad, getAllEntriesForSquad2, getAllOneBrktsAndSeedsForSquad, getAllSquadsForTmnt, postManySquads, postSquad, putSquad } from "@/lib/db/squads/dbSquads";
-import { mockCurData } from "../../../mocks/tmnts/playerEntries/mockOneSquadEntries";
+import {
+  deleteAllSquadsForEvent,
+  deleteAllSquadsForTmnt,
+  deleteSquad,  
+  getAllOneBrktsAndSeedsForSquad,
+  getAllSquadsForTmnt,
+  postManySquads,
+  postSquad,
+  putSquad,
+} from "@/lib/db/squads/dbSquads";
 
 const url = testBaseSquadsApi.startsWith("undefined")
   ? baseSquadsApi
   : testBaseSquadsApi;
-const entriesUrl = url + '/entries/';  
-const eventUrl = url + "/event/";  
+const entriesUrl = url + "/entries/";
+const eventUrl = url + "/event/";
 const manyUrl = url + "/many";
 const squadUrl = url + "/squad/";
 const tmntUrl = url + "/tmnt/";
@@ -26,11 +34,11 @@ const tmntId = "tmt_fe8ac53dad0f400abe6354210a8f4cd1";
 const manySquads: squadType[] = [
   {
     ...blankSquad,
-    id: 'sqd_20c24199328447f8bbe95c05e1b84645',
-    squad_name: 'Test 1',
+    id: "sqd_20c24199328447f8bbe95c05e1b84645",
+    squad_name: "Test 1",
     event_id: "evt_bd63777a6aee43be8372e4d008c1d6d0",
-    squad_date_str: '2022-08-01',
-    squad_time: '10:00 AM',
+    squad_date_str: "2022-08-01",
+    squad_time: "10:00 AM",
     games: 6,
     lane_count: 10,
     starting_lane: 11,
@@ -38,11 +46,11 @@ const manySquads: squadType[] = [
   },
   {
     ...blankSquad,
-    id: 'sqd_20c24199328447f8bbe95c05e1b84646',
-    squad_name: 'Test 2',
+    id: "sqd_20c24199328447f8bbe95c05e1b84646",
+    squad_name: "Test 2",
     event_id: "evt_bd63777a6aee43be8372e4d008c1d6d0",
-    squad_date_str: '2022-08-01',
-    squad_time: '03:00 PM',
+    squad_date_str: "2022-08-01",
+    squad_time: "03:00 PM",
     games: 6,
     lane_count: 12,
     starting_lane: 1,
@@ -54,8 +62,7 @@ const validSquad: squadType = {
   ...manySquads[0],
 };
 
-describe("non standard throw cases", () => { 
-
+describe("non standard throw cases", () => {
   describe("getAllSquadsForTmnt - non standard throw cases", () => {
     afterEach(() => {
       jest.restoreAllMocks();
@@ -97,8 +104,8 @@ describe("non standard throw cases", () => {
       expect(mockedAxios.get).toHaveBeenCalledTimes(1);
     });
   });
-  
-  describe('getAllOneBrktsAndSeedsForSquad - non standard throw cases', () => { 
+
+  describe("getAllOneBrktsAndSeedsForSquad - non standard throw cases", () => {
     afterEach(() => {
       jest.restoreAllMocks();
       jest.clearAllMocks();
@@ -137,57 +144,10 @@ describe("non standard throw cases", () => {
       );
 
       expect(mockedAxios.get).toHaveBeenCalledTimes(1);
-    });    
-  })
-
-  describe("getAllEntriesForSquad2 - non standard throw cases", () => { 
-    afterEach(() => {
-      jest.restoreAllMocks();
-      jest.clearAllMocks();
     });
+  });
 
-    it("should throw an error when response.status !== 200", async () => {
-      mockedAxios.get.mockResolvedValue({
-        status: 500,
-        data: {},
-      });
-
-      await expect(getAllEntriesForSquad2(mockCurData)).rejects.toThrow(
-        "Unexpected status 500 when fetching entries"
-      );
-
-      expect(mockedAxios.get).toHaveBeenCalledTimes(1);      
-      expect(mockedAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining(entriesUrl + mockCurData.squads[0].id),
-        expect.objectContaining({
-          withCredentials: true,
-          params: {
-            curData: JSON.stringify(mockCurData),
-          }
-        })        
-      );
-    });
-    it("should throw with custom message if axios.get rejects", async () => {
-      mockedAxios.get.mockRejectedValueOnce(new Error("Network Error"));
-
-      await expect(getAllEntriesForSquad2(mockCurData)).rejects.toThrow(
-        "getAllEntriesForSquad2 failed: Network Error"
-      );
-
-      expect(mockedAxios.get).toHaveBeenCalledTimes(1);
-    });
-    it("should throw an error when axios.get rejects with non-error", async () => {
-      mockedAxios.get.mockRejectedValueOnce("testing 123");
-
-      await expect(getAllEntriesForSquad2(mockCurData)).rejects.toThrow(
-        "getAllEntriesForSquad2 failed: testing 123"
-      );
-
-      expect(mockedAxios.get).toHaveBeenCalledTimes(1);
-    });
-  })
-
-  describe("postSquad - non standard throw cases", () => { 
+  describe("postSquad - non standard throw cases", () => {
     afterEach(() => {
       jest.restoreAllMocks();
       jest.clearAllMocks();
@@ -228,10 +188,9 @@ describe("non standard throw cases", () => {
 
       expect(mockedAxios.post).toHaveBeenCalledTimes(1);
     });
-  })
+  });
 
   describe("postManySquads - non standard throw cases", () => {
-
     afterEach(() => {
       jest.restoreAllMocks();
       jest.clearAllMocks();
@@ -275,7 +234,6 @@ describe("non standard throw cases", () => {
   });
 
   describe("putSquad - non standard throw cases", () => {
-
     afterEach(() => {
       jest.restoreAllMocks();
       jest.clearAllMocks();
@@ -287,9 +245,7 @@ describe("non standard throw cases", () => {
         data: {},
       });
 
-      await expect(putSquad(validSquad)).rejects.toThrow(
-        "Error putting squad"
-      );
+      await expect(putSquad(validSquad)).rejects.toThrow("Error putting squad");
 
       expect(mockedAxios.put).toHaveBeenCalledTimes(1);
       expect(mockedAxios.put).toHaveBeenCalledWith(
@@ -317,7 +273,7 @@ describe("non standard throw cases", () => {
       expect(mockedAxios.put).toHaveBeenCalledTimes(1);
     });
   });
-  
+
   describe("deleteSquad - non standard throw cases", () => {
     afterEach(() => {
       jest.restoreAllMocks();
@@ -440,5 +396,4 @@ describe("non standard throw cases", () => {
       expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
     });
   });
-
-})
+});

@@ -1,13 +1,8 @@
 "use client";
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
-import {
-  dataOneTmntType,
-  tmntActions,
-  tmntFullType,
-  tmntFormDataType,
-} from "@/lib/types/types";
+import { tmntActions, tmntFullType, tmntFormDataType, oneBrktType, brktSeedType } from "@/lib/types/types";
 import {
   DataGrid,
   GridAlignment,
@@ -52,17 +47,13 @@ import {
   saveTmntEntriesData,
 } from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import WaitModal from "@/components/modal/waitModal";
-import {
-  getTotalUpdated,
-  updateAllEntries,
-} from "@/lib/db/tmntEntries/dbTmntEntries";
 import { PayloadAction } from "@reduxjs/toolkit";
 import { useIsTouchDevice } from "@/hooks/useIsTouchDevice";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
 import { ButtonWithTooltip } from "@/components/mobile/mobileToolTipButton";
 import { BracketList } from "@/components/brackets/bracketListClass";
 import { defaultBrktGames, defaultPlayersPerMatch } from "@/lib/db/initVals";
-import { extractDataFromRows } from "./extractData";
+import { extractDataFromRows, extractFullBrktsData } from "./extractData";
 import { cloneDeep } from "lodash";
 import styles from "./grid.module.css";
 
@@ -113,9 +104,9 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
 
   const entriesSaveStatus = useSelector(getTmntDataSaveStatus);
   const [saveCompleted, setSaveCompleted] = useState(false);
-  const [resultAction, setResultAction] =
-    useState<PayloadAction<tmntFullType> | null>(null);
-
+  // const [resultAction, setResultAction] =
+  //   useState<PayloadAction<tmntFullType> | null>(null);
+  const [resultAction, setResultAction] = useState<tmntFullType | null>(null);
   const [gridEditMode, setGridEditMode] = useState<"cell" | "row">("cell");
   const [rowModesModel, setRowModesModel] = React.useState<GridRowModesModel>(
     {}
@@ -128,11 +119,6 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
   interface entriesTotalsType {
     [key: string]: number;
   }
-  // const entriesTotalsObj: entriesTotalsType = {
-  //   feeTotal: 0,
-  // };
-  // const [entriesTotals, setEntriesTotals] =
-  //   useState<typeof entriesTotalsObj>(entriesTotalsObj);
 
   const squadMinLane = tmntData?.lanes[0]?.lane_number;
   const squadMaxLane = tmntData?.lanes[tmntData?.lanes.length - 1]?.lane_number;
@@ -141,49 +127,6 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
 
   const noErrorsTitle = "No Errors Found";
 
-  // creates the entriesTotals object
-  // useEffect(() => {
-  //   const addToEntriesTotalsObj = (tmntData: tmntFullType) => {
-  //     let initTotals = { ...entriesTotals };
-  //     tmntData.divs.forEach((div) => {
-  //       const divFeeName = entryFeeColName(div.id);
-  //       initTotals = {
-  //         ...initTotals,
-  //         [divFeeName]: 0,
-  //       };
-  //     });
-  //     tmntData.pots.forEach((pot) => {
-  //       const potFeeName = entryFeeColName(pot.id);
-  //       initTotals = {
-  //         ...initTotals,
-  //         [potFeeName]: 0,
-  //       };
-  //     });
-  //     tmntData.brkts.forEach((brkt) => {
-  //       const brktFeeName = entryFeeColName(brkt.id);
-  //       initTotals = {
-  //         ...initTotals,
-  //         [brktFeeName]: 0,
-  //       };
-  //       // const brktNameCol = entryNumBrktsColName(brkt.id);
-  //     });
-  //     tmntData.elims.forEach((elim) => {
-  //       const elimFeeName = entryFeeColName(elim.id);
-  //       initTotals = {
-  //         ...initTotals,
-  //         [elimFeeName]: 0,
-  //       };
-  //     });
-  //     setEntriesTotals(initTotals);
-  //   };
-
-  //   if (tmntData?.divs) {
-  //     addToEntriesTotalsObj(tmntData);
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [tmntData]); // DO NOT INCLUDE entriesTotals in array
-
-  // build initial totals object whenever tmntData changes
   const baseTotals = useMemo(() => {
     if (!tmntData) return {};
 
@@ -432,76 +375,6 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
 
   const columnGroupings = createColummnGroupings();
 
-  // for data entry in grid
-  // useEffect(() => {
-  //   const updatedTotals = { ...entriesTotals };
-  //   let overAllTotal = 0;
-  //   Object.keys(entriesTotals).forEach((key) => {
-  //     if (key !== "feeTotal") {
-  //       const colTotal = rows.reduce(
-  //         (total, row) => total + (isNaN(row[key]) ? 0 : Number(row[key])),
-  //         0
-  //       );
-  //       overAllTotal += colTotal;
-  //       updatedTotals[key] = colTotal;
-  //     }
-  //   });
-  //   updatedTotals.feeTotal = overAllTotal;
-  //   setEntriesTotals(updatedTotals);
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [rows]); // DO NOT INCLUDE entriesTotals in array
-
-  // this useEffect is if Next did not update tmntData
-  // useEffect(() => {
-
-  //   const addToEntriesTotalsObj = (tmntData: dataOneTmntType) => {
-  //     // if (Object.keys(entriesTotals).length > 1) return;
-  //     let initialTotals = { ...entriesTotals };
-  //     tmntData.divs.forEach((div) => {
-  //       const divFeeName = entryFeeColName(div.id);
-  //       if (!Object.keys(initialTotals).includes(divFeeName)) {
-  //         initialTotals = {
-  //           ...initialTotals,
-  //           [divFeeName]: 0,
-  //         };
-  //       }
-  //     });
-  //     tmntData.pots.forEach((pot) => {
-  //       const potFeeName = entryFeeColName(pot.id);
-  //       if (!Object.keys(initialTotals).includes(potFeeName)) {
-  //         initialTotals = {
-  //           ...initialTotals,
-  //           [potFeeName]: 0,
-  //         };
-  //       }
-  //     });
-  //     tmntData.brkts.forEach((brkt) => {
-  //       const brktFeeName = entryFeeColName(brkt.id);
-  //       if (!Object.keys(initialTotals).includes(brktFeeName)) {
-  //         initialTotals = {
-  //           ...initialTotals,
-  //           [brktFeeName]: 0,
-  //         };
-  //       }
-  //     });
-  //     tmntData.elims.forEach((elim) => {
-  //       const elimFeeName = entryFeeColName(elim.id);
-  //       if (!Object.keys(initialTotals).includes(elimFeeName)) {
-  //         initialTotals = {
-  //           ...initialTotals,
-  //           [elimFeeName]: 0,
-  //         };
-  //       }
-  //     });
-  //     setEntriesTotals(initialTotals);
-  //   };
-
-  //   if (tmntData?.divs) {
-  //     addToEntriesTotalsObj(tmntData);
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, []); // KEEP ARRAY EMPTY!
-
   const handleRowModesModelChange = (newRowModesModel: GridRowModesModel) => {
     setRowModesModel(newRowModesModel);
   };
@@ -544,8 +417,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
     });
     const updatedRow = {
       ...newRow,
-      feeTotal: total,
-      // isNew: false,
+      feeTotal: total,      
     };
     setRows(rows.map((row) => (row.id === newRow.id ? updatedRow : row)));
     return updatedRow;
@@ -622,7 +494,6 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
     const id = btDbUuid("ply");
     const newRow: typeof playerEntryData = {
       id,
-      // isNew: true,
       player_id: id,
       first_name: "",
       last_name: "",
@@ -658,26 +529,6 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
     }
   };
 
-  // const handleFindFinalErrorClick = () => {
-
-  //   const errInfo: errInfoType = findNextError(rows, playerFormTmnt.curData, CheckType.Final);
-  //   if (errInfo.msg !== "") {
-  //     setErrModalObj({
-  //       show: true,
-  //       title: "Error in Entries",
-  //       message: errInfo.msg,
-  //       id: errInfo.id,
-  //     });
-  //   } else {
-  //     setErrModalObj({
-  //       show: true,
-  //       title: "No Errors",
-  //       message: "Finalaize check found no errors in the entries.",
-  //       id: "none",
-  //     });
-  //   }
-  // }
-
   const handleFindPrelimErrorClick = () => {
     const errInfo: errInfoType = findNextError(
       rows,
@@ -701,43 +552,64 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
     }
   };
 
+  const doSave = async (brktLists: BracketList[]) => { 
+    try {
+      setSaveCompleted(false); // Reset state before dispatching
+      const entriesData = extractDataFromRows(rows, tmntFullData.squads[0].id);      
+      const brktsData = extractFullBrktsData(brktLists);
+      const tmntToSave: tmntFullType = {
+        ...tmntFullData,
+        players: [...entriesData.players],
+        divEntries: [...entriesData.divEntries],
+        elimEntries: [...entriesData.elimEntries],
+        brktEntries: [...entriesData.brktEntries],
+        oneBrkts: [...brktsData.oneBrkts],
+        brktSeeds: [...brktsData.brktSeeds],
+        potEntries: [...entriesData.potEntries],
+      }
+
+      const savedData = await dispatch(saveTmntEntriesData(tmntToSave)).unwrap();
+      setResultAction(savedData);
+      setSaveCompleted(true);
+
+    } catch (err: any) {
+      setErrModalObj({
+        show: true,
+        title: "Cannot Save",
+        message: err.message,
+        id: "saveError",
+      });
+    }    
+  }
+
   const handleFinalizeClick = async () => {
-    if (canFinalize()) {
-      // get brackt id's and corresponding bracket names
-      const numBrktsCols = columns.filter((col) =>
-        isBrktsColumnName(col.field)
-      );
-      if (numBrktsCols && numBrktsCols.length > 0) {
-        const brktLists: BracketList[] = [];
-        for (let b = 0; b < numBrktsCols.length; b++) {
-          const brktId = getBrktIdFromColName(numBrktsCols[b].field);
-          // right now only 2 players per match, 3 games in bracket
-          const brktList = new BracketList(
-            brktId,
-            defaultPlayersPerMatch,
-            defaultBrktGames
-          );
-          brktList.calcTotalBrkts(rows); // calc total brkts - simple math calc
-          if (brktList.canRandomize()) {
-            brktList.randomize([]);
-            if (brktList.errorCode !== BracketList.noError) {
-              // empty array of brackets
-              brktLists.length = 0;
-              // show error message why could not randomize
-              const brktName = numBrktsCols[b].headerName;
-              setErrModalObj({
-                show: true,
-                title: "Cannot Randomize Brackets",
-                message: "Error in " + brktName + ": " + brktList.errorMessage,
-                id: brktId,
-              });
-              // exit for loop
-              return;
-            }
-          } else {
+
+    if (!canFinalize()) return;
+
+    // get bracket id's and corresponding bracket names
+    const numBrktsCols = columns.filter((col) =>
+      isBrktsColumnName(col.field)
+    );
+    let gotBrktsErr = false;
+    // const oneBrkts: oneBrktType[] = [];
+    // const brktSeeds: brktSeedType[] = [];
+    const brktLists: BracketList[] = [];
+    if (numBrktsCols && numBrktsCols.length > 0) {
+      for (let b = 0; b < numBrktsCols.length; b++) {
+        const brktId = getBrktIdFromColName(numBrktsCols[b].field);
+        // right now only 2 players per match, 3 games in bracket
+        const brktList = new BracketList(
+          brktId,
+          defaultPlayersPerMatch,
+          defaultBrktGames
+        );
+        brktList.calcTotalBrkts(rows); // calc total brkts - simple math calc
+        if (brktList.canRandomize()) {
+          brktList.randomize([]);
+          if (brktList.errorCode !== BracketList.noError) {
             // empty array of brackets
             brktLists.length = 0;
-            // show error message why can not randomize
+            // show error message why could not randomize
             const brktName = numBrktsCols[b].headerName;
             setErrModalObj({
               show: true,
@@ -745,65 +617,56 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
               message: "Error in " + brktName + ": " + brktList.errorMessage,
               id: brktId,
             });
-            // exit for loop
-            return;
+            gotBrktsErr = true;
+            return; // exit for loop
           }
-          brktLists.push(brktList);
+        } else {
+          // empty array of brackets
+          brktLists.length = 0;
+          // show error message why can not randomize
+          const brktName = numBrktsCols[b].headerName;
+          setErrModalObj({
+            show: true,
+            title: "Cannot Randomize Brackets",
+            message: "Error in " + brktName + ": " + brktList.errorMessage,
+            id: brktId,
+          });
+          gotBrktsErr = true;
+          return; // exit for loop
         }
+        brktLists.push(brktList);
       }
-
-      setSaveCompleted(false); // Reset state before dispatching
-      const entriesData = extractDataFromRows(rows, tmntFullData.squads[0].id);
-      tmntFullData.players = entriesData.players;
-      tmntFullData.divEntries = entriesData.divEntries;
-      tmntFullData.elimEntries = entriesData.elimEntries;
-      tmntFullData.brktEntries = entriesData.brktEntries;
-      tmntFullData.potEntries = entriesData.potEntries;
-
-      const saveResultAction = await dispatch(
-        saveTmntEntriesData(tmntFullData)
-      );
-      if (saveTmntEntriesData.fulfilled.match(saveResultAction)) {
-        setResultAction(saveResultAction);
-        setSaveCompleted(true);
-      }
-      // const saveResultAction = await dispatch(saveTmntEntriesData({ rows: rows, data: playersFormData }));
-      // if (SaveOneSquadEntries.fulfilled.match(saveResultAction)) {
-      //   setResultAction(saveResultAction);
-      //   setSaveCompleted(true);
-      // }
+      if (gotBrktsErr) return;
     }
+    await doSave(brktLists);
 
-    // // check if any data entry errors
-    // const errInfo: errInfoType = findNextError(rows, playerFormTmnt.curData, CheckType.Final);
-    // if (errInfo.msg !== "") {
+    // try {
+    //   setSaveCompleted(false); // Reset state before dispatching
+    //   const entriesData = extractDataFromRows(rows, tmntFullData.squads[0].id);
+    //   const brktsData = extractFullBrktsData(brktLists);
+    //   const tmntToSave: tmntFullType = {
+    //     ...tmntFullData,
+    //     players: [...entriesData.players],
+    //     divEntries: [...entriesData.divEntries],
+    //     elimEntries: [...entriesData.elimEntries],
+    //     brktEntries: [...entriesData.brktEntries],
+    //     oneBrkts: [...brktsData.oneBrkts],
+    //     brktSeeds: [...brktsData.brktSeeds],
+    //     potEntries: [...entriesData.potEntries],
+    //   }
+
+    //   const savedData = await dispatch(saveTmntEntriesData(tmntToSave)).unwrap();
+    //   setResultAction(savedData);
+    //   setSaveCompleted(true);
+
+    // } catch (err: any) {
     //   setErrModalObj({
     //     show: true,
-    //     title: "Cannot Finalize",
-    //     message: errInfo.msg,
-    //     id: errInfo.id,
+    //     title: "Cannot Save",
+    //     message: err.message,
+    //     id: "saveError",
     //   });
-    // } else {
-    //   // now check if got divs, pots, brkts, elims
-    //   const countErrInfo = findCountError();
-
-    //   if (countErrInfo.msg !== "") {
-    //     setErrModalObj({
-    //       show: true,
-    //       title: "Cannot Finalize",
-    //       message: countErrInfo.msg,
-    //       id: countErrInfo.id,
-    //     });
-    //     return;
-    //   }
-    //   // ok to save now
-    //   setSaveCompleted(false); // Reset state before dispatching
-    //   const saveResultAction = await dispatch(SaveOneSquadEntries({ rows: rows, data: playersFormData }));
-    //   if (SaveOneSquadEntries.fulfilled.match(saveResultAction)) {
-    //     setResultAction(saveResultAction);
-    //     setSaveCompleted(true);
-    //   }
-    // }
+    // }    
   };
 
   const handleSaveClick = async () => {
@@ -820,14 +683,15 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
         id: errInfo.id,
       });
     } else {
-      setSaveCompleted(false); // Reset state before dispatching
-      const saveResultAction = await dispatch(
-        saveTmntEntriesData(tmntFullData)
-      );
-      if (saveTmntEntriesData.fulfilled.match(saveResultAction)) {
-        setResultAction(saveResultAction);
-        setSaveCompleted(true);
-      }
+      await doSave([]); // pass empry array because not calculating/randomizing brackets
+      // setSaveCompleted(false); // Reset state before dispatching
+      // const saveResultAction = await dispatch(
+      //   saveTmntEntriesData(tmntFullData)
+      // );
+      // if (saveTmntEntriesData.fulfilled.match(saveResultAction)) {
+      //   setResultAction(saveResultAction);
+      //   setSaveCompleted(true);
+      // }
     }
   };
 
@@ -851,23 +715,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
   useEffect(() => {    
 
     if (saveCompleted && entriesSaveStatus === "succeeded" && resultAction) {
-      const updatedInfo = (resultAction.payload as any).updatedInfo;
-
-      if (updatedInfo) {
-        const updatedPlayers = updateAllEntries(updatedInfo, playersFormData);
-        if (!updatedPlayers) return;
-
-        // dispatch(updatePlayers(updatedPlayers.players));
-        // dispatch(updateDivEntries(updatedPlayers.divEntries));
-        // dispatch(updatePotEntries(updatedPlayers.potEntries));
-        // dispatch(updateBrktEntries(updatedPlayers.brktEntries));
-        // dispatch(updateElimEntries(updatedPlayers.elimEntries));
-
-        const totalUpdates: number = getTotalUpdated(updatedInfo);
-        if (totalUpdates >= 0) {
-          router.push(`/dataEntry/runTmnt/${tmntData.tmnt.id}`);
-        }
-      }
+      router.push(`/dataEntry/runTmnt/${tmntData.tmnt.id}`);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [saveCompleted, entriesSaveStatus]); // ok for just saveCompleted and entriesSaveStatus

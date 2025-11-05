@@ -351,6 +351,11 @@ export interface oneBrktsAndSeedsType extends brktSeedType {
   bindex: number,
 }
 
+export type fullBrktsDataType = {
+  oneBrkts: oneBrktType[],
+  brktSeeds: brktSeedType[],  
+}
+
 export type elimType = {
   id: string,
   div_id: string,  

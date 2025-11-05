@@ -16,8 +16,7 @@ import {
   potEntryType,
   brktEntryType,
   elimEntryType,  
-  putManyReturnType,
-  // putManyEntriesReturnType,
+  putManyReturnType,  
   updatedEntriesCountsType,
   gameType,
   divDataType,
@@ -32,8 +31,6 @@ import { todayStr } from "@/lib/dateTools";
 import { btDbUuid } from "../uuid";
 import { startOfToday } from "date-fns";
 import { cloneDeep } from "lodash";
-import { deepClone } from "@mui/x-data-grid/internals";
-import { init } from "next/dist/compiled/webpack/webpack";
 
 export const initUser: userType = {
   id: btDbUuid('usr'),

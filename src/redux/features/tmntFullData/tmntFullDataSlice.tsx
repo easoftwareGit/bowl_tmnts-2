@@ -5,7 +5,7 @@ import { ioDataError, tmntFullType } from "@/lib/types/types";
 import { blankTmnt } from "@/lib/db/initVals";
 import { cloneDeep } from "lodash";
 import { getTmntFullData } from "@/lib/db/tmnts/dbTmnts";
-import { replaceTmntFullData, replaceTmntEntriesData } from "@/lib/db/tmnts/dbTmntsReplaceFull";
+import { replaceTmntFullData, replaceTmntEntriesData } from "@/lib/db/tmnts/dbTmntsReplace";
 
 export interface tmntFullDataState {
   tmntFullData: tmntFullType;

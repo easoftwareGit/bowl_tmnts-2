@@ -32,17 +32,20 @@ export const calcHandicap = (
   let hdcp = 0;
   if (hdcpPer > 0 && average < hdcpFrom) {
     // calc hdcp and round to 1 decimal
-    if (intHdcp) {
-      hdcp = Math.floor(((hdcpFrom - average) * hdcpPer));
-    } else {
-      hdcp = Math.round(((hdcpFrom - average) * hdcpPer) * 10) / 10;
-    }    
+    // if (intHdcp) {
+    //   hdcp = Math.floor(((hdcpFrom - average) * hdcpPer));
+    // } else {
+      // hdcp = Math.round(((hdcpFrom - average) * hdcpPer) * 10) / 10;
+    // }   
+    hdcp = (hdcpFrom - average) * hdcpPer
     if (hdcpFor.toLocaleLowerCase() === "series" && games > 1) {
       hdcp = hdcp * games;
     }
   }
-  if (intHdcp) {
-    hdcp = Math.trunc(hdcp);
+  if (intHdcp) {    
+    hdcp = Math.floor(hdcp);            // round down
+  } else { 
+    hdcp = Math.round(hdcp * 10) / 10;  // round to 1 decimal
   }
   return hdcp;
 };

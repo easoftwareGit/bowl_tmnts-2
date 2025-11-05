@@ -1,4 +1,4 @@
-import { brktsColNameEnd, entryFeeColName, entryNumBrktsColName, feeColNameEnd, isBrktsColumnName, isDivEntryFeeColumnName, isElimFeeColumnName, isPotFeeColumnName, playerEntryData } from "@/app/dataEntry/playersForm/createColumns";
+import { brktsColNameEnd, entryFeeColName, entryNumBrktsColName, feeColNameEnd, isBrktsColumnName, isDivEntryFeeColumnName, isElimFeeColumnName, isPotFeeColumnName, playerEntryData, timeStampColName } from "@/app/dataEntry/playersForm/createColumns";
 import { findNextError, getRowPlayerName, exportedForTesting, CheckType, getDivsPotsBrktsElimsCounts, getDivsPotsBrktsElimsCountErrMsg } from "@/app/dataEntry/playersForm/rowInfo";
 import { BracketList } from "@/components/brackets/bracketListClass";
 import { getBrktOrElimName, getDivName } from "@/lib/getName";
@@ -18,8 +18,10 @@ describe('rowInfo tests', () => {
   const pot2FeeColName = entryFeeColName(mockTmntFullData.pots[1].id);
   const brkt1NumColName = entryNumBrktsColName(mockTmntFullData.brkts[0].id);    
   const brkt1FeeColName = entryFeeColName(mockTmntFullData.brkts[0].id);
+  const brkt1TimeStartColName = timeStampColName(mockTmntFullData.brkts[0].id);
   const brkt2NumColName = entryNumBrktsColName(mockTmntFullData.brkts[1].id);
   const brkt2FeeColName = entryFeeColName(mockTmntFullData.brkts[1].id);
+  const brkt2TimeStartColName = timeStampColName(mockTmntFullData.brkts[0].id);
   const elim1FeeColName = entryFeeColName(mockTmntFullData.elims[0].id);
   const elim2FeeColName = entryFeeColName(mockTmntFullData.elims[1].id);
 
@@ -36,17 +38,27 @@ describe('rowInfo tests', () => {
     [pot2FeeColName]: 10,
     [brkt1NumColName]: 4,
     [brkt1FeeColName]: 20,
+    [brkt1TimeStartColName]: new Date("2025-01-01").getTime(),
     [brkt2NumColName]: 4,
     [brkt2FeeColName]: 20,
+    [brkt2TimeStartColName]: new Date("2025-01-02").getTime(),
     [elim1FeeColName]: 5,
     [elim2FeeColName]: 5,
     feeTotal: 165
   }
+
   const row2 = cloneDeep(validRow);
   row2.id = 'player2';
   row2.first_name = 'Jane';
   row2.last_name = 'Doe';
   row2.position = 'B';
+  // use text values for testing
+  row2[div1FeeColName] = '85';
+  row2[div2FeeColName] = '55';
+  row2[pot1FeeColName] = '20';
+  row2[pot2FeeColName] = '10';
+  row2[elim1FeeColName] = '5';
+  row2[elim2FeeColName] = '5';
 
   const invalidBaseRow = {  
     ...validRow,
