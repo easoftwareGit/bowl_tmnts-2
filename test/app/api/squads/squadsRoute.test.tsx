@@ -3023,7 +3023,7 @@ describe('Squads - API: /api/squads', () => {
       lane_count: 24,
       starting_lane: 1,
       sort_order: 3,
-  }
+    }
 
     let didDel = false
 
@@ -3054,7 +3054,7 @@ describe('Squads - API: /api/squads', () => {
       })
       expect(response.status).toBe(200);
       didDel = true;
-      expect(response.data.deleted.id).toBe(toDelSquad.id)
+      expect(response.data.count).toBe(1)
     })
     it('should return 404 when ID is invalid', async () => {
       try {
@@ -3079,10 +3079,11 @@ describe('Squads - API: /api/squads', () => {
           withCredentials: true,
           url: oneSquadUrl + notFoundId
         })
-        expect(response.status).toBe(404);
+        expect(response.status).toBe(200);
+        expect(response.data.count).toBe(0);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(200);
         } else {
           expect(true).toBeFalsy();
         }
@@ -3174,9 +3175,8 @@ describe('Squads - API: /api/squads', () => {
         url: eventUrl + toDelSquads[0].event_id
       })
       expect(response.status).toBe(200);      
-      didDel = true;
-      const count = response.data.deleted.count
-      expect(count).toBe(toDelSquads.length); 
+      didDel = true;      
+      expect(response.data.count).toBe(toDelSquads.length); 
     })
     it('should return 404 when event ID is invalid', async () => {
       try {
@@ -3201,9 +3201,8 @@ describe('Squads - API: /api/squads', () => {
         url: eventUrl + notfoundEventId
       })
       expect(response.status).toBe(200);      
-      didDel = true;
-      const count = response.data.deleted.count
-      expect(count).toBe(0); 
+      didDel = true;      
+      expect(response.data.count).toBe(0); 
     })  
     it('should return 404 when event ID is valid, but not an event ID', async () => {
       try {
@@ -3394,9 +3393,8 @@ describe('Squads - API: /api/squads', () => {
         url: tmntUrl + toDelEvents[0].tmnt_id
       })
       expect(response.status).toBe(200);      
-      didDel = true;
-      const count = response.data.deleted.count
-      expect(count).toBe(toDelSquads.length); 
+      didDel = true;      
+      expect(response.data.count).toBe(toDelSquads.length); 
     })
     it('should return 404 when tmnt ID is invalid', async () => {
       try {

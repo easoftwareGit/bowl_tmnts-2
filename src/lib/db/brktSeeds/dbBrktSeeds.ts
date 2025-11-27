@@ -1,7 +1,6 @@
 import axios from "axios";
 import { brktSeedsApi } from "@/lib/db/apiPaths";
 import { testBrktSeedsApi } from "../../../../test/testApi";
-import { Brkt_Seed } from "@prisma/client";
 import { brktSeedType } from "@/lib/types/types";
 import { ErrorCode, isValidBtDbId } from "@/lib/validation";
 import { validateBrktSeeds, validCompositKey } from "@/app/api/brktSeeds/validate";
@@ -252,10 +251,10 @@ export const deleteAllBrktSeedsForOneBrkt = async (oneBrktId: string): Promise<n
   } catch (err) {
     throw new Error(`deleteAllBrktSeedsForOneBrkt failed: ${err instanceof Error ? err.message : err}`);
   }
-  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting brktSeeds for oneBrkt");
   }
-  return response.data.deleted.count;
+  return response.data.count;
 }
 
 /**
@@ -277,10 +276,10 @@ export const deleteAllBrktSeedsForBrkt = async (brktId: string): Promise<number>
   } catch (err) {
     throw new Error(`deleteAllBrktSeedsForBrkt failed: ${err instanceof Error ? err.message : err}`);
   }
-  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting brktSeeds for brkt");
   }
-  return response.data.deleted.count;
+  return response.data.count;
 }
 
 /**
@@ -302,10 +301,10 @@ export const deleteAllBrktSeedsForDiv = async (divId: string): Promise<number> =
   } catch (err) {
     throw new Error(`deleteAllBrktSeedsForDiv failed: ${err instanceof Error ? err.message : err}`);
   }
-  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting brktSeeds for div");
   }
-  return response.data.deleted.count;
+  return response.data.count;
 }
 
 /**
@@ -326,10 +325,10 @@ export const deleteAllBrktSeedsForSquad = async (squadId: string): Promise<numbe
   } catch (err) {
     throw new Error(`deleteAllBrktSeedsForSquad failed: ${err instanceof Error ? err.message : err}`);
   }
-  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting brktSeeds for squad");
   }
-  return response.data.deleted.count;
+  return response.data.count;
 }
 
 /**
@@ -350,8 +349,8 @@ export const deleteAllBrktSeedsForTmnt = async (tmntId: string): Promise<number>
   } catch (err) {
     throw new Error(`deleteAllBrktSeedsForTmnt failed: ${err instanceof Error ? err.message : err}`);
   }
-  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting brktSeeds for tmnt");
   }
-  return response.data.deleted.count;
+  return response.data.count;
 }

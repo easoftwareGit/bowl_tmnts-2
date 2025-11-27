@@ -37,12 +37,12 @@ export async function DELETE(
     if (!isValidBtDbId(id, "obk")) {
       return NextResponse.json({ error: "invalid request" }, { status: 404 });
     }
-    const deleted = await prisma.one_Brkt.delete({
+    const result = await prisma.one_Brkt.deleteMany({
       where: {
         id: id,
       },
     });
-    return NextResponse.json({ deleted }, { status: 200 });
+    return NextResponse.json({ count: result.count }, { status: 200 });
   } catch (err: any) {
     const errStatus = getErrorStatus(err.code);
     return NextResponse.json(

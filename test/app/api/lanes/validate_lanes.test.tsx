@@ -10,7 +10,6 @@ import { initLane } from "@/lib/db/initVals";
 import { ErrorCode, maxLaneCount } from "@/lib/validation";
 import { mockLanesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { validLanesType } from "@/lib/types/types";
-import { mock } from "jest-mock-extended";
 
 const { gotLaneData, validLaneData } = exportedForTesting;
 

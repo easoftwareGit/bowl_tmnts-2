@@ -74,7 +74,7 @@ export async function DELETE(
     if (!isValidBtDbId(squadId, "sqd")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
-    const deleted = await prisma.brkt_Seed.deleteMany({
+    const result = await prisma.brkt_Seed.deleteMany({
       where: {
         one_brkt_id: {
           in: await prisma.one_Brkt
@@ -95,14 +95,14 @@ export async function DELETE(
       },
     });
 
-    if (!deleted) {
+    if (!result) {
       return NextResponse.json(
         { error: "error deleting brktSeeds for squad" },
         { status: 404 }
       );
     }
 
-    return NextResponse.json({ deleted }, { status: 200 });
+    return NextResponse.json({ count: result.count }, { status: 200 });
   } catch (err: any) {
     return NextResponse.json(
       { err: "error deleting brktSeeds for squad" },

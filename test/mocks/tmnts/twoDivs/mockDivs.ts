@@ -1,14 +1,17 @@
 import { divType, squadType, potType, brktType, elimType, eventType } from "@/lib/types/types";
-import { defaultBrktGames, defaultBrktPlayers, defaultElimGames, initDiv, initElim } from "@/lib/db/initVals";
+import { defaultBrktGames, defaultBrktPlayers, defaultElimGames, initDiv } from "@/lib/db/initVals";
 import { todayStr } from "@/lib/dateTools";
-import { Div, Pot, Brkt, Elim } from "@prisma/client";
-import { Decimal } from "@prisma/client/runtime/library";
-import { mock } from "node:test";
+import { Prisma, Div, Pot, Brkt, Elim } from "@prisma/client";
+// import { Decimal } from "@prisma/client/runtime/library";
+
+const divId1 = "div_578834e04e5e4885bbae79229d8b96e8";
+const divId2 = "div_24b1cd5dee0542038a1244fc2978e862";
+const tmntId = "tmt_fe8ac53dad0f400abe6354210a8f4cd1";
 
 export const mockDivs: divType[] = [
   {
-    id: "div_578834e04e5e4885bbae79229d8b96e8",
-    tmnt_id: "tmt_fe8ac53dad0f400abe6354210a8f4cd1",
+    id: divId1,
+    tmnt_id: tmntId,
     div_name: "Scratch",
     div_name_err: "",
     tab_title: "Scratch",
@@ -23,8 +26,8 @@ export const mockDivs: divType[] = [
     errClassName: "",
   },
   {
-    id: "div_24b1cd5dee0542038a1244fc2978e862",
-    tmnt_id: "tmt_fe8ac53dad0f400abe6354210a8f4cd1",
+    id: divId2,
+    tmnt_id: tmntId,
     div_name: "Hdcp",
     div_name_err: "",
     tab_title: "Hdcp",
@@ -42,8 +45,8 @@ export const mockDivs: divType[] = [
 
 export const mockPrismaDivs: Div[] = [
   {
-    id: "div_578834e04e5e4885bbae79229d8b96e8",
-    tmnt_id: "tmt_fe8ac53dad0f400abe6354210a8f4cd1",
+    id: divId1,
+    tmnt_id: tmntId,
     div_name: "Scratch",
     hdcp_per: 0,
     hdcp_from: 230,
@@ -54,8 +57,8 @@ export const mockPrismaDivs: Div[] = [
     updatedAt: new Date(),
   },
   {
-    id: "div_24b1cd5dee0542038a1244fc2978e862",
-    tmnt_id: "tmt_fe8ac53dad0f400abe6354210a8f4cd1",
+    id: divId2,
+    tmnt_id: tmntId,
     div_name: "Hdcp",
     hdcp_per: 0.90,
     hdcp_from: 230,
@@ -93,7 +96,7 @@ export const mockEventToPost: eventType[] = [
     added_money: '0',
     added_money_err: '',
     lpox: '80',
-    lpox_valid: 'valid',
+    lpox_valid: 'is-valid',
     lpox_err: '',
     sort_order: 1,
     errClassName: "",
@@ -128,8 +131,8 @@ export const mockDivsToPost: divType[] = [
 export const mockDivsToEdit: divType[] = [
   {
     ...initDiv,
-    id: "div_578834e04e5e4885bbae79229d8b96e8",
-    tmnt_id: "tmt_fe8ac53dad0f400abe6354210a8f4cd1",
+    id: divId1,
+    tmnt_id: tmntId,
     div_name: "Scratch",
     hdcp_per: 0,
     hdcp_from: 230,
@@ -140,7 +143,7 @@ export const mockDivsToEdit: divType[] = [
   {
     ...initDiv,
     id: "div_fe72ab97edf8407186c8e6df7f7fb741",
-    tmnt_id: "tmt_fe8ac53dad0f400abe6354210a8f4cd1",
+    tmnt_id: tmntId,
     div_name: "Hdcp",
     hdcp_per: 0.90,
     hdcp_from: 230,
@@ -150,8 +153,8 @@ export const mockDivsToEdit: divType[] = [
   },
   {
     ...initDiv,    
-    id: "div_24b1cd5dee0542038a1244fc2978e862",
-    tmnt_id: "tmt_fe8ac53dad0f400abe6354210a8f4cd1",
+    id: divId2,
+    tmnt_id: tmntId,
     div_name: "Hdcp 50+",
     hdcp_per: 0.90,
     hdcp_from: 230,
@@ -187,7 +190,7 @@ export const mockSquads: squadType[] = [
 export const mockPots: potType[] = [
   {
     id: 'pot_f7935dec9e8b46148d6f1a6637daebf5',
-    div_id: "div_578834e04e5e4885bbae79229d8b96e8",
+    div_id: divId1,
     squad_id: '1',
     pot_type: 'Game',
     pot_type_err: '',    
@@ -199,7 +202,7 @@ export const mockPots: potType[] = [
   },
   {
     id: 'pot_4fe4f6d6c5694db189543bb68c0a9ec1',
-    div_id: "div_578834e04e5e4885bbae79229d8b96e8",
+    div_id: divId1,
     squad_id: '1',
     pot_type: 'Last Game',
     pot_type_err: '',    
@@ -211,7 +214,7 @@ export const mockPots: potType[] = [
   },
   {
     id: 'pot_ebc5be04fa194837b68792fc0b28adcc',
-    div_id: "div_24b1cd5dee0542038a1244fc2978e862",
+    div_id: divId2,
     squad_id: '1',
     pot_type: 'Game',
     pot_type_err: '',    
@@ -223,7 +226,7 @@ export const mockPots: potType[] = [
   },
   {
     id: 'pot_4a6faec83eb042ff866ae494b879dbe9',
-    div_id: "div_24b1cd5dee0542038a1244fc2978e862",
+    div_id: divId2,
     squad_id: '1',
     pot_type: 'Series',
     pot_type_err: '',    
@@ -241,7 +244,7 @@ export const mockPrismaPots: Pot[] = [
     squad_id: "sqd_7116ce5f80164830830a7157eb093396",
     div_id: "div_f30aea2c534f4cfe87f4315531cef8ef",
     sort_order: 1,
-    fee: new Decimal(20),
+    fee: new Prisma.Decimal(20),
     pot_type: "Game",
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -251,7 +254,7 @@ export const mockPrismaPots: Pot[] = [
     squad_id: "sqd_1a6c885ee19a49489960389193e8f819",
     div_id: "div_1f42042f9ef24029a0a2d48cc276a087",
     sort_order: 1,
-    fee: new Decimal(10),
+    fee: new Prisma.Decimal(10),
     pot_type: "Game",
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -261,7 +264,7 @@ export const mockPrismaPots: Pot[] = [
     squad_id: "sqd_1a6c885ee19a49489960389193e8f819",
     div_id: "div_1f42042f9ef24029a0a2d48cc276a087",
     sort_order: 2,
-    fee: new Decimal(10),
+    fee: new Prisma.Decimal(10),
     pot_type: "Last Game",
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -271,7 +274,7 @@ export const mockPrismaPots: Pot[] = [
     squad_id: "sqd_20c24199328447f8bbe95c05e1b84644",
     div_id: "div_29b9225d8dd44a4eae276f8bde855729",
     sort_order: 1,
-    fee: new Decimal(20),
+    fee: new Prisma.Decimal(20),
     pot_type: "Game",
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -281,7 +284,7 @@ export const mockPrismaPots: Pot[] = [
 export const mockBrkts: brktType[] = [
   {
     id: "brk_0001214095784c39a913137bd42737b6",
-    div_id: "div_578834e04e5e4885bbae79229d8b96e8",  
+    div_id: divId1,  
     squad_id: '',
     div_err: '',
     start: 1,
@@ -306,7 +309,7 @@ export const mockBrkts: brktType[] = [
   },
   {
     id: "brk_0002214095784c39a913137bd42737b6",
-    div_id: "div_578834e04e5e4885bbae79229d8b96e8",  
+    div_id: divId1,  
     squad_id: '',    
     div_err: '',
     start: 4,
@@ -331,7 +334,7 @@ export const mockBrkts: brktType[] = [
   },
   {
     id: "brk_0003214095784c39a913137bd42737b6",
-    div_id: "div_24b1cd5dee0542038a1244fc2978e862",
+    div_id: divId2,
     squad_id: '',    
     div_err: '',
     start: 1,
@@ -356,7 +359,7 @@ export const mockBrkts: brktType[] = [
   },
   {
     id: "brk_0004214095784c39a913137bd42737b6",
-    div_id: "div_24b1cd5dee0542038a1244fc2978e862",
+    div_id: divId2,
     squad_id: '',      
     div_err: '',
     start: 4,
@@ -443,10 +446,10 @@ export const mockPrismaBrkts: Brkt[] = [
     start: 1,
     games: 3,
     players: 8,
-    fee: new Decimal(5),
-    first: new Decimal(25),
-    second: new Decimal(10),
-    admin: new Decimal(5),
+    fee: new Prisma.Decimal(5),
+    first: new Prisma.Decimal(25),
+    second: new Prisma.Decimal(10),
+    admin: new Prisma.Decimal(5),
     createdAt: new Date(),
     updatedAt: new Date(),
   }, {
@@ -457,10 +460,10 @@ export const mockPrismaBrkts: Brkt[] = [
     start: 4,
     games: 3,
     players: 8,
-    fee: new Decimal(5),
-    first: new Decimal(25),
-    second: new Decimal(10),
-    admin: new Decimal(5),
+    fee: new Prisma.Decimal(5),
+    first: new Prisma.Decimal(25),
+    second: new Prisma.Decimal(10),
+    admin: new Prisma.Decimal(5),
     createdAt: new Date(),
     updatedAt: new Date(),
   }, {
@@ -471,10 +474,10 @@ export const mockPrismaBrkts: Brkt[] = [
     start: 1,
     games: 3,
     players: 8,
-    fee: new Decimal(5),
-    first: new Decimal(25),
-    second: new Decimal(10),
-    admin: new Decimal(5),
+    fee: new Prisma.Decimal(5),
+    first: new Prisma.Decimal(25),
+    second: new Prisma.Decimal(10),
+    admin: new Prisma.Decimal(5),
     createdAt: new Date(),
     updatedAt: new Date(),
   }, {
@@ -485,10 +488,10 @@ export const mockPrismaBrkts: Brkt[] = [
     start: 4,
     games: 3,
     players: 8,
-    fee: new Decimal(5),
-    first: new Decimal(25),
-    second: new Decimal(10),
-    admin: new Decimal(5),
+    fee: new Prisma.Decimal(5),
+    first: new Prisma.Decimal(25),
+    second: new Prisma.Decimal(10),
+    admin: new Prisma.Decimal(5),
     createdAt: new Date(),
     updatedAt: new Date(),
   }
@@ -497,7 +500,7 @@ export const mockPrismaBrkts: Brkt[] = [
 export const mockElims: elimType[] = [
   {
     id: 'elm_8fe7ef034c8e4516993a49d7ab7df269',
-    div_id: "div_578834e04e5e4885bbae79229d8b96e8",    
+    div_id: divId1,    
     squad_id: '',     
     div_err: '',
     fee: '10',
@@ -511,7 +514,7 @@ export const mockElims: elimType[] = [
   },
   {
     id: 'elm_d8fe96f2dab34bff9a60c3997cfacc02',
-    div_id: "div_578834e04e5e4885bbae79229d8b96e8",    
+    div_id: divId1,    
     squad_id: '',    
     div_err: '',
     fee: '10',
@@ -525,7 +528,7 @@ export const mockElims: elimType[] = [
   },
   {
     id: 'elm_c6ac61110e1c46fe925911243fb89334',
-    div_id: "div_24b1cd5dee0542038a1244fc2978e862",    
+    div_id: divId2,    
     squad_id: '',      
     div_err: '',
     fee: '10',
@@ -539,7 +542,7 @@ export const mockElims: elimType[] = [
   },
   {
     id: 'elm_e32c25a2bf1340f5a76adf59157adcba',
-    div_id: "div_24b1cd5dee0542038a1244fc2978e862",    
+    div_id: divId2,    
     squad_id: '',     
     div_err: '',
     fee: '10',
@@ -561,7 +564,7 @@ export const mockPrismaElims: Elim[] = [
     sort_order: 1,
     start: 1,
     games: 3,
-    fee: new Decimal(5),
+    fee: new Prisma.Decimal(5),
     createdAt: new Date(),
     updatedAt: new Date(),
   },
@@ -572,7 +575,7 @@ export const mockPrismaElims: Elim[] = [
     sort_order: 2,
     start: 4,
     games: 3,
-    fee: new Decimal(5),
+    fee: new Prisma.Decimal(5),
     createdAt: new Date(),
     updatedAt: new Date(),
   },
@@ -583,7 +586,7 @@ export const mockPrismaElims: Elim[] = [
     sort_order: 1,
     start: 1,
     games: 3,
-    fee: new Decimal(5),
+    fee: new Prisma.Decimal(5),
     createdAt: new Date(),
     updatedAt: new Date(),
   },
@@ -594,7 +597,7 @@ export const mockPrismaElims: Elim[] = [
     sort_order: 2,
     start: 4,
     games: 3,
-    fee: new Decimal(5),
+    fee: new Prisma.Decimal(5),
     createdAt: new Date(),
     updatedAt: new Date(),
   }

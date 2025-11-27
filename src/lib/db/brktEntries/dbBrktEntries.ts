@@ -398,10 +398,10 @@ export const deleteBrktEntry = async (id: string): Promise<number> => {
       `deleteBrktEntry failed: ${err instanceof Error ? err.message : err}`
     );
   }
-  if (response.status !== 200) {
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting brktEntry");
   }
-  return 1;
+  return response.data.count;
 };
 
 /**
@@ -431,11 +431,11 @@ export const deleteAllBrktEntriesForSquad = async (
   }
   if (
     response.status !== 200 ||
-    typeof response.data?.deleted?.count !== "number"
+    typeof response.data?.count !== "number"
   ) {
     throw new Error("Error deleting brktEntries for squad");
   }
-  return response.data.deleted.count;
+  return response.data.count;
 };
 
 /**
@@ -463,13 +463,10 @@ export const deleteAllBrktEntriesForDiv = async (
       }`
     );
   }
-  if (
-    response.status !== 200 ||
-    typeof response.data?.deleted?.count !== "number"
-  ) {
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting brktEntries for div");
   }
-  return response.data.deleted.count;
+  return response.data.count;
 };
 
 /**
@@ -499,11 +496,11 @@ export const deleteAllBrktEntriesForBrkt = async (
   }
   if (
     response.status !== 200 ||
-    typeof response.data?.deleted?.count !== "number"
+    typeof response.data?.count !== "number"
   ) {
     throw new Error("Error deleting brktEntries for brkt");
   }
-  return response.data.deleted.count;
+  return response.data.count;
 };
 
 /**
@@ -533,9 +530,9 @@ export const deleteAllBrktEntriesForTmnt = async (
   }
   if (
     response.status !== 200 ||
-    typeof response.data?.deleted?.count !== "number"
+    typeof response.data?.count !== "number"
   ) {
     throw new Error("Error deleting brktEntries for tmnt");
   }
-  return response.data.deleted.count;
+  return response.data.count;
 };

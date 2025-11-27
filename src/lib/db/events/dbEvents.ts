@@ -208,10 +208,10 @@ export const deleteEvent = async (id: string): Promise<number> => {
   } catch (err) {
     throw new Error(`deleteEvent failed: ${err instanceof Error ? err.message : err}`);
   }
-  if (response.status !== 200) { 
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting event");
   }
-  return 1
+  return response.data.count;
 }
 
 /**
@@ -230,8 +230,8 @@ export const deleteAllEventsForTmnt = async (tmntId: string): Promise<number> =>
   } catch (err) {
     throw new Error(`deleteAllEventsForTmnt failed: ${err instanceof Error ? err.message : err}`);
   }
-  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting events for tmnt");
   }
-  return response.data.deleted.count
+  return response.data.count
 }

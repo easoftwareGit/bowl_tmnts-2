@@ -1911,10 +1911,11 @@ describe('Pots - API: /api/pots', () => {
           withCredentials: true,
           url: onePotUrl + notFoundId,
         })  
-        expect(delResponse.status).toBe(404);
+        expect(delResponse.status).toBe(200);
+        expect(delResponse.data.count).toBe(0);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(200);
         } else {
           expect(true).toBeFalsy();
         }
@@ -2003,9 +2004,8 @@ describe('Pots - API: /api/pots', () => {
         url: squadUrl + toDelPots[0].squad_id
       })
       expect(response.status).toBe(200);
-      didDel = true;
-      const count = response.data.deleted.count;
-      expect(count).toBe(toDelPots.length);
+      didDel = true;      
+      expect(response.data.count).toBe(toDelPots.length);
     })
     it('should return 404 when a squad ID is invalid', async () => { 
       try {
@@ -2029,9 +2029,8 @@ describe('Pots - API: /api/pots', () => {
         withCredentials: true,
         url: squadUrl + notFoundSquadId
       })
-      expect(response.status).toBe(200);      
-      const count = response.data.deleted.count;
-      expect(count).toBe(0);
+      expect(response.status).toBe(200);
+      expect(response.data.count).toBe(0);
     })
     it('should return 404 when a squad id is valid, but not a squad id', async () => {
       try {
@@ -2117,9 +2116,8 @@ describe('Pots - API: /api/pots', () => {
         url: divUrl + toDelPots[0].div_id
       })
       expect(response.status).toBe(200);
-      didDel = true;
-      const count = response.data.deleted.count;
-      expect(count).toBe(toDelPots.length);
+      didDel = true;      
+      expect(response.data.count).toBe(toDelPots.length);
     })
     it('should return 404 when a div when ID is invalid', async () => {
       try {
@@ -2144,9 +2142,8 @@ describe('Pots - API: /api/pots', () => {
         url: divUrl + notFoundDivId
       })
       expect(response.status).toBe(200);
-      didDel = true;
-      const count = response.data.deleted.count;
-      expect(count).toBe(0);
+      didDel = true;      
+      expect(response.data.count).toBe(0);
     })
     it('should return 404 when a div id is valid, but not a div id', async () => {
       try {
@@ -2227,9 +2224,8 @@ describe('Pots - API: /api/pots', () => {
         url: tmntUrl + delPostTmntId
       })
       expect(response.status).toBe(200);
-      didDel = true
-      const count = response.data.deleted.count;
-      expect(count).toBe(toDelPots.length);
+      didDel = true      
+      expect(response.data.count).toBe(toDelPots.length);
     })
     it('should return 404 when tmnt ID is invalid', async () => {
       try {
@@ -2253,9 +2249,8 @@ describe('Pots - API: /api/pots', () => {
         withCredentials: true,
         url: tmntUrl + notFoundTmntId
       })
-      expect(response.status).toBe(200);      
-      const count = response.data.deleted.count;
-      expect(count).toBe(0);
+      expect(response.status).toBe(200);            
+      expect(response.data.count).toBe(0);
     })  
     it('should return 404 when tmnt ID is valid, but not an tmnt ID', async () => {
       try {

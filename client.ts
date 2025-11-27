@@ -1,4 +1,5 @@
-import { PrismaClient } from '@prisma/client'
+// client.ts at project root
 
-const prisma = new PrismaClient()
-export default prisma
+import prisma from "./src/lib/prisma";
+
+export default prisma;

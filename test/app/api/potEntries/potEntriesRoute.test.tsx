@@ -2083,10 +2083,11 @@ describe("Pot Entries - API's: /api/potEntries", () => {
           withCredentials: true,
           url: onePotEntryUrl + notFoundId,
         });
-        expect(response.status).toBe(404);
+        expect(response.status).toBe(200);
+        expect(response.data.count).toBe(0);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(200);
         } else {
           expect(true).toBeFalsy();
         }
@@ -2111,7 +2112,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
           url: squadUrl + squadIdForMockData,
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(mockPotEntriesToPost.length);
+        expect(response.data.count).toBe(mockPotEntriesToPost.length);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -2160,7 +2161,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
           url: squadUrl + notFoundSquadId,
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(0);
+        expect(response.data.count).toBe(0);
       } catch (err) {
         expect(true).toBeFalsy();
       }
@@ -2184,7 +2185,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
           url: divUrl + divIdForMockData,
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(mockPotEntriesToPost.length);
+        expect(response.data.count).toBe(mockPotEntriesToPost.length);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -2233,7 +2234,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
           url: divUrl + notFoundDivId,
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(0);
+        expect(response.data.count).toBe(0);
       } catch (err) {
         expect(true).toBeFalsy();
       }
@@ -2257,7 +2258,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
           url: tmntUrl + tmntIdForMockData,
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(mockPotEntriesToPost.length);
+        expect(response.data.count).toBe(mockPotEntriesToPost.length);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -2306,7 +2307,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
           url: tmntUrl + notFoundTmntId,
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(0);
+        expect(response.data.count).toBe(0);
       } catch (err) {
         expect(true).toBeFalsy();
       }

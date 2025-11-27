@@ -18,10 +18,8 @@ import {
   mockLanesToPost,
   mockSquadsToPost,  
 } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import {
-  deleteAllSquadsForTmnt,
-  deleteSquad,
-  postManySquads,
+import {  
+  deleteSquad,  
   postSquad,
 } from "@/lib/db/squads/dbSquads";
 import { btDbUuid } from "@/lib/uuid";

@@ -237,10 +237,10 @@ export const deleteDivEntry = async (id: string): Promise<number> => {
   } catch (err) {
     throw new Error(`deleteDivEntry failed: ${err instanceof Error ? err.message : err}`);
   }
-    if (response.status !== 200) { 
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting divEntry");
   }
-  return 1;
+  return response.data.count;
 }
 
 /**
@@ -260,10 +260,10 @@ export const deleteAllDivEntriesForSquad = async (squadId: string): Promise<numb
   } catch (err) {
     throw new Error(`deleteAllDivEntriesForSquad failed: ${err instanceof Error ? err.message : err}`);
   }
-  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting divEntries for squad");
   }
-  return response.data.deleted.count;
+  return response.data.count;
 }
 
 /**
@@ -283,10 +283,10 @@ export const deleteAllDivEntriesForDiv = async (divId: string): Promise<number> 
   } catch (err) {
     throw new Error(`deleteAllDivEntriesForDiv failed: ${err instanceof Error ? err.message : err}`);
   }
-  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting divEntries for div");
   }
-  return response.data.deleted.count;
+  return response.data.count;
 }
 
 /**
@@ -305,8 +305,8 @@ export const deleteAllDivEntriesForTmnt = async (tmntId: string): Promise<number
   } catch (err) {
     throw new Error(`deleteAllDivEntriesForTmnt failed: ${err instanceof Error ? err.message : err}`);
   }
-  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting divEntries for tmnt");
   }
-  return response.data.deleted.count;
+  return response.data.count;
 }

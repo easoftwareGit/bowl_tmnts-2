@@ -2347,10 +2347,11 @@ describe('Divs - API: /api/divs', () => {
           withCredentials: true,
           url: oneDivUrl + notFoundId,
         })  
-        expect(delResponse.status).toBe(404);
+        expect(delResponse.status).toBe(200);
+        expect(delResponse.data.count).toBe(0);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(200);
         } else {
           expect(true).toBeFalsy();
         }
@@ -2413,6 +2414,7 @@ describe('Divs - API: /api/divs', () => {
           url: divTmntUrl + tmntToDelId
         })  
         expect(response.status).toBe(200);
+        expect(response.data.count).toBe(mockDivsToPost.length);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(200);
@@ -2461,7 +2463,7 @@ describe('Divs - API: /api/divs', () => {
           url: divTmntUrl + notfoundTmntId
         })  
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(0)
+        expect(response.data.count).toBe(0)
       } catch (err) {
         expect(true).toBeFalsy();
       }

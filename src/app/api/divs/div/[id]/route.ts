@@ -25,11 +25,6 @@ export async function GET(
     if (!div) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
-    // add in hdcp_per_str
-    // const div = {
-    //   ...gotDiv,
-    //   hdcp_per_str: (gotDiv.hdcp_per * 100).toFixed(2),
-    // };
     return NextResponse.json({ div }, { status: 200 });
   } catch (err: any) {
     return NextResponse.json({ error: "error getting div" }, { status: 500 });
@@ -260,17 +255,12 @@ export async function DELETE(
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
 
-    const deletedDiv = await prisma.div.delete({
+    const result = await prisma.div.deleteMany({
       where: {
         id: id,
       },
     });
-    // add in hdcp_per_str
-    const deleted = {
-      ...deletedDiv,
-      hdcp_per_str: (deletedDiv.hdcp_per * 100).toFixed(2),
-    };
-    return NextResponse.json({ deleted }, { status: 200 });
+    return NextResponse.json({ count: result.count }, { status: 200 });
   } catch (err: any) {
     const errStatus = getErrorStatus(err.code);
     return NextResponse.json(

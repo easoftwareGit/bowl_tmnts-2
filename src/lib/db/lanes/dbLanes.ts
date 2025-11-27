@@ -49,29 +49,6 @@ export const getAllLanesForSquad = async (squadId: string): Promise<laneType[]> 
     throw new Error(`Unexpected status ${response.status} when fetching lanes`)
   }
   return extractLanes(response.data.lanes);
-
-  // try {
-  //   if (!isValidBtDbId(squadId, "sqd")) return null
-  //   const response = await axios({
-  //     method: "get",
-  //     withCredentials: true,
-  //     url: squadUrl + squadId,
-  //   });
-  //   if (response.status !== 200) return null
-  //   const tmntLanes = response.data.lanes
-  //   const lanes: laneType[] = tmntLanes.map((lane: any) => {
-  //     return {
-  //       ...blankLane,
-  //       id: lane.id,
-  //       squad_id: lane.squad_id,
-  //       lane_number: lane.lane_number,
-  //       in_use: lane.in_use,
-  //     }
-  //   })
-  //   return lanes
-  // } catch (err) {
-  //   return null;
-  // }
 }
 
 /**
@@ -96,30 +73,6 @@ export const getAllLanesForTmnt = async (tmntId: string): Promise<laneType[] | n
     throw new Error(`Unexpected status ${response.status} when fetching lanes`)
   }    
   return extractLanes(response.data.lanes);
-
-
-  // try {
-  //   if (!isValidBtDbId(tmntId, "tmt")) return null
-  //   const response = await axios({
-  //     method: "get",
-  //     withCredentials: true,
-  //     url: tmntUrl + tmntId,
-  //   });
-  //   if (response.status !== 200) return null
-  //   const tmntLanes = response.data.lanes
-  //   const lanes: laneType[] = tmntLanes.map((lane: any) => {
-  //     return {
-  //       ...blankLane,
-  //       id: lane.id,
-  //       squad_id: lane.squad_id,
-  //       lane_number: lane.lane_number,
-  //       in_use: lane.in_use,
-  //     }
-  //   })
-  //   return lanes
-  // } catch (err) {
-  //   return null;
-  // }
 }
 
 /**
@@ -155,31 +108,6 @@ export const postLane = async (lane: laneType): Promise<laneType> => {
     in_use: dbLane.in_use,
   }
   return postedLane
-
-
-  // try {
-  //   if (!lane || !isValidBtDbId(lane.id, 'lan')) return null    
-  //   // further sanatation and validation done in POST route
-  //   const laneJSON = JSON.stringify(lane);
-  //   const response = await axios({
-  //     method: "post",
-  //     data: laneJSON,
-  //     withCredentials: true,
-  //     url: url,
-  //   });
-  //   if (response.status !== 201) return null
-  //   const dbLane = response.data.lane
-  //   const postedLane: laneType = {
-  //     ...blankLane,
-  //     id: dbLane.id,
-  //     squad_id: dbLane.squad_id,
-  //     lane_number: dbLane.lane_number,
-  //     in_use: dbLane.in_use,
-  //   }
-  //   return postedLane
-  // } catch (err) {
-  //   return null;
-  // }
 }
 
 /**
@@ -222,24 +150,6 @@ export const postManyLanes = async (lanes: laneType[]): Promise<number> => {
     throw new Error("Error posting lanes");
   }
   return response.data.count;
-  
-
-  // try {
-  //   if (!lanes || !Array.isArray(lanes)) return -1
-  //   if (lanes.length === 0) return 0    
-  //   // further sanatation and validation done in POST route
-  //   const laneJSON = JSON.stringify(lanes);
-  //   const response = await axios({
-  //     method: "post",
-  //     data: laneJSON,
-  //     withCredentials: true,
-  //     url: manyUrl,
-  //   });
-  //   if (response.status !== 201) return -1
-  //   return response.data.count;
-  // } catch (err) {
-  //   return -1;
-  // }
 }
 
 /**
@@ -273,31 +183,6 @@ export const putLane = async (lane: laneType): Promise<laneType> => {
     in_use: dbLane.in_use,
   }
   return puttedLane
-
-
-  // try {
-  //   if (!lane || !isValidBtDbId(lane.id, 'lan')) return null
-  //   // further sanatation and validation done in PUT route
-  //   const laneJSON = JSON.stringify(lane);
-  //   const response = await axios({
-  //     method: "put",
-  //     data: laneJSON,
-  //     withCredentials: true,
-  //     url: laneUrl + lane.id,
-  //   });
-  //   if (response.status !== 200) return null
-  //   const dbLane = response.data.lane
-  //   const puttedLane: laneType = {
-  //     ...blankLane,
-  //     id: dbLane.id,
-  //     squad_id: dbLane.squad_id,
-  //     lane_number: dbLane.lane_number,
-  //     in_use: dbLane.in_use,
-  //   }
-  //   return puttedLane
-  // } catch (err) {
-  //   return null;
-  // }
 }
 
 /**
@@ -320,23 +205,10 @@ export const deleteLane = async (id: string): Promise<number> => {
   } catch (err) {
     throw new Error(`deleteLane failed: ${err instanceof Error ? err.message : err}`);
   }
-  if (response.status !== 200) { 
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting lane");
   }
-  return 1
-
-
-  // try {
-  //   if (!isValidBtDbId(id, "lan")) return -1    
-  //   const response = await axios({
-  //     method: "delete",
-  //     withCredentials: true,
-  //     url: laneUrl + id,
-  //   });
-  //   return (response.status === 200) ? 1 : -1
-  // } catch (err) {
-  //   return -1;
-  // }
+  return response.data.count;
 }
 
 /**
@@ -359,23 +231,10 @@ export const deleteAllLanesForSquad = async (squadId: string): Promise<number> =
   } catch (err) {
     throw new Error(`deleteAllLanesForSquad failed: ${err instanceof Error ? err.message : err}`);
   }
-  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting lanes for squad");
   }
-  return response.data.deleted.count;
-
-
-  // try {
-  //   if (!isValidBtDbId(squadId, "sqd")) return -1
-  //   const response = await axios({
-  //     method: "delete",
-  //     withCredentials: true,
-  //     url: squadUrl + squadId,
-  //   });
-  //   return (response.status === 200) ? response.data.deleted.count : -1
-  // } catch (err) {
-  //   return -1;
-  // }
+  return response.data.count;
 }
 
 /**
@@ -397,21 +256,8 @@ export const deleteAllLanesForTmnt = async (tmntId: string): Promise<number> => 
   } catch (err) {
     throw new Error(`deleteAllLanesForTmnt failed: ${err instanceof Error ? err.message : err}`);
   }
-  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting lanes for tmnt");
   }
-  return response.data.deleted.count
-
-
-  // try {
-  //   if (!isValidBtDbId(tmntId, "tmt")) return -1
-  //   const response = await axios({
-  //     method: "delete",
-  //     withCredentials: true,
-  //     url: tmntUrl + tmntId,
-  //   });
-  //   return (response.status === 200) ? response.data.deleted.count : -1
-  // } catch (err) {
-  //   return -1;
-  // }
+  return response.data.count
 }

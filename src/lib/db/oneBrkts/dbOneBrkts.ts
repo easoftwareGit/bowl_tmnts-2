@@ -254,10 +254,10 @@ export const deleteOneBrkt = async (id: string): Promise<number> => {
   } catch (err) {
     throw new Error(`deleteOneBrkt failed: ${err instanceof Error ? err.message : err}`);
   }
-  if (response.status !== 200) { 
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting oneBrkt");
   }    
-  return 1
+  return response.data.count
 }
 
 /**
@@ -277,10 +277,10 @@ export const deleteAllOneBrktsForBrkt = async (brktId: string): Promise<number> 
   } catch (err) {
     throw new Error(`deleteAllOneBrktsForBrkt failed: ${err instanceof Error ? err.message : err}`);
   }
-  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting oneBrkts for brkt");
   }
-  return response.data.deleted.count
+  return response.data.count
 }
 
 /**
@@ -300,10 +300,10 @@ export const deleteAllOneBrktsForDiv = async (divId: string): Promise<number> =>
   } catch (err) {
     throw new Error(`deleteAllOneBrktsForDiv failed: ${err instanceof Error ? err.message : err}`);
   }
-  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting oneBrkts for div");
   }
-  return response.data.deleted.count
+  return response.data.count
 }
 
 /**
@@ -323,10 +323,10 @@ export const deleteAllOneBrktsForSquad = async (squadId: string): Promise<number
   } catch (err) {
     throw new Error(`deleteAllOneBrktsForSquad failed: ${err instanceof Error ? err.message : err}`);
   }
-  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting oneBrkts for squad");
   }
-  return response.data.deleted.count;
+  return response.data.count;
 }
 
 /**
@@ -345,8 +345,8 @@ export const deleteAllOneBrktsForTmnt = async (tmntId: string): Promise<number> 
   } catch (err) {
     throw new Error(`deleteAllOneBrktsForTmnt failed: ${err instanceof Error ? err.message : err}`);
   }
-  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting oneBrkts for tmnt");
   }
-  return response.data.deleted.count;
+  return response.data.count;
 }

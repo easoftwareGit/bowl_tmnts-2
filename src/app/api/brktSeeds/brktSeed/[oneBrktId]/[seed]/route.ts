@@ -45,15 +45,14 @@ export async function DELETE(
       return NextResponse.json({ error: "invalid request" }, { status: 404 });
     }  
     const seedNum = typeof seed === 'string' ? parseInt(seed, 10) : seed;
-    const deleted = await prisma.brkt_Seed.delete({
-      where: {
-        one_brkt_id_seed: {
-          one_brkt_id: oneBrktId,
-          seed: seedNum,
-        },
+
+    const result = await prisma.brkt_Seed.deleteMany({
+      where: {        
+        one_brkt_id: oneBrktId,
+        seed: seedNum,        
       },
     });
-    return NextResponse.json({ deleted }, { status: 200 });
+    return NextResponse.json({ count: result.count }, { status: 200 });
   } catch (err: any) {
     const errStatus = getErrorStatus(err.code);
     return NextResponse.json(

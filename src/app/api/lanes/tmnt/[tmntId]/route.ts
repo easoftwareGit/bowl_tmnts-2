@@ -57,7 +57,7 @@ export async function DELETE(
         { status: 404 }
       );        
     }
-    const deleted = await prisma.lane.deleteMany({
+    const result = await prisma.lane.deleteMany({
       where: {
         squad_id: {
           in: await prisma.squad.findMany({
@@ -74,7 +74,7 @@ export async function DELETE(
         },
       }
     });    
-    return NextResponse.json({ deleted }, { status: 200 });
+    return NextResponse.json({ count: result.count }, { status: 200 });
   } catch (err: any) {
     return NextResponse.json(
       { error: "error deleting lanes for tmnt" },

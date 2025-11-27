@@ -3,9 +3,8 @@ import { baseLanesApi, baseSquadsApi } from "@/lib/db/apiPaths";
 import { testBaseLanesApi, testBaseSquadsApi } from "../../../testApi";
 import { laneType, squadType } from "@/lib/types/types";
 import { initLane, initSquad } from "@/lib/db/initVals";
-import { deleteAllLanesForSquad, deleteAllLanesForTmnt, getAllLanesForSquad, getAllLanesForTmnt } from "@/lib/db/lanes/dbLanes";
-import { mockLanesToPost, mockSquadsToPost, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllSquadsForTmnt, postManySquads } from "@/lib/db/squads/dbSquads";
+import { deleteAllLanesForSquad, getAllLanesForSquad } from "@/lib/db/lanes/dbLanes";
+import { mockLanesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -1100,10 +1099,11 @@ describe('Lanes - API: /api/lanes', () => {
           withCredentials: true,
           url: oneLaneUrl + notFoundId,
         })
-        expect(delResponse.status).toBe(404);
+        expect(delResponse.status).toBe(200);
+        expect(delResponse.data.count).toBe(0);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(200);
         } else {
           expect(true).toBeFalsy();
         }
@@ -1192,9 +1192,8 @@ describe('Lanes - API: /api/lanes', () => {
         url: squadUrl + toDelLanes[0].squad_id
       })
       expect(response.status).toBe(200);      
-      didDel = true;
-      const count = response.data.deleted.count
-      expect(count).toBe(toDelLanes.length); 
+      didDel = true;      
+      expect(response.data.count).toBe(toDelLanes.length); 
     })
     it('should return 404 when squad ID is invalid', async () => {
       try {
@@ -1219,9 +1218,8 @@ describe('Lanes - API: /api/lanes', () => {
         url: squadUrl + notfoundSquadId
       })
       expect(response.status).toBe(200);      
-      didDel = true;
-      const count = response.data.deleted.count
-      expect(count).toBe(0); 
+      didDel = true;      
+      expect(response.data.count).toBe(0); 
     })  
     it('should return 404 when squad ID is valid, but not an event ID', async () => {
       try {
@@ -1415,9 +1413,8 @@ describe('Lanes - API: /api/lanes', () => {
         url: tmntUrl + tmntId
       })
       expect(response.status).toBe(200);
-      didDel = true
-      const count = response.data.deleted.count;
-      expect(count).toBe(toDelLanes.length);
+      didDel = true      
+      expect(response.data.count).toBe(toDelLanes.length);
     })
     it('should return 404 when tmnt ID is invalid', async () => {
       try {
@@ -1442,9 +1439,8 @@ describe('Lanes - API: /api/lanes', () => {
         url: tmntUrl + notFoundTmntId
       })
       expect(response.status).toBe(200);
-      didDel = true
-      const count = response.data.deleted.count;
-      expect(count).toBe(0);
+      didDel = true      
+      expect(response.data.count).toBe(0);
     })  
     it('should return 404 when tmnt ID is valid, but not an tmnt ID', async () => {
       try {

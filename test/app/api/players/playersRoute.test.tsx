@@ -3,7 +3,7 @@ import { basePlayersApi } from "@/lib/db/apiPaths";
 import { testBasePlayersApi } from "../../../testApi";
 import { initPlayer } from "@/lib/db/initVals";
 import { playerType } from "@/lib/types/types";
-import { deleteAllPlayersForSquad, deleteAllPlayersForTmnt, getAllPlayersForSquad, getAllPlayersForTmnt, postManyPlayers } from "@/lib/db/players/dbPlayers";
+import { deleteAllPlayersForSquad, deleteAllPlayersForTmnt, getAllPlayersForTmnt, postManyPlayers } from "@/lib/db/players/dbPlayers";
 import { mockPlayersToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { cloneDeep } from "lodash";
 
@@ -2799,10 +2799,11 @@ describe("Players - API's: /api/players", () => {
           withCredentials: true,
           url: onePlayerUrl + notFoundId
         });
-        expect(response.status).toBe(404);
+        expect(response.status).toBe(200);
+        expect(response.data.count).toBe(0);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(200);
         } else {
           expect(true).toBeFalsy();
         }
@@ -2878,7 +2879,7 @@ describe("Players - API's: /api/players", () => {
           url: squadUrl + notFoundSquadId
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(0);
+        expect(response.data.count).toBe(0);
       } catch (err) {
         expect(true).toBeFalsy();
       }
@@ -2954,7 +2955,7 @@ describe("Players - API's: /api/players", () => {
           url: tmntUrl + notFoundTmntId
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(0);
+        expect(response.data.count).toBe(0);
       } catch (err) {
         expect(true).toBeFalsy();
       }

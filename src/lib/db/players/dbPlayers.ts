@@ -220,10 +220,10 @@ export const deletePlayer = async (id: string): Promise<number> => {
   } catch (err) {
     throw new Error(`deletePlayer failed: ${err instanceof Error ? err.message : err}`);
   }
-  if (response.status !== 200) { 
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting player");
   }
-  return 1;
+  return response.data.count;
 }
 
 /**
@@ -246,10 +246,10 @@ export const deleteAllPlayersForSquad = async (squadId: string): Promise<number>
   } catch (err) {
     throw new Error(`deleteAllPlayersForSquad failed: ${err instanceof Error ? err.message : err}`);
   }
-  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting players for squad");
   }
-  return response.data.deleted.count;
+  return response.data.count;
 } 
 
 /**
@@ -272,8 +272,8 @@ export const deleteAllPlayersForTmnt = async (tmntId: string): Promise<number> =
   } catch (err) {
     throw new Error(`deleteAllPlayersForTmnt failed: ${err instanceof Error ? err.message : err}`);
   }
-  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting players for tmnt");
   }
-  return response.data.deleted.count;
+  return response.data.count;
 }

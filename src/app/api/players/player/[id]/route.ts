@@ -17,9 +17,6 @@ export async function GET(
     if (!validPlayerId(id)) {
       return NextResponse.json({ error: "invalid request" }, { status: 404 });
     }
-    // if (!isValidBtDbId(id, "ply")) {
-    //   return NextResponse.json({ error: "not found" }, { status: 404 });
-    // }
     const player = await prisma.player.findUnique({
       where: {
         id: id,
@@ -229,12 +226,12 @@ export async function DELETE(
     if (!validPlayerId(id)) {
       return NextResponse.json({ error: "invalid request" }, { status: 404 });
     }
-    const deleted = await prisma.player.delete({
+    const result = await prisma.player.deleteMany({
       where: {
         id: id,
       },
     });
-    return NextResponse.json({ deleted }, { status: 200 });
+    return NextResponse.json({ count: result.count }, { status: 200 });
   } catch (err: any) {
     const errStatus = getErrorStatus(err.code);
     return NextResponse.json(

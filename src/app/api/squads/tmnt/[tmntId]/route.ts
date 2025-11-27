@@ -51,7 +51,7 @@ export async function DELETE(
       );        
     }
 
-    const deleted = await prisma.squad.deleteMany({
+    const result = await prisma.squad.deleteMany({
       where: {
         event_id: {
           in: await prisma.event.findMany({
@@ -61,7 +61,7 @@ export async function DELETE(
         },
       },      
     });    
-    return NextResponse.json({ deleted }, { status: 200 });
+    return NextResponse.json({ count: result.count }, { status: 200 });
   } catch (err: any) {
     return NextResponse.json(
       { error: "error deleting squads for tmnt" },

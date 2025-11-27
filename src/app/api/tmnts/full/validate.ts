@@ -1454,72 +1454,74 @@ export const validateFullTmnt = (
   return fullTmntErr;
 };
 
-/**
- * validates full tmnt entries
- *
- * NOTE: does not validate tmnt, events, divs, squads, lanes,
- * pots, brkts or divs
- *
- * @param {tmntFullType} tmntFullData - tmnt full data
- * @returns {tmntFullDataErrType} - error information
- */
-export const validateFullTmntEntries = (
-  tmntFullData: tmntFullType
-): tmntFullDataErrType => {
-  let fullTmntEntriesErr: tmntFullDataErrType = {
-    errorCode: ErrorCode.None,
-    errorTable: "",
-    errorIndex: 0,
-    message: "",
-  };
+// /**
+//  * validates full tmnt entries
+//  *
+//  * @param {tmntFullType} tmntFullData - tmnt full data
+//  * @returns {tmntFullDataErrType} - error information
+//  */
+// export const validateFullTmntEntries = (
+//   tmntFullData: tmntFullType
+// ): tmntFullDataErrType => {
+//   let fullTmntEntriesErr: tmntFullDataErrType = {
+//     errorCode: ErrorCode.None,
+//     errorTable: "",
+//     errorIndex: 0,
+//     message: "",
+//   };
 
-  if (tmntFullData == null || typeof tmntFullData !== "object") {
-    fullTmntEntriesErr.errorCode = ErrorCode.MissingData;
-    fullTmntEntriesErr.errorTable = "tmntFullData";
-    fullTmntEntriesErr.message = basicErrMsg(
-      fullTmntEntriesErr.errorCode,
-      fullTmntEntriesErr.errorTable
-    );
-    return fullTmntEntriesErr;
-  }
+//   if (tmntFullData == null || typeof tmntFullData !== "object") {
+//     fullTmntEntriesErr.errorCode = ErrorCode.MissingData;
+//     fullTmntEntriesErr.errorTable = "tmntFullData";
+//     fullTmntEntriesErr.message = basicErrMsg(
+//       fullTmntEntriesErr.errorCode,
+//       fullTmntEntriesErr.errorTable
+//     );
+//     return fullTmntEntriesErr;
+//   }
 
-  // validate divEntries
-  fullTmntEntriesErr = getDivEntriesError(tmntFullData);
-  if (fullTmntEntriesErr.errorCode !== ErrorCode.None)
-    return fullTmntEntriesErr;
+//   // validate base tmnt
+//   fullTmntEntriesErr = validateFullTmnt(tmntFullData);
+//   if (fullTmntEntriesErr.errorCode !== ErrorCode.None)
+//     return fullTmntEntriesErr;
 
-  // validate brktEntries (includes brktRefunds)
-  fullTmntEntriesErr = getBrktEntriesError(tmntFullData);
-  if (fullTmntEntriesErr.errorCode !== ErrorCode.None)
-    return fullTmntEntriesErr;
+//   // validate divEntries
+//   fullTmntEntriesErr = getDivEntriesError(tmntFullData);
+//   if (fullTmntEntriesErr.errorCode !== ErrorCode.None)
+//     return fullTmntEntriesErr;
 
-  // validate oneBrkts
-  fullTmntEntriesErr = getOneBrktsError(tmntFullData);
-  if (fullTmntEntriesErr.errorCode !== ErrorCode.None)
-    return fullTmntEntriesErr;
+//   // validate brktEntries (includes brktRefunds)
+//   fullTmntEntriesErr = getBrktEntriesError(tmntFullData);
+//   if (fullTmntEntriesErr.errorCode !== ErrorCode.None)
+//     return fullTmntEntriesErr;
 
-  // validate brktSeeds
-  fullTmntEntriesErr = getBrktSeedsError(tmntFullData);
-  if (fullTmntEntriesErr.errorCode !== ErrorCode.None)
-    return fullTmntEntriesErr;
+//   // validate oneBrkts
+//   fullTmntEntriesErr = getOneBrktsError(tmntFullData);
+//   if (fullTmntEntriesErr.errorCode !== ErrorCode.None)
+//     return fullTmntEntriesErr;
 
-  // validate elimEntries
-  fullTmntEntriesErr = getElimEntriesError(tmntFullData);
-  if (fullTmntEntriesErr.errorCode !== ErrorCode.None)
-    return fullTmntEntriesErr;
+//   // validate brktSeeds
+//   fullTmntEntriesErr = getBrktSeedsError(tmntFullData);
+//   if (fullTmntEntriesErr.errorCode !== ErrorCode.None)
+//     return fullTmntEntriesErr;
 
-  // validate potEntries
-  fullTmntEntriesErr = getPotEntriesError(tmntFullData);
-  if (fullTmntEntriesErr.errorCode !== ErrorCode.None)
-    return fullTmntEntriesErr;
+//   // validate elimEntries
+//   fullTmntEntriesErr = getElimEntriesError(tmntFullData);
+//   if (fullTmntEntriesErr.errorCode !== ErrorCode.None)
+//     return fullTmntEntriesErr;
 
-  // validate players
-  fullTmntEntriesErr = getPlayersError(tmntFullData);
-  if (fullTmntEntriesErr.errorCode !== ErrorCode.None)
-    return fullTmntEntriesErr;
+//   // validate potEntries
+//   fullTmntEntriesErr = getPotEntriesError(tmntFullData);
+//   if (fullTmntEntriesErr.errorCode !== ErrorCode.None)
+//     return fullTmntEntriesErr;
 
-  return fullTmntEntriesErr;
-};
+//   // validate players
+//   fullTmntEntriesErr = getPlayersError(tmntFullData);
+//   if (fullTmntEntriesErr.errorCode !== ErrorCode.None)
+//     return fullTmntEntriesErr;
+
+//   return fullTmntEntriesErr;
+// };
 
 export const exportedForTesting = {
   basicErrMsg,

@@ -3,7 +3,7 @@ import { baseTmntsApi } from "@/lib/db/apiPaths";
 import { testBaseTmntsApi } from "../../../../test/testApi";
 import { tmntFullType } from "@/lib/types/types";
 import { ErrorCode } from "@/lib/validation";
-import { validateFullTmnt, validateFullTmntEntries } from "@/app/api/tmnts/full/validate";
+import { validateFullTmnt } from "@/app/api/tmnts/full/validate";
 
 const url = testBaseTmntsApi.startsWith("undefined")
   ? baseTmntsApi
@@ -15,7 +15,7 @@ const fullEntriesUrl = url + "/fullEntries/";
  * replaces full tmnt data, tmnt table and all child/grandchild tables
  * 
  * @param {tmntFullType} tmntFullData - tmnt full data
- * @returns {Promise<number>} - 1 on success or throws error 
+ * @returns {Promise<number>} - true on success or throws error 
  */
 export const replaceTmntFullData = async (
   tmntFullData: tmntFullType
@@ -40,8 +40,7 @@ export const replaceTmntFullData = async (
   if (response.status !== 200 || !response.data?.success) {
     throw new Error("Error replacing full tmnt");
   }
-
-  return 1
+  return response.data.success;
 };
 
 /**
@@ -59,7 +58,7 @@ export const replaceTmntEntriesData = async (
   if (tmntFullData == null || typeof tmntFullData !== "object") {      
     throw new Error("invalid tmntFullData data");
   }
-  const validateResult = validateFullTmntEntries(tmntFullData);
+  const validateResult = validateFullTmnt(tmntFullData);
   if (validateResult.errorCode !== ErrorCode.None) {
     throw new Error(validateResult.message);
   }
@@ -76,6 +75,5 @@ export const replaceTmntEntriesData = async (
   if (response.status !== 200 || !response.data?.success) {
     throw new Error("Error replacing full tmnt entries");
   }
-
-  return 1
+  return response.data.success;
 };

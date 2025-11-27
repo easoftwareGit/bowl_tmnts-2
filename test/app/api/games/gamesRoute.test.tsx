@@ -1716,10 +1716,11 @@ describe('Games - API: /api/games', () => {
           withCredentials: true,
           url: oneGameUrl + notFoundId,
         })  
-        expect(delResponse.status).toBe(404);
+        expect(delResponse.status).toBe(200);
+        expect(delResponse.data.count).toBe(0);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(200);
         } else {
           expect(true).toBeFalsy();
         }
@@ -1803,7 +1804,7 @@ describe('Games - API: /api/games', () => {
       })
       expect(response.status).toBe(200);
       didDel = true
-      const count = response.data.deleted.count;
+      const count = response.data.count;
       expect(count).toBe(toDelGames.length);
     })
     it('should return 404 when a squad ID is invalid', async () => { 
@@ -1829,7 +1830,7 @@ describe('Games - API: /api/games', () => {
         url: squadUrl + notFoundSquadId
       })
       expect(response.status).toBe(200);      
-      const count = response.data.deleted.count;
+      const count = response.data.count;
       expect(count).toBe(0);
     })
     it('should return 404 when a squad id is valid, but not a squad id', async () => {

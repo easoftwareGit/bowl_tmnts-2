@@ -1,6 +1,5 @@
 import { divEntryType } from "@/lib/types/types";
 import { initDivEntry } from "@/lib/db/initVals";
-// import { replaceManyDivEntries } from "../../../../src/lib/db/divEntries/dbDivEntriesReplaceMany";
 
 const squadId = "sqd_42be0f9d527e4081972ce8877190489d";
 const manyDivEntries: divEntryType[] = [

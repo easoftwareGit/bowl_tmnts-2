@@ -1414,10 +1414,11 @@ describe("Elims - PUT, PATCH, DELETE", () => {
           withCredentials: true,
           url: oneElimUrl + notFoundId,
         });
-        expect(delResponse.status).toBe(404);
+        expect(delResponse.status).toBe(200);
+        expect(delResponse.data.count).toBe(0);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(200);
         } else {
           expect(true).toBeFalsy();
         }
@@ -1469,9 +1470,8 @@ describe("Elims - PUT, PATCH, DELETE", () => {
         url: squadUrl + toDelDivSquadElims[0].squad_id        
       })
       expect(response.status).toBe(200);
-      didDel = true;
-      const count = response.data.deleted.count;
-      expect(count).toBe(toDelDivSquadElims.length);
+      didDel = true;      
+      expect(response.data.count).toBe(toDelDivSquadElims.length);
     })
     it('should return 404 when elims id is invalid', async () => { 
       try {
@@ -1495,9 +1495,8 @@ describe("Elims - PUT, PATCH, DELETE", () => {
         withCredentials: true,
         url: squadUrl + notFoundSquadId
       })  
-      expect(response.status).toBe(200);
-      const count = response.data.deleted.count;
-      expect(count).toBe(0);
+      expect(response.status).toBe(200);      
+      expect(response.data.count).toBe(0);
     })
   })
 
@@ -1528,9 +1527,8 @@ describe("Elims - PUT, PATCH, DELETE", () => {
         url: divUrl + toDelDivSquadElims[0].div_id
       })
       expect(response.status).toBe(200);
-      didDel = true;
-      const count = response.data.deleted.count;
-      expect(count).toBe(toDelDivSquadElims.length);
+      didDel = true;      
+      expect(response.data.count).toBe(toDelDivSquadElims.length);
     })
     it('should return 404 when div id is invalid', async () => { 
       try {
@@ -1554,9 +1552,8 @@ describe("Elims - PUT, PATCH, DELETE", () => {
         withCredentials: true,
         url: divUrl + notFoundDivId
       })  
-      expect(response.status).toBe(200);
-      const count = response.data.deleted.count;
-      expect(count).toBe(0);
+      expect(response.status).toBe(200);      
+      expect(response.data.count).toBe(0);
     })
 
   })
@@ -1601,9 +1598,8 @@ describe("Elims - PUT, PATCH, DELETE", () => {
         url: tmntUrl + tmntToDelId
       })
       expect(response.status).toBe(200);
-      didDel = true;
-      const count = response.data.deleted.count;
-      expect(count).toBe(mockElimsToPost.length);
+      didDel = true;      
+      expect(response.data.count).toBe(mockElimsToPost.length);
     })
     it('should return 404 when div id is invalid', async () => { 
       try {
@@ -1627,9 +1623,8 @@ describe("Elims - PUT, PATCH, DELETE", () => {
         withCredentials: true,
         url: tmntUrl + notFoundTmntId
       })  
-      expect(response.status).toBe(200);
-      const count = response.data.deleted.count;
-      expect(count).toBe(0);
+      expect(response.status).toBe(200);      
+      expect(response.data.count).toBe(0);
     })
 
   })  

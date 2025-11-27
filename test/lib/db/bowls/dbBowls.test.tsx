@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { baseBowlsApi } from "@/lib/db/apiPaths";
 import { testBaseBowlsApi } from "../../../testApi";
-import { getBowl, getBowls, postBowl, putBowl, upsertBowl } from "@/lib/db/bowls/dbBowls";
+import { deleteBowl, getBowl, getBowls, postBowl, putBowl, upsertBowl } from "@/lib/db/bowls/dbBowls";
 import { initBowl } from "@/lib/db/initVals";
 import { bowlType } from "@/lib/types/types";
 
@@ -60,13 +60,13 @@ describe('dbBowls', () => {
     url: "https://www.updated.com",
   }
 
-  const deletePostedBowl = async () => { 
+  const deletePostedBowl = async (bowlId: string) => { 
     const response = await axios.get(url);
     const bowls = response.data.bowls;
     const toDel = bowls.find((b: bowlType) => b.id === testBowlId);
     if (toDel) {
       try {
-        const delResponse = await axios({
+        await axios({
           method: "delete",
           withCredentials: true,
           url: oneBowlUrl + toDel.id
@@ -82,7 +82,7 @@ describe('dbBowls', () => {
     // do not use put command, use delete and post
     const bowlJSON = JSON.stringify(bowlToPost);
     try { 
-      await deletePostedBowl();
+      await deletePostedBowl(testBowlId);
       await axios.post(url, bowlJSON, {withCredentials: true,});      
     } catch (err) { 
       // do nothing      
@@ -202,7 +202,7 @@ describe('dbBowls', () => {
     let createdBowl = false
 
     beforeAll(async () => { 
-      await deletePostedBowl();
+      await deletePostedBowl(testBowlId);
     })
 
     beforeEach(() => {
@@ -211,7 +211,7 @@ describe('dbBowls', () => {
 
     afterEach(async () => {
       if (createdBowl) {
-        await deletePostedBowl();
+        await deletePostedBowl(testBowlId);
       }      
     })
 
@@ -261,7 +261,7 @@ describe('dbBowls', () => {
     });
 
     afterAll(async () => {
-      await deletePostedBowl();
+      await deletePostedBowl(testBowlId);
     });
 
     it('should update a bowl by ID', async () => {
@@ -292,11 +292,11 @@ describe('dbBowls', () => {
   describe('upsertBowl() - insert', () => {
 
     beforeAll(async () => {
-      await deletePostedBowl();
+      await deletePostedBowl(testBowlId);
     });
 
     afterAll(async () => {
-      await deletePostedBowl();
+      await deletePostedBowl(testBowlId);
     });
 
     it('should upsert (insert) a bowl', async () => {
@@ -322,7 +322,7 @@ describe('dbBowls', () => {
     });
 
     afterAll(async () => {
-      await deletePostedBowl();
+      await deletePostedBowl(testBowlId);
     });
 
     it('should upsert (update) a bowl', async () => {
@@ -381,4 +381,72 @@ describe('dbBowls', () => {
     });
   });
 
+  describe('deleteBowl()', () => {
+
+    const postBowlToDelete = async () => {
+      const response = await axios.get(url);
+      const bowls = response.data.bowls;
+      const toDel = bowls.find((b: bowlType) => b.id === bowlToPost.id);
+      if (!toDel) {
+        try {
+          await axios.post(url, JSON.stringify(bowlToPost), { withCredentials: true });          
+        } catch (err) {
+          if (err instanceof AxiosError) console.log(err.message);
+        }
+      }
+    }
+
+    let didDel = false;
+
+    beforeAll(async () => {
+      await postBowlToDelete();
+    });
+
+    beforeEach(() => {
+      didDel = false;
+    });
+
+    afterEach(async () => {
+      if (didDel) { 
+        await postBowlToDelete();
+      }
+    });
+
+    afterAll(async () => {
+      await deletePostedBowl(bowlToPost.id);
+    });
+
+    it('should delete a bowl by ID', async () => {
+      const count = await deleteBowl(bowlToPost.id);
+      expect(count).toBe(1);
+    });
+    it('should not delete a bowl with invalid ID', async () => {
+      try {
+        await deleteBowl("invalid");
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('Invalid bowl data');
+      }
+    });
+    it('should not delete a bowl with valid id, but not a bowl id', async () => {
+      try {
+        await deleteBowl(userId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('Invalid bowl data');
+      }
+    })
+    it('should not delete a bowl when passed null', async () => {
+      try {
+        await deleteBowl(null as any);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe('Invalid bowl data');
+      }
+    });
+    it('should not delete a bowl that does not exist', async () => {
+      const count = await deleteBowl(notFoundId);
+      expect(count).toBe(0);
+    })
+  })
 })

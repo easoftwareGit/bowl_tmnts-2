@@ -463,10 +463,10 @@ export const deleteTmnt = async (id: string): Promise<number> => {
   } catch (err) {
     throw new Error(`deleteTmnt failed: ${err instanceof Error ? err.message : err}`);
   }
-  if (response.status !== 200) { 
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting tmnt");
   }
-  return 1;
+  return response.data.count;
 }
 
 export const exportedForTesting = {  

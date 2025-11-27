@@ -230,10 +230,10 @@ export const deleteBrkt = async (id: string): Promise<number> => {
     const response = await axios.delete(oneBrktUrl + id, {
       withCredentials: true
     })
-    if (response.status !== 200) {
+    if (response.status !== 200 || typeof response.data?.count !== "number") {
       throw new Error('Error deleting brkt');
     }
-    return 1
+    return response.data.count
   } catch (err) { 
     throw new Error(`deleteBrkt failed: ${err instanceof Error ? err.message : err}`);
   }
@@ -254,10 +254,10 @@ export const deleteAllBrktsForSquad = async (squadId: string): Promise<number> =
     const response = await axios.delete(squadUrl + squadId, {
       withCredentials: true,
     });
-    if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+    if (response.status !== 200 || typeof response.data?.count !== "number") {
       throw new Error("Error deleting brkts for squad");
     }
-    return response.data.deleted.count;
+    return response.data.count;
   } catch (err) {
     throw new Error(`deleteAllBrktsForSquad failed: ${err instanceof Error ? err.message : err}`);
   }
@@ -278,10 +278,10 @@ export const deleteAllBrktsForDiv = async (divId: string): Promise<number> => {
     const response = await axios.delete(divUrl + divId, {
       withCredentials: true,
     });
-    if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+    if (response.status !== 200 || typeof response.data?.count !== "number") {
       throw new Error("Error deleting brkts for div");
     }
-    return response.data.deleted.count;
+    return response.data.count;
   } catch (err) {
     throw new Error(`deleteAllBrktsForDiv failed: ${err instanceof Error ? err.message : err}`);
   }
@@ -301,10 +301,10 @@ export const deleteAllBrktsForTmnt = async (tmntId: string): Promise<number> => 
     const response = await axios.delete(tmntUrl + tmntId, {
       withCredentials: true,
     });
-    if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+    if (response.status !== 200 || typeof response.data?.count !== "number") {
       throw new Error("Error deleting brkts for tmnt");
     }
-    return response.data.deleted.count;
+    return response.data.count;
   } catch (err) {
     throw new Error(`deleteAllBrktsForTmnt failed: ${err instanceof Error ? err.message : err}`);
   }

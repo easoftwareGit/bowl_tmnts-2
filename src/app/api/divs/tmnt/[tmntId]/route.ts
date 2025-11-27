@@ -48,12 +48,12 @@ export async function DELETE(
         { status: 404 }
       );        
     }
-    const deleted = await prisma.div.deleteMany({
+    const result = await prisma.div.deleteMany({
       where: {
         tmnt_id: tmntId,
       },
     });    
-    return NextResponse.json({ deleted }, { status: 200 });
+    return NextResponse.json({ count: result.count }, { status: 200 });
   } catch (err: any) {
     return NextResponse.json(
       { error: "error getting divs for tmnt" },

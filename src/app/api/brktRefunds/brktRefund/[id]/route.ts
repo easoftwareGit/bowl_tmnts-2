@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ErrorCode, isValidBtDbId } from "@/lib/validation";
 import { initBrktRefund } from "@/lib/db/initVals";
-import { brktRefundType } from "@/lib/types/types";
+import { brktEntryType, brktRefundType } from "@/lib/types/types";
 import { sanitizeBrktRefund, validateBrktRefund } from "../../validate";
 import { getErrorStatus } from "@/app/api/errCodes";
 
@@ -159,8 +159,8 @@ export async function PATCH(
     }
     
     // 4) patch data in database
-    // DO NOT PATCH FEE
-    const brktEntryUpdate = await prisma.brkt_Refund.update({
+    // DO NOT PATCH brkt_entry_id
+    const brktRefund = await prisma.brkt_Refund.update({
       where: {
         brkt_entry_id: id,
       },
@@ -169,21 +169,11 @@ export async function PATCH(
       },
     });
 
-    const brktEntry: brktEntryType = {
-      id: brktEntryUpdate.id,
-      brkt_id: brktEntryUpdate.brkt_id,  
-      player_id: brktEntryUpdate.player_id,
-      num_brackets: brktEntryUpdate.num_brackets,  
-      num_refunds: (toBePatched.num_refunds === 0 || toBePatched.num_refunds == null) ? undefined as any : toBePatched.num_refunds,
-      fee: currentBrktEntry.fee + '',        
-      time_stamp: brktEntryUpdate.time_stamp.getTime(),
-    }    
-
-    return NextResponse.json({ brktEntry }, { status: 200 });
+    return NextResponse.json({ brktRefund }, { status: 200 });
   } catch (err: any) {
     const errStatus = getErrorStatus(err.code);
     return NextResponse.json(
-      { error: "Error patching brktEntry" },
+      { error: "Error patching brktRefund" },
       { status: errStatus }
     );
   }
@@ -199,12 +189,12 @@ export async function DELETE(
       return NextResponse.json({ error: "invalid request" }, { status: 404 });
     }
 
-    const deleted = await prisma.brkt_Entry.delete({
+    const result = await prisma.brkt_Entry.deleteMany({
       where: {
         id: id,
       },
     });
-    return NextResponse.json({ deleted }, { status: 200 });
+    return NextResponse.json({ deleted: result.count }, { status: 200 });
   } catch (err: any) {
     const errStatus = getErrorStatus(err.code);
     return NextResponse.json(

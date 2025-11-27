@@ -6,7 +6,7 @@ import { initElim } from "@/lib/db/initVals";
 import { deleteAllSquadsForTmnt, postManySquads } from "@/lib/db/squads/dbSquads";
 import { deleteAllDivsForTmnt, postManyDivs } from "@/lib/db/divs/dbDivs";
 import { mockElimsToPost, mockSquadsToPost, mockDivsToPost, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllElimsForTmnt, getAllElimsForSquad, getAllElimsForTmnt } from "@/lib/db/elims/dbElims";
+import { deleteAllElimsForTmnt, getAllElimsForTmnt } from "@/lib/db/elims/dbElims";
 import { btDbUuid } from "@/lib/uuid";
 
 // before running this test, run the following commands in the terminal:

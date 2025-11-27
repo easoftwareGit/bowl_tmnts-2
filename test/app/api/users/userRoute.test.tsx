@@ -1270,7 +1270,8 @@ describe('Users - API: /api/users', () => {
           url: oneUserUrl + toDelUser.id
         });
         didDel = true;
-        expect(delResponse.status).toBe(200);                                    
+        expect(delResponse.status).toBe(200); 
+        expect(delResponse.data.count).toBe(1);
       } catch (err) {        
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(200);
@@ -1302,10 +1303,11 @@ describe('Users - API: /api/users', () => {
           withCredentials: true,
           url: oneUserUrl + notFoundId
         });
-        expect(delResponse.status).toBe(404);
+        expect(delResponse.status).toBe(200);
+        expect(delResponse.data.count).toBe(0);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(200);
         } else {
           expect(true).toBeFalsy();
         }

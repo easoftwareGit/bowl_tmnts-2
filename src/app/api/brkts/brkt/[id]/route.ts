@@ -305,17 +305,14 @@ export async function DELETE(
     if (!isValidBtDbId(id, "brk")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
-    const deletedBrkt = await prisma.brkt.delete({
+
+    const result = await prisma.brkt.deleteMany({
       where: {
         id: id,
       },
     });
-    // add in fsa
-    const deleted = {
-      ...deletedBrkt,
-      fsa: (Number(deletedBrkt.fee) * deletedBrkt.players) + "",
-    };
-    return NextResponse.json({ deleted }, { status: 200 });
+    
+    return NextResponse.json({ count: result.count }, { status: 200 });
   } catch (err: any) {
     const errStatus = getErrorStatus(err.code);
     return NextResponse.json(

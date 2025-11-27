@@ -1060,8 +1060,18 @@ describe("brktSeeds - API: /api/brktSeed", () => {
       })
       didDel = true;
       expect(delResponse.status).toBe(200);
-      expect(delResponse.data.deleted.one_brkt_id).toBe(toDelBrktSeed.one_brkt_id);
-      expect(delResponse.data.deleted.seed).toBe(toDelBrktSeed.seed);
+      expect(delResponse.data.count).toBe(1);
+    })
+    it('should not delete a brktSeed by one_brkt_id + seed when not found', async () => {
+      const toDelUrl = oneBrktSeedUrl + notFoundOneBrktId + "/" + toDelBrktSeed.seed
+      const delResponse = await axios({
+        method: "delete",
+        withCredentials: true,
+        url: toDelUrl
+      })
+      didDel = true;
+      expect(delResponse.status).toBe(200);
+      expect(delResponse.data.count).toBe(0);
     })
     it('should not delete a brktSeed by one_brkt_id + seed when one_brkt_id is invalid', async () => {
       try {
@@ -1204,7 +1214,7 @@ describe("brktSeeds - API: /api/brktSeed", () => {
         url: oneBrktSeedUrl + mockBrktSeedsToPost[0].one_brkt_id
       })
       expect(response.status).toBe(200);
-      expect(response.data.deleted.count).toBe(mockBrktSeedsToPost.length);      
+      expect(response.data.count).toBe(mockBrktSeedsToPost.length);      
     })
     it('should not delete all brktSeeds for oneBrkt when oneBrkt does not exist', async () => {
       const response = await axios({
@@ -1213,7 +1223,7 @@ describe("brktSeeds - API: /api/brktSeed", () => {
         url: oneBrktSeedUrl + notFoundOneBrktId
       })
       expect(response.status).toBe(200);
-      expect(response.data.deleted.count).toBe(0);
+      expect(response.data.count).toBe(0);
     })
     it('should not delete all brktSeeds for oneBrkt when oneBrktId is invalid', async () => {
       try {
@@ -1276,7 +1286,7 @@ describe("brktSeeds - API: /api/brktSeed", () => {
         url: brktUrl + mockOneBrktsToPost[0].brkt_id
       })
       expect(response.status).toBe(200);
-      expect(response.data.deleted.count).toBe(mockBrktSeedsToPost.length);
+      expect(response.data.count).toBe(mockBrktSeedsToPost.length);
     })
     it('should not delete all brktSeeds for brkt when brkt does not exist', async () => {
       const response = await axios({
@@ -1285,7 +1295,7 @@ describe("brktSeeds - API: /api/brktSeed", () => {
         url: brktUrl + notFoundBrktId
       })
       expect(response.status).toBe(200);
-      expect(response.data.deleted.count).toBe(0);
+      expect(response.data.count).toBe(0);
     })
     it('should not delete all brktSeeds for brkt when brkt is invalid', async () => {
       try {
@@ -1349,7 +1359,7 @@ describe("brktSeeds - API: /api/brktSeed", () => {
       })
       deletedMany = true;
       expect(response.status).toBe(200);
-      expect(response.data.deleted.count).toBe(mockBrktSeedsToPost.length);
+      expect(response.data.count).toBe(mockBrktSeedsToPost.length);
     })
     it('should not delete all brktSeeds for div when div does not exist', async () => {
       const response = await axios({
@@ -1358,7 +1368,7 @@ describe("brktSeeds - API: /api/brktSeed", () => {
         url: divUrl + notFoundDivId
       })
       expect(response.status).toBe(200);
-      expect(response.data.deleted.count).toBe(0);
+      expect(response.data.count).toBe(0);
     })
     it('should not delete all brktSeeds for div when div is invalid', async () => {
       try {
@@ -1423,7 +1433,7 @@ describe("brktSeeds - API: /api/brktSeed", () => {
       });
       deletedMany = true;
       expect(response.status).toBe(200);
-      expect(response.data.deleted.count).toBe(mockBrktSeedsToPost.length);
+      expect(response.data.count).toBe(mockBrktSeedsToPost.length);
     });
     it("should not delete all brktSeeds for squad when squad does not exist", async () => {
       const response = await axios({
@@ -1432,7 +1442,7 @@ describe("brktSeeds - API: /api/brktSeed", () => {
         url: squadUrl + notFoundSquadId,
       });
       expect(response.status).toBe(200);
-      expect(response.data.deleted.count).toBe(0);
+      expect(response.data.count).toBe(0);
     });
     it("should not delete all brktSeeds for squad when squad is invalid", async () => {
       try {
@@ -1497,7 +1507,7 @@ describe("brktSeeds - API: /api/brktSeed", () => {
       });
       deletedMany = true;
       expect(response.status).toBe(200);
-      expect(response.data.deleted.count).toBe(mockBrktSeedsToPost.length);
+      expect(response.data.count).toBe(mockBrktSeedsToPost.length);
     });
     it("should not delete all brktSeeds for tmnt when tmnt does not exist", async () => {
       const response = await axios({
@@ -1506,7 +1516,7 @@ describe("brktSeeds - API: /api/brktSeed", () => {
         url: tmntUrl + notFoundTmntId,
       });
       expect(response.status).toBe(200);
-      expect(response.data.deleted.count).toBe(0);
+      expect(response.data.count).toBe(0);
     });
     it("should not delete all brktSeeds for tmnt when tmnt is invalid", async () => {
       try {

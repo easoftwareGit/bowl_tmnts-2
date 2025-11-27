@@ -44,12 +44,12 @@ export async function DELETE(
     if (!isValidBtDbId(squadId, 'sqd')) {
       return NextResponse.json({ error: "not found" }, { status: 404 });        
     }
-    const deleted = await prisma.lane.deleteMany({
+    const result = await prisma.lane.deleteMany({
       where: {
         squad_id: squadId
       },
     });
-    return NextResponse.json({ deleted }, { status: 200 });
+    return NextResponse.json({ count: result.count }, { status: 200 });
   } catch (err: any) {
     return NextResponse.json(
       { error: "error getting lanes for squad" },

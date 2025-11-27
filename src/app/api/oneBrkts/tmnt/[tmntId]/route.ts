@@ -48,7 +48,7 @@ export async function DELETE(
     if (!isValidBtDbId(tmntId, "tmt")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
-    const deleted = await prisma.one_Brkt.deleteMany({
+    const result = await prisma.one_Brkt.deleteMany({
       where: {
         brkt_id: {
           in: await prisma.brkt.findMany({
@@ -64,7 +64,7 @@ export async function DELETE(
         }
       }
     })
-    return NextResponse.json({ deleted }, { status: 200 });
+    return NextResponse.json({ count: result.count }, { status: 200 });
   } catch (err: any) {
     return NextResponse.json(
       { err: "error deleting brktEntries for tmnt" },

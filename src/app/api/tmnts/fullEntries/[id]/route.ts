@@ -4,7 +4,7 @@ import { ErrorCode, isValidBtDbId } from "@/lib/validation";
 import { tmntFullType } from "@/lib/types/types";
 import { tmntFullDataForPrisma } from "../../dataForPrisma";
 import { getErrorStatus } from "@/app/api/errCodes";
-import { validateFullTmntEntries } from "../../full/validate";
+import { validateFullTmnt } from "../../full/validate";
 
 // routes /api/tmnts/fullEntries/:id
 
@@ -20,7 +20,7 @@ export async function PUT(
 
     const tmntFullEntriesData: tmntFullType = await request.json();
     // validate tmnt full entries data
-    const validationResult = validateFullTmntEntries(tmntFullEntriesData);
+    const validationResult = validateFullTmnt(tmntFullEntriesData);
     if (
       validationResult.errorCode !== ErrorCode.None ||
       id !== tmntFullEntriesData.tmnt.id

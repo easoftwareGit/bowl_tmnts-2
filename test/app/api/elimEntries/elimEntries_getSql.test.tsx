@@ -2,7 +2,6 @@ import { elimEntryType } from "@/lib/types/types";
 import { initElimEntry } from "@/lib/db/initVals";
 import { mockElimEntriesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { getDeleteManySQL, getInsertManySQL, getUpdateManySQL, exportedForTesting } from "@/app/api/elimEntries/many/getSql";
-import { deleteAllElimEntriesForSquad, postManyElimEntries } from "@/lib/db/elimEntries/dbElimEntries";
 
 const { getElimIds } = exportedForTesting;
 

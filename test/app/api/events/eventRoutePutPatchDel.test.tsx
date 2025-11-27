@@ -2641,32 +2641,16 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
           withCredentials: true,
           url: oneEventUrl + notFoundId,
         });
-        expect(response.status).toBe(404);
+        expect(response.status).toBe(200);
+        expect(response.data.count).toBe(0);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(200);
         } else {
           expect(true).toBeFalsy();
         }
       }
-    })
-    // it('should NOT delete an event by ID when event has child rows', async () => {
-    //   try {
-    //     const response = await axios({
-    //       method: "delete",
-    //       withCredentials: true,
-    //       url: oneEventUrl + testEvent.id
-    //     });
-    //     expect(response.status).toBe(409);
-    //   } catch (err) {
-    //     if (err instanceof AxiosError) {
-    //       expect(err.response?.status).toBe(409);
-    //     } else {
-    //       expect(true).toBeFalsy();
-    //     }
-    //   }
-    // })
-    
+    })    
   })
 
   describe('DELETE all events for a tmnt - API: /api/events/tmnt/:tmntId', () => { 
@@ -2703,7 +2687,8 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
           withCredentials: true,
           url: eventTmntUrl + tmntToDelId,
         });
-        expect(response.status).toBe(200);        
+        expect(response.status).toBe(200);
+        expect(response.data.count).toBe(mockEventsToPost.length);
       } catch (err) {
         expect(true).toBeFalsy();
       }            
@@ -2748,7 +2733,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
           url: eventTmntUrl + notfoundParentId,
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(0)
+        expect(response.data.count).toBe(0)
       } catch (err) {
         expect(true).toBeFalsy();
       }

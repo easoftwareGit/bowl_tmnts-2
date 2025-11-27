@@ -2554,10 +2554,11 @@ describe("DivEntries - API's: /api/divEntries", () => {
           withCredentials: true,
           url: oneDivEntryUrl + notFoundId,
         });
-        expect(response.status).toBe(404);
+        expect(response.status).toBe(200);
+        expect(response.data.count).toBe(0);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(200);
         } else {
           expect(true).toBeFalsy();
         }
@@ -2589,7 +2590,7 @@ describe("DivEntries - API's: /api/divEntries", () => {
           url: divUrl + divIdForDivEntries
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(2);
+        expect(response.data.count).toBe(2);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -2638,7 +2639,7 @@ describe("DivEntries - API's: /api/divEntries", () => {
           url: divUrl + notFoundDivId
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(0);
+        expect(response.data.count).toBe(0);
       } catch (err) {
         expect(true).toBeFalsy();
       }
@@ -2669,7 +2670,7 @@ describe("DivEntries - API's: /api/divEntries", () => {
           url: squadUrl + squadIdForDivEntries
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(4);
+        expect(response.data.count).toBe(4);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -2718,7 +2719,7 @@ describe("DivEntries - API's: /api/divEntries", () => {
           url: squadUrl + notFoundSquadId
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(0);
+        expect(response.data.count).toBe(0);
       } catch (err) {
         expect(true).toBeFalsy();
       }
@@ -2743,7 +2744,7 @@ describe("DivEntries - API's: /api/divEntries", () => {
           url: tmntUrl + tmntIdForMulti
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(mockDivEntriesToPost.length);
+        expect(response.data.count).toBe(mockDivEntriesToPost.length);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -2792,7 +2793,7 @@ describe("DivEntries - API's: /api/divEntries", () => {
           url: tmntUrl + notFoundTmntId
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(0);
+        expect(response.data.count).toBe(0);
       } catch (err) {
         expect(true).toBeFalsy();
       }

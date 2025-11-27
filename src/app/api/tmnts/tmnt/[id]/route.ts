@@ -239,12 +239,12 @@ export async function DELETE(
       return NextResponse.json({ error: "invalid request" }, { status: 404 });
     }
 
-    const deleted = await prisma.tmnt.delete({
+    const result = await prisma.tmnt.deleteMany({
       where: {
         id: id,
       },
     });
-    return NextResponse.json({ deleted }, { status: 200 });
+    return NextResponse.json({ count: result.count }, { status: 200 });
   } catch (err: any) {
     const errStatus = getErrorStatus(err.code);
     return NextResponse.json(

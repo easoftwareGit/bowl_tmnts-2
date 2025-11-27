@@ -49,13 +49,6 @@ export const getAllElimEntriesForTmnt = async (tmntId: string): Promise<elimEntr
     throw new Error(`Unexpected status ${response.status} when fetching elimEntries`)
   }    
   return extractElimEntries(response.data.elimEntries);
-  // return response.data.elimEntries.map((elimEntry: elimEntryType) => ({   
-  //   ...blankElimEntry,
-  //   id: elimEntry.id,        
-  //   elim_id: elimEntry.elim_id,
-  //   player_id: elimEntry.player_id,        
-  //   fee: elimEntry.fee,
-  // }));
 }
 
 /**
@@ -79,13 +72,6 @@ export const getAllElimEntriesForDiv = async (divId: string): Promise<elimEntryT
     throw new Error(`Unexpected status ${response.status} when fetching elimEntries`)
   }
   return extractElimEntries(response.data.elimEntries);
-  // return response.data.elimEntries.map((elimEntry: elimEntryType) => ({
-  //   ...blankElimEntry,
-  //   id: elimEntry.id,        
-  //   elim_id: elimEntry.elim_id,
-  //   player_id: elimEntry.player_id,        
-  //   fee: elimEntry.fee,
-  // }));
 }
 
 /**
@@ -109,13 +95,6 @@ export const getAllElimEntriesForElim = async (elimId: string): Promise<elimEntr
     throw new Error(`Unexpected status ${response.status} when fetching elimEntries`)
   }
   return extractElimEntries(response.data.elimEntries);
-  // return response.data.elimEntries.map((elimEntry: elimEntryType) => ({
-  //   ...blankElimEntry,
-  //   id: elimEntry.id,        
-  //   elim_id: elimEntry.elim_id,
-  //   player_id: elimEntry.player_id,        
-  //   fee: elimEntry.fee,
-  // }));
 }
 
 /**
@@ -274,10 +253,10 @@ export const deleteElimEntry = async (id: string): Promise<number> => {
   } catch (err) {
     throw new Error(`deleteElimEntry failed: ${err instanceof Error ? err.message : err}`);
   }
-  if (response.status !== 200) {
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting elimEntry");
   };
-  return 1;
+  return response.data.count;
 }
 
 /**
@@ -299,10 +278,10 @@ export const deleteAllElimEntriesForSquad = async (squadId: string): Promise<num
   } catch (err) {
     throw new Error(`deleteAllElimEntriesForSquad failed: ${err instanceof Error ? err.message : err}`);
   }
-  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting elimEntries for squad");
   }
-  return response.data.deleted.count;
+  return response.data.count;
 }
 
 /**
@@ -322,10 +301,10 @@ export const deleteAllElimEntriesForDiv = async (divId: string): Promise<number>
   } catch (err) {
     throw new Error(`deleteAllElimEntriesForDiv failed: ${err instanceof Error ? err.message : err}`);
   }
-  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting elimEntries for div");
   }
-  return response.data.deleted.count;
+  return response.data.count;
 }
 
 /**
@@ -345,10 +324,10 @@ export const deleteAllElimEntriesForElim = async (elimId: string): Promise<numbe
   } catch (err) {
     throw new Error(`deleteAllElimEntriesForElim failed: ${err instanceof Error ? err.message : err}`);
   }
-  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting elimEntries for elim");
   }
-  return response.data.deleted.count;
+  return response.data.count;
 }
 
 /**
@@ -368,10 +347,10 @@ export const deleteAllElimEntriesForTmnt = async (tmntId: string): Promise<numbe
   } catch (err) {
     throw new Error(`deleteAllElimEntriesForTmnt failed: ${err instanceof Error ? err.message : err}`);
   }
-  if (response.status !== 200 || typeof response.data?.deleted?.count !== "number") {
+  if (response.status !== 200 || typeof response.data?.count !== "number") {
     throw new Error("Error deleting elimEntries for tmnt");
   }
-  return response.data.deleted.count;
+  return response.data.count;
 }
 
 export const exportedForTesting = {

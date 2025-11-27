@@ -1,4 +1,7 @@
+import "dotenv/config"; // make sure DATABASE_URL is loaded
+
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { hash } from "bcrypt";
 import {
   endOfDayFromString,
@@ -7,7 +10,14 @@ import {
 } from "../src/lib/dateTools";
 import { addDays, addMilliseconds, endOfDay, startOfDay } from "date-fns";
 
-const prisma = new PrismaClient();
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  throw new Error("DATABASE_URL is not set in the environment");
+}
+
+const adapter = new PrismaPg({ connectionString });
+
+const prisma = new PrismaClient({ adapter });
 
 async function userUpsert() {
   const testPasswordHash = await hash("Test123!", 10); // same as call to doHash()
@@ -663,7 +673,7 @@ async function eventUpsert() {
         team_size: 2,
         games: 6,
         entry_fee: 160,
-        lineage: 26,
+        lineage: 36,
         prize_fund: 110,
         other: 4,
         expenses: 10,

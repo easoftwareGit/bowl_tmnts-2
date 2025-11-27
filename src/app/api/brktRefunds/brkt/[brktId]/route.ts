@@ -47,7 +47,7 @@ export async function DELETE(
     if (!isValidBtDbId(brktId, "brk")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
-    const deleted = await prisma.brkt_Refund.deleteMany({
+    const result = await prisma.brkt_Refund.deleteMany({
       where: {
         brkt_entry_id: {
           in: await prisma.one_Brkt.findMany({
@@ -57,7 +57,7 @@ export async function DELETE(
         }
       },
     });
-    return NextResponse.json({ deleted }, { status: 200 });
+    return NextResponse.json({ deleted: result.count }, { status: 200 });
   } catch (err: any) {
     return NextResponse.json(
       { error: "error deleting brktRefunds for brkt" },

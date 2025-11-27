@@ -6,7 +6,6 @@ import { elimEntryType } from "@/lib/types/types";
 import { mockElimEntriesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { deleteAllElimEntriesForTmnt, getAllElimEntriesForSquad, postManyElimEntries } from "@/lib/db/elimEntries/dbElimEntries";
 import { cloneDeep } from "lodash";
-import { getAllBrktEntriesForSquad } from "@/lib/db/brktEntries/dbBrktEntries";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -2168,10 +2167,11 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
           withCredentials: true,
           url: oneElimEntryUrl + notFoundId,
         });
-        expect(response.status).toBe(404);
+        expect(response.status).toBe(200);
+        expect(response.data.count).toBe(0);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(200);
         } else {
           expect(true).toBeFalsy();
         }
@@ -2210,7 +2210,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         });
         expect(response.status).toBe(200);
         didDel = true
-        expect(response.data.deleted.count).toBe(2); // 2 elimEntries deleted from mock data
+        expect(response.data.count).toBe(2); // 2 elimEntries deleted from mock data
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -2259,7 +2259,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
           url: elimUrl + notFoundElimId
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(0);
+        expect(response.data.count).toBe(0);
       } catch (err) {
         expect(true).toBeFalsy();
       }
@@ -2297,7 +2297,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         });
         expect(response.status).toBe(200);
         didDel = true
-        expect(response.data.deleted.count).toBe(mockElimEntriesToPost.length);
+        expect(response.data.count).toBe(mockElimEntriesToPost.length);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -2346,7 +2346,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
           url: divUrl + notFoundDivId
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(0);
+        expect(response.data.count).toBe(0);
       } catch (err) {
         expect(true).toBeFalsy();
       }
@@ -2384,7 +2384,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         });
         expect(response.status).toBe(200);
         didDel = true
-        expect(response.data.deleted.count).toBe(mockElimEntriesToPost.length);
+        expect(response.data.count).toBe(mockElimEntriesToPost.length);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -2433,7 +2433,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
           url: squadUrl + notFoundSquadId
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(0);
+        expect(response.data.count).toBe(0);
       } catch (err) {
         expect(true).toBeFalsy();
       }
@@ -2470,7 +2470,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
           url: tmntUrl + tmntIdFormMockData
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(mockElimEntriesToPost.length);
+        expect(response.data.count).toBe(mockElimEntriesToPost.length);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -2519,7 +2519,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
           url: tmntUrl + notFoundTmntId
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(0);
+        expect(response.data.count).toBe(0);
       } catch (err) {
         expect(true).toBeFalsy();
       }

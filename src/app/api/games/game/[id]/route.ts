@@ -207,12 +207,12 @@ export async function DELETE(
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
 
-    const deleted = await prisma.game.delete({
+    const result = await prisma.game.deleteMany({
       where: {
         id: id,
       },
     });
-    return NextResponse.json({ deleted }, { status: 200 });
+    return NextResponse.json({ count: result.count }, { status: 200 });
   } catch (err: any) {
     const errStatus = getErrorStatus(err.code);
     return NextResponse.json(

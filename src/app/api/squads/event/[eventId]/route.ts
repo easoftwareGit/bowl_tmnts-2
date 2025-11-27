@@ -45,12 +45,12 @@ export async function DELETE(
         { status: 404 }
       );        
     }
-    const deleted = await prisma.squad.deleteMany({
+    const result = await prisma.squad.deleteMany({
       where: {
         event_id: eventId
       },
     });
-    return NextResponse.json({ deleted }, { status: 200 });
+    return NextResponse.json({ count: result.count }, { status: 200 });
   } catch (err: any) {
     return NextResponse.json(
       { error: "error getting squads for event" },

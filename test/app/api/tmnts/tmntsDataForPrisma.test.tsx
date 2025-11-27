@@ -90,16 +90,16 @@ describe('tmntDataForPrisma', () => {
         in_use: mockTmntFullData.lanes[i].in_use,
       });
     };
-    expect(result.brktEntriesData.length).toBe(0);
-    expect(result.brktSeedsData.length).toBe(0);
-    expect(result.brktsData.length).toBe(0);
-    expect(result.divEntriesData.length).toBe(0);
-    expect(result.elimEntriesData.length).toBe(0);
-    expect(result.elimsData.length).toBe(0);
-    expect(result.oneBrktsData.length).toBe(0);
-    expect(result.playersData.length).toBe(0);
-    expect(result.potEntriesData.length).toBe(0);
-    expect(result.potsData.length).toBe(0);            
+    expect(result.brktEntriesData.length).toBe(4);
+    expect(result.brktSeedsData.length).toBe(8);
+    expect(result.brktsData.length).toBe(2);
+    expect(result.divEntriesData.length).toBe(4);
+    expect(result.elimEntriesData.length).toBe(4);
+    expect(result.elimsData.length).toBe(2);
+    expect(result.oneBrktsData.length).toBe(2);
+    expect(result.playersData.length).toBe(4);
+    expect(result.potEntriesData.length).toBe(4);
+    expect(result.potsData.length).toBe(2);            
   });
 
 })

@@ -177,3 +177,27 @@ export const upsertBowl = async (bowl: bowlType): Promise<bowlType> => {
     throw new Error(`upsertBowl failed: ${err instanceof Error ? err.message : err}`);  
   }
 }
+
+/**
+ * deletes a bowl
+ * 
+ * @param {string} id - id of bowl to delete
+ * @returns {number} - 1 if successful
+ * @throws {Error} - if id is invalid or if API call fails
+ */
+export const deleteBowl = async (id: string): Promise<number> => {  
+  if (!isValidBtDbId(id, 'bwl')) { 
+    throw new Error('Invalid bowl data');
+  }  
+  try {
+    const response = await axios.delete(oneBowlUrl + id, {
+      withCredentials: true
+    })
+    if (response.status !== 200 || typeof response.data?.count !== "number") {
+      throw new Error("Error deleting bowl");
+    }
+    return response.data.count
+  } catch (err) {
+    throw new Error(`deleteBowl failed: ${err instanceof Error ? err.message : err}`);  
+  }
+}

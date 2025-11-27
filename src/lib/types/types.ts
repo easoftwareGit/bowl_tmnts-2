@@ -1,6 +1,5 @@
 import { BracketList } from "@/components/brackets/bracketListClass";
 import { ErrorCode } from "../validation"
-import { PrismaClient } from "@prisma/client";
 
 export type roleTypes = "ADMIN" | "DIRECTOR" | "USER"
 
@@ -668,20 +667,6 @@ export enum tmntActions {
   Edit = 3,
   Run = 4,
 }
-
-// export type allDataOneTmntType = {
-//   origData: dataOneTmntType;
-//   curData: dataOneTmntType;
-// }
-
-// export type allEntriesOneSquadType = {
-//   origData: dataOneSquadEntriesType;
-//   curData: dataOneSquadEntriesType;
-// }
-
-// export type tmntFormDataType = allDataOneTmntType & {
-//   tmntAction: tmntActions;
-// }
 
 export type tmntPropsType = {  
   tmnt: tmntType;

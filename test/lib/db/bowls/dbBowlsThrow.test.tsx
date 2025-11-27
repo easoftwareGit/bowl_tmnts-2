@@ -172,7 +172,7 @@ describe('non standard throw cases', () => {
 
       await expect(putBowl(bowlToPost))
         .rejects
-        .toThrow('Error posting bowl');
+        .toThrow('Error putting bowl');
       
       expect(mockedAxios.put).toHaveBeenCalledTimes(1);
       expect(mockedAxios.put).toHaveBeenCalledWith(

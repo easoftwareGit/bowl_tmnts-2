@@ -17,7 +17,7 @@ import {
 import { todayStr } from "@/lib/dateTools";
 import { mockBowl, mockTmntFullData, playerId5 } from "../../../mocks/tmnts/tmntFulldata/mockTmntFullData";
 import { replaceTmntFullData, replaceTmntEntriesData } from "@/lib/db/tmnts/dbTmntsReplace";
-import { after, cloneDeep } from "lodash";
+import { cloneDeep } from "lodash";
 import { getAllPlayersForTmnt } from "@/lib/db/players/dbPlayers";
 import { getAllPotEntriesForTmnt } from "@/lib/db/potEntries/dbPotEntries";
 import { getAllBrktEntriesForTmnt } from "@/lib/db/brktEntries/dbBrktEntries";
@@ -920,7 +920,7 @@ describe("dbTmnts", () => {
       toReplace.pots = [];
 
       const result = await replaceTmntFullData(toReplace);
-      expect(result).toBe(1);
+      expect(result).toBe(true);
     })
     it('should replace a tmnt - core four + pots, brkts and elims', async () => {
       const toReplace = cloneDeep(mockTmntFullData);
@@ -932,11 +932,11 @@ describe("dbTmnts", () => {
       toReplace.potEntries = [];
 
       const result = await replaceTmntFullData(toReplace);
-      expect(result).toBe(1);
+      expect(result).toBe(true);
     })
     it('replaces a full tmnt - tmnt not in database', async () => {
       const result = await replaceTmntFullData(mockTmntFullData)
-      expect(result).toBe(1);
+      expect(result).toBe(true);
       replacedTmnt = true;
 
       const tmnt = await getTmnt(mockTmntFullData.tmnt.id);
@@ -944,7 +944,7 @@ describe("dbTmnts", () => {
     });
     it('replaces a full tmnt - tmnt in database', async () => {
       const result = await replaceTmntFullData(mockTmntFullData)
-      expect(result).toBe(1);
+      expect(result).toBe(true);
       replacedTmnt = true;
 
       const editedTmnt = cloneDeep(mockTmntFullData);
@@ -953,7 +953,7 @@ describe("dbTmnts", () => {
       editedTmnt.divs[0].div_name = "Edited Div";
       editedTmnt.squads[0].squad_name = "Edited Squad";
       const result2 = await replaceTmntFullData(editedTmnt);
-      expect(result2).toBe(1);
+      expect(result2).toBe(true);
 
       const tmnt = await getTmnt(editedTmnt.tmnt.id);
       expect(tmnt).toEqual(editedTmnt.tmnt);
@@ -1046,7 +1046,7 @@ describe("dbTmnts", () => {
 
       const toReplace = cloneDeep(mockTmntFullData);
       const result = await replaceTmntEntriesData(toReplace);
-      expect(result).toBe(1);
+      expect(result).toBe(true);
       const players = await getAllPlayersForTmnt(toReplace.tmnt.id);
       expect(players.length).toEqual(toReplace.players.length);
       for (let i = 0; i < players.length; i++) {
@@ -1232,7 +1232,7 @@ describe("dbTmnts", () => {
       toReplace.players = [];
 
       const result = await replaceTmntEntriesData(toReplace);
-      expect(result).toBe(1);
+      expect(result).toBe(true);
       const playerResult = await getAllPlayersForTmnt(toReplace.tmnt.id);
       expect(playerResult.length).toEqual(toReplace.players.length);
       const divEntriesResult = await getAllDivEntriesForTmnt(toReplace.tmnt.id);
@@ -1261,7 +1261,7 @@ describe("dbTmnts", () => {
     });
     it('replaces a full tmnt - tmnt in database', async () => {
       const result = await replaceTmntFullData(mockTmntFullData) // create tmnt full data
-      expect(result).toBe(1);
+      expect(result).toBe(true);
       replacedTmnt = true;
 
       const tmntEntries = cloneDeep(mockTmntFullData);
@@ -1297,7 +1297,7 @@ describe("dbTmnts", () => {
       tmntEntries.elimEntries[0].player_id = playerId5;
 
       const result2 = await replaceTmntEntriesData(tmntEntries);
-      expect(result2).toBe(1);
+      expect(result2).toBe(true);
 
       const postedEntries = await getTmntFullData(tmntEntries.tmnt.id);
       // non updated values

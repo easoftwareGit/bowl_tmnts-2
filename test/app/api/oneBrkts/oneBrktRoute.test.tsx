@@ -937,10 +937,11 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
           withCredentials: true,
           url: oneOneBrktUrl + notFoundId,
         })  
-        expect(delResponse.status).toBe(404);
+        expect(delResponse.status).toBe(200);
+        expect(delResponse.data.count).toBe(0);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(200);
         } else {
           expect(true).toBeFalsy();
         }
@@ -994,7 +995,7 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
           url: brktsUrl + mockOneBrktsToPost[0].brkt_id
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(mockOneBrktsToPost.length);
+        expect(response.data.count).toBe(mockOneBrktsToPost.length);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -1043,7 +1044,7 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
           url: brktsUrl + notFoundBrktId
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(0);
+        expect(response.data.count).toBe(0);
       } catch (err) {
         expect(true).toBeFalsy();
       }
@@ -1081,7 +1082,7 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
           url: squadUrl + squadIdForMock
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(mockOneBrktsToPost.length);
+        expect(response.data.count).toBe(mockOneBrktsToPost.length);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -1130,7 +1131,7 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
           url: squadUrl + notFoundSquadId
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(0);
+        expect(response.data.count).toBe(0);
       } catch (err) {
         expect(true).toBeFalsy();
       }
@@ -1167,7 +1168,7 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
           url: divUrl + divIdForMock
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(mockOneBrktsToPost.length);
+        expect(response.data.count).toBe(mockOneBrktsToPost.length);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -1216,7 +1217,7 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
           url: divUrl + notFoundDivId
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(0);
+        expect(response.data.count).toBe(0);
       } catch (err) {
         expect(true).toBeFalsy();
       }
@@ -1253,7 +1254,7 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
           url: tmntUrl + tmntIdForMock
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(mockOneBrktsToPost.length);
+        expect(response.data.count).toBe(mockOneBrktsToPost.length);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -1302,7 +1303,7 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
           url: tmntUrl + notFoundTmntId
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(0);
+        expect(response.data.count).toBe(0);
       } catch (err) {
         expect(true).toBeFalsy();
       }

@@ -1042,7 +1042,7 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         expect(compareAsc(postedBrktEntries[i].time_stamp, maxDate)).toBe(-1);
       }
     })
-    it('should 0 count and status 200 with passed empty bracket entries', async () => { 
+    it('should return 0 count and status 200 with passed empty bracket entries', async () => { 
       const brktEntryJSON = JSON.stringify([]);      
       try {
         const response = await axios({
@@ -1658,7 +1658,6 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
       expect(puttedBrktEntry2.num_refunds).toBe(putWithAddNumRefunds.num_refunds);
       expect(compareAsc(puttedBrktEntry2.time_stamp, putWithAddNumRefunds.time_stamp)).toBe(0);
     })
-
     it('should update a sanitized brktEntry by ID', async () => { 
       const toSanitize = {
         ...putBrktEntry,
@@ -1920,7 +1919,6 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         }        
       }      
     })
-
     it('should not update a brktEntry by ID when time_stamp is too low', async () => {
       const invalidBrktEntry = {
         ...putBrktEntry,
@@ -3625,13 +3623,10 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
           url: oneBrktEntryUrl + toDelBrktEntry.id,
         });
         expect(response.status).toBe(200);
+        expect(response.data.count).toBe(1);
         didDel = true;
       } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
+        expect(true).toBeFalsy();
       }
     })
     it(('should NOT delete a brktEntry by ID when ID is invalid'), async () => {
@@ -3673,13 +3668,10 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
           withCredentials: true,
           url: oneBrktEntryUrl + notFoundId,
         });
-        expect(response.status).toBe(404);
+        expect(response.status).toBe(200);
+        expect(response.data.count).toBe(0);
       } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
+        expect(true).toBeFalsy();
       }
     })
   })
@@ -3715,7 +3707,7 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         });
         expect(response.status).toBe(200);
         didDel = true
-        expect(response.data.deleted.count).toBe(2); // 2 brktEntries deleted from mock data
+        expect(response.data.count).toBe(2); // 2 brktEntries deleted from mock data
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -3764,7 +3756,7 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
           url: brktUrl + notFoundBrktId
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(0);
+        expect(response.data.count).toBe(0);
       } catch (err) {
         expect(true).toBeFalsy();
       }
@@ -3802,7 +3794,7 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         });
         expect(response.status).toBe(200);
         didDel = true
-        expect(response.data.deleted.count).toBe(mockBrktEntriesToPost.length);
+        expect(response.data.count).toBe(mockBrktEntriesToPost.length);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -3851,7 +3843,7 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
           url: divUrl + notFoundDivId
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(0);
+        expect(response.data.count).toBe(0);
       } catch (err) {
         expect(true).toBeFalsy();
       }
@@ -3889,7 +3881,7 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
         });
         expect(response.status).toBe(200);
         didDel = true
-        expect(response.data.deleted.count).toBe(mockBrktEntriesToPost.length);
+        expect(response.data.count).toBe(mockBrktEntriesToPost.length);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -3938,7 +3930,7 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
           url: squadUrl + notFoundSquadId
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(0);
+        expect(response.data.count).toBe(0);
       } catch (err) {
         expect(true).toBeFalsy();
       }
@@ -3975,7 +3967,7 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
           url: tmntUrl + tmntIdFormMockData
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(mockBrktEntriesToPost.length);
+        expect(response.data.count).toBe(mockBrktEntriesToPost.length);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -4024,7 +4016,7 @@ describe("BrktEntries - API's: /api/brktEntries", () => {
           url: tmntUrl + notFoundTmntId
         });
         expect(response.status).toBe(200);
-        expect(response.data.deleted.count).toBe(0);
+        expect(response.data.count).toBe(0);
       } catch (err) {
         expect(true).toBeFalsy();
       }

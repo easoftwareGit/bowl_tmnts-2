@@ -894,6 +894,7 @@ describe('Bowls - API: /api/bowls', () => {
           withCredentials: true,
         });
         expect(response.status).toBe(200);
+        expect(response.data.count).toEqual(1);
         didDel = true;
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -935,11 +936,12 @@ describe('Bowls - API: /api/bowls', () => {
       try {
         const response = await axios.delete(oneBowlUrl + '/' + notFoundId, {
           withCredentials: true,
-        });
-        expect(response.status).toBe(404);
+        });        
+        expect(response.status).toBe(200);
+        expect(response.data.count).toBe(0);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(200);
         } else {
           expect(true).toBeFalsy();
         }

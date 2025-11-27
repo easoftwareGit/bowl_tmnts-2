@@ -37,12 +37,12 @@ export async function DELETE(
     if (!isValidBtDbId(elimId, "elm")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
-    const deleted = await prisma.elim_Entry.deleteMany({
+    const result = await prisma.elim_Entry.deleteMany({
       where: {
         elim_id: elimId,
       },
     });
-    return NextResponse.json({ deleted }, { status: 200 });
+    return NextResponse.json({ count: result.count }, { status: 200 });
   } catch (err: any) {
     return NextResponse.json(
       { error: "error deleting elimEntries for elim" },
