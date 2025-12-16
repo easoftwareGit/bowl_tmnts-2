@@ -163,6 +163,7 @@ describe('dbBrkts', () => {
         first: '25',
         second: '10',
         admin: '5',
+        fsa: '40',
         sort_order: 1,
       };
 

@@ -25,23 +25,6 @@ export async function POST(request: NextRequest) {
       .map(brkt => brktDataForPrisma(brkt))
       .filter((data): data is brktDataType => data !== null);
     
-    // const brktsToPost: brktDataType[] = []
-    // validBrkts.brkts.forEach(brkt => {
-    //   brktsToPost.push({
-    //     id: brkt.id,
-    //     div_id: brkt.div_id,
-    //     squad_id: brkt.squad_id,
-    //     fee: brkt.fee,
-    //     start: brkt.start,
-    //     games: brkt.games,
-    //     players: brkt.players,
-    //     first: brkt.first,
-    //     second: brkt.second,
-    //     admin: brkt.admin,        
-    //     sort_order: brkt.sort_order
-    //   })
-    // });      
-
     const result = await prisma.brkt.createMany({
       data: brktsToPost,
       skipDuplicates: false, // or true if you want to silently skip existing rows

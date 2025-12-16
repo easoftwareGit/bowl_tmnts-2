@@ -1,7 +1,7 @@
 import React from "react";
 import { fireEvent, render, screen } from '../../../test-utils'
 import userEvent from "@testing-library/user-event";
-import { allDataOneTmntType, tmntActions, tmntFormDataType } from "@/lib/types/types";
+import { tmntActions, tmntFormDataType } from "@/lib/types/types";
 import { blankDataOneTmnt } from "@/lib/db/initVals";
 import { dateTo_UTC_MMddyyyy, startOfDayFromString, startOfTodayUTC, todayStr } from "@/lib/dateTools";
 import { RootState } from "@/redux/store";

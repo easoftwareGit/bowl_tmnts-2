@@ -465,10 +465,9 @@ const OneToNDivs: React.FC<ChildProps> = ({
 
   const renderHdcpToolTip = (props: any) => (
     <Tooltip id="button-tooltip" {...props}>
-      Enter Hdcp % 0 for scratch
+      Enter Hdcp %<br />Enter 0 for scratch
     </Tooltip>
   );
-
 
   return (
     <>

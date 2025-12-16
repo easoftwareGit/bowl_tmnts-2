@@ -1,5 +1,5 @@
-import React  from "react";
-import { render, screen } from "@testing-library/react";
+import React, { act }  from "react";
+import { render, screen, waitForElementToBeRemoved, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import OneToNSquads, { updatedLanes, validLanes } from "@/app/dataEntry/tmntForm/oneToNSquads";
 import { mockLanes, mockSquads } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
@@ -290,12 +290,27 @@ describe("OneToNSquads - Component", () => {
         expect(startingLaneErrs).toHaveLength(2);
         expect(startingLaneErrs[0]).toHaveTextContent("");
       })
-
-      it('render the number of lanes label', () => { 
+      it('render the number of lanes label with space before help icon', () => { 
         render(<OneToNSquads {...mockOneToNSquadsProps} />);
-        const lanesLabels = screen.getAllByText('# of Lanes');
+        const lanesLabels = screen.getAllByText(/# of lanes/i, { selector: "label" });
         expect(lanesLabels).toHaveLength(2);
-        expect(lanesLabels[0]).toBeInTheDocument();
+        const label = lanesLabels[0] as HTMLLabelElement;
+        const text = label.textContent ?? "";
+        expect(text).toMatch(/# of Lanes\s+\?/i);
+      })
+      it('render the number of lanes help icon with surrounding spaces', () => { 
+        render(<OneToNSquads {...mockOneToNSquadsProps} />);
+        const lanesLabels = screen.getAllByText(/# of lanes/i, { selector: "label" });
+        expect(lanesLabels).toHaveLength(2);
+
+        const label = lanesLabels[0] as HTMLLabelElement;
+        const helpSpan = within(label).getByText("?", { selector: "span" });
+        expect(helpSpan).toBeInTheDocument();
+        expect(helpSpan).toHaveClass("popup-help");
+
+        const text = helpSpan.textContent ?? "";
+        // one or more spaces, then '?', then one or more spaces
+        expect(text).toMatch(/^\s+\?\s+$/); 
       })
       it('render the # of lanes', () => {
         render(<OneToNSquads {...mockOneToNSquadsProps} />);
@@ -309,7 +324,6 @@ describe("OneToNSquads - Component", () => {
         expect(numLanesErrs).toHaveLength(2);
         expect(numLanesErrs[0]).toHaveTextContent("");
       })
-
       it('render squad date labels', () => { 
         render(<OneToNSquads {...mockOneToNSquadsProps} />);
         const dateLabels = screen.getAllByText("Date");
@@ -344,16 +358,6 @@ describe("OneToNSquads - Component", () => {
         expect(squadTimeErrs).toHaveLength(2);
         expect(squadTimeErrs[0]).toHaveTextContent("");
       })
-      it("render the tabs", async () => {
-        const user = userEvent.setup();
-        render(<OneToNSquads {...mockOneToNSquadsProps} />);
-        const tabs = screen.getAllByRole("tab");
-        await user.click(tabs[0]); // focus on first tab
-        expect(tabs[0]).toHaveTextContent(mockEvents[0].tab_title);
-        expect(tabs[0]).toHaveAttribute("aria-selected", "true");
-        expect(tabs[1]).toHaveTextContent(mockEvents[1].tab_title);
-        expect(tabs[1]).toHaveAttribute("aria-selected", "false");
-      });
     })
 
     describe('render the 2nd squad', () => { 
@@ -525,11 +529,24 @@ describe("OneToNSquads - Component", () => {
       });
     })
 
-    describe('render the squads when tmntAction is Run - inputs and buttons disabled', () => { 
-      const runTmntProps = cloneDeep(mockOneToNSquadsProps);      
+    describe('render the tabs', () => {
+      it("render the tabs", async () => {
+        const user = userEvent.setup();
+        render(<OneToNSquads {...mockOneToNSquadsProps} />);
+        const tabs = screen.getAllByRole("tab");
+        await user.click(tabs[0]); // focus on first tab
+        expect(tabs[0]).toHaveTextContent(mockEvents[0].tab_title);
+        expect(tabs[0]).toHaveAttribute("aria-selected", "true");
+        expect(tabs[1]).toHaveTextContent(mockEvents[1].tab_title);
+        expect(tabs[1]).toHaveAttribute("aria-selected", "false");
+      });      
+    })
+
+    describe('render the squads when tmntAction is Run - inputs and buttons disabled', () => {
+      const runTmntProps = cloneDeep(mockOneToNSquadsProps);
       runTmntProps.tmntAction = tmntActions.Run;
-      it('render number of squads', () => { 
-        render(<OneToNSquads {...runTmntProps} />);        
+      it('render number of squads', () => {
+        render(<OneToNSquads {...runTmntProps} />);
         const squadNum = screen.getByRole('textbox', { name: /# squads/i }) as HTMLInputElement;
         expect(squadNum).toBeInTheDocument();
         expect(squadNum).toHaveValue('2');
@@ -537,34 +554,34 @@ describe("OneToNSquads - Component", () => {
       })
       it("render add button", () => {
         render(<OneToNSquads {...runTmntProps} />);
-        const addBtn = screen.getByRole("button", { name: /add/i });        
+        const addBtn = screen.getByRole("button", { name: /add/i });
         expect(addBtn).toBeInTheDocument();
         expect(addBtn).toBeDisabled();
       });
       it("render delete button", () => {
         render(<OneToNSquads {...runTmntProps} />);
-        const delBtn = screen.getByRole("button", { name: /delete/i });        
+        const delBtn = screen.getByRole("button", { name: /delete/i });
         expect(delBtn).toBeInTheDocument();
         expect(delBtn).toBeDisabled();
       });
       it('render squad names', () => {
-        render(<OneToNSquads {...runTmntProps} />);        
+        render(<OneToNSquads {...runTmntProps} />);
         const squadNames = screen.getAllByRole("textbox", { name: /squad name/i }) as HTMLInputElement[];
         expect(squadNames).toHaveLength(2);
         expect(squadNames[0]).toBeDisabled();
         expect(squadNames[1]).toBeDisabled();
       })
       it('render squad games', () => {
-        render(<OneToNSquads {...runTmntProps} />);        
+        render(<OneToNSquads {...runTmntProps} />);
         const squadGames = screen.getAllByRole("spinbutton", { name: /squad games/i }) as HTMLInputElement[];
         expect(squadGames).toHaveLength(2);
         expect(squadGames[0]).toBeDisabled();
         expect(squadGames[1]).toBeDisabled();
       })
       it('render squad events', () => {
-        render(<OneToNSquads {...runTmntProps} />);        
+        render(<OneToNSquads {...runTmntProps} />);
         const squadEvents = screen.getAllByRole("combobox", { name: /event/i }) as HTMLInputElement[];
-        expect(squadEvents).toHaveLength(2);        
+        expect(squadEvents).toHaveLength(2);
         expect(squadEvents[0]).toBeDisabled();
         expect(squadEvents[1]).toBeDisabled();
       })
@@ -583,22 +600,63 @@ describe("OneToNSquads - Component", () => {
         expect(numberOfLanes[1]).toBeDisabled();
       })
       it('render squad dates', () => {
-        render(<OneToNSquads {...runTmntProps} />);        
+        render(<OneToNSquads {...runTmntProps} />);
         const squadDates = screen.getAllByLabelText(/date/i) as HTMLInputElement[];
         expect(squadDates).toHaveLength(2);
         expect(squadDates[0]).toBeDisabled();
         expect(squadDates[1]).toBeDisabled();
       })
-      it('render start times', () => { 
-        render(<OneToNSquads {...runTmntProps} />);        
-        const squadTimes = screen.getAllByLabelText(/start time/i) as HTMLInputElement[];        
+      it('render start times', () => {
+        render(<OneToNSquads {...runTmntProps} />);
+        const squadTimes = screen.getAllByLabelText(/start time/i) as HTMLInputElement[];
         expect(squadTimes).toHaveLength(2);
         expect(squadTimes[0]).toBeDisabled();
         expect(squadTimes[1]).toBeDisabled();
       })
 
     })
-  })
+
+    describe('render the popup-help text', () => {
+      beforeEach(() => {
+        jest.useFakeTimers();
+      })
+      afterEach(() => {
+        jest.runOnlyPendingTimers();
+        jest.useRealTimers();
+      })
+      it("only shows the # of Lanes tooltip while the help icon is hovered", async () => {
+        const tooltipRegex = /Number of lanes used in the squad/i;
+
+        const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+        render(<OneToNSquads {...mockOneToNSquadsProps} />);
+
+        // 1) BEFORE HOVER – tooltip is NOT in the document
+        expect(screen.queryByText(tooltipRegex)).not.toBeInTheDocument();
+
+        const lanesLabels = screen.getAllByText(/# of Lanes/i, { selector: "label" });
+        expect(lanesLabels).toHaveLength(2);
+        const label = lanesLabels[0] as HTMLLabelElement;
+        const helpSpan = within(label).getByText("?", { selector: "span" });
+
+        // 2) HOVER OVER help icon
+        await user.hover(helpSpan);
+        act(() => {
+          jest.advanceTimersByTime(300); // > 250ms show delay
+        });
+
+        const tooltip = await screen.findByText(tooltipRegex);
+        expect(tooltip).toBeInTheDocument();
+
+        // 3) UNHOVER – tooltip disappears after hide delay (1000ms)
+        await user.unhover(helpSpan);
+        act(() => {
+          jest.advanceTimersByTime(1000); // > 250ms show delay
+        });
+        await waitForElementToBeRemoved(() => screen.queryByText(tooltipRegex));
+      });
+    });
+
+  });
 
   describe('render just one squad', () => { 
 

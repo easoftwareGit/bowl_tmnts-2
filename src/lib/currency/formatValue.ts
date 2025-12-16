@@ -41,6 +41,12 @@ export const currencyFormatter = new Intl.NumberFormat('en-US', {
   currency: 'USD',
 });
 
+/**
+ * formats a number value into a string with two decimal places
+ * 
+ * @param value {number} - value to be formatted
+ * @returns { string } - formatted value
+ */
 export const formatDecimalValue = (value: number): string => { 
   if (Number.isNaN(value)) return '';
   return (Number.isInteger(value)) ? value.toString() : value.toFixed(2);  

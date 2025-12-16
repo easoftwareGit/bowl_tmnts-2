@@ -1,5 +1,3 @@
-// zeroToNBrkts.validate.test.tsx
-
 import { validateBrkts } from "@/app/dataEntry/tmntForm/zeroToNBrkts";
 import { brktType, AcdnErrType } from "@/lib/types/types";
 import {

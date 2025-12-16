@@ -427,7 +427,10 @@ const ZeroToNElims: React.FC<ChildProps> = ({
             eventKey={'createElim'}
             title={createElimTitle}            
           >          
-            <div className={clsx("container", "rounded-3", styles.createBackground)}>
+            <div
+              data-testid="createElimContainer"
+              className={clsx("container", "rounded-3", styles.createBackground)}
+            >
             {/* <div className="container rounded-3 createBackground"> */}
               <div className="row g-3 mb-1">
                 <div className="col-sm-3">

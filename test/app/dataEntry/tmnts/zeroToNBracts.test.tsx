@@ -1,7 +1,8 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import ZeroToNBrackets, { exportedForTesting, validateBrkts }  from "@/app/dataEntry/tmntForm/zeroToNBrkts";
+import ZeroToNBrackets, { exportedForTesting, validateBrkts } from "@/app/dataEntry/tmntForm/zeroToNBrkts";
+import styles from "@/app/dataEntry/tmntForm/tmntForm.module.css";
 import { mockBrkts, mockDivs, mockSquads } from "../../../mocks/tmnts/twoDivs/mockDivs";
 import { localConfig } from "@/lib/currency/const";
 import { formatValueSymbSep2Dec } from "@/lib/currency/formatValue";
@@ -32,162 +33,166 @@ describe("ZeroToNBrackets - Component", () => {
   
   describe("render the component", () => {
     
-    describe('render the Create Bracket tab', () => { 
+    describe('render the Create Bracket tab - not brackets exist', () => { 
+      const noBrkts: brktType[] = [];
+      const mockNoBrkts = cloneDeep(mockZeroToNBrktsProps);
+      mockNoBrkts.brkts = noBrkts;
+
       it('render the "Create Brackets" tab', async () => {        
         // ARRANGE        
-        render(<ZeroToNBrackets {...mockZeroToNBrktsProps} />);        
+        render(<ZeroToNBrackets {...mockNoBrkts} />);        
         // ACT        
         const tabs = screen.getAllByRole("tab");        
         // ASSERT     
-        expect(tabs).toHaveLength(mockBrkts.length + 1);  //  + 1 for create pot tab
+        expect(tabs).toHaveLength(noBrkts.length + 1);  //  + 1 for create pot tab
         expect(tabs[0]).toHaveTextContent("Create Bracket");
       })
+      it('render the "Create Bracket tab screen with the correct background color"', async () => {
+        render(<ZeroToNBrackets {...mockNoBrkts} />);
+
+        const wrapper = screen.getByTestId("createBrktContainer");
+
+        expect(wrapper).toHaveClass("container");
+        expect(wrapper).toHaveClass("rounded-3");
+        expect(wrapper).toHaveClass(styles.createBackground);
+      })
       it('render "Division" labels', () => {
-        render(<ZeroToNBrackets {...mockZeroToNBrktsProps} />);
+        render(<ZeroToNBrackets {...mockNoBrkts} />);
         const brktLabels = screen.getAllByText(/division/i);
-        expect(brktLabels).toHaveLength(mockBrkts.length + 1); // + 1 for create bracket
+        expect(brktLabels).toHaveLength(noBrkts.length + 1); // + 1 for create bracket
       })
       it('render the "Scratch" radio button', () => { 
-        render(<ZeroToNBrackets {...mockZeroToNBrktsProps} />);
+        render(<ZeroToNBrackets {...mockNoBrkts} />);
         const scratchRadio = screen.getByRole('radio', { name: /scratch/i }) as HTMLInputElement;
         expect(scratchRadio).not.toBeChecked();        
       })
       it('render the "Hdcp" radio button', () => { 
-        render(<ZeroToNBrackets {...mockZeroToNBrktsProps} />);
+        render(<ZeroToNBrackets {...mockNoBrkts} />);
         const hdcpRadio = screen.getByRole('radio', { name: /hdcp/i }) as HTMLInputElement;
         expect(hdcpRadio).not.toBeChecked();        
       })
       it('render the "Fee" labels', () => {
-        render(<ZeroToNBrackets {...mockZeroToNBrktsProps} />);        
+        render(<ZeroToNBrackets {...mockNoBrkts} />);        
         const feeLabels = screen.getAllByText(/fee/i);
-        expect(feeLabels).toHaveLength(mockBrkts.length + 1); // + 1 for create bracket
+        expect(feeLabels).toHaveLength(noBrkts.length + 1); // + 1 for create bracket
       })
       it('render the "Fee" input', () => {
-        render(<ZeroToNBrackets {...mockZeroToNBrktsProps} />);
+        render(<ZeroToNBrackets {...mockNoBrkts} />);
         const fees = screen.getAllByRole('textbox', { name: /fee/i }) as HTMLInputElement[];        
-        expect(fees).toHaveLength(mockBrkts.length + 1); 
+        expect(fees).toHaveLength(noBrkts.length + 1); 
         expect(fees[0]).toHaveValue('');
       })
       it('DO NOT render the create bracket fee error', () => {
-        render(<ZeroToNBrackets {...mockZeroToNBrktsProps} />);
+        render(<ZeroToNBrackets {...mockNoBrkts} />);
         const brktFeeError = screen.queryByTestId("dangerCreateBrktFee");
         expect(brktFeeError).toHaveTextContent("");
       })
       it('render the "Start" labels', () => { 
-        render(<ZeroToNBrackets {...mockZeroToNBrktsProps} />);
+        render(<ZeroToNBrackets {...mockNoBrkts} />);
         const startLabels = screen.getAllByText(/start/i);
-        expect(startLabels).toHaveLength(mockBrkts.length + 1);
+        expect(startLabels).toHaveLength(noBrkts.length + 1);
       })
       it('render the create bracket "Start" input', () => { 
-        render(<ZeroToNBrackets {...mockZeroToNBrktsProps} />);        
+        render(<ZeroToNBrackets {...mockNoBrkts} />);        
         const startInputs = screen.getAllByRole('spinbutton', { name: /start/i }) as HTMLInputElement[];        
-        expect(startInputs).toHaveLength(mockBrkts.length + 1);
+        expect(startInputs).toHaveLength(noBrkts.length + 1);
         expect(startInputs[0]).toHaveValue(1);
       })
       it('DO NOT render the create bracket "Start" error', () => { 
-        render(<ZeroToNBrackets {...mockZeroToNBrktsProps} />);
+        render(<ZeroToNBrackets {...mockNoBrkts} />);
         const brktStartError = screen.queryByTestId("dangerCreateBrktStart");
         expect(brktStartError).toHaveTextContent("");
       })
       it('render the "Games" labels', () => { 
-        render(<ZeroToNBrackets {...mockZeroToNBrktsProps} />);
+        render(<ZeroToNBrackets {...mockNoBrkts} />);
         const gamesLabels = screen.getAllByText("Games");
-        expect(gamesLabels).toHaveLength(mockBrkts.length + 1);
+        expect(gamesLabels).toHaveLength(noBrkts.length + 1);
       })
       it('render the "Games" input', () => { 
-        render(<ZeroToNBrackets {...mockZeroToNBrktsProps} />); 
+        render(<ZeroToNBrackets {...mockNoBrkts} />); 
         const gamesInputs = screen.getAllByRole('spinbutton', { name: /games/i }) as HTMLInputElement[];
-        expect(gamesInputs).toHaveLength(mockBrkts.length + 1);
+        expect(gamesInputs).toHaveLength(noBrkts.length + 1);
         expect(gamesInputs[0]).toHaveValue(defaultBrktGames);
         expect(gamesInputs[0]).toBeDisabled();
       })
       it('render the "Players" labels', () => { 
-        render(<ZeroToNBrackets {...mockZeroToNBrktsProps} />);
+        render(<ZeroToNBrackets {...mockNoBrkts} />);
         const brktPlayersLabels = screen.getAllByText(/players/i);
-        expect(brktPlayersLabels).toHaveLength(mockBrkts.length + 1);
+        expect(brktPlayersLabels).toHaveLength(noBrkts.length + 1);
       })
       it('render the "Players" input', () => {
-        render(<ZeroToNBrackets {...mockZeroToNBrktsProps} />);        
+        render(<ZeroToNBrackets {...mockNoBrkts} />);        
         const brktPlayersInputs = screen.getAllByRole('spinbutton', { name: /players/i }) as HTMLInputElement[];        
-        expect(brktPlayersInputs).toHaveLength(mockBrkts.length + 1);
+        expect(brktPlayersInputs).toHaveLength(noBrkts.length + 1);
         expect(brktPlayersInputs[0]).toHaveValue(defaultBrktPlayers)
         expect(brktPlayersInputs[0]).toBeDisabled();
       })
       it('render the "Add Bracket" button', () => {
-        render(<ZeroToNBrackets {...mockZeroToNBrktsProps} />);        
+        render(<ZeroToNBrackets {...mockNoBrkts} />);        
         const addBtn = screen.getByRole("button", { name: /add bracket/i });
         expect(addBtn).toBeInTheDocument();
       })
       it('render the bracket "First" labels', () => { 
-        render(<ZeroToNBrackets {...mockZeroToNBrktsProps} />);
+        render(<ZeroToNBrackets {...mockNoBrkts} />);
         const brktFirstLabels = screen.getAllByText("First");
-        expect(brktFirstLabels).toHaveLength(mockBrkts.length + 1);
+        expect(brktFirstLabels).toHaveLength(noBrkts.length + 1);
       })
       it('render the bracket "First" input', () => { 
-        render(<ZeroToNBrackets {...mockZeroToNBrktsProps} />);        
+        render(<ZeroToNBrackets {...mockNoBrkts} />);        
         const brktFirstInputs = screen.getAllByRole('textbox', { name: /first/i }) as HTMLInputElement[];
-        expect(brktFirstInputs).toHaveLength(mockBrkts.length + 1);
+        expect(brktFirstInputs).toHaveLength(noBrkts.length + 1);
         expect(brktFirstInputs[0]).toBeDisabled();
         expect(brktFirstInputs[0]).toHaveValue("");        
       })
       it('render the bracket "Second" labels', () => {
-        render(<ZeroToNBrackets {...mockZeroToNBrktsProps} />);
+        render(<ZeroToNBrackets {...mockNoBrkts} />);
         const brktSecondLabels = screen.getAllByText("Second");
-        expect(brktSecondLabels).toHaveLength(mockBrkts.length + 1);
+        expect(brktSecondLabels).toHaveLength(noBrkts.length + 1);
       })
       it('render the bracket "Second" input', () => {
-        render(<ZeroToNBrackets {...mockZeroToNBrktsProps} />);        
+        render(<ZeroToNBrackets {...mockNoBrkts} />);        
         const brktSecondInputs = screen.getAllByRole('textbox', { name: /second/i }) as HTMLInputElement[];        
-        expect(brktSecondInputs).toHaveLength(mockBrkts.length + 1);
+        expect(brktSecondInputs).toHaveLength(noBrkts.length + 1);
         expect(brktSecondInputs[0]).toBeDisabled();
         expect(brktSecondInputs[0]).toHaveValue("");
       })
       it('render the bracket "Admin" label', () => { 
-        render(<ZeroToNBrackets {...mockZeroToNBrktsProps} />);
+        render(<ZeroToNBrackets {...mockNoBrkts} />);
         const brktAdminLabels = screen.getAllByText("Admin");
-        expect(brktAdminLabels).toHaveLength(mockBrkts.length + 1);
+        expect(brktAdminLabels).toHaveLength(noBrkts.length + 1);
       })
       it('render the bracket "Admin" input', () => {
-        render(<ZeroToNBrackets {...mockZeroToNBrktsProps} />);        
+        render(<ZeroToNBrackets {...mockNoBrkts} />);        
         const brktAdminInputs = screen.getAllByRole('textbox', { name: /admin/i }) as HTMLInputElement[];        
-        expect(brktAdminInputs).toHaveLength(mockBrkts.length + 1);
+        expect(brktAdminInputs).toHaveLength(noBrkts.length + 1);
         expect(brktAdminInputs[0]).toBeDisabled();
         expect(brktAdminInputs[0]).toHaveValue("");
       })
-      it('render the bracket "FSA" labels', () => { 
-        render(<ZeroToNBrackets {...mockZeroToNBrktsProps} />);
-        const brktFSAs = screen.getAllByLabelText(/F\+S\+A/i);
-        expect(brktFSAs).toHaveLength(mockBrkts.length + 1);
-      })
-      it('render "FSA" titles', () => {
-        render(<ZeroToNBrackets {...mockZeroToNBrktsProps} />);
-        const fsaTitles = screen.getAllByTitle("First + Second + Admin must equal Fee * Players");
-        expect(fsaTitles).toHaveLength(mockBrkts.length + 1);
-        expect(fsaTitles[0]).toHaveTextContent("?");
+      it("render F+S+A label with space before help icon", () => {
+        render(<ZeroToNBrackets {...mockNoBrkts} />); 
+        const hdcpTitles = screen.getAllByText(/f\+s\+a/i, { selector: "label" });
+        expect(hdcpTitles).toHaveLength(1);
+
+        const label = hdcpTitles[0] as HTMLLabelElement;
+        const text = label.textContent ?? "";
+        expect(text).toMatch(/^F\+S\+A\s+\?/);
+      });
+      it('render hdcp % help icon with surrounding spaces', () => {
+        render(<ZeroToNBrackets {...mockNoBrkts} />); 
+        const hdcpTitles = screen.getAllByText(/f\+s\+a/i, { selector: "label" });
+        expect(hdcpTitles).toHaveLength(1);
+        
+        const label = hdcpTitles[0] as HTMLLabelElement;
+        const helpSpan = within(label).getByText("?", { selector: "span" });
+        expect(helpSpan).toBeInTheDocument();        
+        expect(helpSpan).toHaveClass("popup-help");
       });
       it('render "FSA" input', () => { 
-        render(<ZeroToNBrackets {...mockZeroToNBrktsProps} />);        
+        render(<ZeroToNBrackets {...mockNoBrkts} />);        
         const fsaInputs = screen.getAllByRole('textbox', { name: /F\+S\+A/i }) as HTMLInputElement[];        
-        expect(fsaInputs).toHaveLength(mockBrkts.length + 1);
+        expect(fsaInputs).toHaveLength(noBrkts.length + 1);
         expect(fsaInputs[0]).toBeDisabled();
         expect(fsaInputs[0]).toHaveValue("");        
-      })
-      it('render the tabs', async () => { 
-        const user = userEvent.setup()
-        render(<ZeroToNBrackets {...mockZeroToNBrktsProps} />);
-        const tabs = screen.getAllByRole("tab");
-        expect(tabs).toHaveLength(mockBrkts.length + 1);
-        await user.click(tabs[0]);
-        expect(tabs[0]).toHaveTextContent('Create Bracket');
-        expect(tabs[0]).toHaveAttribute("aria-selected", "true");
-        expect(tabs[1]).toHaveTextContent('Scratch: 1-3');
-        expect(tabs[1]).toHaveAttribute("aria-selected", "false");
-        expect(tabs[2]).toHaveTextContent('Scratch: 4-6');
-        expect(tabs[2]).toHaveAttribute("aria-selected", "false");
-        expect(tabs[3]).toHaveTextContent('Hdcp: 1-3');
-        expect(tabs[3]).toHaveAttribute("aria-selected", "false");
-        expect(tabs[4]).toHaveTextContent('Hdcp: 4-6');
-        expect(tabs[4]).toHaveAttribute("aria-selected", "false");
       })
     })
 
@@ -966,11 +971,6 @@ describe("ZeroToNBrackets - Component", () => {
         const brktFSAs = screen.getAllByLabelText(/F\+S\+A/i);
         expect(brktFSAs).toHaveLength(mockBrkts.length); // no label for create bracket
       })
-      it('DO NOT render "FSA" titles', () => {
-        render(<ZeroToNBrackets {...runTmntProps} />);
-        const fsaTitles = screen.getAllByTitle("First + Second + Admin must equal Fee * Players");
-        expect(fsaTitles).toHaveLength(mockBrkts.length); // no title for create bracket        
-      });
       it('DO NOT render "FSA" input', () => { 
         render(<ZeroToNBrackets {...runTmntProps} />);        
         const fsaInputs = screen.getAllByRole('textbox', { name: /F\+S\+A/i }) as HTMLInputElement[];        

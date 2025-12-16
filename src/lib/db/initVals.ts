@@ -505,7 +505,7 @@ export const blankDataOneTmnt = (): dataOneTmntType => {
       ...cloneDeep(blankLane),
 
     }],
-    pots: [],
+    pots: [],    
     brkts: [],
     elims: [],
   }

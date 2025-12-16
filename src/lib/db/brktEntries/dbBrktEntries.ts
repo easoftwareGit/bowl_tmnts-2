@@ -50,36 +50,6 @@ export const extractBrktEntries = (brktEntries: any): brktEntryType[] => {
     fee: brktEntry.fee,
     time_stamp: parseTimestamp(brktEntry.time_stamp) as number,
   }));
-
-  // const brktsWithRefundObjs = brktEntries.filter((brktEntry: any) => brktEntry.brkt_refunds != null);
-
-  // // if already calcualted num_refunds
-  // if (brktsWithRefundObjs.length === 0) {
-  //   return brktEntries.map((brktEntry: any) => ({
-  //     ...blankBrktEntry,
-  //     id: brktEntry.id,
-  //     brkt_id: brktEntry.brkt_id,
-  //     player_id: brktEntry.player_id,
-  //     num_brackets: brktEntry.num_brackets,
-  //     num_refunds: brktEntry.num_refunds,
-  //     fee: brktEntry.fee,
-  //     time_stamp: brktEntry.time_stamp,
-  //   }));
-  // } else { // else extract num refunds
-  //   return brktEntries.map((brktEntry: any) => ({
-  //     ...blankBrktEntry,
-  //     id: brktEntry.id,
-  //     brkt_id: brktEntry.brkt_id,
-  //     player_id: brktEntry.player_id,
-  //     num_brackets: brktEntry.num_brackets,
-  //     num_refunds:
-  //       brktEntry.brkt_refunds == null
-  //         ? undefined
-  //         : brktEntry.brkt_refunds.num_refunds,
-  //     fee: brktEntry.fee,
-  //     time_stamp: brktEntry.time_stamp,
-  //   }));
-  // }
 };
 
 /**

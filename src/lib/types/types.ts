@@ -714,21 +714,6 @@ export type updatedEntriesCountsType = {
   total: number,
 }
 
-// export type putManyEntriesReturnType = {
-//   players: putManyReturnType,
-//   divEntries: putManyReturnType,
-//   potEntries: putManyReturnType,
-//   brktEntries: putManyReturnType,
-//   brcktListEntries: putManyReturnType,
-//   elimEntries: putManyReturnType,  
-//   playersToUpdate: tmntEntryPlayerType[],
-//   divEntriesToUpdate: tmntEntryDivEntryType[],
-//   potEntriesToUpdate: tmntEntryPotEntryType[],
-//   brktEntriesToUpdate: tmntEntryBrktEntryType[],
-//   brcktListsToUpdate: BracketList[],
-//   elimEntriesToUpdate: tmntEntryElimEntryType[],
-// }
-
 export type tmntFullType = {
   tmnt: tmntType;
   brktEntries: brktEntryType[];  

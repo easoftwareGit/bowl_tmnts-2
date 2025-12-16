@@ -38,43 +38,6 @@ export const saveBowl = createAsyncThunk(
   }
 )
 
-// export const fetchBowls = createAsyncThunk<
-//   Bowl[],
-//   void,
-//   {
-//     rejectValue: string;
-//   }
-// >("bowls/fetchBowls", async (_, { rejectWithValue }) => {
-//   try {
-//     return await getBowls();
-//   } catch (err) {
-//     return rejectWithValue(err instanceof Error ? err.message : String(err));
-//   }
-
-//   // // Do not use try / catch blocks here. Need the promise to be fulfilled or
-//   // // rejected which will have the appropriate response in the extraReducers.
-
-//   // return await getBowls();
-// });
-
-// export const saveBowl = createAsyncThunk(
-//   "bowls/saveBowl",
-//   async (bowl: bowlType, { getState }) => {
-//     // Do not use try / catch blocks here. Need the promise to be fulfilled or
-//     // rejected which will have the appropriate response in the extraReducers.
-//     const state = getState() as RootState;
-//     const currentBowls = state.bowls.bowls;
-//     const found = currentBowls.find((b) => b.id === bowl.id);
-//     if (found) {
-//       const updatedBowl = await putBowl(bowl);
-//       return updatedBowl;
-//     } else {
-//       const newBowl = await postBowl(bowl);
-//       return newBowl;
-//     }
-//   }
-// );
-
 export const bowlsSlice = createSlice({
   name: "bowls",
   initialState,

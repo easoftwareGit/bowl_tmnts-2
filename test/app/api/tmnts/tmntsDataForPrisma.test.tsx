@@ -1,4 +1,4 @@
-import { eventId, mockTmntFullData } from "../../../mocks/tmnts/tmntFulldata/mockTmntFullData";
+import { mockTmntFullData } from "../../../mocks/tmnts/tmntFulldata/mockTmntFullData";
 import { tmntDataForPrisma, tmntFullDataForPrisma } from "@/app/api/tmnts/dataForPrisma";
 import { cloneDeep } from "lodash";
 

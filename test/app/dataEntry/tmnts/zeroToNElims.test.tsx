@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ZeroToNElims, { validateElims, exportedForTesting } from "@/app/dataEntry/tmntForm/zeroToNElims";
+import styles from "@/app/dataEntry/tmntForm/tmntForm.module.css";
 import { mockElims, mockDivs, mockSquads } from "../../../mocks/tmnts/twoDivs/mockDivs";
 import { localConfig } from "@/lib/currency/const";
 import { formatValueSymbSep2Dec } from "@/lib/currency/formatValue";
@@ -31,105 +32,100 @@ describe('ZeroToNElims - Component', () => {
 
   describe('render the component', () => { 
 
-    describe('render the Create Eliminator tab', () => { 
+    describe('render the Create Eliminator tab - no elims exist', () => { 
+      const noElims: elimType[] = [];
+      const mockNoElims = cloneDeep(mockZeroToNElimsProps);
+      mockNoElims.elims = noElims;
       it('render the "Create Pots" tab', async () => {        
         // ARRANGE        
-        render(<ZeroToNElims {...mockZeroToNElimsProps} />);        
+        render(<ZeroToNElims {...mockNoElims} />);        
         // ACT        
         const tabs = screen.getAllByRole("tab");        
         // ASSERT     
-        expect(tabs).toHaveLength(mockElims.length + 1);  //  + 1 for create pot tab
+        expect(tabs).toHaveLength(noElims.length + 1);  //  + 1 for create pot tab
         expect(tabs[0]).toHaveTextContent("Create Eliminator");
       })
+      it('render the "Create Eliminator tab screen with the correct background color"', async () => {
+        render(<ZeroToNElims {...mockNoElims} />);
+
+        const wrapper = screen.getByTestId("createElimContainer");
+
+        expect(wrapper).toHaveClass("container");
+        expect(wrapper).toHaveClass("rounded-3");
+        expect(wrapper).toHaveClass(styles.createBackground);
+      })
       it('render the Division label', () => {
-        render(<ZeroToNElims {...mockZeroToNElimsProps} />)
+        render(<ZeroToNElims {...mockNoElims} />)
         const divLabels = screen.getAllByText(/division/i);
-        expect(divLabels).toHaveLength(mockElims.length + 1); // + 1 for create pot
+        expect(divLabels).toHaveLength(noElims.length + 1); // + 1 for create pot
       })
       it('render the "Scratch" radio button', () => {
-        render(<ZeroToNElims {...mockZeroToNElimsProps} />);
+        render(<ZeroToNElims {...mockNoElims} />);
         const scratchRadio = screen.getByRole('radio', { name: /scratch/i }) as HTMLInputElement;
         expect(scratchRadio).not.toBeChecked();
       })
       it('render the "Hdcp" radio button', () => {
-        render(<ZeroToNElims {...mockZeroToNElimsProps} />);
+        render(<ZeroToNElims {...mockNoElims} />);
         const hdcpRadio = screen.getByRole('radio', { name: /hdcp/i }) as HTMLInputElement;
         expect(hdcpRadio).not.toBeChecked();
       })
       it('DO NOT render the divison errors', () => {
-        render(<ZeroToNElims {...mockZeroToNElimsProps} />);
+        render(<ZeroToNElims {...mockNoElims} />);
         const divError = screen.queryByTestId("dangerElimDivRadio");
         expect(divError).toHaveTextContent("");
       })
       it('render the "Fee" label', () => {
-        render(<ZeroToNElims {...mockZeroToNElimsProps} />);
+        render(<ZeroToNElims {...mockNoElims} />);
         const feeLabels = screen.getAllByText("Fee");
-        expect(feeLabels).toHaveLength(mockElims.length + 1);
+        expect(feeLabels).toHaveLength(noElims.length + 1);
       })
       it('render the "Fee" input', () => {
-        render(<ZeroToNElims {...mockZeroToNElimsProps} />);
+        render(<ZeroToNElims {...mockNoElims} />);
         const fees = screen.getAllByRole('textbox', { name: /fee/i }) as HTMLInputElement[];
-        expect(fees).toHaveLength(mockElims.length + 1);
+        expect(fees).toHaveLength(noElims.length + 1);
         expect(fees[0]).toHaveValue('');
       })
       it('DO NOT render the create eliminator fee error', () => {
-        render(<ZeroToNElims {...mockZeroToNElimsProps} />);
+        render(<ZeroToNElims {...mockNoElims} />);
         const elimFeeError = screen.queryByTestId("dangerCreateElimFee");
         expect(elimFeeError).toHaveTextContent("");
       })
       it('render the create eliminator "Start" label', () => {
-        render(<ZeroToNElims {...mockZeroToNElimsProps} />);
+        render(<ZeroToNElims {...mockNoElims} />);
         const startLabels = screen.getAllByText(/start/i);
-        expect(startLabels).toHaveLength(mockElims.length + 1);
+        expect(startLabels).toHaveLength(noElims.length + 1);
       })
       it('render the create eliminator "Start" input', () => {
-        render(<ZeroToNElims {...mockZeroToNElimsProps} />);
+        render(<ZeroToNElims {...mockNoElims} />);
         const startInputs = screen.getAllByRole('spinbutton', { name: /start/i }) as HTMLInputElement[];
-        expect(startInputs).toHaveLength(mockElims.length + 1);
+        expect(startInputs).toHaveLength(noElims.length + 1);
         expect(startInputs[0]).toHaveValue(1);
       })
       it('DO NOT render the create eliminator "Start" error', () => {
-        render(<ZeroToNElims {...mockZeroToNElimsProps} />);
+        render(<ZeroToNElims {...mockNoElims} />);
         const elimStartError = screen.queryByTestId("dangerCreateElimStart");
         expect(elimStartError).toHaveTextContent("");
       })
       it('render the "Games" label', () => {
-        render(<ZeroToNElims {...mockZeroToNElimsProps} />);
+        render(<ZeroToNElims {...mockNoElims} />);
         const gamesLabels = screen.getAllByText("Games");
-        expect(gamesLabels).toHaveLength(mockElims.length + 1);
+        expect(gamesLabels).toHaveLength(noElims.length + 1);
       })
       it('render the "Games" input', () => {
-        render(<ZeroToNElims {...mockZeroToNElimsProps} />);
+        render(<ZeroToNElims {...mockNoElims} />);
         const gamesInputs = screen.getAllByRole('spinbutton', { name: /games/i }) as HTMLInputElement[];
-        expect(gamesInputs).toHaveLength(mockElims.length + 1);
+        expect(gamesInputs).toHaveLength(noElims.length + 1);
         expect(gamesInputs[0]).toHaveValue(defaultElimGames)
       })
       it('DO NOT render the create eliminator "Start" error', () => {
-        render(<ZeroToNElims {...mockZeroToNElimsProps} />);
+        render(<ZeroToNElims {...mockNoElims} />);
         const elimGamesError = screen.queryByTestId("dangerCreateElimGames");
         expect(elimGamesError).toHaveTextContent("");
       })
       it('render the "Add Eliminator" button', () => {
-        render(<ZeroToNElims {...mockZeroToNElimsProps} />);        
+        render(<ZeroToNElims {...mockNoElims} />);        
         const addBtn = screen.getByRole('button', { name: /add eliminator/i });
         expect(addBtn).toBeInTheDocument();
-      })
-      it('render the tabs', async () => {
-        const user = userEvent.setup()
-        render(<ZeroToNElims {...mockZeroToNElimsProps} />);
-        const tabs = screen.getAllByRole("tab");
-        expect(tabs).toHaveLength(mockElims.length + 1);
-        await user.click(tabs[0]);
-        expect(tabs[0]).toHaveTextContent('Create Eliminator');
-        expect(tabs[0]).toHaveAttribute("aria-selected", "true");
-        expect(tabs[1]).toHaveTextContent('Scratch: 1-3');
-        expect(tabs[1]).toHaveAttribute("aria-selected", "false");
-        expect(tabs[2]).toHaveTextContent('Scratch: 4-6');
-        expect(tabs[2]).toHaveAttribute("aria-selected", "false");
-        expect(tabs[3]).toHaveTextContent('Hdcp: 1-3');
-        expect(tabs[3]).toHaveAttribute("aria-selected", "false");
-        expect(tabs[4]).toHaveTextContent('Hdcp: 4-6');
-        expect(tabs[4]).toHaveAttribute("aria-selected", "false");
       })
     })
 

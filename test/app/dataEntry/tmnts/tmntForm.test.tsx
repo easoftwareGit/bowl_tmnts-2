@@ -7,6 +7,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import tmntFullDataReducer, { saveTmntFullData } from "@/redux/features/tmntFullData/tmntFullDataSlice"; 
 import bowlsReducer from "@/redux/features/bowls/bowlsSlice"; 
 import TmntDataForm from "@/app/dataEntry/tmntForm/tmntForm"; 
+import { acdnErrClassName } from "@/app/dataEntry/tmntForm/errors";
 import { bowlType, ioDataError, tmntActions, tmntFormDataType } from "@/lib/types/types"; 
 import { getBlankTmntFullData } from "@/app/dataEntry/tmntForm/tmntTools"; 
 import { mockBowl, mockTmntFullData } from "../../../mocks/tmnts/tmntFulldata/mockTmntFullData"; 
@@ -168,6 +169,78 @@ describe('TmntDataForm - Component', () => {
       });
     });
 
+    describe('getLanesTabTitle', () => {
+      beforeEach(() => {
+        jest.restoreAllMocks();
+        jest.clearAllMocks();        
+      });
+
+      it('renders "Lanes -" with a single lane_count', () => {
+        const tmntPropsOne: tmntFormDataType = {
+          tmntFullData: {
+            ...mockTmntFullData,
+            squads: [{ lane_count: 8 } as any],
+          },
+          tmntAction: tmntActions.New,
+        };
+        const store = makeStore([mockBowl]); 
+
+        render(
+          <Provider store={store}>
+            <TmntDataForm tmntProps={tmntPropsOne} />
+          </Provider>
+        );
+
+        expect(screen.getByText("Lanes - 8")).toBeInTheDocument();
+      });
+
+      it('renders comma-separated lane counts for multiple squads', () => {
+        const tmntPropsMulti: tmntFormDataType = {
+          tmntFullData: {
+            ...mockTmntFullData,
+            squads: [
+              { lane_count: 8 } as any,
+              { lane_count: 12 } as any,
+              { lane_count: 16 } as any,
+            ],
+          },
+          tmntAction: tmntActions.New,
+        };
+        const store = makeStore([mockBowl]); 
+
+        render(
+          <Provider store={store}>
+            <TmntDataForm tmntProps={tmntPropsMulti} />
+          </Provider>
+        );
+
+        expect(screen.getByText("Lanes - 8, 12, 16")).toBeInTheDocument();
+      });
+
+      it('renders empty after "Lanes -" when there are no squads', () => {
+        const tmntPropsEmpty: tmntFormDataType = {
+          tmntFullData: {
+            ...mockTmntFullData,
+            squads: [],
+          },
+          tmntAction: tmntActions.New,
+        };
+        const store = makeStore([mockBowl]); 
+
+        render(
+          <Provider store={store}>
+            <TmntDataForm tmntProps={tmntPropsEmpty} />
+          </Provider>
+        );
+
+        expect(screen.getByText("Lanes -")).toBeInTheDocument();
+      });
+    });
+
+  });	
+  
+  describe('TmntDataForm - vallidation', () => { 
+
     describe('validation - validateTmnt and validateTmntInfo', () => {
       beforeEach(() => {
         jest.restoreAllMocks();
@@ -280,75 +353,244 @@ describe('TmntDataForm - Component', () => {
         await waitFor(() => expect(validateEvents).toHaveBeenCalled());
         await waitFor(() => expect(saveTmntFullData).not.toHaveBeenCalled());
       });
-    });
-	
-    describe('getLanesTabTitle', () => {
+    });    
+
+    describe('shows error messages in accordian headers', () => {
       beforeEach(() => {
         jest.restoreAllMocks();
-        jest.clearAllMocks();        
-      });
+        jest.clearAllMocks();
+      })
 
-      it('renders "Lanes -" with a single lane_count', () => {
-        const tmntPropsOne: tmntFormDataType = {
-          tmntFullData: {
-            ...mockTmntFullData,
-            squads: [{ lane_count: 8 } as any],
-          },
-          tmntAction: tmntActions.New,
-        };
-        const store = makeStore([mockBowl]); 
+      it('shows Events accordian error message and class when validateEvents sets an error', async () => {
+        const user = userEvent.setup();
 
+        // Other children pass        
+        (validateDivs as jest.Mock).mockReturnValue(true);
+        (validateSquads as jest.Mock).mockReturnValue(true);
+        (validatePots as jest.Mock).mockReturnValue(true);
+        (validateBrkts as jest.Mock).mockReturnValue(true);
+        (validateElims as jest.Mock).mockReturnValue(true);
+
+        // Events fail AND set the accordion error
+        (validateEvents as jest.Mock).mockImplementation(
+          (events, setEvents, setAcdnErr) => {
+            setAcdnErr({
+              errClassName: acdnErrClassName,
+              message: " - Entry Fee cannot be more than $999,999.00",
+            });
+            return false; // cause validateTmnt() to treat Events as invalid
+          }
+        );
+
+        const store = makeStore([mockBowl]);
         render(
           <Provider store={store}>
-            <TmntDataForm tmntProps={tmntPropsOne} />
+            <TmntDataForm tmntProps={tmntProps} />
           </Provider>
         );
 
-        expect(screen.getByText("Lanes - 8")).toBeInTheDocument();
+        // Trigger validateTmnt -> validateEvents
+        const saveBtn = screen.getByText("Save Tournament");
+        saveBtn.focus();
+        await user.click(saveBtn);
+        
+        const eventsHeader = await screen.findByTestId("eventsAcdnHeader");
+
+        expect(eventsHeader).toHaveTextContent(/events -/i);
+        expect(eventsHeader).toHaveTextContent(/entry fee cannot be more than/i);
+        expect(eventsHeader).toHaveClass(acdnErrClassName);
+
+        // And since Events failed, the save thunk should not be dispatched
+        await waitFor(() => expect(saveTmntFullData).not.toHaveBeenCalled());
       });
+      it('shows Divs accordian error message and class when validateDivs sets an error', async () => {
+        const user = userEvent.setup();
+        
+        (validateEvents as jest.Mock).mockReturnValue(true);        
+        (validateSquads as jest.Mock).mockReturnValue(true);
+        (validatePots as jest.Mock).mockReturnValue(true);
+        (validateBrkts as jest.Mock).mockReturnValue(true);
+        (validateElims as jest.Mock).mockReturnValue(true);
+        
+        (validateDivs as jest.Mock).mockImplementation(
+          (divs, setDivs, setAcdnErr) => {
+            setAcdnErr({
+              errClassName: acdnErrClassName,
+              message: " - Hdcp % cannot be more than 125%",
+            });
+            return false; 
+          }
+        );
 
-      it('renders comma-separated lane counts for multiple squads', () => {
-        const tmntPropsMulti: tmntFormDataType = {
-          tmntFullData: {
-            ...mockTmntFullData,
-            squads: [
-              { lane_count: 8 } as any,
-              { lane_count: 12 } as any,
-              { lane_count: 16 } as any,
-            ],
-          },
-          tmntAction: tmntActions.New,
-        };
-        const store = makeStore([mockBowl]); 
-
+        const store = makeStore([mockBowl]);
         render(
           <Provider store={store}>
-            <TmntDataForm tmntProps={tmntPropsMulti} />
+            <TmntDataForm tmntProps={tmntProps} />
           </Provider>
         );
 
-        expect(screen.getByText("Lanes - 8, 12, 16")).toBeInTheDocument();
+        const saveBtn = screen.getByText("Save Tournament");
+        saveBtn.focus();
+        await user.click(saveBtn);       
+
+        const divsHeader = await screen.findByTestId("divsAcdnHeader");
+        expect(divsHeader).toHaveTextContent(/divisions -/i);
+        expect(divsHeader).toHaveTextContent(/hdcp % cannot be more than/i);
+        expect(divsHeader).toHaveClass(acdnErrClassName);
+        
+        await waitFor(() => expect(saveTmntFullData).not.toHaveBeenCalled());
       });
+      it('shows Squads accordian error message and class when validateSquads sets an error', async () => {
+        const user = userEvent.setup();
+        
+        (validateEvents as jest.Mock).mockReturnValue(true);        
+        (validateDivs as jest.Mock).mockReturnValue(true);
+        (validatePots as jest.Mock).mockReturnValue(true);
+        (validateBrkts as jest.Mock).mockReturnValue(true);
+        (validateElims as jest.Mock).mockReturnValue(true);
+        
+        (validateSquads as jest.Mock).mockImplementation(
+          (squads, setSquads, events, setAcdnErr, minDate, maxDate) => {
+            setAcdnErr({
+              errClassName: acdnErrClassName,
+              message: " - Squad Ganes cannot be more than 6",
+            });
+            return false; 
+          }
+        );
 
-      it('renders empty after "Lanes -" when there are no squads', () => {
-        const tmntPropsEmpty: tmntFormDataType = {
-          tmntFullData: {
-            ...mockTmntFullData,
-            squads: [],
-          },
-          tmntAction: tmntActions.New,
-        };
-        const store = makeStore([mockBowl]); 
-
+        const store = makeStore([mockBowl]);
         render(
           <Provider store={store}>
-            <TmntDataForm tmntProps={tmntPropsEmpty} />
+            <TmntDataForm tmntProps={tmntProps} />
           </Provider>
         );
 
-        expect(screen.getByText("Lanes -")).toBeInTheDocument();
+        const saveBtn = screen.getByText("Save Tournament");
+        saveBtn.focus();
+        await user.click(saveBtn);       
+
+        const squadsHeader = await screen.findByTestId("squadsAcdnHeader");
+        expect(squadsHeader).toHaveTextContent(/squads -/i);
+        expect(squadsHeader).toHaveTextContent(/squad ganes cannot be more than/i);
+        expect(squadsHeader).toHaveClass(acdnErrClassName);
+        
+        await waitFor(() => expect(saveTmntFullData).not.toHaveBeenCalled());
       });
+      it('shows Pots accordian error message and class when validatePots sets an error', async () => {
+        const user = userEvent.setup();
+        
+        (validateEvents as jest.Mock).mockReturnValue(true);
+        (validateDivs as jest.Mock).mockReturnValue(true);
+        (validateSquads as jest.Mock).mockReturnValue(true);
+        (validateBrkts as jest.Mock).mockReturnValue(true);
+        (validateElims as jest.Mock).mockReturnValue(true);
+        
+        (validatePots as jest.Mock).mockImplementation(
+          (pots, setPots, divs, setAcdnErr) => {
+            setAcdnErr({
+              errClassName: acdnErrClassName,
+              message: " - Pot Scratch: Fee cannot be less than $1.00",
+            });
+            return false; 
+          }
+        );
+
+        const store = makeStore([mockBowl]);
+        render(
+          <Provider store={store}>
+            <TmntDataForm tmntProps={tmntProps} />
+          </Provider>
+        );
+
+        const saveBtn = screen.getByText("Save Tournament");
+        saveBtn.focus();
+        await user.click(saveBtn);       
+
+        const potsHeader = await screen.findByTestId("potsAcdnHeader");
+        expect(potsHeader).toHaveTextContent(/pots -/i);
+        expect(potsHeader).toHaveTextContent(/fee cannot be less than/i);
+        expect(potsHeader).toHaveClass(acdnErrClassName);
+        
+        await waitFor(() => expect(saveTmntFullData).not.toHaveBeenCalled());
+      });
+      it('shows Brkts accordian error message and class when validateBrkts sets an error', async () => {
+        const user = userEvent.setup();
+        
+        (validateEvents as jest.Mock).mockReturnValue(true);
+        (validateDivs as jest.Mock).mockReturnValue(true);
+        (validateSquads as jest.Mock).mockReturnValue(true);
+        (validatePots as jest.Mock).mockReturnValue(true);
+        (validateElims as jest.Mock).mockReturnValue(true);
+        
+        (validateBrkts as jest.Mock).mockImplementation(
+          (brkts, setBrkts, divs, maxStartGame, setAcdnErr) => {
+            setAcdnErr({
+              errClassName: acdnErrClassName,
+              message: " - Fee cannot be less than $1.00",
+            });
+            return false; 
+          }
+        );
+
+        const store = makeStore([mockBowl]);
+        render(
+          <Provider store={store}>
+            <TmntDataForm tmntProps={tmntProps} />
+          </Provider>
+        );
+
+        const saveBtn = screen.getByText("Save Tournament");
+        saveBtn.focus();
+        await user.click(saveBtn);       
+
+        const brktsHeader = await screen.findByTestId("brktsAcdnHeader");
+        expect(brktsHeader).toHaveTextContent(/brackets -/i);
+        expect(brktsHeader).toHaveTextContent(/fee cannot be less than/i);
+        expect(brktsHeader).toHaveClass(acdnErrClassName);
+        
+        await waitFor(() => expect(saveTmntFullData).not.toHaveBeenCalled());
+      });
+      it('shows Brkts accordian error message and class when validateBrkts sets an error', async () => {
+        const user = userEvent.setup();
+        
+        (validateEvents as jest.Mock).mockReturnValue(true);
+        (validateDivs as jest.Mock).mockReturnValue(true);
+        (validateSquads as jest.Mock).mockReturnValue(true);
+        (validatePots as jest.Mock).mockReturnValue(true);
+        (validateBrkts as jest.Mock).mockReturnValue(true);         
+        
+        (validateElims as jest.Mock).mockImplementation(
+          (elims, setElims, divs, squadGames, setAcdnErr) => {
+            setAcdnErr({
+              errClassName: acdnErrClassName,
+              message: " - Fee cannot be less than $1.00",
+            });
+            return false; 
+          }
+        );
+
+        const store = makeStore([mockBowl]);
+        render(
+          <Provider store={store}>
+            <TmntDataForm tmntProps={tmntProps} />
+          </Provider>
+        );
+
+        const saveBtn = screen.getByText("Save Tournament");
+        saveBtn.focus();
+        await user.click(saveBtn);       
+
+        const elimsHeader = await screen.findByTestId("elimsAcdnHeader");
+        expect(elimsHeader).toHaveTextContent(/Eliminators -/i);
+        expect(elimsHeader).toHaveTextContent(/fee cannot be less than/i);
+        expect(elimsHeader).toHaveClass(acdnErrClassName);
+        
+        await waitFor(() => expect(saveTmntFullData).not.toHaveBeenCalled());
+      });
+
     });
 
-	});	
+  })
+    
 });

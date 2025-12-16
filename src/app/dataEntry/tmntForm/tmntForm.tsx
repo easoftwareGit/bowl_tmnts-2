@@ -461,7 +461,10 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
         </div>
         <Accordion>
           <AccordionItem eventKey="events" >
-            <Accordion.Header className={eventAcdnErr.errClassName} data-testid="acdnEvents">
+            <Accordion.Header
+              className={eventAcdnErr.errClassName}
+              data-testid="eventsAcdnHeader"
+            >
               Events - {events.length}{eventAcdnErr.message}
             </Accordion.Header>
             <Accordion.Body data-testid="eventAcdn">
@@ -478,7 +481,10 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
         </Accordion>
         <Accordion>
           <AccordionItem eventKey="divs">
-            <Accordion.Header className={divAcdnErr.errClassName}>
+            <Accordion.Header
+              className={divAcdnErr.errClassName}
+              data-testid="divsAcdnHeader"
+            >
               Divisions - {divs.length}{divAcdnErr.message}
             </Accordion.Header>
             <Accordion.Body>
@@ -496,7 +502,10 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
         </Accordion>
         <Accordion>
           <AccordionItem eventKey="squads">
-            <Accordion.Header className={squadAcdnErr.errClassName}>
+            <Accordion.Header
+              className={squadAcdnErr.errClassName}
+              data-testid="squadsAcdnHeader"
+            >
               Squads - {squads.length}{squadAcdnErr.message}
             </Accordion.Header>
             <Accordion.Body>
@@ -530,7 +539,10 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
         </Accordion>
         <Accordion>
           <AccordionItem eventKey="pots">
-            <Accordion.Header className={potAcdnErr.errClassName}>
+            <Accordion.Header
+              className={potAcdnErr.errClassName}
+              data-testid="potsAcdnHeader"
+            >
               Pots - {pots.length}{potAcdnErr.message}
             </Accordion.Header>
             <Accordion.Body>
@@ -548,7 +560,10 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
         </Accordion>
         <Accordion>
           <AccordionItem eventKey="brkts">
-            <Accordion.Header className={brktAcdnErr.errClassName}>
+            <Accordion.Header
+              className={brktAcdnErr.errClassName}
+              data-testid="brktsAcdnHeader"
+            >
               Brackets - {brkts.length}{brktAcdnErr.message}
             </Accordion.Header>
             <Accordion.Body>
@@ -566,7 +581,10 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
         </Accordion>
         <Accordion>
           <AccordionItem eventKey="elims">
-            <Accordion.Header className={elimAcdnErr.errClassName}>
+            <Accordion.Header
+              className={elimAcdnErr.errClassName}
+              data-testid="elimsAcdnHeader"
+            >
               Eliminators - {elims.length}{elimAcdnErr.message}
             </Accordion.Header>
             <Accordion.Body>

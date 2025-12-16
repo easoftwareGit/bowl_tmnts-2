@@ -498,6 +498,7 @@ describe("dbTmnts", () => {
         expect(brkts[i].first).toBe("25");
         expect(brkts[i].second).toBe("10");
         expect(brkts[i].admin).toBe("5");
+        expect(brkts[i].fsa).toBe("40");
         if (brkts[i].id === "brk_3e6bf51cc1ca4748ad5e8abab88277e0") {
           expect(brkts[i].start).toBe(1);
           expect(brkts[i].sort_order).toBe(1);

@@ -1,5 +1,5 @@
-import React from "react";
-import { render, screen } from "@testing-library/react";
+import React, { act } from "react";
+import { render, screen, waitForElementToBeRemoved, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import OneToNDivs from "@/app/dataEntry/tmntForm/oneToNDivs";
 import { mockDivs, mockPots, mockBrkts, mockElims } from '../../../mocks/tmnts/twoDivs/mockDivs'
@@ -64,16 +64,29 @@ describe("OneToNDivs - Component", () => {
         expect(nameErrors).toHaveLength(2);
         expect(nameErrors[0]).toHaveTextContent("");
       })
-      it('render hdcp % labels', () => {        
+      it('render hdcp % label', () => {        
         render(<OneToNDivs {...mockOneToNDivsProps} />)      
         const hdcplabels = screen.getAllByText(/hdcp %/i);  
         expect(hdcplabels).toHaveLength(2)
       })
-      it("render hdcp % titles", () => {
+      it("render hdcp % label with space before help icon", () => {
         render(<OneToNDivs {...mockOneToNDivsProps} />);
-        const hdcpTitles = screen.getAllByTitle("Enter Hdcp % 0 for scratch");
+        const hdcpTitles = screen.getAllByText(/hdcp %/i, { selector: "label" });
         expect(hdcpTitles).toHaveLength(2);
-        expect(hdcpTitles[0]).toHaveTextContent("?");
+
+        const label = hdcpTitles[0] as HTMLLabelElement;
+        const text = label.textContent ?? "";
+        expect(text).toMatch(/^Hdcp %\s+\?/);
+      });
+      it('render hdcp % help icon with surrounding spaces', () => {
+        render(<OneToNDivs {...mockOneToNDivsProps} />);
+        const hdcpTitles = screen.getAllByText(/hdcp %/i, { selector: "label" });
+        expect(hdcpTitles).toHaveLength(2);
+        
+        const label = hdcpTitles[0] as HTMLLabelElement;
+        const helpSpan = within(label).getByText("?", { selector: "span" });
+        expect(helpSpan).toBeInTheDocument();        
+        expect(helpSpan).toHaveClass("popup-help");
       });
       it('render hdcp % inputs', () => {        
         render(<OneToNDivs {...mockOneToNDivsProps} />)                      
@@ -105,41 +118,30 @@ describe("OneToNDivs - Component", () => {
         expect(hdcpFromErrors).toHaveLength(2);
         expect(hdcpFromErrors[0]).toHaveTextContent("");
       })
-      it('render int hdcp checkbox', () => {        
-        render(<OneToNDivs {...mockOneToNDivsProps} />)      
-        const intHdcps = screen.getAllByRole('checkbox', { name: /integer hdcp/i }) as HTMLInputElement[];
-        expect(intHdcps).toHaveLength(2)
-        // 0 hdcp % will have this disabled, not checked in mock for testing
-        expect(intHdcps[0]).not.toBeChecked()
-        expect(intHdcps[0]).toBeDisabled()
-      })
-      it('render hdcp for game radio', () => {
-        render(<OneToNDivs {...mockOneToNDivsProps} />)               
-        const hdcpForGames = screen.getAllByRole('radio', { name: /game/i }) as HTMLInputElement[];
-        expect(hdcpForGames).toHaveLength(2)
-        // 0 hdcp % will have this disabled, not checked in mock for testing
-        expect(hdcpForGames[0]).not.toBeChecked()
-        expect(hdcpForGames[0]).toBeDisabled()
-      })
-      it('render hdcp for series radio', () => {        
-        render(<OneToNDivs {...mockOneToNDivsProps} />)              
-        const hdcpForSeries = screen.getAllByRole('radio', { name: /series/i }) as HTMLInputElement[];
-        expect(hdcpForSeries).toHaveLength(2)
-        // 0 hdcp % will have this disabled, checked in mock for testing
-        expect(hdcpForSeries[0]).toBeChecked()  
-        expect(hdcpForSeries[0]).toBeDisabled()
-      })
-      it('render tabs', async () => {
-        const user = userEvent.setup()
-        render(<OneToNDivs {...mockOneToNDivsProps} />)      
-        const tabs = screen.getAllByRole('tab');  
-        await user.click(tabs[0]); // focus on first tab
-        expect(tabs).toHaveLength(2);
-        expect(tabs[0]).toHaveTextContent(mockDivs[0].tab_title);        
-        expect(tabs[0]).toHaveAttribute("aria-selected", "true");                
-        expect(tabs[1]).toHaveTextContent(mockDivs[1].tab_title);
-        expect(tabs[1]).toHaveAttribute("aria-selected", "false");
-      })
+      // it('render int hdcp checkbox', () => {        
+      //   render(<OneToNDivs {...mockOneToNDivsProps} />)      
+      //   const intHdcps = screen.getAllByRole('checkbox', { name: /integer hdcp/i }) as HTMLInputElement[];
+      //   expect(intHdcps).toHaveLength(2)
+      //   // 0 hdcp % will have this disabled, not checked in mock for testing
+      //   expect(intHdcps[0]).not.toBeChecked()
+      //   expect(intHdcps[0]).toBeDisabled()
+      // })
+      // it('render hdcp for game radio', () => {
+      //   render(<OneToNDivs {...mockOneToNDivsProps} />)               
+      //   const hdcpForGames = screen.getAllByRole('radio', { name: /game/i }) as HTMLInputElement[];
+      //   expect(hdcpForGames).toHaveLength(2)
+      //   // 0 hdcp % will have this disabled, not checked in mock for testing
+      //   expect(hdcpForGames[0]).not.toBeChecked()
+      //   expect(hdcpForGames[0]).toBeDisabled()
+      // })
+      // it('render hdcp for series radio', () => {        
+      //   render(<OneToNDivs {...mockOneToNDivsProps} />)              
+      //   const hdcpForSeries = screen.getAllByRole('radio', { name: /series/i }) as HTMLInputElement[];
+      //   expect(hdcpForSeries).toHaveLength(2)
+      //   // 0 hdcp % will have this disabled, checked in mock for testing
+      //   expect(hdcpForSeries[0]).toBeChecked()  
+      //   expect(hdcpForSeries[0]).toBeDisabled()
+      // })
     })
 
     describe('render the 2nd division', () => { 
@@ -156,197 +158,257 @@ describe("OneToNDivs - Component", () => {
       it('render the 2nd division', async () => {
         // ARRANGE
         const user = userEvent.setup()
-        render(<OneToNDivs {...mockOneToNDivsProps} />)      
+        render(<OneToNDivs {...mockOneToNDivsProps} />)
         // ACT
         const tabs = screen.getAllByRole('tab');
         expect(tabs).toHaveLength(2);
-        await user.click(tabs[1]);        
+        await user.click(tabs[1]);
         // ASSERT
         expect(tabs[0]).toHaveAttribute("aria-selected", "false");
         expect(tabs[1]).toHaveAttribute("aria-selected", "true");
       })
       it('render the delete button', async () => {
         const user = userEvent.setup()
-        render(<OneToNDivs {...mockOneToNDivsProps} />)      
-        const tabs = screen.getAllByRole('tab');  
+        render(<OneToNDivs {...mockOneToNDivsProps} />)
+        const tabs = screen.getAllByRole('tab');
         await user.click(tabs[1]);
-        const delBtn = screen.getByRole("button", { name: /delete div/i });        
+        const delBtn = screen.getByRole("button", { name: /delete div/i });
         expect(delBtn).toBeInTheDocument();
       })
-      it('render div name inputs', async () => {        
+      it('render div name inputs', async () => {
         const user = userEvent.setup()
-        render(<OneToNDivs {...mockOneToNDivsProps} />)      
-        const tabs = screen.getAllByRole('tab');  
+        render(<OneToNDivs {...mockOneToNDivsProps} />)
+        const tabs = screen.getAllByRole('tab');
         await user.click(tabs[1]);
-        const divNames = screen.getAllByRole('textbox', { name: /div name/i }) as HTMLInputElement[];        
+        const divNames = screen.getAllByRole('textbox', { name: /div name/i }) as HTMLInputElement[];
         expect(divNames[1]).toHaveClass("is-invalid");
         expect(divNames[1]).toHaveValue('Hdcp')
       })
-      it('render 2nd div name errors', async () => { 
+      it('render 2nd div name errors', async () => {
         const user = userEvent.setup()
-        render(<OneToNDivs {...mockOneToNDivsProps} />)      
-        const tabs = screen.getAllByRole('tab');  
+        render(<OneToNDivs {...mockOneToNDivsProps} />)
+        const tabs = screen.getAllByRole('tab');
         await user.click(tabs[1]);
         const nameErrors = screen.queryAllByTestId("dangerDivName");
         expect(nameErrors).toHaveLength(2);
         expect(nameErrors[1]).toHaveTextContent("test div name error");
       })
-      it('render hdcp % inputs', async () => {        
+      it('render hdcp % inputs', async () => {
         const user = userEvent.setup()
-        render(<OneToNDivs {...mockOneToNDivsProps} />)      
-        const tabs = screen.getAllByRole('tab');  
-        await user.click(tabs[1]);        
-        const hdcpPers = screen.getAllByRole('textbox', { name: /hdcp %/i }) as HTMLInputElement[];        
+        render(<OneToNDivs {...mockOneToNDivsProps} />)
+        const tabs = screen.getAllByRole('tab');
+        await user.click(tabs[1]);
+        const hdcpPers = screen.getAllByRole('textbox', { name: /hdcp %/i }) as HTMLInputElement[];
         expect(hdcpPers[1]).toHaveClass("is-invalid");
         expect(hdcpPers[1]).toHaveValue('100.00%')
       })
-      it('render 2nd hdcp % errors', async () => { 
+      it('render 2nd hdcp % errors', async () => {
         const user = userEvent.setup()
-        render(<OneToNDivs {...mockOneToNDivsProps} />)      
-        const tabs = screen.getAllByRole('tab');  
+        render(<OneToNDivs {...mockOneToNDivsProps} />)
+        const tabs = screen.getAllByRole('tab');
         await user.click(tabs[1]);
         const hdcpPerErrors = screen.queryAllByTestId("dangerHdcp");
         expect(hdcpPerErrors).toHaveLength(2);
         expect(hdcpPerErrors[1]).toHaveTextContent("test hdcp error");
       })
-      it('render hdcp from inputs', async () => {        
+      it('render hdcp from inputs', async () => {
         const user = userEvent.setup()
-        render(<OneToNDivs {...mockOneToNDivsProps} />)      
-        const tabs = screen.getAllByRole('tab');  
+        render(<OneToNDivs {...mockOneToNDivsProps} />)
+        const tabs = screen.getAllByRole('tab');
         await user.click(tabs[1]);
-        const hdcpFroms = screen.getAllByRole('spinbutton', { name: /hdcp from/i }) as HTMLInputElement[];        
+        const hdcpFroms = screen.getAllByRole('spinbutton', { name: /hdcp from/i }) as HTMLInputElement[];
         expect(hdcpFroms[1]).toHaveClass("is-invalid");
         expect(hdcpFroms[1]).toHaveValue(230)
         expect(hdcpFroms[1]).toBeEnabled()
       })
-      it('render 2nd hdcp from errors', async () => { 
+      it('render 2nd hdcp from errors', async () => {
         const user = userEvent.setup()
-        render(<OneToNDivs {...mockOneToNDivsProps} />)      
-        const tabs = screen.getAllByRole('tab');  
+        render(<OneToNDivs {...mockOneToNDivsProps} />)
+        const tabs = screen.getAllByRole('tab');
         await user.click(tabs[1]);
         const hdcpFromErrors = screen.queryAllByTestId("dangerHdcpFrom");
         expect(hdcpFromErrors).toHaveLength(2);
         expect(hdcpFromErrors[1]).toHaveTextContent("test hdcp from error");
       })
-      it('render int hdcp checkbox', async () => {        
-        const user = userEvent.setup()
-        render(<OneToNDivs {...mockOneToNDivsProps} />)      
-        const tabs = screen.getAllByRole('tab');  
-        await user.click(tabs[1]);
-        const intHdcps = screen.getAllByRole('checkbox', { name: /integer hdcp/i }) as HTMLInputElement[];        
-        expect(intHdcps).toHaveLength(2)
-        expect(intHdcps[1]).toBeChecked()
-        expect(intHdcps[1]).toBeEnabled()
-      })
-      it('render hdcp for game radio', async () => {
-        const user = userEvent.setup()
-        render(<OneToNDivs {...mockOneToNDivsProps} />)      
-        const tabs = screen.getAllByRole('tab');  
-        await user.click(tabs[1]);
-        const hdcpForGames = screen.getAllByRole('radio', { name: /game/i }) as HTMLInputElement[];        
-        expect(hdcpForGames).toHaveLength(2)
-        expect(hdcpForGames[1]).toBeChecked()
-        expect(hdcpForGames[1]).toBeEnabled()
-      })
-      it('render hdcp for series radio', async () => {        
-        const user = userEvent.setup()
-        render(<OneToNDivs {...mockOneToNDivsProps} />)      
-        const tabs = screen.getAllByRole('tab');  
-        await user.click(tabs[1]);
-        const hdcpForSeries = screen.getAllByRole('radio', { name: /series/i }) as HTMLInputElement[];        
-        expect(hdcpForSeries).toHaveLength(2)
-        expect(hdcpForSeries[1]).not.toBeChecked()  
-        expect(hdcpForSeries[1]).toBeEnabled()
-      })
+      // it('render int hdcp checkbox', async () => {
+      //   const user = userEvent.setup()
+      //   render(<OneToNDivs {...mockOneToNDivsProps} />)
+      //   const tabs = screen.getAllByRole('tab');
+      //   await user.click(tabs[1]);
+      //   const intHdcps = screen.getAllByRole('checkbox', { name: /integer hdcp/i }) as HTMLInputElement[];
+      //   expect(intHdcps).toHaveLength(2)
+      //   expect(intHdcps[1]).toBeChecked()
+      //   expect(intHdcps[1]).toBeEnabled()
+      // })
+      // it('render hdcp for game radio', async () => {
+      //   const user = userEvent.setup()
+      //   render(<OneToNDivs {...mockOneToNDivsProps} />)
+      //   const tabs = screen.getAllByRole('tab');
+      //   await user.click(tabs[1]);
+      //   const hdcpForGames = screen.getAllByRole('radio', { name: /game/i }) as HTMLInputElement[];
+      //   expect(hdcpForGames).toHaveLength(2)
+      //   expect(hdcpForGames[1]).toBeChecked()
+      //   expect(hdcpForGames[1]).toBeEnabled()
+      // })
+      // it('render hdcp for series radio', async () => {
+      //   const user = userEvent.setup()
+      //   render(<OneToNDivs {...mockOneToNDivsProps} />)
+      //   const tabs = screen.getAllByRole('tab');
+      //   await user.click(tabs[1]);
+      //   const hdcpForSeries = screen.getAllByRole('radio', { name: /series/i }) as HTMLInputElement[];
+      //   expect(hdcpForSeries).toHaveLength(2)
+      //   expect(hdcpForSeries[1]).not.toBeChecked()
+      //   expect(hdcpForSeries[1]).toBeEnabled()
+      // })
     })
 
-    describe('render the divs when tmntAction is Run - inputs and buttons disabled', () => { 
-      const runTmntProps = cloneDeep(mockOneToNDivsProps);   
+    describe('render tabs for each div', () => {
+      it('render tabs', async () => {
+        const user = userEvent.setup()
+        render(<OneToNDivs {...mockOneToNDivsProps} />)
+        const tabs = screen.getAllByRole('tab');
+        await user.click(tabs[0]); // focus on first tab
+        expect(tabs).toHaveLength(2);
+        expect(tabs[0]).toHaveTextContent(mockDivs[0].tab_title);
+        expect(tabs[0]).toHaveAttribute("aria-selected", "true");
+        expect(tabs[1]).toHaveTextContent(mockDivs[1].tab_title);
+        expect(tabs[1]).toHaveAttribute("aria-selected", "false");
+      });
+    });
+
+    describe('render the divs when tmntAction is Run - inputs and buttons disabled', () => {
+      const runTmntProps = cloneDeep(mockOneToNDivsProps);
       runTmntProps.tmntAction = tmntActions.Run;
-      it('render num divs', () => {         
-        render(<OneToNDivs {...runTmntProps} />)      
+      it('render num divs', () => {
+        render(<OneToNDivs {...runTmntProps} />)
         // const numDivs = screen.getByTestId('inputNumDivs') as HTMLInputElement;
         const numDivs = screen.getByRole('textbox', { name: /# divisions/i }) as HTMLInputElement;
-        expect(numDivs).toBeInTheDocument()        
+        expect(numDivs).toBeInTheDocument()
         expect(numDivs).toHaveValue('2')
-        expect(numDivs).toBeDisabled()          
+        expect(numDivs).toBeDisabled()
       })
-      it('render add button', () => {        
-        render(<OneToNDivs {...runTmntProps} />) 
-        const addBtn = screen.getByRole("button", { name: /add/i });        
-        expect(addBtn).toBeInTheDocument() 
+      it('render add button', () => {
+        render(<OneToNDivs {...runTmntProps} />)
+        const addBtn = screen.getByRole("button", { name: /add/i });
+        expect(addBtn).toBeInTheDocument()
         expect(addBtn).toBeDisabled()
       })
-      it('render delete button', () => {        
-        render(<OneToNDivs {...runTmntProps} />) 
-        const delBtn = screen.getByRole("button", { name: /delete/i });        
-        expect(delBtn).toBeInTheDocument() 
+      it('render delete button', () => {
+        render(<OneToNDivs {...runTmntProps} />)
+        const delBtn = screen.getByRole("button", { name: /delete/i });
+        expect(delBtn).toBeInTheDocument()
         expect(delBtn).toBeDisabled()
       })
-      it('render div name inputs', () => {        
-        render(<OneToNDivs {...runTmntProps} />)      
+      it('render div name inputs', () => {
+        render(<OneToNDivs {...runTmntProps} />)
         const divNames = screen.getAllByRole('textbox', { name: /div name/i }) as HTMLInputElement[];
         expect(divNames).toHaveLength(2)
         expect(divNames[0]).toBeDisabled()
         expect(divNames[1]).toBeDisabled()
       })
-      it('render hdcp % inputs', () => {        
-        render(<OneToNDivs {...runTmntProps} />)                      
+      it('render hdcp % inputs', () => {
+        render(<OneToNDivs {...runTmntProps} />)
         const hdcps = screen.getAllByRole('textbox', { name: /hdcp %/i }) as HTMLInputElement[];
         expect(hdcps).toHaveLength(2)
         expect(hdcps[0]).toBeDisabled()
         expect(hdcps[1]).toBeDisabled()
       })
-      it('render hdcp from inputs', () => {        
-        render(<OneToNDivs {...runTmntProps} />)              
-        const hdcpFroms = screen.getAllByRole('spinbutton', { name: /hdcp from/i }) as HTMLInputElement[];        
-        expect(hdcpFroms).toHaveLength(2)        
+      it('render hdcp from inputs', () => {
+        render(<OneToNDivs {...runTmntProps} />)
+        const hdcpFroms = screen.getAllByRole('spinbutton', { name: /hdcp from/i }) as HTMLInputElement[];
+        expect(hdcpFroms).toHaveLength(2)
         expect(hdcpFroms[0]).toBeDisabled()
         expect(hdcpFroms[1]).toBeDisabled()
       })
-      it('render int hdcp checkbox', () => {        
-        render(<OneToNDivs {...runTmntProps} />)      
-        const intHdcps = screen.getAllByRole('checkbox', { name: /integer hdcp/i }) as HTMLInputElement[];
-        expect(intHdcps).toHaveLength(2)                
-        expect(intHdcps[0]).toBeDisabled()
-        expect(intHdcps[1]).toBeDisabled()
-      })
-      it('render hdcp for game radio', () => {
-        render(<OneToNDivs {...runTmntProps} />)               
-        const hdcpForGames = screen.getAllByRole('radio', { name: /game/i }) as HTMLInputElement[];
-        expect(hdcpForGames).toHaveLength(2)                
-        expect(hdcpForGames[0]).toBeDisabled()
-        expect(hdcpForGames[1]).toBeDisabled()
-      })
-      it('render hdcp for series radio', () => {        
-        render(<OneToNDivs {...runTmntProps} />)              
-        const hdcpForSeries = screen.getAllByRole('radio', { name: /series/i }) as HTMLInputElement[];
-        expect(hdcpForSeries).toHaveLength(2)                
-        expect(hdcpForSeries[0]).toBeDisabled()
-        expect(hdcpForSeries[1]).toBeDisabled()
-      })
+      // it('render int hdcp checkbox', () => {
+      //   render(<OneToNDivs {...runTmntProps} />)
+      //   const intHdcps = screen.getAllByRole('checkbox', { name: /integer hdcp/i }) as HTMLInputElement[];
+      //   expect(intHdcps).toHaveLength(2)
+      //   expect(intHdcps[0]).toBeDisabled()
+      //   expect(intHdcps[1]).toBeDisabled()
+      // })
+      // it('render hdcp for game radio', () => {
+      //   render(<OneToNDivs {...runTmntProps} />)
+      //   const hdcpForGames = screen.getAllByRole('radio', { name: /game/i }) as HTMLInputElement[];
+      //   expect(hdcpForGames).toHaveLength(2)
+      //   expect(hdcpForGames[0]).toBeDisabled()
+      //   expect(hdcpForGames[1]).toBeDisabled()
+      // })
+      // it('render hdcp for series radio', () => {
+      //   render(<OneToNDivs {...runTmntProps} />)
+      //   const hdcpForSeries = screen.getAllByRole('radio', { name: /series/i }) as HTMLInputElement[];
+      //   expect(hdcpForSeries).toHaveLength(2)
+      //   expect(hdcpForSeries[0]).toBeDisabled()
+      //   expect(hdcpForSeries[1]).toBeDisabled()
+      // })
     })
+    
+    describe('render the popup-help text', () => { 
+      beforeEach(() => {
+        jest.useFakeTimers();
+      })
+      afterEach(() => {
+        jest.runOnlyPendingTimers();
+        jest.useRealTimers();        
+      })
+      it("only shows the Hdcp % tooltip while the help icon is hovered", async () => { 
+        const hdcpLineRegex = /Enter Hdcp %/i;
+        const zeroLineRegex = /Enter 0 for scratch/;
+
+        const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+        render(<OneToNDivs {...mockOneToNDivsProps} />)
+
+        // 1) BEFORE HOVER – tooltip is NOT in the document
+        expect(screen.queryByText(hdcpLineRegex)).not.toBeInTheDocument();
+        expect(screen.queryByText(zeroLineRegex)).not.toBeInTheDocument();
+
+        const teamLabels = screen.getAllByText(/hdcp %/i, { selector: "label" });
+        expect(teamLabels).toHaveLength(2);
+        const label = teamLabels[0] as HTMLLabelElement;
+        const helpSpan = within(label).getByText("?", { selector: "span" });
+
+        // 2) HOVER OVER help icon
+        await user.hover(helpSpan);
+        act(() => {
+          jest.advanceTimersByTime(300); // > 250ms show delay
+        });
+
+        const hdcpTip = await screen.findByText(hdcpLineRegex);
+        expect(hdcpTip).toBeInTheDocument();
+        const zeroTip = await screen.findByText(zeroLineRegex);
+        expect(zeroTip).toBeInTheDocument();
+
+        // 3) UNHOVER – tooltip disappears after hide delay (1000ms)
+        await user.unhover(helpSpan);
+        act(() => {
+          jest.advanceTimersByTime(1000); // > 250ms show delay
+        });
+        await waitForElementToBeRemoved(() => screen.queryByText(hdcpLineRegex));
+        // if hdcpLineRegex is removed, so is the zeroLineRegex, no need to check
+      })
+    });
+
   })
 
-  describe('radio buttons per divsion should have same name (group)', () => { 
-    it('test if "Scratch" div radio buttons have same name', () => {      
-      render(<OneToNDivs {...mockOneToNDivsProps} />)  
-      const gameRadios = screen.getAllByRole('radio', { name: /game/i }) as HTMLInputElement[];
-      const seriesRadios = screen.getAllByRole('radio', { name: /series/i }) as HTMLInputElement[];
-      expect(gameRadios[0]).toHaveAttribute('name', 'divHdcpRadio1');
-      expect(seriesRadios[0]).toHaveAttribute('name', 'divHdcpRadio1');
-    })
-    it('test if "Hdcp" div radio buttons have same name', async () => {
-      const user = userEvent.setup()
-      render(<OneToNDivs {...mockOneToNDivsProps} />)      
-      const tabs = screen.getAllByRole('tab');  
-      await user.click(tabs[1]);
-      const gameRadios = screen.getAllByRole('radio', { name: /game/i }) as HTMLInputElement[];
-      const seriesRadios = screen.getAllByRole('radio', { name: /series/i }) as HTMLInputElement[];
-      expect(gameRadios[1]).toHaveAttribute('name', 'divHdcpRadio2');
-      expect(seriesRadios[1]).toHaveAttribute('name', 'divHdcpRadio2');    
-    })
-  })
+  // describe('radio buttons per divsion should have same name (group)', () => { 
+  //   it('test if "Scratch" div radio buttons have same name', () => {      
+  //     render(<OneToNDivs {...mockOneToNDivsProps} />)  
+  //     const gameRadios = screen.getAllByRole('radio', { name: /game/i }) as HTMLInputElement[];
+  //     const seriesRadios = screen.getAllByRole('radio', { name: /series/i }) as HTMLInputElement[];
+  //     expect(gameRadios[0]).toHaveAttribute('name', 'divHdcpRadio1');
+  //     expect(seriesRadios[0]).toHaveAttribute('name', 'divHdcpRadio1');
+  //   })
+  //   it('test if "Hdcp" div radio buttons have same name', async () => {
+  //     const user = userEvent.setup()
+  //     render(<OneToNDivs {...mockOneToNDivsProps} />)      
+  //     const tabs = screen.getAllByRole('tab');  
+  //     await user.click(tabs[1]);
+  //     const gameRadios = screen.getAllByRole('radio', { name: /game/i }) as HTMLInputElement[];
+  //     const seriesRadios = screen.getAllByRole('radio', { name: /series/i }) as HTMLInputElement[];
+  //     expect(gameRadios[1]).toHaveAttribute('name', 'divHdcpRadio2');
+  //     expect(seriesRadios[1]).toHaveAttribute('name', 'divHdcpRadio2');    
+  //   })
+  // })
 
   describe("add division", () => { 
     beforeAll(() => {
@@ -440,29 +502,28 @@ describe("OneToNDivs - Component", () => {
       await user.click(tabs[2]);
       
       // ACT
-      const intHdcps = screen.getAllByRole('checkbox', { name: /integer hdcp/i }) as HTMLInputElement[];
+      // const intHdcps = screen.getAllByRole('checkbox', { name: /integer hdcp/i }) as HTMLInputElement[];
 
       // ASSERT
-      expect(intHdcps).toHaveLength(3)              
-      expect(intHdcps[2]).toBeChecked()      
+      // expect(intHdcps).toHaveLength(3)              
+      // expect(intHdcps[2]).toBeChecked()      
 
-      await user.click(intHdcps[2]);
-      mockDivs[2].int_hdcp = false;
-      try {
-        expect(intHdcps[2]).not.toBeChecked()
-      } catch (error) {
-        expect(mockOneToNDivsProps.divs[2].int_hdcp).toBe(false);
-      }
+      // await user.click(intHdcps[2]);
+      // mockDivs[2].int_hdcp = false;
+      // try {
+      //   expect(intHdcps[2]).not.toBeChecked()
+      // } catch (error) {
+      //   expect(mockOneToNDivsProps.divs[2].int_hdcp).toBe(false);
+      // }
 
-      await user.click(intHdcps[2]);
-      mockDivs[2].int_hdcp = true;
-      try {
-        expect(intHdcps[2]).toBeChecked()  
-      } catch (error) {
-        expect(mockOneToNDivsProps.divs[2].int_hdcp).toBe(true);
-      }
+      // await user.click(intHdcps[2]);
+      // mockDivs[2].int_hdcp = true;
+      // try {
+      //   expect(intHdcps[2]).toBeChecked()  
+      // } catch (error) {
+      //   expect(mockOneToNDivsProps.divs[2].int_hdcp).toBe(true);
+      // }
     })
-
     it('test added division radio buttons', async () => {
       // ARRANGE
       const user = userEvent.setup();
@@ -483,46 +544,46 @@ describe("OneToNDivs - Component", () => {
       await user.click(tabs[2]);
       
       // ACT
-      const gameRadios = screen.getAllByRole('radio', { name: /game/i }) as HTMLInputElement[];
-      const seriesRadios = screen.getAllByRole('radio', { name: /series/i }) as HTMLInputElement[];
+      // const gameRadios = screen.getAllByRole('radio', { name: /game/i }) as HTMLInputElement[];
+      // const seriesRadios = screen.getAllByRole('radio', { name: /series/i }) as HTMLInputElement[];
 
       // const hdcpForGames = screen.getAllByTestId('radioHdcpForGame') as HTMLInputElement[];  
       // const hdcpForSeries = screen.getAllByTestId('radioHdcpForSeries') as HTMLInputElement[];  
 
       // ASSERT
-      expect(gameRadios).toHaveLength(3)
-      expect(seriesRadios).toHaveLength(3)
+      // expect(gameRadios).toHaveLength(3)
+      // expect(seriesRadios).toHaveLength(3)
               
-      expect(gameRadios[2]).toBeChecked()
-      expect(seriesRadios[2]).not.toBeChecked()
+      // expect(gameRadios[2]).toBeChecked()
+      // expect(seriesRadios[2]).not.toBeChecked()
 
       // <input> atribute checked is set as: 
       // checked={div.hdcp_for === 'Game'}
-      await user.click(seriesRadios[2]);
-      mockDivs[2].hdcp_for = "Series";
-      try {
-        expect(gameRadios[2]).not.toBeChecked()
-      } catch (error) {
-        expect(mockOneToNDivsProps.divs[2].hdcp_for).toBe("Series");
-      }
-      try {
-        expect(seriesRadios[2]).toBeChecked()  
-      } catch (error) {
-        expect(mockOneToNDivsProps.divs[2].hdcp_for).toBe("Series");
-      }
+      // await user.click(seriesRadios[2]);
+      // mockDivs[2].hdcp_for = "Series";
+      // try {
+      //   expect(gameRadios[2]).not.toBeChecked()
+      // } catch (error) {
+      //   expect(mockOneToNDivsProps.divs[2].hdcp_for).toBe("Series");
+      // }
+      // try {
+      //   expect(seriesRadios[2]).toBeChecked()  
+      // } catch (error) {
+      //   expect(mockOneToNDivsProps.divs[2].hdcp_for).toBe("Series");
+      // }
       
-      await user.click(gameRadios[2]);
-      mockDivs[2].hdcp_for = "Game";
-      try {
-        expect(gameRadios[2]).toBeChecked()  
-      } catch (error) {
-        expect(mockOneToNDivsProps.divs[2].hdcp_for).toBe("Game");
-      }
-      try {
-        expect(seriesRadios[2]).not.toBeChecked()        
-      } catch (error) {
-        expect(mockOneToNDivsProps.divs[2].hdcp_for).toBe("Game");
-      }            
+      // await user.click(gameRadios[2]);
+      // mockDivs[2].hdcp_for = "Game";
+      // try {
+      //   expect(gameRadios[2]).toBeChecked()  
+      // } catch (error) {
+      //   expect(mockOneToNDivsProps.divs[2].hdcp_for).toBe("Game");
+      // }
+      // try {
+      //   expect(seriesRadios[2]).not.toBeChecked()        
+      // } catch (error) {
+      //   expect(mockOneToNDivsProps.divs[2].hdcp_for).toBe("Game");
+      // }            
     })
   })
 

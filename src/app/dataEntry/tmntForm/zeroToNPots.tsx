@@ -112,7 +112,7 @@ export const validatePots = (
         feeErr = "Fee cannot be more than " + maxMoneyText;
       }
       if (feeErr) {
-        setError(pot.pot_type + " - " + getDivName(pot.div_id, divs), feeErr);
+        setError(getDivName(pot.div_id, divs) + " - " + pot.pot_type, feeErr);
       }
       return {
         ...pot,
@@ -358,7 +358,10 @@ const ZeroToNPots: React.FC<ChildProps> = ({
             eventKey="createPot"
             title={createPotTitle}               
           >
-            <div className={clsx("container", "rounded-3", styles.createBackground)}>
+            <div
+              data-testid="createPotContainer"
+              className={clsx("container", "rounded-3", styles.createBackground)}
+            >
             {/* <div className="container rounded-3 createBackground"> */}
               <div className="row g-3 mb-1">
                 <div className="col-sm-3">              

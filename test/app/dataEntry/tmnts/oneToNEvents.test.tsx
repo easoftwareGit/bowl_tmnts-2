@@ -1,5 +1,5 @@
-import React from "react";
-import { render, screen } from "@testing-library/react";
+import React, { act } from "react";
+import { render, screen, waitForElementToBeRemoved, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import OneToNEvents from "@/app/dataEntry/tmntForm/oneToNEvents";
 import { mockEvents } from "../../../mocks/tmnts/singlesAndDoubles/mockEvents";
@@ -66,16 +66,27 @@ describe("OneToNEvents - Component", () => {
         expect(nameErrors).toHaveLength(2);
         expect(nameErrors[0]).toHaveTextContent("");
       });
-      it("render team size labels", () => {
+      it("render team size labels with space before help icon", () => {
         render(<OneToNEvents {...mockOneToNEventsProps} />);
-        const teamLabels = screen.getAllByText(/team size/i);
+        const teamLabels = screen.getAllByText(/team size/i, { selector: "label" });        
         expect(teamLabels).toHaveLength(2);
+        const label = teamLabels[0] as HTMLLabelElement;
+        const text = label.textContent ?? "";
+        expect(text).toMatch(/^Team Size\s+\?/);
       });
-      it("render team size titles", () => {
+      it('render team size help icon with surrounding spaces', () => {
         render(<OneToNEvents {...mockOneToNEventsProps} />);
-        const teamTitles = screen.getAllByTitle("Singles = 1, Doubles = 2...");
-        expect(teamTitles).toHaveLength(2);
-        expect(teamTitles[0]).toHaveTextContent("?");
+        const helpLables = screen.getAllByText(/team size/i, { selector: "label" });
+        expect(helpLables).toHaveLength(2);
+
+        const label = helpLables[0] as HTMLLabelElement;
+        const helpSpan = within(label).getByText("?", { selector: "span" });
+        expect(helpSpan).toBeInTheDocument();
+        expect(helpSpan).toHaveClass("popup-help");
+
+        const text = helpSpan.textContent ?? "";
+        // one or more spaces, then '?', then one or more spaces
+        expect(text).toMatch(/^\s+\?\s+$/); 
       });
       it("render team sizes", () => {
         render(<OneToNEvents {...mockOneToNEventsProps} />);
@@ -106,18 +117,27 @@ describe("OneToNEvents - Component", () => {
         expect(gameErrors).toHaveLength(2);
         expect(gameErrors[0]).toHaveTextContent("");
       });
-      it("render added labels", () => {
+      it("render added labels with space before help icon", () => {
         render(<OneToNEvents {...mockOneToNEventsProps} />);
-        const addedLabels = screen.getAllByText(/added \$/i);
+        const addedLabels = screen.getAllByText(/added \$/i, { selector: "label" });        
         expect(addedLabels).toHaveLength(2);
+        const label = addedLabels[0] as HTMLLabelElement;
+        const text = label.textContent ?? "";
+        expect(text).toMatch(/^Added \$\s+\?/);
       });
-      it("render added titles", () => {
+      it('renders added help icon with surrounding spaces', () => {
         render(<OneToNEvents {...mockOneToNEventsProps} />);
-        const addedTitles = screen.getAllByTitle(
-          "Total Prize Fund = Added $ + (Entry Prize Fund * Number of Entries)"
-        );
-        expect(addedTitles).toHaveLength(2);
-        expect(addedTitles[0]).toHaveTextContent("?");
+        const helpLables = screen.getAllByText(/added/i, { selector: "label" });
+        expect(helpLables).toHaveLength(2);
+
+        const label = helpLables[0] as HTMLLabelElement;
+        const helpSpan = within(label).getByText("?", { selector: "span" });
+        expect(helpSpan).toBeInTheDocument();
+        expect(helpSpan).toHaveClass("popup-help");
+
+        const text = helpSpan.textContent ?? "";
+        // one or more spaces, then '?', then one or more spaces
+        expect(text).toMatch(/^\s+\?\s+$/); 
       });
       it("render added values", () => {
         render(<OneToNEvents {...mockOneToNEventsProps} />);
@@ -226,18 +246,27 @@ describe("OneToNEvents - Component", () => {
         expect(expenseErrors).toHaveLength(2);
         expect(expenseErrors[0]).toHaveTextContent("");
       });
-      it("render the LPOX labels", () => {
+      it("render the LPOX labels with space before help icon", () => {
         render(<OneToNEvents {...mockOneToNEventsProps} />);
-        const lpoxLabels = screen.getAllByText(/L\+P\+O\+X/i);
+        const lpoxLabels = screen.getAllByText(/L\+P\+O\+X/i, { selector: "label" });
         expect(lpoxLabels).toHaveLength(2);
+        const label = lpoxLabels[0];
+        const text = label.textContent ?? "";        
+        expect(text).toMatch(/^L\+P\+O\+X\s+\?/);
       });
-      it("render LPOX titles", () => {
+      it('renders LPOX help icon with surrounding spaces', () => {
         render(<OneToNEvents {...mockOneToNEventsProps} />);
-        const lpoxTitles = screen.getAllByTitle(
-          "Lineage + Prize Fund + Other + eXpeses must equal Entry Fee"
-        );
-        expect(lpoxTitles).toHaveLength(2);
-        expect(lpoxTitles[0]).toHaveTextContent("?");
+        const helpLables = screen.getAllByText(/L\+P\+O\+X/i, { selector: "label" });
+        expect(helpLables).toHaveLength(2);
+
+        const label = helpLables[0] as HTMLLabelElement;
+        const helpSpan = within(label).getByText("?", { selector: "span" });
+        expect(helpSpan).toBeInTheDocument();
+        expect(helpSpan).toHaveClass("popup-help");
+
+        const text = helpSpan.textContent ?? "";
+        // one or more spaces, then '?', then one or more spaces
+        expect(text).toMatch(/^\s+\?\s+$/); 
       });
       it("render the LPOX values", () => {
         render(<OneToNEvents {...mockOneToNEventsProps} />);
@@ -255,17 +284,6 @@ describe("OneToNEvents - Component", () => {
         expect(lpoxErrors).toHaveLength(2);
         expect(lpoxErrors[0]).toHaveTextContent("");
       });
-      it("render the tabs", async () => {
-        const user = userEvent.setup();
-        render(<OneToNEvents {...mockOneToNEventsProps} />);
-        const tabs = screen.getAllByRole("tab");
-        await user.click(tabs[0]); // focus on first tab
-        expect(tabs).toHaveLength(2);
-        expect(tabs[0]).toHaveTextContent(mockEvents[0].tab_title);
-        expect(tabs[0]).toHaveAttribute("aria-selected", "true");
-        expect(tabs[1]).toHaveTextContent(mockEvents[1].tab_title);
-        expect(tabs[1]).toHaveAttribute("aria-selected", "false");
-      });
     });
 
     describe("render the 2nd event", () => {
@@ -279,7 +297,7 @@ describe("OneToNEvents - Component", () => {
         mockEvents[1].other_err = "test other error";
         mockEvents[1].expenses_err = "test expenses error";
         mockEvents[1].added_money_err = "test added money error";
-        mockEvents[1].lpox_valid = 'invalid';
+        mockEvents[1].lpox_valid = 'is-invalid';
         mockEvents[1].lpox_err = "test lpox error";
       })
       afterAll(() => {
@@ -517,6 +535,20 @@ describe("OneToNEvents - Component", () => {
       });
     });
 
+    describe("render tabs for each event", () => {
+      it("render the tabs", async () => {
+        const user = userEvent.setup();
+        render(<OneToNEvents {...mockOneToNEventsProps} />);
+        const tabs = screen.getAllByRole("tab");
+        await user.click(tabs[0]); // focus on first tab
+        expect(tabs).toHaveLength(2);
+        expect(tabs[0]).toHaveTextContent(mockEvents[0].tab_title);
+        expect(tabs[0]).toHaveAttribute("aria-selected", "true");
+        expect(tabs[1]).toHaveTextContent(mockEvents[1].tab_title);
+        expect(tabs[1]).toHaveAttribute("aria-selected", "false");
+      });
+    })
+
     describe('render the events when tmntAction is Run - inputs and buttons disabled', () => {
       const runTmntProps = cloneDeep(mockOneToNEventsProps);      
       runTmntProps.tmntAction = tmntActions.Run;
@@ -604,6 +636,106 @@ describe("OneToNEvents - Component", () => {
         const delBtn = screen.getByText("Delete Event");
         expect(delBtn).toBeInTheDocument();
         expect(delBtn).toBeDisabled();
+      });
+    })
+    
+    describe('render the popup-help text', () => { 
+      beforeEach(() => {
+        jest.useFakeTimers();
+      })
+      afterEach(() => {
+        jest.runOnlyPendingTimers();
+        jest.useRealTimers();        
+      })
+      it("only shows the Team Size tooltip while the help icon is hovered", async () => {
+        const tooltipRegex = /Singles = 1, Doubles = 2\.\.\./i;
+
+        const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+        render(<OneToNEvents {...mockOneToNEventsProps} />);
+
+        // 1) BEFORE HOVER – tooltip is NOT in the document
+        expect(screen.queryByText(tooltipRegex)).not.toBeInTheDocument();
+
+        const teamLabels = screen.getAllByText(/team size/i, { selector: "label" });
+        expect(teamLabels).toHaveLength(2);
+        const label = teamLabels[0] as HTMLLabelElement;
+        const helpSpan = within(label).getByText("?", { selector: "span" });
+
+        // 2) HOVER OVER help icon
+        await user.hover(helpSpan);
+        act(() => {
+          jest.advanceTimersByTime(300); // > 250ms show delay
+        });
+
+        const tooltip = await screen.findByText(tooltipRegex);
+        expect(tooltip).toBeInTheDocument();
+
+        // 3) UNHOVER – tooltip disappears after hide delay (1000ms)
+        await user.unhover(helpSpan);
+        act(() => {
+          jest.advanceTimersByTime(1000); // > 250ms show delay
+        });
+        await waitForElementToBeRemoved(() => screen.queryByText(tooltipRegex));
+      });
+      it("only shows the Added $ tooltip while the help icon is hovered", async () => {
+        const tooltipRegex = /Total Prize Fund = Added \$ \+ \(Entry Prize Fund \* Number of Entries\)/i;
+
+        const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+        render(<OneToNEvents {...mockOneToNEventsProps} />);
+
+        // 1) BEFORE HOVER – tooltip is NOT in the document
+        expect(screen.queryByText(tooltipRegex)).not.toBeInTheDocument();
+
+        const addedLabels = screen.getAllByText(/added \$/i, { selector: "label" });
+        expect(addedLabels).toHaveLength(2);
+        const label = addedLabels[0] as HTMLLabelElement;
+        const helpSpan = within(label).getByText("?", { selector: "span" });
+
+        // 2) HOVER OVER help icon
+        await user.hover(helpSpan);
+        act(() => {
+          jest.advanceTimersByTime(300); // > 250ms show delay
+        });
+
+        const tooltip = await screen.findByText(tooltipRegex);
+        expect(tooltip).toBeInTheDocument();
+
+        // 3) UNHOVER – tooltip disappears after hide delay (1000ms)
+        await user.unhover(helpSpan);
+        act(() => {
+          jest.advanceTimersByTime(1000); // > 250ms show delay
+        });
+        await waitForElementToBeRemoved(() => screen.queryByText(tooltipRegex));
+      });
+      it("only shows the LPOX tooltip while the help icon is hovered", async () => {
+        const tooltipRegex = /Lineage \+ Prize Fund \+ Other \+ eXpeses must equal Entry Fee/i;
+
+        const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime });
+        render(<OneToNEvents {...mockOneToNEventsProps} />);
+
+        // 1) BEFORE HOVER – tooltip is NOT in the document
+        expect(screen.queryByText(tooltipRegex)).not.toBeInTheDocument();
+
+        const addedLabels = screen.getAllByText(/L\+P\+O\+X/i, { selector: "label" });
+        expect(addedLabels).toHaveLength(2);
+        const label = addedLabels[0] as HTMLLabelElement;
+        const helpSpan = within(label).getByText("?", { selector: "span" });
+
+        // 2) HOVER OVER help icon
+        await user.hover(helpSpan);
+        act(() => {
+          jest.advanceTimersByTime(300); // > 250ms show delay
+        });
+
+        const tooltip = await screen.findByText(tooltipRegex);
+        expect(tooltip).toBeInTheDocument();
+
+        // 3) UNHOVER – tooltip disappears after hide delay (1000ms)
+        await user.unhover(helpSpan);
+        act(() => {
+          jest.advanceTimersByTime(1000); // > 250ms show delay
+        });
+        await waitForElementToBeRemoved(() => screen.queryByText(tooltipRegex));
       });
     })
   });
@@ -928,7 +1060,7 @@ describe("OneToNEvents - Component", () => {
         sort_order: 3,
         event_name: "Trios",
         tab_title: "Trios",
-        lpox_valid: "invalid",
+        lpox_valid: "is-invalid",
       });
     });
 

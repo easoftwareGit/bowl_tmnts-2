@@ -248,7 +248,7 @@ export const validateEvents = (
       };
     })
   );
-  if (areEventsValid) {1
+  if (areEventsValid) {
     setAcdnErr(noAcdnErr);
   }
   return areEventsValid;
@@ -515,16 +515,13 @@ const OneToNEvents: React.FC<ChildProps> = ({
     const valNoSymb = value.replace(currRexEx, '')
     let formattedValue = (value) ? formatValue2Dec(valNoSymb, localConfig) : '';
 
-    if (formattedValue === 'NaN') {
+    if (formattedValue === 'NaN' || typeof (Number(formattedValue)) !== 'number') {
       formattedValue = ''
     }
-    if (typeof (Number(formattedValue)) !== 'number') {
-      formattedValue = ''
-    }
-    const valueNum = Number(formattedValue)
-    if (valueNum < zeroAmount || valueNum > maxMoney) {
-      formattedValue = ''
-    }
+    // const valueNum = Number(formattedValue)
+    // if (valueNum < zeroAmount || valueNum > maxMoney) {
+    //   formattedValue = ''
+    // }
     const temp_event = {
       ...event,
       [name]: formattedValue,
@@ -734,7 +731,7 @@ const OneToNEvents: React.FC<ChildProps> = ({
                 <input
                   type="text"                  
                   name="event_name"
-                  className={`form-control ${event.event_name_err && "invalid"}`}
+                  className={`form-control ${event.event_name_err && "is-invalid"}`}
                   id={`inputEventName${event.id}`}                                                  
                   value={event.event_name}
                   maxLength={maxEventLength}
@@ -855,7 +852,7 @@ const OneToNEvents: React.FC<ChildProps> = ({
                   value={event.entry_fee}
                   onValueChange={handleAmountValueChange(event.id, 'entry_fee')}                  
                   onBlur={handleBlur(event.id)}
-                  disabled={isDisabled}
+                  disabled={isDisabled}                  
                 />
                 <div
                   className="text-danger"

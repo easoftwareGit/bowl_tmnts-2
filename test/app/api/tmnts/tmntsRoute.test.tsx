@@ -424,8 +424,9 @@ describe("Tmnts - API: /api/tmnts", () => {
         expect(tmntFullData.divs[0].brkts[i].admin).toBe('5');
         expect(tmntFullData.divs[0].brkts[i].first).toBe('25');
         expect(tmntFullData.divs[0].brkts[i].second).toBe('10');
+        expect(tmntFullData.divs[0].brkts[i].fsa).toBe('40');
         expect(tmntFullData.divs[0].brkts[i].games).toBe(3);
-        expect(tmntFullData.divs[0].brkts[i].players).toBe(8);
+        expect(tmntFullData.divs[0].brkts[i].players).toBe(8);        
 
         // bracket entries and bracket refunds
         if (tmntFullData.divs[0].brkts[i].id === 'brk_3e6bf51cc1ca4748ad5e8abab88277e0') {
@@ -527,6 +528,7 @@ describe("Tmnts - API: /api/tmnts", () => {
       expect(tmntFullData.events[0].other).toBe('2');
       expect(tmntFullData.events[0].expenses).toBe('5');
       expect(tmntFullData.events[0].added_money).toBe('0');
+      expect(tmntFullData.events[0].lpox).toBe('90');
 
       // squads
       expect(tmntFullData.events[0].squads).toHaveLength(1);

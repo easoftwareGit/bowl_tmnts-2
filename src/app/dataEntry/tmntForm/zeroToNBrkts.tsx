@@ -2,7 +2,7 @@ import React, { useState, ChangeEvent } from "react";
 import { divType, squadType, AcdnErrType, brktType, tmntActions } from "../../../lib/types/types";
 import { initModalObj } from "@/components/modal/modalObjType";
 import ModalConfirm, { delConfTitle } from "@/components/modal/confirmModal";
-import { Tab, Tabs } from "react-bootstrap";
+import { Tab, Tabs, OverlayTrigger, Tooltip } from "react-bootstrap";
 import EaCurrencyInput, {
   maxMoneyText,
   minFeeText,
@@ -502,6 +502,12 @@ const ZeroToNBrackets: React.FC<ChildProps> = ({
     );
   };
 
+  const renderFSAToolTip = (props: any) => (
+    <Tooltip id="button-tooltip" {...props}>
+      First + Second + Admin must equal Fee * Players
+    </Tooltip>
+  )
+
   const MoneyDisabled: React.FC<NumberProps> = ({
     brkt,
     LabelText,
@@ -515,13 +521,21 @@ const ZeroToNBrackets: React.FC<ChildProps> = ({
           <label htmlFor={`${property}${brkt.id}`} className="form-label">
             {LabelText}
           </label>
-        ) : (
+        ) : (            
           <label
             htmlFor={`${property}${brkt.id}`}
-            className="form-label"
-            title={title}
+            className="form-label"              
           >
-            {LabelText} <span className="popup-help">&nbsp;?&nbsp;</span>
+            {LabelText}&nbsp;
+            <>
+              <OverlayTrigger
+                placement="right"
+                delay={{ show: 250, hide: 1000 }}
+                overlay={renderFSAToolTip}
+              >
+                <span className="popup-help">&nbsp;?&nbsp;</span>
+              </OverlayTrigger>
+            </>
           </label>
         )}
         <EaCurrencyInput
@@ -558,7 +572,10 @@ const ZeroToNBrackets: React.FC<ChildProps> = ({
             eventKey="createBrkt"
             title={createBrktTitle}
           >
-            <div className={clsx("container", "rounded-3", styles.createBackground)}>
+            <div
+              data-testid="createBrktContainer"
+              className={clsx("container", "rounded-3", styles.createBackground)}
+            >
             {/* <div className="container rounded-3 createBackground"> */}
               <div className="row g-3 mb-1">
                 <div className="col-sm-2">
