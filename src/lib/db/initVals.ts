@@ -234,6 +234,7 @@ export const initSquad: squadType = {
   squad_date_err: "",
   squad_time: "",
   squad_time_err: "",
+  finalized: false,
   sort_order: 1,
   errClassName: "",
 };

@@ -1,6 +1,5 @@
 import { squadType } from "@/lib/types/types";
 import { initSquad } from "@/lib/db/initVals";
-// import { replaceManySquads } from "../../../../src/lib/db/squads/dbSquadsReplaceMany";
 
 const tmntId = "tmt_fe8ac53dad0f400abe6354210a8f4cd1";
 const manySquads: squadType[] = [
@@ -14,6 +13,7 @@ const manySquads: squadType[] = [
     games: 6,
     lane_count: 10,
     starting_lane: 11,
+    finalized: true,
     sort_order: 1,
   },
   {
@@ -26,12 +26,13 @@ const manySquads: squadType[] = [
     games: 6,
     lane_count: 12,
     starting_lane: 1,
+    finalized: false,
     sort_order: 2,
   },
 ];
 
 describe("replaceManySquads - non standard throw cases", () => {
-  let replaceManySquads: typeof import("../../../../src/lib/db/squads/dbSquadsReplaceMany").replaceManySquads;
+  let replaceManySquads: typeof import("@/lib/db/squads/dbSquadsReplaceMany").replaceManySquads;
   let deleteAllSquadsForTmntMock: jest.Mock;
   let postManySquadsMock: jest.Mock;
 
@@ -41,7 +42,7 @@ describe("replaceManySquads - non standard throw cases", () => {
 
     // Mock only the two database functions we want to control
     jest.doMock(
-      "../../../../src/lib/db/squads/dbSquads",
+      "@/lib/db/squads/dbSquads",
       () => ({
         __esModule: true,
         deleteAllSquadsForTmnt: jest.fn(),
@@ -51,14 +52,14 @@ describe("replaceManySquads - non standard throw cases", () => {
 
     // Import the function under test *after* mocks are in place
     ({ replaceManySquads } = require(
-      "../../../../src/lib/db/squads/dbSquadsReplaceMany"
+      "@/lib/db/squads/dbSquadsReplaceMany"
     ));
 
     // Import our mocked functions for direct access in tests
     ({
       deleteAllSquadsForTmnt: deleteAllSquadsForTmntMock,
       postManySquads: postManySquadsMock,
-    } = require("../../../../src/lib/db/squads/dbSquads"));
+    } = require("@/lib/db/squads/dbSquads"));
   });
 
   afterEach(() => {

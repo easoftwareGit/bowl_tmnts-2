@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import ModalErrorMsg from "@/components/modal/errorModal";
 import { initModalObj } from "@/components/modal/modalObjType";
 
-describe('ConfirmModal - Component', () => { 
+describe('ErrorModal - Component', () => { 
   
   const mockCancel = jest.fn();
 
@@ -16,6 +16,11 @@ describe('ConfirmModal - Component', () => {
   } as typeof initModalObj
 
   describe('render the modal', () => {
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
     it('render the modal', () => { 
       render(
         <ModalErrorMsg
@@ -44,8 +49,8 @@ describe('ConfirmModal - Component', () => {
         />
       )
       const okBtn = screen.getByRole('button', { name: /ok/i });
-      await userEvent.click(okBtn);
-      expect(mockCancel).toHaveBeenCalled();
+      await user.click(okBtn);
+      expect(mockCancel).toHaveBeenCalledTimes(1);
     })
     it('click outside the modal', async () => { 
       const user = userEvent.setup()
@@ -58,8 +63,8 @@ describe('ConfirmModal - Component', () => {
         />
       )
       const modal = screen.getByRole('dialog');
-      await userEvent.click(modal);
-      expect(mockCancel).toHaveBeenCalled();
+      await user.click(modal);
+      expect(mockCancel).toHaveBeenCalledTimes(1);
     })
     it('close the modal', async () => {
       const user = userEvent.setup()
@@ -72,8 +77,21 @@ describe('ConfirmModal - Component', () => {
         />
       )
       const closeBtn = screen.getByRole('button', { name: /close/i });
-      await userEvent.click(closeBtn);
-      expect(mockCancel).toHaveBeenCalled();
+      await user.click(closeBtn);
+      expect(mockCancel).toHaveBeenCalledTimes(1);
     })
+    it('press the escape key acts like clicking the close button', async () => { 
+      const user = userEvent.setup()
+      render(
+        <ModalErrorMsg
+          show={testModalObj.show}
+          title={testModalObj.title}
+          message={testModalObj.message}          
+          onCancel={mockCancel}
+        />
+      )
+      await user.keyboard('{Escape}');
+      expect(mockCancel).toHaveBeenCalledTimes(1);
+    })      
   })
 })

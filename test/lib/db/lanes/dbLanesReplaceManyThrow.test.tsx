@@ -20,7 +20,7 @@ const manyLanes: laneType[] = [
 ];
 
 describe("replaceManyLanes - non standard throw cases", () => {
-  let replaceManyLanes: typeof import("../../../../src/lib/db/lanes/dbLanesReplaceMany").replaceManyLanes;
+  let replaceManyLanes: typeof import("@/lib/db/lanes/dbLanesReplaceMany").replaceManyLanes;
   let deleteAllLanesForSquadMock: jest.Mock;
   let postManyLanesMock: jest.Mock;
 
@@ -30,7 +30,7 @@ describe("replaceManyLanes - non standard throw cases", () => {
 
     // Mock only the two database functions we want to control
     jest.doMock(
-      "../../../../src/lib/db/lanes/dbLanes",
+      "@/lib/db/lanes/dbLanes",
       () => ({
         __esModule: true,
         deleteAllLanesForSquad: jest.fn(),
@@ -40,14 +40,14 @@ describe("replaceManyLanes - non standard throw cases", () => {
 
     // Import the function under test *after* mocks are in place
     ({ replaceManyLanes } = require(
-      "../../../../src/lib/db/lanes/dbLanesReplaceMany"
+      "@/lib/db/lanes/dbLanesReplaceMany"
     ));
 
     // Import our mocked functions for direct access in tests
     ({
       deleteAllLanesForSquad: deleteAllLanesForSquadMock,
       postManyLanes: postManyLanesMock,
-    } = require("../../../../src/lib/db/lanes/dbLanes"));
+    } = require("@/lib/db/lanes/dbLanes"));
   });
 
   afterEach(() => {

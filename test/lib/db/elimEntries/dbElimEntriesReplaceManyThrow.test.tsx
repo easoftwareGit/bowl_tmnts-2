@@ -20,7 +20,7 @@ const manyElimEntries: elimEntryType[] = [
 ];
 
 describe("replaceManyElimEntries - non standard throw cases", () => {
-  let replaceManyElimEntries: typeof import("../../../../src/lib/db/elimEntries/dbElimEntriesReplaceMany").replaceManyElimEntries;
+  let replaceManyElimEntries: typeof import("@/lib/db/elimEntries/dbElimEntriesReplaceMany").replaceManyElimEntries;
   let deleteAllElimEntriesForSquadMock: jest.Mock;
   let postManyElimEntriesMock: jest.Mock;
 
@@ -30,7 +30,7 @@ describe("replaceManyElimEntries - non standard throw cases", () => {
 
     // Mock only the two database functions we want to control
     jest.doMock(
-      "../../../../src/lib/db/elimEntries/dbElimEntries",
+      "@/lib/db/elimEntries/dbElimEntries",
       () => ({
         __esModule: true,
         deleteAllElimEntriesForSquad: jest.fn(),
@@ -40,14 +40,14 @@ describe("replaceManyElimEntries - non standard throw cases", () => {
 
     // Import the function under test *after* mocks are in place
     ({ replaceManyElimEntries } = require(
-      "../../../../src/lib/db/elimEntries/dbElimEntriesReplaceMany"
+      "@/lib/db/elimEntries/dbElimEntriesReplaceMany"
     ));
 
     // Import our mocked functions for direct access in tests
     ({
       deleteAllElimEntriesForSquad: deleteAllElimEntriesForSquadMock,
       postManyElimEntries: postManyElimEntriesMock,
-    } = require("../../../../src/lib/db/elimEntries/dbElimEntries"));
+    } = require("@/lib/db/elimEntries/dbElimEntries"));
   });
 
   afterEach(() => {

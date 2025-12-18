@@ -21,7 +21,8 @@ export const squadDataForPrisma = (squad: squadType): squadDataType | null => {
       lane_count: squad.lane_count,      
       starting_lane: squad.starting_lane,      
       squad_date: squadDate,
-      squad_time: squad.squad_time,      
+      squad_time: squad.squad_time,
+      finalized: squad.finalized,
       sort_order: squad.sort_order      
     }
   } catch (error) {

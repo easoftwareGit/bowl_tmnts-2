@@ -19,8 +19,8 @@ byePlayer.average = 0;
 byePlayer.lane = null as any;
 byePlayer.position = null as any;
 
-jest.mock("../../../../src/app/api/players/validate", () => ({
-  ...jest.requireActual("../../../../src/app/api/players/validate"),
+jest.mock("@/app/api/players/validate", () => ({
+  ...jest.requireActual("@/app/api/players/validate"),
   gotPlayerData: jest.fn(),
   validPlayerData: jest.fn()
 }))

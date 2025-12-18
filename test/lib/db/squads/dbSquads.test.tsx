@@ -13,12 +13,11 @@ import {
   putSquad,  
   getAllOneBrktsAndSeedsForSquad,
   extractSquads,
+  // getSquadEntries,
 } from "@/lib/db/squads/dbSquads";
 import { startOfDayFromString } from "@/lib/dateTools";
 import { mockSquadsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import {
-  mockCurData,  
-} from "../../../mocks/tmnts/playerEntries/mockOneSquadEntries";
+import { mockCurData } from "../../../mocks/tmnts/playerEntries/mockOneSquadEntries";
 import { replaceManySquads } from "@/lib/db/squads/dbSquadsReplaceMany";
 import { cloneDeep } from "lodash";
 
@@ -101,6 +100,7 @@ describe("dbSquads", () => {
           games: 6,
           lane_count: 10,
           starting_lane: 1,
+          finalized: false,
           sort_order: 1,
           extraField: "ignore me", // should be ignored
         }
@@ -119,6 +119,7 @@ describe("dbSquads", () => {
         games: 6,
         lane_count: 10,
         starting_lane: 1,
+        finalized: false,
         sort_order: 1,
       };
 
@@ -135,6 +136,7 @@ describe("dbSquads", () => {
           games: 6,
           lane_count: 10,
           starting_lane: 1,
+          finalized: false,
           sort_order: 1,
           extraField: "ignore me", // should be ignored
         },
@@ -147,6 +149,7 @@ describe("dbSquads", () => {
           games: 6,
           lane_count: 10,
           starting_lane: 1,
+          finalized: false,
           sort_order: 2,
           extraField: "ignore me", // should be ignored
         }
@@ -162,6 +165,7 @@ describe("dbSquads", () => {
       expect(result[1].id).toBe("sqd_456");
       expect(result[1].squad_name).toBe("B Squad");
       expect(result[1].squad_time).toBe("11:00 AM");
+      expect(result[1].finalized).toBe(false);
       expect(result[1].sort_order).toBe(2);
     });
     it('should return an empty array when given null', () => {
@@ -173,6 +177,15 @@ describe("dbSquads", () => {
       expect(result).toEqual([]);
     });
   })
+
+  // describe("getSquadEntries", () => { 
+  //   it('should get all entries for one squad', async () => { 
+  //     const squadID = mockCurData.squads[0].id;
+  //     const entries = await getSquadEntries(squadID);
+  //     expect(entries).toHaveLength(3);
+
+  //   })
+  // })
 
   describe("getAllSquadsForTmnt", () => {
     // from prisma/seed.ts
@@ -188,6 +201,7 @@ describe("dbSquads", () => {
         games: 6,
         lane_count: 10,
         starting_lane: 1,
+        finalized: false,
         sort_order: 1,
       },
       {
@@ -200,6 +214,7 @@ describe("dbSquads", () => {
         games: 6,
         lane_count: 10,
         starting_lane: 1,
+        finalized: false,
         sort_order: 2,
       },
       {
@@ -212,6 +227,7 @@ describe("dbSquads", () => {
         games: 3,
         lane_count: 24,
         starting_lane: 1,
+        finalized: false,
         sort_order: 3,
       },
     ];
@@ -229,6 +245,7 @@ describe("dbSquads", () => {
         expect(squads[i].games).toBe(squadsToGet[i].games);
         expect(squads[i].starting_lane).toBe(squadsToGet[i].starting_lane);
         expect(squads[i].lane_count).toBe(squadsToGet[i].lane_count);
+        expect(squads[i].finalized).toBe(squadsToGet[i].finalized);
         expect(squads[i].sort_order).toBe(squadsToGet[i].sort_order);
       }
     });

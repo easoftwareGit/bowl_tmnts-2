@@ -13,7 +13,13 @@ const WaitModal: React.FC<ChildProps> = ({
 
   return (
     <>
-      <Modal show={show} data-testid="modalWait">
+      <Modal
+        show={show}
+        backdrop="static"
+        keyboard={false}
+        data-testid="modalWait"
+        aria-label="Please wait..."
+      >
         <Modal.Body>
           <div className="d-flex justify-content-center align-items-center">            
             <span>{message}&nbsp;&nbsp;</span>

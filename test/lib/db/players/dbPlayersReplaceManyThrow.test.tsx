@@ -26,7 +26,7 @@ const manyPlayers: playerType[] = [
 ];
 
 describe("replaceManyPlayers - non standard throw cases", () => {
-  let replaceManyPlayers: typeof import("../../../../src/lib/db/players/dbPlayersReplaceMany").replaceManyPlayers;
+  let replaceManyPlayers: typeof import("@/lib/db/players/dbPlayersReplaceMany").replaceManyPlayers;
   let deleteAllPlayersForSquadMock: jest.Mock;
   let postManyPlayersMock: jest.Mock;
 
@@ -36,7 +36,7 @@ describe("replaceManyPlayers - non standard throw cases", () => {
 
     // Mock only the two database functions we want to control
     jest.doMock(
-      "../../../../src/lib/db/players/dbPlayers",
+      "@/lib/db/players/dbPlayers",
       () => ({
         __esModule: true,
         deleteAllPlayersForSquad: jest.fn(),
@@ -46,14 +46,14 @@ describe("replaceManyPlayers - non standard throw cases", () => {
 
     // Import the function under test *after* mocks are in place
     ({ replaceManyPlayers } = require(
-      "../../../../src/lib/db/players/dbPlayersReplaceMany"
+      "@/lib/db/players/dbPlayersReplaceMany"
     ));
 
     // Import our mocked functions for direct access in tests
     ({
       deleteAllPlayersForSquad: deleteAllPlayersForSquadMock,
       postManyPlayers: postManyPlayersMock,
-    } = require("../../../../src/lib/db/players/dbPlayers"));
+    } = require("@/lib/db/players/dbPlayers"));
   });
 
   afterEach(() => {

@@ -9,6 +9,7 @@ import {
   deleteSquad,  
   getAllOneBrktsAndSeedsForSquad,
   getAllSquadsForTmnt,
+  // getSquadEntries,
   postManySquads,
   postSquad,
   putSquad,
@@ -42,6 +43,7 @@ const manySquads: squadType[] = [
     games: 6,
     lane_count: 10,
     starting_lane: 11,
+    finalized: true,
     sort_order: 1,
   },
   {
@@ -54,6 +56,7 @@ const manySquads: squadType[] = [
     games: 6,
     lane_count: 12,
     starting_lane: 1,
+    finalized: false,
     sort_order: 2,
   },
 ];
@@ -63,6 +66,49 @@ const validSquad: squadType = {
 };
 
 describe("non standard throw cases", () => {
+
+  // describe('getSquadEntries - non standard throw cases', () => {
+  //   afterEach(() => {
+  //     jest.restoreAllMocks();
+  //     jest.clearAllMocks();
+  //   });
+
+
+  //   it("should throw an error when response.status !== 200", async () => {
+  //     mockedAxios.get.mockResolvedValue({
+  //       status: 500,
+  //       data: {},
+  //     });
+
+  //     await expect(getSquadEntries(squadId)).rejects.toThrow(
+  //       "Unexpected status 500 when fetching squad entries"
+  //     );
+  //     expect(mockedAxios.get).toHaveBeenCalledTimes(1);
+  //     expect(mockedAxios.get).toHaveBeenCalledWith(
+  //       expect.stringContaining(squadId),
+  //       { withCredentials: true }
+  //     );
+  //   });
+  //   it("should throw with custom message if axios.get rejects", async () => {
+  //     mockedAxios.get.mockRejectedValueOnce(new Error("Network Error"));
+
+  //     await expect(getSquadEntries(squadId)).rejects.toThrow(
+  //       "getSquadEntries failed: Network Error"
+  //     );
+
+  //     expect(mockedAxios.get).toHaveBeenCalledTimes(1);
+  //   });
+  //   it("should throw an error when axios.get rejects with non-error", async () => {
+  //     mockedAxios.get.mockRejectedValueOnce("testing 123");
+
+  //     await expect(getSquadEntries(squadId)).rejects.toThrow(
+  //       "getSquadEntries failed: testing 123"
+  //     );
+
+  //     expect(mockedAxios.get).toHaveBeenCalledTimes(1);
+  //   });
+  // });
+
   describe("getAllSquadsForTmnt - non standard throw cases", () => {
     afterEach(() => {
       jest.restoreAllMocks();

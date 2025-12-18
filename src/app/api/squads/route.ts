@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: Request) {
   try {
-    const { id, event_id, squad_name, games, starting_lane, lane_count, squad_date_str, squad_time, sort_order } = await request.json()    
+    const { id, event_id, squad_name, games, starting_lane, lane_count, squad_date_str, squad_time, finalized, sort_order } = await request.json()    
 
     // const squadDateStr = removeTimeFromISODateStr(squad_date);
     
@@ -46,7 +46,8 @@ export async function POST(request: Request) {
       starting_lane,
       lane_count,
       squad_date_str,
-      squad_time,      
+      squad_time,
+      finalized,
       sort_order
     }
 

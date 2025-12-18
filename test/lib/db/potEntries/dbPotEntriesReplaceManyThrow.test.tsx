@@ -1,6 +1,6 @@
 import { potEntryType } from "@/lib/types/types";
 import { initPotEntry } from "@/lib/db/initVals";
-import { replaceManyPotEntries } from "../../../../src/lib/db/potEntries/dbPotEntriesReplaceMany";
+import { replaceManyPotEntries } from "@/lib/db/potEntries/dbPotEntriesReplaceMany";
 
 const squadId = 'sqd_7116ce5f80164830830a7157eb093396';
 const manyPotEntries: potEntryType[] = [
@@ -21,7 +21,7 @@ const manyPotEntries: potEntryType[] = [
 ];
 
 describe("replaceManyPotEntries - non standard throw cases", () => {
-  let replaceManyPotEntries: typeof import("../../../../src/lib/db/potEntries/dbPotEntriesReplaceMany").replaceManyPotEntries;
+  let replaceManyPotEntries: typeof import("@/lib/db/potEntries/dbPotEntriesReplaceMany").replaceManyPotEntries;
   let deleteAllPotEntriesForSquadMock: jest.Mock;
   let postManyPotEntriesMock: jest.Mock;
 
@@ -31,7 +31,7 @@ describe("replaceManyPotEntries - non standard throw cases", () => {
 
     // Mock only the two database functions we want to control
     jest.doMock(
-      "../../../../src/lib/db/potEntries/dbPotEntries",
+      "@/lib/db/potEntries/dbPotEntries",
       () => ({
         __esModule: true,
         deleteAllPotEntriesForSquad: jest.fn(),
@@ -41,14 +41,14 @@ describe("replaceManyPotEntries - non standard throw cases", () => {
 
     // Import the function under test *after* mocks are in place
     ({ replaceManyPotEntries } = require(
-      "../../../../src/lib/db/potEntries/dbPotEntriesReplaceMany"
+      "@/lib/db/potEntries/dbPotEntriesReplaceMany"
     ));
 
     // Import our mocked functions for direct access in tests
     ({
       deleteAllPotEntriesForSquad: deleteAllPotEntriesForSquadMock,
       postManyPotEntries: postManyPotEntriesMock,
-    } = require("../../../../src/lib/db/potEntries/dbPotEntries"));
+    } = require("@/lib/db/potEntries/dbPotEntries"));
   });
 
   afterEach(() => {

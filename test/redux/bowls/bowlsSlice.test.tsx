@@ -3,7 +3,7 @@ import { getBowls, upsertBowl } from "@/lib/db/bowls/dbBowls";
 import { mockBowl } from "../../mocks/tmnts/tmntFulldata/mockTmntFullData";
 import { configureStore } from "@reduxjs/toolkit";
 
-jest.mock("../../../src/lib/db/bowls/dbBowls", () => ({
+jest.mock("@/lib/db/bowls/dbBowls", () => ({
   getBowls: jest.fn(),
   upsertBowl: jest.fn(),
 }));

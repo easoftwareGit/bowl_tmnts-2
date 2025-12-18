@@ -826,6 +826,7 @@ export const feeTotalColumn = (): GridColDef[] => {
 export const exportedForTesting2 = {
   formatFee,  
   formatFeeBlankAsZero,
+  validBrkts,
   applyPotOrElimFeeCellColor,
   applyNumBrktsCellColor,
 }

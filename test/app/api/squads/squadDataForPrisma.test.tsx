@@ -17,6 +17,7 @@ describe('squadDataForPrisma function', () => {
       lane_count: testSquad.lane_count,
       squad_date: mockSquadDate,
       squad_time: null,
+      finalized: false,
       sort_order: 1
     });
   });

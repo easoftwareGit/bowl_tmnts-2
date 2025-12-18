@@ -47,7 +47,6 @@ import {
   saveTmntEntriesData,
 } from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import WaitModal from "@/components/modal/waitModal";
-import { PayloadAction } from "@reduxjs/toolkit";
 import { useIsTouchDevice } from "@/hooks/useIsTouchDevice";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
 import { ButtonWithTooltip } from "@/components/mobile/mobileToolTipButton";
@@ -104,8 +103,6 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
 
   const entriesSaveStatus = useSelector(getTmntDataSaveStatus);
   const [saveCompleted, setSaveCompleted] = useState(false);
-  // const [resultAction, setResultAction] =
-  //   useState<PayloadAction<tmntFullType> | null>(null);
   const [resultAction, setResultAction] = useState<tmntFullType | null>(null);
   const [gridEditMode, setGridEditMode] = useState<"cell" | "row">("cell");
   const [rowModesModel, setRowModesModel] = React.useState<GridRowModesModel>(
@@ -116,9 +113,9 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
   const [confModalObj, setConfModalObj] = useState(initModalObj);
   const [errModalObj, setErrModalObj] = useState(initModalObj);
 
-  interface entriesTotalsType {
-    [key: string]: number;
-  }
+  // interface entriesTotalsType {
+  //   [key: string]: number;
+  // }
 
   const squadMinLane = tmntData?.lanes[0]?.lane_number;
   const squadMaxLane = tmntData?.lanes[tmntData?.lanes.length - 1]?.lane_number;
@@ -639,34 +636,6 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
       if (gotBrktsErr) return;
     }
     await doSave(brktLists);
-
-    // try {
-    //   setSaveCompleted(false); // Reset state before dispatching
-    //   const entriesData = extractDataFromRows(rows, tmntFullData.squads[0].id);
-    //   const brktsData = extractFullBrktsData(brktLists);
-    //   const tmntToSave: tmntFullType = {
-    //     ...tmntFullData,
-    //     players: [...entriesData.players],
-    //     divEntries: [...entriesData.divEntries],
-    //     elimEntries: [...entriesData.elimEntries],
-    //     brktEntries: [...entriesData.brktEntries],
-    //     oneBrkts: [...brktsData.oneBrkts],
-    //     brktSeeds: [...brktsData.brktSeeds],
-    //     potEntries: [...entriesData.potEntries],
-    //   }
-
-    //   const savedData = await dispatch(saveTmntEntriesData(tmntToSave)).unwrap();
-    //   setResultAction(savedData);
-    //   setSaveCompleted(true);
-
-    // } catch (err: any) {
-    //   setErrModalObj({
-    //     show: true,
-    //     title: "Cannot Save",
-    //     message: err.message,
-    //     id: "saveError",
-    //   });
-    // }    
   };
 
   const handleSaveClick = async () => {
@@ -684,14 +653,6 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
       });
     } else {
       await doSave([]); // pass empry array because not calculating/randomizing brackets
-      // setSaveCompleted(false); // Reset state before dispatching
-      // const saveResultAction = await dispatch(
-      //   saveTmntEntriesData(tmntFullData)
-      // );
-      // if (saveTmntEntriesData.fulfilled.match(saveResultAction)) {
-      //   setResultAction(saveResultAction);
-      //   setSaveCompleted(true);
-      // }
     }
   };
 

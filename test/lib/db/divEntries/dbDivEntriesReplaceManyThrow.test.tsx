@@ -21,8 +21,8 @@ const manyDivEntries: divEntryType[] = [
   },
 ];
 
-describe("replaceManyDivEntries - non standard throw cases", () => {
-  let replaceManyDivEntries: typeof import("../../../../src/lib/db/divEntries/dbDivEntriesReplaceMany").replaceManyDivEntries;
+describe("replaceManyDivEntries - non standard throw cases", () => {  
+  let replaceManyDivEntries: typeof import("@/lib/db/divEntries/dbDivEntriesReplaceMany").replaceManyDivEntries;
   let deleteAllDivEntriesForSquadMock: jest.Mock;
   let postManyDivEntriesMock: jest.Mock;
 
@@ -31,8 +31,8 @@ describe("replaceManyDivEntries - non standard throw cases", () => {
     jest.resetModules();
 
     // Mock only the two database functions we want to control
-    jest.doMock(
-      "../../../../src/lib/db/divEntries/dbDivEntries",
+    jest.doMock(      
+      "@/lib/db/divEntries/dbDivEntries",
       () => ({
         __esModule: true,
         deleteAllDivEntriesForSquad: jest.fn(),
@@ -41,15 +41,15 @@ describe("replaceManyDivEntries - non standard throw cases", () => {
     );
 
     // Import the function under test *after* mocks are in place
-    ({ replaceManyDivEntries } = require(
-      "../../../../src/lib/db/divEntries/dbDivEntriesReplaceMany"
+    ({ replaceManyDivEntries } = require(      
+      "@/lib/db/divEntries/dbDivEntriesReplaceMany"
     ));
 
     // Import our mocked functions for direct access in tests
     ({
       deleteAllDivEntriesForSquad: deleteAllDivEntriesForSquadMock,
-      postManyDivEntries: postManyDivEntriesMock,
-    } = require("../../../../src/lib/db/divEntries/dbDivEntries"));
+      postManyDivEntries: postManyDivEntriesMock,    
+    } = require("@/lib/db/divEntries/dbDivEntries"));
   });
 
   afterEach(() => {

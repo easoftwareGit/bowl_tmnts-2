@@ -24,7 +24,7 @@ const manyPots: potType[] = [
 ];
 
 describe("replaceManyPots - non standard throw cases", () => {
-  let replaceManyPots: typeof import("../../../../src/lib/db/pots/dbPotsReplaceMany").replaceManyPots;
+  let replaceManyPots: typeof import("@/lib/db/pots/dbPotsReplaceMany").replaceManyPots;
   let deleteAllPotsForSquadMock: jest.Mock;
   let postManyPotsMock: jest.Mock;
 
@@ -34,7 +34,7 @@ describe("replaceManyPots - non standard throw cases", () => {
 
     // Mock only the two database functions we want to control
     jest.doMock(
-      "../../../../src/lib/db/pots/dbPots",
+      "@/lib/db/pots/dbPots",
       () => ({
         __esModule: true,
         deleteAllPotsForSquad: jest.fn(),
@@ -44,14 +44,14 @@ describe("replaceManyPots - non standard throw cases", () => {
 
     // Import the function under test *after* mocks are in place
     ({ replaceManyPots } = require(
-      "../../../../src/lib/db/pots/dbPotsReplaceMany"
+      "@/lib/db/pots/dbPotsReplaceMany"
     ));
 
     // Import our mocked functions for direct access in tests
     ({
       deleteAllPotsForSquad: deleteAllPotsForSquadMock,
       postManyPots: postManyPotsMock,
-    } = require("../../../../src/lib/db/pots/dbPots"));
+    } = require("@/lib/db/pots/dbPots"));
   });
 
   afterEach(() => {

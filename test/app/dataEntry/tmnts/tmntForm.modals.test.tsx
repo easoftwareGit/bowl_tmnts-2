@@ -50,10 +50,9 @@ jest.mock("next/navigation", () => ({
   })),
 }));
 
-
-jest.mock("../../../../src/redux/features/tmntFullData/tmntFullDataSlice", () => ({
+jest.mock("@/redux/features/tmntFullData/tmntFullDataSlice", () => ({
   __esModule: true,
-  ...jest.requireActual("../../../../src/redux/features/tmntFullData/tmntFullDataSlice"),
+  ...jest.requireActual("@/redux/features/tmntFullData/tmntFullDataSlice"),
   saveTmntFullData: jest.fn(),
 }));
 

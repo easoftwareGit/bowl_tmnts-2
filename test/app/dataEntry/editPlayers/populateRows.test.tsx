@@ -1,18 +1,21 @@
 import { populateRows } from "@/app/dataEntry/editPlayers/[tmntId]/page";
 import { mockTmntFullData } from "../../../mocks/tmnts/tmntFulldata/mockTmntFullData";
-import { divEntryHdcpColName, entryFeeColName, entryNumBrktsColName, timeStampColName } from "@/app/dataEntry/playersForm/createColumns";
-import { cloneDeep } from "lodash";
+import {
+  divEntryHdcpColName,
+  entryFeeColName,
+  entryNumBrktsColName,
+  timeStampColName,
+} from "@/app/dataEntry/playersForm/createColumns";
 import { blankDivEntry, blankPotEntry } from "@/lib/db/initVals";
+import { cloneDeep } from "lodash";
 
-describe('populateRows', () => { 
-
-  it('should create columns', () => { 
-
+describe("populateRows", () => {
+  it("should create columns", () => {
     const rows = populateRows(mockTmntFullData);
     const columnNames = Object.keys(rows[0]);
     // 8 player, 2 divEntry, 1 potEntry, 8 brktEntry, 2 elimEntry, 1 total
     // 8 + 2 + 1 + 6 + 2 + 1 = 20
-    expect(columnNames).toHaveLength(20); 
+    expect(columnNames).toHaveLength(20);
     // player columns
     expect(rows[0].id).toBeDefined();
     expect(rows[0].player_id).toBeDefined();
@@ -22,32 +25,58 @@ describe('populateRows', () => {
     expect(rows[0].lane).toBeDefined();
     expect(rows[0].position).toBeDefined();
     expect(rows[0].lanePos).toBeDefined();
-    // divEntry columns    
-    expect(rows[0][entryFeeColName(mockTmntFullData.divEntries[0].div_id)]).toBeDefined();    
-    expect(rows[0][divEntryHdcpColName(mockTmntFullData.divEntries[0].div_id)]).toBeDefined();
-    expect(rows[0][entryFeeColName(mockTmntFullData.divEntries[1].div_id)]).toBeDefined();    
-    expect(rows[0][divEntryHdcpColName(mockTmntFullData.divEntries[1].div_id)]).toBeDefined();
+    // divEntry columns
+    expect(
+      rows[0][entryFeeColName(mockTmntFullData.divEntries[0].div_id)]
+    ).toBeDefined();
+    expect(
+      rows[0][divEntryHdcpColName(mockTmntFullData.divEntries[0].div_id)]
+    ).toBeDefined();
+    expect(
+      rows[0][entryFeeColName(mockTmntFullData.divEntries[1].div_id)]
+    ).toBeDefined();
+    expect(
+      rows[0][divEntryHdcpColName(mockTmntFullData.divEntries[1].div_id)]
+    ).toBeDefined();
     // potEntry column
-    expect(rows[0][entryFeeColName(mockTmntFullData.potEntries[0].pot_id)]).toBeDefined();
+    expect(
+      rows[0][entryFeeColName(mockTmntFullData.potEntries[0].pot_id)]
+    ).toBeDefined();
     // brktEntry columns
-    expect(rows[0][entryNumBrktsColName(mockTmntFullData.brktEntries[0].brkt_id)]).toBeDefined();
-    expect(rows[0][entryFeeColName(mockTmntFullData.brktEntries[0].brkt_id)]).toBeDefined();
-    expect(rows[0][timeStampColName(mockTmntFullData.brktEntries[0].brkt_id)]).toBeDefined();
-    expect(rows[0][entryNumBrktsColName(mockTmntFullData.brktEntries[1].brkt_id)]).toBeDefined();
-    expect(rows[0][entryFeeColName(mockTmntFullData.brktEntries[1].brkt_id)]).toBeDefined();    
-    expect(rows[0][timeStampColName(mockTmntFullData.brktEntries[1].brkt_id)]).toBeDefined();    
+    expect(
+      rows[0][entryNumBrktsColName(mockTmntFullData.brktEntries[0].brkt_id)]
+    ).toBeDefined();
+    expect(
+      rows[0][entryFeeColName(mockTmntFullData.brktEntries[0].brkt_id)]
+    ).toBeDefined();
+    expect(
+      rows[0][timeStampColName(mockTmntFullData.brktEntries[0].brkt_id)]
+    ).toBeDefined();
+    expect(
+      rows[0][entryNumBrktsColName(mockTmntFullData.brktEntries[1].brkt_id)]
+    ).toBeDefined();
+    expect(
+      rows[0][entryFeeColName(mockTmntFullData.brktEntries[1].brkt_id)]
+    ).toBeDefined();
+    expect(
+      rows[0][timeStampColName(mockTmntFullData.brktEntries[1].brkt_id)]
+    ).toBeDefined();
     // elimEntry columns
-    expect(rows[0][entryFeeColName(mockTmntFullData.elimEntries[0].elim_id)]).toBeDefined();
-    expect(rows[0][entryFeeColName(mockTmntFullData.elimEntries[1].elim_id)]).toBeDefined();
+    expect(
+      rows[0][entryFeeColName(mockTmntFullData.elimEntries[0].elim_id)]
+    ).toBeDefined();
+    expect(
+      rows[0][entryFeeColName(mockTmntFullData.elimEntries[1].elim_id)]
+    ).toBeDefined();
     // total column
     expect(rows[0].feeTotal).toBeDefined();
-  })
-  it('should create rows', () => { 
+  });
+  it("should create rows", () => {
     const rows = populateRows(mockTmntFullData);
-    expect(rows).toHaveLength(mockTmntFullData.players.length);  
-  })
-  it('should populate rows with player data', () => { 
-    const rows = populateRows(mockTmntFullData);    
+    expect(rows).toHaveLength(mockTmntFullData.players.length);
+  });
+  it("should populate rows with player data", () => {
+    const rows = populateRows(mockTmntFullData);
     expect(rows).toHaveLength(mockTmntFullData.players.length);
 
     for (let i = 0; i < rows.length; i++) {
@@ -59,8 +88,8 @@ describe('populateRows', () => {
       expect(rows[i].lane).toBe(mockTmntFullData.players[i].lane);
       expect(rows[i].position).toBe(mockTmntFullData.players[i].position);
     }
-  })
-  it('should populate rows with div entry data', () => { 
+  });
+  it("should populate rows with div entry data", () => {
     const deMock = cloneDeep(mockTmntFullData);
     // add div entries into div 2
     deMock.divEntries.push({
@@ -96,7 +125,7 @@ describe('populateRows', () => {
     expect(rows[1][div1HdcpColName]).toBe(deMock.divEntries[1].hdcp);
     expect(rows[1][div2FeeColName]).toBe(undefined);
     expect(rows[1][div2HdcpColName]).toBe(undefined);
-    
+
     expect(rows[2][div1FeeColName]).toBe(deMock.divEntries[2].fee);
     expect(rows[2][div1HdcpColName]).toBe(deMock.divEntries[2].hdcp);
     expect(rows[2][div2FeeColName]).toBe(deMock.divEntries[5].fee);
@@ -106,8 +135,8 @@ describe('populateRows', () => {
     expect(rows[3][div1HdcpColName]).toBe(deMock.divEntries[3].hdcp);
     expect(rows[3][div2FeeColName]).toBe(undefined);
     expect(rows[3][div2HdcpColName]).toBe(undefined);
-  })
-  it('should populate rows with pot entry data', () => { 
+  });
+  it("should populate rows with pot entry data", () => {
     const peMock = cloneDeep(mockTmntFullData);
     // add pot entries into div 2
     peMock.potEntries.push({
@@ -128,8 +157,8 @@ describe('populateRows', () => {
     const rows = populateRows(peMock);
     expect(rows).toHaveLength(peMock.players.length);
 
-    const pot1FeeColName = entryFeeColName(peMock.pots[0].id)
-    const pot2FeeColName = entryFeeColName(peMock.pots[1].id)
+    const pot1FeeColName = entryFeeColName(peMock.pots[0].id);
+    const pot2FeeColName = entryFeeColName(peMock.pots[1].id);
 
     expect(rows[0][pot1FeeColName]).toBe(peMock.potEntries[0].fee);
     expect(rows[0][pot2FeeColName]).toBe(peMock.potEntries[4].fee);
@@ -142,33 +171,60 @@ describe('populateRows', () => {
 
     expect(rows[3][pot1FeeColName]).toBe(peMock.potEntries[3].fee);
     expect(rows[3][pot2FeeColName]).toBe(undefined);
-
-  })
-  it('should populate rows with raw brkt entry data', () => {
+  });
+  it("should populate rows with raw brkt entry data", () => {
     const rows = populateRows(mockTmntFullData);
     expect(rows).toHaveLength(mockTmntFullData.players.length);
 
-    const brkt1NumColName = entryNumBrktsColName(mockTmntFullData.brktEntries[0].brkt_id);
-    const brkt1FeeColName = entryFeeColName(mockTmntFullData.brktEntries[0].brkt_id);
-    const brkt1timeStampColName = timeStampColName(mockTmntFullData.brktEntries[0].brkt_id);
+    const brkt1NumColName = entryNumBrktsColName(
+      mockTmntFullData.brktEntries[0].brkt_id
+    );
+    const brkt1FeeColName = entryFeeColName(
+      mockTmntFullData.brktEntries[0].brkt_id
+    );
+    const brkt1timeStampColName = timeStampColName(
+      mockTmntFullData.brktEntries[0].brkt_id
+    );
 
-    const brkt2NumColName = entryNumBrktsColName(mockTmntFullData.brktEntries[1].brkt_id);
-    const brkt2FeeColName = entryFeeColName(mockTmntFullData.brktEntries[1].brkt_id);
-    const brkt2timeStampColName = timeStampColName(mockTmntFullData.brktEntries[1].brkt_id);
+    const brkt2NumColName = entryNumBrktsColName(
+      mockTmntFullData.brktEntries[1].brkt_id
+    );
+    const brkt2FeeColName = entryFeeColName(
+      mockTmntFullData.brktEntries[1].brkt_id
+    );
+    const brkt2timeStampColName = timeStampColName(
+      mockTmntFullData.brktEntries[1].brkt_id
+    );
 
-    expect(rows[0][brkt1NumColName]).toBe(mockTmntFullData.brktEntries[0].num_brackets);
+    expect(rows[0][brkt1NumColName]).toBe(
+      mockTmntFullData.brktEntries[0].num_brackets
+    );
     expect(rows[0][brkt1FeeColName]).toBe(mockTmntFullData.brktEntries[0].fee);
-    expect(rows[0][brkt1timeStampColName]).toBe(mockTmntFullData.brktEntries[0].time_stamp);
-    expect(rows[0][brkt2NumColName]).toBe(mockTmntFullData.brktEntries[2].num_brackets);
+    expect(rows[0][brkt1timeStampColName]).toBe(
+      mockTmntFullData.brktEntries[0].time_stamp
+    );
+    expect(rows[0][brkt2NumColName]).toBe(
+      mockTmntFullData.brktEntries[2].num_brackets
+    );
     expect(rows[0][brkt2FeeColName]).toBe(mockTmntFullData.brktEntries[2].fee);
-    expect(rows[0][brkt2timeStampColName]).toBe(mockTmntFullData.brktEntries[2].time_stamp);
+    expect(rows[0][brkt2timeStampColName]).toBe(
+      mockTmntFullData.brktEntries[2].time_stamp
+    );
 
-    expect(rows[1][brkt1NumColName]).toBe(mockTmntFullData.brktEntries[1].num_brackets);
+    expect(rows[1][brkt1NumColName]).toBe(
+      mockTmntFullData.brktEntries[1].num_brackets
+    );
     expect(rows[1][brkt1FeeColName]).toBe(mockTmntFullData.brktEntries[1].fee);
-    expect(rows[1][brkt1timeStampColName]).toBe(mockTmntFullData.brktEntries[1].time_stamp);
-    expect(rows[1][brkt2NumColName]).toBe(mockTmntFullData.brktEntries[3].num_brackets);
+    expect(rows[1][brkt1timeStampColName]).toBe(
+      mockTmntFullData.brktEntries[1].time_stamp
+    );
+    expect(rows[1][brkt2NumColName]).toBe(
+      mockTmntFullData.brktEntries[3].num_brackets
+    );
     expect(rows[1][brkt2FeeColName]).toBe(mockTmntFullData.brktEntries[3].fee);
-    expect(rows[1][brkt2timeStampColName]).toBe(mockTmntFullData.brktEntries[3].time_stamp);
+    expect(rows[1][brkt2timeStampColName]).toBe(
+      mockTmntFullData.brktEntries[3].time_stamp
+    );
 
     expect(rows[2][brkt1NumColName]).toBe(undefined);
     expect(rows[2][brkt1FeeColName]).toBe(undefined);
@@ -179,14 +235,17 @@ describe('populateRows', () => {
     expect(rows[3][brkt1FeeColName]).toBe(undefined);
     expect(rows[3][brkt2NumColName]).toBe(undefined);
     expect(rows[3][brkt2FeeColName]).toBe(undefined);
-
   });
-  it('should populate rows with elim entry data', () => {
+  it("should populate rows with elim entry data", () => {
     const rows = populateRows(mockTmntFullData);
-    expect(rows).toHaveLength(mockTmntFullData.players.length); 
+    expect(rows).toHaveLength(mockTmntFullData.players.length);
 
-    const elim1FeeColName = entryFeeColName(mockTmntFullData.elimEntries[0].elim_id)
-    const elim2FeeColName = entryFeeColName(mockTmntFullData.elimEntries[1].elim_id)
+    const elim1FeeColName = entryFeeColName(
+      mockTmntFullData.elimEntries[0].elim_id
+    );
+    const elim2FeeColName = entryFeeColName(
+      mockTmntFullData.elimEntries[1].elim_id
+    );
 
     expect(rows[0][elim1FeeColName]).toBe(mockTmntFullData.elimEntries[0].fee);
     expect(rows[0][elim2FeeColName]).toBe(mockTmntFullData.elimEntries[1].fee);
@@ -200,5 +259,4 @@ describe('populateRows', () => {
     expect(rows[3][elim1FeeColName]).toBe(undefined);
     expect(rows[3][elim2FeeColName]).toBe(undefined);
   });
-
-})
+});

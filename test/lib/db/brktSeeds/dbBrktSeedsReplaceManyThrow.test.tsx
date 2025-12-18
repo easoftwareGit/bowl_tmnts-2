@@ -17,8 +17,8 @@ const manyBrktSeeds: brktSeedType[] = [
   }
 ]
 
-describe("replaceManyBrktSeeds - non standard throw cases", () => {
-  let replaceManyBrktSeeds: typeof import("../../../../src/lib/db/brktSeeds/dbBrktSeedsReplaceMany").replaceManyBrktSeeds;
+describe("replaceManyBrktSeeds - non standard throw cases", () => {  
+  let replaceManyBrktSeeds: typeof import("@/lib/db/brktSeeds/dbBrktSeedsReplaceMany").replaceManyBrktSeeds;
   let deleteAllBrktSeedsForSquadMock: jest.Mock;
   let postManyBrktSeedsMock: jest.Mock;
 
@@ -27,8 +27,8 @@ describe("replaceManyBrktSeeds - non standard throw cases", () => {
     jest.resetModules();
 
     // Mock only the two database functions we want to control
-    jest.doMock(
-      "../../../../src/lib/db/brktSeeds/dbBrktSeeds",
+    jest.doMock(      
+      "@/lib/db/brktSeeds/dbBrktSeeds",
       () => ({
         __esModule: true,
         deleteAllBrktSeedsForSquad: jest.fn(),
@@ -37,15 +37,15 @@ describe("replaceManyBrktSeeds - non standard throw cases", () => {
     );
 
     // Import the function under test *after* mocks are in place
-    ({ replaceManyBrktSeeds } = require(
-      "../../../../src/lib/db/brktSeeds/dbBrktSeedsReplaceMany"
+    ({ replaceManyBrktSeeds } = require(      
+      "@/lib/db/brktSeeds/dbBrktSeedsReplaceMany"
     ));
 
     // Import our mocked functions for direct access in tests
     ({
       deleteAllBrktSeedsForSquad: deleteAllBrktSeedsForSquadMock,
-      postManyBrktSeeds: postManyBrktSeedsMock,
-    } = require("../../../../src/lib/db/brktSeeds/dbBrktSeeds"));
+      postManyBrktSeeds: postManyBrktSeedsMock,    
+    } = require("@/lib/db/brktSeeds/dbBrktSeeds"));
   });
 
   afterEach(() => {

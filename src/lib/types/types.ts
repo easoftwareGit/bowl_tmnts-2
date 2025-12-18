@@ -196,6 +196,7 @@ export type squadType = {
   squad_date_err: string,
   squad_time: string | null,
   squad_time_err: string,
+  finalized: boolean,
   sort_order: number,
   errClassName: string,  
 }
@@ -208,7 +209,8 @@ export type squadDataType = {
   lane_count: number,      
   starting_lane: number,      
   squad_date: Date,      
-  squad_time: string | null,       
+  squad_time: string | null,
+  finalized: boolean,
   sort_order: number,      
 }
 

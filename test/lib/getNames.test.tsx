@@ -174,5 +174,4 @@ describe("getName functions", () => {
     });
   });
 
-
 });

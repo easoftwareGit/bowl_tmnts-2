@@ -1,19 +1,16 @@
 import axios from "axios";
 import { baseSquadsApi } from "@/lib/db/apiPaths";
 import { testBaseSquadsApi } from "../../../../test/testApi";
-import { brktEntryType, brktType, dataOneTmntType, divEntryType, divType, elimEntryType, elimType, oneBrktsAndSeedsType, oneBrktType, playerType, potEntryType, potType, squadType } from "@/lib/types/types";
+import { oneBrktsAndSeedsType, squadType } from "@/lib/types/types";
 import { ErrorCode, isValidBtDbId } from "@/lib/validation";
 import { removeTimeFromISODateStr } from "@/lib/dateTools";
-import { blankBrktEntry, blankDivEntry, blankElimEntry, blankPlayer, blankPotEntry, blankSquad, defaultBrktGames, defaultPlayersPerMatch, initOneBrkt } from "../initVals";
-import { btDbUuid } from "@/lib/uuid";
-import { BracketList } from "@/components/brackets/bracketListClass";
-import { Bracket } from "@/components/brackets/bracketClass";
+import { blankSquad } from "../initVals";
 import { validateSquads } from "@/app/api/squads/validate";
 
 const url = testBaseSquadsApi.startsWith("undefined")
   ? baseSquadsApi
   : testBaseSquadsApi;  
-const entriesUrl = url + '/entries/';
+// const entriesUrl = url + '/entries/';
 const eventUrl = url + "/event/";
 const manyUrl = url + "/many";
 const squadUrl = url + "/squad/"; 
@@ -39,6 +36,7 @@ export const extractSquads = (squads: any): squadType[] => {
     starting_lane: squad.starting_lane,
     squad_date_str: removeTimeFromISODateStr(squad.squad_date),
     squad_time: squad.squad_time,
+    finalized: squad.finalized,
     sort_order: squad.sort_order,
   }));
 }
@@ -47,7 +45,8 @@ export const extractSquads = (squads: any): squadType[] => {
  * gets all squads for a tmnt
  * 
  * @param {string} tmntId - id of tmnt to get squads for
- * @returns {squadType[]} - array of squads
+ * @returns {squadType[]} - array of squads for tmnt 
+ * @throws {Error} - if tmntId is invalid or API call fails
  */
 export const getAllSquadsForTmnt = async (tmntId: string): Promise<squadType[]> => {
   if (!isValidBtDbId(tmntId, 'tmt')) {
@@ -63,223 +62,6 @@ export const getAllSquadsForTmnt = async (tmntId: string): Promise<squadType[]> 
     throw new Error(`Unexpected status ${response.status} when fetching squads`)
   }
   return extractSquads(response.data.squads);
-}
-
-/**
- * gets bracket lists for a squad
- * 
- * @param {oneBrktsAndSeedsType[]} oneBrktsAndSeeds - array of oneBrkts and seeds 
- * @returns {BracketList[]} - bracket lists for squad 
- */
-const getBracketListForSquad = (oneBrktsAndSeeds: oneBrktsAndSeedsType[]): BracketList[] => {
-
-  if (!oneBrktsAndSeeds || !Array.isArray(oneBrktsAndSeeds) || oneBrktsAndSeeds.length === 0) return [];
-  const brktLists: BracketList[] = [];
-  let brktId = '';
-  let newBrktList: BracketList | null = null;
-  let oneBrktId = '';
-  let players: string[] = [];
-  oneBrktsAndSeeds.forEach(oneBrktAndSeed => {
-    if (oneBrktAndSeed.brkt_id !== brktId) {      
-      if (newBrktList) {
-        brktLists.push(newBrktList);
-      }
-      newBrktList = new BracketList(oneBrktAndSeed.brkt_id, defaultPlayersPerMatch, defaultBrktGames);
-      brktId = oneBrktAndSeed.brkt_id;
-    }
-    if (oneBrktAndSeed.seed === 0) { 
-      players.length = 0;
-      oneBrktId = oneBrktAndSeed.one_brkt_id;
-    } 
-    players.push(oneBrktAndSeed.player_id);    
-    if (oneBrktAndSeed.seed === 7
-      && newBrktList
-      && oneBrktId === oneBrktAndSeed.one_brkt_id)
-    {
-      const bracket = new Bracket(newBrktList, oneBrktId);
-      bracket.fillBracket(players);
-      newBrktList.brackets.push(bracket);
-    }
-  })
-  if (newBrktList) {
-    brktLists.push(newBrktList);
-  }
-  return brktLists;
-}
-
-/**
- * gets all players for a squad from squad entries
- * 
- * @param {any[]} squadEntries - entries for a squad
- * @param {string} squadId - squad id
- * @returns {playerType[]} - players for a squad
- */
-const getAllPlayersForSquad2 = (squadEntries: any[], squadId: string): playerType[] => {  
-  if (!squadEntries || squadEntries.length === 0) return [];
-  try {    
-    const players: playerType[] = [];
-    squadEntries.forEach((entry: any) => {
-      const player: playerType = {
-        ...blankPlayer,
-        id: entry.player_id,
-        squad_id: squadId,
-        first_name: entry.first_name,
-        last_name: entry.last_name,
-        average: entry.average,
-        lane: entry.lane,
-        position: entry.position,
-      }
-      players.push(player);
-    })
-    return players;
-  } catch (err) {
-    return [];
-  }
-};
-
-/**
- * gets all divEntries for a squad from squad entries
- * 
- * @param {any[]} squadEntries - entries for a squad
- * @param {dataOneTmntType} curData - current tournament data
- * @returns {divEntryType[]} - all divEntries for the squad
- */
-const getAllDivEntriesForSquad2 = (squadEntries: any[], curData: dataOneTmntType): divEntryType[] => { 
-  if (!squadEntries || squadEntries.length === 0) return [];
-  try {    
-    const divEntries: divEntryType[] = [];
-    squadEntries.forEach((entry: any) => {
-      curData.divs.forEach((div: divType) => {
-        const divFeePropName = `${div.id}_fee`;
-        const divHdcpPropName = `${div.id}_hdcp`;
-        if (entry[divFeePropName]) {
-          const divEntry: divEntryType = {
-            ...blankDivEntry,
-            id: btDbUuid('den'),
-            squad_id: curData.squads[0].id,            
-            div_id: div.id,
-            player_id: entry.player_id,
-            fee: entry[divFeePropName],            
-            hdcp: (entry[divHdcpPropName] === null || entry[divHdcpPropName] === undefined) 
-              ? 0 : entry[divHdcpPropName],
-          }
-          divEntries.push(divEntry);
-        }        
-      })
-    })
-    return divEntries;
-  } catch (err) {
-    return [];
-  }
-}
-
-/**
- * get all potEntries for a squad from squad entries
- * 
- * @param {any[]} squadEntries - entries for a squad
- * @param {dataOneTmntType} curData - current tournament data
- * @returns {potEntryType[]} - potEntries for a squad 
- */
-const getAllPotEntriesForSquad2 = (squadEntries: any[], curData: dataOneTmntType): potEntryType[] => { 
-  if (!squadEntries || squadEntries.length === 0) return [];
-  try {    
-    const potEntries: potEntryType[] = [];
-    squadEntries.forEach((entry: any) => {
-      curData.pots.forEach((pot: potType) => {
-        const potFeePropName = `${pot.id}_fee`;
-        if (entry[potFeePropName]) {
-          const potEntry: potEntryType = {
-            ...blankPotEntry,
-            id: btDbUuid('pen'),
-            pot_id: pot.id,
-            player_id: entry.player_id,
-            fee: entry[potFeePropName],
-          }
-          potEntries.push(potEntry);
-        }        
-      })
-    })
-    return potEntries;
-  } catch (err) {
-    return [];
-  }
-}
-
-/**
- * Get all bracket entries for a squad from squad entries
- * 
- * @param {any[]} squadEntries - all entries for a squad
- * @param {dataOneTmntType} curData - current tournament data
- * @returns {brktEntryType[]} - all brktEntries for the squad
- */
-const getAllBrktEntriesForSquad2 = (squadEntries: any[], curData: dataOneTmntType): brktEntryType[] => { 
-  if (!squadEntries || squadEntries.length === 0) return [];
-  try {    
-    const brktEntries: brktEntryType[] = [];
-    squadEntries.forEach((entry: any) => {
-      curData.brkts.forEach((brkt: brktType) => {
-        const brktNumBrktsPropName = `${brkt.id}_num_brackets`;
-        const brktFeePropName =  `${brkt.id}_fee`;
-        if (entry[brktNumBrktsPropName]) {
-          const brktEntry: brktEntryType = {
-            ...blankBrktEntry,
-            id: btDbUuid('ben'),
-            brkt_id: brkt.id,
-            player_id: entry.player_id,
-            num_brackets: entry[brktNumBrktsPropName],
-            fee: entry[brktFeePropName],
-          }
-          brktEntries.push(brktEntry);
-        }        
-      })
-    })
-    return brktEntries;
-  } catch (err) {
-    return [];
-  }
-}
-
-/**
- * gets elimEntries for a squad from squad entries
- * 
- * @param {any[]} squadEntries - entries for a squad
- * @param {dataOneTmntType} curData - current tournament data
- * @returns {elimEntryType[]} - elimEntries for a squad
- */
-const getAllElimEntriesForSquad2 = (squadEntries: any[], curData: dataOneTmntType): elimEntryType[] => { 
-  if (!squadEntries || squadEntries.length === 0) return [];
-  try {    
-    const elimEntries: elimEntryType[] = [];
-    squadEntries.forEach((entry: any) => {
-      curData.elims.forEach((elim: elimType) => {
-        const elimFeePropName = `${elim.id}_fee`;
-        if (entry[elimFeePropName]) {
-          const elimEntry: elimEntryType = {
-            ...blankElimEntry,
-            id: btDbUuid('een'),
-            elim_id: elim.id,
-            player_id: entry.player_id,
-            fee: entry[elimFeePropName],
-          }
-          elimEntries.push(elimEntry);
-        }        
-      })
-    })
-    return elimEntries;
-  } catch (err) {
-    return [];
-  }
-}
-
-const testingGetAllEntriesForSquad2 = async (curData: dataOneTmntType): Promise<Record<string, any>[] | null> => { 
-  const squadId = curData.squads[0].id; // already checked for validity above  
-  const response = await axios({
-    method: "get",
-    withCredentials: true,
-    url: entriesUrl + squadId,        
-    params: { curData: JSON.stringify(curData) }
-  }); 
-  return (response.status === 200) ? response.data.squadEntries : null;  
 }
 
 /**
@@ -338,7 +120,8 @@ export const postSquad = async (squad: squadType): Promise<squadType> => {
     lane_count: dbSquad.lane_count,        
     starting_lane: dbSquad.starting_lane,        
     squad_date_str: removeTimeFromISODateStr(dbSquad.squad_date),        
-    squad_time: dbSquad.squad_time,        
+    squad_time: dbSquad.squad_time,     
+    finalized: dbSquad.finalized,
     sort_order: dbSquad.sort_order,
   }
   return postedSquad
@@ -413,14 +196,15 @@ export const putSquad = async (squad: squadType): Promise<squadType> => {
   const puttedSquad: squadType = {
     ...blankSquad,
     id: dbSquad.id,
-    event_id: dbSquad.event_id,          
+    event_id: dbSquad.event_id,
     squad_name: dbSquad.squad_name,
-    tab_title: dbSquad.squad_name,                
-    games: dbSquad.games,          
-    lane_count: dbSquad.lane_count,        
-    starting_lane: dbSquad.starting_lane,        
-    squad_date_str: removeTimeFromISODateStr(dbSquad.squad_date),        
-    squad_time: dbSquad.squad_time,        
+    tab_title: dbSquad.squad_name,
+    games: dbSquad.games,
+    lane_count: dbSquad.lane_count,
+    starting_lane: dbSquad.starting_lane,
+    squad_date_str: removeTimeFromISODateStr(dbSquad.squad_date),
+    squad_time: dbSquad.squad_time,
+    finalized: dbSquad.finalized,
     sort_order: dbSquad.sort_order,
   }
   return puttedSquad;

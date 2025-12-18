@@ -1,13 +1,11 @@
 import reducer, { fetchTmntYears, tmntYearsSliceState } from "@/redux/features/tmnts/yearsSlice";
 import { getTmntYears } from "@/lib/db/tmnts/dbTmnts";
-// import { getTmntYears } from "../../../src/lib/db/tmnts/dbTmnts";
 import { YearObj } from "@/lib/types/types";
 import { configureStore } from "@reduxjs/toolkit";
 
-jest.mock("../../../src/lib/db/tmnts/dbTmnts", () => ({
+jest.mock("@/lib/db/tmnts/dbTmnts", () => ({
   getTmntYears: jest.fn(),
 }));
-
 
 describe("tmntYearsSlice reducer + thunk", () => {
   const initialState: tmntYearsSliceState = {

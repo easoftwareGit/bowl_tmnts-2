@@ -9,7 +9,7 @@ import {
 } from '@/redux/features/oneTmntGameResults/oneTmntGameResultsSlice';
 
 // Mock the dependencies
-jest.mock('../../../src/lib/db/results/dbResults', () => ({
+jest.mock('@/lib/db/results/dbResults', () => ({
   getGameResultsForTmnt: jest.fn(),
 }));
 

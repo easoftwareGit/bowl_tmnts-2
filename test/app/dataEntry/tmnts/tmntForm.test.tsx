@@ -12,7 +12,7 @@ import { bowlType, ioDataError, tmntActions, tmntFormDataType } from "@/lib/type
 import { getBlankTmntFullData } from "@/app/dataEntry/tmntForm/tmntTools"; 
 import { mockBowl, mockTmntFullData } from "../../../mocks/tmnts/tmntFulldata/mockTmntFullData"; 
 import { ioStatusType } from "@/redux/statusTypes"; 
-import { validateEvents } from "../../../../src/app/dataEntry/tmntForm/oneToNEvents"; 
+import { validateEvents } from "@/app/dataEntry/tmntForm/oneToNEvents"; 
 import { validateDivs } from "@/app/dataEntry/tmntForm/oneToNDivs"; 
 import { validateSquads } from "@/app/dataEntry/tmntForm/oneToNSquads"; 
 import { validatePots } from "@/app/dataEntry/tmntForm/zeroToNPots"; 
@@ -53,40 +53,40 @@ jest.mock("next/navigation", () => ({
 	}, 
 })); 
 
-jest.mock("../../../../src/app/dataEntry/tmntForm/oneToNEvents", () => ({ 
+jest.mock("@/app/dataEntry/tmntForm/oneToNEvents", () => ({ 
 	__esModule: true, 
 	default: () => <div>MockEvents</div>, 
 	validateEvents: jest.fn().mockReturnValue(true), 
 })); 
-jest.mock("../../../../src/app/dataEntry/tmntForm/oneToNDivs", () => ({ 
+jest.mock("@/app/dataEntry/tmntForm/oneToNDivs", () => ({ 
 	__esModule: true, 
 	default: () => <div>MockDivs</div>, 
 	validateDivs: jest.fn().mockReturnValue(true), 
 })); 
-jest.mock("../../../../src/app/dataEntry/tmntForm/oneToNSquads", () => ({ 
+jest.mock("@/app/dataEntry/tmntForm/oneToNSquads", () => ({ 
 	__esModule: true, 
 	default: () => <div>MockSquads</div>, 
 	validateSquads: jest.fn().mockReturnValue(true), 
 })); 
-jest.mock("../../../../src/app/dataEntry/tmntForm/zeroToNPots", () => ({ 
+jest.mock("@/app/dataEntry/tmntForm/zeroToNPots", () => ({ 
 	__esModule: true, 
 	default: () => <div>MockPots</div>, 
 	validatePots: jest.fn().mockReturnValue(true), 
 })); 
-jest.mock("../../../../src/app/dataEntry/tmntForm/zeroToNBrkts", () => ({ 
+jest.mock("@/app/dataEntry/tmntForm/zeroToNBrkts", () => ({ 
 	__esModule: true, 
 	default: () => <div>MockBrkts</div>, 
 	validateBrkts: jest.fn().mockReturnValue(true), 
 })); 
-jest.mock("../../../../src/app/dataEntry/tmntForm/zeroToNElims", () => ({ 
+jest.mock("@/app/dataEntry/tmntForm/zeroToNElims", () => ({ 
 	__esModule: true, 
 	default: () => <div>MockElims</div>, 
 	validateElims: jest.fn().mockReturnValue(true), 
 })); 
 
-jest.mock("../../../../src/redux/features/tmntFullData/tmntFullDataSlice", () => ({
+jest.mock("@/redux/features/tmntFullData/tmntFullDataSlice", () => ({
   __esModule: true,
-  ...jest.requireActual("../../../../src/redux/features/tmntFullData/tmntFullDataSlice"),
+  ...jest.requireActual("@/redux/features/tmntFullData/tmntFullDataSlice"),
   saveTmntFullData: jest.fn(),
 }));
 

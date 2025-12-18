@@ -18,9 +18,8 @@ import {
 import { sanitize } from "@/lib/sanitize";
 import { compareAsc, isValid } from "date-fns";
 import { squadType, idTypes, validSquadsType } from "@/lib/types/types";
-import { blankSquad, initSquad } from "@/lib/db/initVals";
-import { startOfDayFromString, valid_yyyyMMdd, validDateString } from "@/lib/dateTools";
-import { start } from "repl";
+import { blankSquad } from "@/lib/db/initVals";
+import { startOfDayFromString, validDateString } from "@/lib/dateTools";
 
 /**
  * checks if squad object has missing data - DOES NOT SANITIZE OR VALIDATE
@@ -39,7 +38,8 @@ const gotSquadData = (squad: squadType): ErrorCode => {
       || (typeof squad.starting_lane !== "number")
       || (typeof squad.lane_count !== "number")
       || (!squad.squad_date_str)
-      || (typeof squad.sort_order !== "number")           
+      || (typeof squad.sort_order !== "number")
+      || (typeof squad.finalized !== "boolean")
     ) {
       return ErrorCode.MissingData;
     }
@@ -77,6 +77,10 @@ export const validSquadTime = (squadTimeStr: string | null): boolean => {
   if (typeof squadTimeStr === 'undefined') return false  
   if (!squadTimeStr) return true
   return validTime(squadTimeStr)
+}
+export const validFinalzied = (finalized: boolean): boolean => { 
+  if (typeof finalized !== 'boolean') return false
+  return true
 }
 
 /**
@@ -156,6 +160,9 @@ const validSquadData = (squad: squadType): ErrorCode => {
     if (!validSortOrder(squad.sort_order)) {
       return ErrorCode.InvalidData;
     }
+    if (!validFinalzied(squad.finalized)) {
+      return ErrorCode.InvalidData
+    }
     return ErrorCode.None;
   } catch (error) {
     return ErrorCode.OtherError;
@@ -176,6 +183,7 @@ export const sanitizeSquad = (squad: squadType): squadType => {
     lane_count: null as any,
     starting_lane: null as any,
     sort_order: null as any,
+    finalized: null as any
   }
   if (isValidBtDbId(squad.id, "sqd")) {
     sanitizedSquad.id = squad.id;
@@ -200,6 +208,9 @@ export const sanitizeSquad = (squad: squadType): squadType => {
   if ((squad.sort_order === null) || isNumber(squad.sort_order)) {
     sanitizedSquad.sort_order = squad.sort_order
   }  
+  if ((squad.finalized === null) || typeof squad.finalized === 'boolean') {
+    sanitizedSquad.finalized = squad.finalized
+  }
   return sanitizedSquad    
 }
 

@@ -113,13 +113,14 @@ model Squad {
   games         Int
   lane_count    Int
   starting_lane Int
+  finalized     Boolean     @default(false)
   sort_order    Int
   lanes         Lane[]
   pots          Pot[]
   brkts         Brkt[]
   elims         Elim[]
   players       Player[]
-  dviEntries    Div_Entry[]
+  div_entries   Div_Entry[]
   events        Event       @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt

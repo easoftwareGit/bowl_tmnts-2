@@ -40,7 +40,7 @@ const manyEvents: eventType[] = [
   } 
 ]
 describe("replaceManyEvents - non standard throw cases", () => {
-  let replaceManyEvents: typeof import("../../../../src/lib/db/events/dbEventsReplaceMany").replaceManyEvents;
+  let replaceManyEvents: typeof import("@/lib/db/events/dbEventsReplaceMany").replaceManyEvents;
   let deleteAllEventsForTmntMock: jest.Mock;
   let postManyEventsMock: jest.Mock;
 
@@ -50,7 +50,7 @@ describe("replaceManyEvents - non standard throw cases", () => {
 
     // Mock only the two database functions we want to control
     jest.doMock(
-      "../../../../src/lib/db/events/dbEvents",
+      "@/lib/db/events/dbEvents",
       () => ({
         __esModule: true,
         deleteAllEventsForTmnt: jest.fn(),
@@ -60,14 +60,14 @@ describe("replaceManyEvents - non standard throw cases", () => {
 
     // Import the function under test *after* mocks are in place
     ({ replaceManyEvents } = require(
-      "../../../../src/lib/db/events/dbEventsReplaceMany"
+      "@/lib/db/events/dbEventsReplaceMany"
     ));
 
     // Import our mocked functions for direct access in tests
     ({
       deleteAllEventsForTmnt: deleteAllEventsForTmntMock,
       postManyEvents: postManyEventsMock,
-    } = require("../../../../src/lib/db/events/dbEvents"));
+    } = require("@/lib/db/events/dbEvents"));
   });
 
   afterEach(() => {

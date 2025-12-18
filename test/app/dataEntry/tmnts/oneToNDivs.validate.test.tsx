@@ -1,7 +1,7 @@
-import { validateDivs } from "../../../../src/app/dataEntry/tmntForm/oneToNDivs";
+import { validateDivs } from "@/app/dataEntry/tmntForm/oneToNDivs";
 import { divType, AcdnErrType } from "@/lib/types/types";
 import { divId1, divId2, mockTmntFullData } from "../../../mocks/tmnts/tmntFulldata/mockTmntFullData";
-import { acdnErrClassName, noAcdnErr, objErrClassName } from "../../../../src/app/dataEntry/tmntForm/errors";
+import { acdnErrClassName, noAcdnErr, objErrClassName } from "@/app/dataEntry/tmntForm/errors";
 import { maxHdcpPer, maxHdcpFrom } from "@/lib/validation";
 
 const baseMockDiv: divType = {

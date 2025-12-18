@@ -21,7 +21,7 @@ const ModalErrorMsg: React.FC<ChildProps> = ({
 
   return (
     <>
-      <Modal show={show} onHide={onCancel}>
+      <Modal show={show} onHide={onCancel} aria-label="Error">
       <Modal.Header closeButton>
           <Modal.Title>{heading}</Modal.Title>
         </Modal.Header>

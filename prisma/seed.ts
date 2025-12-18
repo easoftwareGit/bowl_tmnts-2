@@ -1183,6 +1183,7 @@ async function squadUpsert() {
         games: 6,
         lane_count: 12,
         starting_lane: 29,
+        finalized: false,
         sort_order: 1,
       },
       create: {
@@ -1194,6 +1195,7 @@ async function squadUpsert() {
         games: 6,
         lane_count: 12,
         starting_lane: 29,
+        finalized: false,
         sort_order: 1,
       },
     });
@@ -1209,6 +1211,7 @@ async function squadUpsert() {
         games: 6,
         lane_count: 10,
         starting_lane: 1,
+        finalized: false,
         sort_order: 1,
       },
       create: {
@@ -1220,6 +1223,7 @@ async function squadUpsert() {
         games: 6,
         lane_count: 10,
         starting_lane: 1,
+        finalized: false,
         sort_order: 1,
       },
     });
@@ -1235,6 +1239,7 @@ async function squadUpsert() {
         games: 6,
         lane_count: 10,
         starting_lane: 1,
+        finalized: false,
         sort_order: 2,
       },
       create: {
@@ -1246,6 +1251,7 @@ async function squadUpsert() {
         games: 6,
         lane_count: 10,
         starting_lane: 1,
+        finalized: false,
         sort_order: 2,
       },
     });
@@ -1261,6 +1267,7 @@ async function squadUpsert() {
         games: 3,
         lane_count: 24,
         starting_lane: 1,
+        finalized: false,
         sort_order: 3,
       },
       create: {
@@ -1272,6 +1279,7 @@ async function squadUpsert() {
         games: 3,
         lane_count: 24,
         starting_lane: 1,
+        finalized: false,
         sort_order: 3,
       },
     });
@@ -1287,6 +1295,7 @@ async function squadUpsert() {
         games: 6,
         lane_count: 6,
         starting_lane: 1,
+        finalized: false,
         sort_order: 1,
       },
       create: {
@@ -1298,6 +1307,7 @@ async function squadUpsert() {
         games: 6,
         lane_count: 6,
         starting_lane: 1,
+        finalized: false,
         sort_order: 1,
       },
     });
@@ -1313,6 +1323,7 @@ async function squadUpsert() {
         games: 6,
         lane_count: 24,
         starting_lane: 1,
+        finalized: false,
         sort_order: 1,
       },
       create: {
@@ -1324,6 +1335,7 @@ async function squadUpsert() {
         games: 6,
         lane_count: 24,
         starting_lane: 1,
+        finalized: false,
         sort_order: 1,
       },
     });
@@ -1339,6 +1351,7 @@ async function squadUpsert() {
         games: 3,
         lane_count: 24,
         starting_lane: 1,
+        finalized: false,
         sort_order: 1,
       },
       create: {
@@ -1350,6 +1363,7 @@ async function squadUpsert() {
         games: 3,
         lane_count: 24,
         starting_lane: 1,
+        finalized: false,
         sort_order: 1,
       },
     });
@@ -1365,6 +1379,7 @@ async function squadUpsert() {
         games: 3,
         lane_count: 24,
         starting_lane: 1,
+        finalized: false,
         sort_order: 2,
       },
       create: {
@@ -1376,6 +1391,7 @@ async function squadUpsert() {
         games: 3,
         lane_count: 24,
         starting_lane: 1,
+        finalized: false,
         sort_order: 2,
       },
     });
@@ -1392,6 +1408,7 @@ async function squadUpsert() {
         games: 6,
         lane_count: 24,
         starting_lane: 9,
+        finalized: false,
         sort_order: 1,
       },
       create: {
@@ -1403,6 +1420,7 @@ async function squadUpsert() {
         games: 6,
         lane_count: 24,
         starting_lane: 9,
+        finalized: false,
         sort_order: 1,
       },
     });
@@ -1419,6 +1437,7 @@ async function squadUpsert() {
         games: 6,
         lane_count: 12,
         starting_lane: 29,
+        finalized: false,
         sort_order: 1,
       },
       create: {
@@ -1430,6 +1449,7 @@ async function squadUpsert() {
         games: 6,
         lane_count: 12,
         starting_lane: 29,
+        finalized: false,
         sort_order: 1,
       },
     });
@@ -1446,6 +1466,7 @@ async function squadUpsert() {
         games: 6,
         lane_count: 12,
         starting_lane: 29,
+        finalized: false,
         sort_order: 1,
       },
       create: {
@@ -1457,6 +1478,7 @@ async function squadUpsert() {
         games: 6,
         lane_count: 12,
         starting_lane: 29,
+        finalized: false,
         sort_order: 1,
       },
     });
@@ -1473,6 +1495,7 @@ async function squadUpsert() {
         games: 6,
         lane_count: 24,
         starting_lane: 1,
+        finalized: false,
         sort_order: 3,
       },
       create: {
@@ -1484,6 +1507,7 @@ async function squadUpsert() {
         games: 6,
         lane_count: 24,
         starting_lane: 1,
+        finalized: false,
         sort_order: 3,
       },
     });

@@ -23,7 +23,12 @@ const ModalConfirm: React.FC<ChildProps> = ({
 
   return (
     <>
-      <Modal show={show} onHide={onCancel} data-testid="modalConfirm">
+      <Modal
+        show={show}
+        onHide={onCancel}
+        data-testid="modalConfirm"
+        aria-label="Confirm"
+      >
         <Modal.Header closeButton>
           <Modal.Title>{heading}</Modal.Title>
         </Modal.Header>          

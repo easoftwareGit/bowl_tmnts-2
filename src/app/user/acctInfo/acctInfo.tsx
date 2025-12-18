@@ -9,7 +9,7 @@ import {
 import { useSession } from "next-auth/react";
 import { findUserByEmail } from "@/lib/db/users/users";
 import { Alert } from "@/components/ui/index";
-import { phone as phoneChecking } from "phone";
+import { phone } from "phone";
 import { patchUser } from "@/lib/db/users/dbUsers";
 import ModalErrorMsg, { cannotSaveTitle } from "@/components/modal/errorModal";
 import { initModalObj } from "@/components/modal/modalObjType";
@@ -93,10 +93,10 @@ const AcctInfo: React.FC<ChildProps> = ({
       if (!user.phone.trim()) {
         errors.phone = 'Phone is required';
         isValid = false;
-      } else {
-        const phoneCheck = phoneChecking(user.phone);
+      } else {        
+        const phoneCheck = phone(user.phone);
         if (!phoneCheck.isValid) {
-          errors.phone = "Phone not valid";
+          errors.phone = "Phone is not valid";
           isValid = false;
         } else {
           errors.phone = "";        

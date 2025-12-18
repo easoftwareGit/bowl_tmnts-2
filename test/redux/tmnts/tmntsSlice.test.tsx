@@ -1,10 +1,9 @@
 import reducer, { TmntSliceState, fetchTmnts } from "@/redux/features/tmnts/tmntsSlice";
 import { getTmnts } from "@/lib/db/tmnts/dbTmnts";
-// import { getTmnts } from "../../../src/lib/db/tmnts/dbTmnts";
 import { tmntsListType } from "@/lib/types/types";
 import { configureStore } from "@reduxjs/toolkit";
 
-jest.mock("../../../src/lib/db/tmnts/dbTmnts", () => ({
+jest.mock("@/lib/db/tmnts/dbTmnts", () => ({
   getTmnts: jest.fn(),
 }));
 

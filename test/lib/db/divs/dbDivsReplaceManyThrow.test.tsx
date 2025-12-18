@@ -29,7 +29,7 @@ const manyDivs: divType[] = [
 ];
 
 describe("replaceManyDivs - non standard throw cases", () => {
-  let replaceManyDivs: typeof import("../../../../src/lib/db/divs/dbDivsReplaceMany").replaceManyDivs;
+  let replaceManyDivs: typeof import("@/lib/db/divs/dbDivsReplaceMany").replaceManyDivs;
   let deleteAllDivsForTmntMock: jest.Mock;
   let postManyDivsMock: jest.Mock;
 
@@ -39,7 +39,7 @@ describe("replaceManyDivs - non standard throw cases", () => {
 
     // Mock only the two database functions we want to control
     jest.doMock(
-      "../../../../src/lib/db/divs/dbDivs",
+      "@/lib/db/divs/dbDivs",
       () => ({
         __esModule: true,
         deleteAllDivsForTmnt: jest.fn(),
@@ -49,14 +49,14 @@ describe("replaceManyDivs - non standard throw cases", () => {
 
     // Import the function under test *after* mocks are in place
     ({ replaceManyDivs } = require(
-      "../../../../src/lib/db/divs/dbDivsReplaceMany"
+      "@/lib/db/divs/dbDivsReplaceMany"
     ));
 
     // Import our mocked functions for direct access in tests
     ({
       deleteAllDivsForTmnt: deleteAllDivsForTmntMock,
       postManyDivs: postManyDivsMock,
-    } = require("../../../../src/lib/db/divs/dbDivs"));
+    } = require("@/lib/db/divs/dbDivs"));
   });
 
   afterEach(() => {

@@ -1,4 +1,4 @@
-import { isAllZeros, sanitize, sanitizeCurrency, sanitizeUrl } from '../../src/lib/sanitize';
+import { isAllZeros, sanitize, sanitizeCurrency, sanitizeUrl } from '@/lib/sanitize';
 
 describe('sanitize inputs', () => {
 

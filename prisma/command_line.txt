@@ -6,4 +6,5 @@ npx prisma migrate dev --name newName
 
 // reset and re-seed
 npx prisma db push --force-reset
+npx prisma generate
 npx prisma db seed

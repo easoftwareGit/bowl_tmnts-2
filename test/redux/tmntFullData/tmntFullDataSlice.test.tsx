@@ -11,11 +11,11 @@ import { blankTmnt } from "@/lib/db/initVals";
 import { configureStore } from "@reduxjs/toolkit";
 import { cloneDeep } from "lodash";
 
-jest.mock("../../../src/lib/db/tmnts/dbTmnts", () => ({
+jest.mock("@/lib/db/tmnts/dbTmnts", () => ({
   getTmntFullData: jest.fn(),
 }));
 
-jest.mock("../../../src/lib/db/tmnts/dbTmntsReplaceFull", () => ({
+jest.mock("@/lib/db/tmnts/dbTmntsReplace", () => ({
   replaceTmntFullData: jest.fn(),
   replaceTmntEntriesData: jest.fn(),
 }));

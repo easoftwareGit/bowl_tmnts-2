@@ -11,7 +11,8 @@ import {
   validEventFkId,
   exportedForTesting,
   sanitizedTime,
-  validateSquads
+  validateSquads,
+  validFinalzied
 } from "@/app/api/squads/validate";
 import { initSquad } from "@/lib/db/initVals";
 import { ErrorCode, maxEventLength, maxSortOrder } from "@/lib/validation";
@@ -38,6 +39,7 @@ const validSquad = {
   lane_count: 12,
   squad_date: new Date(Date.UTC(2022, 9, 23, 0, 0, 0, 0)),  // month - 1
   squad_time: '12:00',
+  finalized: false,
   sort_order: 1
 }
 
@@ -306,6 +308,33 @@ describe('tests for squad validation', () => {
     })
   })
 
+  describe("validFinalzied", () => {
+    it("returns true for true", () => {
+      expect(validFinalzied(true)).toBe(true);
+    });
+    it("returns true for false", () => {
+      expect(validFinalzied(false)).toBe(true);
+    });
+    it("returns false for undefined", () => {
+      expect(validFinalzied(undefined as unknown as boolean)).toBe(false);
+    });
+    it("returns false for null", () => {
+      expect(validFinalzied(null as unknown as boolean)).toBe(false);
+    });
+    it("returns false for a string", () => {
+      expect(validFinalzied("true" as unknown as boolean)).toBe(false);
+    });
+    it("returns false for a number", () => {
+      expect(validFinalzied(1 as unknown as boolean)).toBe(false);
+    });
+    it("returns false for an object", () => {
+      expect(validFinalzied({} as unknown as boolean)).toBe(false);
+    });
+    it("returns false for an array", () => {
+      expect(validFinalzied([] as unknown as boolean)).toBe(false);
+    });
+  });
+
   describe('sanitizedTime', () => {
     it('should return the input string when it matches the 5-character time format', () => {
       const input = '12:34';
@@ -457,6 +486,13 @@ describe('tests for squad validation', () => {
       }
       expect(validSquadData(invalidSquad)).toBe(ErrorCode.InvalidData)
     })
+    it('should return ErrorCode.InvalidData for invalid finalized', () => {
+      const invalidSquad = {
+        ...validSquad,
+        finalized: "test" as any
+      }
+      expect(validSquadData(invalidSquad)).toBe(ErrorCode.InvalidData)
+    })
     it('should return ErrorCode.InvalidData for invalid sort_order', () => {
       const invalidSquad = {
         ...validSquad,
@@ -481,6 +517,7 @@ describe('tests for squad validation', () => {
       expect(sanitizedSquad.lane_count).toEqual(testSquad.lane_count)
       expect(sanitizedSquad.squad_date_str).toBe(testSquad.squad_date_str)
       expect(sanitizedSquad.squad_time).toEqual(testSquad.squad_time)
+      expect(sanitizedSquad.finalized).toEqual(testSquad.finalized)
       expect(sanitizedSquad.sort_order).toEqual(testSquad.sort_order)
     })
     it('should return a sanitized squad when squad has an id', () => {
@@ -500,7 +537,7 @@ describe('tests for squad validation', () => {
       expect(sanitizedSquad.id).toEqual('')
     })
     it('should return a sanitized squad when squad is NOT already sanitized', () => {
-      // do not incluide numerical fields
+      // do not incluide numerical or boolean fields
       const testSquad = {
         ...validSquad,
         event_id: 'abc_123',
@@ -514,19 +551,21 @@ describe('tests for squad validation', () => {
       expect(sanitizedSquad.squad_date_str).toEqual('2022-12-31')
       expect(sanitizedSquad.squad_time).toEqual('23:59')
     })
-    it('should return a sanitized squad when numerical values are null', () => {
+    it('should return a sanitized squad when numerical and boolean values are null', () => {
       const testSquad = {
         ...validSquad,
         games: null as any,
         starting_lane: null as any,
         lane_count: null as any,
-        sort_order: null as any
+        sort_order: null as any,
+        finalized: null as any
       }
       const sanitizedSquad = sanitizeSquad(testSquad)
       expect(sanitizedSquad.games).toBeNull
       expect(sanitizedSquad.starting_lane).toBeNull()
       expect(sanitizedSquad.lane_count).toBeNull()
       expect(sanitizedSquad.sort_order).toBeNull()
+      expect(sanitizedSquad.finalized).toBeNull()
     })
     it('should return a sanitized squad when numerical values are not numbers', () => {
       const testSquad = {
@@ -541,6 +580,14 @@ describe('tests for squad validation', () => {
       expect(sanitizedSquad.starting_lane).toBeNull()
       expect(sanitizedSquad.lane_count).toBeNull()
       expect(sanitizedSquad.sort_order).toBeNull()
+    })
+    it('should return a sanitized squad when boolean values are not booleans', () => {
+      const testSquad = {
+        ...validSquad,
+        finalized: 'abc' as any
+      }
+      const sanitizedSquad = sanitizeSquad(testSquad)
+      expect(sanitizedSquad.finalized).toBeNull()
     })
     it('should return a sanitized squad when numerical values are too low', () => {
       const testSquad = {
@@ -570,7 +617,6 @@ describe('tests for squad validation', () => {
       expect(sanitizedSquad.lane_count).toEqual(201)
       expect(sanitizedSquad.sort_order).toEqual(1234567)
     })
-
     it('should return null when passed a null squad', () => {
       const sanitizedSquad = sanitizeSquad(null as any)
       expect(sanitizedSquad).toEqual(null)
@@ -596,7 +642,8 @@ describe('tests for squad validation', () => {
           lane_count: 20,
           squad_date: new Date(Date.UTC(2024, 0, 1, 0, 0, 0, 0)),  // month - 1 
           squad_time: '12:00 PM',
-          sort_order: 1
+          sort_order: 1,
+          finalized: true
         }
         expect(validateSquad(validTestSquad)).toBe(ErrorCode.None)
       })      
@@ -657,6 +704,13 @@ describe('tests for squad validation', () => {
         const missingSquad = {
           ...validSquad,
           sort_order: null as any,
+        }
+        expect(validateSquad(missingSquad)).toBe(ErrorCode.MissingData)
+      })
+      it('should return ErrorCode.MissingData when passed a squad with missing finalized', () => {
+        const missingSquad = {
+          ...validSquad,
+          finalized: null as any,
         }
         expect(validateSquad(missingSquad)).toBe(ErrorCode.MissingData)
       })
@@ -727,6 +781,14 @@ describe('tests for squad validation', () => {
         }
         expect(validateSquad(invalidSquad)).toBe(ErrorCode.InvalidData)
       })
+      it('should return ErrorCode.InvalidData when passed a squad with invalid finalized', () => { 
+        const invalidSquad = {
+          ...validSquad,
+          finalized: 2 as any,
+        }
+        // missing data because require a boolean
+        expect(validateSquad(invalidSquad)).toBe(ErrorCode.MissingData)
+      })
     })
   })
 
@@ -747,6 +809,7 @@ describe('tests for squad validation', () => {
         expect(validSquads.squads[i].lane_count).toEqual(mockSquadsToPost[i].lane_count);
         expect(validSquads.squads[i].squad_date_str).toEqual(mockSquadsToPost[i].squad_date_str);
         expect(validSquads.squads[i].squad_time).toEqual(mockSquadsToPost[i].squad_time);
+        expect(validSquads.squads[i].finalized).toEqual(mockSquadsToPost[i].finalized);
         expect(validSquads.squads[i].sort_order).toEqual(mockSquadsToPost[i].sort_order);
       }
     })

@@ -1,7 +1,5 @@
 import { brktEntryType } from "@/lib/types/types";
 import { initBrktEntry } from "@/lib/db/initVals";
-// import { replaceManyBrktEntries } from "@/lib/db/brktEntries/dbBrktEntriesReplaceMany";
-// import { replaceManyBrktEntries } from "../../../../src/lib/db/brktEntries/dbBrktEntriesReplaceMany";
 
 const squadId = "sqd_7116ce5f80164830830a7157eb093396";
 const manyBrktEntries: brktEntryType[] = [
@@ -28,7 +26,7 @@ const manyBrktEntries: brktEntryType[] = [
 ];
 
 describe("replaceManyBrktEntries - non standard throw cases", () => {
-  let replaceManyBrktEntries: typeof import("../../../../src/lib/db/brktEntries/dbBrktEntriesReplaceMany").replaceManyBrktEntries;  
+    let replaceManyBrktEntries: typeof import("@/lib/db/brktEntries/dbBrktEntriesReplaceMany").replaceManyBrktEntries;  
   let deleteAllBrktEntriesForSquadMock: jest.Mock;
   let postManyBrktEntriesMock: jest.Mock;
 
@@ -37,8 +35,8 @@ describe("replaceManyBrktEntries - non standard throw cases", () => {
     jest.resetModules();
 
     // Mock only the two database functions we want to control
-    jest.doMock(
-      "../../../../src/lib/db/brktEntries/dbBrktEntries",
+    jest.doMock(  
+      "@/lib/db/brktEntries/dbBrktEntries",
       () => ({
         __esModule: true,
         deleteAllBrktEntriesForSquad: jest.fn(),
@@ -47,15 +45,15 @@ describe("replaceManyBrktEntries - non standard throw cases", () => {
     );
 
     // Import the function under test *after* mocks are in place
-    ({ replaceManyBrktEntries } = require(
-      "../../../../src/lib/db/brktEntries/dbBrktEntriesReplaceMany"
+    ({ replaceManyBrktEntries } = require(      
+      "@/lib/db/brktEntries/dbBrktEntriesReplaceMany"
     ));
 
     // Import our mocked functions for direct access in tests
     ({
       deleteAllBrktEntriesForSquad: deleteAllBrktEntriesForSquadMock,
-      postManyBrktEntries: postManyBrktEntriesMock,
-    } = require("../../../../src/lib/db/brktEntries/dbBrktEntries"));
+      postManyBrktEntries: postManyBrktEntriesMock,    
+    } = require("@/lib/db/brktEntries/dbBrktEntries"));
   });
 
   afterEach(() => {

@@ -17,6 +17,11 @@ describe('ConfirmModal - Component', () => {
   } as typeof initModalObj
 
   describe('render the modal', () => {
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
     it('render the modal', () => { 
       render(
         <ModalConfirm
@@ -29,15 +34,15 @@ describe('ConfirmModal - Component', () => {
       )
       expect(screen.getByText('Tesing Modal')).toBeTruthy;
       expect(screen.getByText('This is just a testing message')).toBeTruthy;            
-      const okBtn = screen.getByRole('button', { name: /ok/i });
-      expect(okBtn).toBeInTheDocument;
-      const cancelBtn = screen.getByRole('button', { name: /cancel/i });
-      expect(cancelBtn).toBeInTheDocument;
+      const yesBtn = screen.getByRole('button', { name: /yes/i });
+      expect(yesBtn).toBeInTheDocument;
+      const noBtn = screen.getByRole('button', { name: /no/i });
+      expect(noBtn).toBeInTheDocument;
       // close button is "X" in the upper right corner
       const closeBtn = screen.getByRole('button', { name: /close/i });
       expect(closeBtn).toBeInTheDocument;
     })
-    it('click the ok button', async () => { 
+    it('click the yes button', async () => { 
       const user = userEvent.setup()
       render(
         <ModalConfirm
@@ -48,11 +53,12 @@ describe('ConfirmModal - Component', () => {
           onCancel={mockCancel}
         />
       )
-      const okBtn = screen.getByRole('button', { name: /ok/i });
-      await userEvent.click(okBtn);
-      expect(mockConfirm).toHaveBeenCalled();
+      const yesBtn = screen.getByRole('button', { name: /yes/i });
+      await user.click(yesBtn);
+      expect(mockConfirm).toHaveBeenCalledTimes(1);
+      expect(mockCancel).not.toHaveBeenCalled();
     })
-    it('click the cancel button', async () => { 
+    it('click the no button', async () => { 
       const user = userEvent.setup()
       render(
         <ModalConfirm
@@ -63,11 +69,12 @@ describe('ConfirmModal - Component', () => {
           onCancel={mockCancel}
         />
       )
-      const cancelBtn = screen.getByRole('button', { name: /cancel/i });
-      await userEvent.click(cancelBtn);
-      expect(mockCancel).toHaveBeenCalled();
+      const noBtn = screen.getByRole('button', { name: /no/i });
+      await user.click(noBtn);
+      expect(mockCancel).toHaveBeenCalledTimes(1);
+      expect(mockConfirm).not.toHaveBeenCalled();
     })
-    it('click outside the modal', async () => { 
+    it('should close the modal when click outside the modal', async () => { 
       const user = userEvent.setup()
       render(
         <ModalConfirm
@@ -79,8 +86,9 @@ describe('ConfirmModal - Component', () => {
         />
       )
       const modal = screen.getByRole('dialog');
-      await userEvent.click(modal);
+      await user.click(modal);
       expect(mockCancel).toHaveBeenCalled();
+      expect(mockConfirm).not.toHaveBeenCalled();
     })
     it('close the modal', async () => {
       const user = userEvent.setup()
@@ -94,8 +102,24 @@ describe('ConfirmModal - Component', () => {
         />
       )
       const closeBtn = screen.getByRole('button', { name: /close/i });
-      await userEvent.click(closeBtn);
+      await user.click(closeBtn);
       expect(mockCancel).toHaveBeenCalled();
+      expect(mockConfirm).not.toHaveBeenCalled();
+    })
+    it('press the escape key acts like clicking the close button', async () => { 
+      const user = userEvent.setup()
+      render(
+        <ModalConfirm
+          show={testModalObj.show}
+          title={testModalObj.title}
+          message={testModalObj.message}
+          onConfirm={mockConfirm}
+          onCancel={mockCancel}
+        />
+      )
+      await user.keyboard('{Escape}');
+      expect(mockCancel).toHaveBeenCalled();
+      expect(mockConfirm).not.toHaveBeenCalled();
     })
   })
 })

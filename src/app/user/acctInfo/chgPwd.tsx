@@ -204,6 +204,7 @@ const ChangePassword: React.FC<ChildProps> = ({
                 type="button"
                 onClick={toggleCurrentVisibility}
                 tabIndex={-1}
+                aria-label='Toggle current password visibility'
               >
                 {showCurrent ? (
                   <Image src="/eye-slash.svg" alt="hide" width="22" height="22" />
@@ -237,6 +238,7 @@ const ChangePassword: React.FC<ChildProps> = ({
                 type="button"
                 onClick={toggleNewVisibility}
                 tabIndex={-1}
+                aria-label='Toggle new password visibility'
               >
                 {showNew ? (
                   <Image src="/eye-slash.svg" alt="hide" width="22" height="22" />
@@ -270,6 +272,7 @@ const ChangePassword: React.FC<ChildProps> = ({
                 type="button"
                 onClick={toggleConfirmVisibility}
                 tabIndex={-1}
+                aria-label='Toggle confirm password visibility'
               >
                 {showNew ? (
                   <Image src="/eye-slash.svg" alt="hide" width="22" height="22" />

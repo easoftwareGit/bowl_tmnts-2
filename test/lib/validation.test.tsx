@@ -197,14 +197,8 @@ describe("tests for validation functions", () => {
       );
     });
 
-    it("valid BtDb id should return true for bracket refund (brf) id", () => {
-      expect(isValidBtDbId("brf_7116ce5f80164830830a7157eb093399", "brf")).toBe(
-        true
-      );
-    });
-
-    it("valid BtDb id should return true for bracket individual bracket (bib) id", () => {
-      expect(isValidBtDbId("bib_7116ce5f80164830830a7157eb093399", "bib")).toBe(
+    it("valid BtDb id should return true for one individual bracket (obk) id", () => {
+      expect(isValidBtDbId("obk_7116ce5f80164830830a7157eb093399", "obk")).toBe(
         true
       );
     });
@@ -620,7 +614,10 @@ describe("tests for validation functions", () => {
     it('should sanitize name before checking length', () => {
       const name = "  John  ";      
       const sanitized = "John";
-      jest.mock('../../src/lib/sanitize', () => ({
+      // jest.mock('../../src/lib/sanitize', () => ({
+      //   sanitize: jest.fn(() => sanitized)
+      // }));
+      jest.mock('@/lib/sanitize', () => ({
         sanitize: jest.fn(() => sanitized)
       }));
       const result = isValidName(name, maxLength);

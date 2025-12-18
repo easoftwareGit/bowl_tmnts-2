@@ -37,16 +37,17 @@ import {
 } from "@mui/x-data-grid";
 import "@testing-library/jest-dom/extend-expect";
 import { RefObject } from "react";
-import { isTouchDevice } from "../../../../src/lib/mobileDevices/mobileDevices";
+import { isTouchDevice } from "@/lib/mobileDevices/mobileDevices";
 
 const {
   formatFee,
   formatFeeBlankAsZero,
+  validBrkts,
   applyPotOrElimFeeCellColor,
   applyNumBrktsCellColor,
 } = exportedForTesting2;
 
-jest.mock("../../../../src/lib/mobileDevices/mobileDevices", () => ({
+jest.mock("@/lib/mobileDevices/mobileDevices", () => ({  
   isTouchDevice: jest.fn(),
 }));
 
@@ -54,8 +55,7 @@ describe("createColumns functions tests", () => {
   interface GridValueFormatterParams {
     value: never;
     row: GridRowModel;
-    colDef: GridColDef;
-    // api: MutableRefObject<GridApi>;
+    colDef: GridColDef;    
     api: RefObject<GridApi>;
   }
 
@@ -1280,6 +1280,22 @@ describe("createColumns functions tests", () => {
       expect(getBrktIdFromColName(col)).toBe("");
     });
   });
+
+  describe("validBrkts", () => {
+    it("returns true for values between 0 and maxBrackets (inclusive)", () => {
+      expect(validBrkts(0)).toBe(true);
+      expect(validBrkts(1)).toBe(true);
+      expect(validBrkts(maxBrackets)).toBe(true);
+    });
+    it("returns false for values less than 0", () => {
+      expect(validBrkts(-1)).toBe(false);
+      expect(validBrkts(-100)).toBe(false);
+    });
+    it("returns false for values greater than maxBrackets", () => {
+      expect(validBrkts(maxBrackets + 1)).toBe(false);
+      expect(validBrkts(maxBrackets + 10)).toBe(false);
+    });
+  })
 
   describe("applyNumBrktsCellColor", () => {
 

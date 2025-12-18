@@ -1,6 +1,6 @@
 import { oneBrktType } from "@/lib/types/types";
 import { initOneBrkt } from "@/lib/db/initVals";
-import { replaceManyOneBrkts } from "../../../../src/lib/db/oneBrkts/dbOneBrktsReplaceMany";
+import { replaceManyOneBrkts } from "@/lib/db/oneBrkts/dbOneBrktsReplaceMany";
 
 const squadId = 'sqd_7116ce5f80164830830a7157eb093396';
 const manyOneBrkts: oneBrktType[] = [
@@ -19,7 +19,7 @@ const manyOneBrkts: oneBrktType[] = [
 ];
 
 describe("replaceManyOneBrkts - non standard throw cases", () => {
-  let replaceManyOneBrkts: typeof import("../../../../src/lib/db/oneBrkts/dbOneBrktsReplaceMany").replaceManyOneBrkts;
+  let replaceManyOneBrkts: typeof import("@/lib/db/oneBrkts/dbOneBrktsReplaceMany").replaceManyOneBrkts;
   let deleteAllOneBrktsForSquadMock: jest.Mock;
   let postManyOneBrktsMock: jest.Mock;
 
@@ -29,7 +29,7 @@ describe("replaceManyOneBrkts - non standard throw cases", () => {
 
     // Mock only the two database functions we want to control
     jest.doMock(
-      "../../../../src/lib/db/oneBrkts/dbOneBrkts",
+      "@/lib/db/oneBrkts/dbOneBrkts",
       () => ({
         __esModule: true,
         deleteAllOneBrktsForSquad: jest.fn(),
@@ -39,14 +39,14 @@ describe("replaceManyOneBrkts - non standard throw cases", () => {
 
     // Import the function under test *after* mocks are in place
     ({ replaceManyOneBrkts } = require(
-      "../../../../src/lib/db/oneBrkts/dbOneBrktsReplaceMany"
+      "@/lib/db/oneBrkts/dbOneBrktsReplaceMany"
     ));
 
     // Import our mocked functions for direct access in tests
     ({
       deleteAllOneBrktsForSquad: deleteAllOneBrktsForSquadMock,
       postManyOneBrkts: postManyOneBrktsMock,
-    } = require("../../../../src/lib/db/oneBrkts/dbOneBrkts"));
+    } = require("@/lib/db/oneBrkts/dbOneBrkts"));
   });
 
   afterEach(() => {

@@ -1,9 +1,10 @@
 import React from "react";
 import { render, screen, fireEvent } from '../../../test-utils'
+import userEvent from "@testing-library/user-event";
 import ModalMessage from "@/components/modal/messageModel";
 import { initModalObj } from "@/components/modal/modalObjType";
 
-describe('ConfirmModal - Component', () => { 
+describe('MessageModal - Component', () => { 
   
   const testModalObj = {
     ...initModalObj,
@@ -13,6 +14,11 @@ describe('ConfirmModal - Component', () => {
   } as typeof initModalObj
 
   describe('render the modal', () => {
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
     it('render the modal', () => { 
       render(
         <ModalMessage
@@ -41,5 +47,16 @@ describe('ConfirmModal - Component', () => {
       // Verify the modal is still open
       expect(screen.getByTestId('modalMessage')).toBeInTheDocument();
     });    
+    it('press the escape key acts like clicking the close button', async () => { 
+      const user = userEvent.setup()
+      render(
+        <ModalMessage
+          show={testModalObj.show}
+          title={testModalObj.title}
+          message={testModalObj.message}
+        />
+      )
+      await user.keyboard('{Escape}');
+    })
   })
 })

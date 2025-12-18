@@ -50,6 +50,7 @@ export async function PUT(
       lane_count,
       squad_date_str,
       squad_time,
+      finalized,
       sort_order,
     } = await request.json();    
 
@@ -62,6 +63,7 @@ export async function PUT(
       lane_count,
       squad_date_str,
       squad_time,
+      finalized,
       sort_order,
     };
 
@@ -99,6 +101,7 @@ export async function PUT(
         lane_count: toPut.lane_count,
         squad_date: squadDate,
         squad_time: toPut.squad_time,
+        finalized: toPut.finalized,
         sort_order: toPut.sort_order,
       },
     });
@@ -144,6 +147,7 @@ export async function PATCH(
       lane_count: currentSquad.lane_count,
       squad_date_str: dateTo_UTC_yyyyMMdd(currentSquad.squad_date),
       squad_time: currentSquad.squad_time!,
+      finalized: currentSquad.finalized,
       sort_order: currentSquad.sort_order,
     };
 
@@ -167,6 +171,9 @@ export async function PATCH(
     }
     if (jsonProps.includes("squad_time")) {
       toCheck.squad_time = json.squad_time;
+    }
+    if (jsonProps.includes("finalized")) {
+      toCheck.finalized = json.finalized;
     }
     if (jsonProps.includes("sort_order")) {
       toCheck.sort_order = json.sort_order;
@@ -200,6 +207,7 @@ export async function PATCH(
       lane_count: null as number | null,
       squad_date: null as Date | null,
       squad_time: null as string | null,
+      finalized: null as boolean | null,
       sort_order: null as number | null
     };
     if (jsonProps.includes("event_id")) {

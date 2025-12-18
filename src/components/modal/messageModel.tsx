@@ -15,7 +15,7 @@ const ModalMessage: React.FC<ChildProps> = ({
 
   return (
     <>
-      <Modal show={show} data-testid="modalMessage">
+      <Modal show={show} data-testid="modalMessage" aria-label="Message">
         <Modal.Header>
           <Modal.Title>{heading}</Modal.Title>
         </Modal.Header>

@@ -26,7 +26,7 @@ export default function RootLayout({
         <Providers>
           <ReduxProvider>
             <EaNavbar />
-            <main>
+            <main data-testid="main">
               <Container fluid className="py-3">
                 {children}
               </Container>
