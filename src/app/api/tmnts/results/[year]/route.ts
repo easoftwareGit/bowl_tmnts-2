@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { validYear } from "@/lib/validation";
-import { endOfToday, endOfDay } from "date-fns";
+import { endOfToday } from "date-fns";
 
 // routes /api/tmnts/results/year
 
@@ -21,8 +21,6 @@ export async function GET(
   if (todayYear === paramYear) {
     maxDate = endOfToday();
   } else {    
-    // maxDate = endOfDay(new Date(`${paramYear}-12-31`))    
-    // maxDate = endOfDay(new Date(Date.UTC(paramYear, 11, 31))); 
     maxDate = new Date(Date.UTC(paramYear, 11, 31, 23, 59, 59, 999)); // December 31st, 23:59:59.999 UTC
   }  
   

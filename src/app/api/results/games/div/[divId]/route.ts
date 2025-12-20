@@ -21,7 +21,7 @@ export async function GET(
         games: true
       },
       where: {
-        dviEntries: {
+        div_entries: {
           some: {
             div_id: divId
           }

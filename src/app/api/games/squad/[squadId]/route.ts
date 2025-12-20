@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isValidBtDbId } from "@/lib/validation";
-import { getSquadGamesSql } from "../../getSql";
 
 // routes /api/games/squad/:squadId
 

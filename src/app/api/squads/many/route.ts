@@ -3,7 +3,6 @@ import { prisma } from "@/lib/prisma";
 import { ErrorCode } from "@/lib/validation";
 import { squadType, squadDataType } from "@/lib/types/types";
 import { validateSquads } from "../validate";
-import { startOfDayFromString } from "@/lib/dateTools";
 import { getErrorStatus } from "../../errCodes";
 import { squadDataForPrisma } from "../dataForPrisma";
 

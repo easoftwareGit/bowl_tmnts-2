@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { validateBrktSeed, sanitizeBrktSeed } from "./validate"
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode } from "@/lib/validation";
 import { brktSeedType } from "@/lib/types/types";
 import { initBrktSeed } from "@/lib/db/initVals";
 import { getErrorStatus } from "../errCodes";

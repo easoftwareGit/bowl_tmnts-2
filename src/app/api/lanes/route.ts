@@ -2,7 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { validateLane, sanitizeLane } from "./validate";
 import { ErrorCode } from "@/lib/validation";
-import { laneDataType, laneType } from "@/lib/types/types";
+import { laneType } from "@/lib/types/types";
 import { initLane } from "@/lib/db/initVals";
 import { getErrorStatus } from "../errCodes";
 

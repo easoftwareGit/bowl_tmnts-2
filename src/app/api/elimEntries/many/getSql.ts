@@ -1,5 +1,4 @@
 import { elimEntryType } from "@/lib/types/types";
-import { validate } from "uuid";
 import { validateElimEntries } from "../validate";
 import { ErrorCode } from "@/lib/validation";
 

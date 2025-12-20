@@ -16,7 +16,9 @@
       "request": "launch",
       "name": "Launch Chrome against localhost",
       "url": "http://localhost:3000",
-      "webRoot": "${workspaceFolder}"
+      "webRoot": "${workspaceFolder}",
+      "port": 9876,
+      "userDataDir": "${workspaceFolder}/.vscode/chrome-profile"      
     },
     // 🧪 Normal Jest test (fast-running)
     {

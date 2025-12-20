@@ -171,7 +171,18 @@ export const RegisterForm = () => {
           url: url,
         });
         if (response.status === 201) {
-          signIn();              
+          const res = await signIn("credentials", {
+            redirect: false,
+            email: formData.email,
+            password: formData.password,
+            callbackUrl: "/user/tmnts",
+          });
+          if (!res?.error) {
+            router.push("/user/tmnts");
+          } else {
+            // optional: show a message, or route them to login
+            router.push("/login");
+          }
         }
       } catch (error: any) {
         if (error.response?.status === 409) {
@@ -339,7 +350,8 @@ export const RegisterForm = () => {
         </div>
         <div className="d-flex justify-content-center align-middle mt-3">
           <p>
-            Have an account? <Link href="/api/auth/signin">Sign in</Link>
+            {/* Have an account? <Link href="/api/auth/signin">Sign in</Link> */}
+            Have an account? <Link href="/login">Sign in</Link>
           </p>
         </div>
       </div>

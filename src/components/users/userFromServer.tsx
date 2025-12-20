@@ -1,9 +1,8 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/authOptions";
+import { auth } from "@/auth";
 
 export async function userFromServer() {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await auth();
     return JSON.stringify(session)
   } catch (error) {
     return JSON.stringify(null);

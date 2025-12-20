@@ -1,9 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { ErrorCode } from "@/lib/validation";
-import { potEntryDataType, potEntryType, tmntEntryPotEntryType } from "@/lib/types/types";
+import { potEntryDataType, potEntryType } from "@/lib/types/types";
 import { validatePotEntries } from "../validate";
-import { getDeleteManySQL, getInsertManySQL, getUpdateManySQL } from "./getSql";
 import { getErrorStatus } from "../../errCodes";
 import { potEntryDataForPrisma } from "../dataForPrisma";
 

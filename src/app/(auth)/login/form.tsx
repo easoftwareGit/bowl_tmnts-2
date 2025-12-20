@@ -17,17 +17,34 @@ export const LoginForm = () => {
   const router = useRouter()
   const searchParams = useSearchParams();
   const rawCallbackUrl = searchParams.get('callbackUrl');
-  const callbackUrl = (!window || !window.location || !window.location.origin)
-    ? "/user/tmnts"
-    : (window?.location?.origin)
-      ? "/user/tmnts"
-      : rawCallbackUrl || "/user/tmnts";
-  // if (!window || !window.location || !window.location.origin) {
-  //    = "/user/tmnts";
-  // }
-  // const callbackUrl = 
-  //   rawCallbackUrl === window?.location?.origin ? "/user/tmnts" : rawCallbackUrl || "/user/tmnts";
-  // const callbackUrl = searchParams.get('callbackUrl') || '/user/tmnts';
+  const defaultCallback = "/user/tmnts";
+
+  const callbackUrl = (() => {
+    if (!rawCallbackUrl) return defaultCallback;
+
+    // If NextAuth gives "/" (or middleware gives origin), treat as default
+    if (rawCallbackUrl === "/") return defaultCallback;
+
+    // If it's absolute, keep only the pathname+search+hash
+    if (rawCallbackUrl.startsWith("http://") || rawCallbackUrl.startsWith("https://")) {
+      try {
+        const url = new URL(rawCallbackUrl);
+        const path = `${url.pathname}${url.search}${url.hash}`;
+        return path === "/" ? defaultCallback : path;
+      } catch {
+        return defaultCallback;
+      }
+    }
+
+    // If it's a relative path already, use it
+    return rawCallbackUrl;
+  })();
+  
+  // const callbackUrl = (!window || !window.location || !window.location.origin)
+  //   ? "/user/tmnts"
+  //   : (window?.location?.origin)
+  //     ? "/user/tmnts"
+  //     : rawCallbackUrl || "/user/tmnts";
 
   const [formData, setFormData] = useState(blankValues);
   const [formErrors, setFormErrors] = useState(blankValues);
@@ -102,17 +119,18 @@ export const LoginForm = () => {
   };
 
   const googleButtonClicked = async () => {
-    try {    
-      setGoogleError("");
-      const res = await signIn("google", {
-        redirect: false,
-        callbackUrl,
-      });
-      if (!res?.error) {
-        router.push(callbackUrl);
-      } else {
-        setGoogleError("Invalid google login");
-      }
+    setGoogleError("");
+    try {          
+      const res = await signIn("google", { callbackUrl });
+      // const res = await signIn("google", {
+      //   redirect: false,
+      //   callbackUrl,
+      // });
+      // if (!res?.error) {
+      //   router.push(callbackUrl);
+      // } else {
+      //   setGoogleError("Invalid google login");
+      // }
     } catch (err: any) {
       setGoogleError("Other error logging in with Google");
     }

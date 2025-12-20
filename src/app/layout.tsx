@@ -7,6 +7,7 @@ import { Container } from "@/components/boostrap";
 import EaNavbar from "@/components/navBar/eaNavbar";
 import { ReduxProvider } from "@/redux/provider";
 import { Providers } from "./providers";
+import { auth } from "@/auth"; // <-- add this
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -15,15 +16,16 @@ export const metadata: Metadata = {
   description: "Bowling Tournaments Database",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth(); // <-- add this
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Providers>
+        <Providers session={session}>
           <ReduxProvider>
             <EaNavbar />
             <main data-testid="main">

@@ -2,7 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { validateBrkt, sanitizeBrkt } from "./validate";
 import { ErrorCode } from "@/lib/validation";
-import { brktDataType, brktType } from "@/lib/types/types";
+import { brktType } from "@/lib/types/types";
 import { initBrkt } from "@/lib/db/initVals";
 import { calcFSA } from "@/lib/currency/fsa";
 import { getErrorStatus } from "../errCodes";

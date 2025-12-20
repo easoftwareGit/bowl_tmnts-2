@@ -1,11 +1,9 @@
-import { getServerSession } from "next-auth"
-// import { authOptions } from "../api/auth/[...nextauth]/route"
-import { authOptions } from "@/lib/authOptions"
+import { auth } from "@/auth";
 import { redirect } from "next/navigation"
 
 export default async function SecretPage() {
 
-  const session = await getServerSession(authOptions)
+  const session = await auth();
   if (!session) {
     redirect('api/auth/signin');
   }

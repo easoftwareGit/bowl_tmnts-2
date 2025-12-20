@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode, isValidBtDbId, maxMoney } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation";
 import { initPotEntry } from "@/lib/db/initVals";
 import { potEntryType } from "@/lib/types/types";
 import { sanitizePotEntry, validatePotEntry } from "../../validate";

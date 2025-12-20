@@ -1,4 +1,4 @@
-import { NextResponse, NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { validatePot, sanitizePot } from "../../validate";
 import { ErrorCode, isValidBtDbId } from "@/lib/validation";

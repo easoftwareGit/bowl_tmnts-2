@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { initElimEntry } from "@/lib/db/initVals";
-import { elimEntryDataType, elimEntryType } from "@/lib/types/types";
+import { elimEntryType } from "@/lib/types/types";
 import { sanitizeElimEntry, validateElimEntry } from "./validate";
 import { ErrorCode } from "@/lib/validation";
 import { getErrorStatus } from "../errCodes";

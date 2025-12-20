@@ -2,7 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sanitizeSquad, validateSquad } from "./validate";
 import { ErrorCode } from "@/lib/validation";
-import { squadDataType, squadType } from "@/lib/types/types";
+import { squadType } from "@/lib/types/types";
 import { initSquad } from "@/lib/db/initVals";
 import { startOfDayFromString } from "@/lib/dateTools";
 import { getErrorStatus } from "../errCodes";
