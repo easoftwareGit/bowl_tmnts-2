@@ -1,4 +1,3 @@
-import { populateRows } from "@/app/dataEntry/editPlayers/[tmntId]/page";
 import { mockTmntFullData } from "../../../mocks/tmnts/tmntFulldata/mockTmntFullData";
 import {
   divEntryHdcpColName,
@@ -6,6 +5,7 @@ import {
   entryNumBrktsColName,
   timeStampColName,
 } from "@/app/dataEntry/playersForm/createColumns";
+import { populateRows } from "@/app/dataEntry/playersForm/populateRows";
 import { blankDivEntry, blankPotEntry } from "@/lib/db/initVals";
 import { cloneDeep } from "lodash";
 
