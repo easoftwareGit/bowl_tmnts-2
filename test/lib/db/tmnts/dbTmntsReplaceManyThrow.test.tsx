@@ -1,7 +1,7 @@
 import axios from "axios";
 import { replaceTmntFullData, replaceTmntEntriesData } from "@/lib/db/tmnts/dbTmntsReplace";
 import { tmntFullType } from "@/lib/types/types";
-import { mockTmntFullData } from "../../../mocks/tmnts/tmntFulldata/mockTmntFullData";
+import { mockTmntFullData } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 
 jest.mock("axios");
 const mockedAxios = axios as jest.Mocked<typeof axios>;

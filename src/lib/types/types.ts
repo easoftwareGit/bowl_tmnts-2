@@ -668,6 +668,7 @@ export enum tmntActions {
   Delete = 2,
   Edit = 3,
   Run = 4,
+  Disable = 5,
 }
 
 export type tmntPropsType = {  

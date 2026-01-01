@@ -1,5 +1,5 @@
 import { validateFullTmnt } from "@/app/api/tmnts/full/validate";
-import { mockTmntFullData } from "../../../mocks/tmnts/tmntFulldata/mockTmntFullData";
+import { mockTmntFullData } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { ErrorCode } from "@/lib/validation";
 import { cloneDeep } from "lodash";
 

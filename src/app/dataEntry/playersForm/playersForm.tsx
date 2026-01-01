@@ -1,13 +1,12 @@
 "use client";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
-import { tmntActions, tmntFullType, tmntFormDataType, oneBrktType, brktSeedType } from "@/lib/types/types";
+import { tmntActions, tmntFullType, tmntFormDataType } from "@/lib/types/types";
 import {
   DataGrid,
   GridAlignment,
-  GridColumnGroupingModel,
-  GridEventListener,
+  GridColumnGroupingModel,  
   GridRowModel,
   GridRowModesModel,
   GridRowSelectionModel,
@@ -67,6 +66,22 @@ import styles from "./grid.module.css";
 // eventId: "evt_9a58f0a486cb4e6c92ca3348702b1a62"
 // squadId: "sqd_3397da1adc014cf58c44e07c19914f71"
 
+type PlayerEntryRow = {
+  id: string;
+  player_id: string;
+  first_name: string;
+  last_name: string;
+  average?: number;
+  lane?: number;
+  position?: string;
+  lanePos?: string;
+  feeTotal: number;
+  // plus your dynamic fee columns:
+  [key: string]: any;
+};
+
+type Row = PlayerEntryRow;
+
 declare module "@mui/x-data-grid" {
   interface ToolbarPropsOverrides {
     setRows: (newRows: (oldRows: GridRowsProp) => GridRowsProp) => void;
@@ -79,7 +94,7 @@ declare module "@mui/x-data-grid" {
 interface ChildProps {
   tmntFullData: tmntFullType;
   rows: (typeof playerEntryData)[];
-  setRows: (rows: (typeof playerEntryData)[]) => void;
+  setRows: React.Dispatch<React.SetStateAction<(typeof playerEntryData)[]>>;  
   findCountError: () => errInfoType;
 }
 
@@ -102,20 +117,11 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
   const tmntData = playersFormData.tmntFullData;
 
   const entriesSaveStatus = useSelector(getTmntDataSaveStatus);
-  const [saveCompleted, setSaveCompleted] = useState(false);
-  const [resultAction, setResultAction] = useState<tmntFullType | null>(null);
   const [gridEditMode, setGridEditMode] = useState<"cell" | "row">("cell");
-  const [rowModesModel, setRowModesModel] = React.useState<GridRowModesModel>(
-    {}
-  );
   const [selectedRowId, setSelectedRowId] = useState<string>("");
 
   const [confModalObj, setConfModalObj] = useState(initModalObj);
   const [errModalObj, setErrModalObj] = useState(initModalObj);
-
-  // interface entriesTotalsType {
-  //   [key: string]: number;
-  // }
 
   const squadMinLane = tmntData?.lanes[0]?.lane_number;
   const squadMaxLane = tmntData?.lanes[tmntData?.lanes.length - 1]?.lane_number;
@@ -165,25 +171,17 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
     return updatedTotals;
   }, [rows, baseTotals]);
 
-  const playersColumns = createPlayerEntryColumns(
-    tmntData?.divs,
-    squadMaxLane,
-    squadMinLane
-  );
-  const divsEntryCols = createDivEntryColumns(tmntData?.divs);
-  const potsEntryCols = createPotEntryColumns(tmntData?.pots, tmntData?.divs);
-  const brktEntryCols = createBrktEntryColumns(tmntData?.brkts, tmntData?.divs);
-  const elimEntryCols = createElimEntryColumns(tmntData?.elims, tmntData?.divs);
-  const feeTotalCol = feeTotalColumn();
-  const columns = playersColumns.concat(
-    divsEntryCols,
-    potsEntryCols,
-    brktEntryCols,
-    elimEntryCols,
-    feeTotalCol
-  );
+  const columns = useMemo(() => {
+    const playersColumns = createPlayerEntryColumns(tmntData?.divs, squadMaxLane, squadMinLane);
+    const divsEntryCols = createDivEntryColumns(tmntData?.divs);
+    const potsEntryCols = createPotEntryColumns(tmntData?.pots, tmntData?.divs);
+    const brktEntryCols = createBrktEntryColumns(tmntData?.brkts, tmntData?.divs);
+    const elimEntryCols = createElimEntryColumns(tmntData?.elims, tmntData?.divs);
+    const feeTotalCol = feeTotalColumn();
+    return playersColumns.concat(divsEntryCols, potsEntryCols, brktEntryCols, elimEntryCols, feeTotalCol);
+  }, [tmntData, squadMaxLane, squadMinLane]);
 
-  const createColummnGroupings = (): GridColumnGroupingModel => {
+  const columnGroupings = useMemo<GridColumnGroupingModel>(() => {
     const playersColGroup: GridColumnGroupingModel = [
       {
         groupId: "players",
@@ -368,55 +366,30 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
       elimsColGroup,
       totalColGroup
     );
-  };
-
-  const columnGroupings = createColummnGroupings();
-
-  const handleRowModesModelChange = (newRowModesModel: GridRowModesModel) => {
-    setRowModesModel(newRowModesModel);
-  };
-
-  const handleRowEditStop: GridEventListener<"rowEditStop"> = (
-    params,
-    event
-  ) => {
-    setGridEditMode("cell");
-  };
-
-  const handleCellEditStop: GridEventListener<"cellEditStop"> = (
-    params,
-    event
-  ) => {};
+  }, [tmntData, entriesTotals]);
 
   const handleRowSelectionModelChange = (
-    rowSelectionModel: GridRowSelectionModel
+    model: GridRowSelectionModel
   ) => {
-    // const values = Object.values(rowSelectionModel);
-    if (rowSelectionModel.length > 0) {
-      setSelectedRowId(rowSelectionModel[0] as string);
-    } else {
-      setSelectedRowId("");
-    }
+    const idValue = model[0];
+    setSelectedRowId(typeof idValue === "string" ? idValue : "");
   };
 
-  const processRowUpdate = (
-    newRow: GridRowModel,
-    oldRow: GridRowModel,
-    params: any
-  ) => {
+  const processRowUpdate = (newRow: GridRowModel) => {
     setGridEditMode("cell");
 
     let total = 0;
-    Object.keys(entriesTotals).forEach((key) => {
-      if (key !== "feeTotal") {
-        total += isNaN(newRow[key]) ? 0 : Number(newRow[key]);
-      }
-    });
-    const updatedRow = {
-      ...newRow,
-      feeTotal: total,      
-    };
-    setRows(rows.map((row) => (row.id === newRow.id ? updatedRow : row)));
+    for (const key of Object.keys(baseTotals)) { 
+      if (key === "feeTotal") continue;
+      const v = Number(newRow[key]);
+      total += Number.isFinite(v) ? v : 0;
+    }
+
+    // get the current row with the fee totals
+    // const updatedRow: Row = { ...newRow, feeTotal: total };
+    const updatedRow = { ...(newRow as Row), feeTotal: total };
+
+    setRows((prev) => prev.map((r) => (r.id === updatedRow.id ? updatedRow : r)));
     return updatedRow;
   };
 
@@ -427,7 +400,8 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
       setConfModalObj(initModalObj); // reset modal object (hides modal)
 
       // filter out deleted row
-      setRows(rows.filter((row) => row.id !== selectedRowId));
+      setRows((prev) => prev.filter((row) => row.id !== idToDel));
+      // setRows(rows.filter((row) => row.id !== idToDel));
       setSelectedRowId("");
 
       // if confirmed cancel
@@ -551,9 +525,10 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
 
   const doSave = async (brktLists: BracketList[]) => { 
     try {
-      setSaveCompleted(false); // Reset state before dispatching
+      // setSaveCompleted(false); // Reset state before dispatching
       const entriesData = extractDataFromRows(rows, tmntFullData.squads[0].id);      
       const brktsData = extractFullBrktsData(brktLists);
+
       const tmntToSave: tmntFullType = {
         ...tmntFullData,
         players: [...entriesData.players],
@@ -565,10 +540,9 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
         potEntries: [...entriesData.potEntries],
       }
 
-      const savedData = await dispatch(saveTmntEntriesData(tmntToSave)).unwrap();
-      setResultAction(savedData);
-      setSaveCompleted(true);
+      await dispatch(saveTmntEntriesData(tmntToSave)).unwrap();
 
+      router.push(`/dataEntry/runTmnt/${tmntData.tmnt.id}`);
     } catch (err: any) {
       setErrModalObj({
         show: true,
@@ -588,8 +562,6 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
       isBrktsColumnName(col.field)
     );
     let gotBrktsErr = false;
-    // const oneBrkts: oneBrktType[] = [];
-    // const brktSeeds: brktSeedType[] = [];
     const brktLists: BracketList[] = [];
     if (numBrktsCols && numBrktsCols.length > 0) {
       for (let b = 0; b < numBrktsCols.length; b++) {
@@ -671,15 +643,6 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
     };
     setRows([...rows, addedRow]);
   };
-
-  // after saved
-  useEffect(() => {    
-
-    if (saveCompleted && entriesSaveStatus === "succeeded" && resultAction) {
-      router.push(`/dataEntry/runTmnt/${tmntData.tmnt.id}`);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [saveCompleted, entriesSaveStatus]); // ok for just saveCompleted and entriesSaveStatus
 
   const renderSaveToolTip = (props: any) => (
     <Tooltip id="button-tooltip" {...props}>
@@ -873,11 +836,8 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
             rows={rows}
             columns={columns}
             editMode={gridEditMode}
-            rowModesModel={rowModesModel}
-            onRowModesModelChange={handleRowModesModelChange}
+            rowSelectionModel={selectedRowId ? [selectedRowId] : []}
             onRowSelectionModelChange={handleRowSelectionModelChange}
-            onRowEditStop={handleRowEditStop}
-            onCellEditStop={handleCellEditStop}
             processRowUpdate={processRowUpdate}
             rowHeight={25}
             columnHeaderHeight={25}

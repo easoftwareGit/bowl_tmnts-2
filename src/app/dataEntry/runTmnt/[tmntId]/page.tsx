@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import TmntDataForm from "../../tmntForm/tmntForm";
 import { useParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
@@ -8,6 +8,7 @@ import { tmntActions, tmntFormDataType } from "@/lib/types/types";
 import Link from "next/link";
 import WaitModal from "@/components/modal/waitModal";
 import { fetchTmntFullData, getTmntFullDataError, getTmntFullDataLoadStatus } from "@/redux/features/tmntFullData/tmntFullDataSlice";
+import { getBlankTmntFullData } from "../../tmntForm/tmntTools";
 
 // http://localhost:3000/dataEntry/runTmnt/tmt_d237a388a8fc4641a2e37233f1d6bebd
 
@@ -18,20 +19,30 @@ const RunTmntPage = () => {
 
   const dispatch = useDispatch<AppDispatch>();
 
-  useEffect(() => {    
+  useEffect(() => {
+    if (!tmntId) return;
     dispatch(fetchTmntFullData(tmntId));
   }, [tmntId, dispatch]);
 
   const tmntLoadStatus = useSelector(getTmntFullDataLoadStatus);
-  const tmntError = useSelector(getTmntFullDataError);  
-  
+  const tmntError = useSelector(getTmntFullDataError);    
   const stateTmntFullData = useSelector(
     (state: RootState) => state.tmntFullData.tmntFullData
   )
-  const tmntFormData: tmntFormDataType = {
-    tmntFullData: stateTmntFullData,
-    tmntAction: tmntActions.Run,
-  };  
+
+  const tmntFormData = useMemo<tmntFormDataType>(() => {
+    if (tmntLoadStatus === "succeeded") {
+      return {
+        tmntFullData: stateTmntFullData,
+        tmntAction: tmntActions.Run,
+      };
+    }
+
+    return {
+      tmntFullData: getBlankTmntFullData(),
+      tmntAction: tmntActions.Run,
+    };
+  }, [tmntLoadStatus, stateTmntFullData]);  
   
   return (
     <>

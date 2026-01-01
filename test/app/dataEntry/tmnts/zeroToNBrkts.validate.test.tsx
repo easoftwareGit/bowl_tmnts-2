@@ -5,7 +5,7 @@ import {
   divId1,
   brktId1,
   brktId2,
-} from "../../../../test/mocks/tmnts/tmntFulldata/mockTmntFullData";
+} from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { minFee, maxMoney } from "@/lib/validation";
 import { defaultBrktGames } from "@/lib/db/initVals";
 import {

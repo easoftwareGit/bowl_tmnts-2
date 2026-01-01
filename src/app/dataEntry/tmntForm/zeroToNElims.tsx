@@ -192,7 +192,7 @@ const ZeroToNElims: React.FC<ChildProps> = ({
   tmntAction,
 }) => {
 
-  const isDisabled = (tmntAction === tmntActions.Run); 
+  const isDisabled = (tmntAction === tmntActions.Run || tmntAction === tmntActions.Disable); 
   const defaultTabKey = (isDisabled && elims.length > 0 && elims[0].id)
     ? elims[0].id
     : 'createElim';  
@@ -421,7 +421,7 @@ const ZeroToNElims: React.FC<ChildProps> = ({
         activeKey={tabKey}
         onSelect={handleTabSelect}
       >
-        {(tmntAction !== tmntActions.Run) ? (
+        {(!isDisabled) ? (
           <Tab
             key={'createElim'}
             eventKey={'createElim'}

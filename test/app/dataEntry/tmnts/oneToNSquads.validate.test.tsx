@@ -1,6 +1,6 @@
 import { validateSquads } from "@/app/dataEntry/tmntForm/oneToNSquads";
 import { squadType, eventType, AcdnErrType } from "@/lib/types/types";
-import { mockTmntFullData, squadId1, squadId2 } from "../../../../test/mocks/tmnts/tmntFulldata/mockTmntFullData";
+import { mockTmntFullData, squadId1, squadId2 } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { acdnErrClassName, noAcdnErr, objErrClassName } from "@/app/dataEntry/tmntForm/errors";
 import {
   minGames,

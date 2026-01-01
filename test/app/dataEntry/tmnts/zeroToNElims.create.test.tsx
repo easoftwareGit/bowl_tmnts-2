@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import ZeroToNElims from "@/app/dataEntry/tmntForm/zeroToNElims";
 import { elimType, tmntActions } from "@/lib/types/types";
 import { minFee, maxMoney, maxGames, minGames } from "@/lib/validation";
-import { divId1, mockTmntFullData } from "../../../mocks/tmnts/tmntFulldata/mockTmntFullData";
+import { divId1, mockTmntFullData } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { max } from "lodash";
 
 const mockSetElims = jest.fn();

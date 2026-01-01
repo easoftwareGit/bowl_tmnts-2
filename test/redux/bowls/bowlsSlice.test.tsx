@@ -1,6 +1,6 @@
 import reducer, { fetchBowls, saveBowl, bowlsSliceState } from "@/redux/features/bowls/bowlsSlice";
 import { getBowls, upsertBowl } from "@/lib/db/bowls/dbBowls";
-import { mockBowl } from "../../mocks/tmnts/tmntFulldata/mockTmntFullData";
+import { mockBowl } from "../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { configureStore } from "@reduxjs/toolkit";
 
 jest.mock("@/lib/db/bowls/dbBowls", () => ({

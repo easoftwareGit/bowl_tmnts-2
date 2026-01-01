@@ -581,21 +581,6 @@ export const noBrktEntriesUpdates: putManyBrktEntriesReturnType = {
   rfDeletes: 0
 }
 
-// export const allEntriesNoUpdates: putManyEntriesReturnType = {
-//   players: deepClone(noUpdates),
-//   divEntries: deepClone(noUpdates),
-//   potEntries: deepClone(noUpdates),
-//   brktEntries: deepClone(noUpdates),
-//   brcktListEntries: deepClone(noUpdates),
-//   elimEntries: deepClone(noUpdates),
-//   playersToUpdate: [],
-//   divEntriesToUpdate: [],
-//   potEntriesToUpdate: [],
-//   brktEntriesToUpdate: [],
-//   brcktListsToUpdate: [],
-//   elimEntriesToUpdate: [],
-// }
-
 export const zeroUdatedEntriesCounts: updatedEntriesCountsType = {
   players: 0,
   divEntries: 0,
@@ -610,21 +595,6 @@ export const errorUpdate: putManyReturnType = {
   inserts: -1,
   deletes: -1,
 }
-
-// export const allEntriesAllErrors: putManyEntriesReturnType = {
-//   players: deepClone(errorUpdate),
-//   divEntries: deepClone(errorUpdate),
-//   potEntries: deepClone(errorUpdate),
-//   brktEntries: deepClone(errorUpdate),
-//   brcktListEntries: deepClone(errorUpdate),
-//   elimEntries: deepClone(errorUpdate),
-//   playersToUpdate: [],
-//   divEntriesToUpdate: [],
-//   potEntriesToUpdate: [],
-//   brktEntriesToUpdate: [],
-//   brcktListsToUpdate: [],
-//   elimEntriesToUpdate: [],
-// }
 
 export const linkedInitTmntFullData = (userId: string): tmntFullType => {
   const tmntId = btDbUuid('tmt');

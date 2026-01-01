@@ -264,7 +264,7 @@ const OneToNSquads: React.FC<ChildProps> = ({
   const [tabKey, setTabKey] = useState(defaultTabKey);  
   const [sortOrder, setSortOrder] = useState(squads[squads.length - 1].sort_order);   
 
-  const isDisabled = (tmntAction === tmntActions.Run);
+  const isDisabled = (tmntAction === tmntActions.Run || tmntAction === tmntActions.Disable);
   const addBtnStyle = isDisabled ? 'btn-dark' : 'btn-success';
   const delBtnStyle = isDisabled ? 'btn-dark' : 'btn-danger';
 

@@ -1,7 +1,7 @@
 import { divEntryHdcpColName, entryFeeColName, entryNumBrktsColName, timeStampColName } from "@/app/dataEntry/playersForm/createColumns";
 import { initBrkt, initDiv, initDivEntry, initElim, initElimEntry, initEvent, initLane, initPlayer, initPot, initPotEntry, initBrktEntry, initSquad, initTmnt } from "@/lib/db/initVals";
 import { brktSeedType, dataOneSquadEntriesType, dataOneTmntType, oneBrktType } from "@/lib/types/types";
-import { brktId1, brktId2, oneBrktId1, oneBrktId2, oneBrktId3, oneBrktId4, playerId1, playerId2, playerId3, playerId4, playerId5, playerId6, playerId7, playerId8 } from "../tmntFulldata/mockTmntFullData";
+import { brktId1, brktId2, oneBrktId1, oneBrktId2, oneBrktId3, oneBrktId4, playerId1, playerId2, playerId3, playerId4, playerId5, playerId6, playerId7, playerId8 } from "../tmntFullData/mockTmntFullData";
 
 const timeStamp = new Date().getTime();
 export const mockOrigData: dataOneSquadEntriesType = {

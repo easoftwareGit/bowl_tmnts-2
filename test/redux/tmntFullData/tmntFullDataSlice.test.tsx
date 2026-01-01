@@ -9,16 +9,14 @@ import { replaceTmntFullData, replaceTmntEntriesData } from "@/lib/db/tmnts/dbTm
 import { tmntFullType } from "@/lib/types/types";
 import { blankTmnt } from "@/lib/db/initVals";
 import { configureStore } from "@reduxjs/toolkit";
-import { cloneDeep } from "lodash";
+import _, { cloneDeep } from "lodash";
 
-jest.mock("@/lib/db/tmnts/dbTmnts", () => ({
-  getTmntFullData: jest.fn(),
-}));
+jest.mock("@/lib/db/tmnts/dbTmnts");
+jest.mock("@/lib/db/tmnts/dbTmntsReplace");
 
-jest.mock("@/lib/db/tmnts/dbTmntsReplace", () => ({
-  replaceTmntFullData: jest.fn(),
-  replaceTmntEntriesData: jest.fn(),
-}));
+const mockedGetTmntFullData = jest.mocked(getTmntFullData);
+const mockedReplaceTmntFullData = jest.mocked(replaceTmntFullData);
+const mockedReplaceTmntEntriesData = jest.mocked(replaceTmntEntriesData);
 
 describe("tmntFullDataSlice reducer + thunk", () => {
   const initialState: tmntFullDataState = {
@@ -163,8 +161,8 @@ describe("tmntFullDataSlice reducer + thunk", () => {
       potEntries: [],
       pots: [],
       squads: [],
-    };
-    (getTmntFullData as jest.Mock).mockResolvedValueOnce(mockData);
+    };    
+    mockedGetTmntFullData.mockResolvedValueOnce(mockData);
 
     const store = configureStore({
       reducer: { tmntFullData: reducer },
@@ -179,8 +177,8 @@ describe("tmntFullDataSlice reducer + thunk", () => {
     expect(state.tmntFullData).toEqual(mockData);
   });
 
-  it("dispatches rejected when getTmntFullData rejects", async () => {
-    (getTmntFullData as jest.Mock).mockRejectedValueOnce(new Error("DB failed"));
+  it("dispatches rejected when getTmntFullData rejects", async () => {    
+    mockedGetTmntFullData.mockRejectedValueOnce(new Error("DB failed"));
 
     const store = configureStore({
       reducer: { tmntFullData: reducer },
@@ -214,8 +212,8 @@ describe("tmntFullDataSlice reducer + thunk", () => {
       potEntries: [],
       pots: [],
       squads: [],
-    };
-    (replaceTmntFullData as jest.Mock).mockResolvedValueOnce(1);
+    };    
+    mockedReplaceTmntFullData.mockResolvedValueOnce(true);
 
     const store = configureStore({
       reducer: { tmntFullData: reducer },
@@ -229,8 +227,40 @@ describe("tmntFullDataSlice reducer + thunk", () => {
     expect(state.tmntFullData).toEqual(mockData);
   });
 
+  it("dispatches rejected when replaceTmntFullData resolves false", async () => {
+    const mockData: tmntFullType = {
+      tmnt: { ...cloneDeep(blankTmnt), id: "10", tmnt_name: "Save Tournament" },
+      brktEntries: [],
+      brktSeeds: [],
+      brkts: [],
+      divs: [],
+      divEntries: [],
+      elimEntries: [],
+      elims: [],
+      events: [],
+      lanes: [],
+      oneBrkts: [],
+      players: [],
+      potEntries: [],
+      pots: [],
+      squads: [],
+    };
+
+    mockedReplaceTmntFullData.mockResolvedValueOnce(false);
+
+    const store = configureStore({ reducer: { tmntFullData: reducer } });
+
+    const action = await store.dispatch(saveTmntFullData(mockData) as any);
+
+    expect(saveTmntFullData.rejected.match(action)).toBe(true);
+
+    const state = store.getState().tmntFullData;
+    expect(state.saveStatus).toBe("failed");
+    expect(state.error).toMatch(/failed to save tournament full data/i);
+  });
+  
   it("dispatches rejected when replaceTmntFullData rejects", async () => {
-    (replaceTmntFullData as jest.Mock).mockRejectedValueOnce(
+    mockedReplaceTmntFullData.mockRejectedValueOnce(
       new Error("Save failed")
     );
 
@@ -266,8 +296,8 @@ describe("tmntFullDataSlice reducer + thunk", () => {
       potEntries: [],
       pots: [],
       squads: [],
-    };
-    (replaceTmntEntriesData as jest.Mock).mockResolvedValueOnce(1);
+    };    
+    mockedReplaceTmntEntriesData.mockResolvedValueOnce(true);
 
     const store = configureStore({
       reducer: { tmntFullData: reducer },
@@ -282,9 +312,39 @@ describe("tmntFullDataSlice reducer + thunk", () => {
     expect(state.error).toBe("");
     expect(state.tmntFullData).toEqual(mockData);
   });
+  it("dispatches rejected when replaceTmntEntriesData resolves false", async () => {
+    const mockData: tmntFullType = {
+      tmnt: { ...cloneDeep(blankTmnt), id: "20", tmnt_name: "Entries Tournament" },
+      brktEntries: [],
+      brktSeeds: [],
+      brkts: [],
+      divs: [],
+      divEntries: [],
+      elimEntries: [],
+      elims: [],
+      events: [],
+      lanes: [],
+      oneBrkts: [],
+      players: [],
+      potEntries: [],
+      pots: [],
+      squads: [],
+    };
 
+    mockedReplaceTmntEntriesData.mockResolvedValueOnce(false);
+    
+    const store = configureStore({ reducer: { tmntFullData: reducer } });
+
+    const action = await store.dispatch(saveTmntEntriesData(mockData) as any);
+
+    expect(saveTmntEntriesData.rejected.match(action)).toBe(true);
+
+    const state = store.getState().tmntFullData;
+    expect(state.saveStatus).toBe("failed");
+    expect(state.error).toMatch(/failed to save tournament entries data/i);
+  });
   it("dispatches rejected when replaceTmntEntriesData rejects", async () => {
-    (replaceTmntEntriesData as jest.Mock).mockRejectedValueOnce(
+    mockedReplaceTmntEntriesData.mockRejectedValueOnce(
       new Error("Entries save failed")
     );
 

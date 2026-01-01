@@ -15,7 +15,7 @@ import {
   getTmntFullData,
 } from "@/lib/db/tmnts/dbTmnts";
 import { todayStr } from "@/lib/dateTools";
-import { mockBowl, mockTmntFullData, playerId5 } from "../../../mocks/tmnts/tmntFulldata/mockTmntFullData";
+import { mockBowl, mockTmntFullData, playerId5 } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { replaceTmntFullData, replaceTmntEntriesData } from "@/lib/db/tmnts/dbTmntsReplace";
 import { cloneDeep } from "lodash";
 import { getAllPlayersForTmnt } from "@/lib/db/players/dbPlayers";
@@ -47,7 +47,6 @@ const { getTmntsForYear, getUpcomingTmnts } = exportedForTesting;
 const url = testBaseTmntsApi.startsWith("undefined")
   ? baseTmntsApi
   : testBaseTmntsApi;
-const fullUrl = url + "/full/";
 const tmntUrl = url + "/tmnt/";
 
 const bowlUrl = testBaseBowlsApi.startsWith("undefined")
@@ -830,33 +829,6 @@ describe("dbTmnts", () => {
         expect(true).toBeFalsy();
       }
     });
-    it("should return a tmnt config without child tables when no child table data", async () => {
-      const emptyTmntId = "tmt_a78f073789cc0f8a9a0de8c6e273eab1";
-      const emptyBowlId = "bwl_561540bd64974da9abdd97765fdb3659";
-      const tmntFullData = await getTmntFullData(emptyTmntId);
-      expect(tmntFullData).not.toBeNull();
-      if (!tmntFullData) return;
-      expect(tmntFullData.tmnt.id).toBe(emptyTmntId);
-      expect(tmntFullData.tmnt.tmnt_name).toBe("Gold Pin");
-      expect(tmntFullData.tmnt.bowls).not.toBeNull();
-      expect(tmntFullData.tmnt.bowl_id).toBe(emptyBowlId);
-      expect(tmntFullData.tmnt.bowls.bowl_name).toBe(
-        "Earl Anthony's Dublin Bowl"
-      );
-      expect(tmntFullData.tmnt.bowls.city).toBe("Dublin");
-      expect(tmntFullData.tmnt.bowls.state).toBe("CA");
-      expect(tmntFullData.tmnt.bowls.url).toBe(
-        "https://www.earlanthonysdublinbowl.com"
-      );
-
-      expect(tmntFullData.divs).toHaveLength(0);
-      expect(tmntFullData.events).toHaveLength(0);
-      expect(tmntFullData.squads).toHaveLength(0);
-      expect(tmntFullData.lanes).toHaveLength(0);
-      expect(tmntFullData.pots).toHaveLength(0);
-      expect(tmntFullData.brkts).toHaveLength(0);
-      expect(tmntFullData.elims).toHaveLength(0);
-    });
     it("should throw error if tmnt id is invalid", async () => {
       try {
         await getTmntFullData("test");
@@ -865,6 +837,14 @@ describe("dbTmnts", () => {
         expect((err as Error).message).toBe("Invalid tmnt id");
       }
     });
+    it('should throw error if tmnt id is a valid id, but not found in db', async () => { 
+      try {
+        await getTmntFullData(notFoundId);
+      } catch (err) {
+        expect(err).toBeInstanceOf(Error);
+        expect((err as Error).message).toBe("getTmntFullData failed: Request failed with status code 404");
+      } 
+    })
     it("should throw error if tmnt id is a valid id, but not a tmnt id", async () => {
       try {
         await getTmntFullData(userId);
@@ -881,6 +861,131 @@ describe("dbTmnts", () => {
         expect((err as Error).message).toBe("Invalid tmnt id");
       }
     });
+
+    describe("getTmntFullData - invalid child data", () => { 
+
+      const postMockTmnt = async () => {
+        try { 
+          const tmntJSON = JSON.stringify(mockTmntFullData.tmnt);
+          await axios.post(url, tmntJSON, {
+            withCredentials: true,
+          });      
+        } catch (err) { 
+          // do nothing
+        }
+      }
+
+      const postMockDivs = async () => {
+        try {
+          const divsJSON = JSON.stringify(mockTmntFullData.divs);
+          await axios.post(url, divsJSON, {
+            withCredentials: true,
+          });      
+        } catch (err) { 
+          // do nothing
+        }
+      }
+
+      const postMockEvents = async () => {
+        try {
+          const eventsJSON = JSON.stringify(mockTmntFullData.events);
+          await axios.post(url, eventsJSON, {
+            withCredentials: true,
+          });      
+        } catch (err) { 
+          // do nothing
+        }
+      }
+
+      const postMockSquads = async () => {
+        try {
+          const squadsJSON = JSON.stringify(mockTmntFullData.squads);
+          await axios.post(url, squadsJSON, {
+            withCredentials: true,
+          });      
+        } catch (err) { 
+          // do nothing
+        }        
+      }
+
+      const postMockLanes = async () => {
+        try {
+          const lanesJSON = JSON.stringify(mockTmntFullData.lanes);
+          await axios.post(url, lanesJSON, {
+            withCredentials: true,
+          });      
+        } catch (err) { 
+          // do nothing
+        }
+      }      
+
+      beforeAll(async () => {
+        await deleteMockTmnt();  // also deletes mock divs, events, squads and lanes 
+        await deleteMockBowl(); 
+        await postMockBowl();
+        await postMockTmnt(); 
+      })
+
+      beforeEach(async () => {
+        postMockTmnt();
+      })
+
+      afterEach(async () => {
+        await deleteMockTmnt();   // also deletes mock divs, events, squads and lanes
+      })
+
+      afterAll(async () => {        
+        await deleteMockBowl();
+      })
+
+      it('should throw error if tmnt has no div(s)', async () => {
+        try {
+          await postMockEvents();
+          await postMockSquads();
+          await postMockLanes();
+          await getTmntFullData(mockTmntFullData.tmnt.id);
+        } catch (err) {
+          expect(err).toBeInstanceOf(Error);
+          expect((err as Error).message).toContain("missing required child data");
+          expect((err as Error).message).toContain("Div");          
+        }
+      })
+      it('should throw error if tmnt has no event(s)', async () => {
+        try {
+          await postMockDivs();
+          // squads is a child of events, lanes is a child of squads
+          await getTmntFullData(mockTmntFullData.tmnt.id);
+        } catch (err) {
+          expect(err).toBeInstanceOf(Error);
+          expect((err as Error).message).toContain("missing required child data");
+          expect((err as Error).message).toContain("Event");
+        }
+      })
+      it('should throw error if tmnt has no squad(s)', async () => {
+        try {
+          await postMockDivs();
+          await postMockEvents();
+          // lanes is a child of squads
+          await getTmntFullData(mockTmntFullData.tmnt.id);
+        } catch (err) {
+          expect(err).toBeInstanceOf(Error);
+          expect((err as Error).message).toContain("missing required child data");
+          expect((err as Error).message).toContain("Squad");
+        }
+      })
+      it('should throw error if tmnt has no lane(s)', async () => {
+        try {
+          await postMockDivs();
+          await postMockEvents();
+          await postMockSquads();
+          await getTmntFullData(mockTmntFullData.tmnt.id);
+        } catch (err) {
+          expect(err).toBeInstanceOf(Error);
+          expect((err as Error).message).toContain("missing required child data");
+          expect((err as Error).message).toContain("Lane");
+        }
+      })
+    })
   });
 
   describe('replaceTmntFullData()', () => {
@@ -908,6 +1013,20 @@ describe("dbTmnts", () => {
       await deleteMockBowl();
     })
 
+    it('returns a boolean success flag', async () => {
+      const toReplace = cloneDeep(mockTmntFullData);
+      toReplace.brktEntries = [];
+      toReplace.brktSeeds = [];
+      toReplace.brkts = [];
+      toReplace.divEntries = [];
+      toReplace.elimEntries = [];
+      toReplace.elims = [];
+      toReplace.oneBrkts = [];
+      toReplace.potEntries = [];
+      toReplace.pots = [];
+      const result = await replaceTmntFullData(toReplace);      
+      expect(typeof result).toBe("boolean");
+    })
     it('should replace a tmnt - just core four: events, divs, squads and lanes', async () => {
       const toReplace = cloneDeep(mockTmntFullData);
       toReplace.brktEntries = [];
@@ -920,7 +1039,7 @@ describe("dbTmnts", () => {
       toReplace.potEntries = [];
       toReplace.pots = [];
 
-      const result = await replaceTmntFullData(toReplace);
+      const result = await replaceTmntFullData(toReplace);      
       expect(result).toBe(true);
     })
     it('should replace a tmnt - core four + pots, brkts and elims', async () => {
@@ -999,7 +1118,7 @@ describe("dbTmnts", () => {
 
   describe('replaceTmntFullEntriesData()', () => { 
     
-    const postMockTmntNoEntries = async (): Promise<number> => {
+    const postMockTmntNoEntries = async (): Promise<boolean> => {
       // tmnt data without entries data
       const toReplace = cloneDeep(mockTmntFullData);
       toReplace.brktEntries = [];
@@ -1047,6 +1166,7 @@ describe("dbTmnts", () => {
 
       const toReplace = cloneDeep(mockTmntFullData);
       const result = await replaceTmntEntriesData(toReplace);
+      expect(typeof result).toBe('boolean');
       expect(result).toBe(true);
       const players = await getAllPlayersForTmnt(toReplace.tmnt.id);
       expect(players.length).toEqual(toReplace.players.length);

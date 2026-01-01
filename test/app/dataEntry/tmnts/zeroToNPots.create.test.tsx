@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import ZeroToNPots from "@/app/dataEntry/tmntForm/zeroToNPots";
 import { potType, tmntActions } from "@/lib/types/types";
 import { minFee, maxMoney } from "@/lib/validation";
-import { divId1, mockTmntFullData } from "../../../mocks/tmnts/tmntFulldata/mockTmntFullData";
+import { divId1, mockTmntFullData } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 
 const mockSetPots = jest.fn();
 const mockSetAcdnErr = jest.fn();

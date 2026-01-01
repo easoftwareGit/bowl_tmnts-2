@@ -16,7 +16,14 @@ const config: Config = {
     url: 'http://localhost:3000'
   },  
   moduleNameMapper: {
+    // Handle alias
     "^@/(.*)$": "<rootDir>/src/$1",
+
+    // CSS modules (import styles from './x.module.css')
+    "^.+\\.module\\.(css|sass|scss)$": "identity-obj-proxy",
+
+    // Non-module CSS imports (optional but recommended)
+    "^.+\\.(css|sass|scss)$": "<rootDir>/test/__mocks__/styleMock.ts",
   },  
 }
 

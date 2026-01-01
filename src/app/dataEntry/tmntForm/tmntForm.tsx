@@ -19,7 +19,7 @@ import ZeroToNElims, { validateElims } from "./zeroToNElims";
 import { compareAsc } from "date-fns";
 import ModalConfirm from "@/components/modal/confirmModal";
 import { useRouter } from "next/navigation"
-import { getTmntFullDataIoError, saveTmntFullData, getTmntDataSaveStatus } from "@/redux/features/tmntFullData/tmntFullDataSlice";
+import { saveTmntFullData, getTmntDataSaveStatus } from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import WaitModal from "@/components/modal/waitModal";
 import styles from "./tmntForm.module.css";
 
@@ -33,8 +33,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
   const dispatch = useDispatch<AppDispatch>();
 
   const tmntSaveStatus = useSelector(getTmntDataSaveStatus);
-  const ioError = useSelector(getTmntFullDataIoError);
-
+  
   const tmntFullData = tmntProps.tmntFullData;
   const tmntAction = tmntProps.tmntAction;
 
@@ -44,7 +43,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
   const cancelTitle = (tmntAction === tmntActions.New)
     ? 'New'
     : 'Editing';
-  const isDisabled = (tmntAction === tmntActions.Run);
+  const isDisabled = (tmntAction === tmntActions.Run || tmntAction === tmntActions.Disable);
 
   const bowls = useSelector((state: RootState) => state.bowls.bowls); 
 
@@ -344,6 +343,15 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
       />      
       <WaitModal show={tmntSaveStatus === 'saving' && !errModalObj.show} message="Saving..." />
       <form>      
+        {isDisabled && (
+          <div className="row g-3 mb-3">
+            <div className="col-md-12">
+              <label className="form-label">
+                Tournament has entries. Cannot be edited.
+              </label>
+            </div>
+          </div>
+        )}
         <div className="row g-3 mb-3">
           <div className="col-md-6">
             <label htmlFor="inputTmntName" className="form-label">
@@ -447,6 +455,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
                 className="btn btn-success me-2"
                 onClick={handleSave}
                 id="saveButton"
+                disabled={isDisabled}
               >
                 Save Tournament
               </button>            

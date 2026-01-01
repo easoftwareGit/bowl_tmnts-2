@@ -15,11 +15,11 @@ const fullEntriesUrl = url + "/fullEntries/";
  * replaces full tmnt data, tmnt table and all child/grandchild tables
  * 
  * @param {tmntFullType} tmntFullData - tmnt full data
- * @returns {Promise<number>} - true on success or throws error 
+ * @returns {Promise<boolean>} - true on success or throws error 
  */
 export const replaceTmntFullData = async (
   tmntFullData: tmntFullType
-): Promise<number> => {
+): Promise<boolean> => {
   if (tmntFullData == null || typeof tmntFullData !== "object") {      
     throw new Error("invalid tmntFullData data");
   }
@@ -50,11 +50,11 @@ export const replaceTmntFullData = async (
  * DOES NOT replace tmnt, events, divs, squads, lanes, pots, brkts, or elims
  * 
  * @param {tmntFullType} tmntFullData - tmnt full data
- * @returns {Promise<number>} - 1 on success or throws error 
+ * @returns {Promise<boolean>} - true on success or throws error 
  */
 export const replaceTmntEntriesData = async (
   tmntFullData: tmntFullType
-): Promise<number> => {
+): Promise<boolean> => {
   if (tmntFullData == null || typeof tmntFullData !== "object") {      
     throw new Error("invalid tmntFullData data");
   }

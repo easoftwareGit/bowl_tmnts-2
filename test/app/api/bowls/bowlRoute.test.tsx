@@ -3,7 +3,7 @@ import { baseBowlsApi } from "@/lib/db/apiPaths";
 import { testBaseBowlsApi } from "../../../testApi";
 import { bowlType } from "@/lib/types/types";
 import { initBowl } from "@/lib/db/initVals";
-import { userId } from "../../../mocks/tmnts/tmntFulldata/mockTmntFullData";
+import { userId } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database

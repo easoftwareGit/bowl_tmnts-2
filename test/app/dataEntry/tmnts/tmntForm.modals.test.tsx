@@ -16,8 +16,9 @@ import bowlsReducer from "@/redux/features/bowls/bowlsSlice";
 import TmntDataForm from "@/app/dataEntry/tmntForm/tmntForm"; 
 import { bowlType, ioDataError, tmntActions, tmntFormDataType } from "@/lib/types/types"; 
 import { getBlankTmntFullData } from "@/app/dataEntry/tmntForm/tmntTools"; 
-import { mockBowl, mockTmntFullData } from "../../../mocks/tmnts/tmntFulldata/mockTmntFullData"; 
+import { mockBowl, mockTmntFullData } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData"; 
 import { ioStatusType } from "@/redux/statusTypes"; 
+import { error } from "console";
 
 const makeStore = (bowls: bowlType[] = []) =>
   configureStore({
@@ -87,20 +88,27 @@ const tmntProps: tmntFormDataType = {
   tmntAction: tmntActions.New, 
 } 
 
+// Typed mock handles
+const useDispatchMock =
+  useDispatch as unknown as jest.MockedFunction<typeof useDispatch>;
+const saveTmntFullDataMock =
+  saveTmntFullData as unknown as jest.MockedFunction<typeof saveTmntFullData>;
+const useRouterMock =
+  useRouter as unknown as jest.MockedFunction<typeof useRouter>;
+
 describe('TmntDataForm - Save Modals', () => {   
   
   describe('save modal - success', () => {
     beforeEach(() => {        
       jest.clearAllMocks();
 
-      (useDispatch as unknown as jest.Mock).mockReturnValue(
+      useDispatchMock.mockReturnValue(
         jest.fn(() => ({ unwrap: () => Promise.resolve() })) as unknown as Dispatch
       );
 
-      (saveTmntFullData as unknown as jest.Mock).mockImplementation(() => ({
+      saveTmntFullDataMock.mockImplementation(() => ({
         unwrap: () => Promise.resolve(),
-      }));
-
+      }) as any);
     });
 
     it('show success modal when save is successful', async () => { 
@@ -133,15 +141,15 @@ describe('TmntDataForm - Save Modals', () => {
     beforeEach(() => {
       jest.clearAllMocks();
 
-      (useDispatch as unknown as jest.Mock).mockReturnValue(
+      useDispatchMock.mockReturnValue(
         jest.fn((thunkAction: any) => thunkAction) as unknown as Dispatch
       );
     });
 
     it('shows correct modal message when errorType = Tmnt', async () => {
-      (saveTmntFullData as unknown as jest.Mock).mockImplementation(() => ({
+      saveTmntFullDataMock.mockImplementation(() => ({
         unwrap: () => Promise.reject({ errorType: ioDataError.Tmnt }),
-      }));
+      }) as any);
 
       const store = makeStore([mockBowl]);
       render(
@@ -162,9 +170,9 @@ describe('TmntDataForm - Save Modals', () => {
       ).toBeInTheDocument();
     });    
     it('shows correct modal message when errorType = Events', async () => {
-      (saveTmntFullData as unknown as jest.Mock).mockImplementation(() => ({
+      saveTmntFullDataMock.mockImplementation(() => ({
         unwrap: () => Promise.reject({ errorType: ioDataError.Events }),
-      }));
+      }) as any);
 
       const store = makeStore([mockBowl]);
       render(
@@ -183,9 +191,9 @@ describe('TmntDataForm - Save Modals', () => {
       expect(screen.getByText(`Cannot save Events.`)).toBeInTheDocument();
     });    
     it('shows correct modal message when errorType = Divs', async () => {
-      (saveTmntFullData as unknown as jest.Mock).mockImplementation(() => ({
+      saveTmntFullDataMock.mockImplementation(() => ({
         unwrap: () => Promise.reject({ errorType: ioDataError.Divs }),
-      }));
+      }) as any);
 
       const store = makeStore([mockBowl]);
       render(
@@ -204,9 +212,9 @@ describe('TmntDataForm - Save Modals', () => {
       expect(screen.getByText(`Cannot save Divisions.`)).toBeInTheDocument();
     });    
     it('shows correct modal message when errorType = Squads', async () => {
-      (saveTmntFullData as unknown as jest.Mock).mockImplementation(() => ({
+      saveTmntFullDataMock.mockImplementation(() => ({
         unwrap: () => Promise.reject({ errorType: ioDataError.Squads }),
-      }));
+      }) as any);
 
       const store = makeStore([mockBowl]);
       render(
@@ -225,9 +233,9 @@ describe('TmntDataForm - Save Modals', () => {
       expect(screen.getByText(`Cannot save Squads.`)).toBeInTheDocument();
     });    
     it('shows correct modal message when errorType = Lanes', async () => {
-      (saveTmntFullData as unknown as jest.Mock).mockImplementation(() => ({
+      saveTmntFullDataMock.mockImplementation(() => ({
         unwrap: () => Promise.reject({ errorType: ioDataError.Lanes }),
-      }));
+      }) as any);
 
       const store = makeStore([mockBowl]);
       render(
@@ -248,9 +256,9 @@ describe('TmntDataForm - Save Modals', () => {
       ).toBeInTheDocument();
     });
     it('shows correct modal message when errorType = Pots', async () => {
-      (saveTmntFullData as unknown as jest.Mock).mockImplementation(() => ({
+      saveTmntFullDataMock.mockImplementation(() => ({
         unwrap: () => Promise.reject({ errorType: ioDataError.Pots }),
-      }));
+      }) as any);
 
       const store = makeStore([mockBowl]);
       render(
@@ -269,9 +277,9 @@ describe('TmntDataForm - Save Modals', () => {
       expect(screen.getByText(`Cannot save Pots.`)).toBeInTheDocument();
     });
     it('shows correct modal message when errorType = Brkts', async () => {
-      (saveTmntFullData as unknown as jest.Mock).mockImplementation(() => ({
+      saveTmntFullDataMock.mockImplementation(() => ({
         unwrap: () => Promise.reject({ errorType: ioDataError.Brkts }),
-      }));
+      }) as any);
 
       const store = makeStore([mockBowl]);
       render(
@@ -292,9 +300,9 @@ describe('TmntDataForm - Save Modals', () => {
       ).toBeInTheDocument();
     });
     it('shows correct modal message when errorType = Elims', async () => {
-      (saveTmntFullData as unknown as jest.Mock).mockImplementation(() => ({
+      saveTmntFullDataMock.mockImplementation(() => ({
         unwrap: () => Promise.reject({ errorType: ioDataError.Elims }),
-      }));
+      }) as any);
 
       const store = makeStore([mockBowl]);
       render(
@@ -312,11 +320,10 @@ describe('TmntDataForm - Save Modals', () => {
       expect(screen.getByText("Cannot Save")).toBeInTheDocument();
       expect(screen.getByText(`Cannot save Eliminators.`)).toBeInTheDocument();
     });    
-
     it('shows "Unknown error saving Tournament." when errorType is undefined', async () => {
-      (saveTmntFullData as unknown as jest.Mock).mockImplementation(() => ({
-        unwrap: () => Promise.reject({}),
-      }));
+      saveTmntFullDataMock.mockImplementation(() => ({
+        unwrap: () => Promise.reject({ errorType: undefined }),
+      }) as any);
 
       const store = makeStore([mockBowl]);
       render(

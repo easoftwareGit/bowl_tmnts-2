@@ -66,7 +66,7 @@ export const saveTmntFullData = createAsyncThunk(
   "tmntFullData/saveTmntFullData",
   async (tmntFullData: tmntFullType) => {
     const result = await replaceTmntFullData(tmntFullData);
-    if (result !== 1) {
+    if (!result) {
       throw new Error("Failed to save tournament full data");
     }
     return tmntFullData;
@@ -77,7 +77,7 @@ export const saveTmntEntriesData = createAsyncThunk(
   "tmntFullData/saveTmntFullEntriesData",
   async (tmntFullData: tmntFullType) => {
     const result = await replaceTmntEntriesData(tmntFullData);
-    if (result !== 1) {
+    if (!result) {
       throw new Error("Failed to save tournament entries data");
     }
     return tmntFullData;

@@ -2,7 +2,7 @@ import axios from "axios";
 import { baseTmntsApi } from "@/lib/db/apiPaths";
 import { testBaseTmntsApi } from "../../../../test/testApi";
 import { tmntFullType, tmntsListType, tmntType, YearObj } from "@/lib/types/types";
-import { isValidBtDbId, validYear } from "@/lib/validation";
+import { isOdd, isValidBtDbId, validYear } from "@/lib/validation";
 import { removeTimeFromISODateStr, todayYearStr } from "@/lib/dateTools";
 import { blankTmnt, linkedInitTmntFullData } from "../initVals";
 import { extractEvents } from "../events/dbEvents";
@@ -362,6 +362,22 @@ export const getTmntFullData = async (tmntId: string): Promise<tmntFullType> => 
         tmntFullData.players.push(...extractedPlayers);
       })      
     })
+  }
+
+  // make sure all required child data is present 
+  // (saved tmnt must have at least 1 row each, 2 and even rows for lanes)
+  const missing: string[] = [];
+  if (tmntFullData.divs.length === 0) missing.push("Div");
+  if (tmntFullData.events.length === 0) missing.push("Event");
+  if (tmntFullData.squads.length === 0) missing.push("Squad");
+  if (tmntFullData.lanes.length === 0) missing.push("Lane");
+
+  if (missing.length > 0) {
+    throw new Error(
+      `getTmntFullData failed: tournament "${tmntId}" is missing required child data: ${missing.join(
+        ", "
+      )}`
+    );
   }
 
   return tmntFullData;

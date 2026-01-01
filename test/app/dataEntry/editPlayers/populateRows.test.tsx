@@ -1,4 +1,4 @@
-import { mockTmntFullData } from "../../../mocks/tmnts/tmntFulldata/mockTmntFullData";
+import { mockTmntFullData } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import {
   divEntryHdcpColName,
   entryFeeColName,

@@ -3,7 +3,7 @@ import { elimType, AcdnErrType } from "@/lib/types/types";
 import {
   mockTmntFullData,
   divId1,
-} from "../../../mocks/tmnts/tmntFulldata/mockTmntFullData";
+} from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { maxGames, maxMoney, minFee } from "@/lib/validation";
 import {
   acdnErrClassName,

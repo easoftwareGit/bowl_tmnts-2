@@ -11,7 +11,7 @@ import { deleteTmnt, getTmntFullData } from "@/lib/db/tmnts/dbTmnts";
 import {
   mockBowl,
   mockTmntFullData,
-} from "../../../mocks/tmnts/tmntFulldata/mockTmntFullData";
+} from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { deleteBowl, postBowl } from "@/lib/db/bowls/dbBowls";
 
 // before running this test, run the following commands in the terminal:

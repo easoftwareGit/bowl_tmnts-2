@@ -10,7 +10,6 @@ const { getTmntsForYear, getUpcomingTmnts } = exportedForTesting;
 const url = testBaseTmntsApi.startsWith("undefined")
   ? baseTmntsApi
   : testBaseTmntsApi;
-const configUrl = url + "/config/";
 const tmntUrl = url + "/tmnt/";
 
 jest.mock("axios");

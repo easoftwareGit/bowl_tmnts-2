@@ -1,5 +1,5 @@
 import { brktType } from '@/lib/types/types';
-import { mockTmntFullData } from '../../../mocks/tmnts/tmntFulldata/mockTmntFullData';
+import { mockTmntFullData } from '../../../mocks/tmnts/tmntFullData/mockTmntFullData';
 import { cloneDeep } from 'lodash';
 import { brktDataForPrisma } from '@/app/api/brkts/dataForPrisma';
 

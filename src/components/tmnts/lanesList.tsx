@@ -96,7 +96,7 @@ const LanesList: FC<LanesListProps> = (props) => {
 
   const [pairs, setPairs] = useState(initPairs);
 
-  const isDisabled = (tmntAction === tmntActions.Run);
+  const isDisabled = (tmntAction === tmntActions.Run || tmntAction === tmntActions.Disable);
 
   useEffect(() => {
     setPairs(pairsOfLanes(squadId, lanes));

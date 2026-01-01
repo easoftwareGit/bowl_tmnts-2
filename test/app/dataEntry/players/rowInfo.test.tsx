@@ -5,7 +5,7 @@ import { getBrktOrElimName, getDivName } from "@/lib/getName";
 import { brktType, elimType } from "@/lib/types/types";
 import { maxAverage, maxBrackets, maxMoney } from "@/lib/validation";
 import { cloneDeep } from "lodash";
-import { mockTmntFullData } from "../../../mocks/tmnts/tmntFulldata/mockTmntFullData";
+import { mockTmntFullData } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { defaultBrktPlayers } from "@/lib/db/initVals";
 
 const { validAverage, validLane, validPosition, validDivs, validPots, validBrkts, validElims } = exportedForTesting;

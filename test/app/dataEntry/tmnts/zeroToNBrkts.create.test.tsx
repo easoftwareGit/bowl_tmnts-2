@@ -3,7 +3,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ZeroToNBrackets from "@/app/dataEntry/tmntForm/zeroToNBrkts";
 import { brktType, tmntActions } from "@/lib/types/types";
-import { mockTmntFullData, divId1 } from "../../../mocks/tmnts/tmntFulldata/mockTmntFullData";
+import { mockTmntFullData, divId1 } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { minFee, maxMoney, maxGames } from "@/lib/validation";
 
 const mockSetBrkts = jest.fn();

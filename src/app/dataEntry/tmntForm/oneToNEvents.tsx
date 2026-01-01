@@ -272,7 +272,7 @@ const OneToNEvents: React.FC<ChildProps> = ({
   
   const tmntId = events[0].tmnt_id; // save parent id for all events 
 
-  const isDisabled = (tmntAction === tmntActions.Run);
+  const isDisabled = (tmntAction === tmntActions.Run || tmntAction === tmntActions.Disable);
   const addBtnStyle = isDisabled ? 'btn-dark' : 'btn-success';
   const delBtnStyle = isDisabled ? 'btn-dark' : 'btn-danger';
 

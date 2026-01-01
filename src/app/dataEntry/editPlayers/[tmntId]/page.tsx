@@ -65,80 +65,6 @@ const buildBrktList = (
   return bList;
 };
 
-// /**
-//  * populates rows for data entry grid
-//  *
-//  * @param {tmntFullType} tmntFullData - tmnt full data
-//  * @returns {typeof playerEntryData[]} - array of playerEntryData
-//  */
-// export const populateRows = (tmntFullData: tmntFullType) => {
-//   const pRows: (typeof playerEntryData)[] = [];
-//   // populate all players
-//   tmntFullData?.players?.forEach((player) => {
-//     const pRow: typeof playerEntryData = { ...playerEntryData };
-//     pRow.id = player.id;
-//     pRow.player_id = player.id;
-//     pRow.first_name = player.first_name;
-//     pRow.last_name = player.last_name;
-//     pRow.average = player.average;
-//     pRow.lane = player.lane;
-//     pRow.position = player.position;
-//     pRow.lanePos = player.lane + "-" + player.position;
-//     pRows.push(pRow);
-//   });
-//   // populate division fee(s) and hdcp(s)
-//   tmntFullData?.divEntries?.forEach((divEntry) => {
-//     // find player row
-//     const pRow = pRows.find(
-//       (row) => row.player_id === divEntry.player_id
-//     ) as typeof playerEntryData;
-//     // creates columns if not yet created or populates columns
-//     if (pRow) {
-//       pRow[entryFeeColName(divEntry.div_id)] = divEntry.fee + ""; // as a string
-//       pRow[divEntryHdcpColName(divEntry.div_id)] = divEntry.hdcp;
-//     }
-//   });
-//   // populate pot fees
-//   tmntFullData?.potEntries?.forEach((potEntry) => {
-//     const pRow = pRows.find(
-//       (row) => row.player_id === potEntry.player_id
-//     ) as typeof playerEntryData;
-//     if (pRow) {
-//       pRow[entryFeeColName(potEntry.pot_id)] = potEntry.fee;
-//     }
-//   });
-//   // populate bracket entries & fee(s)
-//   tmntFullData?.brktEntries?.forEach((brktEntry) => {
-//     const pRow = pRows.find(
-//       (row) => row.player_id === brktEntry.player_id
-//     ) as typeof playerEntryData;
-//     if (pRow) {
-//       pRow[entryNumBrktsColName(brktEntry.brkt_id)] = brktEntry.num_brackets;
-//       pRow[entryFeeColName(brktEntry.brkt_id)] = brktEntry.fee;
-//       pRow[timeStampColName(brktEntry.brkt_id)] = brktEntry.time_stamp;
-//     }
-//   });
-//   // populate elimination fee(s)
-//   tmntFullData?.elimEntries?.forEach((elimEntry) => {
-//     const pRow = pRows.find(
-//       (row) => row.player_id === elimEntry.player_id
-//     ) as typeof playerEntryData;
-//     if (pRow) {
-//       pRow[entryFeeColName(elimEntry.elim_id)] = elimEntry.fee;
-//     }
-//   });
-//   pRows.forEach((row) => {
-//     let feeTotal = 0;
-//     Object.keys(row).forEach((key) => {
-//       if (key.endsWith(feeColNameEnd)) {
-//         feeTotal += Number(row[key]);
-//       }
-//     });
-//     row.feeTotal = feeTotal;
-//   });
-//   return pRows;
-// };
-
 export default function EditPlayersPage() {
 
   const [rows, setRows] = useState<(typeof playerEntryData)[]>([]);
@@ -335,6 +261,7 @@ export default function EditPlayersPage() {
                   type="text"
                   className="form-control"
                   id={`inputDivEntryCount${div.id}`}
+                  data-testid={`inputDivEntryCount${div.id}`}
                   value={entriesCount[entryFeeColName(div.id)]}
                   disabled
                   style={{ textAlign: "center" }}
@@ -374,7 +301,7 @@ export default function EditPlayersPage() {
                 <input
                   type="text"
                   className="form-control"
-                  id={`inputPotNameCount${pot.id}`}
+                  id={`inputPotNameCount${pot.id}`}                  
                   // value={pot.pot_type}
                   value={getPotName(pot, tmntFormData?.tmntFullData?.divs)}
                   disabled
@@ -385,6 +312,7 @@ export default function EditPlayersPage() {
                   type="text"
                   className="form-control"
                   id={`inputPotEntryCount${pot.id}`}
+                  data-testid={`inputPotEntryCount${pot.id}`}
                   value={entriesCount[entryFeeColName(pot.id)]}
                   disabled
                   style={{ textAlign: "center" }}
@@ -462,6 +390,7 @@ export default function EditPlayersPage() {
                     type="text"
                     className="form-control"
                     id={`inputPlayersCount${brkt.id}`}
+                    data-testid={`inputPlayersCount${brkt.id}`}
                     value={allBrktsList[brkt.id]?.brktEntries.length ?? 0}
                     disabled
                     style={{ textAlign: "center" }}
@@ -472,6 +401,7 @@ export default function EditPlayersPage() {
                     type="text"
                     className="form-control"
                     id={`inputFullCount${brkt.id}`}
+                    data-testid={`inputFullCount${brkt.id}`}
                     value={allBrktsList[brkt.id]?.fullCount ?? 0}
                     disabled
                     style={{ textAlign: "center" }}
@@ -482,6 +412,7 @@ export default function EditPlayersPage() {
                     type="text"
                     className="form-control"
                     id={`inputOneByeCount${brkt.id}`}
+                    data-testid={`inputOneByeCount${brkt.id}`}
                     value={allBrktsList[brkt.id]?.oneByeCount ?? 0}
                     disabled
                     style={{ textAlign: "center" }}
@@ -492,6 +423,7 @@ export default function EditPlayersPage() {
                     type="text"
                     className="form-control"
                     id={`inputTotalCount${brkt.id}`}
+                    data-testid={`inputTotalCount${brkt.id}`}
                     value={
                       (allBrktsList[brkt.id]?.fullCount ?? 0) +
                       (allBrktsList[brkt.id]?.oneByeCount ?? 0)
@@ -548,6 +480,7 @@ export default function EditPlayersPage() {
                   type="text"
                   className="form-control"
                   id={`inputElimEntryCount${elim.id}`}
+                  data-testid={`inputElimEntryCount${elim.id}`}
                   value={entriesCount[entryFeeColName(elim.id)]}
                   disabled
                   style={{ textAlign: "center" }}

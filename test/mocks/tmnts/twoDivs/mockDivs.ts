@@ -182,6 +182,7 @@ export const mockSquads: squadType[] = [
     squad_date_err: "",
     squad_time: "10:00",
     squad_time_err: "",
+    finalized: true,
     sort_order: 1,
     errClassName: "",   
   },

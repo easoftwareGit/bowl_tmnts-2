@@ -137,7 +137,7 @@ const ZeroToNPots: React.FC<ChildProps> = ({
   tmntAction,
 }) => {
   
-  const isDisabled = (tmntAction === tmntActions.Run);  
+  const isDisabled = (tmntAction === tmntActions.Run || tmntAction === tmntActions.Disable);  
   const defaultTabKey = (isDisabled && pots.length > 0 && pots[0].id)
     ? pots[0].id
     : 'createPot';  
@@ -352,7 +352,7 @@ const ZeroToNPots: React.FC<ChildProps> = ({
         activeKey={tabKey}
         onSelect={handleTabSelect}
       >
-        {(tmntAction !== tmntActions.Run) ? (
+        {(!isDisabled) ? (
           <Tab
             key="createPot"
             eventKey="createPot"

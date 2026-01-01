@@ -198,7 +198,7 @@ const ZeroToNBrackets: React.FC<ChildProps> = ({
   tmntAction,
 }) => {
 
-  const isDisabled = (tmntAction === tmntActions.Run); 
+  const isDisabled = (tmntAction === tmntActions.Run || tmntAction === tmntActions.Disable); 
   const defaultTabKey = (isDisabled && brkts.length > 0 && brkts[0].id)
   ? brkts[0].id
   : 'createBrkt';  
@@ -566,7 +566,7 @@ const ZeroToNBrackets: React.FC<ChildProps> = ({
         activeKey={tabKey}
         onSelect={handleTabSelect}
       >
-        {(tmntAction !== tmntActions.Run) ? (
+        {(!isDisabled) ? (
           <Tab
             key="createBrkt"
             eventKey="createBrkt"

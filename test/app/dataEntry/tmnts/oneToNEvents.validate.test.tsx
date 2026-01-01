@@ -1,6 +1,6 @@
 import { validateEvents } from "@/app/dataEntry/tmntForm/oneToNEvents";
 import { eventType, AcdnErrType } from "@/lib/types/types";
-import { eventId1, eventId2, mockTmntFullData } from "../../../mocks/tmnts/tmntFulldata/mockTmntFullData";
+import { eventId1, eventId2, mockTmntFullData } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { acdnErrClassName, noAcdnErr, objErrClassName } from "@/app/dataEntry/tmntForm/errors";
 import { maxGames, maxTeamSize } from "@/lib/validation";
 

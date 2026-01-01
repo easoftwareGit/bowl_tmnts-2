@@ -733,6 +733,27 @@ describe("ZeroToNBrackets - Component", () => {
       })
     })
 
+    describe('render the "Scratch 1-3" bracket when tmntAction === Disable', () => { 
+      const disableTmntProps = cloneDeep(mockZeroToNBrktsProps);
+      disableTmntProps.tmntAction = tmntActions.Disable;
+      it('render the Fee input', async () => {
+        const user = userEvent.setup()
+        render(<ZeroToNBrackets {...disableTmntProps} />);
+        const tabs = screen.getAllByRole("tab");
+        await user.click(tabs[1]);
+        const feeInputs = screen.getAllByRole('textbox', { name: /fee/i }) as HTMLInputElement[];        
+        expect(feeInputs[1]).toBeDisabled();
+      })
+      it('render the Delete Bracket button', async () => {
+        const user = userEvent.setup()
+        render(<ZeroToNBrackets {...disableTmntProps} />);
+        const tabs = screen.getAllByRole("tab");
+        await user.click(tabs[1]);
+        const delBtns = screen.getAllByRole("button", { name: /delete bracket/i });        
+        expect(delBtns[0]).toBeDisabled();
+      })
+    })
+
     describe('render the brackets when tmntAction === Run', () => { 
       const runTmntProps = cloneDeep(mockZeroToNBrktsProps);
       runTmntProps.tmntAction = tmntActions.Run;
@@ -838,6 +859,121 @@ describe("ZeroToNBrackets - Component", () => {
       it('render the Delete Bracket button', async () => {
         const user = userEvent.setup()
         render(<ZeroToNBrackets {...runTmntProps} />);
+        const tabs = screen.getAllByRole("tab");
+        await user.click(tabs[1]);
+        const delBtns = screen.getAllByRole("button", { name: /delete bracket/i });        
+        expect(delBtns).toHaveLength(mockBrkts.length) // add button shown in Create Bracket tab
+        for (let i = 0; i < mockBrkts.length; i++) {
+          expect(delBtns[i]).toBeDisabled();
+        }
+      })
+    })
+
+    describe('render the brackets when tmntAction === Disable', () => { 
+      const disableTmntProps = cloneDeep(mockZeroToNBrktsProps);
+      disableTmntProps.tmntAction = tmntActions.Disable;
+      it('render the Division value', async () => {
+        const user = userEvent.setup()
+        render(<ZeroToNBrackets {...disableTmntProps} />);
+        const tabs = screen.getAllByRole("tab");
+        await user.click(tabs[1]);
+        const divInputs = screen.getAllByRole('textbox', { name: /division/i }) as HTMLInputElement[];        
+        expect(divInputs).toHaveLength(mockBrkts.length);
+        for (let i = 0; i < mockBrkts.length; i++) {
+          expect(divInputs[i]).toBeDisabled();
+        }
+      })
+      it('render the Fee input', async () => {
+        const user = userEvent.setup()
+        render(<ZeroToNBrackets {...disableTmntProps} />);
+        const tabs = screen.getAllByRole("tab");
+        await user.click(tabs[1]);
+        const feeInputs = screen.getAllByRole('textbox', { name: /fee/i }) as HTMLInputElement[];        
+        expect(feeInputs).toHaveLength(mockBrkts.length);
+        for (let i = 0; i < mockBrkts.length; i++) {
+          expect(feeInputs[i]).toBeDisabled();
+        }
+      })
+      it('render the Start input', async () => {
+        const user = userEvent.setup()
+        render(<ZeroToNBrackets {...disableTmntProps} />);
+        const tabs = screen.getAllByRole("tab");
+        await user.click(tabs[1]);
+        const startInputs = screen.getAllByRole('spinbutton', { name: /start/i }) as HTMLInputElement[];                
+        expect(startInputs).toHaveLength(mockBrkts.length);
+        for (let i = 0; i < mockBrkts.length; i++) {
+          expect(startInputs[i]).toBeDisabled();
+        }
+      })
+      it('render the Games input', async () => { 
+        const user = userEvent.setup()
+        render(<ZeroToNBrackets {...disableTmntProps} />);
+        const tabs = screen.getAllByRole("tab");
+        await user.click(tabs[1]);
+        const gamesInputs = screen.getAllByRole('spinbutton', { name: /games/i }) as HTMLInputElement[];        
+        expect(gamesInputs).toHaveLength(mockBrkts.length);
+        for (let i = 0; i < mockBrkts.length; i++) {
+          expect(gamesInputs[i]).toBeDisabled();
+        }
+      })
+      it('render the Players input', async () => { 
+        const user = userEvent.setup()
+        render(<ZeroToNBrackets {...disableTmntProps} />);
+        const tabs = screen.getAllByRole("tab");
+        await user.click(tabs[1]);
+        const playersInputs = screen.getAllByRole('spinbutton', { name: /players/i }) as HTMLInputElement[];                
+        expect(playersInputs).toHaveLength(mockBrkts.length);
+        for (let i = 0; i < mockBrkts.length; i++) {
+          expect(playersInputs[i]).toBeDisabled();
+        }
+      })
+      it('input the First input', async () => { 
+        const user = userEvent.setup()
+        render(<ZeroToNBrackets {...disableTmntProps} />);
+        const tabs = screen.getAllByRole("tab");
+        await user.click(tabs[1]);
+        const firstInputs = screen.getAllByRole('textbox', { name: /first/i }) as HTMLInputElement[];        
+        expect(firstInputs).toHaveLength(mockBrkts.length);
+        for (let i = 0; i < mockBrkts.length; i++) {
+          expect(firstInputs[i]).toBeDisabled();
+        }
+      })
+      it('input the Second input', async () => {
+        const user = userEvent.setup()
+        render(<ZeroToNBrackets {...disableTmntProps} />);
+        const tabs = screen.getAllByRole("tab");
+        await user.click(tabs[1]);
+        const secondInputs = screen.getAllByRole('textbox', { name: /second/i }) as HTMLInputElement[];                
+        expect(secondInputs).toHaveLength(mockBrkts.length);
+        for (let i = 0; i < mockBrkts.length; i++) {
+          expect(secondInputs[i]).toBeDisabled();
+        }
+      })
+      it('input the Admin input', async () => { 
+        const user = userEvent.setup()
+        render(<ZeroToNBrackets {...disableTmntProps} />);
+        const tabs = screen.getAllByRole("tab");
+        await user.click(tabs[1]);
+        const adminInputs = screen.getAllByRole('textbox', { name: /admin/i }) as HTMLInputElement[];                
+        expect(adminInputs).toHaveLength(mockBrkts.length);
+        for (let i = 0; i < mockBrkts.length; i++) {
+          expect(adminInputs[i]).toBeDisabled();
+        }
+      })
+      it('render the FSA input', async () => { 
+        const user = userEvent.setup()
+        render(<ZeroToNBrackets {...disableTmntProps} />);
+        const tabs = screen.getAllByRole("tab");
+        await user.click(tabs[1]);
+        const fsaInputs = screen.getAllByRole('textbox', { name: /F\+S\+A/i }) as HTMLInputElement[];                
+        expect(fsaInputs).toHaveLength(mockBrkts.length);
+        for (let i = 0; i < mockBrkts.length; i++) {
+          expect(fsaInputs[i]).toBeDisabled();
+        }
+      })  
+      it('render the Delete Bracket button', async () => {
+        const user = userEvent.setup()
+        render(<ZeroToNBrackets {...disableTmntProps} />);
         const tabs = screen.getAllByRole("tab");
         await user.click(tabs[1]);
         const delBtns = screen.getAllByRole("button", { name: /delete bracket/i });        
@@ -978,6 +1114,136 @@ describe("ZeroToNBrackets - Component", () => {
       })
     })
     
+    describe('DO NOT render the Create Brackets tab when tmntAction === Disable', () => { 
+      const disableTmntProps = cloneDeep(mockZeroToNBrktsProps);
+      disableTmntProps.tmntAction = tmntActions.Disable;
+      it('DO NOT render the Create Brackets tab', async () => { 
+        render(<ZeroToNBrackets {...disableTmntProps} />);
+        const tabs = screen.queryAllByRole('tab');
+        expect(tabs).toHaveLength(mockBrkts.length); // no create bracket tab
+
+        expect(tabs[0]).toHaveAttribute("aria-selected", "true");
+        expect(tabs[1]).toHaveAttribute("aria-selected", "false");
+        expect(tabs[2]).toHaveAttribute("aria-selected", "false");
+        expect(tabs[3]).toHaveAttribute("aria-selected", "false");                
+
+        expect(tabs[0]).not.toHaveTextContent(/create brackets/i);
+        expect(tabs[1]).not.toHaveTextContent(/create brackets/i);
+        expect(tabs[2]).not.toHaveTextContent(/create brackets/i);
+        expect(tabs[3]).not.toHaveTextContent(/create brackets/i);
+      })
+      it('DO NOT render the Divison radio label', async () => {
+        render(<ZeroToNBrackets {...disableTmntProps} />);
+        const divRadio = screen.queryByRole('radio', { name: /division/i });
+        expect(divRadio).not.toBeInTheDocument();
+      })
+      it('DO NOT render the "Sratch" radio button', () => {
+        render(<ZeroToNBrackets {...disableTmntProps} />);        
+        const scratchRadio = screen.queryByRole('radio', { name: /scratch/i }) as HTMLInputElement;
+        expect(scratchRadio).not.toBeInTheDocument();
+      })
+      it('DO NOT render the "HDCP" radio button', () => {
+        render(<ZeroToNBrackets {...disableTmntProps} />);                       
+        const hdcpRadio = screen.queryByRole('radio', { name: /hdcp/i }) as HTMLInputElement;
+        expect(hdcpRadio).not.toBeInTheDocument();
+      })
+      it('DO NOT render the "Fee" label', () => {
+        render(<ZeroToNBrackets {...disableTmntProps} />);        
+        const feeLabels = screen.getAllByText(/fee/i);
+        expect(feeLabels).toHaveLength(mockBrkts.length); // no label for create bracket
+      })
+      it('DO NOT render the "Fee" input', () => {
+        render(<ZeroToNBrackets {...disableTmntProps} />);
+        const fees = screen.getAllByRole('textbox', { name: /fee/i }) as HTMLInputElement[];        
+        expect(fees).toHaveLength(mockBrkts.length); // no input for create bracket        
+      })
+      it('DO NOT render the create bracket fee error', () => {
+        render(<ZeroToNBrackets {...disableTmntProps} />);
+        const brktFeeError = screen.queryByTestId("dangerCreateBrktFee");
+        expect(brktFeeError).not.toBeInTheDocument();
+      })
+      it('DO NOT render the "Start" labels', () => { 
+        render(<ZeroToNBrackets {...disableTmntProps} />);
+        const startLabels = screen.getAllByText(/start/i);
+        expect(startLabels).toHaveLength(mockBrkts.length); // no label for create bracket
+      })
+      it('DO NOT render the create bracket "Start" input', () => { 
+        render(<ZeroToNBrackets {...disableTmntProps} />);        
+        const startInputs = screen.getAllByRole('spinbutton', { name: /start/i }) as HTMLInputElement[];        
+        expect(startInputs).toHaveLength(mockBrkts.length); // no input for create bracket        
+      })
+      it('DO NOT render the create bracket "Start" error', () => { 
+        render(<ZeroToNBrackets {...disableTmntProps} />);
+        const brktStartError = screen.queryByTestId("dangerCreateBrktStart");
+        expect(brktStartError).not.toBeInTheDocument();
+      })
+      it('DO NOT render the "Games" labels', () => { 
+        render(<ZeroToNBrackets {...disableTmntProps} />);
+        const gamesLabels = screen.getAllByText("Games");
+        expect(gamesLabels).toHaveLength(mockBrkts.length); // no label for create bracket
+      })
+      it('DO NOT render the "Games" input', () => { 
+        render(<ZeroToNBrackets {...disableTmntProps} />); 
+        const gamesInputs = screen.getAllByRole('spinbutton', { name: /games/i }) as HTMLInputElement[];
+        expect(gamesInputs).toHaveLength(mockBrkts.length); // no input for create bracket
+      })
+      it('DO NOT render the "Players" labels', () => { 
+        render(<ZeroToNBrackets {...disableTmntProps} />);
+        const brktPlayersLabels = screen.getAllByText(/players/i);
+        expect(brktPlayersLabels).toHaveLength(mockBrkts.length); // no label for create bracket
+      })
+      it('DO NOT render the "Players" input', () => {
+        render(<ZeroToNBrackets {...disableTmntProps} />);        
+        const brktPlayersInputs = screen.getAllByRole('spinbutton', { name: /players/i }) as HTMLInputElement[];        
+        expect(brktPlayersInputs).toHaveLength(mockBrkts.length); // no input for create bracket
+      })
+      it('DO NOT render the "Add Bracket" button', () => {
+        render(<ZeroToNBrackets {...disableTmntProps} />);        
+        const addBtn = screen.queryByRole("button", { name: /add bracket/i });
+        expect(addBtn).not.toBeInTheDocument();
+      })
+      it('DO NOT render the bracket "First" labels', () => { 
+        render(<ZeroToNBrackets {...disableTmntProps} />);
+        const brktFirstLabels = screen.getAllByText("First");
+        expect(brktFirstLabels).toHaveLength(mockBrkts.length); // no label for create bracket
+      })
+      it('DO NOT render the bracket "First" input', () => { 
+        render(<ZeroToNBrackets {...disableTmntProps} />);        
+        const brktFirstInputs = screen.getAllByRole('textbox', { name: /first/i }) as HTMLInputElement[];
+        expect(brktFirstInputs).toHaveLength(mockBrkts.length); // no input for create bracket
+      })
+      it('DO NOT render the bracket "Second" labels', () => {
+        render(<ZeroToNBrackets {...disableTmntProps} />);
+        const brktSecondLabels = screen.getAllByText("Second");
+        expect(brktSecondLabels).toHaveLength(mockBrkts.length); // no label for create bracket
+      })
+      it('DO NOT render the bracket "Second" input', () => {
+        render(<ZeroToNBrackets {...disableTmntProps} />);        
+        const brktSecondInputs = screen.getAllByRole('textbox', { name: /second/i }) as HTMLInputElement[];        
+        expect(brktSecondInputs).toHaveLength(mockBrkts.length); // no input for create bracket
+      })
+      it('DO NOT render the bracket "Admin" label', () => { 
+        render(<ZeroToNBrackets {...disableTmntProps} />);
+        const brktAdminLabels = screen.getAllByText("Admin");
+        expect(brktAdminLabels).toHaveLength(mockBrkts.length); // no label for create bracket
+      })
+      it('DO NOT render the bracket "Admin" input', () => {
+        render(<ZeroToNBrackets {...disableTmntProps} />);        
+        const brktAdminInputs = screen.getAllByRole('textbox', { name: /admin/i }) as HTMLInputElement[];        
+        expect(brktAdminInputs).toHaveLength(mockBrkts.length); // no input for create bracket
+      })
+      it('DO NOT render the bracket "FSA" labels', () => { 
+        render(<ZeroToNBrackets {...disableTmntProps} />);
+        const brktFSAs = screen.getAllByLabelText(/F\+S\+A/i);
+        expect(brktFSAs).toHaveLength(mockBrkts.length); // no label for create bracket
+      })
+      it('DO NOT render "FSA" input', () => { 
+        render(<ZeroToNBrackets {...disableTmntProps} />);        
+        const fsaInputs = screen.getAllByRole('textbox', { name: /F\+S\+A/i }) as HTMLInputElement[];        
+        expect(fsaInputs).toHaveLength(mockBrkts.length); // no input for create bracket
+      })
+    })
+
   })
 
   describe('add a bracket', () => { 

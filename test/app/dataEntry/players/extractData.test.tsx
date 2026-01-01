@@ -13,7 +13,7 @@ import {
 import { isValidBtDbId } from "@/lib/validation";
 import { calcHandicap } from "@/app/api/divEntries/calcHdcp";
 import { BracketList } from "@/components/brackets/bracketListClass";
-import { brktId1, brktId2, playerId1, playerId2, playerId3, playerId4, playerId5, playerId6, playerId7, playerId8 } from "../../../mocks/tmnts/tmntFulldata/mockTmntFullData";
+import { brktId1, brktId2, playerId1, playerId2, playerId3, playerId4, playerId5, playerId6, playerId7, playerId8 } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { defaultBrktGames, defaultPlayersPerMatch } from "@/lib/db/initVals";
 import { Bracket } from "@/components/brackets/bracketClass";
 

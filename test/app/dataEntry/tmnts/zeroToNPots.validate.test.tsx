@@ -1,6 +1,6 @@
 import { validatePots } from "@/app/dataEntry/tmntForm/zeroToNPots";
 import { potType, AcdnErrType } from "@/lib/types/types";
-import { mockTmntFullData } from "../../../mocks/tmnts/tmntFulldata/mockTmntFullData";
+import { mockTmntFullData } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { acdnErrClassName, noAcdnErr, objErrClassName } from "@/app/dataEntry/tmntForm/errors";
 import { maxMoney, minFee } from "@/lib/validation";
 

@@ -142,7 +142,7 @@ const OneToNDivs: React.FC<ChildProps> = ({
   const [sortOrder, setSortOrder] = useState(divs[divs.length - 1].sort_order); 
   
   const tmntId = divs[0].tmnt_id; // index 0 always has tmnt_id
-  const isDisabled = (tmntAction === tmntActions.Run);
+  const isDisabled = (tmntAction === tmntActions.Run || tmntAction === tmntActions.Disable);
   const addBtnStyle = isDisabled ? 'btn-dark' : 'btn-success';
   const delBtnStyle = isDisabled ? 'btn-dark' : 'btn-danger';
 
