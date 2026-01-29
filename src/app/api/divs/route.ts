@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { validateDiv, sanitizeDiv } from "./validate";
-import { ErrorCode } from "@/lib/validation";
+import { validateDiv, sanitizeDiv } from "../../../lib/validation/divs/validate";
+import { ErrorCode } from "@/lib/validation/validation";
 import { divType } from "@/lib/types/types";
 import { initDiv } from "@/lib/db/initVals";
 import { getErrorStatus } from "../errCodes";
@@ -45,13 +45,13 @@ export async function POST(request: Request) {
 
     const toPost = sanitizeDiv(toCheck);
     const errCode = validateDiv(toPost);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = "missing data";
           break;
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = "invalid data";
           break;
         default:

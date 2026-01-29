@@ -1,6 +1,6 @@
 import { divEntryType } from "@/lib/types/types";
-import { validateDivEntries } from "../validate";
-import { ErrorCode } from "@/lib/validation";
+import { validateDivEntries } from "../../../../lib/validation/divEntries/validate";
+import { ErrorCode } from "@/lib/validation/validation";
 
 /**
  * returns an array of unique divIds
@@ -28,7 +28,7 @@ export const getUpdateManySQL = (divEntries: divEntryType[]) => {
 
   if (!divEntries || divEntries.length === 0) return "";
   const validDivEntries = validateDivEntries(divEntries);
-  if (validDivEntries.errorCode !== ErrorCode.None) return "";
+  if (validDivEntries.errorCode !== ErrorCode.NONE) return "";
 
   const divIds: string[] = getDivIds(divEntries);
   if (divIds.length === 0) return "";
@@ -66,7 +66,7 @@ export const getInsertManySQL = (divEntries: divEntryType[]) => {
 
   if (!divEntries || divEntries.length === 0) return "";
   const validDivEntries = validateDivEntries(divEntries);
-  if (validDivEntries.errorCode !== ErrorCode.None) return "";
+  if (validDivEntries.errorCode !== ErrorCode.NONE) return "";
 
   const getSqlValues = (divEntries: divEntryType[]) => {
     const values: string[] = [];
@@ -97,7 +97,7 @@ export const getDeleteManySQL = (divEntries: divEntryType[]) => {
 
   if (!divEntries || divEntries.length === 0) return "";
   const validDivEntries = validateDivEntries(divEntries);
-  if (validDivEntries.errorCode !== ErrorCode.None) return "";
+  if (validDivEntries.errorCode !== ErrorCode.NONE) return "";
 
   const getSqlValues = (divEntries: divEntryType[]) => {
     const values: string[] = [];

@@ -1,6 +1,6 @@
-import { validatePlayers } from "@/app/api/players/validate";
+import { validatePlayers } from "@/lib/validation/players/validate";
 import { playerType, validPlayersType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { deleteAllPlayersForSquad, postManyPlayers } from "./dbPlayers";
 
 /**
@@ -19,11 +19,11 @@ export const replaceManyPlayers = async (players: playerType[], squadId: string)
   if (!isValidBtDbId(squadId, "sqd")) {
     throw new Error('Invalid squad id');
   }
-  let validPlayers: validPlayersType = { players: [], errorCode: ErrorCode.None };
+  let validPlayers: validPlayersType = { players: [], errorCode: ErrorCode.NONE };
   if (players.length !== 0) {
     validPlayers = validatePlayers(players);
   }  
-  if (validPlayers.errorCode !== ErrorCode.None
+  if (validPlayers.errorCode !== ErrorCode.NONE
     || validPlayers.players.length !== players.length)
   { 
     if (validPlayers.players.length === 0) {      

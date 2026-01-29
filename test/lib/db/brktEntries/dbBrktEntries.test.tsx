@@ -22,7 +22,7 @@ import {
 } from "@/lib/db/brktEntries/dbBrktEntries";
 import { replaceManyBrktEntries } from "@/lib/db/brktEntries/dbBrktEntriesReplaceMany";
 import { cloneDeep } from "lodash";
-import { maxDate, minDate } from "@/lib/validation";
+import { maxDate, minDate } from "@/lib/validation/validation";
 import { compareAsc } from "date-fns";
 
 // before running this test, run the following commands in the terminal:

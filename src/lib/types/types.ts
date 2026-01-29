@@ -1,7 +1,14 @@
 import { BracketList } from "@/components/brackets/bracketListClass";
-import { ErrorCode } from "../validation"
+import { ErrorCode } from "../validation/validation"
+import type { SquadStage } from "@prisma/client";
 
 export type roleTypes = "ADMIN" | "DIRECTOR" | "USER"
+
+export enum tmntFormParent {  
+  NEW,
+  EDIT,
+  RUN,  
+}
 
 // usr - user
 // bwl - bowl
@@ -9,6 +16,7 @@ export type roleTypes = "ADMIN" | "DIRECTOR" | "USER"
 // evt - event
 // div - division
 // sqd - squad
+// stg - stage
 // lan - lane  
 // pot - pot 
 // brk - bracket
@@ -23,13 +31,11 @@ export type roleTypes = "ADMIN" | "DIRECTOR" | "USER"
 // bsd - bracket seed
 
 export const idTypesArray = [
-  'usr', 'bwl', 'tmt', 'evt', 'div', 'sqd', 'lan', 'pot', 'brk', 'elm',
-  'ply', 'bye', 'den', 'pen', 'ben', 'een', 'gam', 'obk', 'bsd'
+  'usr', 'bwl', 'tmt', 'evt', 'div', 'sqd', 'stg', 'lan', 'pot', 'brk',
+  'elm', 'ply', 'bye', 'den', 'pen', 'ben', 'een', 'gam', 'obk', 'bsd'
 ] as const;
 
 export type idTypes = typeof idTypesArray[number];
-
-// export type idTypes = 'usr' | 'bwl' | 'tmt' | 'evt' | 'div' | 'sqd' | 'lan' | 'pot' | 'brk' | 'elm' | 'ply' | 'bye' | 'den' | 'pen' | 'ben' | 'een' | 'gam'  | 'obk' | 'bsd'; 
 
 export type userType = {
   id: string
@@ -196,7 +202,6 @@ export type squadType = {
   squad_date_err: string,
   squad_time: string | null,
   squad_time_err: string,
-  finalized: boolean,
   sort_order: number,
   errClassName: string,  
 }
@@ -209,9 +214,46 @@ export type squadDataType = {
   lane_count: number,      
   starting_lane: number,      
   squad_date: Date,      
-  squad_time: string | null,
-  finalized: boolean,
+  squad_time: string | null,  
   sort_order: number,      
+}
+
+export type fullStageType = {
+  id: string,
+  squad_id: string,
+  stage: SquadStage,
+  stage_set_at: Date
+  scores_started_at: Date | null
+  stage_override_enabled: boolean,
+  stage_override_at: Date | null,
+  stage_override_reason: string
+}
+
+export type fullStageDataType = {
+  id: string,
+  squad_id: string,            
+  stage: SquadStage,
+  stage_set_at: Date,
+  scores_started_at: Date | null,
+  stage_override_enabled: boolean,  
+  stage_override_at: Date | null,
+  stage_override_reason: string,
+}
+
+export type justStageType = {
+  id: string,
+  squad_id: string,
+  stage: SquadStage,
+  stage_set_at: Date,
+  scores_started_at: Date | null
+}
+
+export type justStageOverrideType = {
+  id: string,
+  squad_id: string,
+  stage_override_enabled: boolean,
+  stage_override_at: Date | null,
+  stage_override_reason: string
 }
 
 export type validSquadsType = {
@@ -661,16 +703,6 @@ export type editedOneSquadEntriesType = {
   elimEntries: tmntEntryElimEntryType[];
 }
 
-export enum tmntActions {
-  Error = -1,
-  None = 0,
-  New = 1,
-  Delete = 2,
-  Edit = 3,
-  Run = 4,
-  Disable = 5,
-}
-
 export type tmntPropsType = {  
   tmnt: tmntType;
   setTmnt: (tmnt: tmntType) => void;
@@ -754,8 +786,9 @@ export type tmntFullDataForPrismaType = {
 }
 
 export type tmntFormDataType = {
-  tmntFullData: tmntFullType;
-  tmntAction: tmntActions;
+  tmntFullData: tmntFullType;  
+  stage: SquadStage;
+  parentForm: tmntFormParent;
 }
 
 export type tmntFullDataErrType = {
@@ -766,17 +799,19 @@ export type tmntFullDataErrType = {
 }
 
 export enum ioDataError {  
-  None = 0,
-  Tmnt = -1,
-  Events = -2,    
-  Divs = -3,
-  Squads = -4,
-  Lanes = -5,
-  Pots = -6,
-  Brkts = -7,
-  Elims = -8,
-  OtherError = -99,
+  NONE,
+  TMNT,
+  EVENTS,
+  DIVS,
+  SQUADS,
+  LANES,
+  POTS,
+  BRKTS,
+  ELIMS,
+  OTHER_ERROR,
 }
+
+export type DateInput = string | number | Date | null | undefined;
 
 export type testDateType = {
   id: number,

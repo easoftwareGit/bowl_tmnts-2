@@ -1,5 +1,5 @@
 import { btDbUuid } from "@/lib/uuid";
-import { isValidBtDbId } from "@/lib/validation";
+import { isValidBtDbId } from "@/lib/validation/validation";
 
 describe('tests for uuid', () => {  
 

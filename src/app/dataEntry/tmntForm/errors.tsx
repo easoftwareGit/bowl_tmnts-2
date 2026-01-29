@@ -1,4 +1,4 @@
-import { sanitize } from "@/lib/sanitize";
+import { sanitize } from "@/lib/validation/sanitize";
 import { eventType, divType, squadType, AcdnErrType, elimType, brktType } from "@/lib/types/types";
 import styles from "./tmntForm.module.css";
 export const objErrClassName = styles.objError;

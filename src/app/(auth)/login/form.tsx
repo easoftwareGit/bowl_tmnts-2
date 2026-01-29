@@ -3,7 +3,7 @@
 import React, { ChangeEvent, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { maxEmailLength, isEmail, maxPasswordLength } from "@/lib/validation";
+import { maxEmailLength, isEmail, maxPasswordLength } from "@/lib/validation/validation";
 import { signIn } from "next-auth/react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Alert } from "@/components/ui/index";

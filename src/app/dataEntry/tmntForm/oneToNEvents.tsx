@@ -1,5 +1,5 @@
 import React, { useState, ChangeEvent } from "react";
-import { eventType, AcdnErrType, squadType, validTypeStrings, tmntActions } from "../../../lib/types/types";
+import { eventType, AcdnErrType, squadType } from "../../../lib/types/types";
 import { initEvent } from "../../../lib/db/initVals";
 import { Tabs, Tab, OverlayTrigger, Tooltip } from "react-bootstrap";
 import ModalConfirm, { delConfTitle } from "@/components/modal/confirmModal";
@@ -21,7 +21,7 @@ import {
   maxTeamSize,
   zeroAmount,
   maxMoney,
-} from "@/lib/validation";
+} from "@/lib/validation/validation";
 import EaCurrencyInput, { minMoneyText, maxMoneyText } from "@/components/currency/eaCurrencyInput";
 import { localConfig, currRexEx } from "@/lib/currency/const";
 import { btDbUuid } from "@/lib/uuid";
@@ -33,7 +33,7 @@ interface ChildProps {
   squads: squadType[],
   setSquads: (squds: squadType[]) => void;
   setAcdnErr: (objAcdnErr: AcdnErrType) => void;   
-  tmntAction: tmntActions;
+  isDisabled: boolean;
 }
 interface AddOrDelButtonProps {
   id: string,
@@ -260,7 +260,7 @@ const OneToNEvents: React.FC<ChildProps> = ({
   squads,
   setSquads,
   setAcdnErr,  
-  tmntAction,
+  isDisabled,
 }) => {
   
   const defaultTabKey = events[0].id;
@@ -272,7 +272,6 @@ const OneToNEvents: React.FC<ChildProps> = ({
   
   const tmntId = events[0].tmnt_id; // save parent id for all events 
 
-  const isDisabled = (tmntAction === tmntActions.Run || tmntAction === tmntActions.Disable);
   const addBtnStyle = isDisabled ? 'btn-dark' : 'btn-success';
   const delBtnStyle = isDisabled ? 'btn-dark' : 'btn-danger';
 
@@ -518,42 +517,14 @@ const OneToNEvents: React.FC<ChildProps> = ({
     if (formattedValue === 'NaN' || typeof (Number(formattedValue)) !== 'number') {
       formattedValue = ''
     }
-    // const valueNum = Number(formattedValue)
-    // if (valueNum < zeroAmount || valueNum > maxMoney) {
-    //   formattedValue = ''
-    // }
     const temp_event = {
       ...event,
       [name]: formattedValue,
       [nameErr]: '',
     }
-    // let lpoxStr = ''
-    // let lpoxValid: lpoxValidTypes = ''
     const lpoxStr = calcLpox(temp_event);
     temp_event.lpox = lpoxStr;
     const lpoxValid = calcLpoxValid(temp_event);
-    // if (Number(temp_event.entry_fee) === Number(lpoxStr)) {
-    //   lpoxValid = 'is-valid'        
-    // } else {
-    //   lpoxValid = 'is-invalid'      
-    // }
-    // if (!temp_event.entry_fee
-    //     && !temp_event.lineage
-    //     && !temp_event.prize_fund
-    //     && !temp_event.other
-    //     && !temp_event.expenses) {
-    // } else {
-    //   const lpoxNum = Number(temp_event.lineage)
-    //     + Number(temp_event.prize_fund)
-    //     + Number(temp_event.other)
-    //     + Number(temp_event.expenses);
-    //   lpoxStr = formatValue2Dec(lpoxNum.toString(), localConfig)
-    //   if (Number(temp_event.entry_fee) === lpoxNum) {
-    //     lpoxValid = 'is-valid'        
-    //   } else {
-    //     lpoxValid = 'is-invalid'      
-    //   }
-    // }
     return {
       ...temp_event,
       lpox: lpoxStr,

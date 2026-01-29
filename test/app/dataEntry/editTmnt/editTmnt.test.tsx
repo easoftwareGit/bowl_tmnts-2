@@ -1,8 +1,8 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import EditTmntPage from "@/app/dataEntry/editTmnt/[tmntId]/page";
-import { tmntActions } from "@/lib/types/types";
+import { SquadStage } from "@prisma/client";
 
 // ----- Mocks -----
 jest.mock("next/navigation", () => ({
@@ -46,7 +46,7 @@ jest.mock("@/app/dataEntry/tmntForm/tmntForm", () => ({
 jest.mock("@/app/dataEntry/tmntForm/tmntTools", () => ({
   __esModule: true,
   getBlankTmntFullData: jest.fn(),
-  tmntHasEntries: jest.fn(),
+  getSquadStage: jest.fn(),
 }));
 
 // Imports for typed access to mocks AFTER mocks, so imports use the mocks
@@ -59,10 +59,11 @@ import {
 } from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import {
   getBlankTmntFullData,
-  tmntHasEntries,
+  getSquadStage,
 } from "@/app/dataEntry/tmntForm/tmntTools";
+import { tmntFormParent } from "@/lib/types/types";
 
-// Typed mock handles 
+// Typed mock handles
 const useDispatchMock =
   useDispatch as unknown as jest.MockedFunction<typeof useDispatch>;
 const useSelectorMock =
@@ -71,7 +72,9 @@ const useParamsMock =
   useParams as unknown as jest.MockedFunction<typeof useParams>;
 
 const fetchTmntFullDataMock =
-  fetchTmntFullData as unknown as jest.MockedFunction<typeof fetchTmntFullData>;
+  fetchTmntFullData as unknown as jest.MockedFunction<
+    typeof fetchTmntFullData
+  >;
 const getTmntFullDataLoadStatusMock =
   getTmntFullDataLoadStatus as unknown as jest.MockedFunction<
     typeof getTmntFullDataLoadStatus
@@ -85,8 +88,8 @@ const getBlankTmntFullDataMock =
   getBlankTmntFullData as unknown as jest.MockedFunction<
     typeof getBlankTmntFullData
   >;
-const tmntHasEntriesMock =
-  tmntHasEntries as unknown as jest.MockedFunction<typeof tmntHasEntries>;
+const getSquadStageMock =
+  getSquadStage as unknown as jest.MockedFunction<typeof getSquadStage>;
 
 type MockState = {
   tmntFullData: {
@@ -141,14 +144,15 @@ describe("EditTmntPage (src/app/dataEntry/editTmnt/[tmntId]/page.tsx)", () => {
       tmnt: { id: "tmt_blank" },
     } as any);
 
-    tmntHasEntriesMock.mockReturnValue(false);
+    // default squadStage for tests that don't override it
+    getSquadStageMock.mockResolvedValue(SquadStage.DEFINE);
   });
 
   it("dispatches fetchTmntFullData(tmntId) on mount (when tmntId exists)", () => {
     setupSelectors({
       status: "loading",
       error: undefined,
-      stateTmntFullData: { tmnt: { id: "tmt_from_state" } },
+      stateTmntFullData: { tmnt: { id: "tmt_from_state" }, squads: [] },
     });
 
     render(<EditTmntPage />);
@@ -168,7 +172,7 @@ describe("EditTmntPage (src/app/dataEntry/editTmnt/[tmntId]/page.tsx)", () => {
     setupSelectors({
       status: "loading",
       error: undefined,
-      stateTmntFullData: { tmnt: { id: "tmt_from_state" } },
+      stateTmntFullData: { tmnt: { id: "tmt_from_state" }, squads: [] },
     });
 
     render(<EditTmntPage />);
@@ -181,7 +185,7 @@ describe("EditTmntPage (src/app/dataEntry/editTmnt/[tmntId]/page.tsx)", () => {
     setupSelectors({
       status: "loading",
       error: undefined,
-      stateTmntFullData: { tmnt: { id: "tmt_from_state" } },
+      stateTmntFullData: { tmnt: { id: "tmt_from_state" }, squads: [] },
     });
 
     render(<EditTmntPage />);
@@ -192,13 +196,16 @@ describe("EditTmntPage (src/app/dataEntry/editTmnt/[tmntId]/page.tsx)", () => {
 
     expect(screen.queryByText(/edit tournament/i)).not.toBeInTheDocument();
     expect(screen.queryByTestId("TmntDataFormMock")).not.toBeInTheDocument();
+
+    // stage should not be requested while not succeeded
+    expect(getSquadStageMock).not.toHaveBeenCalled();
   });
 
   it("when not loading and not succeeded and has tmntError, shows the error text", () => {
     setupSelectors({
       status: "failed",
       error: "Boom",
-      stateTmntFullData: { tmnt: { id: "tmt_from_state" } },
+      stateTmntFullData: { tmnt: { id: "tmt_from_state" }, squads: [] },
     });
 
     render(<EditTmntPage />);
@@ -213,28 +220,42 @@ describe("EditTmntPage (src/app/dataEntry/editTmnt/[tmntId]/page.tsx)", () => {
       "Error: Boom tmntLoadStatus: failed"
     );
     expect(screen.queryByTestId("TmntDataFormMock")).not.toBeInTheDocument();
+
+    expect(getSquadStageMock).not.toHaveBeenCalled();
   });
 
-  it("when succeeded, renders the page header and the TmntDataForm", () => {
+  it("when succeeded, resolves squad stage and then renders the page header and the TmntDataForm", async () => {
+    const stateData = { tmnt: { id: "tmt_real" }, squads: [{ id: "sqd_1" }] };
+
     setupSelectors({
       status: "succeeded",
       error: undefined,
-      stateTmntFullData: { tmnt: { id: "tmt_real" } },
+      stateTmntFullData: stateData,
     });
+
+    getSquadStageMock.mockResolvedValueOnce(SquadStage.DEFINE);
 
     render(<EditTmntPage />);
 
-    expect(screen.getByTestId("WaitModalMock")).toHaveAttribute("data-show", "false");
-    expect(
-      screen.getByRole("heading", { name: /edit tournament/i })
-    ).toBeInTheDocument();
+    // WaitModal should be hidden
+    expect(screen.getByTestId("WaitModalMock")).toHaveAttribute(
+      "data-show",
+      "false"
+    );
+
+    // header and form appear only after stage has been resolved (stage !== null)
+    await waitFor(() => {
+      expect(
+        screen.getByRole("heading", { name: /edit tournament/i })
+      ).toBeInTheDocument();
+    });
+
     expect(screen.getByTestId("TmntDataFormMock")).toBeInTheDocument();
+    expect(getSquadStageMock).toHaveBeenCalledWith("sqd_1");
   });
 
-  it("when succeeded and tmntHasEntries=false, passes tmntAction=Edit to TmntDataForm", () => {
-    tmntHasEntriesMock.mockReturnValue(false);
-
-    const stateData = { tmnt: { id: "tmt_real" } };
+  it("when succeeded and squadStage=DEFINE, passes squadStage=DEFINE and parentForm=EDIT to TmntDataForm", async () => {
+    const stateData = { tmnt: { id: "tmt_real" }, squads: [{ id: "sqd_1" }] };
 
     setupSelectors({
       status: "succeeded",
@@ -242,21 +263,22 @@ describe("EditTmntPage (src/app/dataEntry/editTmnt/[tmntId]/page.tsx)", () => {
       stateTmntFullData: stateData,
     });
 
+    getSquadStageMock.mockResolvedValueOnce(SquadStage.DEFINE);
+
     render(<EditTmntPage />);
 
-    const form = screen.getByTestId("TmntDataFormMock");
+    const form = await screen.findByTestId("TmntDataFormMock");
     const props = JSON.parse(form.textContent ?? "{}");
 
     expect(props).toEqual({
       tmntFullData: stateData,
-      tmntAction: tmntActions.Edit,
+      stage: SquadStage.DEFINE,
+      parentForm: tmntFormParent.EDIT,
     });
   });
 
-  it("when succeeded and tmntHasEntries=true, passes tmntAction=Disable to TmntDataForm", () => {
-    tmntHasEntriesMock.mockReturnValue(true);
-
-    const stateData = { tmnt: { id: "tmt_real" } };
+  it("when succeeded and squadStage=ENTRIES, passes squadStage=ENTRIES and parentForm=EDIT to TmntDataForm", async () => {
+    const stateData = { tmnt: { id: "tmt_real" }, squads: [{ id: "sqd_1" }] };
 
     setupSelectors({
       status: "succeeded",
@@ -264,14 +286,18 @@ describe("EditTmntPage (src/app/dataEntry/editTmnt/[tmntId]/page.tsx)", () => {
       stateTmntFullData: stateData,
     });
 
+    // e.g., ENTRIES stage
+    getSquadStageMock.mockResolvedValueOnce(SquadStage.ENTRIES);
+
     render(<EditTmntPage />);
 
-    const form = screen.getByTestId("TmntDataFormMock");
+    const form = await screen.findByTestId("TmntDataFormMock");
     const props = JSON.parse(form.textContent ?? "{}");
 
     expect(props).toEqual({
       tmntFullData: stateData,
-      tmntAction: tmntActions.Disable,
+      stage: SquadStage.ENTRIES,
+      parentForm: tmntFormParent.EDIT,
     });
   });
 
@@ -279,7 +305,7 @@ describe("EditTmntPage (src/app/dataEntry/editTmnt/[tmntId]/page.tsx)", () => {
     setupSelectors({
       status: "idle",
       error: undefined,
-      stateTmntFullData: { tmnt: { id: "tmt_from_state" } },
+      stateTmntFullData: { tmnt: { id: "tmt_from_state" }, squads: [] },
     });
 
     render(<EditTmntPage />);
@@ -287,7 +313,95 @@ describe("EditTmntPage (src/app/dataEntry/editTmnt/[tmntId]/page.tsx)", () => {
     // memo fallback executed (even though not rendered), so this should be called
     expect(getBlankTmntFullData).toHaveBeenCalledTimes(1);
 
-    // but form only renders on succeeded
+    // but form only renders on succeeded + stage resolved
     expect(screen.queryByTestId("TmntDataFormMock")).not.toBeInTheDocument();
+
+    expect(getSquadStageMock).not.toHaveBeenCalled();
   });
+
+  it("when succeeded but state has no squads, shows stage error text", async () => {
+    const stateData = { tmnt: { id: "tmt_real" }, squads: [] };
+
+    setupSelectors({
+      status: "succeeded",
+      error: undefined,
+      stateTmntFullData: stateData,
+    });
+
+    render(<EditTmntPage />);
+
+    // getSquadStage should not be called when there is no squad id
+    expect(getSquadStageMock).not.toHaveBeenCalled();
+
+    // stageError should be set to "Tournament has no squad" and shown in the UI
+    // (the component still renders the outer container since tmntLoadStatus === "succeeded"
+    //   but stage is set to ERROR)
+    await waitFor(() => {
+      expect(
+        screen.getByText(/tournament has no squad/i)
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("when getSquadStage rejects, stageError is shown", async () => {
+    const stateData = { tmnt: { id: "tmt_real" }, squads: [{ id: "sqd_1" }] };
+
+    setupSelectors({
+      status: "succeeded",
+      error: undefined,
+      stateTmntFullData: stateData,
+    });
+
+    getSquadStageMock.mockRejectedValueOnce(new Error("DB failure"));
+
+    render(<EditTmntPage />);
+
+    // error message should appear
+    await waitFor(() => {
+      expect(screen.getByText(/stage error:/i)).toBeInTheDocument();
+      // expect(screen.getByText(/db failure/i)).toBeInTheDocument();
+    });
+    // ok not to use wait for here because stage error and db failure 
+    // are shown at the same time
+    expect(screen.getByText(/db failure/i)).toBeInTheDocument();
+
+    // form should still render (with DISABLE)
+    const form = await screen.findByTestId("TmntDataFormMock");
+    const props = JSON.parse(form.textContent ?? "{}");
+
+    expect(props).toEqual({
+      tmntFullData: stateData,
+      stage: SquadStage.ERROR, 
+      parentForm: tmntFormParent.EDIT
+    });
+  });
+
+  it("does not update stage if unmounted before getSquadStage resolves", async () => {
+    const stateData = { tmnt: { id: "tmt_real" }, squads: [{ id: "sqd_1" }] };
+
+    setupSelectors({
+      status: "succeeded",
+      error: undefined,
+      stateTmntFullData: stateData,
+    });
+
+    let resolveStage: (s: SquadStage) => void;
+    const stagePromise = new Promise<SquadStage>((resolve) => {
+      resolveStage = resolve;
+    });
+
+    getSquadStageMock.mockReturnValueOnce(stagePromise as any);
+
+    const { unmount } = render(<EditTmntPage />);
+
+    // Unmount before the stage is resolved
+    unmount();
+
+    // Now resolve the promise
+    resolveStage!(SquadStage.DEFINE);
+
+    // If this test runs without React act warnings, we've effectively
+    // verified the cleanup works.
+  });
+
 });

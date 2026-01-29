@@ -1,6 +1,6 @@
-import { validateElims } from "@/app/api/elims/validate";
+import { validateElims } from "@/lib/validation/elims/validate";
 import { elimType, validElimsType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { deleteAllElimsForSquad, postManyElims } from "./dbElims";
 
 /**
@@ -19,11 +19,11 @@ export const replaceManyElims = async (elims: elimType[], squadId: string): Prom
   if (!isValidBtDbId(squadId, "sqd")) {
     throw new Error('Invalid squad id');
   }
-  let validElims: validElimsType = { elims: [], errorCode: ErrorCode.None };
+  let validElims: validElimsType = { elims: [], errorCode: ErrorCode.NONE };
   if (elims.length !== 0) {
     validElims = validateElims(elims);
   }  
-  if (validElims.errorCode !== ErrorCode.None
+  if (validElims.errorCode !== ErrorCode.NONE
     || validElims.elims.length !== elims.length)
   { 
     if (validElims.elims.length === 0) {      

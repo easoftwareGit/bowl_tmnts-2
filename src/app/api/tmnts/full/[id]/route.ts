@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma"; 
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { tmntFullType } from "@/lib/types/types";
 import { tmntFullDataForPrisma } from "../../dataForPrisma";
 import { getErrorStatus } from "@/app/api/errCodes";
@@ -155,7 +155,7 @@ export async function PUT(
     const tmntFullData: tmntFullType = await request.json();
     // validate tmnt full data
     const validationResult = validateFullTmnt(tmntFullData);
-    if (validationResult.errorCode !== ErrorCode.None || id !== tmntFullData.tmnt.id) {
+    if (validationResult.errorCode !== ErrorCode.NONE || id !== tmntFullData.tmnt.id) {
       return NextResponse.json(
         { error: "validation failed", details: validationResult },
         { status: 422 }

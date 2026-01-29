@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { validateEvent, sanitizeEvent, allEventMoneyValid } from "@/app/api/events/validate";
-import { ErrorCode } from "@/lib/validation";
+import { validateEvent, sanitizeEvent, allEventMoneyValid } from "@/lib/validation/events/validate";
+import { ErrorCode } from "@/lib/validation/validation";
 import { eventDataType, eventType } from "@/lib/types/types";
 import { initEvent } from "@/lib/db/initVals";
 import { getErrorStatus } from "../errCodes";
@@ -61,13 +61,13 @@ export async function POST(request: Request) {
     }
     const toPost = sanitizeEvent(toCheck);
     const errCode = validateEvent(toPost);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = 'missing data'
           break;
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = 'invalid data'
           break;        
         default:

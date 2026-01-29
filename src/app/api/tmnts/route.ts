@@ -1,8 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode } from "@/lib/validation";
+import { ErrorCode } from "@/lib/validation/validation";
 import { tmntDataType, tmntType } from "@/lib/types/types";
-import { sanitizeTmnt, validateTmnt } from "./valildate";
+import { sanitizeTmnt, validateTmnt } from "../../../lib/validation/tmnts/valildate";
 import { initTmnt } from "@/lib/db/initVals";
 import { getErrorStatus } from "../errCodes";
 import { tmntDataForPrisma } from "./dataForPrisma";
@@ -44,13 +44,13 @@ export async function POST(request: Request) {
 
     const toPost = sanitizeTmnt(toCheck);
     const errCode = validateTmnt(toPost);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = 'missing data'
           break;
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = 'invalid data'
           break;        
         default:

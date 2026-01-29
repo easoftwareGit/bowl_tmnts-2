@@ -5,7 +5,7 @@ import {
   maxFirstNameLength,
   maxLastNameLength,
   maxPhoneLength,
-} from "@/lib/validation";
+} from "@/lib/validation/validation";
 import { useSession } from "next-auth/react";
 import { findUserByEmail } from "@/lib/db/users/users";
 import { Alert } from "@/components/ui/index";

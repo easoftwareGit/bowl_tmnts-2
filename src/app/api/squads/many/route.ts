@@ -1,8 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode } from "@/lib/validation";
+import { ErrorCode } from "@/lib/validation/validation";
 import { squadType, squadDataType } from "@/lib/types/types";
-import { validateSquads } from "../validate";
+import { validateSquads } from "../../../../lib/validation/squads/validate";
 import { getErrorStatus } from "../../errCodes";
 import { squadDataForPrisma } from "../dataForPrisma";
 
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ count: 0 }, { status: 200 });
     }
     const validSquads = await validateSquads(squads); // need to use await! or else returns a promise
-    if (validSquads.errorCode !== ErrorCode.None) {
+    if (validSquads.errorCode !== ErrorCode.NONE) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
     // convert valid squads into SquadData to post

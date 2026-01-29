@@ -1,12 +1,12 @@
 import React, { useState, ChangeEvent } from "react";
-import { divType, AcdnErrType, potType, brktType, elimType, HdcpForTypes, tmntActions } from "../../../lib/types/types";
+import { divType, AcdnErrType, potType, brktType, elimType, HdcpForTypes } from "../../../lib/types/types";
 import { defaultHdcpFrom, initDiv } from "../../../lib/db/initVals";
 import { Tabs, Tab, OverlayTrigger, Tooltip } from "react-bootstrap";
 import ModalConfirm, { delConfTitle } from "@/components/modal/confirmModal";
 import ModalErrorMsg, { cannotDeleteTitle } from "@/components/modal/errorModal";
 import { initModalObj } from "@/components/modal/modalObjType";
 import { objErrClassName, acdnErrClassName, getAcdnErrMsg, noAcdnErr, isDuplicateDivName } from "./errors";
-import { maxEventLength, minHdcpPer, maxHdcpPer, minHdcpFrom, maxHdcpFrom } from "@/lib/validation";
+import { maxEventLength, minHdcpPer, maxHdcpPer, minHdcpFrom, maxHdcpFrom } from "@/lib/validation/validation";
 import { EaPercentInput } from "@/components/currency/eaCurrencyInput";
 import { formatValuePercent2Dec } from "@/lib/currency/formatValue";
 import { btDbUuid } from "@/lib/uuid";
@@ -18,7 +18,7 @@ interface ChildProps {
   brkts: brktType[],
   elims: elimType[],
   setAcdnErr: (objAcdnErr: AcdnErrType) => void;
-  tmntAction: tmntActions;
+  isDisabled: boolean;
 }
 interface AddOrDelButtonProps {
   id: string;
@@ -131,7 +131,7 @@ const OneToNDivs: React.FC<ChildProps> = ({
   brkts,
   elims,
   setAcdnErr,
-  tmntAction,
+  isDisabled,
 }) => { 
   
   const defaultTabKey = divs[0].id;
@@ -141,11 +141,9 @@ const OneToNDivs: React.FC<ChildProps> = ({
   const [tabKey, setTabKey] = useState(defaultTabKey);   
   const [sortOrder, setSortOrder] = useState(divs[divs.length - 1].sort_order); 
   
-  const tmntId = divs[0].tmnt_id; // index 0 always has tmnt_id
-  const isDisabled = (tmntAction === tmntActions.Run || tmntAction === tmntActions.Disable);
+  const tmntId = divs[0].tmnt_id; // index 0 always has tmnt_id  
   const addBtnStyle = isDisabled ? 'btn-dark' : 'btn-success';
   const delBtnStyle = isDisabled ? 'btn-dark' : 'btn-danger';
-
 
   const handleAdd = () => {
     const newDiv: divType = {
@@ -452,7 +450,9 @@ const OneToNDivs: React.FC<ChildProps> = ({
         <div className="col-sm-3 d-flex justify-content-center align-items-end">
           <button
             className={`btn ${delBtnStyle}`}
-            id="divDel"
+            // id="divDel"
+            id={`divDel${id}`}
+            data-testid={`divDel${id}`}
             onClick={() => handleDelete(id)}
             disabled={isDisabled}
           >

@@ -2,8 +2,8 @@ import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { initPotEntry } from "@/lib/db/initVals";
 import { potEntryType } from "@/lib/types/types";
-import { sanitizePotEntry, validatePotEntry } from "./validate";
-import { ErrorCode } from "@/lib/validation";
+import { sanitizePotEntry, validatePotEntry } from "../../../lib/validation/potEntries/validate";
+import { ErrorCode } from "@/lib/validation/validation";
 import { getErrorStatus } from "../errCodes";
 import { potEntryDataForPrisma } from "./dataForPrisma";
 
@@ -34,13 +34,13 @@ export const POST = async (request: NextRequest) => {
 
     const toPost = sanitizePotEntry(toCheck);
     const errCode = validatePotEntry(toPost);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = 'missing data'
           break;
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = 'invalid data'
           break;
         default:

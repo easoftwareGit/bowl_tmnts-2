@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { tmntFullType } from "@/lib/types/types";
 import { tmntFullDataForPrisma } from "../../dataForPrisma";
 import { getErrorStatus } from "@/app/api/errCodes";
@@ -22,7 +22,7 @@ export async function PUT(
     // validate tmnt full entries data
     const validationResult = validateFullTmnt(tmntFullEntriesData);
     if (
-      validationResult.errorCode !== ErrorCode.None ||
+      validationResult.errorCode !== ErrorCode.NONE ||
       id !== tmntFullEntriesData.tmnt.id
     ) {
       return NextResponse.json(

@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { ErrorCode } from "@/lib/validation";
+import { ErrorCode } from "@/lib/validation/validation";
 import { userType } from "@/lib/types/types";
 import { initUser } from "@/lib/db/initVals";
 import { sanitizeUser, validateUser } from "../../users/validate";
@@ -25,13 +25,13 @@ export async function POST(req: Request) {
     }
     const sanitizedUser: userType = sanitizeUser(postUser);  
     const errCode = validateUser(sanitizedUser, checkPhone, true);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = 'missing data'
           break;
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = 'invalid data'
           break;
         default:

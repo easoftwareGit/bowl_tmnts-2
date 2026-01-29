@@ -2,8 +2,9 @@
 import React from "react";
 import { useSession } from "next-auth/react"; 
 import TmntDataForm from "../tmntForm/tmntForm";
-import { tmntActions, tmntFormDataType, tmntFullType } from "@/lib/types/types";
+import { tmntFormDataType, tmntFormParent, tmntFullType } from "@/lib/types/types";
 import { getBlankTmntFullData } from "../tmntForm/tmntTools";
+import { SquadStage } from "@prisma/client";
 
 const NewTmntPage = () => {
 
@@ -15,7 +16,8 @@ const NewTmntPage = () => {
 
   const dataOneTmnt: tmntFormDataType = {
     tmntFullData: blankTmnt,
-    tmntAction: tmntActions.New
+    stage: SquadStage.DEFINE,
+    parentForm: tmntFormParent.NEW,
   }
   
   return (

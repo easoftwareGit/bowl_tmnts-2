@@ -1,6 +1,6 @@
-import { validateDivEntries } from "@/app/api/divEntries/validate";
+import { validateDivEntries } from "@/lib/validation/divEntries/validate";
 import { divEntryType, validDivEntriesType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { deleteAllDivEntriesForSquad, postManyDivEntries } from "./dbDivEntries";
 
 /**
@@ -20,11 +20,11 @@ export const replaceManyDivEntries = async (divEntries: divEntryType[], squadId:
   if (!isValidBtDbId(squadId, "sqd")) {
     throw new Error('Invalid squad id');
   }
-  let validDivEntries: validDivEntriesType = { divEntries: [], errorCode: ErrorCode.None };
+  let validDivEntries: validDivEntriesType = { divEntries: [], errorCode: ErrorCode.NONE };
   if (divEntries.length !== 0) {
     validDivEntries = validateDivEntries(divEntries);
   }  
-  if (validDivEntries.errorCode !== ErrorCode.None
+  if (validDivEntries.errorCode !== ErrorCode.NONE
     || validDivEntries.divEntries.length !== divEntries.length)
   { 
     if (validDivEntries.divEntries.length === 0) {      

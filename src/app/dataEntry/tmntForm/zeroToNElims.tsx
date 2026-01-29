@@ -1,13 +1,13 @@
 import React, { ChangeEvent, useState } from 'react'
-import { elimType, divType, squadType, AcdnErrType, tmntActions } from "../../../lib/types/types";
+import { elimType, divType, squadType, AcdnErrType } from "../../../lib/types/types";
 import { initModalObj } from '@/components/modal/modalObjType';
 import ModalConfirm, { delConfTitle } from '@/components/modal/confirmModal';
 import { Tab, Tabs } from 'react-bootstrap';
 import { getBrktOrElimName, getDivName } from '@/lib/getName';
 import EaCurrencyInput, { maxMoneyText, minFeeText } from '@/components/currency/eaCurrencyInput';
 import { acdnErrClassName, getAcdnErrMsg, noAcdnErr, objErrClassName } from './errors';
-import { maxGames, maxMoney, minFee, minGames } from '@/lib/validation';
-import { initElim } from '../../../lib/db/initVals';
+import { maxGames, maxMoney, minFee } from '@/lib/validation/validation';
+import { defaultElimGames, initElim } from '../../../lib/db/initVals';
 import { btDbUuid } from '@/lib/uuid';
 import clsx from "clsx";
 import styles from "./tmntForm.module.css";
@@ -19,7 +19,7 @@ interface ChildProps {
   squads: squadType[];
   setAcdnErr: (objAcdnErr: AcdnErrType) => void;
   setShowingModal: (showingModal: boolean) => void;
-  tmntAction: tmntActions;
+  isDisabled: boolean;
 }
 interface NumberProps {
   elim: elimType;
@@ -73,6 +73,8 @@ const validateElim = (
     return null as any;
   }
 
+  const maxStartGame = squadGames - (defaultElimGames - 1);
+  
   const vElim = {
     ...elim,
     div_err: "",
@@ -94,8 +96,8 @@ const validateElim = (
   }
   if (elim.start < 1) {
     vElim.start_err = 'Start cannot be less than 1';    
-  } else if (elim.start > squadGames) {
-    vElim.start_err = 'Start cannot be more than ' + squadGames;
+  } else if (elim.start > maxStartGame) {
+    vElim.start_err = 'Start cannot be more than ' + maxStartGame;
   }
   if (elim.games < 1) {
     vElim.games_err  = 'Games cannot be less than 1';
@@ -103,7 +105,7 @@ const validateElim = (
     vElim.games_err  = 'Games cannot be more than ' + squadGames;    
   } 
   // right now only 1 squad is allowed, so just grab the first one
-  if (elim.start + elim.games - 1 > squadGames) {
+  if (elim.start + elim.games - 1 > maxStartGame) {
     vElim.start_err = 'Eliminator ends after last game';     
   }
   if (!vElim.div_err && !vElim.fee_err && !vElim.start_err && !vElim.games_err) {
@@ -121,6 +123,16 @@ const validateElim = (
   return vElim;
 }
 
+/**
+ * Validate elims
+ * 
+ * @param {elimType[]} elims - array of elims to validate
+ * @param {Function} setElims - function to update elims
+ * @param {divType[]} divs - array of divs
+ * @param {number} squadGames - number of games in squad
+ * @param {Function} setAcdnErr - function to update acdnErr
+ * @returns {boolean} - true if all elims are valid, false otherwise
+ */
 export const validateElims = (
   elims: elimType[],  
   setElims: (elims: elimType[]) => void,
@@ -189,10 +201,9 @@ const ZeroToNElims: React.FC<ChildProps> = ({
   squads,
   setAcdnErr,
   setShowingModal,
-  tmntAction,
+  isDisabled,
 }) => {
-
-  const isDisabled = (tmntAction === tmntActions.Run || tmntAction === tmntActions.Disable); 
+  
   const defaultTabKey = (isDisabled && elims.length > 0 && elims[0].id)
     ? elims[0].id
     : 'createElim';  

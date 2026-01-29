@@ -1,8 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode } from "@/lib/validation";
+import { ErrorCode } from "@/lib/validation/validation";
 import { potEntryDataType, potEntryType } from "@/lib/types/types";
-import { validatePotEntries } from "../validate";
+import { validatePotEntries } from "../../../../lib/validation/potEntries/validate";
 import { getErrorStatus } from "../../errCodes";
 import { potEntryDataForPrisma } from "../dataForPrisma";
 
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     }
     // sanitize and validate divEntries
     const validPotEntries = await validatePotEntries(potEntries); // need to use await! or else returns a promise
-    if (validPotEntries.errorCode !== ErrorCode.None) {
+    if (validPotEntries.errorCode !== ErrorCode.NONE) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
     // convert valid potEntries into potEntryData to post
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
 //   try {
 //     const tePotEntries: tmntEntryPotEntryType[] = await request.json();
 //     const validPotEntries = await validatePotEntries(tePotEntries as potEntryType[]); // need to use await! or else returns a promise
-//     if (validPotEntries.errorCode !== ErrorCode.None) {
+//     if (validPotEntries.errorCode !== ErrorCode.NONE) {
 //       return NextResponse.json({ error: "invalid data" }, { status: 422 });
 //     }
 

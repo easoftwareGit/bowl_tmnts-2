@@ -42,8 +42,7 @@ const manySquads: squadType[] = [
     squad_time: "10:00 AM",
     games: 6,
     lane_count: 10,
-    starting_lane: 11,
-    finalized: true,
+    starting_lane: 11,    
     sort_order: 1,
   },
   {
@@ -55,8 +54,7 @@ const manySquads: squadType[] = [
     squad_time: "03:00 PM",
     games: 6,
     lane_count: 12,
-    starting_lane: 1,
-    finalized: false,
+    starting_lane: 1,    
     sort_order: 2,
   },
 ];

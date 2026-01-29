@@ -5,8 +5,8 @@ import { RootState } from "@/redux/store";
 import PlayersEntryForm from "../../playersForm/playersForm";
 import {
   brktType,  
-  tmntActions,  
   tmntFormDataType,
+  tmntFormParent,
 } from "@/lib/types/types";
 import {    
   entryFeeColName,
@@ -30,6 +30,7 @@ import {
   getTmntFullDataLoadStatus,
 } from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import { populateRows } from "../../playersForm/populateRows";
+import { SquadStage } from "@prisma/client";
 
 // run tmnt:
 // http://localhost:3000/dataEntry/runTmnt/tmt_d237a388a8fc4641a2e37233f1d6bebd
@@ -88,7 +89,8 @@ export default function EditPlayersPage() {
   );
   const tmntFormData: tmntFormDataType = {
     tmntFullData: stateTmntFullData,
-    tmntAction: tmntActions.Run,
+    stage: SquadStage.DEFINE,
+    parentForm: tmntFormParent.RUN,
   };
 
   const initValues = useMemo(() => {
@@ -243,8 +245,7 @@ export default function EditPlayersPage() {
                 Entries
               </label>
             </div>
-          </div>
-          {/* {playerFormTmnt?.curData?.divs.map((div) => ( */}
+          </div>          
           {tmntFormData?.tmntFullData?.divs.map((div) => (
             <div className="row g-2" key={div.id}>
               <div className="col-10">

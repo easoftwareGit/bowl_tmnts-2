@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { bowlType } from "@/lib/types/types";
 import { initBowl } from "@/lib/db/initVals";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
-import { sanitizeBowl, validateBowl } from "../../validate";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import { sanitizeBowl, validateBowl } from "../../../../../lib/validation/bowls/validate";
 import { getErrorStatus } from "@/app/api/errCodes";
 
 export async function GET(
@@ -52,11 +52,11 @@ export async function PUT(
 
     const toPut = sanitizeBowl(toCheck);
     const errCode = validateBowl(toPut);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       const errorMessages = {
-        [ErrorCode.MissingData]: "missing data",
-        [ErrorCode.InvalidData]: "invalid data",
-        [ErrorCode.OtherError]: "unknown error",
+        [ErrorCode.MISSING_DATA]: "missing data",
+        [ErrorCode.INVALID_DATA]: "invalid data",
+        [ErrorCode.OTHER_ERROR]: "unknown error",
       };
       return NextResponse.json(
         { error: errorMessages[errCode] },
@@ -135,13 +135,13 @@ export async function PATCH(
 
     const toBePatched = sanitizeBowl(toCheck);
     const errCode = validateBowl(toBePatched);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode as ErrorCode) {
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = "missing data";
           break;
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = "invalid data";
           break;
         default:

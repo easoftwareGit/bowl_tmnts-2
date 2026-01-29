@@ -8,17 +8,17 @@ import {
   deleteAllSquadsForTmnt,
   deleteSquad,
   getAllSquadsForTmnt,
+  getAllOneBrktsAndSeedsForSquad,
   postManySquads,
   postSquad,
   putSquad,  
-  getAllOneBrktsAndSeedsForSquad,
-  extractSquads,
-  // getSquadEntries,
+  extractSquads,  
 } from "@/lib/db/squads/dbSquads";
 import { startOfDayFromString } from "@/lib/dateTools";
 import { mockSquadsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { mockCurData } from "../../../mocks/tmnts/playerEntries/mockOneSquadEntries";
 import { replaceManySquads } from "@/lib/db/squads/dbSquadsReplaceMany";
+// import { SquadStage } from "@prisma/client";
 import { cloneDeep } from "lodash";
 
 // before running this test, run the following commands in the terminal:
@@ -45,15 +45,42 @@ const notFoundEventId = "evt_00000000000000000000000000000000"
 const notFoundTmntId = "tmt_00000000000000000000000000000000";
 const notFoundSquadId = "sqd_01234567890123456789012345678901";
 const obsSquadId = 'sqd_7116ce5f80164830830a7157eb093396';
-const goldPinBrktId1 = 'brk_5109b54c2cc44ff9a3721de42c80c8c1';
-const goldPinBrktId2 = 'brk_6ede2512c7d4409ca7b055505990a499';
 const goldPinOneBrktId1 = 'obk_557f12f3875f42baa29fdbd22ee7f2f4';
 const goldPinOneBrktId2 = 'obk_5423c16d58a948748f32c7c72c632297';
 const goldPinOneBrktId3 = 'obk_8d500123a07d46f9bb23db61e74ffc1b';
 const goldPinOneBrktId4 = 'obk_4ba9e037c86e494eb272efcd989dc9d0';
 
+const eventId = "evt_cb97b73cb538418ab993fc867f860510";
 const tmntId = "tmt_467e51d71659d2e412cbc64a0d19ecb4";
 const userId = "usr_01234567890123456789012345678901";
+
+const squadToReset = {
+  ...initSquad,
+  id: obsSquadId,
+  event_id: eventId,
+  squad_name: "Squad 1",
+  squad_date: startOfDayFromString("2022-10-23") as Date,
+  squad_time: null,
+  games: 6,
+  lane_count: 12,
+  starting_lane: 29,
+  sort_order: 1,
+};
+
+const resetSquad = async (squad: squadType) => {
+  try {
+    const putUrl = squadUrl + squad.id;
+    const squadJSON = JSON.stringify(squad);
+    const response = await axios({
+      method: "put",
+      data: squadJSON,
+      withCredentials: true,
+      url: putUrl,
+    });
+  } catch (err) {
+    if (err instanceof AxiosError) console.log(err.message);
+  }
+};
 
 describe("dbSquads", () => {
   const rePostSquad = async (squad: squadType) => {
@@ -100,7 +127,6 @@ describe("dbSquads", () => {
           games: 6,
           lane_count: 10,
           starting_lane: 1,
-          finalized: false,
           sort_order: 1,
           extraField: "ignore me", // should be ignored
         }
@@ -118,8 +144,7 @@ describe("dbSquads", () => {
         squad_time: "10:00 AM",
         games: 6,
         lane_count: 10,
-        starting_lane: 1,
-        finalized: false,
+        starting_lane: 1, 
         sort_order: 1,
       };
 
@@ -135,8 +160,7 @@ describe("dbSquads", () => {
           squad_time: "10:00 AM",
           games: 6,
           lane_count: 10,
-          starting_lane: 1,
-          finalized: false,
+          starting_lane: 1,          
           sort_order: 1,
           extraField: "ignore me", // should be ignored
         },
@@ -149,7 +173,6 @@ describe("dbSquads", () => {
           games: 6,
           lane_count: 10,
           starting_lane: 1,
-          finalized: false,
           sort_order: 2,
           extraField: "ignore me", // should be ignored
         }
@@ -162,10 +185,10 @@ describe("dbSquads", () => {
       expect(result[0].squad_name).toBe("A Squad");
       expect(result[0].squad_time).toBe("10:00 AM");
       expect(result[0].sort_order).toBe(1);
+
       expect(result[1].id).toBe("sqd_456");
       expect(result[1].squad_name).toBe("B Squad");
       expect(result[1].squad_time).toBe("11:00 AM");
-      expect(result[1].finalized).toBe(false);
       expect(result[1].sort_order).toBe(2);
     });
     it('should return an empty array when given null', () => {
@@ -177,15 +200,6 @@ describe("dbSquads", () => {
       expect(result).toEqual([]);
     });
   })
-
-  // describe("getSquadEntries", () => { 
-  //   it('should get all entries for one squad', async () => { 
-  //     const squadID = mockCurData.squads[0].id;
-  //     const entries = await getSquadEntries(squadID);
-  //     expect(entries).toHaveLength(3);
-
-  //   })
-  // })
 
   describe("getAllSquadsForTmnt", () => {
     // from prisma/seed.ts
@@ -201,7 +215,6 @@ describe("dbSquads", () => {
         games: 6,
         lane_count: 10,
         starting_lane: 1,
-        finalized: false,
         sort_order: 1,
       },
       {
@@ -214,7 +227,6 @@ describe("dbSquads", () => {
         games: 6,
         lane_count: 10,
         starting_lane: 1,
-        finalized: false,
         sort_order: 2,
       },
       {
@@ -227,7 +239,6 @@ describe("dbSquads", () => {
         games: 3,
         lane_count: 24,
         starting_lane: 1,
-        finalized: false,
         sort_order: 3,
       },
     ];
@@ -245,7 +256,6 @@ describe("dbSquads", () => {
         expect(squads[i].games).toBe(squadsToGet[i].games);
         expect(squads[i].starting_lane).toBe(squadsToGet[i].starting_lane);
         expect(squads[i].lane_count).toBe(squadsToGet[i].lane_count);
-        expect(squads[i].finalized).toBe(squadsToGet[i].finalized);
         expect(squads[i].sort_order).toBe(squadsToGet[i].sort_order);
       }
     });
@@ -361,6 +371,278 @@ describe("dbSquads", () => {
       }
     });
   });
+
+  // describe('getSquadStageSquad', () => { 
+
+  //   it("gets squad stage for a squad when called with a squad id string", async () => {
+  //     const squad = await getSquadStageSquad(obsSquadId);
+
+  //     expect(squad).not.toBeNull();
+  //     // values from prisma/seeds.ts
+  //     expect(squad.id).toBe(obsSquadId);
+  //     expect(eventId).toBe(eventId);
+  //     expect(squad.stage).toBe(SquadStage.DEFINE);
+  //     expect(squad.stage_set_at).toBe('2022-10-23T00:00:00.000Z');
+  //     expect(squad.scores_started_at).toBe(null);
+  //     expect(squad.stage_override_enabled).toBe(false);
+  //     expect(squad.stage_override_at).toBe(null);
+  //     expect(squad.stage_override_reason).toBe('');
+  //   })
+  //   it('should throw error when squad id is invalid', async () => {
+  //     try {
+  //       await getSquadStageSquad('test');
+  //     } catch (err) {
+  //       expect(err).toBeInstanceOf(Error);
+  //       expect((err as Error).message).toBe("Invalid squad id");
+  //     }
+  //   })
+  //   it('should throw error when squad id is valid, noy not a squad id', async () => {
+  //     try {
+  //       await getSquadStageSquad(userId);
+  //     } catch (err) {
+  //       expect(err).toBeInstanceOf(Error);
+  //       expect((err as Error).message).toBe("Invalid squad id");
+  //     }
+  //   })
+  //   it('should throw error when squad id is null', async () => {
+  //     try {
+  //       await getSquadStageSquad(null as any);
+  //     } catch (err) {
+  //       expect(err).toBeInstanceOf(Error);
+  //       expect((err as Error).message).toBe("Invalid squad id");
+  //     }
+  //   })  
+  // })
+  
+  // describe("getSquadStage", () => { 
+
+  //   it("gets squad stage for a squad when called with a squad id string", async () => {
+  //     const stage = await getSquadStage(obsSquadId);
+
+  //     expect(stage).not.toBeNull();
+  //     // values from prisma/seeds.ts
+  //     expect(stage.id).toBe(obsSquadId);                  
+  //     expect(stage.stage).toBe(SquadStage.DEFINE);
+  //     expect(stage.stage_set_at).toBe('2022-10-23T00:00:00.000Z'); 
+  //     expect(stage.scores_started_at).toBe(null); 
+  //   });
+  //   it("gets squad stage for a squad when called with a tmntFullType-like object", async () => {      
+  //     const fakeFullTmnt: tmntFullType = {
+  //       ...linkedInitTmntFullData(userId),
+  //     };
+  //     fakeFullTmnt.squads = [
+  //       {
+  //         ...initSquad,
+  //         // values from prisma/seeds.ts
+  //         id: obsSquadId,
+  //         stage: SquadStage.DEFINE,
+  //         stage_set_at: new Date("2022-10-23"),
+  //         scores_started_at: null
+  //       }
+  //     ]
+
+  //     const stage = await getSquadStage(fakeFullTmnt);
+
+  //     expect(stage).not.toBeNull();
+  //     // values from prisma/seeds.ts
+  //     expect(stage.id).toBe(obsSquadId);      
+  //     expect(stage.stage).toBe(SquadStage.DEFINE);
+  //     expect(stage.stage_set_at).toBe('2022-10-23T00:00:00.000Z'); 
+  //     expect(stage.scores_started_at).toBe(null); 
+  //   });
+
+  //   it("should throw error when squad id string is invalid format", async () => {
+  //     try {
+  //       await getSquadStage("test");
+  //       // should not reach here
+  //       expect(true).toBe(false);
+  //     } catch (err) {
+  //       expect(err).toBeInstanceOf(Error);
+  //       expect((err as Error).message).toBe("Invalid squad id");
+  //     }
+  //   });
+
+  //   it("should throw error when squad id string is valid format but not a squad id", async () => {
+  //     try {
+  //       await getSquadStage(userId); // usr_... valid-style id but not 'sqd'
+  //       expect(true).toBe(false);
+  //     } catch (err) {
+  //       expect(err).toBeInstanceOf(Error);
+  //       expect((err as Error).message).toBe("Invalid squad id");
+  //     }
+  //   });
+
+  //   it("should throw error when input is null", async () => {
+  //     try {
+  //       await getSquadStage(null as any);
+  //       expect(true).toBe(false);
+  //     } catch (err) {
+  //       expect(err).toBeInstanceOf(Error);
+  //       expect((err as Error).message).toBe("Invalid squad id");
+  //     }
+  //   });
+
+  //   it("should throw error when tmntFullType-like object has no squads", async () => {
+  //     const badFullTmnt: tmntFullType = {
+  //       ...linkedInitTmntFullData(userId),
+  //     };
+  //     badFullTmnt.squads = [];
+
+  //     try {
+  //       await getSquadStage(badFullTmnt);
+  //       expect(true).toBe(false);
+  //     } catch (err) {
+  //       expect(err).toBeInstanceOf(Error);
+  //       expect((err as Error).message).toBe("Invalid squad id");
+  //     }
+  //   });
+
+  //   it("should throw error when tmntFullType-like object has an invalid squad id", async () => {
+  //     const badFullTmnt: tmntFullType = {
+  //       ...linkedInitTmntFullData(userId),
+  //     };
+  //     badFullTmnt.squads[0].id = 'not-a-squad-id';
+
+  //     try {
+  //       await getSquadStage(badFullTmnt);
+  //       expect(true).toBe(false);
+  //     } catch (err) {
+  //       expect(err).toBeInstanceOf(Error);
+  //       expect((err as Error).message).toBe("Invalid squad id");
+  //     }
+  //   });
+
+  // })
+
+  // describe("getSquadStageOverride", () => { 
+
+  //   let doReset = false;
+
+  //   beforeAll(async () => {
+  //     await resetSquad(squadToReset)
+  //   })
+
+  //   afterEach(async () => {
+  //     if (doReset) { 
+  //       doReset = false;
+  //       await resetSquad(squadToReset)
+  //     }
+  //   })
+
+  //   afterAll(async () => {
+  //     await resetSquad(squadToReset)
+  //   })
+
+  //   it("gets squad stage for a squad when called with a squad id string", async () => {
+  //     const stage = await getSquadStageOverride(obsSquadId);
+
+  //     expect(stage).not.toBeNull();
+  //     // values from prisma/seeds.ts
+  //     expect(stage.id).toBe(obsSquadId);                  
+  //     expect(stage.stage_override_enabled).toBe(false);
+  //     expect(stage.stage_override_at).toBe(null); 
+  //     expect(stage.stage_override_reason).toBe(''); 
+  //   });
+  //   it('gets squad stage for a squad when called with a tmntFullType-like object', async () => {
+  //     const fakeFullTmnt = linkedInitTmntFullData(userId);
+  //     fakeFullTmnt.squads = [
+  //       {
+  //         ...initSquad,
+  //         // values from prisma/seeds.ts
+  //         id: obsSquadId,
+  //         stage_override_enabled: false,
+  //         stage_override_at: null,
+  //         stage_override_reason: ''
+  //       }
+  //     ]
+
+  //     const stage = await getSquadStageOverride(fakeFullTmnt);
+
+  //     expect(stage).not.toBeNull();
+  //     // values from prisma/seeds.ts
+  //     expect(stage.id).toBe(obsSquadId);
+  //     expect(stage.stage_override_enabled).toBe(false);
+  //     expect(stage.stage_override_at).toBe(null);
+  //     expect(stage.stage_override_reason).toBe('');
+  //   });
+  //   it('gets squad stage for when overide is enabled', async () => {
+  //     const enabledSquad = {
+  //       ...squadToReset,
+  //       stage_override_enabled: true,
+  //       stage_override_at: new Date('2022-08-21'),
+  //       stage_override_reason: 'test',
+  //     }
+  //     resetSquad(enabledSquad);
+  //     doReset = true;
+
+  //     const stage = await getSquadStageOverride(enabledSquad.id);
+
+  //     expect(stage).not.toBeNull();
+  //     expect(stage.id).toBe(enabledSquad.id);
+  //     expect(stage.stage_override_enabled).toBe(enabledSquad.stage_override_enabled);
+  //     expect(stage.stage_override_at)
+  //       .toBe((enabledSquad.stage_override_at).toISOString());            
+  //     expect(stage.stage_override_reason).toBe(enabledSquad.stage_override_reason);
+  //   });
+
+  //   it("should throw error when squad id string is invalid format", async () => {
+  //     try {
+  //       await getSquadStageOverride("test");
+  //       // should not reach here
+  //       expect(true).toBe(false);
+  //     } catch (err) {
+  //       expect(err).toBeInstanceOf(Error);
+  //       expect((err as Error).message).toBe("Invalid squad id");
+  //     }
+  //   });
+
+  //   it("should throw error when squad id string is valid format but not a squad id", async () => {
+  //     try {
+  //       await getSquadStageOverride(userId); // usr_... valid-style id but not 'sqd'
+  //       expect(true).toBe(false);
+  //     } catch (err) {
+  //       expect(err).toBeInstanceOf(Error);
+  //       expect((err as Error).message).toBe("Invalid squad id");
+  //     }
+  //   });
+
+  //   it("should throw error when input is null", async () => {
+  //     try {
+  //       await getSquadStageOverride(null as any);
+  //       expect(true).toBe(false);
+  //     } catch (err) {
+  //       expect(err).toBeInstanceOf(Error);
+  //       expect((err as Error).message).toBe("Invalid squad id");
+  //     }
+  //   });
+
+  //   it("should throw error when tmntFullType-like object has no squads", async () => {
+  //     const badFullTmnt = linkedInitTmntFullData(userId);      
+  //     badFullTmnt.squads = [];
+
+  //     try {
+  //       await getSquadStageOverride(badFullTmnt);
+  //       expect(true).toBe(false);
+  //     } catch (err) {
+  //       expect(err).toBeInstanceOf(Error);
+  //       expect((err as Error).message).toBe("Invalid squad id");
+  //     }
+  //   });
+
+  //   it("should throw error when tmntFullType-like object has an invalid squad id", async () => {
+  //     const badFullTmnt = linkedInitTmntFullData(userId);
+  //     badFullTmnt.squads[0].id = 'not-a-squad-id';
+
+  //     try {
+  //       await getSquadStageOverride(badFullTmnt);
+  //       expect(true).toBe(false);
+  //     } catch (err) {
+  //       expect(err).toBeInstanceOf(Error);
+  //       expect((err as Error).message).toBe("Invalid squad id");
+  //     }
+  //   });
+
+  // })
 
   describe("postSquad", () => {
     const squadToPost = {
@@ -624,8 +906,8 @@ describe("dbSquads", () => {
   describe("putSquad", () => {
     const squadToPut = {
       ...initSquad,
-      id: "sqd_7116ce5f80164830830a7157eb093396",
-      event_id: "evt_cb97b73cb538418ab993fc867f860510",
+      id: obsSquadId,
+      event_id: eventId,
       squad_name: "Test Squad",
       squad_date: startOfDayFromString("2022-11-23") as Date,
       squad_time: "02:00 PM",
@@ -635,39 +917,10 @@ describe("dbSquads", () => {
       sort_order: 1,
     };
 
-    const putUrl = squadUrl + squadToPut.id;
-
-    const resetSquad = {
-      ...initSquad,
-      id: "sqd_7116ce5f80164830830a7157eb093396",
-      event_id: "evt_cb97b73cb538418ab993fc867f860510",
-      squad_name: "Squad 1",
-      squad_date: startOfDayFromString("2022-10-23") as Date,
-      squad_time: null,
-      games: 6,
-      lane_count: 12,
-      starting_lane: 29,
-      sort_order: 1,
-    };
-
-    const doReset = async () => {
-      try {
-        const squadJSON = JSON.stringify(resetSquad);
-        const response = await axios({
-          method: "put",
-          data: squadJSON,
-          withCredentials: true,
-          url: putUrl,
-        });
-      } catch (err) {
-        if (err instanceof AxiosError) console.log(err.message);
-      }
-    };
-
     let didPut = false;
 
     beforeAll(async () => {
-      await doReset();
+      await resetSquad(squadToReset);
     });
 
     beforeEach(() => {
@@ -676,7 +929,7 @@ describe("dbSquads", () => {
 
     afterEach(async () => {
       if (!didPut) return;
-      await doReset();
+      await resetSquad(squadToReset);
     });
 
     it("should put a squad", async () => {
@@ -750,6 +1003,312 @@ describe("dbSquads", () => {
       }
     });
   });
+
+  // describe("putSquadStage()", () => { 
+  //   let didPut = false;
+
+  //   beforeAll(async () => {
+  //     await resetSquad(squadToReset);
+  //   })
+
+  //   beforeEach(() => {
+  //     didPut = false;
+  //   })
+
+  //   afterEach(async () => {
+  //     if (!didPut) return;
+  //     await resetSquad(squadToReset);
+  //   })
+
+  //   const squadStageToPut: justStageType = {
+  //     ...initJustStage,
+  //     id: squadToReset.id,
+  //     stage: SquadStage.ENTRIES,
+  //   }
+
+  //   it('should put a squad stage when passed a valid squad stage', async () => { 
+  //     const beforeDate = Date.now();
+  //     const puttedSquad = await putSquadStage(squadStageToPut);
+  //     expect(puttedSquad).not.toBeNull();
+  //     if (!puttedSquad) return;
+  //     didPut = true;
+
+  //     const afterDate = Date.now();
+  //     const twoMinutes = 2 * 60 * 1000;
+  //     const stageSetAtMs = new Date(puttedSquad.stage_set_at).getTime();      
+
+  //     expect(puttedSquad.id).toEqual(squadStageToPut.id);
+  //     expect(puttedSquad.stage).toEqual(squadStageToPut.stage);  
+  //     expect(stageSetAtMs).toBeGreaterThanOrEqual(beforeDate - twoMinutes);
+  //     expect(stageSetAtMs).toBeLessThanOrEqual(afterDate + twoMinutes);
+  //     expect(puttedSquad.scores_started_at).toEqual(null);
+  //   })
+  //   it('should put a stage when passed as valid full tmnt data', async () => {
+  //     const beforeDate = Date.now();
+  //     const puttedTmnt = linkedInitTmntFullData(userId);
+  //     puttedTmnt.squads[0].id = squadToReset.id;  
+  //     puttedTmnt.squads[0].stage = SquadStage.ENTRIES;      
+  //     const puttedSquad = await putSquadStage(puttedTmnt.squads[0]);
+  //     expect(puttedSquad).not.toBeNull();
+  //     if (!puttedSquad) return;
+  //     didPut = true;
+
+  //     const afterDate = Date.now();
+  //     const twoMinutes = 2 * 60 * 1000;
+  //     const stageSetAtMs = new Date(puttedTmnt.squads[0].stage_set_at).getTime();      
+
+  //     expect(puttedSquad.id).toEqual(puttedTmnt.squads[0].id);
+  //     expect(puttedSquad.stage).toEqual(puttedTmnt.squads[0].stage);
+  //     expect(stageSetAtMs).toBeGreaterThanOrEqual(beforeDate - twoMinutes);
+  //     expect(stageSetAtMs).toBeLessThanOrEqual(afterDate + twoMinutes);
+  //     expect(puttedSquad.scores_started_at).toEqual(null);
+  //   })
+  //   it('should put a stage when passed a valid squad stage with stage="SCORES" and a valid scores_started at', async () => { 
+  //     const beforeDate = Date.now();
+  //     const scoresStage = {
+  //       ...squadStageToPut,
+  //       stage: SquadStage.SCORES,        
+  //     }
+  //     const puttedSquad = await putSquadStage(scoresStage);
+  //     expect(puttedSquad).not.toBeNull();
+  //     if (!puttedSquad) return;
+  //     didPut = true;
+
+  //     const afterDate = Date.now();
+  //     const twoMinutes = 2 * 60 * 1000;
+  //     const stageSetAtMs = new Date(puttedSquad.stage_set_at).getTime();      
+  //     const scoresStartedAtMs = new Date(puttedSquad.scores_started_at as Date).getTime();
+
+  //     expect(puttedSquad.id).toEqual(scoresStage.id);
+  //     expect(puttedSquad.stage).toEqual(scoresStage.stage);
+  //     expect(stageSetAtMs).toBeGreaterThanOrEqual(beforeDate - twoMinutes);
+  //     expect(stageSetAtMs).toBeLessThanOrEqual(afterDate + twoMinutes);
+  //     expect(scoresStartedAtMs).toBeGreaterThanOrEqual(beforeDate - twoMinutes);
+  //     expect(scoresStartedAtMs).toBeLessThanOrEqual(afterDate + twoMinutes);
+  //   })
+  //   it('should thorw error when trying to put a squad stage with invalid squad id', async () => {
+  //     try {
+  //       await putSquadStage({
+  //         ...squadStageToPut,
+  //         id: 'test',
+  //       });
+  //     } catch (err) {
+  //       expect(err).toBeInstanceOf(Error);
+  //       expect((err as Error).message).toBe("Invalid squad id");
+  //     }
+  //   })
+  //   it('should throw error when trying to put a squad stage with valid id, but not a squad id', async () => {
+  //     try {
+  //       await putSquadStage({
+  //         ...squadStageToPut,
+  //         id: userId,
+  //       });
+  //     } catch (err) {
+  //       expect(err).toBeInstanceOf(Error);
+  //       expect((err as Error).message).toBe("Invalid squad id");
+  //     }
+  //   })
+  //   it('should throw error when trying to put a squad stage when passed null', async () => {
+  //     try {
+  //       await putSquadStage(null as any);
+  //     } catch (err) {
+  //       expect(err).toBeInstanceOf(Error);
+  //       expect((err as Error).message).toBe("Invalid squad stage data");
+  //     }
+  //   })
+  //   it('should thorw error when trying to put a squad stage with invalid stage', async () => {
+  //     try {
+  //       await putSquadStage({
+  //         ...squadStageToPut,
+  //         stage: 'test' as any,
+  //       });
+  //     } catch (err) {
+  //       expect(err).toBeInstanceOf(Error);
+  //       expect((err as Error).message).toBe("putSquadStage failed: Request failed with status code 422");
+  //     }
+  //   })
+  //   it('should throw error when trying to put a squad stage when passed a full tmnt with invalid squad id', async () => { 
+  //     const puttedTmnt = linkedInitTmntFullData(userId);
+  //     puttedTmnt.squads[0].id = 'test';
+  //     try {
+  //       await putSquadStage(puttedTmnt);
+  //     } catch (err) {
+  //       expect(err).toBeInstanceOf(Error);
+  //       expect((err as Error).message).toBe("Invalid squad id");
+  //     }
+  //   })
+  //   it('should throw error when trying to put a squad stage when passed a full tmnt with squad that has a non squad id', async () => { 
+  //     const puttedTmnt = linkedInitTmntFullData(userId);
+  //     puttedTmnt.squads[0].id = userId;
+  //     try {
+  //       await putSquadStage(puttedTmnt);
+  //     } catch (err) {
+  //       expect(err).toBeInstanceOf(Error);
+  //       expect((err as Error).message).toBe("Invalid squad id");
+  //     }
+  //   })
+  //   it('should throw error when trying to put a squad stage when passed a full tmnt with squad that has no squad', async () => { 
+  //     const puttedTmnt = linkedInitTmntFullData(userId);
+  //     puttedTmnt.squads = [];
+  //     try {
+  //       await putSquadStage(puttedTmnt);
+  //     } catch (err) {
+  //       expect(err).toBeInstanceOf(Error);
+  //       expect((err as Error).message).toBe("Invalid squad stage data");
+  //     }
+  //   })
+  // })
+
+  // describe("putSquadStage()", () => {
+  //   let didPut = false;
+
+  //   beforeAll(async () => {
+  //     await resetSquad(squadToReset);
+  //   })
+
+  //   beforeEach(() => {
+  //     didPut = false;
+  //   })
+
+  //   afterEach(async () => {
+  //     if (!didPut) return;
+  //     await resetSquad(squadToReset);
+  //   })
+
+  //   const squadStageOverrideToPut: justStageOverrideType = {
+  //     ...initJustStageOverride,
+  //     id: squadToReset.id,
+  //     stage_override_enabled: true,      
+  //     stage_override_reason: "squad test",
+  //   }
+
+  //   it('should put a stage override when passed a valid squad stage override', async () => {
+  //     const beforeDate = Date.now();
+  //     const puttedSquad = await putSquadStageOverride(squadStageOverrideToPut);
+  //     expect(puttedSquad).not.toBeNull();
+  //     if (!puttedSquad) return;
+  //     didPut = true;
+
+  //     const afterDate = Date.now();
+  //     const twoMinutes = 2 * 60 * 1000;
+  //     const stageOverrideAtMs = new Date(puttedSquad.stage_override_at as Date).getTime();      
+
+  //     expect(puttedSquad.id).toEqual(squadStageOverrideToPut.id);
+  //     expect(puttedSquad.stage_override_enabled).toEqual(squadStageOverrideToPut.stage_override_enabled);
+  //     expect(stageOverrideAtMs).toBeGreaterThanOrEqual(beforeDate - twoMinutes);
+  //     expect(stageOverrideAtMs).toBeLessThanOrEqual(afterDate + twoMinutes);
+  //     expect(puttedSquad.stage_override_reason).toEqual(squadStageOverrideToPut.stage_override_reason);
+  //   })
+  //   it('should put a stage override when passed as valid full tmnt data', async () => {
+  //     const beforeDate = Date.now();
+  //     const puttedTmnt = linkedInitTmntFullData(userId);
+  //     puttedTmnt.squads[0].id = squadToReset.id;  
+  //     puttedTmnt.squads[0].stage_override_enabled = true;
+  //     puttedTmnt.squads[0].stage_override_reason = "tmnt test";
+  //     const puttedSquad = await putSquadStageOverride(puttedTmnt.squads[0]);
+  //     expect(puttedSquad).not.toBeNull();
+  //     if (!puttedSquad) return;
+  //     didPut = true;
+
+  //     const afterDate = Date.now();
+  //     const twoMinutes = 2 * 60 * 1000;
+  //     const stageSetAtMs = new Date(puttedTmnt.squads[0].stage_set_at).getTime();      
+
+  //     expect(puttedSquad.id).toEqual(puttedTmnt.squads[0].id);      
+  //     expect(stageSetAtMs).toBeGreaterThanOrEqual(beforeDate - twoMinutes);
+  //     expect(stageSetAtMs).toBeLessThanOrEqual(afterDate + twoMinutes);
+  //     expect(puttedSquad.stage_override_reason).toEqual(puttedTmnt.squads[0].stage_override_reason);
+  //   })
+  //   it('should throw an error when trying to put a squad stage override with invalid squad id', async () => {
+  //     try {
+  //       await putSquadStageOverride({
+  //         ...squadStageOverrideToPut,
+  //         id: 'test',
+  //       });
+  //     } catch (err) {
+  //       expect(err).toBeInstanceOf(Error);
+  //       expect((err as Error).message).toBe("Invalid squad id");
+  //     }
+  //   });
+  //   it('should throw an error when trying to put a squad stage override whih an valid id, but not a squad id', async () => {
+  //     try {
+  //       await putSquadStageOverride({
+  //         ...squadStageOverrideToPut,
+  //         id: userId,
+  //       });
+  //     } catch (err) {
+  //       expect(err).toBeInstanceOf(Error);      
+  //       expect((err as Error).message).toBe("Invalid squad id");
+  //     }
+  //   })
+  //   it('should throw an error when trying to put a squad stage override when passed null', async () => {
+  //     try {
+  //       await putSquadStageOverride(null as any);
+  //     } catch (err) {
+  //       expect(err).toBeInstanceOf(Error);
+  //       expect((err as Error).message).toBe("Invalid squad stage override data");
+  //     }      
+  //   })
+  //   it('should throw an error with invalid stage_override_enabled', async () => {
+  //     try {
+  //       await putSquadStageOverride({
+  //         ...squadStageOverrideToPut,
+  //         id: squadToReset.id,
+  //         stage_override_enabled: null as any,
+  //       })
+  //     } catch (err) {
+  //       expect(err).toBeInstanceOf(Error);
+  //       expect((err as Error).message).toBe("putSquadStageOverride failed: Request failed with status code 422");
+  //     }
+  //   })
+  //   it('should throw an error with invalid stage_override_enabled = true and no stage_override_reason', async () => {
+  //     try {
+  //       await putSquadStageOverride({
+  //         ...squadStageOverrideToPut,
+  //         id: squadToReset.id,
+  //         stage_override_enabled: true,
+  //         stage_override_reason: '',
+  //       })
+  //     } catch (err) {
+  //       expect(err).toBeInstanceOf(Error);
+  //       expect((err as Error).message).toBe("putSquadStageOverride failed: Request failed with status code 422");
+  //     }
+  //   })
+  //   it('should throw error when trying to put a squad stage override when passed a full tmnt with invalid squad id', async () => { 
+  //     const puttedTmnt = linkedInitTmntFullData(userId);
+  //     puttedTmnt.squads[0].id = 'test';  
+  //     puttedTmnt.squads[0].stage_override_enabled = true;
+  //     puttedTmnt.squads[0].stage_override_reason = "tmnt test";
+  //     try {
+  //       await putSquadStageOverride(puttedTmnt);
+  //     } catch (err) {
+  //       expect(err).toBeInstanceOf(Error);
+  //       expect((err as Error).message).toBe("Invalid squad id");
+  //     }
+  //   })
+  //   it('should throw error when trying to put a squad stage override when passed a full tmnt with non squad id', async () => { 
+  //     const puttedTmnt = linkedInitTmntFullData(userId);
+  //     puttedTmnt.squads[0].id = userId;
+  //     puttedTmnt.squads[0].stage_override_enabled = true;
+  //     puttedTmnt.squads[0].stage_override_reason = "tmnt test";
+  //     try {
+  //       await putSquadStageOverride(puttedTmnt);
+  //     } catch (err) {
+  //       expect(err).toBeInstanceOf(Error);
+  //       expect((err as Error).message).toBe("Invalid squad id");
+  //     }
+  //   })
+  //   it('should throw error when trying to put a squad stage override when passed a full tmnt with no squad', async () => { 
+  //     const puttedTmnt = linkedInitTmntFullData(userId);
+  //     puttedTmnt.squads = [];  
+  //     try {
+  //       await putSquadStageOverride(puttedTmnt);
+  //     } catch (err) {
+  //       expect(err).toBeInstanceOf(Error);
+  //       expect((err as Error).message).toBe("Invalid squad stage override data");
+  //     }
+  //   })
+  // })
 
   describe("replaceManySquads()", () => {    
     let createdSquads = false;
@@ -838,21 +1397,11 @@ describe("dbSquads", () => {
         );
         expect(replacedSquads[i].games).toEqual(squadsToUpdate[i].games);
         if (replacedSquads[i].id === squadsToUpdate[0].id) {
-          expect(replacedSquads[i].squad_name).toEqual(
-            squadsToUpdate[0].squad_name
-          );
-          expect(replacedSquads[i].squad_time).toEqual(
-            squadsToUpdate[0].squad_time
-          );
-          expect(replacedSquads[i].lane_count).toEqual(
-            squadsToUpdate[0].lane_count
-          );
-          expect(replacedSquads[i].starting_lane).toEqual(
-            squadsToUpdate[0].starting_lane
-          );
-          expect(replacedSquads[i].sort_order).toEqual(
-            squadsToUpdate[0].sort_order
-          );
+          expect(replacedSquads[i].squad_name).toEqual(squadsToUpdate[0].squad_name);
+          expect(replacedSquads[i].squad_time).toEqual(squadsToUpdate[0].squad_time);
+          expect(replacedSquads[i].lane_count).toEqual(squadsToUpdate[0].lane_count);
+          expect(replacedSquads[i].starting_lane).toEqual(squadsToUpdate[0].starting_lane);
+          expect(replacedSquads[i].sort_order).toEqual(squadsToUpdate[0].sort_order);
         } else if (replacedSquads[i].id === squadsToUpdate[1].id) {
           expect(replacedSquads[i].squad_name).toEqual(
             squadsToUpdate[1].squad_name

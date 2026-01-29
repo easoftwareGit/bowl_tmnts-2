@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
-import { validateLane, sanitizeLane } from "@/app/api/lanes/validate";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import { validateLane, sanitizeLane } from "@/lib/validation/lanes/validate";
 import { laneType } from "@/lib/types/types";
 import { initLane } from "@/lib/db/initVals";
 import { getErrorStatus } from "@/app/api/errCodes";
@@ -50,13 +50,13 @@ export async function PUT(
     
     const toPut = sanitizeLane(toCheck);
     const errCode = validateLane(toPut);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = "missing data";
           break;
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = "invalid data";
           break;
         default:
@@ -123,13 +123,13 @@ export async function PATCH(
 
     const toBePatched = sanitizeLane(toCheck);
     const errCode = validateLane(toBePatched);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = "missing data";
           break;
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = "invalid data";
           break;
         default:

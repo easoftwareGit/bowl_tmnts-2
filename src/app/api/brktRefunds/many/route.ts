@@ -1,8 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode } from "@/lib/validation";
+import { ErrorCode } from "@/lib/validation/validation";
 import { brktRefundType } from "@/lib/types/types";
-import { validateBrktRefunds } from "../validate";
+import { validateBrktRefunds } from "../../../../lib/validation/brktRefunds/validate";
 import { getErrorStatus } from "../../errCodes";
 
 // routes /api/brktRefunds/many
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
     // sanitize and validate brktRefunds
     const validBrktRefunds = await validateBrktRefunds(brktRefunds) // need to use await! or else returns a promise
-    if (validBrktRefunds.errorCode !== ErrorCode.None) {
+    if (validBrktRefunds.errorCode !== ErrorCode.NONE) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
     const brktRefundsToPost = validBrktRefunds.brktRefunds;

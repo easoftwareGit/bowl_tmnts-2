@@ -10,7 +10,7 @@ import {
   mockDataOneTmnt,
   validRows,
 } from "../../../mocks/tmnts/playerEntries/mockPlayerEntries";
-import { isValidBtDbId } from "@/lib/validation";
+import { isValidBtDbId } from "@/lib/validation/validation";
 import { calcHandicap } from "@/app/api/divEntries/calcHdcp";
 import { BracketList } from "@/components/brackets/bracketListClass";
 import { brktId1, brktId2, playerId1, playerId2, playerId3, playerId4, playerId5, playerId6, playerId7, playerId8 } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";

@@ -3,7 +3,7 @@ import { findNextError, getRowPlayerName, exportedForTesting, CheckType, getDivs
 import { BracketList } from "@/components/brackets/bracketListClass";
 import { getBrktOrElimName, getDivName } from "@/lib/getName";
 import { brktType, elimType } from "@/lib/types/types";
-import { maxAverage, maxBrackets, maxMoney } from "@/lib/validation";
+import { maxAverage, maxBrackets, maxMoney } from "@/lib/validation/validation";
 import { cloneDeep } from "lodash";
 import { mockTmntFullData } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { defaultBrktPlayers } from "@/lib/db/initVals";
@@ -200,57 +200,57 @@ describe('rowInfo tests', () => {
     
     it('should return empty string when average is between 0 and maxAverage', () => {
       const invalidRow = { ...invalidBaseRow, average: 200 };      
-      const result = validAverage(invalidRow, errPlayer, 1, CheckType.Prelim);
+      const result = validAverage(invalidRow, errPlayer, 1, CheckType.PRELIM);
       expect(result).toBe('');
     });
     it('should return error message when average is null and checkType is Final', () => {
       const invalidRow = { ...invalidBaseRow, average: null };
-      const result = validAverage(invalidRow, errPlayer, 1, CheckType.Final);
+      const result = validAverage(invalidRow, errPlayer, 1, CheckType.FINAL);
       expect(result).toBe('Missing Average for Tom Jones in row 2');      
     });
     it('should return error message when average is undefined and checkType is Final', () => {
       const invalidRow = { ...invalidBaseRow, average: undefined };
-      const result = validAverage(invalidRow, errPlayer, 1, CheckType.Final);
+      const result = validAverage(invalidRow, errPlayer, 1, CheckType.FINAL);
       expect(result).toBe('Missing Average for Tom Jones in row 2');      
     });
     it('should return no error message when average is null and checkType is Prelim', () => {
       const invalidRow = { ...invalidBaseRow, average: null };
-      const result = validAverage(invalidRow, errPlayer, 1, CheckType.Prelim);
+      const result = validAverage(invalidRow, errPlayer, 1, CheckType.PRELIM);
       expect(result).toBe('');      
     });
     it('should return error message when average is undefined and checkType is Prelim', () => {
       const invalidRow = { ...invalidBaseRow, average: undefined };
-      const result = validAverage(invalidRow, errPlayer, 1, CheckType.Prelim);
+      const result = validAverage(invalidRow, errPlayer, 1, CheckType.PRELIM);
       expect(result).toBe('');      
     });
     it('should return error message when average is negative', () => {
       const invalidRow = { ...invalidBaseRow, average: -1 };
-      const result = validAverage(invalidRow, errPlayer, 1, CheckType.Prelim);
+      const result = validAverage(invalidRow, errPlayer, 1, CheckType.PRELIM);
       expect(result).toBe('Invalid Average for Tom Jones in row 2');      
     });
     it('should return empty string when average is at boundary 0', () => {
       const invalidRow = { ...invalidBaseRow, average: 0 };      
-      const result = validAverage(invalidRow, errPlayer, 1, CheckType.Prelim);
+      const result = validAverage(invalidRow, errPlayer, 1, CheckType.PRELIM);
       expect(result).toBe('');      
     });
     it('should return empty string when average is equal to maxAverage', () => {
       const invalidRow = { ...invalidBaseRow, average: maxAverage };      
-      const result = validAverage(invalidRow, errPlayer, 1, CheckType.Prelim);      
+      const result = validAverage(invalidRow, errPlayer, 1, CheckType.PRELIM);      
       expect(result).toBe('');
     });
     it('should return error message when average exceeds maxAverage', () => {
       const invalidRow = { ...invalidBaseRow, average: maxAverage + 1 };      
-      const result = validAverage(invalidRow, errPlayer, 1, CheckType.Prelim);
+      const result = validAverage(invalidRow, errPlayer, 1, CheckType.PRELIM);
       expect(result).toBe('Invalid Average for Tom Jones in row 2');
     });
     it('should return error message when average is not a number', () => {
       const invalidRow = { ...invalidBaseRow, average: 'abc' };      
-      const result = validAverage(invalidRow, errPlayer, 1, CheckType.Prelim);
+      const result = validAverage(invalidRow, errPlayer, 1, CheckType.PRELIM);
       expect(result).toBe('Invalid Average for Tom Jones in row 2');
     });
     it('should return error message when average is not an integer', () => {
       const invalidRow = { ...invalidBaseRow, average: 123.4 };      
-      const result = validAverage(invalidRow, errPlayer, 1, CheckType.Prelim);
+      const result = validAverage(invalidRow, errPlayer, 1, CheckType.PRELIM);
       expect(result).toBe('Invalid Average for Tom Jones in row 2');
     });
   });
@@ -258,67 +258,67 @@ describe('rowInfo tests', () => {
   describe('validLane', () => {    
     it('should return empty string when lane is within valid range', () => {
       const row = { ...playerEntryData, lane: 5 };
-      const result = validLane(row, 1, 10, errPlayer, 0, CheckType.Prelim);
+      const result = validLane(row, 1, 10, errPlayer, 0, CheckType.PRELIM);
       expect(result).toBe('');
     });
     it('should return no error message when lane is undefined and checkType is Prelim', () => {
       const row = { ...playerEntryData, lane: undefined };
-      const result = validLane(row, 1, 10, errPlayer, 0, CheckType.Prelim);
+      const result = validLane(row, 1, 10, errPlayer, 0, CheckType.PRELIM);
       expect(result).toBe('');
     });
     it('should return no error message when lane is null and checkType is Prelim', () => {
       const row = { ...playerEntryData, lane: null };
-      const result = validLane(row, 1, 10, errPlayer, 0, CheckType.Prelim);
+      const result = validLane(row, 1, 10, errPlayer, 0, CheckType.PRELIM);
       expect(result).toBe('');
     });
     it('should return no error message when lane is 0 and checkType is Prelim', () => {
       const row = { ...playerEntryData, lane: 0 };
-      const result = validLane(row, 1, 10, errPlayer, 0, CheckType.Prelim);
+      const result = validLane(row, 1, 10, errPlayer, 0, CheckType.PRELIM);
       expect(result).toBe('');
     });
     it('should return error message when lane is undefined and checkType is Final', () => {
       const row = { ...playerEntryData, lane: undefined };
-      const result = validLane(row, 1, 10, errPlayer, 0, CheckType.Final);
+      const result = validLane(row, 1, 10, errPlayer, 0, CheckType.FINAL);
       expect(result).toBe('Missing Lane for Tom Jones in row 1');
     });
     it('should return error message when lane is null and checkType is Final', () => {
       const row = { ...playerEntryData, lane: null };
-      const result = validLane(row, 1, 10, errPlayer, 0, CheckType.Final);
+      const result = validLane(row, 1, 10, errPlayer, 0, CheckType.FINAL);
       expect(result).toBe('Missing Lane for Tom Jones in row 1');
     });
     it('should return error message when lane is 0 and checkType is Final', () => {
       const row = { ...playerEntryData, lane: 0 };
-      const result = validLane(row, 1, 10, errPlayer, 0, CheckType.Final);
+      const result = validLane(row, 1, 10, errPlayer, 0, CheckType.FINAL);
       expect(result).toBe('Missing Lane for Tom Jones in row 1');
     });
     it('should return empty string when lane is within valid range and checkType is Prelim', () => {
       const row = { ...playerEntryData, lane: 5 };
-      const result = validLane(row, 1, 10, errPlayer, 0, CheckType.Prelim);
+      const result = validLane(row, 1, 10, errPlayer, 0, CheckType.PRELIM);
       expect(result).toBe('');
     });
     it('should return error message when lane is less than minLane and checkType is Prelim', () => {
       const row = { ...playerEntryData, lane: 1 };
-      const result = validLane(row, 3, 10, errPlayer, 0, CheckType.Prelim);
+      const result = validLane(row, 3, 10, errPlayer, 0, CheckType.PRELIM);
       expect(result).toBe('Invalid Lane for Tom Jones in row 1');
     });
     it('should return error message when lane is greater than maxLane and checkType is Prelim', () => {
       const row = { ...playerEntryData, lane: 11 };
-      const result = validLane(row, 1, 10, errPlayer, 0, CheckType.Prelim);
+      const result = validLane(row, 1, 10, errPlayer, 0, CheckType.PRELIM);
       expect(result).toBe('Invalid Lane for Tom Jones in row 1');
     });
     it('should return empty string when lane is within valid range and checkType is Final', () => {
       const row = { ...playerEntryData, lane: 5 };
-      const result = validLane(row, 1, 10, errPlayer, 0, CheckType.Final);
+      const result = validLane(row, 1, 10, errPlayer, 0, CheckType.FINAL);
       expect(result).toBe('');
     });
     it('should return error message when lane is less than minLane and checkType is Final', () => {
       const row = { ...playerEntryData, lane: 1 };
-      const result = validLane(row, 3, 10, errPlayer, 0, CheckType.Final);
+      const result = validLane(row, 3, 10, errPlayer, 0, CheckType.FINAL);
       expect(result).toBe('Invalid Lane for Tom Jones in row 1');
     });
     it('should return error message when lane is greater than maxLane and checkType is Final', () => {
       const row = { ...playerEntryData, lane: 11 };
-      const result = validLane(row, 1, 10, errPlayer, 0, CheckType.Final);
+      const result = validLane(row, 1, 10, errPlayer, 0, CheckType.FINAL);
       expect(result).toBe('Invalid Lane for Tom Jones in row 1');
     });
   });
@@ -326,92 +326,92 @@ describe('rowInfo tests', () => {
   describe('validPosition', () => {
     it('should return no error message when position is valid uppercase and checkType is Prelim', () => { 
       const row = { ...playerEntryData, position: 'A' };
-      const result = validPosition(row, errPlayer, 0, CheckType.Prelim);
+      const result = validPosition(row, errPlayer, 0, CheckType.PRELIM);
       expect(result).toBe('');
     })
     it('should return no error message when position is valid uppercase and checkType is Final', () => { 
       const row = { ...playerEntryData, position: 'A' };
-      const result = validPosition(row, errPlayer, 0, CheckType.Final);
+      const result = validPosition(row, errPlayer, 0, CheckType.FINAL);
       expect(result).toBe('');
     })
     it('should return no error message when position is valid lowercase and checkType is Prelim', () => { 
       const row = { ...playerEntryData, position: 'a' };
-      const result = validPosition(row, errPlayer, 0, CheckType.Prelim);
+      const result = validPosition(row, errPlayer, 0, CheckType.PRELIM);
       expect(result).toBe('');
     })
     it('should return no error message when position is valid lowercase and checkType is Final', () => { 
       const row = { ...playerEntryData, position: 'a' };
-      const result = validPosition(row, errPlayer, 0, CheckType.Final);
+      const result = validPosition(row, errPlayer, 0, CheckType.FINAL);
       expect(result).toBe('');
     })
     it('should return no error message when position is valid digit and checkType is Prelim', () => { 
       const row = { ...playerEntryData, position: 'a' };
-      const result = validPosition(row, errPlayer, 0, CheckType.Prelim);
+      const result = validPosition(row, errPlayer, 0, CheckType.PRELIM);
       expect(result).toBe('');
     })
     it('should return no error message when position is valid digit and checkType is Final', () => { 
       const row = { ...playerEntryData, position: 'a' };
-      const result = validPosition(row, errPlayer, 0, CheckType.Final);
+      const result = validPosition(row, errPlayer, 0, CheckType.FINAL);
       expect(result).toBe('');
     })
     it('should return no error message when position is empty string when checkType is Prelim', () => {
       const row = { ...playerEntryData, position: '' };
-      const result = validPosition(row, errPlayer, 0, CheckType.Prelim);
+      const result = validPosition(row, errPlayer, 0, CheckType.PRELIM);
       expect(result).toBe('');
     });
     it('should return error message when position is undefined when checkType is Prelim', () => {
       const row = { ...playerEntryData, position: undefined };
-      const result = validPosition(row, errPlayer, 0, CheckType.Prelim);
+      const result = validPosition(row, errPlayer, 0, CheckType.PRELIM);
       expect(result).toBe('');
     });
     it('should return error message when position is null when checkType is Prelim', () => {
       const row = { ...playerEntryData, position: null };
-      const result = validPosition(row, errPlayer, 0, CheckType.Prelim);
+      const result = validPosition(row, errPlayer, 0, CheckType.PRELIM);
       expect(result).toBe('');
     });
     it('should return error message when position is empty string when checkType is Final', () => {
       const row = { ...playerEntryData, position: '' };
-      const result = validPosition(row, errPlayer, 0, CheckType.Final);
+      const result = validPosition(row, errPlayer, 0, CheckType.FINAL);
       expect(result).toBe('Missing Position for Tom Jones in row 1');
     });
     it('should return error message when position is undefined when checkType is Final', () => {
       const row = { ...playerEntryData, position: undefined };
-      const result = validPosition(row, errPlayer, 0, CheckType.Final);
+      const result = validPosition(row, errPlayer, 0, CheckType.FINAL);
       expect(result).toBe('Missing Position for Tom Jones in row 1');
     });
     it('should return error message when position is null when checkType is Final', () => {
       const row = { ...playerEntryData, position: null };
-      const result = validPosition(row, errPlayer, 0, CheckType.Final);
+      const result = validPosition(row, errPlayer, 0, CheckType.FINAL);
       expect(result).toBe('Missing Position for Tom Jones in row 1');
     });
     it('should return error message when position has invalid characters and checkType is Prelim', () => {
       const row = { ...playerEntryData, position: '*' };
-      const result = validPosition(row, errPlayer, 0, CheckType.Prelim);
+      const result = validPosition(row, errPlayer, 0, CheckType.PRELIM);
       expect(result).toBe('Invalid Position for Tom Jones in row 1');
     });
     it('should return error message when position has invalid characters and checkType is Final', () => {
       const row = { ...playerEntryData, position: '*' };
-      const result = validPosition(row, errPlayer, 0, CheckType.Final);
+      const result = validPosition(row, errPlayer, 0, CheckType.FINAL);
       expect(result).toBe('Invalid Position for Tom Jones in row 1');
     });
     it('should return error message when position has invalid digit and checkType is Prelim', () => {
       const row = { ...playerEntryData, position: '0' };
-      const result = validPosition(row, errPlayer, 0, CheckType.Prelim);
+      const result = validPosition(row, errPlayer, 0, CheckType.PRELIM);
       expect(result).toBe('Invalid Position for Tom Jones in row 1');
     });
     it('should return error message when position has invalid digit and checkType is Final', () => {
       const row = { ...playerEntryData, position: '0' };
-      const result = validPosition(row, errPlayer, 0, CheckType.Final);
+      const result = validPosition(row, errPlayer, 0, CheckType.FINAL);
       expect(result).toBe('Invalid Position for Tom Jones in row 1');
     });
     it('should return error message when position has more than 1 char and checkType is Prelim', () => {
       const row = { ...playerEntryData, position: 'AB' };
-      const result = validPosition(row, errPlayer, 0, CheckType.Prelim);
+      const result = validPosition(row, errPlayer, 0, CheckType.PRELIM);
       expect(result).toBe('Invalid Position for Tom Jones in row 1');
     });
     it('should return error message when position has more than 1 char and checkType is Final', () => {
       const row = { ...playerEntryData, position: 'AB' };
-      const result = validPosition(row, errPlayer, 0, CheckType.Final);
+      const result = validPosition(row, errPlayer, 0, CheckType.FINAL);
       expect(result).toBe('Invalid Position for Tom Jones in row 1');
     });
 
@@ -517,92 +517,92 @@ describe('rowInfo tests', () => {
 
     it('should return empty error message when fee is valid number within range and checkType is Prelim', () => {
       const validRows = [validRow, row2];
-      const result = validDivs(validRows[0], mockTmntFullData, errPlayer, 0, CheckType.Prelim);
+      const result = validDivs(validRows[0], mockTmntFullData, errPlayer, 0, CheckType.PRELIM);
       expect(result).toBe('');
     });
     it('should return empty error message when fee is valid number within range and checkType is Final', () => {
       const validRows = [validRow, row2];
-      const result = validDivs(validRows[0], mockTmntFullData, errPlayer, 0, CheckType.Final);
+      const result = validDivs(validRows[0], mockTmntFullData, errPlayer, 0, CheckType.FINAL);
       expect(result).toBe('');
     });
     it('should return error message when fee1 exceeds maxMoney and checkType is Prelim', () => {
       const row = { ...invalidBaseRow, [div1FeeColName]: maxMoney + 1 };
-      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Prelim);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.PRELIM);
       expect(result).toBe('Invalid Fee for Tom Jones in row 1');
     });
     it('should return error message when fee2 exceeds maxMoney and checkType is Prelim', () => {
       const row = { ...invalidBaseRow, [div2FeeColName]: maxMoney + 1 };
-      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Prelim);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.PRELIM);
       expect(result).toBe('Invalid Fee for Tom Jones in row 1');
     });
     it('should return error message when fee1 exceeds maxMoney and checkType is Final', () => {
       const row = { ...invalidBaseRow, [div1FeeColName]: maxMoney + 1 };
-      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Final);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.FINAL);
       expect(result).toBe('Invalid Fee for Tom Jones in row 1');
     });
     it('should return error message when fee2 exceeds maxMoney and checkType is Final', () => {
       const row = { ...invalidBaseRow, [div2FeeColName]: maxMoney + 1 };
-      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Final);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.FINAL);
       expect(result).toBe('Invalid Fee for Tom Jones in row 1');
     });
     it('should return error message when fee1 less than 0 and checkType is Prelim', () => {
       const row = { ...invalidBaseRow, [div1FeeColName]: -1 };
-      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Prelim);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.PRELIM);
       expect(result).toBe('Invalid Fee for Tom Jones in row 1');
     });
     it('should return error message when fee2 less than 0 and checkType is Prelim', () => {
       const row = { ...invalidBaseRow, [div2FeeColName]: -1 };
-      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Prelim);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.PRELIM);
       expect(result).toBe('Invalid Fee for Tom Jones in row 1');
     });
     it('should return error message when fee1 less than 0 and checkType is Final', () => {
       const row = { ...invalidBaseRow, [div1FeeColName]: -1 };
-      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Final);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.FINAL);
       expect(result).toBe('Invalid Fee for Tom Jones in row 1');
     });
     it('should return error message when fee2 less than 0 and checkType is Final', () => {
       const row = { ...invalidBaseRow, [div2FeeColName]: -1 };
-      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Final);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.FINAL);
       expect(result).toBe('Invalid Fee for Tom Jones in row 1');
     });
     it('should return error message when fee is not a number and checkType is Prelim', () => {
       const row = { ...invalidBaseRow, [div2FeeColName]: "abc" };
-      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Prelim);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.PRELIM);
       expect(result).toBe('Invalid Fee for Tom Jones in row 1');
     });
     it('should return error message when fee not a number and checkType is Final', () => {
       const row = { ...invalidBaseRow, [div2FeeColName]: "abc" };
-      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Final);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.FINAL);
       expect(result).toBe('Invalid Fee for Tom Jones in row 1');
     });
     it('should return empty error message when fee1 is null and checkType is Prelim', () => {
       const row = { ...invalidBaseRow, [div1FeeColName]: null };
-      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Prelim);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.PRELIM);
       expect(result).toBe('');
     });
     it('should return empty error message when fee2 is null and checkType is Prelim', () => {
       const row = { ...invalidBaseRow, [div2FeeColName]: null };
-      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Prelim);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.PRELIM);
       expect(result).toBe('');
     });
     it('should return empty error message when fee1 and fee2 are null and checkType is Prelim', () => {
       const row = { ...invalidBaseRow, [div1FeeColName]: null, [div2FeeColName]: null };
-      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Prelim);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.PRELIM);
       expect(result).toBe('');
     });
     it('should return empty error message when fee1 is null, fee2 is valid and checkType is Final', () => {
       const row = { ...invalidBaseRow, [div1FeeColName]: null };
-      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Final);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.FINAL);
       expect(result).toBe('');
     });
     it('should return empty error message when fee1 is valid, fee2 is null and checkType is Final', () => {
       const row = { ...invalidBaseRow, [div2FeeColName]: null };
-      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Final);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.FINAL);
       expect(result).toBe('');
     });
     it('should return error message when fee1 and fee2 are null and checkType is Final', () => {
       const row = { ...invalidBaseRow, [div1FeeColName]: null, [div2FeeColName]: null };
-      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.Final);
+      const result = validDivs(row, mockTmntFullData, errPlayer, 0, CheckType.FINAL);
       expect(result).toBe('Missing Division Fee for Tom Jones in row 1');
     });
   });
@@ -777,14 +777,14 @@ describe('rowInfo tests', () => {
 
     it('should return empty string when all row data is valid', () => {      
       const validRows = [validRow, row2];
-      const result = findNextError(validRows, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(validRows, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('');
     });
     it('should return empty string when all row data is valid - no average', () => {      
       const row2a = cloneDeep(row2);
       row2a.average = null as any;
       const validRows = [validRow, row2a];
-      const result = findNextError(validRows, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(validRows, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('');
     });
     it('should return empty string when all row data is valid - no lane', () => {      
@@ -792,7 +792,7 @@ describe('rowInfo tests', () => {
       row2a.lane = null as any;
       row2a.lanePos = null as any;
       const validRows = [validRow, row2a];
-      const result = findNextError(validRows, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(validRows, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('');
     });
     it('should return empty string when all row data is valid - no position', () => {      
@@ -800,7 +800,7 @@ describe('rowInfo tests', () => {
       row2a.position = null as any;
       row2a.lanePos = null as any;
       const validRows = [validRow, row2a];
-      const result = findNextError(validRows, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(validRows, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('');
     });
     it('should return empty string when all row data is valid - no division, no Pots, no Brackets, no Elims', () => {      
@@ -816,7 +816,7 @@ describe('rowInfo tests', () => {
       row2a[elim1FeeColName] = null as any;
       row2a[elim2FeeColName] = null as any;
       const validRows = [validRow, row2a];
-      const result = findNextError(validRows, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(validRows, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('');
     });
     it('should return empty string when all row data is valid - no pots', () => {      
@@ -824,7 +824,7 @@ describe('rowInfo tests', () => {
       row2a[pot1FeeColName] = null as any;
       row2a[pot2FeeColName] = null as any;
       const validRows = [validRow, row2a];
-      const result = findNextError(validRows, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(validRows, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('');
     });
     it('should return empty string when all row data is valid - no brackets', () => {      
@@ -834,7 +834,7 @@ describe('rowInfo tests', () => {
       row2a[brkt2FeeColName] = null as any;
       row2a[brkt2NumColName] = null as any;
       const validRows = [validRow, row2a];
-      const result = findNextError(validRows, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(validRows, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('');
     });
     it('should return empty string when all row data is valid - no elims', () => {      
@@ -842,130 +842,130 @@ describe('rowInfo tests', () => {
       row2a[elim1FeeColName] = null as any;
       row2a[elim2FeeColName] = null as any;
       const validRows = [validRow, row2a];
-      const result = findNextError(validRows, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(validRows, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('');
     });    
     it('should return empty string when rows array is empty', () => {
       const emptyRows: typeof playerEntryData[] = [];
-      const result = findNextError(emptyRows, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(emptyRows, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('');
     });
     it('should return error message when rows array is null', () => {      
-      const result = findNextError(null as any, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(null as any, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('No players in the tournament');
     });
     it('should return error message when first name is missing', () => {
       const invalidRow = { ...invalidBaseRow, first_name: '' };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('Missing First Name in row 2');
     });
     it('should return error message when last name is missing', () => {
       const invalidRow = { ...invalidBaseRow, last_name: '' };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('Missing Last Name in row 2');
     });
     it('should return error message when average is invalid', () => { 
       const invalidRow = { ...invalidBaseRow, average: maxAverage + 1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('Invalid Average for Tom Jones in row 2');
     })
     it('should return no error message when average is blank and checkType is Prelim', () => { 
       const invalidRow = { ...invalidBaseRow, average: undefined as any};
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('');
     })    
     it('should return error message when lane is invalid', () => {
       const invalidRow = { ...invalidBaseRow, lane: -1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('Invalid Lane for Tom Jones in row 2');
     });
     it('should return no error message when lane is undefined and checkType is Prelim', () => {
       const invalidRow = { ...invalidBaseRow, lane: undefined as any};
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('');
     });
     it('should return error message when position is invalid and checkType is Prelim', () => {
       const invalidRow = { ...invalidBaseRow, position: '*' };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('Invalid Position for Tom Jones in row 2');
     });
     it('should return no error message when position is undefined and checkType is Prelim', () => {
       const invalidRow = { ...invalidBaseRow, position: undefined as any};
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('');
     });
     it('should return no error message when position is null and checkType is Prelim', () => {
       const invalidRow = { ...invalidBaseRow, position: null as any};
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('');
     });
     it('should return no error message when position is blank and checkType is Prelim', () => {
       const invalidRow = { ...invalidBaseRow, position: ''};
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('');
     });
     it('should return no error message when position is valid and checkType is Prelim', () => {
       const invalidRow = { ...invalidBaseRow, position: 'A'};
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('');
     });
     it('should return error message when division too low', () => {
       const invalidRow = { ...invalidBaseRow, [div1FeeColName]: -1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('Invalid Fee for Tom Jones in row 2');
     });
     it('should return error message when division too high', () => {
       const invalidRow = { ...invalidBaseRow, [div1FeeColName]: maxMoney + 1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('Invalid Fee for Tom Jones in row 2');
     });
     it('should return error message when pot fee is invalid', () => {
       const invalidRow = { ...invalidBaseRow, [pot1FeeColName]: 1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('Invalid pot fee in Scratch: Gm for Tom Jones in row 2');
     });
     it('should return error message when 2nd pot fee is invalid', () => {
       const invalidRow = { ...invalidBaseRow, [pot2FeeColName]: 1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('Invalid pot fee in Scratch: LG for Tom Jones in row 2');
     });
     it('should return error message when number of brackets is too low', () => {
       const invalidRow = { ...invalidBaseRow, [brkt1NumColName]: -1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('Number of brackets in Scratch: 1-3 is less than 0 for Tom Jones in row 2');
     });
     it('should return error message when number of brackets is too high', () => {
       const invalidRow = { ...invalidBaseRow, [brkt1NumColName]: maxBrackets + 1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('Number of brackets in Scratch: 1-3 is more than 999 for Tom Jones in row 2');
     });
     it('should return error message when eliminator fee is invalid', () => {
       const invalidRow = { ...invalidBaseRow, [elim1FeeColName]: 1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('Invalid eliminator fee in Scratch: 1-3 for Tom Jones in row 2');
     });
     it('should return error message when 2nd pot fee is invalid', () => {
       const invalidRow = { ...invalidBaseRow, [elim2FeeColName]: 1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Prelim);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.PRELIM);
       expect(result.msg).toBe('Invalid eliminator fee in Scratch: 4-6 for Tom Jones in row 2');
     });
   });
@@ -974,14 +974,14 @@ describe('rowInfo tests', () => {
 
     it('should return empty string when all row data is valid', () => {      
       const validRows = [validRow, row2];
-      const result = findNextError(validRows, mockTmntFullData, CheckType.Final);
+      const result = findNextError(validRows, mockTmntFullData, CheckType.FINAL);
       expect(result.msg).toBe('');
     });
     it('should return error message - no average', () => {      
       const row2a = cloneDeep(row2);
       row2a.average = null as any;
       const validRows = [validRow, row2a];
-      const result = findNextError(validRows, mockTmntFullData, CheckType.Final);
+      const result = findNextError(validRows, mockTmntFullData, CheckType.FINAL);
       expect(result.msg).toBe('Missing Average for Jane Doe in row 2');
     });
     it('should return error message - no lane', () => {      
@@ -989,7 +989,7 @@ describe('rowInfo tests', () => {
       row2a.lane = null as any;
       row2a.lanePos = null as any;
       const validRows = [validRow, row2a];
-      const result = findNextError(validRows, mockTmntFullData, CheckType.Final);
+      const result = findNextError(validRows, mockTmntFullData, CheckType.FINAL);
       expect(result.msg).toBe('Missing Lane for Jane Doe in row 2');
     });
     it('should return error message - no position', () => {      
@@ -997,7 +997,7 @@ describe('rowInfo tests', () => {
       row2a.position = null as any;
       row2a.lanePos = null as any;
       const validRows = [validRow, row2a];
-      const result = findNextError(validRows, mockTmntFullData, CheckType.Final);
+      const result = findNextError(validRows, mockTmntFullData, CheckType.FINAL);
       expect(result.msg).toBe('Missing Position for Jane Doe in row 2');
     });
     it('should return error message - no division', () => {      
@@ -1005,94 +1005,94 @@ describe('rowInfo tests', () => {
       row2a[div1FeeColName] = null as any;   
       row2a[div2FeeColName] = null as any;
       const validRows = [validRow, row2a];
-      const result = findNextError(validRows, mockTmntFullData, CheckType.Final);
+      const result = findNextError(validRows, mockTmntFullData, CheckType.FINAL);
       expect(result.msg).toBe('Missing Division Fee for Jane Doe in row 2');
     });
     it('should return error message when rows array is empty', () => {
       const emptyRows: typeof playerEntryData[] = [];
-      const result = findNextError(emptyRows, mockTmntFullData, CheckType.Final);
+      const result = findNextError(emptyRows, mockTmntFullData, CheckType.FINAL);
       expect(result.msg).toBe('No players in the tournament');
     });
     it('should return error message when rows array is null', () => {      
-      const result = findNextError(null as any, mockTmntFullData, CheckType.Final);
+      const result = findNextError(null as any, mockTmntFullData, CheckType.FINAL);
       expect(result.msg).toBe('No players in the tournament');
     });
     it('should return error message when first name is missing', () => {
       const invalidRow = { ...invalidBaseRow, first_name: '' };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Final);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.FINAL);
       expect(result.msg).toBe('Missing First Name in row 2');
     });
     it('should return error message when last name is missing', () => {
       const invalidRow = { ...invalidBaseRow, last_name: '' };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Final);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.FINAL);
       expect(result.msg).toBe('Missing Last Name in row 2');
     });
     it('should return error message when average is invalid', () => { 
       const invalidRow = { ...invalidBaseRow, average: maxAverage + 1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Final);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.FINAL);
       expect(result.msg).toBe('Invalid Average for Tom Jones in row 2');
     })
     it('should return error message when lane is invalid', () => {
       const invalidRow = { ...invalidBaseRow, lane: -1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Final);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.FINAL);
       expect(result.msg).toBe('Invalid Lane for Tom Jones in row 2');
     });
     it('should return error message when position is invalid and checkType is Final', () => {
       const invalidRow = { ...invalidBaseRow, position: '*' };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Final);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.FINAL);
       expect(result.msg).toBe('Invalid Position for Tom Jones in row 2');
     });
     it('should return error message when division too low', () => {
       const invalidRow = { ...invalidBaseRow, [div1FeeColName]: -1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Final);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.FINAL);
       expect(result.msg).toBe('Invalid Fee for Tom Jones in row 2');
     });
     it('should return error message when division too high', () => {
       const invalidRow = { ...invalidBaseRow, [div1FeeColName]: maxMoney + 1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Final);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.FINAL);
       expect(result.msg).toBe('Invalid Fee for Tom Jones in row 2');
     });
     it('should return error message when pot fee is invalid', () => {
       const invalidRow = { ...invalidBaseRow, [pot1FeeColName]: 1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Final);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.FINAL);
       expect(result.msg).toBe('Invalid pot fee in Scratch: Gm for Tom Jones in row 2');
     });
     it('should return error message when 2nd pot fee is invalid', () => {
       const invalidRow = { ...invalidBaseRow, [pot2FeeColName]: 1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Final);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.FINAL);
       expect(result.msg).toBe('Invalid pot fee in Scratch: LG for Tom Jones in row 2');
     });
     it('should return error message when number of brackets is too low', () => {
       const invalidRow = { ...invalidBaseRow, [brkt1NumColName]: -1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Final);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.FINAL);
       expect(result.msg).toBe('Number of brackets in Scratch: 1-3 is less than 0 for Tom Jones in row 2');
     });
     it('should return error message when number of brackets is too high', () => {
       const invalidRow = { ...invalidBaseRow, [brkt1NumColName]: maxBrackets + 1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Final);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.FINAL);
       expect(result.msg).toBe('Number of brackets in Scratch: 1-3 is more than 999 for Tom Jones in row 2');
     });
     it('should return error message when eliminator fee is invalid', () => {
       const invalidRow = { ...invalidBaseRow, [elim1FeeColName]: 1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Final);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.FINAL);
       expect(result.msg).toBe('Invalid eliminator fee in Scratch: 1-3 for Tom Jones in row 2');
     });
     it('should return error message when 2nd pot fee is invalid', () => {
       const invalidRow = { ...invalidBaseRow, [elim2FeeColName]: 1 };
       const invalidRows = [validRow, invalidRow];
-      const result = findNextError(invalidRows, mockTmntFullData, CheckType.Final);
+      const result = findNextError(invalidRows, mockTmntFullData, CheckType.FINAL);
       expect(result.msg).toBe('Invalid eliminator fee in Scratch: 4-6 for Tom Jones in row 2');
     });
 

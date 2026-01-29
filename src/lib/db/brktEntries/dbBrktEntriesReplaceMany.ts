@@ -1,6 +1,6 @@
-import { validateBrktEntries } from "@/app/api/brktEntries/validate";
+import { validateBrktEntries } from "@/lib/validation/brktEntries/validate";
 import { brktEntryType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { deleteAllBrktEntriesForSquad, postManyBrktEntries } from "./dbBrktEntries";
 
 /**
@@ -23,7 +23,7 @@ export const replaceManyBrktEntries = async (brktEntries: brktEntryType[], squad
     return 0;
   }
   const validBrktEntries = validateBrktEntries(brktEntries);
-  if (validBrktEntries.errorCode !== ErrorCode.None
+  if (validBrktEntries.errorCode !== ErrorCode.NONE
     || validBrktEntries.brktEntries.length !== brktEntries.length)
   { 
     if (validBrktEntries.brktEntries.length === 0) {      

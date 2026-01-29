@@ -5,7 +5,7 @@ import { potCategoriesTypes, potType } from "@/lib/types/types";
 import { initPot} from "@/lib/db/initVals";
 import { mockPotsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { deleteAllPotsForSquad, deleteAllPotsForTmnt, getAllPotsForTmnt, postManyPots } from "@/lib/db/pots/dbPots";
-import { isValidBtDbId } from "@/lib/validation";
+import { isValidBtDbId } from "@/lib/validation/validation";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database

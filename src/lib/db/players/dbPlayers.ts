@@ -2,9 +2,9 @@ import axios from "axios";
 import { basePlayersApi } from "@/lib/db/apiPaths";
 import { testBasePlayersApi } from "../../../../test/testApi";
 import { playerType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { blankPlayer } from "../initVals";
-import { validatePlayers } from "@/app/api/players/validate";
+import { validatePlayers } from "@/lib/validation/players/validate";
 
 const url = testBasePlayersApi.startsWith("undefined")
   ? basePlayersApi
@@ -134,7 +134,7 @@ export const postManyPlayers = async (players: playerType[]): Promise<number> =>
   }
   if (players.length === 0) return 0; // not an error, just no data to post  
   const validPlayers = validatePlayers(players);
-  if (validPlayers.errorCode !== ErrorCode.None
+  if (validPlayers.errorCode !== ErrorCode.NONE
     || validPlayers.players.length !== players.length)
   { 
     if (validPlayers.players.length === 0) {      

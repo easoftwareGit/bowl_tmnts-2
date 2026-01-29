@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { validCompositKey } from "../../../validate";
+import { validCompositKey } from "../../../../../../lib/validation/brktSeeds/validate";
 import { getErrorStatus } from "@/app/api/errCodes";
 
 // routes /api/brktSeeds/brktSeed/:oneBrktId/:seed

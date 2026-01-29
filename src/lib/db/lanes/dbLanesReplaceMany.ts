@@ -1,6 +1,6 @@
-import { validateLanes } from "@/app/api/lanes/validate";
+import { validateLanes } from "@/lib/validation/lanes/validate";
 import { laneType, validLanesType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { deleteAllLanesForSquad, postManyLanes } from "./dbLanes";
 
 /**
@@ -19,11 +19,11 @@ export const replaceManyLanes = async (lanes: laneType[], squadId: string): Prom
   if (!isValidBtDbId(squadId, "sqd")) {
     throw new Error('Invalid squad id');
   }
-  let validLanes: validLanesType = { lanes: [], errorCode: ErrorCode.None };
+  let validLanes: validLanesType = { lanes: [], errorCode: ErrorCode.NONE };
   if (lanes.length !== 0) {
     validLanes = validateLanes(lanes);
   }  
-  if (validLanes.errorCode !== ErrorCode.None
+  if (validLanes.errorCode !== ErrorCode.NONE
     || validLanes.lanes.length !== lanes.length)
   { 
     if (validLanes.lanes.length === 0) {      

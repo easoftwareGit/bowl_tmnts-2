@@ -29,25 +29,25 @@ import {
   validPotsType,
   validSquadsType,
 } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId, maxMoney } from "@/lib/validation";
-import { validateTmnt } from "../valildate";
-import { validateEvents } from "../../events/validate";
-import { validateLanes } from "../../lanes/validate";
-import { validateOneBrkts } from "../../oneBrkts/valildate";
-import { validatePlayers } from "../../players/validate";
-import { validatePots } from "../../pots/validate";
-import { validatePotEntries } from "../../potEntries/validate";
-import { validateSquads } from "../../squads/validate";
-import { validateBrkts } from "../../brkts/validate";
-import { validateBrktEntries } from "../../brktEntries/validate";
-import { validateBrktSeeds } from "../../brktSeeds/validate";
-import { validateDivs } from "../../divs/validate";
-import { validateDivEntries } from "../../divEntries/validate";
-import { validateElims } from "../../elims/validate";
-import { validateElimEntries } from "../../elimEntries/validate";
+import { ErrorCode, isValidBtDbId, maxMoney } from "@/lib/validation/validation";
+import { validateTmnt } from "../../../../lib/validation/tmnts/valildate";
+import { validateEvents } from "../../../../lib/validation/events/validate";
+import { validateLanes } from "../../../../lib/validation/lanes/validate";
+import { validateOneBrkts } from "../../../../lib/validation/oneBrkts/valildate";
+import { validatePlayers } from "../../../../lib/validation/players/validate";
+import { validatePots } from "../../../../lib/validation/pots/validate";
+import { validatePotEntries } from "../../../../lib/validation/potEntries/validate";
+import { validateSquads } from "../../../../lib/validation/squads/validate";
+import { validateBrkts } from "../../../../lib/validation/brkts/validate";
+import { validateBrktEntries } from "../../../../lib/validation/brktEntries/validate";
+import { validateBrktSeeds } from "../../../../lib/validation/brktSeeds/validate";
+import { validateDivs } from "../../../../lib/validation/divs/validate";
+import { validateDivEntries } from "../../../../lib/validation/divEntries/validate";
+import { validateElims } from "../../../../lib/validation/elims/validate";
+import { validateElimEntries } from "../../../../lib/validation/elimEntries/validate";
 
 const noError: tmntFullDataErrType = {
-  errorCode: ErrorCode.None,
+  errorCode: ErrorCode.NONE,
   errorTable: "",
   errorIndex: 0,
   message: "",
@@ -61,11 +61,11 @@ const noError: tmntFullDataErrType = {
  * @returns {string} - error message
  */
 const basicErrMsg = (errorCode: ErrorCode, errorTable: string): string => {
-  if (errorCode === ErrorCode.MissingData) {
+  if (errorCode === ErrorCode.MISSING_DATA) {
     return `${errorTable} is missing data`;
-  } else if (errorCode === ErrorCode.InvalidData) {
+  } else if (errorCode === ErrorCode.INVALID_DATA) {
     return `${errorTable} has invalid data`;
-  } else if (errorCode === ErrorCode.OtherError) {
+  } else if (errorCode === ErrorCode.OTHER_ERROR) {
     return `${errorTable} has an unknown error`;
   } else {
     return "";
@@ -79,11 +79,11 @@ const basicErrMsg = (errorCode: ErrorCode, errorTable: string): string => {
  * @returns {string} - error message
  */
 const advancedErrMsg = (errorInfo: tmntFullDataErrType): string => {
-  if (errorInfo.errorCode === ErrorCode.MissingData) {
+  if (errorInfo.errorCode === ErrorCode.MISSING_DATA) {
     return `${errorInfo.errorTable} has missing data at index ${errorInfo.errorIndex}`;
-  } else if (errorInfo.errorCode === ErrorCode.InvalidData) {
+  } else if (errorInfo.errorCode === ErrorCode.INVALID_DATA) {
     return `${errorInfo.errorTable} has invalid data at index ${errorInfo.errorIndex}`;
-  } else if (errorInfo.errorCode === ErrorCode.OtherError) {
+  } else if (errorInfo.errorCode === ErrorCode.OTHER_ERROR) {
     return `${errorInfo.errorTable} has an unknown error at index ${errorInfo.errorIndex}`;
   } else {
     return "";
@@ -103,7 +103,7 @@ const getBrktsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
   if (!brkts || !Array.isArray(brkts)) {
     return {
       errorTable: "brkts",
-      errorCode: ErrorCode.MissingData,
+      errorCode: ErrorCode.MISSING_DATA,
       errorIndex: 0,
       message: "no brkts data",
     };
@@ -118,14 +118,14 @@ const getBrktsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
   ) {
     return {
       errorTable: "brkts",
-      errorCode: ErrorCode.MissingData,
+      errorCode: ErrorCode.MISSING_DATA,
       errorIndex: 0,
       message: "no brkts parent data",
     };
   }
 
   // ok to have 0 brkts
-  let validBrkts: validBrktsType = { brkts: [], errorCode: ErrorCode.None };
+  let validBrkts: validBrktsType = { brkts: [], errorCode: ErrorCode.NONE };
   const brktsErr: tmntFullDataErrType = {
     ...noError,
   };
@@ -134,7 +134,7 @@ const getBrktsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
 
   validBrkts = validateBrkts(brkts);
   if (
-    validBrkts.errorCode !== ErrorCode.None ||
+    validBrkts.errorCode !== ErrorCode.NONE ||
     validBrkts.brkts.length !== brkts.length
   ) {
     brktsErr.errorTable = "brkts";
@@ -162,7 +162,7 @@ const getBrktsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
     const div = divs.find((d) => d.id === brkt.div_id);
     if (!div) {
       brktsErr.errorTable = "brkts";
-      brktsErr.errorCode = ErrorCode.MissingData;
+      brktsErr.errorCode = ErrorCode.MISSING_DATA;
       brktsErr.errorIndex = i;
       brktsErr.message =
         "brkts has no parent div at index " + brktsErr.errorIndex;
@@ -171,7 +171,7 @@ const getBrktsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
     const squad = squads.find((s) => s.id === brkt.squad_id);
     if (!squad) {
       brktsErr.errorTable = "brkts";
-      brktsErr.errorCode = ErrorCode.MissingData;
+      brktsErr.errorCode = ErrorCode.MISSING_DATA;
       brktsErr.errorIndex = i;
       brktsErr.message =
         "brkts has no parent squad at index " + brktsErr.errorIndex;
@@ -200,7 +200,7 @@ const getBrktEntriesError = (
   if (!brktEntries || !Array.isArray(brktEntries)) {
     return {
       errorTable: "brktEntries",
-      errorCode: ErrorCode.MissingData,
+      errorCode: ErrorCode.MISSING_DATA,
       errorIndex: 0,
       message: "no brktEntries data",
     };
@@ -213,7 +213,7 @@ const getBrktEntriesError = (
   ) {
     return {
       errorTable: "brktEntries",
-      errorCode: ErrorCode.MissingData,
+      errorCode: ErrorCode.MISSING_DATA,
       errorIndex: 0,
       message: "no brktEntries parent data",
     };
@@ -222,7 +222,7 @@ const getBrktEntriesError = (
   // ok to have 0 brktEntries
   let validBrktEntries: validBrktEntriesType = {
     brktEntries: [],
-    errorCode: ErrorCode.None,
+    errorCode: ErrorCode.NONE,
   };
   const brktEntriesErr: tmntFullDataErrType = {
     ...noError,
@@ -240,7 +240,7 @@ const getBrktEntriesError = (
 
   validBrktEntries = validateBrktEntries(brktEntries);
   if (
-    validBrktEntries.errorCode !== ErrorCode.None ||
+    validBrktEntries.errorCode !== ErrorCode.NONE ||
     validBrktEntries.brktEntries.length !== brktEntries.length
   ) {
     brktEntriesErr.errorTable = "brktEntries";
@@ -268,7 +268,7 @@ const getBrktEntriesError = (
     const brkt = brkts.find((b) => b.id === brktEntry.brkt_id);
     if (!brkt) {
       brktEntriesErr.errorTable = "brktEntries";
-      brktEntriesErr.errorCode = ErrorCode.MissingData;
+      brktEntriesErr.errorCode = ErrorCode.MISSING_DATA;
       brktEntriesErr.errorIndex = i;
       brktEntriesErr.message =
         "brktEntries has no parent brkt at index " + brktEntriesErr.errorIndex;
@@ -279,7 +279,7 @@ const getBrktEntriesError = (
     const player = players.find((p) => p.id === brktEntry.player_id);
     if (!player) {
       brktEntriesErr.errorTable = "brktEntries";
-      brktEntriesErr.errorCode = ErrorCode.MissingData;
+      brktEntriesErr.errorCode = ErrorCode.MISSING_DATA;
       brktEntriesErr.errorIndex = i;
       brktEntriesErr.message =
         "brktEntries has no parent player at index " +
@@ -309,7 +309,7 @@ const getBrktSeedsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
   if (!brktSeeds || !Array.isArray(brktSeeds)) {
     return {
       errorTable: "brktSeeds",
-      errorCode: ErrorCode.MissingData,
+      errorCode: ErrorCode.MISSING_DATA,
       errorIndex: 0,
       message: "no brktSeeds data",
     };
@@ -328,7 +328,7 @@ const getBrktSeedsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
   ) {
     return {
       errorTable: "brktSeeds",
-      errorCode: ErrorCode.MissingData,
+      errorCode: ErrorCode.MISSING_DATA,
       errorIndex: 0,
       message: "no brktSeeds parent data",
     };
@@ -336,7 +336,7 @@ const getBrktSeedsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
   if (oneBrkts.length > 0 && brktSeeds.length === 0) {
     return {
       errorTable: "brktSeeds",
-      errorCode: ErrorCode.MissingData,
+      errorCode: ErrorCode.MISSING_DATA,
       errorIndex: 0,
       message: "no brktSeeds child data",
     };
@@ -344,7 +344,7 @@ const getBrktSeedsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
 
   let validBrktSeeds: validBrktSeedsType = {
     brktSeeds: [],
-    errorCode: ErrorCode.None,
+    errorCode: ErrorCode.NONE,
   };
   const brktSeedsErr: tmntFullDataErrType = {
     ...noError,
@@ -353,7 +353,7 @@ const getBrktSeedsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
 
   validBrktSeeds = validateBrktSeeds(brktSeeds);
   if (
-    validBrktSeeds.errorCode !== ErrorCode.None ||
+    validBrktSeeds.errorCode !== ErrorCode.NONE ||
     validBrktSeeds.brktSeeds.length !== brktSeeds.length
   ) {
     brktSeedsErr.errorTable = "brktSeeds";
@@ -380,7 +380,7 @@ const getBrktSeedsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
     const oneBrkt = oneBrkts.find((b) => b.id === brktSeed.one_brkt_id);
     if (!oneBrkt) {
       brktSeedsErr.errorTable = "brktSeeds";
-      brktSeedsErr.errorCode = ErrorCode.MissingData;
+      brktSeedsErr.errorCode = ErrorCode.MISSING_DATA;
       brktSeedsErr.errorIndex = i;
       brktSeedsErr.message =
         "brktSeeds has no parent oneBrkt at index " + brktSeedsErr.errorIndex;
@@ -389,7 +389,7 @@ const getBrktSeedsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
     const player = players.find((p) => p.id === brktSeed.player_id);
     if (!player) {
       brktSeedsErr.errorTable = "brktSeeds";
-      brktSeedsErr.errorCode = ErrorCode.MissingData;
+      brktSeedsErr.errorCode = ErrorCode.MISSING_DATA;
       brktSeedsErr.errorIndex = i;
       brktSeedsErr.message =
         "brktSeeds has no parent player at index " + brktSeedsErr.errorIndex;
@@ -413,19 +413,19 @@ const getDivsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
   const tmnt = tmntFullData.tmnt;
   if (!divs || !Array.isArray(divs) || divs.length === 0) {
     return {
-      errorCode: ErrorCode.MissingData,
+      errorCode: ErrorCode.MISSING_DATA,
       errorTable: "divs",
       errorIndex: 0,
       message: "no divs data",
     };
   }
-  let validDivs: validDivsType = { divs: [], errorCode: ErrorCode.None };
+  let validDivs: validDivsType = { divs: [], errorCode: ErrorCode.NONE };
   const divsErr: tmntFullDataErrType = {
     ...noError,
   };
   validDivs = validateDivs(divs);
   if (
-    validDivs.errorCode !== ErrorCode.None ||
+    validDivs.errorCode !== ErrorCode.NONE ||
     validDivs.divs.length !== divs.length
   ) {
     divsErr.errorTable = "divs";
@@ -449,7 +449,7 @@ const getDivsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
     const div = divs[i];
     if (div.tmnt_id !== tmnt.id) {
       divsErr.errorTable = "divs";
-      divsErr.errorCode = ErrorCode.MissingData;
+      divsErr.errorCode = ErrorCode.MISSING_DATA;
       divsErr.errorIndex = i;
       divsErr.message =
         "divs has no parent tmnt at index " + divsErr.errorIndex;
@@ -479,7 +479,7 @@ const getDivEntriesError = (
   if (!divEntries || !Array.isArray(divEntries)) {
     return {
       errorTable: "divEntries",
-      errorCode: ErrorCode.MissingData,
+      errorCode: ErrorCode.MISSING_DATA,
       errorIndex: 0,
       message: "no divEntries data",
     };
@@ -492,7 +492,7 @@ const getDivEntriesError = (
   ) {
     return {
       errorTable: "divEntries",
-      errorCode: ErrorCode.MissingData,
+      errorCode: ErrorCode.MISSING_DATA,
       errorIndex: 0,
       message: "no divEntries parent data",
     };
@@ -501,7 +501,7 @@ const getDivEntriesError = (
   // ok to have 0 divEntries
   let validDivEntries: validDivEntriesType = {
     divEntries: [],
-    errorCode: ErrorCode.None,
+    errorCode: ErrorCode.NONE,
   };
   const divEntriesErr: tmntFullDataErrType = {
     ...noError,
@@ -520,7 +520,7 @@ const getDivEntriesError = (
 
   validDivEntries = validateDivEntries(divEntries);
   if (
-    validDivEntries.errorCode !== ErrorCode.None ||
+    validDivEntries.errorCode !== ErrorCode.NONE ||
     validDivEntries.divEntries.length !== divEntries.length
   ) {
     divEntriesErr.errorTable = "divEntries";
@@ -547,7 +547,7 @@ const getDivEntriesError = (
     const squad = squads.find((s) => s.id === divEntry.squad_id);
     if (!squad) {
       divEntriesErr.errorTable = "divEntries";
-      divEntriesErr.errorCode = ErrorCode.MissingData;
+      divEntriesErr.errorCode = ErrorCode.MISSING_DATA;
       divEntriesErr.errorIndex = i;
       divEntriesErr.message =
         "divEntries has no parent squad at index " + divEntriesErr.errorIndex;
@@ -556,7 +556,7 @@ const getDivEntriesError = (
     const div = divs.find((d) => d.id === divEntry.div_id);
     if (!div) {
       divEntriesErr.errorTable = "divEntries";
-      divEntriesErr.errorCode = ErrorCode.MissingData;
+      divEntriesErr.errorCode = ErrorCode.MISSING_DATA;
       divEntriesErr.errorIndex = i;
       divEntriesErr.message =
         "divEntries has no parent div at index " + divEntriesErr.errorIndex;
@@ -565,7 +565,7 @@ const getDivEntriesError = (
     const player = players.find((p) => p.id === divEntry.player_id);
     if (!player) {
       divEntriesErr.errorTable = "divEntries";
-      divEntriesErr.errorCode = ErrorCode.MissingData;
+      divEntriesErr.errorCode = ErrorCode.MISSING_DATA;
       divEntriesErr.errorIndex = i;
       divEntriesErr.message =
         "divEntries has no parent player at index " + divEntriesErr.errorIndex;
@@ -590,7 +590,7 @@ const getElimsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
   const squads: squadType[] = tmntFullData.squads;
   if (!elims || !Array.isArray(elims)) {
     return {
-      errorCode: ErrorCode.MissingData,
+      errorCode: ErrorCode.MISSING_DATA,
       errorTable: "elims",
       errorIndex: 0,
       message: "no elims data",
@@ -606,14 +606,14 @@ const getElimsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
   ) {
     return {
       errorTable: "elims",
-      errorCode: ErrorCode.MissingData,
+      errorCode: ErrorCode.MISSING_DATA,
       errorIndex: 0,
       message: "no elims parent data",
     };
   }
 
   // ok to have 0 elims
-  let validElims: validElimsType = { elims: [], errorCode: ErrorCode.None };
+  let validElims: validElimsType = { elims: [], errorCode: ErrorCode.NONE };
   const elimsErr: tmntFullDataErrType = {
     ...noError,
   };
@@ -622,7 +622,7 @@ const getElimsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
 
   validElims = validateElims(elims);
   if (
-    validElims.errorCode !== ErrorCode.None ||
+    validElims.errorCode !== ErrorCode.NONE ||
     validElims.elims.length !== elims.length
   ) {
     elimsErr.errorTable = "elims";
@@ -649,7 +649,7 @@ const getElimsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
     const div = divs.find((d) => d.id === elim.div_id);
     if (!div) {
       elimsErr.errorTable = "elims";
-      elimsErr.errorCode = ErrorCode.MissingData;
+      elimsErr.errorCode = ErrorCode.MISSING_DATA;
       elimsErr.errorIndex = i;
       elimsErr.message =
         "elims has no parent div at index " + elimsErr.errorIndex;
@@ -658,7 +658,7 @@ const getElimsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
     const squad = squads.find((s) => s.id === elim.squad_id);
     if (!squad) {
       elimsErr.errorTable = "elims";
-      elimsErr.errorCode = ErrorCode.MissingData;
+      elimsErr.errorCode = ErrorCode.MISSING_DATA;
       elimsErr.errorIndex = i;
       elimsErr.message =
         "elims has no parent squad at index " + elimsErr.errorIndex;
@@ -687,7 +687,7 @@ const getElimEntriesError = (
   if (!elimEntries || !Array.isArray(elimEntries)) {
     return {
       errorTable: "elimEntries",
-      errorCode: ErrorCode.MissingData,
+      errorCode: ErrorCode.MISSING_DATA,
       errorIndex: 0,
       message: "no elimEntries data",
     };
@@ -700,7 +700,7 @@ const getElimEntriesError = (
   ) {
     return {
       errorTable: "elimEntries",
-      errorCode: ErrorCode.MissingData,
+      errorCode: ErrorCode.MISSING_DATA,
       errorIndex: 0,
       message: "no elimEntries parent data",
     };
@@ -708,7 +708,7 @@ const getElimEntriesError = (
   // ok to have 0 elimEntries
   let validElimEntries: validElimEntriesType = {
     elimEntries: [],
-    errorCode: ErrorCode.None,
+    errorCode: ErrorCode.NONE,
   };
   const elimEntriesErr: tmntFullDataErrType = {
     ...noError,
@@ -727,7 +727,7 @@ const getElimEntriesError = (
 
   validElimEntries = validateElimEntries(elimEntries);
   if (
-    validElimEntries.errorCode !== ErrorCode.None ||
+    validElimEntries.errorCode !== ErrorCode.NONE ||
     validElimEntries.elimEntries.length !== elimEntries.length
   ) {
     elimEntriesErr.errorTable = "elimEntries";
@@ -754,7 +754,7 @@ const getElimEntriesError = (
     const elim = elims.find((e) => e.id === elimEntry.elim_id);
     if (!elim) {
       elimEntriesErr.errorTable = "elimEntries";
-      elimEntriesErr.errorCode = ErrorCode.MissingData;
+      elimEntriesErr.errorCode = ErrorCode.MISSING_DATA;
       elimEntriesErr.errorIndex = i;
       elimEntriesErr.message =
         "elimEntries has no parent elim at index " + elimEntriesErr.errorIndex;
@@ -763,7 +763,7 @@ const getElimEntriesError = (
     const player = players.find((p) => p.id === elimEntry.player_id);
     if (!player) {
       elimEntriesErr.errorTable = "elimEntries";
-      elimEntriesErr.errorCode = ErrorCode.MissingData;
+      elimEntriesErr.errorCode = ErrorCode.MISSING_DATA;
       elimEntriesErr.errorIndex = i;
       elimEntriesErr.message =
         "elimEntries has no parent player at index " +
@@ -772,7 +772,7 @@ const getElimEntriesError = (
     }
     if (elimEntry.fee !== elim.fee) {
       elimEntriesErr.errorTable = "elimEntries";
-      elimEntriesErr.errorCode = ErrorCode.InvalidData;
+      elimEntriesErr.errorCode = ErrorCode.INVALID_DATA;
       elimEntriesErr.errorIndex = i;
       elimEntriesErr.message =
         "elimEntries has invalid data at index " + elimEntriesErr.errorIndex;
@@ -796,19 +796,19 @@ const getEventsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
   const tmnt = tmntFullData.tmnt;
   if (!events || !Array.isArray(events) || events.length === 0) {
     return {
-      errorCode: ErrorCode.MissingData,
+      errorCode: ErrorCode.MISSING_DATA,
       errorTable: "events",
       errorIndex: 0,
       message: "no events data",
     };
   }
-  let validEvents: validEventsType = { events: [], errorCode: ErrorCode.None };
+  let validEvents: validEventsType = { events: [], errorCode: ErrorCode.NONE };
   const eventsErr: tmntFullDataErrType = {
     ...noError,
   };
   validEvents = validateEvents(events);
   if (
-    validEvents.errorCode !== ErrorCode.None ||
+    validEvents.errorCode !== ErrorCode.NONE ||
     validEvents.events.length !== events.length
   ) {
     eventsErr.errorTable = "events";
@@ -834,7 +834,7 @@ const getEventsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
     const event = events[i];
     if (event.tmnt_id !== tmnt.id) {
       eventsErr.errorTable = "events";
-      eventsErr.errorCode = ErrorCode.MissingData;
+      eventsErr.errorCode = ErrorCode.MISSING_DATA;
       eventsErr.errorIndex = i;
       eventsErr.message =
         "events has no parent tmnt at index " + eventsErr.errorIndex;
@@ -859,7 +859,7 @@ const getLanesError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
   if (!lanes || !Array.isArray(lanes) || lanes.length === 0) {
     return {
       errorTable: "lanes",
-      errorCode: ErrorCode.MissingData,
+      errorCode: ErrorCode.MISSING_DATA,
       errorIndex: 0,
       message: "no lanes data",
     };
@@ -872,19 +872,19 @@ const getLanesError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
   ) {
     return {
       errorTable: "lanes",
-      errorCode: ErrorCode.MissingData,
+      errorCode: ErrorCode.MISSING_DATA,
       errorIndex: 0,
       message: "no lanes parent data",
     };
   }
 
-  let validLanes: validLanesType = { lanes: [], errorCode: ErrorCode.None };
+  let validLanes: validLanesType = { lanes: [], errorCode: ErrorCode.NONE };
   const lanesErr: tmntFullDataErrType = {
     ...noError,
   };
   validLanes = validateLanes(lanes);
   if (
-    validLanes.errorCode !== ErrorCode.None ||
+    validLanes.errorCode !== ErrorCode.NONE ||
     validLanes.lanes.length !== lanes.length
   ) {
     lanesErr.errorTable = "lanes";
@@ -911,7 +911,7 @@ const getLanesError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
     const squad = squads.find((s) => s.id === lane.squad_id);
     if (!squad) {
       lanesErr.errorTable = "lanes";
-      lanesErr.errorCode = ErrorCode.MissingData;
+      lanesErr.errorCode = ErrorCode.MISSING_DATA;
       lanesErr.errorIndex = i;
       lanesErr.message =
         "lanes has no parent squad at index " + lanesErr.errorIndex;
@@ -937,7 +937,7 @@ const getOneBrktsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
   if (!oneBrkts || !Array.isArray(oneBrkts)) {
     return {
       errorTable: "oneBrkts",
-      errorCode: ErrorCode.MissingData,
+      errorCode: ErrorCode.MISSING_DATA,
       errorIndex: 0,
       message: "no oneBrkts data",
     };
@@ -950,7 +950,7 @@ const getOneBrktsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
   ) {
     return {
       errorTable: "oneBrkts",
-      errorCode: ErrorCode.MissingData,
+      errorCode: ErrorCode.MISSING_DATA,
       errorIndex: 0,
       message: "no oneBrkts parent data",
     };
@@ -959,7 +959,7 @@ const getOneBrktsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
   // ok to have 0 oneBrkts
   let validOneBrkts: validOneBrktsType = {
     oneBrkts: [],
-    errorCode: ErrorCode.None,
+    errorCode: ErrorCode.NONE,
   };
   const oneBrktsErr: tmntFullDataErrType = {
     ...noError,
@@ -969,7 +969,7 @@ const getOneBrktsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
 
   validOneBrkts = validateOneBrkts(oneBrkts);
   if (
-    validOneBrkts.errorCode !== ErrorCode.None ||
+    validOneBrkts.errorCode !== ErrorCode.NONE ||
     validOneBrkts.oneBrkts.length !== oneBrkts.length
   ) {
     oneBrktsErr.errorTable = "oneBrkts";
@@ -996,7 +996,7 @@ const getOneBrktsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
     const brkt = brkts.find((b) => b.id === oneBrkt.brkt_id);
     if (!brkt) {
       oneBrktsErr.errorTable = "oneBrkts";
-      oneBrktsErr.errorCode = ErrorCode.MissingData;
+      oneBrktsErr.errorCode = ErrorCode.MISSING_DATA;
       oneBrktsErr.errorIndex = i;
       oneBrktsErr.message =
         "oneBrkts has no parent brkt at index " + oneBrktsErr.errorIndex;
@@ -1022,7 +1022,7 @@ const getPlayersError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
   if (!players || !Array.isArray(players)) {
     return {
       errorTable: "players",
-      errorCode: ErrorCode.MissingData,
+      errorCode: ErrorCode.MISSING_DATA,
       errorIndex: 0,
       message: "no players data",
     };
@@ -1035,7 +1035,7 @@ const getPlayersError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
   ) {
     return {
       errorTable: "players",
-      errorCode: ErrorCode.MissingData,
+      errorCode: ErrorCode.MISSING_DATA,
       errorIndex: 0,
       message: "no players parent data",
     };
@@ -1044,7 +1044,7 @@ const getPlayersError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
   // ok to have 0 players
   let validPlayers: validPlayersType = {
     players: [],
-    errorCode: ErrorCode.None,
+    errorCode: ErrorCode.NONE,
   };
   const playersErr: tmntFullDataErrType = {
     ...noError,
@@ -1054,7 +1054,7 @@ const getPlayersError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
 
   validPlayers = validatePlayers(players);
   if (
-    validPlayers.errorCode !== ErrorCode.None ||
+    validPlayers.errorCode !== ErrorCode.NONE ||
     validPlayers.players.length !== players.length
   ) {
     playersErr.errorTable = "players";
@@ -1081,7 +1081,7 @@ const getPlayersError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
     const squad = squads.find((s) => s.id === player.squad_id);
     if (!squad) {
       playersErr.errorTable = "players";
-      playersErr.errorCode = ErrorCode.MissingData;
+      playersErr.errorCode = ErrorCode.MISSING_DATA;
       playersErr.errorIndex = i;
       playersErr.message =
         "players has no parent squad at index " + playersErr.errorIndex;
@@ -1106,7 +1106,7 @@ const getPotsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
   const squads: squadType[] = tmntFullData.squads;
   if (!pots || !Array.isArray(pots)) {
     return {
-      errorCode: ErrorCode.MissingData,
+      errorCode: ErrorCode.MISSING_DATA,
       errorTable: "pots",
       errorIndex: 0,
       message: "no pots data",
@@ -1122,14 +1122,14 @@ const getPotsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
   ) {
     return {
       errorTable: "pots",
-      errorCode: ErrorCode.MissingData,
+      errorCode: ErrorCode.MISSING_DATA,
       errorIndex: 0,
       message: "no pots parent data",
     };
   }
 
   // ok to have 0 pots
-  let validPots: validPotsType = { pots: [], errorCode: ErrorCode.None };
+  let validPots: validPotsType = { pots: [], errorCode: ErrorCode.NONE };
   const potsErr: tmntFullDataErrType = {
     ...noError,
   };
@@ -1138,7 +1138,7 @@ const getPotsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
 
   validPots = validatePots(pots);
   if (
-    validPots.errorCode !== ErrorCode.None ||
+    validPots.errorCode !== ErrorCode.NONE ||
     validPots.pots.length !== pots.length
   ) {
     potsErr.errorTable = "pots";
@@ -1163,7 +1163,7 @@ const getPotsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
     const div = divs.find((d) => d.id === pot.div_id);
     if (!div) {
       potsErr.errorTable = "pots";
-      potsErr.errorCode = ErrorCode.MissingData;
+      potsErr.errorCode = ErrorCode.MISSING_DATA;
       potsErr.errorIndex = i;
       potsErr.message = "pots has no parent div at index " + potsErr.errorIndex;
       return potsErr;
@@ -1171,7 +1171,7 @@ const getPotsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
     const squad = squads.find((s) => s.id === pot.squad_id);
     if (!squad) {
       potsErr.errorTable = "pots";
-      potsErr.errorCode = ErrorCode.MissingData;
+      potsErr.errorCode = ErrorCode.MISSING_DATA;
       potsErr.errorIndex = i;
       potsErr.message =
         "pots has no parent squad at index " + potsErr.errorIndex;
@@ -1200,7 +1200,7 @@ const getPotEntriesError = (
   if (!potEntries || !Array.isArray(potEntries)) {
     return {
       errorTable: "potEntries",
-      errorCode: ErrorCode.MissingData,
+      errorCode: ErrorCode.MISSING_DATA,
       errorIndex: 0,
       message: "no potEntries data",
     };
@@ -1213,7 +1213,7 @@ const getPotEntriesError = (
   ) {
     return {
       errorTable: "potEntries",
-      errorCode: ErrorCode.MissingData,
+      errorCode: ErrorCode.MISSING_DATA,
       errorIndex: 0,
       message: "no potEntries parent data",
     };
@@ -1222,7 +1222,7 @@ const getPotEntriesError = (
   // ok to have 0 potEntries
   let validPotEntries: validPotEntriesType = {
     potEntries: [],
-    errorCode: ErrorCode.None,
+    errorCode: ErrorCode.NONE,
   };
   const potEntriesErr: tmntFullDataErrType = {
     ...noError,
@@ -1238,7 +1238,7 @@ const getPotEntriesError = (
 
   validPotEntries = validatePotEntries(potEntries);
   if (
-    validPotEntries.errorCode !== ErrorCode.None ||
+    validPotEntries.errorCode !== ErrorCode.NONE ||
     validPotEntries.potEntries.length !== potEntries.length
   ) {
     potEntriesErr.errorTable = "potEntries";
@@ -1265,7 +1265,7 @@ const getPotEntriesError = (
     const pot = pots.find((p) => p.id === potEntry.pot_id);
     if (!pot) {
       potEntriesErr.errorTable = "potEntries";
-      potEntriesErr.errorCode = ErrorCode.MissingData;
+      potEntriesErr.errorCode = ErrorCode.MISSING_DATA;
       potEntriesErr.errorIndex = i;
       potEntriesErr.message =
         "potEntries has no parent pot at index " + potEntriesErr.errorIndex;
@@ -1274,7 +1274,7 @@ const getPotEntriesError = (
     const player = players.find((p) => p.id === potEntry.player_id);
     if (!player) {
       potEntriesErr.errorTable = "potEntries";
-      potEntriesErr.errorCode = ErrorCode.MissingData;
+      potEntriesErr.errorCode = ErrorCode.MISSING_DATA;
       potEntriesErr.errorIndex = i;
       potEntriesErr.message =
         "potEntries has no parent player at index " + potEntriesErr.errorIndex;
@@ -1282,7 +1282,7 @@ const getPotEntriesError = (
     }
     if (potEntry.fee !== pot.fee) {
       potEntriesErr.errorTable = "potEntries";
-      potEntriesErr.errorCode = ErrorCode.InvalidData;
+      potEntriesErr.errorCode = ErrorCode.INVALID_DATA;
       potEntriesErr.errorIndex = i;
       potEntriesErr.message =
         "potEntries has invalid data at index " + potEntriesErr.errorIndex;
@@ -1306,20 +1306,20 @@ const getSquadsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
   const events: eventType[] = tmntFullData.events;
   if (!squads || !Array.isArray(squads) || squads.length === 0) {
     return {
-      errorCode: ErrorCode.MissingData,
+      errorCode: ErrorCode.MISSING_DATA,
       errorTable: "squads",
       errorIndex: 0,
       message: "no squads data",
     };
   }
 
-  let validSquads: validSquadsType = { squads: [], errorCode: ErrorCode.None };
+  let validSquads: validSquadsType = { squads: [], errorCode: ErrorCode.NONE };
   const squadsErr: tmntFullDataErrType = {
     ...noError,
   };
   validSquads = validateSquads(squads);
   if (
-    validSquads.errorCode !== ErrorCode.None ||
+    validSquads.errorCode !== ErrorCode.NONE ||
     validSquads.squads.length !== squads.length
   ) {
     squadsErr.errorTable = "squads";
@@ -1346,7 +1346,7 @@ const getSquadsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
     const event = events.find((e) => e.id === squad.event_id);
     if (!event) {
       squadsErr.errorTable = "squads";
-      squadsErr.errorCode = ErrorCode.MissingData;
+      squadsErr.errorCode = ErrorCode.MISSING_DATA;
       squadsErr.errorIndex = i;
       squadsErr.message =
         "squads has no parent event at index " + squadsErr.errorIndex;
@@ -1369,13 +1369,13 @@ export const validateFullTmnt = (
   tmntFullData: tmntFullType
 ): tmntFullDataErrType => {
   let fullTmntErr: tmntFullDataErrType = {
-    errorCode: ErrorCode.None,
+    errorCode: ErrorCode.NONE,
     errorTable: "",
     errorIndex: 0,
     message: "",
   };
   if (tmntFullData == null || typeof tmntFullData !== "object") {
-    fullTmntErr.errorCode = ErrorCode.MissingData;
+    fullTmntErr.errorCode = ErrorCode.MISSING_DATA;
     fullTmntErr.errorTable = "tmntFullData";
     fullTmntErr.message = basicErrMsg(
       fullTmntErr.errorCode,
@@ -1386,7 +1386,7 @@ export const validateFullTmnt = (
 
   // validate tmnt
   fullTmntErr.errorCode = validateTmnt(tmntFullData.tmnt);
-  if (fullTmntErr.errorCode !== ErrorCode.None) {
+  if (fullTmntErr.errorCode !== ErrorCode.NONE) {
     fullTmntErr.errorTable = "tmnt";
     fullTmntErr.message = basicErrMsg(
       fullTmntErr.errorCode,
@@ -1397,59 +1397,59 @@ export const validateFullTmnt = (
 
   // validate events
   fullTmntErr = getEventsError(tmntFullData);
-  if (fullTmntErr.errorCode !== ErrorCode.None) return fullTmntErr;
+  if (fullTmntErr.errorCode !== ErrorCode.NONE) return fullTmntErr;
 
   // validate divs
   fullTmntErr = getDivsError(tmntFullData);
-  if (fullTmntErr.errorCode !== ErrorCode.None) return fullTmntErr;
+  if (fullTmntErr.errorCode !== ErrorCode.NONE) return fullTmntErr;
 
   // validate squads
   fullTmntErr = getSquadsError(tmntFullData);
-  if (fullTmntErr.errorCode !== ErrorCode.None) return fullTmntErr;
+  if (fullTmntErr.errorCode !== ErrorCode.NONE) return fullTmntErr;
 
   // validate lanes
   fullTmntErr = getLanesError(tmntFullData);
-  if (fullTmntErr.errorCode !== ErrorCode.None) return fullTmntErr;
+  if (fullTmntErr.errorCode !== ErrorCode.NONE) return fullTmntErr;
 
   // validate divEntries
   fullTmntErr = getDivEntriesError(tmntFullData);
-  if (fullTmntErr.errorCode !== ErrorCode.None) return fullTmntErr;
+  if (fullTmntErr.errorCode !== ErrorCode.NONE) return fullTmntErr;
 
   // validate brkts
   fullTmntErr = getBrktsError(tmntFullData);
-  if (fullTmntErr.errorCode !== ErrorCode.None) return fullTmntErr;
+  if (fullTmntErr.errorCode !== ErrorCode.NONE) return fullTmntErr;
 
   // validate brktEntries (includes brktRefunds)
   fullTmntErr = getBrktEntriesError(tmntFullData);
-  if (fullTmntErr.errorCode !== ErrorCode.None) return fullTmntErr;
+  if (fullTmntErr.errorCode !== ErrorCode.NONE) return fullTmntErr;
 
   // validate oneBrkts
   fullTmntErr = getOneBrktsError(tmntFullData);
-  if (fullTmntErr.errorCode !== ErrorCode.None) return fullTmntErr;
+  if (fullTmntErr.errorCode !== ErrorCode.NONE) return fullTmntErr;
 
   // validate brktSeeds
   fullTmntErr = getBrktSeedsError(tmntFullData);
-  if (fullTmntErr.errorCode !== ErrorCode.None) return fullTmntErr;
+  if (fullTmntErr.errorCode !== ErrorCode.NONE) return fullTmntErr;
 
   // validate elims
   fullTmntErr = getElimsError(tmntFullData);
-  if (fullTmntErr.errorCode !== ErrorCode.None) return fullTmntErr;
+  if (fullTmntErr.errorCode !== ErrorCode.NONE) return fullTmntErr;
 
   // validate elimEntries
   fullTmntErr = getElimEntriesError(tmntFullData);
-  if (fullTmntErr.errorCode !== ErrorCode.None) return fullTmntErr;
+  if (fullTmntErr.errorCode !== ErrorCode.NONE) return fullTmntErr;
 
   // validate pots
   fullTmntErr = getPotsError(tmntFullData);
-  if (fullTmntErr.errorCode !== ErrorCode.None) return fullTmntErr;
+  if (fullTmntErr.errorCode !== ErrorCode.NONE) return fullTmntErr;
 
   // validate potEntries
   fullTmntErr = getPotEntriesError(tmntFullData);
-  if (fullTmntErr.errorCode !== ErrorCode.None) return fullTmntErr;
+  if (fullTmntErr.errorCode !== ErrorCode.NONE) return fullTmntErr;
 
   // validate players
   fullTmntErr = getPlayersError(tmntFullData);
-  if (fullTmntErr.errorCode !== ErrorCode.None) return fullTmntErr;
+  if (fullTmntErr.errorCode !== ErrorCode.NONE) return fullTmntErr;
 
   return fullTmntErr;
 };
@@ -1464,14 +1464,14 @@ export const validateFullTmnt = (
 //   tmntFullData: tmntFullType
 // ): tmntFullDataErrType => {
 //   let fullTmntEntriesErr: tmntFullDataErrType = {
-//     errorCode: ErrorCode.None,
+//     errorCode: ErrorCode.NONE,
 //     errorTable: "",
 //     errorIndex: 0,
 //     message: "",
 //   };
 
 //   if (tmntFullData == null || typeof tmntFullData !== "object") {
-//     fullTmntEntriesErr.errorCode = ErrorCode.MissingData;
+//     fullTmntEntriesErr.errorCode = ErrorCode.MISSING_DATA;
 //     fullTmntEntriesErr.errorTable = "tmntFullData";
 //     fullTmntEntriesErr.message = basicErrMsg(
 //       fullTmntEntriesErr.errorCode,
@@ -1482,42 +1482,42 @@ export const validateFullTmnt = (
 
 //   // validate base tmnt
 //   fullTmntEntriesErr = validateFullTmnt(tmntFullData);
-//   if (fullTmntEntriesErr.errorCode !== ErrorCode.None)
+//   if (fullTmntEntriesErr.errorCode !== ErrorCode.NONE)
 //     return fullTmntEntriesErr;
 
 //   // validate divEntries
 //   fullTmntEntriesErr = getDivEntriesError(tmntFullData);
-//   if (fullTmntEntriesErr.errorCode !== ErrorCode.None)
+//   if (fullTmntEntriesErr.errorCode !== ErrorCode.NONE)
 //     return fullTmntEntriesErr;
 
 //   // validate brktEntries (includes brktRefunds)
 //   fullTmntEntriesErr = getBrktEntriesError(tmntFullData);
-//   if (fullTmntEntriesErr.errorCode !== ErrorCode.None)
+//   if (fullTmntEntriesErr.errorCode !== ErrorCode.NONE)
 //     return fullTmntEntriesErr;
 
 //   // validate oneBrkts
 //   fullTmntEntriesErr = getOneBrktsError(tmntFullData);
-//   if (fullTmntEntriesErr.errorCode !== ErrorCode.None)
+//   if (fullTmntEntriesErr.errorCode !== ErrorCode.NONE)
 //     return fullTmntEntriesErr;
 
 //   // validate brktSeeds
 //   fullTmntEntriesErr = getBrktSeedsError(tmntFullData);
-//   if (fullTmntEntriesErr.errorCode !== ErrorCode.None)
+//   if (fullTmntEntriesErr.errorCode !== ErrorCode.NONE)
 //     return fullTmntEntriesErr;
 
 //   // validate elimEntries
 //   fullTmntEntriesErr = getElimEntriesError(tmntFullData);
-//   if (fullTmntEntriesErr.errorCode !== ErrorCode.None)
+//   if (fullTmntEntriesErr.errorCode !== ErrorCode.NONE)
 //     return fullTmntEntriesErr;
 
 //   // validate potEntries
 //   fullTmntEntriesErr = getPotEntriesError(tmntFullData);
-//   if (fullTmntEntriesErr.errorCode !== ErrorCode.None)
+//   if (fullTmntEntriesErr.errorCode !== ErrorCode.NONE)
 //     return fullTmntEntriesErr;
 
 //   // validate players
 //   fullTmntEntriesErr = getPlayersError(tmntFullData);
-//   if (fullTmntEntriesErr.errorCode !== ErrorCode.None)
+//   if (fullTmntEntriesErr.errorCode !== ErrorCode.NONE)
 //     return fullTmntEntriesErr;
 
 //   return fullTmntEntriesErr;

@@ -1,6 +1,6 @@
-import { validatePotEntries } from "@/app/api/potEntries/validate";
+import { validatePotEntries } from "@/lib/validation/potEntries/validate";
 import { potEntryType, validPotEntriesType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { deleteAllPotEntriesForSquad, postManyPotEntries } from "./dbPotEntries";
 
 /**
@@ -19,11 +19,11 @@ export const replaceManyPotEntries = async (potEntries: potEntryType[], squadId:
   if (!isValidBtDbId(squadId, "sqd")) {
     throw new Error('Invalid squad id');
   }
-  let validPotEntries: validPotEntriesType = { potEntries: [], errorCode: ErrorCode.None };
+  let validPotEntries: validPotEntriesType = { potEntries: [], errorCode: ErrorCode.NONE };
   if (potEntries.length !== 0) {
     validPotEntries = validatePotEntries(potEntries);
   }  
-  if (validPotEntries.errorCode !== ErrorCode.None
+  if (validPotEntries.errorCode !== ErrorCode.NONE
     || validPotEntries.potEntries.length !== potEntries.length)
   { 
     if (validPotEntries.potEntries.length === 0) {      

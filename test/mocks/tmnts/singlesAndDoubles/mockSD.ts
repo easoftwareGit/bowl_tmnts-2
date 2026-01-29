@@ -1,7 +1,25 @@
 import { todayStr } from "@/lib/dateTools";
-import { defaultHdcpPer, initBrkt, initDiv, initElim, initEvent, initLane, initPot, initSquad, initTmnt } from "@/lib/db/initVals";
-import { brktType, divType, elimType, eventType, laneType, pairsOfLanesType, potType, squadType, tmntType } from "@/lib/types/types";
-import { startOfToday } from "date-fns";
+import {
+  initBrkt,
+  initDiv,
+  initElim,
+  initEvent,
+  initLane,
+  initPot,
+  initSquad,
+  initTmnt,
+} from "@/lib/db/initVals";
+import {
+  brktType,
+  divType,
+  elimType,
+  eventType,
+  laneType,
+  pairsOfLanesType,
+  potType,
+  squadType,
+  tmntType,
+} from "@/lib/types/types";
 
 export const mockSDTmnt: tmntType = {
   ...initTmnt,
@@ -47,7 +65,7 @@ export const mockSDEvents: eventType[] = [
     added_money: "100",
     lpox: "90",
     sort_order: 2,
-  }
+  },
 ];
 
 export const mockSDDivs: divType[] = [
@@ -56,12 +74,12 @@ export const mockSDDivs: divType[] = [
     id: "div_000134e04e5e4885bbae79229d8b96e8",
     tmnt_id: "tmt_1234387c33d9c78aba290286576ddce5",
     div_name: "Scratch",
-    tab_title: 'Scratch',
+    tab_title: "Scratch",
     hdcp_per: 0,
-    hdcp_per_str: '0.00',
+    hdcp_per_str: "0.00",
     hdcp_from: 0,
-    int_hdcp: true, 
-    hdcp_for: 'Game',
+    int_hdcp: true,
+    hdcp_for: "Game",
     sort_order: 1,
   },
   {
@@ -70,14 +88,14 @@ export const mockSDDivs: divType[] = [
     tmnt_id: "tmt_1234387c33d9c78aba290286576ddce5",
     div_name: "Handicap",
     tab_title: "Handicap",
-    hdcp_per: 0.9,    
-    hdcp_per_str: '90.00',
+    hdcp_per: 0.9,
+    hdcp_per_str: "90.00",
     hdcp_from: 230,
-    int_hdcp: true, 
-    hdcp_for: 'Game',
+    int_hdcp: true,
+    hdcp_for: "Game",
     sort_order: 2,
-  }
-]
+  },
+];
 
 export const mockSDSquads: squadType[] = [
   {
@@ -87,7 +105,7 @@ export const mockSDSquads: squadType[] = [
     squad_name: "A Squad",
     tab_title: "A Squad",
     squad_date_str: todayStr,
-    squad_time: '08:00 AM',
+    squad_time: "08:00 AM",
     games: 6,
     lane_count: 12,
     starting_lane: 1,
@@ -100,13 +118,13 @@ export const mockSDSquads: squadType[] = [
     squad_name: "B Squad",
     tab_title: "B Squad",
     squad_date_str: todayStr,
-    squad_time: '11:00 AM',
+    squad_time: "11:00 AM",
     games: 4,
     lane_count: 12,
     starting_lane: 1,
-    sort_order: 2,    
-  }
-]
+    sort_order: 2,
+  },
+];
 
 export const mockSDLanes: laneType[] = [
   {
@@ -253,7 +271,7 @@ export const mockSDLanes: laneType[] = [
     lane_number: 12,
     squad_id: "sqd_1234ce5f80164830830a7157eb093397",
   },
-]
+];
 
 export const mockSDPairs: pairsOfLanesType[] = [
   {
@@ -261,44 +279,44 @@ export const mockSDPairs: pairsOfLanesType[] = [
     left_lane: mockSDLanes[0].lane_number,
     right_id: mockSDLanes[1].id,
     right_lane: mockSDLanes[1].lane_number,
-    in_use: true
+    in_use: true,
   },
   {
     left_id: mockSDLanes[2].id,
     left_lane: mockSDLanes[2].lane_number,
     right_id: mockSDLanes[3].id,
     right_lane: mockSDLanes[3].lane_number,
-    in_use: true
+    in_use: true,
   },
   {
     left_id: mockSDLanes[4].id,
     left_lane: mockSDLanes[4].lane_number,
     right_id: mockSDLanes[5].id,
     right_lane: mockSDLanes[5].lane_number,
-    in_use: true
+    in_use: true,
   },
   {
     left_id: mockSDLanes[6].id,
     left_lane: mockSDLanes[6].lane_number,
     right_id: mockSDLanes[7].id,
     right_lane: mockSDLanes[7].lane_number,
-    in_use: true
+    in_use: true,
   },
   {
     left_id: mockSDLanes[8].id,
     left_lane: mockSDLanes[8].lane_number,
     right_id: mockSDLanes[9].id,
     right_lane: mockSDLanes[9].lane_number,
-    in_use: true
+    in_use: true,
   },
   {
     left_id: mockSDLanes[10].id,
     left_lane: mockSDLanes[10].lane_number,
     right_id: mockSDLanes[11].id,
     right_lane: mockSDLanes[11].lane_number,
-    in_use: true
-  }
-]
+    in_use: true,
+  },
+];
 
 export const mockSDPots: potType[] = [
   {
@@ -307,7 +325,7 @@ export const mockSDPots: potType[] = [
     squad_id: "sqd_1234ce5f80164830830a7157eb093396",
     div_id: "div_000134e04e5e4885bbae79229d8b96e8",
     sort_order: 1,
-    fee: '20',
+    fee: "20",
     pot_type: "Game",
   },
   {
@@ -316,10 +334,10 @@ export const mockSDPots: potType[] = [
     squad_id: "sqd_1234ce5f80164830830a7157eb093396",
     div_id: "div_000234e04e5e4885bbae79229d8b96e8",
     sort_order: 2,
-    fee: '20',
+    fee: "20",
     pot_type: "Game",
   },
-]
+];
 
 export const mockSDBrkts: brktType[] = [
   {
@@ -331,11 +349,11 @@ export const mockSDBrkts: brktType[] = [
     start: 1,
     games: 3,
     players: 8,
-    fee: '5',
-    first: '25',
-    second: '10',
-    admin: '5',
-    fsa: '40',
+    fee: "5",
+    first: "25",
+    second: "10",
+    admin: "5",
+    fsa: "40",
   },
   {
     ...initBrkt,
@@ -346,11 +364,11 @@ export const mockSDBrkts: brktType[] = [
     start: 4,
     games: 3,
     players: 8,
-    fee: '5',
-    first: '25',
-    second: '10',
-    admin: '5',
-    fsa: '40',
+    fee: "5",
+    first: "25",
+    second: "10",
+    admin: "5",
+    fsa: "40",
   },
   {
     ...initBrkt,
@@ -361,11 +379,11 @@ export const mockSDBrkts: brktType[] = [
     start: 1,
     games: 3,
     players: 8,
-    fee: '5',
-    first: '25',
-    second: '10',
-    admin: '5',
-    fsa: '40',
+    fee: "5",
+    first: "25",
+    second: "10",
+    admin: "5",
+    fsa: "40",
   },
   {
     ...initBrkt,
@@ -376,13 +394,13 @@ export const mockSDBrkts: brktType[] = [
     start: 4,
     games: 3,
     players: 8,
-    fee: '5',
-    first: '25',
-    second: '10',
-    admin: '5',
-    fsa: '40',
+    fee: "5",
+    first: "25",
+    second: "10",
+    admin: "5",
+    fsa: "40",
   },
-]
+];
 
 export const mockSDElims: elimType[] = [
   {
@@ -393,7 +411,7 @@ export const mockSDElims: elimType[] = [
     sort_order: 1,
     start: 1,
     games: 3,
-    fee: '5',
+    fee: "5",
   },
   {
     ...initElim,
@@ -403,7 +421,7 @@ export const mockSDElims: elimType[] = [
     sort_order: 2,
     start: 4,
     games: 3,
-    fee: '5',
+    fee: "5",
   },
   {
     ...initElim,
@@ -413,7 +431,7 @@ export const mockSDElims: elimType[] = [
     sort_order: 3,
     start: 1,
     games: 3,
-    fee: '5',
+    fee: "5",
   },
   {
     ...initElim,
@@ -423,6 +441,6 @@ export const mockSDElims: elimType[] = [
     sort_order: 4,
     start: 4,
     games: 3,
-    fee: '5',
+    fee: "5",
   },
-]
+];

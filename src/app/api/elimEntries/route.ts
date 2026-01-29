@@ -2,8 +2,8 @@ import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { initElimEntry } from "@/lib/db/initVals";
 import { elimEntryType } from "@/lib/types/types";
-import { sanitizeElimEntry, validateElimEntry } from "./validate";
-import { ErrorCode } from "@/lib/validation";
+import { sanitizeElimEntry, validateElimEntry } from "../../../lib/validation/elimEntries/validate";
+import { ErrorCode } from "@/lib/validation/validation";
 import { getErrorStatus } from "../errCodes";
 import { elimEntryDataForPrisma } from "./dataForPrisma";
 
@@ -33,13 +33,13 @@ export const POST = async (request: NextRequest) => {
 
     const toPost = sanitizeElimEntry(toCheck);
     const errCode = validateElimEntry(toPost);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = 'missing data'
           break;
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = 'invalid data'
           break;
         default:

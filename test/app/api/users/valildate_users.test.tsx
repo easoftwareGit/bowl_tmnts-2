@@ -10,7 +10,7 @@ import {
 } from "@/app/api/users/validate";
 import { userType } from "@/lib/types/types";
 import { mockUser } from "../../../mocks/tmnts/mockTmnt";
-import { ErrorCode } from "@/lib/validation";
+import { ErrorCode } from "@/lib/validation/validation";
 
 const userId = 'usr_5bcefb5d314fff1ff5da6521a2fa7bde';
 const nonUserId = 'bwl_5bcefb5d314fff1ff5da6521a2fa7bde';
@@ -21,86 +21,86 @@ describe("user table data validation", () => {
 
   describe("gotUserData function - check for missing data", () => {
     
-    it("should return ErrorCode.None when user object has no missing data", () => {
+    it("should return ErrorCode.NONE when user object has no missing data", () => {
       const testUser: userType = {
         ...mockUser,
         password: "Test123!",
       };
-      expect(gotUserData(testUser, true, true)).toBe(ErrorCode.None);
+      expect(gotUserData(testUser, true, true)).toBe(ErrorCode.NONE);
     });
-    it("should return ErrorCode.None when valid user object, but no phone and do not check phone", () => {
+    it("should return ErrorCode.NONE when valid user object, but no phone and do not check phone", () => {
       const testUser: userType = {
         ...mockUser,
         phone: "",
         password: "Test123!",
       };
-      expect(gotUserData(testUser, false, true)).toBe(ErrorCode.None);
+      expect(gotUserData(testUser, false, true)).toBe(ErrorCode.NONE);
     });
-    it("should return ErrorCode.None when valid user object, but no password and do not check password", () => {
+    it("should return ErrorCode.NONE when valid user object, but no password and do not check password", () => {
       const testUser: userType = {
         ...mockUser,        
         password: "",
         password_hash: "",
       };
-      expect(gotUserData(testUser, true, false)).toBe(ErrorCode.None);
+      expect(gotUserData(testUser, true, false)).toBe(ErrorCode.NONE);
     });
 
-    it("should return ErrorCode.MissingData when no first_name", () => {
+    it("should return ErrorCode.MISSING_DATA when no first_name", () => {
       const testUser: userType = {
         ...mockUser,
         first_name: "",
       };
-      expect(gotUserData(testUser, true, true)).toBe(ErrorCode.MissingData);
+      expect(gotUserData(testUser, true, true)).toBe(ErrorCode.MISSING_DATA);
     });
-    it("should return ErrorCode.MissingData when first_name has just special chars", () => {
+    it("should return ErrorCode.MISSING_DATA when first_name has just special chars", () => {
       const testUser: userType = {
         ...mockUser,
         first_name: "***",
       };
-      expect(gotUserData(testUser, true, true)).toBe(ErrorCode.MissingData);
+      expect(gotUserData(testUser, true, true)).toBe(ErrorCode.MISSING_DATA);
     });
-    it("should return ErrorCode.MissingData when no last_name", () => {
+    it("should return ErrorCode.MISSING_DATA when no last_name", () => {
       const testUser: userType = {
         ...mockUser,
         last_name: "",
       };
-      expect(gotUserData(testUser, true, true)).toBe(ErrorCode.MissingData);
+      expect(gotUserData(testUser, true, true)).toBe(ErrorCode.MISSING_DATA);
     });
-    it("should return ErrorCode.MissingData when last_name has just special chars", () => {
+    it("should return ErrorCode.MISSING_DATA when last_name has just special chars", () => {
       const testUser: userType = {
         ...mockUser,
         last_name: "****",
       };
-      expect(gotUserData(testUser, true, true)).toBe(ErrorCode.MissingData);
+      expect(gotUserData(testUser, true, true)).toBe(ErrorCode.MISSING_DATA);
     });    
-    it("should return ErrorCode.MissingData when no email", () => {
+    it("should return ErrorCode.MISSING_DATA when no email", () => {
       const testUser: userType = {
         ...mockUser,
         email: "",
       };
-      expect(gotUserData(testUser, true, true)).toBe(ErrorCode.MissingData);
+      expect(gotUserData(testUser, true, true)).toBe(ErrorCode.MISSING_DATA);
     });
-    it("should return ErrorCode.MissingData when no phone, but checking for phone", () => {
+    it("should return ErrorCode.MISSING_DATA when no phone, but checking for phone", () => {
       const testUser: userType = {
         ...mockUser,
         phone: "",
       };
-      expect(gotUserData(testUser, true, false)).toBe(ErrorCode.MissingData);
+      expect(gotUserData(testUser, true, false)).toBe(ErrorCode.MISSING_DATA);
     });
-    it("should return ErrorCode.MissingData when no password, but checking for password", () => {
+    it("should return ErrorCode.MISSING_DATA when no password, but checking for password", () => {
       const testUser: userType = {
         ...mockUser,
         password: "",
         password_hash: "",
       };
-      expect(gotUserData(testUser, false, true)).toBe(ErrorCode.MissingData);
+      expect(gotUserData(testUser, false, true)).toBe(ErrorCode.MISSING_DATA);
     });
-    it("should return ErrorCode.MissingData when no role", () => {
+    it("should return ErrorCode.MISSING_DATA when no role", () => {
       const testUser: userType = {
         ...mockUser,
         role: "" as any,
       };
-      expect(gotUserData(testUser, true, true)).toBe(ErrorCode.MissingData);
+      expect(gotUserData(testUser, true, true)).toBe(ErrorCode.MISSING_DATA);
     });        
   });
 
@@ -252,186 +252,186 @@ describe("user table data validation", () => {
   })
 
   describe("validUserData function - invalid data", () => {
-    it("should return ErrorCode.None when valid user object", () => {
+    it("should return ErrorCode.NONE when valid user object", () => {
       const testUser: userType = {
         ...mockUser,
         password: "Test123!",
       };
-      expect(validUserData(testUser, true, true)).toBe(ErrorCode.None);
+      expect(validUserData(testUser, true, true)).toBe(ErrorCode.NONE);
     });
-    it("should return ErrorCode.None when phone is invalid, and not checking for phone", () => {
+    it("should return ErrorCode.NONE when phone is invalid, and not checking for phone", () => {
       const testUser: userType = {
         ...mockUser,
         phone: "",
         password: "Test123!",        
       };
       expect(validUserPhone(testUser.phone)).toBe(false);
-      expect(validUserData(testUser, false, true)).toBe(ErrorCode.None);
+      expect(validUserData(testUser, false, true)).toBe(ErrorCode.NONE);
     });
-    it("should return ErrorCode.None when password is invalid, and not checking for password", () => {
+    it("should return ErrorCode.NONE when password is invalid, and not checking for password", () => {
       const testUser: userType = {
         ...mockUser,        
         password: "Test",        
       };
       expect(validUserPassword(testUser.phone)).toBe(false);
-      expect(validUserData(testUser, true, false)).toBe(ErrorCode.None);
+      expect(validUserData(testUser, true, false)).toBe(ErrorCode.NONE);
     });
-    it("should return ErrorCode.InvalidData when first name is too long", () => {
+    it("should return ErrorCode.INVALID_DATA when first name is too long", () => {
       const testUser: userType = {
         ...mockUser,
         first_name: "1234567890123456",
         password: "Test123!",
       };
       expect(validUserFirstName(testUser.first_name)).toBe(false);
-      expect(validUserData(testUser, true, true)).toBe(ErrorCode.InvalidData);      
+      expect(validUserData(testUser, true, true)).toBe(ErrorCode.INVALID_DATA);      
     });
-    it("should return ErrorCode.InvalidData when last name is too long", () => {
+    it("should return ErrorCode.INVALID_DATA when last name is too long", () => {
       const testUser: userType = {
         ...mockUser,
         last_name: "123456789012345678901",
         password: "Test123!",
       };
       expect(validUserLastName(testUser.last_name)).toBe(false);
-      expect(validUserData(testUser, true, true)).toBe(ErrorCode.InvalidData);
+      expect(validUserData(testUser, true, true)).toBe(ErrorCode.INVALID_DATA);
     });
-    it("should return ErrorCode.InvalidData when email is invalid", () => {
+    it("should return ErrorCode.INVALID_DATA when email is invalid", () => {
       const testUser: userType = {
         ...mockUser,
         email: "john.doe@example",
         password: "Test123!",
       };
       expect(validUserEmail(testUser.email)).toBe(false);
-      expect(validUserData(testUser, true, true)).toBe(ErrorCode.InvalidData);
+      expect(validUserData(testUser, true, true)).toBe(ErrorCode.INVALID_DATA);
     });
-    it("should return ErrorCode.InvalidData when phone is invalid, and checking for phone", () => {
+    it("should return ErrorCode.INVALID_DATA when phone is invalid, and checking for phone", () => {
       const testUser: userType = {
         ...mockUser,
         phone: "abc",
         password: "Test123!",
       };
       expect(validUserPhone(testUser.phone)).toBe(false);
-      expect(validUserData(testUser, true, true)).toBe(ErrorCode.InvalidData);
+      expect(validUserData(testUser, true, true)).toBe(ErrorCode.INVALID_DATA);
     });
-    it("should return ErrorCode.InvalidData when password is invalid and checking for password", () => {
+    it("should return ErrorCode.INVALID_DATA when password is invalid and checking for password", () => {
       const testUser: userType = {
         ...mockUser,
         password: "Test12!",
       };
       expect(validUserPassword(testUser.password)).toBe(false);
-      expect(validUserData(testUser, true, true)).toBe(ErrorCode.InvalidData);
+      expect(validUserData(testUser, true, true)).toBe(ErrorCode.INVALID_DATA);
     });
-    it("should return ErrorCode.InvalidData when role is invalid", () => {
+    it("should return ErrorCode.INVALID_DATA when role is invalid", () => {
       const testUser: userType = {
         ...mockUser,        
         role: "Test" as any,
       };            
-      expect(validUserData(testUser, false, false)).toBe(ErrorCode.InvalidData);
+      expect(validUserData(testUser, false, false)).toBe(ErrorCode.INVALID_DATA);
     });
 
   });
 
   describe('validateUser function, test both gotUserData AND validUserData', () => {
-    it("should return ErrorCode.None when valid data", () => {
+    it("should return ErrorCode.NONE when valid data", () => {
       const testUser: userType = {
         ...mockUser,
         password: "Test123!",
       };
-      expect(validateUser(testUser, true, true)).toBe(ErrorCode.None);
+      expect(validateUser(testUser, true, true)).toBe(ErrorCode.NONE);
     });
-    it("should return ErrorCode.None when user no phone or password, but not checking for phone or password", () => {
+    it("should return ErrorCode.NONE when user no phone or password, but not checking for phone or password", () => {
       const testUser: userType = {
         ...mockUser,
         phone: "",
         password: "",
         password_hash: "",
       };
-      expect(validateUser(testUser, false, false)).toBe(ErrorCode.None);
+      expect(validateUser(testUser, false, false)).toBe(ErrorCode.NONE);
     });
-    it("should return ErrorCode.MissingData when user is missing id", () => {
+    it("should return ErrorCode.MISSING_DATA when user is missing id", () => {
       const testUser: userType = {
         ...mockUser,
         id: "",
       };
-      expect(validateUser(testUser, true, true)).toBe(ErrorCode.MissingData);
+      expect(validateUser(testUser, true, true)).toBe(ErrorCode.MISSING_DATA);
     });
-    it("should return ErrorCode.MissingData when user is missing first name", () => {
+    it("should return ErrorCode.MISSING_DATA when user is missing first name", () => {
       const testUser: userType = {
         ...mockUser,
         first_name: "",
       };
-      expect(validateUser(testUser, true, true)).toBe(ErrorCode.MissingData);
+      expect(validateUser(testUser, true, true)).toBe(ErrorCode.MISSING_DATA);
     });
-    it("should return ErrorCode.MissingData when first_name is all special characters", () => {
+    it("should return ErrorCode.MISSING_DATA when first_name is all special characters", () => {
       const testUser: userType = {
         ...mockUser,
         first_name: "*****",
       };
-      expect(validateUser(testUser, true, true)).toBe(ErrorCode.MissingData);
+      expect(validateUser(testUser, true, true)).toBe(ErrorCode.MISSING_DATA);
     });
-    it("should return ErrorCode.MissingData when user is missing last name", () => {
+    it("should return ErrorCode.MISSING_DATA when user is missing last name", () => {
       const testUser: userType = {
         ...mockUser,
         last_name: "",
       };
-      expect(validateUser(testUser, true, true)).toBe(ErrorCode.MissingData);
+      expect(validateUser(testUser, true, true)).toBe(ErrorCode.MISSING_DATA);
     })    
-    it("should return ErrorCode.MissingData when user is missing email", () => {
+    it("should return ErrorCode.MISSING_DATA when user is missing email", () => {
       const testUser: userType = {
         ...mockUser,
         email: "",
       };
-      expect(validateUser(testUser, true, true)).toBe(ErrorCode.MissingData);
+      expect(validateUser(testUser, true, true)).toBe(ErrorCode.MISSING_DATA);
     })    
-    it('should return ErrorCode.MissingData when user has missing phone and checking phone', () => {
+    it('should return ErrorCode.MISSING_DATA when user has missing phone and checking phone', () => {
       const testUser: userType = {
         ...mockUser,
         phone: "",
       };
-      expect(validateUser(testUser, true, true)).toBe(ErrorCode.MissingData);
+      expect(validateUser(testUser, true, true)).toBe(ErrorCode.MISSING_DATA);
     })
-    it('should return ErrorCode.MissingData when user has missing password and checking password', () => {
+    it('should return ErrorCode.MISSING_DATA when user has missing password and checking password', () => {
       const testUser: userType = {
         ...mockUser,
         password: "",
         password_hash: "",
       };
-      expect(validateUser(testUser, true, true)).toBe(ErrorCode.MissingData);
+      expect(validateUser(testUser, true, true)).toBe(ErrorCode.MISSING_DATA);
     })
-    it("should return ErrorCode.InvalidData when user has invalid first name", () => {
+    it("should return ErrorCode.INVALID_DATA when user has invalid first name", () => {
       const testUser: userType = {
         ...mockUser,
         first_name: "1234567890123456789012345678901234567890",
       };
-      expect(validateUser(testUser, true, true)).toBe(ErrorCode.InvalidData);
+      expect(validateUser(testUser, true, true)).toBe(ErrorCode.INVALID_DATA);
     });
-    it("should return ErrorCode.InvalidData when user is missing last name", () => {
+    it("should return ErrorCode.INVALID_DATA when user is missing last name", () => {
       const testUser: userType = {
         ...mockUser,
         last_name: "This is a very long last name that should fail",
       };
-      expect(validateUser(testUser, true, true)).toBe(ErrorCode.InvalidData);
+      expect(validateUser(testUser, true, true)).toBe(ErrorCode.INVALID_DATA);
     })    
-    it("should return ErrorCode.InvalidData when user is missing email", () => {
+    it("should return ErrorCode.INVALID_DATA when user is missing email", () => {
       const testUser: userType = {
         ...mockUser,
         email: "notvalid@something",
       };
-      expect(validateUser(testUser, true, true)).toBe(ErrorCode.InvalidData);
+      expect(validateUser(testUser, true, true)).toBe(ErrorCode.INVALID_DATA);
     })    
-    it('should return ErrorCode.InvalidData when user has invalid phone and checking phone', () => {
+    it('should return ErrorCode.INVALID_DATA when user has invalid phone and checking phone', () => {
       const testUser: userType = {
         ...mockUser,
         phone: "abc",
       };
-      expect(validateUser(testUser, true, true)).toBe(ErrorCode.InvalidData);
+      expect(validateUser(testUser, true, true)).toBe(ErrorCode.INVALID_DATA);
     })
-    it('should return ErrorCode.InvalidData when user has invalid password and checking password', () => {
+    it('should return ErrorCode.INVALID_DATA when user has invalid password and checking password', () => {
       const testUser: userType = {
         ...mockUser,
         password: "1234",
         password_hash: "",
       };
-      expect(validateUser(testUser, true, true)).toBe(ErrorCode.InvalidData);
+      expect(validateUser(testUser, true, true)).toBe(ErrorCode.INVALID_DATA);
     })
 
   })

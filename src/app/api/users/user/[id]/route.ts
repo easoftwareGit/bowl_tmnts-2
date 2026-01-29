@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { userType } from "@/lib/types/types";
 import { initUser } from "@/lib/db/initVals";
 import { sanitizeUser, validateUser } from "../../validate";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { doHash } from "@/lib/hash";
 import { getErrorStatus } from "@/app/api/errCodes";
 
@@ -52,13 +52,13 @@ export async function PUT(
 
     const toPut = sanitizeUser(toCheck);    
     const errCode = validateUser(toPut, true, true);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = "missing data";
           break;
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = "invalid data";
           break;
         default:
@@ -144,13 +144,13 @@ export async function PATCH(
     
     const toBePatched = sanitizeUser(toCheck);
     const errCode = validateUser(toBePatched, checkPhone, checkPass);    
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode as ErrorCode) {
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = "missing data";
           break;
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = "invalid data";
           break;
         default:

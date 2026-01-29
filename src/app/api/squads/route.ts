@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { sanitizeSquad, validateSquad } from "./validate";
-import { ErrorCode } from "@/lib/validation";
+import { sanitizeSquad, validateSquad } from "../../../lib/validation/squads/validate";
+import { ErrorCode } from "@/lib/validation/validation";
 import { squadType } from "@/lib/types/types";
 import { initSquad } from "@/lib/db/initVals";
 import { startOfDayFromString } from "@/lib/dateTools";
@@ -33,9 +33,17 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: Request) {
   try {
-    const { id, event_id, squad_name, games, starting_lane, lane_count, squad_date_str, squad_time, finalized, sort_order } = await request.json()    
-
-    // const squadDateStr = removeTimeFromISODateStr(squad_date);
+    const {
+      id,
+      event_id,
+      squad_name,
+      games,
+      starting_lane,
+      lane_count,
+      squad_date_str,
+      squad_time,
+      sort_order
+    } = await request.json()        
     
     const toCheck: squadType = {
       ...initSquad,
@@ -47,19 +55,18 @@ export async function POST(request: Request) {
       lane_count,
       squad_date_str,
       squad_time,
-      finalized,
       sort_order
     }
 
     const toPost = sanitizeSquad(toCheck);    
     const errCode = validateSquad(toPost);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = 'missing data'
           break;
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = 'invalid data'
           break;        
         default:

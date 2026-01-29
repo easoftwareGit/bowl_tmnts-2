@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { initBrktEntry } from "@/lib/db/initVals";
 import { brktEntriesFromPrisa, brktEntryType } from "@/lib/types/types";
-import { sanitizeBrktEntry, validateBrktEntry } from "../../validate";
+import { sanitizeBrktEntry, validateBrktEntry } from "../../../../../lib/validation/brktEntries/validate";
 import { brktEntriesWithFee } from "../../feeCalc";
 import { getErrorStatus } from "@/app/api/errCodes";
 
@@ -12,10 +12,10 @@ import { getErrorStatus } from "@/app/api/errCodes";
 const getErrMsg = (errorCode: ErrorCode) => {
   let errMsg: string;
   switch (errorCode) {
-    case ErrorCode.MissingData:
+    case ErrorCode.MISSING_DATA:
       errMsg = "missing data";
       break;
-    case ErrorCode.InvalidData:
+    case ErrorCode.INVALID_DATA:
       errMsg = "invalid data";
       break;
     default:
@@ -101,13 +101,13 @@ export async function PUT(
     };
     
     const sanitizedObj = sanitizeBrktEntry(toCheck);
-    if (sanitizedObj.errorCode !== ErrorCode.None) {
+    if (sanitizedObj.errorCode !== ErrorCode.NONE) {
       const errMsg = getErrMsg(sanitizedObj.errorCode);
       return NextResponse.json({ error: errMsg }, { status: 422 });
     }
     const toPut = sanitizedObj.brktEntry;
     const errCode = validateBrktEntry(toPut);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       const errMsg = getErrMsg(sanitizedObj.errorCode);
       return NextResponse.json({ error: errMsg }, { status: 422 });
     }
@@ -276,13 +276,13 @@ export async function PATCH(
     }
     // 3) sanitize and validate copy of data
     const sanitizedObj = sanitizeBrktEntry(toCheck);
-    if (sanitizedObj.errorCode !== ErrorCode.None) {
+    if (sanitizedObj.errorCode !== ErrorCode.NONE) {
       const errMsg = getErrMsg(sanitizedObj.errorCode);
       return NextResponse.json({ error: errMsg }, { status: 422 });
     }
     const toBePatched = sanitizedObj.brktEntry
     const errCode = validateBrktEntry(toBePatched);    
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       const errMsg = getErrMsg(sanitizedObj.errorCode);
       return NextResponse.json({ error: errMsg }, { status: 422 });
     }

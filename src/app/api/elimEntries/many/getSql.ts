@@ -1,6 +1,6 @@
 import { elimEntryType } from "@/lib/types/types";
-import { validateElimEntries } from "../validate";
-import { ErrorCode } from "@/lib/validation";
+import { validateElimEntries } from "../../../../lib/validation/elimEntries/validate";
+import { ErrorCode } from "@/lib/validation/validation";
 
 /**
  * Get an array of unique elimIds
@@ -28,7 +28,7 @@ export const getUpdateManySQL = (elimEntries: elimEntryType[]) => {
 
   if (!elimEntries || elimEntries.length === 0) return "";
   const validElimEntries = validateElimEntries(elimEntries);
-  if (validElimEntries.errorCode !== ErrorCode.None) return "";
+  if (validElimEntries.errorCode !== ErrorCode.NONE) return "";
 
   const elimIds: string[] = getElimIds(elimEntries);
   if (elimIds.length === 0) return "";
@@ -65,7 +65,7 @@ export const getInsertManySQL = (elimEntries: elimEntryType[]) => {
 
   if (!elimEntries || elimEntries.length === 0) return "";
   const validElimEntries = validateElimEntries(elimEntries);
-  if (validElimEntries.errorCode !== ErrorCode.None) return "";
+  if (validElimEntries.errorCode !== ErrorCode.NONE) return "";
 
   const getSqlValues = (elimEntries: elimEntryType[]) => {
     const values: string[] = [];
@@ -96,7 +96,7 @@ export const getDeleteManySQL = (elimEntries: elimEntryType[]) => {
 
   if (!elimEntries || elimEntries.length === 0) return "";
   const validElimEntries = validateElimEntries(elimEntries);
-  if (validElimEntries.errorCode !== ErrorCode.None) return "";
+  if (validElimEntries.errorCode !== ErrorCode.NONE) return "";
 
   const getSqlValues = (elimEntries: elimEntryType[]) => {
     const values: string[] = [];

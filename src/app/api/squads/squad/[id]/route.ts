@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
-import { sanitizeSquad, validateSquad } from "@/app/api/squads/validate";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import { sanitizeSquad, validateSquad } from "@/lib/validation/squads/validate";
 import { squadType } from "@/lib/types/types";
 import { initSquad } from "@/lib/db/initVals";
 import { dateTo_UTC_yyyyMMdd, startOfDayFromString } from "@/lib/dateTools";
 import { getErrorStatus } from "@/app/api/errCodes";
 
-// routes /api/squads/:id
+// routes /api/squads/squad/:id
 
 export async function GET(
   request: Request,
@@ -50,7 +50,6 @@ export async function PUT(
       lane_count,
       squad_date_str,
       squad_time,
-      finalized,
       sort_order,
     } = await request.json();    
 
@@ -63,19 +62,18 @@ export async function PUT(
       lane_count,
       squad_date_str,
       squad_time,
-      finalized,
       sort_order,
     };
 
     const toPut = sanitizeSquad(toCheck);
     const errCode = validateSquad(toPut);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = "missing data";
           break;
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = "invalid data";
           break;
         default:
@@ -101,7 +99,6 @@ export async function PUT(
         lane_count: toPut.lane_count,
         squad_date: squadDate,
         squad_time: toPut.squad_time,
-        finalized: toPut.finalized,
         sort_order: toPut.sort_order,
       },
     });
@@ -147,7 +144,6 @@ export async function PATCH(
       lane_count: currentSquad.lane_count,
       squad_date_str: dateTo_UTC_yyyyMMdd(currentSquad.squad_date),
       squad_time: currentSquad.squad_time!,
-      finalized: currentSquad.finalized,
       sort_order: currentSquad.sort_order,
     };
 
@@ -172,22 +168,19 @@ export async function PATCH(
     if (jsonProps.includes("squad_time")) {
       toCheck.squad_time = json.squad_time;
     }
-    if (jsonProps.includes("finalized")) {
-      toCheck.finalized = json.finalized;
-    }
     if (jsonProps.includes("sort_order")) {
       toCheck.sort_order = json.sort_order;
     }
 
     const toBePatched = sanitizeSquad(toCheck);
     const errCode = validateSquad(toBePatched);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = "missing data";
           break;
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = "invalid data";
           break;
         default:
@@ -207,7 +200,6 @@ export async function PATCH(
       lane_count: null as number | null,
       squad_date: null as Date | null,
       squad_time: null as string | null,
-      finalized: null as boolean | null,
       sort_order: null as number | null
     };
     if (jsonProps.includes("event_id")) {
@@ -236,19 +228,20 @@ export async function PATCH(
     if (jsonProps.includes("sort_order")) {
       toPatch.sort_order = toBePatched.sort_order;
     }
+
     const squad = await prisma.squad.update({
       where: {
         id: id,
       },
       data: {
-        // event_id: toPatch.event_id || undefined, // do not patch event_id
-        squad_name: toPatch.squad_name || undefined,
-        games: toPatch.games || undefined,
-        starting_lane: toPatch.starting_lane || undefined,
-        lane_count: toPatch.lane_count || undefined,
-        squad_date: toPatch.squad_date || gotEmptySquadDate,
-        squad_time: toPatch.squad_time || gotEmptySquadTime,
-        sort_order: toPatch.sort_order || undefined,
+        // event_id: toPatch.event_id ?? undefined, // do not patch event_id
+        squad_name: toPatch.squad_name ?? undefined,
+        games: toPatch.games ?? undefined,
+        starting_lane: toPatch.starting_lane ?? undefined,
+        lane_count: toPatch.lane_count ?? undefined,
+        squad_date: toPatch.squad_date ?? gotEmptySquadDate,
+        squad_time: toPatch.squad_time ?? gotEmptySquadTime,
+        sort_order: toPatch.sort_order ?? undefined,
       },
     });
 

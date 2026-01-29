@@ -1,6 +1,6 @@
-import { validateSquads } from "@/app/api/squads/validate";
+import { validateSquads } from "@/lib/validation/squads/validate";
 import { squadType, validSquadsType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { deleteAllSquadsForTmnt, postManySquads } from "./dbSquads";
 
 /**
@@ -19,11 +19,11 @@ export const replaceManySquads = async (squads: squadType[], tmntId: string): Pr
   if (!isValidBtDbId(tmntId, "tmt")) {
     throw new Error('Invalid tmnt id');
   }
-  let validSquads: validSquadsType = { squads: [], errorCode: ErrorCode.None };
+  let validSquads: validSquadsType = { squads: [], errorCode: ErrorCode.NONE };
   if (squads.length !== 0) {
     validSquads = validateSquads(squads);
   }  
-  if (validSquads.errorCode !== ErrorCode.None
+  if (validSquads.errorCode !== ErrorCode.NONE
     || validSquads.squads.length !== squads.length)
   { 
     if (validSquads.squads.length === 0) {      

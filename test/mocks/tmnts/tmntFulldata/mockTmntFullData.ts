@@ -15,7 +15,8 @@ import {
   initSquad,
   initTmnt,
 } from "@/lib/db/initVals";
-import { bowlType, tmntFullType } from "@/lib/types/types";
+import { bowlType, fullStageDataType, tmntFullType } from "@/lib/types/types";
+import { SquadStage } from "@prisma/client";
 
 export const brktId1 = "brk_0123f51cc1ca4748ad5e8abab88277ea";
 export const brktId2 = "brk_0123f51cc1ca4748ad5e8abab88277eb";
@@ -42,6 +43,8 @@ export const potId1 = "pot_01238f787de942a1a92aaa2df3e7c18a";
 export const potId2 = "pot_01238f787de942a1a92aaa2df3e7c18b";
 export const squadId1 = "sqd_012366e1174642c7a1bcec47a50f275a";
 export const squadId2 = "sqd_012366e1174642c7a1bcec47a50f275b";
+export const stageId1 = "stg_01238f787de942a1a92aaa2df3e7c18a";
+export const stageId2 = "stg_01238f787de942a1a92aaa2df3e7c18b";
 export const tmntId = "tmt_0123388a8fc4641a2e37233f1d6bebd1";
 export const userId = "usr_5bcefb5d314fff1ff5da6521a2fa7bde";
 
@@ -464,5 +467,16 @@ export const mockTmntFullData: tmntFullType = {
       starting_lane: 29,
       sort_order: 1,
     },
-  ],
+  ],  
 };
+
+export const mockFullTmntStage: fullStageDataType = {
+  id: stageId1,
+  squad_id: squadId1,
+  stage: SquadStage.DEFINE,
+  stage_set_at: new Date("2025-09-01T00:00:00.000Z"),
+  scores_started_at: null,
+  stage_override_enabled: false,
+  stage_override_at: null,
+  stage_override_reason: "",
+}

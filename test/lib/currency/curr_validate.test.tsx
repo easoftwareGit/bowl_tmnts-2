@@ -1,5 +1,5 @@
 import { validBtdbMoney, validMoney } from "@/lib/currency/validate";
-import { maxMoney } from "@/lib/validation";
+import { maxMoney } from "@/lib/validation/validation";
 
 describe("validAmount", () => {
   it("should return true if amount is a valid number", () => {

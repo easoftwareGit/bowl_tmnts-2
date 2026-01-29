@@ -2,8 +2,8 @@ import axios from "axios";
 import { baseOneBrktsApi } from "@/lib/db/apiPaths";
 import { testBaseOneBrktsApi } from "../../../../test/testApi";
 import { oneBrktType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
-import { validateOneBrkts } from "@/app/api/oneBrkts/valildate";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import { validateOneBrkts } from "@/lib/validation/oneBrkts/valildate";
 import { blankOneBrkt } from "../initVals";
 
 const url = testBaseOneBrktsApi.startsWith("undefined")
@@ -191,7 +191,7 @@ export const postManyOneBrkts = async (oneBrkts: oneBrktType[]): Promise<number>
   }
   if (oneBrkts.length === 0) return 0; // not an error, just no data to post
   const validOneBrkts = validateOneBrkts(oneBrkts);
-  if (validOneBrkts.errorCode !== ErrorCode.None
+  if (validOneBrkts.errorCode !== ErrorCode.NONE
     || validOneBrkts.oneBrkts.length !== oneBrkts.length)
   { 
     if (validOneBrkts.oneBrkts.length === 0) {      

@@ -1,6 +1,6 @@
 import { IntlConfig } from "@/lib/currency/components/CurrencyInputProps";
 import { startOfToday, addMinutes, isValid, addSeconds, addDays, addMilliseconds, parseISO, parse, format } from "date-fns";
-import { validTime } from "./validation";
+import { validTime } from "./validation/validation";
 
 const ic: IntlConfig = {
   // locale: window.navigator.language,

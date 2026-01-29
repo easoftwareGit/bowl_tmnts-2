@@ -6,7 +6,7 @@
 import { prisma } from "@/lib/prisma"  // for production & developemnt
 // import prisma from '../../../../test/client'  // for testing
 
-import { isEmail, isValidBtDbId, maxEmailLength } from "@/lib/validation";
+import { isEmail, isValidBtDbId, maxEmailLength } from "@/lib/validation/validation";
 import { User } from '@prisma/client'
 
 /**

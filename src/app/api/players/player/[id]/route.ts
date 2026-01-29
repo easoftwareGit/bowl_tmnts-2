@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { initPlayer } from "@/lib/db/initVals";
 import { playerType } from "@/lib/types/types";
-import { sanitizePlayer, validatePlayer, validPlayerId } from "../../validate";
+import { sanitizePlayer, validatePlayer, validPlayerId } from "../../../../../lib/validation/players/validate";
 import { getErrorStatus } from "@/app/api/errCodes";
 
 // routes /api/players/player/:id
@@ -56,13 +56,13 @@ export async function PUT(
 
     const toPut = sanitizePlayer(toCheck);
     const errCode = validatePlayer(toPut);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = "missing data";
           break;
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = "invalid data";
           break;
         default:
@@ -156,10 +156,10 @@ export async function PATCH(
     }
     const toBePatched = sanitizePlayer(toCheck);
     const errCode = validatePlayer(toBePatched);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = "invalid data";
           break;
         default:

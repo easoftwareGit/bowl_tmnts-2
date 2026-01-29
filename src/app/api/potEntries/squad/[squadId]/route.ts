@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { isValidBtDbId } from "@/lib/validation";
+import { isValidBtDbId } from "@/lib/validation/validation";
 import { getErrorStatus } from "@/app/api/errCodes";
 
 // routes /api/potEntries/squad/:squadId

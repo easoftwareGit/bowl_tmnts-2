@@ -1,5 +1,5 @@
 import axios from "axios";
-import { bcryptLength, maxToHashLength } from "@/lib/validation";
+import { bcryptLength, maxToHashLength } from "@/lib/validation/validation";
 import { baseBcryptApi } from "@/lib/db/apiPaths";
 import { testBaseBcryptApi } from "../../test/testApi";
 

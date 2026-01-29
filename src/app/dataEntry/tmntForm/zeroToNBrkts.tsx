@@ -1,5 +1,5 @@
 import React, { useState, ChangeEvent } from "react";
-import { divType, squadType, AcdnErrType, brktType, tmntActions } from "../../../lib/types/types";
+import { divType, squadType, AcdnErrType, brktType } from "../../../lib/types/types";
 import { initModalObj } from "@/components/modal/modalObjType";
 import ModalConfirm, { delConfTitle } from "@/components/modal/confirmModal";
 import { Tab, Tabs, OverlayTrigger, Tooltip } from "react-bootstrap";
@@ -13,7 +13,7 @@ import {
   maxMoney,
   minFee,  
   zeroAmount,
-} from "@/lib/validation";
+} from "@/lib/validation/validation";
 import {
   acdnErrClassName,
   getAcdnErrMsg,
@@ -34,7 +34,7 @@ interface ChildProps {
   squads: squadType[];
   setAcdnErr: (objAcdnErr: AcdnErrType) => void;
   setShowingModal: (showingModal: boolean) => void;
-  tmntAction: tmntActions;
+  isDisabled: boolean;
 }
 interface NumberProps {
   brkt: brktType;
@@ -132,18 +132,28 @@ const validateBrkt = (
   return vBrkt
 };
 
+/**
+ * validate all brkts
+ * 
+ * @param {brktType[]} brkts - array of brkts to validate
+ * @param {Function} setBrkts - function to update brkts
+ * @param {divType[]} divs - array of divs
+ * @param {number} squadGames - number of games in squad
+ * @param {Function} setAcdnErr - function to update acdnErr
+ * @returns {boolean} - true if all brkts are valid, false otherwise
+ */
 export const validateBrkts = (
   brkts: brktType[],
   setBrkts: (brkts: brktType[]) => void,  
   divs: divType[],  
-  maxStartGame: number,
+  squadGames: number,
   setAcdnErr: (objAcdnErr: AcdnErrType) => void
 ): boolean => {
-  if (!brkts || !divs || !maxStartGame || !setBrkts || !setAcdnErr) return false;
-  if (typeof maxStartGame !== "number"
-      || isNaN(maxStartGame)
-      || maxStartGame < 1
-      || maxStartGame > maxGames) {
+  if (!brkts || !divs || !squadGames || !setBrkts || !setAcdnErr) return false;
+  if (typeof squadGames !== "number"
+      || isNaN(squadGames)
+      || squadGames < 1
+      || squadGames > maxGames) {
     return false;
   }
   // brkts.length === 0 is OK
@@ -151,6 +161,8 @@ export const validateBrkts = (
 
   let areBrktsValid = true;
   let brktErrClassName = "";  
+
+  const maxStartGame = squadGames - (defaultBrktGames - 1);
 
   const newBrktErrMsg = getBrktErrMsg(brkts[0]);
   const setError = (brktName: string, errMsg: string) => {
@@ -195,10 +207,9 @@ const ZeroToNBrackets: React.FC<ChildProps> = ({
   squads,
   setAcdnErr,
   setShowingModal,
-  tmntAction,
+  isDisabled,
 }) => {
-
-  const isDisabled = (tmntAction === tmntActions.Run || tmntAction === tmntActions.Disable); 
+  
   const defaultTabKey = (isDisabled && brkts.length > 0 && brkts[0].id)
   ? brkts[0].id
   : 'createBrkt';  

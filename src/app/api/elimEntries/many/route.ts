@@ -1,8 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode } from "@/lib/validation";
+import { ErrorCode } from "@/lib/validation/validation";
 import { elimEntryType, elimEntryDataType, tmntEntryElimEntryType } from "@/lib/types/types";
-import { validateElimEntries } from "../validate";
+import { validateElimEntries } from "../../../../lib/validation/elimEntries/validate";
 import { getDeleteManySQL, getInsertManySQL, getUpdateManySQL } from "./getSql";
 import { getErrorStatus } from "../../errCodes";
 import { elimEntryDataForPrisma } from "../dataForPrisma";
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     }
     // sanitize and validate elimEntries
     const validElimEntries = await validateElimEntries(elimEntries); // need to use await! or else returns a promise
-    if (validElimEntries.errorCode !== ErrorCode.None) {
+    if (validElimEntries.errorCode !== ErrorCode.NONE) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
     // convert valid elimEntries into elimEntryData to post
@@ -60,7 +60,7 @@ export async function PUT(request: NextRequest) {
   try {
     const teElimEntries: tmntEntryElimEntryType[] = await request.json();    
     const validElimEntries = await validateElimEntries(teElimEntries as elimEntryType[]); // need to use await! or else returns a promise
-    if (validElimEntries.errorCode !== ErrorCode.None) {
+    if (validElimEntries.errorCode !== ErrorCode.NONE) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
 

@@ -7,7 +7,7 @@ import { mockBrktEntriesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mo
 import { deleteAllBrktEntriesForTmnt, getAllBrktEntriesForSquad, postManyBrktEntries } from "@/lib/db/brktEntries/dbBrktEntries";
 import { cloneDeep } from "lodash";
 import { compareAsc } from "date-fns";
-import { maxDate, minDate } from "@/lib/validation";
+import { maxDate, minDate } from "@/lib/validation/validation";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database

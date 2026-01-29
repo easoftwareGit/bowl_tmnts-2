@@ -2,9 +2,9 @@ import axios from "axios";
 import { baseLanesApi } from "@/lib/db/apiPaths";
 import { testBaseLanesApi } from "../../../../test/testApi";
 import { laneType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { blankLane } from "../initVals";
-import { validateLanes } from "@/app/api/lanes/validate";
+import { validateLanes } from "@/lib/validation/lanes/validate";
 
 const url = testBaseLanesApi.startsWith("undefined")
   ? baseLanesApi
@@ -124,7 +124,7 @@ export const postManyLanes = async (lanes: laneType[]): Promise<number> => {
   }
   if (lanes.length === 0) return 0; // not an error, just no data to post  
   const validLanes = validateLanes(lanes);
-  if (validLanes.errorCode !== ErrorCode.None
+  if (validLanes.errorCode !== ErrorCode.NONE
     || validLanes.lanes.length !== lanes.length)
   { 
     if (validLanes.lanes.length === 0) {      

@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { validateBrkt, sanitizeBrkt } from "./validate";
-import { ErrorCode } from "@/lib/validation";
+import { validateBrkt, sanitizeBrkt } from "../../../lib/validation/brkts/validate";
+import { ErrorCode } from "@/lib/validation/validation";
 import { brktType } from "@/lib/types/types";
 import { initBrkt } from "@/lib/db/initVals";
 import { calcFSA } from "@/lib/currency/fsa";
@@ -67,13 +67,13 @@ export async function POST(request: Request) {
 
     const toPost = sanitizeBrkt(toCheck);
     const errCode = validateBrkt(toPost);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = "missing data";
           break;
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = "invalid data";
           break;
         default:

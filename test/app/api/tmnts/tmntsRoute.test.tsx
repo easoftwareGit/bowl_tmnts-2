@@ -5,7 +5,7 @@ import { bowlType, tmntType, YearObj } from "@/lib/types/types";
 import { initBowl, initTmnt } from "@/lib/db/initVals";
 import { removeTimeFromISODateStr, todayStr } from "@/lib/dateTools";
 import { btDbUuid } from "@/lib/uuid";
-import { isValidBtDbId } from "@/lib/validation";
+import { isValidBtDbId } from "@/lib/validation/validation";
 import { cloneDeep } from "lodash";
 import { deleteTmnt, getTmntFullData } from "@/lib/db/tmnts/dbTmnts";
 import {

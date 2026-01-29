@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { isValidBtDbId } from "@/lib/validation";
+import { isValidBtDbId } from "@/lib/validation/validation";
 
 // routes /api/squads/event/:eventId
 
@@ -53,7 +53,7 @@ export async function DELETE(
     return NextResponse.json({ count: result.count }, { status: 200 });
   } catch (err: any) {
     return NextResponse.json(
-      { error: "error getting squads for event" },
+      { error: "error deleting squads for event" },
       { status: 500 }
     );        
   } 

@@ -25,10 +25,16 @@ import {
   exportedForTesting2,  
   feeColWidthNoTouch,
   feeColWidthTouch,
+  entryFeeColName,
+  divEntryHdcpColName,
+  divEntryIntHdcpColName,
+  timeStampColName,
+  entryNumBrktsColName,
+  entryNumRefundsColName,
 } from "@/app/dataEntry/playersForm/createColumns";
 import { initBrkt, initDiv, initElim, initPot } from "@/lib/db/initVals";
 import { brktType, divType, elimType, potType } from "@/lib/types/types";
-import { maxAverage, maxBrackets, maxMoney } from "@/lib/validation";
+import { maxAverage, maxBrackets, maxMoney } from "@/lib/validation/validation";
 import {
   GridApi,
   GridCellParams,
@@ -2133,3 +2139,191 @@ describe("createColumns functions tests", () => {
   });
 
 });
+
+describe("createColumns - edge-case tests", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe("column-name helper builders", () => {
+    it("builds expected column names", () => {
+      expect(entryFeeColName("div1")).toBe(`div1${feeColNameEnd}`);
+      expect(divEntryHdcpColName("div1")).toBe("div1_hdcp");
+      expect(divEntryIntHdcpColName("div1")).toBe("div1_intHdcp");
+      expect(timeStampColName("brk1")).toBe("brk1_timeStamp");
+      expect(entryNumBrktsColName("brk1")).toBe(`brk1${brktsColNameEnd}`);
+      expect(entryNumRefundsColName("pot1")).toBe(`pot1_refunds`);
+    });
+  });
+
+  describe("createPlayerEntryColumns - more edge cases", () => {
+    const mockDivs: divType[] = [
+      { ...initDiv, id: "div1", hdcp_per: 0.9, hdcp_from: 230, int_hdcp: true },
+    ];
+    const maxLane = 40;
+    const minLane = 1;
+
+    it("lane valueSetter: entering 0 sets lane to null and clears lanePos", () => {
+      (isTouchDevice as jest.Mock).mockReturnValue(false);
+
+      const cols = createPlayerEntryColumns(mockDivs, maxLane, minLane);
+      const laneCol = cols.find((c) => c.field === "lane");
+      expect(laneCol?.valueSetter).toBeDefined();
+
+      const row = { lane: 5, position: "A", lanePos: "5-A" };
+      const updated = laneCol!.valueSetter!(0 as any, row as any, laneCol as any, null as any);
+
+      expect(updated.lane).toBeNull();
+      expect(updated.lanePos).toBe("");
+    });
+
+    it('position valueSetter: multi-char "AB" uses first char and updates lanePos when lane valid', () => {
+      (isTouchDevice as jest.Mock).mockReturnValue(false);
+
+      const cols = createPlayerEntryColumns(mockDivs, maxLane, minLane);
+      const posCol = cols.find((c) => c.field === "position");
+      expect(posCol?.valueSetter).toBeDefined();
+
+      const row = { lane: 1, position: "", lanePos: "" };
+      const updated = posCol!.valueSetter!("AB" as any, row as any, posCol as any, null as any);
+
+      expect(updated.position).toBe("A");
+      expect(updated.lanePos).toBe("1-A");
+    });
+
+    it("position cellClassName flags invalid values (e.g. 'AA')", () => {
+      (isTouchDevice as jest.Mock).mockReturnValue(false);
+
+      const cols = createPlayerEntryColumns(mockDivs, maxLane, minLane);
+      const posCol = cols.find((c) => c.field === "position");
+      expect(posCol?.cellClassName).toBeDefined();
+
+      const cellParams: GridCellParams = {
+        id: "position",
+        field: "position",
+        value: "AA", // invalid because length !== 1
+        row: {},
+        rowNode: null as any,
+        colDef: null as any,
+        cellMode: "view",
+        api: null as any,
+        isEditable: true,
+        hasFocus: false,
+        tabIndex: -1,
+      };
+
+      const cc = posCol!.cellClassName;
+
+      expect(typeof cc).toBe("function"); // optional but nice
+
+      if (typeof cc === "function") {
+        const cls = cc(cellParams);
+        expect(cls).toBe("cellError");
+      } else {
+        // In your implementation it should be a function, so if it isn't, fail loudly
+        throw new Error("Expected position column cellClassName to be a function");
+      }      
+    });
+  });
+
+  describe("applyPotOrElimFeeCellColor - numeric string paths", () => {
+    it("returns '' when numeric string equals fee (including whitespace)", () => {
+      expect(applyPotOrElimFeeCellColor("10", 10)).toBe("");
+      expect(applyPotOrElimFeeCellColor(" 10 ", 10)).toBe("");
+    });
+
+    it("returns cellError when numeric string is numeric but does not equal fee or 0", () => {
+      expect(applyPotOrElimFeeCellColor("20", 10)).toBe("cellError");
+    });
+  });
+
+  describe("createXEntryColumns - empty arrays", () => {
+    it("createDivEntryColumns([]) returns []", () => {
+      (isTouchDevice as jest.Mock).mockReturnValue(false);
+      expect(createDivEntryColumns([])).toEqual([]);
+    });
+
+    it("createPotEntryColumns([], divs) returns []", () => {
+      (isTouchDevice as jest.Mock).mockReturnValue(false);
+      const divs: divType[] = [{ ...initDiv, id: "div1", div_name: "Scratch" }];
+      expect(createPotEntryColumns([], divs)).toEqual([]);
+    });
+
+    it("createBrktEntryColumns([], divs) returns []", () => {
+      (isTouchDevice as jest.Mock).mockReturnValue(false);
+      const divs: divType[] = [{ ...initDiv, id: "div1", div_name: "Scratch" }];
+      expect(createBrktEntryColumns([], divs)).toEqual([]);
+    });
+
+    it("createElimEntryColumns([], divs) returns []", () => {
+      (isTouchDevice as jest.Mock).mockReturnValue(false);
+      const divs: divType[] = [{ ...initDiv, id: "div1", div_name: "Scratch" }];
+      expect(createElimEntryColumns([], divs)).toEqual([]);
+    });
+  });
+
+  describe("createBrktEntryColumns - valueSetter bail-outs", () => {
+    const mockDivs: divType[] = [
+      { ...initDiv, id: "div1", div_name: "Scratch", hdcp_per: 0, hdcp_from: 230, int_hdcp: true },
+    ];
+
+    it("invalid numBrkts (e.g. -1) returns original row unchanged", () => {
+      (isTouchDevice as jest.Mock).mockReturnValue(false);
+
+      const brkts: brktType[] = [{ ...initBrkt, id: "brk1", div_id: "div1", start: 1, games: 3, fee: "5" }];
+      const cols = createBrktEntryColumns(brkts, mockDivs);
+
+      const numCol = cols.find((c) => c.field === "brk1_brkts");
+      expect(numCol?.valueSetter).toBeDefined();
+
+      const row = { brk1_brkts: 0 };
+      const updated = numCol!.valueSetter!(-1 as any, row as any, numCol as any, null as any);
+
+      // implementation returns the same row object when invalid
+      expect(updated).toBe(row as any);
+      expect((updated as any).brk1_fee).toBeUndefined();
+      expect((updated as any).brk1_timeStamp).toBeUndefined();
+    });
+
+    it("NaN feePerBrkt (e.g. fee='abc') returns original row unchanged", () => {
+      (isTouchDevice as jest.Mock).mockReturnValue(false);
+
+      const brkts: brktType[] = [{ ...initBrkt, id: "brkBad", div_id: "div1", start: 1, games: 3, fee: "abc" }];
+      const cols = createBrktEntryColumns(brkts, mockDivs);
+
+      const numCol = cols.find((c) => c.field === "brkBad_brkts");
+      expect(numCol?.valueSetter).toBeDefined();
+
+      const row = { brkBad_brkts: 0 };
+      const updated = numCol!.valueSetter!(2 as any, row as any, numCol as any, null as any);
+
+      expect(updated).toBe(row as any);
+      expect((updated as any).brkBad_fee).toBeUndefined();
+      expect((updated as any).brkBad_timeStamp).toBeUndefined();
+    });
+  });
+
+  describe("createDivEntryColumns - HDCP formatter edges", () => {
+    it('HDCP formatter returns "0" for 0 and NaN', () => {
+      (isTouchDevice as jest.Mock).mockReturnValue(false);
+
+      const divs: divType[] = [
+        { ...initDiv, id: "div1", div_name: "Scratch", int_hdcp: true },
+      ];
+
+      const cols = createDivEntryColumns(divs);
+      const hdcpCol = cols.find((c) => c.field === "div1_hdcp");
+      expect(hdcpCol?.valueFormatter).toBeDefined();
+
+      const vf = hdcpCol!.valueFormatter as unknown as (
+        value: any,
+        row: any,
+        colDef: any,
+        api: any
+      ) => string;
+      expect(vf(0 as any, null as any, hdcpCol as any, null as any)).toBe("0");
+      expect(vf(NaN as any, null as any, hdcpCol as any, null as any)).toBe("0");
+    });
+  });
+});
+

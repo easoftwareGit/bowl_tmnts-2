@@ -4,6 +4,9 @@ npx prisma db seed
 // migrate - made changes to database schema
 npx prisma migrate dev --name newName
 
+// migrate and reset database
+npx prisma migrate reset
+
 // reset and re-seed
 npx prisma db push --force-reset
 npx prisma generate
@@ -12,3 +15,9 @@ npx prisma db seed
 // clear database and re-seed
 npx prisma db push --force-reset
 npx prisma db seed
+
+
+// build
+npm run build
+ - or -
+npx next build

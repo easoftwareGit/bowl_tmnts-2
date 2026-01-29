@@ -2,9 +2,9 @@ import axios from "axios";
 import { baseDivsApi } from "@/lib/db/apiPaths";
 import { testBaseDivsApi } from "../../../../test/testApi";
 import { divType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { blankDiv } from "../initVals";
-import { validateDivs } from "@/app/api/divs/validate";
+import { validateDivs } from "@/lib/validation/divs/validate";
 
 const url = testBaseDivsApi.startsWith("undefined")
   ? baseDivsApi
@@ -111,7 +111,7 @@ export const postManyDivs = async (divs: divType[]): Promise<number> => {
   }
   if (divs.length === 0) return 0; //not an error, just no divs to post
   const validDivs = validateDivs(divs);
-  if (validDivs.errorCode !== ErrorCode.None
+  if (validDivs.errorCode !== ErrorCode.NONE
     || validDivs.divs.length !== divs.length)
   { 
     if (validDivs.divs.length === 0) {      

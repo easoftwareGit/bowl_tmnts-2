@@ -1,7 +1,7 @@
 "use client";
 import React, { ChangeEvent, useState } from 'react'
 import Image from "next/image";
-import { isPassword8to20 } from '@/lib/validation';
+import { isPassword8to20 } from '@/lib/validation/validation';
 import { userType } from '@/lib/types/types';
 import { doCompare, doHash } from '@/lib/hash';
 import { patchUser } from '@/lib/db/users/dbUsers';

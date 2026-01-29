@@ -1,5 +1,5 @@
 import { dataOneTmntType } from "@/lib/types/types";
-import { isValidBtDbId } from "@/lib/validation";
+import { isValidBtDbId } from "@/lib/validation/validation";
 
 const getDivAndHdcpSQL = (curData: dataOneTmntType): string => {
   

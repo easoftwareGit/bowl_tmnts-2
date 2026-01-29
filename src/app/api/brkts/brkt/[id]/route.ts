@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
-import { sanitizeBrkt, validateBrkt } from "../../validate";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import { sanitizeBrkt, validateBrkt } from "../../../../../lib/validation/brkts/validate";
 import { brktType } from "@/lib/types/types";
 import { initBrkt } from "@/lib/db/initVals";
 import { calcFSA } from "@/lib/currency/fsa";
@@ -77,13 +77,13 @@ export async function PUT(
 
     const toPut = sanitizeBrkt(toCheck);
     const errCode = validateBrkt(toPut);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = "missing data";
           break;
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = "invalid data";
           break;
         default:
@@ -198,10 +198,10 @@ export async function PATCH(
 
     const toBePatched = sanitizeBrkt(toCheck);
     const errCode = validateBrkt(toBePatched);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = "invalid data";
           break;
         default:

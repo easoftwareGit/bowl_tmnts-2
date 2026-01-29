@@ -2,9 +2,9 @@ import axios from "axios";
 import { baseEventsApi } from "@/lib/db/apiPaths";
 import { testBaseEventsApi } from "../../../../test/testApi";
 import { eventType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { blankEvent } from "../initVals";
-import { validateEvents } from "@/app/api/events/validate";
+import { validateEvents } from "@/lib/validation/events/validate";
 
 const url = testBaseEventsApi.startsWith("undefined")
   ? baseEventsApi
@@ -119,7 +119,7 @@ export const postManyEvents = async (events: eventType[]): Promise<number> => {
   }
   if (events.length === 0) return 0; // not an error, just no events to post
   const validEvents = validateEvents(events);
-  if (validEvents.errorCode !== ErrorCode.None
+  if (validEvents.errorCode !== ErrorCode.NONE
     || validEvents.events.length !== events.length)
   { 
     if (validEvents.events.length === 0) {      

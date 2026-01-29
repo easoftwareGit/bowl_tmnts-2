@@ -1,7 +1,7 @@
 import { brktSeedType, validBrktSeedsType } from "@/lib/types/types";
 import { deleteAllBrktSeedsForSquad, postManyBrktSeeds } from "./dbBrktSeeds";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
-import { validateBrktSeeds, validCompositKey } from "@/app/api/brktSeeds/validate";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import { validateBrktSeeds, validCompositKey } from "@/lib/validation/brktSeeds/validate";
 
 /**
  * brktSeeds data rows are never edited. They are deleted and re-posted
@@ -21,11 +21,11 @@ export const replaceManyBrktSeeds = async (brktSeeds: brktSeedType[], squadId: s
   if (!isValidBtDbId(squadId, "sqd")) {
     throw new Error("Invalid squad id");
   }
-  let validBrktSeeds: validBrktSeedsType = { brktSeeds: [], errorCode: ErrorCode.None };
+  let validBrktSeeds: validBrktSeedsType = { brktSeeds: [], errorCode: ErrorCode.NONE };
   if (brktSeeds.length !== 0) {
     validBrktSeeds = validateBrktSeeds(brktSeeds);
   }  
-  if (validBrktSeeds.errorCode !== ErrorCode.None
+  if (validBrktSeeds.errorCode !== ErrorCode.NONE
     || validBrktSeeds.brktSeeds.length !== brktSeeds.length)
   { 
     if (validBrktSeeds.brktSeeds.length === 0) {      

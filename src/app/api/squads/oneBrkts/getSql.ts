@@ -1,4 +1,4 @@
-import { isValidBtDbId } from "@/lib/validation";
+import { isValidBtDbId } from "@/lib/validation/validation";
 
 export const getSquadOneBrktsAndSeedsSQL = (squadId: string) => {
   if (!isValidBtDbId(squadId, "sqd")) return '';

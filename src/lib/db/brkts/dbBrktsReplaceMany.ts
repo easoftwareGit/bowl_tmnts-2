@@ -1,6 +1,6 @@
-import { validateBrkts } from "@/app/api/brkts/validate";
+import { validateBrkts } from "@/lib/validation/brkts/validate";
 import { brktType, validBrktsType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { deleteAllBrktsForSquad, postManyBrkts } from "./dbBrkts";
 
 /**
@@ -19,11 +19,11 @@ export const replaceManyBrkts = async (brkts: brktType[], squadId: string): Prom
   if (!isValidBtDbId(squadId, "sqd")) {
     throw new Error('Invalid squad id');
   }
-  let validBrkts: validBrktsType = { brkts: [], errorCode: ErrorCode.None };
+  let validBrkts: validBrktsType = { brkts: [], errorCode: ErrorCode.NONE };
   if (brkts.length !== 0) {
     validBrkts = validateBrkts(brkts);
   }  
-  if (validBrkts.errorCode !== ErrorCode.None
+  if (validBrkts.errorCode !== ErrorCode.NONE
     || validBrkts.brkts.length !== brkts.length)
   { 
     if (validBrkts.brkts.length === 0) {      

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
-import { allEventMoneyValid, sanitizeEvent, validateEvent } from "@/app/api/events/validate";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import { allEventMoneyValid, sanitizeEvent, validateEvent } from "@/lib/validation/events/validate";
 import { eventType } from "@/lib/types/types";
 import { initEvent } from "@/lib/db/initVals";
 import { getErrorStatus } from "@/app/api/errCodes";
@@ -81,13 +81,13 @@ export async function PUT(
     }
     const toPut = sanitizeEvent(toCheck);
     const errCode = validateEvent(toPut);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = "missing data";
           break;
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = "invalid data";
           break;
         default:
@@ -226,10 +226,10 @@ export async function PATCH(
     }
     const toBePatched = sanitizeEvent(toCheck);
     const errCode = validateEvent(toBePatched);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = "invalid data";
           break;
         default:

@@ -2,9 +2,9 @@ import axios from "axios";
 import { baseDivEntriesApi } from "@/lib/db/apiPaths";
 import { testBaseDivEntriesApi } from "../../../../test/testApi";
 import { divEntryType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { blankDivEntry } from "../initVals";
-import { validateDivEntries } from "@/app/api/divEntries/validate";
+import { validateDivEntries } from "@/lib/validation/divEntries/validate";
 import { calcHandicap } from "@/app/api/divEntries/calcHdcp";
 
 const url = testBaseDivEntriesApi.startsWith("undefined")
@@ -155,7 +155,7 @@ export const postManyDivEntries = async (divEntries: divEntryType[]): Promise<nu
   if (divEntries.length === 0) return 0; // not an error, no divEntries to post  
   // further sanatation and validation done in POST route
   const validDivEntries = validateDivEntries(divEntries);
-  if (validDivEntries.errorCode !== ErrorCode.None
+  if (validDivEntries.errorCode !== ErrorCode.NONE
     || validDivEntries.divEntries.length !== divEntries.length)
   {
     if (validDivEntries.divEntries.length === 0) {      

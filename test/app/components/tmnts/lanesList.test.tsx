@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import LanesList, { getLanesFromPairs, lanesNotThisSquad, lanesThisSquad, pairsOfLanes } from '@/components/tmnts/lanesList';
 import { mockLanes, mockPairs } from '../../../mocks/tmnts/newTmnt/mockNewTmnt';
-import { laneType, pairsOfLanesType, tmntActions } from '@/lib/types/types';
+import { laneType, pairsOfLanesType } from '@/lib/types/types';
 import { cloneDeep } from 'lodash';
 
 describe('LanesList - Component', () => { 
@@ -352,7 +352,7 @@ describe('LanesList - Component', () => {
         squadId={squad1Id}
         lanes={mockLanes}
         setLanes={mockSetLanes}
-        tmntAction={tmntActions.Edit}
+        isDisabled={false}
       />) 
       const lanesHeader = screen.getByText('Lanes');
       expect(lanesHeader).toBeInTheDocument();
@@ -362,7 +362,7 @@ describe('LanesList - Component', () => {
         squadId={squad1Id}
         lanes={mockLanes}
         setLanes={mockSetLanes}
-        tmntAction={tmntActions.Edit}
+        isDisabled={false}
       />) 
       const inUseHeader = screen.getByText('In Use');
       expect(inUseHeader).toBeInTheDocument();
@@ -372,7 +372,7 @@ describe('LanesList - Component', () => {
         squadId={squad1Id}
         lanes={mockLanes}
         setLanes={mockSetLanes}
-        tmntAction={tmntActions.Edit}
+        isDisabled={false}
       />) 
       const firstPairText = mockLanes[0].lane_number + ' - ' + mockLanes[1].lane_number
       const firstPair = screen.getByText(firstPairText);
@@ -383,7 +383,7 @@ describe('LanesList - Component', () => {
         squadId={squad1Id}
         lanes={mockLanes}
         setLanes={mockSetLanes}
-        tmntAction={tmntActions.Edit}
+        isDisabled={false}
       />) 
       const secondPairText = mockLanes[2].lane_number + ' - ' + mockLanes[3].lane_number
       const secondPair = screen.getByText(secondPairText);
@@ -394,7 +394,7 @@ describe('LanesList - Component', () => {
         squadId={squad1Id}
         lanes={mockLanes}
         setLanes={mockSetLanes}
-        tmntAction={tmntActions.Run}
+        isDisabled={true}
       />) 
       const checkboxes = screen.queryAllByRole('checkbox');
       expect(checkboxes).toHaveLength(6);

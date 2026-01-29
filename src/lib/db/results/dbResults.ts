@@ -1,7 +1,7 @@
 import axios from "axios";
 import { baseResultsApi } from "@/lib/db/apiPaths";
 import { testBaseResultsApi } from "../../../../test/testApi";
-import { isValidBtDbId } from "@/lib/validation";
+import { isValidBtDbId } from "@/lib/validation/validation";
 
 const url = testBaseResultsApi.startsWith("undefined")
   ? baseResultsApi

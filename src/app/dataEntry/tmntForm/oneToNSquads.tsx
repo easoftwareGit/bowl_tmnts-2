@@ -1,5 +1,5 @@
 import React, { useState, ChangeEvent } from "react";
-import { squadType, AcdnErrType, eventType, laneType, tmntActions } from "../../../lib/types/types";
+import { squadType, AcdnErrType, eventType, laneType } from "../../../lib/types/types";
 import { initSquad } from "../../../lib/db/initVals";
 import { Tabs, Tab, OverlayTrigger, Tooltip } from "react-bootstrap";
 import ModalConfirm, { delConfTitle } from "@/components/modal/confirmModal";
@@ -12,7 +12,7 @@ import {
   isDuplicateSquadName,
   isDuplicateDateTime,
 } from "./errors";
-import { maxEventLength, minGames, maxGames, minStartLane, maxStartLane, minLaneCount, maxLaneCount, isOdd, isEven } from "@/lib/validation";
+import { maxEventLength, minGames, maxGames, minStartLane, maxStartLane, minLaneCount, maxLaneCount, isOdd, isEven } from "@/lib/validation/validation";
 import { dateTo_UTC_MMddyyyy, getYearMonthDays, startOfDayFromString, startOfTodayUTC, todayStr, twelveHourto24Hour, validDateString } from "@/lib/dateTools";
 import { btDbUuid } from "@/lib/uuid";
 import { compareAsc, isValid } from "date-fns";
@@ -25,7 +25,7 @@ interface ChildProps {
   setLanes: (lanes: laneType[]) => void;
   events: eventType[];
   setAcdnErr: (objAcdnErr: AcdnErrType) => void;  
-  tmntAction: tmntActions;
+  isDisabled: boolean;
 }
 interface AddOrDelButtonProps {
   id: string;
@@ -255,7 +255,7 @@ const OneToNSquads: React.FC<ChildProps> = ({
   lanes,
   setLanes,
   setAcdnErr,
-  tmntAction,
+  isDisabled,
 }) => {
 
   const defaultTabKey = squads[0].id;
@@ -263,8 +263,7 @@ const OneToNSquads: React.FC<ChildProps> = ({
   const [modalObj, setModalObj] = useState(initModalObj);
   const [tabKey, setTabKey] = useState(defaultTabKey);  
   const [sortOrder, setSortOrder] = useState(squads[squads.length - 1].sort_order);   
-
-  const isDisabled = (tmntAction === tmntActions.Run || tmntAction === tmntActions.Disable);
+  
   const addBtnStyle = isDisabled ? 'btn-dark' : 'btn-success';
   const delBtnStyle = isDisabled ? 'btn-dark' : 'btn-danger';
 
@@ -464,7 +463,7 @@ const OneToNSquads: React.FC<ChildProps> = ({
                 ...squad,
                 squad_name: "Squad " + squad.sort_order,
                 tab_title: "Squad " + squad.sort_order,
-                name_err: "",
+                squad_name_err: "",
               };
             } else if (name === "games") {
               return {
@@ -535,7 +534,7 @@ const OneToNSquads: React.FC<ChildProps> = ({
           return {
             ...squad, 
             event_id: eventId,
-            event_nane_err: '',
+            event_id_err: '',
           }
         } else {
           return squad

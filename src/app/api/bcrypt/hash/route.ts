@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { hash } from "bcrypt";
-import { maxToHashLength } from "@/lib/validation";
+import { maxToHashLength } from "@/lib/validation/validation";
 
 export async function PUT(req: Request) {
 

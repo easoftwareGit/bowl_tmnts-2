@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
-import { sanitizeElim, validateElim } from "@/app/api/elims/validate";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import { sanitizeElim, validateElim } from "@/lib/validation/elims/validate";
 import { elimType } from "@/lib/types/types";
 import { initElim } from "@/lib/db/initVals";
 import { getErrorStatus } from "@/app/api/errCodes";
@@ -62,13 +62,13 @@ export async function PUT(
 
     const toPut = sanitizeElim(toCheck);
     const errCode = validateElim(toPut);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = "missing data";
           break;
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = "invalid data";
           break;
         default:
@@ -154,10 +154,10 @@ export async function PATCH(
     }
 
     const errCode = validateElim(toCheck);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = "invalid data";
           break;
         default:

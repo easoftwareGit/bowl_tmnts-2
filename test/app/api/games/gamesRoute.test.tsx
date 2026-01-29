@@ -3,7 +3,7 @@ import { baseGamesApi  } from "@/lib/db/apiPaths";
 import { testBaseGamesApi } from "../../../testApi";
 import { gameType } from "@/lib/types/types";
 import { initGame } from "@/lib/db/initVals";
-import { isValidBtDbId, maxGames, maxScore } from "@/lib/validation";
+import { isValidBtDbId, maxGames, maxScore } from "@/lib/validation/validation";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database

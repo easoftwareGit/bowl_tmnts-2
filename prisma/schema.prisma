@@ -14,6 +14,15 @@ datasource db {
   // url      = env("DATABASE_URL")
 }
 
+// use: import type { SquadStage } from "@prisma/client"; to import type
+// use: import { SquadStage } from "@prisma/client"; to import enum value(s)
+enum SquadStage {     
+  DEFINE
+  ENTRIES
+  SCORES
+  ERROR
+}
+
 // notes:
 // password is optional because when authenticating via Google, no password is saved in the database
 model User {
@@ -105,25 +114,25 @@ model Div {
 }
 
 model Squad {
-  id            String      @id @default(dbgenerated("concat('sqd_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
-  event_id      String      @db.Text
-  squad_name    String
-  squad_date    DateTime
-  squad_time    String?     @db.Text
-  games         Int
-  lane_count    Int
-  starting_lane Int
-  finalized     Boolean     @default(false)
-  sort_order    Int
-  lanes         Lane[]
-  pots          Pot[]
-  brkts         Brkt[]
-  elims         Elim[]
-  players       Player[]
-  div_entries   Div_Entry[]
-  events        Event       @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  id                      String      @id @default(dbgenerated("concat('sqd_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  event_id                String      @db.Text
+  squad_name              String
+  squad_date              DateTime
+  squad_time              String?     @db.Text
+  games                   Int
+  lane_count              Int
+  starting_lane           Int
+  sort_order              Int
+  stage                   Stage[]
+  lanes                   Lane[]
+  pots                    Pot[]
+  brkts                   Brkt[]
+  elims                   Elim[]
+  players                 Player[]
+  div_entries             Div_Entry[]
+  events                  Event       @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  createdAt               DateTime    @default(now())
+  updatedAt               DateTime    @updatedAt
 
   @@unique([event_id, squad_name])
 }
@@ -138,6 +147,20 @@ model Lane {
   updatedAt   DateTime @updatedAt
 
   @@unique([squad_id, lane_number])
+}
+
+model Stage {
+  id                      String      @id @default(dbgenerated("concat('stg_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  squad_id                String      @db.Text	
+	stage                   SquadStage  @default(DEFINE)
+	stage_set_at            DateTime?
+  scores_started_at       DateTime?	
+  stage_override_enabled  Boolean     @default(false)  
+  stage_override_at       DateTime?
+  stage_override_reason   String?
+  squad                   Squad       @relation(fields: [squad_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  createdAt               DateTime    @default(now())
+  updatedAt               DateTime    @updatedAt
 }
 
 model Pot {

@@ -1,6 +1,6 @@
 import { potEntryType } from "@/lib/types/types";
-import { validatePotEntries } from "../validate";
-import { ErrorCode } from "@/lib/validation";
+import { validatePotEntries } from "../../../../lib/validation/potEntries/validate";
+import { ErrorCode } from "@/lib/validation/validation";
 
 /**
  * returns array of unique potIds
@@ -28,7 +28,7 @@ export const getUpdateManySQL = (potEntries: potEntryType[]) => {
 
   if (!potEntries || potEntries.length === 0) return "";
   const validPotEntries = validatePotEntries(potEntries);
-  if (validPotEntries.errorCode !== ErrorCode.None) return "";
+  if (validPotEntries.errorCode !== ErrorCode.NONE) return "";
 
   const potIds: string[] = getPotIds(potEntries);
   if (potIds.length === 0) return "";
@@ -66,7 +66,7 @@ export const getInsertManySQL = (potEntries: potEntryType[]) => {
 
   if (!potEntries || potEntries.length === 0) return "";
   const validPotEntries = validatePotEntries(potEntries);
-  if (validPotEntries.errorCode !== ErrorCode.None) return "";
+  if (validPotEntries.errorCode !== ErrorCode.NONE) return "";
 
   const getSqlValues = (potEntries: potEntryType[]) => {
     const values: string[] = [];
@@ -91,7 +91,7 @@ export const getDeleteManySQL = (potEntries: potEntryType[]) => {
 
   if (!potEntries || potEntries.length === 0) return "";
   const validPotEntries = validatePotEntries(potEntries);
-  if (validPotEntries.errorCode !== ErrorCode.None) return "";
+  if (validPotEntries.errorCode !== ErrorCode.NONE) return "";
 
   const getSqlValues = (potEntries: potEntryType[]) => {
     const values: string[] = [];

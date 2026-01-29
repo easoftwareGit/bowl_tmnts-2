@@ -2,9 +2,9 @@ import axios from "axios";
 import { baseElimsApi } from "@/lib/db/apiPaths";
 import { testBaseElimsApi } from "../../../../test/testApi";
 import { elimType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { blankElim } from "../initVals";
-import { validateElims } from "@/app/api/elims/validate";
+import { validateElims } from "@/lib/validation/elims/validate";
 
 const url = testBaseElimsApi.startsWith("undefined")
   ? baseElimsApi
@@ -136,7 +136,7 @@ export const postManyElims = async (elims: elimType[]): Promise<number> => {
   }
   if (elims.length === 0) return 0 // not an error, just no data to post
   const validElims = validateElims(elims);
-  if (validElims.errorCode !== ErrorCode.None
+  if (validElims.errorCode !== ErrorCode.NONE
     || validElims.elims.length !== elims.length)
   { 
     if (validElims.elims.length === 0) {      

@@ -2,8 +2,8 @@ import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { initDivEntry } from "@/lib/db/initVals";
 import { divEntryType } from "@/lib/types/types";
-import { sanitizeDivEntry, validateDivEntry } from "./validate";
-import { ErrorCode } from "@/lib/validation";
+import { sanitizeDivEntry, validateDivEntry } from "../../../lib/validation/divEntries/validate";
+import { ErrorCode } from "@/lib/validation/validation";
 import { divEntriesWithHdcp } from "./calcHdcp";
 import { getErrorStatus } from "../errCodes";
 import { divEntryDataForPrisma } from "./dataForPrisma";
@@ -63,13 +63,13 @@ export const POST = async (request: NextRequest) => {
 
     const toPost = sanitizeDivEntry(toCheck);
     const errCode = validateDivEntry(toPost);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = 'missing data'
           break;
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = 'invalid data'
           break;
         default:

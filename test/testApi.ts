@@ -23,6 +23,8 @@ export const testBaseDivEntriesApi = testBaseApi + '/divEntries'
 
 export const testBaseSquadsApi = testBaseApi + '/squads'
 
+export const testBaseStagesApi = testBaseApi + '/stages'
+
 export const testBaseLanesApi = testBaseApi + '/lanes'
 
 export const testBasePotsApi = testBaseApi + '/pots'

@@ -1,5 +1,5 @@
-import { ErrorCode, maxFirstNameLength, maxLastNameLength, isEmail, isPassword8to20, isValidBtDbId, isValidRole, isValidName } from "@/lib/validation";
-import { sanitize } from "@/lib/sanitize";
+import { ErrorCode, maxFirstNameLength, maxLastNameLength, isEmail, isPassword8to20, isValidBtDbId, isValidRole, isValidName } from "@/lib/validation/validation";
+import { sanitize } from "@/lib/validation/sanitize";
 import { userType } from "@/lib/types/types";
 import { phone as phoneChecking } from "phone";
 import { blankUser } from "@/lib/db/initVals";
@@ -13,7 +13,7 @@ const validRoles = ["ADMIN", "DIRECTOR", "USER"]
  * @param user - user data to check 
  * @param checkPhone - true if need to check phone 
  * @param checkPass - true if need to check password
- * @returns - {ErrorCode.MissingData, ErrorCode.None, ErrorCode.OtherError}
+ * @returns - {ErrorCode.MISSING_DATA, ErrorCode.NONE, ErrorCode.OtherError}
  */
 const gotUserData = (user: userType, checkPhone: boolean, checkPass: boolean): ErrorCode => {
   try {
@@ -24,17 +24,17 @@ const gotUserData = (user: userType, checkPhone: boolean, checkPass: boolean): E
         || !(user.email)
         || !(user.role))
     {
-      return ErrorCode.MissingData
+      return ErrorCode.MISSING_DATA
     }
     if (checkPhone && !user.phone) {      
-      return ErrorCode.MissingData
+      return ErrorCode.MISSING_DATA
     }
     if (checkPass && !user.password) {
-      return ErrorCode.MissingData
+      return ErrorCode.MISSING_DATA
     }
-    return ErrorCode.None
+    return ErrorCode.NONE
   } catch (error) {
-    return ErrorCode.OtherError
+    return ErrorCode.OTHER_ERROR
   }
 }
 
@@ -63,38 +63,38 @@ export const validUserPassword = (password: string): boolean => {
  * @param {userType} user - user data to check
  * @param {boolean} checkPhone - true if need to check phone 
  * @param {boolean} checkPass - true if need to check password
- * @returns {ErrorCode} - ErrorCode.None: user data is valid, 
- *    ErrorCode.InvalidData: user data is invalid
+ * @returns {ErrorCode} - ErrorCode.NONE: user data is valid, 
+ *    ErrorCode.INVALID_DATA: user data is invalid
  *    ErrorCode.OtherError: unknown error
  */
 const validUserData = (user: userType, checkPhone: boolean, checkPass: boolean): ErrorCode => {
   
   try {
-    if (!user) return ErrorCode.InvalidData
+    if (!user) return ErrorCode.INVALID_DATA
     if (!isValidBtDbId(user.id, 'usr')) {
-      return ErrorCode.InvalidData
+      return ErrorCode.INVALID_DATA
     }
     if (!validUserFirstName(user.first_name)) {
-      return ErrorCode.InvalidData
+      return ErrorCode.INVALID_DATA
     }
     if (!validUserLastName(user.last_name)) {
-      return ErrorCode.InvalidData
+      return ErrorCode.INVALID_DATA
     }
     if (!validUserEmail(user.email)) {
-      return ErrorCode.InvalidData
+      return ErrorCode.INVALID_DATA
     }
     if (checkPhone && !validUserPhone(user.phone)) {
-      return ErrorCode.InvalidData
+      return ErrorCode.INVALID_DATA
     }
     if (checkPass && !validUserPassword(user.password)) {
-      return ErrorCode.InvalidData
+      return ErrorCode.INVALID_DATA
     }    
     if (!isValidRole(user.role)) {
-      return ErrorCode.InvalidData
+      return ErrorCode.INVALID_DATA
     }
-    return ErrorCode.None
+    return ErrorCode.NONE
   } catch (error) {
-    return ErrorCode.OtherError
+    return ErrorCode.OTHER_ERROR
   }
 }
 
@@ -142,18 +142,18 @@ export const sanitizeUser = (user: userType): userType => {
  * @param user - user data to check
  * @param checkPhone - true if need to check phone 
  * @param checkPass - true if need to check password
- * @returns - {ErrorCode.MissingData, ErrorCode.InvalidData, ErrorCode.None, ErrorCode.OtherError} 
+ * @returns - {ErrorCode.MISSING_DATA, ErrorCode.INVALID_DATA, ErrorCode.NONE, ErrorCode.OtherError} 
  */
 export function validateUser(user: userType, checkPhone: boolean, checkPass: boolean): ErrorCode { 
   
   try {
     const errCode = gotUserData(user, checkPhone, checkPass)
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       return errCode
     }
     return validUserData(user, checkPhone, checkPass)
   } catch (error) {
-    return ErrorCode.OtherError
+    return ErrorCode.OTHER_ERROR
   }
 }
 

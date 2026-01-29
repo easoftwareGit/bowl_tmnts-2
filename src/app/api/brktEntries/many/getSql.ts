@@ -1,6 +1,6 @@
 import { brktEntryType, validBrktEntriesType } from "@/lib/types/types";
-import { validateBrktEntries } from "../validate";
-import { ErrorCode } from "@/lib/validation";
+import { validateBrktEntries } from "../../../../lib/validation/brktEntries/validate";
+import { ErrorCode } from "@/lib/validation/validation";
 
 /**
  * gets array of unique brktIds
@@ -45,7 +45,7 @@ export const getUpdateManySQL = (brktEntries: brktEntryType[]) => {
   if (!brktEntries || brktEntries.length === 0) return "";
 
   const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntries);
-  if (validBrktEntries.errorCode !== ErrorCode.None) return "";
+  if (validBrktEntries.errorCode !== ErrorCode.NONE) return "";
 
   const brktIds: string[] = getBrktIds(brktEntries);
   if (brktIds.length === 0) return "";
@@ -85,7 +85,7 @@ export const getInsertManySQL = (brktEntries: brktEntryType[]) => {
 
   if (!brktEntries || brktEntries.length === 0) return "";
   const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntries);
-  if (validBrktEntries.errorCode !== ErrorCode.None) return "";
+  if (validBrktEntries.errorCode !== ErrorCode.NONE) return "";
 
   const getSqlValues = (brktEntries: brktEntryType[]) => {
     const values: string[] = [];
@@ -116,7 +116,7 @@ export const getDeleteManySQL = (brktEntries: brktEntryType[]) => {
 
   if (!brktEntries || brktEntries.length === 0) return "";
   const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntries);
-  if (validBrktEntries.errorCode !== ErrorCode.None) return "";
+  if (validBrktEntries.errorCode !== ErrorCode.NONE) return "";
 
   const getSqlValues = (brktEntries: brktEntryType[]) => {
     const values: string[] = [];
@@ -146,7 +146,7 @@ export const getUpdateManyRefundsSQL = (brktEntries: brktEntryType[]) => {
   if (!brktEntries || brktEntries.length === 0) return "";
 
   const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntries);
-  if (validBrktEntries.errorCode !== ErrorCode.None) return "";
+  if (validBrktEntries.errorCode !== ErrorCode.NONE) return "";
 
   const brktEntryIds: string[] = getBrktEntryIds(brktEntries);
   if (brktEntryIds.length === 0) return "";
@@ -187,7 +187,7 @@ export const getInsertManyRefundsSQL = (brktEntries: brktEntryType[]) => {
 
   if (!brktEntries || brktEntries.length === 0) return "";
   const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntries);
-  if (validBrktEntries.errorCode !== ErrorCode.None) return "";
+  if (validBrktEntries.errorCode !== ErrorCode.NONE) return "";
 
   const brktEntryRefunds = validBrktEntries.brktEntries.filter((brktEntry) => brktEntry.num_refunds > 0);
   if (brktEntryRefunds.length === 0) return "";
@@ -221,7 +221,7 @@ export const getDeleteManyRefundsSQL = (brktEntries: brktEntryType[]) => {
 
   if (!brktEntries || brktEntries.length === 0) return "";
   const validBrktEntries: validBrktEntriesType = validateBrktEntries(brktEntries);
-  if (validBrktEntries.errorCode !== ErrorCode.None) return "";
+  if (validBrktEntries.errorCode !== ErrorCode.NONE) return "";
 
   const brktEntryRefunds = validBrktEntries.brktEntries.filter((brktEntry) => (brktEntry.num_refunds == null || brktEntry.num_refunds === 0));
   if (brktEntryRefunds.length === 0) return "";

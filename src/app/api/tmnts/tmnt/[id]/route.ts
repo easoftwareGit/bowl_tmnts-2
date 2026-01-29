@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma"; 
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
-import { sanitizeTmnt, validateTmnt } from "@/app/api/tmnts/valildate";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import { sanitizeTmnt, validateTmnt } from "@/lib/validation/tmnts/valildate";
 import { tmntType } from "@/lib/types/types";
 import { initTmnt } from "@/lib/db/initVals";
 import { dateTo_UTC_yyyyMMdd, startOfDayFromString } from "@/lib/dateTools";
@@ -72,13 +72,13 @@ export async function PUT(
 
     const toPut: tmntType = sanitizeTmnt(toCheck);
     const errCode = validateTmnt(toPut);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = "missing data";
           break;
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = "invalid data";
           break;
         default:
@@ -163,13 +163,13 @@ export async function PATCH(
 
     const toBePatched = sanitizeTmnt(toCheck);
     const errCode = validateTmnt(toBePatched);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode as ErrorCode) {
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = "missing data";
           break;
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = "invalid data";
           break;
         default:

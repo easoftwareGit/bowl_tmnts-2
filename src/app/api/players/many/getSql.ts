@@ -1,6 +1,6 @@
 import { playerType, validPlayersType } from "@/lib/types/types"
-import { validatePlayers } from "../validate"
-import { ErrorCode } from "@/lib/validation";
+import { validatePlayers } from "../../../../lib/validation/players/validate"
+import { ErrorCode } from "@/lib/validation/validation";
 
 /**
  * Returns SQL query to update many players at once
@@ -12,7 +12,7 @@ export const getUpdateManySQL = (playerEntries: playerType[]) => {
 
   if (!playerEntries || playerEntries.length === 0) return ''
   const validPlayerEntries: validPlayersType = validatePlayers(playerEntries);
-  if (validPlayerEntries.errorCode !== ErrorCode.None) return ''
+  if (validPlayerEntries.errorCode !== ErrorCode.NONE) return ''
   
   // create the SQL query
   // update does not need to update squad_id
@@ -41,7 +41,7 @@ export const getInsertManySQL = (playerEntries: playerType[]) => {
 
   if (!playerEntries || playerEntries.length === 0) return ''
   const validPlayerEntries: validPlayersType = validatePlayers(playerEntries);
-  if (validPlayerEntries.errorCode !== ErrorCode.None) return ''
+  if (validPlayerEntries.errorCode !== ErrorCode.NONE) return ''
 
   const insertManySQL = 
     `INSERT INTO public."Player" (id, squad_id, first_name, last_name, average, lane, position) ` +
@@ -64,7 +64,7 @@ export const getDeleteManySQL = (playerEntries: playerType[]) => {
 
   if (!playerEntries || playerEntries.length === 0) return ''
   const validPlayerEntries: validPlayersType = validatePlayers(playerEntries);
-  if (validPlayerEntries.errorCode !== ErrorCode.None) return ''
+  if (validPlayerEntries.errorCode !== ErrorCode.NONE) return ''
 
   const deleteManySQL = 
     `DELETE FROM public."Player" ` +

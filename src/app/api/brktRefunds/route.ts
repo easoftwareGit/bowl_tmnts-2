@@ -2,9 +2,9 @@ import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { initBrktRefund } from "@/lib/db/initVals";
 import { brktRefundType } from "@/lib/types/types";
-import { ErrorCode } from "@/lib/validation";
+import { ErrorCode } from "@/lib/validation/validation";
 import { getErrorStatus } from "../errCodes";
-import { sanitizeBrktRefund, validateBrktRefund } from "./validate";
+import { sanitizeBrktRefund, validateBrktRefund } from "../../../lib/validation/brktRefunds/validate";
 
 // routes /api/brktRefunds
 
@@ -30,13 +30,13 @@ export async function POST(request: NextRequest) {
 
     const toPost = sanitizeBrktRefund(toCheck);
     const errCode = validateBrktRefund(toPost);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = 'missing data'
           break;
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = 'invalid data'
           break;        
         default:

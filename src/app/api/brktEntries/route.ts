@@ -2,8 +2,8 @@ import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { initBrktEntry } from "@/lib/db/initVals";
 import { brktEntryType } from "@/lib/types/types";
-import { sanitizeBrktEntry, validateBrktEntry } from "./validate";
-import { ErrorCode } from "@/lib/validation";
+import { sanitizeBrktEntry, validateBrktEntry } from "../../../lib/validation/brktEntries/validate";
+import { ErrorCode } from "@/lib/validation/validation";
 import { getErrorStatus } from "../errCodes";
 import { brktEntryDataForPrisma } from "./dataForPrisma";
 
@@ -12,10 +12,10 @@ import { brktEntryDataForPrisma } from "./dataForPrisma";
 const getErrMsg = (errorCode: ErrorCode) => {
   let errMsg: string;
   switch (errorCode) {
-    case ErrorCode.MissingData:
+    case ErrorCode.MISSING_DATA:
       errMsg = "missing data";
       break;
-    case ErrorCode.InvalidData:
+    case ErrorCode.INVALID_DATA:
       errMsg = "invalid data";
       break;
     default:
@@ -54,13 +54,13 @@ export const POST = async (request: NextRequest) => {
     }
 
     const sanitizedObj = sanitizeBrktEntry(toCheck);
-    if (sanitizedObj.errorCode !== ErrorCode.None) {
+    if (sanitizedObj.errorCode !== ErrorCode.NONE) {
       const errMsg = getErrMsg(sanitizedObj.errorCode);
       return NextResponse.json({ error: errMsg }, { status: 422 });
     }
     const toPost = sanitizedObj.brktEntry;
     const errCode = validateBrktEntry(toPost);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       const errMsg = getErrMsg(sanitizedObj.errorCode);
       return NextResponse.json( { error: errMsg }, { status: 422 } );
     }

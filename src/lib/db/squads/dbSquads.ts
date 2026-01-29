@@ -2,18 +2,18 @@ import axios from "axios";
 import { baseSquadsApi } from "@/lib/db/apiPaths";
 import { testBaseSquadsApi } from "../../../../test/testApi";
 import { oneBrktsAndSeedsType, squadType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { removeTimeFromISODateStr } from "@/lib/dateTools";
 import { blankSquad } from "../initVals";
-import { validateSquads } from "@/app/api/squads/validate";
+import { validateSquads } from "@/lib/validation/squads/validate";
 
 const url = testBaseSquadsApi.startsWith("undefined")
   ? baseSquadsApi
   : testBaseSquadsApi;  
-// const entriesUrl = url + '/entries/';
 const eventUrl = url + "/event/";
 const manyUrl = url + "/many";
 const squadUrl = url + "/squad/"; 
+// const stageUrl = url + "/stage/";
 const tmntUrl = url + "/tmnt/";
 const withSeedsUrl = url + "/withSeeds/";
    
@@ -35,8 +35,7 @@ export const extractSquads = (squads: any): squadType[] => {
     lane_count: squad.lane_count,
     starting_lane: squad.starting_lane,
     squad_date_str: removeTimeFromISODateStr(squad.squad_date),
-    squad_time: squad.squad_time,
-    finalized: squad.finalized,
+    squad_time: squad.squad_time,    
     sort_order: squad.sort_order,
   }));
 }
@@ -87,6 +86,92 @@ export const getAllOneBrktsAndSeedsForSquad = async (squadId: string): Promise<o
   return response.data.oneBrktsAndSeeds;
 }
 
+// /**
+//  * Get a squad for squad stage gets
+//  * 
+//  * @param squadId {string} - id of squad to get
+//  * @returns {squadType} - squad object with just stage data
+//  * @throws {Error} - if squadId is invalid or API call fails
+//  */
+// const getSquadStageSquad = async (squadId: string): Promise<squadType> => { 
+//   if (squadId == null || !isValidBtDbId(squadId, "sqd")) { 
+//     throw new Error("Invalid squad id");
+//   }
+//   let response;
+//   try {
+//     response = await axios.get(stageUrl + squadId, { withCredentials: true });    
+//   } catch (err) {
+//     throw new Error(`getSquadStage failed: ${err instanceof Error ? err.message : err}`);
+//   }
+//   if (response.status !== 200) { 
+//     throw new Error(`Unexpected status ${response.status} when fetching squad stage`)
+//   }    
+//   const stageData = response.data.squad;
+//   return stageData;  
+// }
+
+// export async function getSquadStage(squadId: string): Promise<justStageType>;
+// export async function getSquadStage(fullTmntData: tmntFullType): Promise<justStageType>;
+// /**
+//  * gets squad stage object
+//  * 
+//  * @param input {string | tmntFullType} - squad id or full tmnt data
+//  * @returns {justStageType} - squad stage object
+//  * @throws {Error} - if input is invalid or API call fails
+//  */
+// export async function getSquadStage(input: string | tmntFullType): Promise<justStageType> { 
+//   if (input == null) {
+//     throw new Error("Invalid squad id");
+//   }  
+//   const squadId: string | undefined =
+//     typeof input === "string"
+//       ? input
+//       : Array.isArray(input.squads)
+//         ? input.squads[0]?.id
+//         : undefined;
+//   if (squadId == null) { 
+//     throw new Error("Invalid squad id");
+//   }
+//   const squad = await getSquadStageSquad(squadId);
+//   return {
+//     id: squad.id,
+//     stage: squad.stage,
+//     stage_set_at: squad.stage_set_at,
+//     scores_started_at: squad.scores_started_at
+//   }
+// }
+
+// export async function getSquadStageOverride(squadId: string): Promise<justStageOverrideType>;
+// export async function getSquadStageOverride(fullTmntData: tmntFullType): Promise<justStageOverrideType>;
+// /**
+//  * gets squad override object
+//  * 
+//  * @param input {string | tmntFullType} - squad id or full tmnt data
+//  * @returns {justStageOverrideType} - squad override object
+//  * @throws {Error} - if input is invalid or API call fails
+//  */
+// export async function getSquadStageOverride(input: string | tmntFullType): Promise<justStageOverrideType> { 
+//   if (input == null) {
+//     throw new Error("Invalid squad id");
+//   }  
+//   const squadId: string | undefined =
+//     typeof input === "string"
+//       ? input
+//       : Array.isArray(input.squads)
+//         ? input.squads[0]?.id
+//         : undefined;
+//   if (squadId == null) { 
+//     throw new Error("Invalid squad id");
+//   }  
+//   const squad = await getSquadStageSquad(squadId);
+//   return {
+//     id: squad.id,
+//     stage_override_enabled: squad.stage_override_enabled,
+//     stage_override_at: squad.stage_override_at,
+//     stage_override_reason: squad.stage_override_reason,
+//   }
+// }
+
 /**
  * post a new squad
  * 
@@ -121,7 +206,6 @@ export const postSquad = async (squad: squadType): Promise<squadType> => {
     starting_lane: dbSquad.starting_lane,        
     squad_date_str: removeTimeFromISODateStr(dbSquad.squad_date),        
     squad_time: dbSquad.squad_time,     
-    finalized: dbSquad.finalized,
     sort_order: dbSquad.sort_order,
   }
   return postedSquad
@@ -140,7 +224,7 @@ export const postManySquads = async (squads: squadType[]): Promise<number> => {
   }
   if (squads.length === 0) return 0; // not an error, just no data to post
   const validSquads = validateSquads(squads);
-  if (validSquads.errorCode !== ErrorCode.None
+  if (validSquads.errorCode !== ErrorCode.NONE
     || validSquads.squads.length !== squads.length)
   { 
     if (validSquads.squads.length === 0) {      
@@ -204,11 +288,130 @@ export const putSquad = async (squad: squadType): Promise<squadType> => {
     starting_lane: dbSquad.starting_lane,
     squad_date_str: removeTimeFromISODateStr(dbSquad.squad_date),
     squad_time: dbSquad.squad_time,
-    finalized: dbSquad.finalized,
     sort_order: dbSquad.sort_order,
   }
   return puttedSquad;
 }
+
+// export async function putSquadStage(squadStage: justStageType): Promise<justStageType> 
+// export async function putSquadStage(fullTmntData: tmntFullType): Promise<justStageType>  
+// /**
+//  * puts a squad stage
+//  * 
+//  * @param input {justStageType | tmntFullType} - squad stage to put or full tmnt data with squad
+//  * @returns {justStageType} - putted squad stage
+//  * @throws {Error} - if data is invalid or API call fails
+//  */
+// export async function putSquadStage(input: justStageType | tmntFullType): Promise<justStageType> { 
+//   if (input == null) {
+//     throw new Error("Invalid squad stage data");
+//   }
+
+//   let squadStage: justStageType;
+//   if (isSquadStageType(input)) {
+//     squadStage = input;
+//   } else if (isTmntFullType(input)) {
+//     if (input.squads == null || input.squads.length === 0) {
+//       throw new Error("Invalid squad stage data");
+//     }
+//     squadStage = {
+//       id: input.squads[0].id,
+//       stage: input.squads[0].stage,
+//       stage_set_at: input.squads[0].stage_set_at,
+//       scores_started_at: input.squads[0].scores_started_at,
+//     }
+//   }
+//   else {
+//     throw new Error("Invalid squad stage data");
+//   }
+
+//   if (squadStage.id == null || !isValidBtDbId(squadStage.id, "sqd")) { 
+//     throw new Error("Invalid squad id");
+//   }
+//   let response;
+//   try { 
+//     // further sanatation and validation done in PUT route
+//     const squadStageJSON = JSON.stringify(squadStage);
+//     response = await axios.patch(stageUrl + squadStage.id, squadStageJSON, {
+//       withCredentials: true
+//     });
+//   } catch (err) {
+//     throw new Error(`putSquadStage failed: ${err instanceof Error ? err.message : err}`);
+//   }
+//   if (response.status !== 200 || !response.data?.squad) {
+//     throw new Error("Error putting squad stage");
+//   }
+//   const dbSquad = response.data.squad // returns the upadte whole sqaud row
+//   const puttedSquadStage: justStageType = {
+//     id: dbSquad.id,
+//     stage: dbSquad.stage,
+//     stage_set_at: new Date(dbSquad.stage_set_at),
+//     scores_started_at: dbSquad.scores_started_at
+//       ? new Date(dbSquad.scores_started_at)
+//       : null,
+//   }
+//   return puttedSquadStage;
+// }
+
+// export async function putSquadStageOverride(squadStageOverride: justStageOverrideType): Promise<justStageOverrideType> 
+// export async function putSquadStageOverride(fullTmntData: tmntFullType): Promise<justStageOverrideType>  
+// /**
+//  * puts a squad stage
+//  * 
+//  * @param input {justStageOverrideType | tmntFullType} - squad stage to put or full tmnt data with squad
+//  * @returns {justStageType} - putted squad stage
+//  * @throws {Error} - if data is invalid or API call fails
+//  */
+// export async function putSquadStageOverride(input: justStageOverrideType | tmntFullType): Promise<justStageOverrideType> { 
+//   if (input == null) {
+//     throw new Error("Invalid squad stage override data");
+//   }
+
+//   let squadStageOverride: justStageOverrideType;
+//   if (isSquadStageOverrideType(input)) {
+//     squadStageOverride = input;
+//   } else if (isTmntFullType(input)) {
+//     if (input.squads == null || input.squads.length === 0) {
+//       throw new Error("Invalid squad stage override data");
+//     }
+//     squadStageOverride = {
+//       id: input.squads[0].id,
+//       stage_override_enabled: input.squads[0].stage_override_enabled,
+//       stage_override_at: input.squads[0].stage_override_at,
+//       stage_override_reason: input.squads[0].stage_override_reason,
+//     }
+//   }
+//   else {
+//     throw new Error("Invalid squad stage override data");
+//   }
+
+//   if (squadStageOverride.id == null || !isValidBtDbId(squadStageOverride.id, "sqd")) { 
+//     throw new Error("Invalid squad id");
+//   }
+//   let response;
+//   try { 
+//     // further sanatation and validation done in PUT route
+//     const squadStageOverrideJSON = JSON.stringify(squadStageOverride);
+//     response = await axios.patch(stageUrl + squadStageOverride.id, squadStageOverrideJSON, {
+//       withCredentials: true
+//     });
+//   } catch (err) {
+//     throw new Error(`putSquadStageOverride failed: ${err instanceof Error ? err.message : err}`);
+//   }
+//   if (response.status !== 200 || !response.data?.squad) {
+//     throw new Error("Error putting squad stage override");
+//   }
+//   const dbSquad = response.data.squad // returns the upadte whole sqaud row
+//   const puttedSquadStageOverride: justStageOverrideType = {
+//     id: dbSquad.id,
+//     stage_override_enabled: dbSquad.stage_override_enabled,
+//     stage_override_at: dbSquad.stage_override_at 
+//       ? new Date(dbSquad.stage_override_at)
+//       : null,
+//     stage_override_reason: dbSquad.stage_override_reason,
+//   }
+//   return puttedSquadStageOverride;
+// }
 
 /**
  * deletes a squad
@@ -283,3 +486,7 @@ export const deleteAllSquadsForTmnt = async (tmntId: string): Promise<number> =>
   }
   return response.data.count
 }
+
+// export const exportedForTesting = {
+//   getSquadStageSquad
+// }

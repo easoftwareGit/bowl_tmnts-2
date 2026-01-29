@@ -2,9 +2,9 @@ import axios from "axios";
 import { basePotEntriesApi } from "@/lib/db/apiPaths";
 import { testBasePotEntriesApi } from "../../../../test/testApi";
 import { potEntryType, putManyReturnType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { blankPotEntry, noUpdates } from "../initVals";
-import { validatePotEntries } from "@/app/api/potEntries/validate";
+import { validatePotEntries } from "@/lib/validation/potEntries/validate";
 
 const url = testBasePotEntriesApi.startsWith("undefined")
   ? basePotEntriesApi
@@ -139,7 +139,7 @@ export const postManyPotEntries = async (potEntries: potEntryType[]): Promise<nu
   }
   if (potEntries.length === 0) return 0; // not an error, just no potEntries to post
   const validPotEntries = validatePotEntries(potEntries);
-  if (validPotEntries.errorCode !== ErrorCode.None
+  if (validPotEntries.errorCode !== ErrorCode.NONE
     || validPotEntries.potEntries.length !== potEntries.length)
   { 
     if (validPotEntries.potEntries.length === 0) {      

@@ -1,4 +1,4 @@
-import { isEven, isOdd } from "@/lib/validation";
+import { isEven, isOdd } from "@/lib/validation/validation";
 import { BracketList } from "./bracketListClass";
 import { btDbUuid } from "@/lib/uuid";
 import { shuffleArray } from "@/lib/tools";

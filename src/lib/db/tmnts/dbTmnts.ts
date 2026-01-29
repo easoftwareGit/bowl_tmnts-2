@@ -2,7 +2,7 @@ import axios from "axios";
 import { baseTmntsApi } from "@/lib/db/apiPaths";
 import { testBaseTmntsApi } from "../../../../test/testApi";
 import { tmntFullType, tmntsListType, tmntType, YearObj } from "@/lib/types/types";
-import { isOdd, isValidBtDbId, validYear } from "@/lib/validation";
+import { isOdd, isValidBtDbId, validYear } from "@/lib/validation/validation";
 import { removeTimeFromISODateStr, todayYearStr } from "@/lib/dateTools";
 import { blankTmnt, linkedInitTmntFullData } from "../initVals";
 import { extractEvents } from "../events/dbEvents";

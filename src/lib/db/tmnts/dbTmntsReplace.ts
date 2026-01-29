@@ -2,7 +2,7 @@ import axios from "axios";
 import { baseTmntsApi } from "@/lib/db/apiPaths";
 import { testBaseTmntsApi } from "../../../../test/testApi";
 import { tmntFullType } from "@/lib/types/types";
-import { ErrorCode } from "@/lib/validation";
+import { ErrorCode } from "@/lib/validation/validation";
 import { validateFullTmnt } from "@/app/api/tmnts/full/validate";
 
 const url = testBaseTmntsApi.startsWith("undefined")
@@ -24,7 +24,7 @@ export const replaceTmntFullData = async (
     throw new Error("invalid tmntFullData data");
   }
   const validateResult = validateFullTmnt(tmntFullData);
-  if (validateResult.errorCode !== ErrorCode.None) {
+  if (validateResult.errorCode !== ErrorCode.NONE) {
     throw new Error(validateResult.message);
   }
   
@@ -59,7 +59,7 @@ export const replaceTmntEntriesData = async (
     throw new Error("invalid tmntFullData data");
   }
   const validateResult = validateFullTmnt(tmntFullData);
-  if (validateResult.errorCode !== ErrorCode.None) {
+  if (validateResult.errorCode !== ErrorCode.NONE) {
     throw new Error(validateResult.message);
   }
   

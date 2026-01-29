@@ -1,5 +1,5 @@
-import { validGames } from "@/app/api/squads/validate"
-import { isValidBtDbId } from "@/lib/validation"
+import { validGames } from "@/lib/validation/squads/validate"
+import { isValidBtDbId } from "@/lib/validation/validation"
 
 const getSumsForGames = (squadGames: number) => {
   let sumSQL = ''

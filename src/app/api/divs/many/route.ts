@@ -1,8 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode } from "@/lib/validation";
+import { ErrorCode } from "@/lib/validation/validation";
 import { divDataType, divType, HdcpForTypes } from "@/lib/types/types";
-import { validateDivs } from "../validate";
+import { validateDivs } from "../../../../lib/validation/divs/validate";
 import { getErrorStatus } from "../../errCodes";
 import { divDataForPrisma } from "../dataForPrisma";
 
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     }
     // sanitize and validate divs
     const validDivs = validateDivs(divs); // need to use await! or else returns a promise
-    if (validDivs.errorCode !== ErrorCode.None) {
+    if (validDivs.errorCode !== ErrorCode.NONE) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
 

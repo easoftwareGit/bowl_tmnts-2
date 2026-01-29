@@ -1,6 +1,6 @@
 import axios from "axios";
 import { doCompare, doHash } from "@/lib/hash";
-import { bcryptLength, maxToHashLength } from "@/lib/validation";
+import { bcryptLength, maxToHashLength } from "@/lib/validation/validation";
 import { baseUsersApi } from "@/lib/db/apiPaths";
 import { testBaseUsersApi } from "../testApi";
 

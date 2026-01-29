@@ -1,7 +1,12 @@
 import { playerEntryData } from "@/app/dataEntry/playersForm/createColumns";
 import { Bracket } from "@/components/brackets/bracketClass"
-import { BracketList, initBrktCountsType, playerUsedType } from "@/components/brackets/bracketListClass"
-import { maxBrackets } from "@/lib/validation";
+import {
+  BracketList,
+  initBrktCountsType,
+  playerUsedType, 
+  matchTestCodes
+} from "@/components/brackets/bracketListClass"
+import { maxBrackets } from "@/lib/validation/validation";
 import { cloneDeep } from "lodash";
 
 describe('BracketList', () => { 
@@ -1027,14 +1032,6 @@ describe('BracketList', () => {
       // // from proof of concept
       // // 8 players x 7 brackets each
       // const poc_shuffledEntries: string[] = ['Chad', 'Ed', 'Bob', 'Fred', 'Don', 'Hal', 'Al', 'Fred', 'Greg', 'Al', 'Bob', 'Chad', 'Don', 'Hal', 'Hal', 'Fred', 'Ed', 'Al', 'Bob', 'Greg', 'Don', 'Ed', 'Hal', 'Bob', 'Chad', 'Al', 'Chad', 'Don', 'Greg', 'Ed', 'Chad', 'Don', 'Hal', 'Bob', 'Fred', 'Al', 'Fred', 'Greg', 'Hal', 'Ed', 'Al', 'Chad', 'Bob', 'Greg', 'Don', 'Fred', 'Al', 'Ed', 'Greg', 'Don', 'Bob', 'Hal', 'Ed', 'Greg', 'Chad', 'Fred'];
-
-      // enum matchTestCodes {
-      //   Valid = 0,
-      //   Used = -1,
-      //   Self = -2,
-      //   Past = -3,    
-      //   Prior = -4,  
-      // }
       
       // let poc_shuffledEntriesObj: playerUsedType[];
 
@@ -1078,62 +1075,62 @@ describe('BracketList', () => {
                 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Chad');
       //   let result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;        
       //   oppoMap.delete(poc_shuffledEntriesObj[i].playerId);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Ed');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   oppoMap.delete(poc_shuffledEntriesObj[i].playerId);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Bob');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   oppoMap.delete(poc_shuffledEntriesObj[i].playerId);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Fred');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   oppoMap.delete(poc_shuffledEntriesObj[i].playerId);
       //   i++;
         
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Don');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   oppoMap.delete(poc_shuffledEntriesObj[i].playerId);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Hal');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   oppoMap.delete(poc_shuffledEntriesObj[i].playerId);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Al');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Self);
+      //   expect(result).toBe(matchTestCodes.SELF);
       //   poc_shuffledEntriesObj[i].used = true;
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Fred');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Prior);
+      //   expect(result).toBe(matchTestCodes.PRIOR);
       //   // DO NOT SET poc_shuffledEntriesObj[i].used = true
       //   let iRestart = i;
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Greg');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   oppoMap.delete(poc_shuffledEntriesObj[i].playerId);
         
@@ -1154,86 +1151,86 @@ describe('BracketList', () => {
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Fred');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   oppoMap.delete(poc_shuffledEntriesObj[i].playerId);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Greg');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Used);
+      //   expect(result).toBe(matchTestCodes.USED);
       //   expect(poc_shuffledEntriesObj[i].used).toBe(true);
       //   // this greg index alread used
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Al');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Past);
+      //   expect(result).toBe(matchTestCodes.PAST);
       //   poc_shuffledEntriesObj[i].used = true;
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Bob');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Self);
+      //   expect(result).toBe(matchTestCodes.SELF);
       //   poc_shuffledEntriesObj[i].used = true;
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Chad');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   oppoMap.delete(poc_shuffledEntriesObj[i].playerId);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Don');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   oppoMap.delete(poc_shuffledEntriesObj[i].playerId);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Hal');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   oppoMap.delete(poc_shuffledEntriesObj[i].playerId);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Hal');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Prior);
+      //   expect(result).toBe(matchTestCodes.PRIOR);
       //   // DO NOT SET poc_shuffledEntriesObj[i].used = true
       //   iRestart = i;
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Fred');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Prior);
+      //   expect(result).toBe(matchTestCodes.PRIOR);
       //   // DO NOT SET poc_shuffledEntriesObj[i].used = true
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Ed');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   oppoMap.delete(poc_shuffledEntriesObj[i].playerId);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Al');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Past);
+      //   expect(result).toBe(matchTestCodes.PAST);
       //   poc_shuffledEntriesObj[i].used = true;
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Bob');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Self);
+      //   expect(result).toBe(matchTestCodes.SELF);
       //   poc_shuffledEntriesObj[i].used = true;
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Greg');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   oppoMap.delete(poc_shuffledEntriesObj[i].playerId);
       //   i++;
@@ -1254,96 +1251,96 @@ describe('BracketList', () => {
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Hal');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   oppoMap.delete(poc_shuffledEntriesObj[i].playerId);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Fred');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   oppoMap.delete(poc_shuffledEntriesObj[i].playerId);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Ed');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Used);
+      //   expect(result).toBe(matchTestCodes.USED);
       //   expect(poc_shuffledEntriesObj[i].used).toBe(true);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Al');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Used);
+      //   expect(result).toBe(matchTestCodes.USED);
       //   expect(poc_shuffledEntriesObj[i].used).toBe(true);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Bob');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Used);
+      //   expect(result).toBe(matchTestCodes.USED);
       //   expect(poc_shuffledEntriesObj[i].used).toBe(true);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Greg');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Used);
+      //   expect(result).toBe(matchTestCodes.USED);
       //   expect(poc_shuffledEntriesObj[i].used).toBe(true);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Don');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   oppoMap.delete(poc_shuffledEntriesObj[i].playerId);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Ed');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   oppoMap.delete(poc_shuffledEntriesObj[i].playerId);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Hal');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Prior);
+      //   expect(result).toBe(matchTestCodes.PRIOR);
       //   // DO NOT SET poc_shuffledEntriesObj[i].used = true
       //   iRestart = i;
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Bob');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Past);
+      //   expect(result).toBe(matchTestCodes.PAST);
       //   poc_shuffledEntriesObj[i].used = true;
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Chad');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Self);
+      //   expect(result).toBe(matchTestCodes.SELF);
       //   poc_shuffledEntriesObj[i].used = true;
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Al');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Past);
+      //   expect(result).toBe(matchTestCodes.PAST);
       //   poc_shuffledEntriesObj[i].used = true;
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Chad');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Self);
+      //   expect(result).toBe(matchTestCodes.SELF);
       //   poc_shuffledEntriesObj[i].used = true;
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Don');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Prior);
+      //   expect(result).toBe(matchTestCodes.PRIOR);
       //   poc_shuffledEntriesObj[i].used = true;
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Greg');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   oppoMap.delete(poc_shuffledEntriesObj[i].playerId);
       //   i++;
@@ -1378,105 +1375,105 @@ describe('BracketList', () => {
                 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Chad');
       //   let result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
         
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Ed');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Bob');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Fred');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Don');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Hal');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Al');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Self);
+      //   expect(result).toBe(matchTestCodes.SELF);
       //   poc_shuffledEntriesObj[i].used = true;
       //   // DO NOT call updateOppoMap as this is a self match
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Fred');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Greg');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
         
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Al');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Self);
+      //   expect(result).toBe(matchTestCodes.SELF);
       //   poc_shuffledEntriesObj[i].used = true;
       //   // DO NOT call updateOppoMap as this is a self match        
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Bob');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Chad');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Don');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Hal');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Hal');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Prior);
+      //   expect(result).toBe(matchTestCodes.PRIOR);
       //   // DO NOT SET poc_shuffledEntriesObj[i].used = true
       //   // DO NOT call updateOppoMap as this match is a prior match
       //   let iRestart = i;        
@@ -1484,35 +1481,35 @@ describe('BracketList', () => {
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Fred');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Prior);
+      //   expect(result).toBe(matchTestCodes.PRIOR);
       //   // DO NOT SET poc_shuffledEntriesObj[i].used = true
       //   // DO NOT call updateOppoMap as this match is a prior match
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Ed');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Al');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Self);
+      //   expect(result).toBe(matchTestCodes.SELF);
       //   poc_shuffledEntriesObj[i].used = true;
       //   // DO NOT call updateOppoMap as this is a self match
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Bob');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Prior);        
+      //   expect(result).toBe(matchTestCodes.PRIOR);        
       //   poc_shuffledEntriesObj[i].used = true;
       //   // DO NOT call updateOppoMap as this is a prior match
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Greg');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
@@ -1534,63 +1531,63 @@ describe('BracketList', () => {
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Hal');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Fred');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Ed');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Used);
+      //   expect(result).toBe(matchTestCodes.USED);
       //   expect(poc_shuffledEntriesObj[i].used).toBe(true);        
       //   // DO NOT call updateOppoMap as this is a used match
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Al');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Used);
+      //   expect(result).toBe(matchTestCodes.USED);
       //   expect(poc_shuffledEntriesObj[i].used).toBe(true);  
       //   // DO NOT call updateOppoMap as this is a used match
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Bob');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Used);
+      //   expect(result).toBe(matchTestCodes.USED);
       //   expect(poc_shuffledEntriesObj[i].used).toBe(true);  
       //   // DO NOT call updateOppoMap as this is a used match
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Greg');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Used);
+      //   expect(result).toBe(matchTestCodes.USED);
       //   expect(poc_shuffledEntriesObj[i].used).toBe(true);
       //   // DO NOT call updateOppoMap as this is a used match
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Don');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Ed');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Hal');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   iRestart = i;
@@ -1598,56 +1595,56 @@ describe('BracketList', () => {
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Bob');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Self);
+      //   expect(result).toBe(matchTestCodes.SELF);
       //   poc_shuffledEntriesObj[i].used = true;        
       //   // DO NOT call updateOppoMap as this is a self match
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Chad');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);        
+      //   expect(result).toBe(matchTestCodes.VALID);        
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Al');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Past);
+      //   expect(result).toBe(matchTestCodes.PAST);
       //   poc_shuffledEntriesObj[i].used = true;
       //   // DO NOT call updateOppoMap as this is a past match
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Chad');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Don');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Greg');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Ed');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Chad');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Prior);
+      //   expect(result).toBe(matchTestCodes.PRIOR);
       //   // DO NOT SET poc_shuffledEntriesObj[i].used = true
       //   // DO NOT call updateOppoMap as this is a prior match
       //   iRestart = i;        
@@ -1655,49 +1652,49 @@ describe('BracketList', () => {
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Don');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Prior);
+      //   expect(result).toBe(matchTestCodes.PRIOR);
       //   // DO NOT SET poc_shuffledEntriesObj[i].used = true
       //   // DO NOT call updateOppoMap as this is a prior match
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Hal');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Prior);
+      //   expect(result).toBe(matchTestCodes.PRIOR);
       //   // DO NOT SET poc_shuffledEntriesObj[i].used = true
       //   // DO NOT call updateOppoMap as this is a prior match
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Bob');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Self);
+      //   expect(result).toBe(matchTestCodes.SELF);
       //   poc_shuffledEntriesObj[i].used = true;
       //   // DO NOT call updateOppoMap as this is a self match
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Fred');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Al');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Past);        
+      //   expect(result).toBe(matchTestCodes.PAST);        
       //   poc_shuffledEntriesObj[i].used = true;
       //   // DO NOT call updateOppoMap as this is a past match
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Fred');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Prior);
+      //   expect(result).toBe(matchTestCodes.PRIOR);
       //   // DO NOT SET poc_shuffledEntriesObj[i].used = true
       //   // DO NOT call updateOppoMap as this is a prior match
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Greg');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
@@ -1718,98 +1715,98 @@ describe('BracketList', () => {
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Chad');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Self);
+      //   expect(result).toBe(matchTestCodes.SELF);
       //   poc_shuffledEntriesObj[i].used = true;
       //   // DO NOT call updateOppoMap as this is a self match
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Don');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Hal');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Bob');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Used);
+      //   expect(result).toBe(matchTestCodes.USED);
       //   // DO NOT SET poc_shuffledEntriesObj[i].used = true
       //   // DO NOT call updateOppoMap as this is a used match
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Fred');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Used);
+      //   expect(result).toBe(matchTestCodes.USED);
       //   // DO NOT SET poc_shuffledEntriesObj[i].used = true
       //   // DO NOT call updateOppoMap as this is a used match
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Al');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Used);
+      //   expect(result).toBe(matchTestCodes.USED);
       //   // DO NOT SET poc_shuffledEntriesObj[i].used = true
       //   // DO NOT call updateOppoMap as this is a used match
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Fred');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Greg');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Used);
+      //   expect(result).toBe(matchTestCodes.USED);
       //   // DO NOT SET poc_shuffledEntriesObj[i].used = true
       //   // DO NOT call updateOppoMap as this is a used match
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Hal');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Ed');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Al');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Past);
+      //   expect(result).toBe(matchTestCodes.PAST);
       //   poc_shuffledEntriesObj[i].used = true;
       //   // DO NOT call updateOppoMap as this is a past match
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Chad');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Self);
+      //   expect(result).toBe(matchTestCodes.SELF);
       //   poc_shuffledEntriesObj[i].used = true;
       //   // DO NOT call updateOppoMap as this is a self match
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Bob');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Past);
+      //   expect(result).toBe(matchTestCodes.PAST);
       //   poc_shuffledEntriesObj[i].used = true;
       //   // DO NOT call updateOppoMap as this is a past match
       //   i++;
 
       //   expect(poc_shuffledEntriesObj[i].playerId).toBe('Greg');
       //   result = testBracketList.matchTest(poc_shuffledEntriesObj[i], playerId, pastPlayersSet, oppoMap);
-      //   expect(result).toBe(matchTestCodes.Valid);
+      //   expect(result).toBe(matchTestCodes.VALID);
       //   poc_shuffledEntriesObj[i].used = true;
       //   testBracketList.updateOppoMap(poc_shuffledEntriesObj[i].playerId, oppoMap);        
       //   i++;
@@ -2909,14 +2906,6 @@ describe('BracketList', () => {
         // // from proof of concept
         // // 8 players x 7 brackets each
         // const poc_shuffledEntries: string[] = ['Chad', 'Ed', 'Bob', 'Fred', 'Don', 'Hal', 'Al', 'Fred', 'Greg', 'Al', 'Bob', 'Chad', 'Don', 'Hal', 'Hal', 'Fred', 'Ed', 'Al', 'Bob', 'Greg', 'Don', 'Ed', 'Hal', 'Bob', 'Chad', 'Al', 'Chad', 'Don', 'Greg', 'Ed', 'Chad', 'Don', 'Hal', 'Bob', 'Fred', 'Al', 'Fred', 'Greg', 'Hal', 'Ed', 'Al', 'Chad', 'Bob', 'Greg', 'Don', 'Fred', 'Al', 'Ed', 'Greg', 'Don', 'Bob', 'Hal', 'Ed', 'Greg', 'Chad', 'Fred'];
-
-        // enum matchTestCodes {
-        //   Valid = 0,
-        //   Used = -1,
-        //   Self = -2,
-        //   Past = -3,    
-        //   Prior = -4,  
-        // }
         
         // let poc_shuffledEntriesObj: playerUsedType[];
 

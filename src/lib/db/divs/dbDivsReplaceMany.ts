@@ -1,6 +1,6 @@
-import { validateDivs } from "@/app/api/divs/validate";
+import { validateDivs } from "@/lib/validation/divs/validate";
 import { divType, validDivsType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { deleteAllDivsForTmnt, postManyDivs } from "./dbDivs";
 
 /**
@@ -29,7 +29,7 @@ export const replaceManyDivs = async (
   }  
 
   const validDivs: validDivsType = validateDivs(divs);
-  if (validDivs.errorCode !== ErrorCode.None
+  if (validDivs.errorCode !== ErrorCode.NONE
     || validDivs.divs.length !== divs.length)
   { 
     if (validDivs.divs.length === 0) {      

@@ -2,8 +2,8 @@ import axios from "axios";
 import { brktSeedsApi } from "@/lib/db/apiPaths";
 import { testBrktSeedsApi } from "../../../../test/testApi";
 import { brktSeedType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
-import { validateBrktSeeds, validCompositKey } from "@/app/api/brktSeeds/validate";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import { validateBrktSeeds, validCompositKey } from "@/lib/validation/brktSeeds/validate";
 import { blankBrktSeed } from "../initVals";
 
 const url = testBrktSeedsApi.startsWith("undefined")
@@ -204,7 +204,7 @@ export const postManyBrktSeeds = async (brktSeeds: brktSeedType[]): Promise<numb
   }
   if (brktSeeds.length === 0) return 0; // no error, just no brktSeeds to post
   const validBrktSeeds = validateBrktSeeds(brktSeeds);
-  if (validBrktSeeds.errorCode !== ErrorCode.None
+  if (validBrktSeeds.errorCode !== ErrorCode.NONE
     || validBrktSeeds.brktSeeds.length !== brktSeeds.length)
   {
     if (validBrktSeeds.brktSeeds.length === 0) { 

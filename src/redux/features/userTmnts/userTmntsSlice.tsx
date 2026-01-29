@@ -44,7 +44,7 @@ export const deleteUserTmnt = createAsyncThunk(
   "userTmnts/deleteUserTmnt",
   async (tmntId: string) => {
     const errCode = await deleteTmnt(tmntId);    
-    if (errCode === ioDataError.None) {
+    if (errCode === ioDataError.NONE) {
       return tmntId;
     } else {
       return '';

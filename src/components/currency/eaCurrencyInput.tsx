@@ -7,7 +7,7 @@ import {
   zeroAmount,
   maxMoney,
   minFee,
-} from "@/lib/validation";
+} from "@/lib/validation/validation";
 
 interface EaCurrencyInputProps extends CurrencyInputProps {
   placeholder?: string;

@@ -4,11 +4,10 @@ import { testBaseSquadsApi, testBaseEventsApi } from "../../../testApi";
 import { eventType, squadType } from "@/lib/types/types";
 import { initEvent, initSquad } from "@/lib/db/initVals";
 import { removeTimeFromISODateStr, startOfDayFromString } from "@/lib/dateTools";
-import { deleteAllSquadsForTmnt, getAllSquadsForTmnt } from "@/lib/db/squads/dbSquads";
+import { deleteAllSquadsForTmnt, getAllSquadsForTmnt, postSquad } from "@/lib/db/squads/dbSquads";
 import { mockSquadsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { mockCurData } from "../../../mocks/tmnts/playerEntries/mockOneSquadEntries";
-import { cloneDeep } from "lodash";
-import { isValidBtDbId } from "@/lib/validation";
+import { isValidBtDbId, maxReasonLength } from "@/lib/validation/validation";
+import { SquadStage } from "@prisma/client";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -58,7 +57,19 @@ const testSquad: squadType = {
   games: 6,
   lane_count: 12,
   starting_lane: 29,
-  sort_order: 1,
+  sort_order: 1,     
+}  
+const DSquad: squadType = {
+  ...initSquad,
+  id: "sqd_12345618b3d44c0189c83f6ac5fd4ad6",
+  event_id: "evt_06055deb80674bd592a357a4716d8ef2",
+  squad_name: "D Squad",
+  squad_date_str: "2022-08-21",
+  squad_time: "07:00 PM",
+  games: 3,
+  lane_count: 12,
+  starting_lane: 29,
+  sort_order: 1,  
 }  
 
 const testPatchSquad = {
@@ -66,10 +77,10 @@ const testPatchSquad = {
   event_id: testSquad.event_id,
 }
 
-const deletePostedSquad = async () => {
+const deletePostedSquad = async (squad: squadType) => {
   const response = await axios.get(url);
   const squads = response.data.squads;
-  const toDel = squads.find((s: squadType) => s.squad_name === 'Test Squad');
+  const toDel = squads.find((s: squadType) => s.id === squad.id);
   if (toDel) {
     try {
       const delResponse = await axios({
@@ -83,15 +94,15 @@ const deletePostedSquad = async () => {
   }
 }
 
-const resetSquad = async () => { 
-  // make sure test user is reset in database
+const resetSquad = async (squad: squadType) => { 
+  // make sure test squad is reset in database
   try {
-    const squadJSON = JSON.stringify(testSquad);
+    const squadJSON = JSON.stringify(squad);
     const response = await axios({
       method: "put",
       data: squadJSON,
       withCredentials: true,
-      url: oneSquadUrl + testSquad.id,
+      url: oneSquadUrl + squad.id,
     })
   } catch (err) {
     if (err instanceof AxiosError) console.log(err.message);
@@ -128,10 +139,10 @@ const rePostSquad = async (squad: squadType) => {
 
 describe('Squads - API: /api/squads', () => { 
 
-  describe('GET', () => { 
+  describe('GET all squads API: /api/squads', () => { 
 
-    beforeAll(async () => {
-      await deletePostedSquad();
+    beforeAll(async () => {    
+      await deletePostedSquad(DSquad);
     })
 
     it('should get all squads', async () => { 
@@ -144,10 +155,6 @@ describe('Squads - API: /api/squads', () => {
   })
 
   describe('GET all squads for an event API: /api/squads/event/:eventId', () => { 
-
-    beforeAll(async () => {  
-      await deletePostedSquad();
-    })
 
     it('should get all squads for an event', async () => { 
       // const values taken from prisma/seed.ts
@@ -214,10 +221,6 @@ describe('Squads - API: /api/squads', () => {
   })
 
   describe('GET all squads for a tmnt API: /api/squads/tmnt/:tmntId', () => {
-
-    beforeAll(async () => {  
-      await deletePostedSquad();
-    })
 
     it('should get all squads for a tournament, 1 event, 2 squads', async () => {
       const tmntId = 'tmt_d9b1af944d4941f65b2d2d4ac160cdea'; // 1 event & 2 squads
@@ -353,6 +356,7 @@ describe('Squads - API: /api/squads', () => {
     })
   })
 
+  // // make sure to comment out these tests
   // describe('GET all entries for one squad API: /api/squads/entries/squad/:id', () => { 
     
   //   it('should get all entries for one squad', async () => {
@@ -449,8 +453,6 @@ describe('Squads - API: /api/squads', () => {
     // from prisma/seeds.ts
     const squadId = 'sqd_7116ce5f80164830830a7157eb093396';
     const brktId = 'brk_5109b54c2cc44ff9a3721de42c80c8c1';
-    const oneBrktId1 = 'obk_557f12f3875f42baa29fdbd22ee7f2f4';
-    const oneBrktId2 = 'obk_5423c16d58a948748f32c7c72c632297';
 
     it('should get squad one brkts and seeds', async () => { 
       const response = await axios.get(oneBrktsUrl + squadId);
@@ -505,10 +507,10 @@ describe('Squads - API: /api/squads', () => {
     })
   })  
 
-  describe('POST', () => {
+  describe('POST API: /api/squads', () => {
 
     const squadToPost: squadType = {
-      ...initSquad,      
+      ...initSquad,
       event_id: "evt_c0b2bb31d647414a9bea003bd835f3a0",
       squad_name: "Test Squad",
       squad_date_str: '2023-02-02',
@@ -522,7 +524,7 @@ describe('Squads - API: /api/squads', () => {
     let createdSquad = false;
 
     beforeAll(async () => {
-      await deletePostedSquad();
+      await deletePostedSquad(squadToPost);
     })
 
     beforeEach(() => {
@@ -531,11 +533,11 @@ describe('Squads - API: /api/squads', () => {
 
     afterEach(async () => {
       if (createdSquad) {
-        await deletePostedSquad();
+        await deletePostedSquad(squadToPost);
       }
     })
 
-    it('should create a new squad', async () => { 
+    it('should create a new squad', async () => {
       const squadJSON = JSON.stringify(squadToPost);
       const response = await axios({
         method: "post",
@@ -553,9 +555,10 @@ describe('Squads - API: /api/squads', () => {
       expect(postedSquad.id).toBe(squadToPost.id);
       expect(postedSquad.lane_count).toBe(squadToPost.lane_count);
       expect(postedSquad.starting_lane).toBe(squadToPost.starting_lane);
+      expect(postedSquad.squad_time).toBe(squadToPost.squad_time);
       expect(postedSquad.sort_order).toBe(squadToPost.sort_order);
-    })      
-    it('should create a new squad without a squad time', async () => { 
+    })
+    it('should create a new squad without a squad time', async () => {
       const noTimeSuqd = {
         ...squadToPost,
         squad_time: '',
@@ -572,10 +575,10 @@ describe('Squads - API: /api/squads', () => {
       createdSquad = true;
       expect(postedSquad.squad_time).toBe('');
     })
-    it('should NOT create a new squad when id is blank', async () => { 
+    it('should NOT create a new squad when id is blank', async () => {
       const invalidSquad = {
         ...squadToPost,
-        id: '',        
+        id: '',
       }
       const squadJSON = JSON.stringify(invalidSquad);
       try {
@@ -594,10 +597,10 @@ describe('Squads - API: /api/squads', () => {
         }
       }
     })
-    it('should NOT create a new squad when event_id is blank', async () => { 
+    it('should NOT create a new squad when event_id is blank', async () => {
       const invalidSquad = {
         ...squadToPost,
-        event_id: '',        
+        event_id: '',
       }
       const squadJSON = JSON.stringify(invalidSquad);
       try {
@@ -616,10 +619,10 @@ describe('Squads - API: /api/squads', () => {
         }
       }
     })
-    it('should NOT create a new squad when squad_name is blank', async () => { 
+    it('should NOT create a new squad when squad_name is blank', async () => {
       const invalidSquad = {
         ...squadToPost,
-        squad_name: '',        
+        squad_name: '',
       }
       const squadJSON = JSON.stringify(invalidSquad);
       try {
@@ -638,7 +641,7 @@ describe('Squads - API: /api/squads', () => {
         }
       }
     })
-    it('should NOT create a new squad when squad_date_str is blank', async () => { 
+    it('should NOT create a new squad when squad_date_str is blank', async () => {
       const invalidSquad = {
         ...squadToPost,
         squad_date_str: '',
@@ -660,10 +663,10 @@ describe('Squads - API: /api/squads', () => {
         }
       }
     })
-    it('should NOT create a new squad when games is null', async () => { 
+    it('should NOT create a new squad when games is null', async () => {
       const invalidSquad = {
         ...squadToPost,
-        games: null as any,        
+        games: null as any,
       }
       const squadJSON = JSON.stringify(invalidSquad);
       try {
@@ -685,7 +688,7 @@ describe('Squads - API: /api/squads', () => {
     it('should NOT create a new squad when lane_count is null', async () => {
       const invalidSquad = {
         ...squadToPost,
-        lane_count: null as any,                
+        lane_count: null as any,
       }
       const squadJSON = JSON.stringify(invalidSquad);
       try {
@@ -704,10 +707,10 @@ describe('Squads - API: /api/squads', () => {
         }
       }
     })
-    it('should NOT create a new squad when starting_lane is null', async () => { 
+    it('should NOT create a new squad when starting_lane is null', async () => {
       const invalidSquad = {
         ...squadToPost,
-        starting_lane: null as any,        
+        starting_lane: null as any,
       }
       const squadJSON = JSON.stringify(invalidSquad);
       try {
@@ -726,10 +729,10 @@ describe('Squads - API: /api/squads', () => {
         }
       }
     })
-    it('should NOT create a new squad when sort_order is null', async () => { 
+    it('should NOT create a new squad when sort_order is null', async () => {
       const invalidSquad = {
         ...squadToPost,
-        sort_order: null as any,        
+        sort_order: null as any,
       }
       const squadJSON = JSON.stringify(invalidSquad);
       try {
@@ -747,8 +750,8 @@ describe('Squads - API: /api/squads', () => {
           expect(true).toBeFalsy();
         }
       }
-    })
-    it('should NOT create a new squad when id is invalid', async () => { 
+    });
+    it('should NOT create a new squad when id is invalid', async () => {
       const invalidSquad = {
         ...squadToPost,
         id: 'invalid',
@@ -770,7 +773,7 @@ describe('Squads - API: /api/squads', () => {
         }
       }
     })
-    it('should NOT create a new squad when id is valid, but not a squad id', async () => { 
+    it('should NOT create a new squad when id is valid, but not a squad id', async () => {
       const invalidSquad = {
         ...squadToPost,
         id: nonSquadId,
@@ -792,10 +795,10 @@ describe('Squads - API: /api/squads', () => {
         }
       }
     })
-    it('should NOT create a new squad when event_id is invalid', async () => { 
+    it('should NOT create a new squad when event_id is invalid', async () => {
       const invalidSquad = {
         ...squadToPost,
-        event_id: 'invalid',        
+        event_id: 'invalid',
       }
       const squadJSON = JSON.stringify(invalidSquad);
       try {
@@ -814,10 +817,10 @@ describe('Squads - API: /api/squads', () => {
         }
       }
     })
-    it('should NOT create a new squad when event_id is valid, but not an event id', async () => { 
+    it('should NOT create a new squad when event_id is valid, but not an event id', async () => {
       const invalidSquad = {
         ...squadToPost,
-        event_id: nonSquadId,        
+        event_id: nonSquadId,
       }
       const squadJSON = JSON.stringify(invalidSquad);
       try {
@@ -836,10 +839,10 @@ describe('Squads - API: /api/squads', () => {
         }
       }
     })
-    it('should NOT create a new squad when event_id does not exist', async () => { 
+    it('should NOT create a new squad when event_id does not exist', async () => {
       const invalidSquad = {
         ...squadToPost,
-        event_id: notfoundEventId,        
+        event_id: notfoundEventId,
       }
       const squadJSON = JSON.stringify(invalidSquad);
       try {
@@ -858,10 +861,10 @@ describe('Squads - API: /api/squads', () => {
         }
       }
     })
-    it('should NOT create a new squad when squad_name_str is too long', async () => { 
+    it('should NOT create a new squad when squad_name_str is too long', async () => {
       const invalidSquad = {
         ...squadToPost,
-        squad_name: 'a'.repeat(51),        
+        squad_name: 'a'.repeat(51),
       }
       const squadJSON = JSON.stringify(invalidSquad);
       try {
@@ -880,7 +883,7 @@ describe('Squads - API: /api/squads', () => {
         }
       }
     })
-    it('should NOT create a new squad when squad_date_str is too far in the past', async () => { 
+    it('should NOT create a new squad when squad_date_str is too far in the past', async () => {
       const invalidSquad = {
         ...squadToPost,
         squad_date_str: '1800-11-01'
@@ -899,10 +902,10 @@ describe('Squads - API: /api/squads', () => {
           expect(err.response?.status).toBe(422);
         } else {
           expect(true).toBeFalsy();
-        } 
+        }
       }
     })
-    it('should NOT create a new squad when squad_date_str is too far in the future', async () => { 
+    it('should NOT create a new squad when squad_date_str is too far in the future', async () => {
       const invalidSquad = {
         ...squadToPost,
         squad_date_str: '2300-11-01',
@@ -921,10 +924,10 @@ describe('Squads - API: /api/squads', () => {
           expect(err.response?.status).toBe(422);
         } else {
           expect(true).toBeFalsy();
-        } 
+        }
       }
     })
-    it('should NOT create a new squad when squad_date_str is not a valid day', async () => { 
+    it('should NOT create a new squad when squad_date_str is not a valid day', async () => {
       const invalidSquad = {
         ...squadToPost,
         squad_date_str: '20/20/2024',
@@ -943,10 +946,10 @@ describe('Squads - API: /api/squads', () => {
           expect(err.response?.status).toBe(422);
         } else {
           expect(true).toBeFalsy();
-        } 
+        }
       }
     })
-    it('should create a new squad when squad_date_str is a valid date in DD/MM/YYY format', async () => { 
+    it('should create a new squad when squad_date_str is a valid date in DD/MM/YYY format', async () => {
       const invalidSquad = {
         ...squadToPost,
         squad_date_str: '10/20/2024',
@@ -964,7 +967,7 @@ describe('Squads - API: /api/squads', () => {
       expect(postedSquad.event_id).toBe(squadToPost.event_id);
       expect(removeTimeFromISODateStr(postedSquad.squad_date)).toBe('2024-10-20');
     })
-    it('should NOT create a new squad when squad_date is invalid date', async () => { 
+    it('should NOT create a new squad when squad_date is invalid date', async () => {
       const invalidSquad = {
         ...squadToPost,
         squad_date_str: 'testing',
@@ -983,13 +986,13 @@ describe('Squads - API: /api/squads', () => {
           expect(err.response?.status).toBe(422);
         } else {
           expect(true).toBeFalsy();
-        } 
+        }
       }
     })
-    it('should NOT create a new squad when squad_time is invalid', async () => { 
+    it('should NOT create a new squad when squad_time is invalid', async () => {
       const invalidSquad = {
         ...squadToPost,
-        squad_time: '13:00 PM',   
+        squad_time: '13:00 PM',
       }
       const squadJSON = JSON.stringify(invalidSquad);
       try {
@@ -1005,13 +1008,13 @@ describe('Squads - API: /api/squads', () => {
           expect(err.response?.status).toBe(422);
         } else {
           expect(true).toBeFalsy();
-        } 
+        }
       }
     })
-    it('should NOT create a new squad when games is too small', async () => { 
+    it('should NOT create a new squad when games is too small', async () => {
       const invalidSquad = {
         ...squadToPost,
-        games: 0,   
+        games: 0,
       }
       const squadJSON = JSON.stringify(invalidSquad);
       try {
@@ -1027,13 +1030,13 @@ describe('Squads - API: /api/squads', () => {
           expect(err.response?.status).toBe(422);
         } else {
           expect(true).toBeFalsy();
-        } 
+        }
       }
     })
-    it('should NOT create a new squad when games is too large', async () => { 
+    it('should NOT create a new squad when games is too large', async () => {
       const invalidSquad = {
         ...squadToPost,
-        games: 100,   
+        games: 100,
       }
       const squadJSON = JSON.stringify(invalidSquad);
       try {
@@ -1049,13 +1052,13 @@ describe('Squads - API: /api/squads', () => {
           expect(err.response?.status).toBe(422);
         } else {
           expect(true).toBeFalsy();
-        } 
+        }
       }
     })
-    it('should NOT create a new squad when games is not an integer', async () => { 
+    it('should NOT create a new squad when games is not an integer', async () => {
       const invalidSquad = {
         ...squadToPost,
-        games: 5.5,   
+        games: 5.5,
       }
       const squadJSON = JSON.stringify(invalidSquad);
       try {
@@ -1071,57 +1074,13 @@ describe('Squads - API: /api/squads', () => {
           expect(err.response?.status).toBe(422);
         } else {
           expect(true).toBeFalsy();
-        } 
+        }
       }
     })
-    it('should NOT create a new squad when starting_lane is too small', async () => { 
+    it('should NOT create a new squad when starting_lane is too small', async () => {
       const invalidSquad = {
         ...squadToPost,
-        starting_lane: 0,   
-      }
-      const squadJSON = JSON.stringify(invalidSquad);
-      try {
-        const response = await axios({
-          method: "post",
-          data: squadJSON,
-          withCredentials: true,
-          url: url
-        })  
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        } 
-      }
-    })
-    it('should NOT create a new squad when starting_lane is too large', async () => { 
-      const invalidSquad = {
-        ...squadToPost,
-        starting_lane: 201,   
-      } 
-      const squadJSON = JSON.stringify(invalidSquad);
-      try {
-        const response = await axios({
-          method: "post",
-          data: squadJSON,
-          withCredentials: true,
-          url: url
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        } 
-      }
-    })
-    it('should NOT create a new squad when starting_lane is even', async () => { 
-      const invalidSquad = {
-        ...squadToPost,
-        starting_lane: 2,   
+        starting_lane: 0,
       }
       const squadJSON = JSON.stringify(invalidSquad);
       try {
@@ -1137,13 +1096,13 @@ describe('Squads - API: /api/squads', () => {
           expect(err.response?.status).toBe(422);
         } else {
           expect(true).toBeFalsy();
-        } 
+        }
       }
     })
-    it('should NOT create a new squad when starting_lane is not an integer', async () => { 
+    it('should NOT create a new squad when starting_lane is too large', async () => {
       const invalidSquad = {
         ...squadToPost,
-        starting_lane: 1.4,   
+        starting_lane: 201,
       }
       const squadJSON = JSON.stringify(invalidSquad);
       try {
@@ -1159,13 +1118,13 @@ describe('Squads - API: /api/squads', () => {
           expect(err.response?.status).toBe(422);
         } else {
           expect(true).toBeFalsy();
-        } 
+        }
       }
     })
-    it('should NOT create a new squad when lane_count is too small', async () => { 
+    it('should NOT create a new squad when starting_lane is even', async () => {
       const invalidSquad = {
         ...squadToPost,
-        lane_count: 0,   
+        starting_lane: 2,
       }
       const squadJSON = JSON.stringify(invalidSquad);
       try {
@@ -1181,13 +1140,13 @@ describe('Squads - API: /api/squads', () => {
           expect(err.response?.status).toBe(422);
         } else {
           expect(true).toBeFalsy();
-        } 
+        }
       }
     })
-    it('should NOT create a new squad when lane_count is too large', async () => { 
+    it('should NOT create a new squad when starting_lane is not an integer', async () => {
       const invalidSquad = {
         ...squadToPost,
-        lane_count: 202,   
+        starting_lane: 1.4,
       }
       const squadJSON = JSON.stringify(invalidSquad);
       try {
@@ -1203,13 +1162,13 @@ describe('Squads - API: /api/squads', () => {
           expect(err.response?.status).toBe(422);
         } else {
           expect(true).toBeFalsy();
-        } 
+        }
       }
     })
-    it('should NOT create a new squad when lane_count is odd', async () => { 
+    it('should NOT create a new squad when lane_count is too small', async () => {
       const invalidSquad = {
         ...squadToPost,
-        lane_count: 3,   
+        lane_count: 0,
       }
       const squadJSON = JSON.stringify(invalidSquad);
       try {
@@ -1225,13 +1184,13 @@ describe('Squads - API: /api/squads', () => {
           expect(err.response?.status).toBe(422);
         } else {
           expect(true).toBeFalsy();
-        } 
+        }
       }
     })
-    it('should NOT create a new squad when lane_count is not an integer', async () => { 
+    it('should NOT create a new squad when lane_count is too large', async () => {
       const invalidSquad = {
         ...squadToPost,
-        lane_count: 3.3,   
+        lane_count: 202,
       }
       const squadJSON = JSON.stringify(invalidSquad);
       try {
@@ -1247,13 +1206,13 @@ describe('Squads - API: /api/squads', () => {
           expect(err.response?.status).toBe(422);
         } else {
           expect(true).toBeFalsy();
-        } 
+        }
       }
     })
-    it('should NOT create a new squad when sort_order is too small', async () => { 
+    it('should NOT create a new squad when lane_count is odd', async () => {
       const invalidSquad = {
         ...squadToPost,
-        sort_order: 0,   
+        lane_count: 3,
       }
       const squadJSON = JSON.stringify(invalidSquad);
       try {
@@ -1269,7 +1228,51 @@ describe('Squads - API: /api/squads', () => {
           expect(err.response?.status).toBe(422);
         } else {
           expect(true).toBeFalsy();
-        } 
+        }
+      }
+    })
+    it('should NOT create a new squad when lane_count is not an integer', async () => {
+      const invalidSquad = {
+        ...squadToPost,
+        lane_count: 3.3,
+      }
+      const squadJSON = JSON.stringify(invalidSquad);
+      try {
+        const response = await axios({
+          method: "post",
+          data: squadJSON,
+          withCredentials: true,
+          url: url
+        })
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should NOT create a new squad when sort_order is too small', async () => {
+      const invalidSquad = {
+        ...squadToPost,
+        sort_order: 0,
+      }
+      const squadJSON = JSON.stringify(invalidSquad);
+      try {
+        const response = await axios({
+          method: "post",
+          data: squadJSON,
+          withCredentials: true,
+          url: url
+        })
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
       }
     })
     it('should NOT create a new squad when sort_order is too large', async () => {
@@ -1294,7 +1297,7 @@ describe('Squads - API: /api/squads', () => {
         }
       }
     })
-    it('should not create a new squad when event_id + squad_name is not unique', async () => { 
+    it('should not create a new squad when event_id + squad_name is not unique', async () => {
       const invalidSquad = {
         ...squadToPost,
         event_id: event2Id,
@@ -1317,12 +1320,12 @@ describe('Squads - API: /api/squads', () => {
         }
       }
     })
-    it('should create a new squad with sanitized data', async () => { 
+    it('should create a new squad with sanitized data', async () => {
       const toSanitizeSquad = {
         ...squadToPost,
         squad_name: "    <script>" + squadToPost.squad_name + "</script>   ",
       }
-      const squadJSON = JSON.stringify(toSanitizeSquad);      
+      const squadJSON = JSON.stringify(toSanitizeSquad);
       const response = await axios({
         method: "post",
         data: squadJSON,
@@ -1333,9 +1336,8 @@ describe('Squads - API: /api/squads', () => {
       const postedSquad = response.data.squad;
       createdSquad = true;
       expect(postedSquad.squad_name).toBe(squadToPost.squad_name);
-    })
-
-  })
+    });
+  });
 
   describe('POST many squads API: /api/squads/many', () => { 
 
@@ -1373,6 +1375,9 @@ describe('Squads - API: /api/squads', () => {
         expect(true).toBeFalsy();
         return;
       }
+
+      // check new properties, and start_date 
+
       expect(postedSquads.length).toEqual(mockSquadsToPost.length);
       for (let i = 0; i < postedSquads.length; i++) {
         expect(postedSquads[i].id).toEqual(mockSquadsToPost[i].id);
@@ -1485,7 +1490,7 @@ describe('Squads - API: /api/squads', () => {
     })
   })
 
-  describe('PUT by ID - API: /api/squads/squad/[id]', () => { 
+  describe('PUT by ID - API: /api/squads/squad/:id', () => { 
 
     const putSquad = {
       ...testSquad,      
@@ -1512,11 +1517,11 @@ describe('Squads - API: /api/squads', () => {
     }
 
     beforeAll(async () => {
-      await resetSquad();
+      await resetSquad(testSquad);
     })
 
     afterEach(async () => {
-      await resetSquad();
+      await resetSquad(testSquad);
     })
 
     it('should update a squad by ID', async () => {
@@ -2196,14 +2201,14 @@ describe('Squads - API: /api/squads', () => {
 
   })
 
-  describe('PATCH by ID - API: /api/squads/squad//:id', () => { 
+  describe('PATCH by ID - API: /api/squads/squad/:id', () => { 
 
     beforeAll(async () => {
-      await resetSquad();
+      await resetSquad(testSquad);
     })
       
     afterEach(async () => {
-      await resetSquad();
+      await resetSquad(testSquad);
     })
 
     it('should patch squad_name in a squad by ID', async () => {
@@ -3008,103 +3013,6 @@ describe('Squads - API: /api/squads', () => {
       expect(patchedSquad.squad_time).toBe("");
     })
 
-  })
-
-  describe('DELETE by ID - API: /api/squads/squad/:id', () => { 
-
-    const toDelSquad = {
-      ...initSquad,
-      id: "sqd_3397da1adc014cf58c44e07c19914f72",
-      event_id: "evt_9a58f0a486cb4e6c92ca3348702b1a62",
-      squad_name: "Squad 3",
-      squad_date: startOfDayFromString('2023-09-16') as Date, 
-      squad_time: '02:00 PM',
-      games: 6,
-      lane_count: 24,
-      starting_lane: 1,
-      sort_order: 3,
-    }
-
-    let didDel = false
-
-    beforeEach(() => {
-      didDel = false;
-    })
-
-    afterEach(async () => {
-      if (!didDel) return;
-      try {
-        const squadJSON = JSON.stringify(toDelSquad);
-        const response = await axios({
-          method: 'post',
-          data: squadJSON,
-          withCredentials: true,
-          url: url
-        })        
-      } catch (err) {
-        if (err instanceof Error) console.log(err.message);
-      }
-    })
-
-    it('should delete a squad', async () => { 
-      const response = await axios({
-        method: 'delete',
-        withCredentials: true,
-        url: oneSquadUrl + toDelSquad.id
-      })
-      expect(response.status).toBe(200);
-      didDel = true;
-      expect(response.data.count).toBe(1)
-    })
-    it('should return 404 when ID is invalid', async () => {
-      try {
-        const response = await axios({
-          method: 'delete',
-          withCredentials: true,
-          url: oneSquadUrl + "invalid"
-        })
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT delete a squad by ID when ID is not found', async () => {
-      try {
-        const response = await axios({
-          method: 'delete',
-          withCredentials: true,
-          url: oneSquadUrl + notFoundId
-        })
-        expect(response.status).toBe(200);
-        expect(response.data.count).toBe(0);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(200);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT delete a squad by ID when ID is valid, but not a squad ID', async () => { 
-      try {
-        const response = await axios({
-          method: 'delete',
-          withCredentials: true,
-          url: oneSquadUrl + nonSquadId
-        })
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
   })
 
   describe('DELETE all squads for an event - API: /api/squads/event/:eventId', () => { 

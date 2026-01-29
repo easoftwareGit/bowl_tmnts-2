@@ -1,8 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode } from "@/lib/validation";
+import { ErrorCode } from "@/lib/validation/validation";
 import { laneType } from "@/lib/types/types";
-import { validateLanes } from "../validate";
+import { validateLanes } from "../../../../lib/validation/lanes/validate";
 import { getErrorStatus } from "../../errCodes";
 
 // routes /api/lanes/many
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     }
     // sanitize and validate squads
     const validLanes = await validateLanes(lanes); // need to use await! or else returns a promise
-    if (validLanes.errorCode !== ErrorCode.None) {
+    if (validLanes.errorCode !== ErrorCode.NONE) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
     const result = await prisma.lane.createMany({

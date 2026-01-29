@@ -1,6 +1,6 @@
-import { validateElimEntries } from "@/app/api/elimEntries/validate";
+import { validateElimEntries } from "@/lib/validation/elimEntries/validate";
 import { elimEntryType, validElimEntriesType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { deleteAllElimEntriesForSquad, postManyElimEntries } from "./dbElimEntries";
 
 /**
@@ -19,11 +19,11 @@ export const replaceManyElimEntries = async (elimEntries: elimEntryType[], squad
   if (!isValidBtDbId(squadId, "sqd")) {
     throw new Error('Invalid squad id');
   }
-  let validElimEntries: validElimEntriesType = { elimEntries: [], errorCode: ErrorCode.None };
+  let validElimEntries: validElimEntriesType = { elimEntries: [], errorCode: ErrorCode.NONE };
   if (elimEntries.length !== 0) {
     validElimEntries = validateElimEntries(elimEntries);
   }  
-  if (validElimEntries.errorCode !== ErrorCode.None
+  if (validElimEntries.errorCode !== ErrorCode.NONE
     || validElimEntries.elimEntries.length !== elimEntries.length)
   { 
     if (validElimEntries.elimEntries.length === 0) {      

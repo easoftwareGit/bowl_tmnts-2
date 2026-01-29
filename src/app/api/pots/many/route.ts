@@ -1,8 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode } from "@/lib/validation";
+import { ErrorCode } from "@/lib/validation/validation";
 import { potType, potDataType } from "@/lib/types/types";
-import { validatePots } from "../validate";
+import { validatePots } from "../../../../lib/validation/pots/validate";
 import { getErrorStatus } from "../../errCodes";
 import { potDataForPrisma } from "../dataForPrisma";
 
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     }
     // sanitize and validate pots
     const validPots = await validatePots(pots); // need to use await! or else returns a promise
-    if (validPots.errorCode !== ErrorCode.None) {
+    if (validPots.errorCode !== ErrorCode.NONE) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
     // convert valid pots into potData to post

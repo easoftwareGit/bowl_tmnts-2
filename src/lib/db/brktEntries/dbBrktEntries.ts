@@ -2,9 +2,9 @@ import axios from "axios";
 import { baseBrktEntriesApi } from "@/lib/db/apiPaths";
 import { testBaseBrktEntriesApi } from "../../../../test/testApi";
 import { brktEntryType, brktRefundType, brktType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { blankBrktEntry, blankBrktRefund } from "../initVals";
-import { validateBrktEntries } from "@/app/api/brktEntries/validate";
+import { validateBrktEntries } from "@/lib/validation/brktEntries/validate";
 
 const url = testBaseBrktEntriesApi.startsWith("undefined")
   ? baseBrktEntriesApi
@@ -272,7 +272,7 @@ export const postManyBrktEntries = async (
   if (brktEntries.length === 0) return 0; // not an error, just no data to post
   const validBrktEntries = validateBrktEntries(brktEntries);
   if (
-    validBrktEntries.errorCode !== ErrorCode.None ||
+    validBrktEntries.errorCode !== ErrorCode.NONE ||
     validBrktEntries.brktEntries.length !== brktEntries.length
   ) {
     if (validBrktEntries.brktEntries.length === 0) {

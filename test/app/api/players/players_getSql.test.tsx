@@ -1,7 +1,7 @@
 import { tmntEntryPlayerType } from "@/lib/types/types";
 import { mockPlayersToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { getDeleteManySQL, getInsertManySQL, getUpdateManySQL } from "@/app/api/players/many/getSql";
-import { maxAverage, maxLaneCount } from "@/lib/validation";
+import { maxAverage, maxLaneCount } from "@/lib/validation/validation";
 
 describe('getSql', () => {
   

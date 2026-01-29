@@ -24,9 +24,12 @@ import {
   putManyBrktEntriesReturnType,
   oneBrktType,
   brktSeedType,
-  tmntFullType,  
+  tmntFullType,
+  justStageType,
+  justStageOverrideType,
+  fullStageType,  
 } from "../types/types";
-import { User, Bowl, Tmnt } from "@prisma/client";
+import { User, Bowl, Tmnt, SquadStage } from "@prisma/client";
 import { todayStr } from "@/lib/dateTools";
 import { btDbUuid } from "../uuid";
 import { startOfToday } from "date-fns";
@@ -234,7 +237,6 @@ export const initSquad: squadType = {
   squad_date_err: "",
   squad_time: "",
   squad_time_err: "",
-  finalized: false,
   sort_order: 1,
   errClassName: "",
 };
@@ -254,6 +256,49 @@ export const initSquads: squadType[] = [
     id: btDbUuid('sqd'),
   },
 ];
+
+export const initFullStage: fullStageType = {
+  id: btDbUuid('stg'),  
+  squad_id: '',
+  stage: SquadStage.DEFINE,
+  stage_set_at: new Date(),
+  scores_started_at: null,
+  stage_override_enabled: false,  
+  stage_override_at: null,
+  stage_override_reason: "",
+}
+
+export const initJustStage: justStageType = {
+  id: btDbUuid('stg'),
+  squad_id: '',
+  stage: SquadStage.DEFINE,
+  stage_set_at: new Date(),
+  scores_started_at: null,
+}
+
+export const initJustStageOverride: justStageOverrideType = {
+  id: btDbUuid('stg'),
+  squad_id: '',
+  stage_override_enabled: false,
+  stage_override_at: null,
+  stage_override_reason: "",
+}
+
+export const blankFullStage: fullStageType = {
+  ...initFullStage,
+  id: "",
+  squad_id: "",
+}
+
+export const blankJustStage: justStageType = {
+  ...initJustStage,
+  id: "",
+}
+
+export const blankJustStageOverride: justStageOverrideType = {
+  ...initJustStageOverride,
+  id: "",
+}
 
 export const initLane: laneType = {
   id: btDbUuid('lan'),

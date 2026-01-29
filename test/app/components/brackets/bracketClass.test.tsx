@@ -1,7 +1,7 @@
 import { BracketList } from "@/components/brackets/bracketListClass";
 import { Bracket } from "@/components/brackets/bracketClass";
 import { cloneDeep } from "lodash";
-import { isOdd } from "@/lib/validation";
+import { isOdd } from "@/lib/validation/validation";
 
 describe('Bracket', () => {
 

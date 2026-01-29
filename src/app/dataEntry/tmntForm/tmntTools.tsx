@@ -7,8 +7,10 @@ import {
   initSquad,
   initTmnt,
 } from "@/lib/db/initVals";
+import { getJustStage } from "@/lib/db/stages/dbStages";
 import { tmntFullType } from "@/lib/types/types";
 import { btDbUuid } from "@/lib/uuid";
+import { SquadStage } from "@prisma/client";
 
 /**
  * 
@@ -65,16 +67,13 @@ export const getBlankTmntFullData = (): tmntFullType => {
 };
 
 /**
- * Checks if tmnt has entries
- *
- * @param {tmntFullType} tmntFullData - tmnt to check for entries
- * @returns {boolean} - true if tmnt has entries
+ * gets the stage for a squad
+ * 
+ * @param {string} squadId - squad id for stage
+ * @returns {SquadStage} - stage for squad 
  */
-export const tmntHasEntries = (tmntFullData: tmntFullType): boolean => {
-  return (
-    tmntFullData.brktEntries.length > 0 ||
-    tmntFullData.divEntries.length > 0 ||
-    tmntFullData.elimEntries.length > 0 ||
-    tmntFullData.potEntries.length > 0
-  );
-};
+export const getSquadStage = async (squadId: string): Promise<SquadStage> => {
+  const justStage = await getJustStage(squadId);
+  if (!justStage) return SquadStage.ERROR;
+  return justStage.stage as SquadStage;
+}

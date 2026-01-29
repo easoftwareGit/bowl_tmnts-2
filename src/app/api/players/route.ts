@@ -2,8 +2,8 @@ import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { initPlayer } from "@/lib/db/initVals";
 import { playerType } from "@/lib/types/types";
-import { sanitizePlayer, validatePlayer } from "./validate";
-import { ErrorCode } from "@/lib/validation";
+import { sanitizePlayer, validatePlayer } from "../../../lib/validation/players/validate";
+import { ErrorCode } from "@/lib/validation/validation";
 import { getErrorStatus } from "../errCodes";
 import { playerDataForPrisma } from "./dataForPrisma";
 
@@ -50,13 +50,13 @@ export async function POST(request: NextRequest) {
 
     const toPost = sanitizePlayer(toCheck);
     const errCode = validatePlayer(toPost);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = 'missing data'
           break;
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = 'invalid data'
           break;
         default:

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { compare } from "bcrypt";
-import { bcryptLength, maxToHashLength } from "@/lib/validation";
+import { bcryptLength, maxToHashLength } from "@/lib/validation/validation";
 
 export async function PUT(req: Request) { 
   

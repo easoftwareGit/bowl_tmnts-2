@@ -37,7 +37,7 @@ const initialState: tmntFullDataState = {
   loadStatus: "idle",
   saveStatus: "idle",
   error: "",
-  ioError: ioDataError.None,
+  ioError: ioDataError.NONE,
 };
 
 export const fetchTmntFullData = createAsyncThunk(

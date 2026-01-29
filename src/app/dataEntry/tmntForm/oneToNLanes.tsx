@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { squadType, laneType, tmntActions } from "../../../lib/types/types";
+import { squadType, laneType } from "../../../lib/types/types";
 import { Tabs, Tab } from "react-bootstrap";
 import LanesList from "@/components/tmnts/lanesList";
 import { isArray } from "lodash";
@@ -9,7 +9,7 @@ interface ChildProps {
   lanes: laneType[];  
   setLanes: (lanes: laneType[]) => void;
   squads: squadType[];
-  tmntAction: tmntActions;
+  isDisabled: boolean;
 }
 
 // const defaultTabKey = 'squad1'
@@ -18,7 +18,7 @@ const OneToNLanes: React.FC<ChildProps> = ({
   lanes,
   setLanes,
   squads,
-  tmntAction,
+  isDisabled,
 }) => {
   
   const defaultTabKey = (!squads || !isArray(squads) || squads.length === 0)
@@ -53,7 +53,7 @@ const OneToNLanes: React.FC<ChildProps> = ({
               squadId={squad.id}
               lanes={lanes}
               setLanes={setLanes}
-              tmntAction={tmntAction}
+              isDisabled={isDisabled}
             />
           </Tab>
         )}

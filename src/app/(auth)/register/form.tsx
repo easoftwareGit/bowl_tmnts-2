@@ -14,7 +14,7 @@ import {
   maxLastNameLength,
   maxEmailLength,
   maxPhoneLength,
-} from "@/lib/validation";
+} from "@/lib/validation/validation";
 import { phone as phoneChecking } from "phone";
 import { userType } from "@/lib/types/types";
 import { initUser } from "@/lib/db/initVals";

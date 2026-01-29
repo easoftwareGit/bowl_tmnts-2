@@ -1,8 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode } from "@/lib/validation";
+import { ErrorCode } from "@/lib/validation/validation";
 import { brktEntryType, brktEntryDataType, tmntEntryBrktEntryType } from "@/lib/types/types";
-import { validateBrktEntries } from "../validate";
+import { validateBrktEntries } from "../../../../lib/validation/brktEntries/validate";
 import { getDeleteManyRefundsSQL, getDeleteManySQL, getInsertManyRefundsSQL, getInsertManySQL, getUpdateManyRefundsSQL, getUpdateManySQL } from "./getSql";
 import { getErrorStatus } from "../../errCodes";
 import { brktEntryDataForPrisma } from "../dataForPrisma";
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     }    
     // sanitize and validate brktEntries
     const validBrktEntries = await validateBrktEntries(brktEntries); // need to use await! or else returns a promise
-    if (validBrktEntries.errorCode !== ErrorCode.None) {
+    if (validBrktEntries.errorCode !== ErrorCode.NONE) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
     // convert valid brktEntries into brktEntryData to post and filter out nulls 
@@ -64,7 +64,7 @@ export async function PUT(request: NextRequest) {
   try {
     const teBrktEntries: tmntEntryBrktEntryType[] = await request.json();
     const validBrktEntries = await validateBrktEntries(teBrktEntries as brktEntryType[]); // need to use await! or else returns a promise
-    if (validBrktEntries.errorCode !== ErrorCode.None) {
+    if (validBrktEntries.errorCode !== ErrorCode.NONE) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
 

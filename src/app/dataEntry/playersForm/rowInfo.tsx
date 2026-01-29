@@ -11,7 +11,7 @@ import {
 } from "./createColumns";
 import { GridRowModel } from "@mui/x-data-grid";
 import { fullName, getBrktOrElimName, getDivName, getPotShortName } from "@/lib/getName";
-import { maxAverage, maxBrackets, maxMoney } from "@/lib/validation";
+import { maxAverage, maxBrackets, maxMoney } from "@/lib/validation/validation";
 import { BracketList } from "@/components/brackets/bracketListClass";
 import { defaultBrktPlayers } from "@/lib/db/initVals";
 
@@ -23,8 +23,8 @@ export type errInfoType = {
 };
 
 export enum CheckType {
-  Prelim = 0,
-  Final = 1,
+  PRELIM,
+  FINAL,
 }
 
 /**
@@ -69,7 +69,7 @@ const validAverage = (
     row.average == null ||
     (typeof row.average === "number" && row.average === 0)
   ) {
-    return checkType === CheckType.Prelim
+    return checkType === CheckType.PRELIM
       ? ""
       : "Missing Average for " + errPlayer + " in row " + (i + 1);
   }
@@ -101,7 +101,7 @@ const validLane = (
   checkType: CheckType
 ): string => {
   if (row.lane == null || (typeof row.lane === "number" && row.lane === 0)) {
-    return checkType === CheckType.Prelim
+    return checkType === CheckType.PRELIM
       ? ""
       : "Missing Lane for " + errPlayer + " in row " + (i + 1);
   }
@@ -129,7 +129,7 @@ const validPosition = (
   checkType: CheckType
 ): string => {
   if (row.position == null || row.position === "") {
-    return checkType === CheckType.Prelim
+    return checkType === CheckType.PRELIM
       ? ""
       : "Missing Position for " + errPlayer + " in row " + (i + 1);
   }
@@ -177,7 +177,7 @@ const validDivs = (
     }
   }
   // returns error if found error, or "" if no error and checkType is Prelim
-  if (errMsg !== "" || checkType === CheckType.Prelim) return errMsg;
+  if (errMsg !== "" || checkType === CheckType.PRELIM) return errMsg;
   // if check type is Final, returns error if no fee in any division
   return !gotDiv
     ? "Missing Division Fee for " + errPlayer + " in row " + (i + 1)
@@ -349,7 +349,7 @@ export const findNextError = (
   // - if got brkt entries, must be valid
   // - if got elim entryies, must be valid
 
-  if (!rows || (rows.length === 0 && checkType === CheckType.Final)) {
+  if (!rows || (rows.length === 0 && checkType === CheckType.FINAL)) {
     return { id: "none", msg: "No players in the tournament" };
   }
   if (!tmntData || !tmntData.tmnt) {

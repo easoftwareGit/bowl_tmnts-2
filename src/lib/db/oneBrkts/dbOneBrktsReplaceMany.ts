@@ -1,6 +1,6 @@
-import { validateOneBrkts } from "@/app/api/oneBrkts/valildate";
+import { validateOneBrkts } from "@/lib/validation/oneBrkts/valildate";
 import { oneBrktType, validOneBrktsType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { deleteAllOneBrktsForSquad, postManyOneBrkts } from "./dbOneBrkts";
 
 /**
@@ -19,11 +19,11 @@ export const replaceManyOneBrkts = async (oneBrkts: oneBrktType[], squadId: stri
   if (!isValidBtDbId(squadId, "sqd")) {
     throw new Error('Invalid squad id');
   }
-  let validOneBrkts: validOneBrktsType = { oneBrkts: [], errorCode: ErrorCode.None };
+  let validOneBrkts: validOneBrktsType = { oneBrkts: [], errorCode: ErrorCode.NONE };
   if (oneBrkts.length !== 0) {
     validOneBrkts = validateOneBrkts(oneBrkts);
   }  
-  if (validOneBrkts.errorCode !== ErrorCode.None
+  if (validOneBrkts.errorCode !== ErrorCode.NONE
     || validOneBrkts.oneBrkts.length !== oneBrkts.length)
   { 
     if (validOneBrkts.oneBrkts.length === 0) {      

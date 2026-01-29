@@ -1,8 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode } from "@/lib/validation";
+import { ErrorCode } from "@/lib/validation/validation";
 import { oneBrktType } from "@/lib/types/types";
-import { validateOneBrkts } from "../valildate";
+import { validateOneBrkts } from "../../../../lib/validation/oneBrkts/valildate";
 import { getErrorStatus } from "../../errCodes";
 
 // routes /api/oneBrkts/many
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
     // sanitize and validate oneBrkts    
     const validOneBrkts = await validateOneBrkts(oneBrkts) // need to use await! or else returns a promise
-    if (validOneBrkts.errorCode !== ErrorCode.None) {
+    if (validOneBrkts.errorCode !== ErrorCode.NONE) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
     const oneBrktsToPost = validOneBrkts.oneBrkts

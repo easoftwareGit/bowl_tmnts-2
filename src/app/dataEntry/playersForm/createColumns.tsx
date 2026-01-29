@@ -1,5 +1,5 @@
 import { brktType, divType, elimType, potType } from "@/lib/types/types";
-import { maxAverage, maxBrackets, maxMoney } from "@/lib/validation";
+import { maxAverage, maxBrackets, maxMoney } from "@/lib/validation/validation";
 import {
   GridColDef,
   GridEditInputCell,  
@@ -9,8 +9,8 @@ import {
 import { currencyFormatter } from "@/lib/currency/formatValue";
 import { getBrktOrElimName, getDivName, getPotShortName } from "@/lib/getName";
 import { convertToString } from "@/lib/convert";
-import { validAverage } from "@/app/api/players/validate";
-import { sanitize } from "@/lib/sanitize";
+import { validAverage } from "@/lib/validation/players/validate";
+import { sanitize } from "@/lib/validation/sanitize";
 import { validPosChars } from "./rowInfo";
 import { isTouchDevice } from "@/lib/mobileDevices/mobileDevices";
 import styles from './grid.module.css';

@@ -1,34 +1,38 @@
-import { maxMoney } from "../validation";
+import { maxMoney } from "../validation/validation";
 
 /**
  * checks if money string is valid
  * 
- * @param moneyStr - money to check
- * @param min - minimum amount
- * @param max - maximum amount
+ * @param moneyStr {unknown} - money to check
+ * @param min {number} - minimum amount
+ * @param max {number} - maximum amount
  * @returns boolean - true if amount is valid
  */
-export const validMoney = (moneyStr: string, min: number, max: number): boolean => {  
-  if (moneyStr === null || moneyStr === undefined) return false;
-  if (typeof moneyStr !== "string") {
-    if (typeof moneyStr === "number") {
-      moneyStr = (moneyStr as number).toString();
+export const validMoney = (moneyStr: unknown, min: number, max: number): boolean => {  
+  if (moneyStr == null) return false;
+  let mStr: string = "";
+  if (typeof moneyStr === "string") {
+    mStr = moneyStr;
+  }
+  else {
+    if (typeof moneyStr === "number" && Number.isFinite(moneyStr)) {
+      mStr = (moneyStr as number).toString();
     } else {
       return false;
-    }
-  }  
+    }    
+  }    
   // test comma locations (decimal point ok, leading '-' and/or '$' ok)
   const regexWithCommas = /^-?\$?(\d{1,3})(,\d{3})*(\.\d+)?$/;
   const regexWithoutCommas = /^-?\$?\d+(\.\d+)?$/;
-  if (!(regexWithCommas.test(moneyStr) || regexWithoutCommas.test(moneyStr))) return false;
+  if (!(regexWithCommas.test(mStr) || regexWithoutCommas.test(mStr))) return false;
 
   // remove commas
-  moneyStr = moneyStr.replace(/,/g, "");
+  mStr = mStr.replace(/,/g, "");
   // remove $ (ig got here, passed location of $ tests above)
-  moneyStr = moneyStr.replace('$', "");  
-  if (!moneyStr) return false;
+  mStr = mStr.replace('$', "");  
+  if (!mStr) return false;
   try {
-    const numVal = Number(moneyStr)
+    const numVal = Number(mStr)
     if (isNaN(numVal) || numVal < min || numVal > max) {
       return false
     }
@@ -46,18 +50,27 @@ export const validMoney = (moneyStr: string, min: number, max: number): boolean 
  * @param {number} max - maximum amount
  * @returns {boolean} - true if money string is valid
  */
-export const validBtdbMoney = (moneyStr: string, min: number = 0, max: number = maxMoney): boolean => {
-  if (moneyStr === null
-    || moneyStr === undefined
-    || typeof moneyStr !== "string") return false;
+export const validBtdbMoney = (moneyStr: unknown , min: number = 0, max: number = maxMoney): boolean => {
+  if (moneyStr == null) return false;  
+  let mStr: string = "";
+  if (typeof moneyStr === "string") {
+    mStr = moneyStr;
+  }
+  else {
+    if (typeof moneyStr === "number" && Number.isFinite(moneyStr)) {
+      mStr = (moneyStr as number).toString();
+    } else {
+      return false;
+    }
+  }
   // maxMoney is 999999, so max valid string is $999,999.00 or 11 chars 
-  if (moneyStr.length > 11) return false;
+  if (mStr.length > 11) return false;
   // a blank value for money is OK
   // all 0's is ok
-  if (moneyStr === "" || moneyStr.replace(/^0+/, '') === "") {
-    moneyStr = "0";
+  if (mStr === "" || mStr.replace(/^0+/, '') === "") {
+    mStr = "0";
     // return true;
   }
-  if (!moneyStr) return false;
-  return validMoney(moneyStr, min, max);
+  if (!mStr) return false;
+  return validMoney(mStr, min, max);
 };

@@ -1,5 +1,5 @@
 import React, { useState, ChangeEvent } from "react";
-import { divType, squadType, AcdnErrType, PotCategoryObjType, potType, potCategoriesTypes, tmntActions } from "@/lib/types/types";
+import { divType, squadType, AcdnErrType, PotCategoryObjType, potType, potCategoriesTypes } from "@/lib/types/types";
 import ModalConfirm, { delConfTitle } from "@/components/modal/confirmModal";
 import { Tab, Tabs } from "react-bootstrap";
 import { initModalObj } from "@/components/modal/modalObjType";
@@ -14,7 +14,7 @@ import {
   getAcdnErrMsg,
   noAcdnErr,
 } from "./errors";
-import { maxMoney, minFee } from "@/lib/validation";
+import { maxMoney, minFee } from "@/lib/validation/validation";
 import { getDivName, getPotName } from "@/lib/getName";
 import { btDbUuid } from "@/lib/uuid";
 import clsx from "clsx";
@@ -27,7 +27,7 @@ interface ChildProps {
   squads: squadType[];
   setAcdnErr: (objAcdnErr: AcdnErrType) => void;  
   setShowingModal: (showingModal: boolean) => void;
-  tmntAction: tmntActions;
+  isDisabled: boolean;
 }
 
 const createPotTitle = "Create Pot";
@@ -104,7 +104,7 @@ export const validatePots = (
       feeErr = "";
       potErrClassName = "";      
       const fee = Number(pot.fee);
-      if (typeof fee !== "number") {
+      if (typeof fee !== "number" || isNaN(fee)) {
         feeErr = "Invalid Fee";
       } else if (fee < minFee) {
         feeErr = "Fee cannot be less than " + minFeeText;
@@ -134,10 +134,9 @@ const ZeroToNPots: React.FC<ChildProps> = ({
   squads,
   setAcdnErr,  
   setShowingModal,
-  tmntAction,
+  isDisabled,
 }) => {
-  
-  const isDisabled = (tmntAction === tmntActions.Run || tmntAction === tmntActions.Disable);  
+    
   const defaultTabKey = (isDisabled && pots.length > 0 && pots[0].id)
     ? pots[0].id
     : 'createPot';  

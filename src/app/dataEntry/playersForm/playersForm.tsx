@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
-import { tmntActions, tmntFullType, tmntFormDataType } from "@/lib/types/types";
+import { tmntFullType, tmntFormDataType, tmntFormParent } from "@/lib/types/types";
 import {
   DataGrid,
   GridAlignment,
@@ -54,6 +54,7 @@ import { defaultBrktGames, defaultPlayersPerMatch } from "@/lib/db/initVals";
 import { extractDataFromRows, extractFullBrktsData } from "./extractData";
 import { cloneDeep } from "lodash";
 import styles from "./grid.module.css";
+import { SquadStage } from "@prisma/client";
 
 // full tmnt
 // http://localhost:3000/dataEntry/runTmnt/tmt_d237a388a8fc4641a2e37233f1d6bebd
@@ -112,7 +113,8 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
   );
   const playersFormData: tmntFormDataType = {
     tmntFullData: stateTmntFullData,
-    tmntAction: tmntActions.Run,
+    stage: SquadStage.DEFINE,
+    parentForm: tmntFormParent.RUN,
   };
   const tmntData = playersFormData.tmntFullData;
 
@@ -474,7 +476,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
   };
 
   const canFinalize = (): boolean => {
-    const errInfo: errInfoType = findNextError(rows, tmntData, CheckType.Final);
+    const errInfo: errInfoType = findNextError(rows, tmntData, CheckType.FINAL);
     if (errInfo.msg !== "") {
       setErrModalObj({
         show: true,
@@ -504,7 +506,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
     const errInfo: errInfoType = findNextError(
       rows,
       tmntData,
-      CheckType.Prelim
+      CheckType.PRELIM
     );
     if (errInfo.msg !== "") {
       setErrModalObj({
@@ -614,7 +616,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
     const errInfo: errInfoType = findNextError(
       rows,
       tmntData,
-      CheckType.Prelim
+      CheckType.PRELIM
     );
     if (errInfo.msg !== "") {
       setErrModalObj({

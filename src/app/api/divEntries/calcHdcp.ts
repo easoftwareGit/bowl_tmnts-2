@@ -1,7 +1,7 @@
 import { divEntryRawType, divEntryRawWithHdcpType } from "@/lib/types/types";
-import { validAverage } from "../players/validate";
-import { validHdcpFor, validHdcpFrom, validHdcpPer, validIntHdcp } from "../divs/validate";
-import { validGames } from "../squads/validate";
+import { validAverage } from "../../../lib/validation/players/validate";
+import { validHdcpFor, validHdcpFrom, validHdcpPer, validIntHdcp } from "../../../lib/validation/divs/validate";
+import { validGames } from "../../../lib/validation/squads/validate";
 
 /**
  * calculate handicap

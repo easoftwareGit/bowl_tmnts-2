@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { isValidBtDbType } from './validation';
+import { isValidBtDbType } from './validation/validation';
 import { idTypes } from './types/types';
 
 /**

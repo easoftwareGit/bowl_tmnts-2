@@ -13,12 +13,11 @@ import { configureStore } from "@reduxjs/toolkit";
 import { useRouter } from "next/navigation"; 
 import tmntFullDataReducer, { saveTmntFullData } from "@/redux/features/tmntFullData/tmntFullDataSlice"; 
 import bowlsReducer from "@/redux/features/bowls/bowlsSlice"; 
-import TmntDataForm from "@/app/dataEntry/tmntForm/tmntForm"; 
-import { bowlType, ioDataError, tmntActions, tmntFormDataType } from "@/lib/types/types"; 
+import { bowlType, ioDataError, tmntFormDataType, tmntFormParent } from "@/lib/types/types"; 
 import { getBlankTmntFullData } from "@/app/dataEntry/tmntForm/tmntTools"; 
 import { mockBowl, mockTmntFullData } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData"; 
 import { ioStatusType } from "@/redux/statusTypes"; 
-import { error } from "console";
+import { SquadStage } from "@prisma/client";
 
 const makeStore = (bowls: bowlType[] = []) =>
   configureStore({
@@ -38,11 +37,11 @@ const makeStore = (bowls: bowlType[] = []) =>
         loadStatus: "idle" as ioStatusType,
         saveStatus: "idle" as ioStatusType,
         error: "",
-        ioError: ioDataError.None,
+        ioError: ioDataError.NONE,
       },
     },
   });
-  
+   
 // Mock useRouter:
 jest.mock("next/navigation", () => ({
   useRouter: jest.fn(() => ({
@@ -51,12 +50,14 @@ jest.mock("next/navigation", () => ({
   })),
 }));
 
+// Mock saveTmntFullData
 jest.mock("@/redux/features/tmntFullData/tmntFullDataSlice", () => ({
   __esModule: true,
   ...jest.requireActual("@/redux/features/tmntFullData/tmntFullDataSlice"),
   saveTmntFullData: jest.fn(),
 }));
 
+// Mock react-bootstrap
 jest.mock("react-bootstrap/Modal", () => {
   const MockModal = ({ show, children }: { show: boolean; children: React.ReactNode }) => {
     return show ? <div role="dialog">{children}</div> : null;
@@ -83,10 +84,57 @@ jest.mock("react-bootstrap/Modal", () => {
   return MockModal;
 });
 
+// mock components and validators
+jest.mock("@/app/dataEntry/tmntForm/oneToNEvents", () => ({
+  __esModule: true,
+  ...jest.requireActual("@/app/dataEntry/tmntForm/oneToNEvents"),
+  validateEvents: jest.fn().mockReturnValue(true),
+}));
+
+jest.mock("@/app/dataEntry/tmntForm/oneToNDivs", () => ({
+  __esModule: true,
+  ...jest.requireActual("@/app/dataEntry/tmntForm/oneToNDivs"),
+  validateDivs: jest.fn().mockReturnValue(true),
+}));
+
+jest.mock("@/app/dataEntry/tmntForm/oneToNSquads", () => ({
+  __esModule: true,
+  ...jest.requireActual("@/app/dataEntry/tmntForm/oneToNSquads"),
+  validateSquads: jest.fn().mockReturnValue(true),
+}));
+
+jest.mock("@/app/dataEntry/tmntForm/zeroToNPots", () => ({
+  __esModule: true,
+  ...jest.requireActual("@/app/dataEntry/tmntForm/zeroToNPots"),
+  validatePots: jest.fn().mockReturnValue(true),
+}));
+
+jest.mock("@/app/dataEntry/tmntForm/zeroToNBrkts", () => ({
+  __esModule: true,
+  ...jest.requireActual("@/app/dataEntry/tmntForm/zeroToNBrkts"),
+  validateBrkts: jest.fn().mockReturnValue(true),
+}));
+
+jest.mock("@/app/dataEntry/tmntForm/zeroToNElims", () => ({
+  __esModule: true,
+  ...jest.requireActual("@/app/dataEntry/tmntForm/zeroToNElims"),
+  validateElims: jest.fn().mockReturnValue(true),
+}));
+
+// import the main component and AFETR the child mocks
+import TmntDataForm from "@/app/dataEntry/tmntForm/tmntForm"; 
+
 const tmntProps: tmntFormDataType = { 
   tmntFullData: mockTmntFullData, 
-  tmntAction: tmntActions.New, 
+  stage: SquadStage.DEFINE,
+  parentForm: tmntFormParent.NEW
 } 
+
+const tmntPropsNew: tmntFormDataType = {
+  tmntFullData: getBlankTmntFullData(),
+  stage: SquadStage.DEFINE,
+  parentForm: tmntFormParent.NEW
+}
 
 // Typed mock handles
 const useDispatchMock =
@@ -148,7 +196,7 @@ describe('TmntDataForm - Save Modals', () => {
 
     it('shows correct modal message when errorType = Tmnt', async () => {
       saveTmntFullDataMock.mockImplementation(() => ({
-        unwrap: () => Promise.reject({ errorType: ioDataError.Tmnt }),
+        unwrap: () => Promise.reject({ errorType: ioDataError.TMNT }),
       }) as any);
 
       const store = makeStore([mockBowl]);
@@ -171,7 +219,7 @@ describe('TmntDataForm - Save Modals', () => {
     });    
     it('shows correct modal message when errorType = Events', async () => {
       saveTmntFullDataMock.mockImplementation(() => ({
-        unwrap: () => Promise.reject({ errorType: ioDataError.Events }),
+        unwrap: () => Promise.reject({ errorType: ioDataError.EVENTS }),
       }) as any);
 
       const store = makeStore([mockBowl]);
@@ -192,7 +240,7 @@ describe('TmntDataForm - Save Modals', () => {
     });    
     it('shows correct modal message when errorType = Divs', async () => {
       saveTmntFullDataMock.mockImplementation(() => ({
-        unwrap: () => Promise.reject({ errorType: ioDataError.Divs }),
+        unwrap: () => Promise.reject({ errorType: ioDataError.DIVS }),
       }) as any);
 
       const store = makeStore([mockBowl]);
@@ -213,7 +261,7 @@ describe('TmntDataForm - Save Modals', () => {
     });    
     it('shows correct modal message when errorType = Squads', async () => {
       saveTmntFullDataMock.mockImplementation(() => ({
-        unwrap: () => Promise.reject({ errorType: ioDataError.Squads }),
+        unwrap: () => Promise.reject({ errorType: ioDataError.SQUADS }),
       }) as any);
 
       const store = makeStore([mockBowl]);
@@ -234,7 +282,7 @@ describe('TmntDataForm - Save Modals', () => {
     });    
     it('shows correct modal message when errorType = Lanes', async () => {
       saveTmntFullDataMock.mockImplementation(() => ({
-        unwrap: () => Promise.reject({ errorType: ioDataError.Lanes }),
+        unwrap: () => Promise.reject({ errorType: ioDataError.LANES }),
       }) as any);
 
       const store = makeStore([mockBowl]);
@@ -257,7 +305,7 @@ describe('TmntDataForm - Save Modals', () => {
     });
     it('shows correct modal message when errorType = Pots', async () => {
       saveTmntFullDataMock.mockImplementation(() => ({
-        unwrap: () => Promise.reject({ errorType: ioDataError.Pots }),
+        unwrap: () => Promise.reject({ errorType: ioDataError.POTS }),
       }) as any);
 
       const store = makeStore([mockBowl]);
@@ -278,7 +326,7 @@ describe('TmntDataForm - Save Modals', () => {
     });
     it('shows correct modal message when errorType = Brkts', async () => {
       saveTmntFullDataMock.mockImplementation(() => ({
-        unwrap: () => Promise.reject({ errorType: ioDataError.Brkts }),
+        unwrap: () => Promise.reject({ errorType: ioDataError.BRKTS }),
       }) as any);
 
       const store = makeStore([mockBowl]);
@@ -301,7 +349,7 @@ describe('TmntDataForm - Save Modals', () => {
     });
     it('shows correct modal message when errorType = Elims', async () => {
       saveTmntFullDataMock.mockImplementation(() => ({
-        unwrap: () => Promise.reject({ errorType: ioDataError.Elims }),
+        unwrap: () => Promise.reject({ errorType: ioDataError.ELIMS }),
       }) as any);
 
       const store = makeStore([mockBowl]);
@@ -348,104 +396,203 @@ describe('TmntDataForm - Save Modals', () => {
       jest.clearAllMocks();
     });
 
-    it('shows confirm modal when Cancel is clicked', async () => {
-      const store = makeStore([mockBowl]);
-      render(
-        <Provider store={store}>
-          <TmntDataForm tmntProps={tmntProps} />
-        </Provider>
-      );
+    describe('cancel new tournament', () => {
+      it('shows confirm modal when Cancel is clicked', async () => {
+        const store = makeStore([mockBowl]);
+        render(
+          <Provider store={store}>
+            <TmntDataForm tmntProps={tmntPropsNew} />
+          </Provider>
+        );
 
-      const user = userEvent.setup();
-      const cancelBtn = screen.getByText("Cancel");
+        const user = userEvent.setup();
+        const cancelBtn = screen.getByText("Cancel");
 
-      // The modal should not appear before clicking
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+        // The modal should not appear before clicking
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 
-      await user.click(cancelBtn);
+        await user.click(cancelBtn);
 
-      // The confirm modal should now appear
-      const modal = await screen.findByRole("dialog");
-      expect(modal).toBeInTheDocument();
-      expect(
-        screen.getByText("Cancel New Tournament")
-      ).toBeInTheDocument();
-      expect(
-        screen.getByText("Do you want to cancel entering new tournament?")
-      ).toBeInTheDocument();
-    });
-
-    it('calls confirmedCancel when user confirms cancel', async () => {
-      const mockPush = jest.fn();
-
-      // Redefine router behavior for this test
-      (useRouter as jest.Mock).mockReturnValue({
-        push: mockPush,
-        prefetch: jest.fn(),
+        // The confirm modal should now appear
+        const modal = await screen.findByRole("dialog");
+        expect(modal).toBeInTheDocument();
+        expect(screen.getByText("Cancel New Tournament")).toBeInTheDocument();
+        expect(
+          screen.getByText("Do you want to cancel entering new tournament?")
+        ).toBeInTheDocument();
       });
 
-      const store = makeStore([mockBowl]);
-      render(
-        <Provider store={store}>
-          <TmntDataForm tmntProps={tmntProps} />
-        </Provider>
-      );
+      it('calls confirmedCancel when user confirms cancel', async () => {
+        const mockPush = jest.fn();
 
-      const user = userEvent.setup();
-      await user.click(screen.getByText("Cancel"));
+        // Redefine router behavior for this test
+        (useRouter as jest.Mock).mockReturnValue({
+          push: mockPush,
+          prefetch: jest.fn(),
+        });
 
-      // Modal appears
-      await screen.findByRole("dialog");
-      expect(screen.getByText("Cancel New Tournament")).toBeInTheDocument();
+        const store = makeStore([mockBowl]);
+        render(
+          <Provider store={store}>
+            <TmntDataForm tmntProps={tmntPropsNew} />
+          </Provider>
+        );
 
-      // Simulate clicking confirm button
-      const yesBtn = screen.getByRole("button", { name: /yes/i });
-      await user.click(yesBtn);
+        const user = userEvent.setup();
+        await user.click(screen.getByText("Cancel"));
 
-      // Wait for updates
-      await new Promise((r) => setTimeout(r, 0));
+        // Modal appears
+        await screen.findByRole("dialog");
+        expect(screen.getByText("Cancel New Tournament")).toBeInTheDocument();
 
-      // Verify router navigation
-      expect(mockPush).toHaveBeenCalledWith("/user/tmnts");
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    });
+        // Simulate clicking confirm button
+        const yesBtn = screen.getByRole("button", { name: /yes/i });
+        await user.click(yesBtn);
 
-    it('hides confirm modal when user clicks No', async () => {
-      const mockPush = jest.fn();
+        // Wait for updates
+        await new Promise((r) => setTimeout(r, 0));
 
-      // Redefine router behavior for this test
-      (useRouter as jest.Mock).mockReturnValue({
-        push: mockPush,
-        prefetch: jest.fn(),
+        // Verify router navigation
+        expect(mockPush).toHaveBeenCalledWith("/user/tmnts");
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
       });
 
-      const store = makeStore([mockBowl]);
-      render(
-        <Provider store={store}>
-          <TmntDataForm tmntProps={tmntProps} />
-        </Provider>
-      );
+      it('hides confirm modal when user clicks No', async () => {
+        const mockPush = jest.fn();
 
-      const user = userEvent.setup();
-      await user.click(screen.getByText("Cancel"));
+        // Redefine router behavior for this test
+        (useRouter as jest.Mock).mockReturnValue({
+          push: mockPush,
+          prefetch: jest.fn(),
+        });
 
-      // Confirm modal should appear
-      await screen.findByRole("dialog");
-      expect(screen.getByText("Cancel New Tournament")).toBeInTheDocument();
+        const store = makeStore([mockBowl]);
+        render(
+          <Provider store={store}>
+            <TmntDataForm tmntProps={tmntPropsNew} />
+          </Provider>
+        );
 
-      // Simulate clicking "No" button
-      const noBtn = screen.getByRole("button", { name: /no/i });
-      await user.click(noBtn);
+        const user = userEvent.setup();
+        await user.click(screen.getByText("Cancel"));
 
-      // Wait for state updates to complete
-      await new Promise((r) => setTimeout(r, 0));
+        // Confirm modal should appear
+        await screen.findByRole("dialog");
+        expect(screen.getByText("Cancel New Tournament")).toBeInTheDocument();
 
-      // The confirm modal should close
-      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+        // Simulate clicking "No" button
+        const noBtn = screen.getByRole("button", { name: /no/i });
+        await user.click(noBtn);
 
-      // No navigation should occur
-      expect(mockPush).not.toHaveBeenCalled();
-    });    
+        // Wait for state updates to complete
+        await new Promise((r) => setTimeout(r, 0));
+
+        // The confirm modal should close
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+        // No navigation should occur
+        expect(mockPush).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('cancel edit tournament', () => {
+      it('shows confirm modal when Cancel is clicked', async () => {
+        const store = makeStore([mockBowl]);
+        render(
+          <Provider store={store}>
+            <TmntDataForm tmntProps={tmntProps} />
+          </Provider>
+        );
+
+        const user = userEvent.setup();
+        const cancelBtn = screen.getByText("Cancel");
+
+        // The modal should not appear before clicking
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+        await user.click(cancelBtn);
+
+        // The confirm modal should now appear
+        const modal = await screen.findByRole("dialog");
+        expect(modal).toBeInTheDocument();
+        expect(screen.getByText("Cancel Editing Tournament")).toBeInTheDocument();
+        expect(
+          screen.getByText("Do you want to cancel editing tournament?")
+        ).toBeInTheDocument();
+      });
+
+      it('calls confirmedCancel when user confirms cancel', async () => {
+        const mockPush = jest.fn();
+
+        // Redefine router behavior for this test
+        (useRouter as jest.Mock).mockReturnValue({
+          push: mockPush,
+          prefetch: jest.fn(),
+        });
+
+        const store = makeStore([mockBowl]);
+        render(
+          <Provider store={store}>
+            <TmntDataForm tmntProps={tmntProps} />
+          </Provider>
+        );
+
+        const user = userEvent.setup();
+        await user.click(screen.getByText("Cancel"));
+
+        // Modal appears
+        await screen.findByRole("dialog");
+        expect(screen.getByText("Cancel Editing Tournament")).toBeInTheDocument();
+
+        // Simulate clicking confirm button
+        const yesBtn = screen.getByRole("button", { name: /yes/i });
+        await user.click(yesBtn);
+
+        // Wait for updates
+        await new Promise((r) => setTimeout(r, 0));
+
+        // Verify router navigation
+        expect(mockPush).toHaveBeenCalledWith("/user/tmnts");
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      });
+
+      it('hides confirm modal when user clicks No', async () => {
+        const mockPush = jest.fn();
+
+        // Redefine router behavior for this test
+        (useRouter as jest.Mock).mockReturnValue({
+          push: mockPush,
+          prefetch: jest.fn(),
+        });
+
+        const store = makeStore([mockBowl]);
+        render(
+          <Provider store={store}>
+            <TmntDataForm tmntProps={tmntProps} />
+          </Provider>
+        );
+
+        const user = userEvent.setup();
+        await user.click(screen.getByText("Cancel"));
+
+        // Confirm modal should appear
+        await screen.findByRole("dialog");
+        expect(screen.getByText("Cancel Editing Tournament")).toBeInTheDocument();
+
+        // Simulate clicking "No" button
+        const noBtn = screen.getByRole("button", { name: /no/i });
+        await user.click(noBtn);
+
+        // Wait for state updates to complete
+        await new Promise((r) => setTimeout(r, 0));
+
+        // The confirm modal should close
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+
+        // No navigation should occur
+        expect(mockPush).not.toHaveBeenCalled();
+      });
+    });
 
   });
 
@@ -469,7 +616,7 @@ describe('TmntDataForm - Save Modals', () => {
             loadStatus: "idle" as ioStatusType, // important
             saveStatus: "saving" as ioStatusType,
             error: "",
-            ioError: ioDataError.None,
+            ioError: ioDataError.NONE,
           },
         },
       });
@@ -503,7 +650,7 @@ describe('TmntDataForm - Save Modals', () => {
             loadStatus: "idle" as ioStatusType,
             saveStatus: "success" as ioStatusType,
             error: "",
-            ioError: ioDataError.None,
+            ioError: ioDataError.NONE,
           },
         },
       });
@@ -518,6 +665,76 @@ describe('TmntDataForm - Save Modals', () => {
       // WaitModal should disappear
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
+    it('hides WaitModal when error modal is showing, even if saveStatus is "saving"', async () => {
+      // saveStatus starts as "saving"
+      const store = configureStore({
+        reducer: {
+          tmntFullData: tmntFullDataReducer,
+          bowls: bowlsReducer,
+        },
+        preloadedState: {
+          bowls: {
+            bowls: [mockBowl],
+            loadStatus: "idle" as ioStatusType,
+            saveStatus: "idle" as ioStatusType,
+            error: "",
+          },
+          tmntFullData: {
+            tmntFullData: mockTmntFullData,
+            loadStatus: "idle" as ioStatusType,
+            saveStatus: "saving" as ioStatusType, // <- key
+            error: "",
+            ioError: ioDataError.NONE,
+          },
+        },
+      });
+
+      // Dispatch returns the thunk object, whose unwrap() we mock to reject
+      useDispatchMock.mockReturnValue(
+        jest.fn((thunkAction: any) => thunkAction) as unknown as Dispatch
+      );
+
+      // Cause save() to go into the catch block with a TMNT error
+      saveTmntFullDataMock.mockImplementation(
+        () =>
+          ({
+            unwrap: () =>
+              Promise.reject({
+                errorType: ioDataError.TMNT,
+              }),
+          }) as any
+      );
+
+      render(
+        <Provider store={store}>
+          <TmntDataForm tmntProps={tmntProps} />
+        </Provider>
+      );
+
+      // 1) With saveStatus === "saving" and no error modal yet,
+      //    WaitModal should be visible ("Saving...")
+      expect(screen.getByText("Saving...")).toBeInTheDocument();
+
+      // 2) Click Save to trigger save() -> rejected unwrap() -> error modal
+      const user = userEvent.setup();
+      const saveBtn = screen.getByText("Save Tournament");
+      saveBtn.focus(); // required because handleSave checks activeElement.id === 'saveButton'
+      await user.click(saveBtn);
+
+      // 3) Error modal should now be showing ("Cannot Save" title/message)
+      await screen.findByText("Cannot Save");
+      expect(screen.getByText("Cannot Save")).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          `Cannot save Tournament "${mockTmntFullData.tmnt.tmnt_name}".`
+        )
+      ).toBeInTheDocument();
+
+      // 4) Even though saveStatus is still "saving",
+      //    errModalObj.show === true, so WaitModal should be hidden
+      expect(screen.queryByText("Saving...")).not.toBeInTheDocument();
+    });
+
   });
 
 });

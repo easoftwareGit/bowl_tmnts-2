@@ -4,7 +4,7 @@ import { testBaseOneBrktsApi } from "../../../testApi";
 import { oneBrktType } from "@/lib/types/types";
 import { initOneBrkt } from "@/lib/db/initVals";
 import { mockOneBrktsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { isValidBtDbId } from "@/lib/validation";
+import { isValidBtDbId } from "@/lib/validation/validation";
 import { cloneDeep } from "lodash";
 import { deleteAllOneBrktsForTmnt, getAllOneBrktsForBrkt, postManyOneBrkts } from "@/lib/db/oneBrkts/dbOneBrkts";
 

@@ -1,6 +1,6 @@
 import { FC, useState, useEffect, ChangeEvent } from "react";
-import { laneType, pairsOfLanesType, tmntActions } from "@/lib/types/types"
-import { isOdd } from "@/lib/validation";
+import { laneType, pairsOfLanesType } from "@/lib/types/types"
+import { isOdd } from "@/lib/validation/validation";
 import { btDbUuid } from "@/lib/uuid";
 import styles from "./lanesList.module.css";
 
@@ -8,7 +8,7 @@ interface LanesListProps {
   squadId: string,
   lanes: laneType[],
   setLanes: (lanes: laneType[]) => void,
-  tmntAction: tmntActions,
+  isDisabled: boolean,
 }
 
 /**
@@ -91,12 +91,10 @@ export const pairsOfLanes = (squadId: string, lanes: laneType[]): pairsOfLanesTy
 }
 
 const LanesList: FC<LanesListProps> = (props) => {
-  const { squadId, lanes, setLanes, tmntAction } = props;
+  const { squadId, lanes, setLanes, isDisabled } = props;
   const initPairs = pairsOfLanes(squadId, lanes);
 
   const [pairs, setPairs] = useState(initPairs);
-
-  const isDisabled = (tmntAction === tmntActions.Run || tmntAction === tmntActions.Disable);
 
   useEffect(() => {
     setPairs(pairsOfLanes(squadId, lanes));

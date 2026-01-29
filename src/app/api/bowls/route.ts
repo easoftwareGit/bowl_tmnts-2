@@ -2,8 +2,8 @@ import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { bowlType } from "@/lib/types/types";
 import { initBowl } from "@/lib/db/initVals";
-import { sanitizeBowl, validateBowl } from "./validate";
-import { ErrorCode } from "@/lib/validation";
+import { sanitizeBowl, validateBowl } from "../../../lib/validation/bowls/validate";
+import { ErrorCode } from "@/lib/validation/validation";
 import { getErrorStatus } from "../errCodes";
 
 // routes /api/bowls
@@ -39,16 +39,16 @@ export async function POST(request: NextRequest) {
     }
     const toPost = sanitizeBowl(toCheck);
     const errCode = validateBowl(toPost);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = 'missing data'
           break;
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = 'invalid data'
           break;
-        case ErrorCode.OtherError:
+        case ErrorCode.OTHER_ERROR:
           errMsg = 'other error'
           break;
         default:

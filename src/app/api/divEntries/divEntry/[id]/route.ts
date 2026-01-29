@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { initDivEntry } from "@/lib/db/initVals";
 import { divEntryRawType, divEntryType } from "@/lib/types/types";
-import { sanitizeDivEntry, validateDivEntry } from "../../validate";
+import { sanitizeDivEntry, validateDivEntry } from "../../../../../lib/validation/divEntries/validate";
 import { divEntriesWithHdcp } from "../../calcHdcp";
 import { getErrorStatus } from "@/app/api/errCodes";
 
@@ -83,13 +83,13 @@ export async function PUT(
 
     const toPut = sanitizeDivEntry(toCheck);
     const errCode = validateDivEntry(toPut);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = "missing data";
           break;
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = "invalid data";
           break;
         default:
@@ -169,10 +169,10 @@ export async function PATCH(
     }
     const toBePatched = sanitizeDivEntry(toCheck);
     const errCode = validateDivEntry(toBePatched);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = "invalid data";
           break;
         default:

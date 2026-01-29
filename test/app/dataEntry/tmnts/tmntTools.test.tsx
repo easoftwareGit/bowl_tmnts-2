@@ -1,5 +1,6 @@
-// test/app/dataEntry/tmntForm/tmntTools.test.ts
-import { getBlankTmntFullData, tmntHasEntries } from "@/app/dataEntry/tmntForm/tmntTools";
+import { getBlankTmntFullData, getSquadStage } from "@/app/dataEntry/tmntForm/tmntTools";
+import { SquadStage } from "@prisma/client";
+import { getJustStage } from "@/lib/db/stages/dbStages";
 
 // IMPORTANT: mock btDbUuid so tests don't depend on random UUIDs
 jest.mock("@/lib/uuid", () => {
@@ -18,8 +19,18 @@ jest.mock("@/lib/uuid", () => {
   };
 });
 
-// If you want to reset the mock counters cleanly between tests:
+// Mock getJustStage so squadStage() doesn't hit the real DB layer
+jest.mock("@/lib/db/stages/dbStages", () => ({
+  __esModule: true,
+  getJustStage: jest.fn(),
+}));
+
+// reset the mock counters cleanly between tests:
 const uuidMod = jest.requireMock("@/lib/uuid") as { __resetCounters: () => void };
+
+// Strongly-typed mock for getJustStage
+const mockGetJustStage =
+  getJustStage as unknown as jest.MockedFunction<typeof getJustStage>;
 
 describe("tmntTools.tsx", () => {
   beforeEach(() => {
@@ -99,41 +110,52 @@ describe("tmntTools.tsx", () => {
     });
   });
 
-  describe("tmntHasEntries", () => {
-    it("returns false when all entry arrays are empty", () => {
-      const blank = getBlankTmntFullData();
-      expect(tmntHasEntries(blank)).toBe(false);
+
+  describe("squadStage", () => {
+    it("calls getJustStage with the given squadId", async () => {
+      const squadId = "sqd_123";
+
+      mockGetJustStage.mockResolvedValueOnce({
+        stage: SquadStage.ENTRIES,
+      } as any);
+
+      const result = await getSquadStage(squadId);
+
+      expect(mockGetJustStage).toHaveBeenCalledTimes(1);
+      expect(mockGetJustStage).toHaveBeenCalledWith(squadId);
+      expect(result).toBe(SquadStage.ENTRIES);
     });
 
-    it("returns true when brktEntries has at least 1 entry", () => {
-      const tmnt = getBlankTmntFullData();
-      tmnt.brktEntries.push({} as any);
-      expect(tmntHasEntries(tmnt)).toBe(true);
+    it("returns SquadStage.ERROR when getJustStage returns null/undefined", async () => {
+      const squadId = "sqd_456";
+
+      // explicitly resolve to null (falsy)
+      mockGetJustStage.mockResolvedValueOnce(null as any);
+
+      const result = await getSquadStage(squadId);
+
+      expect(mockGetJustStage).toHaveBeenCalledWith(squadId);
+      expect(result).toBe(SquadStage.ERROR);
     });
 
-    it("returns true when divEntries has at least 1 entry", () => {
-      const tmnt = getBlankTmntFullData();
-      tmnt.divEntries.push({} as any);
-      expect(tmntHasEntries(tmnt)).toBe(true);
+    it("returns the stage from getJustStage when it exists", async () => {
+      const squadId = "sqd_789";
+
+      mockGetJustStage.mockResolvedValueOnce({
+        stage: SquadStage.SCORES,
+      } as any);
+
+      const result = await getSquadStage(squadId);
+
+      expect(result).toBe(SquadStage.SCORES);
     });
 
-    it("returns true when elimEntries has at least 1 entry", () => {
-      const tmnt = getBlankTmntFullData();
-      tmnt.elimEntries.push({} as any);
-      expect(tmntHasEntries(tmnt)).toBe(true);
-    });
+    it("propagates errors thrown by getJustStage", async () => {
+      const squadId = "sqd_999";
 
-    it("returns true when potEntries has at least 1 entry", () => {
-      const tmnt = getBlankTmntFullData();
-      tmnt.potEntries.push({} as any);
-      expect(tmntHasEntries(tmnt)).toBe(true);
-    });
+      mockGetJustStage.mockRejectedValueOnce(new Error("DB failure"));
 
-    it("still returns true if multiple entry arrays have entries", () => {
-      const tmnt = getBlankTmntFullData();
-      tmnt.potEntries.push({} as any);
-      tmnt.divEntries.push({} as any);
-      expect(tmntHasEntries(tmnt)).toBe(true);
+      await expect(getSquadStage(squadId)).rejects.toThrow("DB failure");
     });
-  });
+  });  
 });

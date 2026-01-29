@@ -1,6 +1,6 @@
-import { validateEvents } from "@/app/api/events/validate";
+import { validateEvents } from "@/lib/validation/events/validate";
 import { eventType, validEventsType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { deleteAllEventsForTmnt, postManyEvents } from "./dbEvents";
 
 /**
@@ -19,11 +19,11 @@ export const replaceManyEvents = async (events: eventType[], tmntId: string): Pr
   if (!isValidBtDbId(tmntId, "tmt")) {
     throw new Error('Invalid tmnt id');
   }
-  let validEvents: validEventsType = { events: [], errorCode: ErrorCode.None };
+  let validEvents: validEventsType = { events: [], errorCode: ErrorCode.NONE };
   if (events.length !== 0) {
     validEvents = validateEvents(events);
   }  
-  if (validEvents.errorCode !== ErrorCode.None
+  if (validEvents.errorCode !== ErrorCode.NONE
     || validEvents.events.length !== events.length)
   { 
     if (validEvents.events.length === 0) {      

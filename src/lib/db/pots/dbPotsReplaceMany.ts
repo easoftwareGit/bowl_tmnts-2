@@ -1,6 +1,6 @@
-import { validatePots } from "@/app/api/pots/validate";
+import { validatePots } from "@/lib/validation/pots/validate";
 import { potType, validPotsType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { deleteAllPotsForSquad, postManyPots } from "./dbPots";
 
 /**
@@ -19,11 +19,11 @@ export const replaceManyPots = async (pots: potType[], squadId: string): Promise
   if (!isValidBtDbId(squadId, "sqd")) {
     throw new Error('Invalid squad id');
   }
-  let validPots: validPotsType = { pots: [], errorCode: ErrorCode.None };
+  let validPots: validPotsType = { pots: [], errorCode: ErrorCode.NONE };
   if (pots.length !== 0) {
     validPots = validatePots(pots);
   }  
-  if (validPots.errorCode !== ErrorCode.None
+  if (validPots.errorCode !== ErrorCode.NONE
     || validPots.pots.length !== pots.length)
   { 
     if (validPots.pots.length === 0) {      

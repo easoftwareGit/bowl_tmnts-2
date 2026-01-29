@@ -2,9 +2,9 @@ import axios from "axios";
 import { basePotsApi } from "@/lib/db/apiPaths";
 import { testBasePotsApi } from "../../../../test/testApi";
 import { potType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation";
+import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
 import { blankPot } from "../initVals";
-import { validatePots } from "@/app/api/pots/validate";
+import { validatePots } from "@/lib/validation/pots/validate";
 
 const url = testBasePotsApi.startsWith("undefined")
   ? basePotsApi
@@ -33,7 +33,6 @@ export const extractPots = (pots: any): potType[] => {
     sort_order: pot.sort_order,
   }));
 }
-
 
 /**
  * gets all pots for a squad
@@ -135,7 +134,7 @@ export const postManyPots = async (pots: potType[]): Promise<number> => {
   }
   if (pots.length === 0) return 0; // not an error, just no data to post
   const validPots = validatePots(pots);
-  if (validPots.errorCode !== ErrorCode.None
+  if (validPots.errorCode !== ErrorCode.NONE
     || validPots.pots.length !== pots.length)
   { 
     if (validPots.pots.length === 0) {      

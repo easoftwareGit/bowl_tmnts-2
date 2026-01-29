@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { baseBcryptApi, baseUsersApi } from "@/lib/db/apiPaths";
 import { testBaseBcryptApi, testBaseUsersApi } from "../../../testApi";
-import { maxToHashLength } from "@/lib/validation";
+import { maxToHashLength } from "@/lib/validation/validation";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database

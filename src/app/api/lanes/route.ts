@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { validateLane, sanitizeLane } from "./validate";
-import { ErrorCode } from "@/lib/validation";
+import { validateLane, sanitizeLane } from "../../../lib/validation/lanes/validate";
+import { ErrorCode } from "@/lib/validation/validation";
 import { laneType } from "@/lib/types/types";
 import { initLane } from "@/lib/db/initVals";
 import { getErrorStatus } from "../errCodes";
@@ -40,13 +40,13 @@ export const POST = async (request: NextRequest) => {
     }
     const toPost = sanitizeLane(toCheck);
     const errCode = validateLane(toPost);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = 'missing data'
           break;
-        case ErrorCode.InvalidData:
+        case ErrorCode.INVALID_DATA:
           errMsg = 'invalid data'
           break;
         default:

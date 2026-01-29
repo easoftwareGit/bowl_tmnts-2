@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { validatePot, sanitizePot } from "./validate";
-import { ErrorCode } from "@/lib/validation";
+import { validatePot, sanitizePot } from "../../../lib/validation/pots/validate";
+import { ErrorCode } from "@/lib/validation/validation";
 import { potType } from "@/lib/types/types";
 import { initPot } from "@/lib/db/initVals";
 import { getErrorStatus } from "../errCodes";
@@ -44,13 +44,13 @@ export async function POST(request: Request) {
 
     const toPost = sanitizePot(toCheck);
     const errCode = validatePot(toPost);
-    if (errCode !== ErrorCode.None) {
+    if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = 'missing data'
           break;
-        case ErrorCode.MissingData:
+        case ErrorCode.MISSING_DATA:
           errMsg = 'invalid data'
           break;        
         default:

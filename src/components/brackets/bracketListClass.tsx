@@ -4,7 +4,7 @@ import {
   playerEntryData,
   timeStampColName,
 } from "@/app/dataEntry/playersForm/createColumns";
-import { isOdd, maxBrackets } from "@/lib/validation";
+import { isOdd, maxBrackets } from "@/lib/validation/validation";
 import { blankPlayer, defaultBrktGames, defaultPlayersPerMatch, initPlayer } from "@/lib/db/initVals";
 import { btDbUuid } from "@/lib/uuid";
 import { shuffleArray } from "@/lib/tools";
@@ -58,12 +58,12 @@ export type randmoizeErrorType = {
   totalMatches: number;
 };
 
-enum matchTestCodes {
-  Valid = 0,
-  Used = -1,
-  Self = -2,
-  Past = -3,
-  Prior = -4,
+export enum matchTestCodes {
+  VALID,
+  USED,
+  SELF,
+  PAST,
+  PRIOR,
 }
 
 const maxTries = 250;
@@ -1793,23 +1793,23 @@ export class BracketList {
     const matchTest = (oppoInfo: playerUsedType): matchTestCodes => {
       // has opponent entry been used
       if (oppoInfo.used) {
-        return matchTestCodes.Used;
+        return matchTestCodes.USED;
       }
       // cant have a match vs self
       if (playerId === oppoInfo.playerId) {
-        return matchTestCodes.Self;
+        return matchTestCodes.SELF;
       }
       // cant have a match vs past player
       if (pastPlayersSet.has(oppoInfo.playerId)) {
-        return matchTestCodes.Past;
+        return matchTestCodes.PAST;
       }
       // cant have duplicate matches
       const oppoMatchInfo = oppoMap.get(oppoInfo.playerId);
       // if no opposition matches left, then already have a match
       if (oppoMatchInfo === undefined || oppoMatchInfo === 0) {
-        return matchTestCodes.Prior;
+        return matchTestCodes.PRIOR;
       }
-      return matchTestCodes.Valid;
+      return matchTestCodes.VALID;
     };
 
     /**
@@ -2192,7 +2192,7 @@ export class BracketList {
             while (needMatch) {
               // get next assigned match, and check if match is valid for player
               const matchTestResult = matchTest(this._shuffled[sIndex]);
-              if (matchTestResult === matchTestCodes.Valid) {
+              if (matchTestResult === matchTestCodes.VALID) {
                 const bIndex = putMatchInBracket(
                   this._shuffled[sIndex].playerId
                 );
@@ -2247,7 +2247,7 @@ export class BracketList {
                 this._shuffled[sIndex].used = true;
                 needMatch = false;
                 // else if a prior match and startIndex not set
-              } else if (matchTestResult === matchTestCodes.Prior) {
+              } else if (matchTestResult === matchTestCodes.PRIOR) {
                 // reset start index for next player if not already set
                 if (startIndex === -1) startIndex = sIndex;
                 // DO NOT UPDATE shuffled[sIndex].used
