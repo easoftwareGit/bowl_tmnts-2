@@ -1,4 +1,4 @@
-import { playerType } from '@/lib/types/types';
+import type { playerType } from '@/lib/types/types';
 import { mockTmntFullData } from '../../../mocks/tmnts/tmntFullData/mockTmntFullData';
 import { cloneDeep } from 'lodash';
 import { playerDataForPrisma } from '@/app/api/players/dataForPrisma';

@@ -1,5 +1,5 @@
 import React, { useState, ChangeEvent } from "react";
-import { eventType, AcdnErrType, squadType } from "../../../lib/types/types";
+import type { eventType, AcdnErrType, squadType } from "../../../lib/types/types";
 import { initEvent } from "../../../lib/db/initVals";
 import { Tabs, Tab, OverlayTrigger, Tooltip } from "react-bootstrap";
 import ModalConfirm, { delConfTitle } from "@/components/modal/confirmModal";

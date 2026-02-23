@@ -1,5 +1,12 @@
 import React, { useState, ChangeEvent } from "react";
-import { divType, squadType, AcdnErrType, PotCategoryObjType, potType, potCategoriesTypes } from "@/lib/types/types";
+import type {
+  divType,
+  squadType,
+  AcdnErrType,
+  PotCategoryObjType,
+  potType,
+  potCategoriesTypes,
+} from "@/lib/types/types";
 import ModalConfirm, { delConfTitle } from "@/components/modal/confirmModal";
 import { Tab, Tabs } from "react-bootstrap";
 import { initModalObj } from "@/components/modal/modalObjType";
@@ -23,9 +30,9 @@ import styles from "./tmntForm.module.css";
 interface ChildProps {
   pots: potType[];
   setPots: (pots: potType[]) => void;
-  divs: divType[];  
+  divs: divType[];
   squads: squadType[];
-  setAcdnErr: (objAcdnErr: AcdnErrType) => void;  
+  setAcdnErr: (objAcdnErr: AcdnErrType) => void;
   setShowingModal: (showingModal: boolean) => void;
   isDisabled: boolean;
 }
@@ -39,11 +46,11 @@ const potCategories: PotCategoryObjType[] = [
   },
   {
     id: 2,
-    name: "Last Game",    
+    name: "Last Game",
   },
   {
     id: 3,
-    name: "Series",    
+    name: "Series",
   },
 ];
 
@@ -56,9 +63,9 @@ const getPotErrMsg = (pot: potType): string => {
 };
 
 const getNextPotAcdnErrMsg = (
-  updatedPot: potType | null,  
+  updatedPot: potType | null,
   pots: potType[],
-  divs: divType[]
+  divs: divType[],
 ): string => {
   let errMsg = "";
   let acdnErrMsg = "";
@@ -68,7 +75,7 @@ const getNextPotAcdnErrMsg = (
   while (i < pots.length && !errMsg) {
     pot = pots[i].id === updatedPot?.id ? updatedPot : pots[i];
     errMsg = getPotErrMsg(pot);
-    if (errMsg) {      
+    if (errMsg) {
       acdnErrMsg = getAcdnErrMsg(getPotName(pot, divs), errMsg);
     }
     i++;
@@ -77,10 +84,10 @@ const getNextPotAcdnErrMsg = (
 };
 
 export const validatePots = (
-  pots: potType[],  
+  pots: potType[],
   setPots: (pots: potType[]) => void,
   divs: divType[],
-  setAcdnErr: (objAcdnErr: AcdnErrType) => void
+  setAcdnErr: (objAcdnErr: AcdnErrType) => void,
 ): boolean => {
   let arePotsValid = true;
   let feeErr = "";
@@ -102,7 +109,7 @@ export const validatePots = (
   setPots(
     pots.map((pot) => {
       feeErr = "";
-      potErrClassName = "";      
+      potErrClassName = "";
       const fee = Number(pot.fee);
       if (typeof fee !== "number" || isNaN(fee)) {
         feeErr = "Invalid Fee";
@@ -119,10 +126,10 @@ export const validatePots = (
         fee_err: feeErr,
         errClassName: potErrClassName,
       };
-    })
+    }),
   );
   if (arePotsValid) {
-    setAcdnErr(noAcdnErr);    
+    setAcdnErr(noAcdnErr);
   }
   return arePotsValid;
 };
@@ -130,66 +137,67 @@ export const validatePots = (
 const ZeroToNPots: React.FC<ChildProps> = ({
   pots,
   setPots,
-  divs,  
+  divs,
   squads,
-  setAcdnErr,  
+  setAcdnErr,
   setShowingModal,
   isDisabled,
 }) => {
-    
-  const defaultTabKey = (isDisabled && pots.length > 0 && pots[0].id)
-    ? pots[0].id
-    : 'createPot';  
+  const defaultTabKey =
+    isDisabled && pots.length > 0 && pots[0].id ? pots[0].id : "createPot";
 
   // only 1 squad for now, so all pots use squad[0]
   const potWithSquadId = {
     ...initPot,
-    squad_id: squads[0].id
-  }
-  
+    squad_id: squads[0].id,
+  };
+
   const [modalObj, setModalObj] = useState(initModalObj);
-  const [tabKey, setTabKey] = useState(defaultTabKey);  
+  const [tabKey, setTabKey] = useState(defaultTabKey);
   const [createPot, setCreatePot] = useState(potWithSquadId);
 
-  const initSortOrder = pots.length === 0 ? 1 : pots[pots.length - 1].sort_order + 1;
-  const [sortOrder, setSortOrder] = useState(initSortOrder); 
-   
-  const delBtnStyle = isDisabled ? 'btn-dark' : 'btn-danger';
+  const initSortOrder =
+    pots.length === 0 ? 1 : pots[pots.length - 1].sort_order + 1;
+  const [sortOrder, setSortOrder] = useState(initSortOrder);
+
+  const delBtnStyle = isDisabled ? "btn-dark" : "btn-danger";
 
   const validNewPot = () => {
     let isPotValid = true;
     let potErr = "";
     let divErr = "";
-    let feeErr = "";    
-  
+    let feeErr = "";
+
     if (createPot.pot_type === "") {
       potErr = "Pot Type is required";
       isPotValid = false;
     }
     if (createPot.div_id === "") {
       divErr = "Division is required";
-      isPotValid = false;      
+      isPotValid = false;
     }
     const fee = Number(createPot.fee);
     if (typeof fee !== "number") {
       feeErr = "Invalid Fee";
-      isPotValid = false;      
+      isPotValid = false;
     } else if (fee < minFee) {
       feeErr = "Fee cannot be less than " + minFeeText;
-      isPotValid = false;      
+      isPotValid = false;
     } else if (fee > maxMoney) {
       feeErr = "Fee cannot be more than " + maxMoneyText;
-      isPotValid = false;      
+      isPotValid = false;
     }
 
-    if (isPotValid) {      
-      const duplicatePot = pots.find((pot) =>
-        pot.pot_type === createPot.pot_type && pot.div_id === createPot.div_id            
+    if (isPotValid) {
+      const duplicatePot = pots.find(
+        (pot) =>
+          pot.pot_type === createPot.pot_type &&
+          pot.div_id === createPot.div_id,
       );
-      if (duplicatePot) {        
+      if (duplicatePot) {
         const duplicatePotErrMsg = `Pot: ${createPot.pot_type} - ${getDivName(createPot.div_id, divs)} already exists`;
         potErr = duplicatePotErrMsg;
-        isPotValid = false;        
+        isPotValid = false;
       }
     }
 
@@ -198,7 +206,7 @@ const ZeroToNPots: React.FC<ChildProps> = ({
       pot_type_err: potErr,
       div_err: divErr,
       fee_err: feeErr,
-    })
+    });
     return isPotValid;
   };
 
@@ -208,23 +216,23 @@ const ZeroToNPots: React.FC<ChildProps> = ({
       // create a new pot with a new id
       const newPot: potType = {
         ...createPot,
-        id: btDbUuid('pot')
+        id: btDbUuid("pot"),
       };
-      // add new pot      
+      // add new pot
       const mappedPots = pots.map((pot) => ({ ...pot }));
       mappedPots.push(newPot);
-      setPots(mappedPots);  
+      setPots(mappedPots);
       // update sort order for next new pot
       setCreatePot({
         ...createPot,
         sort_order: sortOrder + 1,
-      });            
+      });
       setSortOrder(sortOrder + 1);
-    } 
+    }
   };
 
   const confirmedDelete = () => {
-    const idToDel = modalObj.id
+    const idToDel = modalObj.id;
     setShowingModal(false);
     setModalObj(initModalObj); // reset modal object (hides modal)
     const updatedData = pots.filter((pot) => pot.id !== idToDel);
@@ -238,7 +246,7 @@ const ZeroToNPots: React.FC<ChildProps> = ({
   };
 
   const handleDelete = (id: string) => {
-    const potToDel = pots.find((pot) => pot.id === id);     
+    const potToDel = pots.find((pot) => pot.id === id);
     if (!potToDel) return;
     const toDelName = getPotName(potToDel, divs); // potToDel.pot_type + " - " + potToDel.div_name;
     setShowingModal(true);
@@ -250,30 +258,30 @@ const ZeroToNPots: React.FC<ChildProps> = ({
     }); // deletion done in confirmedDelete
   };
 
-  const handleCreatePotInputChange = (e: ChangeEvent<HTMLInputElement>) => { 
+  const handleCreatePotInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { id, name, value } = e.target;
     const ids = id.split("-");
 
     let updatedPot: potType;
-    if (name === "potsDivRadio") { 
+    if (name === "potsDivRadio") {
       const parentId = ids[1];
       updatedPot = {
         ...createPot,
-        div_id: parentId, 
+        div_id: parentId,
         div_err: "",
       };
-      if (createPot.pot_type_err.includes('already exists')) {
+      if (createPot.pot_type_err.includes("already exists")) {
         updatedPot.pot_type_err = "";
       }
     } else {
       updatedPot = {
-        ...createPot,        
+        ...createPot,
         pot_type: value as potCategoriesTypes,
         pot_type_err: "",
       };
     }
     setCreatePot(updatedPot);
-  }
+  };
 
   const handleCreatePotAmountValueChange =
     (id: string) =>
@@ -287,11 +295,11 @@ const ZeroToNPots: React.FC<ChildProps> = ({
       let updatedPot: potType = {
         ...createPot,
         fee: rawValue,
-        fee_err: "",        
+        fee_err: "",
       };
-      setCreatePot(updatedPot);      
-    }
-  
+      setCreatePot(updatedPot);
+    };
+
   const handleAmountValueChange =
     (id: string) =>
     (value: string | undefined): void => {
@@ -324,7 +332,7 @@ const ZeroToNPots: React.FC<ChildProps> = ({
           } else {
             return pot;
           }
-        })
+        }),
       );
     };
 
@@ -351,28 +359,26 @@ const ZeroToNPots: React.FC<ChildProps> = ({
         activeKey={tabKey}
         onSelect={handleTabSelect}
       >
-        {(!isDisabled) ? (
-          <Tab
-            key="createPot"
-            eventKey="createPot"
-            title={createPotTitle}               
-          >
+        {!isDisabled ? (
+          <Tab key="createPot" eventKey="createPot" title={createPotTitle}>
             <div
               data-testid="createPotContainer"
-              className={clsx("container", "rounded-3", styles.createBackground)}
+              className={clsx(
+                "container",
+                "rounded-3",
+                styles.createBackground,
+              )}
             >
-            {/* <div className="container rounded-3 createBackground"> */}
+              {/* <div className="container rounded-3 createBackground"> */}
               <div className="row g-3 mb-1">
-                <div className="col-sm-3">              
-                  <label className="form-label">
-                    Pot Type
-                  </label>
+                <div className="col-sm-3">
+                  <label className="form-label">Pot Type</label>
                   {potCategories.map((potCat) => (
                     <div key={potCat.id} className="form-check">
                       <input
                         className="form-check-input"
                         type="radio"
-                        name="potTypeRadio"                    
+                        name="potTypeRadio"
                         id={`pot_type-${potCat.name}`}
                         value={potCat.name}
                         checked={createPot.pot_type === potCat.name}
@@ -388,14 +394,10 @@ const ZeroToNPots: React.FC<ChildProps> = ({
                   ))}
                   <div className="text-danger" data-testid="dangerPotType">
                     {createPot.pot_type_err}
-                  </div>                
-                </div>  
+                  </div>
+                </div>
                 <div className="col-sm-3">
-                  <label
-                    className="form-label"                      
-                  >
-                    Division
-                  </label>
+                  <label className="form-label">Division</label>
                   {divs.map((div) => (
                     <div key={div.id} className="form-check text-break">
                       <input
@@ -418,34 +420,33 @@ const ZeroToNPots: React.FC<ChildProps> = ({
                   <div className="text-danger" data-testid="dangerDiv">
                     {createPot.div_err}
                   </div>
-                </div>   
+                </div>
                 <div className="col-sm-3">
                   <label htmlFor="inputPotFee" className="form-label">
                     Fee
                   </label>
                   <EaCurrencyInput
-                    id="inputPotFee"                      
+                    id="inputPotFee"
                     name="inputPotFee"
                     className={`form-control ${createPot.fee_err && "is-invalid"}`}
                     value={createPot.fee}
-                    onValueChange={handleCreatePotAmountValueChange(createPot.id)}
+                    onValueChange={handleCreatePotAmountValueChange(
+                      createPot.id,
+                    )}
                   />
                   <div className="text-danger" data-testid="dangerPotFee">
                     {createPot.fee_err}
                   </div>
                 </div>
                 <div className="col-sm-3 d-flex justify-content-center align-items-start">
-                  <button
-                    className="btn btn-success mx-3"
-                    onClick={handleAdd}
-                  >
+                  <button className="btn btn-success mx-3" onClick={handleAdd}>
                     Add Pot
                   </button>
-                </div>            
+                </div>
               </div>
             </div>
           </Tab>
-        ) : null }
+        ) : null}
         {pots.map((pot) => (
           <Tab
             key={pot.id}
@@ -455,33 +456,27 @@ const ZeroToNPots: React.FC<ChildProps> = ({
           >
             <div className="row g-3 mb-1">
               <div className="col-sm-3">
-                <label
-                  className="form-label"
-                  htmlFor={`pot_type-${pot.id}`}
-                >
+                <label className="form-label" htmlFor={`pot_type-${pot.id}`}>
                   Pot Type
                 </label>
                 <input
                   type="text"
                   className="form-control"
-                  id={`pot_type-${pot.id}`}                      
+                  id={`pot_type-${pot.id}`}
                   name={`pot_type-${pot.id}`}
                   value={pot.pot_type}
                   disabled
                 />
               </div>
               <div className="col-sm-3">
-                <label
-                  className="form-label"
-                  htmlFor={`div_name-${pot.id}`}
-                >
+                <label className="form-label" htmlFor={`div_name-${pot.id}`}>
                   Division
                 </label>
                 <input
                   type="text"
                   className="form-control"
-                  id={`div_name-${pot.id}`}                      
-                  name={`div_name-${pot.id}`}                  
+                  id={`div_name-${pot.id}`}
+                  name={`div_name-${pot.id}`}
                   value={getDivName(pot.div_id, divs)}
                   disabled
                 />
@@ -506,14 +501,14 @@ const ZeroToNPots: React.FC<ChildProps> = ({
                 </div>
               </div>
               <div className="col-sm-3 d-flex justify-content-center align-items-start">
-                <button                  
+                <button
                   className={`btn ${delBtnStyle} mx-3`}
                   onClick={() => handleDelete(pot.id)}
                   disabled={isDisabled}
                 >
                   Delete Pot
                 </button>
-              </div>                            
+              </div>
             </div>
           </Tab>
         ))}

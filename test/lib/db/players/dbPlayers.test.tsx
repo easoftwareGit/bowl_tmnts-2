@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { basePlayersApi } from "@/lib/db/apiPaths";
 import { testBasePlayersApi } from "../../../testApi";
-import { playerType } from "@/lib/types/types";
+import type { playerType } from "@/lib/types/types";
 import { initPlayer } from "@/lib/db/initVals";
 import { mockPlayersToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import {

@@ -1,4 +1,4 @@
-import { eventType } from "@/lib/types/types";
+import type { eventType } from "@/lib/types/types";
 import { initEvent } from "@/lib/db/initVals";
 
 const tmntId = 'tmt_e134ac14c5234d708d26037ae812ac33'

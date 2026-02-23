@@ -1,4 +1,4 @@
-import { divDataType, divType } from "@/lib/types/types";
+import type { divDataType, divType } from "@/lib/types/types";
 
 /**
  * Converts div to divDataType

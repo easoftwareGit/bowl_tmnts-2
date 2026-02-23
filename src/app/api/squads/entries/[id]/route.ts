@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSquadEntriesSQL } from "../getSql";
-import { dataOneTmntType } from "@/lib/types/types";
+import type { dataOneTmntType } from "@/lib/types/types";
 import { prisma } from "@/lib/prisma";
 import { isValidBtDbId } from "@/lib/validation/validation";
 

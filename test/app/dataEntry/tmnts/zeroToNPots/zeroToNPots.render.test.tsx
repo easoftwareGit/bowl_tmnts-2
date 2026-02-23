@@ -7,7 +7,7 @@ import { mockPots, mockDivs, mockSquads } from "../../../../mocks/tmnts/twoDivs/
 import { localConfig } from "@/lib/currency/const";
 import { formatValueSymbSep2Dec } from "@/lib/currency/formatValue";
 import { getDivName } from "@/lib/getName";
-import { potType } from "@/lib/types/types";
+import type { potType } from "@/lib/types/types";
 import { cloneDeep } from "lodash";
 
 const mockSetPots = jest.fn();

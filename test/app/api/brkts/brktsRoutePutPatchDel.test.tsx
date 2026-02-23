@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { baseBrktsApi } from "@/lib/db/apiPaths";
 import { testBaseBrktsApi } from "../../../testApi";
-import { brktType } from "@/lib/types/types";
+import type { brktType } from "@/lib/types/types";
 import { initBrkt } from "@/lib/db/initVals";
 import { deleteAllBrktsForSquad, deleteAllBrktsForTmnt, postManyBrkts } from "@/lib/db/brkts/dbBrkts";
 import { mockBrktsToPost, mockDivsToPost, mockSquadsToPost, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";

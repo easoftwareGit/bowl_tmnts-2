@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { userType } from "@/lib/types/types";
+import type { userType } from "@/lib/types/types";
 import { initUser } from "@/lib/db/initVals";
 import { sanitizeUser, validateUser } from "../../validate";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { doHash } from "@/lib/hash";
 import { getErrorStatus } from "@/app/api/errCodes";
 

@@ -1,7 +1,7 @@
 import axios from "axios";
 import { baseBrktsApi } from "@/lib/db/apiPaths";
 import { testBaseBrktsApi } from "../../../testApi";
-import { brktType } from "@/lib/types/types";
+import type { brktType } from "@/lib/types/types";
 import { initBrkt } from "@/lib/db/initVals";
 import { deleteAllBrktsForDiv, deleteAllBrktsForSquad, deleteAllBrktsForTmnt, deleteBrkt, getAllBrktsForTmnt, postBrkt, postManyBrkts, putBrkt } from "@/lib/db/brkts/dbBrkts";
 

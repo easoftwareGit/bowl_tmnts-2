@@ -1,7 +1,7 @@
 import axios from "axios";
 import { brktSeedsApi } from "@/lib/db/apiPaths";
 import { testBrktSeedsApi } from "../../../testApi";
-import { brktSeedType } from "@/lib/types/types";
+import type { brktSeedType } from "@/lib/types/types";
 import { initBrktSeed } from "@/lib/db/initVals";
 import { deleteAllBrktSeedsForBrkt, deleteAllBrktSeedsForDiv, deleteAllBrktSeedsForOneBrkt, deleteAllBrktSeedsForSquad, deleteAllBrktSeedsForTmnt, getAllBrktSeedsForBrkt, getAllBrktSeedsForDiv, getAllBrktSeedsForOneBrkt, getAllBrktSeedsForSquad, getAllBrktSeedsForTmnt, getBrktSeed, postManyBrktSeeds } from "@/lib/db/brktSeeds/dbBrktSeeds";
 

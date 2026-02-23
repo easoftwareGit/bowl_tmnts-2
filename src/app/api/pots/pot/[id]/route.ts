@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { validatePot, sanitizePot } from "../../../../../lib/validation/pots/validate";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
-import { potType, potCategoriesTypes } from "@/lib/types/types";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
+import type { potType, potCategoriesTypes } from "@/lib/types/types";
 import { initPot } from "@/lib/db/initVals";
 import { getErrorStatus } from "@/app/api/errCodes";
 

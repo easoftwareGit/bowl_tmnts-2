@@ -3,12 +3,11 @@ import React, { ChangeEvent, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { Accordion, AccordionItem } from "react-bootstrap";
-import {
-  ioDataError,
-  tmntFormDataType,
-  tmntFormParent,
+import type {  
+  tmntFormDataType,  
   tmntFullType,
 } from "@/lib/types/types";
+import { tmntFormParent, ioDataError } from "@/lib/enums/enums";
 import ModalErrorMsg, { cannotSaveTitle } from "@/components/modal/errorModal";
 import { initModalObj } from "@/components/modal/modalObjType";
 import { maxTmntNameLength } from "@/lib/validation/validation";

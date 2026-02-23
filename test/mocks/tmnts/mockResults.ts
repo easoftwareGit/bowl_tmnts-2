@@ -1,4 +1,4 @@
-import { tmntType } from "@/lib/types/types";
+import type { tmntType } from "@/lib/types/types";
 import { dateTo_UTC_MMddyyyy, todayStr } from "@/lib/dateTools";
 
 export const mockResults: tmntType[] = [

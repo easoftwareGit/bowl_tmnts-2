@@ -1,8 +1,8 @@
 "use client";
 import { useState, ChangeEvent, useEffect } from "react";
-import { eventType } from "../../lib/types/types";
+import type { eventType, tmntPropsType } from "../../lib/types/types";
 import { initEvent } from "../../lib/db/initVals";
-import { tmntPropsType } from "../../lib/types/types";
+
 
 interface FormProps {
   tmntProps: tmntPropsType;

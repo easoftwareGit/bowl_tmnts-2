@@ -1,6 +1,7 @@
 import { validateElims } from "@/lib/validation/elims/validate";
-import { elimType, validElimsType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import type { elimType, validElimsType } from "@/lib/types/types";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { deleteAllElimsForSquad, postManyElims } from "./dbElims";
 
 /**

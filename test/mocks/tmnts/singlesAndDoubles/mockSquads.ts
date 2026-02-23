@@ -1,4 +1,4 @@
-import {
+import type {
   brktEntryType,
   brktRefundType,
   brktSeedType,
@@ -18,8 +18,8 @@ import {
   potType,
   squadType,
 } from "@/lib/types/types";
-import { startOfDayFromString, todayStr } from "@/lib/dateTools";
-import { Squad, SquadStage } from "@prisma/client";
+import { todayStr } from "@/lib/dateTools";
+import { SquadStage } from "@prisma/client";
 import {
   initBrkt,
   initBrktEntry,
@@ -237,7 +237,7 @@ export const mockStageToPost: fullStageType = {
   id: "stg_217f23ac429b4b569676c7962f4edaa0",
   squad_id: "sqd_20c24199328447f8bbe95c05e1b84645",
   stage: SquadStage.DEFINE,
-  stage_set_at: new Date(),
+  stage_set_at: new Date().toISOString(),
   scores_started_at: null,
   stage_override_enabled: false,  
   stage_override_at: null,

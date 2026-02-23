@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { ErrorCode } from "@/lib/validation/validation";
-import { userType } from "@/lib/types/types";
+import { ErrorCode } from "@/lib/enums/enums";
+import type { userType } from "@/lib/types/types";
 import { initUser } from "@/lib/db/initVals";
 import { sanitizeUser, validateUser } from "../../users/validate";
 import { doHash } from "@/lib/hash";

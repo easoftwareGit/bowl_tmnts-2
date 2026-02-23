@@ -1,9 +1,9 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { initDivEntry } from "@/lib/db/initVals";
-import { divEntryType } from "@/lib/types/types";
+import type { divEntryType } from "@/lib/types/types";
 import { sanitizeDivEntry, validateDivEntry } from "../../../lib/validation/divEntries/validate";
-import { ErrorCode } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { divEntriesWithHdcp } from "./calcHdcp";
 import { getErrorStatus } from "../errCodes";
 import { divEntryDataForPrisma } from "./dataForPrisma";

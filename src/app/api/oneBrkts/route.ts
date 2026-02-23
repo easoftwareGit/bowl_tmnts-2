@@ -1,8 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { validateOneBrkt, sanitizeOneBrkt } from "../../../lib/validation/oneBrkts/valildate";
-import { ErrorCode } from "@/lib/validation/validation";
-import { oneBrktType } from "@/lib/types/types";
+import { ErrorCode } from "@/lib/enums/enums";
+import type { oneBrktType } from "@/lib/types/types";
 import { initOneBrkt } from "@/lib/db/initVals";
 
 // routes /api/oneBrkts

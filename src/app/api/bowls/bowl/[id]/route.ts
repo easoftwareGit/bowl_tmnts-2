@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { bowlType } from "@/lib/types/types";
+import type { bowlType } from "@/lib/types/types";
 import { initBowl } from "@/lib/db/initVals";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { sanitizeBowl, validateBowl } from "../../../../../lib/validation/bowls/validate";
 import { getErrorStatus } from "@/app/api/errCodes";
 
@@ -59,7 +60,7 @@ export async function PUT(
         [ErrorCode.OTHER_ERROR]: "unknown error",
       };
       return NextResponse.json(
-        { error: errorMessages[errCode] },
+        { error: errorMessages[errCode as keyof typeof errorMessages] },
         { status: 422 }
       );      
     }

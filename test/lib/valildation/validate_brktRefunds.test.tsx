@@ -6,10 +6,11 @@ import {
   validateBrktRefunds,
 } from "@/lib/validation/brktRefunds/validate";
 import { initBrktRefund } from "@/lib/db/initVals";
-import { ErrorCode, maxBrackets } from "@/lib/validation/validation";
+import { maxBrackets } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { mockBrktRefundsToPost } from "../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { cloneDeep } from "lodash";
-import { validBrktRefundsType } from "@/lib/types/types";
+import type { validBrktRefundsType } from "@/lib/types/types";
 
 const { gotBrktRefundData, validBrktRefundData } = exportedForTesting;
 

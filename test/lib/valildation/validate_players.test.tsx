@@ -12,16 +12,16 @@ import {
   validPlayerId,
 } from "@/lib/validation/players/validate";
 import { mockPlayers } from "../../mocks/tmnts/newTmnt/mockNewTmnt";
-import {
-  ErrorCode,
+import {  
   maxAverage,
   maxFirstNameLength,
   maxLaneCount,
   maxLastNameLength,
   maxStartLane,
 } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { cloneDeep } from "lodash";
-import { playerType } from "@/lib/types/types";
+import type { playerType } from "@/lib/types/types";
 import { initPlayer } from "@/lib/db/initVals";
 
 const { gotPlayerData, validPlayerData } = exportedForTesting;

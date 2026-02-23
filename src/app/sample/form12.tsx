@@ -1,8 +1,7 @@
 "use client";
 import React, { useState, ChangeEvent, useEffect } from "react";
 import { Tab, Tabs } from "react-bootstrap";
-// import { mockPots, mockDivs } from "../../../test/mocks/tmnts/twoDivs/mockDivs";
-import { PotCategoryObjType, potType } from "@/lib/types/types";
+import type { PotCategoryObjType, potType } from "@/lib/types/types";
 import { blankPot, initPot } from "@/lib/db/initVals";
 import EaCurrencyInput from "@/components/currency/eaCurrencyInput";
 import { btDbUuid } from "@/lib/uuid";

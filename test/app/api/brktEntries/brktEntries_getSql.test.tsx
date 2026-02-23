@@ -1,6 +1,6 @@
 import { getUpdateManySQL, getDeleteManySQL, getInsertManySQL, exportedForTesting, getUpdateManyRefundsSQL, getInsertManyRefundsSQL, getDeleteManyRefundsSQL } from "@/app/api/brktEntries/many/getSql";
 import { initBrktEntry } from "@/lib/db/initVals";
-import { brktEntryType } from "@/lib/types/types";
+import type { brktEntryType } from "@/lib/types/types";
 import { maxBrackets } from "@/lib/validation/validation";
 
 const { getBrktIds, getBrktEntryIds } = exportedForTesting;

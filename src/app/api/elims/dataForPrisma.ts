@@ -1,4 +1,4 @@
-import { elimDataType, elimType } from "@/lib/types/types"
+import type { elimDataType, elimType } from "@/lib/types/types"
 
 /**
  * Converts elim to elimDataType

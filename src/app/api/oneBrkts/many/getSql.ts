@@ -1,4 +1,4 @@
-import { oneBrktType } from "@/lib/types/types";
+import type { oneBrktType } from "@/lib/types/types";
 
 /**
  * gets array of unique brktIds

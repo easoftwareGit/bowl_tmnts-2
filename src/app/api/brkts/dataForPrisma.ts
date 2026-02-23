@@ -1,4 +1,4 @@
-import { brktDataType, brktType } from "@/lib/types/types"
+import type { brktDataType, brktType } from "@/lib/types/types"
 
 /**
  * Converts brkt to brktDataType

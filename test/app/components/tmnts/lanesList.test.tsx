@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import LanesList, { getLanesFromPairs, lanesNotThisSquad, lanesThisSquad, pairsOfLanes } from '@/components/tmnts/lanesList';
 import { mockLanes, mockPairs } from '../../../mocks/tmnts/newTmnt/mockNewTmnt';
-import { laneType, pairsOfLanesType } from '@/lib/types/types';
+import type { laneType, pairsOfLanesType } from '@/lib/types/types';
 import { cloneDeep } from 'lodash';
 
 describe('LanesList - Component', () => { 

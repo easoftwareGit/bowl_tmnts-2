@@ -1,8 +1,9 @@
 import axios from "axios";
 import { baseDivEntriesApi } from "@/lib/db/apiPaths";
 import { testBaseDivEntriesApi } from "../../../../test/testApi";
-import { divEntryType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import type { divEntryType } from "@/lib/types/types";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { blankDivEntry } from "../initVals";
 import { validateDivEntries } from "@/lib/validation/divEntries/validate";
 import { calcHandicap } from "@/app/api/divEntries/calcHdcp";

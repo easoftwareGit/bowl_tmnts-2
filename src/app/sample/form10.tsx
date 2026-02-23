@@ -2,7 +2,7 @@
 import React, { useState, ChangeEvent, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
-import { testDateType } from "@/lib/types/types";
+import type { testDateType } from "@/lib/types/types";
 import { fetchTestDates } from "@/redux/features/testdates/testdatesSlice";
 
 import "./form.css";

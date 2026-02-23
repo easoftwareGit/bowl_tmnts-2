@@ -4,12 +4,13 @@ import {
   validBowlName,
   validCity,
   validState,
-  validUrl,  
+  validUrl,    
   exportedForTesting,   
 } from "@/lib/validation/bowls/validate";
+import { ErrorCode } from "@/lib/enums/enums";
 import { initBowl } from "@/lib/db/initVals";
-import { bowlType } from "@/lib/types/types";
-import { ErrorCode, maxUrlLength } from "@/lib/validation/validation";
+import type { bowlType } from "@/lib/types/types";
+import { maxUrlLength } from "@/lib/validation/validation";
 
 const { gotBowlData, validBowlData } = exportedForTesting;
 
@@ -301,7 +302,7 @@ describe("bowl table data validation", () => {
       expect(result).toBe(false);
     });
     it('should return false for URL exceeding max length', () => {
-      const url = 'http://example.com/' + 'a'.repeat(maxUrlLength);
+      const url = 'http://example.com/' + 'a'.repeat(maxUrlLength + 1);
       const result = validUrl(url);
       expect(result).toBe(false);
     });  

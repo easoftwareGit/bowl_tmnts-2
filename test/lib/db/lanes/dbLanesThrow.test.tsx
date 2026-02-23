@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { baseLanesApi } from "@/lib/db/apiPaths";
 import { testBaseLanesApi } from "../../../testApi";
-import { laneType } from "@/lib/types/types";
+import type { laneType } from "@/lib/types/types";
 import { deleteAllLanesForSquad, deleteAllLanesForTmnt, deleteLane, getAllLanesForSquad, getAllLanesForTmnt, postLane, postManyLanes } from "@/lib/db/lanes/dbLanes";
 
 const url = testBaseLanesApi.startsWith("undefined")

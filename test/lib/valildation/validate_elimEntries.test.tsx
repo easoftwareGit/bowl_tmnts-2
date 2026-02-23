@@ -1,8 +1,8 @@
 import { exportedForTesting, sanitizeElimEntry, validateElimEntries, validateElimEntry, validElimEntryFee } from "@/lib/validation/elimEntries/validate";
 import { initElimEntry } from "@/lib/db/initVals";
-import { ErrorCode } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { mockElimEntriesToPost } from "../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { validElimEntriesType } from "@/lib/types/types";
+import type { validElimEntriesType } from "@/lib/types/types";
 
 const { gotElimEntryData, validElimEntryData } = exportedForTesting;
 
@@ -341,7 +341,7 @@ describe("tests for elimEntry validation", () => {
         fee: '-1'
       }
       const sanitizedElimEntry = sanitizeElimEntry(testElimEntry);
-      expect(sanitizedElimEntry.fee).toEqual('');
+      expect(sanitizedElimEntry.fee).toEqual('-1');
     })
     it('should return a sanitized elimEntry when fee is too high', () => { 
       const testElimEntry = {
@@ -349,7 +349,7 @@ describe("tests for elimEntry validation", () => {
         fee: '1234567890'
       }
       const sanitizedElimEntry = sanitizeElimEntry(testElimEntry);
-      expect(sanitizedElimEntry.fee).toEqual('');
+      expect(sanitizedElimEntry.fee).toEqual('1234567890');
     })
     it('should return a sanitized elimEntry when fee is sanitzied', () => { 
       const testElimEntry = {
@@ -357,7 +357,7 @@ describe("tests for elimEntry validation", () => {
         fee: '80.000'
       }
       const sanitizedElimEntry = sanitizeElimEntry(testElimEntry);
-      expect(sanitizedElimEntry.fee).toEqual('80.000');
+      expect(sanitizedElimEntry.fee).toEqual('80');
     })
     it('should return a sanitized elimEntry when data is not sanitzied', () => { 
       const testElimEntry = {
@@ -522,7 +522,7 @@ describe("tests for elimEntry validation", () => {
       const validElimEntries: validElimEntriesType = validateElimEntries(elimEntriesToValidate);
       expect(validElimEntries.errorCode).toBe(ErrorCode.NONE);
       expect(validElimEntries.elimEntries.length).toBe(elimEntriesToValidate.length);
-      expect(validElimEntries.elimEntries[1].fee).toBe('85.000');
+      expect(validElimEntries.elimEntries[1].fee).toBe('85');
     })
     it('should return ErrorCode.MISSING_DATA when id is sanitzied to ""', () => { 
       const elimEntriesToValidate = [...mockElimEntriesToPost];

@@ -1,8 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sanitizeSquad, validateSquad } from "../../../lib/validation/squads/validate";
-import { ErrorCode } from "@/lib/validation/validation";
-import { squadType } from "@/lib/types/types";
+import { ErrorCode } from "@/lib/enums/enums";
+import type { squadType } from "@/lib/types/types";
 import { initSquad } from "@/lib/db/initVals";
 import { startOfDayFromString } from "@/lib/dateTools";
 import { getErrorStatus } from "../errCodes";

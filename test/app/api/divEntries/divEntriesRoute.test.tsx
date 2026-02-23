@@ -2,7 +2,7 @@ import axios, { AxiosError } from "axios";
 import { baseDivEntriesApi } from "@/lib/db/apiPaths";
 import { testBaseDivEntriesApi } from "../../../testApi";
 import { initDiv, initDivEntry } from "@/lib/db/initVals";
-import { divEntryRawWithHdcpType, divEntryType, HdcpForTypes } from "@/lib/types/types";
+import type { divEntryRawWithHdcpType, divEntryType, HdcpForTypes } from "@/lib/types/types";
 import { mockDivEntriesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { deleteAllDivEntriesForTmnt, getAllDivEntriesForSquad, getAllDivEntriesForTmnt, postManyDivEntries } from "@/lib/db/divEntries/dbDivEntries";
 import { cloneDeep } from "lodash";

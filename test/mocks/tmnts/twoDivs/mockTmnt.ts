@@ -1,5 +1,4 @@
-import { startOfDayFromString } from "@/lib/dateTools";
-import { tmntType } from "@/lib/types/types";
+import type { tmntType } from "@/lib/types/types";
 
 export const mockTmnt: tmntType = {
   id: "tmt_fe8ac53dad0f400abe6354210a8f4cd1",

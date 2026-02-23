@@ -1,6 +1,7 @@
 import { validatePots } from "@/lib/validation/pots/validate";
-import { potType, validPotsType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import type { potType, validPotsType } from "@/lib/types/types";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { deleteAllPotsForSquad, postManyPots } from "./dbPots";
 
 /**

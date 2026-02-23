@@ -2,7 +2,7 @@ import axios, { AxiosError } from "axios";
 import { baseElimEntriesApi } from "@/lib/db/apiPaths";
 import { testBaseElimEntriesApi } from "../../../testApi";
 import { initElimEntry } from "@/lib/db/initVals";
-import { elimEntryType } from "@/lib/types/types";
+import type { elimEntryType } from "@/lib/types/types";
 import { mockElimEntriesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { deleteAllElimEntriesForTmnt, getAllElimEntriesForSquad, postManyElimEntries } from "@/lib/db/elimEntries/dbElimEntries";
 import { cloneDeep } from "lodash";

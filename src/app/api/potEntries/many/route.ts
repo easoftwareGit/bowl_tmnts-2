@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode } from "@/lib/validation/validation";
-import { potEntryDataType, potEntryType } from "@/lib/types/types";
+import { ErrorCode } from "@/lib/enums/enums";
+import type { potEntryDataType, potEntryType } from "@/lib/types/types";
 import { validatePotEntries } from "../../../../lib/validation/potEntries/validate";
 import { getErrorStatus } from "../../errCodes";
 import { potEntryDataForPrisma } from "../dataForPrisma";

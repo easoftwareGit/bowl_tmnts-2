@@ -14,7 +14,7 @@ import {
   postManyOneBrkts,
   postOneBrkt,
 } from "@/lib/db/oneBrkts/dbOneBrkts";
-import { oneBrktType } from "@/lib/types/types";
+import type { oneBrktType } from "@/lib/types/types";
 import { blankOneBrkt } from "@/lib/db/initVals";
 
 const url = testBaseOneBrktsApi.startsWith("undefined")

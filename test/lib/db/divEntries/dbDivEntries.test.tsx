@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { baseDivEntriesApi } from "@/lib/db/apiPaths";
 import { testBaseDivEntriesApi } from "../../../testApi";
-import { divEntryRawWithHdcpType, divEntryType } from "@/lib/types/types";
+import type { divEntryRawWithHdcpType, divEntryType } from "@/lib/types/types";
 import { initDivEntry } from "@/lib/db/initVals";
 import { mockDivEntriesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import {

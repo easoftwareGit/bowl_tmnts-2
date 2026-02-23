@@ -1,8 +1,9 @@
 import axios from "axios";
 import { baseSquadsApi } from "@/lib/db/apiPaths";
 import { testBaseSquadsApi } from "../../../../test/testApi";
-import { oneBrktsAndSeedsType, squadType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import type { oneBrktsAndSeedsType, squadType } from "@/lib/types/types";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { removeTimeFromISODateStr } from "@/lib/dateTools";
 import { blankSquad } from "../initVals";
 import { validateSquads } from "@/lib/validation/squads/validate";

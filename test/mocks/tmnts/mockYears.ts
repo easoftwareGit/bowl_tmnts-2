@@ -1,4 +1,4 @@
-import { YearObj } from "@/lib/types/types"
+import type { YearObj } from "@/lib/types/types"
 
 export const mockYears: YearObj[] = [
   {

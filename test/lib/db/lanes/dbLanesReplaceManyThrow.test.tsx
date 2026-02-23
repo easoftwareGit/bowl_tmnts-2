@@ -1,4 +1,4 @@
-import { laneType } from "@/lib/types/types";
+import type { laneType } from "@/lib/types/types";
 import { initLane } from "@/lib/db/initVals";
 
 const squadId = 'sqd_20c24199328447f8bbe95c05e1b84645';

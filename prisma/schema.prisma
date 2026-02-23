@@ -123,7 +123,7 @@ model Squad {
   lane_count              Int
   starting_lane           Int
   sort_order              Int
-  stage                   Stage[]
+  stage                   Stage?    // 1:1 with Stage, no array of stages
   lanes                   Lane[]
   pots                    Pot[]
   brkts                   Brkt[]
@@ -151,7 +151,7 @@ model Lane {
 
 model Stage {
   id                      String      @id @default(dbgenerated("concat('stg_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
-  squad_id                String      @db.Text	
+  squad_id                String      @unique @db.Text	
 	stage                   SquadStage  @default(DEFINE)
 	stage_set_at            DateTime?
   scores_started_at       DateTime?	

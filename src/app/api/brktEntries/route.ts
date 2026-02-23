@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { initBrktEntry } from "@/lib/db/initVals";
 import { brktEntryType } from "@/lib/types/types";
 import { sanitizeBrktEntry, validateBrktEntry } from "../../../lib/validation/brktEntries/validate";
-import { ErrorCode } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { getErrorStatus } from "../errCodes";
 import { brktEntryDataForPrisma } from "./dataForPrisma";
 
@@ -53,18 +53,34 @@ export const POST = async (request: NextRequest) => {
       time_stamp,
     }
 
-    const sanitizedObj = sanitizeBrktEntry(toCheck);
-    if (sanitizedObj.errorCode !== ErrorCode.NONE) {
-      const errMsg = getErrMsg(sanitizedObj.errorCode);
-      return NextResponse.json({ error: errMsg }, { status: 422 });
+    const toPost = sanitizeBrktEntry(toCheck);      
+    const coerced =
+      toPost.id !== toCheck.id ||
+      toPost.brkt_id !== toCheck.brkt_id ||
+      toPost.player_id !== toCheck.player_id ||
+      toPost.num_brackets !== toCheck.num_brackets ||
+      toPost.num_refunds !== toCheck.num_refunds ||
+      toPost.fee !== toCheck.fee ||
+      toPost.time_stamp !== toCheck.time_stamp;
+    if (coerced) {
+      return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
-    const toPost = sanitizedObj.brktEntry;
     const errCode = validateBrktEntry(toPost);
     if (errCode !== ErrorCode.NONE) {
-      const errMsg = getErrMsg(sanitizedObj.errorCode);
-      return NextResponse.json( { error: errMsg }, { status: 422 } );
+      let errMsg: string;
+      switch (errCode) {
+        case ErrorCode.MISSING_DATA:
+          errMsg = "missing data";
+          break;
+        case ErrorCode.INVALID_DATA:
+          errMsg = "invalid data";
+          break;
+        default:
+          errMsg = "unknown error";
+          break;
+      }
+      return NextResponse.json({ error: errMsg }, { status: 422 });
     }
-
     const brktEntryData = brktEntryDataForPrisma(toPost);
     if (!brktEntryData) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });

@@ -1,5 +1,5 @@
 import { blankFullStage, blankJustStageOverride, initFullStage } from "@/lib/db/initVals";
-import { fullStageType, justStageOverrideType, justStageType } from "@/lib/types/types";
+import type { fullStageType, justStageOverrideType, justStageType } from "@/lib/types/types";
 import {
   validStageOverrideAt,
   validStageOverrideEnabled,
@@ -18,8 +18,10 @@ import {
   isSquadStageOverrideType,
   isSquadStageType
 } from "@/lib/validation/stages/validate";
-import { ErrorCode, maxReasonLength } from "@/lib/validation/validation";
+import { maxReasonLength } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { SquadStage } from "@prisma/client";
+import { cloneDeep } from "lodash";
 
 const stageId = "stg_c5f562c4c4304d919ac43fead73123e2";
 const squadId = "sqd_7116ce5f80164830830a7157eb093396";
@@ -30,32 +32,24 @@ const {
   gotJustStageOverrideData,
 } = exportedForTesting;
 
+const dateStr = "2025-01-01T12:00:00.000Z";
+
 const validFullStage: fullStageType = {
   ...initFullStage,
   id: stageId,
   squad_id: squadId,
   stage: SquadStage.DEFINE,
-  stage_set_at: new Date("2025-01-01T12:00:00.000Z"),
+  stage_set_at: dateStr,
   scores_started_at: null,
   stage_override_enabled: false,
   stage_override_at: null,
   stage_override_reason: '',
 };
 
-
 describe("tests for stage validation", () => {
 
   describe("gotFullStageData function", () => {
-    const baseStage: fullStageType = {
-      id: stageId,
-      squad_id: squadId,
-      stage: SquadStage.DEFINE,
-      stage_set_at: new Date("2025-01-01T12:00:00.000Z"),
-      scores_started_at: null,
-      stage_override_enabled: false,
-      stage_override_at: null,
-      stage_override_reason: '',      
-    };
+    const baseStage = cloneDeep(validFullStage);
 
     it("should return ErrorCode.NONE when squadStage has required data (scores_started_at null allowed)", () => {
       expect(gotFullStageData(baseStage)).toBe(ErrorCode.NONE);
@@ -93,7 +87,7 @@ describe("tests for stage validation", () => {
       const testStage: fullStageType = {
         ...baseStage,
         stage: SquadStage.SCORES,
-        scores_started_at: new Date("2025-01-02T12:34:56.000Z"),
+        scores_started_at: dateStr,
       };
       expect(gotFullStageData(testStage)).toBe(ErrorCode.NONE);
     });
@@ -126,7 +120,7 @@ describe("tests for stage validation", () => {
       const testStage: fullStageType = {
         ...baseStage,
         stage_override_enabled: true,
-        stage_override_at: new Date("2025-01-03T10:00:00.000Z"),
+        stage_override_at: dateStr,
         stage_override_reason: null as any,
       };
       expect(gotFullStageData(testStage)).toBe(ErrorCode.MISSING_DATA);
@@ -136,7 +130,7 @@ describe("tests for stage validation", () => {
       const testStage: fullStageType = {
         ...baseStage,
         stage_override_enabled: true,
-        stage_override_at: new Date("2025-01-03T10:00:00.000Z"),
+        stage_override_at: dateStr,
         stage_override_reason: "   ",
       };
       expect(gotFullStageData(testStage)).toBe(ErrorCode.MISSING_DATA);
@@ -146,7 +140,7 @@ describe("tests for stage validation", () => {
       const testStage: fullStageType = {
         ...baseStage,
         stage_override_enabled: true,
-        stage_override_at: new Date("2025-01-03T10:00:00.000Z"),
+        stage_override_at: dateStr,
         stage_override_reason: "Testing",
       };
       expect(gotFullStageData(testStage)).toBe(ErrorCode.NONE);
@@ -156,11 +150,12 @@ describe("tests for stage validation", () => {
       const testStage: fullStageType = {
         ...baseStage,
         stage_override_enabled: false,
-        stage_override_at: new Date("2025-01-03T10:00:00.000Z"),
+        stage_override_at: dateStr,
         stage_override_reason: "",
       };
+      // data is invalid, but data is there, so gotFullStageData returns NONE
       expect(gotFullStageData(testStage)).toBe(
-        ErrorCode.MISSING_DATA
+        ErrorCode.NONE
       );
     });
 
@@ -171,8 +166,9 @@ describe("tests for stage validation", () => {
         stage_override_at: null,
         stage_override_reason: "Should not be set",
       };
+      // data is invalid, but data is there, so gotFullStageData returns NONE
       expect(gotFullStageData(testStage)).toBe(
-        ErrorCode.MISSING_DATA
+        ErrorCode.NONE
       );
     });
   })
@@ -182,7 +178,7 @@ describe("tests for stage validation", () => {
       id: stageId,
       squad_id: squadId,
       stage: SquadStage.DEFINE,
-      stage_set_at: new Date("2025-01-01T12:00:00.000Z"),
+      stage_set_at: dateStr,
       scores_started_at: null,
     };
 
@@ -222,7 +218,7 @@ describe("tests for stage validation", () => {
       const testStage: justStageType = {
         ...baseStage,
         stage: SquadStage.SCORES,
-        scores_started_at: new Date("2025-01-02T12:34:56.000Z"),
+        scores_started_at: dateStr,
       };
       expect(gotJustStageData(testStage)).toBe(ErrorCode.NONE);
     });
@@ -287,7 +283,7 @@ describe("tests for stage validation", () => {
       const testOverride: justStageOverrideType = {
         ...baseOverride,
         stage_override_enabled: true,
-        stage_override_at: new Date("2025-01-03T10:00:00.000Z"),
+        stage_override_at: dateStr,
         stage_override_reason: null as any,
       };
       expect(gotJustStageOverrideData(testOverride)).toBe(
@@ -299,7 +295,7 @@ describe("tests for stage validation", () => {
       const testOverride: justStageOverrideType = {
         ...baseOverride,
         stage_override_enabled: true,
-        stage_override_at: new Date("2025-01-03T10:00:00.000Z"),
+        stage_override_at: dateStr,
         stage_override_reason: "   ",
       };
       expect(gotJustStageOverrideData(testOverride)).toBe(
@@ -311,7 +307,7 @@ describe("tests for stage validation", () => {
       const testOverride: justStageOverrideType = {
         ...baseOverride,
         stage_override_enabled: true,
-        stage_override_at: new Date("2025-01-03T10:00:00.000Z"),
+        stage_override_at: dateStr,
         stage_override_reason: "Testing",
       };
       expect(gotJustStageOverrideData(testOverride)).toBe(ErrorCode.NONE);
@@ -321,11 +317,12 @@ describe("tests for stage validation", () => {
       const testOverride: justStageOverrideType = {
         ...baseOverride,
         stage_override_enabled: false,
-        stage_override_at: new Date("2025-01-03T10:00:00.000Z"),
+        stage_override_at: dateStr,
         stage_override_reason: "",
       };
+      // data is invalid, but data is there, so gotJustStageOverrideData returns NONE
       expect(gotJustStageOverrideData(testOverride)).toBe(
-        ErrorCode.MISSING_DATA
+        ErrorCode.NONE
       );
     });
 
@@ -336,8 +333,9 @@ describe("tests for stage validation", () => {
         stage_override_at: null,
         stage_override_reason: "Should not be set",
       };
+      // data is invalid, but data is there, so gotJustStageOverrideData returns NONE
       expect(gotJustStageOverrideData(testOverride)).toBe(
-        ErrorCode.MISSING_DATA
+        ErrorCode.NONE
       );
     });
   });  
@@ -366,11 +364,11 @@ describe("tests for stage validation", () => {
 
   describe("validStageSetAt function", () => {
     it("returns true for a Date object", () => {
-      expect(validStageSetAt(new Date())).toBe(true);
+      expect(validStageSetAt(dateStr)).toBe(true);
     });
 
-    it("returns true for epoch milliseconds number", () => {
-      expect(validStageSetAt(1700000000000)).toBe(true);
+    it("returns false for epoch milliseconds number", () => {
+      expect(validStageSetAt(1700000000000)).toBe(false);
     });
 
     it("returns true for numeric string epoch milliseconds", () => {
@@ -418,8 +416,9 @@ describe("tests for stage validation", () => {
     });
 
     it("returns true for valid date inputs", () => {
-      expect(validStageOverrideAt(new Date())).toBe(true);
-      expect(validStageOverrideAt(1700000000000)).toBe(true);
+      expect(validStageOverrideAt(dateStr)).toBe(true);
+      expect(validStageOverrideAt(new Date())).toBe(false);
+      expect(validStageOverrideAt(1700000000000)).toBe(false);
       expect(validStageOverrideAt("1700000000000")).toBe(true);
 
       const iso = "2023-12-31T23:59:59.000Z";
@@ -464,7 +463,7 @@ describe("tests for stage validation", () => {
       id: stageId,
       squad_id: squadId,
       stage: SquadStage.DEFINE,
-      stage_set_at: new Date("2025-01-01T12:00:00.000Z"),
+      stage_set_at: dateStr,
       scores_started_at: null,
       stage_override_enabled: false,
       stage_override_at: null,
@@ -479,7 +478,7 @@ describe("tests for stage validation", () => {
       const testStage: fullStageType = {
         ...baseStage,
         stage: SquadStage.SCORES,
-        scores_started_at: new Date("2025-01-02T09:30:00.000Z"),
+        scores_started_at: dateStr,
       };
       expect(validFullStageData(testStage)).toBe(ErrorCode.NONE);
     });
@@ -525,6 +524,43 @@ describe("tests for stage validation", () => {
       };
       expect(validFullStageData(testStage)).toBe(ErrorCode.INVALID_DATA);
     });
+
+    it("should return ErrorCode.MISSING_DATA when stage_override_enabled is true and stage_override_at is missing", () => {
+      const testStage: fullStageType = {
+        ...baseStage,
+        stage_override_enabled: true,      
+      };
+      expect(validFullStageData(testStage)).toBe(ErrorCode.MISSING_DATA);
+    })
+
+    it("should return ErrorCode.MISSING_DATA when stage_override_enabled is true and stage_override_reason is missing", () => {
+      const testStage: fullStageType = {
+        ...baseStage,
+        stage_override_enabled: true,  
+        stage_override_at: dateStr,
+      };
+      expect(validFullStageData(testStage)).toBe(ErrorCode.MISSING_DATA);
+    })
+
+    it("should return ErrorCode.INVALID_DATA when stage_override_at is an invalid date", () => {
+      const testStage: fullStageType = {
+        ...baseStage,
+        stage_override_enabled: true,
+        stage_override_at: "bad-date" as any,
+        stage_override_reason: "reason",
+      };
+      expect(validFullStageData(testStage)).toBe(ErrorCode.INVALID_DATA);
+    })
+
+    it("should return ErrorCode.INVALID_DATA when stage_override_reason is too long", () => {
+      const testStage: fullStageType = {
+        ...baseStage,
+        stage_override_enabled: true,
+        stage_override_at: dateStr,
+        stage_override_reason: "a".repeat(maxReasonLength + 1),
+      };
+      expect(validFullStageData(testStage)).toBe(ErrorCode.INVALID_DATA);
+    });
   });
 
   describe("validJustStageData function", () => {
@@ -532,7 +568,7 @@ describe("tests for stage validation", () => {
       id: stageId,
       squad_id: squadId,
       stage: SquadStage.DEFINE,
-      stage_set_at: new Date("2025-01-01T12:00:00.000Z"),
+      stage_set_at: dateStr,
       scores_started_at: null,
     };
 
@@ -544,7 +580,7 @@ describe("tests for stage validation", () => {
       const testStage: justStageType = {
         ...baseStage,
         stage: SquadStage.SCORES,
-        scores_started_at: new Date("2025-01-02T09:30:00.000Z"),
+        scores_started_at: dateStr,
       };
       expect(validJustStageData(testStage)).toBe(ErrorCode.NONE);
     });
@@ -609,7 +645,7 @@ describe("tests for stage validation", () => {
       const testOverride: justStageOverrideType = {
         ...baseOverride,
         stage_override_enabled: true,
-        stage_override_at: new Date("2025-01-03T10:00:00.000Z"),
+        stage_override_at: dateStr,
         stage_override_reason: "Testing override",
       };
       expect(validJustStageOverrideData(testOverride)).toBe(ErrorCode.NONE);
@@ -635,7 +671,7 @@ describe("tests for stage validation", () => {
       );
     });
 
-    it("should return ErrorCode.INVALID_DATA when override is enabled and override_at is null", () => {
+    it("should return ErrorCode.MISSING_DATA when override is enabled and override_at is null", () => {
       const testOverride: justStageOverrideType = {
         ...baseOverride,
         stage_override_enabled: true,
@@ -643,19 +679,19 @@ describe("tests for stage validation", () => {
         stage_override_reason: "Reason here",
       };
       expect(validJustStageOverrideData(testOverride)).toBe(
-        ErrorCode.INVALID_DATA
+        ErrorCode.MISSING_DATA
       );
     });
 
-    it("should return ErrorCode.INVALID_DATA when override is enabled and override_reason is blank", () => {
+    it("should return ErrorCode.MISSING_DATA when override is enabled and override_reason is blank", () => {
       const testOverride: justStageOverrideType = {
         ...baseOverride,
         stage_override_enabled: true,
-        stage_override_at: new Date("2025-01-03T10:00:00.000Z"),
+        stage_override_at: dateStr,
         stage_override_reason: "",
       };
       expect(validJustStageOverrideData(testOverride)).toBe(
-        ErrorCode.INVALID_DATA
+        ErrorCode.MISSING_DATA
       );
     });
 
@@ -663,7 +699,7 @@ describe("tests for stage validation", () => {
       const testOverride: justStageOverrideType = {
         ...baseOverride,
         stage_override_enabled: true,
-        stage_override_at: new Date("2025-01-03T10:00:00.000Z"),
+        stage_override_at: dateStr,
         stage_override_reason: "   ",
       };
       expect(validJustStageOverrideData(testOverride)).toBe(
@@ -675,7 +711,7 @@ describe("tests for stage validation", () => {
       const testOverride: justStageOverrideType = {
         ...baseOverride,
         stage_override_enabled: false,
-        stage_override_at: new Date("2025-01-03T10:00:00.000Z"),
+        stage_override_at: dateStr,
         stage_override_reason: "",
       };
       expect(validJustStageOverrideData(testOverride)).toBe(
@@ -737,19 +773,18 @@ describe("tests for stage validation", () => {
       expect(sanitizedFullStage.id).toEqual("");
     });
     it("should return a sanitized fullStage when fullStage is NOT already sanitized", () => {
-      // do not incluide numerical or boolean fields
-      const atDate = new Date();
+      // do not incluide numerical or boolean fields      
       const testFullStage = {
         ...validFullStage,
         squad_id: "abc_123",
-        scores_started_at: atDate,
-        stage_override_at: atDate,
+        scores_started_at: dateStr,
+        stage_override_at: dateStr,
         stage_override_reason: " <alert> test </alert>  ",
       };
       const sanitizedFullStage = sanitizeFullStage(testFullStage);
       expect(sanitizedFullStage.squad_id).toEqual("");
-      expect(sanitizedFullStage.scores_started_at).toEqual(atDate);
-      expect(sanitizedFullStage.stage_override_at).toEqual(atDate);
+      expect(sanitizedFullStage.scores_started_at).toEqual(dateStr);
+      expect(sanitizedFullStage.stage_override_at).toEqual(dateStr);
       expect(sanitizedFullStage.stage_override_reason).toEqual("test");
     });
     it("should return a sanitized fullStage when numerical and boolean values are null", () => {
@@ -831,8 +866,8 @@ describe("tests for stage validation", () => {
       id: stageId,
       squad_id: squadId,
       stage: SquadStage.DEFINE,
-      stage_set_at: new Date("2025-01-01T12:00:00.000Z"),
-      scores_started_at: new Date("2025-01-02T09:30:00.000Z"),
+      stage_set_at: dateStr,
+      scores_started_at: dateStr,
     };
 
     it("should return null when input is null", () => {
@@ -865,8 +900,8 @@ describe("tests for stage validation", () => {
         id: squadId,
         squad_id: squadId,
         stage: SquadStage.SCORES,
-        stage_set_at: new Date("2025-02-01T12:00:00.000Z"),
-        scores_started_at: new Date("2025-02-01T12:05:00.000Z"),
+        stage_set_at: "2025-02-01T12:00:00.000Z",
+        scores_started_at: "2025-02-01T12:05:00.000Z",
       };
 
       const result = sanitizeJustStage(testJustStage);
@@ -884,7 +919,7 @@ describe("tests for stage validation", () => {
       id: stageId,
       squad_id: squadId,
       stage_override_enabled: true,
-      stage_override_at: new Date("2025-03-01T10:00:00.000Z"),
+      stage_override_at: "2025-03-01T10:00:00.000Z",
       stage_override_reason: "  Some reason here  ",
     };
 
@@ -960,7 +995,7 @@ describe("tests for stage validation", () => {
         const testFullStage = {
           ...validFullStage,
           stage_override_enabled: true,
-          stage_override_at: new Date("2025-03-01T10:00:00.000Z"),
+          stage_override_at: "2025-03-01T10:00:00.000Z",
           stage_override_reason: "<aletrt>  Some reason here  </alert>", 
         };
         expect(validateFullStage(testFullStage)).toBe(ErrorCode.NONE);
@@ -1057,23 +1092,6 @@ describe("tests for stage validation", () => {
         };
         expect(validateFullStage(missingFullStage)).toBe(ErrorCode.MISSING_DATA);
       });
-      it("should return ErrorCode.MISSING_DATA when passed a full Stage with stage_override_enabled = false and valid stage_override_at", () => {
-        const missingFullStage = {
-          ...validFullStage,
-          stage_override_enabled: false,
-          stage_override_at: new Date(),          
-        };
-        expect(validateFullStage(missingFullStage)).toBe(ErrorCode.MISSING_DATA);
-      });
-      it("should return ErrorCode.MISSING_DATA when passed a full Stage with stage_override_enabled = false and valid stage_override_reason", () => {
-        const missingFullStage = {
-          ...validFullStage,
-          stage_override_enabled: false,
-          stage_override_reason: 'testing',
-        };
-        expect(validateFullStage(missingFullStage)).toBe(ErrorCode.MISSING_DATA);
-      });
-
       it("should return ErrorCode.MISSING_DATA when passed a null full stage", () => {
         expect(validateFullStage(null as any)).toBe(ErrorCode.MISSING_DATA);
       });
@@ -1134,10 +1152,27 @@ describe("tests for stage validation", () => {
         const missingFullStage = {
           ...validFullStage,
           stage: SquadStage.ENTRIES,
-          scores_started_at: new Date(),
+          scores_started_at: dateStr,
         };
         expect(validateFullStage(missingFullStage)).toBe(ErrorCode.INVALID_DATA);
       });
+      it("should return ErrorCode.INVALID_DATA when passed a full Stage with stage_override_enabled = false and valid stage_override_at", () => {
+        const missingFullStage = {
+          ...validFullStage,
+          stage_override_enabled: false,
+          stage_override_at: dateStr,          
+        };
+        expect(validateFullStage(missingFullStage)).toBe(ErrorCode.INVALID_DATA);
+      });
+      it("should return ErrorCode.INVALID_DATA when passed a full Stage with stage_override_enabled = false and valid stage_override_reason", () => {
+        const missingFullStage = {
+          ...validFullStage,
+          stage_override_enabled: false,
+          stage_override_reason: 'testing',
+        };
+        expect(validateFullStage(missingFullStage)).toBe(ErrorCode.INVALID_DATA);
+      });
+
     });
 
   });
@@ -1147,7 +1182,7 @@ describe("tests for stage validation", () => {
       id: stageId,
       squad_id: squadId,
       stage: SquadStage.DEFINE,
-      stage_set_at: new Date(),
+      stage_set_at: dateStr,
       scores_started_at: null,
     }
     describe('validateJustStage function - valid data', () => { 
@@ -1158,7 +1193,7 @@ describe("tests for stage validation", () => {
         const gotScoresStage: justStageType = {
           ...validJustStage,
           stage: SquadStage.SCORES,
-          scores_started_at: new Date(),
+          scores_started_at: dateStr,
         }
         expect(validateJustStage(gotScoresStage)).toEqual(ErrorCode.NONE);  
       })      
@@ -1279,7 +1314,7 @@ describe("tests for stage validation", () => {
         const invalidJustStage: justStageType = {
           ...validJustStage,
           stage: SquadStage.ENTRIES,
-          scores_started_at: new Date(),
+          scores_started_at: dateStr,
         }
         expect(validateJustStage(invalidJustStage)).toEqual(ErrorCode.INVALID_DATA);
       })
@@ -1304,7 +1339,7 @@ describe("tests for stage validation", () => {
         const testJustStageOverride: justStageOverrideType = {
           ...validJustStageOverride,
           stage_override_enabled: true,
-          stage_override_at: new Date(),
+          stage_override_at: dateStr,
           stage_override_reason: "Testing override",
         }
         expect(validJustStageOverrideData(testJustStageOverride)).toEqual(ErrorCode.NONE);
@@ -1360,7 +1395,7 @@ describe("tests for stage validation", () => {
         const invalidJustStageOverride: justStageOverrideType = {
           ...validJustStageOverride,
           stage_override_enabled: true,
-          stage_override_at: new Date(),
+          stage_override_at: dateStr,
           stage_override_reason: "a".repeat(maxReasonLength + 1),
         }
         expect(validJustStageOverrideData(invalidJustStageOverride)).toEqual(ErrorCode.INVALID_DATA);
@@ -1373,7 +1408,7 @@ describe("tests for stage validation", () => {
       id: stageId,
       squad_id: squadId,
       stage: SquadStage.DEFINE,
-      stage_set_at: new Date("2025-01-01T12:00:00.000Z"),
+      stage_set_at: dateStr,
       scores_started_at: null,
     };
 
@@ -1385,7 +1420,7 @@ describe("tests for stage validation", () => {
       const withScores: justStageType = {
         ...validStageObj,
         stage: SquadStage.SCORES,
-        scores_started_at: new Date("2025-01-02T09:30:00.000Z"),
+        scores_started_at: dateStr,
       };
       expect(isSquadStageType(withScores)).toBe(true);
     });
@@ -1436,13 +1471,13 @@ describe("tests for stage validation", () => {
       expect(isSquadStageType(bad)).toBe(false);
     });
 
-    it("returns false when stage_set_at is not a Date", () => {
-      const bad: any = {
+    it("returns true when stage_set_at is and invalid string date", () => {
+      const invalidByCorrectShape: any = {
         ...validStageObj,
         stage_set_at: "not-a-date",
       };
 
-      expect(isSquadStageType(bad)).toBe(false);
+      expect(isSquadStageType(invalidByCorrectShape)).toBe(true);
     });
 
     it("returns false when id is not a string", () => {
@@ -1454,13 +1489,13 @@ describe("tests for stage validation", () => {
       expect(isSquadStageType(bad)).toBe(false);
     });
 
-    it("returns false when scores_started_at is neither null nor Date", () => {
-      const bad: any = {
+    it("returns true when scores_started_at is neither a invalid string date", () => {
+      const invalidByCorrectShape: any = {
         ...validStageObj,
         scores_started_at: "not-a-date",
       };
 
-      expect(isSquadStageType(bad)).toBe(false);
+      expect(isSquadStageType(invalidByCorrectShape)).toBe(true);
     });
 
     it("returns false when scores_started_at property is missing", () => {
@@ -1468,7 +1503,7 @@ describe("tests for stage validation", () => {
         id: stageId,
         squad_id: squadId,
         stage: SquadStage.DEFINE,
-        stage_set_at: new Date("2025-01-01T12:00:00.000Z"),
+        stage_set_at: dateStr,
         // scores_started_at missing
       };
 
@@ -1477,13 +1512,13 @@ describe("tests for stage validation", () => {
   });
 
   describe("isSquadStageOverrideType type guard", () => {
-    const validOverrideDate = new Date("2025-03-01T10:00:00.000Z");
+    const validOverrideDateStr = "2025-03-01T10:00:00.000Z";
 
     const validOverrideObj: justStageOverrideType = {
       id: stageId,
       squad_id: squadId,
       stage_override_enabled: true,
-      stage_override_at: validOverrideDate,
+      stage_override_at: validOverrideDateStr,
       stage_override_reason: "Override for testing",
     };
 
@@ -1555,20 +1590,20 @@ describe("tests for stage validation", () => {
       expect(isSquadStageOverrideType(bad)).toBe(false);
     });
 
-    it("returns false when stage_override_at is not a Date", () => {
-      const bad: any = {
+    it("returns true when stage_override_at is an invalid string date", () => {
+      const invalidButCorrectShape: any = {
         ...validOverrideObj,
         stage_override_at: "not-a-date",
       };
 
-      expect(isSquadStageOverrideType(bad)).toBe(false);
+      expect(isSquadStageOverrideType(invalidButCorrectShape)).toBe(true);
     });
 
     it("returns false when stage_override_enabled is not present but other fields are", () => {
       const bad: any = {
         id: stageId,
         squad_id: squadId,
-        stage_override_at: validOverrideDate,
+        stage_override_at: validOverrideDateStr,
         stage_override_reason: "Reason",
         // stage_override_enabled missing
       };
@@ -1581,7 +1616,7 @@ describe("tests for stage validation", () => {
         id: stageId,
         stageId: squadId,
         enabled: true,
-        override_at: validOverrideDate,
+        override_at: validOverrideDateStr,
         reason: "Bad keys",
       };
 

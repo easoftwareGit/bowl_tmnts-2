@@ -1,4 +1,4 @@
-import { divEntryRawType, divEntryRawWithHdcpType } from "@/lib/types/types";
+import type { divEntryRawType, divEntryRawWithHdcpType } from "@/lib/types/types";
 import { validAverage } from "../../../lib/validation/players/validate";
 import { validHdcpFor, validHdcpFrom, validHdcpPer, validIntHdcp } from "../../../lib/validation/divs/validate";
 import { validGames } from "../../../lib/validation/squads/validate";

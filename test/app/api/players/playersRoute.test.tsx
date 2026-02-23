@@ -2,7 +2,7 @@ import axios, { AxiosError } from "axios";
 import { basePlayersApi } from "@/lib/db/apiPaths";
 import { testBasePlayersApi } from "../../../testApi";
 import { initPlayer } from "@/lib/db/initVals";
-import { playerType } from "@/lib/types/types";
+import type { playerType } from "@/lib/types/types";
 import { deleteAllPlayersForSquad, deleteAllPlayersForTmnt, getAllPlayersForTmnt, postManyPlayers } from "@/lib/db/players/dbPlayers";
 import { mockPlayersToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { cloneDeep } from "lodash";

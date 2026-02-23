@@ -90,6 +90,17 @@ describe('tmntDataForPrisma', () => {
         in_use: mockTmntFullData.lanes[i].in_use,
       });
     };
+    expect(result.squadsData).not.toBeNull();
+    expect(result.stageData).toMatchObject({
+      id: mockTmntFullData.stage.id,
+      squad_id: mockTmntFullData.stage.squad_id,
+      stage: mockTmntFullData.stage.stage,
+      stage_set_at: mockTmntFullData.stage.stage_set_at,
+      scores_started_at: mockTmntFullData.stage.scores_started_at,
+      stage_override_enabled: mockTmntFullData.stage.stage_override_enabled,
+      stage_override_at: mockTmntFullData.stage.stage_override_at,
+      stage_override_reason: mockTmntFullData.stage.stage_override_reason
+    })
     expect(result.brktEntriesData.length).toBe(4);
     expect(result.brktSeedsData.length).toBe(8);
     expect(result.brktsData.length).toBe(2);

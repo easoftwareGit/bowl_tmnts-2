@@ -1,15 +1,14 @@
 import axios from "axios";
 import { baseSquadsApi } from "@/lib/db/apiPaths";
 import { testBaseSquadsApi } from "../../../testApi";
-import { squadType } from "@/lib/types/types";
+import type { squadType } from "@/lib/types/types";
 import { blankSquad } from "@/lib/db/initVals";
 import {
   deleteAllSquadsForEvent,
   deleteAllSquadsForTmnt,
   deleteSquad,  
   getAllOneBrktsAndSeedsForSquad,
-  getAllSquadsForTmnt,
-  // getSquadEntries,
+  getAllSquadsForTmnt,  
   postManySquads,
   postSquad,
   putSquad,

@@ -1,7 +1,7 @@
 import axios from "axios";
 import { baseGamesApi } from "@/lib/db/apiPaths";
 import { testBaseGamesApi } from "../../../../test/testApi";
-import { gameType } from "@/lib/types/types";
+import type { gameType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { blankGame } from "../initVals";
 

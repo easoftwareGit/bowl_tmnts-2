@@ -1,5 +1,5 @@
 import { sanitize } from "./sanitize";
-import { DateInput, fullStageType, idTypes, idTypesArray } from "../types/types";
+import type { DateInput, fullStageType, idTypes } from "@/lib/types/types";
 import { SquadStage } from "@prisma/client";
 
 export const maxFirstNameLength = 15;
@@ -50,18 +50,16 @@ export const maxDate = new Date(Date.UTC(maxYear, 11, 31, 23, 59, 59, 999));
 
 export const minLane = 1;
 
+// 8.64.15 is max date per
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date#the_epoch_timestamps_and_invalid_date
+export const minTimeStamp = -8.64e15;
+export const maxTimeStamp = 8.64e15;
+
 export const idTypeLength = 3; // length of id type, e.g. usr, bwl, div, pot, elm, brk
 export const idTypeSeparator = "_"; // separator between id type and id
 export const idTypeSeparatorLength = 1; // length of id type separator, e.g
 export const uuidLength = 32; // length of a uuid without hyphens, e.g. 123e4567e89b12d3a456426655440000
 export const baseIdLength = idTypeLength + idTypeSeparatorLength + uuidLength; // length of a base id, e.g. usr_123e4567e89b12d3a456426655440000
-
-export enum ErrorCode {
-  NONE,
-  MISSING_DATA,
-  INVALID_DATA,
-  OTHER_ERROR,
-}
 
 /**
  * checks if string is in a valid email format
@@ -97,6 +95,31 @@ export function isPassword8to20(str: unknown): boolean {
 
 const validRoles = ["ADMIN", "DIRECTOR", "USER"];
 
+
+// usr - user
+// bwl - bowl
+// tmt - tournament
+// evt - event
+// div - division
+// sqd - squad
+// stg - stage
+// lan - lane
+// pot - pot
+// brk - bracket
+// elm - eliminator
+// ply - player
+// bye - bye player
+// den - division entry
+// pen - pot entry
+// ben - bracket entry
+// een - eliminator entry
+// gam - game
+// obk - one individual bracket
+// bsd - bracket seed
+export const idTypesArray = [
+  'usr', 'bwl', 'tmt', 'evt', 'div', 'sqd', 'stg', 'lan', 'pot', 'brk',
+  'elm', 'ply', 'bye', 'den', 'pen', 'ben', 'een', 'gam', 'obk', 'bsd'
+] as const;
 const validTypes = new Set(idTypesArray);
 
 /**
@@ -182,7 +205,7 @@ const isValidDateObject = (d: unknown): d is Date =>
 /**
  * converts value to a valid date or null
  *
- * @param value {DateInput} - value to convert to a vlaid date or to null
+ * @param value {DateInput} - value to convert to a valid date or to null
  * @returns {Date | null} - valid date or null
  */
 export const toValidDateOrNull = (value: DateInput): Date | null => {
@@ -215,6 +238,20 @@ export const toValidDateOrNull = (value: DateInput): Date | null => {
   // if got here, not a valid date, so return null
   return null;
 };
+
+/**
+ * check if two values are numerically equal
+ * 
+ * @param {any} a - first value to compare
+ * @param {any} b - second value to compare
+ * @returns {boolean} - true if values are numerically equal 
+ */
+export const safeNumericEqual = (a: any, b: any): boolean => {
+  const numA = Number(a);
+  const numB = Number(b);
+  if (!Number.isFinite(numA) || !Number.isFinite(numB)) return false;
+  return numA === numB;
+}
 
 /**
  * checks if numStr is a valid positive integer
@@ -308,7 +345,7 @@ export const isValidTimeStamp = (timestamp: number): boolean => {
   // 8.64.15 is max date per
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date#the_epoch_timestamps_and_invalid_date
   return (
-    timestamp >= -8.64e15 && timestamp <= 8.64e15 && Number.isInteger(timestamp)
+    timestamp >= minTimeStamp && timestamp <= maxTimeStamp && Number.isInteger(timestamp)
   );
 };
 

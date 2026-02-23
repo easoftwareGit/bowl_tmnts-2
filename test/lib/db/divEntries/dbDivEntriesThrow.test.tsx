@@ -13,7 +13,7 @@ import {
   postManyDivEntries,
   putDivEntry,
 } from "@/lib/db/divEntries/dbDivEntries";
-import { divEntryType } from "@/lib/types/types";
+import type { divEntryType } from "@/lib/types/types";
 import { initDivEntry } from "@/lib/db/initVals";
 
 const url = testBaseDivEntriesApi.startsWith("undefined")

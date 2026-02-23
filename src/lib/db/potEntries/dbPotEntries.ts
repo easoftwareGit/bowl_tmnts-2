@@ -1,9 +1,10 @@
 import axios from "axios";
 import { basePotEntriesApi } from "@/lib/db/apiPaths";
 import { testBasePotEntriesApi } from "../../../../test/testApi";
-import { potEntryType, putManyReturnType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
-import { blankPotEntry, noUpdates } from "../initVals";
+import type { potEntryType } from "@/lib/types/types";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
+import { blankPotEntry } from "../initVals";
 import { validatePotEntries } from "@/lib/validation/potEntries/validate";
 
 const url = testBasePotEntriesApi.startsWith("undefined")

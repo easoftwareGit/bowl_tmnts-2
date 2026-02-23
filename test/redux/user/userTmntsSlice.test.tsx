@@ -1,6 +1,6 @@
 import { configureStore, Store } from '@reduxjs/toolkit';
 import { userTmntsSlice, fetchUserTmnts, deleteUserTmnt} from '@/redux/features/userTmnts/userTmntsSlice';
-import { tmntsListType } from '@/lib/types/types';
+import type { tmntsListType } from '@/lib/types/types';
 
 const initialState = {
   userTmnts: [],

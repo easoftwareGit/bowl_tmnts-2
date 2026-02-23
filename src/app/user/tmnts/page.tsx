@@ -5,7 +5,7 @@ import { AppDispatch, RootState } from "@/redux/store";
 import { useSession } from "next-auth/react"; 
 import Link from "next/link";
 import { fetchUserTmnts, getUserTmntError, getUserTmntStatus, deleteUserTmnt } from "@/redux/features/userTmnts/userTmntsSlice";
-import { tmntsListType } from "@/lib/types/types";
+import type { tmntsListType } from "@/lib/types/types";
 import { yyyyMMdd_To_ddMMyyyy } from "@/lib/dateTools";
 import ModalConfirm from "@/components/modal/confirmModal";
 import WaitModal from "@/components/modal/waitModal";

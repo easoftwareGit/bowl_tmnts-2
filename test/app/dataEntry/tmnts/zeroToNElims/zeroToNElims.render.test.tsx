@@ -8,7 +8,7 @@ import { localConfig } from "@/lib/currency/const";
 import { formatValueSymbSep2Dec } from "@/lib/currency/formatValue";
 import { defaultElimGames} from "@/lib/db/initVals";
 import { getBrktOrElimName, getDivName } from "@/lib/getName";
-import { elimType } from "@/lib/types/types";
+import type { elimType } from "@/lib/types/types";
 import { minFeeText } from "@/components/currency/eaCurrencyInput";
 import { cloneDeep } from "lodash";
 

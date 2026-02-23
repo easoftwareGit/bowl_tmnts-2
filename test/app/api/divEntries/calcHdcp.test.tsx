@@ -1,5 +1,5 @@
 import { calcHandicap, divEntriesWithHdcp } from "@/app/api/divEntries/calcHdcp";
-import { divEntryRawType } from "@/lib/types/types";
+import type { divEntryRawType } from "@/lib/types/types";
 
 describe('calcHandicap', () => {
 

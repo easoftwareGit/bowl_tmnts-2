@@ -1,6 +1,7 @@
 import { validatePotEntries } from "@/lib/validation/potEntries/validate";
-import { potEntryType, validPotEntriesType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import type { potEntryType, validPotEntriesType } from "@/lib/types/types";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { deleteAllPotEntriesForSquad, postManyPotEntries } from "./dbPotEntries";
 
 /**

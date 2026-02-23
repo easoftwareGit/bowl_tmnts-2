@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { baseSquadsApi, baseEventsApi } from "@/lib/db/apiPaths";
 import { testBaseSquadsApi, testBaseEventsApi } from "../../../testApi";
-import { eventType, squadType } from "@/lib/types/types";
+import type { eventType, squadType } from "@/lib/types/types";
 import { initEvent, initSquad } from "@/lib/db/initVals";
 import { removeTimeFromISODateStr, startOfDayFromString } from "@/lib/dateTools";
 import { deleteAllSquadsForTmnt, getAllSquadsForTmnt, postSquad } from "@/lib/db/squads/dbSquads";

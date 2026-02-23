@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { isValidBtDbType } from './validation/validation';
-import { idTypes } from './types/types';
+import type { idTypes } from './types/types';
 
 /**
  * generates a BtDb uuid

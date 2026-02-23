@@ -1,8 +1,9 @@
 import axios from "axios";
 import { brktSeedsApi } from "@/lib/db/apiPaths";
 import { testBrktSeedsApi } from "../../../../test/testApi";
-import { brktSeedType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import type { brktSeedType } from "@/lib/types/types";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { validateBrktSeeds, validCompositKey } from "@/lib/validation/brktSeeds/validate";
 import { blankBrktSeed } from "../initVals";
 

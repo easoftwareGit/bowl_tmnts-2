@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
-import { tmntFormDataType, tmntFormParent } from "@/lib/types/types";
+import type { tmntFormDataType } from "@/lib/types/types";
+import { tmntFormParent } from "@/lib/enums/enums";
 import TmntDataForm from "../../tmntForm/tmntForm";
 import { useParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";

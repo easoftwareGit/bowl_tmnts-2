@@ -1,8 +1,9 @@
 import axios from "axios";
 import { baseElimEntriesApi } from "@/lib/db/apiPaths";
 import { testBaseElimEntriesApi } from "../../../../test/testApi";
-import { elimEntryType, putManyReturnType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import type { elimEntryType } from "@/lib/types/types";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { blankElimEntry, noUpdates } from "../initVals";
 import { validateElimEntries } from "@/lib/validation/elimEntries/validate";
 

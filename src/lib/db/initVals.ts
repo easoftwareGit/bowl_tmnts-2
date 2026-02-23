@@ -1,4 +1,4 @@
-import {
+import type {
   userType,
   bowlType,
   tmntType,  
@@ -261,7 +261,7 @@ export const initFullStage: fullStageType = {
   id: btDbUuid('stg'),  
   squad_id: '',
   stage: SquadStage.DEFINE,
-  stage_set_at: new Date(),
+  stage_set_at: new Date().toISOString(),
   scores_started_at: null,
   stage_override_enabled: false,  
   stage_override_at: null,
@@ -272,7 +272,7 @@ export const initJustStage: justStageType = {
   id: btDbUuid('stg'),
   squad_id: '',
   stage: SquadStage.DEFINE,
-  stage_set_at: new Date(),
+  stage_set_at: new Date().toISOString(),
   scores_started_at: null,
 }
 
@@ -504,6 +504,7 @@ export const blankBrktRefund: brktRefundType = {
 export const blankBrktEntry: brktEntryType = {
   ...initBrktEntry,
   id: "",
+  time_stamp: 0,
 }
 
 export const initElimEntry: elimEntryType = {
@@ -685,6 +686,7 @@ export const linkedInitTmntFullData = (userId: string): tmntFullType => {
       id: squadId,
       event_id: eventId,
     }],
+    stage: initFullStage,
   }    
 
   return initData;

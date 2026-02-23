@@ -1,7 +1,8 @@
-import { isValidBtDbId, ErrorCode, validSortOrder, isNumber, maxMoney } from "@/lib/validation/validation";
+import { isValidBtDbId, validSortOrder, isNumber } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { sanitize, sanitizeCurrency } from "@/lib/validation/sanitize";
 import { validBtdbMoney, validMoney } from "@/lib/currency/validate";
-import { potType, potCategoriesTypes, idTypes, validPotsType } from "@/lib/types/types";
+import type { potType, potCategoriesTypes, idTypes, validPotsType } from "@/lib/types/types";
 import { blankPot } from "@/lib/db/initVals";
 
 /**

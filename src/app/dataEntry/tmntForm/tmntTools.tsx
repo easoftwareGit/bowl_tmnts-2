@@ -1,4 +1,9 @@
 import {
+  blankDiv,
+  blankEvent,
+  blankFullStage,
+  blankSquad,
+  blankTmnt,
   initBrkts,
   initDiv,  
   initElims,
@@ -8,15 +13,39 @@ import {
   initTmnt,
 } from "@/lib/db/initVals";
 import { getJustStage } from "@/lib/db/stages/dbStages";
-import { tmntFullType } from "@/lib/types/types";
+import type { tmntFullType } from "@/lib/types/types";
 import { btDbUuid } from "@/lib/uuid";
 import { SquadStage } from "@prisma/client";
 
 /**
+ * Returns a tmntFullType object with all arrays empty, all values blank except id's
  * 
- * @returns - a tmntFullType object with all arrays empty, all values blank
+ * @param {boolean} initialize - true: initialize with id's, sets today's date, links id's
+ * @returns {tmntFullType} - tmntFullType object with all arrays empty, all values blank
  */
-export const getBlankTmntFullData = (): tmntFullType => {
+export const getBlankTmntFullData = (initialize: boolean = true): tmntFullType => {
+
+  if (!initialize) {
+    const allBlankTmntFullData: tmntFullType = {
+      tmnt: { ...blankTmnt },
+      brktEntries: [],
+      brktSeeds: [],
+      brkts: initBrkts,
+      divs: [{ ...blankDiv }],
+      divEntries: [],
+      elimEntries: [],
+      elims: initElims,
+      events: [{ ...blankEvent }],
+      lanes: [],
+      oneBrkts: [],
+      players: [],
+      potEntries: [],
+      pots: initPots,
+      squads: [{ ...blankSquad }],   
+      stage: { ...blankFullStage },          
+    }
+    return allBlankTmntFullData;
+  }
   const blankTmntFullData: tmntFullType = {
     tmnt: { ...initTmnt, id: btDbUuid("tmt") },
     brktEntries: [],
@@ -45,8 +74,13 @@ export const getBlankTmntFullData = (): tmntFullType => {
     players: [],
     potEntries: [],
     pots: initPots,
-    squads: [{ ...initSquad, id: btDbUuid("sqd") }],    
+    squads: [{ ...initSquad, id: btDbUuid("sqd") }],   
+    stage: {
+      ...blankFullStage,
+      id: btDbUuid("stg"),      
+    },
   };
+  blankTmntFullData.stage.squad_id = blankTmntFullData.squads[0].id;
   for (let i = 0; i < blankTmntFullData.events.length; i++) {
     blankTmntFullData.events[i].id = btDbUuid("evt");
     blankTmntFullData.events[i].tmnt_id = blankTmntFullData.tmnt.id;

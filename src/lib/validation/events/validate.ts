@@ -4,13 +4,13 @@ import {
   minTeamSize,
   maxTeamSize,
   minGames,
-  maxGames,
-  ErrorCode,  
+  maxGames,  
   validSortOrder,  
 } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { sanitize, sanitizeCurrency } from "@/lib/validation/sanitize";
 import { validBtdbMoney, validMoney } from "@/lib/currency/validate";
-import { eventType, idTypes, validEventsType } from "@/lib/types/types";
+import type { eventType, idTypes, validEventsType } from "@/lib/types/types";
 import { blankEvent } from "@/lib/db/initVals";
 import { isNumber } from "@/lib/validation/validation";
 
@@ -304,20 +304,20 @@ export const validateEvents = (events: eventType[]): validEventsType => {
   let i = 0;
   let tmntId = "";
   while (i < events.length) {
-    const toPost = sanitizeEvent(events[i]);
-    const errCode = validateEvent(toPost);
+    const sanitized = sanitizeEvent(events[i]);
+    const errCode = validateEvent(sanitized);
     if (errCode !== ErrorCode.NONE) { 
       return { events: okEvents, errorCode: errCode };
     }    
     // all events MUST have same tmnt_id
-    if (i > 0 && tmntId !== toPost.tmnt_id) {
+    if (i > 0 && tmntId !== sanitized.tmnt_id) {
       return { events: okEvents, errorCode: ErrorCode.INVALID_DATA };
     }
     // push AFETER errCode is None
-    okEvents.push(toPost);    
+    okEvents.push(sanitized);    
     // set tmnt_id AFTER 1st event sanitzied and validated
     if (i === 0) {
-      tmntId = toPost.tmnt_id;
+      tmntId = sanitized.tmnt_id;
     }
     i++;
   }

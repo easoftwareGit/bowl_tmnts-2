@@ -1,4 +1,4 @@
-import {    
+import type {    
   divEntryType,  
   elimEntryType,
   playerType,
@@ -7,12 +7,12 @@ import {
   gridTmntEntryDataType,
   fullBrktsDataType,
 } from "@/lib/types/types";
+import type { playerEntryRow } from "./populateRows";
 import {
   brktsColNameEnd,
   divEntryHdcpColName,
   entryFeeColName,
-  feeColNameEnd,
-  playerEntryData,
+  feeColNameEnd,  
   timeStampColName,  
 } from "./createColumns";
 import {  
@@ -24,36 +24,47 @@ import {
 } from "@/lib/db/initVals";
 import { btDbUuid } from "@/lib/uuid";
 import { BracketList } from "@/components/brackets/bracketListClass";
+import { isValidBtDbId } from "@/lib/validation/validation";
 
 /**
  * extarcts data from rows in grid
  *
- * DATA IS ASSUMED TO BE VALID
- *
- * @param {typeof playerEntryData[]} rows - array of playerEntryData in data grid
+ * @param {playerEntryRow[]} rows - array of playerEntryData in data grid
+ * @param {string} squadId - squad id 
+ * @param {BracketList[]} brktLists - array of BracketLists
  * @returns {gridTmntEntryDataType} - gridTmntEntryDataType object
  */
 export const extractDataFromRows = (
-  rows: (typeof playerEntryData)[],
-  squadId: string
+  rows: playerEntryRow[],
+  squadId: string,
+  brktLists: BracketList[],
 ): gridTmntEntryDataType => {
+
+  const emptyResult = (): gridTmntEntryDataType => ({
+    players: [],
+    divEntries: [],
+    potEntries: [],
+    brktEntries: [],
+    elimEntries: [],
+  });
+  if (!rows || !Array.isArray(rows) || rows.length === 0) {
+    return emptyResult();
+  }
+  if (!isValidBtDbId(squadId, "sqd")) {
+    return emptyResult();
+  }
+  // Validate brktLists (empty array allowed)
+  if (!brktLists || !Array.isArray(brktLists)) { 
+    return emptyResult();
+  }
+
   const players: playerType[] = [];
   const divEntries: divEntryType[] = [];
   const potEntries: potEntryType[] = [];
   const brktEntries: brktEntryType[] = [];
   const elimEntries: elimEntryType[] = [];
-
-  if (!rows || rows.length === 0)
-    return {      
-      players: players,
-      divEntries: divEntries,
-      potEntries: potEntries,
-      brktEntries: brktEntries,      
-      elimEntries: elimEntries,
-    };
-
+  
   rows.forEach((row) => {
-
     const divFeeColNames = Object.keys(row).filter(
       (key) => key.startsWith("div") && key.endsWith(feeColNameEnd)
     );
@@ -66,7 +77,7 @@ export const extractDataFromRows = (
     const elimFeeColNames = Object.keys(row).filter(
       (key) => key.startsWith("elm") && key.endsWith(feeColNameEnd)
     );
-
+    
     players.push({
       ...initPlayer,
       id: row.id,
@@ -80,6 +91,7 @@ export const extractDataFromRows = (
 
     const feeTextLength = feeColNameEnd.length * -1;
     const brktTextLength = brktsColNameEnd.length * -1;
+
     divFeeColNames.forEach((feeColName) => {
       if (row[feeColName]) {
         const divId = feeColName.slice(0, feeTextLength); // remove "_fee" from column name
@@ -98,6 +110,7 @@ export const extractDataFromRows = (
         });
       }
     });
+
     potFeeColNames.forEach((feeColName) => {
       if (row[feeColName]) {
         const potId = feeColName.slice(0, feeTextLength); // remove "_fee" from column name
@@ -110,20 +123,58 @@ export const extractDataFromRows = (
         });
       }
     });
+        
     brktNumColNames.forEach((brktNumColName) => {
+      const brktId = brktNumColName.slice(0, brktTextLength); // remove "_brkts" from column name
+      const brktList = brktLists.find((list) => list.brktId === brktId);
+    
       if (row[brktNumColName]) {
-        const brktId = brktNumColName.slice(0, brktTextLength); // remove "_brkts" from column name
-        brktEntries.push({
-          ...initBrktEntry,
-          id: btDbUuid('ben'),
-          brkt_id: brktId,
-          player_id: row.id,
-          num_brackets: row[brktNumColName],
-          fee: row[entryFeeColName(brktId)] + '',
-          time_stamp: row[timeStampColName(brktId)],
-        });
+        if (brktList && row[brktNumColName] > brktList.totalBrackets) {
+          brktEntries.push({
+            ...initBrktEntry,
+            id: btDbUuid('ben'),
+            brkt_id: brktId,
+            player_id: row.id,
+            num_brackets: row[brktNumColName],
+            num_refunds: row[brktNumColName] - brktList.totalBrackets,
+            fee: row[entryFeeColName(brktId)] + '',
+            time_stamp: row[timeStampColName(brktId)],
+          });           
+        } else {
+          brktEntries.push({
+            ...initBrktEntry,
+            id: btDbUuid('ben'),
+            brkt_id: brktId,
+            player_id: row.id,
+            num_brackets: row[brktNumColName],
+            fee: row[entryFeeColName(brktId)] + '',
+            time_stamp: row[timeStampColName(brktId)],
+          });              
+        }
+        // if (row[brktNumColName] > brktList.totalBrackets) {
+        //   brktEntries.push({
+        //     ...initBrktEntry,
+        //     id: btDbUuid('ben'),
+        //     brkt_id: brktId,
+        //     player_id: row.id,
+        //     num_brackets: row[brktNumColName],
+        //     num_refunds: row[brktNumColName] - brktList.totalBrackets,
+        //     fee: row[entryFeeColName(brktId)] + '',
+        //     time_stamp: row[timeStampColName(brktId)],
+        //   });
+        // } else {
+        //   brktEntries.push({
+        //     ...initBrktEntry,
+        //     id: btDbUuid('ben'),
+        //     brkt_id: brktId,
+        //     player_id: row.id,
+        //     num_brackets: row[brktNumColName],
+        //     fee: row[entryFeeColName(brktId)] + '',
+        //     time_stamp: row[timeStampColName(brktId)],
+        //   });            
       }
     });
+
     elimFeeColNames.forEach((feeColName) => {
       if (row[feeColName]) {
         const elimId = feeColName.slice(0, feeTextLength); // remove "_fee" from column name
@@ -161,9 +212,18 @@ export const extractFullBrktsData = (brktLists: BracketList[]): fullBrktsDataTyp
 
   try {
     brktLists.forEach((brktList) => {
-      for (let bindex = 0; bindex < brktList.brackets.length; bindex++) {
+      for (let bindex = 0; bindex < brktList.brackets.length; bindex++) {        
+                
+        // create parent row in array of one brkts
+        const one_brkt_id = btDbUuid('obk');        
+        fbData.oneBrkts.push({        
+          id: one_brkt_id,
+          brkt_id: brktList.brktId,
+          bindex: bindex
+        });
+
+        // create child rows in array of brkt seeds
         const brkt = brktList.brackets[bindex];
-        const one_brkt_id = btDbUuid('obk');
         for (let seed = 0; seed < brkt.players.length; seed++) {
           const player = brkt.players[seed];
           fbData.brktSeeds.push({
@@ -172,11 +232,6 @@ export const extractFullBrktsData = (brktLists: BracketList[]): fullBrktsDataTyp
             player_id: player
           });
         };
-        fbData.oneBrkts.push({        
-          id: one_brkt_id,
-          brkt_id: brkt.id,
-          bindex: bindex
-        });
       }
     });
     return fbData;

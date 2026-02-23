@@ -3,16 +3,15 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from "react"
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
 import PlayersEntryForm from "../../playersForm/playersForm";
-import {
+import type {
   brktType,  
-  tmntFormDataType,
-  tmntFormParent,
+  tmntFormDataType,  
 } from "@/lib/types/types";
+import { tmntFormParent } from "@/lib/enums/enums";
 import {    
   entryFeeColName,
   entryNumBrktsColName,
   feeColNameEnd,
-  playerEntryData,  
 } from "../../playersForm/createColumns";
 import { getBrktOrElimName, getPotName } from "@/lib/getName";
 import { OverlayTrigger, Tooltip, Tab, Tabs } from "react-bootstrap";
@@ -29,8 +28,9 @@ import {
   getTmntFullDataError,
   getTmntFullDataLoadStatus,
 } from "@/redux/features/tmntFullData/tmntFullDataSlice";
-import { populateRows } from "../../playersForm/populateRows";
+import { playerEntryRow, populateRows } from "../../playersForm/populateRows";
 import { SquadStage } from "@prisma/client";
+import { createByePlayer } from "@/components/brackets/byePlayer";
 
 // run tmnt:
 // http://localhost:3000/dataEntry/runTmnt/tmt_d237a388a8fc4641a2e37233f1d6bebd
@@ -38,17 +38,20 @@ import { SquadStage } from "@prisma/client";
 // edit bowlers:
 // http://localhost:3000/dataEntry/editPlayers/tmt_d237a388a8fc4641a2e37233f1d6bebd
 
+const dummySquadId = "sqd_00000000000000000000000000000000";
+const initByePlayer = createByePlayer(dummySquadId); // ok to use dummy data, not saved
+
 /**
  * builds brkts list map
  *
  * @param {brktType[]} brkts - array of brkts
- * @param {typeof playerEntryData[]} rows - array of playerEntryData, current data entry rows
+ * @param {playerEntryRow[]} rows - array of playerEntryData, current data entry rows
  * @param {Record<string, BracketList>} prevAllBrktsList - prior brkts list
  * @returns {Record<string, BracketList>} - brkts list map
  */
 const buildBrktList = (
   brkts: brktType[],
-  rows: (typeof playerEntryData)[] = [],
+  rows: playerEntryRow[] = [],
   prevAllBrktsList?: Record<string, BracketList>
 ): Record<string, BracketList> => {
   const bList: Record<string, BracketList> = {};
@@ -58,6 +61,7 @@ const buildBrktList = (
       brkt.id,
       defaultPlayersPerMatch,
       defaultBrktGames,
+      initByePlayer,
       prev?.brackets
     );
     brktList.calcTotalBrkts(rows);
@@ -68,16 +72,17 @@ const buildBrktList = (
 
 export default function EditPlayersPage() {
 
-  const [rows, setRows] = useState<(typeof playerEntryData)[]>([]);
+  const [rows, setRows] = useState<playerEntryRow[]>([]);
   const [entriesCount, setEntriesCount] = useState<Record<string, number>>({});
   const [priorCount, setPriorCount] = useState<Record<string, number>>({});
-  const [allBrktsList, setAllBrktsList] = useState<Record<string, BracketList>>(
-    {}
-  );
+  const [allBrktsList, setAllBrktsList] = useState<Record<string, BracketList>>({});
   const [gotRefunds, setGotRefunds] = useState<Record<string, boolean>>({});
 
+  const defaultTabKey = "divs";
+  const [tabKey, setTabKey] = useState(defaultTabKey);
+
   // get original rows for change detection (useRef -> no re-renders)
-  const origRowsRef = useRef<(typeof playerEntryData)[]>([]);
+  const origRowsRef = useRef<playerEntryRow[]>([]);
   // so only initialize state once when data first becomes available
   const initializedRef = useRef(false);
 
@@ -93,6 +98,7 @@ export default function EditPlayersPage() {
     parentForm: tmntFormParent.RUN,
   };
 
+  // init values for form when retrieving data from state
   const initValues = useMemo(() => {
     const entriesCountInit: Record<string, number> = {};
     const priorCountInit: Record<string, number> = {};
@@ -100,7 +106,7 @@ export default function EditPlayersPage() {
       return {
         entriesCountInit,
         priorCountInit,
-        currRows: [] as (typeof playerEntryData)[],
+        currRows: [] as playerEntryRow[],
         allBrktsListInit: {} as Record<string, BracketList>,
         gotRefundsInit: {} as Record<string, boolean>,
       };
@@ -123,9 +129,9 @@ export default function EditPlayersPage() {
     });
 
     // build rows - most of the work
-    const curRows = populateRows(stateTmntFullData);
+    const currentRows = populateRows(stateTmntFullData);
     /// build brkt lists
-    const allBrktsListInit = buildBrktList(stateTmntFullData.brkts, curRows);
+    const allBrktsListInit = buildBrktList(stateTmntFullData.brkts, currentRows);
     // got refunds for initial stte
     const gotRefundsInit: Record<string, boolean> = {};
     Object.keys(allBrktsListInit).forEach((id) => {
@@ -135,7 +141,7 @@ export default function EditPlayersPage() {
     return {
       entriesCountInit,
       priorCountInit,
-      currRows: curRows,
+      currRows: currentRows,
       allBrktsListInit,
       gotRefundsInit,
     };
@@ -163,9 +169,6 @@ export default function EditPlayersPage() {
 
     initializedRef.current = true;
   }, [tmntLoadStatus, initValues]);
-
-  const defaultTabKey = "divs";
-  const [tabKey, setTabKey] = useState(defaultTabKey);
 
   // when grid data is changed
   useEffect(() => {
@@ -549,8 +552,7 @@ export default function EditPlayersPage() {
         {tmntLoadStatus === "succeeded" && (
           <>
             <h2>Bowlers</h2>
-            <PlayersEntryForm
-              tmntFullData={tmntFormData?.tmntFullData}
+            <PlayersEntryForm              
               rows={rows}
               setRows={setRows}
               findCountError={findCountError}

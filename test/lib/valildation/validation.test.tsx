@@ -16,11 +16,12 @@ import {
   isValidTimeStamp,
   validInteger,
   toValidDateOrNull,
+  safeNumericEqual,
   exportedForTesting,
   isFullStageType
 } from "@/lib/validation/validation";
 import { initDiv, initEvent } from "@/lib/db/initVals";
-import { fullStageType } from "@/lib/types/types";
+import type { fullStageType } from "@/lib/types/types";
 import { SquadStage } from "@prisma/client";
 
 const { isValidDateObject } = exportedForTesting;
@@ -477,6 +478,84 @@ describe("tests for validation functions", () => {
     });
   });
 
+  describe("safeNumericEqual", () => {
+
+    describe("returns true when values are numerically equal", () => {
+      it("returns true for equal integers", () => {
+        expect(safeNumericEqual(100, 100)).toBe(true);
+      });
+      it("returns true for equal numeric strings", () => {
+        expect(safeNumericEqual("100", "100")).toBe(true);
+      });
+      it("returns true for numeric string and number", () => {
+        expect(safeNumericEqual("100", 100)).toBe(true);
+        expect(safeNumericEqual(100, "100")).toBe(true);
+      });
+      it("returns true for decimal string and integer string (required test)", () => {
+        expect(safeNumericEqual("100", "100.00")).toBe(true);
+      });
+      it("returns true for decimals that are numerically equal", () => {
+        expect(safeNumericEqual("10.5", 10.5)).toBe(true);
+      });
+      it("returns true for zero values", () => {
+        expect(safeNumericEqual(0, "0")).toBe(true);
+        expect(safeNumericEqual("0.00", 0)).toBe(true);
+      });
+      it("returns true for negative values", () => {
+        expect(safeNumericEqual("-25", -25)).toBe(true);
+      });
+      it("returns true when both values are null (Number(null) === 0)", () => {
+        expect(safeNumericEqual(null, null)).toBe(true);
+      });
+    });
+
+    describe("returns false when numeric values differ", () => {
+      it("returns false for different integers", () => {
+        expect(safeNumericEqual(100, 101)).toBe(false);
+      });
+      it("returns false for different numeric strings", () => {
+        expect(safeNumericEqual("100", "101")).toBe(false);
+      });
+      it("returns false for decimal differences", () => {
+        expect(safeNumericEqual("100.01", "100.02")).toBe(false);
+      });
+      it("returns false for negative vs positive", () => {
+        expect(safeNumericEqual("-100", "100")).toBe(false);
+      });
+    });
+
+    describe("returns false when either value is not finite numeric", () => {
+      it("returns false for non-numeric string", () => {
+        expect(safeNumericEqual("abc", 100)).toBe(false);
+      });
+      it("returns false for empty string vs number", () => {
+        // Number("") === 0, so this is actually equal
+        expect(safeNumericEqual("", 0)).toBe(true);
+      });
+      it("returns false when one value is NaN", () => {
+        expect(safeNumericEqual(NaN, 100)).toBe(false);
+        expect(safeNumericEqual(100, NaN)).toBe(false);
+      });
+      it("returns false when both values are NaN", () => {
+        expect(safeNumericEqual(NaN, NaN)).toBe(false);
+      });
+      it("returns false when value is Infinity", () => {
+        expect(safeNumericEqual(Infinity, 100)).toBe(false);
+        expect(safeNumericEqual(100, Infinity)).toBe(false);
+      });
+      it("returns false when value is undefined", () => {
+        expect(safeNumericEqual(undefined, 100)).toBe(false);
+        expect(safeNumericEqual(100, undefined)).toBe(false);
+      });
+      it("returns false for object values", () => {
+        expect(safeNumericEqual({}, 100)).toBe(false);
+      });
+      it("returns false for array values", () => {
+        expect(safeNumericEqual([], 100)).toBe(false);
+      });
+    });
+  });
+
   describe("validPositiveInt", () => {    
     it("should return true when given a valid positive integer string", () => {
       const result = validPositiveInt("123");
@@ -831,7 +910,7 @@ describe("tests for validation functions", () => {
       id: "fs_123",
       squad_id: "sqd_456",
       stage: SquadStage.DEFINE,
-      stage_set_at: new Date(),
+      stage_set_at: new Date().toISOString(),
       scores_started_at: null,
       stage_override_enabled: false,
       stage_override_at: null,

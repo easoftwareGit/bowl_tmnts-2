@@ -1,7 +1,8 @@
-import { isValidBtDbId, maxTmntNameLength, ErrorCode, minDate, maxDate } from "@/lib/validation/validation";
+import { isValidBtDbId, maxTmntNameLength, minDate, maxDate } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { sanitize } from "@/lib/validation/sanitize";
 import { isValid, compareAsc } from "date-fns";
-import { idTypes, tmntFullType, tmntType } from "@/lib/types/types";
+import type { idTypes, tmntFullType, tmntType } from "@/lib/types/types";
 import { blankTmnt } from "@/lib/db/initVals";
 import { validDateString } from "@/lib/dateTools";
 

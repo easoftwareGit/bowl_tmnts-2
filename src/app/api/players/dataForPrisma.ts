@@ -1,4 +1,4 @@
-import { playerDataType, playerType } from "@/lib/types/types"
+import type { playerDataType, playerType } from "@/lib/types/types"
 
 /**
  * Converts player to playerDataType

@@ -1,6 +1,7 @@
 import { validateBrkts } from "@/lib/validation/brkts/validate";
-import { brktType, validBrktsType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import type { brktType, validBrktsType } from "@/lib/types/types";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { deleteAllBrktsForSquad, postManyBrkts } from "./dbBrkts";
 
 /**

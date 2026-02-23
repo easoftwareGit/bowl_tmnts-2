@@ -9,8 +9,9 @@ import {
   validateElims
 } from "@/lib/validation/elims/validate";
 import { initElim } from "@/lib/db/initVals";
-import { elimType, validElimsType } from "@/lib/types/types";
-import { ErrorCode, minGames, maxGames } from "@/lib/validation/validation";
+import type { elimType, validElimsType } from "@/lib/types/types";
+import { minGames, maxGames } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { mockElimsToPost } from "../../mocks/tmnts/singlesAndDoubles/mockSquads";
 
 const { gotElimData, validElimData } = exportedForTesting;

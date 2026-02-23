@@ -1,5 +1,5 @@
 import { initElim } from "@/lib/db/initVals";
-import { elimType } from "@/lib/types/types";
+import type { elimType } from "@/lib/types/types";
 
 const squadId = "sqd_7116ce5f80164830830a7157eb093396";
 

@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { squadType, laneType } from "../../../lib/types/types";
+import type { squadType, laneType } from "../../../lib/types/types";
 import { Tabs, Tab } from "react-bootstrap";
 import LanesList from "@/components/tmnts/lanesList";
 import { isArray } from "lodash";

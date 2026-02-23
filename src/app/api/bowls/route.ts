@@ -1,9 +1,9 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { bowlType } from "@/lib/types/types";
+import type { bowlType } from "@/lib/types/types";
 import { initBowl } from "@/lib/db/initVals";
 import { sanitizeBowl, validateBowl } from "../../../lib/validation/bowls/validate";
-import { ErrorCode } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { getErrorStatus } from "../errCodes";
 
 // routes /api/bowls

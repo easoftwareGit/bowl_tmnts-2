@@ -61,7 +61,7 @@ import {
   getBlankTmntFullData,
   getSquadStage,
 } from "@/app/dataEntry/tmntForm/tmntTools";
-import { tmntFormParent } from "@/lib/types/types";
+import { tmntFormParent } from "@/lib/enums/enums";
 
 // Typed mock handles
 const useDispatchMock =

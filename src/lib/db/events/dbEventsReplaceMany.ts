@@ -1,6 +1,7 @@
 import { validateEvents } from "@/lib/validation/events/validate";
-import { eventType, validEventsType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import type { eventType, validEventsType } from "@/lib/types/types";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { deleteAllEventsForTmnt, postManyEvents } from "./dbEvents";
 
 /**

@@ -1,7 +1,7 @@
-import { isValidBtDbId, ErrorCode, isNumber } from "@/lib/validation/validation";
-import { oneBrktType, validOneBrktsType } from "@/lib/types/types";
+import { isValidBtDbId, isNumber } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
+import type { oneBrktType, validOneBrktsType } from "@/lib/types/types";
 import { blankOneBrkt } from "@/lib/db/initVals";
-import { isInteger } from "lodash";
 
 /**
  * checks if oneBrkt object has missing data - DOES NOT SANITIZE OR VALIDATE

@@ -1,6 +1,6 @@
 "use client";
 import { dateTo_MMddyyyy } from "@/lib/dateTools";
-import { testDateType } from "@/lib/types/types";
+import type { testDateType } from "@/lib/types/types";
 import { FC, useState, useEffect } from "react";
 
 interface TestDatesListProps {

@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
-import { tmntFullType } from "@/lib/types/types";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
+import type { tmntFullType } from "@/lib/types/types";
 import { tmntFullDataForPrisma } from "../../dataForPrisma";
 import { getErrorStatus } from "@/app/api/errCodes";
-import { validateFullTmnt } from "../../full/validate";
+
+import { SquadStage } from "@prisma/client";
+import { sanitizeFullTmnt, validateFullTmnt } from "@/lib/validation/tmnts/full/validate";
 
 // routes /api/tmnts/fullEntries/:id
 
@@ -17,58 +20,71 @@ export async function PUT(
     if (!isValidBtDbId(id, "tmt")) {
       return NextResponse.json({ error: "invalid request" }, { status: 404 });
     }
-
     const tmntFullEntriesData: tmntFullType = await request.json();
+    const toPut = sanitizeFullTmnt(tmntFullEntriesData); 
     // validate tmnt full entries data
-    const validationResult = validateFullTmnt(tmntFullEntriesData);
+    const validationResult = validateFullTmnt(toPut);
     if (
       validationResult.errorCode !== ErrorCode.NONE ||
-      id !== tmntFullEntriesData.tmnt.id
+      id !== toPut.tmnt.id
     ) {
       return NextResponse.json(
         { error: "validation failed", details: validationResult },
         { status: 422 }
       );
     }
-    if (
-      tmntFullEntriesData.squads &&
-      tmntFullEntriesData.squads.length === 0 &&
-      !isValidBtDbId(tmntFullEntriesData.squads[0].id, "sqd")
-    ) {
+
+    const squads = toPut.squads;
+    if (!squads || squads.length === 0) {
+      return NextResponse.json(
+        { error: "missing squad data" },
+        { status: 422 }
+      );
+    }
+    const squadId = squads[0].id;
+    if (!isValidBtDbId(squadId, "sqd")) {
       return NextResponse.json(
         { error: "invalid squad id" },
         { status: 422 }
       );
     }
-    const squadId = tmntFullEntriesData.squads[0].id; // only 1 squad for now
+
+    // 1 - convert tmntData to prisma data
+    const prismaTmntFullEntriesData = tmntFullDataForPrisma(toPut);
+    if (!prismaTmntFullEntriesData) {
+      return NextResponse.json(
+        { error: "invalid tmnt data" },
+        { status: 404 }
+      );
+    }
+
+    // 1.1 - set stage date
+    const stageDate = new Date();
+    const stageDateStr = stageDate.toISOString(); // app sets stage date    
+    const stage = prismaTmntFullEntriesData.stageData;
+
     // run replace - delete/create many in one transaction
+    // Use Prisma interactive transaction (tx callback) because:
+    // T1) We must read brkt IDs inside the transaction and use them for dependent deletes.
+    // T2) We perform multiple sequential deletes/inserts that must commit/rollback together.
+    // T3) We have conditional/looped writes (brktEntries with refunds).    
     const result = await prisma.$transaction(async (tx) => {
-      // 1 - delete data in database
-      // 1a - deleting player data also deletes divEntries, potEntries,
+      // 2 - delete data in database
+      // 2a - deleting player data also deletes divEntries, potEntries,
       // elimEntries and brktEntries
       await tx.player.deleteMany({ where: { squad_id: squadId } });
       // deleting oneBrkt data also deletes brktSeeds
       // need to break up the one_brkt delete into 2 parts
-      // 1b - get all brkts for this squad
+      // 2b - get all brkts for this squad
       const brkts = await tx.brkt.findMany({
         where: { squad_id: squadId },
         select: { id: true },
       });
       const brktIds = brkts.map((brkt) => brkt.id);
-      // 1c - delete one_brkt data
+      // 2c - delete one_brkt data
       await tx.one_Brkt.deleteMany({
         where: { brkt_id: { in: brktIds } },
       });
-
-      // 2 - convert tmntData to prisma data
-      const prismaTmntFullEntriesData =
-        tmntFullDataForPrisma(tmntFullEntriesData);
-      if (!prismaTmntFullEntriesData) {
-        return NextResponse.json(
-          { error: "invalid tmnt data" },
-          { status: 404 }
-        );
-      }
 
       // 3 replace data with edited data
       await tx.player.createMany({
@@ -83,18 +99,32 @@ export async function PUT(
       await tx.elim_Entry.createMany({
         data: prismaTmntFullEntriesData.elimEntriesData,
       });
+      // 3a - update stage
+      const updatedStage = await tx.stage.update({
+        where: { id: stage.id },
+        data: {
+          // squad_id: stage.squad_id, // no change needed to squad id
+          stage: stage.stage,
+          stage_set_at: stageDateStr,
+          stage_override_enabled: stage.stage_override_enabled,
+          scores_started_at: (stage.stage && stage.stage === SquadStage.SCORES) ? stageDateStr : null,
+          stage_override_at: (stage.stage_override_enabled) ? stageDateStr : null,
+          stage_override_reason: stage.stage_override_reason,
+        },
+      })
+
       // brktEntries has 1-1 child data in brktRefunds.
       // cannot use createMany for brktEntries w/ refunds
       // so split brktEntries into 2 groups: w/o refunds and w/ refunds
-      // 3d1 - filter brktEntries w/o refunds and with refunds
-      const beNoRefunds = tmntFullEntriesData.brktEntries.filter(
+      // 3b1 - filter brktEntries w/o refunds and with refunds
+      const beNoRefunds = toPut.brktEntries.filter(
         (brktEntry) => !brktEntry.num_refunds || brktEntry.num_refunds <= 0
       );
-      const beYesRefunds = tmntFullEntriesData.brktEntries.filter(
+      const beYesRefunds = toPut.brktEntries.filter(
         (brktEntry) =>
           brktEntry.num_refunds != null && brktEntry.num_refunds > 0
       );
-      // 3d2 - create brktEntries w/o refunds
+      // 3b2 - create brktEntries w/o refunds
       await tx.brkt_Entry.createMany({
         data: beNoRefunds.map((be) => ({
           id: be.id,
@@ -104,7 +134,7 @@ export async function PUT(
           time_stamp: new Date(be.time_stamp), // Convert to Date object
         })),
       });
-      // 3d3 - create brktEntries w/ refunds
+      // 3b3 - create brktEntries w/ refunds
       for (const be of beYesRefunds) {
         await tx.brkt_Entry.create({
           data: {
@@ -129,9 +159,8 @@ export async function PUT(
         data: prismaTmntFullEntriesData.brktSeedsData,
       });
 
-      return { success: true };
+      return { success: true, stage: updatedStage };
     });
-
     return NextResponse.json(result, { status: 200 });
   } catch (err: any) {
     const errStatus = getErrorStatus(err.code);

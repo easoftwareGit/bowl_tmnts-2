@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { baseElimsApi } from "@/lib/db/apiPaths";
 import { testBaseElimsApi } from "../../../testApi";
-import { elimType } from "@/lib/types/types";
+import type { elimType } from "@/lib/types/types";
 import { initElim } from "@/lib/db/initVals";
 import { deleteAllSquadsForTmnt, postManySquads } from "@/lib/db/squads/dbSquads";
 import { deleteAllDivsForTmnt, postManyDivs } from "@/lib/db/divs/dbDivs";

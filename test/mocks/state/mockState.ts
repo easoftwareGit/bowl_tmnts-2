@@ -1,5 +1,4 @@
-// import { Bowl } from "@prisma/client";
-import { bowlType } from "@/lib/types/types"
+import type { bowlType } from "@/lib/types/types"
 
 export const mockStateBowls: bowlType[] = [  
   {

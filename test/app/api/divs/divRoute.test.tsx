@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { baseDivsApi } from "@/lib/db/apiPaths";
 import { testBaseDivsApi } from "../../../testApi";
-import { divType } from "@/lib/types/types";
+import type { divType } from "@/lib/types/types";
 import { initDiv } from "@/lib/db/initVals";
 import { mockDivsToPost, tmntToDelId } from "../../../mocks/tmnts/twoDivs/mockDivs";
 import { deleteAllDivsForTmnt, getAllDivsForTmnt, postDiv } from "@/lib/db/divs/dbDivs";

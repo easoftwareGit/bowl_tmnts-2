@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode } from "@/lib/validation/validation";
-import { squadType, squadDataType } from "@/lib/types/types";
+import { ErrorCode } from "@/lib/enums/enums";
+import type { squadType, squadDataType } from "@/lib/types/types";
 import { validateSquads } from "../../../../lib/validation/squads/validate";
 import { getErrorStatus } from "../../errCodes";
 import { squadDataForPrisma } from "../dataForPrisma";

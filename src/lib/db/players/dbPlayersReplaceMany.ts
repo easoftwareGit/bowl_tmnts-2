@@ -1,6 +1,7 @@
 import { validatePlayers } from "@/lib/validation/players/validate";
-import { playerType, validPlayersType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import type { playerType, validPlayersType } from "@/lib/types/types";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { deleteAllPlayersForSquad, postManyPlayers } from "./dbPlayers";
 
 /**

@@ -10,8 +10,9 @@ import {
   validateBrkts,
 } from "@/lib/validation/brkts/validate";
 import { defaultBrktGames, defaultBrktPlayers, initBrkt } from "@/lib/db/initVals";
-import { validBrktsType } from "@/lib/types/types";
-import { ErrorCode, maxGames, maxSortOrder } from "@/lib/validation/validation";
+import type { validBrktsType } from "@/lib/types/types";
+import { maxGames, maxSortOrder } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { mockBrktsToPost } from "../../mocks/tmnts/singlesAndDoubles/mockSquads";
 
 const { gotBrktData, validBrktData } = exportedForTesting;

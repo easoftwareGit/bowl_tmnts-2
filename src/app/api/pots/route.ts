@@ -1,8 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { validatePot, sanitizePot } from "../../../lib/validation/pots/validate";
-import { ErrorCode } from "@/lib/validation/validation";
-import { potType } from "@/lib/types/types";
+import { ErrorCode } from "@/lib/enums/enums";
+import type { potType } from "@/lib/types/types";
 import { initPot } from "@/lib/db/initVals";
 import { getErrorStatus } from "../errCodes";
 import { potDataForPrisma } from "./dataForPrisma";

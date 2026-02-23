@@ -1,7 +1,7 @@
 import axios from "axios";
 import { basePotsApi } from "@/lib/db/apiPaths";
 import { testBasePotsApi } from "../../../testApi";
-import { potCategoriesTypes, potType } from "@/lib/types/types";
+import type { potCategoriesTypes, potType } from "@/lib/types/types";
 import { blankPot } from "@/lib/db/initVals";
 import { deleteAllPotsForDiv, deleteAllPotsForSquad, deleteAllPotsForTmnt, deletePot, getAllPotsForSquad, getAllPotsForTmnt, postManyPots, postPot, putPot } from "@/lib/db/pots/dbPots";
 

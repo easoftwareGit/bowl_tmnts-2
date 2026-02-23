@@ -2,7 +2,7 @@ import React from "react";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ZeroToNPots from "@/app/dataEntry/tmntForm/zeroToNPots";
-import { potType } from "@/lib/types/types";
+import type { potType } from "@/lib/types/types";
 import { minFee, maxMoney } from "@/lib/validation/validation";
 import { divId1, mockTmntFullData } from "../../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { noAcdnErr } from "@/app/dataEntry/tmntForm/errors";

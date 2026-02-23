@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { baseEventsApi } from "@/lib/db/apiPaths";
 import { testBaseEventsApi } from "../../../testApi";
-import { eventType } from "@/lib/types/types";
+import type { eventType } from "@/lib/types/types";
 import { initEvent } from "@/lib/db/initVals";
 import { mockEventsToPost, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockEvents";
 import { postManyEvents } from "@/lib/db/events/dbEvents";

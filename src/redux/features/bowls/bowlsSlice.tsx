@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ioStatusType } from "@/redux/statusTypes";
 import { RootState } from "@/redux/store";
 import { getBowls, upsertBowl } from "@/lib/db/bowls/dbBowls";
-import { bowlType } from "@/lib/types/types";
+import type { bowlType } from "@/lib/types/types";
 
 export interface bowlsSliceState {
   bowls: bowlType[];

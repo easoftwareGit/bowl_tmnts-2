@@ -1,14 +1,22 @@
 import axios, { AxiosError } from "axios";
 import { baseStagesApi } from "@/lib/db/apiPaths";
 import { testBaseStagesApi } from "../../../testApi";
-import { fullStageType, justStageType, tmntFullType } from "@/lib/types/types";
-import { getFullStageForSquad, exportedForTesting, getJustStage, getJustStageOverride, postFullStage, patchJustStage, patchJustStageOverride, deleteFullStage, postInitialStageForSquad } from "@/lib/db/stages/dbStages";
+import type { fullStageType, justStageType, tmntFullType } from "@/lib/types/types";
+import {
+  getFullStageForSquad,
+  getJustStage,
+  getJustStageOverride,
+  postFullStage,
+  patchJustStage,
+  patchJustStageOverride,
+  deleteFullStage,
+  postInitialStageForSquad
+} from "@/lib/db/stages/dbStages";
 import { SquadStage } from "@prisma/client";
 import { linkedInitTmntFullData } from "@/lib/db/initVals";
 import { mockSquadsToPost, mockStageToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { deleteSquad, postSquad } from "@/lib/db/squads/dbSquads";
 import { isValidBtDbId, maxReasonLength } from "@/lib/validation/validation";
-const { extractFullStage } = exportedForTesting;
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -44,7 +52,7 @@ const testStage: fullStageType = {
   id: stageId,
   squad_id: squadId,
   stage: "DEFINE",
-  stage_set_at: new Date("2022-10-23"),
+  stage_set_at: '2022-10-23T12:00:00.000Z',
   scores_started_at: null,
   stage_override_enabled: false,
   stage_override_at: null,
@@ -54,7 +62,7 @@ const wholeTmntStage: fullStageType = {
   id: "stg_124dd9efc30f4352b691dfd93d1e284e",
   squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
   stage: "ENTRIES",
-  stage_set_at: new Date("2024-07-01"),
+  stage_set_at: new Date("2024-07-01").toISOString(),
   scores_started_at: null,
   stage_override_enabled: false,
   stage_override_at: null,
@@ -65,7 +73,7 @@ const testStageAllFields: fullStageType = {
   id: stageId,
   squad_id: squadId,
   stage: "SCORES",
-  stage_set_at: new Date("2022-10-23"),
+  stage_set_at: new Date("2022-10-23").toISOString(),
   scores_started_at: null,
   stage_override_enabled: true,
   stage_override_at: null,
@@ -76,10 +84,10 @@ const testOverrideStage: fullStageType = {
   id: stageId,
   squad_id: squadId,
   stage: "ENTRIES",
-  stage_set_at: new Date("2022-10-23"),
+  stage_set_at: new Date("2022-10-23").toISOString(),  
   scores_started_at: null,
   stage_override_enabled: true,
-  stage_override_at: new Date("2022-10-23"),
+  stage_override_at: new Date("2022-10-23").toISOString(),
   stage_override_reason: 'Test override reason',
 }
 
@@ -148,99 +156,7 @@ const rePostStage = async (fullStage: fullStageType) => {
   }
 };
 
-
 describe("dbStages", () => {
-
-  describe("extractFullStage()", () => {
-    const isoStageSetAt = "2025-01-01T12:34:56.000Z";
-    const isoStageOverrideAt = "2025-01-02T08:00:00.000Z";
-
-    const validInput: any = {
-      id: testStage.id,
-      squad_id: testStage.squad_id,
-      stage: SquadStage.SCORES,
-      stage_set_at: isoStageSetAt,          // string; should be converted
-      scores_started_at: null,              // stays null
-      stage_override_enabled: true,
-      stage_override_at: isoStageOverrideAt, // string; should be converted
-      stage_override_reason: "Testing override",
-    };
-
-    it("returns null when input is null or undefined", () => {
-      expect(extractFullStage(null as any)).toBeNull();
-      expect(extractFullStage(undefined as any)).toBeNull();
-    });
-
-    it("returns null when input is not a fullStageType (fails isFullStageType)", () => {
-      // Missing required fields like id, squad_id, stage
-      const invalid: any = {};
-      expect(extractFullStage(invalid)).toBeNull();
-    });
-
-    it("returns a fullStageType with converted Date fields for a valid fullStage-like object", () => {
-      const result = extractFullStage(validInput);
-
-      expect(result).not.toBeNull();
-      const stage = result as fullStageType;
-
-      // basic field passthrough
-      expect(stage.id).toBe(validInput.id);
-      expect(stage.squad_id).toBe(validInput.squad_id);
-      expect(stage.stage).toBe(SquadStage.SCORES);
-      expect(stage.stage_override_enabled).toBe(true);
-      expect(stage.stage_override_reason).toBe("Testing override");
-
-      // stage_set_at: required, must be Date
-      expect(stage.stage_set_at).toBeInstanceOf(Date);
-      expect(stage.stage_set_at.toISOString()).toBe(
-        new Date(isoStageSetAt).toISOString()
-      );
-
-      // scores_started_at: nullable, here null
-      expect(stage.scores_started_at).toBeNull();
-
-      // stage_override_at: nullable but provided; must be Date
-      expect(stage.stage_override_at).toBeInstanceOf(Date);
-      expect(stage.stage_override_at?.toISOString()).toBe(
-        new Date(isoStageOverrideAt).toISOString()
-      );
-    });
-
-    it("handles Date inputs directly (not just strings)", () => {
-      const dateStageSetAt = new Date("2025-03-01T10:00:00.000Z");
-      const dateOverrideAt = new Date("2025-03-02T10:00:00.000Z");
-
-      const input: any = {
-        ...validInput,
-        stage_set_at: dateStageSetAt,
-        stage_override_at: dateOverrideAt,
-      };
-
-      const result = extractFullStage(input);
-
-      expect(result).not.toBeNull();
-      const stage = result as fullStageType;
-
-      expect(stage.stage_set_at).toBeInstanceOf(Date);
-      expect(stage.stage_set_at.toISOString()).toBe(
-        dateStageSetAt.toISOString()
-      );
-
-      expect(stage.stage_override_at).toBeInstanceOf(Date);
-      expect(stage.stage_override_at?.toISOString()).toBe(
-        dateOverrideAt.toISOString()
-      );
-    });
-
-    it("returns null if required fields are wrong type (e.g., id not string)", () => {
-      const badId: any = {
-        ...validInput,
-        id: 123, // invalid type
-      };
-
-      expect(extractFullStage(badId)).toBeNull();
-    });
-  });
 
   describe('getFullStageForSquad()', () => {
     it("should return a stage", async () => {
@@ -262,7 +178,7 @@ describe("dbStages", () => {
         await getFullStageForSquad(notFoundSquadId);
       } catch (err) {
         expect(err).toBeInstanceOf(Error);
-        expect((err as Error).message).toBe("Request failed with status code 404");
+        expect((err as Error).message).toBe("getFullStageForSquad failed: Request failed with status code 404");
       }
     });
     it('should return null if squad id is invalid', async () => {
@@ -406,7 +322,7 @@ describe("dbStages", () => {
         await getJustStageOverride(notFoundSquadId);
       } catch (err) {
         expect(err).toBeInstanceOf(Error);
-        expect((err as Error).message).toBe("Request failed with status code 404");
+        expect((err as Error).message).toBe("getFullStageForSquad failed: Request failed with status code 404");
       }
     })
     it('should throw error if squad id is invalid', async () => {
@@ -519,8 +435,8 @@ describe("dbStages", () => {
       const after = Date.now();
       const twoMinutes = 2 * 60 * 1000;
       const stageSetAtMs = new Date(postedStage.stage_set_at).getTime();
-      const scoresStartedAtMs = new Date(postedStage.scores_started_at as Date).getTime();
-      const stageOverrideAtMs = new Date(postedStage.stage_override_at as Date).getTime();
+      const scoresStartedAtMs = new Date(postedStage.scores_started_at!).getTime();
+      const stageOverrideAtMs = new Date(postedStage.stage_override_at!).getTime();
             
       expect(postedStage.id).toBe(allStageFields.id);
       expect(postedStage.squad_id).toBe(allStageFields.squad_id);
@@ -540,14 +456,14 @@ describe("dbStages", () => {
     })
     it('should post a full stage - all fields and ignore dates passed in. system sets dates', async () => {
       const before = new Date();
-      const aDate = new Date("2022-01-01");
+      const dateStr = "2022-01-01T00:00:00.000Z"
       const ignoreDatesStage: fullStageType = {
         ...mockStageToPost,
         stage: SquadStage.SCORES,
-        stage_set_at: aDate,
-        scores_started_at: aDate,
+        stage_set_at: dateStr,
+        scores_started_at: dateStr,
         stage_override_enabled: true,
-        stage_override_at: aDate,
+        stage_override_at: dateStr,
         stage_override_reason: 'test reason',
       };
 
@@ -559,8 +475,8 @@ describe("dbStages", () => {
       const after = new Date();
       const twoMinutes = 2 * 60 * 1000;
       const stageSetAtMs = new Date(postedStage.stage_set_at).getTime();
-      const scoresStartedAtMs = new Date(postedStage.scores_started_at as Date).getTime();
-      const stageOverrideAtMs = new Date(postedStage.stage_override_at as Date).getTime();
+      const scoresStartedAtMs = new Date(postedStage.scores_started_at!).getTime();
+      const stageOverrideAtMs = new Date(postedStage.stage_override_at!).getTime();
             
       expect(postedStage.id).toBe(ignoreDatesStage.id);
       expect(postedStage.squad_id).toBe(ignoreDatesStage.squad_id);
@@ -767,8 +683,8 @@ describe("dbStages", () => {
       const after = new Date();
       const twoMinutes = 2 * 60 * 1000;
       const stageSetAtMs = new Date(postedStage.stage_set_at).getTime();
-      const scoresStartedAtMs = new Date(postedStage.scores_started_at as Date).getTime();
-      const stageOverrideAtMs = new Date(postedStage.stage_override_at as Date).getTime();
+      const scoresStartedAtMs = new Date(postedStage.scores_started_at!).getTime();
+      const stageOverrideAtMs = new Date(postedStage.stage_override_at!).getTime();
             
       expect(postedStage.id).toBe(sanitizedStage.id);
       expect(postedStage.squad_id).toBe(sanitizedStage.squad_id);
@@ -1002,7 +918,7 @@ describe("dbStages", () => {
         const after = new Date();
         const twoMinutes = 2 * 60 * 1000;
         expect(patchedStage.stage_override_at).not.toBeNull();
-        const stageOverrideAtMs = new Date(patchedStage.stage_override_at as Date).getTime();
+        const stageOverrideAtMs = new Date(patchedStage.stage_override_at!).getTime();
 
         expect(patchedStage.id).toBe(testStage.id);
         expect(patchedStage.squad_id).toBe(testStage.squad_id);
@@ -1118,7 +1034,7 @@ describe("dbStages", () => {
       id: "stg_57f542b0c5664845a631be0148bc8b89",
       squad_id: "sqd_3397da1adc014cf58c44e07c19914f72",
       stage: "DEFINE",
-      stage_set_at: new Date("2023-09-16"),
+      stage_set_at: "2023-09-16T00:00:00.000Z",
       scores_started_at: null,
       stage_override_enabled: false,
       stage_override_at: null,

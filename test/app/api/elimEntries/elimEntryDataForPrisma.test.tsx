@@ -1,4 +1,4 @@
-import { elimEntryType } from '@/lib/types/types';
+import type { elimEntryType } from '@/lib/types/types';
 import { mockTmntFullData } from '../../../mocks/tmnts/tmntFullData/mockTmntFullData';
 import { cloneDeep } from 'lodash';
 import { elimEntryDataForPrisma } from '@/app/api/elimEntries/dataForPrisma';

@@ -1,4 +1,4 @@
-import { playerType } from "@/lib/types/types";
+import type { playerType } from "@/lib/types/types";
 import { initPlayer } from "@/lib/db/initVals";
 
 const squadId = 'sqd_7116ce5f80164830830a7157eb093396';

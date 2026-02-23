@@ -1,9 +1,9 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { findUserByEmail } from "@/lib/db/users/users";
 import { sanitizeUser, validateUser } from "./validate";
-import { userType } from "@/lib/types/types";
+import type { userType } from "@/lib/types/types";
 import { initUser } from "@/lib/db/initVals";
 import { doHash } from "@/lib/hash";
 import { getErrorStatus } from "../errCodes";

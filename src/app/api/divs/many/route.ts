@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode } from "@/lib/validation/validation";
-import { divDataType, divType, HdcpForTypes } from "@/lib/types/types";
+import { ErrorCode } from "@/lib/enums/enums";
+import type { divDataType, divType } from "@/lib/types/types";
 import { validateDivs } from "../../../../lib/validation/divs/validate";
 import { getErrorStatus } from "../../errCodes";
 import { divDataForPrisma } from "../dataForPrisma";

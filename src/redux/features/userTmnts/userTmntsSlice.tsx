@@ -2,7 +2,8 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { ioStatusType } from "@/redux/statusTypes";
 import { RootState } from "@/redux/store";
 import { deleteTmnt, getUserTmnts } from "@/lib/db/tmnts/dbTmnts";
-import { ioDataError, tmntsListType } from "@/lib/types/types";
+import type { tmntsListType } from "@/lib/types/types";
+import { ioDataError } from "@/lib/enums/enums";
 
 export interface userTmntSliceState {
   userTmnts: tmntsListType[];

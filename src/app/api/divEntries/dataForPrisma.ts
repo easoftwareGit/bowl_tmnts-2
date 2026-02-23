@@ -1,4 +1,4 @@
-import { divEntryDataType, divEntryType } from "@/lib/types/types"
+import type { divEntryDataType, divEntryType } from "@/lib/types/types"
 
 /**
  * Converts divEntry to divEntryDataType

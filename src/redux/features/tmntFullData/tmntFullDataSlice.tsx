@@ -1,8 +1,9 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ioStatusType } from "@/redux/statusTypes";
 import { RootState } from "@/redux/store";
-import { ioDataError, tmntFullType } from "@/lib/types/types";
-import { blankTmnt } from "@/lib/db/initVals";
+import type { tmntFullType } from "@/lib/types/types";
+import { ioDataError } from "@/lib/enums/enums";
+import { blankFullStage, blankTmnt } from "@/lib/db/initVals";
 import { cloneDeep } from "lodash";
 import { getTmntFullData } from "@/lib/db/tmnts/dbTmnts";
 import { replaceTmntFullData, replaceTmntEntriesData } from "@/lib/db/tmnts/dbTmntsReplace";
@@ -33,6 +34,7 @@ const initialState: tmntFullDataState = {
     potEntries: [],
     pots: [],
     squads: [],
+    stage: blankFullStage,
   },
   loadStatus: "idle",
   saveStatus: "idle",
@@ -76,13 +78,16 @@ export const saveTmntFullData = createAsyncThunk(
 export const saveTmntEntriesData = createAsyncThunk(
   "tmntFullData/saveTmntFullEntriesData",
   async (tmntFullData: tmntFullType) => {
-    const result = await replaceTmntEntriesData(tmntFullData);
-    if (!result) {
-      throw new Error("Failed to save tournament entries data");
-    }
-    return tmntFullData;
+    const { stage } = await replaceTmntEntriesData(tmntFullData);
+    // no longer need to throw error here, because the saveTmntFullData will throw    
+
+    // merge server stage fields into what we sent
+    return {
+      ...tmntFullData,
+      stage, // server is authoritative for stage fields
+    } as tmntFullType;
   }
-)
+);
 
 export const tmntFullDataSlice = createSlice({
   name: "tmntFullData",

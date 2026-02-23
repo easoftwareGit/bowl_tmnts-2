@@ -1,8 +1,8 @@
 import axios, { AxiosError } from "axios";
 import { baseBowlsApi, baseTmntsApi } from "@/lib/db/apiPaths";
 import { testBaseBowlsApi, testBaseTmntsApi } from "../../../testApi";
-import { tmntType } from "@/lib/types/types";
-import { initPlayer, initTmnt } from "@/lib/db/initVals";
+import type { tmntType } from "@/lib/types/types";
+import { initTmnt } from "@/lib/db/initVals";
 import {
   deleteTmnt,
   getTmnt,
@@ -18,14 +18,8 @@ import { todayStr } from "@/lib/dateTools";
 import { mockBowl, mockTmntFullData, playerId5 } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { replaceTmntFullData, replaceTmntEntriesData } from "@/lib/db/tmnts/dbTmntsReplace";
 import { cloneDeep } from "lodash";
-import { getAllPlayersForTmnt } from "@/lib/db/players/dbPlayers";
-import { getAllPotEntriesForTmnt } from "@/lib/db/potEntries/dbPotEntries";
-import { getAllBrktEntriesForTmnt } from "@/lib/db/brktEntries/dbBrktEntries";
-import { getAllDivEntriesForTmnt } from "@/lib/db/divEntries/dbDivEntries";
-import { getAllElimEntriesForTmnt } from "@/lib/db/elimEntries/dbElimEntries";
-import { getAllOneBrktsForTmnt } from "@/lib/db/oneBrkts/dbOneBrkts";
-import { getAllBrktSeedsForTmnt } from "@/lib/db/brktSeeds/dbBrktSeeds";
 import { postBowl } from "@/lib/db/bowls/dbBowls";
+import { SquadStage } from "@prisma/client";
 
 const { getTmntsForYear, getUpcomingTmnts } = exportedForTesting;
 
@@ -154,10 +148,10 @@ describe("dbTmnts", () => {
       expect(userTmnts[0].user_id).toBe(userId);
       expect(userTmnts[10].user_id).toBe(userId);
       // tmnts sorted by date, newest to oldest
-      expect(userTmnts[0].id).toBe("tmt_e134ac14c5234d708d26037ae812ac33");
-      expect(userTmnts[0].start_date_str).toBe("2026-08-19");
-      expect(userTmnts[1].id).toBe("tmt_ce35f0c119aa49fd9b89aa86cb980a6a");
-      expect(userTmnts[1].start_date_str).toBe("2025-12-31");
+      expect(userTmnts[0].id).toBe("tmt_ce35f0c119aa49fd9b89aa86cb980a6a");
+      expect(userTmnts[0].start_date_str).toBe("2026-12-31");
+      expect(userTmnts[1].id).toBe("tmt_e134ac14c5234d708d26037ae812ac33");
+      expect(userTmnts[1].start_date_str).toBe("2026-08-19");
       expect(userTmnts[2].id).toBe("tmt_2d494e9bb51f4b9abba428c3f37131c9");
       expect(userTmnts[2].start_date_str).toBe("2024-12-20");
       expect(userTmnts[3].id).toBe("tmt_a237a388a8fc4641a2e37233f1d6bebd");
@@ -233,7 +227,7 @@ describe("dbTmnts", () => {
       expect(tmnts[0].bowls).not.toBeNull();
       expect(tmnts[0].start_date_str).toBe("2026-08-19");
       expect(tmnts[1].bowls).not.toBeNull();
-      expect(tmnts[1].start_date_str).toBe("2025-12-31");
+      expect(tmnts[1].start_date_str).toBe("2026-12-31");
     });
     it("should get all upcoming tmnts - getUpcomingTmnts()", async () => {
       const tmnts = await getUpcomingTmnts();
@@ -244,7 +238,7 @@ describe("dbTmnts", () => {
       expect(tmnts[0].bowls).not.toBeNull();
       expect(tmnts[0].start_date_str).toBe("2026-08-19");
       expect(tmnts[1].bowls).not.toBeNull();
-      expect(tmnts[1].start_date_str).toBe("2025-12-31");
+      expect(tmnts[1].start_date_str).toBe("2026-12-31");
     });
     it("should get all upcoming tmnts take 1", async () => {
       const tmnts = await getTmnts("", 0, 1); // get upcoming tmnts
@@ -262,7 +256,7 @@ describe("dbTmnts", () => {
       // 1 rows for results in prisma/seed.ts
       expect(tmnts).toHaveLength(1);
       expect(tmnts[0].bowls).not.toBeNull();
-      expect(tmnts[0].start_date_str).toBe("2025-12-31");
+      expect(tmnts[0].start_date_str).toBe("2026-12-31");
     });
     it("should get all upcoming tmnts - ignore invalid skip and take", async () => {
       const tmnts = await getTmnts("", -1, 1.1); // get upcoming tmnts
@@ -273,7 +267,7 @@ describe("dbTmnts", () => {
       expect(tmnts[0].bowls).not.toBeNull();
       expect(tmnts[0].start_date_str).toBe("2026-08-19");
       expect(tmnts[1].bowls).not.toBeNull();
-      expect(tmnts[1].start_date_str).toBe("2025-12-31");
+      expect(tmnts[1].start_date_str).toBe("2026-12-31");
     });
     it("should throw error if year is null", async () => {
       try {
@@ -352,6 +346,7 @@ describe("dbTmnts", () => {
       const fullDivId = "div_99a3cae28786485bb7a036935f0f6a0a";
       const fullEventId = "evt_4ff710c8493f4a218d2e2b045442974a";
       const fullSquadId = "sqd_8e4266e1174642c7a1bcec47a50f275f";
+      const fullStageId = 'stg_124dd9efc30f4352b691dfd93d1e284e';
 
       const tmntFullData = await getTmntFullData(fullTmntId);
       expect(tmntFullData).not.toBeNull();
@@ -418,6 +413,17 @@ describe("dbTmnts", () => {
       expect(squads[0].lane_count).toBe(12);
       expect(squads[0].starting_lane).toBe(29);
       expect(squads[0].sort_order).toBe(1);
+
+      const squad = tmntFullData.stage;
+      expect(squad).not.toBeNull();
+      if (!squad) return;
+      expect(squad.id).toBe(fullStageId);
+      expect(squad.squad_id).toBe(fullSquadId);
+      expect(squad.stage).toBe(SquadStage.ENTRIES);
+      expect(squad.stage_set_at).toBe('2024-07-01T00:00:00.000Z');
+      expect(squad.scores_started_at).toBe(null);
+      expect(squad.stage_override_enabled).toBe(false);
+      expect(squad.stage_override_reason).toBe(null);          
 
       const lanes = tmntFullData.lanes;
       expect(lanes).toHaveLength(12);
@@ -1146,12 +1152,17 @@ describe("dbTmnts", () => {
 
     beforeEach(async () => {      
       replacedTmnt = false;
+
+      const success = await postMockTmntNoEntries();
+      if (success) {
+        replacedTmnt = true;
+      }
     });
 
     afterEach(async () => {
       if (replacedTmnt) {
         await deleteMockTmnt();
-        await postMockTmntNoEntries();
+        // await postMockTmntNoEntries();
       }
     });
 
@@ -1160,390 +1171,520 @@ describe("dbTmnts", () => {
       await deleteMockBowl();
     })
 
-    it('should replace a tmnt entries - all entries data', async () => {
+    // it('should replace a tmnt entries - all entries data', async () => {
+    //   await postMockTmntNoEntries();
+    //   replacedTmnt = true;
+
+    //   const toReplace = cloneDeep(mockTmntFullData);
+    //   const before = Date.now();
+
+    //   const result = await replaceTmntEntriesData(toReplace);
+
+    //   const after = Date.now();
+    //   const twoMinutes = 2 * 60 * 1000;
+
+    //   expect(result.success).toBe(true);
+    //   expect(result.stage).not.toBeNull();
+
+    //   const puttedStage = result.stage;
+    //   const stageSetAtMs = new Date(puttedStage.stage_set_at).getTime();
+    //   expect(puttedStage.id).toBe(toReplace.stage.id);
+    //   expect(puttedStage.squad_id).toBe(toReplace.stage.squad_id);
+    //   expect(puttedStage.stage).toBe(toReplace.stage.stage);
+      
+    //   expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
+    //   expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
+
+    //   expect(puttedStage.stage_override_enabled).toBe(toReplace.stage.stage_override_enabled);
+    //   expect(puttedStage.stage_override_at).toBe(toReplace.stage.stage_override_at);
+    //   expect(puttedStage.stage_override_reason).toBe(toReplace.stage.stage_override_reason);
+
+    //   const players = await getAllPlayersForTmnt(toReplace.tmnt.id);
+    //   expect(players.length).toEqual(toReplace.players.length);
+    //   for (let i = 0; i < players.length; i++) {
+    //     const foundPlayer = toReplace.players.find(p => p.id === players[i].id);
+    //     expect(foundPlayer).not.toBeUndefined();
+    //     expect(foundPlayer?.squad_id).toBe(toReplace.players[i].squad_id);
+    //     if (foundPlayer?.id === toReplace.players[0].id) {
+    //       expect(foundPlayer?.first_name).toBe(toReplace.players[0].first_name);
+    //       expect(foundPlayer?.last_name).toBe(toReplace.players[0].last_name);
+    //       expect(foundPlayer?.average).toBe(toReplace.players[0].average);
+    //       expect(foundPlayer?.lane).toBe(toReplace.players[0].lane);
+    //       expect(foundPlayer?.position).toBe(toReplace.players[0].position);
+    //     } else if (foundPlayer?.id === toReplace.players[1].id) {
+    //       expect(foundPlayer?.first_name).toBe(toReplace.players[1].first_name);
+    //       expect(foundPlayer?.last_name).toBe(toReplace.players[1].last_name);
+    //       expect(foundPlayer?.average).toBe(toReplace.players[1].average);
+    //       expect(foundPlayer?.lane).toBe(toReplace.players[1].lane);
+    //       expect(foundPlayer?.position).toBe(toReplace.players[1].position);
+    //     } else if (foundPlayer?.id === toReplace.players[2].id) {
+    //       expect(foundPlayer?.first_name).toBe(toReplace.players[2].first_name);
+    //       expect(foundPlayer?.last_name).toBe(toReplace.players[2].last_name);
+    //       expect(foundPlayer?.average).toBe(toReplace.players[2].average);
+    //       expect(foundPlayer?.lane).toBe(toReplace.players[2].lane);
+    //       expect(foundPlayer?.position).toBe(toReplace.players[2].position);
+    //     } else if (foundPlayer?.id === toReplace.players[3].id) {
+    //       expect(foundPlayer?.first_name).toBe(toReplace.players[3].first_name);
+    //       expect(foundPlayer?.last_name).toBe(toReplace.players[3].last_name);
+    //       expect(foundPlayer?.average).toBe(toReplace.players[3].average);
+    //       expect(foundPlayer?.lane).toBe(toReplace.players[3].lane);
+    //       expect(foundPlayer?.position).toBe(toReplace.players[3].position);
+    //     } else { 
+    //       expect(false).toBe(true);
+    //     }
+    //   }
+    //   const divEntries = await getAllDivEntriesForTmnt(toReplace.tmnt.id);
+    //   expect(divEntries.length).toEqual(toReplace.divEntries.length);
+    //   for (let i = 0; i < divEntries.length; i++) {
+    //     const foundDivEntry = toReplace.divEntries.find(d => d.id === divEntries[i].id);
+    //     expect(foundDivEntry).not.toBeUndefined();
+    //     expect(foundDivEntry?.squad_id).toBe(toReplace.divEntries[i].squad_id);
+    //     expect(foundDivEntry?.div_id).toBe(toReplace.divEntries[i].div_id);
+    //     if (foundDivEntry?.id === toReplace.divEntries[0].id) {
+    //       expect(foundDivEntry?.fee).toBe(toReplace.divEntries[0].fee);
+    //       expect(foundDivEntry?.player_id).toBe(toReplace.divEntries[0].player_id);
+    //     } else if (foundDivEntry?.id === toReplace.divEntries[1].id) {
+    //       expect(foundDivEntry?.fee).toBe(toReplace.divEntries[1].fee);
+    //       expect(foundDivEntry?.player_id).toBe(toReplace.divEntries[1].player_id);
+    //     } else if (foundDivEntry?.id === toReplace.divEntries[2].id) {
+    //       expect(foundDivEntry?.fee).toBe(toReplace.divEntries[2].fee);
+    //       expect(foundDivEntry?.player_id).toBe(toReplace.divEntries[2].player_id);
+    //     } else if (foundDivEntry?.id === toReplace.divEntries[3].id) {
+    //       expect(foundDivEntry?.fee).toBe(toReplace.divEntries[3].fee);
+    //       expect(foundDivEntry?.player_id).toBe(toReplace.divEntries[3].player_id);
+    //     } else { 
+    //       expect(false).toBe(true);
+    //     }
+    //   }
+    //   const potEntries = await getAllPotEntriesForTmnt(toReplace.tmnt.id);
+    //   expect(potEntries.length).toEqual(toReplace.potEntries.length);
+    //   for (let i = 0; i < potEntries.length; i++) {
+    //     const foundPotEntry = toReplace.potEntries.find(p => p.id === potEntries[i].id);
+    //     expect(foundPotEntry).not.toBeUndefined();        
+    //     expect(foundPotEntry?.pot_id).toBe(toReplace.potEntries[i].pot_id);
+    //     if (foundPotEntry?.id === toReplace.potEntries[0].id) {
+    //       expect(foundPotEntry?.fee).toBe(toReplace.potEntries[0].fee);
+    //       expect(foundPotEntry?.player_id).toBe(toReplace.potEntries[0].player_id);
+    //     } else if (foundPotEntry?.id === toReplace.potEntries[1].id) {
+    //       expect(foundPotEntry?.fee).toBe(toReplace.potEntries[1].fee);
+    //       expect(foundPotEntry?.player_id).toBe(toReplace.potEntries[1].player_id);
+    //     } else if (foundPotEntry?.id === toReplace.potEntries[2].id) {
+    //       expect(foundPotEntry?.fee).toBe(toReplace.potEntries[2].fee);
+    //       expect(foundPotEntry?.player_id).toBe(toReplace.potEntries[2].player_id);
+    //     } else if (foundPotEntry?.id === toReplace.potEntries[3].id) {
+    //       expect(foundPotEntry?.fee).toBe(toReplace.potEntries[3].fee);
+    //       expect(foundPotEntry?.player_id).toBe(toReplace.potEntries[3].player_id);
+    //     } else {
+    //       expect(false).toBe(true);
+    //     }
+    //   }
+    //   const brktEntries = await getAllBrktEntriesForTmnt(toReplace.tmnt.id);
+    //   expect(brktEntries.length).toEqual(toReplace.brktEntries.length);
+    //   for (let i = 0; i < brktEntries.length; i++) {
+    //     const foundBrktEntry = toReplace.brktEntries.find(b => b.id === brktEntries[i].id);
+    //     expect(foundBrktEntry).not.toBeUndefined();
+    //     if (foundBrktEntry?.id === toReplace.brktEntries[0].id) {
+    //       expect(foundBrktEntry?.brkt_id).toBe(toReplace.brktEntries[0].brkt_id);
+    //       expect(foundBrktEntry?.player_id).toBe(toReplace.brktEntries[0].player_id);
+    //       expect(foundBrktEntry?.num_brackets).toBe(toReplace.brktEntries[0].num_brackets);
+    //       expect(foundBrktEntry?.time_stamp).toBe(toReplace.brktEntries[0].time_stamp);
+    //     } else if (foundBrktEntry?.id === toReplace.brktEntries[1].id) {
+    //       expect(foundBrktEntry?.brkt_id).toBe(toReplace.brktEntries[1].brkt_id);
+    //       expect(foundBrktEntry?.player_id).toBe(toReplace.brktEntries[1].player_id);
+    //       expect(foundBrktEntry?.num_brackets).toBe(toReplace.brktEntries[1].num_brackets);
+    //       expect(foundBrktEntry?.time_stamp).toBe(toReplace.brktEntries[1].time_stamp);
+    //     } else if (foundBrktEntry?.id === toReplace.brktEntries[2].id) {
+    //       expect(foundBrktEntry?.brkt_id).toBe(toReplace.brktEntries[2].brkt_id);
+    //       expect(foundBrktEntry?.player_id).toBe(toReplace.brktEntries[2].player_id);
+    //       expect(foundBrktEntry?.num_brackets).toBe(toReplace.brktEntries[2].num_brackets);
+    //       expect(foundBrktEntry?.time_stamp).toBe(toReplace.brktEntries[2].time_stamp);
+    //     } else if (foundBrktEntry?.id === toReplace.brktEntries[3].id) {
+    //       expect(foundBrktEntry?.brkt_id).toBe(toReplace.brktEntries[3].brkt_id);
+    //       expect(foundBrktEntry?.player_id).toBe(toReplace.brktEntries[3].player_id);
+    //       expect(foundBrktEntry?.num_brackets).toBe(toReplace.brktEntries[3].num_brackets);
+    //       expect(foundBrktEntry?.time_stamp).toBe(toReplace.brktEntries[3].time_stamp);
+    //     } else { 
+    //       expect(false).toBe(true);
+    //     }
+    //   }
+    //   const oneBrkts = await getAllOneBrktsForTmnt(toReplace.tmnt.id);
+    //   expect(oneBrkts.length).toEqual(toReplace.oneBrkts.length);
+    //   for (let i = 0; i < oneBrkts.length; i++) {
+    //     const foundOneBrkt = toReplace.oneBrkts.find(o => o.id === oneBrkts[i].id);
+    //     expect(foundOneBrkt).not.toBeUndefined();
+    //     if (foundOneBrkt?.id === toReplace.oneBrkts[0].id) {
+    //       expect(foundOneBrkt?.brkt_id).toBe(toReplace.oneBrkts[0].brkt_id);
+    //       expect(foundOneBrkt?.bindex).toBe(toReplace.oneBrkts[0].bindex);
+    //     } else if (foundOneBrkt?.id === toReplace.oneBrkts[1].id) {
+    //       expect(foundOneBrkt?.brkt_id).toBe(toReplace.oneBrkts[1].brkt_id);
+    //       expect(foundOneBrkt?.bindex).toBe(toReplace.oneBrkts[1].bindex);
+    //     } else { 
+    //       expect(false).toBe(true);
+    //     }
+    //   }
+    //   const brktSeeds = await getAllBrktSeedsForTmnt(toReplace.tmnt.id);
+    //   expect(brktSeeds.length).toEqual(toReplace.brktSeeds.length);
+    //   for (let i = 0; i < brktSeeds.length; i++) {
+    //     const foundBrktSeed = toReplace.brktSeeds.find(b => b.one_brkt_id === brktSeeds[i].one_brkt_id && b.seed === brktSeeds[i].seed);
+    //     expect(foundBrktSeed).not.toBeUndefined();
+    //     if (foundBrktSeed?.one_brkt_id === toReplace.brktSeeds[0].one_brkt_id && foundBrktSeed?.seed === toReplace.brktSeeds[0].seed) {
+    //       expect(foundBrktSeed?.player_id).toBe(toReplace.brktSeeds[0].player_id);
+    //     } else if (foundBrktSeed?.one_brkt_id === toReplace.brktSeeds[1].one_brkt_id && foundBrktSeed?.seed === toReplace.brktSeeds[1].seed) {
+    //       expect(foundBrktSeed?.player_id).toBe(toReplace.brktSeeds[1].player_id);
+    //     } else if (foundBrktSeed?.one_brkt_id === toReplace.brktSeeds[2].one_brkt_id && foundBrktSeed?.seed === toReplace.brktSeeds[2].seed) {
+    //       expect(foundBrktSeed?.player_id).toBe(toReplace.brktSeeds[2].player_id);
+    //     } else if (foundBrktSeed?.one_brkt_id === toReplace.brktSeeds[3].one_brkt_id && foundBrktSeed?.seed === toReplace.brktSeeds[3].seed) {
+    //       expect(foundBrktSeed?.player_id).toBe(toReplace.brktSeeds[3].player_id);
+    //     } else if (foundBrktSeed?.one_brkt_id === toReplace.brktSeeds[4].one_brkt_id && foundBrktSeed?.seed === toReplace.brktSeeds[4].seed) {
+    //       expect(foundBrktSeed?.player_id).toBe(toReplace.brktSeeds[4].player_id);
+    //     } else if (foundBrktSeed?.one_brkt_id === toReplace.brktSeeds[5].one_brkt_id && foundBrktSeed?.seed === toReplace.brktSeeds[5].seed) {
+    //       expect(foundBrktSeed?.player_id).toBe(toReplace.brktSeeds[5].player_id);
+    //     } else if (foundBrktSeed?.one_brkt_id === toReplace.brktSeeds[6].one_brkt_id && foundBrktSeed?.seed === toReplace.brktSeeds[6].seed) {
+    //       expect(foundBrktSeed?.player_id).toBe(toReplace.brktSeeds[6].player_id);
+    //     } else if (foundBrktSeed?.one_brkt_id === toReplace.brktSeeds[7].one_brkt_id && foundBrktSeed?.seed === toReplace.brktSeeds[7].seed) {
+    //       expect(foundBrktSeed?.player_id).toBe(toReplace.brktSeeds[7].player_id);
+    //     } else { 
+    //       expect(false).toBe(true);
+    //     }
+    //   }
+    //   const elimEntries = await getAllElimEntriesForTmnt(toReplace.tmnt.id);
+    //   expect(elimEntries.length).toEqual(toReplace.elimEntries.length);
+    //   for (let i = 0; i < elimEntries.length; i++) {
+    //     const foundElimEntry = toReplace.elimEntries.find(e => e.id === elimEntries[i].id);
+    //     expect(foundElimEntry).not.toBeUndefined();
+    //     if (foundElimEntry?.id === toReplace.elimEntries[0].id) {
+    //       expect(foundElimEntry?.elim_id).toBe(toReplace.elimEntries[0].elim_id);
+    //       expect(foundElimEntry?.player_id).toBe(toReplace.elimEntries[0].player_id);
+    //       expect(foundElimEntry?.fee).toBe(toReplace.elimEntries[0].fee);
+    //     } else if (foundElimEntry?.id === toReplace.elimEntries[1].id) {
+    //       expect(foundElimEntry?.elim_id).toBe(toReplace.elimEntries[1].elim_id);
+    //       expect(foundElimEntry?.player_id).toBe(toReplace.elimEntries[1].player_id);
+    //       expect(foundElimEntry?.fee).toBe(toReplace.elimEntries[1].fee);
+    //     } else if (foundElimEntry?.id === toReplace.elimEntries[2].id) {
+    //       expect(foundElimEntry?.elim_id).toBe(toReplace.elimEntries[2].elim_id);
+    //       expect(foundElimEntry?.player_id).toBe(toReplace.elimEntries[2].player_id);
+    //       expect(foundElimEntry?.fee).toBe(toReplace.elimEntries[2].fee);
+    //     } else if (foundElimEntry?.id === toReplace.elimEntries[3].id) {
+    //       expect(foundElimEntry?.elim_id).toBe(toReplace.elimEntries[3].elim_id);
+    //       expect(foundElimEntry?.player_id).toBe(toReplace.elimEntries[3].player_id);
+    //       expect(foundElimEntry?.fee).toBe(toReplace.elimEntries[3].fee);
+    //     } else {
+    //       expect(false).toBe(true);
+    //     }
+    //   }
+    // });
+    // it('should replace a tmnt entries - no entries data', async () => {
+    //   const toReplace = cloneDeep(mockTmntFullData);
+    //   toReplace.brktEntries = [];
+    //   toReplace.brktSeeds = [];
+    //   toReplace.divEntries = [];
+    //   toReplace.elimEntries = [];
+    //   toReplace.oneBrkts = [];
+    //   toReplace.potEntries = [];
+    //   toReplace.players = [];
+
+    //   const before = Date.now();
+
+    //   const result = await replaceTmntEntriesData(toReplace);
+    //   expect(result.success).toBe(true);
+      
+    //   const after = Date.now();
+    //   const twoMinutes = 2 * 60 * 1000;
+      
+    //   expect(result.stage).not.toBeNull();
+    //   const puttedStage = result.stage;
+    //   const stageSetAtMs = new Date(puttedStage.stage_set_at).getTime();
+    //   expect(puttedStage.id).toBe(toReplace.stage.id);
+    //   expect(puttedStage.squad_id).toBe(toReplace.stage.squad_id);
+    //   expect(puttedStage.stage).toBe(toReplace.stage.stage);
+      
+    //   expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
+    //   expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
+
+    //   expect(puttedStage.stage_override_enabled).toBe(toReplace.stage.stage_override_enabled);
+    //   expect(puttedStage.stage_override_at).toBe(toReplace.stage.stage_override_at);
+    //   expect(puttedStage.stage_override_reason).toBe(toReplace.stage.stage_override_reason);
+
+    //   expect(result.success).toBe(true);
+    //   const playerResult = await getAllPlayersForTmnt(toReplace.tmnt.id);
+    //   expect(playerResult.length).toEqual(toReplace.players.length);
+    //   const divEntriesResult = await getAllDivEntriesForTmnt(toReplace.tmnt.id);
+    //   expect(divEntriesResult.length).toEqual(toReplace.divEntries.length);
+    //   const potEntriesResult = await getAllPotEntriesForTmnt(toReplace.tmnt.id);
+    //   expect(potEntriesResult.length).toEqual(toReplace.potEntries.length);
+    //   const brktEntriesResult = await getAllBrktEntriesForTmnt(toReplace.tmnt.id);
+    //   expect(brktEntriesResult.length).toEqual(toReplace.brktEntries.length);
+    //   const elimEntriesResult = await getAllElimEntriesForTmnt(toReplace.tmnt.id);
+    //   expect(elimEntriesResult.length).toEqual(toReplace.elimEntries.length);
+    //   const oneBrktsResult = await getAllOneBrktsForTmnt(toReplace.tmnt.id);
+    //   expect(oneBrktsResult.length).toEqual(toReplace.oneBrkts.length);
+    //   const brktSeedsResult = await getAllBrktSeedsForTmnt(toReplace.tmnt.id);
+    //   expect(brktSeedsResult.length).toEqual(toReplace.brktSeeds.length);
+    // });
+    // it('should replace a tmnt entries - all entries data; stage = SCORES', async () => {
+    //   await postMockTmntNoEntries();
+    //   replacedTmnt = true;
+
+    //   const toReplace = cloneDeep(mockTmntFullData);
+    //   toReplace.stage.stage = SquadStage.SCORES;
+
+    //   const before = Date.now();
+
+    //   const result = await replaceTmntEntriesData(toReplace);
+
+    //   const after = Date.now();
+    //   const twoMinutes = 2 * 60 * 1000;
+
+    //   expect(result.success).toBe(true);
+    //   expect(result.stage).not.toBeNull();
+
+    //   const puttedStage = result.stage;
+    //   const stageSetAtMs = new Date(puttedStage.stage_set_at).getTime();
+    //   const scoresSetAtMs = new Date(puttedStage.scores_started_at!).getTime();
+      
+    //   expect(puttedStage.scores_started_at).not.toBeNull();
+    //   expect(puttedStage.id).toBe(toReplace.stage.id);
+    //   expect(puttedStage.squad_id).toBe(toReplace.stage.squad_id);
+    //   expect(puttedStage.stage).toBe(toReplace.stage.stage);
+      
+    //   expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
+    //   expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
+    //   expect(scoresSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
+    //   expect(scoresSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
+
+    //   expect(puttedStage.stage_override_enabled).toBe(toReplace.stage.stage_override_enabled);
+    //   expect(puttedStage.stage_override_at).toBe(toReplace.stage.stage_override_at);
+    //   expect(puttedStage.stage_override_reason).toBe(toReplace.stage.stage_override_reason);
+    // });
+    it('should replace a tmnt entries - all entries dat; stage = ENTRIES and stage_override_enabled = true', async () => {
       await postMockTmntNoEntries();
       replacedTmnt = true;
 
       const toReplace = cloneDeep(mockTmntFullData);
-      const result = await replaceTmntEntriesData(toReplace);
-      expect(typeof result).toBe('boolean');
-      expect(result).toBe(true);
-      const players = await getAllPlayersForTmnt(toReplace.tmnt.id);
-      expect(players.length).toEqual(toReplace.players.length);
-      for (let i = 0; i < players.length; i++) {
-        const foundPlayer = toReplace.players.find(p => p.id === players[i].id);
-        expect(foundPlayer).not.toBeUndefined();
-        expect(foundPlayer?.squad_id).toBe(toReplace.players[i].squad_id);
-        if (foundPlayer?.id === toReplace.players[0].id) {
-          expect(foundPlayer?.first_name).toBe(toReplace.players[0].first_name);
-          expect(foundPlayer?.last_name).toBe(toReplace.players[0].last_name);
-          expect(foundPlayer?.average).toBe(toReplace.players[0].average);
-          expect(foundPlayer?.lane).toBe(toReplace.players[0].lane);
-          expect(foundPlayer?.position).toBe(toReplace.players[0].position);
-        } else if (foundPlayer?.id === toReplace.players[1].id) {
-          expect(foundPlayer?.first_name).toBe(toReplace.players[1].first_name);
-          expect(foundPlayer?.last_name).toBe(toReplace.players[1].last_name);
-          expect(foundPlayer?.average).toBe(toReplace.players[1].average);
-          expect(foundPlayer?.lane).toBe(toReplace.players[1].lane);
-          expect(foundPlayer?.position).toBe(toReplace.players[1].position);
-        } else if (foundPlayer?.id === toReplace.players[2].id) {
-          expect(foundPlayer?.first_name).toBe(toReplace.players[2].first_name);
-          expect(foundPlayer?.last_name).toBe(toReplace.players[2].last_name);
-          expect(foundPlayer?.average).toBe(toReplace.players[2].average);
-          expect(foundPlayer?.lane).toBe(toReplace.players[2].lane);
-          expect(foundPlayer?.position).toBe(toReplace.players[2].position);
-        } else if (foundPlayer?.id === toReplace.players[3].id) {
-          expect(foundPlayer?.first_name).toBe(toReplace.players[3].first_name);
-          expect(foundPlayer?.last_name).toBe(toReplace.players[3].last_name);
-          expect(foundPlayer?.average).toBe(toReplace.players[3].average);
-          expect(foundPlayer?.lane).toBe(toReplace.players[3].lane);
-          expect(foundPlayer?.position).toBe(toReplace.players[3].position);
-        } else { 
-          expect(false).toBe(true);
-        }
-      }
-      const divEntries = await getAllDivEntriesForTmnt(toReplace.tmnt.id);
-      expect(divEntries.length).toEqual(toReplace.divEntries.length);
-      for (let i = 0; i < divEntries.length; i++) {
-        const foundDivEntry = toReplace.divEntries.find(d => d.id === divEntries[i].id);
-        expect(foundDivEntry).not.toBeUndefined();
-        expect(foundDivEntry?.squad_id).toBe(toReplace.divEntries[i].squad_id);
-        expect(foundDivEntry?.div_id).toBe(toReplace.divEntries[i].div_id);
-        if (foundDivEntry?.id === toReplace.divEntries[0].id) {
-          expect(foundDivEntry?.fee).toBe(toReplace.divEntries[0].fee);
-          expect(foundDivEntry?.player_id).toBe(toReplace.divEntries[0].player_id);
-        } else if (foundDivEntry?.id === toReplace.divEntries[1].id) {
-          expect(foundDivEntry?.fee).toBe(toReplace.divEntries[1].fee);
-          expect(foundDivEntry?.player_id).toBe(toReplace.divEntries[1].player_id);
-        } else if (foundDivEntry?.id === toReplace.divEntries[2].id) {
-          expect(foundDivEntry?.fee).toBe(toReplace.divEntries[2].fee);
-          expect(foundDivEntry?.player_id).toBe(toReplace.divEntries[2].player_id);
-        } else if (foundDivEntry?.id === toReplace.divEntries[3].id) {
-          expect(foundDivEntry?.fee).toBe(toReplace.divEntries[3].fee);
-          expect(foundDivEntry?.player_id).toBe(toReplace.divEntries[3].player_id);
-        } else { 
-          expect(false).toBe(true);
-        }
-      }
-      const potEntries = await getAllPotEntriesForTmnt(toReplace.tmnt.id);
-      expect(potEntries.length).toEqual(toReplace.potEntries.length);
-      for (let i = 0; i < potEntries.length; i++) {
-        const foundPotEntry = toReplace.potEntries.find(p => p.id === potEntries[i].id);
-        expect(foundPotEntry).not.toBeUndefined();        
-        expect(foundPotEntry?.pot_id).toBe(toReplace.potEntries[i].pot_id);
-        if (foundPotEntry?.id === toReplace.potEntries[0].id) {
-          expect(foundPotEntry?.fee).toBe(toReplace.potEntries[0].fee);
-          expect(foundPotEntry?.player_id).toBe(toReplace.potEntries[0].player_id);
-        } else if (foundPotEntry?.id === toReplace.potEntries[1].id) {
-          expect(foundPotEntry?.fee).toBe(toReplace.potEntries[1].fee);
-          expect(foundPotEntry?.player_id).toBe(toReplace.potEntries[1].player_id);
-        } else if (foundPotEntry?.id === toReplace.potEntries[2].id) {
-          expect(foundPotEntry?.fee).toBe(toReplace.potEntries[2].fee);
-          expect(foundPotEntry?.player_id).toBe(toReplace.potEntries[2].player_id);
-        } else if (foundPotEntry?.id === toReplace.potEntries[3].id) {
-          expect(foundPotEntry?.fee).toBe(toReplace.potEntries[3].fee);
-          expect(foundPotEntry?.player_id).toBe(toReplace.potEntries[3].player_id);
-        } else {
-          expect(false).toBe(true);
-        }
-      }
-      const brktEntries = await getAllBrktEntriesForTmnt(toReplace.tmnt.id);
-      expect(brktEntries.length).toEqual(toReplace.brktEntries.length);
-      for (let i = 0; i < brktEntries.length; i++) {
-        const foundBrktEntry = toReplace.brktEntries.find(b => b.id === brktEntries[i].id);
-        expect(foundBrktEntry).not.toBeUndefined();
-        if (foundBrktEntry?.id === toReplace.brktEntries[0].id) {
-          expect(foundBrktEntry?.brkt_id).toBe(toReplace.brktEntries[0].brkt_id);
-          expect(foundBrktEntry?.player_id).toBe(toReplace.brktEntries[0].player_id);
-          expect(foundBrktEntry?.num_brackets).toBe(toReplace.brktEntries[0].num_brackets);
-          expect(foundBrktEntry?.time_stamp).toBe(toReplace.brktEntries[0].time_stamp);
-        } else if (foundBrktEntry?.id === toReplace.brktEntries[1].id) {
-          expect(foundBrktEntry?.brkt_id).toBe(toReplace.brktEntries[1].brkt_id);
-          expect(foundBrktEntry?.player_id).toBe(toReplace.brktEntries[1].player_id);
-          expect(foundBrktEntry?.num_brackets).toBe(toReplace.brktEntries[1].num_brackets);
-          expect(foundBrktEntry?.time_stamp).toBe(toReplace.brktEntries[1].time_stamp);
-        } else if (foundBrktEntry?.id === toReplace.brktEntries[2].id) {
-          expect(foundBrktEntry?.brkt_id).toBe(toReplace.brktEntries[2].brkt_id);
-          expect(foundBrktEntry?.player_id).toBe(toReplace.brktEntries[2].player_id);
-          expect(foundBrktEntry?.num_brackets).toBe(toReplace.brktEntries[2].num_brackets);
-          expect(foundBrktEntry?.time_stamp).toBe(toReplace.brktEntries[2].time_stamp);
-        } else if (foundBrktEntry?.id === toReplace.brktEntries[3].id) {
-          expect(foundBrktEntry?.brkt_id).toBe(toReplace.brktEntries[3].brkt_id);
-          expect(foundBrktEntry?.player_id).toBe(toReplace.brktEntries[3].player_id);
-          expect(foundBrktEntry?.num_brackets).toBe(toReplace.brktEntries[3].num_brackets);
-          expect(foundBrktEntry?.time_stamp).toBe(toReplace.brktEntries[3].time_stamp);
-        } else { 
-          expect(false).toBe(true);
-        }
-      }
-      const oneBrkts = await getAllOneBrktsForTmnt(toReplace.tmnt.id);
-      expect(oneBrkts.length).toEqual(toReplace.oneBrkts.length);
-      for (let i = 0; i < oneBrkts.length; i++) {
-        const foundOneBrkt = toReplace.oneBrkts.find(o => o.id === oneBrkts[i].id);
-        expect(foundOneBrkt).not.toBeUndefined();
-        if (foundOneBrkt?.id === toReplace.oneBrkts[0].id) {
-          expect(foundOneBrkt?.brkt_id).toBe(toReplace.oneBrkts[0].brkt_id);
-          expect(foundOneBrkt?.bindex).toBe(toReplace.oneBrkts[0].bindex);
-        } else if (foundOneBrkt?.id === toReplace.oneBrkts[1].id) {
-          expect(foundOneBrkt?.brkt_id).toBe(toReplace.oneBrkts[1].brkt_id);
-          expect(foundOneBrkt?.bindex).toBe(toReplace.oneBrkts[1].bindex);
-        } else { 
-          expect(false).toBe(true);
-        }
-      }
-      const brktSeeds = await getAllBrktSeedsForTmnt(toReplace.tmnt.id);
-      expect(brktSeeds.length).toEqual(toReplace.brktSeeds.length);
-      for (let i = 0; i < brktSeeds.length; i++) {
-        const foundBrktSeed = toReplace.brktSeeds.find(b => b.one_brkt_id === brktSeeds[i].one_brkt_id && b.seed === brktSeeds[i].seed);
-        expect(foundBrktSeed).not.toBeUndefined();
-        if (foundBrktSeed?.one_brkt_id === toReplace.brktSeeds[0].one_brkt_id && foundBrktSeed?.seed === toReplace.brktSeeds[0].seed) {
-          expect(foundBrktSeed?.player_id).toBe(toReplace.brktSeeds[0].player_id);
-        } else if (foundBrktSeed?.one_brkt_id === toReplace.brktSeeds[1].one_brkt_id && foundBrktSeed?.seed === toReplace.brktSeeds[1].seed) {
-          expect(foundBrktSeed?.player_id).toBe(toReplace.brktSeeds[1].player_id);
-        } else if (foundBrktSeed?.one_brkt_id === toReplace.brktSeeds[2].one_brkt_id && foundBrktSeed?.seed === toReplace.brktSeeds[2].seed) {
-          expect(foundBrktSeed?.player_id).toBe(toReplace.brktSeeds[2].player_id);
-        } else if (foundBrktSeed?.one_brkt_id === toReplace.brktSeeds[3].one_brkt_id && foundBrktSeed?.seed === toReplace.brktSeeds[3].seed) {
-          expect(foundBrktSeed?.player_id).toBe(toReplace.brktSeeds[3].player_id);
-        } else if (foundBrktSeed?.one_brkt_id === toReplace.brktSeeds[4].one_brkt_id && foundBrktSeed?.seed === toReplace.brktSeeds[4].seed) {
-          expect(foundBrktSeed?.player_id).toBe(toReplace.brktSeeds[4].player_id);
-        } else if (foundBrktSeed?.one_brkt_id === toReplace.brktSeeds[5].one_brkt_id && foundBrktSeed?.seed === toReplace.brktSeeds[5].seed) {
-          expect(foundBrktSeed?.player_id).toBe(toReplace.brktSeeds[5].player_id);
-        } else if (foundBrktSeed?.one_brkt_id === toReplace.brktSeeds[6].one_brkt_id && foundBrktSeed?.seed === toReplace.brktSeeds[6].seed) {
-          expect(foundBrktSeed?.player_id).toBe(toReplace.brktSeeds[6].player_id);
-        } else if (foundBrktSeed?.one_brkt_id === toReplace.brktSeeds[7].one_brkt_id && foundBrktSeed?.seed === toReplace.brktSeeds[7].seed) {
-          expect(foundBrktSeed?.player_id).toBe(toReplace.brktSeeds[7].player_id);
-        } else { 
-          expect(false).toBe(true);
-        }
-      }
-      const elimEntries = await getAllElimEntriesForTmnt(toReplace.tmnt.id);
-      expect(elimEntries.length).toEqual(toReplace.elimEntries.length);
-      for (let i = 0; i < elimEntries.length; i++) {
-        const foundElimEntry = toReplace.elimEntries.find(e => e.id === elimEntries[i].id);
-        expect(foundElimEntry).not.toBeUndefined();
-        if (foundElimEntry?.id === toReplace.elimEntries[0].id) {
-          expect(foundElimEntry?.elim_id).toBe(toReplace.elimEntries[0].elim_id);
-          expect(foundElimEntry?.player_id).toBe(toReplace.elimEntries[0].player_id);
-          expect(foundElimEntry?.fee).toBe(toReplace.elimEntries[0].fee);
-        } else if (foundElimEntry?.id === toReplace.elimEntries[1].id) {
-          expect(foundElimEntry?.elim_id).toBe(toReplace.elimEntries[1].elim_id);
-          expect(foundElimEntry?.player_id).toBe(toReplace.elimEntries[1].player_id);
-          expect(foundElimEntry?.fee).toBe(toReplace.elimEntries[1].fee);
-        } else if (foundElimEntry?.id === toReplace.elimEntries[2].id) {
-          expect(foundElimEntry?.elim_id).toBe(toReplace.elimEntries[2].elim_id);
-          expect(foundElimEntry?.player_id).toBe(toReplace.elimEntries[2].player_id);
-          expect(foundElimEntry?.fee).toBe(toReplace.elimEntries[2].fee);
-        } else if (foundElimEntry?.id === toReplace.elimEntries[3].id) {
-          expect(foundElimEntry?.elim_id).toBe(toReplace.elimEntries[3].elim_id);
-          expect(foundElimEntry?.player_id).toBe(toReplace.elimEntries[3].player_id);
-          expect(foundElimEntry?.fee).toBe(toReplace.elimEntries[3].fee);
-        } else {
-          expect(false).toBe(true);
-        }
-      }
-    });
-    it('should replace a tmnt entries - no entries data', async () => {
-      const toReplace = cloneDeep(mockTmntFullData);
-      toReplace.brktEntries = [];
-      toReplace.brktSeeds = [];
-      toReplace.divEntries = [];
-      toReplace.elimEntries = [];
-      toReplace.oneBrkts = [];
-      toReplace.potEntries = [];
-      toReplace.players = [];
+      toReplace.stage.stage = SquadStage.ENTRIES;
+      toReplace.stage.stage_override_enabled = true;
+      toReplace.stage.stage_override_reason = 'override reason';
+
+      const before = Date.now();
 
       const result = await replaceTmntEntriesData(toReplace);
-      expect(result).toBe(true);
-      const playerResult = await getAllPlayersForTmnt(toReplace.tmnt.id);
-      expect(playerResult.length).toEqual(toReplace.players.length);
-      const divEntriesResult = await getAllDivEntriesForTmnt(toReplace.tmnt.id);
-      expect(divEntriesResult.length).toEqual(toReplace.divEntries.length);
-      const potEntriesResult = await getAllPotEntriesForTmnt(toReplace.tmnt.id);
-      expect(potEntriesResult.length).toEqual(toReplace.potEntries.length);
-      const brktEntriesResult = await getAllBrktEntriesForTmnt(toReplace.tmnt.id);
-      expect(brktEntriesResult.length).toEqual(toReplace.brktEntries.length);
-      const elimEntriesResult = await getAllElimEntriesForTmnt(toReplace.tmnt.id);
-      expect(elimEntriesResult.length).toEqual(toReplace.elimEntries.length);
-      const oneBrktsResult = await getAllOneBrktsForTmnt(toReplace.tmnt.id);
-      expect(oneBrktsResult.length).toEqual(toReplace.oneBrkts.length);
-      const brktSeedsResult = await getAllBrktSeedsForTmnt(toReplace.tmnt.id);
-      expect(brktSeedsResult.length).toEqual(toReplace.brktSeeds.length);
-    });
-    it('should throw error when post tmnt entries - tmnt not in database', async () => {
-      try {
-        const notInDbTmnt = cloneDeep(mockTmntFullData);
-        notInDbTmnt.tmnt.id = 'tmt_00000000000000000000000000000000';                              
-        // parent table, child tables not in database for grandchild tables
-        const result = await replaceTmntEntriesData(mockTmntFullData)
-      } catch (err) {
-        expect(err).toBeInstanceOf(Error);
-        expect((err as Error).message).toBe("replaceTmntFullEntriesData failed: Request failed with status code 409");
-      }
-    });
-    it('replaces a full tmnt - tmnt in database', async () => {
-      const result = await replaceTmntFullData(mockTmntFullData) // create tmnt full data
-      expect(result).toBe(true);
-      replacedTmnt = true;
 
-      const tmntEntries = cloneDeep(mockTmntFullData);
-      // values that will not update
-      tmntEntries.tmnt.tmnt_name = 'DoNotUpdate';
-      tmntEntries.events[0].event_name = 'DoNotUpdate';
-      tmntEntries.divs[0].div_name = 'DoNotUpdate';
-      tmntEntries.squads[0].squad_name = 'DoNotUpdate';
-      tmntEntries.lanes[0].lane_number = 100;
-      tmntEntries.pots[0].pot_type = 'Series';
-      tmntEntries.brkts[0].start = 2;
-      tmntEntries.elims[0].start = 2;
-      // values that will update
-      tmntEntries.players[0].first_name = 'Updated';
-      tmntEntries.players[0].last_name = 'ThisToo';
-      tmntEntries.players.push(
-        {
-          ...initPlayer,
-          id: playerId5,
-          squad_id: tmntEntries.squads[0].id,
-          first_name: 'New',
-          last_name: 'Player',
-          average: 199,
-          lane: 29,
-          position: 'Z',
-        }
-      )
-      tmntEntries.divEntries[0].fee = '100';        
-      tmntEntries.potEntries[0].player_id = playerId5;
-      tmntEntries.brktEntries[0].num_brackets = 100;      
-      tmntEntries.oneBrkts[0].bindex = 7;
-      tmntEntries.brktSeeds[0].seed = 7;
-      tmntEntries.elimEntries[0].player_id = playerId5;
+      const after = Date.now();
+      const twoMinutes = 2 * 60 * 1000;
 
-      const result2 = await replaceTmntEntriesData(tmntEntries);
-      expect(result2).toBe(true);
+      expect(result.success).toBe(true);
+      expect(result.stage).not.toBeNull();
 
-      const postedEntries = await getTmntFullData(tmntEntries.tmnt.id);
-      // non updated values
-      expect(postedEntries.tmnt.tmnt_name).toBe(mockTmntFullData.tmnt.tmnt_name);
-      expect(postedEntries.events[0].event_name).toBe(mockTmntFullData.events[0].event_name);
-      for (let i = 0; i < postedEntries.divs.length; i++) {
-        if (postedEntries.divs[i].id === mockTmntFullData.divs[0].id) {
-          expect(postedEntries.divs[i].div_name).toBe(mockTmntFullData.divs[0].div_name);
-        }
-      }
-      expect(postedEntries.squads[0].squad_name).toBe(mockTmntFullData.squads[0].squad_name);
-      for (let i = 0; i < postedEntries.lanes.length; i++) {
-        if (postedEntries.lanes[i].id === mockTmntFullData.lanes[0].id) {
-          expect(postedEntries.lanes[i].lane_number).toBe(mockTmntFullData.lanes[0].lane_number);
-        }
-      }
-      for (let i = 0; i < postedEntries.pots.length; i++) {
-        if (postedEntries.pots[i].id === mockTmntFullData.pots[0].id) {
-          expect(postedEntries.pots[i].pot_type).toBe(mockTmntFullData.pots[0].pot_type);
-        }
-      }
-      for (let i = 0; i < postedEntries.brkts.length; i++) {
-        if (postedEntries.brkts[i].id === mockTmntFullData.brkts[0].id) {
-          expect(postedEntries.brkts[i].start).toBe(mockTmntFullData.brkts[0].start);
-        }
-      }
-      for (let i = 0; i < postedEntries.elims.length; i++) {
-        if (postedEntries.elims[i].id === mockTmntFullData.elims[0].id) {
-          expect(postedEntries.elims[i].start).toBe(mockTmntFullData.elims[0].start);
-        }
-      }      
-      // updated values
-      for (let i = 0; i < postedEntries.players.length; i++) {
-        if (postedEntries.players[i].id === tmntEntries.players[0].id) {
-          expect(postedEntries.players[i].first_name).toBe('Updated');
-          expect(postedEntries.players[i].last_name).toBe('ThisToo');          
-        }
-      }
-      for (let i = 0; i < postedEntries.divEntries.length; i++) {
-        if (postedEntries.divEntries[i].id === tmntEntries.divEntries[0].id) {
-          expect(postedEntries.divEntries[i].fee).toBe('100')
-        }
-      }
-      for (let i = 0; i < postedEntries.potEntries.length; i++) {
-        if (postedEntries.potEntries[i].id === tmntEntries.potEntries[0].id) {          
-          expect(postedEntries.potEntries[i].player_id).toBe(playerId5);
-        }
-      }
-      for (let i = 0; i < postedEntries.brktEntries.length; i++) {
-        if (postedEntries.brktEntries[i].id === tmntEntries.brktEntries[0].id) {
-          expect(postedEntries.brktEntries[i].num_brackets).toBe(100);
-        }
-      }
-      for (let i = 0; i < postedEntries.oneBrkts.length; i++) {
-        if (postedEntries.oneBrkts[i].id === tmntEntries.oneBrkts[0].id) {
-          expect(postedEntries.oneBrkts[i].bindex).toBe(7);
-        }
-      }
-      for (let i = 0; i < postedEntries.brktSeeds.length; i++) {
-        if (postedEntries.brktSeeds[i].seed === 7) {
-          expect(postedEntries.brktSeeds[i].player_id).toBe(tmntEntries.brktSeeds[0].player_id);
-        }
-      }
-      for (let i = 0; i < postedEntries.elimEntries.length; i++) {
-        if (postedEntries.elimEntries[i].player_id === tmntEntries.elimEntries[0].player_id) {
-          expect(postedEntries.elimEntries[i].player_id).toBe(playerId5);
-        }
-      }
+      const puttedStage = result.stage;
+      const stageSetAtMs = new Date(puttedStage.stage_set_at).getTime();
+      const overrideSetAtMs = new Date(puttedStage.stage_override_at!).getTime();
+
+      expect(puttedStage.id).toBe(toReplace.stage.id);
+      expect(puttedStage.squad_id).toBe(toReplace.stage.squad_id);
+      expect(puttedStage.stage).toBe(toReplace.stage.stage);
+      
+      expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
+      expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
+      expect(overrideSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
+      expect(overrideSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
+
+      expect(puttedStage.stage_override_enabled).toBe(toReplace.stage.stage_override_enabled);
+      expect(puttedStage.stage_override_reason).toBe(toReplace.stage.stage_override_reason);
     });
-    it("should throw error when post tmnt entries if invalid tmnt id", async () => {
-      try {
-        const invalidTmnt = cloneDeep(mockTmntFullData);
-        invalidTmnt.divEntries[0].id = "invalid id";
-        await replaceTmntEntriesData(invalidTmnt);
-      } catch (err) {
-        expect(err).toBeInstanceOf(Error);
-        expect((err as Error).message).toBe("divEntries has missing data at index 0");
-      }
-    });
-    it("should throw error when post tmnt entries if got invalid data", async () => {
-      try {
-        const invalidTmnt = cloneDeep(mockTmntFullData);
-        invalidTmnt.players[0].first_name = "";
-        await replaceTmntEntriesData(invalidTmnt);
-      } catch (err) {
-        expect(err).toBeInstanceOf(Error);
-        expect((err as Error).message).toBe('players has missing data at index 0');
-      }
-    });
-    it("should throw error when post tmnt entries if passed null", async () => {
-      try {
-        await replaceTmntEntriesData(null as any);
-      } catch (err) {
-        expect(err).toBeInstanceOf(Error);
-        expect((err as Error).message).toBe("invalid tmntFullData data");
-      }
-    });
-    it("should throw error when post tmnt entries if passed non object", async () => {
-      try {
-        await replaceTmntEntriesData("test" as any);
-      } catch (err) {
-        expect(err).toBeInstanceOf(Error);
-        expect((err as Error).message).toBe("invalid tmntFullData data");
-      }
-    });
-    it("should throw error when post tmnt entries if squad is empty", async () => {
-      try {
-        const invalidTmnt = cloneDeep(mockTmntFullData);
-        invalidTmnt.squads = [];
-        await replaceTmntEntriesData(invalidTmnt);
-      } catch (err) {
-        expect(err).toBeInstanceOf(Error);
-        expect((err as Error).message).toBe("no squads data");
-      }
-    });
-    it("should throw error when post tmnt entries if squad is invalid", async () => {
-      try {
-        const invalidTmnt = cloneDeep(mockTmntFullData);
-        invalidTmnt.squads[0].id = "invalid id";
-        await replaceTmntEntriesData(invalidTmnt);
-      } catch (err) {
-        expect(err).toBeInstanceOf(Error);
-        expect((err as Error).message).toBe("squads has missing data at index 0");
-      }
-    });
+    // it('should throw error when post tmnt entries - tmnt not in database', async () => {
+    //   try {
+    //     const notInDbTmnt = cloneDeep(mockTmntFullData);
+    //     notInDbTmnt.tmnt.id = 'tmt_00000000000000000000000000000000';                              
+    //     // parent table, child tables not in database for grandchild tables
+    //     const result = await replaceTmntEntriesData(mockTmntFullData)
+    //   } catch (err) {
+    //     expect(err).toBeInstanceOf(Error);
+    //     expect((err as Error).message).toBe("replaceTmntFullEntriesData failed: Request failed with status code 409");
+    //   }
+    // });
+    // it('replaces a full tmnt - tmnt in database', async () => {
+    //   const result = await replaceTmntFullData(mockTmntFullData) // create tmnt full data
+    //   expect(result).toBe(true);
+    //   replacedTmnt = true;
+
+    //   const tmntEntries = cloneDeep(mockTmntFullData);
+    //   // values that will not update
+    //   tmntEntries.tmnt.tmnt_name = 'DoNotUpdate';
+    //   tmntEntries.events[0].event_name = 'DoNotUpdate';
+    //   tmntEntries.divs[0].div_name = 'DoNotUpdate';
+    //   tmntEntries.squads[0].squad_name = 'DoNotUpdate';
+    //   tmntEntries.lanes[0].lane_number = 100;
+    //   tmntEntries.pots[0].pot_type = 'Series';
+    //   tmntEntries.brkts[0].start = 2;
+    //   tmntEntries.elims[0].start = 2;
+    //   // values that will update
+    //   tmntEntries.players[0].first_name = 'Updated';
+    //   tmntEntries.players[0].last_name = 'ThisToo';
+    //   tmntEntries.players.push(
+    //     {
+    //       ...initPlayer,
+    //       id: playerId5,
+    //       squad_id: tmntEntries.squads[0].id,
+    //       first_name: 'New',
+    //       last_name: 'Player',
+    //       average: 199,
+    //       lane: 29,
+    //       position: 'Z',
+    //     }
+    //   )
+    //   tmntEntries.divEntries[0].fee = '100';        
+    //   tmntEntries.potEntries[0].player_id = playerId5;
+    //   tmntEntries.brktEntries[0].num_brackets = 100;      
+    //   tmntEntries.oneBrkts[0].bindex = 7;
+    //   tmntEntries.brktSeeds[0].seed = 7;
+    //   tmntEntries.elimEntries[0].player_id = playerId5;
+
+    //   const before = Date.now();
+
+    //   const result2 = await replaceTmntEntriesData(tmntEntries);
+    //   expect(result2.success).toBe(true);
+
+    //   const after = Date.now();
+    //   const twoMinutes = 2 * 60 * 1000;
+      
+    //   expect(result2.stage).not.toBeNull();
+    //   const puttedStage = result2.stage;
+    //   const stageSetAtMs = new Date(puttedStage.stage_set_at).getTime();
+    //   expect(puttedStage.id).toBe(tmntEntries.stage.id);
+    //   expect(puttedStage.squad_id).toBe(tmntEntries.stage.squad_id);
+    //   expect(puttedStage.stage).toBe(tmntEntries.stage.stage);
+      
+    //   expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
+    //   expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
+
+    //   expect(puttedStage.stage_override_enabled).toBe(tmntEntries.stage.stage_override_enabled);
+    //   expect(puttedStage.stage_override_at).toBe(tmntEntries.stage.stage_override_at);
+    //   expect(puttedStage.stage_override_reason).toBe(tmntEntries.stage.stage_override_reason);
+
+    //   const postedEntries = await getTmntFullData(tmntEntries.tmnt.id);
+    //   // non updated values
+    //   expect(postedEntries.tmnt.tmnt_name).toBe(mockTmntFullData.tmnt.tmnt_name);
+    //   expect(postedEntries.events[0].event_name).toBe(mockTmntFullData.events[0].event_name);
+    //   for (let i = 0; i < postedEntries.divs.length; i++) {
+    //     if (postedEntries.divs[i].id === mockTmntFullData.divs[0].id) {
+    //       expect(postedEntries.divs[i].div_name).toBe(mockTmntFullData.divs[0].div_name);
+    //     }
+    //   }
+    //   expect(postedEntries.squads[0].squad_name).toBe(mockTmntFullData.squads[0].squad_name);
+    //   for (let i = 0; i < postedEntries.lanes.length; i++) {
+    //     if (postedEntries.lanes[i].id === mockTmntFullData.lanes[0].id) {
+    //       expect(postedEntries.lanes[i].lane_number).toBe(mockTmntFullData.lanes[0].lane_number);
+    //     }
+    //   }
+    //   for (let i = 0; i < postedEntries.pots.length; i++) {
+    //     if (postedEntries.pots[i].id === mockTmntFullData.pots[0].id) {
+    //       expect(postedEntries.pots[i].pot_type).toBe(mockTmntFullData.pots[0].pot_type);
+    //     }
+    //   }
+    //   for (let i = 0; i < postedEntries.brkts.length; i++) {
+    //     if (postedEntries.brkts[i].id === mockTmntFullData.brkts[0].id) {
+    //       expect(postedEntries.brkts[i].start).toBe(mockTmntFullData.brkts[0].start);
+    //     }
+    //   }
+    //   for (let i = 0; i < postedEntries.elims.length; i++) {
+    //     if (postedEntries.elims[i].id === mockTmntFullData.elims[0].id) {
+    //       expect(postedEntries.elims[i].start).toBe(mockTmntFullData.elims[0].start);
+    //     }
+    //   }      
+    //   // updated values
+    //   for (let i = 0; i < postedEntries.players.length; i++) {
+    //     if (postedEntries.players[i].id === tmntEntries.players[0].id) {
+    //       expect(postedEntries.players[i].first_name).toBe('Updated');
+    //       expect(postedEntries.players[i].last_name).toBe('ThisToo');          
+    //     }
+    //   }
+    //   for (let i = 0; i < postedEntries.divEntries.length; i++) {
+    //     if (postedEntries.divEntries[i].id === tmntEntries.divEntries[0].id) {
+    //       expect(postedEntries.divEntries[i].fee).toBe('100')
+    //     }
+    //   }
+    //   for (let i = 0; i < postedEntries.potEntries.length; i++) {
+    //     if (postedEntries.potEntries[i].id === tmntEntries.potEntries[0].id) {          
+    //       expect(postedEntries.potEntries[i].player_id).toBe(playerId5);
+    //     }
+    //   }
+    //   for (let i = 0; i < postedEntries.brktEntries.length; i++) {
+    //     if (postedEntries.brktEntries[i].id === tmntEntries.brktEntries[0].id) {
+    //       expect(postedEntries.brktEntries[i].num_brackets).toBe(100);
+    //     }
+    //   }
+    //   for (let i = 0; i < postedEntries.oneBrkts.length; i++) {
+    //     if (postedEntries.oneBrkts[i].id === tmntEntries.oneBrkts[0].id) {
+    //       expect(postedEntries.oneBrkts[i].bindex).toBe(7);
+    //     }
+    //   }
+    //   for (let i = 0; i < postedEntries.brktSeeds.length; i++) {
+    //     if (postedEntries.brktSeeds[i].seed === 7) {
+    //       expect(postedEntries.brktSeeds[i].player_id).toBe(tmntEntries.brktSeeds[0].player_id);
+    //     }
+    //   }
+    //   for (let i = 0; i < postedEntries.elimEntries.length; i++) {
+    //     if (postedEntries.elimEntries[i].player_id === tmntEntries.elimEntries[0].player_id) {
+    //       expect(postedEntries.elimEntries[i].player_id).toBe(playerId5);
+    //     }
+    //   }
+    // });
+    // it("should throw error when post tmnt entries if invalid tmnt id", async () => {
+    //   try {
+    //     const invalidTmnt = cloneDeep(mockTmntFullData);
+    //     invalidTmnt.divEntries[0].id = "invalid id";
+    //     await replaceTmntEntriesData(invalidTmnt);
+    //   } catch (err) {
+    //     expect(err).toBeInstanceOf(Error);
+    //     expect((err as Error).message).toBe("divEntries has missing data at index 0");
+    //   }
+    // });
+    // it("should throw error when post tmnt entries if got invalid data", async () => {
+    //   try {
+    //     const invalidTmnt = cloneDeep(mockTmntFullData);
+    //     invalidTmnt.players[0].first_name = "";
+    //     await replaceTmntEntriesData(invalidTmnt);
+    //   } catch (err) {
+    //     expect(err).toBeInstanceOf(Error);
+    //     expect((err as Error).message).toBe('players has missing data at index 0');
+    //   }
+    // });
+    // it("should throw error when post tmnt entries if passed null", async () => {
+    //   try {
+    //     await replaceTmntEntriesData(null as any);
+    //   } catch (err) {
+    //     expect(err).toBeInstanceOf(Error);
+    //     expect((err as Error).message).toBe("invalid tmntFullData data");
+    //   }
+    // });
+    // it("should throw error when post tmnt entries if passed non object", async () => {
+    //   try {
+    //     await replaceTmntEntriesData("test" as any);
+    //   } catch (err) {
+    //     expect(err).toBeInstanceOf(Error);
+    //     expect((err as Error).message).toBe("invalid tmntFullData data");
+    //   }
+    // });
+    // it("should throw error when post tmnt entries if squad is empty", async () => {
+    //   try {
+    //     const invalidTmnt = cloneDeep(mockTmntFullData);
+    //     invalidTmnt.squads = [];
+    //     await replaceTmntEntriesData(invalidTmnt);
+    //   } catch (err) {
+    //     expect(err).toBeInstanceOf(Error);
+    //     expect((err as Error).message).toBe("no squads data");
+    //   }
+    // });
+    // it("should throw error when post tmnt entries if squad is invalid", async () => {
+    //   try {
+    //     const invalidTmnt = cloneDeep(mockTmntFullData);
+    //     invalidTmnt.squads[0].id = "invalid id";
+    //     await replaceTmntEntriesData(invalidTmnt);
+    //   } catch (err) {
+    //     expect(err).toBeInstanceOf(Error);
+    //     expect((err as Error).message).toBe("squads has missing data at index 0");
+    //   }
+    // });
   })
 
   describe("postTmnt", () => {

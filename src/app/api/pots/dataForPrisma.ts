@@ -1,4 +1,4 @@
-import { potDataType, potType } from "@/lib/types/types"
+import type { potDataType, potType } from "@/lib/types/types"
 
 /**
  * Converts pot to potDataType

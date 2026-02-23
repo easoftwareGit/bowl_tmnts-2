@@ -1,6 +1,6 @@
-import { brktEntryType, validBrktEntriesType } from "@/lib/types/types";
+import type { brktEntryType, validBrktEntriesType } from "@/lib/types/types";
 import { validateBrktEntries } from "../../../../lib/validation/brktEntries/validate";
-import { ErrorCode } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 
 /**
  * gets array of unique brktIds

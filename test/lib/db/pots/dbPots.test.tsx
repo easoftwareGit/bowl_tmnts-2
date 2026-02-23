@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { basePotsApi } from "@/lib/db/apiPaths";
 import { testBasePotsApi } from "../../../testApi";
-import { potCategoriesTypes, potType } from "@/lib/types/types";
+import type { potCategoriesTypes, potType } from "@/lib/types/types";
 import { initPot } from "@/lib/db/initVals";
 import { mockPotsToPost} from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import {

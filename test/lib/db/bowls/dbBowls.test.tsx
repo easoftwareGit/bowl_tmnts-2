@@ -3,7 +3,7 @@ import { baseBowlsApi } from "@/lib/db/apiPaths";
 import { testBaseBowlsApi } from "../../../testApi";
 import { deleteBowl, getBowl, getBowls, postBowl, putBowl, upsertBowl } from "@/lib/db/bowls/dbBowls";
 import { initBowl } from "@/lib/db/initVals";
-import { bowlType } from "@/lib/types/types";
+import type { bowlType } from "@/lib/types/types";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database

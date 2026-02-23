@@ -1,6 +1,7 @@
 import { validateDivs } from "@/lib/validation/divs/validate";
-import { divType, validDivsType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import type { divType, validDivsType } from "@/lib/types/types";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { deleteAllDivsForTmnt, postManyDivs } from "./dbDivs";
 
 /**

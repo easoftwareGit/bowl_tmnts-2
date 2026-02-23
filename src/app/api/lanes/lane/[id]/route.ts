@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { validateLane, sanitizeLane } from "@/lib/validation/lanes/validate";
-import { laneType } from "@/lib/types/types";
+import type { laneType } from "@/lib/types/types";
 import { initLane } from "@/lib/db/initVals";
 import { getErrorStatus } from "@/app/api/errCodes";
 

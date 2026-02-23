@@ -8,7 +8,7 @@ import { localConfig } from "@/lib/currency/const";
 import { formatValueSymbSep2Dec } from "@/lib/currency/formatValue";
 import { defaultBrktGames, defaultBrktPlayers } from "@/lib/db/initVals";
 import { getDivName } from "@/lib/getName";
-import { brktType, divType } from "@/lib/types/types";
+import type { brktType } from "@/lib/types/types";
 import { minFeeText } from "@/components/currency/eaCurrencyInput";
 import { cloneDeep } from "lodash";
 

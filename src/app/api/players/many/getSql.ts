@@ -1,6 +1,6 @@
-import { playerType, validPlayersType } from "@/lib/types/types"
+import type { playerType, validPlayersType } from "@/lib/types/types"
 import { validatePlayers } from "../../../../lib/validation/players/validate"
-import { ErrorCode } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 
 /**
  * Returns SQL query to update many players at once

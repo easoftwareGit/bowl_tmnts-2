@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { sanitizeSquad, validateSquad } from "@/lib/validation/squads/validate";
-import { squadType } from "@/lib/types/types";
+import type { squadType } from "@/lib/types/types";
 import { initSquad } from "@/lib/db/initVals";
 import { dateTo_UTC_yyyyMMdd, startOfDayFromString } from "@/lib/dateTools";
 import { getErrorStatus } from "@/app/api/errCodes";

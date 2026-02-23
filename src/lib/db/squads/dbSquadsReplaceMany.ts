@@ -1,6 +1,7 @@
 import { validateSquads } from "@/lib/validation/squads/validate";
-import { squadType, validSquadsType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import type { squadType, validSquadsType } from "@/lib/types/types";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { deleteAllSquadsForTmnt, postManySquads } from "./dbSquads";
 
 /**

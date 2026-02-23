@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { baseLanesApi, baseSquadsApi } from "@/lib/db/apiPaths";
 import { testBaseLanesApi, testBaseSquadsApi } from "../../../testApi";
-import { laneType, squadType } from "@/lib/types/types";
+import type { laneType, squadType } from "@/lib/types/types";
 import { initLane, initSquad } from "@/lib/db/initVals";
 import { deleteAllLanesForSquad, getAllLanesForSquad } from "@/lib/db/lanes/dbLanes";
 import { mockLanesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";

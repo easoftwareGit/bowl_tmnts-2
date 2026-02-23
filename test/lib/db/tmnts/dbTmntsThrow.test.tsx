@@ -1,7 +1,7 @@
 import axios from "axios";
 import { baseTmntsApi } from "@/lib/db/apiPaths";
 import { testBaseTmntsApi } from "../../../testApi";
-import { tmntType } from "@/lib/types/types";
+import type { tmntType } from "@/lib/types/types";
 import { blankTmnt } from "@/lib/db/initVals";
 import { getTmnt, getTmntYears, getUserTmnts, exportedForTesting, getTmntFullData, postTmnt, putTmnt, deleteTmnt } from "@/lib/db/tmnts/dbTmnts";
 

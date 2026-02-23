@@ -1,7 +1,7 @@
 import axios from "axios";
 import { baseUsersApi } from "@/lib/db/apiPaths";
 import { testBaseUsersApi } from "../../../../test/testApi";
-import { userType } from "@/lib/types/types";
+import type { userType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { blankUser } from "../initVals";
 

@@ -1,4 +1,4 @@
-import { tmntType } from "@/lib/types/types";
+import type { tmntType } from "@/lib/types/types";
 
 export const mockUpcoming: tmntType[] = [
   {

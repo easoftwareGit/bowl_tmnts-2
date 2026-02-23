@@ -8,7 +8,8 @@ import tmntFullDataReducer from "@/redux/features/tmntFullData/tmntFullDataSlice
 import bowlsReducer from "@/redux/features/bowls/bowlsSlice"; 
 import TmntDataForm from "@/app/dataEntry/tmntForm/tmntForm"; 
 import { acdnErrClassName } from "@/app/dataEntry/tmntForm/errors";
-import { bowlType, ioDataError, tmntFormDataType, tmntFormParent } from "@/lib/types/types"; 
+import type { bowlType, tmntFormDataType } from "@/lib/types/types"; 
+import { tmntFormParent, ioDataError } from "@/lib/enums/enums";
 import { getBlankTmntFullData } from "@/app/dataEntry/tmntForm/tmntTools"; 
 import { mockBowl, mockTmntFullData } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData"; 
 import { ioStatusType } from "@/redux/statusTypes"; 

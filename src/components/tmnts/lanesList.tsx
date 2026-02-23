@@ -1,5 +1,5 @@
 import { FC, useState, useEffect, ChangeEvent } from "react";
-import { laneType, pairsOfLanesType } from "@/lib/types/types"
+import type { laneType, pairsOfLanesType } from "@/lib/types/types"
 import { isOdd } from "@/lib/validation/validation";
 import { btDbUuid } from "@/lib/uuid";
 import styles from "./lanesList.module.css";

@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma"; 
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { sanitizeTmnt, validateTmnt } from "@/lib/validation/tmnts/valildate";
-import { tmntType } from "@/lib/types/types";
+import type { tmntType } from "@/lib/types/types";
 import { initTmnt } from "@/lib/db/initVals";
 import { dateTo_UTC_yyyyMMdd, startOfDayFromString } from "@/lib/dateTools";
 import { getErrorStatus } from "@/app/api/errCodes";

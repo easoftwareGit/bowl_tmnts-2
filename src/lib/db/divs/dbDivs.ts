@@ -1,8 +1,9 @@
 import axios from "axios";
 import { baseDivsApi } from "@/lib/db/apiPaths";
 import { testBaseDivsApi } from "../../../../test/testApi";
-import { divType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import type { divType } from "@/lib/types/types";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { blankDiv } from "../initVals";
 import { validateDivs } from "@/lib/validation/divs/validate";
 

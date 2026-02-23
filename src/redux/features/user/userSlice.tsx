@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { ioStatusType } from "@/redux/statusTypes";
 import { findUserById } from "@/lib/db/users/users";
-import { userType } from "@/lib/types/types";
+import type { userType } from "@/lib/types/types";
 import { blankUser } from "@/lib/db/initVals";
 import { cloneDeep } from "lodash";
 

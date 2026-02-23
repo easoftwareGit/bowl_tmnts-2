@@ -1,6 +1,6 @@
 "use client"
 import React, { useState, ChangeEvent } from 'react'
-import { eventType, squadType } from '../../lib/types/types'
+import type { eventType, squadType } from '../../lib/types/types'
 import { initModalObj } from '@/components/modal/modalObjType'
 import { maxGames, minGames } from '@/lib/validation/validation'
 import { objErrClassName } from '../dataEntry/tmntForm/errors'

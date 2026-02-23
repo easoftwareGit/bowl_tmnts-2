@@ -1,8 +1,7 @@
 import { initPrismaTmnt } from "@/lib/db/initVals";
 import { startOfDayFromString, todayStr } from "@/lib/dateTools";
-import { tmntsListType, tmntType, userType } from "@/lib/types/types";
+import type { tmntsListType, tmntType, userType } from "@/lib/types/types";
 import { Tmnt } from "@prisma/client";
-import { startOfToday } from "date-fns";
 
 export const mockUser: userType = {
   id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",

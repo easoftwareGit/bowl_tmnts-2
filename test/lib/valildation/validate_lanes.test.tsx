@@ -7,9 +7,10 @@ import {
   validateLanes,
 } from "@/lib/validation/lanes/validate";
 import { initLane } from "@/lib/db/initVals";
-import { ErrorCode, maxLaneCount } from "@/lib/validation/validation";
+import { maxLaneCount } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { mockLanesToPost } from "../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { validLanesType } from "@/lib/types/types";
+import type { validLanesType } from "@/lib/types/types";
 
 const { gotLaneData, validLaneData } = exportedForTesting;
 

@@ -1,11 +1,13 @@
-import { NextResponse, NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
-import { fullStageType } from "@/lib/types/types";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
+import type { fullStageType } from "@/lib/types/types";
 import { initFullStage } from "@/lib/db/initVals";
 import { sanitizeFullStage, validateFullStage } from "@/lib/validation/stages/validate";
 import { getErrorStatus } from "@/app/api/errCodes";
 import { SquadStage } from "@prisma/client";
+import { extractStageFromPrisma } from "@/lib/db/stageMappers";
 
 // routes /api/stages/stage/:id
 
@@ -25,8 +27,8 @@ export async function GET(
     });
     if (!stage) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
-    }
-    return NextResponse.json({ stage }, { status: 200 });
+    }    
+    return NextResponse.json({ stage }, { status: 200 });    
   } catch (err: any) {
     return NextResponse.json({ error: "error getting stage" }, { status: 500 });
   }
@@ -65,10 +67,10 @@ export async function PUT(
 
     const toPut = sanitizeFullStage(toCheck);
     // set systen stage dates AFTER sanitize and BEFORE validation
-    const stageDate = new Date(); // app sets stage date
-    toPut.stage_set_at = stageDate;
-    toPut.scores_started_at = (toPut.stage && toPut.stage === SquadStage.SCORES) ? stageDate : null;
-    toPut.stage_override_at = (toPut.stage_override_enabled) ? stageDate : null;
+    const stageDateStr = new Date().toISOString(); // app sets stage date
+    toPut.stage_set_at = stageDateStr;
+    toPut.scores_started_at = (toPut.stage && toPut.stage === SquadStage.SCORES) ? stageDateStr : null;
+    toPut.stage_override_at = (toPut.stage_override_enabled) ? stageDateStr : null;
 
     const errCode = validateFullStage(toPut);
     if (errCode !== ErrorCode.NONE) {
@@ -125,15 +127,15 @@ export async function PATCH(
     // populate toCheck with json
     const jsonProps = Object.getOwnPropertyNames(json);
     
-    const currentStage = await prisma.stage.findUnique({
+    const currentPrismaStage = await prisma.stage.findUnique({
       where: {
         id: id,
       },
     });    
-    if (!currentStage) {
+    if (!currentPrismaStage) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
-    }
-
+    }    
+    const currentStage = extractStageFromPrisma(currentPrismaStage as any);
     const toCheck: fullStageType = {
       ...initFullStage,
       squad_id: currentStage.squad_id,
@@ -163,17 +165,17 @@ export async function PATCH(
     // set date values AFTER sanitize and BEFORE validate 
     // also, do not set stage_override_reason here. it will checked in validate
 
-    const stageDate = new Date(); // app sets stage date 
+    const stageDateStr = new Date().toISOString(); // app sets stage date 
     if (toBePatched.stage !== currentStage.stage) {
-      toBePatched.stage_set_at = stageDate;
+      toBePatched.stage_set_at = stageDateStr;
       if (toBePatched.stage === SquadStage.SCORES) {
-        toBePatched.scores_started_at = stageDate;
+        toBePatched.scores_started_at = stageDateStr;
       }
     }
     if (jsonProps.includes("stage_override_enabled")) {
       toBePatched.stage_override_at =
         (toBePatched.stage_override_enabled)
-          ? stageDate
+          ? stageDateStr
           : null;        
     }    
 
@@ -215,9 +217,9 @@ export async function PATCH(
     // stage
     if (jsonProps.includes("stage")) {
       data.stage = toBePatched.stage;
-      data.stage_set_at = toBePatched.stage_set_at;
+      data.stage_set_at = new Date(toBePatched.stage_set_at);
       if (toBePatched.stage === SquadStage.SCORES) {
-        data.scores_started_at = stageDate;
+        data.scores_started_at = new Date(stageDateStr);
       }
     }
 
@@ -226,7 +228,7 @@ export async function PATCH(
       data.stage_override_enabled = toBePatched.stage_override_enabled;
 
       if (toBePatched.stage_override_enabled) {
-        data.stage_override_at = stageDate;
+        data.stage_override_at = new Date(stageDateStr);
         data.stage_override_reason = toBePatched.stage_override_reason;
       } else {
         data.stage_override_at = null; 

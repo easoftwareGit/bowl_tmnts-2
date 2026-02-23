@@ -1,9 +1,9 @@
 import { exportedForTesting, sanitizeOneBrkt, validateOneBrkt, validateOneBrkts } from "@/lib/validation/oneBrkts/valildate";
 import { initOneBrkt } from "@/lib/db/initVals";
-import { ErrorCode } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { mockOneBrktsToPost } from "../../mocks/tmnts/singlesAndDoubles/mockSquads";
+import type { validOneBrktsType } from "@/lib/types/types";
 import { cloneDeep } from "lodash";
-import { validOneBrktsType } from "@/lib/types/types";
 
 const { gotOneBrktData, validBindex, validOneBrktData } = exportedForTesting;
 

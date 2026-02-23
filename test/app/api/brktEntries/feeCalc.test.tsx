@@ -1,5 +1,5 @@
 import { brktEntriesWithFee } from "@/app/api/brktEntries/feeCalc";
-import { brktEntriesFromPrisa } from "@/lib/types/types";
+import type { brktEntriesFromPrisa } from "@/lib/types/types";
 import { cloneDeep } from "lodash";
 
 describe('brktEntriesWithFee', () => { 

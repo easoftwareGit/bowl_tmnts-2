@@ -1,7 +1,7 @@
 import axios from "axios";
 import { baseDivsApi } from "@/lib/db/apiPaths";
 import { testBaseDivsApi } from "../../../testApi";
-import { divType } from "@/lib/types/types";
+import type { divType } from "@/lib/types/types";
 import { initDiv } from "@/lib/db/initVals";
 import {
   deleteAllDivsForTmnt,

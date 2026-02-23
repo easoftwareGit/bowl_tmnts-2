@@ -1,4 +1,4 @@
-import { divEntryType } from "@/lib/types/types";
+import type { divEntryType } from "@/lib/types/types";
 import { initDivEntry } from "@/lib/db/initVals";
 
 const squadId = "sqd_42be0f9d527e4081972ce8877190489d";

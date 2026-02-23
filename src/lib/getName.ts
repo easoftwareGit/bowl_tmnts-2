@@ -1,4 +1,4 @@
-import { brktType, divType, elimType, potType } from "@/lib/types/types";
+import type { brktType, divType, elimType, potType } from "@/lib/types/types";
 
 const findDiv = (id: string, divs: divType[]): divType | undefined => {
   return divs.find((div) => div.id === id);

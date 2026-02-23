@@ -10,7 +10,7 @@ export class Bracket {
   static errAlreadyInBracket = -2;
   static errBracketIsFull = -3;    
   static errInvalidMatch = -4;  
-  static byePlayerId = 'ply_00000000000000000000000000000000';
+  static byePlayerId = 'bye_00000000000000000000000000000000';
 
   private _id: string = '';  
   private _playersPerMatch: number;

@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { baseBowlsApi } from "@/lib/db/apiPaths";
 import { testBaseBowlsApi } from "../../../testApi";
-import { bowlType } from "@/lib/types/types";
+import type { bowlType } from "@/lib/types/types";
 import { initBowl } from "@/lib/db/initVals";
 import { userId } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 
@@ -110,7 +110,7 @@ describe('Bowls - API: /api/bowls', () => {
     })
     it('should not get a bowl by ID when ID is invalid', async () => {
       try {
-        const response =await axios.get(url + "/invalid");
+        const response = await axios.get(url + "/invalid");
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -122,7 +122,7 @@ describe('Bowls - API: /api/bowls', () => {
     })
     it('should not get a bowl by ID when ID is valid, but not a bowl ID', async () => { 
       try {
-        const response = await axios.get(url + '/' +nonBowlId);
+        const response = await axios.get(url + '/' + nonBowlId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {

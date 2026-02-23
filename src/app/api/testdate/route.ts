@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { testDateType } from "@/lib/types/types";
+import type { testDateType } from "@/lib/types/types";
 import { initTestDate } from "@/lib/db/initVals";
 import { getErrorStatus } from "../errCodes";
 

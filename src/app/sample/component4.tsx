@@ -1,5 +1,5 @@
 import React from "react";
-import { eventType, squadType, AcdnErrType } from "../../lib/types/types";
+import type { eventType, squadType, AcdnErrType } from "../../lib/types/types";
 
 interface ChildProps {
   events: eventType[];

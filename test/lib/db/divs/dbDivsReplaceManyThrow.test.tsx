@@ -1,4 +1,4 @@
-import { divType } from "@/lib/types/types";
+import type { divType } from "@/lib/types/types";
 import { initDiv } from "@/lib/db/initVals";
 
 const tmntId = "tmt_e134ac14c5234d708d26037ae812ac33";

@@ -82,6 +82,9 @@ describe("tmntTools.tsx", () => {
       expect(blank.squads[0].id).toMatch(/^sqd_/);
       expect(blank.squads[0].event_id).toBe(blank.events[0].id);
 
+      expect(blank.stage.id).toMatch(/^stg_/);
+      expect(blank.stage.squad_id).toMatch(/^sqd_/);
+
       // lanes -> squad
       for (const lane of blank.lanes) {
         expect(lane.id).toMatch(/^lan_/);
@@ -108,8 +111,36 @@ describe("tmntTools.tsx", () => {
       expect(a.squads).not.toBe(b.squads);
       expect(a.lanes).not.toBe(b.lanes);
     });
-  });
 
+    it("when passed false, does not assign ids using btDbUuid prefixes and does not wires up foreign keys correctly ", () => {
+      const blank = getBlankTmntFullData(false);
+
+      // tmnt id prefix
+      expect(blank.tmnt.id).toBe('');
+      expect(blank.tmnt.start_date_str).toBe('');
+      expect(blank.tmnt.end_date_str).toBe('');
+
+      // event
+      expect(blank.events[0].id).toBe('');
+      expect(blank.events[0].tmnt_id).toBe('');
+
+      // div
+      expect(blank.divs[0].id).toBe('');
+      expect(blank.divs[0].tmnt_id).toBe('');
+
+      // squad -> event
+      expect(blank.squads[0].id).toBe('');
+      expect(blank.squads[0].event_id).toBe('');
+
+      // stage -> squad
+      expect(blank.stage.id).toBe('');
+      expect(blank.stage.squad_id).toBe('');
+
+      // lanes -> squad
+      expect(blank.lanes).toHaveLength(0);
+    });
+
+  });
 
   describe("squadStage", () => {
     it("calls getJustStage with the given squadId", async () => {

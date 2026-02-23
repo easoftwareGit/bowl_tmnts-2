@@ -1,7 +1,8 @@
 import { exportedForTesting, sanitizeGame, validateGame, validateGames, validGameFkId } from "@/lib/validation/games/validate"
 import { initGame } from "@/lib/db/initVals";
-import { gameType, validGamesType } from "@/lib/types/types";
-import { ErrorCode, maxGames, maxScore } from "@/lib/validation/validation";
+import type { gameType, validGamesType } from "@/lib/types/types";
+import { maxGames, maxScore } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { mockGamesToPost } from "../../mocks/tmnts/singlesAndDoubles/mockSquads";
 
 const { gotGameData, validGameNumber, validScore, validGameData } = exportedForTesting;

@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { baseGamesApi  } from "@/lib/db/apiPaths";
 import { testBaseGamesApi } from "../../../testApi";
-import { gameType } from "@/lib/types/types";
+import type { gameType } from "@/lib/types/types";
 import { initGame } from "@/lib/db/initVals";
 import { isValidBtDbId, maxGames, maxScore } from "@/lib/validation/validation";
 

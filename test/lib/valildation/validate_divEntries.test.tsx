@@ -1,8 +1,8 @@
 import { exportedForTesting, sanitizeDivEntry, validateDivEntries, validateDivEntry, validDivEntryFee } from "@/lib/validation/divEntries/validate";
 import { initDivEntry } from "@/lib/db/initVals";
-import { ErrorCode } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { mockDivEntriesToPost } from "../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { validDivEntriesType } from "@/lib/types/types";
+import type { validDivEntriesType } from "@/lib/types/types";
 
 const { gotDivEntryData, validDivEntryData } = exportedForTesting;
 
@@ -398,7 +398,7 @@ describe("tests for divEntry validation", () => {
         fee: '-1'
       }
       const sanitizedDivEntry = sanitizeDivEntry(testDivEntry);
-      expect(sanitizedDivEntry.fee).toEqual('');
+      expect(sanitizedDivEntry.fee).toEqual('-1');
     })
     it('should return a sanitized divEntry when fee is too high', () => { 
       const testDivEntry = {
@@ -406,7 +406,7 @@ describe("tests for divEntry validation", () => {
         fee: '1234567890'
       }
       const sanitizedDivEntry = sanitizeDivEntry(testDivEntry);
-      expect(sanitizedDivEntry.fee).toEqual('');
+      expect(sanitizedDivEntry.fee).toEqual('1234567890');
     })
     it('should return a sanitized divEntry when fee is sanitzied', () => { 
       const testDivEntry = {
@@ -414,7 +414,7 @@ describe("tests for divEntry validation", () => {
         fee: '80.000'
       }
       const sanitizedDivEntry = sanitizeDivEntry(testDivEntry);
-      expect(sanitizedDivEntry.fee).toEqual('80.000');
+      expect(sanitizedDivEntry.fee).toEqual('80');
     })
     it('should return a sanitized divEntry when data is not sanitzied', () => { 
       const testDivEntry = {
@@ -580,7 +580,7 @@ describe("tests for divEntry validation", () => {
       const validDivEntries: validDivEntriesType = validateDivEntries(divEntriesToValidate);
       expect(validDivEntries.errorCode).toBe(ErrorCode.NONE);
       expect(validDivEntries.divEntries.length).toBe(divEntriesToValidate.length);
-      expect(validDivEntries.divEntries[1].fee).toBe('85.000');
+      expect(validDivEntries.divEntries[1].fee).toBe('85');
     })
     it('should return ErrorCode.MISSING_DATA when id is sanitzied to ""', () => { 
       const divEntriesToValidate = [...mockDivEntriesToPost];

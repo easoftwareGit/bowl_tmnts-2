@@ -1,8 +1,8 @@
 import axios from "axios";
 import { baseTmntsApi } from "@/lib/db/apiPaths";
 import { testBaseTmntsApi } from "../../../../test/testApi";
-import { tmntFullType, tmntsListType, tmntType, YearObj } from "@/lib/types/types";
-import { isOdd, isValidBtDbId, validYear } from "@/lib/validation/validation";
+import type { tmntFullType, tmntsListType, tmntType, YearObj } from "@/lib/types/types";
+import { isValidBtDbId, validYear } from "@/lib/validation/validation";
 import { removeTimeFromISODateStr, todayYearStr } from "@/lib/dateTools";
 import { blankTmnt, linkedInitTmntFullData } from "../initVals";
 import { extractEvents } from "../events/dbEvents";
@@ -19,6 +19,7 @@ import { extractBrktSeeds } from "../brktSeeds/dbBrktSeeds";
 import { extractElimEntries } from "../elimEntries/dbElimEntries";
 import { extractPotEntries } from "../potEntries/dbPotEntries";
 import { extractPlayers } from "../players/dbPlayers";
+import { extractStageFromPrisma } from "../stageMappers";
 
 const url = testBaseTmntsApi.startsWith("undefined")
   ? baseTmntsApi
@@ -345,6 +346,7 @@ export const getTmntFullData = async (tmntId: string): Promise<tmntFullType> => 
     const extractedEvents = extractEvents(dbTmntFullData.events);
     tmntFullData.events.push(...extractedEvents);
 
+    let gotStage = false; // only 1 squad per tmnt, only 1 stage 
     dbTmntFullData.events.forEach((dbEvent: any) => {
       
       // squad data
@@ -352,6 +354,11 @@ export const getTmntFullData = async (tmntId: string): Promise<tmntFullType> => 
       tmntFullData.squads.push(...extractedSquads);
 
       dbEvent.squads.forEach((dbSquad: any) => {
+        // stage data - only 1 squad per tmnt, so only 1 stage
+        if (!gotStage) {
+          tmntFullData.stage = dbSquad.stage;  
+          gotStage = true;
+        }        
 
         // lane data
         const extractedLanes = extractLanes(dbSquad.lanes);

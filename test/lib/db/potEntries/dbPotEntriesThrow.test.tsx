@@ -1,7 +1,7 @@
 import axios from "axios";
 import { basePotEntriesApi } from "@/lib/db/apiPaths";
 import { testBasePotEntriesApi } from "../../../testApi";
-import { potEntryType } from "@/lib/types/types";
+import type { potEntryType } from "@/lib/types/types";
 import { blankPotEntry } from "@/lib/db/initVals";
 import { deleteAllPotEntriesForDiv, deleteAllPotEntriesForSquad, deleteAllPotEntriesForTmnt, deletePotEntry, getAllPotEntriesForDiv, getAllPotEntriesForSquad, getAllPotEntriesForTmnt, postManyPotEntries, postPotEntry, putPotEntry } from "@/lib/db/potEntries/dbPotEntries";
 

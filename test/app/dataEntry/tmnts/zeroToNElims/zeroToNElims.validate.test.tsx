@@ -1,5 +1,5 @@
 import { validateElims, exportedForTesting } from "@/app/dataEntry/tmntForm/zeroToNElims";
-import { elimType, AcdnErrType } from "@/lib/types/types";
+import type { elimType, AcdnErrType } from "@/lib/types/types";
 import {
   mockTmntFullData,
   divId1,

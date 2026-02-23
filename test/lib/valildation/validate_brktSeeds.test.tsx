@@ -7,10 +7,11 @@ import {
   validCompositKey,
 } from "@/lib/validation/brktSeeds/validate";
 import { defaultBrktPlayers, initBrktSeed } from "@/lib/db/initVals";
-import { ErrorCode } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { mockBrktSeedsToPost } from "../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { cloneDeep } from "lodash";
-import { validBrktSeedsType } from "@/lib/types/types";
+import type { validBrktSeedsType } from "@/lib/types/types";
+import { btDbUuid } from "@/lib/uuid";
 
 const { gotBrktSeedData, validBrktSeedData } = exportedForTesting;
 
@@ -128,6 +129,11 @@ describe("test for brktSeeds validation", () => {
     it("should return ErrorCode.NONE for valid brktSeed", () => {
       expect(validBrktSeedData(validBrktSeed)).toEqual(ErrorCode.NONE);
     });
+    it("should return ErrorCode.NONE for valid brktSeed with bye player", () => {
+      const validBye = cloneDeep(validBrktSeed);
+      validBye.player_id = btDbUuid('bye');
+      expect(validBrktSeedData(validBye)).toEqual(ErrorCode.NONE);
+    });
     it("should return InvalidData for null brktSeed", () => {
       expect(validBrktSeedData(null as any)).toEqual(ErrorCode.INVALID_DATA);
     });
@@ -190,6 +196,18 @@ describe("test for brktSeeds validation", () => {
 
   describe('sanitizeBrktSeed function', () => { 
     it('should return valid brktSeed', () => {
+      const sanitzied = sanitizeBrktSeed(validBrktSeed);
+      expect(sanitzied).toEqual({
+        ...initBrktSeed,
+        one_brkt_id: validBrktSeed.one_brkt_id,
+        seed: validBrktSeed.seed,
+        player_id: validBrktSeed.player_id
+      });      
+    });
+    it('should return valid brktSeed for a bye player', () => {
+      const byeBrktSeed = cloneDeep(validBrktSeed);
+      const byeId = btDbUuid('bye');
+      byeBrktSeed.player_id = byeId;
       const sanitzied = sanitizeBrktSeed(validBrktSeed);
       expect(sanitzied).toEqual({
         ...initBrktSeed,

@@ -5,7 +5,7 @@ import OneToNSquads from "@/app/dataEntry/tmntForm/oneToNSquads";
 import { mockLanes, mockSquads } from "../../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { mockEvents } from "../../../../mocks/tmnts/singlesAndDoubles/mockEvents";
 import { initSquad } from "@/lib/db/initVals";
-import { laneType, squadType } from "@/lib/types/types";
+import type { laneType, squadType } from "@/lib/types/types";
 import { cloneDeep } from "lodash";
 import { noAcdnErr } from "@/app/dataEntry/tmntForm/errors";
 

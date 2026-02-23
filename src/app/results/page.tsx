@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { clearTmnts, fetchTmnts } from "@/redux/features/tmnts/tmntsSlice";
 import { fetchTmntYears } from "@/redux/features/tmnts/yearsSlice";
-import { YearObj, tmntsListType } from "../../lib/types/types";
+import type { YearObj, tmntsListType } from "../../lib/types/types";
 import TmntsList from "@/components/tmnts/tmntsList";
 import { todayYearStr } from "@/lib/dateTools";
 

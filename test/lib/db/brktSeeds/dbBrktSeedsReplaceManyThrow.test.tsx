@@ -1,4 +1,4 @@
-import { brktSeedType } from "@/lib/types/types";
+import type { brktSeedType } from "@/lib/types/types";
 import { initBrktSeed } from "@/lib/db/initVals";
 
 const squadId = 'sqd_42be0f9d527e4081972ce8877190489d';

@@ -1,8 +1,9 @@
 import axios from "axios";
 import { baseLanesApi } from "@/lib/db/apiPaths";
 import { testBaseLanesApi } from "../../../../test/testApi";
-import { laneType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import type { laneType } from "@/lib/types/types";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { blankLane } from "../initVals";
 import { validateLanes } from "@/lib/validation/lanes/validate";
 
@@ -14,6 +15,12 @@ const manyUrl = url + "/many";
 const squadUrl = url + "/squad/"; 
 const tmntUrl = url + "/tmnt/";
 
+/**
+ * extract lanes from API response
+ * 
+ * @param {any} lanes - lanes to be extracted
+ * @returns {laneType[]} - array of lanes
+ */
 export const extractLanes = (lanes: any): laneType[] => {
   if (!lanes || !Array.isArray(lanes)) return [];
   return lanes.map((lane: any) => ({

@@ -1,15 +1,15 @@
 import {
-  isValidBtDbId,
-  ErrorCode,
+  isValidBtDbId,  
   maxMoney,
   validSortOrder,
   minGames,
   maxGames,
   isNumber,
 } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { sanitizeCurrency } from "@/lib/validation/sanitize";
 import { validMoney } from "@/lib/currency/validate";
-import { brktType, validBrktsType } from "@/lib/types/types";
+import type { brktType, validBrktsType } from "@/lib/types/types";
 import { blankBrkt, defaultBrktGames, defaultBrktPlayers } from "@/lib/db/initVals";
 
 /**

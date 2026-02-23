@@ -1,8 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { validateElim, sanitizeElim } from "../../../lib/validation/elims/validate";
-import { ErrorCode } from "@/lib/validation/validation";
-import { elimType } from "@/lib/types/types";
+import { ErrorCode } from "@/lib/enums/enums";
+import type { elimType } from "@/lib/types/types";
 import { initElim } from "@/lib/db/initVals";
 import { getErrorStatus } from "../errCodes";
 import { elimDataForPrisma } from "./dataForPrisma";

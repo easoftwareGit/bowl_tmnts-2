@@ -11,22 +11,28 @@ import {
   initElim,
   initEvent,
   initLane,
+  initPlayer,
   initPot,
   initSquad,
   initTmnt,
 } from "@/lib/db/initVals";
-import { bowlType, fullStageDataType, tmntFullType } from "@/lib/types/types";
+import type { bowlType, fullStageType, playerType, tmntFullType } from "@/lib/types/types";
 import { SquadStage } from "@prisma/client";
 
 export const brktId1 = "brk_0123f51cc1ca4748ad5e8abab88277ea";
 export const brktId2 = "brk_0123f51cc1ca4748ad5e8abab88277eb";
 export const bowlId = "bwl_0123388a8fc4641a2e37233f1d6bebd1";
+export const byeId = "bye_0123388a8fc4641a2e37233f1d6beab1";
 export const divId1 = "div_0123cae28786485bb7a036935f0f6a0a";
 export const divId2 = "div_0123cae28786485bb7a036935f0f6a0b";
 export const elimId1 = "elm_01234ec07f824b0e93169ae78e8b4b1a";
 export const elimId2 = "elm_01234ec07f824b0e93169ae78e8b4b1b";
 export const eventId1 = "evt_012310c8493f4a218d2e2b045442974a";
 export const eventId2 = "evt_012310c8493f4a218d2e2b045442974b";
+export const laneId1 = "lan_01239d9e6b6e4c5b9f6b7d9e7f9b6c5a";
+export const laneId2 = "lan_01239d9e6b6e4c5b9f6b7d9e7f9b6c5b";
+export const laneId3 = "lan_01239d9e6b6e4c5b9f6b7d9e7f9b6c5c";
+export const laneId4 = "lan_01239d9e6b6e4c5b9f6b7d9e7f9b6c5d";
 export const oneBrktId1 = "obk_01238f787de942a1a92aaa2df3e7c18a";
 export const oneBrktId2 = "obk_01238f787de942a1a92aaa2df3e7c18b";
 export const oneBrktId3 = "obk_01238f787de942a1a92aaa2df3e7c18c";
@@ -39,6 +45,14 @@ export const playerId5 = "ply_0123e9e6b6e4c5b9f6b7d9e7f9b6c5ee";
 export const playerId6 = "ply_0123e9e6b6e4c5b9f6b7d9e7f9b6c5ff";
 export const playerId7 = "ply_0123e9e6b6e4c5b9f6b7d9e7f9b6c5ab";
 export const playerId8 = "ply_0123e9e6b6e4c5b9f6b7d9e7f9b6c5ac";
+export const playerId9 = "ply_0123e9e6b6e4c5b9f6b7d9e7f9b6c5ad";
+export const playerId10 = "ply_0123e9e6b6e4c5b9f6b7d9e7f9b6c5ae";
+export const playerId11 = "ply_0123e9e6b6e4c5b9f6b7d9e7f9b6c5af";
+export const playerId12 = "ply_0123e9e6b6e4c5b9f6b7d9e7f9b6c5ba";
+export const playerId13 = "ply_0123e9e6b6e4c5b9f6b7d9e7f9b6c5bb";
+export const playerId14 = "ply_0123e9e6b6e4c5b9f6b7d9e7f9b6c5bc";
+export const playerId15 = "ply_0123e9e6b6e4c5b9f6b7d9e7f9b6c5bd";
+export const playerId16 = "ply_0123e9e6b6e4c5b9f6b7d9e7f9b6c5be";
 export const potId1 = "pot_01238f787de942a1a92aaa2df3e7c18a";
 export const potId2 = "pot_01238f787de942a1a92aaa2df3e7c18b";
 export const squadId1 = "sqd_012366e1174642c7a1bcec47a50f275a";
@@ -321,28 +335,28 @@ export const mockTmntFullData: tmntFullType = {
   lanes: [
     {
       ...initLane,
-      id: "lan_01239d9e6b6e4c5b9f6b7d9e7f9b6c5a",
+      id: laneId1,
       lane_number: 29,
       squad_id: squadId1,
       in_use: true,
     },
     {
       ...initLane,
-      id: "lan_01239d9e6b6e4c5b9f6b7d9e7f9b6c5b",
+      id: laneId2,
       lane_number: 30,
       squad_id: squadId1,
       in_use: true,
     },
     {
       ...initLane,
-      id: "lan_01239d9e6b6e4c5b9f6b7d9e7f9b6c5c",
+      id: laneId3,
       lane_number: 31,
       squad_id: squadId1,
       in_use: true,
     },
     {
       ...initLane,
-      id: "lan_01239d9e6b6e4c5b9f6b7d9e7f9b6c5d",
+      id: laneId4,
       lane_number: 32,
       squad_id: squadId1,
       in_use: true,
@@ -468,13 +482,33 @@ export const mockTmntFullData: tmntFullType = {
       sort_order: 1,
     },
   ],  
+  stage: {
+    id: stageId1,
+    squad_id: squadId1,
+    stage: SquadStage.DEFINE,
+    stage_set_at: "2025-09-01T00:00:00.000Z",
+    scores_started_at: null,
+    stage_override_enabled: false,
+    stage_override_at: null,
+    stage_override_reason: "",
+  }
 };
 
-export const mockFullTmntStage: fullStageDataType = {
+export const mockByePlayer: playerType = {
+  ...initPlayer,
+  id: byeId,
+  squad_id: squadId1,
+  first_name: "Bye",
+  last_name: null as any,
+  lane: null as any,
+  position: null as any,
+}
+
+export const mockFullTmntStage: fullStageType = {
   id: stageId1,
   squad_id: squadId1,
   stage: SquadStage.DEFINE,
-  stage_set_at: new Date("2025-09-01T00:00:00.000Z"),
+  stage_set_at: "2025-09-01T00:00:00.000Z",
   scores_started_at: null,
   stage_override_enabled: false,
   stage_override_at: null,

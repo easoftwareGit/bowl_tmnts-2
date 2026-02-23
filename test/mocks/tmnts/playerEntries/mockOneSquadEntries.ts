@@ -8,7 +8,7 @@ import {
   initSquad,
   initTmnt,
 } from "@/lib/db/initVals";
-import { dataOneTmntType } from "@/lib/types/types";
+import type { dataOneTmntType } from "@/lib/types/types";
 
 export const mockCurData: dataOneTmntType = {
   tmnt: {

@@ -1,7 +1,6 @@
 "use client";
 import { useState, ChangeEvent, useEffect } from "react";
-import { divType } from "../../lib/types/types";
-import { tmntPropsType } from "../../lib/types/types";
+import type { divType, tmntPropsType } from "../../lib/types/types";
 import EaCurrencyInput, { EaPercentInput } from "@/components/currency/eaCurrencyInput";
 import { v4 as uuidv4 } from "uuid";
 

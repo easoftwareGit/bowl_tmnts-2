@@ -2,7 +2,8 @@
 import React from "react";
 import { useSession } from "next-auth/react"; 
 import TmntDataForm from "../tmntForm/tmntForm";
-import { tmntFormDataType, tmntFormParent, tmntFullType } from "@/lib/types/types";
+import type { tmntFormDataType, tmntFullType } from "@/lib/types/types";
+import { tmntFormParent } from "@/lib/enums/enums";
 import { getBlankTmntFullData } from "../tmntForm/tmntTools";
 import { SquadStage } from "@prisma/client";
 

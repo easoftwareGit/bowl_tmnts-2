@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma"; 
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
-import { tmntFullType } from "@/lib/types/types";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
+import type { tmntFullType } from "@/lib/types/types";
 import { tmntFullDataForPrisma } from "../../dataForPrisma";
 import { getErrorStatus } from "@/app/api/errCodes";
-import { validateFullTmnt } from "../validate";
+import { sanitizeFullTmnt, validateFullTmnt } from "@/lib/validation/tmnts/full/validate";
 import { calcFSA } from "@/lib/currency/fsa";
+import { Prisma } from "@prisma/client";
+
 
 // routes /api/tmnts/full/:id
 
@@ -45,7 +48,8 @@ export async function GET(
                       position: 'asc',
                     },
                   ],
-                }
+                },
+                stage: true,
               },
             },
           },
@@ -151,11 +155,12 @@ export async function PUT(
     if (!isValidBtDbId(id, "tmt")) {
       return NextResponse.json({ error: "invalid request" }, { status: 404 });
     }
-
     const tmntFullData: tmntFullType = await request.json();
+
+    const toPut = sanitizeFullTmnt(tmntFullData);        
     // validate tmnt full data
-    const validationResult = validateFullTmnt(tmntFullData);
-    if (validationResult.errorCode !== ErrorCode.NONE || id !== tmntFullData.tmnt.id) {
+    const validationResult = validateFullTmnt(toPut);    
+    if (validationResult.errorCode !== ErrorCode.NONE || id !== toPut.tmnt.id) {
       return NextResponse.json(
         { error: "validation failed", details: validationResult },
         { status: 422 }
@@ -164,7 +169,7 @@ export async function PUT(
 
     // 1 - prepare data before sending to prisma
     // 1a - convert tmntData to prisma data
-    const prismaTmntFullData = tmntFullDataForPrisma(tmntFullData);
+    const prismaTmntFullData = tmntFullDataForPrisma(toPut);
     if (!prismaTmntFullData) {
       return NextResponse.json({ error: "invalid tmnt data" }, { status: 404 });
     }
@@ -172,16 +177,24 @@ export async function PUT(
     // cannot use createMany for brktEntries w/ refunds
     // so split brktEntries into 2 groups: w/o refunds and w/ refunds
     // 1b - filter brktEntries w/o refunds and with refunds
-    const beNoRefunds = tmntFullData.brktEntries.filter(
+    const beNoRefunds = toPut.brktEntries.filter(
       (brktEntry) => !brktEntry.num_refunds || brktEntry.num_refunds <= 0
     );
-    const beYesRefunds = tmntFullData.brktEntries.filter(
+    const beYesRefunds = toPut.brktEntries.filter(
       (brktEntry) => brktEntry.num_refunds != null && brktEntry.num_refunds > 0
     );
 
-    const queries: any[] = [];
+    // 1c - set stage date 
+    const stageDate = new Date();
+    const stageDateStr = stageDate.toISOString(); // app sets stage date    
+    prismaTmntFullData.stageData.stage_set_at = stageDateStr;
+
+    // Use batch transaction style because all queries are precomputed.
+    // No intermediate reads or dependent logic are required.
+    // This ensures atomic full replacement of the tournament structure.    
+    const queries: Prisma.PrismaPromise<unknown>[] = [];
     queries.push(
-      // 2 - delete parent tmnt, deletes all tmnt children, grandchildren...
+      // 2 - delete parent tmnt, deletes all tmnt children, grandchildren...      
       prisma.tmnt.deleteMany({ where: { id: id } }),
 
       // 3 - replace all tmnt data, child and grandchild tables in correct order
@@ -191,7 +204,8 @@ export async function PUT(
       prisma.event.createMany({ data: prismaTmntFullData.eventsData }),
       prisma.div.createMany({ data: prismaTmntFullData.divsData }),
       prisma.squad.createMany({ data: prismaTmntFullData.squadsData }),
-      prisma.lane.createMany({ data: prismaTmntFullData.lanesData }),      
+      prisma.stage.create({ data: prismaTmntFullData.stageData }),
+      prisma.lane.createMany({ data: prismaTmntFullData.lanesData }),  
       // 3c - optional child tables - user creates/edits a tmnt
       prisma.pot.createMany({ data: prismaTmntFullData.potsData }),
       prisma.brkt.createMany({ data: prismaTmntFullData.brktsData }),

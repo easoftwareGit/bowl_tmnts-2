@@ -1,6 +1,7 @@
 import { validateLanes } from "@/lib/validation/lanes/validate";
-import { laneType, validLanesType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import type { laneType, validLanesType } from "@/lib/types/types";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { deleteAllLanesForSquad, postManyLanes } from "./dbLanes";
 
 /**

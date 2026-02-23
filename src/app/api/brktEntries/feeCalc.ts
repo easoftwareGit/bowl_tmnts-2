@@ -1,4 +1,4 @@
-import { brktEntriesFromPrisa, brktEntryWithFeeType } from "@/lib/types/types"
+import type { brktEntriesFromPrisa, brktEntryWithFeeType } from "@/lib/types/types"
 
 /**
  * Calculates the fee for each brktEntry

@@ -1,6 +1,6 @@
-import { divEntryType } from "@/lib/types/types";
+import type { divEntryType } from "@/lib/types/types";
 import { validateDivEntries } from "../../../../lib/validation/divEntries/validate";
-import { ErrorCode } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 
 /**
  * returns an array of unique divIds

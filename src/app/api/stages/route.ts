@@ -1,10 +1,10 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { fullStageType } from "@/lib/types/types";
+import type { fullStageType } from "@/lib/types/types";
 import { initFullStage } from "@/lib/db/initVals";
 import { sanitizeFullStage, validateFullStage } from "@/lib/validation/stages/validate";
-import { ErrorCode } from "@/lib/validation/validation";
-import { stageDataForPrisma } from "./dataForPrisma";
+import { ErrorCode } from "@/lib/enums/enums";
+import { extractStageFromPrisma, stageDataForPrisma } from "../../../lib/db/stageMappers";
 import { getErrorStatus } from "../errCodes";
 import { SquadStage } from "@prisma/client";
 
@@ -12,7 +12,7 @@ import { SquadStage } from "@prisma/client";
 
 export async function GET(request: NextRequest) {
   try {
-    const stages = await prisma.stage.findMany()
+    const stages = await prisma.stage.findMany()    
     return NextResponse.json({ stages }, { status: 200 });    
   } catch (err: any) {
     return NextResponse.json(
@@ -50,10 +50,10 @@ export async function POST(request: Request) {
     const toPost = sanitizeFullStage(toCheck); 
     
     // set systen stage dates AFTER sanitize and BEFORE validation
-    const stageDate = new Date(); // app sets stage date
-    toPost.stage_set_at = stageDate;
-    toPost.scores_started_at = (toPost.stage === SquadStage.SCORES) ? stageDate : null;
-    toPost.stage_override_at = (toPost.stage_override_enabled) ? stageDate : null;
+    const stageDateStr = new Date().toISOString(); // app sets stage date
+    toPost.stage_set_at = stageDateStr;
+    toPost.scores_started_at = (toPost.stage === SquadStage.SCORES) ? stageDateStr : null;
+    toPost.stage_override_at = (toPost.stage_override_enabled) ? stageDateStr : null;
 
     const errCode = validateFullStage(toPost);
     if (errCode !== ErrorCode.NONE) {

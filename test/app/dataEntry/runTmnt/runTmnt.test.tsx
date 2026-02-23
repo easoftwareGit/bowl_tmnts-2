@@ -1,6 +1,6 @@
-// test/app/dataEntry/runTmnt/runTmnt.test.tsx
 import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 
 // ---------- Mocks ----------
@@ -8,6 +8,7 @@ import "@testing-library/jest-dom";
 jest.mock("next/navigation", () => ({
   __esModule: true,
   useParams: jest.fn(),
+  useRouter: jest.fn(),
 }));
 
 jest.mock("react-redux", () => ({
@@ -32,6 +33,33 @@ jest.mock("@/components/modal/waitModal", () => ({
     show ? <div data-testid="wait-modal">{message}</div> : null,
 }));
 
+// ModalErrorMsg mock – show dialog only when show=true; expose title/message and an OK button
+jest.mock("@/components/modal/errorModal", () => ({
+  __esModule: true,
+  default: ({
+    show,
+    title,
+    message,
+    onCancel,
+  }: {
+    show: boolean;
+    title: string;
+    message: string;
+    onCancel?: () => void;
+  }) =>
+    show ? (
+      <div data-testid="ModalErrorMsgMock" role="dialog" aria-label="Error">
+        <div data-testid="error-title">{title}</div>
+        <div data-testid="error-message">{message}</div>
+        <button type="button" onClick={onCancel}>
+          OK
+        </button>
+      </div>
+    ) : (
+      <div data-testid="ModalErrorMsgMock" data-show="false" />
+    ),
+}));
+
 // TmntDataForm mock – we want to inspect tmntProps
 jest.mock("@/app/dataEntry/tmntForm/tmntForm", () => ({
   __esModule: true,
@@ -54,7 +82,7 @@ jest.mock("@/app/dataEntry/tmntForm/tmntTools", () => ({
 // ---------- Imports that use the mocks above ----------
 
 import RunTmntPage from "@/app/dataEntry/runTmnt/[tmntId]/page";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchTmntFullData,
@@ -68,6 +96,8 @@ import { SquadStage } from "@prisma/client";
 // ---------- Typed shortcuts to mocks ----------
 
 const mockedUseParams = useParams as jest.Mock;
+const mockedUseRouter = useRouter as unknown as jest.Mock;
+
 const mockedUseDispatch = useDispatch as unknown as jest.Mock;
 const mockedUseSelector = useSelector as unknown as jest.Mock;
 
@@ -86,6 +116,8 @@ let mockTmntFullData: any;
 let mockState: any;
 let mockDispatch: jest.Mock;
 
+let mockPush: jest.Mock;
+
 describe("RunTmntPage", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -93,6 +125,11 @@ describe("RunTmntPage", () => {
     // Default params
     mockedUseParams.mockReturnValue({ tmntId: "tmt_123" });
 
+    // Router
+    mockPush = jest.fn();
+    mockedUseRouter.mockReturnValue({ push: mockPush });
+
+    // Dispatch
     mockDispatch = jest.fn();
     mockedUseDispatch.mockReturnValue(mockDispatch);
 
@@ -109,9 +146,7 @@ describe("RunTmntPage", () => {
     };
 
     // useSelector always calls selector(mockState)
-    mockedUseSelector.mockImplementation((selector: any) =>
-      selector(mockState)
-    );
+    mockedUseSelector.mockImplementation((selector: any) => selector(mockState));
 
     // Default load status + error
     mockLoadStatus = "idle";
@@ -180,14 +215,12 @@ describe("RunTmntPage", () => {
 
       render(<RunTmntPage />);
 
-      expect(
-        screen.queryByText(/Error: Boom! tmntLoadStatus:/i)
-      ).not.toBeInTheDocument();
+      expect(screen.queryByText(/Error: Boom! tmntLoadStatus:/i)).not.toBeInTheDocument();
     });
   });
 
   describe("layout and navigation buttons", () => {
-    it("renders Run Tournament heading and all main buttons when load succeeds", () => {
+    it("renders Run Tournament heading and all main buttons/links when load succeeds", () => {
       mockLoadStatus = "succeeded";
 
       render(<RunTmntPage />);
@@ -195,28 +228,18 @@ describe("RunTmntPage", () => {
       // Heading
       expect(screen.getByText("Run Tournament")).toBeInTheDocument();
 
-      // All the visible buttons/links
-      expect(
-        screen.getByRole("link", { name: /back to list/i })
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("link", { name: /edit bowlers/i })
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("link", { name: /enter scores/i })
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("link", { name: /set prize fund/i })
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("link", { name: /print reports/i })
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("link", { name: /finalize/i })
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("link", { name: /last button/i })
-      ).toBeInTheDocument();
+      // Back link is still a Link
+      expect(screen.getByRole("link", { name: /back to list/i })).toBeInTheDocument();
+
+      // Edit Bowlers is now a button
+      expect(screen.getByRole("button", { name: /edit bowlers/i })).toBeInTheDocument();
+
+      // Other items are still links
+      expect(screen.getByRole("link", { name: /enter scores/i })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /set prize fund/i })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /print reports/i })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /finalize/i })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /last button/i })).toBeInTheDocument();
 
       // TmntDataForm gets rendered
       expect(screen.getByTestId("tmnt-form-mock")).toBeInTheDocument();
@@ -228,25 +251,94 @@ describe("RunTmntPage", () => {
 
       render(<RunTmntPage />);
 
-      const backLink = screen.getByRole("link", {
-        name: /back to list/i,
-      });
+      const backLink = screen.getByRole("link", { name: /back to list/i });
       expect(backLink).toHaveAttribute("href", "/user/tmnts");
     });
+  });
 
-    it("Edit Bowlers link points to /dataEntry/editPlayers/[tmntId]", () => {
+  describe("Edit Bowlers button behavior", () => {
+    it("clicking Edit Bowlers navigates to editPlayers when stage is DEFINE", async () => {
+      const user = userEvent.setup();
       mockLoadStatus = "succeeded";
       mockedUseParams.mockReturnValue({ tmntId: "tmt_999" });
 
+      // stage resolves to DEFINE
+      mockedGetSquadStage.mockResolvedValue(SquadStage.DEFINE);
+
       render(<RunTmntPage />);
 
-      const editLink = screen.getByRole("link", {
-        name: /edit bowlers/i,
+      // wait for stage load effect to run
+      await waitFor(() => {
+        expect(mockedGetSquadStage).toHaveBeenCalledTimes(1);
       });
-      expect(editLink).toHaveAttribute(
-        "href",
-        "/dataEntry/editPlayers/tmt_999"
+
+      await user.click(screen.getByRole("button", { name: /edit bowlers/i }));
+
+      expect(mockPush).toHaveBeenCalledTimes(1);
+      expect(mockPush).toHaveBeenCalledWith("/dataEntry/editPlayers/tmt_999");
+    });
+
+    it("clicking Edit Bowlers navigates to editPlayers when stage is ENTRIES", async () => {
+      const user = userEvent.setup();
+      mockLoadStatus = "succeeded";
+
+      mockedGetSquadStage.mockResolvedValue(SquadStage.ENTRIES);
+
+      render(<RunTmntPage />);
+
+      await waitFor(() => {
+        expect(mockedGetSquadStage).toHaveBeenCalledTimes(1);
+      });
+
+      await user.click(screen.getByRole("button", { name: /edit bowlers/i }));
+
+      expect(mockPush).toHaveBeenCalledWith("/dataEntry/editPlayers/tmt_123");
+    });
+
+    it("clicking Edit Bowlers shows Cannot Edit Bowlers modal when stage is SCORES", async () => {
+      const user = userEvent.setup();
+      mockLoadStatus = "succeeded";
+
+      mockedGetSquadStage.mockResolvedValue(SquadStage.SCORES);
+
+      render(<RunTmntPage />);
+
+      await waitFor(() => {
+        expect(mockedGetSquadStage).toHaveBeenCalledTimes(1);
+      });
+
+      await user.click(screen.getByRole("button", { name: /edit bowlers/i }));
+
+      const dlg = await screen.findByRole("dialog", { name: /error/i });
+      expect(dlg).toBeInTheDocument();
+
+      expect(screen.getByTestId("error-title")).toHaveTextContent("Cannot Edit Bowlers");
+      expect(screen.getByTestId("error-message")).toHaveTextContent(
+        "This tournament has been finalized and moved into the entering scores stage."
       );
+
+      expect(mockPush).not.toHaveBeenCalled();
+    });
+
+    it("clicking OK on the modal hides it (canceledModalErr)", async () => {
+      const user = userEvent.setup();
+      mockLoadStatus = "succeeded";
+
+      mockedGetSquadStage.mockResolvedValue(SquadStage.SCORES);
+
+      render(<RunTmntPage />);
+
+      await waitFor(() => {
+        expect(mockedGetSquadStage).toHaveBeenCalledTimes(1);
+      });
+
+      await user.click(screen.getByRole("button", { name: /edit bowlers/i }));
+      expect(await screen.findByRole("dialog", { name: /error/i })).toBeInTheDocument();
+
+      await user.click(screen.getByRole("button", { name: /ok/i }));
+
+      // Our mock renders a non-dialog placeholder when hidden
+      expect(screen.queryByRole("dialog", { name: /error/i })).not.toBeInTheDocument();
     });
   });
 
@@ -264,9 +356,7 @@ describe("RunTmntPage", () => {
       render(<RunTmntPage />);
 
       // Stage effect runs after load succeeds
-      const msg = await screen.findByText(
-        /Stage error: Tournament has no squad/i
-      );
+      const msg = await screen.findByText(/Stage error: Tournament has no squad/i);
       expect(msg).toBeInTheDocument();
 
       // getSquadStage should never be called when there is no squad id
@@ -288,20 +378,18 @@ describe("RunTmntPage", () => {
 
       await waitFor(() => {
         expect(mockedGetSquadStage).toHaveBeenCalledTimes(1);
-        // expect(mockedGetSquadStage).toHaveBeenCalledWith("squad_first");
       });
-      // only one expect inside waitFor. ok to have others after waitFor
+
       expect(mockedGetSquadStage).toHaveBeenCalledWith("squad_first");
     });
 
     it("passes a safe fallback stage (DEFINE) to TmntDataForm before async stage loads", () => {
       mockLoadStatus = "succeeded";
-
       mockedGetSquadStage.mockResolvedValue(SquadStage.SCORES);
 
       render(<RunTmntPage />);
 
-      // The *first* call to TmntDataForm happens before getSquadStage resolves
+      // first render uses stage ?? DEFINE fallback
       const firstCall = mockedTmntDataForm.mock.calls[0][0];
       const tmntProps = firstCall.tmntProps;
 
@@ -314,35 +402,26 @@ describe("RunTmntPage", () => {
 
       render(<RunTmntPage />);
 
-      // Wait until TmntDataForm has been rendered more than once
-      // (initial render with DEFINE, then rerender with SCORES)
       await waitFor(() => {
         expect(mockedTmntDataForm.mock.calls.length).toBeGreaterThan(1);
       });
 
-      // Now inspect the *latest* call to TmntDataForm
       const calls = mockedTmntDataForm.mock.calls;
       const lastCallProps = calls[calls.length - 1][0].tmntProps;
 
-      // Last call should reflect the updated stage
       expect(lastCallProps.stage).toBe(SquadStage.SCORES);
     });
 
     it("sets stage to ERROR and shows error message if getSquadStage rejects", async () => {
       mockLoadStatus = "succeeded";
 
-      mockedGetSquadStage.mockRejectedValue(
-        new Error("Stage fetch failed")
-      );
+      mockedGetSquadStage.mockRejectedValue(new Error("Stage fetch failed"));
 
       render(<RunTmntPage />);
 
-      const msg = await screen.findByText(
-        /Stage error: Stage fetch failed/i
-      );
+      const msg = await screen.findByText(/Stage error: Stage fetch failed/i);
       expect(msg).toBeInTheDocument();
 
-      // In the last call, the stage should be ERROR
       const calls = mockedTmntDataForm.mock.calls;
       const lastProps = calls[calls.length - 1][0].tmntProps;
       expect(lastProps.stage).toBe(SquadStage.ERROR);

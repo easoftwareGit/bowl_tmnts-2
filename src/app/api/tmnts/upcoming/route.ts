@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     },
     orderBy: [
       {
-        start_date: 'desc'
+        start_date: 'asc'        
       }
     ],
     select: {

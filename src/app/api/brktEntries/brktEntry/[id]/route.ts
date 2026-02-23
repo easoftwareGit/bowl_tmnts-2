@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { initBrktEntry } from "@/lib/db/initVals";
-import { brktEntriesFromPrisa, brktEntryType } from "@/lib/types/types";
+import type { brktEntriesFromPrisa, brktEntryType } from "@/lib/types/types";
 import { sanitizeBrktEntry, validateBrktEntry } from "../../../../../lib/validation/brktEntries/validate";
 import { brktEntriesWithFee } from "../../feeCalc";
 import { getErrorStatus } from "@/app/api/errCodes";
@@ -100,15 +101,32 @@ export async function PUT(
       time_stamp,
     };
     
-    const sanitizedObj = sanitizeBrktEntry(toCheck);
-    if (sanitizedObj.errorCode !== ErrorCode.NONE) {
-      const errMsg = getErrMsg(sanitizedObj.errorCode);
-      return NextResponse.json({ error: errMsg }, { status: 422 });
+    const toPut = sanitizeBrktEntry(toCheck);     
+    const coerced =
+      toPut.brkt_id !== toCheck.brkt_id ||
+      toPut.player_id !== toCheck.player_id ||
+      toPut.num_brackets !== toCheck.num_brackets ||
+      toPut.num_refunds !== toCheck.num_refunds ||
+      toPut.fee !== toCheck.fee ||
+      toPut.time_stamp !== toCheck.time_stamp;
+    if (coerced) {
+      return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
-    const toPut = sanitizedObj.brktEntry;
-    const errCode = validateBrktEntry(toPut);
+
+    let errCode = validateBrktEntry(toPut);
     if (errCode !== ErrorCode.NONE) {
-      const errMsg = getErrMsg(sanitizedObj.errorCode);
+      let errMsg: string;
+      switch (errCode) {
+        case ErrorCode.MISSING_DATA:
+          errMsg = "missing data";
+          break;
+        case ErrorCode.INVALID_DATA:
+          errMsg = "invalid data";
+          break;
+        default:
+          errMsg = "unknown error";
+          break;
+      }
       return NextResponse.json({ error: errMsg }, { status: 422 });
     }
 
@@ -197,6 +215,7 @@ export async function PATCH(
     if (!isValidBtDbId(id, "ben")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }  
+
     // 1) get copy of data in database    
     const currentBrktEntryNoFee = await prisma.brkt_Entry.findUnique({
       select: {
@@ -275,15 +294,29 @@ export async function PATCH(
       return NextResponse.json({ brktEntry: currentBrktEntry }, { status: 200 });
     }
     // 3) sanitize and validate copy of data
-    const sanitizedObj = sanitizeBrktEntry(toCheck);
-    if (sanitizedObj.errorCode !== ErrorCode.NONE) {
-      const errMsg = getErrMsg(sanitizedObj.errorCode);
-      return NextResponse.json({ error: errMsg }, { status: 422 });
+    const toBePatched = sanitizeBrktEntry(toCheck);
+
+    const coerced =
+      (jsonProps.includes("brkt_id") && toBePatched.brkt_id !== toCheck.brkt_id) ||
+      (jsonProps.includes("player_id") && toBePatched.player_id !== toCheck.player_id) ||
+      (jsonProps.includes("num_brackets") && toBePatched.num_brackets !== toCheck.num_brackets) ||
+      (jsonProps.includes("num_refunds") && toBePatched.num_refunds !== toCheck.num_refunds) ||
+      (jsonProps.includes("time_stamp") && toBePatched.time_stamp !== toCheck.time_stamp)
+    if (coerced) {
+      return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
-    const toBePatched = sanitizedObj.brktEntry
-    const errCode = validateBrktEntry(toBePatched);    
+
+    let errCode = validateBrktEntry(toBePatched);    
     if (errCode !== ErrorCode.NONE) {
-      const errMsg = getErrMsg(sanitizedObj.errorCode);
+      let errMsg: string;
+      switch (errCode) {
+        case ErrorCode.INVALID_DATA:
+          errMsg = "invalid data";
+          break;
+        default:
+          errMsg = "unknown error";
+          break;
+      }
       return NextResponse.json({ error: errMsg }, { status: 422 });
     }
 

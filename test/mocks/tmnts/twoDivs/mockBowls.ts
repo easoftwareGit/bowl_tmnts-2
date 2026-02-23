@@ -1,4 +1,3 @@
-// import { bowlType } from "@/lib/types/types";
 import { Bowl } from "@prisma/client"
 import { initPrismaBowl } from "@/lib/db/initVals"
 

@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
-import { tmntFullType, tmntFormDataType, tmntFormParent } from "@/lib/types/types";
+import type { tmntFullType } from "@/lib/types/types";
 import {
   DataGrid,
   GridAlignment,
@@ -12,8 +12,7 @@ import {
   GridRowSelectionModel,
   GridRowsProp,
 } from "@mui/x-data-grid";
-import {
-  playerEntryData,
+import {  
   createDivEntryColumns,
   entryFeeColName,
   divEntryHdcpColName,
@@ -52,9 +51,11 @@ import { ButtonWithTooltip } from "@/components/mobile/mobileToolTipButton";
 import { BracketList } from "@/components/brackets/bracketListClass";
 import { defaultBrktGames, defaultPlayersPerMatch } from "@/lib/db/initVals";
 import { extractDataFromRows, extractFullBrktsData } from "./extractData";
+import { SquadStage } from "@prisma/client";
+import type { playerEntryRow } from "./populateRows";
+import { createByePlayer } from "@/components/brackets/byePlayer";
 import { cloneDeep } from "lodash";
 import styles from "./grid.module.css";
-import { SquadStage } from "@prisma/client";
 
 // full tmnt
 // http://localhost:3000/dataEntry/runTmnt/tmt_d237a388a8fc4641a2e37233f1d6bebd
@@ -77,7 +78,7 @@ type PlayerEntryRow = {
   position?: string;
   lanePos?: string;
   feeTotal: number;
-  // plus your dynamic fee columns:
+  // plus dynamic fee columns:
   [key: string]: any;
 };
 
@@ -92,15 +93,13 @@ declare module "@mui/x-data-grid" {
   }
 }
 
-interface ChildProps {
-  tmntFullData: tmntFullType;
-  rows: (typeof playerEntryData)[];
-  setRows: React.Dispatch<React.SetStateAction<(typeof playerEntryData)[]>>;  
+interface ChildProps {  
+  rows: playerEntryRow[];
+  setRows: React.Dispatch<React.SetStateAction<playerEntryRow[]>>;  
   findCountError: () => errInfoType;
 }
 
-const PlayersEntryForm: React.FC<ChildProps> = ({
-  tmntFullData,
+const PlayersEntryForm: React.FC<ChildProps> = ({  
   rows,
   setRows,
   findCountError,
@@ -108,15 +107,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
 
-  const stateTmntFullData = useSelector(
-    (state: RootState) => state.tmntFullData.tmntFullData
-  );
-  const playersFormData: tmntFormDataType = {
-    tmntFullData: stateTmntFullData,
-    stage: SquadStage.DEFINE,
-    parentForm: tmntFormParent.RUN,
-  };
-  const tmntData = playersFormData.tmntFullData;
+  const tmntData = useSelector((state: RootState) => state.tmntFullData.tmntFullData);
 
   const entriesSaveStatus = useSelector(getTmntDataSaveStatus);
   const [gridEditMode, setGridEditMode] = useState<"cell" | "row">("cell");
@@ -125,9 +116,11 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
   const [confModalObj, setConfModalObj] = useState(initModalObj);
   const [errModalObj, setErrModalObj] = useState(initModalObj);
 
-  const squadMinLane = tmntData?.lanes[0]?.lane_number;
-  const squadMaxLane = tmntData?.lanes[tmntData?.lanes.length - 1]?.lane_number;
-
+  const lanes = tmntData?.lanes ?? [];
+  const squadMinLane = lanes[0]?.lane_number ?? 1;
+  const squadMaxLane =
+    lanes.length ? lanes[lanes.length - 1].lane_number : squadMinLane + 1;
+  
   const isTouchDevice = useIsTouchDevice();
 
   const noErrorsTitle = "No Errors Found";
@@ -151,7 +144,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
     return initTotals;
   }, [tmntData]);
 
-  // recompute totals wheneverrows OR baseTotals change
+  // re-compute totals when ever rows OR baseTotals change
   const entriesTotals = useMemo(() => {
     if (!rows || Object.keys(baseTotals).length === 0) return baseTotals;
 
@@ -173,6 +166,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
     return updatedTotals;
   }, [rows, baseTotals]);
 
+  // create columns for the grid when get tmntData
   const columns = useMemo(() => {
     const playersColumns = createPlayerEntryColumns(tmntData?.divs, squadMaxLane, squadMinLane);
     const divsEntryCols = createDivEntryColumns(tmntData?.divs);
@@ -183,6 +177,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
     return playersColumns.concat(divsEntryCols, potsEntryCols, brktEntryCols, elimEntryCols, feeTotalCol);
   }, [tmntData, squadMaxLane, squadMinLane]);
 
+  // create column groupings for the grid when get tmntData
   const columnGroupings = useMemo<GridColumnGroupingModel>(() => {
     const playersColGroup: GridColumnGroupingModel = [
       {
@@ -465,7 +460,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
   const handleAddClick = () => {
     setGridEditMode("cell");
     const id = btDbUuid("ply");
-    const newRow: typeof playerEntryData = {
+    const newRow: playerEntryRow = {
       id,
       player_id: id,
       first_name: "",
@@ -527,12 +522,15 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
 
   const doSave = async (brktLists: BracketList[]) => { 
     try {
-      // setSaveCompleted(false); // Reset state before dispatching
-      const entriesData = extractDataFromRows(rows, tmntFullData.squads[0].id);      
+      // stage_set_at value set in replaceTmntEntriesData 
+      const updatedStage: SquadStage =
+        brktLists.length === 0 ? SquadStage.ENTRIES : SquadStage.SCORES;
+
+      const entriesData = extractDataFromRows(rows, tmntData.squads[0].id, brktLists);      
       const brktsData = extractFullBrktsData(brktLists);
 
       const tmntToSave: tmntFullType = {
-        ...tmntFullData,
+        ...tmntData,
         players: [...entriesData.players],
         divEntries: [...entriesData.divEntries],
         elimEntries: [...entriesData.elimEntries],
@@ -540,6 +538,24 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
         oneBrkts: [...brktsData.oneBrkts],
         brktSeeds: [...brktsData.brktSeeds],
         potEntries: [...entriesData.potEntries],
+        stage: {
+          ...tmntData.stage,
+          stage: updatedStage
+        },  
+      }
+
+      // add one, and only one, bye player if needed
+      for (const brktList of brktLists) {
+        if (brktList.oneByeCount > 0) {
+          const foundByePlayer = tmntToSave.players.find(
+            p => p.id === brktList.byePlayer.id
+          );
+
+          if (!foundByePlayer) {
+            tmntToSave.players.push(brktList.byePlayer);
+            break; // EXIT LOOP immediately after adding bye player
+          }
+        }
       }
 
       await dispatch(saveTmntEntriesData(tmntToSave)).unwrap();
@@ -557,14 +573,26 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
 
   const handleFinalizeClick = async () => {
 
+    if (!tmntData || !tmntData.squads.length) return;
     if (!canFinalize()) return;
+    const squadId = tmntData?.squads?.[0]?.id;  // only 1 squad per tmnt
+    if (!squadId) {
+      setErrModalObj({
+        show: true,
+        title: "Cannot Finalize",
+        message: "Squad data not loaded. Please try again.",
+        id: "squad",
+      });
+      return;
+    }      
 
     // get bracket id's and corresponding bracket names
     const numBrktsCols = columns.filter((col) =>
       isBrktsColumnName(col.field)
     );
     let gotBrktsErr = false;
-    const brktLists: BracketList[] = [];
+    const brktLists: BracketList[] = [];    
+    const byePlayer = createByePlayer(squadId); // create bye player for all bracket lists
     if (numBrktsCols && numBrktsCols.length > 0) {
       for (let b = 0; b < numBrktsCols.length; b++) {
         const brktId = getBrktIdFromColName(numBrktsCols[b].field);
@@ -572,7 +600,8 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
         const brktList = new BracketList(
           brktId,
           defaultPlayersPerMatch,
-          defaultBrktGames
+          defaultBrktGames,
+          byePlayer,
         );
         brktList.calcTotalBrkts(rows); // calc total brkts - simple math calc
         if (brktList.canRandomize()) {
@@ -633,7 +662,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
   const handleDebug1Click = () => {
     const newId = btDbUuid("ply");
     const newRow = cloneDeep(rows[0]);
-    const addedRow: typeof playerEntryData = {
+    const addedRow: playerEntryRow = {
       ...newRow,
       id: newId,
       player_id: newId,
@@ -692,6 +721,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
               type="button"
               className="btn btn-primary"
               onClick={handleAddClick}
+              name="Add"
             >
               <svg
                 xmlns="/plus-circle.svg"
@@ -712,6 +742,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
               type="button"
               className="btn btn-danger"
               onClick={handleDelete}
+              name="Delete"
             >
               <svg
                 xmlns="/trash.svg"
@@ -732,6 +763,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
               type="button"
               className="btn btn-warning"
               onClick={handleFindPrelimErrorClick}
+              name="Find"
             >
               <svg
                 xmlns="/exclamation-diamond.svg"
@@ -751,7 +783,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
             <ButtonWithTooltip
               onClick={handleSaveClick}
               isTouchDevice={isTouchDevice}
-              renderTooltip={renderSaveToolTip}
+              renderTooltip={renderSaveToolTip}              
               buttonText="Save"
               buttonColor="success"
               icon={
@@ -797,6 +829,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
                 type="button"
                 className="btn btn-danger"
                 onClick={handleCancel}
+                name="Cancel"
                 // title="Cancel. All changes will be lost."
               >
                 <svg

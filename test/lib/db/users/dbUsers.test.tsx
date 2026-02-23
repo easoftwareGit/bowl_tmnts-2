@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { baseUsersApi } from "@/lib/db/apiPaths";
 import { testBaseUsersApi } from "../../../testApi";
-import { userType } from "@/lib/types/types";
+import type { userType } from "@/lib/types/types";
 import { initUser } from "@/lib/db/initVals";
 import { patchUser } from "@/lib/db/users/dbUsers";
 

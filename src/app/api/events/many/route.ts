@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode } from "@/lib/validation/validation";
-import { eventDataType, eventType } from "@/lib/types/types";
+import { ErrorCode } from "@/lib/enums/enums";
+import type { eventDataType, eventType } from "@/lib/types/types";
 import { validateEvents } from "../../../../lib/validation/events/validate";
 import { getErrorStatus } from "../../errCodes";
 import { eventDataForPrisma } from "../dataForPrisma";

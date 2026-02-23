@@ -8,9 +8,9 @@ import {
   validUserPassword,
   exportedForTesting,   
 } from "@/app/api/users/validate";
-import { userType } from "@/lib/types/types";
+import { ErrorCode } from "@/lib/enums/enums";
+import type { userType } from "@/lib/types/types";
 import { mockUser } from "../../../mocks/tmnts/mockTmnt";
-import { ErrorCode } from "@/lib/validation/validation";
 
 const userId = 'usr_5bcefb5d314fff1ff5da6521a2fa7bde';
 const nonUserId = 'bwl_5bcefb5d314fff1ff5da6521a2fa7bde';

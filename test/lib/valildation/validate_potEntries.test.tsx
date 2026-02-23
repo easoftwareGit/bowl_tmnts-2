@@ -6,9 +6,9 @@ import {
   validPotEntryFee,
 } from "@/lib/validation/potEntries/validate";
 import { initPotEntry } from "@/lib/db/initVals";
-import { ErrorCode } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { mockPotEntriesToPost } from "../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { validPotEntriesType } from "@/lib/types/types";
+import type { validPotEntriesType } from "@/lib/types/types";
 
 const { gotPotEntryData, validPotEntryData } = exportedForTesting;
 
@@ -339,7 +339,7 @@ describe("tests for potEntry validation", () => {
         fee: "-1",
       };
       const sanitizedPotEntry = sanitizePotEntry(testPotEntry);
-      expect(sanitizedPotEntry.fee).toEqual("");
+      expect(sanitizedPotEntry.fee).toEqual("-1");
     });
     it("should return a sanitized potEntry when fee is too high", () => {
       const testPotEntry = {
@@ -347,7 +347,7 @@ describe("tests for potEntry validation", () => {
         fee: "1234567890",
       };
       const sanitizedPotEntry = sanitizePotEntry(testPotEntry);
-      expect(sanitizedPotEntry.fee).toEqual("");
+      expect(sanitizedPotEntry.fee).toEqual("1234567890");
     });
     it("should return a sanitized potEntry when fee is sanitzied", () => {
       const testPotEntry = {
@@ -355,7 +355,7 @@ describe("tests for potEntry validation", () => {
         fee: "20.000",
       };
       const sanitizedPotEntry = sanitizePotEntry(testPotEntry);
-      expect(sanitizedPotEntry.fee).toEqual("20.000");
+      expect(sanitizedPotEntry.fee).toEqual("20");
     });
     it("should return a sanitized potEntry when data is not sanitzied", () => {
       const testPotEntry = {
@@ -531,7 +531,7 @@ describe("tests for potEntry validation", () => {
       expect(validpotEntries.potEntries.length).toBe(
         potEntriesToValidate.length
       );
-      expect(validpotEntries.potEntries[1].fee).toBe("20.000");
+      expect(validpotEntries.potEntries[1].fee).toBe("20");
     });
     it('should return ErrorCode.MISSING_DATA when id is sanitzied to ""', () => {
       const potEntriesToValidate = [...mockPotEntriesToPost];

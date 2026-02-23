@@ -1,5 +1,5 @@
 import { startOfDayFromString } from "@/lib/dateTools";
-import { squadDataType, squadType } from "@/lib/types/types";
+import type { squadDataType, squadType } from "@/lib/types/types";
 
 /**
  * Converts a squad to squad data for prisma

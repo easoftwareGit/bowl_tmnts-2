@@ -1,13 +1,13 @@
 import axios, { AxiosError } from "axios";
 import { baseStagesApi } from "@/lib/db/apiPaths";
 import { testBaseStagesApi } from "../../../../test/testApi";
-import {
+import type {
   fullStageType,
   justStageType,
   justStageOverrideType,
   tmntFullType,
 } from "@/lib/types/types";
-import { isFullStageType, isValidBtDbId, toValidDateOrNull } from "@/lib/validation/validation";
+import { isValidBtDbId } from "@/lib/validation/validation";
 import { initFullStage } from "../initVals";
 import { SquadStage } from "@prisma/client";
 import { validStageValue } from "@/lib/validation/stages/validate";
@@ -18,31 +18,6 @@ const url = testBaseStagesApi.startsWith("undefined")
   : testBaseStagesApi;
 const stageUrl = url + "/stage/";
 const squadUrl = url + "/squad/";
-
-/**
- * Extracts a full stage from an object
- * 
- * @param {any} fullStage - object to extract from
- * @returns {fullStageType | null} - stage object with full stage data or null
- */
-const extractFullStage = (fullStage: any): fullStageType | null => {
-  if (fullStage == null || !isFullStageType(fullStage)) return null as any;  
-  const stageSetAt = toValidDateOrNull(fullStage.stage_set_at) as Date;
-  const scoresStartedAt = toValidDateOrNull(fullStage.scores_started_at);
-  const stageOverrideAt = toValidDateOrNull(fullStage.stage_override_at);
-  const retVal: fullStageType = {
-    ...initFullStage,
-    id: fullStage.id,
-    squad_id: fullStage.squad_id,
-    stage: fullStage.stage,
-    stage_set_at: stageSetAt,
-    scores_started_at: scoresStartedAt,
-    stage_override_enabled: fullStage.stage_override_enabled,    
-    stage_override_at: stageOverrideAt,
-    stage_override_reason: fullStage.stage_override_reason
-  }
-  return retVal;
-};
 
 /**
  * Get a full stage for a squad
@@ -59,14 +34,12 @@ export const getFullStageForSquad = async (squadId: string): Promise<fullStageTy
     response = await axios.get(squadUrl + squadId, { withCredentials: true });
   } catch (err) {
     // Just propagate the underlying error message, no function-name prefix
-    throw new Error(
-      err instanceof Error ? err.message : String(err)
-    );    
+    throw new Error(`getFullStageForSquad failed: ${err instanceof Error ? err.message : err}`);
   }
   if (response.status !== 200) {
     throw new Error(`Unexpected status ${response.status} when fetching stage`);
-  }
-  return extractFullStage(response.data.stage);    
+  }  
+  return response.data.stage; 
 };
 
 export async function getJustStage(squadId: string): Promise<justStageType | null>;
@@ -338,5 +311,3 @@ export const deleteFullStage = async (stageId: string): Promise<number> => {
   }
   return response.data.count;
 };
-
-export const exportedForTesting = { extractFullStage };

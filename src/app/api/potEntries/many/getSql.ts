@@ -1,6 +1,6 @@
-import { potEntryType } from "@/lib/types/types";
+import type { potEntryType } from "@/lib/types/types";
 import { validatePotEntries } from "../../../../lib/validation/potEntries/validate";
-import { ErrorCode } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 
 /**
  * returns array of unique potIds

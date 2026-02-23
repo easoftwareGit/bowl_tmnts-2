@@ -9,7 +9,7 @@ import {
   initSquad,
   initTmnt,
 } from "@/lib/db/initVals";
-import {
+import type {
   brktType,
   divType,
   elimType,

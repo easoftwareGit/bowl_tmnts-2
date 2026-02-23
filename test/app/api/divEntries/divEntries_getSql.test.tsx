@@ -1,4 +1,4 @@
-import { divEntryType } from "@/lib/types/types";
+import type { divEntryType } from "@/lib/types/types";
 import { getDeleteManySQL, getInsertManySQL,  getUpdateManySQL, exportedForTesting } from "@/app/api/divEntries/many/getSql";
 import { initDivEntry } from "@/lib/db/initVals";
 import { deleteAllDivEntriesForSquad, postManyDivEntries } from "@/lib/db/divEntries/dbDivEntries";

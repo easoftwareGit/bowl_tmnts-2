@@ -1,6 +1,6 @@
 "use client";
 import { FC, useState, useEffect } from "react";
-import { YearObj, tmntsListType } from "@/lib/types/types";
+import type { YearObj, tmntsListType } from "@/lib/types/types";
 import Link from "next/link";
 import { getMonthDay } from "@/lib/dateTools";
 

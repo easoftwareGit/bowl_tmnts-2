@@ -1,7 +1,7 @@
 import { validTmntName, sanitizeTmnt, validateTmnt, exportedForTesting, validTmntDates, validTmntFkId } from "@/lib/validation/tmnts/valildate";
-import { tmntType } from "@/lib/types/types";
+import type { tmntType } from "@/lib/types/types";
 import { mockTmnt } from "../../mocks/tmnts/mockTmnt";
-import { ErrorCode } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 const { gotTmntData, validTmntData } = exportedForTesting;
 
 const startDate1Str = '2020-01-30';

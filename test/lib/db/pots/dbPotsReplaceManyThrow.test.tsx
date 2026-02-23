@@ -1,4 +1,4 @@
-import { potCategoriesTypes, potType } from "@/lib/types/types";
+import type { potCategoriesTypes, potType } from "@/lib/types/types";
 import { initPot } from "@/lib/db/initVals";
 
 const squadId = 'sqd_7116ce5f80164830830a7157eb093396';

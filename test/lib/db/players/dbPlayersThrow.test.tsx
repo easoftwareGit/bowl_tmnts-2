@@ -11,7 +11,7 @@ import {
   postPlayer,  
   putPlayer,  
 } from "@/lib/db/players/dbPlayers";
-import { playerType } from "@/lib/types/types";
+import type { playerType } from "@/lib/types/types";
 import { blankPlayer } from "@/lib/db/initVals";
 
 const url = testBasePlayersApi.startsWith("undefined")

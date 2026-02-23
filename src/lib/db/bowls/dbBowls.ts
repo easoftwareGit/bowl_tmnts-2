@@ -1,7 +1,7 @@
 import axios from "axios";
 import { baseBowlsApi } from "@/lib/db/apiPaths";
 import { testBaseBowlsApi } from "../../../../test/testApi";
-import { bowlType } from "@/lib/types/types";
+import type { bowlType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { blankBowl } from "../initVals";
 

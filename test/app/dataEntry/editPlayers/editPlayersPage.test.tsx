@@ -1,5 +1,6 @@
 import React from "react";
 import { render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 
 // mock react-redux useSelector
@@ -26,8 +27,7 @@ jest.mock("@/redux/features/tmntFullData/tmntFullDataSlice", () => ({
 jest.mock("@/app/dataEntry/playersForm/createColumns", () => ({
   feeColNameEnd: "_fee",
   entryFeeColName: (id: string) => `${id}_fee`,
-  entryNumBrktsColName: (id: string) => `${id}_num_brkts`,
-  // page uses typeof playerEntryData for typing; runtime not needed
+  entryNumBrktsColName: (id: string) => `${id}_num_brkts`,  
   playerEntryData: {},
 }));
 
@@ -43,15 +43,48 @@ jest.mock("@/app/dataEntry/playersForm/populateRows", () => ({
   populateRows: (tmntFullData: any) => mockPopulateRows(tmntFullData),
 }));
 
-// mock PlayersEntryForm (so can assert it received props)
+/**
+ * PlayersEntryForm mock:
+ * - stores last props so tests can call findCountError() directly
+ * - provides buttons to call setRows() to simulate user edits
+ */
+let lastPlayersEntryFormProps: any = null;
+
 jest.mock("@/app/dataEntry/playersForm/playersForm", () => ({
   __esModule: true,
-  default: (props: any) => (
-    <div data-testid="PlayersEntryFormMock">
-      <div data-testid="rowsLen">{props.rows?.length ?? -1}</div>
-      <div data-testid="hasFindCountError">{String(typeof props.findCountError === "function")}</div>
-    </div>
-  ),
+  default: (props: any) => {
+    lastPlayersEntryFormProps = props;
+    return (
+      <div data-testid="PlayersEntryFormMock">
+        <div data-testid="rowsLen">{props.rows?.length ?? -1}</div>
+        <div data-testid="hasFindCountError">
+          {String(typeof props.findCountError === "function")}
+        </div>
+
+        <button
+          type="button"
+          onClick={() =>
+            props.setRows([...(props.rows ?? []), { id: "new_row" }])
+          }
+        >
+          Add Row
+        </button>
+
+        <button
+          type="button"
+          onClick={() => props.setRows([{ id: "edited_only" }])}
+        >
+          Replace Rows
+        </button>
+      </div>
+    );
+  },
+}));
+
+// mock createByePlayer
+jest.mock("@/components/brackets/byePlayer", () => ({
+  __esModule: true,
+  createByePlayer: (squadId: string) => ({ id: "bye", squad_id: squadId }),
 }));
 
 // mock WaitModal
@@ -111,18 +144,42 @@ jest.mock("@/lib/db/initVals", () => ({
 }));
 
 // mock rowInfo used by findCountError
+const mockGetCounts = jest.fn(() => ({ ok: true }));
+const mockGetCountErrMsg = jest.fn(() => "");
+
+// mock rowInfo used by findCountError
 // (don't deeply test its logic here; just ensure wiring works)
 jest.mock("@/app/dataEntry/playersForm/rowInfo", () => ({
-  getDivsPotsBrktsElimsCounts: jest.fn(() => ({ ok: true })),
-  getDivsPotsBrktsElimsCountErrMsg: jest.fn(() => ""),
+  getDivsPotsBrktsElimsCounts: function (...args: unknown[]) {
+    return mockGetCounts.apply(null, args);
+  },
+  getDivsPotsBrktsElimsCountErrMsg: function (...args: unknown[]) {
+    return mockGetCountErrMsg.apply(null, args);
+  },
 }));
 
-// Light mock react-bootstrap bits used here
-// Tabs renders all children (simplifies testing counts UI)
+/**
+ * react-bootstrap mock:
+ * - renders children
+ * - exposes current activeKey in DOM
+ * - provides a button to invoke onSelect for tab switching test
+ */
 jest.mock("react-bootstrap", () => ({
-  OverlayTrigger: ({ children }: any) => <span data-testid="OverlayTriggerMock">{children}</span>,
-  Tooltip: ({ children }: any) => <span data-testid="TooltipMock">{children}</span>,
-  Tabs: ({ children }: any) => <div data-testid="TabsMock">{children}</div>,
+  OverlayTrigger: ({ children }: any) => (
+    <span data-testid="OverlayTriggerMock">{children}</span>
+  ),
+  Tooltip: ({ children }: any) => (
+    <span data-testid="TooltipMock">{children}</span>
+  ),
+  Tabs: ({ children, activeKey, onSelect }: any) => (
+    <div data-testid="TabsMock">
+      <div data-testid="ActiveTabKey">{String(activeKey)}</div>
+      <button type="button" onClick={() => onSelect?.("pots")}>
+        Select Pots
+      </button>
+      {children}
+    </div>
+  ),
   Tab: ({ children, eventKey, title }: any) => (
     <section data-testid={`Tab-${eventKey}`}>
       <h3>{title}</h3>
@@ -134,11 +191,12 @@ jest.mock("react-bootstrap", () => ({
 import EditPlayersPage from "@/app/dataEntry/editPlayers/[tmntId]/page";
 
 // test fixtures
-const makeTmntFullData = () => ({
+const makeTmntFullData = (overrides: Partial<any> = {}) => ({
   divs: [{ id: "div_1", div_name: "Scratch" }],
   pots: [{ id: "pot_1", pot_type: "Game" }],
   brkts: [{ id: "brk_1", brkt_name: "A Bracket" }],
   elims: [{ id: "elm_1", elim_name: "Elim A" }],
+  ...overrides,
 });
 
 describe("EditPlayersPage", () => {
@@ -154,6 +212,9 @@ describe("EditPlayersPage", () => {
     mockPopulateRows.mockReturnValue([]);
     mockGetStatus.mockReturnValue("idle");
     mockGetError.mockReturnValue(null);
+
+    mockGetCounts.mockImplementation(() => ({ ok: true }));
+    mockGetCountErrMsg.mockImplementation(() => "");
   });
 
   it("shows WaitModal when load status is loading", () => {
@@ -208,7 +269,6 @@ describe("EditPlayersPage", () => {
     expect(screen.getByTestId("hasFindCountError")).toHaveTextContent("true");
 
     // Wait for the rows-driven effect to compute counts and render into inputs
-
     // Div fee count: div_1_fee has >0 in r1 and r3 => 2
     await waitFor(() => {                               
       expect(screen.getByTestId("inputDivEntryCountdiv_1")).toBeInTheDocument();      
@@ -243,8 +303,8 @@ describe("EditPlayersPage", () => {
     
     // refunds marker should appear for bracket brk_1 (per our mock BracketList)
     // In your code it renders: <span className="popup-help">&nbsp;*&nbsp;</span>
-    const brkTab = screen.getByTestId("Tab-brkts");
-    expect(within(brkTab).getByText("*")).toBeInTheDocument();
+    const brkTab = screen.getByTestId("Tab-brkts");    
+    expect(within(brkTab).getByText(/\*/)).toBeInTheDocument();
 
     // usePreventUnload should be wired up with a function
     expect(mockUsePreventUnload).toHaveBeenCalled();
@@ -282,6 +342,171 @@ describe("EditPlayersPage", () => {
     expect(
       screen.queryByTestId("PlayersEntryFormMock")
     ).not.toBeInTheDocument();
+  });
+
+  it("findCountError returns {id:'counts', msg} when rowInfo reports an error", async () => {
+    const tmntFullData = makeTmntFullData();
+    mockState = { tmntFullData: { tmntFullData } };
+    mockGetStatus.mockReturnValue("succeeded");
+    mockGetError.mockReturnValue(null);
+
+    mockPopulateRows.mockReturnValue([{ id: "r1", div_1_fee: 0, pot_1_fee: 0, elm_1_fee: 0, brk_1_num_brkts: 0 }]);
+
+    mockGetCountErrMsg.mockReturnValue("Need at least 1 entry in each division");
+
+    render(<EditPlayersPage />);
+
+    await screen.findByTestId("PlayersEntryFormMock");
+    expect(typeof lastPlayersEntryFormProps?.findCountError).toBe("function");
+
+    const err = lastPlayersEntryFormProps.findCountError();
+    expect(err).toEqual({ id: "counts", msg: "Need at least 1 entry in each division" });
+  });
+
+  it("does not render refund asterisk when BracketList.playersWithRefunds is false", async () => {
+    const tmntFullData = makeTmntFullData();
+    tmntFullData.brkts = [{ id: "brk_2", brkt_name: "No Refund Bracket" }];
+
+    mockState = { tmntFullData: { tmntFullData } };
+    mockGetStatus.mockReturnValue("succeeded");
+    mockGetError.mockReturnValue(null);
+
+    mockPopulateRows.mockReturnValue([
+      { id: "r1", div_1_fee: 10, pot_1_fee: 0, elm_1_fee: 0, brk_2_num_brkts: 1 },
+    ]);
+
+    render(<EditPlayersPage />);
+
+    await screen.findByText("Brackets");
+    const brkTab = screen.getByTestId("Tab-brkts");
+
+    expect(within(brkTab).queryByText(/\*/)).not.toBeInTheDocument();
+  });
+
+  it("usePreventUnload callback returns false initially and true after rows change", async () => {
+    const user = userEvent.setup();
+
+    const tmntFullData = makeTmntFullData();
+    mockState = { tmntFullData: { tmntFullData } };
+    mockGetStatus.mockReturnValue("succeeded");
+    mockGetError.mockReturnValue(null);
+
+    mockPopulateRows.mockReturnValue([
+      { id: "r1", div_1_fee: 10, pot_1_fee: 0, elm_1_fee: 0, brk_1_num_brkts: 1 },
+    ]);
+
+    render(<EditPlayersPage />);
+
+    await screen.findByTestId("PlayersEntryFormMock");
+
+    // wait for init effect to write rows + origRowsRef (rowsLen shows current page state)
+    await waitFor(() => {
+      expect(screen.getByTestId("rowsLen")).toHaveTextContent("1");
+    });
+
+    // grab the most recent callback (after init re-render)
+    const getLatestGuardFn = () =>
+      mockUsePreventUnload.mock.calls[mockUsePreventUnload.mock.calls.length - 1]?.[0];
+
+    await waitFor(() => {
+      expect(typeof getLatestGuardFn()).toBe("function");
+    });
+
+    // no edits yet
+    expect(getLatestGuardFn()()).toBe(false);
+
+    // simulate user edit by changing rows via PlayersEntryForm mock button
+    await user.click(screen.getByRole("button", { name: "Add Row" }));
+
+    // allow state/effects to flush
+    await waitFor(() => {
+      expect(screen.getByTestId("rowsLen")).toHaveTextContent("2");
+    });
+
+    // grab latest again (rows changed => new callback)
+    expect(getLatestGuardFn()()).toBe(true);
+  });
+
+  it("does not overwrite user-edited rows if redux tmntFullData changes after initialization", async () => {
+    const user = userEvent.setup();
+
+    // first load
+    const tmntFullDataV1 = makeTmntFullData();
+    mockState = { tmntFullData: { tmntFullData: tmntFullDataV1 } };
+    mockGetStatus.mockReturnValue("succeeded");
+    mockGetError.mockReturnValue(null);
+
+    // initial populateRows gives 1 row
+    mockPopulateRows.mockReturnValue([{ id: "r1" }]);
+
+    const { rerender } = render(<EditPlayersPage />);
+
+    await screen.findByTestId("PlayersEntryFormMock");
+    await waitFor(() => {
+      expect(screen.getByTestId("rowsLen")).toHaveTextContent("1");
+    });
+
+    // user edits rows locally -> now length 2
+    await user.click(screen.getByRole("button", { name: "Add Row" }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("rowsLen")).toHaveTextContent("2");
+    });
+
+    // now simulate redux update (new object reference)
+    const tmntFullDataV2 = makeTmntFullData({
+      divs: [{ id: "div_1", div_name: "Updated" }],
+    });
+    mockState = { tmntFullData: { tmntFullData: tmntFullDataV2 } };
+
+    // populateRows would try to reset to 1 row (or anything different)
+    mockPopulateRows.mockReturnValue([{ id: "rA" }]);
+
+    rerender(<EditPlayersPage />);
+
+    // should still be the user-edited rows (length 2), not overwritten
+    await waitFor(() => {
+      expect(screen.getByTestId("rowsLen")).toHaveTextContent("2");
+    });
+  });
+
+  it("updates tabKey when Tabs onSelect fires", async () => {
+    const tmntFullData = makeTmntFullData();
+    mockState = { tmntFullData: { tmntFullData } };
+    mockGetStatus.mockReturnValue("succeeded");
+    mockGetError.mockReturnValue(null);
+
+    mockPopulateRows.mockReturnValue([{ id: "r1" }]);
+
+    render(<EditPlayersPage />);
+
+    await screen.findByTestId("TabsMock");
+
+    // default
+    expect(screen.getByTestId("ActiveTabKey")).toHaveTextContent("divs");
+
+    // trigger onSelect("pots") via Tabs mock
+    screen.getByRole("button", { name: "Select Pots" }).click();
+
+    await waitFor(() => {
+      expect(screen.getByTestId("ActiveTabKey")).toHaveTextContent("pots");
+    });
+  });  
+
+  it("when succeeded but tmntFullData is null: still renders page without crashing", async () => {
+    mockState = { tmntFullData: { tmntFullData: null } };
+    mockGetStatus.mockReturnValue("succeeded");
+    mockGetError.mockReturnValue(null);
+
+    mockPopulateRows.mockReturnValue([]); // should be unused, but safe
+
+    render(<EditPlayersPage />);
+
+    expect(await screen.findByRole("heading", { name: "Bowlers" })).toBeInTheDocument();
+    expect(screen.getByTestId("PlayersEntryFormMock")).toBeInTheDocument();
+
+    // Div/Pot/Brkt/Elim lists are empty => no count inputs
+    expect(screen.queryByTestId("inputDivEntryCountdiv_1")).not.toBeInTheDocument();
   });
 
 });

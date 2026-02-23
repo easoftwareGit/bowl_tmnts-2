@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { initDivEntry } from "@/lib/db/initVals";
-import { divEntryRawType, divEntryType } from "@/lib/types/types";
+import type { divEntryRawType, divEntryType } from "@/lib/types/types";
 import { sanitizeDivEntry, validateDivEntry } from "../../../../../lib/validation/divEntries/validate";
 import { divEntriesWithHdcp } from "../../calcHdcp";
 import { getErrorStatus } from "@/app/api/errCodes";

@@ -2,7 +2,7 @@ import userEvent from "@testing-library/user-event";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import OneToNSquads from "@/app/dataEntry/tmntForm/oneToNSquads";
 import { validateSquads } from "@/app/dataEntry/tmntForm/oneToNSquads";
-import { squadType, eventType, AcdnErrType } from "@/lib/types/types";
+import type { squadType, eventType, AcdnErrType } from "@/lib/types/types";
 import { mockTmntFullData, squadId1, squadId2 } from "../../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { mockLanes, mockSquads } from "../../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { mockEvents } from "../../../../mocks/tmnts/singlesAndDoubles/mockEvents";

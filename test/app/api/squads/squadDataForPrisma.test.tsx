@@ -1,4 +1,4 @@
-import { squadType } from "@/lib/types/types";
+import type { squadType } from "@/lib/types/types";
 import { mockTmntFullData } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { squadDataForPrisma } from "@/app/api/squads/dataForPrisma";
 import { cloneDeep } from "lodash";

@@ -19,7 +19,8 @@ import {
   valid_yyyyMMdd,
   yyyyMMdd_To_ddMMyyyy,
   ymdType,
-  dateStringToTimeStamp,  
+  dateStringToTimeStamp,
+  toIso,  
 } from "@/lib/dateTools";
 import { addDays, addMinutes, compareAsc, startOfToday } from "date-fns";
 
@@ -850,6 +851,31 @@ describe("tests for dateTools", () => {
       const expectedTimestamp = new Date('2023-03-12T02:30:00.000Z').getTime();
       const result = dateStringToTimeStamp(isoDateString);
       expect(result).toBe(expectedTimestamp);
+    });
+  });
+
+  describe("toIso", () => {
+    it("should return ISO string for a valid Date", () => {
+      const d = new Date("2024-10-26T12:34:56.789Z");
+      expect(toIso(d)).toBe("2024-10-26T12:34:56.789Z");
+    });
+
+    it("should return null when given null", () => {
+      expect(toIso(null)).toBeNull();
+    });
+
+    it("should return null when given undefined", () => {
+      expect(toIso(undefined)).toBeNull();
+    });
+
+    it("should return null for an invalid Date object (no throw)", () => {
+      const bad = new Date("invalid-date");
+      expect(toIso(bad)).toBeNull();
+    });
+
+    it("should not throw for an invalid Date object", () => {
+      const bad = new Date("invalid-date");
+      expect(() => toIso(bad)).not.toThrow();
     });
   });
 

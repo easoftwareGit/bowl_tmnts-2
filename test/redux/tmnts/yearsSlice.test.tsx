@@ -1,6 +1,6 @@
 import reducer, { fetchTmntYears, tmntYearsSliceState } from "@/redux/features/tmnts/yearsSlice";
 import { getTmntYears } from "@/lib/db/tmnts/dbTmnts";
-import { YearObj } from "@/lib/types/types";
+import type { YearObj } from "@/lib/types/types";
 import { configureStore } from "@reduxjs/toolkit";
 
 jest.mock("@/lib/db/tmnts/dbTmnts", () => ({

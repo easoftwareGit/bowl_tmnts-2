@@ -1,6 +1,5 @@
-import { potEntryType } from "@/lib/types/types";
+import type { potEntryType } from "@/lib/types/types";
 import { initPotEntry } from "@/lib/db/initVals";
-import { replaceManyPotEntries } from "@/lib/db/potEntries/dbPotEntriesReplaceMany";
 
 const squadId = 'sqd_7116ce5f80164830830a7157eb093396';
 const manyPotEntries: potEntryType[] = [

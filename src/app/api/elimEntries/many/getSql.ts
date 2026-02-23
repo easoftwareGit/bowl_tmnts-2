@@ -1,6 +1,6 @@
-import { elimEntryType } from "@/lib/types/types";
+import type { elimEntryType } from "@/lib/types/types";
 import { validateElimEntries } from "../../../../lib/validation/elimEntries/validate";
-import { ErrorCode } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 
 /**
  * Get an array of unique elimIds

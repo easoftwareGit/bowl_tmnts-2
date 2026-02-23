@@ -2,8 +2,7 @@ import {
   isValidBtDbId,
   maxEventLength,
   minGames,
-  maxGames,
-  ErrorCode,
+  maxGames,  
   validTime,
   minLane,
   maxStartLane,
@@ -15,9 +14,10 @@ import {
   maxDate,
   minDate,
 } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { sanitize } from "@/lib/validation/sanitize";
 import { compareAsc, isValid } from "date-fns";
-import {
+import type {
   squadType,
   idTypes,
   validSquadsType,

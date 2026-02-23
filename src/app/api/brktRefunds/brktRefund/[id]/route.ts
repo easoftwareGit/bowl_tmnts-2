@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { initBrktRefund } from "@/lib/db/initVals";
-import { brktRefundType } from "@/lib/types/types";
+import type { brktRefundType } from "@/lib/types/types";
 import { sanitizeBrktRefund, validateBrktRefund } from "../../../../../lib/validation/brktRefunds/validate";
 import { getErrorStatus } from "@/app/api/errCodes";
 

@@ -1,6 +1,8 @@
-import { isValidBtDbId, ErrorCode, isNumber } from "@/lib/validation/validation";
-import { brktSeedType, validBrktSeedsType } from "@/lib/types/types";
+import { isValidBtDbId, isNumber } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
+import type { brktSeedType, validBrktSeedsType } from "@/lib/types/types";
 import { blankBrktSeed, defaultBrktPlayers } from "@/lib/db/initVals";
+import { validPlayerId } from "../players/validate";
 
 /**
  * checks if brktSeed object has missing data - DOES NOT SANITIZE OR VALIDATE
@@ -48,7 +50,8 @@ const validBrktSeedData = (brktSeed: brktSeedType): ErrorCode => {
   try {
     if (!brktSeed) return ErrorCode.INVALID_DATA
     if (!isValidBtDbId(brktSeed.one_brkt_id, 'obk')) return ErrorCode.INVALID_DATA
-    if (!isValidBtDbId(brktSeed.player_id, 'ply')) return ErrorCode.INVALID_DATA
+    if (!validPlayerId(brktSeed.player_id)) return ErrorCode.INVALID_DATA
+    // if (!isValidBtDbId(brktSeed.player_id, 'ply')) return ErrorCode.INVALID_DATA
     if (!validSeed(brktSeed.seed)) return ErrorCode.INVALID_DATA
     return ErrorCode.NONE
   } catch (error) {
@@ -81,7 +84,7 @@ export const sanitizeBrktSeed = (brktSeed: brktSeedType): brktSeedType => {
     ...blankBrktSeed,
   }
   if (isValidBtDbId(brktSeed.one_brkt_id, 'obk')) sanitziedOneBrkt.one_brkt_id = brktSeed.one_brkt_id;
-  if (isValidBtDbId(brktSeed.player_id, 'ply')) sanitziedOneBrkt.player_id = brktSeed.player_id;
+  if (validPlayerId(brktSeed.player_id)) sanitziedOneBrkt.player_id = brktSeed.player_id;
   if (validSeed(brktSeed.seed)) sanitziedOneBrkt.seed = brktSeed.seed;
   return sanitziedOneBrkt;
 }

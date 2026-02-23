@@ -15,7 +15,7 @@ import {
   postManyElimEntries,
   putElimEntry,
 } from "@/lib/db/elimEntries/dbElimEntries";
-import { elimEntryType } from "@/lib/types/types";
+import type { elimEntryType } from "@/lib/types/types";
 import { initElimEntry } from "@/lib/db/initVals";
 
 const url = testBaseElimEntriesApi.startsWith("undefined")

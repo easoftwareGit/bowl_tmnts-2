@@ -1,7 +1,9 @@
 import { validMoney } from "@/lib/currency/validate";
 import { blankElimEntry } from "@/lib/db/initVals";
-import { elimEntryType, validElimEntriesType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId, maxMoney } from "@/lib/validation/validation";
+import type { elimEntryType, validElimEntriesType } from "@/lib/types/types";
+import { isValidBtDbId, maxMoney } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
+import { sanitizeCurrency } from "../sanitize";
 
 /**
  * checks if elimEntry object has missing data - DOES NOT SANITIZE OR VALIDATE
@@ -64,6 +66,23 @@ const validElimEntryData = (elimEntry: elimEntryType): ErrorCode => {
 }
 
 /**
+ * sanitizes an elim entry money string
+ *   "" is valid, and sanitized to "0"
+ *   all 0's is ok, return "0"
+ *   sanitizeCurrency removes trailing zeros
+ *
+ * @param moneyStr - money string to sanitize
+ * @returns {string} - sanitized money string
+ */
+const sanitizedElimEntryMoney = (moneyStr: string): string => {
+  if (moneyStr === null
+    || moneyStr === undefined
+    || typeof moneyStr !== "string") return "";  
+  if (moneyStr === "" || moneyStr.replace(/^0+/, '') === "") return "0";
+  return sanitizeCurrency(moneyStr);
+}
+
+/**
  * sanitizes elimEntry
  * 
  * @param {elimEntryType} elimEntry - elimEntry to sanitize
@@ -83,9 +102,7 @@ export const sanitizeElimEntry = (elimEntry: elimEntryType): elimEntryType => {
   if (isValidBtDbId(elimEntry.player_id, "ply")) {
     sanitziedElimEntry.player_id = elimEntry.player_id;
   }
-  if (validMoney(elimEntry.fee, 0, maxMoney)) {
-    sanitziedElimEntry.fee = elimEntry.fee;
-  }
+  sanitziedElimEntry.fee = sanitizedElimEntryMoney(elimEntry.fee);
   return sanitziedElimEntry;
 }
 

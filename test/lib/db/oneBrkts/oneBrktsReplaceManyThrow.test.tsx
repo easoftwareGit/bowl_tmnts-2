@@ -1,6 +1,5 @@
-import { oneBrktType } from "@/lib/types/types";
+import type { oneBrktType } from "@/lib/types/types";
 import { initOneBrkt } from "@/lib/db/initVals";
-import { replaceManyOneBrkts } from "@/lib/db/oneBrkts/dbOneBrktsReplaceMany";
 
 const squadId = 'sqd_7116ce5f80164830830a7157eb093396';
 const manyOneBrkts: oneBrktType[] = [

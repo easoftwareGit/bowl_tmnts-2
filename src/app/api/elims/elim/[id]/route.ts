@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { sanitizeElim, validateElim } from "@/lib/validation/elims/validate";
-import { elimType } from "@/lib/types/types";
+import type { elimType } from "@/lib/types/types";
 import { initElim } from "@/lib/db/initVals";
 import { getErrorStatus } from "@/app/api/errCodes";
 

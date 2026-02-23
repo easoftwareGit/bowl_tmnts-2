@@ -13,7 +13,7 @@ import { phone } from "phone";
 import { patchUser } from "@/lib/db/users/dbUsers";
 import ModalErrorMsg, { cannotSaveTitle } from "@/components/modal/errorModal";
 import { initModalObj } from "@/components/modal/modalObjType";
-import { userType } from "@/lib/types/types";
+import type { userType } from "@/lib/types/types";
 import { useRouter } from "next/navigation"
 
 const savedAcctInfoTitle = 'Saved Account Info';

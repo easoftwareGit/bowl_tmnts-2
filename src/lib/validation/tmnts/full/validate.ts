@@ -1,4 +1,4 @@
-import {
+import type {
   brktEntryType,
   brktSeedType,
   brktType,
@@ -29,22 +29,27 @@ import {
   validPotsType,
   validSquadsType,
 } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId, maxMoney } from "@/lib/validation/validation";
-import { validateTmnt } from "../../../../lib/validation/tmnts/valildate";
-import { validateEvents } from "../../../../lib/validation/events/validate";
-import { validateLanes } from "../../../../lib/validation/lanes/validate";
-import { validateOneBrkts } from "../../../../lib/validation/oneBrkts/valildate";
-import { validatePlayers } from "../../../../lib/validation/players/validate";
-import { validatePots } from "../../../../lib/validation/pots/validate";
-import { validatePotEntries } from "../../../../lib/validation/potEntries/validate";
-import { validateSquads } from "../../../../lib/validation/squads/validate";
-import { validateBrkts } from "../../../../lib/validation/brkts/validate";
-import { validateBrktEntries } from "../../../../lib/validation/brktEntries/validate";
-import { validateBrktSeeds } from "../../../../lib/validation/brktSeeds/validate";
-import { validateDivs } from "../../../../lib/validation/divs/validate";
-import { validateDivEntries } from "../../../../lib/validation/divEntries/validate";
-import { validateElims } from "../../../../lib/validation/elims/validate";
-import { validateElimEntries } from "../../../../lib/validation/elimEntries/validate";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
+import { sanitizeTmnt, validateTmnt } from "../valildate";
+import { sanitizeEvent, validateEvents } from "../../events/validate";
+import { sanitizeLane, validateLanes } from "../../lanes/validate";
+import { sanitizeOneBrkt, validateOneBrkts } from "../../oneBrkts/valildate";
+import { sanitizePlayer, validatePlayers } from "../../players/validate";
+import { sanitizePot, validatePots } from "../../pots/validate";
+import { sanitizePotEntry, validatePotEntries } from "../../potEntries/validate";
+import { sanitizeSquad, validateSquads } from "../../squads/validate";
+import { sanitizeBrkt, validateBrkts } from "../../brkts/validate";
+import { sanitizeBrktEntry, validateBrktEntries } from "../../brktEntries/validate";
+import { sanitizeBrktSeed, validateBrktSeeds } from "../../brktSeeds/validate";
+import { sanitizeDiv, validateDivs } from "../../divs/validate";
+import { sanitizeDivEntry, validateDivEntries } from "../../divEntries/validate";
+import { sanitizeElim, validateElims } from "../../elims/validate";
+import { sanitizeElimEntry, validateElimEntries } from "../../elimEntries/validate";
+import { sanitizeFullStage, validateFullStage } from "../../stages/validate";
+import { getBlankTmntFullData } from "@/app/dataEntry/tmntForm/tmntTools";
+import { cloneDeep } from "lodash";
+
 
 const noError: tmntFullDataErrType = {
   errorCode: ErrorCode.NONE,
@@ -231,7 +236,9 @@ const getBrktEntriesError = (
   if (brktEntries.length === 0) return brktEntriesErr;
 
   // remove any brktEntries with 0 num_brackets
-  brktEntries = brktEntries.filter((brktEntry) => brktEntry.num_brackets > 0);
+  brktEntries = brktEntries.filter((brktEntry) =>
+    (brktEntry.num_brackets !== 0 && brktEntry.num_brackets != null)
+  );
   // if no brktEntries left, then no error
   if (brktEntries.length === 0) {
     tmntFullData.brktEntries = [];
@@ -387,7 +394,7 @@ const getBrktSeedsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
       return brktSeedsErr;
     }
     const player = players.find((p) => p.id === brktSeed.player_id);
-    if (!player) {
+    if (!player) {      
       brktSeedsErr.errorTable = "brktSeeds";
       brktSeedsErr.errorCode = ErrorCode.MISSING_DATA;
       brktSeedsErr.errorIndex = i;
@@ -1359,6 +1366,61 @@ const getSquadsError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
   return squadsErr;
 };
 
+const getStageError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
+  const stage = tmntFullData.stage;
+  if (stage === null || typeof stage !== "object") {
+    return {
+      errorCode: ErrorCode.MISSING_DATA,
+      errorTable: "stage",
+      errorIndex: 0,
+      message: "no stage data",
+    };
+  }
+  let stageError = validateFullStage(stage);
+  if (stageError !== ErrorCode.NONE) {
+    return {
+      errorCode: stageError,
+      errorTable: "stage",
+      errorIndex: 0,
+      message: (stageError === ErrorCode.MISSING_DATA) ? "no stage data" : "invalid stage data",
+    };
+  }
+  return noError;
+}
+
+/**
+ * sanitize full tmnt
+ * 
+ * @param {tmntFullType} tmntFullData - tmnt full data to sanitize
+ * @returns {tmntFullType} - sanitized tmnt full data 
+ */
+export const sanitizeFullTmnt = (tmntFullData: tmntFullType): tmntFullType => {
+
+  const sanitizedFullTmnt = cloneDeep({ ...getBlankTmntFullData(false) }); // no id's, no foreign keys
+  sanitizedFullTmnt.tmnt = sanitizeTmnt(tmntFullData.tmnt);
+
+  sanitizedFullTmnt.events = tmntFullData.events.map(sanitizeEvent);
+  sanitizedFullTmnt.divs = tmntFullData.divs.map(sanitizeDiv);
+  sanitizedFullTmnt.squads = tmntFullData.squads.map(sanitizeSquad);
+  sanitizedFullTmnt.stage = sanitizeFullStage(tmntFullData.stage);
+  sanitizedFullTmnt.lanes = tmntFullData.lanes.map(sanitizeLane);
+
+  sanitizedFullTmnt.pots = tmntFullData.pots.map(sanitizePot);
+  sanitizedFullTmnt.brkts = tmntFullData.brkts.map(sanitizeBrkt);
+  sanitizedFullTmnt.elims = tmntFullData.elims.map(sanitizeElim);
+
+  sanitizedFullTmnt.players = tmntFullData.players.map(sanitizePlayer);
+  sanitizedFullTmnt.divEntries = tmntFullData.divEntries.map(sanitizeDivEntry);
+  sanitizedFullTmnt.potEntries = tmntFullData.potEntries.map(sanitizePotEntry);
+
+  sanitizedFullTmnt.brktEntries = tmntFullData.brktEntries.map(sanitizeBrktEntry);
+  sanitizedFullTmnt.oneBrkts = tmntFullData.oneBrkts.map(sanitizeOneBrkt);
+  sanitizedFullTmnt.brktSeeds = tmntFullData.brktSeeds.map(sanitizeBrktSeed);
+
+  sanitizedFullTmnt.elimEntries = tmntFullData.elimEntries.map(sanitizeElimEntry);
+  return sanitizedFullTmnt;
+}
+
 /**
  * validates full tmnt
  *
@@ -1405,6 +1467,10 @@ export const validateFullTmnt = (
 
   // validate squads
   fullTmntErr = getSquadsError(tmntFullData);
+  if (fullTmntErr.errorCode !== ErrorCode.NONE) return fullTmntErr;
+
+  // validate stage
+  fullTmntErr = getStageError(tmntFullData);
   if (fullTmntErr.errorCode !== ErrorCode.NONE) return fullTmntErr;
 
   // validate lanes
@@ -1454,75 +1520,6 @@ export const validateFullTmnt = (
   return fullTmntErr;
 };
 
-// /**
-//  * validates full tmnt entries
-//  *
-//  * @param {tmntFullType} tmntFullData - tmnt full data
-//  * @returns {tmntFullDataErrType} - error information
-//  */
-// export const validateFullTmntEntries = (
-//   tmntFullData: tmntFullType
-// ): tmntFullDataErrType => {
-//   let fullTmntEntriesErr: tmntFullDataErrType = {
-//     errorCode: ErrorCode.NONE,
-//     errorTable: "",
-//     errorIndex: 0,
-//     message: "",
-//   };
-
-//   if (tmntFullData == null || typeof tmntFullData !== "object") {
-//     fullTmntEntriesErr.errorCode = ErrorCode.MISSING_DATA;
-//     fullTmntEntriesErr.errorTable = "tmntFullData";
-//     fullTmntEntriesErr.message = basicErrMsg(
-//       fullTmntEntriesErr.errorCode,
-//       fullTmntEntriesErr.errorTable
-//     );
-//     return fullTmntEntriesErr;
-//   }
-
-//   // validate base tmnt
-//   fullTmntEntriesErr = validateFullTmnt(tmntFullData);
-//   if (fullTmntEntriesErr.errorCode !== ErrorCode.NONE)
-//     return fullTmntEntriesErr;
-
-//   // validate divEntries
-//   fullTmntEntriesErr = getDivEntriesError(tmntFullData);
-//   if (fullTmntEntriesErr.errorCode !== ErrorCode.NONE)
-//     return fullTmntEntriesErr;
-
-//   // validate brktEntries (includes brktRefunds)
-//   fullTmntEntriesErr = getBrktEntriesError(tmntFullData);
-//   if (fullTmntEntriesErr.errorCode !== ErrorCode.NONE)
-//     return fullTmntEntriesErr;
-
-//   // validate oneBrkts
-//   fullTmntEntriesErr = getOneBrktsError(tmntFullData);
-//   if (fullTmntEntriesErr.errorCode !== ErrorCode.NONE)
-//     return fullTmntEntriesErr;
-
-//   // validate brktSeeds
-//   fullTmntEntriesErr = getBrktSeedsError(tmntFullData);
-//   if (fullTmntEntriesErr.errorCode !== ErrorCode.NONE)
-//     return fullTmntEntriesErr;
-
-//   // validate elimEntries
-//   fullTmntEntriesErr = getElimEntriesError(tmntFullData);
-//   if (fullTmntEntriesErr.errorCode !== ErrorCode.NONE)
-//     return fullTmntEntriesErr;
-
-//   // validate potEntries
-//   fullTmntEntriesErr = getPotEntriesError(tmntFullData);
-//   if (fullTmntEntriesErr.errorCode !== ErrorCode.NONE)
-//     return fullTmntEntriesErr;
-
-//   // validate players
-//   fullTmntEntriesErr = getPlayersError(tmntFullData);
-//   if (fullTmntEntriesErr.errorCode !== ErrorCode.NONE)
-//     return fullTmntEntriesErr;
-
-//   return fullTmntEntriesErr;
-// };
-
 export const exportedForTesting = {
   basicErrMsg,
   advancedErrMsg,
@@ -1540,4 +1537,5 @@ export const exportedForTesting = {
   getPotsError,
   getPotEntriesError,
   getSquadsError,
+  getStageError,
 };

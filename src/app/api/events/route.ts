@@ -1,8 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { validateEvent, sanitizeEvent, allEventMoneyValid } from "@/lib/validation/events/validate";
-import { ErrorCode } from "@/lib/validation/validation";
-import { eventDataType, eventType } from "@/lib/types/types";
+import { ErrorCode } from "@/lib/enums/enums";
+import type { eventType } from "@/lib/types/types";
 import { initEvent } from "@/lib/db/initVals";
 import { getErrorStatus } from "../errCodes";
 import { eventDataForPrisma } from "./dataForPrisma";

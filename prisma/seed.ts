@@ -492,16 +492,16 @@ async function tmntUpsert() {
         user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
         tmnt_name: "New Years Eve 2025",
         bowl_id: "bwl_561540bd64974da9abdd97765fdb3659",
-        start_date: startOfDayFromString("2025-12-31") as Date,
-        end_date: startOfDayFromString("2025-12-31") as Date,
+        start_date: startOfDayFromString("2026-12-31") as Date,
+        end_date: startOfDayFromString("2026-12-31") as Date,
       },
       create: {
         id: "tmt_ce35f0c119aa49fd9b89aa86cb980a6a",
         user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
         tmnt_name: "New Years Eve 2025",
         bowl_id: "bwl_561540bd64974da9abdd97765fdb3659",
-        start_date: startOfDayFromString("2025-12-31") as Date,
-        end_date: startOfDayFromString("2025-12-31") as Date,
+        start_date: startOfDayFromString("2026-12-31") as Date,
+        end_date: startOfDayFromString("2026-12-31") as Date,
       },
     });
     // tmnt to delete
@@ -525,8 +525,8 @@ async function tmntUpsert() {
         end_date: startOfDayFromString("2026-08-19") as Date,
       },
     });
-    console.log("Upserted tmnts:", 14);
-    return 14;
+    console.log("Upserted tmnts:", 13);
+    return 13;
   } catch (error) {
     console.log(error);
     return -1;

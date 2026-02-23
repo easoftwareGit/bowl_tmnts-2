@@ -1,39 +1,9 @@
-import { BracketList } from "@/components/brackets/bracketListClass";
-import { ErrorCode } from "../validation/validation"
+import type { BracketList } from "@/components/brackets/bracketListClass";
 import type { SquadStage } from "@prisma/client";
+import { ErrorCode, tmntFormParent } from "@/lib/enums/enums";
+import { idTypesArray } from "../validation/validation";
 
 export type roleTypes = "ADMIN" | "DIRECTOR" | "USER"
-
-export enum tmntFormParent {  
-  NEW,
-  EDIT,
-  RUN,  
-}
-
-// usr - user
-// bwl - bowl
-// tmt - tournament
-// evt - event
-// div - division
-// sqd - squad
-// stg - stage
-// lan - lane  
-// pot - pot 
-// brk - bracket
-// elm - eliminator
-// ply - player
-// den - division entry
-// pen - pot entry
-// ben - bracket entry
-// een - eliminator entry
-// gam - game
-// obk - one individual bracket
-// bsd - bracket seed
-
-export const idTypesArray = [
-  'usr', 'bwl', 'tmt', 'evt', 'div', 'sqd', 'stg', 'lan', 'pot', 'brk',
-  'elm', 'ply', 'bye', 'den', 'pen', 'ben', 'een', 'gam', 'obk', 'bsd'
-] as const;
 
 export type idTypes = typeof idTypesArray[number];
 
@@ -222,10 +192,10 @@ export type fullStageType = {
   id: string,
   squad_id: string,
   stage: SquadStage,
-  stage_set_at: Date
-  scores_started_at: Date | null
+  stage_set_at: string,
+  scores_started_at: string | null
   stage_override_enabled: boolean,
-  stage_override_at: Date | null,
+  stage_override_at: string | null,
   stage_override_reason: string
 }
 
@@ -240,19 +210,32 @@ export type fullStageDataType = {
   stage_override_reason: string,
 }
 
+export type prismaFullStageType = {
+  id: string,
+  squad_id: string,
+  stage: SquadStage,
+  stage_set_at: string,
+  scores_started_at: string | null
+  stage_override_enabled: boolean,
+  stage_override_at: string | null,
+  stage_override_reason: string,
+  createdAt: string,
+  updatedAt: string
+}
+
 export type justStageType = {
   id: string,
   squad_id: string,
   stage: SquadStage,
-  stage_set_at: Date,
-  scores_started_at: Date | null
+  stage_set_at: string,
+  scores_started_at: string | null
 }
 
 export type justStageOverrideType = {
   id: string,
   squad_id: string,
   stage_override_enabled: boolean,
-  stage_override_at: Date | null,
+  stage_override_at: string | null,
   stage_override_reason: string
 }
 
@@ -647,6 +630,7 @@ export type validElimEntriesType = {
   elimEntries: elimEntryType[],
   errorCode: ErrorCode
 }
+
 export type gameType = {
   id: string,
   squad_id: string,
@@ -765,6 +749,7 @@ export type tmntFullType = {
   potEntries: potEntryType[];
   pots: potType[];
   squads: squadType[];  
+  stage: fullStageType;
 }
 
 export type tmntFullDataForPrismaType = {
@@ -783,6 +768,7 @@ export type tmntFullDataForPrismaType = {
   potEntriesData: potEntryDataType[];
   potsData: potDataType[];
   squadsData: squadDataType[];
+  stageData: fullStageType;
 }
 
 export type tmntFormDataType = {
@@ -798,19 +784,6 @@ export type tmntFullDataErrType = {
   message: string
 }
 
-export enum ioDataError {  
-  NONE,
-  TMNT,
-  EVENTS,
-  DIVS,
-  SQUADS,
-  LANES,
-  POTS,
-  BRKTS,
-  ELIMS,
-  OTHER_ERROR,
-}
-
 export type DateInput = string | number | Date | null | undefined;
 
 export type testDateType = {
@@ -819,4 +792,3 @@ export type testDateType = {
   eod: Date,
   gmt: Date,
 }
-

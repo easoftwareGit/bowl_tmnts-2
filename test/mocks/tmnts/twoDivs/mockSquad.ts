@@ -1,5 +1,5 @@
 import { initSquad } from "@/lib/db/initVals"
-import { squadType } from "@/lib/types/types"
+import type { squadType } from "@/lib/types/types"
 
 export const mockSquad: squadType[] = [
   {

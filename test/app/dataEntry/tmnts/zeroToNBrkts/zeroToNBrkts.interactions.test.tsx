@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ZeroToNBrackets, { validateBrkts } from "@/app/dataEntry/tmntForm/zeroToNBrkts";
-import { brktType, AcdnErrType } from "@/lib/types/types";
+import type { brktType, AcdnErrType } from "@/lib/types/types";
 import { mockTmntFullData, divId1 } from "../../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { minFee, maxMoney, maxGames } from "@/lib/validation/validation";
 import { acdnErrClassName, noAcdnErr, objErrClassName } from "@/app/dataEntry/tmntForm/errors";

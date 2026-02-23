@@ -1,4 +1,4 @@
-import { tmntFullType } from "@/lib/types/types";
+import type { tmntFullType } from "@/lib/types/types";
 import {
   brktsColNameEnd,
   entryFeeColName,
@@ -6,14 +6,14 @@ import {
   feeColNameEnd,
   getElimFee,
   getPotFee,
-  isValidFee,
-  playerEntryData,
+  isValidFee,  
 } from "./createColumns";
 import { GridRowModel } from "@mui/x-data-grid";
 import { fullName, getBrktOrElimName, getDivName, getPotShortName } from "@/lib/getName";
 import { maxAverage, maxBrackets, maxMoney } from "@/lib/validation/validation";
 import { BracketList } from "@/components/brackets/bracketListClass";
 import { defaultBrktPlayers } from "@/lib/db/initVals";
+import type { playerEntryRow } from "./populateRows";
 
 export const validPosChars = /^[a-zA-Z1-9]+$/;
 
@@ -30,12 +30,12 @@ export enum CheckType {
 /**
  * gets the name of a player on a row, or lane position or row number
  *
- * @param {typeof playerEntryData[]} rows - array of playerEntryData
+ * @param {playerEntryRow[]} rows - array of playerEntryRows
  * @param {GridRowModel} currRow - current row
  * @returns {string} - name of player, or "player at Lane position" or "player on row"
  */
 export const getRowPlayerName = (
-  rows: (typeof playerEntryData)[],
+  rows: playerEntryRow[],
   currRow: GridRowModel
 ) => {
   let name = fullName(currRow.first_name, currRow.last_name);
@@ -53,14 +53,14 @@ export const getRowPlayerName = (
 /**
  * checks if the average is valid
  *
- * @param {typeof playerEntryData} row - current row of playerEntryData in data grid
+ * @param {playerEntryRow} row - current row of playerEntryRow in data grid
  * @param {string} errPlayer - name of player
  * @param {number} i - row's index
  * @param {CheckType} checkType - type of check (Prelim or Final)
  * @returns {string} - error message if got an error or empty string
  */
 const validAverage = (
-  row: typeof playerEntryData,
+  row: playerEntryRow,
   errPlayer: string,
   i: number,
   checkType: CheckType
@@ -84,7 +84,7 @@ const validAverage = (
 /**
  * checks if the lane is valid
  *
- * @param {typeof playerEntryData} row - current row of playerEntryData in data grid
+ * @param {playerEntryRow} row - current row of playerEntryRow in data grid
  * @param {number} minLane - minimum lane number
  * @param {number} maxLane - maximum lane number
  * @param {string} errPlayer - name of player
@@ -93,7 +93,7 @@ const validAverage = (
  * @returns {string} - error message if got an error or empty string
  */
 const validLane = (
-  row: typeof playerEntryData,
+  row: playerEntryRow,
   minLane: number,
   maxLane: number,
   errPlayer: string,
@@ -109,21 +109,21 @@ const validLane = (
     !Number.isInteger(row.lane) ||
     row.lane < minLane ||
     row.lane > maxLane
-    ? "Invalid Lane for " + errPlayer + " in row " + (i + 1)
-    : "";
+      ? "Invalid Lane for " + errPlayer + " in row " + (i + 1)
+      : "";
 };
 
 /**
  * checks if the position is blank or valid
  *
- * @param {typeof playerEntryData} row - current row of playerEntryData in data grid
+ * @param {playerEntryRow} row - current row of playerEntryRow in data grid
  * @param {string} errPlayer - name of player
  * @param {number} i - row's index
  * @param {CheckType} checkType - type of check (Prelim or Final)
  * @returns {string} - error message if got an error or empty string
  */
 const validPosition = (
-  row: typeof playerEntryData,
+  row: playerEntryRow,
   errPlayer: string,
   i: number,
   checkType: CheckType
@@ -143,7 +143,7 @@ const validPosition = (
 /**
  * gets an error message if a player's fee(s) for a division(s) is/are invalid
  *
- * @param {typeof playerEntryData} row - current row
+ * @param {playerEntryRow} row - current row
  * @param {tmntFullType} tmntData - current tournament data
  * @param {string} errPlayer - name of player
  * @param {number} i - row's index
@@ -151,7 +151,7 @@ const validPosition = (
  * @returns - error message if got an error or empty string
  */
 const validDivs = (
-  row: typeof playerEntryData,
+  row: playerEntryRow,
   tmntData: tmntFullType,
   errPlayer: string,
   i: number,
@@ -161,19 +161,18 @@ const validDivs = (
   let gotDiv = false;
   for (const div of tmntData.divs) {
     const feeColName = entryFeeColName(div.id);
-    if (
-      row[feeColName] != null ||
-      (typeof row[feeColName] === "number" && row[feeColName] !== 0)
-    ) {
-      gotDiv = true;
+    let feeNumber = 0; // if null treat as 0
+    if (row[feeColName] != null) {
+      feeNumber = Number(row[feeColName]); // row[feeColName] might be a string
+      if (Number.isNaN(feeNumber)) {
+        feeNumber = -1; // -1 is invalid
+      }
     }
-    let fee = row[feeColName] || 0;
-    if (!isNaN(fee)) {
-      fee = Number(fee);
-    }
-    if (typeof fee !== "number" || fee < 0 || fee > maxMoney) {
+    if (feeNumber < 0 || feeNumber > maxMoney) {
       errMsg = "Invalid Fee for " + errPlayer + " in row " + (i + 1);
       break;
+    } else if (feeNumber > 0) {  // must have a fee > 0 to have a division entry
+      gotDiv = true;
     }
   }
   // returns error if found error, or "" if no error and checkType is Prelim
@@ -187,7 +186,7 @@ const validDivs = (
 /**
  * gets an error message if a player's pot fee(s) is/are invalid
  *
- * @param {typeof playerEntryData} row - current row
+ * @param {playerEntryRow} row - current row
  * @param {tmntFullType} tmntData - current tournament data
  * @param {string[]} playerDivIds - player's division ids
  * @param {string} errPlayer - name of player
@@ -195,7 +194,7 @@ const validDivs = (
  * @returns - error message if got an error or empty string
  */
 const validPots = (
-  row: typeof playerEntryData,
+  row: playerEntryRow,
   tmntData: tmntFullType,
   playerDivIds: string[],
   errPlayer: string,
@@ -226,7 +225,7 @@ const validPots = (
 /**
  * gets an error message if a player's bracket(s) is/are invalid
  *
- * @param {typeof playerEntryData} row - current row
+ * @param {playerEntryRow} row - current row
  * @param {tmntFullType} tmntData - current tournament data
  * @param {string[]} playerDivIds - player's division ids
  * @param {string} errPlayer - name of player
@@ -234,7 +233,7 @@ const validPots = (
  * @returns - error message if got an error or empty string
  */
 const validBrkts = (
-  row: typeof playerEntryData,
+  row: playerEntryRow,
   tmntData: tmntFullType,
   playerDivIds: string[],
   errPlayer: string,
@@ -277,7 +276,7 @@ const validBrkts = (
 /**
  * gets an error message if a player's elim(s) fee(s) is/are invalid
  *
- * @param {typeof playerEntryData} row - current row
+ * @param {playerEntryRow} row - current row
  * @param {tmntFullType} tmntData - current tournament data
  * @param {string[]} playerDivIds - player's division ids
  * @param {string} errPlayer - name of player
@@ -285,7 +284,7 @@ const validBrkts = (
  * @returns - error message if got an error or empty string
  */
 const validElims = (
-  row: typeof playerEntryData,
+  row: playerEntryRow,
   tmntData: tmntFullType,
   playerDivIds: string[],
   errPlayer: string,
@@ -318,13 +317,13 @@ const validElims = (
 /**
  * finds the next error in the rows
  *
- * @param {typeof playerEntryData[]} rows - array of playerEntryData
+ * @param {playerEntryRow[]} rows - array of playerEntryRows
  * @param {tmntFullType} tmntData - current tournament data
  * @param {CheckType} checkType - type of check (Prelim or Final)
  * @returns {errInfoType} - error info object - if no error, id = "", errMsg = ""
  */
 export const findNextError = (
-  rows: (typeof playerEntryData)[],
+  rows: playerEntryRow[],
   tmntData: tmntFullType,
   checkType: CheckType
 ): errInfoType => {
@@ -371,6 +370,7 @@ export const findNextError = (
   let errId = "";
   let errMsg = "";
   const names = new Set<string>();
+  const lanePos = new Set<string>();
   const squadMinLane = tmntData.lanes[0]?.lane_number;
   const squadMaxLane = tmntData.lanes[tmntData.lanes.length - 1]?.lane_number;
 
@@ -386,12 +386,14 @@ export const findNextError = (
       errMsg = "Missing Last Name in row " + (i + 1);
       break;
     }
-    const name = fullName(row.first_name, row.last_name);
-    if (names.has(name)) {
+    // const name = fullName(row.first_name, row.last_name);
+    const nameKey = fullName(row.first_name, row.last_name).trim().toLowerCase();
+    if (names.has(nameKey)) {
+      const name = fullName(row.first_name, row.last_name);
       errMsg = `Duplicate Player Name "${name}" in row ${i + 1}`;
       break;
     }
-    names.add(name);
+    names.add(nameKey);
     const errPlayer = getRowPlayerName(rows, row);
     errMsg = validAverage(row, errPlayer, i, checkType);
     if (errMsg !== "") break;
@@ -406,6 +408,16 @@ export const findNextError = (
     if (errMsg !== "") break;
     errMsg = validPosition(row, errPlayer, i, checkType);
     if (errMsg !== "") break;
+    // only check lane/position when CheckType is FINAL
+    if (checkType === CheckType.FINAL) {
+      const lanePosKey = `${row.lane}-${String(row.position).toUpperCase()}`;
+      if (lanePos.has(lanePosKey)) {      
+        errMsg = `Duplicate Lane/Position ${lanePosKey} in row ${i + 1}`
+        break;
+      }
+      lanePos.add(lanePosKey);      
+    }
+    if (errMsg !== "") break;
     errMsg = validDivs(row, tmntData, errPlayer, i, checkType);
     if (errMsg !== "") break;
 
@@ -413,12 +425,13 @@ export const findNextError = (
     const playerDivIds: string[] = [];
     for (const div of tmntData.divs) {
       const feeColName = entryFeeColName(div.id);
-      if (
-        (row[feeColName] != null ||
-          (typeof row[feeColName] === "number" && row[feeColName] !== 0)) &&
-        !playerDivIds.includes(div.id)
-      ) {
-        playerDivIds.push(div.id);
+      if (row[feeColName] != null) { 
+        const feeNumber = Number(row[feeColName]); // row[feeColName] might be a string
+        if (!Number.isNaN(feeNumber) && feeNumber !== 0) { 
+          if (!playerDivIds.includes(div.id)) {
+            playerDivIds.push(div.id);  
+          } 
+        }
       }
     }
 

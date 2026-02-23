@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { initPlayer } from "@/lib/db/initVals";
-import { playerType } from "@/lib/types/types";
+import type { playerType } from "@/lib/types/types";
 import { sanitizePlayer, validatePlayer, validPlayerId } from "../../../../../lib/validation/players/validate";
 import { getErrorStatus } from "@/app/api/errCodes";
 

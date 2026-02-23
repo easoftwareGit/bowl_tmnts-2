@@ -1,7 +1,9 @@
 import { validMoney } from "@/lib/currency/validate";
 import { blankDivEntry } from "@/lib/db/initVals";
-import { divEntryType, validDivEntriesType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId, maxMoney } from "@/lib/validation/validation";
+import type { divEntryType, validDivEntriesType } from "@/lib/types/types";
+import { isValidBtDbId, maxMoney } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
+import { sanitizeCurrency } from "../sanitize";
 
 /**
  * checks if divEntry object has missing data - DOES NOT SANITIZE OR VALIDATE
@@ -68,6 +70,23 @@ const validDivEntryData = (divEntry: divEntryType): ErrorCode => {
 }
 
 /**
+ * sanitizes a div entry money string
+ *   "" is valid, and sanitized to "0"
+ *   all 0's is ok, return "0"
+ *   sanitizeCurrency removes trailing zeros
+ *
+ * @param moneyStr - money string to sanitize
+ * @returns {string} - sanitized money string
+ */
+const sanitizedDivEntryMoney = (moneyStr: string): string => {
+  if (moneyStr === null
+    || moneyStr === undefined
+    || typeof moneyStr !== "string") return "";  
+  if (moneyStr === "" || moneyStr.replace(/^0+/, '') === "") return "0";
+  return sanitizeCurrency(moneyStr);
+}
+
+/**
  * sanitizes divEntry
  * 
  * @param {divEntryType} divEntry - divEntry to sanitize
@@ -90,9 +109,7 @@ export const sanitizeDivEntry = (divEntry: divEntryType): divEntryType => {
   if (isValidBtDbId(divEntry.player_id, "ply")) {
     sanitziedDivEntry.player_id = divEntry.player_id;
   }
-  if (validMoney(divEntry.fee, 0, maxMoney)) {
-    sanitziedDivEntry.fee = divEntry.fee;
-  }
+  sanitziedDivEntry.fee = sanitizedDivEntryMoney(divEntry.fee);  
   return sanitziedDivEntry;
 }
 

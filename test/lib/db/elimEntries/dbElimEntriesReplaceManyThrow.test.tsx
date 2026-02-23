@@ -1,4 +1,4 @@
-import { elimEntryType } from "@/lib/types/types";
+import type { elimEntryType } from "@/lib/types/types";
 import { initElimEntry } from "@/lib/db/initVals";
 
 const squadId = 'sqd_7116ce5f80164830830a7157eb093396';

@@ -1,13 +1,16 @@
-import { playerEntryData } from "@/app/dataEntry/playersForm/createColumns";
 import { Bracket } from "@/components/brackets/bracketClass"
 import {
   BracketList,
   initBrktCountsType,
-  playerUsedType, 
-  matchTestCodes
 } from "@/components/brackets/bracketListClass"
 import { maxBrackets } from "@/lib/validation/validation";
+import type { playerEntryRow } from "@/app/dataEntry/playersForm/populateRows";
 import { cloneDeep } from "lodash";
+import { playerType } from "@/lib/types/types";
+import { initPlayer } from "@/lib/db/initVals";
+import { btDbUuid } from "@/lib/uuid";
+import { createByePlayer } from "../../../../src/components/brackets/byePlayer";
+import { squadId1 } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 
 describe('BracketList', () => { 
 
@@ -49,7 +52,7 @@ describe('BracketList', () => {
 
     it('should initialize with an empty brackets array when constructed', () => {
       expect(testBracketList.brackets).toHaveLength(0);
-    })
+    });
     it('brktCounts should return empty values when constructed', () => {
       const result: initBrktCountsType = testBracketList.brktCounts;
       expect(result.forFullValues).toHaveLength(0);
@@ -66,6 +69,12 @@ describe('BracketList', () => {
     it('should return the correct # of players per bracket', () => {
       const result = testBracketList.playersPerBrkt;
       expect(result).toBe(8);
+    })
+    it('should return the passed in byePlayer', () => { 
+      const byePlayer = createByePlayer(squadId1);
+      const byePlayerBrkt = new BracketList("test", 2, 3, byePlayer);
+      expect(byePlayerBrkt.byePlayer.id).toBe(byePlayer.id);
+      expect(byePlayerBrkt.byePlayer.squad_id).toBe(squadId1);
     })
   })
 
@@ -753,7 +762,7 @@ describe('BracketList', () => {
 
     describe('randomize - createOppoMap', () => { 
 
-      // const createNeededMapCount = (brktEntries: (typeof playerEntryData)[]): Map<string, number> => {
+      // const createNeededMapCount = (brktEntries: playerEntryRow[]): Map<string, number> => {
       //   const neededCountMap = new Map<string, number>();
       //   for (let i = 0; i < brktEntries.length; i++) {
       //     neededCountMap.set(brktEntries[i].player_id, brktEntries[i]['test_brkts']);
@@ -3617,6 +3626,7 @@ describe('BracketList', () => {
       testBracketList.calcTotalBrkts(playerData);
       expect(testBracketList.fullCount).toBe(7);
       expect(testBracketList.oneByeCount).toBe(0);
+      expect(testBracketList.canRandomize()).toBe(true);
     })
     it('should return the correct number of brackets 7 Players (0 Full, 4 OneBye)', () => {
       const testBracketList = new BracketList('test', 2, 3);
@@ -3632,6 +3642,7 @@ describe('BracketList', () => {
       testBracketList.calcTotalBrkts(playerData);
       expect(testBracketList.fullCount).toBe(0);
       expect(testBracketList.oneByeCount).toBe(4);
+      expect(testBracketList.canRandomize()).toBe(true);
     })
     it('should return the correct number of brackets 8 players (4 Full, 2 OneBye)', () => {
       const testBracketList = new BracketList('test', 2, 3);
@@ -3643,11 +3654,12 @@ describe('BracketList', () => {
         { player_id: 'Ed', test_brkts: 6, test_timeStamp: 500 },
         { player_id: 'Fred', test_brkts: 4, test_timeStamp: 600 },
         { player_id: 'Greg', test_brkts: 6, test_timeStamp: 700 },
-        { player_id: 'Hal', test_brkts: 6, test_timeStamp: 800 },
+        { player_id: 'Hal', test_brkts: 6, test_timeStamp: 800 },        
       ];
       testBracketList.calcTotalBrkts(playerData);
       expect(testBracketList.fullCount).toBe(4);
       expect(testBracketList.oneByeCount).toBe(2);
+      expect(testBracketList.canRandomize()).toBe(true);
     })    
     it('should return corect # of full and one bye brackets - 10 full brackets', () => {
       const testBracketList = new BracketList('test', 2, 3);
@@ -3667,6 +3679,7 @@ describe('BracketList', () => {
       testBracketList.calcTotalBrkts(playerData);
       expect(testBracketList.fullCount).toBe(10);
       expect(testBracketList.oneByeCount).toBe(0);
+      expect(testBracketList.canRandomize()).toBe(true);
     });
     it('should return the correct number of brackets (9 Full, 4 OneBye)', () => {
       const testBracketList = new BracketList('test', 2, 3);
@@ -3685,6 +3698,7 @@ describe('BracketList', () => {
       testBracketList.calcTotalBrkts(playerData);
       expect(testBracketList.fullCount).toBe(9);
       expect(testBracketList.oneByeCount).toBe(4);
+      expect(testBracketList.canRandomize()).toBe(true);
     })
     it('edge case high, should return the correct number of brackets Al and Bob 50 Brackets (15 Full, 6 OneBye)', () => {
       const testBracketList = new BracketList('test', 2, 3);
@@ -3711,6 +3725,7 @@ describe('BracketList', () => {
       testBracketList.calcTotalBrkts(playerData);
       expect(testBracketList.fullCount).toBe(15);
       expect(testBracketList.oneByeCount).toBe(6);
+      expect(testBracketList.canRandomize()).toBe(true);
     })
     it('edge case high, Al 50 brackets (14 Full, 5 OneBye)', () => {
       const testBracketList = new BracketList('test', 2, 3);
@@ -3737,6 +3752,7 @@ describe('BracketList', () => {
       testBracketList.calcTotalBrkts(playerData);
       expect(testBracketList.fullCount).toBe(14);
       expect(testBracketList.oneByeCount).toBe(5);
+      expect(testBracketList.canRandomize()).toBe(true);
     })
     it('edge case low, should return the correct number of brackets 18Px1B (0 Full, 2 OneBye)', () => {
       const testBracketList = new BracketList('test', 2, 3);
@@ -3763,6 +3779,7 @@ describe('BracketList', () => {
       testBracketList.calcTotalBrkts(playerData);      
       expect(testBracketList.fullCount).toBe(2);
       expect(testBracketList.oneByeCount).toBe(0);
+      expect(testBracketList.canRandomize()).toBe(false);
     })    
     it('edge case low, should return the correct number of brackets 10Px4B (5 Full, 0 OneBye)', () => {
       const testBracketList = new BracketList('test', 2, 3);
@@ -3781,6 +3798,7 @@ describe('BracketList', () => {
       testBracketList.calcTotalBrkts(playerData);      
       expect(testBracketList.fullCount).toBe(5);
       expect(testBracketList.oneByeCount).toBe(0);
+      expect(testBracketList.canRandomize()).toBe(true);
     })    
     it('edge case low, should return the correct number of brackets 10Px2B (2 Full, 0 OneBye)', () => {
       const testBracketList = new BracketList('test', 2, 3);
@@ -3798,9 +3816,10 @@ describe('BracketList', () => {
       ];      
       testBracketList.calcTotalBrkts(playerData);      
       expect(testBracketList.fullCount).toBe(2);
-      expect(testBracketList.oneByeCount).toBe(1);
+      expect(testBracketList.oneByeCount).toBe(0);
+      expect(testBracketList.canRandomize()).toBe(false);
     })
-    it('edge case low, should return the correct number of brackets 20Px1B (1 Full, 0 OneBye)', () => {
+    it('edge case low, should return the correct number of brackets 20Px1B (2 Full, 0 OneBye)', () => {
       const testBracketList = new BracketList('test', 2, 3);
       const playerData = [
         { player_id: 'Al', test_brkts: 1, test_timeStamp: 100 },
@@ -3827,6 +3846,7 @@ describe('BracketList', () => {
       testBracketList.calcTotalBrkts(playerData);      
       expect(testBracketList.fullCount).toBe(2);
       expect(testBracketList.oneByeCount).toBe(0);
+      expect(testBracketList.canRandomize()).toBe(false);
     })
     it('edge case low, should return the correct number of brackets 21Px1B (1 Full, 0 OneBye)', () => {
       const testBracketList = new BracketList('test', 2, 3);
@@ -3856,8 +3876,9 @@ describe('BracketList', () => {
       testBracketList.calcTotalBrkts(playerData);      
       expect(testBracketList.fullCount).toBe(0);
       expect(testBracketList.oneByeCount).toBe(3);
+      expect(testBracketList.canRandomize()).toBe(true);
     })
-    it('edge case high and low, should return the correct number of brackets 1Px50B 17Px1B (1 Full, 0 OneBye)', () => {
+    it('edge case high and low, should return the correct number of brackets 1Px50B 17Px1B (2 Full, 0 OneBye)', () => {
       const testBracketList = new BracketList('test', 2, 3);
       const playerData = [
         { player_id: 'Al', test_brkts: 50, test_timeStamp: 100 },
@@ -3882,6 +3903,7 @@ describe('BracketList', () => {
       testBracketList.calcTotalBrkts(playerData);      
       expect(testBracketList.fullCount).toBe(2);
       expect(testBracketList.oneByeCount).toBe(0);
+      expect(testBracketList.canRandomize()).toBe(false);
     })
     it('edge case low, should return the correct number of brackets 4Px4B (2 Full, 0 OneBye)', () => {
       const testBracketList = new BracketList('test', 2, 3);
@@ -3894,6 +3916,7 @@ describe('BracketList', () => {
       testBracketList.calcTotalBrkts(playerData);      
       expect(testBracketList.fullCount).toBe(0);
       expect(testBracketList.oneByeCount).toBe(0);
+      expect(testBracketList.canRandomize()).toBe(false);
     })
     it('edge case - no full brackets, 7 Players x 10 brkts', () => {
       const testBracketList = new BracketList('test', 2, 3);
@@ -3909,6 +3932,7 @@ describe('BracketList', () => {
       testBracketList.calcTotalBrkts(playerData);
       expect(testBracketList.fullCount).toBe(0);
       expect(testBracketList.oneByeCount).toBe(10);
+      expect(testBracketList.canRandomize()).toBe(true);
     })
     it('edge case low - no full brackets, 7 players with random brackets, 5 is min', () => {
       const testBracketList = new BracketList('test', 2, 3);
@@ -3924,13 +3948,15 @@ describe('BracketList', () => {
       testBracketList.calcTotalBrkts(playerData);
       expect(testBracketList.fullCount).toBe(0);
       expect(testBracketList.oneByeCount).toBe(5);
+      expect(testBracketList.canRandomize()).toBe(true);
     })    
     it('should return 0 brackets when no player entries', () => {
       const testBracketList = new BracketList('test', 2, 3);
-      const playerData: typeof playerEntryData[] = [];
+      const playerData: playerEntryRow[] = [];
       testBracketList.calcTotalBrkts(playerData);      
       expect(testBracketList.fullCount).toBe(0);
       expect(testBracketList.oneByeCount).toBe(0);
+      expect(testBracketList.canRandomize()).toBe(false);
     })
     it('edge case invalid data - no player id, should return 0 brackets', () => {
       const testBracketList = new BracketList('test', 2, 3);
@@ -3949,6 +3975,7 @@ describe('BracketList', () => {
       testBracketList.calcTotalBrkts(playerData);      
       expect(testBracketList.fullCount).toBe(0);
       expect(testBracketList.oneByeCount).toBe(0);
+      expect(testBracketList.canRandomize()).toBe(false);
     })
     it('edge case invalid data - number of brackets too high, should return 0 brackets', () => {
       const testBracketList = new BracketList('test', 2, 3);
@@ -3967,6 +3994,7 @@ describe('BracketList', () => {
       testBracketList.calcTotalBrkts(playerData);      
       expect(testBracketList.fullCount).toBe(0);
       expect(testBracketList.oneByeCount).toBe(0);
+      expect(testBracketList.canRandomize()).toBe(false);
     })
     it('edge case invalid data - number of brackets non-integer, should return 0 brackets', () => {
       const testBracketList = new BracketList('test', 2, 3);
@@ -3985,6 +4013,7 @@ describe('BracketList', () => {
       testBracketList.calcTotalBrkts(playerData);      
       expect(testBracketList.fullCount).toBe(0);
       expect(testBracketList.oneByeCount).toBe(0);
+      expect(testBracketList.canRandomize()).toBe(false);
     })
     it('edge case invalid data - no time stamp, should return 0 brackets', () => {
       const testBracketList = new BracketList('test', 2, 3);
@@ -4002,7 +4031,8 @@ describe('BracketList', () => {
       ];      
       testBracketList.calcTotalBrkts(playerData);      
       expect(testBracketList.fullCount).toBe(0);
-      expect(testBracketList.oneByeCount).toBe(0);
+      expect(testBracketList.oneByeCount).toBe(0);  
+      expect(testBracketList.canRandomize()).toBe(false);
     })
   })
 
@@ -4033,6 +4063,7 @@ describe('BracketList', () => {
   
       testBracketList.calcTotalBrkts(testData);
       expect(testBracketList.canRandomize()).toBe(true);
+      expect(testBracketList.errorMessage).toBe('');
     })
     it('should return false when when not enough players', () => {
       const testBracketList = new BracketList('test', 2, 3);
@@ -4051,7 +4082,7 @@ describe('BracketList', () => {
     })
     it('should return false when when no players', () => {
       const testBracketList = new BracketList('test', 2, 3);
-      const playerData: typeof playerEntryData[] = [];
+      const playerData: playerEntryRow[] = [];
       testBracketList.calcTotalBrkts(playerData);      
       expect(testBracketList.canRandomize()).toBe(false);
       expect(testBracketList.errorMessage).toBe('Not enough players for brackets');
@@ -4078,6 +4109,7 @@ describe('BracketList', () => {
       ];      
       testBracketList.calcTotalBrkts(playerData);            
       expect(testBracketList.canRandomize()).toBe(true);
+      expect(testBracketList.errorMessage).toBe('');
     })
     it('edge case low, should return false for 20Px1B - not all players in a bracket', () => {
       const testBracketList = new BracketList('test', 2, 3);
@@ -4105,7 +4137,87 @@ describe('BracketList', () => {
       ]
       testBracketList.calcTotalBrkts(playerData);      
       expect(testBracketList.canRandomize()).toBe(false);
-      expect(testBracketList.errorMessage).toBe("Not all entries assigned to brackets. Adjust entries");
+      expect(testBracketList.errorMessage).toBe("Not all entries can be assigned to brackets. Adjust entries");
+    })
+    it('edge case low, should return false for 10Px2B - not all players in a bracket', () => {
+      const testBracketList = new BracketList('test', 2, 3);
+      const playerData = [
+        { player_id: 'Al', test_brkts: 2, test_timeStamp: 100 },
+        { player_id: 'Bob', test_brkts: 2, test_timeStamp: 200 },
+        { player_id: 'Chad', test_brkts: 2, test_timeStamp: 300 },
+        { player_id: 'Don', test_brkts: 2, test_timeStamp: 400 },
+        { player_id: 'Ed', test_brkts: 2, test_timeStamp: 500 },
+        { player_id: 'Fred', test_brkts: 2, test_timeStamp: 600 },
+        { player_id: 'Greg', test_brkts: 2, test_timeStamp: 700 },
+        { player_id: 'Hal', test_brkts: 2, test_timeStamp: 800 },
+        { player_id: 'Ian', test_brkts: 2, test_timeStamp: 900 },
+        { player_id: 'Jim', test_brkts: 2, test_timeStamp: 1000 },
+      ];      
+      testBracketList.calcTotalBrkts(playerData);      
+      expect(testBracketList.canRandomize()).toBe(false);
+      expect(testBracketList.errorMessage).toBe("Not all entries can be assigned to brackets. Adjust entries");
+    })
+    it('edge case high and low, should return false for 1Px50B 17Px1B - not all players in a bracket', () => {
+      const testBracketList = new BracketList('test', 2, 3);
+      const playerData = [
+        { player_id: 'Al', test_brkts: 50, test_timeStamp: 100 },
+        { player_id: 'Bob', test_brkts: 1, test_timeStamp: 200 },
+        { player_id: 'Chad', test_brkts: 1, test_timeStamp: 300 },
+        { player_id: 'Don', test_brkts: 1, test_timeStamp: 400 },
+        { player_id: 'Ed', test_brkts: 1, test_timeStamp: 500 },
+        { player_id: 'Fred', test_brkts: 1, test_timeStamp: 600 },
+        { player_id: 'Greg', test_brkts: 1, test_timeStamp: 700 },
+        { player_id: 'Hal', test_brkts: 1, test_timeStamp: 800 },
+        { player_id: 'Ian', test_brkts: 1, test_timeStamp: 900 },
+        { player_id: 'Jim', test_brkts: 1, test_timeStamp: 1000 },
+        { player_id: 'Ken', test_brkts: 1, test_timeStamp: 1100 },
+        { player_id: 'Lou', test_brkts: 1, test_timeStamp: 1200 },
+        { player_id: 'Mike', test_brkts: 1, test_timeStamp: 1300 },
+        { player_id: 'Nate', test_brkts: 1, test_timeStamp: 1400 },
+        { player_id: 'Otto', test_brkts: 1, test_timeStamp: 1500 },
+        { player_id: 'Paul', test_brkts: 1, test_timeStamp: 1600 },
+        { player_id: 'Quin', test_brkts: 1, test_timeStamp: 1700 },
+        { player_id: 'Rob', test_brkts: 1, test_timeStamp: 1800 },
+      ]
+      testBracketList.calcTotalBrkts(playerData);      
+      expect(testBracketList.canRandomize()).toBe(false);
+      expect(testBracketList.errorMessage).toBe("Not all entries can be assigned to brackets. Adjust entries");
+    })
+    it('edge case invalid data - no player id, should return false', () => {
+      const testBracketList = new BracketList('test', 2, 3);
+      const playerData = [
+        { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
+        { player_id: '', test_brkts: 10, test_timeStamp: 200 },
+        { player_id: 'Chad', test_brkts: 10, test_timeStamp: 300 },
+        { player_id: 'Don', test_brkts: 10, test_timeStamp: 400 },
+        { player_id: 'Ed', test_brkts: 10, test_timeStamp: 500 },
+        { player_id: 'Fred', test_brkts: 10, test_timeStamp: 600 },
+        { player_id: 'Greg', test_brkts: 10, test_timeStamp: 700 },
+        { player_id: 'Hal', test_brkts: 10, test_timeStamp: 800 },
+        { player_id: 'Ian', test_brkts: 10, test_timeStamp: 900 },
+        { player_id: 'Jim', test_brkts: 10, test_timeStamp: 1000 },
+      ];      
+      testBracketList.calcTotalBrkts(playerData);      
+      expect(testBracketList.canRandomize()).toBe(false);
+      expect(testBracketList.errorMessage).toBe('Invalid bracket entries');
+    })
+    it('edge case invalid data - number of brackets too high, should return 0 brackets', () => {
+      const testBracketList = new BracketList('test', 2, 3);
+      const playerData = [
+        { player_id: 'Al', test_brkts: 10, test_timeStamp: 100 },
+        { player_id: 'Bob', test_brkts: maxBrackets + 1, test_timeStamp: 200 },
+        { player_id: 'Chad', test_brkts: 10, test_timeStamp: 300 },
+        { player_id: 'Don', test_brkts: 10, test_timeStamp: 400 },
+        { player_id: 'Ed', test_brkts: 10, test_timeStamp: 500 },
+        { player_id: 'Fred', test_brkts: 10, test_timeStamp: 600 },
+        { player_id: 'Greg', test_brkts: 10, test_timeStamp: 700 },
+        { player_id: 'Hal', test_brkts: 10, test_timeStamp: 800 },
+        { player_id: 'Ian', test_brkts: 10, test_timeStamp: 900 },
+        { player_id: 'Jim', test_brkts: 10, test_timeStamp: 1000 },
+      ];      
+      testBracketList.calcTotalBrkts(playerData);      
+      expect(testBracketList.canRandomize()).toBe(false);
+      expect(testBracketList.errorMessage).toBe('Invalid bracket entries');
     })
     it('edge case low, should return true for 21Px1B', () => {
       const testBracketList = new BracketList('test', 2, 3);
@@ -4134,6 +4246,7 @@ describe('BracketList', () => {
       ]
       testBracketList.calcTotalBrkts(playerData);      
       expect(testBracketList.canRandomize()).toBe(true);
+      expect(testBracketList.errorMessage).toBe('');
     })
   })
 
@@ -4156,7 +4269,7 @@ describe('BracketList', () => {
 
     const validBracketsForPlayer = (
       brktList: BracketList,
-      playerEntries: (typeof playerEntryData)[],
+      playerEntries: playerEntryRow[],
       playerIndex: number,
       playerOppoMap: Map<string, number>
     ): errorInfoType => {
@@ -4219,7 +4332,7 @@ describe('BracketList', () => {
       return errorInfo
     }
 
-    const createNeededMapCount = (brktEntries: (typeof playerEntryData)[]): Map<string, number> => {
+    const createNeededMapCount = (brktEntries: playerEntryRow[]): Map<string, number> => {
       const neededCountMap = new Map<string, number>();
       for (let i = 0; i < brktEntries.length; i++) {
         neededCountMap.set(brktEntries[i].player_id, brktEntries[i]['test_brkts']);

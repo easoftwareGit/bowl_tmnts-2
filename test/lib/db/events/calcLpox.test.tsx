@@ -1,5 +1,5 @@
 import { calcLpox, calcLpoxValid } from "@/lib/db/events/calcLpox";
-import { eventType } from "@/lib/types/types";
+import type { eventType } from "@/lib/types/types";
 import { IntlConfig } from "@/lib/currency/components/CurrencyInputProps";
 import { getLocaleConfig } from "@/lib/currency/components/utils";
 

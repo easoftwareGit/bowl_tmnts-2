@@ -1,5 +1,5 @@
 import { exportedForTesting, validateBrkts } from "@/app/dataEntry/tmntForm/zeroToNBrkts";
-import { brktType, AcdnErrType, divType } from "@/lib/types/types";
+import type { brktType, AcdnErrType, divType } from "@/lib/types/types";
 import {
   mockTmntFullData,
   divId1,

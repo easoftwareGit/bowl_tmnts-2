@@ -1,4 +1,4 @@
-import { eventDataType, eventType } from "@/lib/types/types"
+import type { eventDataType, eventType } from "@/lib/types/types"
 
 /**
  * Converts event to eventDataType

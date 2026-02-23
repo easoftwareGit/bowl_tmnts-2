@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { initDivs, blankTmnt } from "../../lib/db/initVals";
 import { todayStr } from "@/lib/dateTools";
 import { mockEvents } from "../../../test/mocks/tmnts/singlesAndDoubles/mockEvents";
-import { tmntType, brktType, divType, elimType, potType, squadType, laneType, eventType } from "../../lib/types/types";
+import type { tmntType, brktType, divType, elimType, potType, squadType, laneType, eventType } from "../../lib/types/types";
 import { SampleForm } from "./form";
 import { Form3 } from "./form3";
 import { Form5 } from "./form5";

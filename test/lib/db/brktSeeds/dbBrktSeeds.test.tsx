@@ -24,7 +24,7 @@ import {
 import { replaceManyBrktSeeds } from "@/lib/db/brktSeeds/dbBrktSeedsReplaceMany";
 import { deleteAllOneBrktsForSquad, deleteOneBrkt, postOneBrkt } from "@/lib/db/oneBrkts/dbOneBrkts";
 import { cloneDeep } from "lodash";
-import { brktSeedType } from "@/lib/types/types";
+import type { brktSeedType } from "@/lib/types/types";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database

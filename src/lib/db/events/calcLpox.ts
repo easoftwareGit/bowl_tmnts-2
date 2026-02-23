@@ -1,5 +1,5 @@
 import { formatValue2Dec } from "@/lib/currency/formatValue";
-import { eventType, validTypeStrings } from "@/lib/types/types";
+import type { eventType, validTypeStrings } from "@/lib/types/types";
 import { localConfig } from "@/lib/currency/const";
 
 /**

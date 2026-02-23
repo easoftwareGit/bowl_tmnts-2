@@ -15,7 +15,7 @@ import {
   postManyBrktEntries,
   putBrktEntry,  
 } from "@/lib/db/brktEntries/dbBrktEntries";
-import { brktEntryType } from "@/lib/types/types";
+import type { brktEntryType } from "@/lib/types/types";
 import { initBrktEntry } from "@/lib/db/initVals";
 
 const url = testBaseBrktEntriesApi.startsWith("undefined")

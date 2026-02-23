@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { baseSquadsApi } from "@/lib/db/apiPaths";
 import { testBaseSquadsApi } from "../../../testApi";
-import { squadType } from "@/lib/types/types";
+import type { squadType } from "@/lib/types/types";
 import { initSquad } from "@/lib/db/initVals";
 import {
   deleteAllSquadsForEvent,

@@ -1,7 +1,7 @@
 import axios, { AxiosError } from "axios";
 import { brktSeedsApi } from "@/lib/db/apiPaths";
 import { testBrktSeedsApi } from "../../../testApi";
-import { brktSeedType } from "@/lib/types/types";
+import type { brktSeedType } from "@/lib/types/types";
 import { defaultBrktPlayers, initBrktSeed } from "@/lib/db/initVals";
 import {
   mockBrktSeedsToPost,

@@ -1,8 +1,9 @@
 import axios from "axios";
 import { baseBrktsApi } from "@/lib/db/apiPaths";
 import { testBaseBrktsApi } from "../../../../test/testApi";
-import { brktType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import type { brktType } from "@/lib/types/types";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { blankBrkt } from "../initVals";
 import { validateBrkts } from "@/lib/validation/brkts/validate";
 

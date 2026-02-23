@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode } from "@/lib/validation/validation";
-import { laneType } from "@/lib/types/types";
+import { ErrorCode } from "@/lib/enums/enums";
+import type { laneType } from "@/lib/types/types";
 import { validateLanes } from "../../../../lib/validation/lanes/validate";
 import { getErrorStatus } from "../../errCodes";
 

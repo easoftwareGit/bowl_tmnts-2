@@ -1,9 +1,9 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { initPlayer } from "@/lib/db/initVals";
-import { playerType } from "@/lib/types/types";
+import type { playerType } from "@/lib/types/types";
 import { sanitizePlayer, validatePlayer } from "../../../lib/validation/players/validate";
-import { ErrorCode } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { getErrorStatus } from "../errCodes";
 import { playerDataForPrisma } from "./dataForPrisma";
 

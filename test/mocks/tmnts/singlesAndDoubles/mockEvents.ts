@@ -1,5 +1,5 @@
 import { initEvent } from "@/lib/db/initVals";
-import { eventType } from "@/lib/types/types";
+import type { eventType } from "@/lib/types/types";
 import { Event } from "@prisma/client";
 import { Prisma } from "@prisma/client";
 

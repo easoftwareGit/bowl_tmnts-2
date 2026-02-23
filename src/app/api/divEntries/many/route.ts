@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode } from "@/lib/validation/validation";
-import { divEntryType, divEntryDataType, tmntEntryDivEntryType } from "@/lib/types/types";
+import { ErrorCode } from "@/lib/enums/enums";
+import type { divEntryType, divEntryDataType, tmntEntryDivEntryType } from "@/lib/types/types";
 import { validateDivEntries } from "../../../../lib/validation/divEntries/validate";
 import { getDeleteManySQL, getInsertManySQL, getUpdateManySQL } from "./getSql";
 import { getErrorStatus } from "../../errCodes";

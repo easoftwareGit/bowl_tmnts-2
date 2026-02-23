@@ -1,5 +1,5 @@
 import { Event } from "@prisma/client";
-import { eventType } from "@/lib/types/types";
+import type { eventType } from "@/lib/types/types";
 import { Decimal } from "@prisma/client/runtime/library";
 
 export const mockEvent: eventType[] = [

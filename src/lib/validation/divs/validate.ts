@@ -2,15 +2,14 @@ import {
   isValidBtDbId,
   maxEventLength,
   minHdcpPer,
-  maxHdcpPer,
-  ErrorCode,
+  maxHdcpPer,  
   minHdcpFrom,
   maxHdcpFrom,
   validSortOrder,
 } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { sanitize } from "@/lib/validation/sanitize";
-import { HdcpForTypes, idTypes, validDivsType } from "@/lib/types/types";
-import { divType } from "@/lib/types/types";
+import type { HdcpForTypes, idTypes, validDivsType, divType } from "@/lib/types/types";
 import { blankDiv } from "@/lib/db/initVals";
 import { isNumber } from "@/lib/validation/validation";
 

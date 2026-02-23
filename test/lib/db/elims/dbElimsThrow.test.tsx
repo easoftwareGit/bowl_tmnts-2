@@ -1,7 +1,7 @@
 import axios from "axios";
 import { baseElimsApi } from "@/lib/db/apiPaths";
 import { testBaseElimsApi } from "../../../../test/testApi";
-import { elimType } from "@/lib/types/types";
+import type { elimType } from "@/lib/types/types";
 import { initElim } from "@/lib/db/initVals";
 import { deleteAllElimsForDiv, deleteAllElimsForSquad, deleteAllElimsForTmnt, deleteElim, getAllElimsForSquad, getAllElimsForTmnt, postElim, postManyElims, putElim } from "@/lib/db/elims/dbElims";
 

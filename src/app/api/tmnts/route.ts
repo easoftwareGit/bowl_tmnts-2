@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode } from "@/lib/validation/validation";
-import { tmntDataType, tmntType } from "@/lib/types/types";
+import { ErrorCode } from "@/lib/enums/enums";
+import type { tmntDataType, tmntType } from "@/lib/types/types";
 import { sanitizeTmnt, validateTmnt } from "../../../lib/validation/tmnts/valildate";
 import { initTmnt } from "@/lib/db/initVals";
 import { getErrorStatus } from "../errCodes";

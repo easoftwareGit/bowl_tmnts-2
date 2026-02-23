@@ -1,6 +1,7 @@
 import { IntlConfig } from "@/lib/currency/components/CurrencyInputProps";
 import { startOfToday, addMinutes, isValid, addSeconds, addDays, addMilliseconds, parseISO, parse, format } from "date-fns";
 import { validTime } from "./validation/validation";
+import { DateInput } from "./types/types";
 
 const ic: IntlConfig = {
   // locale: window.navigator.language,
@@ -340,3 +341,65 @@ export const dateStringToTimeStamp = (dateStr: string): number => {
   if (!isValid(date)) return NaN
   return date.getTime()
 }
+
+
+/**
+ * checks if an object is a valid date object
+ *
+ * @param d {unknown} - object to check if a valid date object
+ * @returns {boolean} - true if a valid date object, otherwise false
+ */
+const isValidDateObject = (d: unknown): d is Date =>
+  d instanceof Date && !isNaN(d.getTime());
+
+/**
+ * converts value to a valid date or null
+ *
+ * @param {DateInput} value - value to convert to a valid date or to null
+ * @returns {Date | null} - valid date or null
+ */
+export const toValidDateOrNull = (value: DateInput): Date | null => {
+  if (value == null) return null; // returns null for null or undefined
+
+  if (isValidDateObject(value)) return value;
+
+  // if value is a number, then treat value as milliseconds
+  if (typeof value === "number") {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : d; // Valid? Convert. Invalid? Keep original.
+  }
+
+  // if value is a string, then treat value as ISO string or "1234567890123"
+  if (typeof value === "string") {
+    const trimmed = value.trim(); // remove leading and trailing whitespace
+    if (!trimmed) return null;
+
+    // if a valid ISO numeric string, then convert to Date
+    if (/^\d+$/.test(trimmed)) {
+      const d = new Date(Number(trimmed));
+      return Number.isNaN(d.getTime()) ? null : d;
+    }
+
+    // let it through and let Date.parse() handle it
+    const d = new Date(trimmed);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+
+  // if got here, not a valid date, so return null
+  return null;
+};
+
+/**
+ * converts a date to an ISO string
+ * 
+ * @param {Date | null | undefined} d - date to convert to ISO string
+ * @returns {string | null} - ISO string or null
+ */
+export const toIso = (d: Date | null | undefined): string | null => {
+  if (!d) return null;
+
+  // Invalid Date -> d.getTime() is NaN
+  if (Number.isNaN(d.getTime())) return null;
+
+  return d.toISOString();
+};

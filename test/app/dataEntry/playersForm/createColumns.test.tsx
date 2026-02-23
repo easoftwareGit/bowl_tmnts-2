@@ -33,7 +33,7 @@ import {
   entryNumRefundsColName,
 } from "@/app/dataEntry/playersForm/createColumns";
 import { initBrkt, initDiv, initElim, initPot } from "@/lib/db/initVals";
-import { brktType, divType, elimType, potType } from "@/lib/types/types";
+import type { brktType, divType, elimType, potType } from "@/lib/types/types";
 import { maxAverage, maxBrackets, maxMoney } from "@/lib/validation/validation";
 import {
   GridApi,

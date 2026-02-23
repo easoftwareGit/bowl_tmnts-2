@@ -5,8 +5,8 @@ import {
   validatePots,
 } from "@/lib/validation/pots/validate";
 import { initPot } from "@/lib/db/initVals";
-import { potCategoriesTypes, potType, validPotsType } from "@/lib/types/types";
-import { ErrorCode } from "@/lib/validation/validation";
+import type { potCategoriesTypes, potType, validPotsType } from "@/lib/types/types";
+import { ErrorCode } from "@/lib/enums/enums";
 import { mockPotsToPost } from "../../mocks/tmnts/singlesAndDoubles/mockSquads";
 
 const { gotPotData, validPotType, validPotMoney, validPotFkId, validPotData } = exportedForTesting;

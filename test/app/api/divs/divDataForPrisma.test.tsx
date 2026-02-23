@@ -1,4 +1,4 @@
-import { divType } from "@/lib/types/types";
+import type { divType } from "@/lib/types/types";
 import { mockTmntFullData } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { cloneDeep } from "lodash";
 import { divDataForPrisma } from "@/app/api/divs/dataForPrisma";

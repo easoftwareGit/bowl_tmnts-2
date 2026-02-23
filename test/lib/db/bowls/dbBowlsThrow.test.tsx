@@ -2,7 +2,7 @@ import axios, { AxiosError } from "axios";
 import { baseBowlsApi } from "@/lib/db/apiPaths";
 import { testBaseBowlsApi } from "../../../testApi";
 import { getBowl, getBowls, postBowl, putBowl } from "@/lib/db/bowls/dbBowls";
-import { bowlType } from "@/lib/types/types";
+import type { bowlType } from "@/lib/types/types";
 import { initBowl } from "@/lib/db/initVals";
 
 const url = testBaseBowlsApi.startsWith("undefined")

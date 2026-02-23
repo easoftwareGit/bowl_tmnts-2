@@ -1,4 +1,4 @@
-import { brktType, divType, elimType, potType } from "@/lib/types/types";
+import type { brktType, divType, elimType, potType } from "@/lib/types/types";
 import { maxAverage, maxBrackets, maxMoney } from "@/lib/validation/validation";
 import {
   GridColDef,
@@ -13,6 +13,7 @@ import { validAverage } from "@/lib/validation/players/validate";
 import { sanitize } from "@/lib/validation/sanitize";
 import { validPosChars } from "./rowInfo";
 import { isTouchDevice } from "@/lib/mobileDevices/mobileDevices";
+import type { playerEntryRow } from "./populateRows";
 import styles from './grid.module.css';
 
 export const brktsColNameEnd = "_brkts";
@@ -146,7 +147,7 @@ export const createPlayerEntryColumns = (
 
   const firstNameSettter = (value: string, row: GridRowModel) => { 
     if (value == null) { 
-      value === "";
+      value = "";
     };
     let firstName = sanitize(value)
     return {
@@ -157,7 +158,7 @@ export const createPlayerEntryColumns = (
 
   const lastNameSettter = (value: string, row: GridRowModel) => { 
     if (value == null) { 
-      value === "";
+      value = "";
     };
     let lastName = sanitize(value)
     return {
@@ -184,7 +185,7 @@ export const createPlayerEntryColumns = (
         ...newRow,
         average: aveRowValue,
         [divHdcpName]: hdcp,
-      } as typeof playerEntryData;
+      } as playerEntryRow;
     });
     return newRow;
   };

@@ -12,8 +12,9 @@ import {
   validateEvents,
 } from "@/lib/validation/events/validate";
 import { initEvent } from "@/lib/db/initVals";
-import { eventType, validEventsType } from "@/lib/types/types";
-import { ErrorCode, maxEventLength, maxSortOrder } from "@/lib/validation/validation";
+import type { eventType, validEventsType } from "@/lib/types/types";
+import { maxEventLength, maxSortOrder } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { startOfDayFromString, todayStr } from "@/lib/dateTools";
 import { mockEvents } from "../../mocks/tmnts/singlesAndDoubles/mockEvents";
 

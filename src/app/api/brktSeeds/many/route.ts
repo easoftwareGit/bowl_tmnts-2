@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ErrorCode } from "@/lib/validation/validation";
-import { brktSeedType } from "@/lib/types/types";
+import { ErrorCode } from "@/lib/enums/enums";
+import type { brktSeedType } from "@/lib/types/types";
 import { validateBrktSeeds } from "../../../../lib/validation/brktSeeds/validate";
 import { getErrorStatus } from "../../errCodes";
 

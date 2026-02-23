@@ -1,6 +1,7 @@
 import { validateOneBrkts } from "@/lib/validation/oneBrkts/valildate";
-import { oneBrktType, validOneBrktsType } from "@/lib/types/types";
-import { ErrorCode, isValidBtDbId } from "@/lib/validation/validation";
+import type { oneBrktType, validOneBrktsType } from "@/lib/types/types";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { ErrorCode } from "@/lib/enums/enums";
 import { deleteAllOneBrktsForSquad, postManyOneBrkts } from "./dbOneBrkts";
 
 /**
