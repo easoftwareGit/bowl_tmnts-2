@@ -1,5 +1,5 @@
 import axios from "axios";
-import { baseDivEntriesApi } from "@/lib/db/apiPaths";
+import { baseDivEntriesApi } from "@/lib/api/apiPaths";
 import { testBaseDivEntriesApi } from "../../../testApi";
 import {
   deleteAllDivEntriesForDiv,

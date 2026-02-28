@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import { baseDivEntriesApi } from "@/lib/db/apiPaths";
+import { baseDivEntriesApi } from "@/lib/api/apiPaths";
 import { testBaseDivEntriesApi } from "../../../testApi";
 import { initDiv, initDivEntry } from "@/lib/db/initVals";
 import type { divEntryRawWithHdcpType, divEntryType, HdcpForTypes } from "@/lib/types/types";

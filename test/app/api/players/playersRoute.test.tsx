@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import { basePlayersApi } from "@/lib/db/apiPaths";
+import { basePlayersApi } from "@/lib/api/apiPaths";
 import { testBasePlayersApi } from "../../../testApi";
 import { initPlayer } from "@/lib/db/initVals";
 import type { playerType } from "@/lib/types/types";

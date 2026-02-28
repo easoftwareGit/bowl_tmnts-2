@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import { baseElimsApi } from "@/lib/db/apiPaths";
+import { baseElimsApi } from "@/lib/api/apiPaths";
 import { testBaseElimsApi } from "../../../testApi";
 import type { elimType } from "@/lib/types/types";
 import { initElim } from "@/lib/db/initVals";

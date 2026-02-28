@@ -1,5 +1,3 @@
-import { baseOrigin, baseApi } from '@/lib/baseApi';
-
 export default function Home() {  
   return (
     <div>

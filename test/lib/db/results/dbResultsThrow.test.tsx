@@ -1,5 +1,5 @@
 import axios from "axios";
-import { baseResultsApi } from "@/lib/db/apiPaths";
+import { baseResultsApi } from "@/lib/api/apiPaths";
 import { testBaseResultsApi } from "../../../testApi";
 import { getGameResultsForDiv, getGameResultsForTmnt } from "@/lib/db/results/dbResults";
 

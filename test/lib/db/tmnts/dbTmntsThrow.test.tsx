@@ -1,5 +1,5 @@
 import axios from "axios";
-import { baseTmntsApi } from "@/lib/db/apiPaths";
+import { baseTmntsApi } from "@/lib/api/apiPaths";
 import { testBaseTmntsApi } from "../../../testApi";
 import type { tmntType } from "@/lib/types/types";
 import { blankTmnt } from "@/lib/db/initVals";

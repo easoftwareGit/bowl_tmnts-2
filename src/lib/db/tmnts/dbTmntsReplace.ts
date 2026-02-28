@@ -1,5 +1,5 @@
 import axios from "axios";
-import { baseTmntsApi } from "@/lib/db/apiPaths";
+import { baseTmntsApi } from "@/lib/api/apiPaths";
 import { testBaseTmntsApi } from "../../../../test/testApi";
 import type { fullStageType, tmntFullType } from "@/lib/types/types";
 import { ErrorCode } from "@/lib/enums/enums";

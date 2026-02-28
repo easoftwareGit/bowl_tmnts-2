@@ -1,5 +1,5 @@
 import axios from "axios";
-import { basePlayersApi } from "@/lib/db/apiPaths";
+import { basePlayersApi } from "@/lib/api/apiPaths";
 import { testBasePlayersApi } from "../../../testApi";
 import {
   deleteAllPlayersForSquad,

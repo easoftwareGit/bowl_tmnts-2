@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import { baseBowlsApi, baseTmntsApi } from "@/lib/db/apiPaths";
+import { baseBowlsApi, baseTmntsApi } from "@/lib/api/apiPaths";
 import { testBaseBowlsApi, testBaseTmntsApi } from "../../../testApi";
 import type { tmntType } from "@/lib/types/types";
 import { initTmnt } from "@/lib/db/initVals";
@@ -15,7 +15,7 @@ import {
   getTmntFullData,
 } from "@/lib/db/tmnts/dbTmnts";
 import { todayStr } from "@/lib/dateTools";
-import { mockBowl, mockTmntFullData, playerId5 } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
+import { mockBowl, mockTmntFullData } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { replaceTmntFullData, replaceTmntEntriesData } from "@/lib/db/tmnts/dbTmntsReplace";
 import { cloneDeep } from "lodash";
 import { postBowl } from "@/lib/db/bowls/dbBowls";

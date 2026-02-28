@@ -1,5 +1,5 @@
 import axios from "axios";
-import { baseElimEntriesApi } from "@/lib/db/apiPaths";
+import { baseElimEntriesApi } from "@/lib/api/apiPaths";
 import { testBaseElimEntriesApi } from "../../../../test/testApi";
 import type { elimEntryType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation/validation";

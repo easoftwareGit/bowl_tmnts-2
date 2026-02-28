@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import { baseOneBrktsApi } from "@/lib/db/apiPaths";
+import { baseOneBrktsApi } from "@/lib/api/apiPaths";
 import { testBaseOneBrktsApi } from "../../../testApi";
 import type { oneBrktType } from "@/lib/types/types";
 import { initOneBrkt } from "@/lib/db/initVals";

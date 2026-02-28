@@ -1,5 +1,5 @@
 import axios from "axios";
-import { baseApi } from "@/lib/baseApi";
+import { baseApi } from "@/lib/api/baseApi";
 import { testDate } from "@prisma/client";
 
 const url = baseApi + "/testdate";

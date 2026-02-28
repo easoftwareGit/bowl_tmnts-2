@@ -1,5 +1,5 @@
 import axios from "axios";
-import { baseOneBrktsApi } from "@/lib/db/apiPaths";
+import { baseOneBrktsApi } from "@/lib/api/apiPaths";
 import { testBaseOneBrktsApi } from "../../../../test/testApi";
 import type { oneBrktType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation/validation";

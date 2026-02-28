@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import { baseResultsApi  } from "@/lib/db/apiPaths";
+import { baseResultsApi  } from "@/lib/api/apiPaths";
 import { testBaseResultsApi } from "../../../../../testApi";
 
 // before running this test, run the following commands in the terminal:

@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import { baseLanesApi } from "@/lib/db/apiPaths";
+import { baseLanesApi } from "@/lib/api/apiPaths";
 import { testBaseLanesApi } from "../../../testApi";
 import type { laneType } from "@/lib/types/types";
 import { initLane } from "@/lib/db/initVals";

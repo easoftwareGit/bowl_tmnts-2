@@ -1,6 +1,6 @@
 import axios from "axios";
 import { bcryptLength, maxToHashLength } from "@/lib/validation/validation";
-import { baseBcryptApi } from "@/lib/db/apiPaths";
+import { baseBcryptApi } from "@/lib/api/apiPaths";
 import { testBaseBcryptApi } from "../../test/testApi";
 
 const url = testBaseBcryptApi.startsWith("undefined")

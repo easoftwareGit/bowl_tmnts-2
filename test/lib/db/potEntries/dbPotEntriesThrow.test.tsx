@@ -1,5 +1,5 @@
 import axios from "axios";
-import { basePotEntriesApi } from "@/lib/db/apiPaths";
+import { basePotEntriesApi } from "@/lib/api/apiPaths";
 import { testBasePotEntriesApi } from "../../../testApi";
 import type { potEntryType } from "@/lib/types/types";
 import { blankPotEntry } from "@/lib/db/initVals";

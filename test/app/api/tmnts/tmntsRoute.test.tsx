@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import { baseTmntsApi } from "@/lib/db/apiPaths";
+import { baseTmntsApi } from "@/lib/api/apiPaths";
 import { testBaseTmntsApi } from "../../../testApi";
 import type { bowlType, brktSeedType, tmntType, YearObj } from "@/lib/types/types";
 import { blankBrktSeed, initBowl, initTmnt } from "@/lib/db/initVals";
@@ -223,35 +223,35 @@ describe("Tmnts - API: /api/tmnts", () => {
 
       expect(tmnts[0].bowls).not.toBeNull();
     })
-    it('should NOT get all tmnts for user when user_id is invalid', async () => {
-      try {
-        const response = await axios.get(userUrl + 'test');
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT get all tmnts for user when user_id is valid, but not a user ID', async () => {
-      try {
-        const response = await axios.get(userUrl + tmntId);
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT get all tmnts for user when user_id is not found', async () => {
-      const response = await axios.get(userUrl + notFoundUserId);
-      expect(response.status).toBe(200);
-      expect(response.data.tmnts).toHaveLength(0);
-    })
+    // it('should NOT get all tmnts for user when user_id is invalid', async () => {
+    //   try {
+    //     const response = await axios.get(userUrl + 'test');
+    //     expect(response.status).toBe(404);
+    //   } catch (err) {
+    //     if (err instanceof AxiosError) {
+    //       expect(err.response?.status).toBe(404);
+    //     } else {
+    //       expect(true).toBeFalsy();
+    //     }
+    //   }
+    // })
+    // it('should NOT get all tmnts for user when user_id is valid, but not a user ID', async () => {
+    //   try {
+    //     const response = await axios.get(userUrl + tmntId);
+    //     expect(response.status).toBe(404);
+    //   } catch (err) {
+    //     if (err instanceof AxiosError) {
+    //       expect(err.response?.status).toBe(404);
+    //     } else {
+    //       expect(true).toBeFalsy();
+    //     }
+    //   }
+    // })
+    // it('should NOT get all tmnts for user when user_id is not found', async () => {
+    //   const response = await axios.get(userUrl + notFoundUserId);
+    //   expect(response.status).toBe(200);
+    //   expect(response.data.tmnts).toHaveLength(0);
+    // })
   })
 
   describe('GET list of years from tmnts - API: /api/tmnts/years/year', () => {

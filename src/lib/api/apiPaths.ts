@@ -1,4 +1,4 @@
-import { baseApi } from "@/lib/baseApi";
+import { baseApi } from "@/lib/api/baseApi";
 
 export const baseUsersApi = baseApi + '/users'
 
@@ -7,8 +7,7 @@ export const baseNextAuthApi = baseApi + '/auth/[...nextauth]'
 
 export const baseBowlsApi = baseApi + '/bowls'
 
-export const baseTmntsApi = baseApi + '/tmnts/'
-export const baseTmntsYearsApi = baseApi + '/tmnts/years/'
+export const baseTmntsApi = baseApi + '/tmnts'
 
 export const baseEventsApi = baseApi + '/events'
 

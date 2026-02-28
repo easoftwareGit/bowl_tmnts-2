@@ -1,5 +1,5 @@
 import axios from "axios";
-import { baseEventsApi } from "@/lib/db/apiPaths";
+import { baseEventsApi } from "@/lib/api/apiPaths";
 import { testBaseEventsApi } from "../../../../test/testApi";
 import type { eventType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation/validation";

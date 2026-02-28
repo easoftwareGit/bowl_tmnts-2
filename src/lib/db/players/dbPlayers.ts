@@ -1,5 +1,5 @@
 import axios from "axios";
-import { basePlayersApi } from "@/lib/db/apiPaths";
+import { basePlayersApi } from "@/lib/api/apiPaths";
 import { testBasePlayersApi } from "../../../../test/testApi";
 import type { playerType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation/validation";

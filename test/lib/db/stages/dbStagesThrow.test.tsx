@@ -1,5 +1,5 @@
 import axios from "axios";
-import { baseStagesApi } from "@/lib/db/apiPaths";
+import { baseStagesApi } from "@/lib/api/apiPaths";
 import { testBaseStagesApi } from "../../../testApi";
 import type { justStageType, justStageOverrideType, fullStageType } from "@/lib/types/types";
 import {

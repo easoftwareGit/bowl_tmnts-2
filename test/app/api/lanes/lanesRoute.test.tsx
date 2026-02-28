@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import { baseLanesApi, baseSquadsApi } from "@/lib/db/apiPaths";
+import { baseLanesApi, baseSquadsApi } from "@/lib/api/apiPaths";
 import { testBaseLanesApi, testBaseSquadsApi } from "../../../testApi";
 import type { laneType, squadType } from "@/lib/types/types";
 import { initLane, initSquad } from "@/lib/db/initVals";

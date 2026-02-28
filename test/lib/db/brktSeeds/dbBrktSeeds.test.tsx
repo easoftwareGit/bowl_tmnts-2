@@ -1,5 +1,5 @@
 import axios from "axios";
-import { brktSeedsApi } from "@/lib/db/apiPaths";
+import { brktSeedsApi } from "@/lib/api/apiPaths";
 import { testBrktSeedsApi } from "../../../testApi";
 import { defaultBrktPlayers, initBrktSeed } from "@/lib/db/initVals";
 import {

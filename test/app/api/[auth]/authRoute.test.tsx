@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import { baseUsersApi, baseRegisterApi } from "@/lib/db/apiPaths";
+import { baseUsersApi, baseRegisterApi } from "@/lib/api/apiPaths";
 import { testBaseUsersApi, testBaseRegisterApi } from "../../../testApi";
 import type { userType } from "@/lib/types/types";
 import { initUser } from "@/lib/db/initVals";

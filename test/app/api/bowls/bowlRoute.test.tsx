@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import { baseBowlsApi } from "@/lib/db/apiPaths";
+import { baseBowlsApi } from "@/lib/api/apiPaths";
 import { testBaseBowlsApi } from "../../../testApi";
 import type { bowlType } from "@/lib/types/types";
 import { initBowl } from "@/lib/db/initVals";

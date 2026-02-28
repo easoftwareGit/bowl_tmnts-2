@@ -1,5 +1,5 @@
 import axios from "axios";
-import { baseLanesApi } from "@/lib/db/apiPaths";
+import { baseLanesApi } from "@/lib/api/apiPaths";
 import { testBaseLanesApi } from "../../../../test/testApi";
 import type { laneType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation/validation";

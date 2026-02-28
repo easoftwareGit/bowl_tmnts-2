@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import { baseBcryptApi, baseUsersApi } from "@/lib/db/apiPaths";
+import { baseBcryptApi, baseUsersApi } from "@/lib/api/apiPaths";
 import { testBaseBcryptApi, testBaseUsersApi } from "../../../testApi";
 import { maxToHashLength } from "@/lib/validation/validation";
 

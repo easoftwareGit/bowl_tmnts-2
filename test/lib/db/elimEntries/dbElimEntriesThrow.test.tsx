@@ -1,5 +1,5 @@
 import axios from "axios";
-import { baseElimEntriesApi } from "@/lib/db/apiPaths";
+import { baseElimEntriesApi } from "@/lib/api/apiPaths";
 import { testBaseElimEntriesApi } from "../../../testApi";
 import {
   deleteAllElimEntriesForElim,

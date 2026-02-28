@@ -1,5 +1,5 @@
 import axios from "axios";
-import { baseBrktEntriesApi } from "@/lib/db/apiPaths";
+import { baseBrktEntriesApi } from "@/lib/api/apiPaths";
 import { testBaseBrktEntriesApi } from "../../../testApi";
 import {
   deleteAllBrktEntriesForBrkt,
