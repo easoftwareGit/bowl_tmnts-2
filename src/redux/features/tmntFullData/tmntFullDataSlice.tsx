@@ -6,7 +6,7 @@ import { ioDataError } from "@/lib/enums/enums";
 import { blankFullStage, blankTmnt } from "@/lib/db/initVals";
 import { cloneDeep } from "lodash";
 import { getTmntFullData } from "@/lib/db/tmnts/dbTmnts";
-import { replaceTmntFullData, replaceTmntEntriesData } from "@/lib/db/tmnts/dbTmntsReplace";
+import { replaceTmntFullData, replaceTmntEntriesData } from "@/lib/db/tmnts/dbTmnts";
 
 export interface tmntFullDataState {
   tmntFullData: tmntFullType;

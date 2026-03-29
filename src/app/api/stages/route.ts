@@ -4,8 +4,8 @@ import type { fullStageType } from "@/lib/types/types";
 import { initFullStage } from "@/lib/db/initVals";
 import { sanitizeFullStage, validateFullStage } from "@/lib/validation/stages/validate";
 import { ErrorCode } from "@/lib/enums/enums";
-import { extractStageFromPrisma, stageDataForPrisma } from "../../../lib/db/stageMappers";
-import { getErrorStatus } from "../errCodes";
+import { stageDataForPrisma } from "../../../lib/db/stageMappers";
+import { standardCatchReturn } from "../apiCatch";
 import { SquadStage } from "@prisma/client";
 
 // routes /api/stages
@@ -14,11 +14,8 @@ export async function GET(request: NextRequest) {
   try {
     const stages = await prisma.stage.findMany()    
     return NextResponse.json({ stages }, { status: 200 });    
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: "error getting stages" },
-      { status: 500 }
-    );        
+  } catch (error) {
+    return standardCatchReturn(error, "error getting stages");
   }
 }
 
@@ -94,11 +91,7 @@ export async function POST(request: Request) {
       data: stageData
     })
     return NextResponse.json({ stage: createdStage }, { status: 201 })        
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error posting stage" },
-      { status: errStatus }
-    );        
+  } catch (error) {
+    return standardCatchReturn(error, "error posting stage");
   }
 }

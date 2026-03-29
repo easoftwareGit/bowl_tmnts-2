@@ -3,8 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import AcctInfo from "@/app/user/acctInfo/acctInfo";
 import { useSession } from "next-auth/react";
-import { findUserByEmail } from "@/lib/db/users/users";
-import { patchUser } from "@/lib/db/users/dbUsers";
+import { getUserByEmail, patchUser } from "@/lib/db/users/dbUsers";
 
 const pushMock = jest.fn();
 jest.mock("next/navigation", () => ({
@@ -15,13 +14,9 @@ jest.mock("next-auth/react", () => ({
   useSession: jest.fn(),
 }));
 
-jest.mock("@/lib/db/users/users", () => ({
-  __esModule: true,
-  findUserByEmail: jest.fn(),
-}));
-
 jest.mock("@/lib/db/users/dbUsers", () => ({
   __esModule: true,
+  getUserByEmail: jest.fn(),
   patchUser: jest.fn(),
 }));
 
@@ -34,7 +29,7 @@ import { phone as phoneChecking } from "phone";
 
 // ---------- helpers ----------
 const mockUseSession = useSession as jest.MockedFunction<typeof useSession>;
-const mockFindUserByEmail = findUserByEmail as jest.MockedFunction<typeof findUserByEmail>;
+const mockgetUserByEmail = getUserByEmail as jest.MockedFunction<typeof getUserByEmail>;
 const mockPatchUser = patchUser as jest.MockedFunction<typeof patchUser>;
 const mockPhone = phoneChecking as jest.MockedFunction<typeof phoneChecking>;
 
@@ -82,7 +77,7 @@ describe("AcctInfoForm Component", () => {
     mockPhone.mockReturnValue({ isValid: true } as any);
 
     // default: email not already in use
-    mockFindUserByEmail.mockResolvedValue(null as any);
+    mockgetUserByEmail.mockResolvedValue(null as any);
 
     // default: patch succeeds
     mockPatchUser.mockResolvedValue({ id: "usr_1" } as any);

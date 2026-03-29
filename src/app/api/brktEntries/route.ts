@@ -4,38 +4,17 @@ import { initBrktEntry } from "@/lib/db/initVals";
 import { brktEntryType } from "@/lib/types/types";
 import { sanitizeBrktEntry, validateBrktEntry } from "../../../lib/validation/brktEntries/validate";
 import { ErrorCode } from "@/lib/enums/enums";
-import { getErrorStatus } from "../errCodes";
-import { brktEntryDataForPrisma } from "./dataForPrisma";
+import { standardCatchReturn } from "../apiCatch";
+import { brktEntryDataForPrisma } from "./brktEntryDataForPrisma";
 
 // routes /api/brktEntries
 
-const getErrMsg = (errorCode: ErrorCode) => {
-  let errMsg: string;
-  switch (errorCode) {
-    case ErrorCode.MISSING_DATA:
-      errMsg = "missing data";
-      break;
-    case ErrorCode.INVALID_DATA:
-      errMsg = "invalid data";
-      break;
-    default:
-      errMsg = "unknown error";
-      break;
-  }
-  return errMsg;  
-}
-
 export async function GET(request: NextRequest) {
   try {
-    const brktEntries = await prisma.brkt_Entry.findMany(
-      { include: { brkt_refunds: true } }
-    );
+    const brktEntries = await prisma.brkt_Entry.findMany();
     return NextResponse.json({ brktEntries }, { status: 200 });
   } catch (error) {
-    return NextResponse.json(
-      { error: "error getting brktEntries" },
-      { status: 500 }
-    );                
+    return standardCatchReturn(error, "error getting brktEntries");
   }
 }
 
@@ -114,11 +93,7 @@ export const POST = async (request: NextRequest) => {
       brktEntry = postedBrktEntry
     }
     return NextResponse.json({ brktEntry }, { status: 201 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error creating brktEntry" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error creating brktEntry");
   }
 }

@@ -3,28 +3,11 @@ import { prisma } from "@/lib/prisma";
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { ErrorCode } from "@/lib/enums/enums";
 import { initBrktEntry } from "@/lib/db/initVals";
-import type { brktEntriesFromPrisa, brktEntryType } from "@/lib/types/types";
+import type { brktEntryType } from "@/lib/types/types";
 import { sanitizeBrktEntry, validateBrktEntry } from "../../../../../lib/validation/brktEntries/validate";
-import { brktEntriesWithFee } from "../../feeCalc";
-import { getErrorStatus } from "@/app/api/errCodes";
+import { standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/brktEntries/brktEntry/:id
-
-const getErrMsg = (errorCode: ErrorCode) => {
-  let errMsg: string;
-  switch (errorCode) {
-    case ErrorCode.MISSING_DATA:
-      errMsg = "missing data";
-      break;
-    case ErrorCode.INVALID_DATA:
-      errMsg = "invalid data";
-      break;
-    default:
-      errMsg = "unknown error";
-      break;
-  }
-  return errMsg;  
-}
 
 export async function GET(
   request: Request,
@@ -35,47 +18,38 @@ export async function GET(
     if (!isValidBtDbId(id, "ben")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
-    const brktEntryNoFee = await prisma.brkt_Entry.findUnique({
+    const brktEntry = await prisma.brkt_Entry.findUnique({
       select: {
         id: true,
         brkt_id: true,
         player_id: true,
         num_brackets: true,
         time_stamp: true,
-        brkt_refunds: true,
+        // parent Brkt fields you want
         brkt: {
           select: {
             fee: true,
           },
         },
+
+        // optional child (1:1); will be null if missing
+        brkt_refunds: {
+          select: {
+            num_refunds: true,
+          },
+        },        
       },      
       where: {
         id: id,
       },
     })
-    if (!brktEntryNoFee) {
+    if (!brktEntry) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }   
 
-    // get # of refunds and convert brkt.fee from decimal to number
-    const brktEntriesNoFee: brktEntriesFromPrisa[] = [
-      {
-        ...brktEntryNoFee,
-        num_refunds: brktEntryNoFee.brkt_refunds ? brktEntryNoFee.brkt_refunds.num_refunds : null as any,
-        brkt: {
-          ...brktEntryNoFee.brkt,
-          fee: Number(brktEntryNoFee.brkt.fee),
-        },
-      }
-    ];
-
-    // calc player fee
-    const brktEntries = brktEntriesWithFee(brktEntriesNoFee);
-    // get just 1st and only brkt entry
-    const brktEntry = brktEntries[0];
     return NextResponse.json({ brktEntry }, { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json({ error: "error getting brktEntry" }, { status: 500 });
+  } catch (error) {
+    return standardCatchReturn(error, "error getting brktEntry");    
   }
 }
 
@@ -107,7 +81,7 @@ export async function PUT(
       toPut.player_id !== toCheck.player_id ||
       toPut.num_brackets !== toCheck.num_brackets ||
       toPut.num_refunds !== toCheck.num_refunds ||
-      toPut.fee !== toCheck.fee ||
+      Number(toPut.fee) !== Number(toCheck.fee) ||
       toPut.time_stamp !== toCheck.time_stamp;
     if (coerced) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
@@ -192,12 +166,8 @@ export async function PUT(
     }
 
     return NextResponse.json({ brktEntry }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "Error putting brktEntry" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error putting brktEntry");
   }
 }
 
@@ -238,21 +208,10 @@ export async function PATCH(
     if (!currentBrktEntryNoFee) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
-    // convert brkt.fee to a number
-    const currentBrktEntriesNoFee: brktEntriesFromPrisa[] = [
-      {
-        ...currentBrktEntryNoFee,
-        num_refunds: currentBrktEntryNoFee.brkt_refunds ? currentBrktEntryNoFee.brkt_refunds.num_refunds : 0,
-        brkt: {
-          ...currentBrktEntryNoFee.brkt,
-          fee: Number(currentBrktEntryNoFee.brkt.fee),
-        },
-      }
-    ];
-    // calc player fee
-    const brktEntries = brktEntriesWithFee(currentBrktEntriesNoFee);
-    // get just 1st and only brkt entry
-    const currentBrktEntry = brktEntries[0];
+    const currentBrktEntry = {
+      ...currentBrktEntryNoFee,
+      num_refunds: currentBrktEntryNoFee.brkt_refunds ? currentBrktEntryNoFee.brkt_refunds.num_refunds : 0,
+    }
 
     const json = await request.json();
     // populate toCheck with json
@@ -264,9 +223,8 @@ export async function PATCH(
       brkt_id: currentBrktEntry.brkt_id,
       player_id: currentBrktEntry.player_id,
       num_brackets: currentBrktEntry.num_brackets,
-      num_refunds: currentBrktEntry.num_refunds,
-      fee: currentBrktEntry.fee + '',
-      time_stamp: currentBrktEntry.time_stamp,
+      num_refunds: currentBrktEntry.num_refunds,      
+      time_stamp: new Date(currentBrktEntry.time_stamp).getSeconds(),
     };    
     let gotDataToPatch = false;
     if (jsonProps.includes("brkt_id")) {
@@ -306,7 +264,9 @@ export async function PATCH(
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
 
-    let errCode = validateBrktEntry(toBePatched);    
+    // validate data (DO NOT CHECK FEE)
+    let errCode = validateBrktEntry(toBePatched, false);
+
     if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
@@ -320,6 +280,7 @@ export async function PATCH(
       return NextResponse.json({ error: errMsg }, { status: 422 });
     }
 
+    // 5) populate data to patch
     const toPatch = {
       ...initBrktEntry,      
     }
@@ -339,7 +300,7 @@ export async function PATCH(
       toPatch.time_stamp = toBePatched.time_stamp;
     }
     
-    // 4) patch data in database
+    // 6) patch data in database
     // DO NOT PATCH FEE
     const brktEntryUpdate = await prisma.brkt_Entry.update({
       where: {
@@ -377,23 +338,18 @@ export async function PATCH(
         });
       }
     }
-    const brktEntry: brktEntryType = {
+    const brktEntry = {
       id: brktEntryUpdate.id,
       brkt_id: brktEntryUpdate.brkt_id,  
       player_id: brktEntryUpdate.player_id,
       num_brackets: brktEntryUpdate.num_brackets,  
-      num_refunds: (toBePatched.num_refunds === 0 || toBePatched.num_refunds == null) ? undefined as any : toBePatched.num_refunds,
-      fee: currentBrktEntry.fee + '',        
+      num_refunds: (toBePatched.num_refunds === 0 || toBePatched.num_refunds == null) ? undefined as any : toBePatched.num_refunds,      
       time_stamp: brktEntryUpdate.time_stamp.getTime(),
     }    
 
     return NextResponse.json({ brktEntry }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "Error patching brktEntry" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error patching brktEntry");
   }
 }
 
@@ -413,11 +369,7 @@ export async function DELETE(
       },
     });
     return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "Error deleting brktEntry" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error deleting brktEntry");
   }
 }    

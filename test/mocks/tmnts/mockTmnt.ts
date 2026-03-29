@@ -1,37 +1,35 @@
 import { initPrismaTmnt } from "@/lib/db/initVals";
 import { startOfDayFromString, todayStr } from "@/lib/dateTools";
-import type { tmntsListType, tmntType, userType } from "@/lib/types/types";
+import type { tmntsListType, tmntType, userDataType } from "@/lib/types/types";
 import { Tmnt } from "@prisma/client";
 
-export const mockUser: userType = {
+export const mockUser: userDataType = {
   id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
-  email: "john.doe@example.com",  
-  password: "Test123!",
+  email: "john.doe@example.com",
   first_name: "John",
   last_name: "Doe",
   phone: "800-555-1234",
   role: "DIRECTOR",
-  password_hash: "$2b$12$C16ySjxkx1krojAMpoVZ3.v/pHt4ZtvDEBOXVGe4AUdPM0K/M4teq",
-}
+};
 
 export const mockTmnt: tmntType = {
   id: "tmt_fe8ac53dad0f400abe6354210a8f4cd1",
-  user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde", 
+  user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
   tmnt_name: "New Year's Eve 6 Gamer",
   tmnt_name_err: "",
-  bowl_id: 'bwl_561540bd64974da9abdd97765fdb3659',
+  bowl_id: "bwl_561540bd64974da9abdd97765fdb3659",
   bowl_id_err: "",
   start_date_str: todayStr,
   start_date_err: "",
   end_date_str: todayStr,
   end_date_err: "",
-  bowls: {
+  bowl: {
     bowl_name: "Earl Anthony's Dublin Bowl",
     city: "Dublin",
     state: "CA",
     url: "https://www.earlanthonysdublinbowl.com/",
   },
-}
+};
 
 export const mockPrismaTmnts: Tmnt[] = [
   {
@@ -39,9 +37,9 @@ export const mockPrismaTmnts: Tmnt[] = [
     id: "tmt_fe8ac53dad0f400abe6354210a8f4cd1",
     user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
     tmnt_name: "New Year's Eve 6 Gamer",
-    bowl_id: 'bwl_561540bd64974da9abdd97765fdb3659',
-    start_date: startOfDayFromString('2023-12-31') as Date,
-    end_date: startOfDayFromString('2023-12-31') as Date,
+    bowl_id: "bwl_561540bd64974da9abdd97765fdb3659",
+    start_date: startOfDayFromString("2023-12-31") as Date,
+    end_date: startOfDayFromString("2023-12-31") as Date,
   },
   {
     ...initPrismaTmnt,
@@ -49,8 +47,8 @@ export const mockPrismaTmnts: Tmnt[] = [
     user_id: "usr_516a113083983234fc316e31fb695b85",
     tmnt_name: "Yosemite 6 Gamer",
     bowl_id: "bwl_8b4a5c35ad1247049532ff53a12def0a",
-    start_date: startOfDayFromString('2022-01-02') as Date, 
-    end_date: startOfDayFromString('2022-01-02') as Date, 
+    start_date: startOfDayFromString("2022-01-02") as Date,
+    end_date: startOfDayFromString("2022-01-02") as Date,
   },
   {
     ...initPrismaTmnt,
@@ -58,46 +56,150 @@ export const mockPrismaTmnts: Tmnt[] = [
     user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
     tmnt_name: "Gold Pin",
     bowl_id: "bwl_561540bd64974da9abdd97765fdb3659",
-    start_date: startOfDayFromString('2025-08-19') as Date, 
-    end_date: startOfDayFromString('2025-08-19') as Date,
+    start_date: startOfDayFromString("2025-08-19") as Date,
+    end_date: startOfDayFromString("2025-08-19") as Date,
   },
-]
+];
 
 export const mockPrismaTmntsList: tmntsListType[] = [
   {
-    id: "tmt_fe8ac53dad0f400abe6354210a8f4cd1",    
+    id: "tmt_fe8ac53dad0f400abe6354210a8f4cd1",
     user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
     tmnt_name: "New Year's Eve 6 Gamer",
-    start_date_str: '2023-12-31', 
-    bowls: {
+    start_date_str: "2023-12-31",
+    bowl: {
       bowl_name: "Earl Anthony's Dublin Bowl",
       city: "Dublin",
       state: "CA",
       url: "https://www.earlanthonysdublinbowl.com/",
-    }    
+    },
   },
   {
-    id: "tmt_56d916ece6b50e6293300248c6792316",   
+    id: "tmt_56d916ece6b50e6293300248c6792316",
     user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
-    tmnt_name: "Yosemite 6 Gamer",    
-    start_date_str: '2022-01-02',
-    bowls: {
+    tmnt_name: "Yosemite 6 Gamer",
+    start_date_str: "2022-01-02",
+    bowl: {
       bowl_name: "Yosemite Lanes",
       city: "Modesto",
       state: "CA",
       url: "http://yosemitelanes.com/",
-    }
+    },
   },
   {
     id: "tmt_e134ac14c5234d708d26037ae812ac33",
     user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
     tmnt_name: "Gold Pin",
-    start_date_str: '2025-08-19',
-    bowls: {
+    start_date_str: "2025-08-19",
+    bowl: {
       bowl_name: "Earl Anthony's Dublin Bowl",
       city: "Dublin",
       state: "CA",
       url: "https://www.earlanthonysdublinbowl.com/",
-    }
-  }
-]
+    },
+  },
+];
+
+// import { initPrismaTmnt } from "@/lib/db/initVals";
+// import { startOfDayFromString, todayStr } from "@/lib/dateTools";
+// import type { tmntsListType, tmntType, userType } from "@/lib/types/types";
+// import { Tmnt } from "@prisma/client";
+
+// export const mockUser: userType = {
+//   id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
+//   email: "john.doe@example.com",  
+//   password: "Test123!",
+//   first_name: "John",
+//   last_name: "Doe",
+//   phone: "800-555-1234",
+//   role: "DIRECTOR",
+//   password_hash: "$2b$12$C16ySjxkx1krojAMpoVZ3.v/pHt4ZtvDEBOXVGe4AUdPM0K/M4teq",
+// }
+
+// export const mockTmnt: tmntType = {
+//   id: "tmt_fe8ac53dad0f400abe6354210a8f4cd1",
+//   user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde", 
+//   tmnt_name: "New Year's Eve 6 Gamer",
+//   tmnt_name_err: "",
+//   bowl_id: 'bwl_561540bd64974da9abdd97765fdb3659',
+//   bowl_id_err: "",
+//   start_date_str: todayStr,
+//   start_date_err: "",
+//   end_date_str: todayStr,
+//   end_date_err: "",
+//   bowl: {
+//     bowl_name: "Earl Anthony's Dublin Bowl",
+//     city: "Dublin",
+//     state: "CA",
+//     url: "https://www.earlanthonysdublinbowl.com/",
+//   },
+// }
+
+// export const mockPrismaTmnts: Tmnt[] = [
+//   {
+//     ...initPrismaTmnt,
+//     id: "tmt_fe8ac53dad0f400abe6354210a8f4cd1",
+//     user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
+//     tmnt_name: "New Year's Eve 6 Gamer",
+//     bowl_id: 'bwl_561540bd64974da9abdd97765fdb3659',
+//     start_date: startOfDayFromString('2023-12-31') as Date,
+//     end_date: startOfDayFromString('2023-12-31') as Date,
+//   },
+//   {
+//     ...initPrismaTmnt,
+//     id: "tmt_56d916ece6b50e6293300248c6792316",
+//     user_id: "usr_516a113083983234fc316e31fb695b85",
+//     tmnt_name: "Yosemite 6 Gamer",
+//     bowl_id: "bwl_8b4a5c35ad1247049532ff53a12def0a",
+//     start_date: startOfDayFromString('2022-01-02') as Date, 
+//     end_date: startOfDayFromString('2022-01-02') as Date, 
+//   },
+//   {
+//     ...initPrismaTmnt,
+//     id: "tmt_e134ac14c5234d708d26037ae812ac33",
+//     user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
+//     tmnt_name: "Gold Pin",
+//     bowl_id: "bwl_561540bd64974da9abdd97765fdb3659",
+//     start_date: startOfDayFromString('2025-08-19') as Date, 
+//     end_date: startOfDayFromString('2025-08-19') as Date,
+//   },
+// ]
+
+// export const mockPrismaTmntsList: tmntsListType[] = [
+//   {
+//     id: "tmt_fe8ac53dad0f400abe6354210a8f4cd1",    
+//     user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
+//     tmnt_name: "New Year's Eve 6 Gamer",
+//     start_date_str: '2023-12-31', 
+//     bowl: {
+//       bowl_name: "Earl Anthony's Dublin Bowl",
+//       city: "Dublin",
+//       state: "CA",
+//       url: "https://www.earlanthonysdublinbowl.com/",
+//     }    
+//   },
+//   {
+//     id: "tmt_56d916ece6b50e6293300248c6792316",   
+//     user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
+//     tmnt_name: "Yosemite 6 Gamer",    
+//     start_date_str: '2022-01-02',
+//     bowl: {
+//       bowl_name: "Yosemite Lanes",
+//       city: "Modesto",
+//       state: "CA",
+//       url: "http://yosemitelanes.com/",
+//     }
+//   },
+//   {
+//     id: "tmt_e134ac14c5234d708d26037ae812ac33",
+//     user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
+//     tmnt_name: "Gold Pin",
+//     start_date_str: '2025-08-19',
+//     bowl: {
+//       bowl_name: "Earl Anthony's Dublin Bowl",
+//       city: "Dublin",
+//       state: "CA",
+//       url: "https://www.earlanthonysdublinbowl.com/",
+//     }
+//   }
+// ]

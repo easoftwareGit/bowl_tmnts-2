@@ -5,7 +5,7 @@ import { initBowl } from "@/lib/db/initVals";
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { ErrorCode } from "@/lib/enums/enums";
 import { sanitizeBowl, validateBowl } from "../../../../../lib/validation/bowls/validate";
-import { getErrorStatus } from "@/app/api/errCodes";
+import { getErrorStatus, standardCatchReturn } from "@/app/api/apiCatch";
 
 export async function GET(
   request: Request,
@@ -25,9 +25,9 @@ export async function GET(
     if (!bowl) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
-    return NextResponse.json({ bowl }, { status: 200 });
+    return NextResponse.json({ bowl }, { status: 200 });    
   } catch (error) {
-    return NextResponse.json({ error: "Error getting bowl" }, { status: 500 });
+    return standardCatchReturn(error, "error getting bowl");    
   }
 }
 
@@ -82,12 +82,8 @@ export async function PUT(
     });
 
     return NextResponse.json({ bowl }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "Error upserting bowl" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error upserting bowl");
   }
 }
 
@@ -183,12 +179,8 @@ export async function PATCH(
       },
     });
     return NextResponse.json({ bowl }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "Error patching bowl" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error patching bowl");
   }
 }
 
@@ -207,11 +199,7 @@ export async function DELETE(
       },
     });
     return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "Error deleting bowl" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error deleting bowl");
   }
 }

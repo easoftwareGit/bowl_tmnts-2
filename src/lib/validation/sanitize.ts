@@ -1,43 +1,97 @@
-// base on code in https://www.npmjs.com/package/string-sanitizer
+import { maxUrlLength } from "./constants";
 
-import { maxUrlLength } from "./validation";
-
-// space, regular chars, digits, single quote, exclamation and a dash 
-// why do ()*+ not work?
-export const stringRegEx = /[^ a-zA-Z0-9'+-.,]/g;
+const nameRegex = /[^\p{L}\p{M}\p{Zs}'\-]/gu;
 
 /**
- * trims tailing and leading spaces,
- * removes special chars, 
- * allow only numbers, regular chars, space, period, dash, comma, plus
- *
- * @param {string} str
- * @return {*}  {string} - "a.b-c@d e'fg#h1ক😀" returns "a.b-cd e'fgh1"
+ * sanitize name fields (first name, last name)
+ * 
+ * @param {unknown} str - string to sanitize
+ * @returns {string} sanitized string 
  */
-export function sanitize(str: unknown): string {
-  if (!str || typeof str !== "string") {
-    return "";
-  }
-  try {
-    let san
-    try {
-      san = decodeURIComponent(str);
-    } catch (error) {
-      san = str
-    }    
-    san = san.replace(/<[^>]*>/g, "")
-    san = san.replace(stringRegEx, "")
-    san = san.replace(/\(/g, "")
-    san = san.replace(/\)/g, "")
-    san = san.replace(/\*/g, "");
-    if (san) {
-      return san.trim();
-    } else {
-      return "";
-    }
-  } catch (error) {
-    return "";
-  }
+export function sanitizeName(str: unknown): string {
+  if (typeof str !== "string") return "";
+
+  return str
+    .replace(nameRegex, "")
+    .trim();
+}
+
+const cityRegex = /[^\p{L}\p{M}\p{Zs}.\-]/gu;
+
+/**
+ * sanitize city
+ * 
+ * @param {unknown} str - string to sanitize
+ * @returns {string} sanitized string 
+ */
+export function sanitizeCity(str: unknown): string {
+  if (typeof str !== "string") return "";
+
+  return str
+    .replace(cityRegex, "")
+    .trim();
+}
+
+const tournamentRegex = /[^\p{L}\p{M}\p{N}\p{Zs}'.,&()\-]/gu;
+
+/**
+ * sanitize tournament name
+ * 
+ * @param {unknown} str - string to sanitize
+ * @returns {string} sanitized string 
+ */
+export function sanitizeTournamentName(str: unknown): string {
+  if (typeof str !== "string") return "";
+
+  return str
+    .replace(tournamentRegex, "")
+    .trim();
+}
+
+const notesRegex = /[^\p{L}\p{M}\p{N}\p{P}\p{Sm}\p{Zs}\n\r]/gu;
+
+/**
+ * sanitize notes
+ *
+ * @param {unknown} str - string to sanitize
+ * @returns {string} sanitized string
+ */
+export function sanitizeNotes(str: unknown): string {
+  if (typeof str !== "string") return "";
+
+  return str
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/giu, "")
+    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/giu, "")
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&apos;/gi, "'")
+    .replace(/<\/?[^>]+>/g, "")
+    .replace(notesRegex, "")
+    .replace(/[^\S\r\n]+/g, " ")
+    .replace(/ *\r */g, "\r")
+    .replace(/ *\n */g, "\n")
+    .trim();
+}
+
+// allow letters, marks, numbers, and spaces
+const edsRegex = /[^\p{L}\p{M}\p{N}\p{Zs}'\-]/gu;
+
+/**
+ * sanitize names for Events, Divisions, Squads (EDS)
+ * 
+ * @param {unknown} str - string to sanitize
+ * @returns {string} sanitized string 
+ */
+export function sanitizeEDS(str: unknown): string {
+  if (typeof str !== "string") return "";
+  return str
+    .replace(edsRegex, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export function sanitizeUrl(url: unknown): string {

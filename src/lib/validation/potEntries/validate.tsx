@@ -1,7 +1,8 @@
 import { validMoney } from "@/lib/currency/validate";
 import { blankPotEntry } from "@/lib/db/initVals";
 import type { potEntryType, validPotEntriesType } from "@/lib/types/types";
-import { isValidBtDbId, maxMoney } from "@/lib/validation/validation";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { maxMoney } from "../constants";
 import { ErrorCode } from "@/lib/enums/enums";
 import { sanitizeCurrency } from "../sanitize";
 
@@ -35,7 +36,7 @@ const gotPotEntryData = (pot: potEntryType): ErrorCode => {
  */
 export const validPotEntryFee = (moneyStr: unknown): boolean => {
   if (!moneyStr || typeof moneyStr !== 'string') return false;
-  return validMoney(moneyStr, 0, maxMoney);
+  return validMoney(moneyStr, 0.01, maxMoney);
 };
 
 /**

@@ -4,15 +4,12 @@ import type {
   justStageOverrideType,
   justStageType,
 } from "@/lib/types/types";
-import {
-  isValidBtDbId,
-  maxReasonLength,
-  toValidDateOrNull,
-} from "../validation";
+import { isValidBtDbId, toValidDateOrNull } from "@/lib/validation/validation";
+import { maxReasonLength } from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
 import { SquadStage } from "@prisma/client";
 import { blankFullStage, initFullStage } from "@/lib/db/initVals";
-import { sanitize } from "../sanitize";
+import { sanitizeNotes } from "../sanitize";
 
 const gotFullStageData = (stage: fullStageType): ErrorCode => {
   try {
@@ -39,21 +36,6 @@ const gotFullStageData = (stage: fullStageType): ErrorCode => {
     ) {
       return ErrorCode.MISSING_DATA;
     }
-
-    // if stage_override_enabled is false,
-    // then stage_override_at and stage_override_reason are not required
-    // so no need to check for missing data - DO CHECK IF VALID 
-    // if (!stage.stage_override_enabled) {
-    //   if (
-    //     (stage.stage_override_at !== null &&
-    //     stage.stage_override_at.trim() === "") ||
-    //     (stage.stage_override_reason !== null &&
-    //       stage.stage_override_reason.trim() !== "")
-    //   ) {
-    //     return ErrorCode.MISSING_DATA;
-    //   }
-    // }
-
 
     // if stage is scores, then scores_started_at is required
     if (stage.stage === SquadStage.SCORES && stage.scores_started_at == null) {
@@ -137,7 +119,7 @@ export const validStageOverrideAt = (value: unknown): boolean => {
   return value == null || toValidDateOrNull(value as DateInput) !== null;
 };
 export const validStageOverrideReason = (value: unknown): boolean => {
-  const sanitized = sanitize(value);
+  const sanitized = sanitizeNotes(value);
   return sanitized.length > 0 && sanitized.length <= maxReasonLength;
 };
 
@@ -300,7 +282,7 @@ export const sanitizeFullStage = (fullStage: fullStageType): fullStageType => {
   if (validStageOverrideAt(fullStage.stage_override_at)) {
     sanitizedStage.stage_override_at = fullStage.stage_override_at;
   }
-  sanitizedStage.stage_override_reason = sanitize(
+  sanitizedStage.stage_override_reason = sanitizeNotes(
     fullStage.stage_override_reason,
   );
   return sanitizedStage;

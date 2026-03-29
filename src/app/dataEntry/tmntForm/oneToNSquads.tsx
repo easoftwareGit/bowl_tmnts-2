@@ -12,7 +12,16 @@ import {
   isDuplicateSquadName,
   isDuplicateDateTime,
 } from "./errors";
-import { maxEventLength, minGames, maxGames, minStartLane, maxStartLane, minLaneCount, maxLaneCount, isOdd, isEven } from "@/lib/validation/validation";
+import { isOdd, isEven } from "@/lib/validation/validation";
+import {
+  maxEventLength,
+  minGames,
+  maxGames,
+  minStartLane,
+  maxStartLane,
+  minLaneCount,
+  maxLaneCount,
+} from "@/lib/validation/constants";
 import { dateTo_UTC_MMddyyyy, getYearMonthDays, startOfDayFromString, startOfTodayUTC, todayStr, twelveHourto24Hour, validDateString } from "@/lib/dateTools";
 import { btDbUuid } from "@/lib/uuid";
 import { compareAsc, isValid } from "date-fns";

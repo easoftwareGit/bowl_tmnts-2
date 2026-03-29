@@ -5,7 +5,7 @@ import { ErrorCode } from "@/lib/enums/enums";
 import { initElimEntry } from "@/lib/db/initVals";
 import type { elimEntryType } from "@/lib/types/types";
 import { sanitizeElimEntry, validateElimEntry } from "../../../../../lib/validation/elimEntries/validate";
-import { getErrorStatus } from "@/app/api/errCodes";
+import { standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/elimEntries/elimEntry/:id
 
@@ -27,8 +27,8 @@ export async function GET(
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }    
     return NextResponse.json({ elimEntry }, { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json({ error: "error getting elimEntry" }, { status: 500 });
+  } catch (error) {
+    return standardCatchReturn(error, "error getting elimEntry");    
   }
 }
 
@@ -80,12 +80,8 @@ export async function PUT(
     });
 
     return NextResponse.json({ elimEntry }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "Error putting elimEntry" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error putting elimEntry");
   }
 }
 
@@ -171,12 +167,8 @@ export async function PATCH(
     });
 
     return NextResponse.json({ elimEntry }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "Error patching elimEntry" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error patching elimEntry");
   }
 }
 
@@ -196,11 +188,7 @@ export async function DELETE(
       },
     });
     return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "Error deleting elimEntry" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error deleting elimEntry");
   }
 }    

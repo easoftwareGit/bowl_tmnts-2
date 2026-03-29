@@ -1,7 +1,7 @@
 import type { potType } from '@/lib/types/types';
 import { mockTmntFullData } from '../../../mocks/tmnts/tmntFullData/mockTmntFullData';
 import { cloneDeep } from 'lodash';
-import { potDataForPrisma } from '@/app/api/pots/dataForPrisma';
+import { potDataForPrisma } from '@/app/api/pots/potDataForPrisma';
 
 describe('potDataForPrisma', () => {
   const testPot: potType = cloneDeep(mockTmntFullData.pots[0]);

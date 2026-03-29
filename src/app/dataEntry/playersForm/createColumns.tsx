@@ -1,5 +1,5 @@
 import type { brktType, divType, elimType, potType } from "@/lib/types/types";
-import { maxAverage, maxBrackets, maxMoney } from "@/lib/validation/validation";
+import { maxAverage, maxBrackets, maxMoney } from "@/lib/validation/constants";
 import {
   GridColDef,
   GridEditInputCell,  
@@ -10,7 +10,7 @@ import { currencyFormatter } from "@/lib/currency/formatValue";
 import { getBrktOrElimName, getDivName, getPotShortName } from "@/lib/getName";
 import { convertToString } from "@/lib/convert";
 import { validAverage } from "@/lib/validation/players/validate";
-import { sanitize } from "@/lib/validation/sanitize";
+import { sanitizeName } from "@/lib/validation/sanitize";
 import { validPosChars } from "./rowInfo";
 import { isTouchDevice } from "@/lib/mobileDevices/mobileDevices";
 import type { playerEntryRow } from "./populateRows";
@@ -149,7 +149,7 @@ export const createPlayerEntryColumns = (
     if (value == null) { 
       value = "";
     };
-    let firstName = sanitize(value)
+    let firstName = sanitizeName(value)
     return {
       ...row,
       first_name: firstName
@@ -160,7 +160,7 @@ export const createPlayerEntryColumns = (
     if (value == null) { 
       value = "";
     };
-    let lastName = sanitize(value)
+    let lastName = sanitizeName(value)
     return {
       ...row,
       last_name: lastName

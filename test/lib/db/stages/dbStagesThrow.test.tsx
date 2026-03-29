@@ -1,33 +1,90 @@
-import axios from "axios";
+import { publicApi, privateApi } from "@/lib/api/axios";
 import { baseStagesApi } from "@/lib/api/apiPaths";
 import { testBaseStagesApi } from "../../../testApi";
-import type { justStageType, justStageOverrideType, fullStageType } from "@/lib/types/types";
+import type { fullStageType } from "@/lib/types/types";
 import {
-  getFullStageForSquad,  
+  getFullStageForSquad,
   getJustStage,
   getJustStageOverride,
   postFullStage,
   patchJustStage,
   patchJustStageOverride,
   deleteFullStage,
-  postInitialStageForSquad
+  postInitialStageForSquad,
 } from "@/lib/db/stages/dbStages";
 import { mockStageToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { SquadStage } from "@prisma/client";
 
-const url = testBaseStagesApi.startsWith("undefined")
+jest.mock("@/lib/api/axios", () => ({
+  publicApi: {
+    get: jest.fn(),
+  },
+  privateApi: {
+    post: jest.fn(),
+    patch: jest.fn(),
+    delete: jest.fn(),
+  },
+}));
+
+const mockedPublicApi = publicApi as jest.Mocked<typeof publicApi>;
+const mockedPrivateApi = privateApi as jest.Mocked<typeof privateApi>;
+
+const rawUrl = testBaseStagesApi.startsWith("undefined")
   ? baseStagesApi
   : testBaseStagesApi;
-const stageUrl = url + "/stage/";
+
+const normalizeApiPath = (path: string): string => {
+  if (path.startsWith("/api/")) return path.replace(/^\/api/, "");
+  if (path === "/api") return "/";
+  return path;
+};
+
+const url = normalizeApiPath(rawUrl);
+const stageUrl = `${url}/stage/`;
 
 const squadId = "sqd_7116ce5f80164830830a7157eb093396";
 const stageId = "stg_c5f562c4c4304d919ac43fead73123e2";
 
-jest.mock("axios");
+describe("non standard throw cases", () => {
+  // describe("getFullStageForSquad - non standard throw cases", () => {
+  //   afterEach(() => {
+  //     jest.restoreAllMocks();
+  //     jest.clearAllMocks();
+  //   });
 
-const mockedAxios = axios as jest.Mocked<typeof axios>;
+  //   it("should return null when response.data.stage is missing", async () => {
+  //     mockedPublicApi.get.mockResolvedValueOnce({
+  //       data: {},
+  //     } as any);
 
-describe("non standard throw cases", () => { 
+  //     await expect(getFullStageForSquad(squadId)).resolves.toBeNull();
+
+  //     expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
+  //     expect(mockedPublicApi.get).toHaveBeenCalledWith(
+  //       expect.stringContaining(squadId)
+  //     );
+  //   });
+
+  //   it("should throw with custom message if publicApi.get rejects", async () => {
+  //     mockedPublicApi.get.mockRejectedValueOnce(new Error("Network Error"));
+
+  //     await expect(getFullStageForSquad(squadId)).rejects.toThrow(
+  //       "getFullStageForSquad failed: Network Error"
+  //     );
+
+  //     expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
+  //   });
+
+  //   it("should throw an error when publicApi.get rejects with non-error", async () => {
+  //     mockedPublicApi.get.mockRejectedValueOnce("testing 123");
+
+  //     await expect(getFullStageForSquad(squadId)).rejects.toThrow(
+  //       "getFullStageForSquad failed: testing 123"
+  //     );
+
+  //     expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
+  //   });
+  // });
 
   describe("getFullStageForSquad - non standard throw cases", () => {
     afterEach(() => {
@@ -35,39 +92,123 @@ describe("non standard throw cases", () => {
       jest.clearAllMocks();
     });
 
-    it("should throw an error when response.status !== 200", async () => {
-      mockedAxios.get.mockResolvedValue({
-        status: 500,
+    it("should throw when response.data.stage is missing", async () => {
+      mockedPublicApi.get.mockResolvedValueOnce({
         data: {},
-      });
+      } as any);
 
       await expect(getFullStageForSquad(squadId)).rejects.toThrow(
-        "Unexpected status 500 when fetching stage"
+        "getFullStageForSquad failed: Error fetching stage"
       );
 
-      expect(mockedAxios.get).toHaveBeenCalledTimes(1);
-      expect(mockedAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining(squadId),
-        { withCredentials: true }
+      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
+      expect(mockedPublicApi.get).toHaveBeenCalledWith(
+        expect.stringContaining(squadId)
       );
     });
-    it("should throw with custom message if axios.get rejects", async () => {
-      mockedAxios.get.mockRejectedValueOnce(new Error("Network Error"));
+
+    it("should throw with custom message if publicApi.get rejects", async () => {
+      mockedPublicApi.get.mockRejectedValueOnce(new Error("Network Error"));
 
       await expect(getFullStageForSquad(squadId)).rejects.toThrow(
         "getFullStageForSquad failed: Network Error"
       );
 
-      expect(mockedAxios.get).toHaveBeenCalledTimes(1);
+      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
     });
-    it("should throw an error when axios.get rejects with non-error", async () => {
-      mockedAxios.get.mockRejectedValueOnce("testing 123");
+
+    it("should throw an error when publicApi.get rejects with non-error", async () => {
+      mockedPublicApi.get.mockRejectedValueOnce("testing 123");
 
       await expect(getFullStageForSquad(squadId)).rejects.toThrow(
         "getFullStageForSquad failed: testing 123"
       );
 
-      expect(mockedAxios.get).toHaveBeenCalledTimes(1);
+      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("getJustStage - non standard throw cases", () => {
+    afterEach(() => {
+      jest.restoreAllMocks();
+      jest.clearAllMocks();
+    });
+
+    it("should return null when response.data.stage is missing", async () => {
+      mockedPublicApi.get.mockResolvedValueOnce({
+        data: {},
+      } as any);
+      
+      await expect(getJustStage(squadId)).rejects.toThrow(
+        "getJustStage failed: getFullStageForSquad failed: Error fetching stage"
+      );      
+
+      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
+      expect(mockedPublicApi.get).toHaveBeenCalledWith(
+        expect.stringContaining(squadId)
+      );
+    });
+
+    it("should throw with custom message if publicApi.get rejects", async () => {
+      mockedPublicApi.get.mockRejectedValueOnce(new Error("Network Error"));
+
+      await expect(getJustStage(squadId)).rejects.toThrow(
+        "getJustStage failed: getFullStageForSquad failed: Network Error"
+      );
+
+      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
+    });
+
+    it("should throw an error when publicApi.get rejects with non-error", async () => {
+      mockedPublicApi.get.mockRejectedValueOnce("testing 123");
+
+      await expect(getJustStage(squadId)).rejects.toThrow(
+        "getJustStage failed: getFullStageForSquad failed: testing 123"
+      );
+
+      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("getJustStageOverride - non standard throw cases", () => {
+    afterEach(() => {
+      jest.restoreAllMocks();
+      jest.clearAllMocks();
+    });
+
+    it("should return null when response.data.stage is missing", async () => {
+      mockedPublicApi.get.mockResolvedValueOnce({
+        data: {},
+      } as any);
+
+      await expect(getJustStageOverride(squadId)).rejects.toThrow(
+        "getJustStageOverride failed: getFullStageForSquad failed: Error fetching stage"
+      );      
+
+      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
+      expect(mockedPublicApi.get).toHaveBeenCalledWith(
+        expect.stringContaining(squadId)
+      );
+    });
+
+    it("should throw with custom message if publicApi.get rejects", async () => {
+      mockedPublicApi.get.mockRejectedValueOnce(new Error("Network Error"));
+
+      await expect(getJustStageOverride(squadId)).rejects.toThrow(
+        "getJustStageOverride failed: getFullStageForSquad failed: Network Error"
+      );
+
+      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
+    });
+
+    it("should throw an error when publicApi.get rejects with non-error", async () => {
+      mockedPublicApi.get.mockRejectedValueOnce("testing 123");
+
+      await expect(getJustStageOverride(squadId)).rejects.toThrow(
+        "getJustStageOverride failed: getFullStageForSquad failed: testing 123"
+      );
+
+      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -77,45 +218,44 @@ describe("non standard throw cases", () => {
       jest.clearAllMocks();
     });
 
-    it("should throw an error when response.status !== 201", async () => {
-      mockedAxios.post.mockResolvedValueOnce({
-        status: 200,
+    it("should throw an error when response.data.stage is missing", async () => {
+      mockedPrivateApi.post.mockResolvedValueOnce({
         data: {},
-      });
+      } as any);
 
       await expect(postFullStage(mockStageToPost)).rejects.toThrow(
-        "Error posting stage"
+        "postFullStage failed: Error posting stage"
       );
 
-      expect(mockedAxios.post).toHaveBeenCalledTimes(1);
-      expect(mockedAxios.post).toHaveBeenCalledWith(
+      expect(mockedPrivateApi.post).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.post).toHaveBeenCalledWith(
         url,
-        JSON.stringify(mockStageToPost),
-        { withCredentials: true }
+        JSON.stringify(mockStageToPost)
       );
     });
-    it("should throw with custom message if axios.get rejects", async () => {
-      mockedAxios.post.mockRejectedValueOnce(new Error("Network Error"));
+
+    it("should throw with custom message if privateApi.post rejects", async () => {
+      mockedPrivateApi.post.mockRejectedValueOnce(new Error("Network Error"));
 
       await expect(postFullStage(mockStageToPost)).rejects.toThrow(
         "postFullStage failed: Network Error"
       );
 
-      expect(mockedAxios.post).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.post).toHaveBeenCalledTimes(1);
     });
-    it("should throw an error when axios.get rejects with non-error", async () => {
-      mockedAxios.post.mockRejectedValueOnce("testing 123");
+
+    it("should throw an error when privateApi.post rejects with non-error", async () => {
+      mockedPrivateApi.post.mockRejectedValueOnce("testing 123");
 
       await expect(postFullStage(mockStageToPost)).rejects.toThrow(
         "postFullStage failed: testing 123"
       );
 
-      expect(mockedAxios.post).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.post).toHaveBeenCalledTimes(1);
     });
-  })
+  });
 
-  describe("postFullStage - non standard throw cases", () => {
-
+  describe("postFullStage with validFullStage - non standard throw cases", () => {
     const validFullStage: fullStageType = {
       id: mockStageToPost.id,
       squad_id: mockStageToPost.squad_id,
@@ -124,7 +264,7 @@ describe("non standard throw cases", () => {
       scores_started_at: mockStageToPost.scores_started_at,
       stage_override_enabled: mockStageToPost.stage_override_enabled,
       stage_override_at: mockStageToPost.stage_override_at,
-      stage_override_reason: mockStageToPost.stage_override_reason
+      stage_override_reason: mockStageToPost.stage_override_reason,
     };
 
     afterEach(() => {
@@ -132,183 +272,187 @@ describe("non standard throw cases", () => {
       jest.clearAllMocks();
     });
 
-    it("should throw an error when response.status !== 200", async () => {
-      mockedAxios.post.mockResolvedValueOnce({
-        status: 500,
+    it("should throw an error when response.data.stage is missing", async () => {
+      mockedPrivateApi.post.mockResolvedValueOnce({
         data: {},
-      });
+      } as any);
 
-      await expect(postFullStage(validFullStage)).rejects.toThrow("Error posting stage");
+      await expect(postFullStage(validFullStage)).rejects.toThrow(
+        "postFullStage failed: Error posting stage"
+      );
 
-      expect(mockedAxios.post).toHaveBeenCalledTimes(1);
-      expect(mockedAxios.post).toHaveBeenCalledWith(
+      expect(mockedPrivateApi.post).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.post).toHaveBeenCalledWith(
         url,
-        JSON.stringify(validFullStage),
-        { withCredentials: true }
+        JSON.stringify(validFullStage)
       );
     });
-    it("should throw with custom message if axios.get rejects", async () => {
-      mockedAxios.post.mockRejectedValueOnce(new Error("Network Error"));
+
+    it("should throw with custom message if privateApi.post rejects", async () => {
+      mockedPrivateApi.post.mockRejectedValueOnce(new Error("Network Error"));
 
       await expect(postFullStage(validFullStage)).rejects.toThrow(
         "postFullStage failed: Network Error"
       );
 
-      expect(mockedAxios.post).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.post).toHaveBeenCalledTimes(1);
     });
-    it("should throw an error when axios.get rejects with non-error", async () => {
-      mockedAxios.post.mockRejectedValueOnce("testing 123");
+
+    it("should throw an error when privateApi.post rejects with non-error", async () => {
+      mockedPrivateApi.post.mockRejectedValueOnce("testing 123");
 
       await expect(postFullStage(validFullStage)).rejects.toThrow(
         "postFullStage failed: testing 123"
       );
 
-      expect(mockedAxios.post).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.post).toHaveBeenCalledTimes(1);
     });
   });
 
   describe("postInitialStageForSquad - non standard throw cases", () => {
-
     afterEach(() => {
       jest.restoreAllMocks();
       jest.clearAllMocks();
     });
 
-    it("should throw an error when response.status !== 200", async () => {
-
-      mockedAxios.post.mockResolvedValueOnce({
-        status: 500,
+    it("should throw an error when response.data.stage is missing", async () => {
+      mockedPrivateApi.post.mockResolvedValueOnce({
         data: {},
-      });
+      } as any);
 
-      await expect(postInitialStageForSquad(squadId)).rejects.toThrow("Error posting stage");
+      await expect(postInitialStageForSquad(squadId)).rejects.toThrow(
+        "postFullStage failed: Error posting stage"
+      );
 
-      expect(mockedAxios.post).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.post).toHaveBeenCalledTimes(1);
 
-      const [calledUrl, calledBody, calledConfig] = mockedAxios.post.mock.calls[0];
+      const [calledUrl, calledBody] = mockedPrivateApi.post.mock.calls[0];
       expect(calledUrl).toBe(url);
-      expect(calledConfig).toEqual({ withCredentials: true });
 
-      // calledBody is JSON.stringify(fullStage)
       const posted = JSON.parse(calledBody as string);
 
       expect(posted).toEqual(
         expect.objectContaining({
           squad_id: squadId,
-          stage: "DEFINE", // enum serializes to string
+          stage: "DEFINE",
           stage_override_enabled: false,
           stage_override_reason: "",
         })
       );
 
-      // id is generated, just assert it looks like a stage id
-      expect(posted.id).toEqual(expect.stringMatching(/^stg_/));      
+      expect(posted.id).toEqual(expect.stringMatching(/^stg_/));
     });
-    it("should throw with custom message if axios.get rejects", async () => {
-      mockedAxios.post.mockRejectedValueOnce(new Error("Network Error"));
+
+    it("should throw with custom message if privateApi.post rejects", async () => {
+      mockedPrivateApi.post.mockRejectedValueOnce(new Error("Network Error"));
 
       await expect(postInitialStageForSquad(squadId)).rejects.toThrow(
         "postFullStage failed: Network Error"
       );
 
-      expect(mockedAxios.post).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.post).toHaveBeenCalledTimes(1);
     });
-    it("should throw an error when axios.get rejects with non-error", async () => {
-      mockedAxios.post.mockRejectedValueOnce("testing 123");
+
+    it("should throw an error when privateApi.post rejects with non-error", async () => {
+      mockedPrivateApi.post.mockRejectedValueOnce("testing 123");
 
       await expect(postInitialStageForSquad(squadId)).rejects.toThrow(
         "postFullStage failed: testing 123"
       );
 
-      expect(mockedAxios.post).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.post).toHaveBeenCalledTimes(1);
     });
   });
 
   describe("patchJustStage - non standard throw cases", () => {
-    
     afterEach(() => {
       jest.restoreAllMocks();
       jest.clearAllMocks();
     });
 
-    it("should throw an error when response.status !== 200", async () => {
-      mockedAxios.patch.mockResolvedValueOnce({
-        status: 500,
+    it("should throw an error when response.data.stage is missing", async () => {
+      mockedPrivateApi.patch.mockResolvedValueOnce({
         data: {},
-      });
+      } as any);
 
-      await expect(patchJustStage(stageId, SquadStage.ENTRIES)).rejects.toThrow("Error patching justStage");
+      await expect(
+        patchJustStage(stageId, SquadStage.ENTRIES)
+      ).rejects.toThrow("patchJustStage failed: Error patching justStage");
 
-      expect(mockedAxios.patch).toHaveBeenCalledTimes(1);
-      expect(mockedAxios.patch).toHaveBeenCalledWith(
+      expect(mockedPrivateApi.patch).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.patch).toHaveBeenCalledWith(
         stageUrl + stageId,
-        JSON.stringify({id: stageId, stage: SquadStage.ENTRIES}),
-        { withCredentials: true }
+        JSON.stringify({ id: stageId, stage: SquadStage.ENTRIES })
       );
     });
-    it("should throw with custom message if axios.get rejects", async () => {
-      mockedAxios.patch.mockRejectedValueOnce(new Error("Network Error"));
 
-      await expect(patchJustStage(stageId, SquadStage.ENTRIES)).rejects.toThrow(
-        "patchJustStage failed: Network Error"
-      );
+    it("should throw with custom message if privateApi.patch rejects", async () => {
+      mockedPrivateApi.patch.mockRejectedValueOnce(new Error("Network Error"));
 
-      expect(mockedAxios.patch).toHaveBeenCalledTimes(1);
+      await expect(
+        patchJustStage(stageId, SquadStage.ENTRIES)
+      ).rejects.toThrow("patchJustStage failed: Network Error");
+
+      expect(mockedPrivateApi.patch).toHaveBeenCalledTimes(1);
     });
-    it("should throw an error when axios.get rejects with non-error", async () => {
-      mockedAxios.patch.mockRejectedValueOnce("testing 123");
 
-      await expect(patchJustStage(stageId, SquadStage.ENTRIES)).rejects.toThrow(
-        "patchJustStage failed: testing 123"
-      );
+    it("should throw an error when privateApi.patch rejects with non-error", async () => {
+      mockedPrivateApi.patch.mockRejectedValueOnce("testing 123");
 
-      expect(mockedAxios.patch).toHaveBeenCalledTimes(1);
+      await expect(
+        patchJustStage(stageId, SquadStage.ENTRIES)
+      ).rejects.toThrow("patchJustStage failed: testing 123");
+
+      expect(mockedPrivateApi.patch).toHaveBeenCalledTimes(1);
     });
   });
 
   describe("patchJustStageOverride - non standard throw cases", () => {
-    
     afterEach(() => {
       jest.restoreAllMocks();
       jest.clearAllMocks();
     });
 
-    it("should throw an error when response.status !== 200", async () => {
-      mockedAxios.patch.mockResolvedValueOnce({
-        status: 500,
+    it("should throw an error when response.data.stage is missing", async () => {
+      mockedPrivateApi.patch.mockResolvedValueOnce({
         data: {},
-      });
+      } as any);
 
-      await expect(patchJustStageOverride(stageId, true, 'testing')).rejects.toThrow("Error patching justStage");
+      await expect(
+        patchJustStageOverride(stageId, true, "testing")
+      ).rejects.toThrow(
+        "patchJustStageOverride failed: Error patching justStageOverride"
+      );
 
-      expect(mockedAxios.patch).toHaveBeenCalledTimes(1);
-      expect(mockedAxios.patch).toHaveBeenCalledWith(
+      expect(mockedPrivateApi.patch).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.patch).toHaveBeenCalledWith(
         stageUrl + stageId,
         JSON.stringify({
           id: stageId,
           stage_override_enabled: true,
-          stage_override_reason: 'testing'            
-        }),
-        { withCredentials: true }
+          stage_override_reason: "testing",
+        })
       );
     });
-    it("should throw with custom message if axios.get rejects", async () => {
-      mockedAxios.patch.mockRejectedValueOnce(new Error("Network Error"));
 
-      await expect(patchJustStageOverride(stageId, true, 'testing')).rejects.toThrow(
-        "patchJustStageOverride failed: Network Error"
-      );
+    it("should throw with custom message if privateApi.patch rejects", async () => {
+      mockedPrivateApi.patch.mockRejectedValueOnce(new Error("Network Error"));
 
-      expect(mockedAxios.patch).toHaveBeenCalledTimes(1);
+      await expect(
+        patchJustStageOverride(stageId, true, "testing")
+      ).rejects.toThrow("patchJustStageOverride failed: Network Error");
+
+      expect(mockedPrivateApi.patch).toHaveBeenCalledTimes(1);
     });
-    it("should throw an error when axios.get rejects with non-error", async () => {
-      mockedAxios.patch.mockRejectedValueOnce("testing 123");
 
-      await expect(patchJustStageOverride(stageId, true, 'testing')).rejects.toThrow(
-        "patchJustStageOverride failed: testing 123"
-      );
+    it("should throw an error when privateApi.patch rejects with non-error", async () => {
+      mockedPrivateApi.patch.mockRejectedValueOnce("testing 123");
 
-      expect(mockedAxios.patch).toHaveBeenCalledTimes(1);
+      await expect(
+        patchJustStageOverride(stageId, true, "testing")
+      ).rejects.toThrow("patchJustStageOverride failed: testing 123");
+
+      expect(mockedPrivateApi.patch).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -318,39 +462,37 @@ describe("non standard throw cases", () => {
       jest.clearAllMocks();
     });
 
-    it("should throw an error when response.status !== 200", async () => {
-      mockedAxios.delete.mockResolvedValueOnce({
-        status: 500,
+    it("should throw an error when response.data.count is missing", async () => {
+      mockedPrivateApi.delete.mockResolvedValueOnce({
         data: {},
-      });
+      } as any);
 
       await expect(deleteFullStage(stageId)).rejects.toThrow(
-        "Error deleting stage"
+        "deleteFullStage failed: Error deleting stage"
       );
 
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
-      expect(mockedAxios.delete).toHaveBeenCalledWith(stageUrl + stageId, {
-        withCredentials: true,
-      });
+      expect(mockedPrivateApi.delete).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.delete).toHaveBeenCalledWith(stageUrl + stageId);
     });
-    it("should throw with custom message if axios.get rejects", async () => {
-      mockedAxios.delete.mockRejectedValueOnce(new Error("Network Error"));
+
+    it("should throw with custom message if privateApi.delete rejects", async () => {
+      mockedPrivateApi.delete.mockRejectedValueOnce(new Error("Network Error"));
 
       await expect(deleteFullStage(stageId)).rejects.toThrow(
         "deleteFullStage failed: Network Error"
       );
 
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.delete).toHaveBeenCalledTimes(1);
     });
-    it("should throw an error when axios.get rejects with non-error", async () => {
-      mockedAxios.delete.mockRejectedValueOnce("testing 123");
+
+    it("should throw an error when privateApi.delete rejects with non-error", async () => {
+      mockedPrivateApi.delete.mockRejectedValueOnce("testing 123");
 
       await expect(deleteFullStage(stageId)).rejects.toThrow(
         "deleteFullStage failed: testing 123"
       );
 
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.delete).toHaveBeenCalledTimes(1);
     });
   });
-
-})
+});

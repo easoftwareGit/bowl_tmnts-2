@@ -6,7 +6,7 @@ import {
   validateBrktRefunds,
 } from "@/lib/validation/brktRefunds/validate";
 import { initBrktRefund } from "@/lib/db/initVals";
-import { maxBrackets } from "@/lib/validation/validation";
+import { maxBrackets } from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
 import { mockBrktRefundsToPost } from "../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { cloneDeep } from "lodash";

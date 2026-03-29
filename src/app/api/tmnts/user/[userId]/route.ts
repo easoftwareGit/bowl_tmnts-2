@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isValidBtDbId } from "@/lib/validation/validation";
+import { standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/tmnts/user/:userId
 
@@ -25,7 +26,7 @@ export async function GET(
         end_date: true,
         bowl_id: true,
         user_id: true,
-        bowls: {
+        bowl: {
           select: {
             bowl_name: true,
             city: true,
@@ -40,6 +41,6 @@ export async function GET(
     })
     return NextResponse.json({ tmnts }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ error: "error getting tmnts for user" }, { status: 500 });
+    return standardCatchReturn(error, "error getting tmnts for user");    
   }
 }

@@ -4,8 +4,8 @@ import { validatePot, sanitizePot } from "../../../lib/validation/pots/validate"
 import { ErrorCode } from "@/lib/enums/enums";
 import type { potType } from "@/lib/types/types";
 import { initPot } from "@/lib/db/initVals";
-import { getErrorStatus } from "../errCodes";
-import { potDataForPrisma } from "./dataForPrisma";
+import { standardCatchReturn } from "../apiCatch";
+import { potDataForPrisma } from "./potDataForPrisma";
 
 // routes /api/pots
 export async function GET(request: NextRequest) {
@@ -21,11 +21,8 @@ export async function GET(request: NextRequest) {
       ]
     })
     return NextResponse.json({pots}, {status: 200});    
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: "error getting pots" },
-      { status: 400 }
-    );            
+  } catch (error) {
+    return standardCatchReturn(error, "error getting pots");
   }
 }
 
@@ -71,11 +68,7 @@ export async function POST(request: Request) {
       data: potData
     })    
     return NextResponse.json({ pot }, { status: 201 })        
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error creating pot" },
-      { status: errStatus }
-    );            
+  } catch (error) {
+    return standardCatchReturn(error, "error creating pot");
   }
 }

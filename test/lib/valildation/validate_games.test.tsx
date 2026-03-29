@@ -1,7 +1,7 @@
 import { exportedForTesting, sanitizeGame, validateGame, validateGames, validGameFkId } from "@/lib/validation/games/validate"
 import { initGame } from "@/lib/db/initVals";
 import type { gameType, validGamesType } from "@/lib/types/types";
-import { maxGames, maxScore } from "@/lib/validation/validation";
+import { maxGames, maxScore } from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
 import { mockGamesToPost } from "../../mocks/tmnts/singlesAndDoubles/mockSquads";
 

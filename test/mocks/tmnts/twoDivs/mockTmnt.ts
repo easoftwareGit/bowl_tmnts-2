@@ -11,7 +11,7 @@ export const mockTmnt: tmntType = {
   start_date_err: "",
   end_date_str: '2023-12-31',
   end_date_err: "",
-  bowls: {
+  bowl: {
     bowl_name: "Earl Anthony's Dublin Bowl",
     city: "Dublin",
     state: "CA",

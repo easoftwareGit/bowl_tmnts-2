@@ -18,7 +18,7 @@ import {
   maxLaneCount,
   maxLastNameLength,
   maxStartLane,
-} from "@/lib/validation/validation";
+} from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
 import { cloneDeep } from "lodash";
 import type { playerType } from "@/lib/types/types";

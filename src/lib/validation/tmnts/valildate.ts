@@ -1,6 +1,7 @@
-import { isValidBtDbId, maxTmntNameLength, minDate, maxDate } from "@/lib/validation/validation";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { maxTmntNameLength, minDate, maxDate } from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
-import { sanitize } from "@/lib/validation/sanitize";
+import { sanitizeTournamentName } from "@/lib/validation/sanitize";
 import { isValid, compareAsc } from "date-fns";
 import type { idTypes, tmntFullType, tmntType } from "@/lib/types/types";
 import { blankTmnt } from "@/lib/db/initVals";
@@ -16,7 +17,7 @@ const gotTmntData = (tmnt: tmntType): ErrorCode => {
   try {
     if (!tmnt 
       || !tmnt.id
-      || !sanitize(tmnt.tmnt_name)
+      || !sanitizeTournamentName(tmnt.tmnt_name)
       || (!tmnt.start_date_str) 
       || (!tmnt.end_date_str)  
       || !tmnt.bowl_id
@@ -31,7 +32,7 @@ const gotTmntData = (tmnt: tmntType): ErrorCode => {
 }
 
 export const validTmntName = (tmntName: string): boolean => {  
-  const sanitized = sanitize(tmntName);
+  const sanitized = sanitizeTournamentName(tmntName);
   return (sanitized.length > 0 && sanitized.length <= maxTmntNameLength)
 }
 
@@ -140,7 +141,7 @@ export const sanitizeTmnt = (tmnt: tmntType): tmntType => {
   if (isValidBtDbId(tmnt.id, 'tmt')) {
     sanditizedTmnt.id = tmnt.id
   }
-  sanditizedTmnt.tmnt_name = sanitize(tmnt.tmnt_name) 
+  sanditizedTmnt.tmnt_name = sanitizeTournamentName(tmnt.tmnt_name) 
   if (typeof tmnt.start_date_str === 'string' && validDateString(tmnt.start_date_str)) {
     sanditizedTmnt.start_date_str = tmnt.start_date_str  
   }

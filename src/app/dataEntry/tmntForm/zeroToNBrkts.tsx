@@ -13,7 +13,7 @@ import {
   maxMoney,
   minFee,  
   zeroAmount,
-} from "@/lib/validation/validation";
+} from "@/lib/validation/constants";
 import {
   acdnErrClassName,
   getAcdnErrMsg,

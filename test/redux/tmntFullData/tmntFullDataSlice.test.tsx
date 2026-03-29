@@ -9,7 +9,7 @@ import { getTmntFullData } from "@/lib/db/tmnts/dbTmnts";
 import {
   replaceTmntFullData,
   replaceTmntEntriesData,
-} from "@/lib/db/tmnts/dbTmntsReplace";
+} from "@/lib/db/tmnts/dbTmnts";
 
 import type { tmntFullType, fullStageType } from "@/lib/types/types";
 import { blankFullStage, blankTmnt } from "@/lib/db/initVals";
@@ -19,7 +19,6 @@ import { ioDataError } from "@/lib/enums/enums";
 import { SquadStage } from "@prisma/client";
 
 jest.mock("@/lib/db/tmnts/dbTmnts");
-jest.mock("@/lib/db/tmnts/dbTmntsReplace");
 
 const mockedGetTmntFullData = jest.mocked(getTmntFullData);
 const mockedReplaceTmntFullData = jest.mocked(replaceTmntFullData);

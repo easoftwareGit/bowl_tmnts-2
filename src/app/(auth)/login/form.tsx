@@ -3,7 +3,8 @@
 import React, { ChangeEvent, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { maxEmailLength, isEmail, maxPasswordLength } from "@/lib/validation/validation";
+import { isEmail } from "@/lib/validation/validation";
+import { maxEmailLength, maxPasswordLength } from "@/lib/validation/constants";
 import { signIn } from "next-auth/react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Alert } from "@/components/ui/index";
@@ -110,8 +111,8 @@ export const LoginForm = () => {
         } else {
           setLoginError('Invalid email or password')
         }
-      } else {
-        console.log("Invalid login Data!");        
+      // } else {
+      //   console.log("Invalid login Data!");        
       }      
     } catch (err: any) {
       setLoginError("Other error logging in");
@@ -148,7 +149,7 @@ export const LoginForm = () => {
   }
 
   return (
-    <form onSubmit={onSubmit}>
+    <form onSubmit={onSubmit} noValidate>
       <div className="form_container">
         <div className="row g-3 mb-3">
           <div className="col">
@@ -199,7 +200,7 @@ export const LoginForm = () => {
           </div>            
         </div>
         <div className="d-grid">
-          <button type="submit" id="btnSubmit" className="btn btn-primary mt-2">
+          <button type="submit" id="btnSubmit" data-testid="btnSubmit" className="btn btn-primary mt-2">
             Login
           </button>
           <button id="btnLoginAsEric" className="btn btn-secondary mt-2" onClick={handleLoginAsEric}>

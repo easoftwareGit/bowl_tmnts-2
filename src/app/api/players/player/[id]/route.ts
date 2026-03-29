@@ -5,7 +5,7 @@ import { ErrorCode } from "@/lib/enums/enums";
 import { initPlayer } from "@/lib/db/initVals";
 import type { playerType } from "@/lib/types/types";
 import { sanitizePlayer, validatePlayer, validPlayerId } from "../../../../../lib/validation/players/validate";
-import { getErrorStatus } from "@/app/api/errCodes";
+import { getErrorStatus, standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/players/player/:id
 
@@ -27,8 +27,8 @@ export async function GET(
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }    
     return NextResponse.json({ player }, { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json({ error: "error getting player" }, { status: 500 });
+  } catch (error) {
+    return standardCatchReturn(error, "error getting player");
   }
 }
 
@@ -87,12 +87,8 @@ export async function PUT(
     });
 
     return NextResponse.json({ player }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "Error putting player" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error putting player");
   }
 }
 
@@ -209,12 +205,8 @@ export async function PATCH(
     });
 
     return NextResponse.json({ player }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "Error patching player" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error patching player");
   }
 }
 
@@ -233,11 +225,7 @@ export async function DELETE(
       },
     });
     return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "Error deleting player" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error deleting player");
   }
 }    

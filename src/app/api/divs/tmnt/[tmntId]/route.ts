@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isValidBtDbId } from "@/lib/validation/validation";
+import { standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/divs/tmnt/:tmntId
 
@@ -27,37 +28,7 @@ export async function GET(
     })    
     // no matching rows is ok
     return NextResponse.json({divs}, {status: 200});    
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: "error getting divs for event" },
-      { status: 500 }
-    );        
-  } 
-}
-
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ tmntId: string }> }
-) {
-  try {
-    const { tmntId } = await params;
-    // check if tmntId is a valid tmnt id
-    if (!isValidBtDbId(tmntId, 'tmt')) {
-      return NextResponse.json(
-        { error: "not found" },
-        { status: 404 }
-      );        
-    }
-    const result = await prisma.div.deleteMany({
-      where: {
-        tmnt_id: tmntId,
-      },
-    });    
-    return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: "error getting divs for tmnt" },
-      { status: 500 }
-    );        
+  } catch (error) {
+    return standardCatchReturn(error, "error getting divs for tmnt");
   } 
 }

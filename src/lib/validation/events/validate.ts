@@ -1,14 +1,16 @@
 import {
   isValidBtDbId,
+  validSortOrder,  
+} from "@/lib/validation/validation";
+import {
   maxEventLength,
   minTeamSize,
   maxTeamSize,
   minGames,
   maxGames,  
-  validSortOrder,  
-} from "@/lib/validation/validation";
+} from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
-import { sanitize, sanitizeCurrency } from "@/lib/validation/sanitize";
+import { sanitizeEDS, sanitizeCurrency } from "@/lib/validation/sanitize";
 import { validBtdbMoney, validMoney } from "@/lib/currency/validate";
 import type { eventType, idTypes, validEventsType } from "@/lib/types/types";
 import { blankEvent } from "@/lib/db/initVals";
@@ -40,7 +42,7 @@ const gotEventData = (event: eventType): ErrorCode => {
     if (
       !event.id ||
       !event.tmnt_id ||
-      !sanitize(event.event_name) ||
+      !sanitizeEDS(event.event_name) ||
       typeof event.team_size !== "number" ||
       typeof event.games !== "number" ||  
       !gotEventMoney(event.added_money) ||
@@ -62,7 +64,7 @@ const gotEventData = (event: eventType): ErrorCode => {
 
 export const validEventName = (eventName: unknown): boolean => {
   if (eventName == null || typeof eventName !== 'string') return false;  
-  const sanitized = sanitize(eventName);
+  const sanitized = sanitizeEDS(eventName);
   return sanitized.length > 0 && sanitized.length <= maxEventLength;
 };
 export const validTeamSize = (teamSize: unknown): boolean => {
@@ -231,7 +233,7 @@ export const sanitizeEvent = (event: eventType): eventType => {
   if (validEventFkId(event.tmnt_id, "tmt")) {
     sanitizedEvent.tmnt_id = event.tmnt_id;
   }
-  sanitizedEvent.event_name = sanitize(event.event_name);
+  sanitizedEvent.event_name = sanitizeEDS(event.event_name);
   if ((event.team_size === null) || isNumber(event.team_size)) {
     sanitizedEvent.team_size = event.team_size;
   }

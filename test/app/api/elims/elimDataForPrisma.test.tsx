@@ -1,7 +1,7 @@
 import type { elimType } from '@/lib/types/types';
 import { mockTmntFullData } from '../../../mocks/tmnts/tmntFullData/mockTmntFullData';
 import { cloneDeep } from 'lodash';
-import { elimDataForPrisma } from '@/app/api/elims/dataForPrisma';
+import { elimDataForPrisma } from '@/app/api/elims/elimDataForPrisma';
 
 describe('elimDataForPrisma', () => {
   const testElim: elimType = cloneDeep(mockTmntFullData.elims[0]);

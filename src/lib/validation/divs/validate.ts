@@ -1,17 +1,19 @@
 import {
   isValidBtDbId,
+  validSortOrder,
+  isNumber,
+} from "@/lib/validation/validation";
+import {
   maxEventLength,
   minHdcpPer,
   maxHdcpPer,  
   minHdcpFrom,
   maxHdcpFrom,
-  validSortOrder,
-} from "@/lib/validation/validation";
+} from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
-import { sanitize } from "@/lib/validation/sanitize";
+import { sanitizeEDS } from "@/lib/validation/sanitize";
 import type { HdcpForTypes, idTypes, validDivsType, divType } from "@/lib/types/types";
 import { blankDiv } from "@/lib/db/initVals";
-import { isNumber } from "@/lib/validation/validation";
 
 const isHdcpForType = (value: any): value is HdcpForTypes => {
   return value === "Game" || value === "Series";
@@ -27,7 +29,7 @@ const gotDivData = (div: divType): ErrorCode => {
   try {
     if (!div.id
       || !div.tmnt_id
-      || !sanitize(div.div_name)
+      || !sanitizeEDS(div.div_name)
       || (typeof div.hdcp_per !== 'number')
       || (typeof div.hdcp_from !== 'number')
       || (typeof div.int_hdcp !== 'boolean')
@@ -44,7 +46,7 @@ const gotDivData = (div: divType): ErrorCode => {
 
 export const validDivName = (divName: unknown): boolean => {
   if (!divName || typeof divName !== 'string') return false
-  const sanitized = sanitize(divName);
+  const sanitized = sanitizeEDS(divName);
   return (sanitized.length > 0 && sanitized.length <= maxEventLength);
 }
 export const validHdcpPer = (hdcpPer: unknown): boolean => {
@@ -139,7 +141,7 @@ export const sanitizeDiv = (div: divType): divType => {
   if (validDivFkId(div.tmnt_id, 'tmt')) {
     sanitizedDiv.tmnt_id = div.tmnt_id
   }
-  sanitizedDiv.div_name = sanitize(div.div_name)
+  sanitizedDiv.div_name = sanitizeEDS(div.div_name)
   if ((div.hdcp_per === null) || isNumber(div.hdcp_per)) {
     sanitizedDiv.hdcp_per = div.hdcp_per
   }

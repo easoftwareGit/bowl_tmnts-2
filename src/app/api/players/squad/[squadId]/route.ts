@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isValidBtDbId } from "@/lib/validation/validation";
+import { standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/players/squad/:squadId
 
@@ -31,34 +32,7 @@ export async function GET(
       ],      
     });    
     return NextResponse.json({ players }, { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: "error getting players for squad" },
-      { status: 500 }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error getting players for squad");
   }
-}
-
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ squadId: string }> }
-) {
-  try {
-    const { squadId } = await params;
-    // check if squadId is a valid squad id
-    if (!isValidBtDbId(squadId, "sqd")) {
-      return NextResponse.json({ error: "not found" }, { status: 404 });
-    }
-    const result = await prisma.player.deleteMany({
-      where: {
-        squad_id: squadId,
-      },
-    });
-    return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: "error deleting players for squad" },
-      { status: 500 }   
-    );
-  }
-}    
+}  

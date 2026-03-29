@@ -1,37 +1,41 @@
-import axios from "axios";
+import { publicApi, privateApi } from "@/lib/api/axios";
 import { baseDivEntriesApi } from "@/lib/api/apiPaths";
 import { testBaseDivEntriesApi } from "../../../testApi";
 import {
-  deleteAllDivEntriesForDiv,
-  deleteAllDivEntriesForSquad,
-  deleteAllDivEntriesForTmnt,
   deleteDivEntry,
   getAllDivEntriesForDiv,
   getAllDivEntriesForSquad,
   getAllDivEntriesForTmnt,
   postDivEntry,
-  postManyDivEntries,
   putDivEntry,
 } from "@/lib/db/divEntries/dbDivEntries";
 import type { divEntryType } from "@/lib/types/types";
 import { initDivEntry } from "@/lib/db/initVals";
 
+jest.mock("@/lib/api/axios", () => ({
+  publicApi: {
+    get: jest.fn(),
+  },
+  privateApi: {
+    post: jest.fn(),
+    put: jest.fn(),
+    delete: jest.fn(),
+  },
+}));
+
+const mockedPublicApi = publicApi as jest.Mocked<typeof publicApi>;
+const mockedPrivateApi = privateApi as jest.Mocked<typeof privateApi>;
+
 const url = testBaseDivEntriesApi.startsWith("undefined")
   ? baseDivEntriesApi
   : testBaseDivEntriesApi;
-const divUrl = url + "/div/";
 const divEntryUrl = url + "/divEntry/";
-const manyUrl = url + "/many";
+const divUrl = url + "/div/";
 const squadUrl = url + "/squad/";
 const tmntUrl = url + "/tmnt/";
 
-
-jest.mock("axios");
-
-const mockedAxios = axios as jest.Mocked<typeof axios>;
-
 const divEntryId = "den_652fc6c5556e407291c4b5666b2dccd7";
-const divId = 'div_f30aea2c534f4cfe87f4315531cef8ef'
+const divId = "div_f30aea2c534f4cfe87f4315531cef8ef";
 const squadId = "sqd_42be0f9d527e4081972ce8877190489d";
 const tmntId = "tmt_fd99387c33d9c78aba290286576ddce5";
 
@@ -58,428 +62,215 @@ const validDivEntry: divEntryType = {
   ...manyDivEntries[0],
 };
 
-describe("non standard throw cases", () => { 
+describe("non standard throw cases", () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
 
   describe("getAllDivEntriesForTmnt - non standard throw cases", () => {
-    afterEach(() => {
-      jest.restoreAllMocks();
-      jest.clearAllMocks();
-    });
-
-    it("should throw an error when response.status !== 200", async () => {
-      mockedAxios.get.mockResolvedValue({
-        status: 500,
-        data: {},
-      });
-
-      await expect(getAllDivEntriesForTmnt(tmntId)).rejects.toThrow(
-        "Unexpected status 500 when fetching divEntries"
-      );
-
-      expect(mockedAxios.get).toHaveBeenCalledTimes(1);
-      expect(mockedAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining(tmntId),
-        { withCredentials: true }
-      );
-    });
-    it("should throw with custom message if axios.get rejects", async () => {
-      mockedAxios.get.mockRejectedValueOnce(new Error("Network Error"));
+    it("should throw with custom message if publicApi.get rejects", async () => {
+      mockedPublicApi.get.mockRejectedValueOnce(new Error("Network Error"));
 
       await expect(getAllDivEntriesForTmnt(tmntId)).rejects.toThrow(
         "getAllDivEntriesForTmnt failed: Network Error"
       );
 
-      expect(mockedAxios.get).toHaveBeenCalledTimes(1);
+      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
+      expect(mockedPublicApi.get).toHaveBeenCalledWith(tmntUrl + tmntId);
     });
-    it("should throw an error when axios.get rejects with non-error", async () => {
-      mockedAxios.get.mockRejectedValueOnce("testing 123");
+
+    it("should throw an error when publicApi.get rejects with non-error", async () => {
+      mockedPublicApi.get.mockRejectedValueOnce("testing 123");
 
       await expect(getAllDivEntriesForTmnt(tmntId)).rejects.toThrow(
         "getAllDivEntriesForTmnt failed: testing 123"
       );
 
-      expect(mockedAxios.get).toHaveBeenCalledTimes(1);
+      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
+      expect(mockedPublicApi.get).toHaveBeenCalledWith(tmntUrl + tmntId);
     });
   });
 
   describe("getAllDivEntriesForSquad - non standard throw cases", () => {
-    afterEach(() => {
-      jest.restoreAllMocks();
-      jest.clearAllMocks();
-    });
-
-    it("should throw an error when response.status !== 200", async () => {
-      mockedAxios.get.mockResolvedValue({
-        status: 500,
-        data: {},
-      });
-
-      await expect(getAllDivEntriesForSquad(squadId)).rejects.toThrow(
-        "Unexpected status 500 when fetching divEntries"
-      );
-
-      expect(mockedAxios.get).toHaveBeenCalledTimes(1);
-      expect(mockedAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining(squadId),
-        { withCredentials: true }
-      );
-    });
-    it("should throw with custom message if axios.get rejects", async () => {
-      mockedAxios.get.mockRejectedValueOnce(new Error("Network Error"));
+    it("should throw with custom message if publicApi.get rejects", async () => {
+      mockedPublicApi.get.mockRejectedValueOnce(new Error("Network Error"));
 
       await expect(getAllDivEntriesForSquad(squadId)).rejects.toThrow(
         "getAllDivEntriesForSquad failed: Network Error"
       );
 
-      expect(mockedAxios.get).toHaveBeenCalledTimes(1);
+      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
+      expect(mockedPublicApi.get).toHaveBeenCalledWith(squadUrl + squadId);
     });
-    it("should throw an error when axios.get rejects with non-error", async () => {
-      mockedAxios.get.mockRejectedValueOnce("testing 123");
+
+    it("should throw an error when publicApi.get rejects with non-error", async () => {
+      mockedPublicApi.get.mockRejectedValueOnce("testing 123");
 
       await expect(getAllDivEntriesForSquad(squadId)).rejects.toThrow(
         "getAllDivEntriesForSquad failed: testing 123"
       );
 
-      expect(mockedAxios.get).toHaveBeenCalledTimes(1);
+      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
+      expect(mockedPublicApi.get).toHaveBeenCalledWith(squadUrl + squadId);
     });
   });
 
   describe("getAllDivEntriesForDiv - non standard throw cases", () => {
-    afterEach(() => {
-      jest.restoreAllMocks();
-      jest.clearAllMocks();
-    });
-
-    it("should throw an error when response.status !== 200", async () => {
-      mockedAxios.get.mockResolvedValue({
-        status: 500,
-        data: {},
-      });
-
-      await expect(getAllDivEntriesForDiv(divId)).rejects.toThrow(
-        "Unexpected status 500 when fetching divEntries"
-      );
-
-      expect(mockedAxios.get).toHaveBeenCalledTimes(1);
-      expect(mockedAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining(divId),
-        { withCredentials: true }
-      );
-    });
-    it("should throw with custom message if axios.get rejects", async () => {
-      mockedAxios.get.mockRejectedValueOnce(new Error("Network Error"));
+    it("should throw with custom message if publicApi.get rejects", async () => {
+      mockedPublicApi.get.mockRejectedValueOnce(new Error("Network Error"));
 
       await expect(getAllDivEntriesForDiv(divId)).rejects.toThrow(
         "getAllDivEntriesForDiv failed: Network Error"
       );
 
-      expect(mockedAxios.get).toHaveBeenCalledTimes(1);
+      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
+      expect(mockedPublicApi.get).toHaveBeenCalledWith(divUrl + divId);
     });
-    it("should throw an error when axios.get rejects with non-error", async () => {
-      mockedAxios.get.mockRejectedValueOnce("testing 123");
+
+    it("should throw an error when publicApi.get rejects with non-error", async () => {
+      mockedPublicApi.get.mockRejectedValueOnce("testing 123");
 
       await expect(getAllDivEntriesForDiv(divId)).rejects.toThrow(
         "getAllDivEntriesForDiv failed: testing 123"
       );
 
-      expect(mockedAxios.get).toHaveBeenCalledTimes(1);
+      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
+      expect(mockedPublicApi.get).toHaveBeenCalledWith(divUrl + divId);
     });
   });
 
   describe("postDivEntry - non standard throw cases", () => {
-
-    afterEach(() => {
-      jest.restoreAllMocks();
-      jest.clearAllMocks();
-    });
-
-    it("should throw an error when response.status !== 201", async () => {
-      mockedAxios.post.mockResolvedValueOnce({
-        status: 200,
+    it("should throw an error when response.data.divEntry is missing", async () => {
+      mockedPrivateApi.post.mockResolvedValueOnce({
         data: {},
-      });
+      } as any);
 
       await expect(postDivEntry(validDivEntry)).rejects.toThrow(
         "Error posting divEntry"
       );
 
-      expect(mockedAxios.post).toHaveBeenCalledTimes(1);
-      expect(mockedAxios.post).toHaveBeenCalledWith(
+      expect(mockedPrivateApi.post).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.post).toHaveBeenCalledWith(
         url,
-        JSON.stringify(validDivEntry),
-        { withCredentials: true }
+        JSON.stringify(validDivEntry)
       );
     });
-    it("should throw with custom message if axios.get rejects", async () => {
-      mockedAxios.post.mockRejectedValueOnce(new Error("Network Error"));
+
+    it("should throw with custom message if privateApi.post rejects", async () => {
+      mockedPrivateApi.post.mockRejectedValueOnce(new Error("Network Error"));
 
       await expect(postDivEntry(validDivEntry)).rejects.toThrow(
         "postDivEntry failed: Network Error"
       );
 
-      expect(mockedAxios.post).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.post).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.post).toHaveBeenCalledWith(
+        url,
+        JSON.stringify(validDivEntry)
+      );
     });
-    it("should throw an error when axios.get rejects with non-error", async () => {
-      mockedAxios.post.mockRejectedValueOnce("testing 123");
+
+    it("should throw an error when privateApi.post rejects with non-error", async () => {
+      mockedPrivateApi.post.mockRejectedValueOnce("testing 123");
 
       await expect(postDivEntry(validDivEntry)).rejects.toThrow(
         "postDivEntry failed: testing 123"
       );
 
-      expect(mockedAxios.post).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("postManyDivEntries - non standard throw cases", () => {
-
-    afterEach(() => {
-      jest.restoreAllMocks();
-      jest.clearAllMocks();
-    });
-
-    it("should throw an error when response.status !== 201", async () => {
-      mockedAxios.post.mockResolvedValueOnce({
-        status: 200,
-        data: {},
-      });
-
-      await expect(postManyDivEntries(manyDivEntries)).rejects.toThrow(
-        "Error posting divEntries"
+      expect(mockedPrivateApi.post).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.post).toHaveBeenCalledWith(
+        url,
+        JSON.stringify(validDivEntry)
       );
-
-      expect(mockedAxios.post).toHaveBeenCalledTimes(1);
-      expect(mockedAxios.post).toHaveBeenCalledWith(
-        manyUrl,
-        JSON.stringify(manyDivEntries),
-        { withCredentials: true }
-      );
-    });
-    it("should throw with custom message if axios.get rejects", async () => {
-      mockedAxios.post.mockRejectedValueOnce(new Error("Network Error"));
-
-      await expect(postManyDivEntries(manyDivEntries)).rejects.toThrow(
-        "postManyDivEntries failed: Network Error"
-      );
-
-      expect(mockedAxios.post).toHaveBeenCalledTimes(1);
-    });
-    it("should throw an error when axios.get rejects with non-error", async () => {
-      mockedAxios.post.mockRejectedValueOnce("testing 123");
-
-      await expect(postManyDivEntries(manyDivEntries)).rejects.toThrow(
-        "postManyDivEntries failed: testing 123"
-      );
-
-      expect(mockedAxios.post).toHaveBeenCalledTimes(1);
     });
   });
 
   describe("putDivEntry - non standard throw cases", () => {
-
-    afterEach(() => {
-      jest.restoreAllMocks();
-      jest.clearAllMocks();
-    });
-
-    it("should throw an error when response.status !== 200", async () => {
-      mockedAxios.put.mockResolvedValueOnce({
-        status: 500,
+    it("should throw an error when response.data.divEntry is missing", async () => {
+      mockedPrivateApi.put.mockResolvedValueOnce({
         data: {},
-      });
+      } as any);
 
       await expect(putDivEntry(validDivEntry)).rejects.toThrow(
         "Error putting divEntry"
       );
 
-      expect(mockedAxios.put).toHaveBeenCalledTimes(1);
-      expect(mockedAxios.put).toHaveBeenCalledWith(
+      expect(mockedPrivateApi.put).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.put).toHaveBeenCalledWith(
         divEntryUrl + validDivEntry.id,
-        JSON.stringify(validDivEntry),
-        { withCredentials: true }
+        JSON.stringify(validDivEntry)
       );
     });
-    it("should throw with custom message if axios.get rejects", async () => {
-      mockedAxios.put.mockRejectedValueOnce(new Error("Network Error"));
+
+    it("should throw with custom message if privateApi.put rejects", async () => {
+      mockedPrivateApi.put.mockRejectedValueOnce(new Error("Network Error"));
 
       await expect(putDivEntry(validDivEntry)).rejects.toThrow(
         "putDivEntry failed: Network Error"
       );
 
-      expect(mockedAxios.put).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.put).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.put).toHaveBeenCalledWith(
+        divEntryUrl + validDivEntry.id,
+        JSON.stringify(validDivEntry)
+      );
     });
-    it("should throw an error when axios.get rejects with non-error", async () => {
-      mockedAxios.put.mockRejectedValueOnce("testing 123");
+
+    it("should throw an error when privateApi.put rejects with non-error", async () => {
+      mockedPrivateApi.put.mockRejectedValueOnce("testing 123");
 
       await expect(putDivEntry(validDivEntry)).rejects.toThrow(
         "putDivEntry failed: testing 123"
       );
 
-      expect(mockedAxios.put).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.put).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.put).toHaveBeenCalledWith(
+        divEntryUrl + validDivEntry.id,
+        JSON.stringify(validDivEntry)
+      );
     });
   });
-  
-  describe("deleteDivEntry - non standard throw cases", () => {
-    afterEach(() => {
-      jest.restoreAllMocks();
-      jest.clearAllMocks();
-    });
 
-    it("should throw an error when response.status !== 200", async () => {
-      mockedAxios.delete.mockResolvedValueOnce({
-        status: 500,
+  describe("deleteDivEntry - non standard throw cases", () => {
+    it("should throw an error when response.data.count is missing", async () => {
+      mockedPrivateApi.delete.mockResolvedValueOnce({
         data: {},
-      });
+      } as any);
 
       await expect(deleteDivEntry(divEntryId)).rejects.toThrow(
         "Error deleting divEntry"
       );
 
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
-      expect(mockedAxios.delete).toHaveBeenCalledWith(divEntryUrl + divEntryId, {
-        withCredentials: true,
-      });
+      expect(mockedPrivateApi.delete).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.delete).toHaveBeenCalledWith(
+        divEntryUrl + divEntryId
+      );
     });
-    it("should throw with custom message if axios.get rejects", async () => {
-      mockedAxios.delete.mockRejectedValueOnce(new Error("Network Error"));
+
+    it("should throw with custom message if privateApi.delete rejects", async () => {
+      mockedPrivateApi.delete.mockRejectedValueOnce(new Error("Network Error"));
 
       await expect(deleteDivEntry(divEntryId)).rejects.toThrow(
         "deleteDivEntry failed: Network Error"
       );
 
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.delete).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.delete).toHaveBeenCalledWith(
+        divEntryUrl + divEntryId
+      );
     });
-    it("should throw an error when axios.get rejects with non-error", async () => {
-      mockedAxios.delete.mockRejectedValueOnce("testing 123");
+
+    it("should throw an error when privateApi.delete rejects with non-error", async () => {
+      mockedPrivateApi.delete.mockRejectedValueOnce("testing 123");
 
       await expect(deleteDivEntry(divEntryId)).rejects.toThrow(
         "deleteDivEntry failed: testing 123"
       );
 
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.delete).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.delete).toHaveBeenCalledWith(
+        divEntryUrl + divEntryId
+      );
     });
   });
-
-  describe("deleteAllDivEntriesForSquad - non standard throw cases", () => {
-    afterEach(() => {
-      jest.restoreAllMocks();
-      jest.clearAllMocks();
-    });
-
-    it("should throw an error when response.status !== 200", async () => {
-      mockedAxios.delete.mockResolvedValueOnce({
-        status: 500,
-        data: {},
-      });
-
-      await expect(deleteAllDivEntriesForSquad(squadId)).rejects.toThrow(
-        "Error deleting divEntries for squad"
-      );
-
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
-      expect(mockedAxios.delete).toHaveBeenCalledWith(squadUrl + squadId, {
-        withCredentials: true,
-      });
-    });
-    it("should throw with custom message if axios.get rejects", async () => {
-      mockedAxios.delete.mockRejectedValueOnce(new Error("Network Error"));
-
-      await expect(deleteAllDivEntriesForSquad(squadId)).rejects.toThrow(
-        "deleteAllDivEntriesForSquad failed: Network Error"
-      );
-
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
-    });
-    it("should throw an error when axios.get rejects with non-error", async () => {
-      mockedAxios.delete.mockRejectedValueOnce("testing 123");
-
-      await expect(deleteAllDivEntriesForSquad(squadId)).rejects.toThrow(
-        "deleteAllDivEntriesForSquad failed: testing 123"
-      );
-
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("deleteAllDivEntriesForDiv - non standard throw cases", () => {
-    afterEach(() => {
-      jest.restoreAllMocks();
-      jest.clearAllMocks();
-    });
-
-    it("should throw an error when response.status !== 200", async () => {
-      mockedAxios.delete.mockResolvedValueOnce({
-        status: 500,
-        data: {},
-      });
-
-      await expect(deleteAllDivEntriesForDiv(divId)).rejects.toThrow(
-        "Error deleting divEntries for div"
-      );
-
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
-      expect(mockedAxios.delete).toHaveBeenCalledWith(divUrl + divId, {
-        withCredentials: true,
-      });
-    });
-    it("should throw with custom message if axios.get rejects", async () => {
-      mockedAxios.delete.mockRejectedValueOnce(new Error("Network Error"));
-
-      await expect(deleteAllDivEntriesForDiv(divId)).rejects.toThrow(
-        "deleteAllDivEntriesForDiv failed: Network Error"
-      );
-
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
-    });
-    it("should throw an error when axios.get rejects with non-error", async () => {
-      mockedAxios.delete.mockRejectedValueOnce("testing 123");
-
-      await expect(deleteAllDivEntriesForDiv(divId)).rejects.toThrow(
-        "deleteAllDivEntriesForDiv failed: testing 123"
-      );
-
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("deleteAllDivEntriesForTmnt - non standard throw cases", () => {
-    afterEach(() => {
-      jest.restoreAllMocks();
-      jest.clearAllMocks();
-    });
-
-    it("should throw an error when response.status !== 200", async () => {
-      mockedAxios.delete.mockResolvedValueOnce({
-        status: 500,
-        data: {},
-      });
-
-      await expect(deleteAllDivEntriesForTmnt(tmntId)).rejects.toThrow(
-        "Error deleting divEntries for tmnt"
-      );
-
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
-      expect(mockedAxios.delete).toHaveBeenCalledWith(tmntUrl + tmntId, {
-        withCredentials: true,
-      });
-    });
-    it("should throw with custom message if axios.get rejects", async () => {
-      mockedAxios.delete.mockRejectedValueOnce(new Error("Network Error"));
-
-      await expect(deleteAllDivEntriesForTmnt(tmntId)).rejects.toThrow(
-        "deleteAllDivEntriesForTmnt failed: Network Error"
-      );
-
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
-    });
-    it("should throw an error when axios.get rejects with non-error", async () => {
-      mockedAxios.delete.mockRejectedValueOnce("testing 123");
-
-      await expect(deleteAllDivEntriesForTmnt(tmntId)).rejects.toThrow(
-        "deleteAllDivEntriesForTmnt failed: testing 123"
-      );
-
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
-    });
-  });
-
-})
+});

@@ -21,7 +21,7 @@ export async function GET(
         games: true,
       },
       where: {
-        events: {
+        event: {
           tmnt_id: tmntId,
         },
       },

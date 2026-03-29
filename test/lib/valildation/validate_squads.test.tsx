@@ -14,7 +14,7 @@ import {
   validateSquads,
 } from "@/lib/validation/squads/validate";
 import { initSquad } from "@/lib/db/initVals";
-import { maxEventLength, maxSortOrder } from "@/lib/validation/validation";
+import { maxEventLength, maxSortOrder } from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
 import { todayStr } from "@/lib/dateTools";
 import { mockSquadsToPost } from "../../mocks/tmnts/singlesAndDoubles/mockSquads";

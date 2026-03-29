@@ -3,10 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { ErrorCode } from "@/lib/enums/enums";
 import { initDivEntry } from "@/lib/db/initVals";
-import type { divEntryRawType, divEntryType } from "@/lib/types/types";
+import type { divEntryType } from "@/lib/types/types";
 import { sanitizeDivEntry, validateDivEntry } from "../../../../../lib/validation/divEntries/validate";
-import { divEntriesWithHdcp } from "../../calcHdcp";
-import { getErrorStatus } from "@/app/api/errCodes";
+import { standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/divEntries/divEntry/:id
 
@@ -19,7 +18,7 @@ export async function GET(
     if (!isValidBtDbId(id, "den")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
-    const divEntryNoHdcp = await prisma.div_Entry.findUnique({
+    const divEntry = await prisma.div_Entry.findUnique({
       select: {
         id: true,
         squad_id: true,
@@ -43,23 +42,12 @@ export async function GET(
         id: id,
       },
     })
-    if (!divEntryNoHdcp) {
+    if (!divEntry) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     } 
-    // convert fee to number
-    const divEntriesNoHecp: divEntryRawType[] = [
-      {
-        ...divEntryNoHdcp,
-        fee: divEntryNoHdcp.fee.toNumber(),
-      }
-    ];
-    // calc hdcp
-    const divEntries = divEntriesWithHdcp(divEntriesNoHecp);
-    // get just 1st and only div entry
-    const divEntry = divEntries[0];
     return NextResponse.json({ divEntry }, { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json({ error: "error getting divEntry" }, { status: 500 });
+  } catch (error) {
+    return standardCatchReturn(error, "error getting divEntry");    
   }
 }
 
@@ -112,12 +100,8 @@ export async function PUT(
     });
 
     return NextResponse.json({ divEntry }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "Error putting divEntry" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error putting divEntry");
   }
 }
 
@@ -212,12 +196,8 @@ export async function PATCH(
     });
 
     return NextResponse.json({ divEntry }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "Error patching divEntry" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error patching divEntry");
   }
 }
 
@@ -237,11 +217,7 @@ export async function DELETE(
       },
     });
     return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "Error deleting divEntry" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error deleting divEntry");
   }
 }    

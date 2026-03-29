@@ -4,8 +4,8 @@ import { ErrorCode } from "@/lib/enums/enums";
 import type { tmntDataType, tmntType } from "@/lib/types/types";
 import { sanitizeTmnt, validateTmnt } from "../../../lib/validation/tmnts/valildate";
 import { initTmnt } from "@/lib/db/initVals";
-import { getErrorStatus } from "../errCodes";
-import { tmntDataForPrisma } from "./dataForPrisma";
+import { standardCatchReturn } from "../apiCatch";
+import { tmntDataForPrisma } from "./tmntDataForPrisma";
 
 // routes /api/tmnts
 
@@ -19,11 +19,8 @@ export async function GET(request: NextRequest) {
     })
     // return NextResponse.json(tmnts);
     return NextResponse.json({ tmnts }, { status: 200 });    
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: "error getting tmnts" },
-      { status: 400 }
-    );        
+  } catch (error) {
+    return standardCatchReturn(error, "error getting tmnts");
   }
 }
   
@@ -67,8 +64,6 @@ export async function POST(request: Request) {
     if (!prismaToPost) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
-    // const startDate = startOfDayFromString(toPost.start_date_str) as Date
-    // const endDate = startOfDayFromString(toPost.end_date_str) as Date
     let tmntData: tmntDataType = {
       id: prismaToPost.id,
       tmnt_name: prismaToPost.tmnt_name,
@@ -82,11 +77,7 @@ export async function POST(request: Request) {
       data: tmntData
     })
     return NextResponse.json({ tmnt }, { status: 201 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error creating tmnt" },
-      { status: errStatus }
-    );        
+  } catch (error) {
+    return standardCatchReturn(error, "error creating tmnt");
   }
 }

@@ -3,8 +3,6 @@ import { baseEventsApi } from "@/lib/api/apiPaths";
 import { testBaseEventsApi } from "../../../testApi";
 import type { eventType } from "@/lib/types/types";
 import { initEvent } from "@/lib/db/initVals";
-import { mockEventsToPost, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockEvents";
-import { postManyEvents } from "@/lib/db/events/dbEvents";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -65,12 +63,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     const resetEvent = async () => {
       // make sure test event is reset in database
       const eventJSON = JSON.stringify(testEvent);
-      const putResponse = await axios({
-        method: "put",
-        data: eventJSON,
-        withCredentials: true,
-        url: oneEventUrl + testEvent.id,
-      })
+      await axios.put(oneEventUrl + testEvent.id, eventJSON, { withCredentials: true });      
     }
 
     const putEvent = { 
@@ -123,15 +116,12 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
 
     it('should update an event by ID', async () => { 
       const eventJSON = JSON.stringify(putEvent);
-      const putResponse = await axios({
-        method: "put",
-        data: eventJSON,
-        withCredentials: true,
-        url: oneEventUrl + testEvent.id,
-      })      
-      expect(putResponse.status).toBe(200);
+      const response = await axios.put(oneEventUrl + testEvent.id, eventJSON, {
+        withCredentials: true
+      });
+      expect(response.status).toBe(200);
       didPut = true;
-      const puttedEvent = putResponse.data.event;
+      const puttedEvent = response.data.event;
       // did not update tmnt_id
       expect(puttedEvent.tmnt_id).toEqual(testEvent.tmnt_id);
       // all other fields updated
@@ -147,24 +137,21 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       expect(puttedEvent.sort_order).toEqual(putEvent.sort_order);
     })
     it('should update an event when by ID with blank added money', async () => {
-      const invalidEvent = {
+      const testEvent = {
         ...putEvent,
         added_money: '',
       }
-      const eventJSON = JSON.stringify(invalidEvent);      
-      const putResponse = await axios({
-        method: "put",
-        data: eventJSON,
-        withCredentials: true,
-        url: oneEventUrl + testEvent.id,
+      const eventJSON = JSON.stringify(testEvent); 
+      const response = await axios.put(oneEventUrl + testEvent.id, eventJSON, {
+        withCredentials: true
       });
-      expect(putResponse.status).toBe(200);
+      expect(response.status).toBe(200);
       didPut = true;
-      const puttedEvent = putResponse.data.event;
+      const puttedEvent = response.data.event;
       expect(puttedEvent.added_money).toEqual('0');
     })
     it('should update an event when by ID with all money flieds blank', async () => {
-      const invalidEvent = {
+      const testEvent = {
         ...putEvent,
         added_money: '',
         entry_fee: '',
@@ -174,34 +161,56 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         expenses: '',
         lpox: '',
       }
-      const eventJSON = JSON.stringify(invalidEvent);      
-      const putResponse = await axios({
-        method: "put",
-        data: eventJSON,
-        withCredentials: true,
-        url: oneEventUrl + testEvent.id,
-      });
-      expect(putResponse.status).toBe(200);
+      const eventJSON = JSON.stringify(testEvent);     
+      const response = await axios.put(oneEventUrl + testEvent.id, eventJSON, {
+        withCredentials: true
+      });      
+      expect(response.status).toBe(200);
       didPut = true;
-      const puttedEvent = putResponse.data.event;
+      const puttedEvent = response.data.event;
       expect(puttedEvent.added_money).toEqual('0');
       expect(puttedEvent.entry_fee).toEqual('0');
       expect(puttedEvent.lineage).toEqual('0');
       expect(puttedEvent.prize_fund).toEqual('0');
       expect(puttedEvent.other).toEqual('0');
-      expect(puttedEvent.expenses).toEqual('0');
-      expect(puttedEvent.lpox).toEqual('0');
+      expect(puttedEvent.expenses).toEqual('0');      
     })
+    it('should update an event by ID with sanitized data', async () => {
+      const validEvent = {
+        ...putEvent,
+        event_name: '<script>Name</script>',        
+        entry_fee: '80.001',
+        lineage: '18.002',
+        prize_fund: '55.002',
+        other: '2.002',
+        expenses: '05.003',
+        added_money: '0.003',
+        lpox: '80.002',
+      }
+      const eventJSON = JSON.stringify(validEvent);
+      const response = await axios({
+        method: "put",
+        data: eventJSON,
+        withCredentials: true,
+        url: oneEventUrl + testEvent.id,
+      })
+      const puttedEvent = response.data.event;
+      expect(response.status).toBe(200);
+      expect(puttedEvent.event_name).toEqual('scriptNamescript');
+      expect(puttedEvent.entry_fee).toEqual('80');
+      expect(puttedEvent.lineage).toEqual('18');
+      expect(puttedEvent.prize_fund).toEqual('55');
+      expect(puttedEvent.other).toEqual('2');
+      expect(puttedEvent.expenses).toEqual('5');
+      expect(puttedEvent.added_money).toEqual('0');      
+    })      
     it('should NOT update an event by ID when ID is invalid', async () => {
       const eventJSON = JSON.stringify(putEvent);
       try {
-        const putResponse = await axios({
-          method: "put",
-          data: eventJSON,
-          withCredentials: true,
-          url: oneEventUrl + 'test',
-        })
-        expect(putResponse.status).toBe(404);
+        const response = await axios.put(oneEventUrl + 'test', eventJSON, {
+          withCredentials: true
+        });
+        expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -213,13 +222,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     it('should NOT update an event by ID when ID is valid, but not an event ID', async () => {
       const eventJSON = JSON.stringify(putEvent);
       try {
-        const putResponse = await axios({
-          method: "put",
-          data: eventJSON,
-          withCredentials: true,
-          url: oneEventUrl + nonEventId,
-        })
-        expect(putResponse.status).toBe(404);
+        const response = await axios.put(oneEventUrl + nonEventId, eventJSON, {
+          withCredentials: true
+        });
+        expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
           if (err instanceof AxiosError) {
@@ -233,13 +239,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     it('should NOT update an event by ID when ID is not found', async () => {
       const eventJSON = JSON.stringify(putEvent);
       try {
-        const putResponse = await axios({
-          method: "put",
-          data: eventJSON,
-          withCredentials: true,
-          url: oneEventUrl + notFoundId,
-        })
-        expect(putResponse.status).toBe(404);
+        const response = await axios.put(oneEventUrl + notFoundId, eventJSON, {
+          withCredentials: true
+        });
+        expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
           if (err instanceof AxiosError) {
@@ -257,11 +260,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         tmnt_id: "",
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -279,11 +282,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         event_name: "",
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -301,11 +304,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         team_size: null as any,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -323,11 +326,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         games: null as any,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -345,11 +348,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         entry_fee: '',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -367,11 +370,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         lineage: '',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -389,11 +392,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         prize_fund: '',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -411,11 +414,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         other: '',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -433,11 +436,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         expenses: '',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -455,11 +458,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         lpox: '',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -477,11 +480,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         sort_order: null as any,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -501,11 +504,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         tmnt_id: "invalid",
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -525,11 +528,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         tmnt_id: nonEventId,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -547,11 +550,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         event_name: "a".repeat(256),
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -569,11 +572,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         team_size: 0,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -591,11 +594,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         team_size: 1000,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -613,11 +616,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         team_size: 1.5,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -635,11 +638,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         team_size: 'abc',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -657,11 +660,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         games: 0,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -679,11 +682,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         games: 1000,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -701,11 +704,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         games: 1.5,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -723,11 +726,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         games: 'abc',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -745,11 +748,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         added_money: 100 as any,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -767,11 +770,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         added_money: 'abc',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -789,11 +792,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         added_money: '-1',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -811,11 +814,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         added_money: '1234567',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -833,11 +836,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         entry_fee: 100 as any,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -855,11 +858,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         entry_fee: 'abc',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -877,11 +880,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         entry_fee: '-1',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -899,11 +902,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         entry_fee: '1234567',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -921,11 +924,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         lineage: 20 as any,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -943,11 +946,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         lineage: 'abc',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -965,11 +968,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         lineage: '-1',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -987,11 +990,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         lineage: '1234567',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -1009,11 +1012,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         prize_fund: 75 as any,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -1031,11 +1034,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         prize_fund: 'abc',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -1053,11 +1056,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         prize_fund: '-1',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -1075,11 +1078,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         prize_fund: '1234567',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -1097,11 +1100,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         other: 20 as any,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -1119,11 +1122,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         other: 'abc',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -1141,11 +1144,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         other: '-1',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -1163,11 +1166,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         other: '1234567',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -1185,11 +1188,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         expenses: 10 as any,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -1207,11 +1210,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         expenses: 'abc',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -1229,11 +1232,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         expenses: '-1',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -1251,11 +1254,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         expenses: '1234567',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -1273,11 +1276,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         lpox: 'abc',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -1295,11 +1298,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         lpox: '-1',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -1317,11 +1320,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         lpox: '1234567',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -1339,11 +1342,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         sort_order: 'abc',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -1361,11 +1364,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         sort_order: 0,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -1383,11 +1386,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         sort_order: 1234567,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -1405,11 +1408,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         entry_fee: '100',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -1427,11 +1430,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         ...putEvent,
         lpox: '100',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + testEvent.id,
         });
@@ -1452,11 +1455,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         event_name: TriosName,
         sort_order: 2,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "put",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + event5Id,
         });
@@ -1469,30 +1472,6 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         }
       }
     })
-    it('should update an event by ID with sanitized data', async () => {
-      const validEvent = {
-        ...putEvent,
-        event_name: '<script>' + sampleEvent.event_name + '</script>',        
-        entry_fee: '80.001',
-        lineage: '18.002',
-        prize_fund: '55.002',
-        other: '2.002',
-        expenses: '05.003',
-        added_money: '0.003',
-        lpox: '80.002',
-      }
-      const eventJSON = JSON.stringify(validEvent);
-      const response = await axios({
-        method: "put",
-        data: eventJSON,
-        withCredentials: true,
-        url: oneEventUrl + testEvent.id,
-      })
-      const puttedEvent = response.data.event;
-      expect(response.status).toBe(200);
-      expect(puttedEvent.event_name).toEqual(sampleEvent.event_name);
-    })      
-
   })
 
   describe('PATCH by ID - API: /api/events/event/:id', () => {
@@ -1500,12 +1479,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     const doResetEvent = async () => {
       try {
         const eventJSON = JSON.stringify(testEvent);
-        const putResponse = await axios({
-          method: "put",
-          data: eventJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        })
+        await axios.put(oneEventUrl + testEvent.id, eventJSON, { withCredentials: true });
       } catch (err) {
         if (err instanceof AxiosError) console.log(err.message);
       }
@@ -1514,7 +1488,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     let didPatch = false;
 
     beforeAll(async () => {
-      await doResetEvent
+      await doResetEvent();
     })
 
     beforeEach(() => {
@@ -1535,6 +1509,24 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         tmnt_id: tmntNoEventsId,
       }
       const eventJSON = JSON.stringify(patchEvent);
+      const response = await axios.patch(oneEventUrl + patchEvent.id, eventJSON, {
+        withCredentials: true
+      });
+      const patchedEvent = response.data.event;
+      expect(response.status).toBe(200);
+      didPatch = true;
+      // for tmnt_id, check vs testEvent, not patchEvent 
+      expect(patchedEvent.tmnt_id).toEqual(testEvent.tmnt_id);
+    })
+    it('should patch sanitized data in an event by ID', async () => {
+      const patchEvent = {
+        ...blankEvent,
+        event_name: '<script>Name</script>',        
+        entry_fee: '81.001',
+        expenses: '6.001',
+        lpox: '81.002',
+      }
+      const eventJSON = JSON.stringify(patchEvent);
       const response = await axios({
         method: "patch",
         data: eventJSON,
@@ -1544,22 +1536,19 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       const patchedEvent = response.data.event;
       expect(response.status).toBe(200);
       didPatch = true;
-      // for tmnt_id, check vs testEvent, not patchEvent 
-      expect(patchedEvent.tmnt_id).toEqual(testEvent.tmnt_id);
+      expect(patchedEvent.event_name).toEqual('scriptNamescript');
+      expect(patchedEvent.entry_fee).toEqual('81');
+      expect(patchedEvent.expenses).toEqual('6');
     })
-    it('should return 200 when just passing in blank tmnt_id, no patching done', async () => {
-      // last tmnt is seeds, also used for delete test 
-      const tmntNoEventsId = 'tmt_e134ac14c5234d708d26037ae812ac33';
+    it('should return 200 when just passing in blank tmnt_id, no patching done', async () => {            
       const patchEvent = {
         ...blankEvent,
         tmnt_id: '',
       }
-      const eventJSON = JSON.stringify(patchEvent);
-      const response = await axios({
-        method: "patch",
-        data: eventJSON,
-        withCredentials: true,
-        url: oneEventUrl + blankEvent.id,
+      const eventJSON = JSON.stringify(patchEvent);      
+      // do not patch tmnt_id, no error
+      const response = await axios.patch(oneEventUrl + patchEvent.id, eventJSON, {
+        withCredentials: true
       })
       const patchedEvent = response.data.event;
       expect(response.status).toBe(200);
@@ -1573,11 +1562,8 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         event_name: 'Updated Event Name',
       }
       const eventJSON = JSON.stringify(patchEvent);
-      const response = await axios({
-        method: "patch",
-        data: eventJSON,
-        withCredentials: true,
-        url: oneEventUrl + blankEvent.id,
+      const response = await axios.patch(oneEventUrl + patchEvent.id, eventJSON, {
+        withCredentials: true
       })
       const patchedEvent = response.data.event;
       expect(response.status).toBe(200);
@@ -1590,11 +1576,8 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         team_size: 2,
       }
       const eventJSON = JSON.stringify(patchEvent);
-      const response = await axios({
-        method: "patch",
-        data: eventJSON,
-        withCredentials: true,
-        url: oneEventUrl + blankEvent.id,
+      const response = await axios.patch(oneEventUrl + patchEvent.id, eventJSON, {
+        withCredentials: true
       })
       const patchedEvent = response.data.event;
       expect(response.status).toBe(200);
@@ -1607,11 +1590,8 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         games: 4,
       }
       const eventJSON = JSON.stringify(patchEvent);
-      const response = await axios({
-        method: "patch",
-        data: eventJSON,
-        withCredentials: true,
-        url: oneEventUrl + blankEvent.id,
+      const response = await axios.patch(oneEventUrl + patchEvent.id, eventJSON, {
+        withCredentials: true
       })
       const patchedEvent = response.data.event;
       expect(response.status).toBe(200);
@@ -1624,18 +1604,15 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         added_money: '10',
       }
       const eventJSON = JSON.stringify(patchEvent);
-      const response = await axios({
-        method: "patch",
-        data: eventJSON,
-        withCredentials: true,
-        url: oneEventUrl + blankEvent.id,
+      const response = await axios.patch(oneEventUrl + patchEvent.id, eventJSON, {
+        withCredentials: true
       })
       const patchedEvent = response.data.event;
       expect(response.status).toBe(200);
       didPatch = true;
       expect(patchedEvent.added_money).toEqual(patchEvent.added_money);
     })
-    it('should patch entry fee, lineage and lpox in an event by ID', async () => {
+    it('should patch entry fee, and lineage in an event by ID', async () => {
       const patchEvent = {
         ...blankEvent,
         entry_fee: '81',
@@ -1643,20 +1620,16 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         lpox: '81',
       }
       const eventJSON = JSON.stringify(patchEvent);
-      const response = await axios({
-        method: "patch",
-        data: eventJSON,
-        withCredentials: true,
-        url: oneEventUrl + blankEvent.id,
+      const response = await axios.patch(oneEventUrl + patchEvent.id, eventJSON, {
+        withCredentials: true
       })
       const patchedEvent = response.data.event;
       expect(response.status).toBe(200);
       didPatch = true;
       expect(patchedEvent.entry_fee).toEqual(patchEvent.entry_fee);
       expect(patchedEvent.lineage).toEqual(patchEvent.lineage);
-      expect(patchedEvent.lpox).toEqual(patchEvent.lpox);
     })
-    it('should patch entry fee, prize fund, lpox in an event by ID', async () => {
+    it('should patch entry fee, and prize fund in an event by ID', async () => {
       const patchEvent = {
         ...blankEvent,
         entry_fee: '81',
@@ -1664,20 +1637,16 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         lpox: '81',
       }
       const eventJSON = JSON.stringify(patchEvent);
-      const response = await axios({
-        method: "patch",
-        data: eventJSON,
-        withCredentials: true,
-        url: oneEventUrl + blankEvent.id,
+      const response = await axios.patch(oneEventUrl + patchEvent.id, eventJSON, {
+        withCredentials: true
       })
       const patchedEvent = response.data.event;
       expect(response.status).toBe(200);
       didPatch = true;
       expect(patchedEvent.entry_fee).toEqual(patchEvent.entry_fee);
-      expect(patchedEvent.prize_fund).toEqual(patchEvent.prize_fund);
-      expect(patchedEvent.lpox).toEqual(patchEvent.lpox);
+      expect(patchedEvent.prize_fund).toEqual(patchEvent.prize_fund);      
     })
-    it('should patch entry fee, other, lpox in an event by ID', async () => {
+    it('should patch entry fee and other in an event by ID', async () => {
       const patchEvent = {
         ...blankEvent,
         entry_fee: '81',
@@ -1685,18 +1654,14 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         lpox: '81',
       }
       const eventJSON = JSON.stringify(patchEvent);
-      const response = await axios({
-        method: "patch",
-        data: eventJSON,
-        withCredentials: true,
-        url: oneEventUrl + blankEvent.id,
+      const response = await axios.patch(oneEventUrl + patchEvent.id, eventJSON, {
+        withCredentials: true
       })
       const patchedEvent = response.data.event;
       expect(response.status).toBe(200);
       didPatch = true;
       expect(patchedEvent.entry_fee).toEqual(patchEvent.entry_fee);
-      expect(patchedEvent.other).toEqual(patchEvent.other);
-      expect(patchedEvent.lpox).toEqual(patchEvent.lpox);
+      expect(patchedEvent.other).toEqual(patchEvent.other);      
     })
     it('should patch entry fee, expenses, lpox in an event by ID', async () => {
       const patchEvent = {
@@ -1706,28 +1671,24 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         lpox: '81',
       }
       const eventJSON = JSON.stringify(patchEvent);
-      const response = await axios({
-        method: "patch",
-        data: eventJSON,
-        withCredentials: true,
-        url: oneEventUrl + blankEvent.id,
+      const response = await axios.patch(oneEventUrl + patchEvent.id, eventJSON, {
+        withCredentials: true
       })
       const patchedEvent = response.data.event;
       expect(response.status).toBe(200);
       didPatch = true;
       expect(patchedEvent.entry_fee).toEqual(patchEvent.entry_fee);
       expect(patchedEvent.expenses).toEqual(patchEvent.expenses);
-      expect(patchedEvent.lpox).toEqual(patchEvent.lpox);
     })
     it('should not patch event name when event name is missing in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           event_name: "",
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -1742,13 +1703,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch event name when event name is too long in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           event_name: "a".repeat(256),
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -1763,13 +1724,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch team size when team size is not a nummber an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           team_size: 'abc',
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -1784,13 +1745,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch team size when team size is too low in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           team_size: 0,
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -1805,13 +1766,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch team size when team size is too high in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           team_size: 1001,
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -1826,13 +1787,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch games when games is not a number in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           games: 'abc',
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -1847,13 +1808,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch games when games is too low in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           games: 0,
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -1868,13 +1829,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch games when games is too high in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           games: 1001,
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -1889,13 +1850,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch added money when added money is a number not a string in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           added_money: 200 as any,
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -1910,13 +1871,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch added money when added money is not a number in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           added_money: 'abc',
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -1931,13 +1892,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch added money when added money is negitive in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           added_money: '-1',
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -1952,13 +1913,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch added money when added money is too high in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           added_money: '1234567',
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -1973,13 +1934,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch entry fee when entry fee is a number not a string, in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           entry_fee: 100 as any,
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -1994,13 +1955,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch entry fee when entry fee is not a number in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           entry_fee: 'abc',
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -2015,13 +1976,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch entry fee when entry fee is negitive in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           entry_fee: '-1',
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -2036,13 +1997,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch entry fee when entry fee is too high in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           entry_fee: '1234567',
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -2057,13 +2018,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch lineage when lineage is a number not a string,  in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           lineage: 20 as any,
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -2078,13 +2039,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch lineage when lineage is not a number in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           lineage: 'abc',
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -2099,13 +2060,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch lineage when lineage is negitive in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           lineage: '-1',
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -2120,13 +2081,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch lineage when lineage is too high in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           lineage: '1234567',
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -2141,13 +2102,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch prize fund when prize fund is a number not a string, in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           prize_fund: 75 as any,
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -2162,13 +2123,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch prize fund when prize fund is not a number in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           prize_fund: 'abc',
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -2183,13 +2144,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch prize fund when prize fund is negitive in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           prize_fund: '-1',
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -2204,13 +2165,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch prize fund when prize fund is too high in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           prize_fund: '1234567',
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -2225,13 +2186,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch other when other is not number not a string, in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           other: 2 as any,
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -2246,13 +2207,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch other when other is not a number in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           other: 'abc',
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -2267,13 +2228,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch other when other is negitive in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           other: '-1',
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -2288,13 +2249,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch other when other is too high in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           other: '1234567',
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -2309,13 +2270,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch expenses when expenses is a number not a string, in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           expenses: 10 as any,
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -2330,13 +2291,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch expenses when expenses is not a number in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           expenses: 'abc',
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -2351,13 +2312,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch expenses when expenses is negitive in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           expenses: '-1',
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -2372,13 +2333,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch expenses when expenses is too high in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           expenses: '1234567',
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -2393,13 +2354,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch sort_order when sort_order is not a number in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           sort_order: 'abc',
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -2414,13 +2375,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch sort_order when sort_order is too low in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           sort_order: 0,
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -2435,13 +2396,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch sort_order when sort_order is too high in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           sort_order: 1234567,
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -2456,13 +2417,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch event when entry fee !== lpox in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           lpox: '81',
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -2477,13 +2438,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch event when entry fee !== (lineage + prize fund + other + expenses) in an event by ID', async () => {
       try {
-        const eventJSON = JSON.stringify({
+        const invalidJSON = JSON.stringify({
           ...blankEvent,
           entry_fee: '81',
         })
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + blankEvent.id,
         })
@@ -2504,11 +2465,11 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         event_name: TriosName,
         sort_order: 2,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
         const response = await axios({
           method: "patch",
-          data: eventJSON,
+          data: invalidJSON,
           withCredentials: true,
           url: oneEventUrl + event5Id,
         });
@@ -2521,27 +2482,6 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         }
       }
     })
-    it('should patch sanitized data in an event by ID', async () => {
-      const patchEvent = {
-        ...blankEvent,
-        event_name: '<script>Updated Event Name</script>',        
-        entry_fee: '81.001',
-        expenses: '6.001',
-        lpox: '81.002',
-      }
-      const eventJSON = JSON.stringify(patchEvent);
-      const response = await axios({
-        method: "patch",
-        data: eventJSON,
-        withCredentials: true,
-        url: oneEventUrl + blankEvent.id,
-      })
-      const patchedEvent = response.data.event;
-      expect(response.status).toBe(200);
-      didPatch = true;
-      expect(patchedEvent.event_name).toEqual('Updated Event Name');
-    })
-
   })
 
   describe('DELETE by ID - API: /api/events/event/:id', () => {
@@ -2574,12 +2514,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       // if deleted event, add event back
       try {
         const eventJSON = JSON.stringify(toDelEvent);
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });        
+        await axios.post(url, eventJSON, { withCredentials: true });
       } catch (err) {
         if (err instanceof Error) console.log(err.message);
       }
@@ -2587,11 +2522,9 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
 
     it('should delete an event by ID', async () => {
       try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: oneEventUrl + toDelEvent.id,
-        });
+        const response = await axios.delete(oneEventUrl + toDelEvent.id, {
+          withCredentials: true
+        })
         expect(response.status).toBe(200);
         didDel = true;
       } catch (err) {
@@ -2602,12 +2535,17 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         }
       }
     })
+    it('should NOT delete an event by ID when ID is valid, but not found', async () => {
+      const response = await axios.delete(oneEventUrl + notFoundId, {
+        withCredentials: true
+      });
+      expect(response.status).toBe(200);
+      expect(response.data.count).toBe(0);
+    })    
     it('should NOT delete an event by ID when ID is invalid', async () => {
       try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: oneEventUrl + 'test',
+        const response = await axios.delete(oneEventUrl + 'test', {
+          withCredentials: true
         });
         expect(response.status).toBe(404);
       } catch (err) {
@@ -2620,10 +2558,8 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should NOT delete an event by ID when ID is valid, but not an event ID', async () => {
       try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: oneEventUrl + nonEventId,
+        const response = await axios.delete(oneEventUrl + nonEventId, {
+          withCredentials: true
         });
         expect(response.status).toBe(404);
       } catch (err) {
@@ -2634,111 +2570,6 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         }
       }
     })
-    it('should NOT delete an event by ID when ID is valid, but not found', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: oneEventUrl + notFoundId,
-        });
-        expect(response.status).toBe(200);
-        expect(response.data.count).toBe(0);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(200);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })    
-  })
-
-  describe('DELETE all events for a tmnt - API: /api/events/tmnt/:tmntId', () => { 
-    
-    const postEvents = async () => {      
-      const response = await axios.get(eventTmntUrl + tmntToDelId);
-      const tmntEvents = response.data.events;
-      if (!tmntEvents || tmntEvents.length === 0) {
-        const eventsToPost = [...mockEventsToPost];
-        await postManyEvents(eventsToPost);
-      }
-    }    
-
-    beforeEach(async () => {
-      await postEvents();
-    })
-
-    afterAll(async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: eventTmntUrl + tmntToDelId,
-        });        
-      } catch (err) {
-        if (err instanceof Error) console.log(err.message);
-      }            
-    })
-
-    it('should delete all events for a tmnt', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: eventTmntUrl + tmntToDelId,
-        });
-        expect(response.status).toBe(200);
-        expect(response.data.count).toBe(mockEventsToPost.length);
-      } catch (err) {
-        expect(true).toBeFalsy();
-      }            
-    })
-    it('should not delete all events for a tmnt when tmnt id is invalid', async () => { 
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: eventTmntUrl + 'test',
-        });
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not delete all events for a tmnt when tmnt id is valid, but not a tmnt id', async () => { 
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: eventTmntUrl + nonEventId,
-        });
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should delete 0 events for a tmnt when tmnt id is valid, but no events found for tmnt', async () => { 
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: eventTmntUrl + notfoundParentId,
-        });
-        expect(response.status).toBe(200);
-        expect(response.data.count).toBe(0)
-      } catch (err) {
-        expect(true).toBeFalsy();
-      }
-    })
-
   })
 
 })

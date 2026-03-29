@@ -18,7 +18,7 @@ import { defaultBrktPlayers } from "@/lib/db/initVals";
 
 import { mockTmntFullData } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { populateRows } from "@/app/dataEntry/playersForm/populateRows";
-import { maxBrackets } from "@/lib/validation/validation";
+import { maxBrackets, maxMoney } from "@/lib/validation/constants";
 
 describe("PlayersForm - validate (rowInfo)", () => {
   const makeRows = () => cloneDeep(populateRows(mockTmntFullData));
@@ -137,7 +137,7 @@ describe("PlayersForm - validate (rowInfo)", () => {
     it("flags invalid division fee (> maxMoney) when provided", () => {
       const rows = makeRows();
       const feeKey = entryFeeColName(div0.id);
-      rows[0][feeKey] = 999999999; // safely > maxMoney
+      rows[0][feeKey] = maxMoney + 1; // safely > maxMoney
       const res = findNextError(rows, mockTmntFullData, CheckType.PRELIM);
       expect(res.id).toBe(rows[0].id);
       expect(res.msg).toMatch(/Invalid Fee/i);

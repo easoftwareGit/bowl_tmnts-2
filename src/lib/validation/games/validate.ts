@@ -1,6 +1,7 @@
 import { blankGame } from "@/lib/db/initVals";
 import type { gameType, idTypes, validGamesType } from "@/lib/types/types";
-import { isValidBtDbId, isNumber, maxScore, validInteger, maxGames } from "@/lib/validation/validation";
+import { isValidBtDbId, isNumber, validInteger } from "@/lib/validation/validation";
+import { maxScore, maxGames } from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
 import { cloneDeep } from "lodash";
 

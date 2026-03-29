@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isValidBtDbId } from "@/lib/validation/validation";
+import { standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/brktSeeds/oneBrkt/:oneBrktId
 
@@ -38,28 +39,6 @@ export async function GET(
 
     return NextResponse.json({ brktSeeds }, { status: 200 });
   } catch (err: any) {
-    return NextResponse.json({ err: "error getting brktSeeds for oneBrkt" }, { status: 500 });
-  }
-}
-
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ oneBrktId: string }> }
-) {
-  try {
-    const { oneBrktId } = await params;    
-    // check if id is a valid brkt id
-    if (!isValidBtDbId(oneBrktId, "obk")) {
-      return NextResponse.json({ error: "not found" }, { status: 404 });
-    }
-    const result = await prisma.brkt_Seed.deleteMany({
-      where: { one_brkt_id: oneBrktId },
-    });
-    return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: "error deleting brktSeeds for oneBrkt" },
-      { status: 500 }
-    );
+    return standardCatchReturn(err, "error getting brktSeeds for oneBrkt");    
   }
 }

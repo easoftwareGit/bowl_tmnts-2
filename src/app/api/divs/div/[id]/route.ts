@@ -5,7 +5,7 @@ import { ErrorCode } from "@/lib/enums/enums";
 import { sanitizeDiv, validateDiv, validIntHdcp } from "../../../../../lib/validation/divs/validate";
 import type { divType, HdcpForTypes } from "@/lib/types/types";
 import { initDiv } from "@/lib/db/initVals";
-import { getErrorStatus } from "@/app/api/errCodes";
+import { getErrorStatus, standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/divs/:id
 
@@ -27,8 +27,8 @@ export async function GET(
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
     return NextResponse.json({ div }, { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json({ error: "error getting div" }, { status: 500 });
+  } catch (error) {
+    return standardCatchReturn(error, "error getting div");
   }
 }
 
@@ -102,12 +102,8 @@ export async function PUT(
       hdcp_per_str: (putDiv.hdcp_per * 100).toFixed(2),
     };
     return NextResponse.json({ div }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error updating div" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error updating div");
   }
 }
 
@@ -237,12 +233,8 @@ export async function PATCH(
       hdcp_per_str: (patchDiv.hdcp_per * 100).toFixed(2),
     };
     return NextResponse.json({ div }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error patching div" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error patching div");
   }
 }
 
@@ -262,11 +254,7 @@ export async function DELETE(
       },
     });
     return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error deleting div" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error deleting div");
   }
 }

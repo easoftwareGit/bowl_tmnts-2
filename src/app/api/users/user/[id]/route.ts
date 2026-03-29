@@ -1,58 +1,90 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import type { userType } from "@/lib/types/types";
-import { initUser } from "@/lib/db/initVals";
-import { sanitizeUser, validateUser } from "../../validate";
+import type { userDataType, userFormType, roleTypes } from "@/lib/types/types";
+import { blankUserData, initUserForm } from "@/lib/db/initVals";
+import { sanitizeUser, validateUser } from "@/lib/validation/users/validate";
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { ErrorCode } from "@/lib/enums/enums";
-import { doHash } from "@/lib/hash";
-import { getErrorStatus } from "@/app/api/errCodes";
+import { doHash } from "@/lib/server/hashServer";
+import { standardCatchReturn } from "@/app/api/apiCatch";
+
+// routes /api/users/:id
+
+const isRoleType = (value: unknown): value is roleTypes => {
+  return value === "ADMIN" || value === "DIRECTOR" || value === "USER";
+};
 
 export async function GET(
   request: Request,
-	{ params }: { params: Promise<{ id: string }> }
-) { 
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
     if (!isValidBtDbId(id, "usr")) {
       return NextResponse.json({ error: "invalid request" }, { status: 404 });
     }
+
     const user = await prisma.user.findUnique({
       where: {
-        id: id,
+        id,
       },
     });
+
     if (!user) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
+
     return NextResponse.json({ user }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ error: "Error getting user" }, { status: 500 });
+    return standardCatchReturn(error, "Error getting user by id");
   }
 }
 
 export async function PUT(
   req: Request,
-	{ params }: { params: Promise<{ id: string }> }
-) { 
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
     if (!isValidBtDbId(id, "usr")) {
       return NextResponse.json({ error: "invalid request" }, { status: 404 });
     }
-    const { first_name, last_name, email, phone, password } = await req.json();
-    const toCheck: userType = {
-      ...initUser,
+
+    const { first_name, last_name, email, phone, password, role } =
+      await req.json();
+
+    const toCheck: userFormType = {
+      ...initUserForm,
       id,
       first_name,
       last_name,
       email,
       phone,
       password,
+      role,
     };
 
-    const toPut = sanitizeUser(toCheck);    
-    const errCode = validateUser(toPut, true, true);
+    const sanitized = sanitizeUser(toCheck);
+    const toPut: userFormType = {
+      id: sanitized.id,
+      first_name: sanitized.first_name,
+      last_name: sanitized.last_name,
+      email: sanitized.email,
+      phone: sanitized.phone,
+      password: "password" in sanitized ? sanitized.password : "",
+      role: sanitized.role === "" ? toCheck.role : sanitized.role,
+    };
+    // detect if sanitization changed phone or password
+    const phoneChanged = toCheck.phone !== sanitized.phone;
+    const passwordChanged =
+      "password" in sanitized ? toCheck.password !== sanitized.password : false;
+    if (phoneChanged || passwordChanged) {
+      return NextResponse.json({ error: "invalid data" }, { status: 422 });
+    }
+    const checkPhone = toPut.phone !== "";
+    const checkPass = toPut.password !== "";
+
+    const errCode = validateUser(toPut, checkPhone, checkPass);
     if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
@@ -68,86 +100,141 @@ export async function PUT(
       }
       return NextResponse.json({ error: errMsg }, { status: 422 });
     }
-    const hashedPassword = await doHash(toPut.password);
-    
-    const user = await prisma.user.update({
+
+    const hashed = toPut.password ? await doHash(toPut.password) : "";
+    if (!hashed && toPut.password !== "") {
+      return NextResponse.json(
+        { error: "Error hashing password" },
+        { status: 422 },
+      );
+    }
+
+    const result = await prisma.user.updateMany({
       where: {
-        id: id,
+        id,
       },
       data: {
         first_name: toPut.first_name,
         last_name: toPut.last_name,
         email: toPut.email,
-        password_hash: hashedPassword,
+        password_hash: hashed,
         phone: toPut.phone,
+        role: toPut.role,
       },
     });
+
+    if (result.count === 0) {
+      return NextResponse.json({ error: "not found" }, { status: 404 });
+    }
+
+    // do not return password or password_hash
+    const user: userDataType & { password_hash: string } = {
+      ...blankUserData,
+      id: toPut.id,
+      first_name: toPut.first_name,
+      last_name: toPut.last_name,
+      email: toPut.email,
+      phone: toPut.phone,
+      role: toPut.role,
+      password_hash: hashed,
+    };
+
     return NextResponse.json({ user }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "Error putting user" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "Error putting user");
   }
 }
 
 export async function PATCH(
   request: Request,
-	{ params }: { params: Promise<{ id: string }> }
-) { 
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
     if (!isValidBtDbId(id, "usr")) {
       return NextResponse.json({ error: "invalid request" }, { status: 404 });
     }
-    
+
     const currentUser = await prisma.user.findUnique({
       where: {
-        id: id,
+        id,
       },
-    });    
+    });
+
     if (!currentUser) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
 
     const json = await request.json();
-    // populate toCheck with json
     const jsonProps = Object.getOwnPropertyNames(json);
-    const toCheck: userType = {
-      ...initUser,
+
+    const toCheck: userFormType = {
+      ...initUserForm,
+      id,
       first_name: currentUser.first_name,
       last_name: currentUser.last_name,
       email: currentUser.email,
-      phone: currentUser.phone || "",        
-      // password_hash: currentUser.password_hash || "",
+      phone: currentUser.phone || "",
+      password: "",
+      role: isRoleType(currentUser.role) ? currentUser.role : "USER",
     };
 
-    let checkPhone = false
-    let checkPass = false
-    if (jsonProps.includes('first_name')) {
+    if (jsonProps.includes("first_name")) {
       toCheck.first_name = json.first_name;
     }
-    if (jsonProps.includes('last_name')) {
+    if (jsonProps.includes("last_name")) {
       toCheck.last_name = json.last_name;
     }
-    if (jsonProps.includes('email')) {
+    if (jsonProps.includes("email")) {
       toCheck.email = json.email;
     }
-    if (jsonProps.includes('phone')) {
+    if (jsonProps.includes("phone")) {
       toCheck.phone = json.phone;
-      checkPhone = true
     }
     if (jsonProps.includes("password")) {
       toCheck.password = json.password;
-      checkPass = true
     }
-    
-    const toBePatched = sanitizeUser(toCheck);
-    const errCode = validateUser(toBePatched, checkPhone, checkPass);    
+    if (jsonProps.includes("role")) {
+      toCheck.role = json.role;
+    }
+
+    // if password_hash is not empty and new password is empty
+    // return error - cannot remove password
+    if (
+      currentUser.password_hash !== "" &&
+      jsonProps.includes("password") &&
+      toCheck.password === ""
+    ) {
+      return NextResponse.json({ error: "invalid data" }, { status: 422 });
+    }
+
+    const sanitized = sanitizeUser(toCheck);
+    const toBePatched: userFormType = {
+      id: sanitized.id,
+      first_name: sanitized.first_name,
+      last_name: sanitized.last_name,
+      email: sanitized.email,
+      phone: sanitized.phone,
+      password: "password" in sanitized ? sanitized.password : "",
+      role: sanitized.role === "" ? toCheck.role : sanitized.role,
+    };
+
+    // detect if sanitization changed phone or password
+    const phoneChanged = toCheck.phone !== sanitized.phone;
+    const passwordChanged =
+      "password" in sanitized ? toCheck.password !== sanitized.password : false;
+
+    if (phoneChanged || passwordChanged) {
+      return NextResponse.json({ error: "invalid data" }, { status: 422 });
+    }
+
+    const checkPhone = toBePatched.phone !== "";
+    const checkPass = toBePatched.password !== "";
+
+    const errCode = validateUser(toBePatched, checkPhone, checkPass);
     if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
-      switch (errCode as ErrorCode) {
+      switch (errCode) {
         case ErrorCode.MISSING_DATA:
           errMsg = "missing data";
           break;
@@ -161,17 +248,24 @@ export async function PATCH(
       return NextResponse.json({ error: errMsg }, { status: 422 });
     }
 
-    let hashedPassword = "";
-    if (jsonProps.includes("password")) {
-      hashedPassword = await doHash(toCheck.password);
-    }    
-    const toPatch = {
-      first_name: "",
-      last_name: "",
-      email: "",
-      password_hash: "",
-      phone: "",
-    };
+    const hashed = toBePatched.password
+      ? await doHash(toBePatched.password)
+      : "";
+
+    // let hashedPassword = "";
+    // if (jsonProps.includes("password")) {
+    //   hashedPassword = await doHash(toBePatched.password);
+    // }
+
+    const toPatch: {
+      first_name?: string;
+      last_name?: string;
+      email?: string;
+      password_hash?: string;
+      phone?: string;
+      role?: userDataType["role"];
+    } = {};
+
     if (jsonProps.includes("first_name")) {
       toPatch.first_name = toBePatched.first_name;
     }
@@ -182,38 +276,32 @@ export async function PATCH(
       toPatch.email = toBePatched.email;
     }
     if (jsonProps.includes("password")) {
-      toPatch.password_hash = hashedPassword;
+      toPatch.password_hash = hashed;
     }
     if (jsonProps.includes("phone")) {
       toPatch.phone = toBePatched.phone;
     }
+    if (jsonProps.includes("role")) {
+      toPatch.role = toBePatched.role;
+    }
+
     const user = await prisma.user.update({
       where: {
-        id: id,
+        id,
       },
-      // remove data if not sent
-      data: {
-        first_name: toPatch.first_name || undefined,
-        last_name: toPatch.last_name || undefined,
-        email: toPatch.email || undefined,
-        password_hash: hashedPassword || undefined,
-        phone: toPatch.phone || undefined,
-      },
+      data: toPatch,
     });
+
     return NextResponse.json({ user }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "Error pasting user" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "Error patching user");
   }
 }
 
 export async function DELETE(
   request: Request,
-	{ params }: { params: Promise<{ id: string }> }
-) { 
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
     if (!isValidBtDbId(id, "usr")) {
@@ -222,15 +310,12 @@ export async function DELETE(
 
     const result = await prisma.user.deleteMany({
       where: {
-        id: id,
+        id,
       },
     });
+
     return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "Error deleting user" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "Error deleting user");
   }
 }

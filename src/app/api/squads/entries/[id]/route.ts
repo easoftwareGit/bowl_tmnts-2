@@ -3,6 +3,7 @@ import { getSquadEntriesSQL } from "../getSql";
 import type { dataOneTmntType } from "@/lib/types/types";
 import { prisma } from "@/lib/prisma";
 import { isValidBtDbId } from "@/lib/validation/validation";
+import { standardCatchReturn } from "@/app/api/apiCatch";
 
 export async function GET(
   request: Request,  
@@ -32,9 +33,6 @@ export async function GET(
     const squadEntries = await prisma.$queryRawUnsafe(squadsSql);
     return NextResponse.json({squadEntries}, { status: 200 });
   } catch (error) {
-    return NextResponse.json(
-      { error: "error getting squad entries" },
-      { status: 500 }
-    );                 
+    return standardCatchReturn(error, "error getting squad entries");
   }
 }

@@ -1,4 +1,4 @@
-import { sanitize } from "@/lib/validation/sanitize";
+import { sanitizeEDS } from "@/lib/validation/sanitize";
 import type {
   eventType,
   divType,
@@ -33,7 +33,7 @@ export const isDuplicateEventName = (
   arrOfEvents: eventType[],
   event: eventType,
 ): boolean => {
-  let eventName = sanitize(event.event_name);
+  let eventName = sanitizeEDS(event.event_name);
   if (eventName.length === 0) return false;
   eventName = eventName.toLowerCase();
   let i = 0;
@@ -56,7 +56,7 @@ export const isDuplicateDivName = (
   arrOfDivs: divType[],
   div: divType,
 ): boolean => {
-  let divName = sanitize(div.div_name);
+  let divName = sanitizeEDS(div.div_name);
   if (divName.length === 0) return false;
   divName = divName.toLowerCase();
   let i = 0;
@@ -79,7 +79,7 @@ export const isDuplicateSquadName = (
   arrOfSquads: squadType[],
   squad: squadType,
 ): boolean => {
-  let squadName = sanitize(squad.squad_name);
+  let squadName = sanitizeEDS(squad.squad_name);
   if (squadName.length === 0) return false;
   squadName = squadName.toLowerCase();
   let i = 0;

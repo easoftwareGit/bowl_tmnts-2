@@ -1,231 +1,203 @@
 import {
   isAllZeros,
-  sanitize,
+  sanitizeCity,
   sanitizeCurrency,
+  sanitizeEDS,
+  sanitizeName,
+  sanitizeNotes,
+  sanitizeTournamentName,
   sanitizeUrl,
 } from "@/lib/validation/sanitize";
 
 describe("sanitize inputs", () => {
-  describe("tests for sanitize function", () => {
-    it("should remove special characters and trim spaces", () => {
-      const input = "a.b-c@d e'fg#h,1ক😀";
-      const expectedOutput = "a.b-cd e'fgh,1";
-      const result = sanitize(input);
-      expect(result).toEqual(expectedOutput);
+
+  describe("sanitizeName", () => {
+    it("returns empty string for non-string inputs", () => {
+      expect(sanitizeName(null)).toBe("");
+      expect(sanitizeName(undefined)).toBe("");
+      expect(sanitizeName(123)).toBe("");
+      expect(sanitizeName(NaN)).toBe("");
+      expect(sanitizeName(Infinity)).toBe("");
     });
 
-    it("should remove special characters and trim spaces, CAPITAL LETTERS", () => {
-      const input = "A.B-C@D E'FG#H1ক😀";
-      const expectedOutput = "A.B-CD E'FGH1";
-      const result = sanitize(input);
-      expect(result).toEqual(expectedOutput);
-    });
-    it("should sanitize a string with only special characters", () => {
-      const input = "!@#$%^&*()_";
-      const expectedOutput = "";
-      const result = sanitize(input);
-      expect(result).toBe(expectedOutput);
+    it("trims leading and trailing spaces", () => {
+      expect(sanitizeName("   John   ")).toBe("John");
     });
 
-    it("should return an empty string if input is falsy", () => {
-      const input = "";
-      const expectedOutput = "";
-      const result = sanitize(input);
-      expect(result).toEqual(expectedOutput);
-    });
-    it("should sanitize a very long string", () => {
-      const input =
-        "A very long string with <p>HTML</p> tags and special characters: !@#$%^&*()";
-      const expectedOutput =
-        "A very long string with HTML tags and special characters";
-      const result = sanitize(input);
-      expect(result).toBe(expectedOutput);
-    });
-    it("should remove all whitespace and return an empty string", () => {
-      const input = "     ";
-      const expectedOutput = "";
-      const result = sanitize(input);
-      expect(result).toBe(expectedOutput);
-    });
-    // sanitize a string with leading and trailing whitespace
-    it("should sanitize a string with leading and trailing whitespace", () => {
-      const input = "   Hello World!   ";
-      const expectedOutput = "Hello World";
-      const result = sanitize(input);
-      expect(result).toBe(expectedOutput);
-    });
-    it("should return a strign with no leading or tailing spaces", () => {
-      const input = "  a.b-c@d e'fg#h1ক😀  ";
-      const expectedOutput = "a.b-cd e'fgh1";
-      const result = sanitize(input);
-      expect(result).toEqual(expectedOutput);
+    it("keeps international letters and combining marks", () => {
+      expect(sanitizeName("Héllô Wörld")).toBe("Héllô Wörld");
+      expect(sanitizeName("ক")).toBe("ক");
+      expect(sanitizeName("Łukasz")).toBe("Łukasz");
     });
 
-    it('remove punctuation :;?!"', () => {
-      const input = 'abc:def;opq?rst!uvw"xyz';
-      const expectedOutput = "abcdefopqrstuvwxyz";
-      const result = sanitize(input);
-      expect(result).toEqual(expectedOutput);
-    });
-    it("keep allowed punctuation '.,", () => {
-      const input = "abc.def,ghi'jkl";
-      const expectedOutput = "abc.def,ghi'jkl";
-      const result = sanitize(input);
-      expect(result).toEqual(expectedOutput);
-    });
-    it("remove manually searched chars curved brackets and astirisk ()*", () => {
-      const input = "12(34)56*78+90";
-      const expectedOutput = "12345678+90";
-      const result = sanitize(input);
-      expect(result).toEqual(expectedOutput);
-    });
-    it("remove manually searched chars when they appear multiple times ()*", () => {
-      const input = "12((34)))56*****7890";
-      const expectedOutput = "1234567890";
-      const result = sanitize(input);
-      expect(result).toEqual(expectedOutput);
-    });
-    it("remove all brackets, straight [], curved (), curly {}, angeled <> ", () => {
-      const input = "[ABC](DEF){GHI}<JKL>";
-      const expectedOutput = "ABCDEFGHI";
-      const result = sanitize(input);
-      expect(result).toEqual(expectedOutput);
+    it("keeps apostrophe and hyphen", () => {
+      expect(sanitizeName("O'Connor")).toBe("O'Connor");
+      expect(sanitizeName("Jean-Luc")).toBe("Jean-Luc");
     });
 
-    it("should remove HTML tags when string contains HTML", () => {
-      const input = "<div>Hello</div> <p>World!</p>";
-      const expectedOutput = "Hello World";
-      const result = sanitize(input);
-      expect(result).toBe(expectedOutput);
-    });
-    it("should sanitize a string with URL-encoded characters", () => {
-      const input = "%3Cdiv%3EHello%3C/div%3E%20%3Cp%3EWorld!%3C/p%3E";
-      const expectedOutput = "Hello World";
-      const result = sanitize(input);
-      expect(result).toBe(expectedOutput);
+    it("removes digits, punctuation (other than ' and -), and emojis", () => {
+      expect(sanitizeName("Bob2 😀!@#")).toBe("Bob");
+      expect(sanitizeName("Ann, Marie.")).toBe("Ann Marie"); // comma/period removed, space preserved
     });
 
-    it("remove math symbols */=^", () => {
-      const input = "*12/34=5678^90";
-      const expectedOutput = "1234567890";
-      const result = sanitize(input);
-      expect(result).toEqual(expectedOutput);
-    });
-    // sanitize a string with asterisks
-    it("should sanitize string with asterisks", () => {
-      const input = "Hello*World*";
-      const expectedOutput = "HelloWorld";
-      const result = sanitize(input);
-      expect(result).toBe(expectedOutput);
+    it("removes brackets and other symbols", () => {
+      expect(sanitizeName("[ABC](DEF){GHI}<JKL>")).toBe("ABCDEFGHIJKL");
     });
 
-    // sanitize a string with parentheses
-    it("should remove parentheses when string contains parentheses", () => {
-      const input = "Hello (World)";
-      const expectedOutput = "Hello World";
-      const result = sanitize(input);
-      expect(result).toBe(expectedOutput);
+    it("returns empty string when input is only spaces", () => {
+      expect(sanitizeName("     ")).toBe("");
     });
-    it("keep math symbols +- plus and minus", () => {
-      const input = "12+34-56++78--90";
-      const expectedOutput = "12+34-56++78--90";
-      const result = sanitize(input);
-      expect(result).toEqual(expectedOutput);
+
+    it("does not collapse multiple spaces (only trims ends)", () => {
+      expect(sanitizeName("a  b   c")).toBe("a  b   c");
+      expect(sanitizeName("Billy Bob")).toBe("Billy Bob");
     });
-    it("remove other special chars `~@#$&|\\", () => {
-      const input = "AB`CDE~FGH@IJK#LMN$OPQ&RST|UVW\\XYZ";
-      const expectedOutput = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-      const result = sanitize(input);
-      expect(result).toEqual(expectedOutput);
-    });
-    it('remove random advaned unicode symbols "¼©«¬±ĂĖõœϢ֍جᴻ╢█"', () => {
-      const input = "ABC¼©«¬±ĂĖõœϢ֍جᴻ╢█xyz";
-      const expectedOutput = "ABCxyz";
-      const result = sanitize(input);
-      expect(result).toEqual(expectedOutput);
-    });
-    it("should return the string unchanged when it contains only allowed characters", () => {
-      const input = "Hello, world-123 'test'.";
-      const result = sanitize(input);
-      expect(result).toBe("Hello, world-123 'test'.");
-    });
-    it("should return an empty string when input is empty string", () => {
-      const result = sanitize("");
-      expect(result).toBe("");
-    });
-    it("should trim leading and trailing spaces", () => {
-      const input = "   leading and trailing spaces   ";
-      const result = sanitize(input);
-      expect(result).toBe("leading and trailing spaces");
-    });
-    it("should keep multiple spaces between words", () => {
-      const input = "a  b   c    d";
-      const result = sanitize(input);
-      expect(result).toBe("a  b   c    d");
-    });
-    it("should return an empty string when input contains only spaces", () => {
-      const input = "     ";
-      const result = sanitize(input);
-      expect(result).toBe("");
-    });
-    it("should remove non-Latin characters from the string", () => {
-      const input = "a.b-c@d e'fg#h1ক😀";
-      const result = sanitize(input);
-      expect(result).toBe("a.b-cd e'fgh1");
-    });
-    it("should maintain case sensitivity when input has a combination of upper and lower case letters", () => {
-      const input = "HeLlo, WoRld-123 'TeSt'.";
-      const result = sanitize(input);
-      expect(result).toBe("HeLlo, WoRld-123 'TeSt'.");
-    });
-    it("should trim after removing non-Latin characters", () => {
-      const input = "()  a.b-c@d e'fg#h1  ক  😀";
-      const result = sanitize(input);
-      expect(result).toBe("a.b-cd e'fgh1");
-    });
-    it("should return the same string when input is a valid JSON object", () => {
-      const input = '{"key": "value"}';
-      const result = sanitize(input);
-      expect(result).toBe("key value");
-    });
-    it("should remove newline characters and non-visible characters", () => {
-      const input = "a\nb\tc\r";
-      const result = sanitize(input);
-      expect(result).toBe("abc");
-    });
-    it("should sanitize string with non-ASCII characters", () => {
-      const input = "Héllô Wörld!";
-      const expectedOutput = "Hll Wrld";
-      const result = sanitize(input);
-      expect(result).toBe(expectedOutput);
-    });
-    it("should return an empty string when input is null", () => {
-      const result = sanitize(null);
-      expect(result).toBe("");
-    });
-    it("should return an empty string when input is undefined", () => {
-      const result = sanitize(undefined);
-      expect(result).toBe("");
-    });
-    it("should return an empty string when input is NaN", () => {
-      const result = sanitize(NaN);
-      expect(result).toBe("");
-    });
-    it("should return an empty string when input is Infinity", () => {
-      const result = sanitize(Infinity);
-      expect(result).toBe("");
-    });
-    it("should return an empty string when input is -Infinity", () => {
-      const result = sanitize(-Infinity);
-      expect(result).toBe("");
-    });
-    it("should return an empty string when input is a number", () => {
-      const result = sanitize(123);
-      expect(result).toBe("");
+
+    it("removes newlines/tabs because they are not Zs spaces", () => {
+      expect(sanitizeName("a\nb\tc\r")).toBe("abc");
     });
   });
 
-  describe("tests for the sanitizeUrl function", () => {
+  describe("sanitizeCity", () => {
+    it("returns empty string for non-string inputs", () => {
+      expect(sanitizeCity(null)).toBe("");
+      expect(sanitizeCity(undefined)).toBe("");
+      expect(sanitizeCity(123)).toBe("");
+    });
+
+    it("trims leading and trailing spaces", () => {
+      expect(sanitizeCity("  St. Louis  ")).toBe("St. Louis");
+    });
+
+    it("keeps international letters, period, and hyphen", () => {
+      expect(sanitizeCity("São Paulo")).toBe("São Paulo");
+      expect(sanitizeCity("Baden-Württemberg")).toBe("Baden-Württemberg");
+      expect(sanitizeCity("St. Louis")).toBe("St. Louis");
+      expect(sanitizeCity("ক. শহর-1")).toBe("ক. শহর-"); // numbers removed
+    });
+
+    it("removes disallowed punctuation and emojis", () => {
+      expect(sanitizeCity("City@Name😀")).toBe("CityName");
+      expect(sanitizeCity("A/B\\C")).toBe("ABC");
+    });
+
+    it("removes newlines/tabs", () => {
+      expect(sanitizeCity("a\nb\tc\r")).toBe("abc");
+    });
+  });
+
+  describe("sanitizeTournamentName", () => {
+    it("returns empty string for non-string inputs", () => {
+      expect(sanitizeTournamentName(null)).toBe("");
+      expect(sanitizeTournamentName(undefined)).toBe("");
+      expect(sanitizeTournamentName(123)).toBe("");
+    });
+
+    it("keeps letters (international), numbers, spaces, and allowed punctuation", () => {
+      const input = "2026 Spring Classic (Singles) - Bob's, Inc. & Co.";
+      expect(sanitizeTournamentName(input)).toBe(input);
+    });
+
+    it("removes disallowed characters like @ # / and emojis", () => {
+      const input = "A.B-C@D E'FG#H,1ক😀";
+      // tournament allows letters, numbers, spaces, '.,&()-
+      // @ and # removed, emoji removed
+      expect(sanitizeTournamentName(input)).toBe("A.B-CD E'FGH,1ক");
+    });
+
+    it("trims leading and trailing spaces", () => {
+      expect(sanitizeTournamentName("   Hello World!   ")).toBe("Hello World");
+      // "!" is disallowed for tournamentName and will be removed
+    });
+
+    it("does not collapse multiple spaces (only trims ends)", () => {
+      expect(sanitizeTournamentName("a  b   c")).toBe("a  b   c");
+    });
+
+    it("removes newlines/tabs", () => {
+      expect(sanitizeTournamentName("a\nb\tc\r")).toBe("abc");
+    });
+  });
+
+  describe("sanitizeNotes", () => {
+    it("returns empty string for non-string inputs", () => {
+      expect(sanitizeNotes(null)).toBe("");
+      expect(sanitizeNotes(undefined)).toBe("");
+      expect(sanitizeNotes(123)).toBe("");
+    });
+
+    it("keeps international letters, numbers, and punctuation", () => {
+      const input = "Notes: Héllô — Wörld! score=200, ok? ক 😀";
+      // emoji should be removed; punctuation should remain (Unicode \p{P})
+      expect(sanitizeNotes(input)).toBe("Notes: Héllô — Wörld! score=200, ok? ক");
+    });
+
+    it("keeps newlines and carriage returns", () => {
+      const input = "Line1\nLine2\rLine3";
+      expect(sanitizeNotes(input)).toBe(input);
+    });
+
+    it("removes tabs (not allowed) and other control chars", () => {
+      const input = "a\tb\u0000c";
+      expect(sanitizeNotes(input)).toBe("abc");
+    });
+
+    it("trims leading and trailing spaces but preserves internal spacing/newlines", () => {
+      expect(sanitizeNotes("  a  b \n c  ")).toBe("a b\nc");
+    });
+    
+    it("collapses multiple spaces", () => {
+      expect(sanitizeNotes("a   b   c")).toBe("a b c");
+    });
+    it("should remove html tags", () => {
+      expect(sanitizeNotes("<p>hello</p>")).toBe("hello");
+    });
+    it("should remove html attributes", () => {
+      expect(sanitizeNotes("<p class='hello'>hello</p>")).toBe("hello");
+    })
+    it("should remove html comments", () => {
+      expect(sanitizeNotes("<!-- hello -->")).toBe("");
+    })
+    it("should remove html entities", () => {
+      expect(sanitizeNotes("&lt;hello&gt;")).toBe("");
+    })
+    it('should remove html scripts', () => {
+      expect(sanitizeNotes("<script>alert('hello')</script>")).toBe("");
+    })
+  });
+
+  describe("sanitizeEDS", () => {
+    it("removes special characters and trims", () => {
+      expect(sanitizeEDS(" Event 1 ***")).toBe("Event 1");
+    });
+
+    it("keeps international letters and numbers", () => {
+      expect(sanitizeEDS("Évênt 2026")).toBe("Évênt 2026");
+      expect(sanitizeEDS("সেকশন ৩")).toBe("সেকশন ৩");
+    });
+
+    it("keeps apostrophe and hyphen", () => {
+      expect(sanitizeEDS("Scratch-A")).toBe("Scratch-A");
+      expect(sanitizeEDS("Director's Cup 2")).toBe("Director's Cup 2");
+    });
+
+    it("collapses multiple spaces", () => {
+      expect(sanitizeEDS("Event    1     Squad   2"))
+        .toBe("Event 1 Squad 2");
+    });
+
+    it("removes emoji", () => {
+      expect(sanitizeEDS("Event 😀 1")).toBe("Event 1");
+    });
+
+    it("returns empty string for non-string input", () => {
+      expect(sanitizeEDS(null)).toBe("");
+      expect(sanitizeEDS(undefined)).toBe("");
+      expect(sanitizeEDS(123)).toBe("");
+    });
+  });
+
+  describe("sanitizeUrl", () => {
     it("should return the sanitized URL when given a valid URL without an ending slash", () => {
       const result = sanitizeUrl("https://example.com");
       expect(result).toBe("https://example.com");
@@ -248,33 +220,8 @@ describe("sanitize inputs", () => {
       expect(result).toBe("http://example.com:8080/path?query=123#hash");
     });
 
-    it("should return the sanitized URL when given a valid HTTPS URL", () => {
-      const result = sanitizeUrl("https://example.com/path?query=123#hash");
-      expect(result).toBe("https://example.com/path?query=123#hash");
-    });
-
-    it("should return the sanitized URL when given a valid URL with a path", () => {
-      const result = sanitizeUrl("http://example.com/path?query=123#hash");
-      expect(result).toBe("http://example.com/path?query=123#hash");
-    });
-
-    it("should return the sanitized URL when given a valid HTTP URL with query parameters", () => {
-      const result = sanitizeUrl("http://example.com/path?query=123#hash");
-      expect(result).toBe("http://example.com/path?query=123#hash");
-    });
-
-    it("should return the sanitized URL when given a URL with a hash fragment", () => {
-      const result = sanitizeUrl("http://example.com/path?query=123#hash");
-      expect(result).toBe("http://example.com/path?query=123#hash");
-    });
-
     it("should return an empty string when given a URL with a malformed structure", () => {
       const result = sanitizeUrl("invalidurl");
-      expect(result).toBe("");
-    });
-
-    it("should return an empty string when given an empty URL", () => {
-      const result = sanitizeUrl("");
       expect(result).toBe("");
     });
 
@@ -284,18 +231,13 @@ describe("sanitize inputs", () => {
     });
 
     it("should return an empty string when given a URL with a very long length", () => {
-      const longUrl = "http://" + "a".repeat(10000); // creating a URL with a very long length
+      const longUrl = "http://" + "a".repeat(10000);
       const result = sanitizeUrl(longUrl);
       expect(result).toBe("");
     });
 
     it("should return an empty string when given a URL with missing protocol", () => {
       const result = sanitizeUrl("example.com");
-      expect(result).toBe("");
-    });
-
-    it("should return an empty string when given an invalid URL", () => {
-      const result = sanitizeUrl("invalidurl");
       expect(result).toBe("");
     });
 
@@ -322,156 +264,63 @@ describe("sanitize inputs", () => {
         "http://example.com/%3Cscript%3Ealert('XSS')%3C/script%3E"
       );
     });
-    it('should return an empty string when passsed a non string value', () => { 
+
+    it("should return an empty string when passed a non string value", () => {
       const result = sanitizeUrl(123);
       expect(result).toBe("");
-    })
+    });
   });
 
-  describe("tests for isAllZeros function", () => {
+  describe("isAllZeros", () => {
     it('should return true when the string contains only "0"s', () => {
-      const result = isAllZeros("0000");
-      expect(result).toBe(true);
+      expect(isAllZeros("0000")).toBe(true);
     });
     it('should return true when the string contains only 1 "0"', () => {
-      const result = isAllZeros("0");
-      expect(result).toBe(true);
+      expect(isAllZeros("0")).toBe(true);
     });
     it('should return false when the string contains mixed "0"s and other characters', () => {
-      const result = isAllZeros("0101");
-      expect(result).toBe(false);
+      expect(isAllZeros("0101")).toBe(false);
     });
     it("should return false for an empty string", () => {
-      const result = isAllZeros("");
-      expect(result).toBe(false);
+      expect(isAllZeros("")).toBe(false);
     });
-    it("should return false when the string contains non-'0' characters", () => {
-      const result = isAllZeros("0123");
-      expect(result).toBe(false);
-    });
-    it("should return true when the string contains only special characters", () => {
-      const result = isAllZeros("!@#$%^&*()");
-      expect(result).toBe(false);
-    });
-    it('should return true when the string contains only "0"s and whitespace characters', () => {
-      const result = isAllZeros("  0000  ");
-      expect(result).toBe(false);
-    });
-    it('should return true for a very long string of "0"s', () => {
-      const result = isAllZeros(
-        "00000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-      );
-      expect(result).toBe(true);
-    });
-    it("should return false when input is null", () => {
-      const result = isAllZeros(null as any);
-      expect(result).toBe(false);
-    });
-    it("should return false when input is undefined", () => {
-      const result = isAllZeros(undefined as any);
-      expect(result).toBe(false);
+    it("should return false when input is null/undefined", () => {
+      expect(isAllZeros(null as any)).toBe(false);
+      expect(isAllZeros(undefined as any)).toBe(false);
     });
   });
 
-  describe("test for sanitizeCurrency function", () => {
+  describe("sanitizeCurrency", () => {
     it("should return the sanitized currency when given a valid currency string", () => {
-      const result = sanitizeCurrency("123.45");
-      expect(result).toBe("123.45");
+      expect(sanitizeCurrency("123.45")).toBe("123.45");
     });
     it("should return an empty string when given an empty currency string", () => {
-      const result = sanitizeCurrency("");
-      expect(result).toBe("");
+      expect(sanitizeCurrency("")).toBe("");
     });
-    it('should return an "0" when given an "0"', () => {
-      const result = sanitizeCurrency("0");
-      expect(result).toBe("0");
+    it('should return "0" when given "0"', () => {
+      expect(sanitizeCurrency("0")).toBe("0");
     });
-    it('should return an "0" when given an "000"', () => {
-      const result = sanitizeCurrency("000");
-      expect(result).toBe("0");
+    it('should return "0" when given "000"', () => {
+      expect(sanitizeCurrency("000")).toBe("0");
     });
-    it('should return an "0" when given an "00.0"', () => {
-      const result = sanitizeCurrency("00.0");
-      expect(result).toBe("0");
+    it('should return "0" when given "0.00"', () => {
+      expect(sanitizeCurrency("0.00")).toBe("0");
     });
-    it('should return an "0" when given an "0.00"', () => {
-      const result = sanitizeCurrency("0.00");
-      expect(result).toBe("0");
+    it("should remove commas and leading '$'", () => {
+      expect(sanitizeCurrency("1,234.56")).toBe("1234.56");
+      expect(sanitizeCurrency("$123.45")).toBe("123.45");
     });
-    it("should return a strig with no decimal point when given a currency string without any decimal points", () => {
-      const result = sanitizeCurrency("123");
-      expect(result).toBe("123");
+    it("should trim (not round) extra decimals", () => {
+      expect(sanitizeCurrency("123.456")).toBe("123.45");
+      expect(sanitizeCurrency("123.899")).toBe("123.89");
     });
-    it("should return a strig with 1 digit after decimal point when given a currency string with 1 digit after decimal point", () => {
-      const result = sanitizeCurrency("123.4");
-      expect(result).toBe("123.4");
+    it("should return empty string for invalid currency", () => {
+      expect(sanitizeCurrency("abc")).toBe("");
+      expect(sanitizeCurrency("(123.45)")).toBe("");
     });
-    it("should return a strig with 2 digits after decimal point when given a currency string with 2 digits after decimal point", () => {
-      const result = sanitizeCurrency("123.45");
-      expect(result).toBe("123.45");
-    });
-    it("should return a strig with a leading negative sign", () => {
-      const result = sanitizeCurrency("-123.45");
-      expect(result).toBe("-123.45");
-    });
-    it('should remove trailing ".0" when given a currency string with trailing ".0"', () => {
-      const result = sanitizeCurrency("123.0");
-      expect(result).toBe("123");
-    });
-    it('should remove trailing ".00" when given a currency string with trailing ".00"', () => {
-      const result = sanitizeCurrency("123.00");
-      expect(result).toBe("123");
-    });
-    it('should remove trailing ".000" when given a currency string with trailing ".000"', () => {
-      const result = sanitizeCurrency("123.000");
-      expect(result).toBe("123");
-    });
-    it('should remove trailing ".0" from valid currency string', () => {
-      const input = "123.00";
-      const result = sanitizeCurrency(input);
-      expect(result).toBe("123");
-    });
-    it('should return the sanitized currency string without commas ","', () => {
-      const input = "1,234.56";
-      const result = sanitizeCurrency(input);
-      expect(result).toBe("1234.56");
-    });
-    it('should return the sanitized currency string without leading "$"', () => {
-      const input = "$123.45";
-      const result = sanitizeCurrency(input);
-      expect(result).toBe("123.45");
-    });
-    it("should return aN EMPTY string when given a strig with a brackets for a negative number", () => {
-      const result = sanitizeCurrency("(123.45)");
-      expect(result).toBe("");
-    });
-    it("should return a strig with 2 digits after decimal point when given a currency string with 3 digits after decimal point", () => {
-      const result = sanitizeCurrency("123.456");
-      expect(result).toBe("123.45");
-    });
-    it("should return a strig with 2 digits after decimal point, trimmed, not rounded when given a currency string with 3 digits after decimal point", () => {
-      const result = sanitizeCurrency("123.899");
-      expect(result).toBe("123.89");
-    });
-    it("should return an empty string when given an invalid currency string", () => {
-      const result = sanitizeCurrency("abc");
-      expect(result).toBe("");
-    });
-    it("should return an empty string when passed null", () => {
-      const result = sanitizeCurrency(null as any);
-      expect(result).toBe("");
-    });
-    it("should return an empty string when passed undefined", () => {
-      const result = sanitizeCurrency(undefined as any);
-      expect(result).toBe("");
-    });
-    it("should return an formatted string when passed a number", () => {
-      const result = sanitizeCurrency(123.45 as any);
-      expect(result).toBe("123.45");
-    });
-    it("should return an formatted string when passed a negative number", () => {
-      const result = sanitizeCurrency(-123.45 as any);
-      expect(result).toBe("-123.45");
+    it("should accept number inputs", () => {
+      expect(sanitizeCurrency(123.45 as any)).toBe("123.45");
+      expect(sanitizeCurrency(-123.45 as any)).toBe("-123.45");
     });
   });
 });

@@ -112,6 +112,9 @@ describe("tests for elimEntry validation", () => {
     it('should return false when fee is negative', () => {      
       expect(validElimEntryFee('-1')).toBe(false);
     })
+    it('should return false when fee is zero', () => {      
+      expect(validElimEntryFee('0')).toBe(false);
+    })
     it('should return false when fee is too big', () => {       
       expect(validElimEntryFee('1234567890')).toBe(false);
     })
@@ -421,6 +424,14 @@ describe("tests for elimEntry validation", () => {
         const testElimEntry = {
           ...validElimEntry,
           fee: null as any
+        }
+        const errorCode = validateElimEntry(testElimEntry);
+        expect(errorCode).toBe(ErrorCode.MISSING_DATA);
+      })
+      it('should return ErrorCode.INVALID_DATA when fee is ""', () => {
+        const testElimEntry = {
+          ...validElimEntry,
+          fee: ''
         }
         const errorCode = validateElimEntry(testElimEntry);
         expect(errorCode).toBe(ErrorCode.MISSING_DATA);

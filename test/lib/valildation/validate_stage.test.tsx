@@ -18,7 +18,7 @@ import {
   isSquadStageOverrideType,
   isSquadStageType
 } from "@/lib/validation/stages/validate";
-import { maxReasonLength } from "@/lib/validation/validation";
+import { maxReasonLength } from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
 import { SquadStage } from "@prisma/client";
 import { cloneDeep } from "lodash";

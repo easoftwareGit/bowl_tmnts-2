@@ -5,7 +5,7 @@ import { ErrorCode } from "@/lib/enums/enums";
 import { sanitizeElim, validateElim } from "@/lib/validation/elims/validate";
 import type { elimType } from "@/lib/types/types";
 import { initElim } from "@/lib/db/initVals";
-import { getErrorStatus } from "@/app/api/errCodes";
+import { getErrorStatus, standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/elims/:id
 
@@ -27,8 +27,8 @@ export async function GET(
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
     return NextResponse.json({ elim }, { status: 200 });    
-  } catch (err: any) {
-    return NextResponse.json({ error: "error getting elim" }, { status: 500 });
+  } catch (error) {
+    return standardCatchReturn(error, "error getting elim");    
   }
 }
 
@@ -93,12 +93,8 @@ export async function PUT(
       },
     });
     return NextResponse.json({ elim }, { status: 200 });    
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error updating elim" },
-      { status: errStatus }
-    );    
+  } catch (error) {
+    return standardCatchReturn(error, "error updating elim");
   }
 }
 
@@ -214,12 +210,8 @@ export async function PATCH(
       },
     });
     return NextResponse.json({ elim }, { status: 200 });    
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error patching elim" },
-      { status: errStatus }
-    );    
+  } catch (error) {
+    return standardCatchReturn(error, "error patching elim");
   }
 }
 
@@ -238,11 +230,7 @@ export async function DELETE(
       },
     });
     return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error deleting elim" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error deleting elim");
   }
 }

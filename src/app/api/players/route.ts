@@ -4,8 +4,8 @@ import { initPlayer } from "@/lib/db/initVals";
 import type { playerType } from "@/lib/types/types";
 import { sanitizePlayer, validatePlayer } from "../../../lib/validation/players/validate";
 import { ErrorCode } from "@/lib/enums/enums";
-import { getErrorStatus } from "../errCodes";
-import { playerDataForPrisma } from "./dataForPrisma";
+import { standardCatchReturn } from "../apiCatch";
+import { playerDataForPrisma } from "./playerDataForPrisma";
 
 // routes /api/players
 
@@ -26,10 +26,7 @@ export async function GET(request: NextRequest) {
     })   
     return NextResponse.json({ players }, { status: 200 });
   } catch (error) {
-    return NextResponse.json(
-      { error: "error getting players" },
-      { status: 500 }
-    );            
+    return standardCatchReturn(error, "error getting players");
   }
 }
 
@@ -77,11 +74,7 @@ export async function POST(request: NextRequest) {
       data: playerData
     })
     return NextResponse.json({ player }, { status: 201 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error creating player" },
-      { status: errStatus }
-    );            
+  } catch (error) {
+    return standardCatchReturn(error, "error creating player");
   }
 }

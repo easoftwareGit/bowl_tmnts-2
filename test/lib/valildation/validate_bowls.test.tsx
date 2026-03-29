@@ -10,7 +10,7 @@ import {
 import { ErrorCode } from "@/lib/enums/enums";
 import { initBowl } from "@/lib/db/initVals";
 import type { bowlType } from "@/lib/types/types";
-import { maxUrlLength } from "@/lib/validation/validation";
+import { maxUrlLength } from "@/lib/validation/constants";
 
 const { gotBowlData, validBowlData } = exportedForTesting;
 

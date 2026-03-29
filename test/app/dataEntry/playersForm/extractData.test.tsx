@@ -11,7 +11,7 @@ import {
   mockPlayerRows,  
 } from "../../../mocks/tmnts/playerEntries/mockPlayerEntries";
 import { isValidBtDbId } from "@/lib/validation/validation";
-import { calcHandicap } from "@/app/api/divEntries/calcHdcp";
+import { calcHandicap } from "@/lib/db/divEntries/calcHdcp";
 import { BracketList } from "@/components/brackets/bracketListClass";
 import {
   brktId1,

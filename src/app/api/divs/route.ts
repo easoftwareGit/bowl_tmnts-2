@@ -4,8 +4,8 @@ import { validateDiv, sanitizeDiv } from "../../../lib/validation/divs/validate"
 import { ErrorCode } from "@/lib/enums/enums";
 import type { divType } from "@/lib/types/types";
 import { initDiv } from "@/lib/db/initVals";
-import { getErrorStatus } from "../errCodes";
-import { divDataForPrisma } from "./dataForPrisma";
+import { standardCatchReturn } from "../apiCatch";
+import { divDataForPrisma } from "./divsDataForPrisma";
 
 // routes /api/divs
 
@@ -22,8 +22,8 @@ export async function GET(request: NextRequest) {
       ],
     });
     return NextResponse.json({ divs }, { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json({ error: "error getting divs" }, { status: 500 });
+  } catch (error) {
+    return standardCatchReturn(error, "error getting divs");
   }
 }
 
@@ -65,24 +65,12 @@ export async function POST(request: Request) {
     if (!divData) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
-
-    // let divData: divDataType = {
-    //   id: toPost.id,
-    //   tmnt_id: toPost.tmnt_id,
-    //   div_name: toPost.div_name,
-    //   hdcp_per: toPost.hdcp_per,
-    //   hdcp_from: toPost.hdcp_from,
-    //   int_hdcp: toPost.int_hdcp,
-    //   hdcp_for: toPost.hdcp_for,
-    //   sort_order: toPost.sort_order,
-    // };
     const div = await prisma.div.create({
       data: divData,
     });
 
     return NextResponse.json({ div }, { status: 201 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json({ error: "error creating div" }, { status: errStatus });
+  } catch (error) {
+    return standardCatchReturn(error, "error creating div");
   }
 }

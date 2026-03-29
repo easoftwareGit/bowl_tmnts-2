@@ -3,9 +3,6 @@ import { baseElimEntriesApi } from "@/lib/api/apiPaths";
 import { testBaseElimEntriesApi } from "../../../testApi";
 import { initElimEntry } from "@/lib/db/initVals";
 import type { elimEntryType } from "@/lib/types/types";
-import { mockElimEntriesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllElimEntriesForTmnt, getAllElimEntriesForSquad, postManyElimEntries } from "@/lib/db/elimEntries/dbElimEntries";
-import { cloneDeep } from "lodash";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -30,7 +27,6 @@ const elimUrl = url + "/elim/";
 const divUrl = url + "/div/";
 const squadUrl = url + "/squad/";
 const tmntUrl = url + "/tmnt/"; 
-const manyUrl = url + "/many";
 
 describe("ElimEntries - API's: /api/elimEntries", () => { 
 
@@ -42,22 +38,22 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
     fee: '5',
   }
 
-  const tmntIdForMulti = 'tmt_fe8ac53dad0f400abe6354210a8f4cd1';
+  const elimEntryToPost: elimEntryType = {
+    ...initElimEntry,
+    id: 'een_1234567890abcdef1234567890abcdef',
+    elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
+    player_id: 'ply_bb0fd8bbd9e34d34a7fa90b4111c6e40',
+    fee: '3'
+  }
 
   const tmntIdForElimEntries = 'tmt_fd99387c33d9c78aba290286576ddce5';
   const squadIdForElimEntries = 'sqd_7116ce5f80164830830a7157eb093396';
   const divIdForElimEntries = 'div_f30aea2c534f4cfe87f4315531cef8ef';
   const elimIdForElimEntries = 'elm_45d884582e7042bb95b4818ccdd9974c';
 
-  const tmntIdFormMockData = 'tmt_56d916ece6b50e6293300248c6792316';
-  const divIdForMockData = 'div_1f42042f9ef24029a0a2d48cc276a087';
-  const squadIdForMockData = 'sqd_1a6c885ee19a49489960389193e8f819';
-  const brktIdForMockData = 'brk_aa3da3a411b346879307831b6fdadd5f';
-
   const notFoundId = "een_01234567890123456789012345678901";
   const notFoundElimId = "elm_01234567890123456789012345678901";
   const notFoundDivId = "div_01234567890123456789012345678901";
-  const notFoundPlayerId = "ply_01234567890123456789012345678901";
   const notFoundSquadId = "sqd_01234567890123456789012345678901";
   const notFoundTmntId = "tmt_01234567890123456789012345678901";
   const userId = "usr_01234567890123456789012345678901";
@@ -66,19 +62,10 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
   const elim2Id = 'elm_9d01015272b54962a375cf3c91007a12';
 
   const deletePostedElimEntry = async () => {
-    const response = await axios.get(url);
-    const elimEntries = response.data.elimEntries;
-    const toDel = elimEntries.find((e: elimEntryType) => e.fee === '3');
-    if (toDel) {
-      try {
-        const delResponse = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: oneElimEntryUrl + toDel.id
-        });
-      } catch (err) {
-        if (err instanceof AxiosError) console.log(err.message);
-      }
+    try {
+      await axios.delete(oneElimEntryUrl + elimEntryToPost.id, {withCredentials: true});
+    } catch (err) {
+      if (err instanceof AxiosError) console.log(err.message);
     }
   }
 
@@ -344,13 +331,6 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
 
   describe('POST one elimEntry API: /api/elimEntries', () => {
     
-    const elimEntryToPost: elimEntryType = {
-      ...initElimEntry,
-      elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
-      player_id: 'ply_bb0fd8bbd9e34d34a7fa90b4111c6e40',
-      fee: '3'
-    }
-
     let createdElimEntry = false;
 
     beforeAll(async () => {
@@ -367,14 +347,13 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
       }
     })
 
+    afterAll(async () => {
+      await deletePostedElimEntry();
+    })
+
     it('should post one elimEntry', async () => {
-      const divPlayerJSON = JSON.stringify(elimEntryToPost);
-      const response = await axios({
-        method: "post",
-        withCredentials: true,
-        url: url,
-        data: divPlayerJSON
-      });
+      const elimEntryJSON = JSON.stringify(elimEntryToPost);
+      const response = await axios.post(url, elimEntryJSON, { withCredentials: true });
       expect(response.status).toBe(201);
       createdElimEntry = true;
       const elimEntry = response.data.elimEntry;
@@ -390,12 +369,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
       }
       const elimEntryJSON = JSON.stringify(toSanitize);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: elimEntryJSON
-        });
+        const response = await axios.post(url, elimEntryJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -410,14 +384,9 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...elimEntryToPost,
         id: ''
       }
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: elimEntryJSON
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -432,14 +401,9 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...elimEntryToPost,
         elim_id: ''
       }
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: elimEntryJSON
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -454,14 +418,9 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...elimEntryToPost,
         player_id: ''
       }
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: elimEntryJSON
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -476,14 +435,9 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...elimEntryToPost,
         fee: ''
       }
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: elimEntryJSON
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -498,14 +452,9 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...elimEntryToPost,
         id: 'test'
       }
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: elimEntryJSON
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -520,14 +469,9 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...elimEntryToPost,
         id: userId
       }
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: elimEntryJSON
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -542,14 +486,9 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...elimEntryToPost,
         elim_id: 'test'
       }
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: elimEntryJSON
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -564,14 +503,9 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...elimEntryToPost,
         elim_id: userId
       }
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: elimEntryJSON
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -586,14 +520,9 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...elimEntryToPost,
         player_id: 'test'
       }
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: elimEntryJSON
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -608,14 +537,9 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...elimEntryToPost,
         player_id: userId
       }
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: elimEntryJSON
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -630,14 +554,9 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...elimEntryToPost,
         fee: '-1'
       }
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: elimEntryJSON
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -652,14 +571,9 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...elimEntryToPost,
         fee: '1234567890'
       }
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: elimEntryJSON
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -670,883 +584,15 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
       }
     })
   })
-
-  describe('POST many elimEntries for one tmnt API: /api/elimEntries/many', () => {
-
-    let createdElimEntries = false;
-
-    beforeAll(async () => {
-      await deleteAllElimEntriesForTmnt(tmntIdFormMockData);
-    })
-
-    beforeEach(() => {
-      createdElimEntries = false;
-    })
-
-    afterEach(async () => {
-      if (createdElimEntries) {
-        await deleteAllElimEntriesForTmnt(tmntIdFormMockData);
-      }
-    })
-
-    it('should create many elimEntries', async () => {
-      const elimEntryJSON = JSON.stringify(mockElimEntriesToPost);
-      const response = await axios({
-        method: "post",
-        data: elimEntryJSON,
-        withCredentials: true,
-        url: manyUrl,
-      })
-      expect(response.status).toBe(201);
-      createdElimEntries = true;
-      expect(response.data.count).toBe(mockElimEntriesToPost.length);
-
-      const postedElimEntries = await getAllElimEntriesForSquad(squadIdForMockData);
-      expect(response.status).toBe(201);
-      if (!postedElimEntries) {
-        expect(true).toBeFalsy();
-        return;
-      }      
-      expect(postedElimEntries.length).toBe(mockElimEntriesToPost.length);
-      for (let i = 0; i < mockElimEntriesToPost.length; i++) {
-        expect(postedElimEntries[i].id).toBe(mockElimEntriesToPost[i].id);
-        expect(postedElimEntries[i].elim_id).toBe(mockElimEntriesToPost[i].elim_id);
-        expect(postedElimEntries[i].player_id).toBe(mockElimEntriesToPost[i].player_id);
-        expect(postedElimEntries[i].fee).toBe(mockElimEntriesToPost[i].fee);
-      }
-    })
-    it('should return 0 and code 200 when passed an empty array', async () => {
-      const elimEntryJSON = JSON.stringify([]);
-      const response = await axios({
-        method: "post",
-        data: elimEntryJSON,
-        withCredentials: true,
-        url: manyUrl,
-      })
-      expect(response.status).toBe(200);
-      expect(response.data.count).toBe(0);
-    });
-    it('should NOT create many elimEntries with sanitzied data, fee sanitized to ""', async () => {
-      const toSanitize = cloneDeep(mockElimEntriesToPost);
-      toSanitize[0].fee = '   84  ';
-      const elimEntryJSON = JSON.stringify(toSanitize);
-      try {
-        const response = await axios({
-          method: "post",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: manyUrl,
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('shold NOT create many elimEntries with blank ids', async () => {
-      const toSanitize = cloneDeep(mockElimEntriesToPost);
-      toSanitize[1].id = '';
-      const elimEntryJSON = JSON.stringify(toSanitize);
-      try {
-        const response = await axios({
-          method: "post",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: manyUrl,
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create many elimEntries with blank elim_id', async () => {
-      const toSanitize = cloneDeep(mockElimEntriesToPost);
-      toSanitize[1].elim_id = '';
-      const elimEntryJSON = JSON.stringify(toSanitize);
-      try {
-        const response = await axios({
-          method: "post",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: manyUrl,
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create many elimEntries with blank player_id', async () => {
-      const toSanitize = cloneDeep(mockElimEntriesToPost);
-      toSanitize[1].player_id = '';
-      const elimEntryJSON = JSON.stringify(toSanitize);
-      try {
-        const response = await axios({
-          method: "post",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: manyUrl,
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create many elimEntries with blank fee', async () => {
-      const toSanitize = cloneDeep(mockElimEntriesToPost);
-      toSanitize[1].fee = '';
-      const elimEntryJSON = JSON.stringify(toSanitize);
-      try {
-        const response = await axios({
-          method: "post",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: manyUrl,
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create many elimEntries with invalid id', async () => {
-      const toSanitize = cloneDeep(mockElimEntriesToPost);
-      toSanitize[1].id = 'test';
-      const elimEntryJSON = JSON.stringify(toSanitize);
-      try {
-        const response = await axios({
-          method: "post",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: manyUrl,
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create many elimEntries with valid id, but not a elimEntry id', async () => {
-      const toSanitize = cloneDeep(mockElimEntriesToPost);
-      toSanitize[1].id = userId;
-      const elimEntryJSON = JSON.stringify(toSanitize);
-      try {
-        const response = await axios({
-          method: "post",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: manyUrl,
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create many elimEntries with invalid elim_id', async () => {
-      const toSanitize = cloneDeep(mockElimEntriesToPost);
-      toSanitize[1].elim_id = 'test';
-      const elimEntryJSON = JSON.stringify(toSanitize);
-      try {
-        const response = await axios({
-          method: "post",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: manyUrl,
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create many elimEntries with valid elim_id, but not a div id', async () => {
-      const toSanitize = cloneDeep(mockElimEntriesToPost);
-      toSanitize[1].elim_id = userId;
-      const elimEntryJSON = JSON.stringify(toSanitize);
-      try {
-        const response = await axios({
-          method: "post",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: manyUrl,
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create many elimEntries with invalid player_id', async () => {
-      const toSanitize = cloneDeep(mockElimEntriesToPost);
-      toSanitize[1].player_id = 'test';
-      const elimEntryJSON = JSON.stringify(toSanitize);
-      try {
-        const response = await axios({
-          method: "post",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: manyUrl,
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create many elimEntries with valid player_id, but not a player id', async () => {
-      const toSanitize = cloneDeep(mockElimEntriesToPost);
-      toSanitize[1].player_id = userId;
-      const elimEntryJSON = JSON.stringify(toSanitize);
-      try {
-        const response = await axios({
-          method: "post",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: manyUrl,
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create many elimEntries when fee to too low', async () => {
-      const toSanitize = cloneDeep(mockElimEntriesToPost);
-      toSanitize[1].fee = '-1';
-      const elimEntryJSON = JSON.stringify(toSanitize);
-      try {
-        const response = await axios({
-          method: "post",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: manyUrl,
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create many elimEntries when fee to too high', async () => {
-      const toSanitize = cloneDeep(mockElimEntriesToPost);
-      toSanitize[1].fee = '9999999999';
-      const elimEntryJSON = JSON.stringify(toSanitize);
-      try {
-        const response = await axios({
-          method: "post",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: manyUrl,
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })    
-  })
-
-  describe('PUT many elimEntries API: /api/elimEntries/many', () => {
-
-    let createdElimEntries = false;
-
-    beforeAll(async () => {
-      await deleteAllElimEntriesForTmnt(tmntIdFormMockData);
-    })
-
-    beforeEach(() => {
-      createdElimEntries = false;
-    })
-
-    afterEach(async () => {
-      if (createdElimEntries) {
-        await deleteAllElimEntriesForTmnt(tmntIdFormMockData);
-      }
-    })
-
-    const testElimEntries = [
-      {
-        ...mockElimEntriesToPost[0],
-      },
-      {
-        ...mockElimEntriesToPost[1],
-      },
-      {
-        ...initElimEntry,
-        id: 'een_03be0472be3d476ea1caa99dd05953fa',
-        elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
-        player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
-        fee: '5'
-      },
-      {
-        ...initElimEntry,
-        id: 'een_04be0472be3d476ea1caa99dd05953fa',
-        elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
-        player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
-        fee: '5'
-      },
-    ];
-
-    it('should update many elimEntries - just update 1 player 2 elim entry', async () => {
-      const potEntryJSON = JSON.stringify(testElimEntries);
-      const response = await axios({
-        method: "post",
-        data: potEntryJSON,
-        withCredentials: true,
-        url: manyUrl,
-      })
-      expect(response.status).toBe(201);
-      createdElimEntries = true;
-      expect(response.data.count).toBe(testElimEntries.length);
-      const postedElimEntries = await getAllElimEntriesForSquad(squadIdForMockData);
-      expect(response.status).toBe(201);
-      if (!postedElimEntries) {
-        expect(true).toBeFalsy();
-        return;
-      }
-      // change fee, add eType = 'u'
-      const elimEntriesToUpdate = [
-        {
-          ...testElimEntries[0],
-          fee: '4',
-          eType: "u",
-        },
-        {
-          ...testElimEntries[1],
-          fee: '4',
-          eType: "u",
-        },
-      ]
-      const toUpdateJSON = JSON.stringify(elimEntriesToUpdate)
-      const updateResponse = await axios({
-        method: "put",
-        data: toUpdateJSON,
-        withCredentials: true,
-        url: manyUrl,
-      })
-      expect(updateResponse.status).toBe(200);
-      const updateInfo = updateResponse.data.updateInfo;
-      expect(updateInfo).not.toBeNull();
-      expect(updateInfo.updates).toBe(2);
-      expect(updateInfo.inserts).toBe(0);
-      expect(updateInfo.deletes).toBe(0);
-    });
-    it('should update many elimEntries - just update 2 player 1 elim entry', async () => {
-      const potEntryJSON = JSON.stringify(testElimEntries);
-      const response = await axios({
-        method: "post",
-        data: potEntryJSON,
-        withCredentials: true,
-        url: manyUrl,
-      })
-      expect(response.status).toBe(201);
-      createdElimEntries = true;
-      expect(response.data.count).toBe(testElimEntries.length);
-      const postedElimEntries = await getAllElimEntriesForSquad(squadIdForMockData);
-      expect(response.status).toBe(201);
-      if (!postedElimEntries) {
-        expect(true).toBeFalsy();
-        return;
-      }
-      // change fee, add eType = 'u'
-      const elimEntriesToUpdate = [
-        {
-          ...testElimEntries[0],
-          fee: '4',
-          eType: "u",
-        },
-        {
-          ...testElimEntries[2],
-          fee: '4',
-          eType: "u",
-        },
-      ]
-      const toUpdateJSON = JSON.stringify(elimEntriesToUpdate)
-      const updateResponse = await axios({
-        method: "put",
-        data: toUpdateJSON,
-        withCredentials: true,
-        url: manyUrl,
-      })
-      expect(updateResponse.status).toBe(200);
-      const updateInfo = updateResponse.data.updateInfo;
-      expect(updateInfo).not.toBeNull();
-      expect(updateInfo.updates).toBe(2);
-      expect(updateInfo.inserts).toBe(0);
-      expect(updateInfo.deletes).toBe(0);
-    });
-    it('should update many elimEntries - just update 2 player 2 elim entry', async () => {
-      const potEntryJSON = JSON.stringify(testElimEntries);
-      const response = await axios({
-        method: "post",
-        data: potEntryJSON,
-        withCredentials: true,
-        url: manyUrl,
-      })
-      expect(response.status).toBe(201);
-      createdElimEntries = true;
-      expect(response.data.count).toBe(testElimEntries.length);
-      const postedElimEntries = await getAllElimEntriesForSquad(squadIdForMockData);
-      expect(response.status).toBe(201);
-      if (!postedElimEntries) {
-        expect(true).toBeFalsy();
-        return;
-      }
-      // change fee, add eType = 'u'
-      const elimEntriesToUpdate = [
-        {
-          ...testElimEntries[0],
-          fee: '4',
-          eType: "u",
-        },
-        {
-          ...testElimEntries[1],
-          fee: '4',
-          eType: "u",
-        },
-        {
-          ...testElimEntries[2],
-          fee: '4',
-          eType: "u",
-        },
-        {
-          ...testElimEntries[3],
-          fee: '4',
-          eType: "u",
-        },
-      ]
-      const toUpdateJSON = JSON.stringify(elimEntriesToUpdate)
-      const updateResponse = await axios({
-        method: "put",
-        data: toUpdateJSON,
-        withCredentials: true,
-        url: manyUrl,
-      })
-      expect(updateResponse.status).toBe(200);
-      const updateInfo = updateResponse.data.updateInfo;
-      expect(updateInfo).not.toBeNull();
-      expect(updateInfo.updates).toBe(4);
-      expect(updateInfo.inserts).toBe(0);
-      expect(updateInfo.deletes).toBe(0);
-    });
-    it('should insert many elimEntries - just insert 1 player 2 elim entry', async () => {
-      createdElimEntries = true;
-      // add eType = 'i'
-      const elimEntriesToUpdate = [
-        {
-          ...testElimEntries[0],
-          eType: "i",
-        },
-        {
-          ...testElimEntries[1],
-          eType: "i",
-        },
-      ]
-      const toUpdateJSON = JSON.stringify(elimEntriesToUpdate)
-      const updateResponse = await axios({
-        method: "put",
-        data: toUpdateJSON,
-        withCredentials: true,
-        url: manyUrl,
-      })
-      expect(updateResponse.status).toBe(200);
-      const updateInfo = updateResponse.data.updateInfo;
-      expect(updateInfo).not.toBeNull();
-      expect(updateInfo.updates).toBe(0);
-      expect(updateInfo.inserts).toBe(2);
-      expect(updateInfo.deletes).toBe(0);
-    });
-    it('should insert many elimEntries - just insert 2 player 1 elim entry', async () => {
-      createdElimEntries = true;
-      // add eType = 'i'
-      const elimEntriesToUpdate = [
-        {
-          ...testElimEntries[0],
-          eType: "i",
-        },
-        {
-          ...testElimEntries[2],
-          eType: "i",
-        },
-      ]
-      const toUpdateJSON = JSON.stringify(elimEntriesToUpdate)
-      const updateResponse = await axios({
-        method: "put",
-        data: toUpdateJSON,
-        withCredentials: true,
-        url: manyUrl,
-      })
-      expect(updateResponse.status).toBe(200);
-      const updateInfo = updateResponse.data.updateInfo;
-      expect(updateInfo).not.toBeNull();
-      expect(updateInfo.updates).toBe(0);
-      expect(updateInfo.inserts).toBe(2);
-      expect(updateInfo.deletes).toBe(0);
-    });
-    it('should insert many elimEntries - just insert 2 player 2 elim entry', async () => {
-      createdElimEntries = true;
-      // add eType = 'i'
-      const elimEntriesToUpdate = [
-        {
-          ...testElimEntries[0],
-          eType: "i",
-        },
-        {
-          ...testElimEntries[1],
-          eType: "i",
-        },
-        {
-          ...testElimEntries[2],
-          eType: "i",
-        },
-        {
-          ...testElimEntries[3],
-          eType: "i",
-        },
-      ]
-      const toUpdateJSON = JSON.stringify(elimEntriesToUpdate)
-      const updateResponse = await axios({
-        method: "put",
-        data: toUpdateJSON,
-        withCredentials: true,
-        url: manyUrl,
-      })
-      expect(updateResponse.status).toBe(200);
-      const updateInfo = updateResponse.data.updateInfo;
-      expect(updateInfo).not.toBeNull();
-      expect(updateInfo.updates).toBe(0);
-      expect(updateInfo.inserts).toBe(4);
-      expect(updateInfo.deletes).toBe(0);
-    });
-    it('should delete many elimEntries - just delete 1 player 2 elim entry', async () => {
-      const potEntryJSON = JSON.stringify(testElimEntries);
-      const response = await axios({
-        method: "post",
-        data: potEntryJSON,
-        withCredentials: true,
-        url: manyUrl,
-      })
-      expect(response.status).toBe(201);
-      createdElimEntries = true;
-      expect(response.data.count).toBe(testElimEntries.length);
-      const postedElimEntries = await getAllElimEntriesForSquad(squadIdForMockData);
-      expect(response.status).toBe(201);
-      if (!postedElimEntries) {
-        expect(true).toBeFalsy();
-        return;
-      }                        
-      // add eType = 'd'
-      const elimEntriesToUpdate = [
-        {
-          ...testElimEntries[0],
-          eType: "d",
-        },
-        {
-          ...testElimEntries[1],
-          eType: "d",
-        },
-      ]
-      const toUpdateJSON = JSON.stringify(elimEntriesToUpdate)
-      const updateResponse = await axios({
-        method: "put",
-        data: toUpdateJSON,
-        withCredentials: true,
-        url: manyUrl,
-      })
-      expect(updateResponse.status).toBe(200);
-      const updateInfo = updateResponse.data.updateInfo;
-      expect(updateInfo).not.toBeNull();
-      expect(updateInfo.updates).toBe(0);
-      expect(updateInfo.inserts).toBe(0);
-      expect(updateInfo.deletes).toBe(2);
-    });
-    it('should delete many elimEntries - just delete 1 player 2 elim entry', async () => {
-      const potEntryJSON = JSON.stringify(testElimEntries);
-      const response = await axios({
-        method: "post",
-        data: potEntryJSON,
-        withCredentials: true,
-        url: manyUrl,
-      })
-      expect(response.status).toBe(201);
-      createdElimEntries = true;
-      expect(response.data.count).toBe(testElimEntries.length);
-      const postedElimEntries = await getAllElimEntriesForSquad(squadIdForMockData);
-      expect(response.status).toBe(201);
-      if (!postedElimEntries) {
-        expect(true).toBeFalsy();
-        return;
-      }
-      // add eType = 'd'
-      const elimEntriesToUpdate = [
-        {
-          ...testElimEntries[0],
-          eType: "d",
-        },
-        {
-          ...testElimEntries[2],
-          eType: "d",
-        },
-      ]
-      const toUpdateJSON = JSON.stringify(elimEntriesToUpdate)
-      const updateResponse = await axios({
-        method: "put",
-        data: toUpdateJSON,
-        withCredentials: true,
-        url: manyUrl,
-      })
-      expect(updateResponse.status).toBe(200);
-      const updateInfo = updateResponse.data.updateInfo;
-      expect(updateInfo).not.toBeNull();
-      expect(updateInfo.updates).toBe(0);
-      expect(updateInfo.inserts).toBe(0);
-      expect(updateInfo.deletes).toBe(2);
-    });
-    it('should delete many elimEntries - just delete 1 player 2 elim entry', async () => {
-      const potEntryJSON = JSON.stringify(testElimEntries);
-      const response = await axios({
-        method: "post",
-        data: potEntryJSON,
-        withCredentials: true,
-        url: manyUrl,
-      })
-      expect(response.status).toBe(201);
-      createdElimEntries = true;
-      expect(response.data.count).toBe(testElimEntries.length);
-      const postedElimEntries = await getAllElimEntriesForSquad(squadIdForMockData);
-      expect(response.status).toBe(201);
-      if (!postedElimEntries) {
-        expect(true).toBeFalsy();
-        return;
-      }
-      // add eType = 'd'
-      const elimEntriesToUpdate = [
-        {
-          ...testElimEntries[0],
-          eType: "d",
-        },
-        {
-          ...testElimEntries[1],
-          eType: "d",
-        },
-        {
-          ...testElimEntries[2],
-          eType: "d",
-        },
-        {
-          ...testElimEntries[3],
-          eType: "d",
-        },
-      ]
-      const toUpdateJSON = JSON.stringify(elimEntriesToUpdate)
-      const updateResponse = await axios({
-        method: "put",
-        data: toUpdateJSON,
-        withCredentials: true,
-        url: manyUrl,
-      })
-      expect(updateResponse.status).toBe(200);
-      const updateInfo = updateResponse.data.updateInfo;
-      expect(updateInfo).not.toBeNull();
-      expect(updateInfo.updates).toBe(0);
-      expect(updateInfo.inserts).toBe(0);
-      expect(updateInfo.deletes).toBe(4);
-    });
-    it('should update, insert and delete many elimEntries', async () => {
-      const potEntryJSON = JSON.stringify(testElimEntries);
-      const response = await axios({
-        method: "post",
-        data: potEntryJSON,
-        withCredentials: true,
-        url: manyUrl,
-      })
-      expect(response.status).toBe(201);
-      createdElimEntries = true;
-      expect(response.data.count).toBe(testElimEntries.length);
-      const postedElimEntries = await getAllElimEntriesForSquad(squadIdForMockData);
-      expect(response.status).toBe(201);
-      if (!postedElimEntries) {
-        expect(true).toBeFalsy();
-        return;
-      }            
-      // set editsm,  eType 
-      const elimEntriesToUpdate = [
-        {
-          ...testElimEntries[0],
-          fee: '4',
-          eType: "u",
-        },
-        {
-          ...testElimEntries[1],
-          fee: '4',
-          eType: "u",
-        },
-        {
-          ...testElimEntries[2],          
-          eType: "d",
-        },
-        {
-          ...testElimEntries[3],          
-          eType: "d",
-        },
-        {
-          ...initElimEntry,
-          id: 'een_05de0472be3d476ea1caa99dd05953fa',
-          elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
-          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
-          fee: '5',
-          eType: "i",
-        },
-        {
-          ...initElimEntry,
-          id: 'een_06de0472be3d476ea1caa99dd05953fa',
-          elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
-          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
-          fee: '5',
-          eType: "i",
-        },
-      ]
-      const toUpdateJSON = JSON.stringify(elimEntriesToUpdate)
-      const updateResponse = await axios({
-        method: "put",
-        data: toUpdateJSON,
-        withCredentials: true,
-        url: manyUrl,
-      })
-      expect(updateResponse.status).toBe(200);
-      const updateInfo = updateResponse.data.updateInfo;
-      expect(updateInfo).not.toBeNull();
-      expect(updateInfo.updates).toBe(2);
-      expect(updateInfo.inserts).toBe(2);
-      expect(updateInfo.deletes).toBe(2);
-    });
-    it('should NOT update many elimEntries when data is invalid', async () => {
-      const potEntryJSON = JSON.stringify(testElimEntries);
-      const response = await axios({
-        method: "post",
-        data: potEntryJSON,
-        withCredentials: true,
-        url: manyUrl,
-      })
-      expect(response.status).toBe(201);
-      createdElimEntries = true;
-      expect(response.data.count).toBe(testElimEntries.length);
-      const postedElimEntries = await getAllElimEntriesForSquad(squadIdForMockData);
-      expect(response.status).toBe(201);
-      if (!postedElimEntries) {
-        expect(true).toBeFalsy();
-        return;
-      }                        
-      // change fee, add eType = 'u'
-      const elimEntriesToUpdate = [
-        {
-          ...testElimEntries[0],
-          fee: '1234567890',
-          eType: "u",
-        },
-        {
-          ...testElimEntries[1],
-          fee: '4',
-          eType: "u",
-        },
-        {
-          ...testElimEntries[2],          
-          eType: "d",
-        },
-        {
-          ...testElimEntries[3],          
-          eType: "d",
-        },
-        {
-          ...initElimEntry,
-          id: 'een_05de0472be3d476ea1caa99dd05953fa',
-          elim_id: 'elm_b4c3939adca140898b1912b75b3725f8',
-          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
-          fee: '5',
-          eType: "i",
-        },
-        {
-          ...initElimEntry,
-          id: 'een_06de0472be3d476ea1caa99dd05953fa',
-          elim_id: 'elm_4f176545e4294a0292732cccada91b9d',
-          player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
-          fee: '5',
-          eType: "i",
-        },
-      ]
-      const toUpdateJSON = JSON.stringify(elimEntriesToUpdate)
-      try {
-        const updateResponse = await axios({
-          method: "put",
-          data: toUpdateJSON,
-          withCredentials: true,
-          url: manyUrl,
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    
-  });
 
   describe('PUT one elimEntry API: /api/elimEntries/elimEntry/:id', () => { 
 
     const resetElimEntry = async () => {
       // make sure test player is reset in database
       const elimEntryJSON = JSON.stringify(testElimEntry);
-      const putResponse = await axios({
-        method: "put",
-        data: elimEntryJSON,
-        withCredentials: true,
-        url: oneElimEntryUrl + testElimEntry.id,
-      })
+      await axios.put(oneElimEntryUrl + testElimEntry.id, elimEntryJSON, {
+        withCredentials: true
+      });
     }
 
     const putElimEntry = {
@@ -1574,11 +620,8 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
 
     it('should update a elimEntry by ID', async () => {
       const elimEntryJSON = JSON.stringify(putElimEntry);
-      const response = await axios({
-        method: "put",
-        data: elimEntryJSON,
-        withCredentials: true,
-        url: oneElimEntryUrl + testElimEntry.id,
+      const response = await axios.put(oneElimEntryUrl + testElimEntry.id, elimEntryJSON, {
+        withCredentials: true
       });
       expect(response.status).toBe(200);
       didPut = true;
@@ -1594,11 +637,8 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         fee: '3.000',
       }
       const elimEntryJSON = JSON.stringify(toSanitize);
-      const response = await axios({
-        method: "put",
-        data: elimEntryJSON,
-        withCredentials: true,
-        url: oneElimEntryUrl + testElimEntry.id,
+      const response = await axios.put(oneElimEntryUrl + testElimEntry.id, elimEntryJSON, {
+        withCredentials: true
       });
       expect(response.status).toBe(200);
       didPut = true;
@@ -1612,13 +652,10 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...putElimEntry,
         elim_id: ''
       }
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "put",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: oneElimEntryUrl + testElimEntry.id,
+        const response = await axios.put(oneElimEntryUrl + testElimEntry.id, invalidJSON, {
+          withCredentials: true
         });
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1634,13 +671,10 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...putElimEntry,
         player_id: ''
       }
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "put",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: oneElimEntryUrl + testElimEntry.id,
+        const response = await axios.put(oneElimEntryUrl + testElimEntry.id, invalidJSON, {
+          withCredentials: true
         });
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1656,13 +690,10 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...putElimEntry,
         fee: ''
       }
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "put",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: oneElimEntryUrl + testElimEntry.id,
+        const response = await axios.put(oneElimEntryUrl + testElimEntry.id, invalidJSON, {
+          withCredentials: true
         });
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1678,13 +709,10 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...putElimEntry,
         fee: '-1'
       }
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "put",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: oneElimEntryUrl + testElimEntry.id,
+        const response = await axios.put(oneElimEntryUrl + testElimEntry.id, invalidJSON, {
+          withCredentials: true
         });
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1700,13 +728,10 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...putElimEntry,
         fee: '1234567890'
       }
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "put",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: oneElimEntryUrl + testElimEntry.id,
+        const response = await axios.put(oneElimEntryUrl + testElimEntry.id, invalidJSON, {
+          withCredentials: true
         });
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1722,13 +747,10 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...putElimEntry,
         fee: 'not a number'
       }
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "put",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: oneElimEntryUrl + testElimEntry.id,
+        const response = await axios.put(oneElimEntryUrl + testElimEntry.id, invalidJSON, {
+          withCredentials: true
         });
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1750,11 +772,8 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
     const doResetElimEntry = async () => {
       try {
         const playerJSON = JSON.stringify(testElimEntry);
-        const putResponse = await axios({
-          method: "patch",
-          data: playerJSON,
-          withCredentials: true,
-          url: oneElimEntryUrl + testElimEntry.id,
+        await axios.patch(oneElimEntryUrl + testElimEntry.id, playerJSON, {
+          withCredentials: true
         })
       } catch (err) {
         if (err instanceof AxiosError) console.log(err.message);
@@ -1764,7 +783,7 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
     let didPatch = false;
 
     beforeAll(async () => {
-      await doResetElimEntry
+      await doResetElimEntry();
     })
 
     beforeEach(() => {
@@ -1784,12 +803,9 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         elim_id: toPatchedElimId,
       }
       const elimEntryJSON = JSON.stringify(patchElimEntry);
-      const response = await axios({
-        method: "patch",
-        data: elimEntryJSON,
-        withCredentials: true,
-        url: oneElimEntryUrl + toPatch.id,
-      });
+      const response = await axios.patch(oneElimEntryUrl + toPatch.id, elimEntryJSON, {
+        withCredentials: true
+      })
       expect(response.status).toBe(200);
       didPatch = true;
       const patchedElimEntry = response.data.elimEntry;
@@ -1803,12 +819,9 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         player_id: toPatchedPlayerId,
       }
       const elimEntryJSON = JSON.stringify(patchElimEntry);
-      const response = await axios({
-        method: "patch",
-        data: elimEntryJSON,
-        withCredentials: true,
-        url: oneElimEntryUrl + toPatch.id,
-      });
+      const response = await axios.patch(oneElimEntryUrl + toPatch.id, elimEntryJSON, {
+        withCredentials: true
+      })
       expect(response.status).toBe(200);
       didPatch = true;
       const patchedElimEntry = response.data.elimEntry;
@@ -1822,12 +835,9 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         fee: toPatchedFee,
       }
       const elimEntryJSON = JSON.stringify(patchElimEntry);
-      const response = await axios({
-        method: "patch",
-        data: elimEntryJSON,
-        withCredentials: true,
-        url: oneElimEntryUrl + toPatch.id,
-      });
+      const response = await axios.patch(oneElimEntryUrl + toPatch.id, elimEntryJSON, {
+        withCredentials: true
+      })
       expect(response.status).toBe(200);
       didPatch = true;
       const patchedElimEntry = response.data.elimEntry;
@@ -1839,14 +849,11 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...toPatch,
         elim_id: ''
       }
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "patch",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: oneElimEntryUrl + toPatch.id,
-        });
+        const response = await axios.patch(oneElimEntryUrl + toPatch.id, invalidJSON, {
+          withCredentials: true
+        })
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1861,14 +868,11 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...toPatch,
         elim_id: userId
       }
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "patch",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: oneElimEntryUrl + toPatch.id,
-        });
+        const response = await axios.patch(oneElimEntryUrl + toPatch.id, invalidJSON, {
+          withCredentials: true
+        })
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1883,14 +887,11 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...toPatch,
         elim_id: 'test'
       }
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "patch",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: oneElimEntryUrl + toPatch.id,
-        });
+        const response = await axios.patch(oneElimEntryUrl + toPatch.id, invalidJSON, {
+          withCredentials: true
+        })
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1905,14 +906,11 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...toPatch,
         elim_id: userId
       }
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "patch",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: oneElimEntryUrl + toPatch.id,
-        });
+        const response = await axios.patch(oneElimEntryUrl + toPatch.id, invalidJSON, {
+          withCredentials: true
+        })
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1927,14 +925,11 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...toPatch,
         player_id: ''
       }
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "patch",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: oneElimEntryUrl + toPatch.id,
-        });
+        const response = await axios.patch(oneElimEntryUrl + toPatch.id, invalidJSON, {
+          withCredentials: true
+        })
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1949,14 +944,11 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...toPatch,
         player_id: 'test'
       }
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "patch",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: oneElimEntryUrl + toPatch.id,
-        });
+        const response = await axios.patch(oneElimEntryUrl + toPatch.id, invalidJSON, {
+          withCredentials: true
+        })
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1971,14 +963,11 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...toPatch,
         player_id: userId
       }
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "patch",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: oneElimEntryUrl + toPatch.id,
-        });
+        const response = await axios.patch(oneElimEntryUrl + toPatch.id, invalidJSON, {
+          withCredentials: true
+        })
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1993,14 +982,11 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...toPatch,
         fee: ''
       } 
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "patch",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: oneElimEntryUrl + toPatch.id,
-        });
+        const response = await axios.patch(oneElimEntryUrl + toPatch.id, invalidJSON, {
+          withCredentials: true
+        })
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2015,14 +1001,11 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...toPatch,
         fee: '-1'
       } 
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "patch",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: oneElimEntryUrl + toPatch.id,
-        });
+        const response = await axios.patch(oneElimEntryUrl + toPatch.id, invalidJSON, {
+          withCredentials: true
+        })
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2037,14 +1020,11 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...toPatch,
         fee: '1234567890'
       } 
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "patch",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: oneElimEntryUrl + toPatch.id,
-        });
+        const response = await axios.patch(oneElimEntryUrl + toPatch.id, invalidJSON, {
+          withCredentials: true
+        })
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2059,14 +1039,11 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         ...toPatch,
         fee: 'abc'
       } 
-      const elimEntryJSON = JSON.stringify(invalidElimEntry);
+      const invalidJSON = JSON.stringify(invalidElimEntry);
       try {
-        const response = await axios({
-          method: "patch",
-          data: elimEntryJSON,
-          withCredentials: true,
-          url: oneElimEntryUrl + toPatch.id,
-        });
+        const response = await axios.patch(oneElimEntryUrl + toPatch.id, invalidJSON, {
+          withCredentials: true
+        })
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2100,40 +1077,23 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
       // if deleted event, add event back
       try {
         const playerJSON = JSON.stringify(toDelElimEntry);
-        const response = await axios({
-          method: "post",
-          data: playerJSON,
-          withCredentials: true,
-          url: url,
-        });
+        await axios.post(url, playerJSON, { withCredentials: true });
       } catch (err) {
         if (err instanceof Error) console.log(err.message);
       }
     })
 
     it('should delete a elimEntry by ID', async () => { 
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: oneElimEntryUrl + toDelElimEntry.id,
-        });
-        expect(response.status).toBe(200);
-        didDel = true;
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
+      const response = await axios.delete(oneElimEntryUrl + toDelElimEntry.id, {
+        withCredentials: true
+      });
+      expect(response.status).toBe(200);
+      didDel = true;
     })
     it(('should NOT delete a elimEntry by ID when ID is invalid'), async () => {
       try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: oneElimEntryUrl + "invalid_id",
+        const response = await axios.delete(oneElimEntryUrl + "invalid_id", {          
+          withCredentials: true
         });
         expect(response.status).toBe(404);
       } catch (err) {
@@ -2144,12 +1104,10 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
         }
       }
     })
-    it('should NOT delete a elimEntry by ID when id is valid, bit noy a elimEntry id', async () => {
+    it('should NOT delete a elimEntry by ID when id is valid, but not a elimEntry id', async () => {
       try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: oneElimEntryUrl + userId,
+        const response = await axios.delete(oneElimEntryUrl + userId, {          
+          withCredentials: true
         });
         expect(response.status).toBe(404);
       } catch (err) {
@@ -2161,368 +1119,11 @@ describe("ElimEntries - API's: /api/elimEntries", () => {
       }
     })
     it('should NOT delete a elimEntry by ID when id is not found', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: oneElimEntryUrl + notFoundId,
-        });
-        expect(response.status).toBe(200);
-        expect(response.data.count).toBe(0);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(200);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-  })
-
-  describe('DELETE all elimEntries for one brkt - API: /api/elimEntries/brkt/:brktId', () => { 
-
-    let didDel = false
-
-    beforeAll(async () => {
-      await postManyElimEntries(mockElimEntriesToPost)
-    })
-
-    beforeEach(() => {      
-      didDel = false      
-    })
-
-    afterEach(async () => {
-      if (!didDel) return;
-      await deleteAllElimEntriesForTmnt(tmntIdFormMockData)      
-      await postManyElimEntries(mockElimEntriesToPost)
-    })
-
-    afterAll(async () => {
-      await deleteAllElimEntriesForTmnt(tmntIdFormMockData)
-    })
-
-    it('should delete all elimEntries for one brkt', async () => { 
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: elimUrl + brktIdForMockData
-        });
-        expect(response.status).toBe(200);
-        didDel = true
-        expect(response.data.count).toBe(2); // 2 elimEntries deleted from mock data
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT delete all elimEntries for one brkt when ID is invalid', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: elimUrl + 'test'
-        });
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT delete all elimEntries for one brkt when ID valid, but not a brkt ID', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: elimUrl + userId
-        });
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should delete 0 elimEntries for a brkt when brkt id is not found', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: elimUrl + notFoundElimId
-        });
-        expect(response.status).toBe(200);
-        expect(response.data.count).toBe(0);
-      } catch (err) {
-        expect(true).toBeFalsy();
-      }
-    })
-  })
-
-  describe('DELETE all elimEntries for one div - API: /api/elimEntries/div/:divId', () => { 
-    
-    let didDel = false
-
-    beforeAll(async () => {
-      await postManyElimEntries(mockElimEntriesToPost)
-    })
-
-    beforeEach(() => {      
-      didDel = false      
-    })
-
-    afterEach(async () => {
-      if (!didDel) return;
-      await deleteAllElimEntriesForTmnt(tmntIdFormMockData)      
-      await postManyElimEntries(mockElimEntriesToPost)
-    })
-
-    afterAll(async () => {
-      await deleteAllElimEntriesForTmnt(tmntIdFormMockData)
-    })
-
-    it('should delete all elimEntries for one div', async () => { 
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: divUrl + divIdForMockData
-        });
-        expect(response.status).toBe(200);
-        didDel = true
-        expect(response.data.count).toBe(mockElimEntriesToPost.length);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT delete all elimEntries for one div when ID is invalid', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: divUrl + 'test'
-        });
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT delete all elimEntries for one div when ID valid, but not a div ID', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: divUrl + userId
-        });
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should delete 0 elimEntries for a div when div id is not found', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: divUrl + notFoundDivId
-        });
-        expect(response.status).toBe(200);
-        expect(response.data.count).toBe(0);
-      } catch (err) {
-        expect(true).toBeFalsy();
-      }
-    })
-  })
-
-  describe('DELETE all elimEntries for one squad - API: /api/elimEntries/squad/:squadId', () => {       
-
-    let didDel = false
-
-    beforeAll(async () => {
-      await postManyElimEntries(mockElimEntriesToPost)
-    })
-
-    beforeEach(() => {      
-      didDel = false      
-    })
-
-    afterEach(async () => {
-      if (!didDel) return;
-      await deleteAllElimEntriesForTmnt(tmntIdFormMockData)      
-      await postManyElimEntries(mockElimEntriesToPost)
-    })
-
-    afterAll(async () => {
-      await deleteAllElimEntriesForTmnt(tmntIdFormMockData)
-    })
-
-    it('should delete all elimEntries for one squad', async () => { 
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: squadUrl + squadIdForMockData
-        });
-        expect(response.status).toBe(200);
-        didDel = true
-        expect(response.data.count).toBe(mockElimEntriesToPost.length);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT delete all elimEntries for one squad when ID is invalid', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: squadUrl + 'test'
-        });
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT delete all elimEntries for one squad when ID valid, but not a squad ID', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: squadUrl + userId
-        });
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should delete 0 elimEntries for a squad when squad id is not found', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: squadUrl + notFoundSquadId
-        });
-        expect(response.status).toBe(200);
-        expect(response.data.count).toBe(0);
-      } catch (err) {
-        expect(true).toBeFalsy();
-      }
-    })
-  })
-
-  describe('DELETE all elimEntries for one tmnt - API: /api/elimEntries/tmnt/:tmntId', () => { 
-    
-    let didDel = false
-
-    beforeAll(async () => {
-      await postManyElimEntries(mockElimEntriesToPost)
-    })
-
-    beforeEach(() => {      
-      didDel = false      
-    })
-
-    afterEach(async () => {
-      if (!didDel) return;
-      await deleteAllElimEntriesForTmnt(tmntIdFormMockData)      
-      await postManyElimEntries(mockElimEntriesToPost)
-    })
-
-    afterAll(async () => {
-      await deleteAllElimEntriesForTmnt(tmntIdFormMockData)
-    })
-
-    it('should delete all elimEntries for a tmnt', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: tmntUrl + tmntIdFormMockData
-        });
-        expect(response.status).toBe(200);
-        expect(response.data.count).toBe(mockElimEntriesToPost.length);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT delete all elimEntries for a tmnt when tmnt id is not valid', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: tmntUrl + 'test'
-        });
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT delete all elimEntries for a tmnt when tmnt id is valid, but not a squad id', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: tmntUrl + userId
-        });
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should delete 0 elimEntries for a tmnt when tmnt id is not found', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: tmntUrl + notFoundTmntId
-        });
-        expect(response.status).toBe(200);
-        expect(response.data.count).toBe(0);
-      } catch (err) {
-        expect(true).toBeFalsy();
-      }
+      const response = await axios.delete(oneElimEntryUrl + notFoundId, {          
+        withCredentials: true
+      });
+      expect(response.status).toBe(200);
+      expect(response.data.count).toBe(0);
     })
   })
 

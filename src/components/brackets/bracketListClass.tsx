@@ -3,7 +3,8 @@ import {
   entryNumBrktsColName,
   timeStampColName,
 } from "@/app/dataEntry/playersForm/createColumns";
-import { isOdd, maxBrackets } from "@/lib/validation/validation";
+import { isOdd } from "@/lib/validation/validation";
+import { maxBrackets } from "@/lib/validation/constants";
 import {
   blankPlayer,
   defaultBrktGames,

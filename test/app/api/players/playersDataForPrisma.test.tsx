@@ -1,7 +1,7 @@
 import type { playerType } from '@/lib/types/types';
 import { mockTmntFullData } from '../../../mocks/tmnts/tmntFullData/mockTmntFullData';
 import { cloneDeep } from 'lodash';
-import { playerDataForPrisma } from '@/app/api/players/dataForPrisma';
+import { playerDataForPrisma } from '@/app/api/players/playerDataForPrisma';
 
 describe('playerDataForPrisma', () => {
   const testPlayer: playerType = cloneDeep(mockTmntFullData.players[0]);

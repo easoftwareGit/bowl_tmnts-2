@@ -4,7 +4,7 @@ import {
   mockTmntFullData,
   divId1,
 } from "../../../../mocks/tmnts/tmntFullData/mockTmntFullData";
-import { maxMoney, minFee } from "@/lib/validation/validation";
+import { maxMoney, minFee } from "@/lib/validation/constants";
 import {
   acdnErrClassName,
   noAcdnErr,

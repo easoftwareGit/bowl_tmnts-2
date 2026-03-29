@@ -8,8 +8,7 @@ import {
   isOdd,
   isEven,
   isNumber,  
-  validSortOrder,
-  maxSortOrder,
+  validSortOrder,  
   validPositiveInt,
   isValidRole,
   isValidName,
@@ -23,6 +22,7 @@ import {
 import { initDiv, initEvent } from "@/lib/db/initVals";
 import type { fullStageType } from "@/lib/types/types";
 import { SquadStage } from "@prisma/client";
+import { maxFirstNameLength, maxSortOrder } from "@/lib/validation/constants";
 
 const { isValidDateObject } = exportedForTesting;
 
@@ -812,7 +812,7 @@ describe("tests for validation functions", () => {
       expect(result).toBe(true);
     });
     it('should return false when name exceeds max length by one character', () => {
-      const name = "A".repeat(16); // 16 characters, exceeding maxFirstNameLength by 1      
+      const name = "A".repeat(maxFirstNameLength + 1); 
       const result = isValidName(name, maxLength);
       expect(result).toBe(false);
     });

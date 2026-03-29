@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import ZeroToNBrackets, { validateBrkts } from "@/app/dataEntry/tmntForm/zeroToNBrkts";
 import type { brktType, AcdnErrType } from "@/lib/types/types";
 import { mockTmntFullData, divId1 } from "../../../../mocks/tmnts/tmntFullData/mockTmntFullData";
-import { minFee, maxMoney, maxGames } from "@/lib/validation/validation";
+import { minFee, maxMoney, maxGames } from "@/lib/validation/constants";
 import { acdnErrClassName, noAcdnErr, objErrClassName } from "@/app/dataEntry/tmntForm/errors";
 import { cloneDeep } from "lodash";
 

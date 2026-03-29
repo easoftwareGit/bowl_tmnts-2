@@ -2,7 +2,7 @@ import { validatePots } from "@/app/dataEntry/tmntForm/zeroToNPots";
 import type { potType, AcdnErrType } from "@/lib/types/types";
 import { mockTmntFullData } from "../../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { acdnErrClassName, noAcdnErr, objErrClassName } from "@/app/dataEntry/tmntForm/errors";
-import { maxMoney, minFee } from "@/lib/validation/validation";
+import { maxMoney, minFee } from "@/lib/validation/constants";
 
 const baseMockPot: potType = {
   ...mockTmntFullData.pots[0],  // assumes you have at least 1 mock pot

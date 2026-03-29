@@ -1,9 +1,5 @@
-import {
-  isValidBtDbId,
-  minLane,
-  maxLaneCount,  
-  isNumber,    
-} from "@/lib/validation/validation";
+import { isValidBtDbId, isNumber } from "@/lib/validation/validation";
+import { minLane, maxLaneCount } from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
 import type { idTypes, laneType, validLanesType } from "@/lib/types/types";
 import { blankLane } from "@/lib/db/initVals";

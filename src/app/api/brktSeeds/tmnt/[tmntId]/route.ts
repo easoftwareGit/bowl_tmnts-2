@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isValidBtDbId } from "@/lib/validation/validation";
+import { standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/brktSeeds/tmnt/:tmntId
 
@@ -21,28 +22,15 @@ export async function GET(
         player_id: true,
       },
       where: {
-        one_brkt_id: {
-          in: await prisma.one_Brkt
-            .findMany({
-              where: {
-                brkt_id: {
-                  in: await prisma.brkt
-                    .findMany({
-                      where: {
-                        div_id: {
-                          in: await prisma.div.findMany({
-                            where: { tmnt_id: tmntId },
-                            select: { id: true },
-                          }).then((divs) => divs.map((div) => div.id))
-                        }
-                      }
-                    })
-                    .then((brkts) => brkts.map((brkt) => brkt.id)),
-                },
+        one_brkt: {
+          brkt: {
+            div: {
+              tmnt: {
+                id: tmntId,
               },
-            })
-            .then((brkts) => brkts.map((brkt) => brkt.id)),
-        },
+            },
+          },
+        }
       },
       orderBy: [
         {
@@ -63,62 +51,6 @@ export async function GET(
 
     return NextResponse.json({ brktSeeds }, { status: 200 });
   } catch (err: any) {
-    return NextResponse.json(
-      { err: "error getting brktSeeds for tmnt" },
-      { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ tmntId: string }> }
-) {
-  try {
-    const { tmntId } = await params;    
-    // check if tmntId is a valid tmnt id
-    if (!isValidBtDbId(tmntId, "tmt")) {
-      return NextResponse.json({ error: "not found" }, { status: 404 });
-    }
-    const result = await prisma.brkt_Seed.deleteMany({
-      where: {
-        one_brkt_id: {
-          in: await prisma.one_Brkt
-            .findMany({
-              where: {
-                brkt_id: {
-                  in: await prisma.brkt
-                    .findMany({
-                      where: {
-                        div_id: {
-                          in: await prisma.div.findMany({
-                            where: { tmnt_id: tmntId },
-                            select: { id: true },
-                          }).then((divs) => divs.map((div) => div.id))
-                        }
-                      }
-                    })
-                    .then((brkts) => brkts.map((brkt) => brkt.id)),
-                },
-              },
-            })
-            .then((brkts) => brkts.map((brkt) => brkt.id)),
-        },
-      },
-    });
-
-    if (!result) {
-      return NextResponse.json(
-        { error: "error deleting brktSeeds for tmnt" },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json(
-      { err: "error deleting brktSeeds for tmnt" },
-      { status: 500 }
-    );
+    return standardCatchReturn(err, "error getting brktSeeds for tmnt");
   }
 }

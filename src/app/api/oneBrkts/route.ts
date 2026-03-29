@@ -4,6 +4,7 @@ import { validateOneBrkt, sanitizeOneBrkt } from "../../../lib/validation/oneBrk
 import { ErrorCode } from "@/lib/enums/enums";
 import type { oneBrktType } from "@/lib/types/types";
 import { initOneBrkt } from "@/lib/db/initVals";
+import { standardCatchReturn } from "../apiCatch";
 
 // routes /api/oneBrkts
 export async function GET(request: NextRequest) {
@@ -19,11 +20,8 @@ export async function GET(request: NextRequest) {
       ]
     });
     return NextResponse.json({oneBrkts}, {status: 200});    
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: "error getting oneBrkts" },
-      { status: 400 }
-    );            
+  } catch (error) {
+    return standardCatchReturn(error, "error getting oneBrkts");
   }
 }
 
@@ -61,10 +59,7 @@ export async function POST(request: Request) {
       data: toPost,
     });
     return NextResponse.json({oneBrkt}, {status: 201});
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: "error creating oneBrkt" },
-      { status: 500 }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error creating oneBrkt");
   }
 }

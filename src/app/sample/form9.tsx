@@ -8,7 +8,7 @@ import {
   getBowlsLoadStatus,
   getBowlsError,
 } from "@/redux/features/bowls/bowlsSlice";
-import { maxTmntNameLength } from "@/lib/validation/validation";
+import { maxTmntNameLength } from "@/lib/validation/constants";
 import { initTmnt } from "@/lib/db/initVals";
 
 const Form9 = () => {

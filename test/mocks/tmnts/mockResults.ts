@@ -9,7 +9,7 @@ export const mockResults: tmntType[] = [
     tmnt_name_err: "",
     bowl_id: 'bwl_ff4cd62b03f24017beea81c1d6e047e7',
     bowl_id_err: "",
-    bowls: {
+    bowl: {
       bowl_name: "Coconut Bowl",
       city: "Sparks",
       state: "NV",
@@ -27,7 +27,7 @@ export const mockResults: tmntType[] = [
     tmnt_name_err: "",
     bowl_id: 'bwl_561540bd64974da9abdd97765fdb3659',
     bowl_id_err: "",
-    bowls: {
+    bowl: {
       bowl_name: "Earl Anthony's Dublin Bowl",
       city: "Dublin",
       state: "CA",
@@ -45,7 +45,7 @@ export const mockResults: tmntType[] = [
     tmnt_name_err: "",
     bowl_id: 'bwl_561540bd64974da9abdd97765fdb3659',
     bowl_id_err: "",
-    bowls: {
+    bowl: {
       bowl_name: "Earl Anthony's Dublin Bowl",
       city: "Dublin",
       state: "CA",
@@ -63,7 +63,7 @@ export const mockResults: tmntType[] = [
     tmnt_name_err: "",
     bowl_id: 'bwl_8b4a5c35ad1247049532ff53a12def0a',
     bowl_id_err: "",
-    bowls: {
+    bowl: {
       bowl_name: "Yosemite Lanes",
       city: "Modesto",
       state: "CA",

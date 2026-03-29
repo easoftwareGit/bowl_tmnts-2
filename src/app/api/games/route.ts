@@ -4,7 +4,7 @@ import { validateGame, sanitizeGame } from "../../../lib/validation/games/valida
 import { ErrorCode } from "@/lib/enums/enums";
 import type { gameType } from "@/lib/types/types";
 import { initGame } from "@/lib/db/initVals";
-import { getErrorStatus } from "../errCodes";
+import { standardCatchReturn } from "../apiCatch";
 
 // routes /api/games
 export async function GET(request: NextRequest) {
@@ -23,11 +23,8 @@ export async function GET(request: NextRequest) {
       ]
     })
     return NextResponse.json({games}, {status: 200});    
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: "error getting games" },
-      { status: 400 }
-    );            
+  } catch (error) {
+    return standardCatchReturn(error, "error getting games");
   }
 }
 
@@ -75,11 +72,7 @@ export async function POST(request: Request) {
       data: gameData
     })    
     return NextResponse.json({ game }, { status: 201 })        
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error creating game" },
-      { status: errStatus }
-    );            
+  } catch (error) {
+    return standardCatchReturn(error, "error creating game");
   }
 }

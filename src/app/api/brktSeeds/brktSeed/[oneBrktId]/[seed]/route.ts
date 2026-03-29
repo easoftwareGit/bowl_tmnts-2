@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { validCompositKey } from "../../../../../../lib/validation/brktSeeds/validate";
-import { getErrorStatus } from "@/app/api/errCodes";
+import { standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/brktSeeds/brktSeed/:oneBrktId/:seed
 
@@ -28,10 +28,7 @@ export async function GET(
     }
     return NextResponse.json({brktSeed}, { status: 200 });    
   } catch (error) {
-    return NextResponse.json(
-      { error: "error getting brktSeed" },
-      { status: 500 }
-    );
+    return standardCatchReturn(error, "error getting brktSeed");
   }
 }
 
@@ -53,11 +50,7 @@ export async function DELETE(
       },
     });
     return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error deleting brktSeed" },
-      { status: errStatus }
-    );    
+  } catch (error) {
+    standardCatchReturn(error, "error deleting brktSeed");
   }
 }

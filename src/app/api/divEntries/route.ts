@@ -4,14 +4,13 @@ import { initDivEntry } from "@/lib/db/initVals";
 import type { divEntryType } from "@/lib/types/types";
 import { sanitizeDivEntry, validateDivEntry } from "../../../lib/validation/divEntries/validate";
 import { ErrorCode } from "@/lib/enums/enums";
-import { divEntriesWithHdcp } from "./calcHdcp";
-import { getErrorStatus } from "../errCodes";
-import { divEntryDataForPrisma } from "./dataForPrisma";
+import { standardCatchReturn } from "../apiCatch";
+import { divEntryDataForPrisma } from "./divEntryDataForPrisma";
 
 // routes /api/divEntries
 export async function GET(request: NextRequest) {
   try {
-    const divEntriesNoHdcp = await prisma.div_Entry.findMany({
+    const divEntries = await prisma.div_Entry.findMany({
       select: {
         id: true,
         squad_id: true,
@@ -33,19 +32,9 @@ export async function GET(request: NextRequest) {
       },
     });    
 
-    const divEntries = divEntriesWithHdcp(
-      divEntriesNoHdcp.map(entry => ({
-        ...entry,
-        fee: entry.fee.toNumber()
-      })
-    ));    
-
     return NextResponse.json({ divEntries }, { status: 200 });
   } catch (error) {
-    return NextResponse.json(
-      { error: "error getting divEntries" },
-      { status: 500 }
-    );                
+    return standardCatchReturn(error, "error getting divEntries");
   }
 }
 
@@ -90,11 +79,7 @@ export const POST = async (request: NextRequest) => {
       data: divEntryData
     })
     return NextResponse.json({ divEntry }, { status: 201 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error creating divEntry" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error creating divEntry");
   }
 }

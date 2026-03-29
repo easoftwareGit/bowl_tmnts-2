@@ -6,7 +6,7 @@ import { sanitizeSquad, validateSquad } from "@/lib/validation/squads/validate";
 import type { squadType } from "@/lib/types/types";
 import { initSquad } from "@/lib/db/initVals";
 import { dateTo_UTC_yyyyMMdd, startOfDayFromString } from "@/lib/dateTools";
-import { getErrorStatus } from "@/app/api/errCodes";
+import { standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/squads/squad/:id
 
@@ -28,8 +28,8 @@ export async function GET(
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
     return NextResponse.json({ squad }, { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json({ error: "error getting squad" }, { status: 500 });
+  } catch (error) {
+    return standardCatchReturn(error, "error getting squad");    
   }
 }
 
@@ -104,12 +104,8 @@ export async function PUT(
       },
     });
     return NextResponse.json({ squad }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error updating squad" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error updating squad");
   }
 }
 
@@ -247,12 +243,8 @@ export async function PATCH(
     });
 
     return NextResponse.json({ squad }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error patching squad" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error patching squad");
   }
 }
 
@@ -272,11 +264,7 @@ export async function DELETE(
       },
     });
     return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error deleting squad" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error deleting squad");
   }
 }

@@ -6,7 +6,7 @@ import { sanitizeBrkt, validateBrkt } from "../../../../../lib/validation/brkts/
 import type { brktType } from "@/lib/types/types";
 import { initBrkt } from "@/lib/db/initVals";
 import { calcFSA } from "@/lib/currency/fsa";
-import { getErrorStatus } from "@/app/api/errCodes";
+import { getErrorStatus, standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/brkts/brkt/:id
 
@@ -19,22 +19,17 @@ export async function GET(
     if (!isValidBtDbId(id, "brk")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
-    const prismaBrkt = await prisma.brkt.findUnique({
+    const brkt = await prisma.brkt.findUnique({
       where: {
         id: id,
       },
     });
-    if (!prismaBrkt) {
+    if (!brkt) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
-    // add in fsa
-    const brkt = {
-      ...prismaBrkt,
-      fsa: calcFSA(prismaBrkt.first, prismaBrkt.second, prismaBrkt.admin),
-    }
     return NextResponse.json({ brkt }, { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json({ error: "error getting brkt" }, { status: 500 });
+  } catch (error) {
+    return standardCatchReturn(error, "error getting brkt");    
   }
 }
 
@@ -95,7 +90,7 @@ export async function PUT(
     }
 
     // NO fsa in data object
-    const putBrkt = await prisma.brkt.update({
+    const brkt = await prisma.brkt.update({
       where: {
         id: id,
       },
@@ -112,18 +107,9 @@ export async function PUT(
         sort_order: toPut.sort_order,
       },
     });
-    // add in fsa
-    const brkt = {
-      ...putBrkt,
-      fsa: calcFSA(putBrkt.first, putBrkt.second, putBrkt.admin),
-    };
     return NextResponse.json({ brkt }, { status: 200 });    
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error updating brkt" },
-      { status: errStatus }
-    );    
+  } catch (error) {
+    return standardCatchReturn(error, "error updating brkt");
   }
 }
 
@@ -256,7 +242,7 @@ export async function PATCH(
       toPatch.sort_order = undefined as any;
     }
 
-    const patchBrkt = await prisma.brkt.update({
+    const brkt = await prisma.brkt.update({
       where: {
         id: id,
       },
@@ -274,26 +260,9 @@ export async function PATCH(
         sort_order: toPatch.sort_order || undefined,
       },
     });
-    let brkt;
-    // add in fsa if needed
-    if (jsonProps.includes("fee") ||
-        jsonProps.includes("first") ||
-        jsonProps.includes("second") ||
-        jsonProps.includes("admin")) {
-      brkt = {
-        ...patchBrkt,
-        fsa: calcFSA(patchBrkt.first, patchBrkt.second, patchBrkt.admin),
-      };
-    } else {
-      brkt = patchBrkt;
-    }
     return NextResponse.json({ brkt }, { status: 200 });    
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error patching brkt" },
-      { status: errStatus }
-    );    
+  } catch (error) {
+    return standardCatchReturn(error, "error patching brkt");
   }
 }
 
@@ -314,11 +283,7 @@ export async function DELETE(
     });
     
     return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error deleting brkt" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error deleting brkt");
   }
 }

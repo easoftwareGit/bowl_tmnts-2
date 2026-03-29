@@ -17,7 +17,7 @@ const getSumsForGames = (squadGames: number) => {
  * @param {number} squadGames - number of games in squad 
  * @returns {string} - SQL for getting squad games 
  */
-export const getSquadGamesSql = (squadId: string, squadGames: number) => { 
+export const getSquadGamesSql = (squadId: string, squadGames: number): string => { 
 
   if (!isValidBtDbId(squadId, "sqd") || !validGames(squadGames)) return '';  
   const squadGamesSQL =
@@ -30,7 +30,13 @@ export const getSquadGamesSql = (squadId: string, squadGames: number) => {
   return squadGamesSQL
 }
 
-const getScoresPlusHdcp = (squadGames: number) => { 
+/**
+ * gets SQL for getting division games plus hdcp
+ * 
+ * @param {number} squadGames - number of games in squad
+ * @returns {string} - SQL for getting division games plus hdcp
+ */
+const getScoresPlusHdcp = (squadGames: number): string => { 
   let scoresSql = ''
   for (let i = 1; i <= squadGames; i++) {
     scoresSql += `game_scores."Game ${i}", `;
@@ -48,7 +54,7 @@ const getScoresPlusHdcp = (squadGames: number) => {
  * @param {number} squadGames - number of games in squad
  * @returns {string} - SQL for getting division games 
  */
-export const getDivGamesSql = (divId: string, squadGames: number) => { 
+export const getDivGamesSql = (divId: string, squadGames: number): string => { 
 
   if (!isValidBtDbId(divId, "div") || !validGames(squadGames)) return '';  
   const divGamesSql = 
@@ -130,18 +136,3 @@ export const getDivGamesSql = (divId: string, squadGames: number) => {
     `ORDER BY "total + Hdcp" DESC;`
   return divGamesSql
 }
-
-// export const getDivGamesSql = (divId: string, hdcp_per: number, squadGames: number) => {   
-
-//   if (!isValidBtDbId(divId, "div")
-//     || !validHdcpPer(hdcp_per)
-//     || !validGames(squadGames)
-//   ) return ''; 
-//   if (hdcp_per === 0) return getDivGamesSqlNoHdcp(divId, squadGames);
-//   return getDivGamesSqlWithHdcp(divId, squadGames);
-// }
-
-// export const exportedForTesting = {
-//   getSumsForGames,
-//   getDivGamesSqlNoHdcp 
-// }

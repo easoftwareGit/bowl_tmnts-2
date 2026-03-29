@@ -1,7 +1,8 @@
 "use client";
 import React, { useState } from "react";
-import { findUserByEmail, findUserById } from "@/lib/db/users/users";
+
 import { User } from '@prisma/client'
+import { getUserByEmail, getUserById } from "@/lib/db/users/dbUsers";
 
 const initUser = {
   id: "",
@@ -26,7 +27,7 @@ export const Form7: React.FC = () => {
   const [userId, setUserId] = useState("")
 
   const findByEmail = async () => {
-    const foundUser = await findUserByEmail(email) as User
+    const foundUser = await getUserByEmail(email) as User
     if (foundUser && Object.keys(foundUser).length > 0) { 
       setUser({
         ...foundUser,
@@ -39,7 +40,7 @@ export const Form7: React.FC = () => {
   }
 
   const findById = async () => {
-    const foundUser = await findUserById(userId) as User
+    const foundUser = await getUserById(userId) as User
     if (foundUser && Object.keys(foundUser).length > 0) { 
       setUser({
         ...foundUser,

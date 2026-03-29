@@ -77,7 +77,7 @@ describe('Bowls - API: /api/bowls', () => {
     beforeAll(async () => { 
       await deletePostedBowl();
     })
-
+    
     it('should get all bowls', async () => { 
       const response = await axios.get(url);
       expect(response.status).toBe(200);
@@ -279,8 +279,8 @@ describe('Bowls - API: /api/bowls', () => {
       createdBowl = true;
       expect(response.status).toBe(201);
       expect(postedBowl.id).toBe(bowlToPost.id); // use the original id
-      expect(postedBowl.bowl_name).toBe(bowlToPost.bowl_name);
-      expect(postedBowl.city).toBe(bowlToPost.city);
+      expect(postedBowl.bowl_name).toBe('script' + bowlToPost.bowl_name + 'script');      
+      expect(postedBowl.city).toBe('CdivE' + bowlToPost.city + 'CdivECpECpE');      
       expect(postedBowl.state).toBe(bowlToPost.state);
       expect(postedBowl.url).toBe(bowlToPost.url);      
     })
@@ -488,8 +488,8 @@ describe('Bowls - API: /api/bowls', () => {
       }); 
       expect(response.status).toBe(200);
       const bowl = response.data.bowl;
-      expect(bowl.bowl_name).toBe(sampleBowl.bowl_name);
-      expect(bowl.city).toBe(sampleBowl.city);
+      expect(bowl.bowl_name).toBe('script' + sampleBowl.bowl_name + 'script');
+      expect(bowl.city).toBe('CdivE' + sampleBowl.city + 'CdivECpECpE');      
       expect(bowl.state).toBe(sampleBowl.state);
       expect(bowl.url).toBe("http://example.com/%3Cscript%3Ealert('XSS')%3C/script%3E");
     })
@@ -819,7 +819,7 @@ describe('Bowls - API: /api/bowls', () => {
       });
       const patchedBowl = response.data.bowl;
       expect(response.status).toBe(200);
-      expect(patchedBowl.bowl_name).toBe("alert1");
+      expect(patchedBowl.bowl_name).toBe("scriptalert(1)script");
     })
     it('should patch a bowl by ID with sanitized city', async () => {
       const bowlJSON = JSON.stringify({

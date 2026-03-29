@@ -1,7 +1,7 @@
 import type { eventType } from '@/lib/types/types';
 import { mockTmntFullData } from '../../../mocks/tmnts/tmntFullData/mockTmntFullData';
 import { cloneDeep } from 'lodash';
-import { eventDataForPrisma } from '@/app/api/events/dataForPrisma';
+import { eventDataForPrisma } from '@/app/api/events/eventDataForPrisma';
 
 describe('eventDataForPrisma', () => {
   const testEvent: eventType = cloneDeep(mockTmntFullData.events[0]);

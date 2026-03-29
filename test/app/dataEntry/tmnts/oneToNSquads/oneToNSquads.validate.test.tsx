@@ -14,7 +14,7 @@ import {
   maxStartLane,
   minLaneCount,
   maxLaneCount,
-} from "@/lib/validation/validation";
+} from "@/lib/validation/constants";
 import { dateTo_UTC_MMddyyyy, dateTo_yyyyMMdd, startOfDayFromString, todayStr } from "@/lib/dateTools";
 import { addDays } from "date-fns";
 import { cloneDeep } from "lodash";

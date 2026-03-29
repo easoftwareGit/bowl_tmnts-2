@@ -5,7 +5,7 @@ import { ErrorCode } from "@/lib/enums/enums";
 import { initPotEntry } from "@/lib/db/initVals";
 import type { potEntryType } from "@/lib/types/types";
 import { sanitizePotEntry, validatePotEntry } from "../../../../../lib/validation/potEntries/validate";
-import { getErrorStatus } from "@/app/api/errCodes";
+import { standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/potEntries/potEntry/:id
 
@@ -27,8 +27,8 @@ export async function GET(
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }    
     return NextResponse.json({ potEntry }, { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json({ error: "error getting potEntry" }, { status: 500 });
+  } catch (error) {
+    return standardCatchReturn(error, "error getting potEntry");
   }
 }
 
@@ -79,12 +79,8 @@ export async function PUT(
     });
 
     return NextResponse.json({ potEntry }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "Error putting potEntry" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error putting potEntry");
   }
 }
 
@@ -170,12 +166,8 @@ export async function PATCH(
     });
 
     return NextResponse.json({ potEntry }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "Error patching potEntry" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error patching potEntry");
   }
 }
 
@@ -195,11 +187,7 @@ export async function DELETE(
       },
     });
     return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "Error deleting potEntry" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error deleting potEntry");
   }
 }    

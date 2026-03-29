@@ -1,7 +1,7 @@
 import type { brktEntryType } from '@/lib/types/types';
 import { mockTmntFullData } from '../../../mocks/tmnts/tmntFullData/mockTmntFullData';
 import { cloneDeep } from 'lodash';
-import { brktEntryDataForPrisma } from '@/app/api/brktEntries/dataForPrisma';
+import { brktEntryDataForPrisma } from '@/app/api/brktEntries/brktEntryDataForPrisma';
 
 describe('eventDataForPrisma', () => {
   const testBrktEntry: brktEntryType = cloneDeep(mockTmntFullData.brktEntries[0]);

@@ -21,7 +21,7 @@ import {
   getAcdnErrMsg,
   noAcdnErr,
 } from "./errors";
-import { maxMoney, minFee } from "@/lib/validation/validation";
+import { maxMoney, minFee } from "@/lib/validation/constants";
 import { getDivName, getPotName } from "@/lib/getName";
 import { btDbUuid } from "@/lib/uuid";
 import clsx from "clsx";

@@ -10,7 +10,7 @@ import type {
 import { tmntFormParent, ioDataError } from "@/lib/enums/enums";
 import ModalErrorMsg, { cannotSaveTitle } from "@/components/modal/errorModal";
 import { initModalObj } from "@/components/modal/modalObjType";
-import { maxTmntNameLength } from "@/lib/validation/validation";
+import { maxTmntNameLength } from "@/lib/validation/constants";
 import { startOfDayFromString, validDateString } from "@/lib/dateTools";
 import { noAcdnErr } from "./errors";
 import OneToNEvents, { validateEvents } from "./oneToNEvents";

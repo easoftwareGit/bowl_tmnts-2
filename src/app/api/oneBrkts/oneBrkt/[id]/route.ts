@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isValidBtDbId } from "@/lib/validation/validation";
-import { getErrorStatus } from "@/app/api/errCodes";
+import { standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/oneBrkts/oneBrkt/:id
 
@@ -23,8 +23,8 @@ export async function GET(
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
     return NextResponse.json({ oneBrkt }, { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json({ error: "error getting oneBrkt" }, { status: 500 });
+  } catch (error) {
+    return standardCatchReturn(error, "error getting oneBrkt");
   }  
 }
 
@@ -43,11 +43,7 @@ export async function DELETE(
       },
     });
     return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error deleting oneBrkt" },
-      { status: errStatus }
-    );    
+  } catch (error) {
+    return standardCatchReturn(error, "error deleting oneBrkt");
   }
 }

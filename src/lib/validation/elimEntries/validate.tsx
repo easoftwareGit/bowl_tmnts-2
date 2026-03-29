@@ -1,7 +1,8 @@
 import { validMoney } from "@/lib/currency/validate";
 import { blankElimEntry } from "@/lib/db/initVals";
 import type { elimEntryType, validElimEntriesType } from "@/lib/types/types";
-import { isValidBtDbId, maxMoney } from "@/lib/validation/validation";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { maxMoney, minElimEntryFee } from "../constants";
 import { ErrorCode } from "@/lib/enums/enums";
 import { sanitizeCurrency } from "../sanitize";
 
@@ -35,7 +36,7 @@ const gotElimEntryData = (elimEntry: elimEntryType): ErrorCode => {
  */
 export const validElimEntryFee = (moneyStr: unknown): boolean => {
   if (!moneyStr || typeof moneyStr !== 'string') return false;
-  return validMoney(moneyStr, 0, maxMoney);
+  return validMoney(moneyStr, minElimEntryFee, maxMoney);
 };
 
 /**

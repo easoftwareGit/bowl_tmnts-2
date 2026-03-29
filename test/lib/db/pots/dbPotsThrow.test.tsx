@@ -1,24 +1,37 @@
-import axios from "axios";
+import { publicApi, privateApi } from "@/lib/api/axios";
 import { basePotsApi } from "@/lib/api/apiPaths";
 import { testBasePotsApi } from "../../../testApi";
 import type { potCategoriesTypes, potType } from "@/lib/types/types";
 import { blankPot } from "@/lib/db/initVals";
-import { deleteAllPotsForDiv, deleteAllPotsForSquad, deleteAllPotsForTmnt, deletePot, getAllPotsForSquad, getAllPotsForTmnt, postManyPots, postPot, putPot } from "@/lib/db/pots/dbPots";
+import {
+  deletePot,
+  getAllPotsForSquad,
+  getAllPotsForTmnt,
+  postPot,
+  putPot,
+} from "@/lib/db/pots/dbPots";
 
 const url = testBasePotsApi.startsWith("undefined")
   ? basePotsApi
   : testBasePotsApi;
-const divUrl = url + "/div/";  
-const manyUrl = url + "/many";
 const potUrl = url + "/pot/";
 const squadUrl = url + "/squad/";
 const tmntUrl = url + "/tmnt/";
 
-jest.mock("axios");
+jest.mock("@/lib/api/axios", () => ({
+  publicApi: {
+    get: jest.fn(),
+  },
+  privateApi: {
+    post: jest.fn(),
+    put: jest.fn(),
+    delete: jest.fn(),
+  },
+}));
 
-const mockedAxios = axios as jest.Mocked<typeof axios>;
+const mockedPublicApi = publicApi as jest.Mocked<typeof publicApi>;
+const mockedPrivateApi = privateApi as jest.Mocked<typeof privateApi>;
 
-const divId = 'div_621bfee84e774d5a9dc2e9b6bdc5d31c';
 const potId = "pot_761fb6d8a9a04cb4b3372e212da2a3b0";
 const squadId = "sqd_7116ce5f80164830830a7157eb093396";
 const tmntId = "tmt_fd99387c33d9c78aba290286576ddce5";
@@ -27,406 +40,228 @@ const manyPots: potType[] = [
   {
     ...blankPot,
     id: "pot_01758d99c5494efabb3b0d273cf22e7a",
-    squad_id: 'sqd_853edbcc963745b091829e3eadfcf064',
-    div_id: 'div_621bfee84e774d5a9dc2e9b6bdc5d31c',
+    squad_id: "sqd_853edbcc963745b091829e3eadfcf064",
+    div_id: "div_621bfee84e774d5a9dc2e9b6bdc5d31c",
     sort_order: 1,
-    fee: '20',
+    fee: "20",
     pot_type: "Game" as potCategoriesTypes,
   },
   {
     ...blankPot,
     id: "pot_02758d99c5494efabb3b0d273cf22e7a",
-    squad_id: 'sqd_853edbcc963745b091829e3eadfcf064',
-    div_id: 'div_621bfee84e774d5a9dc2e9b6bdc5d31c',
+    squad_id: "sqd_853edbcc963745b091829e3eadfcf064",
+    div_id: "div_621bfee84e774d5a9dc2e9b6bdc5d31c",
     sort_order: 2,
-    fee: '10',
+    fee: "10",
     pot_type: "Last Game" as potCategoriesTypes,
   },
 ];
 
 const validPot: potType = {
-  ...manyPots[0]
-}
+  ...manyPots[0],
+};
 
-describe("non standard throw cases", () => { 
+describe("non standard throw cases", () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
 
   describe("getAllPotsForSquad - non standard throw cases", () => {
-    afterEach(() => {
-      jest.restoreAllMocks();
-      jest.clearAllMocks();
-    });
-
-    it("should throw an error when response.status !== 200", async () => {
-      mockedAxios.get.mockResolvedValue({
-        status: 500,
-        data: {},
-      });
+    it("should throw an error when response.data is missing", async () => {
+      mockedPublicApi.get.mockResolvedValueOnce({
+        data: undefined,
+      } as any);
 
       await expect(getAllPotsForSquad(squadId)).rejects.toThrow(
-        "Unexpected status 500 when fetching pots"
+        "getAllPotsForSquad failed: No data returned from API"
       );
 
-      expect(mockedAxios.get).toHaveBeenCalledTimes(1);
-      expect(mockedAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining(squadId),
-        { withCredentials: true }
-      );
+      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
+      expect(mockedPublicApi.get).toHaveBeenCalledWith(squadUrl + squadId);
     });
-    it("should throw with custom message if axios.get rejects", async () => {
-      mockedAxios.get.mockRejectedValueOnce(new Error("Network Error"));
+
+    it("should throw with custom message if publicApi.get rejects", async () => {
+      mockedPublicApi.get.mockRejectedValueOnce(new Error("Network Error"));
 
       await expect(getAllPotsForSquad(squadId)).rejects.toThrow(
         "getAllPotsForSquad failed: Network Error"
       );
 
-      expect(mockedAxios.get).toHaveBeenCalledTimes(1);
+      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
+      expect(mockedPublicApi.get).toHaveBeenCalledWith(squadUrl + squadId);
     });
-    it("should throw an error when axios.get rejects with non-error", async () => {
-      mockedAxios.get.mockRejectedValueOnce("testing 123");
+
+    it("should throw an error when publicApi.get rejects with non-error", async () => {
+      mockedPublicApi.get.mockRejectedValueOnce("testing 123");
 
       await expect(getAllPotsForSquad(squadId)).rejects.toThrow(
         "getAllPotsForSquad failed: testing 123"
       );
 
-      expect(mockedAxios.get).toHaveBeenCalledTimes(1);
+      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
+      expect(mockedPublicApi.get).toHaveBeenCalledWith(squadUrl + squadId);
     });
   });
 
   describe("getAllPotsForTmnt - non standard throw cases", () => {
-    afterEach(() => {
-      jest.restoreAllMocks();
-      jest.clearAllMocks();
-    });
-
-    it("should throw an error when response.status !== 200", async () => {
-      mockedAxios.get.mockResolvedValue({
-        status: 500,
-        data: {},
-      });
+    it("should throw an error when response.data is missing", async () => {
+      mockedPublicApi.get.mockResolvedValueOnce({
+        data: undefined,
+      } as any);
 
       await expect(getAllPotsForTmnt(tmntId)).rejects.toThrow(
-        "Unexpected status 500 when fetching pots"
+        "getAllPotsForTmnt failed: No data returned from API"
       );
 
-      expect(mockedAxios.get).toHaveBeenCalledTimes(1);
-      expect(mockedAxios.get).toHaveBeenCalledWith(
-        expect.stringContaining(tmntId),
-        { withCredentials: true }
-      );
+      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
+      expect(mockedPublicApi.get).toHaveBeenCalledWith(tmntUrl + tmntId);
     });
-    it("should throw with custom message if axios.get rejects", async () => {
-      mockedAxios.get.mockRejectedValueOnce(new Error("Network Error"));
+
+    it("should throw with custom message if publicApi.get rejects", async () => {
+      mockedPublicApi.get.mockRejectedValueOnce(new Error("Network Error"));
 
       await expect(getAllPotsForTmnt(tmntId)).rejects.toThrow(
         "getAllPotsForTmnt failed: Network Error"
       );
 
-      expect(mockedAxios.get).toHaveBeenCalledTimes(1);
+      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
+      expect(mockedPublicApi.get).toHaveBeenCalledWith(tmntUrl + tmntId);
     });
-    it("should throw an error when axios.get rejects with non-error", async () => {
-      mockedAxios.get.mockRejectedValueOnce("testing 123");
+
+    it("should throw an error when publicApi.get rejects with non-error", async () => {
+      mockedPublicApi.get.mockRejectedValueOnce("testing 123");
 
       await expect(getAllPotsForTmnt(tmntId)).rejects.toThrow(
         "getAllPotsForTmnt failed: testing 123"
       );
 
-      expect(mockedAxios.get).toHaveBeenCalledTimes(1);
+      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
+      expect(mockedPublicApi.get).toHaveBeenCalledWith(tmntUrl + tmntId);
     });
   });
 
   describe("postPot - non standard throw cases", () => {
-    afterEach(() => {
-      jest.restoreAllMocks();
-      jest.clearAllMocks();
-    });
-
-    it("should throw an error when response.status !== 201", async () => {
-      mockedAxios.post.mockResolvedValueOnce({
-        status: 200,
+    it("should throw an error when response.data.pot is missing", async () => {
+      mockedPrivateApi.post.mockResolvedValueOnce({
         data: {},
-      });
+      } as any);
 
-      await expect(postPot(validPot)).rejects.toThrow(
-        "Error posting pot"
-      );
+      await expect(postPot(validPot)).rejects.toThrow("postPot failed: Error posting pot");
 
-      expect(mockedAxios.post).toHaveBeenCalledTimes(1);
-      expect(mockedAxios.post).toHaveBeenCalledWith(
+      expect(mockedPrivateApi.post).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.post).toHaveBeenCalledWith(
         url,
-        JSON.stringify(validPot),
-        { withCredentials: true }
+        JSON.stringify(validPot)
       );
     });
-    it("should throw with custom message if axios.get rejects", async () => {
-      mockedAxios.post.mockRejectedValueOnce(new Error("Network Error"));
+
+    it("should throw with custom message if privateApi.post rejects", async () => {
+      mockedPrivateApi.post.mockRejectedValueOnce(new Error("Network Error"));
 
       await expect(postPot(validPot)).rejects.toThrow(
         "postPot failed: Network Error"
       );
 
-      expect(mockedAxios.post).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.post).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.post).toHaveBeenCalledWith(
+        url,
+        JSON.stringify(validPot)
+      );
     });
-    it("should throw an error when axios.get rejects with non-error", async () => {
-      mockedAxios.post.mockRejectedValueOnce("testing 123");
+
+    it("should throw an error when privateApi.post rejects with non-error", async () => {
+      mockedPrivateApi.post.mockRejectedValueOnce("testing 123");
 
       await expect(postPot(validPot)).rejects.toThrow(
         "postPot failed: testing 123"
       );
 
-      expect(mockedAxios.post).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("postManyPots - non standard throw cases", () => {
-
-    afterEach(() => {
-      jest.restoreAllMocks();
-      jest.clearAllMocks();
-    });
-
-    it("should throw an error when response.status !== 201", async () => {
-      mockedAxios.post.mockResolvedValueOnce({
-        status: 200,
-        data: {},
-      });
-
-      await expect(postManyPots(manyPots)).rejects.toThrow(
-        "Error posting pots"
+      expect(mockedPrivateApi.post).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.post).toHaveBeenCalledWith(
+        url,
+        JSON.stringify(validPot)
       );
-
-      expect(mockedAxios.post).toHaveBeenCalledTimes(1);
-      expect(mockedAxios.post).toHaveBeenCalledWith(
-        manyUrl,
-        JSON.stringify(manyPots),
-        { withCredentials: true }
-      );
-    });
-    it("should throw with custom message if axios.get rejects", async () => {
-      mockedAxios.post.mockRejectedValueOnce(new Error("Network Error"));
-
-      await expect(postManyPots(manyPots)).rejects.toThrow(
-        "postManyPots failed: Network Error"
-      );
-
-      expect(mockedAxios.post).toHaveBeenCalledTimes(1);
-    });
-    it("should throw an error when axios.get rejects with non-error", async () => {
-      mockedAxios.post.mockRejectedValueOnce("testing 123");
-
-      await expect(postManyPots(manyPots)).rejects.toThrow(
-        "postManyPots failed: testing 123"
-      );
-
-      expect(mockedAxios.post).toHaveBeenCalledTimes(1);
     });
   });
 
   describe("putPot - non standard throw cases", () => {
-
-    afterEach(() => {
-      jest.restoreAllMocks();
-      jest.clearAllMocks();
-    });
-
-    it("should throw an error when response.status !== 200", async () => {
-      mockedAxios.put.mockResolvedValueOnce({
-        status: 500,
+    it("should throw an error when response.data.pot is missing", async () => {
+      mockedPrivateApi.put.mockResolvedValueOnce({
         data: {},
-      });
+      } as any);
 
-      await expect(putPot(validPot)).rejects.toThrow(
-        "Error putting pot"
-      );
+      await expect(putPot(validPot)).rejects.toThrow("putPot failed: Error putting pot");
 
-      expect(mockedAxios.put).toHaveBeenCalledTimes(1);
-      expect(mockedAxios.put).toHaveBeenCalledWith(
+      expect(mockedPrivateApi.put).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.put).toHaveBeenCalledWith(
         potUrl + validPot.id,
-        JSON.stringify(validPot),
-        { withCredentials: true }
+        JSON.stringify(validPot)
       );
     });
-    it("should throw with custom message if axios.get rejects", async () => {
-      mockedAxios.put.mockRejectedValueOnce(new Error("Network Error"));
+
+    it("should throw with custom message if privateApi.put rejects", async () => {
+      mockedPrivateApi.put.mockRejectedValueOnce(new Error("Network Error"));
 
       await expect(putPot(validPot)).rejects.toThrow(
         "putPot failed: Network Error"
       );
 
-      expect(mockedAxios.put).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.put).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.put).toHaveBeenCalledWith(
+        potUrl + validPot.id,
+        JSON.stringify(validPot)
+      );
     });
-    it("should throw an error when axios.get rejects with non-error", async () => {
-      mockedAxios.put.mockRejectedValueOnce("testing 123");
+
+    it("should throw an error when privateApi.put rejects with non-error", async () => {
+      mockedPrivateApi.put.mockRejectedValueOnce("testing 123");
 
       await expect(putPot(validPot)).rejects.toThrow(
         "putPot failed: testing 123"
       );
 
-      expect(mockedAxios.put).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.put).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.put).toHaveBeenCalledWith(
+        potUrl + validPot.id,
+        JSON.stringify(validPot)
+      );
     });
   });
 
   describe("deletePot - non standard throw cases", () => {
-    afterEach(() => {
-      jest.restoreAllMocks();
-      jest.clearAllMocks();
-    });
-
-    it("should throw an error when response.status !== 200", async () => {
-      mockedAxios.delete.mockResolvedValueOnce({
-        status: 500,
+    it("should throw an error when response.data.count is missing", async () => {
+      mockedPrivateApi.delete.mockResolvedValueOnce({
         data: {},
-      });
+      } as any);
 
       await expect(deletePot(potId)).rejects.toThrow(
-        "Error deleting pot"
+        "deletePot failed: Error deleting pot"
       );
 
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
-      expect(mockedAxios.delete).toHaveBeenCalledWith(potUrl + potId, {
-        withCredentials: true,
-      });
+      expect(mockedPrivateApi.delete).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.delete).toHaveBeenCalledWith(potUrl + potId);
     });
-    it("should throw with custom message if axios.get rejects", async () => {
-      mockedAxios.delete.mockRejectedValueOnce(new Error("Network Error"));
+
+    it("should throw with custom message if privateApi.delete rejects", async () => {
+      mockedPrivateApi.delete.mockRejectedValueOnce(new Error("Network Error"));
 
       await expect(deletePot(potId)).rejects.toThrow(
         "deletePot failed: Network Error"
       );
 
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.delete).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.delete).toHaveBeenCalledWith(potUrl + potId);
     });
-    it("should throw an error when axios.get rejects with non-error", async () => {
-      mockedAxios.delete.mockRejectedValueOnce("testing 123");
+
+    it("should throw an error when privateApi.delete rejects with non-error", async () => {
+      mockedPrivateApi.delete.mockRejectedValueOnce("testing 123");
 
       await expect(deletePot(potId)).rejects.toThrow(
         "deletePot failed: testing 123"
       );
 
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.delete).toHaveBeenCalledTimes(1);
+      expect(mockedPrivateApi.delete).toHaveBeenCalledWith(potUrl + potId);
     });
   });
-
-  describe("deleteAllPotsForDiv - non standard throw cases", () => {
-    afterEach(() => {
-      jest.restoreAllMocks();
-      jest.clearAllMocks();
-    });
-
-    it("should throw an error when response.status !== 200", async () => {
-      mockedAxios.delete.mockResolvedValueOnce({
-        status: 500,
-        data: {},
-      });
-
-      await expect(deleteAllPotsForDiv(divId)).rejects.toThrow(
-        "Error deleting pots for div"
-      );
-
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
-      expect(mockedAxios.delete).toHaveBeenCalledWith(divUrl + divId, {
-        withCredentials: true,
-      });
-    });
-    it("should throw with custom message if axios.get rejects", async () => {
-      mockedAxios.delete.mockRejectedValueOnce(new Error("Network Error"));
-
-      await expect(deleteAllPotsForDiv(divId)).rejects.toThrow(
-        "deleteAllPotsForDiv failed: Network Error"
-      );
-
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
-    });
-    it("should throw an error when axios.get rejects with non-error", async () => {
-      mockedAxios.delete.mockRejectedValueOnce("testing 123");
-
-      await expect(deleteAllPotsForDiv(divId)).rejects.toThrow(
-        "deleteAllPotsForDiv failed: testing 123"
-      );
-
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("deleteAllPotsForSquad - non standard throw cases", () => {
-    afterEach(() => {
-      jest.restoreAllMocks();
-      jest.clearAllMocks();
-    });
-
-    it("should throw an error when response.status !== 200", async () => {
-      mockedAxios.delete.mockResolvedValueOnce({
-        status: 500,
-        data: {},
-      });
-
-      await expect(deleteAllPotsForSquad(squadId)).rejects.toThrow(
-        "Error deleting pots for squad"
-      );
-
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
-      expect(mockedAxios.delete).toHaveBeenCalledWith(squadUrl + squadId, {
-        withCredentials: true,
-      });
-    });
-    it("should throw with custom message if axios.get rejects", async () => {
-      mockedAxios.delete.mockRejectedValueOnce(new Error("Network Error"));
-
-      await expect(deleteAllPotsForSquad(squadId)).rejects.toThrow(
-        "deleteAllPotsForSquad failed: Network Error"
-      );
-
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
-    });
-    it("should throw an error when axios.get rejects with non-error", async () => {
-      mockedAxios.delete.mockRejectedValueOnce("testing 123");
-
-      await expect(deleteAllPotsForSquad(squadId)).rejects.toThrow(
-        "deleteAllPotsForSquad failed: testing 123"
-      );
-
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("deleteAllPotsForTmnt - non standard throw cases", () => {
-    afterEach(() => {
-      jest.restoreAllMocks();
-      jest.clearAllMocks();
-    });
-
-    it("should throw an error when response.status !== 200", async () => {
-      mockedAxios.delete.mockResolvedValueOnce({
-        status: 500,
-        data: {},
-      });
-
-      await expect(deleteAllPotsForTmnt(tmntId)).rejects.toThrow(
-        "Error deleting pots for tmnt"
-      );
-
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
-      expect(mockedAxios.delete).toHaveBeenCalledWith(tmntUrl + tmntId, {
-        withCredentials: true,
-      });
-    });
-    it("should throw with custom message if axios.get rejects", async () => {
-      mockedAxios.delete.mockRejectedValueOnce(new Error("Network Error"));
-
-      await expect(deleteAllPotsForTmnt(tmntId)).rejects.toThrow(
-        "deleteAllPotsForTmnt failed: Network Error"
-      );
-
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
-    });
-    it("should throw an error when axios.get rejects with non-error", async () => {
-      mockedAxios.delete.mockRejectedValueOnce("testing 123");
-
-      await expect(deleteAllPotsForTmnt(tmntId)).rejects.toThrow(
-        "deleteAllPotsForTmnt failed: testing 123"
-      );
-
-      expect(mockedAxios.delete).toHaveBeenCalledTimes(1);
-    });
-  });
-
-})
+});

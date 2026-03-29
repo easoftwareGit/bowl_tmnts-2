@@ -113,6 +113,9 @@ describe("tests for potEntry validation", () => {
     it("should return false when fee is negative", () => {
       expect(validPotEntryFee("-1")).toBe(false);
     });
+    it("should return false when fee is zero", () => {
+      expect(validPotEntryFee("0")).toBe(false);
+    });
     it("should return false when fee is too big", () => {
       expect(validPotEntryFee("1234567890")).toBe(false);
     });

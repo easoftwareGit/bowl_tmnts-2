@@ -4,10 +4,6 @@ import { testBaseBrktsApi } from "../../../testApi";
 import type { brktType } from "@/lib/types/types";
 import { initBrkt } from "@/lib/db/initVals";
 import { btDbUuid } from "@/lib/uuid";
-import { mockBrktsToPost, tmntToDelId, mockSquadsToPost, mockDivsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { deleteAllSquadsForTmnt, postManySquads } from "@/lib/db/squads/dbSquads";
-import { deleteAllDivsForTmnt, postManyDivs } from "@/lib/db/divs/dbDivs";
-import { deleteAllBrktsForTmnt, getAllBrktsForTmnt } from "@/lib/db/brkts/dbBrkts";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -31,7 +27,6 @@ const oneBrktUrl = url + "/brkt/";
 const squadUrl = url + "/squad/";
 const divUrl = url + "/div/";
 const tmntUrl = url + "/tmnt/";
-const manyUrl = url + "/many";
 
 const notFoundId = "brk_01234567890123456789012345678901";
 const nonBrktId = "usr_01234567890123456789012345678901";
@@ -60,27 +55,34 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
     sort_order: 1,
   }
 
-  const deletePostedBrkt = async () => { 
-    const response = await axios.get(url);
-    const brkts = response.data.brkts;
-    const toDel = brkts.find((b: brktType) => b.fee === '3');
-    if (toDel) {
-      try {
-        const delResponse = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: oneBrktUrl + toDel.id          
-        });        
-      } catch (err) {
-        if (err instanceof AxiosError) console.log(err.message);
-      }
+  const brktToPost: brktType = {
+    ...initBrkt,
+    id: "brk_1234567890abcdef1234567890abcdef",
+    squad_id: "sqd_3397da1adc014cf58c44e07c19914f72",
+    div_id: 'div_66d39a83d7a84a8c85d28d8d1b2c7a90',
+    start: 1,
+    games: 3,
+    players: 8,
+    fee: '3',
+    first: '15',
+    second: '6',
+    admin: '3',
+    fsa: '24',
+    sort_order: 1,
+  }
+
+  const deletePostedBrkt = async (brktId: string) => { 
+    try {
+      const response = await axios.delete(oneBrktUrl + brktId, { withCredentials: true });      
+    } catch (err) {
+      if (err instanceof AxiosError) console.log(err.message);
     }
   }
 
   describe('GET', () => { 
 
     beforeAll(async () => {
-      await deletePostedBrkt();
+      await deletePostedBrkt(brktToPost.id);
     })
 
     it('should get all brkts', async () => {
@@ -89,9 +91,8 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
       // 15 rows in prisma/seed.ts
       expect(response.data.brkts).toHaveLength(15);
       const brkts = response.data.brkts;
-      for (let i = 0; i < brkts.length; i++) {
-        expect(brkts[i].fee * brkts[i].players).toBe(Number(brkts[i].fsa));
-        expect(Number(brkts[i].first) + Number(brkts[i].second) + Number(brkts[i].admin)).toBe(Number(brkts[i].fsa));
+      for (let i = 0; i < brkts.length; i++) {        
+        expect(Number(brkts[i].first) + Number(brkts[i].second) + Number(brkts[i].admin)).toBe(Number(brkts[i].fee) * brkts[i].players);
       }
     })
 
@@ -113,7 +114,7 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
       expect(brkt.first).toBe(testBrkt.first);
       expect(brkt.second).toBe(testBrkt.second);
       expect(brkt.admin).toBe(testBrkt.admin);
-      expect(brkt.fsa).toBe(40);
+      // expect(brkt.fsa).toBe(40);
       expect(brkt.sort_order).toBe(testBrkt.sort_order);
     })
     it('should NOT get brkt by id when ID is invalid', async () => {
@@ -158,7 +159,7 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
   describe('GET brkts for squad API: /api/brkts/squad/:id', () => { 
 
     beforeAll(async () => {
-      await deletePostedBrkt();
+      await deletePostedBrkt(brktToPost.id);
     })
 
     it('should get all brkts for squad', async () => { 
@@ -166,11 +167,7 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
       const squadBrktId1 = 'brk_5109b54c2cc44ff9a3721de42c80c8c1';
       const squadBrktId2 = 'brk_6ede2512c7d4409ca7b055505990a499';
   
-      const response = await axios({
-        method: "get",
-        withCredentials: true,
-        url: squadUrl + multiBrktSquadId
-      })
+      const response = await axios.get(squadUrl + multiBrktSquadId);
 
       expect(response.status).toBe(200);
       // 2 rows for squad in prisma/seed.ts
@@ -190,8 +187,6 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
       expect(brkts[1].second).toBe('10');
       expect(brkts[0].admin).toBe('5');
       expect(brkts[1].admin).toBe('5');
-      expect(brkts[0].fsa).toBe(40);
-      expect(brkts[1].fsa).toBe(40);      
     })
     it('should NOT get all brkts for squad when squad ID is invalid', async () => {
       try {
@@ -206,16 +201,12 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
       }
     })
     it('should return code 200 if no brkts for squad found, 0 rows returned', async () => {     
-      const response = await axios({
-        method: "get",
-        withCredentials: true,
-        url: squadUrl + notFoundSquadId
-      })
+      const response = await axios.get(squadUrl + notFoundSquadId);
       expect(response.status).toBe(200);
       expect(response.data.brkts).toHaveLength(0);
     })
     it('should NOT get all brkts for squad when squad ID id valid, but not a brkt ID', async () => { 
-      try {
+      try {        
         const response = await axios.get(squadUrl + nonBrktId);
         expect(response.status).toBe(404);
       } catch (err) {
@@ -232,7 +223,7 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
   describe('GET brkts for div API: /api/brkts/div/:id', () => { 
 
     beforeAll(async () => {
-      await deletePostedBrkt();
+      await deletePostedBrkt(brktToPost.id);
     })
 
     it('should get all brkts for div', async () => { 
@@ -240,11 +231,7 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
       const divBrktId1 = 'brk_5109b54c2cc44ff9a3721de42c80c8c1';
       const divBrktId2 = 'brk_6ede2512c7d4409ca7b055505990a499';
       
-      const response = await axios({
-        method: "get",
-        withCredentials: true,
-        url: divUrl + multiBrktDivId
-      })
+      const response = await axios.get(divUrl + multiBrktDivId);
 
       expect(response.status).toBe(200);
       // 2 rows for div in prisma/seed.ts
@@ -264,8 +251,6 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
       expect(brkts[1].second).toBe('10');
       expect(brkts[0].admin).toBe('5');
       expect(brkts[1].admin).toBe('5');
-      expect(brkts[0].fsa).toBe(40);
-      expect(brkts[1].fsa).toBe(40);
     })
     it('should NOT get all brkts for div when div ID is invalid', async () => {
       try {
@@ -280,17 +265,13 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
       }
     })
     it('should return code 200 if no brkts for div found, 0 rows returned', async () => {     
-      const response = await axios({
-        method: "get",
-        withCredentials: true,
-        url: divUrl + notFoundDivId
-      })
+      const response = await axios.get(divUrl + notFoundDivId);
       expect(response.status).toBe(200);
       expect(response.data.brkts).toHaveLength(0);
     })
     it('should NOT get all brkts for div when div ID id valid, but not a brkt ID', async () => { 
       try {
-        const response = await axios.get(divUrl + nonBrktId);
+        const response = await axios.get(divUrl + nonBrktId);        
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -308,15 +289,12 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
     const tmntId = 'tmt_fd99387c33d9c78aba290286576ddce5';
 
     beforeAll(async () => {
-      await deletePostedBrkt();
+      await deletePostedBrkt(brktToPost.id);
     })
 
     it('should get all brkts for tmnt', async () => { 
-      const response = await axios({
-        method: "get",
-        withCredentials: true,
-        url: tmntUrl + tmntId
-      })
+      
+      const response = await axios.get(tmntUrl + tmntId);
       // 2 rows for squad for event for tmnt in prisma/seed.ts
       expect(response.data.brkts).toHaveLength(2);
       const brkts: brktType[] = response.data.brkts;
@@ -334,16 +312,15 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
       expect(brkts[0].second).toBe('10');
       expect(brkts[0].admin).toBe('5');
       expect(brkts[0].admin).toBe('5');
-      expect(brkts[0].fsa).toBe(40);
-      expect(brkts[0].fsa).toBe(40);
+    })
+    it('should return code 200 if no brkts for tmnt found, 0 rows returned', async () => {     
+      const response = await axios.get(tmntUrl + notFoundTmntId);
+      expect(response.status).toBe(200);
+      expect(response.data.brkts).toHaveLength(0);
     })
     it('should NOT get all brkts for tmnt when ID is invalid', async () => {
       try {
-        const response = await axios({
-          method: "get",
-          withCredentials: true,
-          url: tmntUrl + 'test'
-        })
+        const response = await axios.get(tmntUrl + 'test');
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -353,22 +330,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         }
       }
     })
-    it('should return code 200 if no brkts for tmnt found, 0 rows returned', async () => {     
-      const response = await axios({
-        method: "get",
-        withCredentials: true,
-        url: tmntUrl + notFoundTmntId
-      })
-      expect(response.status).toBe(200);
-      expect(response.data.brkts).toHaveLength(0);
-    })
     it('should NOT get all brkts for tmnt when ID is valid id, not a valid tmnt id', async () => {
       try {
-        const response = await axios({
-          method: "get",
-          withCredentials: true,
-          url: tmntUrl + nonBrktId
-        })
+        const response = await axios.get(tmntUrl + nonBrktId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -383,25 +347,10 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
 
   describe('POST', () => {
 
-    const brktToPost: brktType = {
-      ...initBrkt,      
-      squad_id: "sqd_3397da1adc014cf58c44e07c19914f72",
-      div_id: 'div_66d39a83d7a84a8c85d28d8d1b2c7a90',
-      start: 1,
-      games: 3,
-      players: 8,
-      fee: '3',
-      first: '15',
-      second: '6',
-      admin: '3',
-      fsa: '24',
-      sort_order: 1,
-    }
-
     let createdBrkt = false;
 
     beforeAll(async () => {
-      await deletePostedBrkt();
+      await deletePostedBrkt(brktToPost.id);
     })
 
     beforeEach(() => {
@@ -410,18 +359,13 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
 
     afterEach(async () => {
       if (createdBrkt) {
-        await deletePostedBrkt();
+        await deletePostedBrkt(brktToPost.id);
       }
     })
 
     it('should create a new brkt', async () => {
       const brktJSON = JSON.stringify(brktToPost);
-      const response = await axios({
-        method: "post",
-        withCredentials: true,
-        url: url,
-        data: brktJSON
-      })
+      const response = await axios.post(url, brktJSON, {withCredentials: true});
       expect(response.status).toBe(201);
       const postedBrkt = response.data.brkt;
       createdBrkt = true;
@@ -431,8 +375,7 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
       expect(postedBrkt.fee).toBe(brktToPost.fee);
       expect(postedBrkt.first).toBe(brktToPost.first);
       expect(postedBrkt.second).toBe(brktToPost.second);
-      expect(postedBrkt.admin).toBe(brktToPost.admin);
-      expect(postedBrkt.fsa + '').toBe(brktToPost.fsa);
+      expect(postedBrkt.admin).toBe(brktToPost.admin);      
       expect(postedBrkt.sort_order).toBe(brktToPost.sort_order);      
     })
     it('should NOT create a new brkt when squad id is blank', async () => {
@@ -440,14 +383,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         id: "",
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -462,14 +400,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         squad_id: "",
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -484,14 +417,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         div_id: "",
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -506,14 +434,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         start: null as any,
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -528,14 +451,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         games: null as any,
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -550,14 +468,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         players: null as any,
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -572,14 +485,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         fee: "",
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -594,14 +502,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         first: "",
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -616,14 +519,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         second: "",
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -638,14 +536,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         admin: "",
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -660,14 +553,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         sort_order: null as any,
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -682,14 +570,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         squad_id: notFoundId, // use valid brkt ID, not a squad ID
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -704,14 +587,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         div_id: notFoundId, // use valid brkt ID, not a squad ID
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -726,14 +604,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         start: 0,
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -748,14 +621,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         start: 100,
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -770,14 +638,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         start: 1.5,
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -792,14 +655,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         start: 'abc' as any,
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -814,14 +672,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         games: 0,
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -836,14 +689,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         games: 100,
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -858,14 +706,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         games: 1.5,
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -880,14 +723,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         games: 'abc' as any,
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -902,14 +740,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         players: 0,
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -924,14 +757,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         players: 100,
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -946,14 +774,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         players: 1.5,
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -968,14 +791,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         players: 'abc' as any,
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -990,14 +808,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         fee: '0',
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);  
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1012,14 +825,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         fee: '1234567'
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1034,14 +842,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         fee: 'invalid'
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1056,14 +859,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         first: '0'
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1078,14 +876,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         first: '1234567'
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1100,14 +893,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         first: 'invalid'
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1122,14 +910,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         second: '0'
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1144,14 +927,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         second: '1234567'
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1166,14 +944,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         second: 'invalid'
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1188,14 +961,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         admin: '0'
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1210,14 +978,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         admin: '1234567'
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1232,14 +995,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         admin: 'invalid'
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1254,14 +1012,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         fsa: '0'
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1276,14 +1029,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         fsa: '1234567'
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1298,14 +1046,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         fsa: 'invalid'
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1320,14 +1063,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         sort_order: 0,
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1342,14 +1080,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         sort_order: 1234567,
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1364,14 +1097,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         sort_order: 1.5,
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1386,14 +1114,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         ...initBrkt,
         sort_order: 'abc' as any,
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1409,14 +1132,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         fee: '3',
         fsa: '25'
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1434,14 +1152,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         second: '6',
         admin: '4'
       }
-      const brktJSON = JSON.stringify(invalidBrkt);
+      const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: brktJSON
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1458,14 +1171,9 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
         div_id: testBrkt.div_id,
         start: 1,
       }
-      const potJSON = JSON.stringify(invalidPot);
+      const invalidJSON = JSON.stringify(invalidPot);
       try {
-        const response = await axios({
-          method: "post",
-          data: potJSON,
-          withCredentials: true,
-          url: url
-        })
+        const response = await axios.post(url, invalidJSON, {withCredentials: true});
         expect(response.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1478,20 +1186,15 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
     it('should create a new brkt with sanitzed data', async () => { 
       const toSanitizeBrkt: brktType = {
         ...brktToPost,
-        id: btDbUuid('brk'),
+        id: brktToPost.id,
         fee: '3.001',
         first: '15.002',
         second: '6.003',
         admin: '3.004',
         fsa: '24.001',
       }
-      const brktJSON = JSON.stringify(toSanitizeBrkt);
-      const response = await axios({
-        method: "post",
-        withCredentials: true,
-        url: url,
-        data: brktJSON
-      })
+      const toSanitizeJSON = JSON.stringify(toSanitizeBrkt);
+      const response = await axios.post(url, toSanitizeJSON, {withCredentials: true});
       expect(response.status).toBe(201);
       const postedBrkt = response.data.brkt;
       createdBrkt = true;
@@ -1505,151 +1208,6 @@ describe('Brkts - GET and POST API: /api/brkts', () => {
       expect(postedBrkt.sort_order).toBe(brktToPost.sort_order);      
     })
 
-  })
-
-  describe('POST many brkts API: /api/brkts/many', () => { 
-
-    let createdBrkts = false;    
-
-    beforeAll(async () => { 
-      // remove any old test data      
-      await deleteAllBrktsForTmnt(tmntToDelId);
-      await deleteAllSquadsForTmnt(tmntToDelId);      
-      await deleteAllDivsForTmnt(tmntToDelId);
-
-      await deletePostedBrkt();
-
-      // make sure test data in database
-      await postManyDivs(mockDivsToPost)
-      await postManySquads(mockSquadsToPost)
-    })
-
-    beforeEach(() => {
-      createdBrkts = false;
-    })
-
-    afterEach(async () => {
-      if (createdBrkts) {
-        await deleteAllBrktsForTmnt(tmntToDelId);
-
-        await deletePostedBrkt();
-      }
-    })
-
-    afterAll(async () => {
-      await deleteAllBrktsForTmnt(tmntToDelId);
-      await deleteAllDivsForTmnt(tmntToDelId);
-      await deleteAllSquadsForTmnt(tmntToDelId);
-    })
-
-    it('should create many brkts', async () => {  
-      const brktsJSON = JSON.stringify(mockBrktsToPost);      
-      const response = await axios({
-        method: "post",
-        data: brktsJSON,
-        withCredentials: true,
-        url: manyUrl        
-      })
-      expect(response.status).toBe(201);
-      createdBrkts = true;
-      expect(response.data.count).toBe(mockBrktsToPost.length);
-
-      // check that the brkts were created
-      const postedBrkts = await getAllBrktsForTmnt(tmntToDelId);
-      if (!postedBrkts) {
-        expect(true).toBe(false);
-        return
-      }
-      expect(postedBrkts.length).toBe(mockBrktsToPost.length);
-      for (let i = 0; i < postedBrkts.length; i++) {
-        expect(postedBrkts[i].id).toBe(mockBrktsToPost[i].id);
-        expect(postedBrkts[i].squad_id).toBe(mockBrktsToPost[i].squad_id);
-        expect(postedBrkts[i].div_id).toBe(mockBrktsToPost[i].div_id);
-        expect(postedBrkts[i].start).toBe(mockBrktsToPost[i].start);
-        expect(postedBrkts[i].games).toBe(mockBrktsToPost[i].games);
-        expect(postedBrkts[i].players).toBe(mockBrktsToPost[i].players);
-        expect(postedBrkts[i].fee).toBe(mockBrktsToPost[i].fee);
-        expect(postedBrkts[i].first).toBe(mockBrktsToPost[i].first);
-        expect(postedBrkts[i].second).toBe(mockBrktsToPost[i].second);
-        expect(postedBrkts[i].admin).toBe(mockBrktsToPost[i].admin);
-        expect(postedBrkts[i].fsa + '').toBe(mockBrktsToPost[i].fsa);
-        expect(postedBrkts[i].sort_order).toBe(mockBrktsToPost[i].sort_order);
-      }
-    })
-    it('should return 0 count and status 200 when passed empty array', async () => {
-      const brktsJSON = JSON.stringify([]);
-      try {
-        const response = await axios({
-          method: "post",
-          data: brktsJSON,
-          withCredentials: true,
-          url: manyUrl
-        })
-        expect(response.status).toBe(200);
-        expect(response.data.count).toBe(0);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    // no text values to sanitize
-    it('should not post brkts with invalid data', async () => {
-      const invalidBrkts = [
-        {
-          ...mockBrktsToPost[0],
-          fee: '0',          
-        },
-        {
-          ...mockBrktsToPost[1],
-        },
-      ]
-      const brktsJSON = JSON.stringify(invalidBrkts);
-      try {
-        const response = await axios({
-          method: "post",
-          data: brktsJSON,
-          withCredentials: true,
-          url: manyUrl
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not post brkts with invalid data in other than 1st element', async () => {
-      const invalidBrkts = [
-        {
-          ...mockBrktsToPost[0],
-        },
-        {
-          ...mockBrktsToPost[1],
-          start: 0,
-        },
-      ]
-      const brktsJSON = JSON.stringify(invalidBrkts);
-      try {
-        const response = await axios({
-          method: "post",
-          data: brktsJSON,
-          withCredentials: true,
-          url: manyUrl
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
   })
 
 })

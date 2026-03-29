@@ -6,7 +6,7 @@ import { Tab, Tabs } from 'react-bootstrap';
 import { getBrktOrElimName, getDivName } from '@/lib/getName';
 import EaCurrencyInput, { maxMoneyText, minFeeText } from '@/components/currency/eaCurrencyInput';
 import { acdnErrClassName, getAcdnErrMsg, noAcdnErr, objErrClassName } from './errors';
-import { maxGames, maxMoney, minFee } from '@/lib/validation/validation';
+import { maxGames, maxMoney, minFee } from '@/lib/validation/constants';
 import { defaultElimGames, initElim } from '../../../lib/db/initVals';
 import { btDbUuid } from '@/lib/uuid';
 import clsx from "clsx";

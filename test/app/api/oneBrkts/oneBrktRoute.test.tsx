@@ -3,10 +3,7 @@ import { baseOneBrktsApi } from "@/lib/api/apiPaths";
 import { testBaseOneBrktsApi } from "../../../testApi";
 import type { oneBrktType } from "@/lib/types/types";
 import { initOneBrkt } from "@/lib/db/initVals";
-import { mockOneBrktsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import { isValidBtDbId } from "@/lib/validation/validation";
-import { cloneDeep } from "lodash";
-import { deleteAllOneBrktsForTmnt, getAllOneBrktsForBrkt, postManyOneBrkts } from "@/lib/db/oneBrkts/dbOneBrkts";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -29,7 +26,6 @@ const url = testBaseOneBrktsApi.startsWith("undefined")
 const oneOneBrktUrl = url + "/oneBrkt/";
 const brktsUrl = url + "/brkt/";
 const divUrl = url + "/div/";
-const manyUrl = url + "/many";
 const squadUrl = url + "/squad/";
 const tmntUrl = url + "/tmnt/";
 
@@ -46,17 +42,6 @@ const squadId = 'sqd_7116ce5f80164830830a7157eb093396';
 const tmntId = 'tmt_fd99387c33d9c78aba290286576ddce5';
 const userId = 'usr_01234567890123456789012345678901';
 
-const divIdForMock = 'div_18997d3fd7ef4eb7ad2b53a9e93f9ce5';
-const squadIdForMock = 'sqd_1234ec18b3d44c0189c83f6ac5fd4ad6';
-const tmntIdForMock = 'tmt_d9b1af944d4941f65b2d2d4ac160cdea';
-
-const testOneBrkt: oneBrktType = {
-  ...initOneBrkt,
-  id: "obk_e886acff5e6145f2aeb7950f9c7f9fe5",
-  brkt_id: brktId,
-  bindex: 99,
-}
-
 const oneBrktToFind: oneBrktType = {
   ...initOneBrkt,
   id: "obk_557f12f3875f42baa29fdbd22ee7f2f4",
@@ -64,29 +49,18 @@ const oneBrktToFind: oneBrktType = {
   bindex: 0,
 }  
 
-const delOneOneBrkt = async (id: string) => { 
-  try {
-    const delResponse = await axios({
-      method: "delete",
-      withCredentials: true,
-      url: oneOneBrktUrl + id
-    });
-  } catch (err) {
-    if (err instanceof AxiosError) { 
-      if (err.status !== 404) {
-        console.log(err.message);
-        return;
-      }
-    }
-  }
+const oneBrktToPost: oneBrktType = {
+  ...initOneBrkt,      
+  id: "obk_1234567890abcdef1234567890abcdef",
+  brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
+  bindex: 99,
 }
 
-const deletePostedOneBrkt = async () => { 
-  const response = await axios.get(url);
-  const oneBrkts = response.data.oneBrkts;
-  const toDel = oneBrkts.find((o: oneBrktType) => o.bindex === 99);
-  if (toDel) {
-    await delOneOneBrkt(toDel.id);
+const deletePostedOneBrkt = async (id: string) => { 
+  try {
+    await axios.delete(oneOneBrktUrl + id, { withCredentials: true });
+  } catch (err) {
+    if (err instanceof AxiosError) console.log(err.message);      
   }
 }
 
@@ -95,7 +69,7 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
   describe('GET /api/oneBrkts', () => {
 
     beforeAll(async () => {
-      await deletePostedOneBrkt();
+      await deletePostedOneBrkt(oneBrktToPost.id);
     })  
 
     it('should return 200 and an array of oneBrkts', async () => {
@@ -111,7 +85,7 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
   describe('GET by id /api/oneBrkts/oneBrkt/:id', () => {
 
     beforeAll(async () => {
-      await deletePostedOneBrkt();    
+      await deletePostedOneBrkt(oneBrktToPost.id);    
     })
 
     it('should return 200 and the oneBrkt with the given id', async () => {
@@ -157,15 +131,11 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
   describe('GET oneBrkts for a bracket /api/oneBrkts/brkt/:brkt_id', () => { 
 
     beforeAll(async () => { 
-      await deletePostedOneBrkt();
+      await deletePostedOneBrkt(oneBrktToPost.id);
     })
 
     it('should return 200 and an array of oneBrkts for a given bracket', async () => {          
-      const response = await axios({
-        method: "get",
-        withCredentials: true,
-        url: brktsUrl + brktId,
-      })
+      const response = await axios.get(brktsUrl + brktId);
       expect(response.status).toBe(200);
       expect(response.data.oneBrkts).toBeDefined();
       expect(Array.isArray(response.data.oneBrkts)).toBe(true);
@@ -181,13 +151,17 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
         if (i === 1) expect(oneBrkt.bindex).toBe(1);
       }
     });
+    it('should return 200 and an empty array of oneBrkts for when no linked rows', async () => {       
+      const response = await axios.get(brktsUrl + notFoundBrktId);
+      expect(response.status).toBe(200);
+      expect(response.data.oneBrkts).toBeDefined();
+      expect(Array.isArray(response.data.oneBrkts)).toBe(true);
+      // 0 rows 
+      expect(response.data.oneBrkts).toHaveLength(0);
+    })
     it('should NOT get all oneBrkts when brkt_id is not valid', async () => { 
       try {
-        const response = await axios({
-          method: "get",
-          withCredentials: true,
-          url: brktsUrl + "invalid_brkt_id",
-        })
+        const response = await axios.get(brktsUrl + "invalid_brkt_id");
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -199,11 +173,7 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
     })
     it('should NOT get all oneBrkts when brkt_id is valid, but not a brktId', async () => { 
       try {
-        const response = await axios({
-          method: "get",
-          withCredentials: true,
-          url: brktsUrl + userId,
-        })
+        const response = await axios.get(brktsUrl + userId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -213,33 +183,16 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
         }
       }
     })
-    it('should return 200 and an empty array of oneBrkts for when no linked rows', async () => {       
-      const response = await axios({
-        method: "get",
-        withCredentials: true,
-        url: brktsUrl + notFoundBrktId,
-      })
-      expect(response.status).toBe(200);
-      expect(response.data.oneBrkts).toBeDefined();
-      expect(Array.isArray(response.data.oneBrkts)).toBe(true);
-      // 0 rows 
-      expect(response.data.oneBrkts).toHaveLength(0);
-    })
   })  
 
   describe('GET oneBrkts for a div /api/oneBrkts/div/:div_id', () => { 
 
     beforeAll(async () => {
-      await deletePostedOneBrkt();
+      await deletePostedOneBrkt(oneBrktToPost.id);
     })
 
     it('should get all onebrkts for div', async () => { 
-      
-      const response = await axios({
-        method: "get",
-        withCredentials: true,
-        url: divUrl + divId
-      })
+      const response = await axios.get(divUrl + divId);
       expect(response.status).toBe(200);            
       expect(response.data.oneBrkts).toBeDefined();
       expect(Array.isArray(response.data.oneBrkts)).toBe(true);
@@ -256,13 +209,17 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
         if (i === 1 || i === 3) expect(oneBrkt.bindex).toBe(1);
       }
     });
+    it('should return 200 and an empty array of oneBrkts for when no linked rows', async () => {       
+      const response = await axios.get(divUrl + notFoundDivId);
+      expect(response.status).toBe(200);
+      expect(response.data.oneBrkts).toBeDefined();
+      expect(Array.isArray(response.data.oneBrkts)).toBe(true);
+      // 0 rows 
+      expect(response.data.oneBrkts).toHaveLength(0);
+    })    
     it('should NOT get all oneBrkts when div id is not valid', async () => {
       try {
-        const response = await axios({
-          method: "get",
-          withCredentials: true,
-          url: divUrl + "invalid_id",
-        })
+        const response = await axios.get(divUrl + "invalid_div_id");
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -274,11 +231,7 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
     });
     it('should NOT get all oneBrkts when div id is valid, but not a divId', async () => {
       try {
-        const response = await axios({
-          method: "get",
-          withCredentials: true,
-          url: divUrl + userId,
-        })
+        const response = await axios.get(divUrl + userId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -288,33 +241,16 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
         }
       }
     });
-    it('should return 200 and an empty array of oneBrkts for when no linked rows', async () => {       
-      const response = await axios({
-        method: "get",
-        withCredentials: true,
-        url: divUrl + notFoundDivId,
-      })
-      expect(response.status).toBe(200);
-      expect(response.data.oneBrkts).toBeDefined();
-      expect(Array.isArray(response.data.oneBrkts)).toBe(true);
-      // 0 rows 
-      expect(response.data.oneBrkts).toHaveLength(0);
-    })    
   })
 
   describe('GET oneBrkts for a squad /api/oneBrkts/squad/:squad_id', () => { 
 
     beforeAll(async () => {
-      await deletePostedOneBrkt();
+      await deletePostedOneBrkt(oneBrktToPost.id);
     })
 
     it('should get all onebrkts for squad', async () => { 
-      
-      const response = await axios({
-        method: "get",
-        withCredentials: true,
-        url: squadUrl + squadId
-      })
+      const response = await axios.get(squadUrl + squadId);
       expect(response.status).toBe(200);            
       expect(response.data.oneBrkts).toBeDefined();
       expect(Array.isArray(response.data.oneBrkts)).toBe(true);
@@ -331,13 +267,17 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
         if (i === 1 || i === 3) expect(oneBrkt.bindex).toBe(1);
       }
     });
+    it('should return 200 and an empty array of oneBrkts for when no linked rows', async () => {       
+      const response = await axios.get(squadUrl + notFoundSquadId);
+      expect(response.status).toBe(200);
+      expect(response.data.oneBrkts).toBeDefined();
+      expect(Array.isArray(response.data.oneBrkts)).toBe(true);
+      // 0 rows 
+      expect(response.data.oneBrkts).toHaveLength(0);
+    })    
     it('should NOT get all oneBrkts when squad id is not valid', async () => {
       try {
-        const response = await axios({
-          method: "get",
-          withCredentials: true,
-          url: squadUrl + "invalid_id",
-        })
+        const response = await axios.get(squadUrl + "invalid_squad_id");
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -349,11 +289,7 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
     });
     it('should NOT get all oneBrkts when squad id is valid, but not a squad id', async () => {
       try {
-        const response = await axios({
-          method: "get",
-          withCredentials: true,
-          url: squadUrl + userId,
-        })
+        const response = await axios.get(squadUrl + userId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -363,32 +299,16 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
         }
       }
     });
-    it('should return 200 and an empty array of oneBrkts for when no linked rows', async () => {       
-      const response = await axios({
-        method: "get",
-        withCredentials: true,
-        url: squadUrl + notFoundSquadId,
-      })
-      expect(response.status).toBe(200);
-      expect(response.data.oneBrkts).toBeDefined();
-      expect(Array.isArray(response.data.oneBrkts)).toBe(true);
-      // 0 rows 
-      expect(response.data.oneBrkts).toHaveLength(0);
-    })    
   })
 
   describe('GET oneBrkts for a tmnt /api/oneBrkts/tmnt/:tmnt_id', () => { 
 
     beforeAll(async () => {
-      await deletePostedOneBrkt();
+      await deletePostedOneBrkt(oneBrktToPost.id);
     })
 
     it('should get all onebrkts for tmnt', async () => {
-      const response = await axios({
-        method: "get",
-        withCredentials: true,
-        url: tmntUrl + tmntId
-      });
+      const response = await axios.get(tmntUrl + tmntId);
       expect(response.status).toBe(200);
       expect(response.data.oneBrkts).toBeDefined();
       expect(Array.isArray(response.data.oneBrkts)).toBe(true);
@@ -402,13 +322,17 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
         expect(oneBrkt.bindex).toBeLessThanOrEqual(1);
       });
     });
+    it('should return 200 and an empty array of oneBrkts for when no linked rows', async () => {
+      const response = await axios.get(tmntUrl + notFoundTmntId);
+      expect(response.status).toBe(200);
+      expect(response.data.oneBrkts).toBeDefined();
+      expect(Array.isArray(response.data.oneBrkts)).toBe(true);
+      // 0 rows 
+      expect(response.data.oneBrkts).toHaveLength(0);
+    });
     it('should NOT get all oneBrkts when tmnt is not valid', async () => {
       try {
-        const response = await axios({
-          method: "get",
-          withCredentials: true,
-          url: tmntUrl + "invalid_tmnt_id",
-        });
+        const response = await axios.get(tmntUrl + "invalid_tmnt_id");
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -420,11 +344,7 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
     });
     it('should NOT get all oneBrkts when tmnt_id is valid, but not a tmntId', async () => {
       try {
-        const response = await axios({
-          method: "get",
-          withCredentials: true,
-          url: tmntUrl + userId,
-        });
+        const response = await axios.get(tmntUrl + userId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -434,32 +354,14 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
         }
       }
     });
-    it('should return 200 and an empty array of oneBrkts for when no linked rows', async () => {
-      const response = await axios({
-        method: "get",
-        withCredentials: true,
-        url: tmntUrl + notFoundTmntId,
-      });
-      expect(response.status).toBe(200);
-      expect(response.data.oneBrkts).toBeDefined();
-      expect(Array.isArray(response.data.oneBrkts)).toBe(true);
-      // 0 rows 
-      expect(response.data.oneBrkts).toHaveLength(0);
-    });
   })
 
   describe('POST /api/oneBrkts', () => { 
 
-    const oneBrktToPost: oneBrktType = {
-      ...initOneBrkt,      
-      brkt_id: "brk_5109b54c2cc44ff9a3721de42c80c8c1",
-      bindex: 99,
-    }
-
     let didPost = false;
 
     beforeEach(async () => {
-      await deletePostedOneBrkt();
+      await deletePostedOneBrkt(oneBrktToPost.id);
     })
 
     beforeEach(() => { 
@@ -468,18 +370,13 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
 
     afterEach(async () => { 
       if (didPost) {
-        await deletePostedOneBrkt();
+        await deletePostedOneBrkt(oneBrktToPost.id);
       }
     })
 
     it('should create a new oneBrkt and return 201', async () => {
       const oneBrktJSON = JSON.stringify(oneBrktToPost);
-      const response = await axios({
-        method: "post",
-        withCredentials: true,
-        url: url,
-        data: oneBrktJSON
-      });
+      const response = await axios.post(url, oneBrktJSON, { withCredentials: true });
       didPost = true;
       expect(response.status).toBe(201);
       expect(response.data.oneBrkt).toBeDefined();
@@ -492,14 +389,10 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
         ...oneBrktToPost,
         id: "",
       }
-      const oneBrktJSON = JSON.stringify(invalidOneBrkt);
+      const invalidJSON = JSON.stringify(invalidOneBrkt);
       try {
-        await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: oneBrktJSON
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
+        expect(response.status).toBe(422);
       }
       catch (err) {
         if (err instanceof AxiosError) {
@@ -515,14 +408,10 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
         ...oneBrktToPost,
         id: "test",
       }
-      const oneBrktJSON = JSON.stringify(invalidOneBrkt);
+      const invalidJSON = JSON.stringify(invalidOneBrkt);
       try {
-        await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: oneBrktJSON
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
+        expect(response.status).toBe(422);
       }
       catch (err) {
         if (err instanceof AxiosError) {
@@ -538,14 +427,10 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
         ...oneBrktToPost,
         id: userId,
       }
-      const oneBrktJSON = JSON.stringify(invalidOneBrkt);
+      const invalidJSON = JSON.stringify(invalidOneBrkt);
       try {
-        await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: oneBrktJSON
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
+        expect(response.status).toBe(422);
       }
       catch (err) {
         if (err instanceof AxiosError) {
@@ -561,14 +446,10 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
         ...oneBrktToPost,
         brkt_id: "",
       }
-      const oneBrktJSON = JSON.stringify(invalidOneBrkt);
+      const invalidJSON = JSON.stringify(invalidOneBrkt);
       try {
-        await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: oneBrktJSON
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
+        expect(response.status).toBe(422);
       }
       catch (err) {
         if (err instanceof AxiosError) {
@@ -584,14 +465,10 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
         ...oneBrktToPost,
         brkt_id: "test",
       }
-      const oneBrktJSON = JSON.stringify(invalidOneBrkt);
+      const invalidJSON = JSON.stringify(invalidOneBrkt);
       try {
-        await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: oneBrktJSON
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
+        expect(response.status).toBe(422);
       }
       catch (err) {
         if (err instanceof AxiosError) {
@@ -607,14 +484,10 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
         ...oneBrktToPost,
         brkt_id: userId,
       }
-      const oneBrktJSON = JSON.stringify(invalidOneBrkt);
+      const invalidJSON = JSON.stringify(invalidOneBrkt);
       try {
-        await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: oneBrktJSON
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
+        expect(response.status).toBe(422);
       }
       catch (err) {
         if (err instanceof AxiosError) {
@@ -630,14 +503,10 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
         ...oneBrktToPost,
         bindex: undefined as any, 
       }
-      const oneBrktJSON = JSON.stringify(invalidOneBrkt);
+      const invalidJSON = JSON.stringify(invalidOneBrkt);
       try {
-        await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: oneBrktJSON
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
+        expect(response.status).toBe(422);
       }
       catch (err) {
         if (err instanceof AxiosError) {
@@ -653,14 +522,10 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
         ...oneBrktToPost,
         bindex: 'Test' as any,
       }
-      const oneBrktJSON = JSON.stringify(invalidOneBrkt);
+      const invalidJSON = JSON.stringify(invalidOneBrkt);
       try {
-        await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: oneBrktJSON
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
+        expect(response.status).toBe(422);
       }
       catch (err) {
         if (err instanceof AxiosError) {
@@ -676,14 +541,10 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
         ...oneBrktToPost,
         bindex: 1.5, 
       }
-      const oneBrktJSON = JSON.stringify(invalidOneBrkt);
+      const invalidJSON = JSON.stringify(invalidOneBrkt);
       try {
-        await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: oneBrktJSON
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
+        expect(response.status).toBe(422);
       }
       catch (err) {
         if (err instanceof AxiosError) {
@@ -699,14 +560,10 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
         ...oneBrktToPost,
         bindex: Number.MAX_SAFE_INTEGER + 1,
       }
-      const oneBrktJSON = JSON.stringify(invalidOneBrkt);
+      const invalidJSON = JSON.stringify(invalidOneBrkt);
       try {
-        await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: oneBrktJSON
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
+        expect(response.status).toBe(422);
       }
       catch (err) {
         if (err instanceof AxiosError) {
@@ -722,141 +579,15 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
         ...oneBrktToPost,
         bindex: -1,
       }
-      const oneBrktJSON = JSON.stringify(invalidOneBrkt);
+      const invalidJSON = JSON.stringify(invalidOneBrkt);
       try {
-        await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: oneBrktJSON
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
+        expect(response.status).toBe(422);
       }
       catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(422);
           expect(err.response?.data.error).toBe("missing data");
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-  })
-
-  describe('POST many oneBrkts /api/oneBrkts/many', () => { 
-
-    let createdMany = false; 
-   
-    beforeAll(async () => { 
-      await deleteAllOneBrktsForTmnt(tmntIdForMock);
-    })
-
-    beforeEach(() => {
-      createdMany = false;
-    })
-
-    afterEach(async () => {
-      if (createdMany) {
-        await deleteAllOneBrktsForTmnt(tmntIdForMock);
-      }      
-    })
-  
-    it('should create many oneBrkts', async () => {
-      const oneBrktsJSON = JSON.stringify(mockOneBrktsToPost);
-      const response = await axios({
-        method: "post",
-        data: oneBrktsJSON,
-        withCredentials: true,
-        url: manyUrl
-      })
-      expect(response.status).toBe(201);
-      // const postedOneBrkts = response.data.oneBrkts;
-      createdMany = true;
-      expect(response.data.count).toBe(mockOneBrktsToPost.length);
-
-      const postedOneBrkts = await getAllOneBrktsForBrkt(mockOneBrktsToPost[0].brkt_id);
-      if (!postedOneBrkts) {
-        expect(true).toBeFalsy();
-        return;
-      } 
-      expect(postedOneBrkts.length).toBe(mockOneBrktsToPost.length);
-      for (let i = 0; i < postedOneBrkts.length; i++) {
-        expect(postedOneBrkts[i].id).toEqual(mockOneBrktsToPost[i].id);
-        expect(postedOneBrkts[i].brkt_id).toEqual(mockOneBrktsToPost[i].brkt_id);
-        expect(postedOneBrkts[i].bindex).toEqual(mockOneBrktsToPost[i].bindex);
-      }  
-    })
-    it('should return 0 and status 200 when passed empty array', async () => { 
-      const oneBrktsJSON = JSON.stringify([]);
-      const response = await axios({
-        method: "post",
-        data: oneBrktsJSON,
-        withCredentials: true,
-        url: manyUrl
-      })
-      expect(response.status).toBe(200);
-      expect(response.data.count).toBe(0);
-    })
-    it('should not post oneBrkts with invalid data', async () => { 
-      const invalidOneBrkts = cloneDeep(mockOneBrktsToPost);
-      invalidOneBrkts[0].bindex = 1.5;
-      const potsJSON = JSON.stringify(invalidOneBrkts);
-      try {
-        const response =await axios({
-          method: "post",
-          data: potsJSON,
-          withCredentials: true,
-          url: manyUrl
-        });
-        expect(response.status).toBe(422);
-      }
-      catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-          expect(err.response?.data.error).toBe("invalid data");
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not post oneBrkts with invalid data in 2nd element', async () => { 
-      const invalidOneBrkts = cloneDeep(mockOneBrktsToPost);
-      invalidOneBrkts[1].brkt_id = userId;
-      const potsJSON = JSON.stringify(invalidOneBrkts);
-      try {
-        const response =await axios({
-          method: "post",
-          data: potsJSON,
-          withCredentials: true,
-          url: manyUrl
-        });
-        expect(response.status).toBe(422);
-      }
-      catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-          expect(err.response?.data.error).toBe("invalid data");
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not post oneBrkts with invalid data in 3rd element', async () => {
-      const invalidOneBrkts = cloneDeep(mockOneBrktsToPost);
-      invalidOneBrkts[2].id = 'test_id';
-      const potsJSON = JSON.stringify(invalidOneBrkts);
-      try {
-        const response =await axios({
-          method: "post",
-          data: potsJSON,
-          withCredentials: true,
-          url: manyUrl
-        });
-        expect(response.status).toBe(422);
-      }
-      catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-          expect(err.response?.data.error).toBe("invalid data");
         } else {
           expect(true).toBeFalsy();
         }
@@ -886,62 +617,37 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
       if (!didDel) return;
       try {
         const oneBrktJSON = JSON.stringify(toDelOneBrkt);
-        const response = await axios({
-          method: 'post',
-          data: oneBrktJSON,
-          withCredentials: true,
-          url: url
-        })        
+        await axios.post(url, oneBrktJSON, { withCredentials: true });
       } catch (err) {
         if (err instanceof Error) console.log(err.message);
       }
     })
 
     it('should delete a oneBrkt by ID', async () => {
-      try {
-        const delResponse = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: oneOneBrktUrl + toDelOneBrkt.id,
-        })  
-        didDel = true;
-        expect(delResponse.status).toBe(200);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(200);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
+      const response = await axios.delete(oneOneBrktUrl + toDelOneBrkt.id, {
+        withCredentials: true
+      });
+      didDel = true;
+      expect(response.status).toBe(200);
+      expect(response.data.count).toBe(1);
+    })
+    it('should return 0 when deleting a oneBrkt that does not exist', async () => {
+      const response = await axios.delete(oneOneBrktUrl + notFoundId, {
+        withCredentials: true
+      });
+      didDel = true;
+      expect(response.status).toBe(200);
+      expect(response.data.count).toBe(0);
     })
     it('should NOT delete a oneBrkt by ID when ID is invalid', async () => { 
       try {
-        const delResponse = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: oneOneBrktUrl + 'test',
-        })  
-        expect(delResponse.status).toBe(404);
+        const response = await axios.delete(oneOneBrktUrl + 'test', {
+          withCredentials: true
+        })
+        expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT delete a oneBrkt by ID when ID is not found', async () => { 
-      try {
-        const delResponse = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: oneOneBrktUrl + notFoundId,
-        })  
-        expect(delResponse.status).toBe(200);
-        expect(delResponse.data.count).toBe(0);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(200);
         } else {
           expect(true).toBeFalsy();
         }
@@ -949,68 +655,9 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
     })
     it('should NOT delete a oneBrkt by ID when ID is valid, but not an oneBrkt id', async () => { 
       try {
-        const delResponse = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: oneOneBrktUrl + userId
-        })  
-        expect(delResponse.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-  })
-
-  describe('DELETE all oneBrkts for brkt by id /api/oneBrkts/brkt/:brktId', () => { 
-
-    let didDel = false    
-
-    beforeAll(async () => {
-      await postManyOneBrkts(mockOneBrktsToPost)
-    })
-
-    beforeEach(() => {      
-      didDel = false      
-    })
-
-    afterEach(async () => {
-      if (!didDel) return;
-      await deleteAllOneBrktsForTmnt(tmntIdForMock)
-      await postManyOneBrkts(mockOneBrktsToPost)
-    })
-
-    afterAll(async () => {
-      await deleteAllOneBrktsForTmnt(tmntIdForMock)
-    })
-
-    it('should delete all oneBrkts for a brkt', async () => { 
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: brktsUrl + mockOneBrktsToPost[0].brkt_id
-        });
-        expect(response.status).toBe(200);
-        expect(response.data.count).toBe(mockOneBrktsToPost.length);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT delete all oneBrkts for a brkt when brkt id is not valid', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: brktsUrl + 'test'
-        });
+        const response = await axios.delete(oneOneBrktUrl + userId, {
+          withCredentials: true
+        })
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1020,294 +667,6 @@ describe('OneBrkts - API: /api/oneBrkts', () => {
         }
       }
     })
-    it('should NOT delete all oneBrkts for a brkt when brkt id is valid, but not a brkt id', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: brktsUrl + userId
-        });
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should delete 0 oneBrkts for a brkt when brkt id is not found', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: brktsUrl + notFoundBrktId
-        });
-        expect(response.status).toBe(200);
-        expect(response.data.count).toBe(0);
-      } catch (err) {
-        expect(true).toBeFalsy();
-      }
-    })    
-  })
-
-  describe('DELETE all oneBrkts for squad by id /api/oneBrkts/squad/:squadId', () => { 
-
-    
-    let didDel = false    
-
-    beforeAll(async () => {
-      await postManyOneBrkts(mockOneBrktsToPost)
-    })
-
-    beforeEach(() => {      
-      didDel = false      
-    })
-
-    afterEach(async () => {
-      if (!didDel) return;
-      await deleteAllOneBrktsForTmnt(tmntIdForMock)
-      await postManyOneBrkts(mockOneBrktsToPost)
-    })
-
-    afterAll(async () => {
-      await deleteAllOneBrktsForTmnt(tmntIdForMock)
-    })
-
-    it('should delete all oneBrkts for a squad', async () => { 
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: squadUrl + squadIdForMock
-        });
-        expect(response.status).toBe(200);
-        expect(response.data.count).toBe(mockOneBrktsToPost.length);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT delete all oneBrkts for a squad when squad id is not valid', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: squadUrl + 'test'
-        });
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT delete all oneBrkts for a squad when squad id is valid, but not a squad id', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: squadUrl + userId
-        });
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should delete 0 oneBrkts for a squad when squad id is not found', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: squadUrl + notFoundSquadId
-        });
-        expect(response.status).toBe(200);
-        expect(response.data.count).toBe(0);
-      } catch (err) {
-        expect(true).toBeFalsy();
-      }
-    })    
-  })
-
-  describe('DELETE all oneBrkts for division by id /api/oneBrkts/div/:divId', () => { 
-    
-    let didDel = false    
-
-    beforeAll(async () => {
-      await postManyOneBrkts(mockOneBrktsToPost)
-    })
-
-    beforeEach(() => {      
-      didDel = false      
-    })
-
-    afterEach(async () => {
-      if (!didDel) return;
-      await deleteAllOneBrktsForTmnt(tmntIdForMock)
-      await postManyOneBrkts(mockOneBrktsToPost)
-    })
-
-    afterAll(async () => {
-      await deleteAllOneBrktsForTmnt(tmntIdForMock)
-    })
-
-    it('should delete all oneBrkts for a division', async () => { 
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: divUrl + divIdForMock
-        });
-        expect(response.status).toBe(200);
-        expect(response.data.count).toBe(mockOneBrktsToPost.length);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT delete all oneBrkts for a div when div id is not valid', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: divUrl + 'test'
-        });
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT delete all oneBrkts for a div when div id is valid, but not a squad id', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: divUrl + userId
-        });
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should delete 0 oneBrkts for a div when div id is not found', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: divUrl + notFoundDivId
-        });
-        expect(response.status).toBe(200);
-        expect(response.data.count).toBe(0);
-      } catch (err) {
-        expect(true).toBeFalsy();
-      }
-    })    
-  })
-
-  describe('DELETE all oneBrkts for tmnt by id /api/oneBrkts/tmnt/:tmntId', () => { 
-
-    let didDel = false    
-
-    beforeAll(async () => {
-      await postManyOneBrkts(mockOneBrktsToPost)
-    })
-
-    beforeEach(() => {      
-      didDel = false      
-    })
-
-    afterEach(async () => {
-      if (!didDel) return;
-      await deleteAllOneBrktsForTmnt(tmntIdForMock)
-      await postManyOneBrkts(mockOneBrktsToPost)
-    })
-
-    afterAll(async () => {
-      await deleteAllOneBrktsForTmnt(tmntIdForMock)
-    })
-
-    it('should delete all oneBrkts for a tmnt', async () => {      
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: tmntUrl + tmntIdForMock
-        });
-        expect(response.status).toBe(200);
-        expect(response.data.count).toBe(mockOneBrktsToPost.length);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT delete all oneBrkts for a tmnt when tmnt id is not valid', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: tmntUrl + 'test'
-        });
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT delete all oneBrkts for a tmnt when tmnt id is valid, but not a tmnt id', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: tmntUrl + userId
-        });
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should delete 0 oneBrkts for a tmnt when tmnt id is not found', async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: tmntUrl + notFoundTmntId
-        });
-        expect(response.status).toBe(200);
-        expect(response.data.count).toBe(0);
-      } catch (err) {
-        expect(true).toBeFalsy();
-      }
-    })    
   })
 
 })

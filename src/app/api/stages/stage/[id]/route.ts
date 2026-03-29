@@ -5,7 +5,7 @@ import { ErrorCode } from "@/lib/enums/enums";
 import type { fullStageType } from "@/lib/types/types";
 import { initFullStage } from "@/lib/db/initVals";
 import { sanitizeFullStage, validateFullStage } from "@/lib/validation/stages/validate";
-import { getErrorStatus } from "@/app/api/errCodes";
+import { standardCatchReturn } from "@/app/api/apiCatch";
 import { SquadStage } from "@prisma/client";
 import { extractStageFromPrisma } from "@/lib/db/stageMappers";
 
@@ -29,8 +29,8 @@ export async function GET(
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }    
     return NextResponse.json({ stage }, { status: 200 });    
-  } catch (err: any) {
-    return NextResponse.json({ error: "error getting stage" }, { status: 500 });
+  } catch (error) {
+    return standardCatchReturn(error, "error getting stage");
   }
 }
 
@@ -104,12 +104,8 @@ export async function PUT(
       },
     });
     return NextResponse.json({ stage: puttedStage }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error putting stage" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error putting stage");
   }
 }
 
@@ -241,12 +237,8 @@ export async function PATCH(
     });
 
     return NextResponse.json({ stage: updatedStage }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error patching stage" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error patching stage");
   }
 }
 
@@ -266,11 +258,7 @@ export async function DELETE(
       },
     });
     return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error deleting stage" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error deleting stage");
   }
 }

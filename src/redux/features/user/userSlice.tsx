@@ -1,12 +1,12 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { ioStatusType } from "@/redux/statusTypes";
-import { findUserById } from "@/lib/db/users/users";
-import type { userType } from "@/lib/types/types";
-import { blankUser } from "@/lib/db/initVals";
+import { getUserById } from "@/lib/db/users/dbUsers";
+import type { userDataType } from "@/lib/types/types";
+import { blankUserData } from "@/lib/db/initVals";
 import { cloneDeep } from "lodash";
 
 export interface userSliceState {
-  user: userType;
+  user: userDataType;
   loadStatus: ioStatusType;
   saveStatus: ioStatusType;
   error: string | undefined;
@@ -14,7 +14,7 @@ export interface userSliceState {
 
 // initial state constant
 const initialState: userSliceState = {
-  user: cloneDeep(blankUser),
+  user: cloneDeep(blankUserData),
   loadStatus: "idle",
   saveStatus: "idle",
   error: "",
@@ -22,20 +22,19 @@ const initialState: userSliceState = {
 
 /**
  * gets a user by id
- * 
+ *
  * @param {string} userId - id of user to get
- * @returns {userType} - user from database
+ * @returns {userDataType | null} - user from database
  */
-export const fetchUser = createAsyncThunk(
+export const fetchUser = createAsyncThunk<userDataType | null, string>(
   "user/fetchUser",
   async (userId: string) => {
-
     // Do not use try / catch blocks here. Need the promise to be fulfilled or
     // rejected which will have the appropriate response in the extraReducers.
 
-    return findUserById(userId);    
+    return getUserById(userId);
   }
-)
+);
 
 export const userSlice = createSlice({
   name: "user",
@@ -43,20 +42,27 @@ export const userSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(fetchUser.pending, (state: userSliceState) => {
+      .addCase(fetchUser.pending, (state) => {
         state.loadStatus = "loading";
         state.error = "";
       })
-      .addCase(fetchUser.fulfilled, (state: userSliceState, action) => {
+      .addCase(fetchUser.fulfilled, (state, action) => {
         state.loadStatus = "succeeded";
-        // need to get set values indidividually
-        // don't set password
-        // skip setting password hash
-        
-        // state.user = action.payload;
         state.error = "";
+
+        if (action.payload) {
+          state.user = {
+            ...state.user,
+            id: action.payload.id,
+            first_name: action.payload.first_name,
+            last_name: action.payload.last_name,
+            email: action.payload.email,
+            phone: action.payload.phone,
+            role: action.payload.role,
+          };
+        }
       })
-      .addCase(fetchUser.rejected, (state: userSliceState, action) => {
+      .addCase(fetchUser.rejected, (state, action) => {
         state.loadStatus = "failed";
         state.error = action.error.message;
       });

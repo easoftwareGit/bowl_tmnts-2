@@ -4,8 +4,8 @@ import { validateElim, sanitizeElim } from "../../../lib/validation/elims/valida
 import { ErrorCode } from "@/lib/enums/enums";
 import type { elimType } from "@/lib/types/types";
 import { initElim } from "@/lib/db/initVals";
-import { getErrorStatus } from "../errCodes";
-import { elimDataForPrisma } from "./dataForPrisma";
+import { getErrorStatus, standardCatchReturn } from "../apiCatch";
+import { elimDataForPrisma } from "./elimDataForPrisma";
 
 // routes /api/elims
 
@@ -22,8 +22,8 @@ export async function GET(request: NextRequest) {
       ],
     });
     return NextResponse.json({ elims }, { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json({ error: "error getting elims" }, { status: 500 });
+  } catch (error) {
+    return standardCatchReturn(error, "error getting elims");
   }
 }
 
@@ -76,11 +76,7 @@ export async function POST(request: Request) {
       data: elimData,
     });
     return NextResponse.json({ elim }, { status: 201 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error creating elim" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error creating elim");
   }
 }

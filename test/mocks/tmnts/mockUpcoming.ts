@@ -12,7 +12,7 @@ export const mockUpcoming: tmntType[] = [
     end_date_err: "",
     bowl_id: "bwl_561540bd64974da9abdd97765fdb3659",
     bowl_id_err: "",
-    bowls: {
+    bowl: {
       bowl_name: "Earl Anthony's Dublin Bowl",
       city: "Dublin",
       state: "CA",
@@ -30,7 +30,7 @@ export const mockUpcoming: tmntType[] = [
     end_date_err: "",
     bowl_id: "bwl_561540bd64974da9abdd97765fdb3659",
     bowl_id_err: "",
-    bowls: {
+    bowl: {
       bowl_name: "Earl Anthony's Dublin Bowl",
       city: "Dublin",
       state: "CA",

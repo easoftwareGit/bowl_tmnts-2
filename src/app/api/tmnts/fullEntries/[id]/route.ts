@@ -3,9 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { ErrorCode } from "@/lib/enums/enums";
 import type { tmntFullType } from "@/lib/types/types";
-import { tmntFullDataForPrisma } from "../../dataForPrisma";
-import { getErrorStatus } from "@/app/api/errCodes";
-
+import { tmntFullDataForPrisma } from "../../tmntDataForPrisma";
+import { getErrorStatus, standardCatchReturn } from "@/app/api/apiCatch";
 import { SquadStage } from "@prisma/client";
 import { sanitizeFullTmnt, validateFullTmnt } from "@/lib/validation/tmnts/full/validate";
 
@@ -162,11 +161,7 @@ export async function PUT(
       return { success: true, stage: updatedStage };
     });
     return NextResponse.json(result, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "Error replacing tmnt entries data" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error replacing tmnt entries data");
   }
 }

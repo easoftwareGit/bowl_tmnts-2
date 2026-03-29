@@ -7,35 +7,38 @@ import type {
 import {  
   isValidBtDbId,
   isValidTimeStamp,
+  safeNumericEqual,
+} from "@/lib/validation/validation";
+import {  
   maxBrackets,
   maxDate,
   maxMoney,
-  safeNumericEqual,
-} from "@/lib/validation/validation";
+  minBrktEntryFee,  
+} from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
 import { cloneDeep } from "lodash";
 import { sanitizeCurrency } from "../sanitize";
-import { sanitizedTime } from "../squads/validate";
 
 /**
  * checks if brktEntry object has missing data - DOES NOT SANITIZE OR VALIDATE
  * NOTE: num_refunds can be 0 or null, so it is not checked here
  *
  * @param {brktEntryType} brktEntry - brktEntry to check for missing data
+ * @param {boolean} checkFee - whether to check if fee is valid
  * @returns {ErrorCode.MISSING_DATA | ErrorCode.NONE | ErrorCode.OTHER_ERROR} - error code
  */
-const gotBrktEntryData = (brktEntry: brktEntryType): ErrorCode => {
+const gotBrktEntryData = (brktEntry: brktEntryType, checkFee: boolean = true): ErrorCode => {
   try {
     if (
       !brktEntry ||
       !brktEntry.id ||
       !brktEntry.brkt_id ||
       !brktEntry.player_id ||      
-      brktEntry.num_brackets == null ||
-      !brktEntry.fee ||
+      brktEntry.num_brackets == null ||      
       brktEntry.time_stamp == null   ) {
       return ErrorCode.MISSING_DATA;
     }
+    if (checkFee && !brktEntry.fee) return ErrorCode.MISSING_DATA;
     return ErrorCode.NONE;
   } catch (error) {
     return ErrorCode.OTHER_ERROR;
@@ -81,16 +84,17 @@ export const validBrktEntryNumRefunds = (numRefunds: unknown): boolean => {
 export const validBrktEntryFee = (moneyStr: unknown): boolean => {
   if (moneyStr == null || typeof moneyStr !== "string") return false;
   if (moneyStr === "") return true; // blank is ok
-  return validMoney(moneyStr, 0, maxMoney);
+  return validMoney(moneyStr, minBrktEntryFee, maxMoney);
 };
 
 /**
  * checks if brktEntry data is valid
  *
  * @param {brktEntryType} brktEntry - brktEntry to validate
+ * @param {boolean} checkFee - whether to check fee
  * @returns {ErrorCode.NONE | ErrorCode.INVALID_DATA | ErrorCode.OTHER_ERROR} - error code
  */
-const validBrktEntryData = (brktEntry: brktEntryType): ErrorCode => {
+const validBrktEntryData = (brktEntry: brktEntryType, checkFee: boolean = true): ErrorCode => {
   try {
     if (!brktEntry) return ErrorCode.INVALID_DATA;
     if (!isValidBtDbId(brktEntry.id, "ben")) {
@@ -108,21 +112,23 @@ const validBrktEntryData = (brktEntry: brktEntryType): ErrorCode => {
     if (!validBrktEntryNumRefunds(brktEntry.num_refunds)) {
       return ErrorCode.INVALID_DATA;
     }
-    if (!validBrktEntryFee(brktEntry.fee)) {
-      return ErrorCode.INVALID_DATA;
-    }
-    if (
-      brktEntry.num_brackets === 0 &&
-      brktEntry.fee !== "" &&
-      Number(brktEntry.fee) !== 0
-    ) {
-      return ErrorCode.INVALID_DATA;
-    }
-    if (
-      (brktEntry.fee === "" || Number(brktEntry.fee) === 0) &&
-      brktEntry.num_brackets !== 0
-    ) {
-      return ErrorCode.INVALID_DATA;
+    if (checkFee) {
+      if (!validBrktEntryFee(brktEntry.fee)) {
+        return ErrorCode.INVALID_DATA;
+      }
+      if (
+        brktEntry.num_brackets === 0 &&
+        brktEntry.fee !== "" &&
+        Number(brktEntry.fee) !== 0
+      ) {
+        return ErrorCode.INVALID_DATA;
+      }
+      if (
+        (brktEntry.fee === "" || Number(brktEntry.fee) === 0) &&
+        brktEntry.num_brackets !== 0
+      ) {
+        return ErrorCode.INVALID_DATA;
+      }
     }
     if (brktEntry.num_brackets < brktEntry.num_refunds) {
       return ErrorCode.INVALID_DATA;
@@ -247,13 +253,14 @@ export const sanitizeBrktEntry = (brktEntry: brktEntryType): brktEntryType => {
  * validates brktEntry
  *
  * @param brktEntry - brktEntry to validate
+ * @param {boolean} checkFee - whether to check fee
  * @returns {ErrorCode.NONE | ErrorCode.MISSING_DATA | ErrorCode.INVALID_DATA | ErrorCode.OTHER_ERROR} - error code
  */
-export const validateBrktEntry = (brktEntry: brktEntryType): ErrorCode => {
+export const validateBrktEntry = (brktEntry: brktEntryType, checkFee: boolean = true): ErrorCode => {
   try {
-    const errorCode = gotBrktEntryData(brktEntry);
+    const errorCode = gotBrktEntryData(brktEntry, checkFee);
     if (errorCode !== ErrorCode.NONE) return errorCode;
-    return validBrktEntryData(brktEntry);
+    return validBrktEntryData(brktEntry, checkFee);
   } catch (err) {
     return ErrorCode.OTHER_ERROR;
   }

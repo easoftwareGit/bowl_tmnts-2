@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { validYear } from "@/lib/validation/validation";
 import { endOfDayFromString } from "@/lib/dateTools";
+import { standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/tmnts/years/year
 
@@ -28,10 +29,7 @@ export async function GET(
     )
       
     return NextResponse.json({ years }, { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: "error getting years" },
-      { status: 500 }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error getting years");
   }
 }

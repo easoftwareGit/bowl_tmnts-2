@@ -1,7 +1,7 @@
 import type { divEntryType } from '@/lib/types/types';
 import { mockTmntFullData } from '../../../mocks/tmnts/tmntFullData/mockTmntFullData';
 import { cloneDeep } from 'lodash';
-import { divEntryDataForPrisma } from '@/app/api/divEntries/dataForPrisma';
+import { divEntryDataForPrisma } from '@/app/api/divEntries/divEntryDataForPrisma';
 
 describe('eventDataForPrisma', () => {
   const testDivEntry: divEntryType = cloneDeep(mockTmntFullData.divEntries[0]);

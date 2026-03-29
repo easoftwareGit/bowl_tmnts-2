@@ -1,7 +1,8 @@
 import { validMoney } from "@/lib/currency/validate";
 import { blankDivEntry } from "@/lib/db/initVals";
 import type { divEntryType, validDivEntriesType } from "@/lib/types/types";
-import { isValidBtDbId, maxMoney } from "@/lib/validation/validation";
+import { isValidBtDbId } from "@/lib/validation/validation";
+import { maxMoney } from "../constants";
 import { ErrorCode } from "@/lib/enums/enums";
 import { sanitizeCurrency } from "../sanitize";
 

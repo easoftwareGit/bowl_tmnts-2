@@ -5,7 +5,7 @@ import { ErrorCode } from "@/lib/enums/enums";
 import { allEventMoneyValid, sanitizeEvent, validateEvent } from "@/lib/validation/events/validate";
 import type { eventType } from "@/lib/types/types";
 import { initEvent } from "@/lib/db/initVals";
-import { getErrorStatus } from "@/app/api/errCodes";
+import { standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/events/event/:id
 
@@ -18,22 +18,22 @@ export async function GET(
     if (!isValidBtDbId(id, "evt")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
-    const prismaEvent = await prisma.event.findUnique({
+    const event = await prisma.event.findUnique({
       where: {
         id: id,
       },
     });
-    if (!prismaEvent) {
+    if (!event) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
-    // add in lpox
-    const event = {
-      ...prismaEvent,
-      lpox: prismaEvent.entry_fee,
-    }
+    // // add in lpox
+    // const event = {
+    //   ...prismaEvent,
+    //   lpox: prismaEvent.entry_fee,
+    // }
     return NextResponse.json({ event }, { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json({ error: "error getting event" }, { status: 500 });
+  } catch (error) {
+    return standardCatchReturn(error, "error getting event");    
   }
 }
 
@@ -99,7 +99,7 @@ export async function PUT(
     }
     
     // NO lpox in data object
-    const putEvent = await prisma.event.update({
+    const event = await prisma.event.update({
       where: {
         id: id,
       },
@@ -117,18 +117,14 @@ export async function PUT(
         sort_order: toPut.sort_order,
       },
     });
-    // add in lpox
-    const event = {
-      ...putEvent,
-      lpox: putEvent.entry_fee,
-    };
+    // // add in lpox
+    // const event = {
+    //   ...putEvent,
+    //   lpox: putEvent.entry_fee,
+    // };
     return NextResponse.json({ event }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error updating event" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error updating event");  
   }
 }
 
@@ -288,7 +284,7 @@ export async function PATCH(
       toPatch.sort_order = undefined as any;
     }
 
-    const patchEvent = await prisma.event.update({
+    const event = await prisma.event.update({
       where: {
         id: id,
       },
@@ -307,23 +303,19 @@ export async function PATCH(
         sort_order: toPatch.sort_order || undefined,
       },
     });
-    let event;
-    // add in lpox if needed
-    if (jsonProps.includes("entry_fee")) {
-      event = {
-        ...patchEvent,
-        lpox: patchEvent.entry_fee,
-      };
-    } else {
-      event = patchEvent;
-    }
+    // let event;
+    // // add in lpox if needed
+    // if (jsonProps.includes("entry_fee")) {
+    //   event = {
+    //     ...patchEvent,
+    //     lpox: patchEvent.entry_fee,
+    //   };
+    // } else {
+    //   event = patchEvent;
+    // }
     return NextResponse.json({ event }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error patching event" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error patching event");
   }
 }
 
@@ -342,11 +334,7 @@ export async function DELETE(
       },
     });
     return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error deleting event" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error deleting event");
   }
 }

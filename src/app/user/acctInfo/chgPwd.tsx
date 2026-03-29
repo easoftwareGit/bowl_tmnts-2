@@ -1,30 +1,35 @@
 "use client";
-import React, { ChangeEvent, useState } from 'react'
+
+import React, { ChangeEvent, useState } from "react";
 import Image from "next/image";
-import { isPassword8to20 } from '@/lib/validation/validation';
-import type { userType } from '@/lib/types/types';
-import { doCompare, doHash } from '@/lib/hash';
-import { patchUser } from '@/lib/db/users/dbUsers';
-import { initModalObj } from '@/components/modal/modalObjType';
-import ModalErrorMsg from '@/components/modal/errorModal';
-import { findUserById } from '@/lib/db/users/users';
+import { isPassword8to20 } from "@/lib/validation/validation";
+import type { userDataType, userFormType } from "@/lib/types/types";
+// import { doCompare } from "@/lib/server/hashServer";
+import { changePassword } from "@/lib/db/users/dbUsers";
+import { initModalObj } from "@/components/modal/modalObjType";
+import ModalErrorMsg from "@/components/modal/errorModal";
 
 const blankValues = {
-  current: '',
-  new: '',
-  confirm: ''
+  current: "",
+  new: "",
+  confirm: "",
+};
+
+// type UserWithPasswordHash = userDataType & {
+//   password_hash: string;
+// };
+
+// interface ChildProps {
+//   user: UserWithPasswordHash;
+//   setInfoType: (infoType: string) => void;
+// }
+
+interface ChildProps {
+  user: userDataType;
+  setInfoType: (infoType: string) => void;
 }
 
-interface ChildProps { 
-  user: userType,  
-  setInfoType: (infoType: string) => void
-}
-
-const ChangePassword: React.FC<ChildProps> = ({
-  user,  
-  setInfoType
-}) => {
- 
+const ChangePassword: React.FC<ChildProps> = ({ user, setInfoType }) => {
   const [pwdData, setPwdData] = useState(blankValues);
   const [formErrors, setFormErrors] = useState(blankValues);
 
@@ -37,77 +42,77 @@ const ChangePassword: React.FC<ChildProps> = ({
     const errors = {
       current: "",
       new: "",
-      confirm: "",      
-    }
-    let isValid = true; 
+      confirm: "",
+    };
+    let isValid = true;
 
-    // current   
+    // current
     if (!pwdData.current.trim()) {
-      errors.current = 'Current Password is required';
+      errors.current = "Current Password is required";
       isValid = false;
     } else if (!isPassword8to20(pwdData.current)) {
       errors.current =
         "Password not in a valid format: at least 1 lower case, 1 UPPER case, 1 digit, 1 special character, 8 to 20 charaters long";
       isValid = false;
     } else {
-      errors.current = '';
+      errors.current = "";
     }
 
-    // new   
-    if (!pwdData.current.trim()) {
-      errors.new = 'New Password is required';
+    // new
+    if (!pwdData.new.trim()) {
+      errors.new = "New Password is required";
       isValid = false;
     } else if (!isPassword8to20(pwdData.new)) {
       errors.new =
         "Password not in a valid format: at least 1 lower case, 1 UPPER case, 1 digit, 1 special character, 8 to 20 charaters long";
       isValid = false;
     } else if (pwdData.new === pwdData.current) {
-      errors.new = 'New Password cannot be the same as Current Password';
+      errors.new = "New Password cannot be the same as Current Password";
       isValid = false;
     } else {
-      errors.new = '';
+      errors.new = "";
     }
 
-    // confirm 
+    // confirm
     if (!pwdData.confirm.trim()) {
-      errors.confirm = 'Confirm Password is required';
+      errors.confirm = "Confirm Password is required";
       isValid = false;
     } else if (!isPassword8to20(pwdData.confirm)) {
       errors.confirm =
         "Password not in a valid format: at least 1 lower case, 1 UPPER case, 1 digit, 1 special character, 8 to 20 charaters long";
       isValid = false;
     } else if (pwdData.new !== pwdData.confirm) {
-      errors.confirm = 'New and Confirm Passwords do not match';
-      isValid = false;    
+      errors.confirm = "New and Confirm Passwords do not match";
+      isValid = false;
     } else {
-      errors.confirm = '';
+      errors.confirm = "";
     }
-    
-    // compare current password to hashed password 
-    if (isValid) { 
-      const dbUser = await findUserById(user.id);
-      if (!dbUser) {
-        errors.current = 'Error getting user from database';
-        isValid = false;
-      } else { 
-        const isCurrentValid = await doCompare(
-          pwdData.current,
-          user.password_hash
-        );
-        if (!isCurrentValid) {
-          errors.current = 'Current Password is incorrect';
-          isValid = false;
-        }
-      }
-    }
+
+    // // compare current password to hashed password
+    // if (isValid) {
+    //   const dbUser = await getUserById(user.id);
+    //   if (!dbUser) {
+    //     errors.current = "Error getting user from database";
+    //     isValid = false;
+    //   } else {
+    //     const isCurrentValid = await doCompare(
+    //       pwdData.current,
+    //       user.password_hash
+    //     );
+    //     if (!isCurrentValid) {
+    //       errors.current = "Current Password is incorrect";
+    //       isValid = false;
+    //     }
+    //   }
+    // }
 
     setFormErrors(errors);
     return isValid;
-  }
+  };
 
   const handleAcctInfoClick = async () => {
-    setInfoType('AcctInfo');
-  }
+    setInfoType("AcctInfo");
+  };
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -122,9 +127,9 @@ const ChangePassword: React.FC<ChildProps> = ({
   };
 
   const canceledModalErr = () => {
-    const gotoAcctInfo = (errModalObj.id === 'success') ? true : false;
+    const gotoAcctInfo = errModalObj.id === "success";
     setErrModalObj(initModalObj); // reset modal object (hides modal)
-    if (gotoAcctInfo) setInfoType('AcctInfo');
+    if (gotoAcctInfo) setInfoType("AcctInfo");
   };
 
   const toggleCurrentVisibility = () => {
@@ -139,45 +144,80 @@ const ChangePassword: React.FC<ChildProps> = ({
     setShowConfirm(!showConfirm);
   };
 
-  const updatePassword = async () => { 
-    // patch user
-    const dataToPatch = {
-      id: user.id,
-      password: pwdData.new
-    }
-    const patchedUser = await patchUser(dataToPatch);
-    if (!patchedUser) {
+  const updatePassword = async () => {
+
+    const result = await changePassword(
+      user.id,
+      pwdData.current,
+      pwdData.new
+    );
+    if (!result.success) {
+      if (result.error === "Current Password is incorrect") {
+        setFormErrors({
+          ...formErrors,
+          current: result.error,
+        });
+        return;
+      }
+
       setErrModalObj({
         show: true,
-        title: 'Update Password Failed',
-        message: `Cannot update new password.`,
-        id: 'fail'
-      })   
+        title: "Update Password Failed",
+        message: result.error ?? "Cannot update new password.",
+        id: "fail",
+      });
     } else { 
       setErrModalObj({
         show: true,
-        title: 'Update Password Success',
-        message: 'Successfully updated password.',
-        id: 'success'
-      })            
+        title: "Update Password Success",
+        message: "Successfully updated password.",
+        id: "success",
+      })
     }
-  }
+
+    // const dataToPatch: userFormType = {
+    //   id: user.id,
+    //   email: user.email,
+    //   password: pwdData.new,
+    //   first_name: user.first_name,
+    //   last_name: user.last_name,
+    //   phone: user.phone,
+    //   role: user.role,
+    // };
+
+    // const patchedUser = await patchUser(dataToPatch);
+    // if (!patchedUser) {
+    //   setErrModalObj({
+    //     show: true,
+    //     title: "Update Password Failed",
+    //     message: "Cannot update new password.",
+    //     id: "fail",
+    //   });
+    // } else {
+    //   setErrModalObj({
+    //     show: true,
+    //     title: "Update Password Success",
+    //     message: "Successfully updated password.",
+    //     id: "success",
+    //   });
+    // }
+  };
 
   const handleUpdateClick = async () => {
     const isValid = await validUserData();
     if (isValid) {
       updatePassword();
     }
-  }
+  };
 
   return (
     <>
       <ModalErrorMsg
         show={errModalObj.show}
         title={errModalObj.title}
-        message={errModalObj.message}   
+        message={errModalObj.message}
         onCancel={canceledModalErr}
-      />        
+      />
       <div className="form_container">
         <div className="row g-3 mb-1">
           <h5>{user.first_name + " " + user.last_name}</h5>
@@ -204,10 +244,15 @@ const ChangePassword: React.FC<ChildProps> = ({
                 type="button"
                 onClick={toggleCurrentVisibility}
                 tabIndex={-1}
-                aria-label='Toggle current password visibility'
+                aria-label="Toggle current password visibility"
               >
                 {showCurrent ? (
-                  <Image src="/eye-slash.svg" alt="hide" width="22" height="22" />
+                  <Image
+                    src="/eye-slash.svg"
+                    alt="hide"
+                    width="22"
+                    height="22"
+                  />
                 ) : (
                   <Image src="/eye.svg" alt="show" width="22" height="22" />
                 )}
@@ -218,15 +263,13 @@ const ChangePassword: React.FC<ChildProps> = ({
         </div>
         <div className="row g-3 mb-2">
           <div className="col-12">
-            <label className="form-label"htmlFor="inputNew">
+            <label className="form-label" htmlFor="inputNew">
               New Password
             </label>
             <div className="input-group">
               <input
                 type={showNew ? "text" : "password"}
-                className={`form-control ${
-                  formErrors.new && "is-invalid"
-                }`}
+                className={`form-control ${formErrors.new && "is-invalid"}`}
                 id="inputNew"
                 name="new"
                 value={pwdData.new}
@@ -238,10 +281,15 @@ const ChangePassword: React.FC<ChildProps> = ({
                 type="button"
                 onClick={toggleNewVisibility}
                 tabIndex={-1}
-                aria-label='Toggle new password visibility'
+                aria-label="Toggle new password visibility"
               >
                 {showNew ? (
-                  <Image src="/eye-slash.svg" alt="hide" width="22" height="22" />
+                  <Image
+                    src="/eye-slash.svg"
+                    alt="hide"
+                    width="22"
+                    height="22"
+                  />
                 ) : (
                   <Image src="/eye.svg" alt="show" width="22" height="22" />
                 )}
@@ -272,10 +320,15 @@ const ChangePassword: React.FC<ChildProps> = ({
                 type="button"
                 onClick={toggleConfirmVisibility}
                 tabIndex={-1}
-                aria-label='Toggle confirm password visibility'
+                aria-label="Toggle confirm password visibility"
               >
-                {showNew ? (
-                  <Image src="/eye-slash.svg" alt="hide" width="22" height="22" />
+                {showConfirm ? (
+                  <Image
+                    src="/eye-slash.svg"
+                    alt="hide"
+                    width="22"
+                    height="22"
+                  />
                 ) : (
                   <Image src="/eye.svg" alt="show" width="22" height="22" />
                 )}
@@ -295,27 +348,27 @@ const ChangePassword: React.FC<ChildProps> = ({
             </button>
           </div>
           <div className="col-md-6">
-          <div className="d-grid gap-2 d-md-flex justify-content-md-end">
-            <button
-              type="button"
-              className="btn btn-success"
-              onClick={handleUpdateClick}
-            >
-              Update
-            </button>
-            <button
-              type="button"
-              className="btn btn-danger"
-              onClick={handleAcctInfoClick}
-            >
-              Cancel
-            </button>
+            <div className="d-grid gap-2 d-md-flex justify-content-md-end">
+              <button
+                type="button"
+                className="btn btn-success"
+                onClick={handleUpdateClick}
+              >
+                Update
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={handleAcctInfoClick}
+              >
+                Cancel
+              </button>
             </div>
           </div>
-        </div>          
-      </div> 
+        </div>
+      </div>
     </>
-  )
-}
+  );
+};
 
 export default ChangePassword;

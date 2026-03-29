@@ -6,7 +6,12 @@ import { mockLanes, mockSquads } from "../../../../mocks/tmnts/singlesAndDoubles
 import { mockEvents } from "../../../../mocks/tmnts/singlesAndDoubles/mockEvents";
 import { initSquad } from "@/lib/db/initVals";
 import type { laneType, squadType } from "@/lib/types/types";
-import { maxLaneCount, maxStartLane, minLaneCount, minStartLane } from "@/lib/validation/validation";
+import {
+  maxLaneCount,
+  maxStartLane,
+  minLaneCount,
+  minStartLane
+} from "@/lib/validation/constants";
 import { cloneDeep } from "lodash";
 
 const mockSetSquads = jest.fn();

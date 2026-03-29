@@ -1,28 +1,30 @@
 import React, { ChangeEvent, useState } from "react";
+import { isEmail } from "@/lib/validation/validation";
 import {
-  isEmail,
-  maxEmailLength,
   maxFirstNameLength,
   maxLastNameLength,
+  maxEmailLength,
   maxPhoneLength,
-} from "@/lib/validation/validation";
+} from "@/lib/validation/constants";
 import { useSession } from "next-auth/react";
-import { findUserByEmail } from "@/lib/db/users/users";
+import { useRouter } from "next/navigation";
 import { Alert } from "@/components/ui/index";
 import { phone } from "phone";
-import { patchUser } from "@/lib/db/users/dbUsers";
-import ModalErrorMsg, { cannotSaveTitle } from "@/components/modal/errorModal";
+import { getUserByEmail, patchUser } from "@/lib/db/users/dbUsers";
+import ModalErrorMsg, {
+  cannotSaveTitle,
+} from "@/components/modal/errorModal";
 import { initModalObj } from "@/components/modal/modalObjType";
-import type { userType } from "@/lib/types/types";
-import { useRouter } from "next/navigation"
+import type { userDataType } from "@/lib/types/types";
 
-const savedAcctInfoTitle = 'Saved Account Info';
+
+const savedAcctInfoTitle = "Saved Account Info";
 
 interface ChildProps {
-  user: userType;
-  setUser: (user: userType) => void;
-  origUserData: userType,  
-  setInfoType: (infoType: string) => void
+  user: userDataType;
+  setUser: (user: userDataType) => void;
+  origUserData: userDataType;
+  setInfoType: (infoType: string) => void;
 }
 
 const blankErrors = {
@@ -35,92 +37,97 @@ const blankErrors = {
 const AcctInfo: React.FC<ChildProps> = ({
   user,
   setUser,
-  origUserData,  
-  setInfoType
+  origUserData,
+  setInfoType,
 }) => {
+  const { update } = useSession();
 
-  const { status, data, update } = useSession();
-
-  const [formErrors, setFormErrors] = useState(blankErrors);  
-  const [usedEmail, setUsedEmail] = useState("");  
+  const [formErrors, setFormErrors] = useState(blankErrors);
+  const [usedEmail, setUsedEmail] = useState("");
   const [errModalObj, setErrModalObj] = useState(initModalObj);
 
   const router = useRouter();
 
   const phoneRequired = origUserData.phone ? true : false;
 
+  const hasPassword =
+    "password_hash" in user &&
+    typeof user.password_hash === "string" &&
+    user.password_hash !== "";
+
   const validUserData = async (): Promise<boolean> => {
     const errors = {
       first_name: "",
       last_name: "",
       email: "",
-      phone: "",  
-    }
-    let isValid = true; 
+      phone: "",
+    };
+    let isValid = true;
 
-    // first name    
+    // first name
     if (!user.first_name.trim()) {
-      errors.first_name = 'First Name is required';
+      errors.first_name = "First Name is required";
       isValid = false;
     } else {
-      errors.first_name = '';
+      errors.first_name = "";
     }
 
-    // last name    
+    // last name
     if (!user.last_name.trim()) {
-      errors.last_name = 'Last Name is required';
+      errors.last_name = "Last Name is required";
       isValid = false;
     } else {
-      errors.last_name = '';
+      errors.last_name = "";
     }
 
     // email
     if (!user.email.trim()) {
-      errors.email = 'Email is required';
+      errors.email = "Email is required";
       isValid = false;
     } else if (!isEmail(user.email)) {
-      errors.email = 'Email is not valid';
+      errors.email = "Email is not valid";
       isValid = false;
     } else {
-      errors.email = '';
+      errors.email = "";
     }
 
     // phone
     // if phone is not required (google auth) and phone is blank, then ok
     if (!phoneRequired && !user.phone.trim()) {
       errors.phone = "";
-    } else {  // else if entered phone, check if valid
+    } else {
+      // else if entered phone, check if valid
       if (!user.phone.trim()) {
-        errors.phone = 'Phone is required';
+        errors.phone = "Phone is required";
         isValid = false;
-      } else {        
+      } else {
         const phoneCheck = phone(user.phone);
         if (!phoneCheck.isValid) {
           errors.phone = "Phone is not valid";
           isValid = false;
         } else {
-          errors.phone = "";        
+          errors.phone = "";
         }
       }
     }
 
     if (isValid && user.email !== origUserData.email) {
-      const foundEmail = await findUserByEmail(user.email);
+      const foundEmail = await getUserByEmail(user.email);
       if (foundEmail) {
         errors.email = "Email already in use";
         isValid = false;
       }
     }
-    
+
     setFormErrors(errors);
     return isValid;
-  }
-  
+  };
+
   const canceledModalErr = () => {
-    const saved = (errModalObj.title === savedAcctInfoTitle) ? true : false;
+    const saved = errModalObj.title === savedAcctInfoTitle;
     setErrModalObj(initModalObj); // reset modal object (hides modal)
-    if (saved) {      
-      router.push('/'); // back to list of tournaments
+    if (saved) {
+      router.push("/"); // back to list of tournaments
     }
   };
 
@@ -140,65 +147,58 @@ const AcctInfo: React.FC<ChildProps> = ({
   };
 
   const handleChangePasswordClick = () => {
-    setInfoType('Password');
-  }
+    setInfoType("Password");
+  };
 
   const handleCancelClick = () => {
-    router.push('/'); // back to home 
+    router.push("/"); // back to home
   };
 
   const save = async () => {
-    
     try {
       const dataValid = await validUserData();
       if (!dataValid) return;
 
       // update session
-      update({
+      await update({
         first_name: user.first_name,
         last_name: user.last_name,
-        email: user.email
+        email: user.email,
       });
-      
+
       // patch user
-      const dataToPatch = {
-        id: user.id
-      }
-      if (user.first_name !== origUserData.first_name) {
-        (dataToPatch as any).first_name = user.first_name;
-      }
-      if (user.last_name !== origUserData.last_name) {
-        (dataToPatch as any).last_name = user.last_name;
-      }
-      if (user.email !== origUserData.email) {
-        (dataToPatch as any).email = user.email;
-      }
-      if (origUserData.phone && user.phone !== origUserData.phone) {
-        (dataToPatch as any).phone = user.phone;
-      }      
+      const dataToPatch: userDataType = {
+        id: user.id,
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        phone: origUserData.phone ? user.phone : origUserData.phone,
+        role: user.role,
+      };
+
       const patchedUser = await patchUser(dataToPatch);
       if (patchedUser) {
         setErrModalObj({
           show: true,
           title: savedAcctInfoTitle,
-          message: `Successfully updated account information.`,
-          id: "success"
-        })            
+          message: "Successfully updated account information.",
+          id: "success",
+        });
       }
-    } catch (error) {
+    } catch {
       setErrModalObj({
         show: true,
         title: cannotSaveTitle,
-        message: `Cannot save Account Info.`,
-        id: initModalObj.id
-      })   
+        message: "Cannot save Account Info.",
+        id: initModalObj.id,
+      });
     }
-  }
+  };
 
-  const saveButtonClick = async () => {    
+  const saveButtonClick = async () => {
     const dataIsValid = await validUserData();
     if (dataIsValid) {
-      save()
+      save();
     }
   };
 
@@ -207,9 +207,9 @@ const AcctInfo: React.FC<ChildProps> = ({
       <ModalErrorMsg
         show={errModalObj.show}
         title={errModalObj.title}
-        message={errModalObj.message}   
+        message={errModalObj.message}
         onCancel={canceledModalErr}
-      />  
+      />
       <div>
         <div className="row g-3 mb-3">
           <div className="col-md-6">
@@ -223,7 +223,7 @@ const AcctInfo: React.FC<ChildProps> = ({
               name="first_name"
               value={user.first_name}
               maxLength={maxFirstNameLength}
-              onChange={handleInputChange}                
+              onChange={handleInputChange}
             />
             <div className="text-danger">{formErrors.first_name}</div>
           </div>
@@ -238,7 +238,7 @@ const AcctInfo: React.FC<ChildProps> = ({
               name="last_name"
               value={user.last_name}
               maxLength={maxLastNameLength}
-              onChange={handleInputChange}                
+              onChange={handleInputChange}
             />
             <div className="text-danger">{formErrors.last_name}</div>
           </div>
@@ -255,7 +255,7 @@ const AcctInfo: React.FC<ChildProps> = ({
               name="email"
               value={user.email}
               maxLength={maxEmailLength}
-              onChange={handleInputChange}                
+              onChange={handleInputChange}
             />
             <div className="text-danger" id="emailError">
               {formErrors.email}
@@ -273,44 +273,44 @@ const AcctInfo: React.FC<ChildProps> = ({
               name="phone"
               value={user.phone}
               maxLength={maxPhoneLength}
-              onChange={handleInputChange}                
+              onChange={handleInputChange}
             />
             <div className="text-danger">{formErrors.phone}</div>
           </div>
-        </div>   
+        </div>
         <div className="row g-3">
           <div className="col-md-6">
             <button
               type="button"
               className="btn btn-primary"
               onClick={handleChangePasswordClick}
-              disabled={user.password_hash === ''}
+              disabled={!hasPassword}
             >
               Change Password
             </button>
           </div>
           <div className="col-md-6">
-          <div className="d-grid gap-2 d-md-flex justify-content-md-end">
-            <button
-              type="button"
-              className="btn btn-success"
-              onClick={saveButtonClick}
-            >
-              Save
-            </button>
-            <button
-              type="button"
-              className="btn btn-danger"
-              onClick={handleCancelClick}
-            >
-              Cancel
-            </button>
+            <div className="d-grid gap-2 d-md-flex justify-content-md-end">
+              <button
+                type="button"
+                className="btn btn-success"
+                onClick={saveButtonClick}
+              >
+                Save
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={handleCancelClick}
+              >
+                Cancel
+              </button>
             </div>
           </div>
-        </div>          
+        </div>
       </div>
     </>
   );
-}
+};
 
-export default AcctInfo
+export default AcctInfo;

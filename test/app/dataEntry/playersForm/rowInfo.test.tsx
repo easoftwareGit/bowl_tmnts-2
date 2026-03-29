@@ -21,7 +21,7 @@ import {
 import { BracketList } from "@/components/brackets/bracketListClass";
 import { getBrktOrElimName, getDivName } from "@/lib/getName";
 import type { brktType, elimType } from "@/lib/types/types";
-import { maxAverage, maxBrackets, maxMoney } from "@/lib/validation/validation";
+import { maxAverage, maxBrackets, maxMoney } from "@/lib/validation/constants";
 import { cloneDeep } from "lodash";
 import { mockTmntFullData } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { defaultBrktPlayers } from "@/lib/db/initVals";

@@ -3,13 +3,11 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ZeroToNElims, { validateElims } from "@/app/dataEntry/tmntForm/zeroToNElims";
 import type { AcdnErrType, elimType } from "@/lib/types/types";
-import { minFee, maxMoney, maxGames, minGames } from "@/lib/validation/validation";
+import { minFee, maxMoney, maxGames, minGames } from "@/lib/validation/constants";
 import { divId1, mockTmntFullData } from "../../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { cloneDeep } from "lodash";
 import { acdnErrClassName, noAcdnErr, objErrClassName } from "@/app/dataEntry/tmntForm/errors";
 import { getBrktOrElimName } from "@/lib/getName";
-import { mock } from "node:test";
-import { defaultBrktGames } from "@/lib/db/initVals";
 
 const mockSetElims = jest.fn();
 const mockSetAcdnErr = jest.fn();

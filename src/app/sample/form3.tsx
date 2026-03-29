@@ -2,7 +2,7 @@
 import React, { useState, ChangeEvent } from 'react'
 import type { eventType, squadType } from '../../lib/types/types'
 import { initModalObj } from '@/components/modal/modalObjType'
-import { maxGames, minGames } from '@/lib/validation/validation'
+import { maxGames, minGames } from '@/lib/validation/constants'
 import { objErrClassName } from '../dataEntry/tmntForm/errors'
 import ModalConfirm from '@/components/modal/confirmModal'
 import EaCurrencyInput from '@/components/currency/eaCurrencyInput'

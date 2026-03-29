@@ -351,7 +351,7 @@ describe("UserTmntsPage", () => {
               id: "tmt_1",
               tmnt_name: "Sweeper 1",
               start_date_str: "2025-01-02",
-              bowls: {
+              bowl: {
                 bowl_name: "Earl Anthony's",
                 city: "Dublin",
                 state: "CA",
@@ -361,7 +361,7 @@ describe("UserTmntsPage", () => {
               id: "tmt_2",
               tmnt_name: "Sweeper 2",
               start_date_str: "2025-02-03",
-              bowls: {
+              bowl: {
                 bowl_name: "Harvest Park",
                 city: "Pleasanton",
                 state: "CA",
@@ -433,7 +433,7 @@ describe("UserTmntsPage", () => {
               id: "tmt_1",
               tmnt_name: "Sweeper 1",
               start_date_str: "2025-01-02",
-              bowls: {
+              bowl: {
                 bowl_name: "Earl Anthony's",
                 city: "Dublin",
                 state: "CA",
@@ -465,7 +465,7 @@ describe("UserTmntsPage", () => {
               id: "tmt_9",
               tmnt_name: "Big Money",
               start_date_str: "2025-11-30",
-              bowls: { bowl_name: "AMF", city: "San Jose", state: "CA" },
+              bowl: { bowl_name: "AMF", city: "San Jose", state: "CA" },
             },
           ],
         },
@@ -510,7 +510,7 @@ describe("UserTmntsPage", () => {
               id: "tmt_del",
               tmnt_name: "To Delete",
               start_date_str: "2025-10-10",
-              bowls: { bowl_name: "Bowl 1", city: "X", state: "Y" },
+              bowl: { bowl_name: "Bowl 1", city: "X", state: "Y" },
             },
           ],
         },
@@ -548,7 +548,7 @@ describe("UserTmntsPage", () => {
               id: "tmt_keep",
               tmnt_name: "Keep Me",
               start_date_str: "2025-09-09",
-              bowls: { bowl_name: "Bowl 2", city: "A", state: "B" },
+              bowl: { bowl_name: "Bowl 2", city: "A", state: "B" },
             },
           ],
         },

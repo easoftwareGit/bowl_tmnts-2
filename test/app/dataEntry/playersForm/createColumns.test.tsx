@@ -34,7 +34,7 @@ import {
 } from "@/app/dataEntry/playersForm/createColumns";
 import { initBrkt, initDiv, initElim, initPot } from "@/lib/db/initVals";
 import type { brktType, divType, elimType, potType } from "@/lib/types/types";
-import { maxAverage, maxBrackets, maxMoney } from "@/lib/validation/validation";
+import { maxAverage, maxBrackets, maxMoney, minLane } from "@/lib/validation/constants";
 import {
   GridApi,
   GridCellParams,
@@ -364,8 +364,7 @@ describe("createColumns functions tests", () => {
       { ...initDiv, id: "div1", hdcp_per: 0.9, hdcp_from: 230, int_hdcp: true },
       { ...initDiv, id: "div2", hdcp_per: 0.9, hdcp_from: 230, int_hdcp: false }
     ];
-    const maxLane = 40;
-    const minLane = 1;
+    const maxLane = 40;    
 
     beforeEach(() => {
       jest.clearAllMocks();

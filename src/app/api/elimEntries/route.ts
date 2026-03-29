@@ -4,8 +4,8 @@ import { initElimEntry } from "@/lib/db/initVals";
 import type { elimEntryType } from "@/lib/types/types";
 import { sanitizeElimEntry, validateElimEntry } from "../../../lib/validation/elimEntries/validate";
 import { ErrorCode } from "@/lib/enums/enums";
-import { getErrorStatus } from "../errCodes";
-import { elimEntryDataForPrisma } from "./dataForPrisma";
+import { getErrorStatus, standardCatchReturn } from "../apiCatch";
+import { elimEntryDataForPrisma } from "./elimEntriesDataForPrisma";
 
 // routes /api/elimEntries
 export async function GET(request: NextRequest) {
@@ -13,10 +13,7 @@ export async function GET(request: NextRequest) {
     const elimEntries = await prisma.elim_Entry.findMany();
     return NextResponse.json({ elimEntries }, { status: 200 });
   } catch (error) {
-    return NextResponse.json(
-      { error: "error getting elimEntries" },
-      { status: 500 }
-    );                
+    return standardCatchReturn(error, "error getting elimEntries");
   }
 }
 
@@ -55,21 +52,11 @@ export const POST = async (request: NextRequest) => {
     if (!elimEntryData) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
-    // const elimEntryData: elimEntryDataType = {
-    //   id: toPost.id,      
-    //   elim_id: toPost.elim_id,
-    //   player_id: toPost.player_id,      
-    //   fee: toPost.fee,
-    // }
     const elimEntry = await prisma.elim_Entry.create({
       data: elimEntryData
     })
     return NextResponse.json({ elimEntry }, { status: 201 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error creating elimEntry" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error creating elimEntry");
   }
 }

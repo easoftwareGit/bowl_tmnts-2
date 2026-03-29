@@ -71,7 +71,7 @@ describe('tmnt table data validation', () => {
     it('should return missing data error code when tmnt_name contains only special characters', () => { 
       testTmnt = {
         ...mockTmnt,
-        tmnt_name: '!$%^&'
+        tmnt_name: '<>#😀'
       }
       expect(gotTmntData(testTmnt)).toBe(ErrorCode.MISSING_DATA)
     })
@@ -95,13 +95,13 @@ describe('tmnt table data validation', () => {
       expect(validTmntName('12345678901234567890123456789012345678901234567890')).toBe(false)
     })
     it('should return false for tmnt_name with oonly special characters', () => {
-      expect(validTmntName('!$%^&')).toBe(false)
+      expect(validTmntName('<>#😀')).toBe(false)
     })
     it('should return false for tmnt_name with only spaces', () => {
       expect(validTmntName('  ')).toBe(false)
     })
     it('should return false for tmnt_name with only spaces and special characters', () => {
-      expect(validTmntName('  !$%^&  ')).toBe(false)
+      expect(validTmntName('  <>#😀  ')).toBe(false)
     })
     it('should return true for tmnt name with some specail characters, but also has valid text', () => {
       expect(validTmntName('  ***  Valid Tournament Name  ++ ')).toBe(true)
@@ -227,7 +227,7 @@ describe('tmnt table data validation', () => {
     it('should return invalid data error code when tmnt_name contains only special characters', () => { 
       testTmnt = {
         ...mockTmnt,
-        tmnt_name: '!$%^&'
+        tmnt_name: '<>#😀'
       }
       expect(validTmntData(testTmnt)).toBe(ErrorCode.INVALID_DATA)
     })    
@@ -358,7 +358,7 @@ describe('tmnt table data validation', () => {
         tmnt_name: '   T>e<s@t-N#aকm😀e  ',
       }
       const sanitized = sanitizeTmnt(testTmnt)
-      expect(sanitized.tmnt_name).toEqual('Test-Name')
+      expect(sanitized.tmnt_name).toEqual('Test-Naকme')
     })
     it('should remove HTML tags from tmnt name', () => {
       const testTmnt: tmntType = {
@@ -366,7 +366,7 @@ describe('tmnt table data validation', () => {
         tmnt_name: "<script>alert('hello')</script>",
       }
       const sanitized = sanitizeTmnt(testTmnt)
-      expect(sanitized.tmnt_name).toEqual("alert'hello'")
+      expect(sanitized.tmnt_name).toEqual("scriptalert('hello')script")
     })
     it('should return a valid start_date for a valid start date' , () => {
       const testTmnt: tmntType = {

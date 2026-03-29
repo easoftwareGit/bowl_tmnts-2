@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isValidBtDbId } from "@/lib/validation/validation";
-import { divEntriesWithHdcp } from "../../calcHdcp";
+import { standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/divEntry/div/:divId
 
@@ -15,7 +15,7 @@ export async function GET(
     if (!isValidBtDbId(divId, "div")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
-    const divEntriesNoHdcp = await prisma.div_Entry.findMany({
+    const divEntries = await prisma.div_Entry.findMany({
       select: {
         id: true,
         squad_id: true,
@@ -39,43 +39,8 @@ export async function GET(
         div_id: divId
       },
     })
-
-    const divEntries = divEntriesWithHdcp(
-      divEntriesNoHdcp.map(entry => ({
-        ...entry,
-        fee: entry.fee.toNumber()
-      })
-    ));    
-
-    return NextResponse.json({divEntries}, {status: 200});
-  } catch (err: any) {
-    return NextResponse.json({ err: "error getting divEntries for div" },
-      { status: 500 }
-    );
+    return NextResponse.json({ divEntries }, { status: 200 });    
+  } catch (error) {
+    return standardCatchReturn(error, "error getting divEntries for div");
   }
 }
-
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ divId: string }> }
-) {
-  try {
-    const { divId } = await params;    
-    // check if id is a valid div id
-    if (!isValidBtDbId(divId, "div")) {
-      return NextResponse.json({ error: "not found" }, { status: 404 });
-    }
-    const result = await prisma.div_Entry.deleteMany({
-      where: {
-        div_id: divId,
-      },
-    });
-    return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: "error deleting divEntries for div" },
-      { status: 500 }
-    );
-  }
-}
-

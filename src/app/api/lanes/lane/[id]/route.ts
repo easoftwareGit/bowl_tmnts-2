@@ -5,7 +5,7 @@ import { ErrorCode } from "@/lib/enums/enums";
 import { validateLane, sanitizeLane } from "@/lib/validation/lanes/validate";
 import type { laneType } from "@/lib/types/types";
 import { initLane } from "@/lib/db/initVals";
-import { getErrorStatus } from "@/app/api/errCodes";
+import { getErrorStatus, standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/lanes/lane/:id
 
@@ -27,8 +27,8 @@ export async function GET(
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
     return NextResponse.json({ lane }, { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json({ error: "error getting lane" }, { status: 500 });
+  } catch (error) {
+    return standardCatchReturn(error, "error getting lane");
   }
 }
 
@@ -77,12 +77,8 @@ export async function PUT(
       },
     });
     return NextResponse.json({ lane }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error updating lane" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error updating lane");
   }
 }
 
@@ -161,12 +157,8 @@ export async function PATCH(
     });
 
     return NextResponse.json({ lane }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error patching lane" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error patching lane");
   }
 }
 
@@ -186,11 +178,7 @@ export async function DELETE(
       },
     });
     return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error deleting lane" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error deleting lane");
   }
 }

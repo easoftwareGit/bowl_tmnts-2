@@ -1,8 +1,5 @@
-import {
-  isValidBtDbId,  
-  isNumber,
-  maxBrackets,
-} from "@/lib/validation/validation";
+import { isValidBtDbId, isNumber } from "@/lib/validation/validation";
+import { maxBrackets } from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
 import type { brktRefundType, validBrktRefundsType } from "@/lib/types/types";
 import { blankBrktRefund } from "@/lib/db/initVals";

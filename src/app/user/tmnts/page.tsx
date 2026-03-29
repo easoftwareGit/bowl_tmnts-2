@@ -60,8 +60,8 @@ export default function UserTmntsPage() {
       message: "Are you sure you want to delete the tournament?\n" + 
                "Name: " + toDel.tmnt_name + "\n" + 
                "Start Date: " + toDel.start_date_str + "\n" +
-               "Center: " + toDel.bowls.bowl_name + "\n" +
-               "Location: " + toDel.bowls.city + ", " + toDel.bowls.state,
+               "Center: " + toDel.bowl.bowl_name + "\n" +
+               "Location: " + toDel.bowl.city + ", " + toDel.bowl.state,
       id: tmntId,
     });
   }
@@ -120,7 +120,7 @@ export default function UserTmntsPage() {
                     <tr key={tmnt.id}>
                       <td className="align-middle">{tmnt.tmnt_name}</td>
                       <td className="align-middle">{yyyyMMdd_To_ddMMyyyy(tmnt.start_date_str)}</td>
-                      <td className="align-middle">{tmnt.bowls.bowl_name}</td>
+                      <td className="align-middle">{tmnt.bowl.bowl_name}</td>
                       <td className="align-middle" style={{ textAlign: "center" }}>
                         <Link
                           className="btn btn-info me-2"

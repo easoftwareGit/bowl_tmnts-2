@@ -4,7 +4,7 @@ import type { bowlType } from "@/lib/types/types";
 import { initBowl } from "@/lib/db/initVals";
 import { sanitizeBowl, validateBowl } from "../../../lib/validation/bowls/validate";
 import { ErrorCode } from "@/lib/enums/enums";
-import { getErrorStatus } from "../errCodes";
+import { standardCatchReturn } from "../apiCatch";
 
 // routes /api/bowls
 
@@ -15,12 +15,9 @@ export async function GET(request: NextRequest) {
         bowl_name: 'asc',
       }
     })
-    return NextResponse.json({bowls}, {status: 200});    
+    return NextResponse.json({ bowls }, { status: 200 });     
   } catch (error) {
-    return NextResponse.json(
-      { error: "error getting bowls" },
-      { status: 500 }
-    );            
+    return standardCatchReturn(error, "error getting bowls");
   }
 }
 
@@ -79,12 +76,8 @@ export async function POST(request: NextRequest) {
     const bowl = await prisma.bowl.create({
       data: bowlData
     })
-    return NextResponse.json({bowl}, {status: 201});
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error creating bowl" },
-      { status: errStatus }
-    );
+    return NextResponse.json({ bowl }, { status: 201 });    
+  } catch (error) {
+    return standardCatchReturn(error, "error creating bowl");
   }
 }

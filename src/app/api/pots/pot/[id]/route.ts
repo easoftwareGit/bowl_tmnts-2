@@ -5,7 +5,7 @@ import { isValidBtDbId } from "@/lib/validation/validation";
 import { ErrorCode } from "@/lib/enums/enums";
 import type { potType, potCategoriesTypes } from "@/lib/types/types";
 import { initPot } from "@/lib/db/initVals";
-import { getErrorStatus } from "@/app/api/errCodes";
+import { standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/pots/pot/:id
 
@@ -27,8 +27,8 @@ export async function GET(
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
     return NextResponse.json({ pot }, { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json({ error: "error getting pot" }, { status: 500 });
+  } catch (error) {
+    return standardCatchReturn(error, "error getting pot");
   }
 }
 
@@ -86,12 +86,8 @@ export async function PUT(
       },
     });
     return NextResponse.json({ pot }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error updating pot" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error updating pot");
   }
 }
 
@@ -199,12 +195,8 @@ export async function PATCH(
       },
     });
     return NextResponse.json({ pot }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error patching pot" },
-      { status: errStatus }
-    );    
+  } catch (error) {
+    return standardCatchReturn(error, "error patching pot");
   }
 }
 
@@ -224,11 +216,7 @@ export async function DELETE(
       },
     });
     return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error deleting pot" },
-      { status: errStatus }
-    );    
+  } catch (error) {
+    return standardCatchReturn(error, "error deleting pot");
   }
 }

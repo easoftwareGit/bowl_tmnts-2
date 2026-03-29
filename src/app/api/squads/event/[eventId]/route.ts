@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isValidBtDbId } from "@/lib/validation/validation";
+import { standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/squads/event/:eventId
 
@@ -11,10 +12,7 @@ export async function GET(
   try {
     const { eventId } = await params;
     if (!isValidBtDbId(eventId, 'evt')) {
-      return NextResponse.json(
-        { error: "invalid request" },
-        { status: 404 }
-      );        
+      return NextResponse.json( { error: "invalid request" }, { status: 404 } );        
     }
     const squads = await prisma.squad.findMany({
       where: {
@@ -24,38 +22,8 @@ export async function GET(
     })    
     // no matching rows is ok
     return NextResponse.json({squads}, {status: 200});    
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: "error getting squads for event" },
-      { status: 500 }
-    );        
+  } catch (error) {
+    return standardCatchReturn(error, "error getting squads for event");
   } 
 }
-
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ eventId: string }> }
-) {
-  try {
-    const { eventId } = await params;
-    // check if id is a valid tmnt id
-    if (!isValidBtDbId(eventId, 'evt')) {
-      return NextResponse.json(
-        { error: "not found" },
-        { status: 404 }
-      );        
-    }
-    const result = await prisma.squad.deleteMany({
-      where: {
-        event_id: eventId
-      },
-    });
-    return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: "error deleting squads for event" },
-      { status: 500 }
-    );        
-  } 
-}
-      
+ 

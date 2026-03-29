@@ -4,7 +4,7 @@ import { validateBrktSeed, sanitizeBrktSeed } from "../../../lib/validation/brkt
 import { ErrorCode } from "@/lib/enums/enums";
 import type { brktSeedType } from "@/lib/types/types";
 import { initBrktSeed } from "@/lib/db/initVals";
-import { getErrorStatus } from "../errCodes";
+import { standardCatchReturn } from "../apiCatch";
 
 // routes /api/brktSeeds/
 
@@ -20,12 +20,9 @@ export async function GET(request: Request) {
         }, 
       ]
     });
-    return NextResponse.json({brktSeeds}, {status: 200});    
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: "error getting brktSeeds" },
-      { status: 400 }
-    );            
+    return NextResponse.json({ brktSeeds }, { status: 200 });        
+  } catch (error) {
+    return standardCatchReturn(error, "error getting brktSeeds");
   }  
 }
 
@@ -62,12 +59,8 @@ export async function POST(request: NextRequest) {
     const brktSeed = await prisma.brkt_Seed.create({
       data: toPost,
     });
-    return NextResponse.json({brktSeed}, {status: 201});
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error creating brktSeed" },
-      { status: errStatus }
-    );
+    return NextResponse.json({ brktSeed }, { status: 201 });    
+  } catch (error) {
+    return standardCatchReturn(error, "error creating brktSeed");
   }
 }

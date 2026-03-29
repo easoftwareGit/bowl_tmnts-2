@@ -3,7 +3,7 @@ import { baseStagesApi } from "@/lib/api/apiPaths";
 import { testBaseStagesApi } from "../../../testApi";
 import type { fullStageType } from "@/lib/types/types";
 import { mockStageToPost, mockSquadsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { maxReasonLength } from "@/lib/validation/validation";
+import { maxReasonLength } from "@/lib/validation/constants";
 import { SquadStage } from "@prisma/client";
 import { deleteSquad, postSquad } from "@/lib/db/squads/dbSquads";
 
@@ -26,7 +26,6 @@ const url = testBaseStagesApi.startsWith("undefined")
   ? baseStagesApi
   : testBaseStagesApi;   
 const oneStageUrl = url + "/stage/"
-const testStageUrl = url + "/testing/"
 const squadUrl = url + "/squad/"
 
 const notFoundStageId = "stg_01234567890123456789012345678901";
@@ -69,30 +68,21 @@ const toDeleteStage: fullStageType = {
 }
 
 const deletePostedStage = async (stageId: string) => {
-  const response = await axios.get(url);
-  const stages = response.data.stages;
-  const toDel = stages.find((s: fullStageType) => s.id === stageId);
-  if (toDel) {
-    try {      
-      const delResponse = await axios.delete(
-        oneStageUrl + toDel.id,
-        { withCredentials: true }
-    );
-    } catch (err) {
-      if (err instanceof AxiosError) console.log(err.message);
-    }
+  
+  try {      
+    await axios.delete(oneStageUrl + stageId, { withCredentials: true });          
+  } catch (err) {
+    if (err instanceof AxiosError) console.log(err.message);
   }
 }
 
 const resetStage = async (fullStage: fullStageType) => {
   // make sure test stage is reset in database
   try {
-    const stageJSON = JSON.stringify(fullStage);
-    const response = await axios.put(
-      testStageUrl + fullStage.id,
-      stageJSON,
-      { withCredentials: true }
-    );
+    const stageJSON = JSON.stringify(fullStage);    
+    await axios.put(oneStageUrl + fullStage.id, stageJSON, {
+      withCredentials: true
+    });
   } catch (err) {
     if (err instanceof AxiosError) console.log(err.message);
   }
@@ -101,24 +91,19 @@ const resetStage = async (fullStage: fullStageType) => {
 const rePostStage = async (stageToRepost: fullStageType) => {
   
   try {
-    await axios.get(oneStageUrl + stageToRepost.id);    
-    return; // stage already in database
-  } catch (err) { 
-    // status 404 is OK, not found error
+    const response = await axios.get(oneStageUrl + stageToRepost.id);        
+    const found = response.data.stage;
+    if (found) return;    
+  } catch (err) {     
     if (err instanceof AxiosError) {
-      if (err.status !== 404) {
-        console.log(err.message);        
-        return;
+      if (err.status !== 404) {     // if not a NOT FOUND error
+        console.log(err.message);   // log error        
       }
-    } 
+    }    
   }
   try {
     const stageJSON = JSON.stringify(stageToRepost);
-    await axios.post(
-      testStageUrl,
-      stageJSON,
-      { withCredentials: true }
-    );
+    await axios.post(url, stageJSON, { withCredentials: true });    
   } catch (err) {
     if (err instanceof AxiosError) console.log(err.message);
   }
@@ -126,20 +111,20 @@ const rePostStage = async (stageToRepost: fullStageType) => {
 
 describe('Stages - API: /api/stages', () => { 
 
-  // describe('GET all stages API: /api/stages', () => { 
+  describe('GET all stages API: /api/stages', () => { 
 
-  //   beforeAll(async () => {
-  //     await deletePostedStage(toPostStageId);      
-  //     await rePostStage(toDeleteStage)
-  //   })
+    beforeAll(async () => {
+      await deletePostedStage(toPostStageId);      
+      await rePostStage(toDeleteStage)
+    })
 
-  //   it('should get all stages', async () => {
-  //     const response = await axios.get(url);
-  //     expect(response.status).toBe(200);
-  //     // 12 rows in prisma/seed.ts
-  //     expect(response.data.stages).toHaveLength(12);
-  //   })  
-  // })
+    it('should get all stages', async () => {
+      const response = await axios.get(url);
+      expect(response.status).toBe(200);
+      // 12 rows in prisma/seed.ts
+      expect(response.data.stages).toHaveLength(12);
+    })  
+  })
 
   describe('GET one stage API: /api/stages/:id', () => { 
 
@@ -149,13 +134,24 @@ describe('Stages - API: /api/stages', () => {
     })
 
     it('should get one stage', async () => {
+      const before = Date.now();
+
       const response = await axios.get(oneStageUrl + testStage.id);
       expect(response.status).toBe(200);
       const gotStage = response.data.stage;
+
+      const after = Date.now();
+      const twoMinutes = 2 * 60 * 1000;
+
+      const stageSetAtMs = new Date(gotStage.stage_set_at).getTime();      
+
       expect(gotStage.id).toBe(testStage.id);
       expect(gotStage.squad_id).toBe(testStage.squad_id);
       expect(gotStage.stage).toBe(testStage.stage);
-      expect(gotStage.stage_set_at).toBe(testStage.stage_set_at);
+
+      expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
+      expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
+
       expect(gotStage.scores_started_at).toBe(testStage.scores_started_at);
       expect(gotStage.stage_override_enabled).toBe(testStage.stage_override_enabled);
       expect(gotStage.stage_override_at).toBe(testStage.stage_override_at);
@@ -232,11 +228,10 @@ describe('Stages - API: /api/stages', () => {
       beforeAll(async () => {
         await deletePostedStage(toPostStageId);        
         try {
-          const response = await axios.put(
-            testStageUrl + testStage.id,
-            JSON.stringify(editedStage),
-            { withCredentials: true }
-          );
+          const stageJSON = JSON.stringify(editedStage);
+          await axios.put(oneStageUrl + editedStage.id, stageJSON, {
+            withCredentials: true
+          });
         }
         catch (err) {
           if (err instanceof AxiosError) console.log(err.message);
@@ -248,17 +243,31 @@ describe('Stages - API: /api/stages', () => {
       })
 
       it('should get an edited stage', async () => {
+        const before = Date.now();
 
         const response = await axios.get(oneStageUrl + editedStage.id);
         expect(response.status).toBe(200);
         const postedStage = response.data.stage;
+
+        const after = Date.now();
+        const twoMinutes = 2 * 60 * 1000;
+
+        const stageSetAtMs = new Date(postedStage.stage_set_at).getTime();      
+        const scoresSetAtMs = new Date(postedStage.scores_started_at).getTime();
+        const overrideSetAtMs = new Date(postedStage.stage_override_at!).getTime();
+
         expect(postedStage.id).toBe(editedStage.id);
         expect(postedStage.squad_id).toBe(editedStage.squad_id);
         expect(postedStage.stage).toBe(editedStage.stage);
-        expect(postedStage.stage_set_at).toBe(editedStage.stage_set_at);
-        expect(postedStage.scores_started_at).toBe(editedStage.scores_started_at);
+
+        expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
+        expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
+        expect(scoresSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
+        expect(scoresSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
+        expect(overrideSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
+        expect(overrideSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
+
         expect(postedStage.stage_override_enabled).toBe(editedStage.stage_override_enabled);
-        expect(postedStage.stage_override_at).toBe(editedStage.stage_override_at);
         expect(postedStage.stage_override_reason).toBe(editedStage.stage_override_reason);
       })
     })
@@ -272,13 +281,25 @@ describe('Stages - API: /api/stages', () => {
     })
 
     it('should get one stage', async () => {
+
+      const before = Date.now();
+
       const response = await axios.get(squadUrl + testStage.squad_id);
       expect(response.status).toBe(200);
       const gotStage = response.data.stage;
+
+      const after = Date.now();
+      const twoMinutes = 2 * 60 * 1000;
+
+      const stageSetAtMs = new Date(gotStage.stage_set_at).getTime();      
+
       expect(gotStage.id).toBe(testStage.id);
       expect(gotStage.squad_id).toBe(testStage.squad_id);
       expect(gotStage.stage).toBe(testStage.stage);
-      expect(gotStage.stage_set_at).toBe(testStage.stage_set_at);
+
+      expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
+      expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);        
+
       expect(gotStage.scores_started_at).toBe(testStage.scores_started_at);
       expect(gotStage.stage_override_enabled).toBe(testStage.stage_override_enabled);
       expect(gotStage.stage_override_at).toBe(testStage.stage_override_at);
@@ -355,11 +376,10 @@ describe('Stages - API: /api/stages', () => {
       beforeAll(async () => {
         await deletePostedStage(toPostStageId);        
         try {
-          const response = await axios.put(
-            testStageUrl + testStage.id,
-            JSON.stringify(editedStage),
-            { withCredentials: true }
-          );
+          const stageJSON = JSON.stringify(editedStage);
+          await axios.put(oneStageUrl + editedStage.id, stageJSON, {
+            withCredentials: true
+          });
         }
         catch (err) {
           if (err instanceof AxiosError) console.log(err.message);
@@ -371,17 +391,32 @@ describe('Stages - API: /api/stages', () => {
       })
 
       it('should get an edited stage', async () => {
+        const before = Date.now();
 
         const response = await axios.get(squadUrl + editedStage.squad_id);
+
         expect(response.status).toBe(200);
         const postedStage = response.data.stage;
+
+        const after = Date.now();
+        const twoMinutes = 2 * 60 * 1000;
+
+        const stageSetAtMs = new Date(postedStage.stage_set_at).getTime();      
+        const scoresSetAtMs = new Date(postedStage.scores_started_at).getTime();
+        const overrideSetAtMs = new Date(postedStage.stage_override_at!).getTime();
+
         expect(postedStage.id).toBe(editedStage.id);
         expect(postedStage.squad_id).toBe(editedStage.squad_id);
         expect(postedStage.stage).toBe(editedStage.stage);
-        expect(postedStage.stage_set_at).toBe(editedStage.stage_set_at);
-        expect(postedStage.scores_started_at).toBe(editedStage.scores_started_at);
-        expect(postedStage.stage_override_enabled).toBe(editedStage.stage_override_enabled);
-        expect(postedStage.stage_override_at).toBe(editedStage.stage_override_at);
+
+        expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
+        expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);        
+        expect(scoresSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
+        expect(scoresSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
+        expect(overrideSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
+        expect(overrideSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
+                
+        expect(postedStage.stage_override_enabled).toBe(editedStage.stage_override_enabled);        
         expect(postedStage.stage_override_reason).toBe(editedStage.stage_override_reason);
       })
     })
@@ -446,11 +481,8 @@ describe('Stages - API: /api/stages', () => {
         stage_override_enabled: true,
         stage_override_reason: "test reason"
       }
-      const response = await axios.post(
-        url,
-        JSON.stringify(allStageFields),
-        { withCredentials: true }
-      );
+      const stageJSON = JSON.stringify(allStageFields);
+      const response = await axios.post(url, stageJSON, { withCredentials: true });
       expect(response.status).toBe(201);
       didPost = true;
       const postedStage = response.data.stage;
@@ -519,6 +551,49 @@ describe('Stages - API: /api/stages', () => {
       expect(stageOverrideAtMs).toBeLessThanOrEqual(after.getTime() + twoMinutes);
 
       expect(postedStage.stage_override_reason).toBe(ignoreDatesStage.stage_override_reason);
+    });
+    it('should post a full stage with all values sanitized', async () => {
+      const before = new Date();      
+      const toSanitzeStage: fullStageType = {
+        ...mockStageToPost,
+        stage: SquadStage.SCORES,
+        stage_set_at: aDateStr,
+        scores_started_at: aDateStr,
+        stage_override_enabled: true,
+        stage_override_at: aDateStr,
+        stage_override_reason: '     test  reason    ',
+      };
+      const response = await axios.post(
+        url,
+        JSON.stringify(toSanitzeStage),
+        { withCredentials: true }
+      );
+      expect(response.status).toBe(201);
+      didPost = true;
+      const postedStage = response.data.stage;
+
+      const after = new Date();
+      const twoMinutes = 2 * 60 * 1000;
+      const stageSetAtMs = new Date(postedStage.stage_set_at).getTime();      
+      const scoresStartedAtMs = new Date(postedStage.scores_started_at as Date).getTime();
+      const stageOverrideAtMs = new Date(postedStage.stage_override_at as Date).getTime();
+
+      expect(postedStage.id).toBe(toSanitzeStage.id);
+      expect(postedStage.squad_id).toBe(toSanitzeStage.squad_id);
+      expect(postedStage.stage).toBe(toSanitzeStage.stage);
+
+      expect(stageSetAtMs).toBeGreaterThanOrEqual(before.getTime() - twoMinutes);
+      expect(stageSetAtMs).toBeLessThanOrEqual(after.getTime() + twoMinutes);
+
+      expect(scoresStartedAtMs).toBeGreaterThanOrEqual(before.getTime() - twoMinutes);
+      expect(scoresStartedAtMs).toBeLessThanOrEqual(after.getTime() + twoMinutes);
+
+      expect(postedStage.stage_override_enabled).toBe(toSanitzeStage.stage_override_enabled);
+
+      expect(stageOverrideAtMs).toBeGreaterThanOrEqual(before.getTime() - twoMinutes);
+      expect(stageOverrideAtMs).toBeLessThanOrEqual(after.getTime() + twoMinutes);
+
+      expect(postedStage.stage_override_reason).toBe("test reason");
     });
     it('should NOT post a full stage when id is missing', async () => { 
       const invalidStage: fullStageType = {
@@ -774,6 +849,29 @@ describe('Stages - API: /api/stages', () => {
         }
       }
     })
+    it('should NOT post a full stage when stage_override_enabled = true and stage_override_reason is sanitzied to blank', async () => { 
+      const invalidStage: fullStageType = {
+        ...mockStageToPost,
+        stage_override_enabled: true,
+        stage_override_at: new Date().toDateString(),
+        stage_override_reason: '<script>test</script>',
+      };
+      const stageJSON = JSON.stringify(invalidStage);
+      try {
+        const response = await axios.post(
+          url,
+          stageJSON,
+          { withCredentials: true }
+        );
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
     it('should NOT post a full stage when stage_override_enabled = true and stage_override_reason is invalid', async () => { 
       const invalidStage: fullStageType = {
         ...mockStageToPost,
@@ -819,49 +917,6 @@ describe('Stages - API: /api/stages', () => {
         }
       }
     })
-    it('should post a full stage with all values sanitized', async () => {
-      const before = new Date();      
-      const toSanitzeStage: fullStageType = {
-        ...mockStageToPost,
-        stage: SquadStage.SCORES,
-        stage_set_at: aDateStr,
-        scores_started_at: aDateStr,
-        stage_override_enabled: true,
-        stage_override_at: aDateStr,
-        stage_override_reason: '<alert>   test reason*****</alert>',
-      };
-      const response = await axios.post(
-        url,
-        JSON.stringify(toSanitzeStage),
-        { withCredentials: true }
-      );
-      expect(response.status).toBe(201);
-      didPost = true;
-      const postedStage = response.data.stage;
-
-      const after = new Date();
-      const twoMinutes = 2 * 60 * 1000;
-      const stageSetAtMs = new Date(postedStage.stage_set_at).getTime();      
-      const scoresStartedAtMs = new Date(postedStage.scores_started_at as Date).getTime();
-      const stageOverrideAtMs = new Date(postedStage.stage_override_at as Date).getTime();
-
-      expect(postedStage.id).toBe(toSanitzeStage.id);
-      expect(postedStage.squad_id).toBe(toSanitzeStage.squad_id);
-      expect(postedStage.stage).toBe(toSanitzeStage.stage);
-
-      expect(stageSetAtMs).toBeGreaterThanOrEqual(before.getTime() - twoMinutes);
-      expect(stageSetAtMs).toBeLessThanOrEqual(after.getTime() + twoMinutes);
-
-      expect(scoresStartedAtMs).toBeGreaterThanOrEqual(before.getTime() - twoMinutes);
-      expect(scoresStartedAtMs).toBeLessThanOrEqual(after.getTime() + twoMinutes);
-
-      expect(postedStage.stage_override_enabled).toBe(toSanitzeStage.stage_override_enabled);
-
-      expect(stageOverrideAtMs).toBeGreaterThanOrEqual(before.getTime() - twoMinutes);
-      expect(stageOverrideAtMs).toBeLessThanOrEqual(after.getTime() + twoMinutes);
-
-      expect(postedStage.stage_override_reason).toBe("test reason");
-    });
   })
 
   describe('PUT by ID - update - API: /api/stages/stage/:id', () => {
@@ -1029,6 +1084,47 @@ describe('Stages - API: /api/stages', () => {
       
       expect(updatedStage.stage_override_reason).toBe(stageToPut.stage_override_reason);
     })
+    it('should put a full stage with all values sanitized', async () => {
+      const before = Date.now();
+      const toSanitzeStage: fullStageType = {
+        ...testStage,
+        stage: SquadStage.SCORES,
+        stage_override_enabled: true,
+        stage_override_reason: '   test  reason     ',
+      };
+      const response = await axios.put(
+        oneStageUrl + toSanitzeStage.id,
+        JSON.stringify(toSanitzeStage),
+        { withCredentials: true }
+      );
+      expect(response.status).toBe(200);
+      didUpdate = true;
+      const postedStage = response.data.stage;
+
+      const after = Date.now();
+      const twoMinutes = 2 * 60 * 1000;
+
+      const stageSetAtMs = new Date(postedStage.stage_set_at).getTime();
+      const scoresStartedAtMs = new Date(postedStage.scores_started_at as Date).getTime();
+      const stageOverrideAtMs = new Date(postedStage.stage_override_at as Date).getTime();
+
+      expect(postedStage.id).toBe(toSanitzeStage.id);
+      expect(postedStage.squad_id).toBe(toSanitzeStage.squad_id);
+      expect(postedStage.stage).toBe(toSanitzeStage.stage);
+
+      expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
+      expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
+      expect(scoresStartedAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
+      expect(scoresStartedAtMs).toBeLessThanOrEqual(after + twoMinutes);
+    
+      expect(postedStage.stage_override_enabled).toBe(toSanitzeStage.stage_override_enabled);
+
+      expect(stageOverrideAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
+      expect(stageOverrideAtMs).toBeLessThanOrEqual(after + twoMinutes);
+
+      expect(postedStage.stage_override_reason).toBe("test reason");
+    });
+
     it('should NOT put a full stage when id is missing', async () => { 
       const invalidStage: fullStageType = {
         ...testStage,
@@ -1283,46 +1379,29 @@ describe('Stages - API: /api/stages', () => {
         }
       }
     })
-    it('should put a full stage with all values sanitized', async () => {
-      const before = Date.now();
-      const toSanitzeStage: fullStageType = {
+    it('should NOT put a full stage when stage_override_enabled = true and stage_override_reason is sanitized to blank', async () => { 
+      const invalidStage: fullStageType = {
         ...testStage,
-        stage: SquadStage.SCORES,
         stage_override_enabled: true,
-        stage_override_reason: '<alert>   test reason*****</alert>',
+        stage_override_at: new Date().toISOString(),
+        stage_override_reason: '<script>alert("test")</script>',
       };
-      const response = await axios.put(
-        oneStageUrl + toSanitzeStage.id,
-        JSON.stringify(toSanitzeStage),
-        { withCredentials: true }
-      );
-      expect(response.status).toBe(200);
-      didUpdate = true;
-      const postedStage = response.data.stage;
-
-      const after = Date.now();
-      const twoMinutes = 2 * 60 * 1000;
-
-      const stageSetAtMs = new Date(postedStage.stage_set_at).getTime();
-      const scoresStartedAtMs = new Date(postedStage.scores_started_at as Date).getTime();
-      const stageOverrideAtMs = new Date(postedStage.stage_override_at as Date).getTime();
-
-      expect(postedStage.id).toBe(toSanitzeStage.id);
-      expect(postedStage.squad_id).toBe(toSanitzeStage.squad_id);
-      expect(postedStage.stage).toBe(toSanitzeStage.stage);
-
-      expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
-      expect(scoresStartedAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(scoresStartedAtMs).toBeLessThanOrEqual(after + twoMinutes);
-    
-      expect(postedStage.stage_override_enabled).toBe(toSanitzeStage.stage_override_enabled);
-
-      expect(stageOverrideAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(stageOverrideAtMs).toBeLessThanOrEqual(after + twoMinutes);
-
-      expect(postedStage.stage_override_reason).toBe("test reason");
-    });
+      const stageJSON = JSON.stringify(invalidStage);
+      try {
+        const response = await axios.put(
+          oneStageUrl + invalidStage.id,
+          stageJSON,
+          { withCredentials: true }
+        );
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
 
   })
 

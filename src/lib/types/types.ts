@@ -7,11 +7,19 @@ export type roleTypes = "ADMIN" | "DIRECTOR" | "USER"
 
 export type idTypes = typeof idTypesArray[number];
 
-export type userType = {
+export type userDataType = {
   id: string
   email: string
-  password: string
-  password_hash: string
+  first_name: string
+  last_name: string
+  phone: string
+  role: roleTypes
+}
+
+export type userFormType = {
+  id: string
+  email: string
+  password: string    
   first_name: string
   last_name: string
   phone: string
@@ -42,7 +50,7 @@ export type tmntsListType = {
   user_id: string;
 	tmnt_name: string; 
 	start_date_str: string; 
-  bowls: BowlInTmntData,  
+  bowl: BowlInTmntData,  
 }
 
 export type tmntType = {
@@ -51,7 +59,7 @@ export type tmntType = {
   tmnt_name: string,
   tmnt_name_err: string,
   bowl_id: string,
-  bowls: BowlInTmntData
+  bowl: BowlInTmntData
   bowl_id_err: string,
   start_date_str: string,  
   start_date_err: string,
@@ -345,6 +353,13 @@ export type brktDataType = {
   sort_order: number;  
 };
 
+export interface brktDataFromPrismaType extends brktDataType {
+  createdAt: string;
+  updatedAt: string;
+  brkt_entries: brktEntryDataFromPrismaType[];
+  one_brkts: oneBrktType[];
+}
+
 export type validBrktsType = {
   brkts: brktType[],
   errorCode: ErrorCode
@@ -536,6 +551,23 @@ export type brktEntryType = {
   time_stamp: number,
 }
 
+export interface brktRefundDataFromPrismaType extends brktRefundType {
+  createdAt: string,
+  updatedAt: string,  
+}
+
+export type brktEntryDataFromPrismaType = {
+  id: string,
+  brkt_id: string,
+  player_id: string,
+  num_brackets: number,
+  time_stamp: string,
+  createdAt: string,
+  updatedAt: string,
+  brkt_refunds: brktRefundDataFromPrismaType | null;
+}
+
+
 export type brktEntrySanitizedResult = {
   brktEntry: brktEntryType,
   errorCode: ErrorCode
@@ -558,24 +590,6 @@ export type brktEntryDataType = {
   time_stamp: Date,  
 }
 
-export type brktEntryDataWithRefundsType = brktEntryDataType & {
-  id: string,  
-  brkt_id: string,
-  player_id: string,
-  num_brackets: number,
-  num_refunds: number,
-  time_stamp: Date,  
-  brkt_refunds: brktRefundType | undefined,
-}
-
-export interface brktEntriesFromPrisa extends brktEntryDataType {
-  brkt: BrktInBbrktEntryType,  
-}
-
-export interface brktEntryWithFeeDataType extends brktEntryDataType {
-  fee: number,
-}
-
 export type brktRefundType = {
   brkt_entry_id: string,  
   num_refunds: number,
@@ -594,10 +608,6 @@ export type brktEntryNfType = {
   num_brackets: number, 
   num_refunds: number,
   time_stamp: number,  
-}
-
-export type brktEntryWithFeeType = brktEntryNfType & {
-  fee: number,
 }
 
 export type validBrktEntriesType = {

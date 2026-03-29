@@ -1,13 +1,16 @@
 import { blankPlayer } from "@/lib/db/initVals";
-import { sanitize } from "@/lib/validation/sanitize";
+import { sanitizeName } from "@/lib/validation/sanitize";
 import type { idTypes, playerType, validPlayersType } from "@/lib/types/types";
 import {  
-  isValidBtDbId,
-  maxFirstNameLength,
-  maxLastNameLength,
-  maxStartLane,
+  isValidBtDbId,  
   isValidName,
 } from "@/lib/validation/validation";
+import {
+  maxFirstNameLength,
+  maxLastNameLength,
+  maxStartLane,  
+} from "@/lib/validation/constants";
+
 import { ErrorCode } from "@/lib/enums/enums";
 import { isNumber } from "lodash";
 
@@ -19,11 +22,11 @@ const gotPlayerData = (player: playerType): ErrorCode => {
     if (player.id.startsWith("ply")) {
       if (
         !player.squad_id ||
-        !sanitize(player.first_name) ||
-        !sanitize(player.last_name) ||
+        !sanitizeName(player.first_name) ||
+        !sanitizeName(player.last_name) ||
         typeof player.average !== "number" ||
         typeof player.lane !== "number" ||
-        !sanitize(player.position)
+        !sanitizeName(player.position)
       ) {
         return ErrorCode.MISSING_DATA;
       }
@@ -31,7 +34,7 @@ const gotPlayerData = (player: playerType): ErrorCode => {
     } else if (player.id.startsWith("bye")) {
       if (
         !player.squad_id ||
-        !sanitize(player.first_name) ||
+        !sanitizeName(player.first_name) ||
         typeof player.average !== "number"
       ) {
         return ErrorCode.MISSING_DATA;
@@ -165,7 +168,7 @@ export const sanitizePlayer = (player: playerType): playerType => {
   if (validPlayerFkId(player.squad_id, "sqd")) {
     sanitizedPlayer.squad_id = player.squad_id;
   }
-  sanitizedPlayer.first_name = sanitize(player.first_name);
+  sanitizedPlayer.first_name = sanitizeName(player.first_name);
   if (player.average === null || isNumber(player.average)) {
     sanitizedPlayer.average = player.average;
   }
@@ -173,7 +176,7 @@ export const sanitizePlayer = (player: playerType): playerType => {
     if (player.last_name === null) {
       sanitizedPlayer.last_name = null as any;
     } else {
-      sanitizedPlayer.last_name = sanitize(player.last_name);
+      sanitizedPlayer.last_name = sanitizeName(player.last_name);
     }
     if (player.lane === null) {
       sanitizedPlayer.lane = null as any;
@@ -185,14 +188,14 @@ export const sanitizePlayer = (player: playerType): playerType => {
     if (player.position === null) {
       sanitizedPlayer.position = null as any;
     } else {
-      sanitizedPlayer.position = sanitize(player.position);
+      sanitizedPlayer.position = sanitizeName(player.position);
     }
   } else {
-    sanitizedPlayer.last_name = sanitize(player.last_name);
+    sanitizedPlayer.last_name = sanitizeName(player.last_name);
     if (player.lane === null || isNumber(player.lane)) {
       sanitizedPlayer.lane = player.lane;
     }
-    sanitizedPlayer.position = sanitize(player.position);
+    sanitizedPlayer.position = sanitizeName(player.position);
   }
   return sanitizedPlayer;
 };

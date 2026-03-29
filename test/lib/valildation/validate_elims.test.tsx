@@ -10,7 +10,7 @@ import {
 } from "@/lib/validation/elims/validate";
 import { initElim } from "@/lib/db/initVals";
 import type { elimType, validElimsType } from "@/lib/types/types";
-import { minGames, maxGames } from "@/lib/validation/validation";
+import { minGames, maxGames } from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
 import { mockElimsToPost } from "../../mocks/tmnts/singlesAndDoubles/mockSquads";
 

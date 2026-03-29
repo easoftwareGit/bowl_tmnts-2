@@ -4,7 +4,7 @@ import { validateLane, sanitizeLane } from "../../../lib/validation/lanes/valida
 import { ErrorCode } from "@/lib/enums/enums";
 import type { laneType } from "@/lib/types/types";
 import { initLane } from "@/lib/db/initVals";
-import { getErrorStatus } from "../errCodes";
+import { getErrorStatus, standardCatchReturn } from "../apiCatch";
 
 // routes /api/lanes
 
@@ -21,11 +21,8 @@ export async function GET(request: NextRequest) {
       ]      
     })
     return NextResponse.json({ lanes }, { status: 200 });        
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: "error getting lanes" },
-      { status: 400 }
-    );            
+  } catch (error) {
+    return standardCatchReturn(error, "error getting lanes");
   }  
 }
 
@@ -63,11 +60,7 @@ export const POST = async (request: NextRequest) => {
       data: toPost
     })
     return NextResponse.json({ lane }, { status: 201 });    
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error creating lane" },
-      { status: errStatus }
-    );        
+  } catch (error) {
+    return standardCatchReturn(error, "error creating lane");
   }
 }

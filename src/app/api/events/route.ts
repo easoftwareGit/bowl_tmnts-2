@@ -4,14 +4,14 @@ import { validateEvent, sanitizeEvent, allEventMoneyValid } from "@/lib/validati
 import { ErrorCode } from "@/lib/enums/enums";
 import type { eventType } from "@/lib/types/types";
 import { initEvent } from "@/lib/db/initVals";
-import { getErrorStatus } from "../errCodes";
-import { eventDataForPrisma } from "./dataForPrisma";
+import { getErrorStatus, standardCatchReturn } from "../apiCatch";
+import { eventDataForPrisma } from "./eventDataForPrisma";
 
 // routes /api/events
 
 export async function GET(request: NextRequest) {
   try {
-    const prismaEvents = await prisma.event.findMany({
+    const events = await prisma.event.findMany({
       orderBy: [
         {
           tmnt_id: 'asc',
@@ -21,17 +21,9 @@ export async function GET(request: NextRequest) {
         }, 
       ]
     })        
-    // add in lpox    
-    const events = prismaEvents.map(event => ({
-      ...event,
-      lpox: event.entry_fee
-    }))
     return NextResponse.json({ events }, { status: 200 });    
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: "error getting events" },
-      { status: 500 }
-    );        
+  } catch (error) {
+    return standardCatchReturn(error, "error getting events");
   }
 }
 
@@ -74,30 +66,18 @@ export async function POST(request: Request) {
           errMsg = 'unknown error'
           break;
       }
-      return NextResponse.json(
-        { error: errMsg },
-        { status: 422 }
-      );
+      return NextResponse.json({ error: errMsg }, { status: 422 });      
     }
             
     const eventData = eventDataForPrisma(toPost);
     if (!eventData) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
-    const postedEvent = await prisma.event.create({
+    const event = await prisma.event.create({
       data: eventData
     })
-    // add in lpox
-    const event = {
-      ...postedEvent,
-      lpox: postedEvent.entry_fee
-    }    
     return NextResponse.json({ event }, { status: 201 });    
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error creating event" },
-      { status: errStatus }
-    );        
+  } catch (error) {
+    return standardCatchReturn(error, "error creating event");
   }
 }

@@ -6,7 +6,7 @@ import { mockDivs, mockPots, mockBrkts, mockElims } from '../../../../mocks/tmnt
 import { initDiv, defaultHdcpFrom } from "@/lib/db/initVals";
 import { noAcdnErr } from "@/app/dataEntry/tmntForm/errors";
 import { cloneDeep } from "lodash";
-import { maxHdcpFrom, minHdcpFrom } from "@/lib/validation/validation";
+import { maxHdcpFrom, minHdcpFrom } from "@/lib/validation/constants";
 
 const mockSetDivs = jest.fn();
 const mockSetAcdnErr = jest.fn();

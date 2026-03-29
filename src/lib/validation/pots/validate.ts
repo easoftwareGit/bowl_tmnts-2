@@ -1,6 +1,6 @@
 import { isValidBtDbId, validSortOrder, isNumber } from "@/lib/validation/validation";
 import { ErrorCode } from "@/lib/enums/enums";
-import { sanitize, sanitizeCurrency } from "@/lib/validation/sanitize";
+import { sanitizeCurrency, sanitizeName } from "@/lib/validation/sanitize";
 import { validBtdbMoney, validMoney } from "@/lib/currency/validate";
 import type { potType, potCategoriesTypes, idTypes, validPotsType } from "@/lib/types/types";
 import { blankPot } from "@/lib/db/initVals";
@@ -17,7 +17,7 @@ const gotPotData = (pot: potType): ErrorCode => {
       || !pot.id
       || !pot.div_id
       || !pot.squad_id
-      || !sanitize(pot.pot_type)
+      || !sanitizeName(pot.pot_type)
       || !validMoney(pot.fee, Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER)
       || typeof pot.sort_order !== "number"
     ) {
@@ -37,7 +37,7 @@ const gotPotData = (pot: potType): ErrorCode => {
  */
 const validPotType = (pot_type: potCategoriesTypes): boolean => {
   if (!pot_type) return false;
-  const sanitized = sanitize(pot_type);
+  const sanitized = sanitizeName(pot_type);
   // "" is inclided in PotCategories type, but is not a valid value
   return (sanitized === 'Game' || sanitized === 'Last Game' || sanitized === 'Series');  
 }
@@ -122,7 +122,7 @@ export const sanitizePot = (pot: potType): potType => {
     sanitizedPot.squad_id = pot.squad_id
   };
   if (validPotType(pot.pot_type)) {    
-    sanitizedPot.pot_type = sanitize(pot.pot_type) as potCategoriesTypes;
+    sanitizedPot.pot_type = sanitizeName(pot.pot_type) as potCategoriesTypes;
   }
   // sanitizeCurrency removes trailing zeros
   if (validPotMoney(pot.fee)) {

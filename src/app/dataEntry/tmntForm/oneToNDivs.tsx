@@ -27,7 +27,7 @@ import {
   maxHdcpPer,
   minHdcpFrom,
   maxHdcpFrom,
-} from "@/lib/validation/validation";
+} from "@/lib/validation/constants";
 import { EaPercentInput } from "@/components/currency/eaCurrencyInput";
 import { formatValuePercent2Dec } from "@/lib/currency/formatValue";
 import { btDbUuid } from "@/lib/uuid";

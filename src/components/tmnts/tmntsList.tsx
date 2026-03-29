@@ -59,7 +59,7 @@ export function getSortedStateOptions(tmnts: tmntsListType[]): SelectOption[] {
   if (!tmnts) return [];
   const stateOptions: SelectOption[] = [];
   tmnts.forEach((tmnt) => {
-    const state = tmnt.bowls.state;
+    const state = tmnt.bowl.state;
     const index: number = sortedIndex(stateOptions, state);
     if (stateOptions.length > 0) {
       if (index === stateOptions.length) {
@@ -92,7 +92,7 @@ const TmntsList: FC<TmntListProps> = (props) => {
 
   function filterTmnt(tmnt: tmntsListType): boolean {
     if (stateFilter === "all") return true;
-    return tmnt.bowls.state === stateFilter;
+    return tmnt.bowl.state === stateFilter;
   }
 
   // populate array of states (no duplicates), keeping array sorted
@@ -186,15 +186,15 @@ const TmntsList: FC<TmntListProps> = (props) => {
                   </td>
                   <td>
                     <a
-                      href={tmnt.bowls.url}
+                      href={tmnt.bowl.url}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      {tmnt.bowls.bowl_name}
+                      {tmnt.bowl.bowl_name}
                     </a>
                   </td>
                   <td>
-                    {tmnt.bowls.city}, {tmnt.bowls.state}
+                    {tmnt.bowl.city}, {tmnt.bowl.state}
                   </td>
                 </tr>
               ))}

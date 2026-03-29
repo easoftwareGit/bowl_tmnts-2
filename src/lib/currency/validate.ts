@@ -1,4 +1,4 @@
-import { maxMoney } from "../validation/validation";
+import { maxMoney } from "../validation/constants";
 
 /**
  * checks if money string is valid

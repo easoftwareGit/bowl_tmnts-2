@@ -21,7 +21,7 @@ import {
   maxTeamSize,
   zeroAmount,
   maxMoney,
-} from "@/lib/validation/validation";
+} from "@/lib/validation/constants";
 import EaCurrencyInput, { minMoneyText, maxMoneyText } from "@/components/currency/eaCurrencyInput";
 import { localConfig, currRexEx } from "@/lib/currency/const";
 import { btDbUuid } from "@/lib/uuid";

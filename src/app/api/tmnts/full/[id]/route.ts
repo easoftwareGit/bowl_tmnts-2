@@ -3,8 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { ErrorCode } from "@/lib/enums/enums";
 import type { tmntFullType } from "@/lib/types/types";
-import { tmntFullDataForPrisma } from "../../dataForPrisma";
-import { getErrorStatus } from "@/app/api/errCodes";
+import { tmntFullDataForPrisma } from "../../tmntDataForPrisma";
+import { standardCatchReturn } from "@/app/api/apiCatch";
 import { sanitizeFullTmnt, validateFullTmnt } from "@/lib/validation/tmnts/full/validate";
 import { calcFSA } from "@/lib/currency/fsa";
 import { Prisma } from "@prisma/client";
@@ -23,10 +23,10 @@ export async function GET(
     }
 
     // perform prisma query here
-    const tmntFullDataPrisma = await prisma.tmnt.findUnique({
+    const tmntFullData = await prisma.tmnt.findUnique({
       where: { id: id },
       include: {
-        bowls: true,   // hosting bowling center
+        bowl: true,   // hosting bowling center
         events: {
           include: {
             squads: {
@@ -106,43 +106,12 @@ export async function GET(
       },
     });
 
-    if (!tmntFullDataPrisma) {
+    if (!tmntFullData) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }        
-
-    // calculate the bracket fsa for each brakcet; bracket fee for each bracket entry
-    const tmntFullData = {
-      ...tmntFullDataPrisma,
-      divs: tmntFullDataPrisma.divs.map((div) => {
-        return {
-          ...div,
-          brkts: div.brkts.map((brkt) => {
-            return {
-              ...brkt,
-              fsa: calcFSA(brkt.first, brkt.second, brkt.admin) + "",
-              brkt_entries: brkt.brkt_entries.map((brktEntry) => {
-                return {
-                  ...brktEntry,
-                  fee: (Number(brkt.fee || 0) && brktEntry.num_brackets)
-                    ? Number(brkt.fee) * brktEntry.num_brackets
-                    : 0,
-                };
-              }),
-            };
-          }),
-        };
-      }),
-      events: tmntFullDataPrisma.events.map((event) => {
-        return {
-          ...event,
-          lpox: event.entry_fee
-        }
-      })
-    };
-
     return NextResponse.json({ tmntFullData }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ error: "Error getting tmnt full data" }, { status: 500 });
+    return standardCatchReturn(error, "error getting tmnt full data");
   }
 }
 
@@ -260,11 +229,7 @@ export async function PUT(
     await prisma.$transaction(queries);
 
     return NextResponse.json({ success: true }, { status: 200 });    
-  } catch (err: any) { 
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "Error replacing tmnt data" },
-      { status: errStatus }
-    );
+  } catch (error) { 
+    return standardCatchReturn(error, "Error replacing tmnt data");
   }
 }

@@ -1,11 +1,13 @@
 import {
   isValidBtDbId,  
-  maxMoney,
   validSortOrder,
-  minGames,
-  maxGames,
   isNumber,
 } from "@/lib/validation/validation";
+import {  
+  maxMoney,  
+  minGames,
+  maxGames,  
+} from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
 import { sanitizeCurrency } from "@/lib/validation/sanitize";
 import { validMoney } from "@/lib/currency/validate";

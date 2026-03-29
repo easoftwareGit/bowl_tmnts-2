@@ -5,6 +5,7 @@ import type { divType } from "@/lib/types/types";
 import { initDiv } from "@/lib/db/initVals";
 import { mockDivsToPost, tmntToDelId } from "../../../mocks/tmnts/twoDivs/mockDivs";
 import { deleteAllDivsForTmnt, getAllDivsForTmnt, postDiv } from "@/lib/db/divs/dbDivs";
+import { userId } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -25,8 +26,6 @@ const url = testBaseDivsApi.startsWith("undefined")
   ? baseDivsApi
   : testBaseDivsApi;   
 const oneDivUrl = url + "/div/"
-const divTmntUrl = url + '/tmnt/';
-const manyUrl = url + "/many";
 
 const notFoundId = "div_01234567890123456789012345678901";
 const notfoundTmntId = "tmt_01234567890123456789012345678901";
@@ -36,6 +35,18 @@ const div3Id = 'div_29b9225d8dd44a4eae276f8bde855729';
 const tmnt2Id = 'tmt_56d916ece6b50e6293300248c6792316';
 
 describe('Divs - API: /api/divs', () => { 
+
+  const divToPost: divType = {
+    ...initDiv,      
+    id: "div_1234567890abcdef1234567890abcdef",
+    tmnt_id: "tmt_e134ac14c5234d708d26037ae812ac33",
+    div_name: "Test Div",
+    hdcp_per: .9,
+    hdcp_from: 220,
+    int_hdcp: true, 
+    hdcp_for: 'Game',
+    sort_order: 1,
+  }
 
   const testDiv: divType = {
     ...initDiv,
@@ -55,31 +66,17 @@ describe('Divs - API: /api/divs', () => {
   }
 
   const deletePostedDiv = async () => {
-    const response = await axios.get(url);
-    const divs = response.data.divs;
-    const toDel = divs.find((d: divType) => d.div_name === 'Test Div');
-    if (toDel) {
-      try {
-        const delResponse = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: oneDivUrl + toDel.id
-        });
-      } catch (err) {
-        if (err instanceof AxiosError) console.log(err.message);
-      }
+    try {
+      await axios.delete(oneDivUrl + divToPost.id, { withCredentials: true });
+    } catch (err) {
+      if (err instanceof AxiosError) console.log(err.message);
     }
   }
 
   const resetDiv = async () => { 
     // make sure test div is reset in database
     const divJSON = JSON.stringify(testDiv);
-    const response = await axios({
-      method: "put",
-      data: divJSON,
-      withCredentials: true,
-      url: oneDivUrl + testDiv.id,
-    })
+    await axios.put(oneDivUrl + testDiv.id, divJSON, { withCredentials: true }); 
   }
 
   describe('GET', () => { 
@@ -98,6 +95,10 @@ describe('Divs - API: /api/divs', () => {
   })
 
   describe('GET by ID - API: API: /api/divs/div/:id', () => { 
+
+    beforeAll(async () => {
+      await deletePostedDiv();
+    })
 
     it('should get a div by ID', async () => {
       const response = await axios.get(oneDivUrl + testDiv.id);
@@ -163,11 +164,7 @@ describe('Divs - API: /api/divs', () => {
       const tmntDivId2 = 'div_29b9225d8dd44a4eae276f8bde855729';
 
       const multiDivUrl = url + '/tmnt/' + multiDivTmntId;
-      const response = await axios({
-        method: "get",
-        withCredentials: true,
-        url: multiDivUrl
-      })
+      const response = await axios.get(multiDivUrl, { withCredentials: true });
       expect(response.status).toBe(200);
       // 2 rows for tmnt in prisma/seed.ts
       expect(response.data.divs).toHaveLength(2);
@@ -180,17 +177,6 @@ describe('Divs - API: /api/divs', () => {
   })
 
   describe('POST', () => { 
-
-    const divToPost: divType = {
-      ...initDiv,      
-      tmnt_id: "tmt_e134ac14c5234d708d26037ae812ac33",
-      div_name: "Test Div",
-      hdcp_per: .9,
-      hdcp_from: 220,
-      int_hdcp: true, 
-      hdcp_for: 'Game',
-      sort_order: 1,
-    }
   
     let createdDiv = false;
 
@@ -210,12 +196,7 @@ describe('Divs - API: /api/divs', () => {
 
     it('should create a new div', async () => { 
       const divJSON = JSON.stringify(divToPost);
-      const response = await axios({
-        method: "post",
-        data: divJSON,
-        withCredentials: true,
-        url: url
-      })
+      const response = await axios.post(url, divJSON, { withCredentials: true });
       expect(response.status).toBe(201);      
       createdDiv = true
       const postedDiv = response.data.div;    
@@ -234,12 +215,7 @@ describe('Divs - API: /api/divs', () => {
         hdcp_for: 'Series',
       }
       const divJSON = JSON.stringify(seriesDiv);
-      const response = await axios({
-        method: "post",
-        data: divJSON,
-        withCredentials: true,
-        url: url
-      })
+      const response = await axios.post(url, divJSON, { withCredentials: true });
       expect(response.status).toBe(201);
       createdDiv = true;
       const postedDiv = response.data.div;      
@@ -250,14 +226,9 @@ describe('Divs - API: /api/divs', () => {
         ...divToPost,
         tmnt_id: notfoundTmntId,
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "post",
-          data: divJSON,
-          withCredentials: true,
-          url: url
-        })
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -272,14 +243,9 @@ describe('Divs - API: /api/divs', () => {
         ...divToPost,
         tmnt_id: "",
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "post",
-          data: divJSON,
-          withCredentials: true,
-          url: url
-        })
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -294,14 +260,9 @@ describe('Divs - API: /api/divs', () => {
         ...divToPost,
         div_name: "",
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "post",
-          data: divJSON,
-          withCredentials: true,
-          url: url
-        })
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -316,14 +277,9 @@ describe('Divs - API: /api/divs', () => {
         ...divToPost,
         hdcp_per: null as any,
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "post",
-          data: divJSON,
-          withCredentials: true,
-          url: url
-        })
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -338,14 +294,9 @@ describe('Divs - API: /api/divs', () => {
         ...divToPost,
         hdcp_from: null as any,
       } 
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "post",
-          data: divJSON,
-          withCredentials: true,
-          url: url
-        })
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -360,14 +311,9 @@ describe('Divs - API: /api/divs', () => {
         ...divToPost,
         int_hdcp: null as any,
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "post",
-          data: divJSON,
-          withCredentials: true,
-          url: url
-        })
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -382,14 +328,9 @@ describe('Divs - API: /api/divs', () => {
         ...divToPost,
         hdcp_for: '',
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "post",
-          data: divJSON,
-          withCredentials: true,
-          url: url
-        })
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -404,14 +345,9 @@ describe('Divs - API: /api/divs', () => {
         ...divToPost,
         sort_order: null as any,
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "post",
-          data: divJSON,
-          withCredentials: true,
-          url: url
-        })
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -426,14 +362,9 @@ describe('Divs - API: /api/divs', () => {
         ...divToPost,
         tmnt_id: 'invalid',
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "post",
-          data: divJSON,
-          withCredentials: true,
-          url: url
-        })
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -448,14 +379,9 @@ describe('Divs - API: /api/divs', () => {
         ...divToPost,
         tmnt_id: nonDivId,
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "post",
-          data: divJSON,
-          withCredentials: true,
-          url: url
-        })
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -470,14 +396,9 @@ describe('Divs - API: /api/divs', () => {
         ...divToPost,
         div_name: 'a'.repeat(51),
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "post",
-          data: divJSON,
-          withCredentials: true,
-          url: url
-        })
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -492,14 +413,9 @@ describe('Divs - API: /api/divs', () => {
         ...divToPost,
         hdcp_per: -1,
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "post",
-          data: divJSON,
-          withCredentials: true,
-          url: url
-        })
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -514,14 +430,9 @@ describe('Divs - API: /api/divs', () => {
         ...divToPost,
         hdcp_per: 2, // 200%
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "post",
-          data: divJSON,
-          withCredentials: true,
-          url: url
-        })
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -536,14 +447,9 @@ describe('Divs - API: /api/divs', () => {
         ...divToPost,
         hdcp_per: 'abc' as any,
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "post",
-          data: divJSON,
-          withCredentials: true,
-          url: url
-        })
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -558,14 +464,9 @@ describe('Divs - API: /api/divs', () => {
         ...divToPost,
         hdcp_from: -1,
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "post",
-          data: divJSON,
-          withCredentials: true,
-          url: url
-        })
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -580,14 +481,9 @@ describe('Divs - API: /api/divs', () => {
         ...divToPost,
         hdcp_from: 301,
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "post",
-          data: divJSON,
-          withCredentials: true,
-          url: url
-        })
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -602,14 +498,9 @@ describe('Divs - API: /api/divs', () => {
         ...divToPost,
         hdcp_from: 233.3,
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "post",
-          data: divJSON,
-          withCredentials: true,
-          url: url
-        })
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -624,14 +515,9 @@ describe('Divs - API: /api/divs', () => {
         ...divToPost,
         hdcp_from: 'abc' as any,
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "post",
-          data: divJSON,
-          withCredentials: true,
-          url: url
-        })
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -646,14 +532,9 @@ describe('Divs - API: /api/divs', () => {
         ...divToPost,
         int_hdcp: 'true' as any,
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "post",
-          data: divJSON,
-          withCredentials: true,
-          url: url
-        })
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -668,14 +549,9 @@ describe('Divs - API: /api/divs', () => {
         ...divToPost,
         hdcp_for: 'invalid' as any,
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "post",
-          data: divJSON,
-          withCredentials: true,
-          url: url
-        })
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -690,14 +566,9 @@ describe('Divs - API: /api/divs', () => {
         ...divToPost,
         sort_order: 0,
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "post",
-          data: divJSON,
-          withCredentials: true,
-          url: url
-        })
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -712,14 +583,9 @@ describe('Divs - API: /api/divs', () => {
         ...divToPost,
         sort_order: 1234567,
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "post",
-          data: divJSON,
-          withCredentials: true,
-          url: url
-        })
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -734,14 +600,9 @@ describe('Divs - API: /api/divs', () => {
         ...divToPost,
         sort_order: 1.5,
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "post",
-          data: divJSON,
-          withCredentials: true,
-          url: url
-        })
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -756,14 +617,9 @@ describe('Divs - API: /api/divs', () => {
         ...divToPost,
         sort_order: 'abc' as any,
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "post",
-          data: divJSON,
-          withCredentials: true,
-          url: url
-        })
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -779,14 +635,9 @@ describe('Divs - API: /api/divs', () => {
         tmnt_id: tmnt2Id,
         div_name: 'Scratch',
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "post",
-          data: divJSON,
-          withCredentials: true,
-          url: url
-        })
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -802,165 +653,13 @@ describe('Divs - API: /api/divs', () => {
         div_name: "    <script>" + divToPost.div_name + "</script>   ",
       }
       const divJSON = JSON.stringify(toSanitizeDiv);
-      const response = await axios({
-        method: "post",
-        data: divJSON,
-        withCredentials: true,
-        url: url
-      })
+      const response = await axios.post(url, divJSON, { withCredentials: true });
       expect(response.status).toBe(201);
       createdDiv = true
       const postedDiv = response.data.div;      
-      expect(postedDiv.div_name).toBe(divToPost.div_name);
+      expect(postedDiv.div_name).toBe('script' + divToPost.div_name + 'script');
     })
 
-  })
-
-  describe('POST many divs for one tmnt API: /api/divs/many', () => { 
-
-    let createdEvents = false;    
-
-    beforeAll(async () => { 
-      await deleteAllDivsForTmnt(mockDivsToPost[0].tmnt_id);
-    })
-
-    beforeEach(() => {
-      createdEvents = false;
-    })
-
-    afterEach(async () => {
-      if (createdEvents) {
-        await deleteAllDivsForTmnt(mockDivsToPost[0].tmnt_id);
-      }      
-    })
-
-    it('should create many divs', async () => {
-      const divsJSON = JSON.stringify(mockDivsToPost);
-      const response = await axios({
-        method: "post",
-        data: divsJSON,
-        withCredentials: true,
-        url: manyUrl
-      })
-      expect(response.status).toBe(201);
-      createdEvents = true;
-      expect(response.data.count).toBe(mockDivsToPost.length);
-      const postedDivs = await getAllDivsForTmnt(mockDivsToPost[0].tmnt_id);
-      if (!postedDivs) {
-        expect(true).toBeFalsy();
-        return;
-      }      
-      expect(postedDivs.length).toBe(mockDivsToPost.length);      
-      for (let i = 0; i < postedDivs.length; i++) {
-        expect(postedDivs[i].id).toBe(mockDivsToPost[i].id);
-        expect(postedDivs[i].tmnt_id).toBe(mockDivsToPost[i].tmnt_id);
-        expect(postedDivs[i].div_name).toBe(mockDivsToPost[i].div_name);
-        expect(postedDivs[i].hdcp_per).toBe(mockDivsToPost[i].hdcp_per);
-        expect(postedDivs[i].hdcp_from).toBe(mockDivsToPost[i].hdcp_from);
-        expect(postedDivs[i].int_hdcp).toBe(mockDivsToPost[i].int_hdcp);
-        expect(postedDivs[i].hdcp_for).toBe(mockDivsToPost[i].hdcp_for);
-        expect(postedDivs[i].sort_order).toBe(mockDivsToPost[i].sort_order);
-      }
-    })
-    it('should return 0 and code 200 when passed empty array', async () => {
-      const divsJSON = JSON.stringify([]);
-      const response = await axios({
-        method: "post",
-        data: divsJSON,
-        withCredentials: true,
-        url: manyUrl
-      });
-      expect(response.status).toBe(200);
-      expect(response.data.count).toBe(0);
-    })
-    it('should create many divs with sanitized data', async () => { 
-      const toSanitizeDiv = [
-        {
-          ...mockDivsToPost[0],
-          div_name: "    " + mockDivsToPost[0].div_name + "  ***  ",
-        },
-        {
-          ...mockDivsToPost[1],
-          div_name: "<script>" + mockDivsToPost[1].div_name + "</script>",
-        }
-      ]
-      const divsJSON = JSON.stringify(toSanitizeDiv);
-      const response = await axios({
-        method: "post", 
-        data: divsJSON,
-        withCredentials: true,
-        url: manyUrl
-      })
-      expect(response.status).toBe(201);
-      createdEvents = true;
-      expect(response.data.count).toBe(toSanitizeDiv.length);
-
-      const postedDivs = await getAllDivsForTmnt(mockDivsToPost[0].tmnt_id);
-      expect(response.status).toBe(201);
-      if (!postedDivs) {
-        expect(true).toBeFalsy();
-        return;
-      }
-      expect(postedDivs.length).toBe(toSanitizeDiv.length);
-      expect(postedDivs[0].div_name).toBe(mockDivsToPost[0].div_name);
-      expect(postedDivs[1].div_name).toBe(mockDivsToPost[1].div_name);
-    })
-    it('should NOT create many divs with invalid data in first div', async () => { 
-      const invalidDivs = [
-        {
-          ...mockDivsToPost[0],
-          div_name: "",
-        },
-        {
-          ...mockDivsToPost[1],
-          div_name: "Valid Div",
-        }
-      ]
-      const divsJSON = JSON.stringify(invalidDivs);
-      try {        
-        const response = await axios({
-          method: "post",
-          data: divsJSON,
-          withCredentials: true,
-          url: manyUrl
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not post events with invalid data in second div', async () => { 
-      const invalidDivs = [
-        {
-          ...mockDivsToPost[0],
-          div_name: "Valid Div",
-        },
-        {
-          ...mockDivsToPost[1],
-          hdcp_from: -1,
-        }
-      ]
-      const divsJSON = JSON.stringify(invalidDivs);
-      try {        
-        const response = await axios({
-          method: "post",
-          data: divsJSON,
-          withCredentials: true,
-          url: manyUrl
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
   })
 
   describe('PUT by ID - API: API: /api/divs/div/:id', () => { 
@@ -1006,14 +705,11 @@ describe('Divs - API: /api/divs', () => {
 
     it('should update a div by ID', async () => { 
       const divJSON = JSON.stringify(putDiv);
-      const putResponse = await axios({
-        method: "put",
-        data: divJSON,
-        withCredentials: true,
-        url: oneDivUrl + testDiv.id,
-      })
-      const div = putResponse.data.div;
-      expect(putResponse.status).toBe(200);
+      const response = await axios.put(oneDivUrl + testDiv.id, divJSON, {
+        withCredentials: true
+      });
+      const div = response.data.div;
+      expect(response.status).toBe(200);
       didPut = true;
       // did not update tmnt_id
       expect(div.tmnt_id).toBe(testDiv.tmnt_id);
@@ -1028,13 +724,10 @@ describe('Divs - API: /api/divs', () => {
     it('should not update a div when ID is invalid', async () => { 
       try {
         const divJSON = JSON.stringify(putDiv);
-        const putResponse = await axios({
-          method: "put",
-          data: divJSON,
-          withCredentials: true,
-          url: oneDivUrl + 'test',
-        })
-        expect(putResponse.status).toBe(404);
+        const response = await axios.put(oneDivUrl + 'test', divJSON, {
+          withCredentials: true
+        });
+        expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -1043,16 +736,13 @@ describe('Divs - API: /api/divs', () => {
         }
       }      
     })
-    it('should NOT update a div when ID is valid, but not a tmnt ID', async () => {
+    it('should NOT update a div when ID is valid, but not a div ID', async () => {
       try {
         const divJSON = JSON.stringify(putDiv);
-        const putResponse = await axios({
-          method: "put",
-          data: divJSON,
-          withCredentials: true,
-          url: oneDivUrl + nonDivId,
-        })
-        expect(putResponse.status).toBe(404);
+        const response = await axios.put(oneDivUrl + nonDivId, divJSON, {
+          withCredentials: true
+        });
+        expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -1064,13 +754,10 @@ describe('Divs - API: /api/divs', () => {
     it('should NOT update a divby ID when ID is not found', async () => {
       try {
         const divJSON = JSON.stringify(putDiv);
-        const putResponse = await axios({
-          method: "put",
-          data: divJSON,
-          withCredentials: true,
-          url: oneDivUrl + notFoundId,
-        })
-        expect(putResponse.status).toBe(404);
+        const response = await axios.put(oneDivUrl + notFoundId, divJSON, {
+          withCredentials: true
+        });
+        expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -1084,13 +771,10 @@ describe('Divs - API: /api/divs', () => {
         ...putDiv,
         div_name: '',
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "put",
-          data: divJSON,
-          withCredentials: true,
-          url: oneDivUrl + testDiv.id,
+        const response = await axios.put(oneDivUrl + testDiv.id, invalidJSON, {
+          withCredentials: true
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1106,13 +790,10 @@ describe('Divs - API: /api/divs', () => {
         ...putDiv,
         hdcp_per: '',
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "put",
-          data: divJSON,
-          withCredentials: true,
-          url: oneDivUrl + testDiv.id,
+        const response = await axios.put(oneDivUrl + testDiv.id, invalidJSON, {
+          withCredentials: true
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1128,13 +809,10 @@ describe('Divs - API: /api/divs', () => {
         ...putDiv,
         hdcp_from: '',
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "put",
-          data: divJSON,
-          withCredentials: true,
-          url: oneDivUrl + testDiv.id,
+        const response = await axios.put(oneDivUrl + testDiv.id, invalidJSON, {
+          withCredentials: true
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1150,13 +828,10 @@ describe('Divs - API: /api/divs', () => {
         ...putDiv,
         int_hdcp: null as any,
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "put",
-          data: divJSON,
-          withCredentials: true,
-          url: oneDivUrl + testDiv.id,
+        const response = await axios.put(oneDivUrl + testDiv.id, invalidJSON, {
+          withCredentials: true
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1172,13 +847,10 @@ describe('Divs - API: /api/divs', () => {
         ...putDiv,
         hdcp_for: null as any,
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "put",
-          data: divJSON,
-          withCredentials: true,
-          url: oneDivUrl + testDiv.id,
+        const response = await axios.put(oneDivUrl + testDiv.id, invalidJSON, {
+          withCredentials: true
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1194,13 +866,10 @@ describe('Divs - API: /api/divs', () => {
         ...putDiv,
         hdcp_for: '',
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "put",
-          data: divJSON,
-          withCredentials: true,
-          url: oneDivUrl + testDiv.id,
+        const response = await axios.put(oneDivUrl + testDiv.id, invalidJSON, {
+          withCredentials: true
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1216,13 +885,10 @@ describe('Divs - API: /api/divs', () => {
         ...putDiv,
         sort_order: null as any,
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "put",
-          data: divJSON,
-          withCredentials: true,
-          url: oneDivUrl + testDiv.id,
+        const response = await axios.put(oneDivUrl + testDiv.id, invalidJSON, {
+          withCredentials: true
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1238,13 +904,10 @@ describe('Divs - API: /api/divs', () => {
         ...putDiv,
         div_name: 'a'.repeat(51),
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "put",
-          data: divJSON,
-          withCredentials: true,
-          url: oneDivUrl + testDiv.id,
+        const response = await axios.put(oneDivUrl + testDiv.id, invalidJSON, {
+          withCredentials: true
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1260,13 +923,10 @@ describe('Divs - API: /api/divs', () => {
         ...putDiv,
         hdcp_per: -1, 
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "put",
-          data: divJSON,
-          withCredentials: true,
-          url: oneDivUrl + testDiv.id,
+        const response = await axios.put(oneDivUrl + testDiv.id, invalidJSON, {
+          withCredentials: true
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1282,13 +942,10 @@ describe('Divs - API: /api/divs', () => {
         ...putDiv,
         hdcp_per: 2, // 200%
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "put",
-          data: divJSON,
-          withCredentials: true,
-          url: oneDivUrl + testDiv.id,
+        const response = await axios.put(oneDivUrl + testDiv.id, invalidJSON, {
+          withCredentials: true
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1304,13 +961,10 @@ describe('Divs - API: /api/divs', () => {
         ...putDiv,
         hdcp_per: 'abc' as any,
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "put",
-          data: divJSON,
-          withCredentials: true,
-          url: oneDivUrl + testDiv.id,
+        const response = await axios.put(oneDivUrl + testDiv.id, invalidJSON, {
+          withCredentials: true
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1326,13 +980,10 @@ describe('Divs - API: /api/divs', () => {
         ...putDiv,
         hdcp_from: -1, 
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "put",
-          data: divJSON,
-          withCredentials: true,
-          url: oneDivUrl + testDiv.id,
+        const response = await axios.put(oneDivUrl + testDiv.id, invalidJSON, {
+          withCredentials: true
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1348,13 +999,10 @@ describe('Divs - API: /api/divs', () => {
         ...putDiv,
         hdcp_from: 301,
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "put",
-          data: divJSON,
-          withCredentials: true,
-          url: oneDivUrl + testDiv.id,
+        const response = await axios.put(oneDivUrl + testDiv.id, invalidJSON, {
+          withCredentials: true
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1370,13 +1018,10 @@ describe('Divs - API: /api/divs', () => {
         ...putDiv,
         hdcp_from: 244.4,
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "put",
-          data: divJSON,
-          withCredentials: true,
-          url: oneDivUrl + testDiv.id,
+        const response = await axios.put(oneDivUrl + testDiv.id, invalidJSON, {
+          withCredentials: true
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1392,13 +1037,10 @@ describe('Divs - API: /api/divs', () => {
         ...putDiv,
         hdcp_from: 'abc' as any,
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "put",
-          data: divJSON,
-          withCredentials: true,
-          url: oneDivUrl + testDiv.id,
+        const response = await axios.put(oneDivUrl + testDiv.id, invalidJSON, {
+          withCredentials: true
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1414,13 +1056,10 @@ describe('Divs - API: /api/divs', () => {
         ...putDiv,
         int_hdcp: 'true' as any,
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "put",
-          data: divJSON,
-          withCredentials: true,
-          url: oneDivUrl + testDiv.id,
+        const response = await axios.put(oneDivUrl + testDiv.id, invalidJSON, {
+          withCredentials: true
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1436,13 +1075,10 @@ describe('Divs - API: /api/divs', () => {
         ...putDiv,
         hdcp_for: 'test',
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "put",
-          data: divJSON,
-          withCredentials: true,
-          url: oneDivUrl + testDiv.id,
+        const response = await axios.put(oneDivUrl + testDiv.id, invalidJSON, {
+          withCredentials: true
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1458,13 +1094,10 @@ describe('Divs - API: /api/divs', () => {
         ...putDiv,
         sort_order: 0,
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "put",
-          data: divJSON,
-          withCredentials: true,
-          url: oneDivUrl + testDiv.id,
+        const response = await axios.put(oneDivUrl + testDiv.id, invalidJSON, {
+          withCredentials: true
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1480,13 +1113,10 @@ describe('Divs - API: /api/divs', () => {
         ...putDiv,
         sort_order: 1234567,
       } 
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "put",
-          data: divJSON,
-          withCredentials: true,
-          url: oneDivUrl + testDiv.id,
+        const response = await axios.put(oneDivUrl + testDiv.id, invalidJSON, {
+          withCredentials: true
         })
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1502,13 +1132,10 @@ describe('Divs - API: /api/divs', () => {
         ...putDiv,
         sort_order: 1.5,
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "put",
-          data: divJSON,
-          withCredentials: true,
-          url: oneDivUrl + testDiv.id,
+        const response = await axios.put(oneDivUrl + testDiv.id, invalidJSON, {
+          withCredentials: true
         })
         expect(response.status).toBe(422);
       } catch (err) { 
@@ -1526,13 +1153,10 @@ describe('Divs - API: /api/divs', () => {
         tmnt_id: tmnt2Id,
         div_name: 'Scratch',
       }
-      const divJSON = JSON.stringify(invalidDiv);
+      const invalidJSON = JSON.stringify(invalidDiv);
       try {
-        const response = await axios({
-          method: "put",
-          data: divJSON,
-          withCredentials: true,
-          url: oneDivUrl + invalidDiv.id,
+        const response = await axios.put(oneDivUrl + invalidDiv.id, invalidJSON, {
+          withCredentials: true
         })
         expect(response.status).toBe(409);
       } catch (err) { 
@@ -1549,16 +1173,13 @@ describe('Divs - API: /api/divs', () => {
         div_name: '<script>' + sampleDiv.div_name + '</script>',
       }
       const divJSON = JSON.stringify(toSanitizeDiv);
-      const response = await axios({
-        method: "put",
-        data: divJSON,
-        withCredentials: true,
-        url: oneDivUrl + testDiv.id,
-      })
+      const response = await axios.put(oneDivUrl + testDiv.id, divJSON, {
+        withCredentials: true
+      });
       expect(response.status).toBe(200);
       const puttedDiv = response.data.div;
       didPut = true;
-      expect(puttedDiv.div_name).toEqual(sampleDiv.div_name);
+      expect(puttedDiv.div_name).toEqual('script' + sampleDiv.div_name + 'script');
     })
 
   })
@@ -1568,12 +1189,7 @@ describe('Divs - API: /api/divs', () => {
     const doResetDiv = async () => {
       try {
         const divJSON = JSON.stringify(testDiv);
-        const putResponse = await axios({
-          method: "put",
-          data: divJSON,
-          withCredentials: true,
-          url: oneDivUrl + testDiv.id,
-        })
+        await axios.put(oneDivUrl + testDiv.id, divJSON, { withCredentials: true });
       } catch (err) {
         if (err instanceof AxiosError) console.log(err.message);
       }
@@ -1601,11 +1217,8 @@ describe('Divs - API: /api/divs', () => {
         div_name: 'Patched Div Name',
       }
       const divJSON = JSON.stringify(patchDiv);
-      const response = await axios({
-        method: "patch",
-        data: divJSON,
-        withCredentials: true,
-        url: oneDivUrl + blankDiv.id,
+      const response = await axios.patch(oneDivUrl + patchDiv.id, divJSON, {
+        withCredentials: true
       })
       expect(response.status).toBe(200);
       didPatch = true;
@@ -1618,11 +1231,8 @@ describe('Divs - API: /api/divs', () => {
         div_name: 'Patched Div Name',
       }
       const divJSON = JSON.stringify(patchDiv);
-      const response = await axios({
-        method: "patch",
-        data: divJSON,
-        withCredentials: true,
-        url: oneDivUrl + blankDiv.id,
+      const response = await axios.patch(oneDivUrl + patchDiv.id, divJSON, {
+        withCredentials: true
       })
       expect(response.status).toBe(200);
       didPatch = true;
@@ -1635,11 +1245,8 @@ describe('Divs - API: /api/divs', () => {
         tmnt_id: tmnt2Id,
       }
       const divJSON = JSON.stringify(patchDiv);
-      const response = await axios({
-        method: "patch",
-        data: divJSON,
-        withCredentials: true,
-        url: oneDivUrl + blankDiv.id,
+      const response = await axios.patch(oneDivUrl + patchDiv.id, divJSON, {
+        withCredentials: true
       })
       expect(response.status).toBe(200);
       didPatch = true;
@@ -1652,11 +1259,8 @@ describe('Divs - API: /api/divs', () => {
         hdcp_per: .5,
       }
       const divJSON = JSON.stringify(patchDiv);
-      const response = await axios({
-        method: "patch",
-        data: divJSON,
-        withCredentials: true,
-        url: oneDivUrl + blankDiv.id,
+      const response = await axios.patch(oneDivUrl + patchDiv.id, divJSON, {
+        withCredentials: true
       })
       expect(response.status).toBe(200);
       didPatch = true;
@@ -1669,11 +1273,8 @@ describe('Divs - API: /api/divs', () => {
         hdcp_from: 215,
       }
       const divJSON = JSON.stringify(patchDiv);
-      const response = await axios({
-        method: "patch",
-        data: divJSON,
-        withCredentials: true,
-        url: oneDivUrl + blankDiv.id,
+      const response = await axios.patch(oneDivUrl + patchDiv.id, divJSON, {
+        withCredentials: true
       })
       expect(response.status).toBe(200);
       didPatch = true;
@@ -1686,11 +1287,8 @@ describe('Divs - API: /api/divs', () => {
         int_hdcp: false,
       }
       const divJSON = JSON.stringify(patchDiv);
-      const response = await axios({
-        method: "patch",
-        data: divJSON,
-        withCredentials: true,
-        url: oneDivUrl + blankDiv.id,
+      const response = await axios.patch(oneDivUrl + patchDiv.id, divJSON, {
+        withCredentials: true
       })
       expect(response.status).toBe(200);
       didPatch = true;
@@ -1703,11 +1301,8 @@ describe('Divs - API: /api/divs', () => {
         hdcp_for: 'Series',
       }
       const divJSON = JSON.stringify(patchDiv);
-      const response = await axios({
-        method: "patch",
-        data: divJSON,
-        withCredentials: true,
-        url: oneDivUrl + blankDiv.id,
+      const response = await axios.patch(oneDivUrl + patchDiv.id, divJSON, {
+        withCredentials: true
       })
       expect(response.status).toBe(200);
       didPatch = true;
@@ -1720,11 +1315,8 @@ describe('Divs - API: /api/divs', () => {
         sort_order: 20,
       }
       const divJSON = JSON.stringify(patchDiv);
-      const response = await axios({
-        method: "patch",
-        data: divJSON,
-        withCredentials: true,
-        url: oneDivUrl + blankDiv.id,
+      const response = await axios.patch(oneDivUrl + patchDiv.id, divJSON, {
+        withCredentials: true
       })
       expect(response.status).toBe(200);
       didPatch = true;
@@ -1732,16 +1324,13 @@ describe('Divs - API: /api/divs', () => {
       expect(patchedDiv.sort_order).toEqual(patchDiv.sort_order);
     })
     it('should NOT patch tmnt_id by ID', async () => {
-      const patchDiv = {
+      const invalidDiv = {
         ...blankDiv,
         tmnt_id: tmnt2Id,
       } 
-      const divJSON = JSON.stringify(patchDiv);
-      const response = await axios({
-        method: "patch",
-        data: divJSON,
-        withCredentials: true,
-        url: oneDivUrl + blankDiv.id,
+      const divJSON = JSON.stringify(invalidDiv);
+      const response = await axios.patch(oneDivUrl + invalidDiv.id, divJSON, {
+        withCredentials: true
       })
       expect(response.status).toBe(200);
       didPatch = true;
@@ -1751,18 +1340,15 @@ describe('Divs - API: /api/divs', () => {
     })
     it('should NOT patch a div when ID is invalid', async () => { 
       try {
-        const patchTmnt = {
+        const invalidDiv = {
           ...blankDiv,
           tmnt_name: 'patched div name',
         }
-        const tmntJSON = JSON.stringify(patchTmnt);
-        const patchResponse = await axios({
-          method: "patch",
-          data: tmntJSON,
-          withCredentials: true,
-          url: oneDivUrl + 'test',
+        const invalidJSON = JSON.stringify(invalidDiv);    
+        const response = await axios.patch(oneDivUrl + 'test', invalidJSON, {
+          withCredentials: true
         })
-        expect(patchResponse.status).toBe(404);
+        expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -1773,18 +1359,15 @@ describe('Divs - API: /api/divs', () => {
     })
     it('should NOT patch a div when ID is not found', async () => {
       try {
-        const patchTmnt = {
+        const invalidDiv = {
           ...blankDiv,
           tmnt_name: 'patched div name',
         }
-        const tmntJSON = JSON.stringify(patchTmnt);
-        const patchResponse = await axios({
-          method: "patch",
-          data: tmntJSON,
-          withCredentials: true,
-          url: oneDivUrl + notFoundId,
+        const invalidJSON = JSON.stringify(invalidDiv);
+        const response = await axios.patch(oneDivUrl + notFoundId, invalidJSON, {
+          withCredentials: true
         })
-        expect(patchResponse.status).toBe(404);
+        expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -1795,18 +1378,15 @@ describe('Divs - API: /api/divs', () => {
     })
     it('should NOT patch a div when ID is valid, but not a div ID', async () => {
       try {
-        const patchTmnt = {
+        const invalidDiv = {
           ...blankDiv,
           tmnt_name: 'updated tmnt name',
         }
-        const tmntJSON = JSON.stringify(patchTmnt);
-        const patchResponse = await axios({
-          method: "patch",
-          data: tmntJSON,
-          withCredentials: true,
-          url: oneDivUrl + nonDivId,
+        const invalidJSON = JSON.stringify(invalidDiv);
+        const response = await axios.patch(oneDivUrl + userId, invalidJSON, {
+          withCredentials: true
         })
-        expect(patchResponse.status).toBe(404);
+        expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -1817,18 +1397,15 @@ describe('Divs - API: /api/divs', () => {
     })
     it('should NOT patch a div when div_name is blank', async () => { 
       try {
-        const patchTmnt = {
+        const invalidDiv = {
           ...blankDiv,
           div_name: '',
         }
-        const tmntJSON = JSON.stringify(patchTmnt);
-        const patchResponse = await axios({
-          method: "patch",
-          data: tmntJSON,
-          withCredentials: true,
-          url: oneDivUrl + blankDiv.id,
+        const invalidJSON = JSON.stringify(invalidDiv);
+        const response = await axios.patch(oneDivUrl + invalidDiv.id, invalidJSON, {
+          withCredentials: true
         })
-        expect(patchResponse.status).toBe(422);
+        expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(422);
@@ -1839,18 +1416,15 @@ describe('Divs - API: /api/divs', () => {
     })
     it('should NOT patch a div when hdcp_per is null', async () => { 
       try {
-        const patchTmnt = {
+        const invalidDiv = {
           ...blankDiv,
           hdcp_per: null as any,
         }
-        const tmntJSON = JSON.stringify(patchTmnt);
-        const patchResponse = await axios({
-          method: "patch",
-          data: tmntJSON,
-          withCredentials: true,
-          url: oneDivUrl + blankDiv.id,
+        const invalidJSON = JSON.stringify(invalidDiv);
+        const response = await axios.patch(oneDivUrl + invalidDiv.id, invalidJSON, {
+          withCredentials: true
         })
-        expect(patchResponse.status).toBe(422);
+        expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(422);
@@ -1861,18 +1435,15 @@ describe('Divs - API: /api/divs', () => {
     })
     it('should NOT patch a div when hdcp_from is null', async () => { 
       try {
-        const patchTmnt = {
+        const invalidDiv = {
           ...blankDiv,
           hdcp_from: null as any,
         }
-        const tmntJSON = JSON.stringify(patchTmnt);
-        const patchResponse = await axios({
-          method: "patch",
-          data: tmntJSON,
-          withCredentials: true,
-          url: oneDivUrl + blankDiv.id,
+        const invalidJSON = JSON.stringify(invalidDiv);
+        const response = await axios.patch(oneDivUrl + invalidDiv.id, invalidJSON, {
+          withCredentials: true
         })
-        expect(patchResponse.status).toBe(422);
+        expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(422);
@@ -1883,18 +1454,15 @@ describe('Divs - API: /api/divs', () => {
     })
     it('should NOT patch a div when int_hdcp is null', async () => { 
       try {
-        const patchTmnt = {
+        const invalidDiv = {
           ...blankDiv,
           int_hdcp: null as any,
         }
-        const tmntJSON = JSON.stringify(patchTmnt);
-        const patchResponse = await axios({
-          method: "patch",
-          data: tmntJSON,
-          withCredentials: true,
-          url: oneDivUrl + blankDiv.id,
+        const invalidJSON = JSON.stringify(invalidDiv);
+        const response = await axios.patch(oneDivUrl + invalidDiv.id, invalidJSON, {
+          withCredentials: true
         })
-        expect(patchResponse.status).toBe(422);
+        expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(422);
@@ -1905,18 +1473,15 @@ describe('Divs - API: /api/divs', () => {
     })
     it('should NOT patch a div when sort_order is null', async () => { 
       try {
-        const patchTmnt = {
+        const invalidDiv = {
           ...blankDiv,
           sort_order: null as any,
         }
-        const tmntJSON = JSON.stringify(patchTmnt);
-        const patchResponse = await axios({
-          method: "patch",
-          data: tmntJSON,
-          withCredentials: true,
-          url: oneDivUrl + blankDiv.id,
+        const invalidJSON = JSON.stringify(invalidDiv);
+        const response = await axios.patch(oneDivUrl + invalidDiv.id, invalidJSON, {
+          withCredentials: true
         })
-        expect(patchResponse.status).toBe(422);
+        expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(422);
@@ -1927,18 +1492,15 @@ describe('Divs - API: /api/divs', () => {
     })
     it('should NOT patch a div when div_name is too long', async () => { 
       try {
-        const patchTmnt = {
+        const invalidDiv = {
           ...blankDiv,
           div_name: 'a'.repeat(256),
         }
-        const tmntJSON = JSON.stringify(patchTmnt);
-        const patchResponse = await axios({
-          method: "patch",
-          data: tmntJSON,
-          withCredentials: true,
-          url: oneDivUrl + blankDiv.id,
+        const invalidJSON = JSON.stringify(invalidDiv);
+        const response = await axios.patch(oneDivUrl + invalidDiv.id, invalidJSON, {
+          withCredentials: true
         })
-        expect(patchResponse.status).toBe(422);
+        expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(422);
@@ -1949,18 +1511,15 @@ describe('Divs - API: /api/divs', () => {
     })
     it('should NOT patch a div when hdcp_per is negative', async () => { 
       try {
-        const patchTmnt = {
+        const invalidDiv = {
           ...blankDiv,
           hdcp_per: -1,
         }
-        const tmntJSON = JSON.stringify(patchTmnt);
-        const patchResponse = await axios({
-          method: "patch",
-          data: tmntJSON,
-          withCredentials: true,
-          url: oneDivUrl + blankDiv.id,
+        const invalidJSON = JSON.stringify(invalidDiv);
+        const response = await axios.patch(oneDivUrl + invalidDiv.id, invalidJSON, {
+          withCredentials: true
         })
-        expect(patchResponse.status).toBe(422);
+        expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(422);
@@ -1971,18 +1530,15 @@ describe('Divs - API: /api/divs', () => {
     })
     it('should NOT patch a div when hdcp_per is too large', async () => { 
       try {
-        const patchTmnt = {
+        const invalidDiv = {
           ...blankDiv,
           hdcp_per: 3,
         }
-        const tmntJSON = JSON.stringify(patchTmnt);
-        const patchResponse = await axios({
-          method: "patch",
-          data: tmntJSON,
-          withCredentials: true,
-          url: oneDivUrl + blankDiv.id,
+        const invalidJSON = JSON.stringify(invalidDiv);
+        const response = await axios.patch(oneDivUrl + invalidDiv.id, invalidJSON, {
+          withCredentials: true
         })
-        expect(patchResponse.status).toBe(422);
+        expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(422);
@@ -1993,18 +1549,15 @@ describe('Divs - API: /api/divs', () => {
     })
     it('should NOT patch a div when hdcp_per is not a number', async () => { 
       try {
-        const patchTmnt = {
+        const invalidDiv = {
           ...blankDiv,
           hdcp_per: 'abc' as any,
         }
-        const tmntJSON = JSON.stringify(patchTmnt);
-        const patchResponse = await axios({
-          method: "patch",
-          data: tmntJSON,
-          withCredentials: true,
-          url: oneDivUrl + blankDiv.id,
+        const invalidJSON = JSON.stringify(invalidDiv);
+        const response = await axios.patch(oneDivUrl + invalidDiv.id, invalidJSON, {
+          withCredentials: true
         })
-        expect(patchResponse.status).toBe(422);
+        expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(422);
@@ -2015,18 +1568,15 @@ describe('Divs - API: /api/divs', () => {
     })     
     it('should NOT patch a div when hdcp_from is negative', async () => { 
       try {
-        const patchTmnt = {
+        const invalidDiv = {
           ...blankDiv,
           hdcp_from: -1,
         }
-        const tmntJSON = JSON.stringify(patchTmnt);
-        const patchResponse = await axios({
-          method: "patch",
-          data: tmntJSON,
-          withCredentials: true,
-          url: oneDivUrl + blankDiv.id,
+        const invalidJSON = JSON.stringify(invalidDiv);
+        const response = await axios.patch(oneDivUrl + invalidDiv.id, invalidJSON, {
+          withCredentials: true
         })
-        expect(patchResponse.status).toBe(422);
+        expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(422);
@@ -2037,18 +1587,15 @@ describe('Divs - API: /api/divs', () => {
     })
     it('should NOT patch a div when hdcp_from is too large', async () => { 
       try {
-        const patchTmnt = {
+        const invalidDiv = {
           ...blankDiv,
           hdcp_from: 301,
         }
-        const tmntJSON = JSON.stringify(patchTmnt);
-        const patchResponse = await axios({
-          method: "patch",
-          data: tmntJSON,
-          withCredentials: true,
-          url: oneDivUrl + blankDiv.id,
+        const invalidJSON = JSON.stringify(invalidDiv);
+        const response = await axios.patch(oneDivUrl + invalidDiv.id, invalidJSON, {
+          withCredentials: true
         })
-        expect(patchResponse.status).toBe(422);
+        expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(422);
@@ -2059,18 +1606,15 @@ describe('Divs - API: /api/divs', () => {
     })
     it('should NOT patch a div when hdcp_from is not an integer', async () => { 
       try {
-        const patchTmnt = {
+        const invalidDiv = {
           ...blankDiv,
           hdcp_from: 233.33,
         }
-        const tmntJSON = JSON.stringify(patchTmnt);
-        const patchResponse = await axios({
-          method: "patch",
-          data: tmntJSON,
-          withCredentials: true,
-          url: oneDivUrl + blankDiv.id,
+        const invalidJSON = JSON.stringify(invalidDiv);
+        const response = await axios.patch(oneDivUrl + invalidDiv.id, invalidJSON, {
+          withCredentials: true
         })
-        expect(patchResponse.status).toBe(422);
+        expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(422);
@@ -2081,18 +1625,15 @@ describe('Divs - API: /api/divs', () => {
     })
     it('should NOT patch a div when hdcp_from is not a number', async () => { 
       try {
-        const patchTmnt = {
+        const invalidDiv = {
           ...blankDiv,
           hdcp_from: 'abc' as any,
         }
-        const tmntJSON = JSON.stringify(patchTmnt);
-        const patchResponse = await axios({
-          method: "patch",
-          data: tmntJSON,
-          withCredentials: true,
-          url: oneDivUrl + blankDiv.id,
+        const invalidJSON = JSON.stringify(invalidDiv);
+        const response = await axios.patch(oneDivUrl + invalidDiv.id, invalidJSON, {
+          withCredentials: true
         })
-        expect(patchResponse.status).toBe(422);
+        expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(422);
@@ -2103,18 +1644,15 @@ describe('Divs - API: /api/divs', () => {
     })
     it('should NOT patch a div when int_hdcp is not a boolean', async () => { 
       try {
-        const patchTmnt = {
+        const invalidDiv = {
           ...blankDiv,
           int_hdcp: 'true',
         }
-        const tmntJSON = JSON.stringify(patchTmnt);
-        const patchResponse = await axios({
-          method: "patch",
-          data: tmntJSON,
-          withCredentials: true,
-          url: oneDivUrl + blankDiv.id,
+        const invalidJSON = JSON.stringify(invalidDiv);
+        const response = await axios.patch(oneDivUrl + invalidDiv.id, invalidJSON, {
+          withCredentials: true
         })
-        expect(patchResponse.status).toBe(422);
+        expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(422);
@@ -2125,18 +1663,15 @@ describe('Divs - API: /api/divs', () => {
     })
     it('should NOT patch a div when hdcp_for is not "Game" or "Series"', async () => { 
       try {
-        const patchTmnt = {
+        const invalidDiv = {
           ...blankDiv,
           hdcp_for: "test",
         }
-        const tmntJSON = JSON.stringify(patchTmnt);
-        const patchResponse = await axios({
-          method: "patch",
-          data: tmntJSON,
-          withCredentials: true,
-          url: oneDivUrl + blankDiv.id,
+        const invalidJSON = JSON.stringify(invalidDiv);
+        const response = await axios.patch(oneDivUrl + invalidDiv.id, invalidJSON, {
+          withCredentials: true
         })
-        expect(patchResponse.status).toBe(422);
+        expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(422);
@@ -2147,18 +1682,15 @@ describe('Divs - API: /api/divs', () => {
     })
     it('should NOT patch a div when sort_order is too low', async () => { 
       try {
-        const patchTmnt = {
+        const invalidDiv = {
           ...blankDiv,
           sort_order: 0,
         }
-        const tmntJSON = JSON.stringify(patchTmnt);
-        const patchResponse = await axios({
-          method: "patch",
-          data: tmntJSON,
-          withCredentials: true,
-          url: oneDivUrl + blankDiv.id,
+        const invalidJSON = JSON.stringify(invalidDiv);
+        const response = await axios.patch(oneDivUrl + invalidDiv.id, invalidJSON, {
+          withCredentials: true
         })
-        expect(patchResponse.status).toBe(422);
+        expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(422);
@@ -2169,18 +1701,15 @@ describe('Divs - API: /api/divs', () => {
     })
     it('should NOT patch a div when sort_order is too high', async () => { 
       try {
-        const patchTmnt = {
+        const invalidDiv = {
           ...blankDiv,
           sort_order: 1234567,
         } 
-        const tmntJSON = JSON.stringify(patchTmnt);
-        const patchResponse = await axios({
-          method: "patch",
-          data: tmntJSON,
-          withCredentials: true,
-          url: oneDivUrl + blankDiv.id,
+        const invalidJSON = JSON.stringify(invalidDiv);
+        const response = await axios.patch(oneDivUrl + invalidDiv.id, invalidJSON, {
+          withCredentials: true
         })
-        expect(patchResponse.status).toBe(422);
+        expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(422);
@@ -2191,18 +1720,15 @@ describe('Divs - API: /api/divs', () => {
     })
     it('should NOT patch a div when sort_order is not a number', async () => { 
       try {
-        const patchTmnt = {
+        const invalidDiv = {
           ...blankDiv,
           sort_order: 'abc' as any,
         }
-        const tmntJSON = JSON.stringify(patchTmnt);
-        const patchResponse = await axios({
-          method: "patch",
-          data: tmntJSON,
-          withCredentials: true,
-          url: oneDivUrl + blankDiv.id,
+        const invalidJSON = JSON.stringify(invalidDiv);
+        const response = await axios.patch(oneDivUrl + invalidDiv.id, invalidJSON, {
+          withCredentials: true
         })
-        expect(patchResponse.status).toBe(422);
+        expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(422);
@@ -2213,20 +1739,17 @@ describe('Divs - API: /api/divs', () => {
     })
     it('should not patch a div when tmnt_id + div_name is not unique', async () => { 
       try {
-        const patchTmnt = {
+        const invalidDiv = {
           ...blankDiv,
           id: div3Id,
           tmnt_id: tmnt2Id,
           div_name: "Scratch",
         }
-        const tmntJSON = JSON.stringify(patchTmnt);
-        const patchResponse = await axios({
-          method: "patch",
-          data: tmntJSON,
-          withCredentials: true,
-          url: oneDivUrl + patchTmnt.id,
-        })
-        expect(patchResponse.status).toBe(409);
+        const invalidJSON = JSON.stringify(invalidDiv);
+        const response = await axios.patch(oneDivUrl + invalidDiv.id, invalidJSON, {
+          withCredentials: true
+        });
+        expect(response.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(409);
@@ -2238,35 +1761,29 @@ describe('Divs - API: /api/divs', () => {
     it('should patch a div with a sanitzed div name', async () => { 
       const patchTmnt = {
         ...blankDiv,
-        div_name: "    <script>Patched Div Name</script>   ",
+        div_name: "    <script>Patched</script>   ",
       }
-      const tmntJSON = JSON.stringify(patchTmnt);
-      const patchResponse = await axios({
-        method: "patch",
-        data: tmntJSON,
-        withCredentials: true,
-        url: oneDivUrl + blankDiv.id,
-      })
-      expect(patchResponse.status).toBe(200);
+      const divJSON = JSON.stringify(patchTmnt);
+      const response = await axios.patch(oneDivUrl + blankDiv.id, divJSON, {
+        withCredentials: true
+      });
+      expect(response.status).toBe(200);
       didPatch = true;
-      const patchedDiv = patchResponse.data.div;
-      expect(patchedDiv.div_name).toBe("Patched Div Name");
+      const patchedDiv = response.data.div;
+      expect(patchedDiv.div_name).toBe("scriptPatchedscript");
     })
     it('should patch a div with "Series" for hdcp_for', async () => { 
       const patchTmnt = {
         ...blankDiv,
         hdcp_for: "Series",
       }
-      const tmntJSON = JSON.stringify(patchTmnt);
-      const patchResponse = await axios({
-        method: "patch",
-        data: tmntJSON,
-        withCredentials: true,
-        url: oneDivUrl + blankDiv.id,
-      })
-      expect(patchResponse.status).toBe(200);
+      const divJSON = JSON.stringify(patchTmnt);
+      const response = await axios.patch(oneDivUrl + blankDiv.id, divJSON, {
+        withCredentials: true
+      });
+      expect(response.status).toBe(200);
       didPatch = true;
-      const patchedDiv = patchResponse.data.div;
+      const patchedDiv = response.data.div;
       expect(patchedDiv.hdcp_for).toBe("Series");
     })
 
@@ -2279,14 +1796,14 @@ describe('Divs - API: /api/divs', () => {
       id: "div_66d39a83d7a84a8c85d28d8d1b2c7a90",
       tmnt_id: "tmt_9a34a65584f94f548f5ce3b3becbca19",
       div_name: "Women's",
-      hdcp_per: 0.90,
+      hdcp_per: 0.9,
       hdcp_from: 230,
       int_hdcp: true,
-      hdcp_for: 'Game',
+      hdcp_for: "Game",
       sort_order: 4,
     }
 
-    let didDel = false
+    let didDel = false    
 
     beforeEach(() => {
       didDel = false;
@@ -2296,42 +1813,28 @@ describe('Divs - API: /api/divs', () => {
       if (!didDel) return;
       try {
         const divJSON = JSON.stringify(toDelDiv);
-        const response = await axios({
-          method: 'post',
-          data: divJSON,
-          withCredentials: true,
-          url: url
-        })        
+        await axios.post(url, divJSON, {
+          withCredentials: true
+        })
       } catch (err) {
         if (err instanceof Error) console.log(err.message);
       }
     })
 
     it('should delete a div by ID', async () => {
-      try {
-        const delResponse = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: oneDivUrl + toDelDiv.id,
-        })  
-        didDel = true;
-        expect(delResponse.status).toBe(200);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(200);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
+      const response = await axios.delete(oneDivUrl + toDelDiv.id, {
+        withCredentials: true
+      })
+      didDel = true;
+      expect(response.status).toBe(200);
+      expect(response.data.count).toBe(1);
     })
     it('should NOT delete a div by ID when ID is invalid', async () => { 
       try {
-        const delResponse = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: oneDivUrl + 'test',
-        })  
-        expect(delResponse.status).toBe(404);
+        const response = await axios.delete(oneDivUrl + 'test', {
+          withCredentials: true
+        })
+        expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
@@ -2341,95 +1844,17 @@ describe('Divs - API: /api/divs', () => {
       }
     })
     it('should NOT delete a div by ID when ID is not found', async () => { 
-      try {
-        const delResponse = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: oneDivUrl + notFoundId,
-        })  
-        expect(delResponse.status).toBe(200);
-        expect(delResponse.data.count).toBe(0);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(200);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
+      const response = await axios.delete(oneDivUrl + notFoundId, {
+        withCredentials: true
+      })
+      expect(response.status).toBe(200);
+      expect(response.data.count).toBe(0);
     })
     it('should NOT delete a div by ID when ID is valid, bit not an div id', async () => { 
       try {
-        const delResponse = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: oneDivUrl + nonDivId
-        })  
-        expect(delResponse.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-  })
-
-  describe('DELETE all divs for a tmnt - API: /api/divs/tmnt/:tmntId', () => { 
-
-    const postDivs = async () => {      
-      const response = await axios.get(divTmntUrl + tmntToDelId);
-      const tmntDivs = response.data.divs;
-      if (!tmntDivs || tmntDivs.length === 0) {
-        const divsToPost = [...mockDivsToPost];        
-        for await (const div of divsToPost) {    
-          const postedDiv = await postDiv(div);
-          if (!postedDiv) return null
-        }  
-      }
-    }    
-
-    beforeEach(async () => {
-      await postDivs();
-    })
-
-    afterAll(async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: divTmntUrl + tmntToDelId,
-        });
-        expect(response.status).toBe(200);        
-      } catch (err) {
-        if (err instanceof Error) console.log(err.message);
-      }
-    })
-
-    it('should delete all divs for a tmnt', async () => { 
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: divTmntUrl + tmntToDelId
-        })  
-        expect(response.status).toBe(200);
-        expect(response.data.count).toBe(mockDivsToPost.length);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(200);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT delete all divs for a tmnt when tmnt is invalid', async () => { 
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: divTmntUrl + 'test'
-        })  
+        const response = await axios.delete(oneDivUrl + nonDivId, {
+          withCredentials: true
+        })
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2439,36 +1864,6 @@ describe('Divs - API: /api/divs', () => {
         }
       }
     })
-    it('should NOT delete all divs for a tmnt when tmnt id is valid, but not a tmnt id', async () => { 
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: divTmntUrl + nonDivId
-        })  
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should delete 0 divs for a tmnt when tmnt id is valid, but no divs found for tmnt', async () => { 
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: divTmntUrl + notfoundTmntId
-        })  
-        expect(response.status).toBe(200);
-        expect(response.data.count).toBe(0)
-      } catch (err) {
-        expect(true).toBeFalsy();
-      }
-    })
-
   })
 
 })

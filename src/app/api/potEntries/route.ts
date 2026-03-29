@@ -4,8 +4,8 @@ import { initPotEntry } from "@/lib/db/initVals";
 import type { potEntryType } from "@/lib/types/types";
 import { sanitizePotEntry, validatePotEntry } from "../../../lib/validation/potEntries/validate";
 import { ErrorCode } from "@/lib/enums/enums";
-import { getErrorStatus } from "../errCodes";
-import { potEntryDataForPrisma } from "./dataForPrisma";
+import { standardCatchReturn } from "../apiCatch";
+import { potEntryDataForPrisma } from "./potEntriesDataForPrisma";
 
 // routes /api/potEntries
 
@@ -14,10 +14,7 @@ export async function GET(request: NextRequest) {
     const potEntries = await prisma.pot_Entry.findMany();
     return NextResponse.json({ potEntries }, { status: 200 });
   } catch (error) {
-    return NextResponse.json(
-      { error: "error getting potEntries" },
-      { status: 500 }
-    );                
+    return standardCatchReturn(error, "error getting potEntries");
   }
 }
 
@@ -61,11 +58,7 @@ export const POST = async (request: NextRequest) => {
       data: potEntryData
     })
     return NextResponse.json({ potEntry }, { status: 201 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error creating potEntry" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error creating potEntry");
   }
 }

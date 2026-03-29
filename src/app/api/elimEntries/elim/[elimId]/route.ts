@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isValidBtDbId } from "@/lib/validation/validation";
+import { standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/elimEntry/elim/:elimId
 
@@ -20,34 +21,7 @@ export async function GET(
       },
     })
     return NextResponse.json({elimEntries}, {status: 200});
-  } catch (err: any) {
-    return NextResponse.json({ err: "error getting elimEntries for elim" },
-      { status: 500 }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error getting elimEntries for elim");
   }
 }
-
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ elimId: string }> }
-) {
-  try {
-    const { elimId } = await params;
-    // check if id is a valid elim id
-    if (!isValidBtDbId(elimId, "elm")) {
-      return NextResponse.json({ error: "not found" }, { status: 404 });
-    }
-    const result = await prisma.elim_Entry.deleteMany({
-      where: {
-        elim_id: elimId,
-      },
-    });
-    return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: "error deleting elimEntries for elim" },
-      { status: 500 }
-    );
-  }
-}
-

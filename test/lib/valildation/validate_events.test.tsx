@@ -13,7 +13,7 @@ import {
 } from "@/lib/validation/events/validate";
 import { initEvent } from "@/lib/db/initVals";
 import type { eventType, validEventsType } from "@/lib/types/types";
-import { maxEventLength, maxSortOrder } from "@/lib/validation/validation";
+import { maxEventLength, maxMoney, maxSortOrder } from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
 import { startOfDayFromString, todayStr } from "@/lib/dateTools";
 import { mockEvents } from "../../mocks/tmnts/singlesAndDoubles/mockEvents";
@@ -254,7 +254,7 @@ describe("tests for event validation", () => {
     it("should return ErrorCode.NONE when added_money is valid number but over maxMoney", () => {
       const invalidEvent = {
         ...validEvent,
-        added_money: "1234567890",
+        added_money: (maxMoney + 1).toString(),
       };
       const result = gotEventData(invalidEvent);
       expect(result).toBe(ErrorCode.NONE);
@@ -270,7 +270,7 @@ describe("tests for event validation", () => {
     it("should return ErrorCode.NONE when entry_fee is valid number but over maxMoney", () => {
       const invalidEvent = {
         ...validEvent,
-        entry_fee: "1234567890",
+        entry_fee: (maxMoney + 1).toString(),
       };
       const result = gotEventData(invalidEvent);
       expect(result).toBe(ErrorCode.NONE);
@@ -286,7 +286,7 @@ describe("tests for event validation", () => {
     it("should return ErrorCode.NONE when lineage is valid number but over maxMoney", () => {
       const invalidEvent = {
         ...validEvent,
-        lineage: "1234567890",
+        lineage: (maxMoney + 1).toString(),
       };
       const result = gotEventData(invalidEvent);
       expect(result).toBe(ErrorCode.NONE);
@@ -302,7 +302,7 @@ describe("tests for event validation", () => {
     it("should return ErrorCode.NONE when prize_fund is valid number but over maxMoney", () => {
       const invalidEvent = {
         ...validEvent,
-        prize_fund: "1234567890",
+        prize_fund: (maxMoney + 1).toString(),
       };
       const result = gotEventData(invalidEvent);
       expect(result).toBe(ErrorCode.NONE);
@@ -318,7 +318,7 @@ describe("tests for event validation", () => {
     it("should return ErrorCode.NONE when other is valid number but over maxMoney", () => {
       const invalidEvent = {
         ...validEvent,
-        other: "1234567890",
+        other: (maxMoney + 1).toString(),
       };
       const result = gotEventData(invalidEvent);
       expect(result).toBe(ErrorCode.NONE);
@@ -334,7 +334,7 @@ describe("tests for event validation", () => {
     it("should return ErrorCode.NONE when expenses is valid number but over maxMoney", () => {
       const invalidEvent = {
         ...validEvent,
-        expenses: "1234567890",
+        expenses: (maxMoney + 1).toString(),
       };
       const result = gotEventData(invalidEvent);
       expect(result).toBe(ErrorCode.NONE);
@@ -350,7 +350,7 @@ describe("tests for event validation", () => {
     it("should return ErrorCode.NONE when lpox is valid number but over maxMoney", () => {
       const invalidEvent = {
         ...validEvent,
-        lpox: "1234567890",
+        lpox: (maxMoney + 1).toString(),
       };
       const result = gotEventData(invalidEvent);
       expect(result).toBe(ErrorCode.NONE);

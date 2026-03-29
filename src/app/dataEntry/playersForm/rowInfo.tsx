@@ -10,7 +10,7 @@ import {
 } from "./createColumns";
 import { GridRowModel } from "@mui/x-data-grid";
 import { fullName, getBrktOrElimName, getDivName, getPotShortName } from "@/lib/getName";
-import { maxAverage, maxBrackets, maxMoney } from "@/lib/validation/validation";
+import { maxAverage, maxBrackets, maxMoney } from "@/lib/validation/constants";
 import { BracketList } from "@/components/brackets/bracketListClass";
 import { defaultBrktPlayers } from "@/lib/db/initVals";
 import type { playerEntryRow } from "./populateRows";

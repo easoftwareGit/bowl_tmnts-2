@@ -1,5 +1,6 @@
 "use client";
-import React, { ChangeEvent, useState } from "react";
+import React, { useState } from "react";
+import type { ChangeEvent, ComponentProps } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,63 +11,70 @@ import { Alert } from "@/components/ui/index";
 import {
   isEmail,
   isPassword8to20,
+} from "@/lib/validation/validation";
+import {
   maxFirstNameLength,
   maxLastNameLength,
   maxEmailLength,
   maxPhoneLength,
-} from "@/lib/validation/validation";
+} from "@/lib/validation/constants";
 import { phone as phoneChecking } from "phone";
-import { userType } from "@/lib/types/types";
-import { initUser } from "@/lib/db/initVals";
-import { sanitizeUser } from "@/app/api/users/validate";
+import type { userFormType } from "@/lib/types/types";
+import { initUserForm } from "@/lib/db/initVals";
 import "./form.css";
+import { sanitizeName } from "@/lib/validation/sanitize";
+import { sanitizeUser } from "@/lib/validation/users/validate";
 
-const blankValues = {
-  first_name: "",
-  last_name: "",
-  email: "",
-  phone: "",
-  password: "",
+type registerFormStateType = userFormType & {
+  confirm: string;
+};
+
+type FormSubmitHandler = NonNullable<ComponentProps<"form">["onSubmit"]>;
+
+const blankValues: registerFormStateType = {
+  ...initUserForm,
+  id: "",
   confirm: "",
 };
 
-export const RegisterForm = () => {  
-
+export const RegisterForm = () => {
   const router = useRouter();
 
-  const [formData, setFormData] = useState(blankValues);
-  const [formErrors, setFormErrors] = useState(blankValues);
+  const [formData, setFormData] = useState<registerFormStateType>(blankValues);
+  const [formErrors, setFormErrors] = useState<registerFormStateType>(blankValues);
   const [usedEmail, setUsedEmail] = useState("");
-  
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
   const validateForm = () => {
-    const errors = {
-      first_name: "",
-      last_name: "",
-      email: "",
-      phone: "",
-      password: "",
-      confirm: "",
+    const errors: registerFormStateType = {
+      ...blankValues,
     };
     let isValid = true;
+
+    const sanitizedUser: registerFormStateType = {
+      ...formData,
+    };
+
     setUsedEmail("");
 
     // first name
-    if (!formData.first_name.trim()) {
+    sanitizedUser.first_name = sanitizeName(sanitizedUser.first_name);
+    if (!sanitizedUser.first_name) {
       errors.first_name = "First Name is required";
       isValid = false;
     } else {
-      errors.first_name = "";      
+      errors.first_name = "";
     }
 
     // last name
-    if (!formData.last_name.trim()) {
+    sanitizedUser.last_name = sanitizeName(sanitizedUser.last_name);
+    if (!sanitizedUser.last_name) {
       errors.last_name = "Last Name is required";
       isValid = false;
     } else {
-      errors.last_name = "";      
+      errors.last_name = "";
     }
 
     // email
@@ -77,7 +85,8 @@ export const RegisterForm = () => {
       errors.email = "Email is not valid";
       isValid = false;
     } else {
-      errors.email = "";      
+      sanitizedUser.email = formData.email;
+      errors.email = "";
     }
 
     // phone
@@ -89,7 +98,8 @@ export const RegisterForm = () => {
         errors.phone = "Phone not valid";
         isValid = false;
       } else {
-        errors.phone = "";        
+        sanitizedUser.phone = formData.phone;
+        errors.phone = "";
       }
     }
 
@@ -102,6 +112,7 @@ export const RegisterForm = () => {
         "Password not in a valid format: at least 1 lower case, 1 UPPER case, 1 digit, 1 special character, 8 to 20 charaters long";
       isValid = false;
     } else {
+      sanitizedUser.password = formData.password;
       errors.password = "";
     }
 
@@ -114,6 +125,7 @@ export const RegisterForm = () => {
         "Password not in a valid format: at least 1 lower case, 1 UPPER case, 1 digit, 1 special character, 8 to 20 charaters long";
       isValid = false;
     } else {
+      sanitizedUser.confirm = formData.confirm;
       errors.confirm = "";
     }
 
@@ -125,6 +137,7 @@ export const RegisterForm = () => {
       }
     }
 
+    setFormData(sanitizedUser);
     setFormErrors(errors);
     return isValid;
   };
@@ -144,32 +157,33 @@ export const RegisterForm = () => {
     }
   };
 
-  const onSubmit = async (e: React.FormEvent) => {
+  const onSubmit: FormSubmitHandler = async (e) => {
     e.preventDefault();
     if (validateForm()) {
       try {
         const url = baseApi + "/auth/register";
-        const toScrub: userType = {
-          ...initUser,
+        const toScrub: userFormType = {
+          ...initUserForm,
           first_name: formData.first_name,
-          last_name: formData.last_name,          
-          phone: formData.phone,          
-        }
+          last_name: formData.last_name,
+          email: formData.email,
+          phone: formData.phone,
+          password: formData.password,
+        };
         const sanitizedUser = sanitizeUser(toScrub);
-        var userJson = JSON.stringify({
+        const userJson = JSON.stringify({
           id: sanitizedUser.id,
           first_name: sanitizedUser.first_name,
           last_name: sanitizedUser.last_name,
-          email: formData.email,
+          email: sanitizedUser.email,
           phone: sanitizedUser.phone,
           password: formData.password,
         });
-        const response = await axios({
-          method: "post",
-          data: userJson,
+
+        const response = await axios.post(url, userJson, {
           withCredentials: true,
-          url: url,
         });
+
         if (response.status === 201) {
           const res = await signIn("credentials", {
             redirect: false,
@@ -180,19 +194,26 @@ export const RegisterForm = () => {
           if (!res?.error) {
             router.push("/user/tmnts");
           } else {
-            // optional: show a message, or route them to login
             router.push("/login");
           }
         }
-      } catch (error: any) {
-        if (error.response?.status === 409) {
-          setUsedEmail("Email already in use");
+      } catch (error: unknown) {
+        if (axios.isAxiosError(error)) {
+          if (error.response?.status === 409) {
+            setUsedEmail("Email already in use");
+          } else {
+            setFormErrors({
+              ...formErrors,
+              email: "Other error registering",
+            });
+          }
         } else {
-          console.log("Error creating user");
+          setFormErrors({
+            ...formErrors,
+            email: "Unexpected error registering",
+          });
         }
       }
-    } else {
-      console.log("Invalid Registraction Data!");
     }
   };
 
@@ -205,7 +226,7 @@ export const RegisterForm = () => {
   };
 
   return (
-    <form onSubmit={onSubmit}>
+    <form onSubmit={onSubmit} noValidate>
       <div className="form_container">
         <div className="row g-3 mb-3">
           <div className="col-md-6">
@@ -350,7 +371,6 @@ export const RegisterForm = () => {
         </div>
         <div className="d-flex justify-content-center align-middle mt-3">
           <p>
-            {/* Have an account? <Link href="/api/auth/signin">Sign in</Link> */}
             Have an account? <Link href="/login">Sign in</Link>
           </p>
         </div>

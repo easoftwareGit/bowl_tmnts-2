@@ -1,5 +1,6 @@
-import type {
-  userType,
+import type {  
+  userDataType,
+  userFormType,  
   bowlType,
   tmntType,  
   eventType,
@@ -27,7 +28,7 @@ import type {
   tmntFullType,
   justStageType,
   justStageOverrideType,
-  fullStageType,  
+  fullStageType,
 } from "../types/types";
 import { User, Bowl, Tmnt, SquadStage } from "@prisma/client";
 import { todayStr } from "@/lib/dateTools";
@@ -35,20 +36,33 @@ import { btDbUuid } from "../uuid";
 import { startOfToday } from "date-fns";
 import { cloneDeep } from "lodash";
 
-export const initUser: userType = {
+export const initUserData: userDataType = {
   id: btDbUuid('usr'),
-  email: "",  
-  password: "",
-  password_hash: "",
-  first_name: "",
-  last_name: "",
-  phone: "",
-  role: 'USER'
+  email: '',
+  first_name: '',
+  last_name: '',
+  phone: '',
+  role: 'USER',
 }
 
-export const blankUser = {
-  ...initUser,
-  id: "",
+export const initUserForm: userFormType = {
+  id: btDbUuid('usr'),
+  email: '',
+  password: '',
+  first_name: '',
+  last_name: '',
+  phone: '',
+  role: 'USER',
+}
+
+export const blankUserData = {
+  ...initUserData,
+  id: "",  
+}
+
+export const blankUserForm = {
+  ...initUserForm,
+  id: "",  
 }
 
 export const initPrismaUser: User = {
@@ -97,7 +111,7 @@ export const initTmnt: tmntType = {
   start_date_err: "",
   end_date_str: todayStr,
   end_date_err: "",
-  bowls: {
+  bowl: {
     bowl_name: "",
     city: "",
     state: "",

@@ -6,7 +6,7 @@ import {
   brktId1,
   brktId2,
 } from "../../../../mocks/tmnts/tmntFullData/mockTmntFullData";
-import { minFee, maxMoney, maxGames } from "@/lib/validation/validation";
+import { minFee, maxMoney, maxGames } from "@/lib/validation/constants";
 import { defaultBrktGames } from "@/lib/db/initVals";
 import {
   acdnErrClassName,

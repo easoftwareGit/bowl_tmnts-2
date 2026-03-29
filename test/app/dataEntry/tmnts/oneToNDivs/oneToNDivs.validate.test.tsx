@@ -2,7 +2,7 @@ import { validateDivs } from "@/app/dataEntry/tmntForm/oneToNDivs";
 import type { divType, AcdnErrType } from "@/lib/types/types";
 import { divId1, divId2, mockTmntFullData } from "../../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { acdnErrClassName, noAcdnErr, objErrClassName } from "@/app/dataEntry/tmntForm/errors";
-import { maxHdcpPer, maxHdcpFrom, minHdcpPer, minHdcpFrom } from "@/lib/validation/validation";
+import { maxHdcpPer, maxHdcpFrom, minHdcpPer, minHdcpFrom } from "@/lib/validation/constants";
 
 const baseMockDiv: divType = {
   ...mockTmntFullData.divs[0],

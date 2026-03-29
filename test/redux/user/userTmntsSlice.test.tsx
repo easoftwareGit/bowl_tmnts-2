@@ -1,5 +1,5 @@
 import { configureStore, Store } from '@reduxjs/toolkit';
-import { userTmntsSlice, fetchUserTmnts, deleteUserTmnt} from '@/redux/features/userTmnts/userTmntsSlice';
+import { userTmntsSlice, fetchUserTmnts, deleteUserTmnt } from '@/redux/features/userTmnts/userTmntsSlice';
 import type { tmntsListType } from '@/lib/types/types';
 
 const initialState = {
@@ -14,7 +14,7 @@ const tmntData: tmntsListType[] = [
     user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
     tmnt_name: "Gold Pin",
     start_date_str: '2023-08-19',
-    bowls: {
+    bowl: {
       bowl_name: "Earl Anthony's Dublin Bowl",
       city: "Dublin",
       state: "CA",
@@ -26,7 +26,7 @@ const tmntData: tmntsListType[] = [
     user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
     tmnt_name: "Yosemite 6 Gamer",
     start_date_str: '2022-01-02',
-    bowls: {
+    bowl: {
       bowl_name: "Yosemite Lanes",
       city: "Modesto",
       state: "CA",

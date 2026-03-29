@@ -12,7 +12,7 @@ import {
 } from "@/lib/validation/divs/validate";
 import { initDiv } from "@/lib/db/initVals";
 import type { divType, validDivsType } from "@/lib/types/types";
-import { maxEventLength, maxSortOrder } from "@/lib/validation/validation";
+import { maxEventLength, maxSortOrder } from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
 import { mockDivs } from "../../mocks/tmnts/twoDivs/mockDivs";
 

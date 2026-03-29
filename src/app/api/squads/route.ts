@@ -5,8 +5,8 @@ import { ErrorCode } from "@/lib/enums/enums";
 import type { squadType } from "@/lib/types/types";
 import { initSquad } from "@/lib/db/initVals";
 import { startOfDayFromString } from "@/lib/dateTools";
-import { getErrorStatus } from "../errCodes";
-import { squadDataForPrisma } from "./dataForPrisma";
+import { getErrorStatus, standardCatchReturn } from "../apiCatch";
+import { squadDataForPrisma } from "./squadDataForPrisma";
 
 // routes /api/squads
 
@@ -23,11 +23,8 @@ export async function GET(request: NextRequest) {
       ]
     })
     return NextResponse.json({ squads }, { status: 200 });    
-  } catch (err: any) {
-    return NextResponse.json(
-      { error: "error getting squads" },
-      { status: 500 }
-    );        
+  } catch (error) {
+    return standardCatchReturn(error, "error getting squads");
   }
 }
 
@@ -94,11 +91,7 @@ export async function POST(request: Request) {
       data: squadData
     })
     return NextResponse.json({ squad }, { status: 201 })        
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error creating squad" },
-      { status: errStatus }
-    );        
+  } catch (error) {
+    return standardCatchReturn(error, "error creating squad");
   }
 }

@@ -1,5 +1,5 @@
 import { mockTmntFullData } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
-import { tmntDataForPrisma, tmntFullDataForPrisma } from "@/app/api/tmnts/dataForPrisma";
+import { tmntDataForPrisma, tmntFullDataForPrisma } from "@/app/api/tmnts/tmntDataForPrisma";
 import { cloneDeep } from "lodash";
 
 describe('tmntDataForPrisma', () => {

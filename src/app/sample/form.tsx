@@ -1,12 +1,10 @@
 "use client";
 import React, { useState, ChangeEvent, useRef } from "react";
-import { sanitize } from "@/lib/validation/sanitize";
-import { format, startOfToday, endOfToday, formatISO, isValid, startOfDay, addDays, interval } from "date-fns";
-import { todayStr, dateTo_yyyyMMdd, twelveHourto24Hour, getTimeString, dateTo_UTC_MMddyyyy } from "@/lib/dateTools";
-import CurrencyInput, { formatValue } from "@/lib/currency";
+import { startOfToday, endOfToday, formatISO, isValid, startOfDay, interval } from "date-fns";
+import { todayStr, dateTo_yyyyMMdd, getTimeString, dateTo_UTC_MMddyyyy } from "@/lib/dateTools";
+import { formatValue } from "@/lib/currency";
 import { getLocaleConfig } from "@/lib/currency/components/utils";
 import { IntlConfig } from "@/lib/currency/components/CurrencyInputProps";
-import EaCurrencyInput from "@/components/currency/eaCurrencyInput";
 
 import "./form.css";
 

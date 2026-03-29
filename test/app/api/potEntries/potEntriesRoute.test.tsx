@@ -4,10 +4,7 @@ import { testBasePotEntriesApi } from "../../../testApi";
 import { initPotEntry } from "@/lib/db/initVals";
 import { mockPotEntriesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
 import {
-  deleteAllPotEntriesForSquad,
-  deleteAllPotEntriesForTmnt,
   getAllPotEntriesForSquad,  
-  postManyPotEntries,
 } from "@/lib/db/potEntries/dbPotEntries";
 import { cloneDeep } from "lodash";
 
@@ -33,7 +30,6 @@ const onePotEntryUrl = url + "/potEntry/";
 const divUrl = url + "/div/";
 const squadUrl = url + "/squad/";
 const tmntUrl = url + "/tmnt/";
-const manyUrl = url + "/many";
 
 describe("Pot Entries - API's: /api/potEntries", () => {
   const testPotEntry = {
@@ -43,6 +39,14 @@ describe("Pot Entries - API's: /api/potEntries", () => {
     player_id: "ply_88be0472be3d476ea1caa99dd05953fa",
     fee: "20",
   };
+
+  const potEntryToPost = {
+    ...initPotEntry,
+    id: "pen_1234567890abcdef1234567890abcdef",
+    pot_id: "pot_b2a7b02d761b4f5ab5438be84f642c3b",
+    player_id: "ply_a01758cff1cc4bab9d9133e661bd49b0",
+    fee: "20",
+  };  
 
   const goldPinPotId = "pot_b2a7b02d761b4f5ab5438be84f642c3b";
 
@@ -61,9 +65,17 @@ describe("Pot Entries - API's: /api/potEntries", () => {
   const notFoundTmntId = "tmt_01234567890123456789012345678901";
   const userId = "usr_01234567890123456789012345678901";
 
+  const deletePostedPotEntry = async (potEntryId: string) => {
+    try {
+      await axios.delete(onePotEntryUrl + potEntryId, { withCredentials: true });
+    } catch (err) {
+      if (err instanceof Error) console.log(err.message);
+    }     
+  };
+
   describe("GET", () => {
     beforeAll(async () => {
-      await deleteAllPotEntriesForSquad(squadIdForMockData);
+      await deletePostedPotEntry(potEntryToPost.id);
     });
 
     it("should get all potEntries", async () => {
@@ -82,6 +94,11 @@ describe("Pot Entries - API's: /api/potEntries", () => {
   });
 
   describe("GET one potEntry API: /api/potEntries/potEntry/:id", () => {
+
+    beforeAll(async () => {
+      await deletePostedPotEntry(potEntryToPost.id);
+    });
+
     it("should get one potEntry by ID", async () => {
       try {
         const urlToUse = onePotEntryUrl + testPotEntry.id;
@@ -140,7 +157,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
 
   describe("GET all potEntries for one div API: /api/potEntries/div/:divId", () => {
     beforeAll(async () => {
-      await deleteAllPotEntriesForSquad(squadIdForMockData);
+      await deletePostedPotEntry(potEntryToPost.id);
     });
 
     it("should get all potEntries for one div", async () => {
@@ -189,7 +206,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
 
   describe("GET all potEntries for one squad API: /api/potEntries/squad/:squadId", () => {
     beforeAll(async () => {
-      await deleteAllPotEntriesForSquad(squadIdForMockData);
+      await deletePostedPotEntry(potEntryToPost.id);
     });
 
     it("should get all potEntries for one squad", async () => {
@@ -238,7 +255,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
 
   describe("GET all potEntries for one tmnt API: /api/potEntries/tmnt/:tmntId", () => {
     beforeAll(async () => {
-      await deleteAllPotEntriesForSquad(squadIdForMockData);
+      await deletePostedPotEntry(potEntryToPost.id);
     });
 
     it("should get all potEntries for one tmnt", async () => {
@@ -286,12 +303,11 @@ describe("Pot Entries - API's: /api/potEntries", () => {
   });
 
   describe("POST one potEntry API: /api/potEntries", () => {
-    const potEntryToPost = cloneDeep(mockPotEntriesToPost[0]);
-
+  
     let createdPotEntry = false;
 
     beforeAll(async () => {
-      await deleteAllPotEntriesForSquad(squadIdForMockData);
+      await deletePostedPotEntry(potEntryToPost.id);
     });
 
     beforeEach(() => {
@@ -300,17 +316,14 @@ describe("Pot Entries - API's: /api/potEntries", () => {
 
     afterEach(async () => {
       if (createdPotEntry) {
-        await deleteAllPotEntriesForSquad(squadIdForMockData);
+        await deletePostedPotEntry(potEntryToPost.id);
       }
     });
 
     it("should post one potEntry", async () => {
-      const potPlayerJSON = JSON.stringify(potEntryToPost);
-      const response = await axios({
-        method: "post",
+      const potEntryJSON = JSON.stringify(potEntryToPost);
+      const response = await axios.post(url, potEntryJSON, {
         withCredentials: true,
-        url: url,
-        data: potPlayerJSON,
       });
       expect(response.status).toBe(201);
       createdPotEntry = true;
@@ -327,11 +340,8 @@ describe("Pot Entries - API's: /api/potEntries", () => {
       };
       const potEntryJSON = JSON.stringify(toSanitize);
       try {
-        const response = await axios({
-          method: "post",
+        const response = await axios.post(url, potEntryJSON, {
           withCredentials: true,
-          url: url,
-          data: potEntryJSON,
         });
         expect(response.status).toBe(422);
       } catch (err) {
@@ -347,14 +357,11 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         ...potEntryToPost,
         id: "",
       };
-      const potEntryJSON = JSON.stringify(invalidPotEntry);
+      const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "post",
+        const response = await axios.post(url, invalidJSON, {
           withCredentials: true,
-          url: url,
-          data: potEntryJSON,
-        });
+        });        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -369,13 +376,10 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         ...potEntryToPost,
         pot_id: "",
       };
-      const potEntryJSON = JSON.stringify(invalidPotEntry);
+      const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "post",
+        const response = await axios.post(url, invalidJSON, {
           withCredentials: true,
-          url: url,
-          data: potEntryJSON,
         });
         expect(response.status).toBe(422);
       } catch (err) {
@@ -391,13 +395,10 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         ...potEntryToPost,
         player_id: "",
       };
-      const potEntryJSON = JSON.stringify(invalidPotEntry);
+      const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "post",
+        const response = await axios.post(url, invalidJSON, {
           withCredentials: true,
-          url: url,
-          data: potEntryJSON,
         });
         expect(response.status).toBe(422);
       } catch (err) {
@@ -413,13 +414,10 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         ...potEntryToPost,
         fee: "",
       };
-      const potEntryJSON = JSON.stringify(invalidPotEntry);
+      const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "post",
+        const response = await axios.post(url, invalidJSON, {
           withCredentials: true,
-          url: url,
-          data: potEntryJSON,
         });
         expect(response.status).toBe(422);
       } catch (err) {
@@ -457,14 +455,11 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         ...potEntryToPost,
         id: userId,
       };
-      const potEntryJSON = JSON.stringify(invalidPotEntry);
+      const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "post",
+        const response = await axios.post(url, invalidJSON, {
           withCredentials: true,
-          url: url,
-          data: potEntryJSON,
-        });
+        })
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -479,13 +474,10 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         ...potEntryToPost,
         pot_id: "test",
       };
-      const potEntryJSON = JSON.stringify(invalidPotEntry);
+      const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "post",
+        const response = await axios.post(url, invalidJSON, {
           withCredentials: true,
-          url: url,
-          data: potEntryJSON,
         });
         expect(response.status).toBe(422);
       } catch (err) {
@@ -501,13 +493,10 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         ...potEntryToPost,
         pot_id: userId,
       };
-      const potEntryJSON = JSON.stringify(invalidPotEntry);
+      const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "post",
+        const response = await axios.post(url, invalidJSON, {
           withCredentials: true,
-          url: url,
-          data: potEntryJSON,
         });
         expect(response.status).toBe(422);
       } catch (err) {
@@ -523,13 +512,10 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         ...potEntryToPost,
         player_id: "test",
       };
-      const potEntryJSON = JSON.stringify(invalidPotEntry);
+      const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "post",
+        const response = await axios.post(url, invalidJSON, {
           withCredentials: true,
-          url: url,
-          data: potEntryJSON,
         });
         expect(response.status).toBe(422);
       } catch (err) {
@@ -545,13 +531,10 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         ...potEntryToPost,
         player_id: userId,
       };
-      const potEntryJSON = JSON.stringify(invalidPotEntry);
+      const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "post",
+        const response = await axios.post(url, invalidJSON, {
           withCredentials: true,
-          url: url,
-          data: potEntryJSON,
         });
         expect(response.status).toBe(422);
       } catch (err) {
@@ -567,13 +550,10 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         ...potEntryToPost,
         fee: "-1",
       };
-      const potEntryJSON = JSON.stringify(invalidPotEntry);
+      const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "post",
+        const response = await axios.post(url, invalidJSON, {
           withCredentials: true,
-          url: url,
-          data: potEntryJSON,
         });
         expect(response.status).toBe(422);
       } catch (err) {
@@ -589,13 +569,10 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         ...potEntryToPost,
         fee: "1234567890",
       };
-      const potEntryJSON = JSON.stringify(invalidPotEntry);
+      const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "post",
+        const response = await axios.post(url, invalidJSON, {
           withCredentials: true,
-          url: url,
-          data: potEntryJSON,
         });
         expect(response.status).toBe(422);
       } catch (err) {
@@ -606,866 +583,15 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         }
       }
     });
-  });
-
-  describe("POST many potEntries for one tmnt API: /api/potEntries/many", () => {
-    let createdPotEntries = false;
-
-    beforeAll(async () => {
-      await deleteAllPotEntriesForTmnt(tmntIdForMockData);
-    });
-
-    beforeEach(() => {
-      createdPotEntries = false;
-    });
-
-    afterEach(async () => {
-      if (createdPotEntries) {
-        await deleteAllPotEntriesForTmnt(tmntIdForMockData);
-      }
-    });
-
-    it("should create many potEntries", async () => {
-      const potEntryJSON = JSON.stringify(mockPotEntriesToPost);
-      const response = await axios({
-        method: "post",
-        data: potEntryJSON,
-        withCredentials: true,
-        url: manyUrl,
-      });
-      expect(response.status).toBe(201);
-      createdPotEntries = true;
-      expect(response.data.count).toBe(mockPotEntriesToPost.length);
-
-      const postedPotEntries = await getAllPotEntriesForSquad(
-        squadIdForMockData
-      );
-      if (!postedPotEntries) {
-        expect(true).toBeFalsy();
-        return;
-      }
-      expect(postedPotEntries.length).toBe(mockPotEntriesToPost.length);
-      for (let i = 0; i < mockPotEntriesToPost.length; i++) {
-        expect(postedPotEntries[i].id).toBe(mockPotEntriesToPost[i].id);
-        expect(postedPotEntries[i].pot_id).toBe(mockPotEntriesToPost[i].pot_id);
-        expect(postedPotEntries[i].player_id).toBe(
-          mockPotEntriesToPost[i].player_id
-        );
-        expect(postedPotEntries[i].fee).toBe(mockPotEntriesToPost[i].fee);
-      }
-    });
-    it("should return 0 and status 200 when passed an empty array", async () => {
-      const potEntryJSON = JSON.stringify([]);
-      const response = await axios({
-        method: "post",
-        data: potEntryJSON,
-        withCredentials: true,
-        url: manyUrl,
-      });
-      expect(response.status).toBe(200);
-      expect(response.data.count).toBe(0);
-    });
-    it('should NOT create many potEntries with sanitzied data, fee sanitized to ""', async () => {
-      const toSanitize = cloneDeep(mockPotEntriesToPost);
-      toSanitize[0].fee = "   84  ";
-      const potEntryJSON = JSON.stringify(toSanitize);
-      try {
-        const response = await axios({
-          method: "post",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: manyUrl,
-        });
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("shold NOT create many potEntries with blank ids", async () => {
-      const toSanitize = cloneDeep(mockPotEntriesToPost);
-      toSanitize[1].id = "";
-      const potEntryJSON = JSON.stringify(toSanitize);
-      try {
-        const response = await axios({
-          method: "post",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: manyUrl,
-        });
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should NOT create many potEntries with blank pot_id", async () => {
-      const toSanitize = cloneDeep(mockPotEntriesToPost);
-      toSanitize[1].pot_id = "";
-      const potEntryJSON = JSON.stringify(toSanitize);
-      try {
-        const response = await axios({
-          method: "post",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: manyUrl,
-        });
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should NOT create many potEntries with blank player_id", async () => {
-      const toSanitize = cloneDeep(mockPotEntriesToPost);
-      toSanitize[1].player_id = "";
-      const potEntryJSON = JSON.stringify(toSanitize);
-      try {
-        const response = await axios({
-          method: "post",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: manyUrl,
-        });
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should NOT create many potEntries with blank fee", async () => {
-      const toSanitize = cloneDeep(mockPotEntriesToPost);
-      toSanitize[1].fee = "";
-      const potEntryJSON = JSON.stringify(toSanitize);
-      try {
-        const response = await axios({
-          method: "post",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: manyUrl,
-        });
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should NOT create many potEntries with invalid id", async () => {
-      const toSanitize = cloneDeep(mockPotEntriesToPost);
-      toSanitize[1].id = "test";
-      const potEntryJSON = JSON.stringify(toSanitize);
-      try {
-        const response = await axios({
-          method: "post",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: manyUrl,
-        });
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should NOT create many potEntries with valid id, but not a potEntry id", async () => {
-      const toSanitize = cloneDeep(mockPotEntriesToPost);
-      toSanitize[1].id = userId;
-      const potEntryJSON = JSON.stringify(toSanitize);
-      try {
-        const response = await axios({
-          method: "post",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: manyUrl,
-        });
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should NOT create many potEntries with invalid pot_id", async () => {
-      const toSanitize = cloneDeep(mockPotEntriesToPost);
-      toSanitize[1].pot_id = "test";
-      const potEntryJSON = JSON.stringify(toSanitize);
-      try {
-        const response = await axios({
-          method: "post",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: manyUrl,
-        });
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should NOT create many potEntries with valid pot_id, but not a pot id", async () => {
-      const toSanitize = cloneDeep(mockPotEntriesToPost);
-      toSanitize[1].pot_id = userId;
-      const potEntryJSON = JSON.stringify(toSanitize);
-      try {
-        const response = await axios({
-          method: "post",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: manyUrl,
-        });
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should NOT create many potEntries with invalid player_id", async () => {
-      const toSanitize = cloneDeep(mockPotEntriesToPost);
-      toSanitize[1].player_id = "test";
-      const potEntryJSON = JSON.stringify(toSanitize);
-      try {
-        const response = await axios({
-          method: "post",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: manyUrl,
-        });
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should NOT create many potEntries with valid player_id, but not a player id", async () => {
-      const toSanitize = cloneDeep(mockPotEntriesToPost);
-      toSanitize[1].player_id = userId;
-      const potEntryJSON = JSON.stringify(toSanitize);
-      try {
-        const response = await axios({
-          method: "post",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: manyUrl,
-        });
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should NOT create many potEntries when fee to too low", async () => {
-      const toSanitize = cloneDeep(mockPotEntriesToPost);
-      toSanitize[1].fee = "-1";
-      const potEntryJSON = JSON.stringify(toSanitize);
-      try {
-        const response = await axios({
-          method: "post",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: manyUrl,
-        });
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should NOT create many potEntries when fee to too high", async () => {
-      const toSanitize = cloneDeep(mockPotEntriesToPost);
-      toSanitize[1].fee = "9999999999";
-      const potEntryJSON = JSON.stringify(toSanitize);
-      try {
-        const response = await axios({
-          method: "post",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: manyUrl,
-        });
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-  });
-
-  describe("PUT many potEntries API: /api/potEntries/many", () => {
-    // let createdPotEntries = false;
-    // const potsSquadId = 'sqd_1a6c885ee19a49489960389193e8f819'
-    // const divEntriesToDelTmntId = 'tmt_56d916ece6b50e6293300248c6792316';
-    // beforeAll(async () => {
-    //   await deleteAllPotEntriesForTmnt(divEntriesToDelTmntId);
-    // })
-    // beforeEach(() => {
-    //   createdPotEntries = false;
-    // })
-    // afterEach(async () => {
-    //   if (createdPotEntries) {
-    //     await deleteAllPotEntriesForTmnt(divEntriesToDelTmntId);
-    //   }
-    // })
-    // const testPotEntries = [
-    //   {
-    //     ...mockPotEntriesToPost[0],
-    //   },
-    //   {
-    //     ...initPotEntry,
-    //     id: 'pen_04be0472be3d476ea1caa99dd05953fa',
-    //     pot_id: 'pot_ab80213899ea424b938f52a062deacfe',
-    //     player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
-    //     fee: '10'
-    //   },
-    //   {
-    //     ...mockPotEntriesToPost[1],
-    //   },
-    //   {
-    //     ...initPotEntry,
-    //     id: 'pen_05be0472be3d476ea1caa99dd05953fa',
-    //     pot_id: 'pot_ab80213899ea424b938f52a062deacfe',
-    //     player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',
-    //     fee: '10'
-    //   },
-    //   {
-    //     ...mockPotEntriesToPost[2],
-    //   },
-    //   {
-    //     ...initPotEntry,
-    //     id: 'pen_06be0472be3d476ea1caa99dd05953fa',
-    //     pot_id: 'pot_ab80213899ea424b938f52a062deacfe',
-    //     player_id: 'ply_8bc2b34cf25e4081ba6a365e89ff49d8',
-    //     fee: '10'
-    //   },
-    // ]
-    // it('should update many potEntries - just update 1 player 2 pot entry', async () => {
-    //   const potEntryJSON = JSON.stringify(testPotEntries);
-    //   const response = await axios({
-    //     method: "post",
-    //     data: potEntryJSON,
-    //     withCredentials: true,
-    //     url: manyUrl,
-    //   })
-    //   expect(response.status).toBe(201);
-    //   createdPotEntries = true;
-    //   expect(response.data.count).toBe(testPotEntries.length);
-    //   // change average, add eType = 'u'
-    //   const potEntriesToUpdate = [
-    //     {
-    //       ...testPotEntries[0],
-    //       fee: '19',
-    //       eType: "u",
-    //     },
-    //     {
-    //       ...testPotEntries[1],
-    //       fee: '9',
-    //       eType: "u",
-    //     },
-    //   ]
-    //   const toUpdateJSON = JSON.stringify(potEntriesToUpdate)
-    //   const updateResponse = await axios({
-    //     method: "put",
-    //     data: toUpdateJSON,
-    //     withCredentials: true,
-    //     url: manyUrl,
-    //   })
-    //   expect(updateResponse.status).toBe(200);
-    //   const updateInfo = updateResponse.data.updateInfo;
-    //   expect(updateInfo).not.toBeNull();
-    //   expect(updateInfo.updates).toBe(2);
-    //   expect(updateInfo.inserts).toBe(0);
-    //   expect(updateInfo.deletes).toBe(0);
-    // })
-    // it('should update many potEntries - just update 2 player 1 pot entry', async () => {
-    //   const potEntryJSON = JSON.stringify(testPotEntries);
-    //   const response = await axios({
-    //     method: "post",
-    //     data: potEntryJSON,
-    //     withCredentials: true,
-    //     url: manyUrl,
-    //   })
-    //   expect(response.status).toBe(201);
-    //   createdPotEntries = true;
-    //   expect(response.data.count).toBe(testPotEntries.length);
-    //   // change fee
-    //   // change average, add eType = 'u'
-    //   const potEntriesToUpdate = [
-    //     {
-    //       ...testPotEntries[0],
-    //       fee: '19',
-    //       eType: "u",
-    //     },
-    //     {
-    //       ...testPotEntries[2],
-    //       fee: '19',
-    //       eType: "u",
-    //     },
-    //   ]
-    //   const toUpdateJSON = JSON.stringify(potEntriesToUpdate)
-    //   const updateResponse = await axios({
-    //     method: "put",
-    //     data: toUpdateJSON,
-    //     withCredentials: true,
-    //     url: manyUrl,
-    //   })
-    //   expect(updateResponse.status).toBe(200);
-    //   const updateInfo = updateResponse.data.updateInfo;
-    //   expect(updateInfo).not.toBeNull();
-    //   expect(updateInfo.updates).toBe(2);
-    //   expect(updateInfo.inserts).toBe(0);
-    //   expect(updateInfo.deletes).toBe(0);
-    // })
-    // it('should update many potEntries - just update 2 player 2 pot entry', async () => {
-    //   const potEntryJSON = JSON.stringify(testPotEntries);
-    //   const response = await axios({
-    //     method: "post",
-    //     data: potEntryJSON,
-    //     withCredentials: true,
-    //     url: manyUrl,
-    //   })
-    //   expect(response.status).toBe(201);
-    //   createdPotEntries = true;
-    //   expect(response.data.count).toBe(testPotEntries.length);
-    //   // change fee
-    //   // change average, add eType = 'u'
-    //   const potEntriesToUpdate = [
-    //     {
-    //       ...testPotEntries[0],
-    //       fee: '19',
-    //       eType: "u",
-    //     },
-    //     {
-    //       ...testPotEntries[1],
-    //       fee: '9',
-    //       eType: "u",
-    //     },
-    //     {
-    //       ...testPotEntries[2],
-    //       fee: '19',
-    //       eType: "u",
-    //     },
-    //     {
-    //       ...testPotEntries[3],
-    //       fee: '9',
-    //       eType: "u",
-    //     },
-    //   ]
-    //   const toUpdateJSON = JSON.stringify(potEntriesToUpdate)
-    //   const updateResponse = await axios({
-    //     method: "put",
-    //     data: toUpdateJSON,
-    //     withCredentials: true,
-    //     url: manyUrl,
-    //   })
-    //   expect(updateResponse.status).toBe(200);
-    //   const updateInfo = updateResponse.data.updateInfo;
-    //   expect(updateInfo).not.toBeNull();
-    //   expect(updateInfo.updates).toBe(4);
-    //   expect(updateInfo.inserts).toBe(0);
-    //   expect(updateInfo.deletes).toBe(0);
-    // })
-    // it('should insert many potEntries - just update 1 player 2 pot entry', async () => {
-    //   createdPotEntries = true;
-    //   // add eType = 'i'
-    //   const potEntriesToUpdate = [
-    //     {
-    //       ...testPotEntries[0],
-    //       eType: "i",
-    //     },
-    //     {
-    //       ...testPotEntries[1],
-    //       eType: "i",
-    //     },
-    //   ]
-    //   const toUpdateJSON = JSON.stringify(potEntriesToUpdate)
-    //   const updateResponse = await axios({
-    //     method: "put",
-    //     data: toUpdateJSON,
-    //     withCredentials: true,
-    //     url: manyUrl,
-    //   })
-    //   expect(updateResponse.status).toBe(200);
-    //   const updateInfo = updateResponse.data.updateInfo;
-    //   expect(updateInfo).not.toBeNull();
-    //   expect(updateInfo.updates).toBe(0);
-    //   expect(updateInfo.inserts).toBe(2);
-    //   expect(updateInfo.deletes).toBe(0);
-    // });
-    // it('should insert many potEntries - just update 2 player 1 pot entry', async () => {
-    //   createdPotEntries = true;
-    //   // add eType = 'i'
-    //   const potEntriesToUpdate = [
-    //     {
-    //       ...testPotEntries[0],
-    //       eType: "i",
-    //     },
-    //     {
-    //       ...testPotEntries[2],
-    //       eType: "i",
-    //     },
-    //   ]
-    //   const toUpdateJSON = JSON.stringify(potEntriesToUpdate)
-    //   const updateResponse = await axios({
-    //     method: "put",
-    //     data: toUpdateJSON,
-    //     withCredentials: true,
-    //     url: manyUrl,
-    //   })
-    //   expect(updateResponse.status).toBe(200);
-    //   const updateInfo = updateResponse.data.updateInfo;
-    //   expect(updateInfo).not.toBeNull();
-    //   expect(updateInfo.updates).toBe(0);
-    //   expect(updateInfo.inserts).toBe(2);
-    //   expect(updateInfo.deletes).toBe(0);
-    // });
-    // it('should insert many potEntries - just update 2 player 2 pot entry', async () => {
-    //   createdPotEntries = true;
-    //   // add eType = 'i'
-    //   const potEntriesToUpdate = [
-    //     {
-    //       ...testPotEntries[0],
-    //       eType: "i",
-    //     },
-    //     {
-    //       ...testPotEntries[1],
-    //       eType: "i",
-    //     },
-    //     {
-    //       ...testPotEntries[2],
-    //       eType: "i",
-    //     },
-    //     {
-    //       ...testPotEntries[3],
-    //       eType: "i",
-    //     },
-    //   ]
-    //   const toUpdateJSON = JSON.stringify(potEntriesToUpdate)
-    //   const updateResponse = await axios({
-    //     method: "put",
-    //     data: toUpdateJSON,
-    //     withCredentials: true,
-    //     url: manyUrl,
-    //   })
-    //   expect(updateResponse.status).toBe(200);
-    //   const updateInfo = updateResponse.data.updateInfo;
-    //   expect(updateInfo).not.toBeNull();
-    //   expect(updateInfo.updates).toBe(0);
-    //   expect(updateInfo.inserts).toBe(4);
-    //   expect(updateInfo.deletes).toBe(0);
-    // });
-    // it('should delete many potEntries - just update 1 player 2 pot entry', async () => {
-    //   const potEntryJSON = JSON.stringify(testPotEntries);
-    //   const response = await axios({
-    //     method: "post",
-    //     data: potEntryJSON,
-    //     withCredentials: true,
-    //     url: manyUrl,
-    //   })
-    //   expect(response.status).toBe(201);
-    //   createdPotEntries = true;
-    //   expect(response.data.count).toBe(testPotEntries.length);
-    //   // add eType = 'd'
-    //   const potEntriesToUpdate = [
-    //     {
-    //       ...testPotEntries[0],
-    //       eType: "d",
-    //     },
-    //     {
-    //       ...testPotEntries[1],
-    //       eType: "d",
-    //     },
-    //   ]
-    //   const toUpdateJSON = JSON.stringify(potEntriesToUpdate)
-    //   const updateResponse = await axios({
-    //     method: "put",
-    //     data: toUpdateJSON,
-    //     withCredentials: true,
-    //     url: manyUrl,
-    //   })
-    //   expect(updateResponse.status).toBe(200);
-    //   const updateInfo = updateResponse.data.updateInfo;
-    //   expect(updateInfo).not.toBeNull();
-    //   expect(updateInfo.updates).toBe(0);
-    //   expect(updateInfo.inserts).toBe(0);
-    //   expect(updateInfo.deletes).toBe(2);
-    // });
-    // it('should delete many potEntries - just update 2 player 1 pot entry', async () => {
-    //   const potEntryJSON = JSON.stringify(testPotEntries);
-    //   const response = await axios({
-    //     method: "post",
-    //     data: potEntryJSON,
-    //     withCredentials: true,
-    //     url: manyUrl,
-    //   })
-    //   expect(response.status).toBe(201);
-    //   createdPotEntries = true;
-    //   expect(response.data.count).toBe(testPotEntries.length);
-    //   // add eType = 'd'
-    //   const potEntriesToUpdate = [
-    //     {
-    //       ...testPotEntries[0],
-    //       eType: "d",
-    //     },
-    //     {
-    //       ...testPotEntries[2],
-    //       eType: "d",
-    //     },
-    //   ]
-    //   const toUpdateJSON = JSON.stringify(potEntriesToUpdate)
-    //   const updateResponse = await axios({
-    //     method: "put",
-    //     data: toUpdateJSON,
-    //     withCredentials: true,
-    //     url: manyUrl,
-    //   })
-    //   expect(updateResponse.status).toBe(200);
-    //   const updateInfo = updateResponse.data.updateInfo;
-    //   expect(updateInfo).not.toBeNull();
-    //   expect(updateInfo.updates).toBe(0);
-    //   expect(updateInfo.inserts).toBe(0);
-    //   expect(updateInfo.deletes).toBe(2);
-    // });
-    // it('should delete many potEntries - just update 2 player 2 pot entry', async () => {
-    //   const potEntryJSON = JSON.stringify(testPotEntries);
-    //   const response = await axios({
-    //     method: "post",
-    //     data: potEntryJSON,
-    //     withCredentials: true,
-    //     url: manyUrl,
-    //   })
-    //   expect(response.status).toBe(201);
-    //   createdPotEntries = true;
-    //   expect(response.data.count).toBe(testPotEntries.length);
-    //   // add eType = 'd'
-    //   const potEntriesToUpdate = [
-    //     {
-    //       ...testPotEntries[0],
-    //       eType: "d",
-    //     },
-    //     {
-    //       ...testPotEntries[1],
-    //       eType: "d",
-    //     },
-    //     {
-    //       ...testPotEntries[2],
-    //       eType: "d",
-    //     },
-    //     {
-    //       ...testPotEntries[3],
-    //       eType: "d",
-    //     },
-    //   ]
-    //   const toUpdateJSON = JSON.stringify(potEntriesToUpdate)
-    //   const updateResponse = await axios({
-    //     method: "put",
-    //     data: toUpdateJSON,
-    //     withCredentials: true,
-    //     url: manyUrl,
-    //   })
-    //   expect(updateResponse.status).toBe(200);
-    //   const updateInfo = updateResponse.data.updateInfo;
-    //   expect(updateInfo).not.toBeNull();
-    //   expect(updateInfo.updates).toBe(0);
-    //   expect(updateInfo.inserts).toBe(0);
-    //   expect(updateInfo.deletes).toBe(4);
-    // });
-    // it('should update, insert and delete many potEntries', async () => {
-    //   const multiPotEntriesTest = [
-    //     {
-    //       ...testPotEntries[0],
-    //     },
-    //     {
-    //       ...testPotEntries[1],
-    //     },
-    //     {
-    //       ...testPotEntries[2],
-    //     },
-    //     {
-    //       ...testPotEntries[3],
-    //     },
-    //   ]
-    //   const potEntryJSON = JSON.stringify(multiPotEntriesTest);
-    //   const response = await axios({
-    //     method: "post",
-    //     data: potEntryJSON,
-    //     withCredentials: true,
-    //     url: manyUrl,
-    //   })
-    //   expect(response.status).toBe(201);
-    //   createdPotEntries = true;
-    //   expect(response.data.count).toBe(mockPotEntriesToPost.length);
-    //   const postedPotEntries = await getAllPotEntriesForSquad(potsSquadId);
-    //   if (!postedPotEntries) {
-    //     expect(true).toBeFalsy();
-    //     return
-    //   }
-    //   // set edits, set eType
-    //   const potEntriesToUpdate = [
-    //     {
-    //       ...multiPotEntriesTest[0],
-    //       fee: '19',
-    //       eType: "u",
-    //     },
-    //     {
-    //       ...multiPotEntriesTest[1],
-    //       fee: '9',
-    //       eType: "u",
-    //     },
-    //     {
-    //       ...multiPotEntriesTest[2],
-    //       eType: "d",
-    //     },
-    //     {
-    //       ...multiPotEntriesTest[3],
-    //       eType: "d",
-    //     },
-    //     {
-    //       ...testPotEntries[4],
-    //       eType: "i",
-    //     },
-    //     {
-    //       ...testPotEntries[5],
-    //       eType: "i",
-    //     },
-    //   ]
-    //   const toUpdateJSON = JSON.stringify(potEntriesToUpdate)
-    //   const updateResponse = await axios({
-    //     method: "put",
-    //     data: toUpdateJSON,
-    //     withCredentials: true,
-    //     url: manyUrl,
-    //   })
-    //   expect(updateResponse.status).toBe(200);
-    //   const updateInfo = updateResponse.data.updateInfo;
-    //   expect(updateInfo).not.toBeNull();
-    //   expect(updateInfo.updates).toBe(2);
-    //   expect(updateInfo.inserts).toBe(2);
-    //   expect(updateInfo.deletes).toBe(2);
-    // })
-    // it('should NOT update, insert and delete many potEntries with invalid data', async () => {
-    //   const multiPotEntriesTest = [
-    //     {
-    //       ...testPotEntries[0],
-    //     },
-    //     {
-    //       ...testPotEntries[1],
-    //     },
-    //     {
-    //       ...testPotEntries[2],
-    //     },
-    //     {
-    //       ...testPotEntries[3],
-    //     },
-    //   ]
-    //   const potEntryJSON = JSON.stringify(multiPotEntriesTest);
-    //   const response = await axios({
-    //     method: "post",
-    //     data: potEntryJSON,
-    //     withCredentials: true,
-    //     url: manyUrl,
-    //   })
-    //   expect(response.status).toBe(201);
-    //   createdPotEntries = true;
-    //   expect(response.data.count).toBe(mockPotEntriesToPost.length);
-    //   const postedPotEntries = await getAllPotEntriesForSquad(potsSquadId);
-    //   if (!postedPotEntries) {
-    //     expect(true).toBeFalsy();
-    //     return
-    //   }
-    //   // set divs edits, set eType
-    //   const potEntriesToUpdate = [
-    //     {
-    //       ...multiPotEntriesTest[0],
-    //       fee: '1234567890',
-    //       eType: "u",
-    //     },
-    //     {
-    //       ...multiPotEntriesTest[1],
-    //       fee: '9',
-    //       eType: "u",
-    //     },
-    //     {
-    //       ...multiPotEntriesTest[2],
-    //       eType: "d",
-    //     },
-    //     {
-    //       ...multiPotEntriesTest[3],
-    //       eType: "d",
-    //     },
-    //     {
-    //       ...testPotEntries[4],
-    //       eType: "i",
-    //     },
-    //     {
-    //       ...testPotEntries[5],
-    //       eType: "i",
-    //     },
-    //   ]
-    //   const toUpdateJSON = JSON.stringify(potEntriesToUpdate)
-    //   try {
-    //     const updateResponse = await axios({
-    //       method: "put",
-    //       data: toUpdateJSON,
-    //       withCredentials: true,
-    //       url: manyUrl,
-    //     })
-    //     expect(response.status).toBe(422);
-    //   } catch (err) {
-    //     if (err instanceof AxiosError) {
-    //       expect(err.response?.status).toBe(422);
-    //     } else {
-    //       expect(true).toBeFalsy();
-    //     }
-    //   }
-    // })
   });
 
   describe("PUT one potEntry API: /api/potEntries/potEntry/:id", () => {
     const resetPotEntry = async () => {
       // make sure test player is reset in database
       const potEntryJSON = JSON.stringify(testPotEntry);
-      const putResponse = await axios({
-        method: "put",
-        data: potEntryJSON,
-        withCredentials: true,
-        url: onePotEntryUrl + testPotEntry.id,
-      });
+      await axios.put(onePotEntryUrl + testPotEntry.id, potEntryJSON,
+        { withCredentials: true }
+      );
     };
 
     const putPotEntry = {
@@ -1493,12 +619,9 @@ describe("Pot Entries - API's: /api/potEntries", () => {
 
     it("should update a potEntry by ID", async () => {
       const potEntryJSON = JSON.stringify(putPotEntry);
-      const response = await axios({
-        method: "put",
-        data: potEntryJSON,
-        withCredentials: true,
-        url: onePotEntryUrl + testPotEntry.id,
-      });
+      const response = await axios.put(onePotEntryUrl + putPotEntry.id, potEntryJSON,
+        { withCredentials: true }
+      );
       expect(response.status).toBe(200);
       didPut = true;
       const puttedPotEntry = response.data.potEntry;
@@ -1512,12 +635,9 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         fee: "23.000",
       };
       const potEntryJSON = JSON.stringify(toSanitize);
-      const response = await axios({
-        method: "put",
-        data: potEntryJSON,
-        withCredentials: true,
-        url: onePotEntryUrl + testPotEntry.id,
-      });
+      const response = await axios.put(onePotEntryUrl + putPotEntry.id, potEntryJSON,
+        { withCredentials: true }
+      );
       expect(response.status).toBe(200);
       didPut = true;
       const puttedPotEntry = response.data.potEntry;
@@ -1530,14 +650,11 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         ...putPotEntry,
         pot_id: "",
       };
-      const potEntryJSON = JSON.stringify(invalidPotEntry);
+      const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "put",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: onePotEntryUrl + testPotEntry.id,
-        });
+        const response = await axios.put(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
+          { withCredentials: true }
+        );
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1552,14 +669,11 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         ...putPotEntry,
         player_id: "",
       };
-      const potEntryJSON = JSON.stringify(invalidPotEntry);
+      const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "put",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: onePotEntryUrl + testPotEntry.id,
-        });
+        const response = await axios.put(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
+          { withCredentials: true }
+        );
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1574,14 +688,11 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         ...putPotEntry,
         fee: "",
       };
-      const potEntryJSON = JSON.stringify(invalidPotEntry);
+      const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "put",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: onePotEntryUrl + testPotEntry.id,
-        });
+        const response = await axios.put(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
+          { withCredentials: true }
+        );
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1596,14 +707,11 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         ...putPotEntry,
         fee: "-1",
       };
-      const potEntryJSON = JSON.stringify(invalidPotEntry);
+      const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "put",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: onePotEntryUrl + testPotEntry.id,
-        });
+        const response = await axios.put(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
+          { withCredentials: true }
+        );
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1618,14 +726,11 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         ...putPotEntry,
         fee: "1234567890",
       };
-      const potEntryJSON = JSON.stringify(invalidPotEntry);
+      const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "put",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: onePotEntryUrl + testPotEntry.id,
-        });
+        const response = await axios.put(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
+          { withCredentials: true }
+        );
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1640,14 +745,11 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         ...putPotEntry,
         fee: "not a number",
       };
-      const potEntryJSON = JSON.stringify(invalidPotEntry);
+      const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "put",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: onePotEntryUrl + testPotEntry.id,
-        });
+        const response = await axios.put(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
+          { withCredentials: true }
+        );
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1667,11 +769,8 @@ describe("Pot Entries - API's: /api/potEntries", () => {
     const doResetPotEntry = async () => {
       try {
         const playerJSON = JSON.stringify(testPotEntry);
-        const putResponse = await axios({
-          method: "patch",
-          data: playerJSON,
-          withCredentials: true,
-          url: onePotEntryUrl + testPotEntry.id,
+        await axios.put(onePotEntryUrl + testPotEntry.id, playerJSON, {
+          withCredentials: true
         });
       } catch (err) {
         if (err instanceof AxiosError) console.log(err.message);
@@ -1681,7 +780,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
     let didPatch = false;
 
     beforeAll(async () => {
-      await doResetPotEntry;
+      await doResetPotEntry();
     });
 
     beforeEach(() => {
@@ -1701,12 +800,9 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         pot_id: toPatchedPotId,
       };
       const potEntryJSON = JSON.stringify(patchPotEntry);
-      const response = await axios({
-        method: "patch",
-        data: potEntryJSON,
-        withCredentials: true,
-        url: onePotEntryUrl + toPatch.id,
-      });
+      const response = await axios.patch(onePotEntryUrl + patchPotEntry.id, potEntryJSON,
+        { withCredentials: true }
+      );
       expect(response.status).toBe(200);
       didPatch = true;
       const patchedPotEntry = response.data.potEntry;
@@ -1720,12 +816,9 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         player_id: toPatchedPlayerId,
       };
       const potEntryJSON = JSON.stringify(patchPotEntry);
-      const response = await axios({
-        method: "patch",
-        data: potEntryJSON,
-        withCredentials: true,
-        url: onePotEntryUrl + toPatch.id,
-      });
+      const response = await axios.patch(onePotEntryUrl + patchPotEntry.id, potEntryJSON,
+        { withCredentials: true }
+      );
       expect(response.status).toBe(200);
       didPatch = true;
       const patchedPotEntry = response.data.potEntry;
@@ -1739,12 +832,9 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         fee: toPatchedFee,
       };
       const potEntryJSON = JSON.stringify(patchPotEntry);
-      const response = await axios({
-        method: "patch",
-        data: potEntryJSON,
-        withCredentials: true,
-        url: onePotEntryUrl + toPatch.id,
-      });
+      const response = await axios.patch(onePotEntryUrl + patchPotEntry.id, potEntryJSON,
+        { withCredentials: true }
+      );
       expect(response.status).toBe(200);
       didPatch = true;
       const patchedPotEntry = response.data.potEntry;
@@ -1756,14 +846,11 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         ...toPatch,
         pot_id: "",
       };
-      const potEntryJSON = JSON.stringify(invalidPotEntry);
+      const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "patch",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: onePotEntryUrl + toPatch.id,
-        });
+        const response = await axios.patch(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
+          { withCredentials: true }
+        );
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1778,14 +865,11 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         ...toPatch,
         pot_id: userId,
       };
-      const potEntryJSON = JSON.stringify(invalidPotEntry);
+      const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "patch",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: onePotEntryUrl + toPatch.id,
-        });
+        const response = await axios.patch(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
+          { withCredentials: true }
+        );
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1800,14 +884,11 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         ...toPatch,
         pot_id: "test",
       };
-      const potEntryJSON = JSON.stringify(invalidPotEntry);
+      const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "patch",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: onePotEntryUrl + toPatch.id,
-        });
+        const response = await axios.patch(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
+          { withCredentials: true }
+        );
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1822,14 +903,11 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         ...toPatch,
         pot_id: userId,
       };
-      const potEntryJSON = JSON.stringify(invalidPotEntry);
+      const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "patch",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: onePotEntryUrl + toPatch.id,
-        });
+        const response = await axios.patch(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
+          { withCredentials: true }
+        );
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1844,14 +922,11 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         ...toPatch,
         player_id: "",
       };
-      const potEntryJSON = JSON.stringify(invalidPotEntry);
+      const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "patch",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: onePotEntryUrl + toPatch.id,
-        });
+        const response = await axios.patch(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
+          { withCredentials: true }
+        );
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1866,14 +941,11 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         ...toPatch,
         player_id: "test",
       };
-      const potEntryJSON = JSON.stringify(invalidPotEntry);
+      const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "patch",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: onePotEntryUrl + toPatch.id,
-        });
+        const response = await axios.patch(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
+          { withCredentials: true }
+        );
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1888,14 +960,11 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         ...toPatch,
         player_id: userId,
       };
-      const potEntryJSON = JSON.stringify(invalidPotEntry);
+      const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "patch",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: onePotEntryUrl + toPatch.id,
-        });
+        const response = await axios.patch(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
+          { withCredentials: true }
+        );
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1910,14 +979,11 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         ...toPatch,
         fee: "",
       };
-      const potEntryJSON = JSON.stringify(invalidPotEntry);
+      const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "patch",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: onePotEntryUrl + toPatch.id,
-        });
+        const response = await axios.patch(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
+          { withCredentials: true }
+        );
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1932,14 +998,11 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         ...toPatch,
         fee: "-1",
       };
-      const potEntryJSON = JSON.stringify(invalidPotEntry);
+      const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "patch",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: onePotEntryUrl + toPatch.id,
-        });
+        const response = await axios.patch(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
+          { withCredentials: true }
+        );
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1954,14 +1017,11 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         ...toPatch,
         fee: "1234567890",
       };
-      const potEntryJSON = JSON.stringify(invalidPotEntry);
+      const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "patch",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: onePotEntryUrl + toPatch.id,
-        });
+        const response = await axios.patch(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
+          { withCredentials: true }
+        );
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1976,14 +1036,11 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         ...toPatch,
         fee: "abc",
       };
-      const potEntryJSON = JSON.stringify(invalidPotEntry);
+      const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "patch",
-          data: potEntryJSON,
-          withCredentials: true,
-          url: onePotEntryUrl + toPatch.id,
-        });
+        const response = await axios.patch(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
+          { withCredentials: true }
+        );
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2002,7 +1059,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
       id: "pen_8c8b607b7ebb4e84a0753307afce256e",
       pot_id: "pot_791fb6d8a9a04cb4b3372e212da2a3b0",
       player_id: "ply_bb0fd8bbd9e34d34a7fa90b4111c6e40",
-      fee: 20,
+      fee: '20',
     };
 
     let didDel = false;
@@ -2015,42 +1072,33 @@ describe("Pot Entries - API's: /api/potEntries", () => {
       if (!didDel) return;
       // if deleted event, add event back
       try {
-        const playerJSON = JSON.stringify(toDelPotEntry);
-        const response = await axios({
-          method: "post",
-          data: playerJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const potEntryJSON = JSON.stringify(toDelPotEntry);
+        await axios.post(url, potEntryJSON, { withCredentials: true });
       } catch (err) {
         if (err instanceof Error) console.log(err.message);
       }
     });
 
     it("should delete a potEntry by ID", async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: onePotEntryUrl + toDelPotEntry.id,
-        });
-        expect(response.status).toBe(200);
-        didDel = true;
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
+      const response = await axios.delete(onePotEntryUrl + toDelPotEntry.id,
+        { withCredentials: true }
+      );
+      expect(response.status).toBe(200);
+      didDel = true;
+      expect(response.data.count).toBe(1);      
+    });
+    it("should return 0 when deleting a potEntry by ID when id is not found", async () => {
+      const response = await axios.delete(onePotEntryUrl + notFoundId,
+        { withCredentials: true }
+      );
+      expect(response.status).toBe(200);
+      expect(response.data.count).toBe(0);
     });
     it("should NOT delete a potEntry by ID when ID is invalid", async () => {
       try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: onePotEntryUrl + "invalid_id",
-        });
+        const response = await axios.delete(onePotEntryUrl + "invalid_id",
+          { withCredentials: true }
+        );
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2062,32 +1110,13 @@ describe("Pot Entries - API's: /api/potEntries", () => {
     });
     it("should NOT delete a potEntry by ID when id is valid, bit noy a potEntry id", async () => {
       try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: onePotEntryUrl + userId,
-        });
+        const response = await axios.delete(onePotEntryUrl + userId,
+          { withCredentials: true }
+        );
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
           expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should NOT delete a potEntry by ID when id is not found", async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: onePotEntryUrl + notFoundId,
-        });
-        expect(response.status).toBe(200);
-        expect(response.data.count).toBe(0);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(200);
         } else {
           expect(true).toBeFalsy();
         }
@@ -2095,222 +1124,4 @@ describe("Pot Entries - API's: /api/potEntries", () => {
     });
   });
 
-  describe("DELETE all potEntries for one squad - API: /api/potEntries/squad/:squadId/:squadId", () => {
-    beforeAll(async () => {
-      await postManyPotEntries(mockPotEntriesToPost);
-    });
-
-    afterAll(async () => {
-      await deleteAllPotEntriesForTmnt(tmntIdForMockData);
-    });
-
-    it("should delete all potEntries for a squad", async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: squadUrl + squadIdForMockData,
-        });
-        expect(response.status).toBe(200);
-        expect(response.data.count).toBe(mockPotEntriesToPost.length);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should NOT delete all potEntries for a squad when squad id is not valid", async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: squadUrl + "test",
-        });
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should NOT delete all potEntries for a squad when squad id is valid, but not a squad id", async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: squadUrl + userId,
-        });
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should delete 0 potEntries for a squad when squad id is not found", async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: squadUrl + notFoundSquadId,
-        });
-        expect(response.status).toBe(200);
-        expect(response.data.count).toBe(0);
-      } catch (err) {
-        expect(true).toBeFalsy();
-      }
-    });
-  });
-
-  describe("DELETE all potEntries for one div - API: /api/potEntries/div/:squadId/:divId", () => {
-    beforeAll(async () => {
-      await postManyPotEntries(mockPotEntriesToPost);
-    });
-
-    afterAll(async () => {
-      await deleteAllPotEntriesForTmnt(tmntIdForMockData);
-    });
-
-    it("should delete all potEntries for a div", async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: divUrl + divIdForMockData,
-        });
-        expect(response.status).toBe(200);
-        expect(response.data.count).toBe(mockPotEntriesToPost.length);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should NOT delete all potEntries for a div when div id is not valid", async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: divUrl + "test",
-        });
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should NOT delete all potEntries for a div when div id is valid, but not a div id", async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: divUrl + userId,
-        });
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should delete 0 potEntries for a div when div id is not found", async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: divUrl + notFoundDivId,
-        });
-        expect(response.status).toBe(200);
-        expect(response.data.count).toBe(0);
-      } catch (err) {
-        expect(true).toBeFalsy();
-      }
-    });
-  });
-
-  describe("DELETE all potEntries for one tmnt - API: /api/potEntries/tmnt/:tmntId", () => {
-    beforeAll(async () => {
-      await postManyPotEntries(mockPotEntriesToPost);
-    });
-
-    afterAll(async () => {
-      await deleteAllPotEntriesForTmnt(tmntIdForMockData);
-    });
-
-    it("should delete all potEntries for a tmnt", async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: tmntUrl + tmntIdForMockData,
-        });
-        expect(response.status).toBe(200);
-        expect(response.data.count).toBe(mockPotEntriesToPost.length);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should NOT delete all potEntries for a tmnt when tmnt id is not valid", async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: tmntUrl + "test",
-        });
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should NOT delete all potEntries for a tmnt when tmnt id is valid, but not a tmnt id", async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: tmntUrl + userId,
-        });
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should delete 0 potEntries for a tmnt when tmnt id is not found", async () => {
-      try {
-        const response = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: tmntUrl + notFoundTmntId,
-        });
-        expect(response.status).toBe(200);
-        expect(response.data.count).toBe(0);
-      } catch (err) {
-        expect(true).toBeFalsy();
-      }
-    });
-  });
 });

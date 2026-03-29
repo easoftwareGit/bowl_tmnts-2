@@ -1,21 +1,23 @@
 import {
   isValidBtDbId,
-  maxEventLength,
-  minGames,
-  maxGames,  
   validTime,
-  minLane,
-  maxStartLane,
   isOdd,
   isEven,
   isNumber,
-  maxLaneCount,
   validSortOrder,
+} from "@/lib/validation/validation";
+import {  
+  maxEventLength,
+  minGames,
+  maxGames,    
+  minLane,
+  maxStartLane,
+  maxLaneCount,
   maxDate,
   minDate,
-} from "@/lib/validation/validation";
+} from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
-import { sanitize } from "@/lib/validation/sanitize";
+import { sanitizeEDS } from "@/lib/validation/sanitize";
 import { compareAsc, isValid } from "date-fns";
 import type {
   squadType,
@@ -39,7 +41,7 @@ const gotSquadData = (squad: squadType): ErrorCode => {
       !squad ||
       !squad.id ||
       !squad.event_id ||
-      !sanitize(squad.squad_name) ||
+      !sanitizeEDS(squad.squad_name) ||
       typeof squad.games !== "number" ||
       typeof squad.starting_lane !== "number" ||
       typeof squad.lane_count !== "number" ||
@@ -55,7 +57,7 @@ const gotSquadData = (squad: squadType): ErrorCode => {
 };
 
 export const validSquadName = (squadName: unknown): boolean => {
-  const sanitized = sanitize(squadName);
+  const sanitized = sanitizeEDS(squadName);
   return sanitized.length > 0 && sanitized.length <= maxEventLength;
 };
 export const validGames = (games: unknown): boolean => {
@@ -199,7 +201,7 @@ export const sanitizeSquad = (squad: squadType): squadType => {
   if (isValidBtDbId(squad.id, "sqd")) {
     sanitizedSquad.id = squad.id;
   }
-  sanitizedSquad.squad_name = sanitize(squad.squad_name);
+  sanitizedSquad.squad_name = sanitizeEDS(squad.squad_name);
   if (validEventFkId(squad.event_id, "evt")) {
     sanitizedSquad.event_id = squad.event_id;
   }

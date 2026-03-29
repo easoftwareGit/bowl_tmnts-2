@@ -3,9 +3,6 @@ import { baseEventsApi } from "@/lib/api/apiPaths";
 import { testBaseEventsApi } from "../../../testApi";
 import type { eventType } from "@/lib/types/types";
 import { initEvent } from "@/lib/db/initVals";
-import { btDbUuid } from "@/lib/uuid";
-import { mockEventsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockEvents";
-import { deleteAllEventsForTmnt, getAllEventsForTmnt } from "@/lib/db/events/dbEvents";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -48,33 +45,42 @@ describe('Events - GETs and POST API: /api/events', () => {
     sort_order: 1,
   };
 
+  const eventToPost: eventType = {
+    ...initEvent,   
+    id: "evt_1234567890abcdef1234567890abcdef",
+    tmnt_id: "tmt_fd99387c33d9c78aba290286576ddce5",
+    event_name: "Test Event",
+    team_size: 1,
+    games: 6,
+    added_money: '0',
+    entry_fee: '80',
+    lineage: '18',
+    prize_fund: '55',
+    other: '2',
+    expenses: '5',
+    lpox: '80',
+    sort_order: 2,
+  };
+
+
   const notFoundId = "evt_01234567890123456789012345678901";
   const notFoundTmntId = "tmt_01234567890123456789012345678901";
-  const nonEventId = "usr_01234567890123456789012345678901";
+  const userId = "usr_01234567890123456789012345678901";
   
   const tmnt1Id = 'tmt_fd99387c33d9c78aba290286576ddce5';
 
-  const deletePostedEvent = async () => {
-    const response = await axios.get(url);
-    const events = response.data.events;
-    const toDel = events.find((e: eventType) => e.event_name === 'Test Event');
-    if (toDel) {
-      try {
-        const delResponse = await axios({
-          method: "delete",
-          withCredentials: true,
-          url: oneEventUrl + toDel.id
-        });
-      } catch (err) {
-        if (err instanceof AxiosError) console.log(err.message);
-      }
+  const deletePostedEvent = async (eventId: string) => {
+    try {
+      await axios.delete(oneEventUrl + eventId, { withCredentials: true });
+    } catch (err) {
+      if (err instanceof AxiosError) console.log(err.message);
     }
   }
 
   describe('GET', () => { 
 
     beforeAll(async () => {
-      await deletePostedEvent();
+      await deletePostedEvent(eventToPost.id);
     })
 
     it('should get all events', async () => {
@@ -93,6 +99,10 @@ describe('Events - GETs and POST API: /api/events', () => {
 
   describe('GET by ID - API: API: /api/events/event/:id', () => { 
 
+    beforeAll(async () => {
+      await deletePostedEvent(eventToPost.id);
+    });
+
     it('should get an event by ID', async () => { 
       const response = await axios.get(oneEventUrl + testEvent.id);
       const event = response.data.event;
@@ -107,8 +117,7 @@ describe('Events - GETs and POST API: /api/events', () => {
       expect(event.prize_fund).toEqual(testEvent.prize_fund);
       expect(event.other).toEqual(testEvent.other);
       expect(event.expenses).toEqual(testEvent.expenses);
-      expect(event.added_money).toEqual(testEvent.added_money);
-      expect(event.lpox).toEqual(testEvent.lpox);
+      expect(event.added_money).toEqual(testEvent.added_money);      
       expect(event.sort_order).toEqual(testEvent.sort_order);
     })
     it('should NOT get an event by ID when ID is invalid', async () => {
@@ -125,7 +134,7 @@ describe('Events - GETs and POST API: /api/events', () => {
     })
     it('should NOT get an event by ID when ID is valid, but not an event ID', async () => {
       try {
-        const response = await axios.get(oneEventUrl + nonEventId);
+        const response = await axios.get(oneEventUrl + userId);
         expect(true).toBeFalsy();
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -153,41 +162,44 @@ describe('Events - GETs and POST API: /api/events', () => {
   describe('GET all events for a tmnt API: /api/events/tmnt/:tmntId', () => {
         
     beforeAll(async () => {
-      await deletePostedEvent();
+      await deletePostedEvent(eventToPost.id);
     })
 
-    it('should get all events for a tournament', async () => { 
+    it('should get all events for a tournament', async () => {
       // const values taken from prisma/seed.ts
       const miltiEventTmntId = 'tmt_2d494e9bb51f4b9abba428c3f37131c9';
       const tmntEvent1Id = 'evt_cb55703a8a084acb86306e2944320e8d';
-      const tmntEvent2Id = 'evt_adfcff4846474a25ad2936aca121bd37';      
+      const tmntEvent2Id = 'evt_adfcff4846474a25ad2936aca121bd37';
       
-      const response = await axios({
-        method: "get",
-        withCredentials: true,
-        url: tmntUrl + miltiEventTmntId, 
-      })
+      const response = await axios.get(tmntUrl + miltiEventTmntId, {
+        withCredentials: true
+      });
       expect(response.status).toBe(200);
       // 2 event rows for tmnt in prisma/seed.ts
       expect(response.data.events).toHaveLength(2);
       const events: eventType[] = response.data.events;
       // query in /api/events/tmnt GET sorts by sort_order
       expect(events[0].id).toBe(tmntEvent1Id);
-      expect(events[1].id).toBe(tmntEvent2Id);      
+      expect(events[1].id).toBe(tmntEvent2Id);
       expect(events[0].tmnt_id).toBe(miltiEventTmntId);
-      expect(events[1].tmnt_id).toBe(miltiEventTmntId);      
+      expect(events[1].tmnt_id).toBe(miltiEventTmntId);
       expect(events[0].lpox).not.toBeNull();
-      expect(events[1].lpox).not.toBeNull();      
+      expect(events[1].lpox).not.toBeNull();
       expect(events[0].lpox).not.toBe('');
-      expect(events[1].lpox).not.toBe('');      
-    })
+      expect(events[1].lpox).not.toBe('');
+    });
+    it('should return status 200 when tmnt id is not found', async () => {
+      const response = await axios.get(tmntUrl + notFoundTmntId, {
+        withCredentials: true
+      });
+      expect(response.status).toBe(200);
+      expect(response.data.events).toHaveLength(0);
+    });
     it('should return status 404 when tmntId is invalid', async () => { 
       try {
-        const response = await axios({
-          method: "get",
-          withCredentials: true,
-          url: tmntUrl + "invalid",
-        })
+        const response = await axios.get(tmntUrl + 'invalid', {
+          withCredentials: true
+        });
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -199,10 +211,8 @@ describe('Events - GETs and POST API: /api/events', () => {
     })
     it('should return starus 404 when tmntId is valid, but not a tmnt id', async () => { 
       try {
-        const response = await axios({
-          method: "get",
-          withCredentials: true,
-          url: tmntUrl + nonEventId,
+        const response = await axios.get(tmntUrl + userId, {
+          withCredentials: true
         })
         expect(response.status).toBe(404);
       } catch (err) {
@@ -213,40 +223,15 @@ describe('Events - GETs and POST API: /api/events', () => {
         }
       }
     }) 
-    it('should return status 200 when tmnt id is not found', async () => { 
-      const response = await axios({
-        method: "get",
-        withCredentials: true,
-        url: tmntUrl + notFoundTmntId, 
-      })
-      expect(response.status).toBe(200);      
-      expect(response.data.events).toHaveLength(0);
-    })
 
   })
 
   describe('POST one event API: /api/events', () => { 
 
-    const eventToPost: eventType = {
-      ...initEvent,      
-      tmnt_id: "tmt_fd99387c33d9c78aba290286576ddce5",
-      event_name: "Test Event",
-      team_size: 1,
-      games: 6,
-      added_money: '0',
-      entry_fee: '80',
-      lineage: '18',
-      prize_fund: '55',
-      other: '2',
-      expenses: '5',
-      lpox: '80',
-      sort_order: 2,
-    };
-
     let createdEvent = false;    
 
     beforeAll(async () => { 
-      await deletePostedEvent();
+      await deletePostedEvent(eventToPost.id);
     })
 
     beforeEach(() => {
@@ -255,18 +240,13 @@ describe('Events - GETs and POST API: /api/events', () => {
 
     afterEach(async () => {
       if (createdEvent) {
-        await deletePostedEvent();
+        await deletePostedEvent(eventToPost.id);
       }      
     })
 
     it('should create a new event', async () => { 
       const eventJSON = JSON.stringify(eventToPost);
-      const response = await axios({
-        method: "post",
-        data: eventJSON,
-        withCredentials: true,
-        url: url,
-      });
+      const response = await axios.post(url, eventJSON, { withCredentials: true });
       expect(response.status).toBe(201);
       // the "POST" returns json'ed data, so decimal values return as strings
       const postedEvent = response.data.event;
@@ -290,12 +270,7 @@ describe('Events - GETs and POST API: /api/events', () => {
         added_money: '',
       }
       const eventJSON = JSON.stringify(validEvent);
-      const response = await axios({
-        method: "post",
-        data: eventJSON,
-        withCredentials: true,
-        url: url,
-      });
+      const response = await axios.post(url, eventJSON, { withCredentials: true });
       expect(response.status).toBe(201);
       const postedEvent = response.data.event;
       createdEvent = true;
@@ -313,12 +288,7 @@ describe('Events - GETs and POST API: /api/events', () => {
         lpox: '',
       }
       const eventJSON = JSON.stringify(validEvent);
-      const response = await axios({
-        method: "post",
-        data: eventJSON,
-        withCredentials: true,
-        url: url,
-      });
+      const response = await axios.post(url, eventJSON, { withCredentials: true });
       expect(response.status).toBe(201);
       const postedEvent = response.data.event;
       createdEvent = true;
@@ -329,19 +299,37 @@ describe('Events - GETs and POST API: /api/events', () => {
       expect(postedEvent.expenses).toEqual('0');
       expect(postedEvent.added_money).toEqual('0');
     })
+    it('should create a new event with sanitized event name', async () => {
+      const validEvent = {
+        ...eventToPost,        
+        event_name: '<script>Name</script>',
+      }
+      const eventJSON = JSON.stringify(validEvent);
+      const response = await axios.post(url, eventJSON, { withCredentials: true });
+      const postedEvent = response.data.event;      
+      expect(response.status).toBe(201);
+      createdEvent = true
+      expect(postedEvent.id).toEqual(validEvent.id); // use validEvent.id
+      expect(postedEvent.tmnt_id).toEqual(eventToPost.tmnt_id);
+      expect(postedEvent.event_name).toEqual('scriptNamescript');
+      expect(postedEvent.team_size).toEqual(eventToPost.team_size);
+      expect(postedEvent.games).toEqual(eventToPost.games);
+      expect(postedEvent.entry_fee).toEqual(eventToPost.entry_fee);
+      expect(postedEvent.lineage).toEqual(eventToPost.lineage);
+      expect(postedEvent.prize_fund).toEqual(eventToPost.prize_fund);
+      expect(postedEvent.other).toEqual(eventToPost.other);
+      expect(postedEvent.expenses).toEqual(eventToPost.expenses);
+      expect(postedEvent.added_money).toEqual(eventToPost.added_money);
+      expect(postedEvent.sort_order).toEqual(eventToPost.sort_order);      
+    })  
     it('should NOT create a new event when ID is blank', async () => { 
       const invalidEvent = {
         ...eventToPost,
         id: "",
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -356,14 +344,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         tmnt_id: "",
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -378,14 +361,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         event_name: "",
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -400,14 +378,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         team_size: null as any,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -422,14 +395,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         games: null as any,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -444,14 +412,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         entry_fee: '',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -466,14 +429,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         lineage: '',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -488,14 +446,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         prize_fund: '',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -510,14 +463,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         other: '',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -532,14 +480,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         expenses: '',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -554,14 +497,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         lpox: '',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -576,14 +514,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         sort_order: null as any,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -598,14 +531,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         id: "test",
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -618,16 +546,11 @@ describe('Events - GETs and POST API: /api/events', () => {
     it('should NOT create a new event when ID is valid, but not an event ID', async () => {
       const invalidEvent = {
         ...eventToPost,
-        id: nonEventId,
+        id: userId,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -642,14 +565,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         tmnt_id: "test",
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -662,16 +580,11 @@ describe('Events - GETs and POST API: /api/events', () => {
     it('should NOT create a new event when tmnt_id is valid, but not a tmnt id', async () => { 
       const invalidEvent = {
         ...eventToPost,
-        tmnt_id: nonEventId,
+        tmnt_id: userId,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -686,14 +599,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         tmnt_id: notFoundTmntId,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -708,14 +616,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         event_name: "a".repeat(256),
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -730,14 +633,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         team_size: 0,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -752,14 +650,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         team_size: 1000,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -774,14 +667,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         team_size: 1.5,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -796,14 +684,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         team_size: 'abc',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -818,14 +701,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         games: 0,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -840,14 +718,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         games: 1000,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -862,14 +735,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         games: 1.5,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -884,14 +752,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         games: 'abc',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -906,14 +769,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         added_money: 500 as any,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -928,14 +786,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         added_money: 'abc',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -950,14 +803,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         added_money: '-1',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -972,14 +820,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         added_money: '1234567',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -994,14 +837,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         entry_fee: 100 as any,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1016,14 +854,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         entry_fee: 'abc',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1038,14 +871,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         entry_fee: '-1',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1060,14 +888,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         entry_fee: '1234567',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1082,14 +905,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         lineage: 20 as any,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1104,14 +922,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         lineage: 'abc',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1126,14 +939,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         lineage: '-1',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1148,14 +956,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         lineage: '1234567',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1170,14 +973,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         prize_fund: 75 as any,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1192,14 +990,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         prize_fund: 'abc',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1214,14 +1007,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         prize_fund: '-1',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1236,14 +1024,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         prize_fund: '1234567',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1258,14 +1041,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         other: 2 as any,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1280,14 +1058,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         other: 'abc',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1302,14 +1075,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         other: '-1',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1324,14 +1092,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         other: '1234567',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1346,14 +1109,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         expenses: 10 as any,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1368,14 +1126,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         expenses: 'abc',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1390,14 +1143,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         expenses: '-1',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1412,14 +1160,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         expenses: '1234567',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1434,14 +1177,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         lpox: 'abc',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1456,14 +1194,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         lpox: '-1',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1478,14 +1211,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         lpox: '1234567',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1500,14 +1228,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         sort_order: 'abc',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1522,14 +1245,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         sort_order: 0,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1544,14 +1262,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         sort_order: 1234567,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1566,14 +1279,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         entry_fee: '100',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1588,14 +1296,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         ...eventToPost,
         lpox: '100',
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1614,14 +1317,9 @@ describe('Events - GETs and POST API: /api/events', () => {
         event_name: dubName,
         sort_order: 2,
       }
-      const eventJSON = JSON.stringify(invalidEvent);
+      const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "post",
-          data: eventJSON,
-          withCredentials: true,
-          url: url,
-        });
+        const response = await axios.post(url, invalidJSON, { withCredentials: true });
         expect(response.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1630,188 +1328,7 @@ describe('Events - GETs and POST API: /api/events', () => {
           expect(true).toBeFalsy();
         }
       }
-    })
-    it('should create a new event with sanitized event name', async () => {
-      const validEvent = {
-        ...eventToPost,
-        id: btDbUuid('evt'),
-        event_name: '<script>' + eventToPost.event_name + '</script>',
-      }
-      const eventJSON = JSON.stringify(validEvent);
-      const response = await axios({
-        method: "post",
-        data: eventJSON,
-        withCredentials: true,
-        url: url,
-      })
-      const postedEvent = response.data.event;      
-      expect(response.status).toBe(201);
-      createdEvent = true
-      expect(postedEvent.id).toEqual(validEvent.id); // use validEvent.id
-      expect(postedEvent.tmnt_id).toEqual(eventToPost.tmnt_id);
-      expect(postedEvent.event_name).toEqual(eventToPost.event_name);
-      expect(postedEvent.team_size).toEqual(eventToPost.team_size);
-      expect(postedEvent.games).toEqual(eventToPost.games);
-      expect(postedEvent.entry_fee).toEqual(eventToPost.entry_fee);
-      expect(postedEvent.lineage).toEqual(eventToPost.lineage);
-      expect(postedEvent.prize_fund).toEqual(eventToPost.prize_fund);
-      expect(postedEvent.other).toEqual(eventToPost.other);
-      expect(postedEvent.expenses).toEqual(eventToPost.expenses);
-      expect(postedEvent.added_money).toEqual(eventToPost.added_money);
-      expect(postedEvent.sort_order).toEqual(eventToPost.sort_order);      
-    })  
-    
-  })
-
-  describe('POST many events for one tmnt API: /api/events/many', () => { 
-
-    let createdEvents = false;    
-
-    beforeAll(async () => { 
-      await deleteAllEventsForTmnt(mockEventsToPost[0].tmnt_id);
-    })
-
-    beforeEach(() => {
-      createdEvents = false;
-    })
-
-    afterEach(async () => {
-      if (createdEvents) {
-        await deleteAllEventsForTmnt(mockEventsToPost[0].tmnt_id);
-      }      
-    })
-
-    it('should create many events', async () => { 
-      const eventsJSON = JSON.stringify(mockEventsToPost);
-      const response = await axios({
-        method: "post",
-        data: eventsJSON,
-        withCredentials: true,
-        url: manyUrl,
-      })
-      expect(response.status).toBe(201);
-      createdEvents = true
-      expect(response.data.count).toBe(mockEventsToPost.length);
-      const postedEvents = await getAllEventsForTmnt(mockEventsToPost[0].tmnt_id);
-      if (!postedEvents) { 
-        expect(true).toBe(false);
-        return;
-      };
-      expect(postedEvents.length).toEqual(mockEventsToPost.length);
-      // the "POST" returns json'ed data, so decimal values return as strings
-      for (let i = 0; i < postedEvents.length; i++) {
-        expect(postedEvents[i].id).toEqual(mockEventsToPost[i].id);
-        expect(postedEvents[i].tmnt_id).toEqual(mockEventsToPost[i].tmnt_id);
-        expect(postedEvents[i].event_name).toEqual(mockEventsToPost[i].event_name);
-        expect(postedEvents[i].team_size).toEqual(mockEventsToPost[i].team_size);
-        expect(postedEvents[i].games).toEqual(mockEventsToPost[i].games);
-        expect(postedEvents[i].entry_fee).toEqual(mockEventsToPost[i].entry_fee);
-        expect(postedEvents[i].lineage).toEqual(mockEventsToPost[i].lineage);
-        expect(postedEvents[i].prize_fund).toEqual(mockEventsToPost[i].prize_fund);
-        expect(postedEvents[i].other).toEqual(mockEventsToPost[i].other);
-        expect(postedEvents[i].expenses).toEqual(mockEventsToPost[i].expenses);
-        expect(postedEvents[i].added_money).toEqual(mockEventsToPost[i].added_money);
-        expect(postedEvents[i].lpox).toEqual(mockEventsToPost[i].lpox);
-        expect(postedEvents[i].sort_order).toEqual(mockEventsToPost[i].sort_order);        
-      } 
-    })
-    it('should retirn 0 and statuscode 200 if passed an empty array', async () => { 
-      const eventsJSON = JSON.stringify([]);
-      const response = await axios({
-        method: "post",
-        data: eventsJSON,
-        withCredentials: true,
-        url: manyUrl,
-      })
-      expect(response.status).toBe(200);
-      expect(response.data.count).toBe(0);
-    })
-    it('should create many events with sanitized data', async () => {
-      const toSanitzie = [
-        {
-          ...mockEventsToPost[0],
-          event_name: '   ' + mockEventsToPost[0].event_name + '  **** ',
-        },
-        {
-          ...mockEventsToPost[1],
-          event_name: '<script>' + mockEventsToPost[1].event_name + '</script>',
-        }
-      ]
-      const eventsJSON = JSON.stringify(toSanitzie);
-      const response = await axios({
-        method: "post",
-        data: eventsJSON,
-        withCredentials: true,
-        url: manyUrl,
-      })
-      expect(response.status).toBe(201);
-      createdEvents = true
-      expect(response.data.count).toBe(toSanitzie.length);      
-      const postedEvents = await getAllEventsForTmnt(mockEventsToPost[0].tmnt_id);
-      if (!postedEvents) {
-        expect(true).toBe(false);
-        return;
-      }
-      expect(postedEvents.length).toEqual(toSanitzie.length);
-      expect(postedEvents[0].event_name).toEqual(mockEventsToPost[0].event_name);
-      expect(postedEvents[1].event_name).toEqual(mockEventsToPost[1].event_name);
-    })
-    it('should not post events with invalid data in first event', async () => {
-      const invalidEvents = [
-        {
-          ...mockEventsToPost[0],
-          event_name: '',
-        },
-        {
-          ...mockEventsToPost[1],
-          event_name: 'Valid Event',
-        }
-      ]
-      const eventsJSON = JSON.stringify(invalidEvents);
-      try {
-        const response = await axios({
-          method: "post",
-          data: eventsJSON,
-          withCredentials: true,
-          url: manyUrl,
-        })      
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not post events with invalid data in other event', async () => {
-      const invalidEvents = [
-        {
-          ...mockEventsToPost[0],
-          event_name: 'Valid Name',
-        },
-        {
-          ...mockEventsToPost[1],
-          games: 0,
-        }
-      ]
-      const eventsJSON = JSON.stringify(invalidEvents);
-      try {
-        const response = await axios({
-          method: "post",
-          data: eventsJSON,
-          withCredentials: true,
-          url: manyUrl,
-        })      
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
+    })    
   })
 
 })

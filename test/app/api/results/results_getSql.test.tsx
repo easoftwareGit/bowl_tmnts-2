@@ -1,5 +1,5 @@
 import { getDivGamesSql, getTmntGamesSql } from "@/app/api/results/games/getSql"
-import { maxGames } from "@/lib/validation/validation"
+import { maxGames } from "@/lib/validation/constants"
 
 describe('getSql', () => { 
 

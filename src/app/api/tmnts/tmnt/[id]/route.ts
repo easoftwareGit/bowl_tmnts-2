@@ -6,8 +6,8 @@ import { sanitizeTmnt, validateTmnt } from "@/lib/validation/tmnts/valildate";
 import type { tmntType } from "@/lib/types/types";
 import { initTmnt } from "@/lib/db/initVals";
 import { dateTo_UTC_yyyyMMdd, startOfDayFromString } from "@/lib/dateTools";
-import { getErrorStatus } from "@/app/api/errCodes";
-import { tmntDataForPrisma } from "../../dataForPrisma";
+import { getErrorStatus, standardCatchReturn } from "@/app/api/apiCatch";
+import { tmntDataForPrisma } from "../../tmntDataForPrisma";
 
 // routes /api/tmnts/tmnt/:id
 
@@ -31,7 +31,7 @@ export async function GET(
         end_date: true,
         bowl_id: true,
         user_id: true,
-        bowls: {
+        bowl: {
           select: {
             bowl_name: true,
             city: true,
@@ -46,7 +46,7 @@ export async function GET(
     }
     return NextResponse.json({ tmnt }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ error: "Error getting tmnt" }, { status: 500 });
+    return standardCatchReturn(error, "error getting tmnt");
   }
 }
 
@@ -93,8 +93,6 @@ export async function PUT(
     if (!prismaToPut) {
       return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
-    // const startDate = startOfDayFromString(toPut.start_date_str) as Date
-    // const endDate = startOfDayFromString(toPut.end_date_str) as Date    
     const tmnt = await prisma.tmnt.update({
       where: {
         id: id,
@@ -108,12 +106,8 @@ export async function PUT(
       },
     });
     return NextResponse.json({ tmnt }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "Error putting tmnt" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error putting tmnt");
   }
 }
 
@@ -221,12 +215,8 @@ export async function PATCH(
       },
     });
     return NextResponse.json({ tmnt }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "Error patching tmnt" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error patching tmnt");
   }
 }
 
@@ -246,12 +236,8 @@ export async function DELETE(
       },
     });
     return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "Error deleting tmnt" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error deleting tmnt");
   }
 
 }

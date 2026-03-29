@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isValidBtDbId } from "@/lib/validation/validation";
+import { standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/oneBrkts/withSeeds/:id
 
@@ -59,7 +60,7 @@ export async function GET(
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
     return NextResponse.json({ oneBrktsAndSeeds }, { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json({ error: "error getting oneBrktsAndSeeds" }, { status: 500 });
+  } catch (error) {
+    return standardCatchReturn(error, "error getting oneBrktsAndSeeds");
   }  
 }

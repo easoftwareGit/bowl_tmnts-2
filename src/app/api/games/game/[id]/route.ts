@@ -5,7 +5,7 @@ import { isValidBtDbId } from "@/lib/validation/validation";
 import { ErrorCode } from "@/lib/enums/enums";
 import type { gameType } from "@/lib/types/types";
 import { initGame } from "@/lib/db/initVals";
-import { getErrorStatus } from "@/app/api/errCodes";
+import { getErrorStatus, standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/games/game/:id
 
@@ -27,8 +27,8 @@ export async function GET(
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
     return NextResponse.json({ game }, { status: 200 });
-  } catch (err: any) {
-    return NextResponse.json({ error: "error getting game" }, { status: 500 });
+  } catch (error) {
+    return standardCatchReturn(error, "error getting game");
   }
 }
 
@@ -84,12 +84,8 @@ export async function PUT(
       },
     });
     return NextResponse.json({ game }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error updating game" },
-      { status: errStatus }
-    );
+  } catch (error) {
+    return standardCatchReturn(error, "error updating game");
   }
 }
 
@@ -188,12 +184,8 @@ export async function PATCH(
       },
     });
     return NextResponse.json({ game }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error patching game" },
-      { status: errStatus }
-    );    
+  } catch (error) {
+    return standardCatchReturn(error, "error patching game");
   }
 }
 
@@ -214,11 +206,7 @@ export async function DELETE(
       },
     });
     return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (err: any) {
-    const errStatus = getErrorStatus(err.code);
-    return NextResponse.json(
-      { error: "error deleting game" },
-      { status: errStatus }
-    );    
+  } catch (error) {
+    return standardCatchReturn(error, "error deleting game");
   }
 }

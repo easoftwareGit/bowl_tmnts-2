@@ -1,12 +1,12 @@
-import {  
-  isValidBtDbId,
+import { isValidBtDbId } from "@/lib/validation/validation";
+import {
   maxBowlNameLemgth,
   maxCityLength,
   maxStateLength,
-  maxUrlLength,
-} from "@/lib/validation/validation";
+  maxUrlLength
+} from "../constants";
 import { ErrorCode } from "@/lib/enums/enums";
-import { sanitize, sanitizeUrl } from "@/lib/validation/sanitize";
+import { sanitizeCity, sanitizeName, sanitizeTournamentName, sanitizeUrl } from "@/lib/validation/sanitize";
 import type { bowlType } from "@/lib/types/types";
 import { blankBowl } from "@/lib/db/initVals";
 import { cloneDeep } from "lodash";
@@ -23,9 +23,9 @@ const gotBowlData = (bowl: bowlType): ErrorCode => {
     if (
       !bowl ||
       !bowl.id ||
-      !sanitize(bowl.bowl_name) ||
-      !sanitize(bowl.city) ||
-      !sanitize(bowl.state) ||
+      !sanitizeTournamentName(bowl.bowl_name) ||
+      !sanitizeCity(bowl.city) ||
+      !sanitizeCity(bowl.state) ||
       !sanitizeUrl(bowl.url)
     ) {
       return ErrorCode.MISSING_DATA;
@@ -37,15 +37,15 @@ const gotBowlData = (bowl: bowlType): ErrorCode => {
 };
 
 export const validBowlName = (bowlName: unknown): boolean => {
-  const sanitized = sanitize(bowlName);
+  const sanitized = sanitizeTournamentName(bowlName);
   return sanitized.length > 0 && sanitized.length <= maxBowlNameLemgth;
 };
 export const validCity = (city: unknown): boolean => {
-  const sanitized = sanitize(city);
+  const sanitized = sanitizeCity(city);
   return sanitized.length > 0 && sanitized.length <= maxCityLength;
 };
 export const validState = (state: unknown): boolean => {
-  const sanitized = sanitize(state);
+  const sanitized = sanitizeCity(state);
   return sanitized.length > 0 && sanitized.length <= maxStateLength;
 };
 export const validUrl = (url: unknown): boolean => {
@@ -97,9 +97,9 @@ export const sanitizeBowl = (bowl: bowlType): bowlType => {
   if (isValidBtDbId(bowl.id, "bwl")) {
     sanitizedBowl.id = bowl.id;
   }
-  sanitizedBowl.bowl_name = sanitize(bowl.bowl_name);
-  sanitizedBowl.city = sanitize(bowl.city);
-  sanitizedBowl.state = sanitize(bowl.state);
+  sanitizedBowl.bowl_name = sanitizeTournamentName(bowl.bowl_name);
+  sanitizedBowl.city = sanitizeCity(bowl.city);
+  sanitizedBowl.state = sanitizeCity(bowl.state);
   sanitizedBowl.url = sanitizeUrl(bowl.url);
   return sanitizedBowl;
 };
