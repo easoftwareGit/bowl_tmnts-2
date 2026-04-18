@@ -29,62 +29,17 @@ jest.mock("@/lib/api/axios", () => ({
 const mockedPublicApi = publicApi as jest.Mocked<typeof publicApi>;
 const mockedPrivateApi = privateApi as jest.Mocked<typeof privateApi>;
 
-const rawUrl = testBaseStagesApi.startsWith("undefined")
-  ? baseStagesApi
-  : testBaseStagesApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseStagesApi
+  ? testBaseStagesApi
+  : baseStagesApi;  
 
-const normalizeApiPath = (path: string): string => {
-  if (path.startsWith("/api/")) return path.replace(/^\/api/, "");
-  if (path === "/api") return "/";
-  return path;
-};
-
-const url = normalizeApiPath(rawUrl);
-const stageUrl = `${url}/stage/`;
+const stageUrl = url + "/stage/"; 
 
 const squadId = "sqd_7116ce5f80164830830a7157eb093396";
 const stageId = "stg_c5f562c4c4304d919ac43fead73123e2";
 
 describe("non standard throw cases", () => {
-  // describe("getFullStageForSquad - non standard throw cases", () => {
-  //   afterEach(() => {
-  //     jest.restoreAllMocks();
-  //     jest.clearAllMocks();
-  //   });
-
-  //   it("should return null when response.data.stage is missing", async () => {
-  //     mockedPublicApi.get.mockResolvedValueOnce({
-  //       data: {},
-  //     } as any);
-
-  //     await expect(getFullStageForSquad(squadId)).resolves.toBeNull();
-
-  //     expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
-  //     expect(mockedPublicApi.get).toHaveBeenCalledWith(
-  //       expect.stringContaining(squadId)
-  //     );
-  //   });
-
-  //   it("should throw with custom message if publicApi.get rejects", async () => {
-  //     mockedPublicApi.get.mockRejectedValueOnce(new Error("Network Error"));
-
-  //     await expect(getFullStageForSquad(squadId)).rejects.toThrow(
-  //       "getFullStageForSquad failed: Network Error"
-  //     );
-
-  //     expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
-  //   });
-
-  //   it("should throw an error when publicApi.get rejects with non-error", async () => {
-  //     mockedPublicApi.get.mockRejectedValueOnce("testing 123");
-
-  //     await expect(getFullStageForSquad(squadId)).rejects.toThrow(
-  //       "getFullStageForSquad failed: testing 123"
-  //     );
-
-  //     expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
-  //   });
-  // });
 
   describe("getFullStageForSquad - non standard throw cases", () => {
     afterEach(() => {

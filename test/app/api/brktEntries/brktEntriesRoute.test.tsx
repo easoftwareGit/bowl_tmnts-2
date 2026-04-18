@@ -23,9 +23,11 @@ import { toValidDateOrNull } from "@/lib/dateTools";
 //      d) directly to the left of the drop down select, click the green play button
 //         This will start the server in debug mode. 
 
-const url = testBaseBrktEntriesApi.startsWith("undefined")
-  ? baseBrktEntriesApi
-  : testBaseBrktEntriesApi; 
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseBrktEntriesApi
+  ? testBaseBrktEntriesApi
+  : baseBrktEntriesApi;  
+
 const oneBrktEntryUrl = url + "/brktEntry/";
 const brktUrl = url + "/brkt/";
 const divUrl = url + "/div/";

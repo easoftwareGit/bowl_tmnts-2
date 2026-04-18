@@ -31,9 +31,11 @@ import { calcHandicap } from "@/lib/db/divEntries/calcHdcp";
 //      d) directly to the left of the drop down select, click the green play button
 //         This will start the server in debug mode.
 
-const url = testBaseDivEntriesApi.startsWith("undefined")
-  ? baseDivEntriesApi
-  : testBaseDivEntriesApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseDivEntriesApi
+  ? testBaseDivEntriesApi
+  : baseDivEntriesApi;
+
 const divEntryUrl = url + "/divEntry/";
 
 const divEntriesToGet = [

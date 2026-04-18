@@ -20,20 +20,21 @@ import { btDbUuid } from "@/lib/uuid";
 //      d) directly to the left of the drop down select, click the green play button
 //         This will start the server in debug mode. 
 
-const userUrl = testBaseUsersApi.startsWith("undefined")
-  ? baseUsersApi
-  : testBaseUsersApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseUsersApi
+  ? testBaseUsersApi
+  : baseUsersApi;
 
-const oneUserUrl = userUrl + "/user/";
+const oneUserUrl = url + "/user/";
 
 describe("auth route", () => {
   const user1email = "adam@email.com";
 
   describe("register route POST", () => {
-    const url = testBaseRegisterApi.startsWith("undefined")
-      ? baseRegisterApi
-      : testBaseRegisterApi;
-
+    const registerUrl = process.env.NODE_ENV === "test" && testBaseRegisterApi
+      ? testBaseRegisterApi
+      : baseRegisterApi;    
+    
     let createdUser = false;
 
     const registerUser: userFormType = {
@@ -47,7 +48,7 @@ describe("auth route", () => {
 
     const deleteTestUser = async () => {
       try {
-        const response = await axios.get(userUrl);
+        const response = await axios.get(url);
         const users = response.data.users as userDataType[];
         const toDel = users.find(
           (u: userDataType) =>
@@ -90,7 +91,7 @@ describe("auth route", () => {
         method: "post",
         data: userJSON,
         withCredentials: true,
-        url,
+        url: registerUrl,
       });
 
       expect(response.status).toBe(201);
@@ -118,7 +119,7 @@ describe("auth route", () => {
         method: "post",
         data: userJSON,
         withCredentials: true,
-        url,
+        url: registerUrl,
       });
 
       expect(response.status).toBe(201);
@@ -140,7 +141,7 @@ describe("auth route", () => {
           method: "post",
           data: userJSON,
           withCredentials: true,
-          url,
+          url: registerUrl,
         });
         expect(response.status).toBe(422);
       } catch (err) {
@@ -164,7 +165,7 @@ describe("auth route", () => {
           method: "post",
           data: userJSON,
           withCredentials: true,
-          url,
+          url: registerUrl,
         });
         expect(response.status).toBe(422);
       } catch (err) {
@@ -188,7 +189,7 @@ describe("auth route", () => {
           method: "post",
           data: userJSON,
           withCredentials: true,
-          url,
+          url: registerUrl,
         });
         expect(response.status).toBe(422);
       } catch (err) {
@@ -212,7 +213,7 @@ describe("auth route", () => {
           method: "post",
           data: userJSON,
           withCredentials: true,
-          url,
+          url: registerUrl,
         });
         expect(response.status).toBe(422);
       } catch (err) {
@@ -236,7 +237,7 @@ describe("auth route", () => {
           method: "post",
           data: userJSON,
           withCredentials: true,
-          url,
+          url: registerUrl,
         });
         expect(response.status).toBe(422);
       } catch (err) {
@@ -260,7 +261,7 @@ describe("auth route", () => {
           method: "post",
           data: userJSON,
           withCredentials: true,
-          url,
+          url: registerUrl,
         });
         expect(response.status).toBe(422);
       } catch (err) {
@@ -284,7 +285,7 @@ describe("auth route", () => {
           method: "post",
           data: userJSON,
           withCredentials: true,
-          url,
+          url: registerUrl,
         });
         expect(response.status).toBe(422);
       } catch (err) {
@@ -308,7 +309,7 @@ describe("auth route", () => {
           method: "post",
           data: userJSON,
           withCredentials: true,
-          url,
+          url: registerUrl,
         });
         expect(response.status).toBe(409);
       } catch (err) {
@@ -332,7 +333,7 @@ describe("auth route", () => {
         method: "post",
         data: userJSON,
         withCredentials: true,
-        url,
+        url: registerUrl,
       });
 
       const postedUser: userDataType = response.data.user;

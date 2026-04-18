@@ -17,9 +17,11 @@ import { testBaseResultsApi } from "../../../../../testApi";
 //      d) directly to the left of the drop down select, click the green play button
 //         This will start the server in debug mode. 
 
-const url = testBaseResultsApi.startsWith("undefined")
-  ? baseResultsApi
-  : testBaseResultsApi;  
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseResultsApi
+  ? testBaseResultsApi
+  : baseResultsApi;
+
 const divUrl = url + "/games/div/";
 
 const notFoundDivId = "div_01234567890123456789012345678901";

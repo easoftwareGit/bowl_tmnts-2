@@ -29,9 +29,11 @@ import { SquadStage } from "@prisma/client";
 import { validateFullTmnt } from "@/lib/validation/tmnts/full/validate";
 import { ErrorCode } from "@/lib/enums/enums";
 
-const url = testBaseTmntsApi.startsWith("undefined")
-  ? baseTmntsApi
-  : testBaseTmntsApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseTmntsApi
+  ? testBaseTmntsApi
+  : baseTmntsApi;
+
 const fullUrl = url + "/full/";
 const fullEntriesUrl = url + "/fullEntries/";
 const tmntUrl = url + "/tmnt/";

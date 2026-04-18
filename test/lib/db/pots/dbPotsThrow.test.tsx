@@ -11,9 +11,11 @@ import {
   putPot,
 } from "@/lib/db/pots/dbPots";
 
-const url = testBasePotsApi.startsWith("undefined")
-  ? basePotsApi
-  : testBasePotsApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBasePotsApi
+  ? testBasePotsApi
+  : basePotsApi;
+
 const potUrl = url + "/pot/";
 const squadUrl = url + "/squad/";
 const tmntUrl = url + "/tmnt/";

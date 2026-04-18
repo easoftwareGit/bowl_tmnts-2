@@ -18,18 +18,15 @@ import { initLane } from "@/lib/db/initVals";
 //      c) select "Node.js: debug server-side"
 //      d) directly to the left of the drop down select, click the green play button
 //         This will start the server in debug mode. 
+  
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseLanesApi
+  ? testBaseLanesApi
+  : baseLanesApi;
 
-const url = testBaseLanesApi.startsWith("undefined")
-  ? baseLanesApi
-  : testBaseLanesApi;   
 const oneLaneUrl = url + "/lane/";  
 const squadUrl = url + "/squad/";
 const tmntUrl = url + "/tmnt/";
-
-const urlForSquads = testBaseSquadsApi.startsWith("undefined")
-  ? baseSquadsApi
-  : testBaseSquadsApi;
-const oneSquadUrl = urlForSquads + "/squad/";
 
 const notFoundId = "lan_01234567890123456789012345678901";
 const notfoundSquadId = "sqd_01234567890123456789012345678901";

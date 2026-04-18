@@ -12,9 +12,11 @@ import {
   putPotEntry,
 } from "@/lib/db/potEntries/dbPotEntries";
 
-const url = testBasePotEntriesApi.startsWith("undefined")
-  ? basePotEntriesApi
-  : testBasePotEntriesApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBasePotEntriesApi
+  ? testBasePotEntriesApi
+  : basePotEntriesApi;
+
 const potEntryUrl = url + "/potEntry/";
 
 jest.mock("@/lib/api/axios", () => ({

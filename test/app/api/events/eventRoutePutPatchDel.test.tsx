@@ -19,11 +19,12 @@ import { initEvent } from "@/lib/db/initVals";
 //      d) directly to the left of the drop down select, click the green play button
 //         This will start the server in debug mode. 
 
-const url = testBaseEventsApi.startsWith("undefined")
-  ? baseEventsApi
-  : testBaseEventsApi;   
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseEventsApi
+  ? testBaseEventsApi
+  : baseEventsApi;
+
 const oneEventUrl = url + "/event/";
-const eventTmntUrl = url + '/tmnt/';
   
 describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => { 
 

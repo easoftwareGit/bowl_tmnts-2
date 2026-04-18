@@ -31,9 +31,11 @@ import { cloneDeep } from "lodash";
 //      d) directly to the left of the drop down select, click the green play button
 //         This will start the server in debug mode.
 
-const url = testBaseSquadsApi.startsWith("undefined")
-  ? baseSquadsApi
-  : testBaseSquadsApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseSquadsApi
+  ? testBaseSquadsApi
+  : baseSquadsApi;
+
 const squadUrl = url + "/squad/";
 
 const normalizeApiPath = (path: string): string => {

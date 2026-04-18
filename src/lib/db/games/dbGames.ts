@@ -5,9 +5,11 @@ import type { gameType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { blankGame } from "../initVals";
 
-const url = testBaseGamesApi.startsWith("undefined")
-  ? baseGamesApi
-  : testBaseGamesApi;  
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseGamesApi
+  ? testBaseGamesApi
+  : baseGamesApi;  
+
 const squadUrl = url + "/squad/";
 
 /**

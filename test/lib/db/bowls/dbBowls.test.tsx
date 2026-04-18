@@ -27,11 +27,12 @@ import type { bowlType } from "@/lib/types/types";
 //      d) directly to the left of the drop down select, click the green play button
 //         This will start the server in debug mode.
 
-const url = testBaseBowlsApi.startsWith("undefined")
-  ? baseBowlsApi
-  : testBaseBowlsApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseBowlsApi
+  ? testBaseBowlsApi
+  : baseBowlsApi;
 
-const oneBowlUrl = `${url}/bowl/`;
+const oneBowlUrl = url + "/bowl/"; 
 
 const testBowlId = "bwl_012342f8b85942929f2584318b3d49a2"; // not in database
 const notFoundId = "bwl_00000000000000000000000000000000";

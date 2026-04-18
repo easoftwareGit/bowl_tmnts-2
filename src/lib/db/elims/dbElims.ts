@@ -5,9 +5,11 @@ import type { elimType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { blankElim } from "../initVals";
 
-const url = testBaseElimsApi.startsWith("undefined")
-  ? baseElimsApi
-  : testBaseElimsApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseElimsApi
+  ? testBaseElimsApi
+  : baseElimsApi;
+
 const elimUrl = url + "/elim/";
 const squadUrl = url + "/squad/";
 const tmntUrl = url + "/tmnt/";

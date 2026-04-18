@@ -6,9 +6,10 @@ import { isValidBtDbId } from "@/lib/validation/validation";
 import { blankBrktEntry } from "../initVals";
 import { isBrktDataFromPrisma } from "@/lib/validation/typeGuards";
 
-const url = testBaseBrktEntriesApi.startsWith("undefined")
-  ? baseBrktEntriesApi
-  : testBaseBrktEntriesApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseBrktEntriesApi
+  ? testBaseBrktEntriesApi
+  : baseBrktEntriesApi;
 
 const brktEntryUrl = url + "/brktEntry/";
 const tmntUrl = url + "/tmnt/";

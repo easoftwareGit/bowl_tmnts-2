@@ -5,9 +5,10 @@ import type { oneBrktType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { blankOneBrkt } from "../initVals";
 
-const url = testBaseOneBrktsApi.startsWith("undefined")
-  ? baseOneBrktsApi
-  : testBaseOneBrktsApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseOneBrktsApi
+  ? testBaseOneBrktsApi
+  : baseOneBrktsApi;
 
 const oneOneBrktUrl = url + "/oneBrkt/";
 const brktUrl = url + "/brkt/";

@@ -11,9 +11,11 @@ import {
 import type { playerType } from "@/lib/types/types";
 import { blankPlayer } from "@/lib/db/initVals";
 
-const url = testBasePlayersApi.startsWith("undefined")
-  ? basePlayersApi
-  : testBasePlayersApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBasePlayersApi
+  ? testBasePlayersApi
+  : basePlayersApi;
+
 const playerUrl = url + "/player/";
 
 jest.mock("@/lib/api/axios", () => ({

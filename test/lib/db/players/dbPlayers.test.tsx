@@ -28,9 +28,11 @@ import {
 //      d) directly to the left of the drop down select, click the green play button
 //         This will start the server in debug mode.
 
-const url = testBasePlayersApi.startsWith("undefined")
-  ? basePlayersApi
-  : testBasePlayersApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBasePlayersApi
+  ? testBasePlayersApi
+  : basePlayersApi;
+
 const playerUrl = url + "/player/";
 
 const tmntId = "tmt_fd99387c33d9c78aba290286576ddce5";

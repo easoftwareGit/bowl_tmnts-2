@@ -3,9 +3,10 @@ import { baseResultsApi } from "@/lib/api/apiPaths";
 import { testBaseResultsApi } from "../../../../test/testApi";
 import { isValidBtDbId } from "@/lib/validation/validation";
 
-const url = testBaseResultsApi.startsWith("undefined")
-  ? baseResultsApi
-  : testBaseResultsApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseResultsApi
+  ? testBaseResultsApi
+  : baseResultsApi;
 
 const gameDivUrl = url + "/games/div/";
 const gameTmntUrl = url + "/games/tmnt/";

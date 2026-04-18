@@ -24,9 +24,11 @@ jest.mock("@/lib/api/axios", () => ({
 const mockedPublicApi = publicApi as jest.Mocked<typeof publicApi>;
 const mockedPrivateApi = privateApi as jest.Mocked<typeof privateApi>;
 
-const url = testBaseEventsApi.startsWith("undefined")
-  ? baseEventsApi
-  : testBaseEventsApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseEventsApi
+  ? testBaseEventsApi
+  : baseEventsApi;
+
 const eventUrl = url + "/event/";
 
 const eventId = "evt_9a58f0a486cb4e6c92ca3348702b1a63";

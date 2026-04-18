@@ -66,34 +66,36 @@ const { getTmntsForYear, getUpcomingTmnts } = exportedForTesting;
 //      d) directly to the left of the drop down select, click the green play button
 //         This will start the server in debug mode.
 
-const url = testBaseTmntsApi.startsWith("undefined")
-  ? baseTmntsApi
-  : testBaseTmntsApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseTmntsApi
+  ? testBaseTmntsApi
+  : baseTmntsApi;
+
 const tmntUrl = url + "/tmnt/";
 
-const bowlUrl = testBaseBowlsApi.startsWith("undefined")
-  ? baseBowlsApi
-  : testBaseBowlsApi;
+const bowlUrl = process.env.NODE_ENV === "test" && testBaseBowlsApi
+  ? testBaseBowlsApi
+  : baseBowlsApi;  
 
-const userUrl = testBaseUsersApi.startsWith("undefined")
-  ? baseUsersApi
-  : testBaseUsersApi;
+const userUrl = process.env.NODE_ENV === "test" && testBaseUsersApi
+  ? testBaseUsersApi
+  : baseUsersApi;  
 
-const eventsUrl = testBaseEventsApi.startsWith("undefined")
-  ? baseEventsApi
-  : testBaseEventsApi;
+const eventsUrl = process.env.NODE_ENV === "test" && testBaseEventsApi
+  ? testBaseEventsApi
+  : baseEventsApi;  
 
-const divsUrl = testBaseDivsApi.startsWith("undefined")
-  ? baseDivsApi
-  : testBaseDivsApi;
+const divsUrl = process.env.NODE_ENV === "test" && testBaseDivsApi
+  ? testBaseDivsApi
+  : baseDivsApi;  
 
-const squadsUrl = testBaseSquadsApi.startsWith("undefined")
-  ? baseSquadsApi
-  : testBaseSquadsApi;
+const squadsUrl = process.env.NODE_ENV === "test" && testBaseSquadsApi
+  ? testBaseSquadsApi
+  : baseSquadsApi;  
 
-const lanesUrl = testBaseLanesApi.startsWith("undefined")
-  ? baseLanesApi
-  : testBaseLanesApi;
+const lanesUrl = process.env.NODE_ENV === "test" && testBaseLanesApi
+  ? testBaseLanesApi
+  : baseLanesApi;  
 
 const gpBowlId = "bwl_561540bd64974da9abdd97765fdb3659";
 const notFoundId = "tmt_00000000000000000000000000000000";

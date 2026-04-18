@@ -7,9 +7,11 @@ import { ErrorCode } from "@/lib/enums/enums";
 import { blankDiv } from "../initVals";
 import { validateDivs } from "@/lib/validation/divs/validate";
 
-const url = testBaseDivsApi.startsWith("undefined")
-  ? baseDivsApi
-  : testBaseDivsApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseDivsApi
+  ? testBaseDivsApi
+  : baseDivsApi;
+
 const divUrl = url + "/div/";
 const manyUrl = url + "/many";
 const tmntUrl = url + "/tmnt/";

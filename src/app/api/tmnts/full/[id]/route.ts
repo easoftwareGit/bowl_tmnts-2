@@ -6,7 +6,6 @@ import type { tmntFullType } from "@/lib/types/types";
 import { tmntFullDataForPrisma } from "../../tmntDataForPrisma";
 import { standardCatchReturn } from "@/app/api/apiCatch";
 import { sanitizeFullTmnt, validateFullTmnt } from "@/lib/validation/tmnts/full/validate";
-import { calcFSA } from "@/lib/currency/fsa";
 import { Prisma } from "@prisma/client";
 
 

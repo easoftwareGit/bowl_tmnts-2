@@ -100,12 +100,12 @@
       */
       export const getUsers = async () => {
         // for testing.
-        // if testing: tmntYearUrl = testBaseBowlsApi;
-        // if not testing: tmntYearUrl = baseBowlsApi
-        const url = testBaseUsersApi.startsWith("undefined")
-          ? baseUsersApi
-          : testBaseUsersApi;    
-
+        // if testing: tmntYearUrl = testBaseUsersApi;
+        // if not testing: tmntYearUrl = baseUsersApi
+        // If running tests AND a test URL is defined, use it; otherwise use the app API path
+        const url = process.env.NODE_ENV === "test" && testBaseUsersApi
+          ? testBaseUsersApi
+          : baseUsersApi;
         const response = await axios.get(baseUsersApi);
         return response.data; // response.data is already JSON'ed
       };

@@ -22,9 +22,11 @@ import { maxYear, minYear } from "@/lib/validation/constants";
 //      d) directly to the left of the drop down select, click the green play button
 //         This will start the server in debug mode.
 
-const url = testBaseTmntsApi.startsWith("undefined")
-  ? baseTmntsApi
-  : testBaseTmntsApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseTmntsApi
+  ? testBaseTmntsApi
+  : baseTmntsApi;
+
 const fullUrl = url + "/full/";
 const tmntUrl = url + "/tmnt/";
 const userUrl = url + "/user/";

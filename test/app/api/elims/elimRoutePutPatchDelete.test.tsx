@@ -3,11 +3,6 @@ import { baseElimsApi } from "@/lib/api/apiPaths";
 import { testBaseElimsApi } from "../../../testApi";
 import type { elimType } from "@/lib/types/types";
 import { initElim } from "@/lib/db/initVals";
-import { deleteAllElimsForDiv, deleteAllElimsForSquad, postManyElims } from "@/lib/db/elims/dbElims";
-import { deleteAllSquadsForTmnt, postManySquads } from "@/lib/db/squads/dbSquads";
-import { deleteAllDivsForTmnt, postManyDivs } from "@/lib/db/divs/dbDivs";
-import { mockElimsToPost, mockSquadsToPost, mockDivsToPost, tmntToDelId } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import { after } from "lodash";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -24,9 +19,11 @@ import { after } from "lodash";
 //      d) directly to the left of the drop down select, click the green play button
 //         This will start the server in debug mode.
 
-const url = testBaseElimsApi.startsWith("undefined")
-  ? baseElimsApi
-  : testBaseElimsApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseElimsApi
+  ? testBaseElimsApi
+  : baseElimsApi;  
+
 const oneElimUrl = url + "/elim/";
 
 const notFoundId = "elm_01234567890123456789012345678901";
@@ -36,39 +33,6 @@ const elim3Id = "elm_b4c3939adca140898b1912b75b3725f8";
 
 const div2Id = "div_1f42042f9ef24029a0a2d48cc276a087";
 const squad2Id = "sqd_1a6c885ee19a49489960389193e8f819";
-
-const toDelDivSquadElims = [
-  {
-    ...initElim,
-    id: "elm_de24c5cc04f6463d89f24e6e19a12601",
-    squad_id: "sqd_42be0f9d527e4081972ce8877190489d",
-    div_id: "div_18997d3fd7ef4eb7ad2b53a9e93f9ce5",
-    sort_order: 1,
-    start: 1,
-    games: 3,
-    fee: '5',
-  },
-  {
-    ...initElim,
-    id: "elm_de24c5cc04f6463d89f24e6e19a12602",
-    squad_id: "sqd_42be0f9d527e4081972ce8877190489d",
-    div_id: "div_18997d3fd7ef4eb7ad2b53a9e93f9ce5",
-    sort_order: 2,
-    start: 2,
-    games: 3,
-    fee: '5',
-  },
-  {
-    ...initElim,
-    id: "elm_de24c5cc04f6463d89f24e6e19a12603",
-    squad_id: "sqd_42be0f9d527e4081972ce8877190489d",
-    div_id: "div_18997d3fd7ef4eb7ad2b53a9e93f9ce5",
-    sort_order: 3,
-    start: 3,
-    games: 3,
-    fee: '5',
-  },
-]
 
 describe("Elims - PUT, PATCH, DELETE", () => {
   const testElim: elimType = {

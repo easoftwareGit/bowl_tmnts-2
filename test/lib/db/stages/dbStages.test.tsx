@@ -40,18 +40,12 @@ import { maxReasonLength } from "@/lib/validation/constants";
 //      d) directly to the left of the drop down select, click the green play button
 //         This will start the server in debug mode.
 
-const rawUrl = testBaseStagesApi.startsWith("undefined")
-  ? baseStagesApi
-  : testBaseStagesApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseStagesApi
+  ? testBaseStagesApi
+  : baseStagesApi;
 
-const normalizeApiPath = (path: string): string => {
-  if (path.startsWith("/api/")) return path.replace(/^\/api/, "");
-  if (path === "/api") return "/";
-  return path;
-};
-
-const url = normalizeApiPath(rawUrl);
-const oneStageUrl = `${url}/stage/`;
+const oneStageUrl = url + "/stage/"; // `${url}/stage/`;
 
 const userId = "usr_5bcefb5d314fff1ff5da6521a2fa7bde";
 const tmntId = "tmt_fd99387c33d9c78aba290286576ddce5";

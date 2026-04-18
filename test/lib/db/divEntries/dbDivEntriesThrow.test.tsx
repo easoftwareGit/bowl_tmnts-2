@@ -26,9 +26,11 @@ jest.mock("@/lib/api/axios", () => ({
 const mockedPublicApi = publicApi as jest.Mocked<typeof publicApi>;
 const mockedPrivateApi = privateApi as jest.Mocked<typeof privateApi>;
 
-const url = testBaseDivEntriesApi.startsWith("undefined")
-  ? baseDivEntriesApi
-  : testBaseDivEntriesApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseDivEntriesApi
+  ? testBaseDivEntriesApi
+  : baseDivEntriesApi;
+
 const divEntryUrl = url + "/divEntry/";
 const divUrl = url + "/div/";
 const squadUrl = url + "/squad/";

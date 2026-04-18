@@ -3,10 +3,10 @@ import { baseGamesApi } from "@/lib/api/apiPaths";
 import { testBaseGamesApi } from "../../../../test/testApi";
 import { getAllGamesForSquad } from "@/lib/db/games/dbGames";
 
-const url = testBaseGamesApi.startsWith("undefined")
-  ? baseGamesApi
-  : testBaseGamesApi;  
-const squadUrl = url + "/squad/";
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseGamesApi
+  ? testBaseGamesApi
+  : baseGamesApi;
 
 jest.mock("axios");
 

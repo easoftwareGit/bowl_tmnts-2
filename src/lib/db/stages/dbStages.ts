@@ -14,9 +14,11 @@ import { SquadStage } from "@prisma/client";
 import { validStageValue } from "@/lib/validation/stages/validate";
 import { btDbUuid } from "@/lib/uuid";
 
-const url = testBaseStagesApi.startsWith("undefined")
-  ? baseStagesApi
-  : testBaseStagesApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseStagesApi
+  ? testBaseStagesApi
+  : baseStagesApi;
+
 const stageUrl = url + "/stage/";
 const squadUrl = url + "/squad/";
 

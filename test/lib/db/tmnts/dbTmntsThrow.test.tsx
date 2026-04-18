@@ -19,9 +19,11 @@ import { mockTmntFullData } from "../../../mocks/tmnts/tmntFullData/mockTmntFull
 
 const { getTmntsForYear, getUpcomingTmnts } = exportedForTesting;
 
-const url = testBaseTmntsApi.startsWith("undefined")
-  ? baseTmntsApi
-  : testBaseTmntsApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseTmntsApi
+  ? testBaseTmntsApi
+  : baseTmntsApi;
+
 const tmntUrl = url + "/tmnt/";
 
 jest.mock("@/lib/api/axios", () => ({

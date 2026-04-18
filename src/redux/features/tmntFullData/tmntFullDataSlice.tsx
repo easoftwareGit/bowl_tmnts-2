@@ -143,6 +143,7 @@ export const tmntFullDataSlice = createSlice({
 });
 
 export const selectTmntFullData = (state: RootState) => state.tmntFullData;
+
 export const getTmntFullDataLoadStatus = (state: RootState) =>
   state.tmntFullData.loadStatus;
 export const getTmntDataSaveStatus = (state: RootState) =>

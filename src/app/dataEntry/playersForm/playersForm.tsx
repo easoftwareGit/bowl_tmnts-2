@@ -125,6 +125,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
 
   const noErrorsTitle = "No Errors Found";
 
+  // re-compute totals when tmntData changes
   const baseTotals = useMemo(() => {
     if (!tmntData) return {};
 

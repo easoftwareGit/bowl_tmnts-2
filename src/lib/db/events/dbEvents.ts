@@ -5,9 +5,10 @@ import type { eventType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { blankEvent } from "../initVals";
 
-const url = testBaseEventsApi.startsWith("undefined")
-  ? baseEventsApi
-  : testBaseEventsApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseEventsApi
+  ? testBaseEventsApi
+  : baseEventsApi;
 
 const eventUrl = url + "/event/";
 const tmntUrl = url + "/tmnt/";

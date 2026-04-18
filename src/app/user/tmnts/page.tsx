@@ -4,13 +4,22 @@ import { useSelector, useDispatch } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { useSession } from "next-auth/react"; 
 import Link from "next/link";
-import { fetchUserTmnts, getUserTmntError, getUserTmntStatus, deleteUserTmnt } from "@/redux/features/userTmnts/userTmntsSlice";
+import {
+  fetchUserTmnts,
+  getUserTmntError,
+  getUserTmntStatus,
+  deleteUserTmnt
+} from "@/redux/features/userTmnts/userTmntsSlice";
 import type { tmntsListType } from "@/lib/types/types";
 import { yyyyMMdd_To_ddMMyyyy } from "@/lib/dateTools";
 import ModalConfirm from "@/components/modal/confirmModal";
 import WaitModal from "@/components/modal/waitModal";
 import { initModalObj } from "@/components/modal/modalObjType";
-import { fetchBowls, getBowlsError, getBowlsLoadStatus } from "@/redux/features/bowls/bowlsSlice";
+import {
+  fetchBowls,
+  getBowlsError,
+  getBowlsLoadStatus
+} from "@/redux/features/bowls/bowlsSlice";
 // import "./userTmnts.css";
 import styles from "./userTmnts.module.css";
 

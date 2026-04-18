@@ -20,9 +20,11 @@ import { btDbUuid } from "@/lib/uuid";
 //      d) directly to the left of the drop down select, click the green play button
 //         This will start the server in debug mode. 
 
-const url = testBaseBrktsApi.startsWith("undefined")
-  ? baseBrktsApi
-  : testBaseBrktsApi; 
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseBrktsApi
+  ? testBaseBrktsApi
+  : baseBrktsApi;
+
 const oneBrktUrl = url + "/brkt/";
 const squadUrl = url + "/squad/";
 const divUrl = url + "/div/";

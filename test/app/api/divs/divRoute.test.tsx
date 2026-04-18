@@ -22,9 +22,11 @@ import { userId } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 //      d) directly to the left of the drop down select, click the green play button
 //         This will start the server in debug mode. 
 
-const url = testBaseDivsApi.startsWith("undefined")
-  ? baseDivsApi
-  : testBaseDivsApi;   
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseDivsApi
+  ? testBaseDivsApi
+  : baseDivsApi;
+
 const oneDivUrl = url + "/div/"
 
 const notFoundId = "div_01234567890123456789012345678901";

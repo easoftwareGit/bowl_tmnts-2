@@ -5,9 +5,11 @@ import type { laneType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { blankLane } from "../initVals";
 
-const url = testBaseLanesApi.startsWith("undefined")
-  ? baseLanesApi
-  : testBaseLanesApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseLanesApi
+  ? testBaseLanesApi
+  : baseLanesApi;  
+
 const laneUrl = url + "/lane/";
 const squadUrl = url + "/squad/";
 const tmntUrl = url + "/tmnt/";

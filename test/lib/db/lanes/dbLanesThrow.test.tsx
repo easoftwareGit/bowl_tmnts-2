@@ -19,9 +19,11 @@ jest.mock("@/lib/api/axios", () => ({
   },
 }));
 
-const url = testBaseLanesApi.startsWith("undefined")
-  ? baseLanesApi
-  : testBaseLanesApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseLanesApi
+  ? testBaseLanesApi
+  : baseLanesApi;  
+
 const laneUrl = url + "/lane/";
 
 const laneId = "lan_255dd3b8755f4dea956445e7a3511d91";

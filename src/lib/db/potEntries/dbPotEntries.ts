@@ -5,9 +5,10 @@ import type { potEntryType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { blankPotEntry } from "../initVals";
 
-const url = testBasePotEntriesApi.startsWith("undefined")
-  ? basePotEntriesApi
-  : testBasePotEntriesApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBasePotEntriesApi
+  ? testBasePotEntriesApi
+  : basePotEntriesApi;
 
 const divUrl = url + "/div/";
 const potEntryUrl = url + "/potEntry/";

@@ -19,9 +19,11 @@ import type { elimEntryType } from "@/lib/types/types";
 //      d) directly to the left of the drop down select, click the green play button
 //         This will start the server in debug mode. 
 
-const url = testBaseElimEntriesApi.startsWith("undefined")
-  ? baseElimEntriesApi
-  : testBaseElimEntriesApi; 
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseElimEntriesApi
+  ? testBaseElimEntriesApi
+  : baseElimEntriesApi;
+
 const oneElimEntryUrl = url + "/elimEntry/";
 const elimUrl = url + "/elim/";
 const divUrl = url + "/div/";

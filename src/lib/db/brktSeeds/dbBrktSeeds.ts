@@ -6,9 +6,10 @@ import { isValidBtDbId } from "@/lib/validation/validation";
 import { validCompositKey } from "@/lib/validation/brktSeeds/validate";
 import { blankBrktSeed } from "../initVals";
 
-const url = testBrktSeedsApi.startsWith("undefined")
-  ? brktSeedsApi
-  : testBrktSeedsApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBrktSeedsApi
+  ? testBrktSeedsApi
+  : brktSeedsApi;  
 
 const oneBrktSeedUrl = url + "/brktSeed/";
 const brktUrl = url + "/brkt/";

@@ -5,9 +5,10 @@ import type { bowlType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { blankBowl } from "../initVals";
 
-const url = testBaseBowlsApi.startsWith("undefined")
-  ? baseBowlsApi
-  : testBaseBowlsApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseBowlsApi
+  ? testBaseBowlsApi
+  : baseBowlsApi;  
 
 const oneBowlUrl = `${url}/bowl/`;
 

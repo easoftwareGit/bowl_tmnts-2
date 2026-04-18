@@ -7,9 +7,11 @@ import { blankUserData } from "../initVals";
 import { maxEmailLength } from "@/lib/validation/constants";
 import { AxiosError } from "axios";
 
-const url = testBaseUsersApi.startsWith("undefined")
-  ? baseUsersApi
-  : testBaseUsersApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseUsersApi
+  ? testBaseUsersApi
+  : baseUsersApi;
+
 const userUrl = url + "/user/";
 const emailUrl = url + "/email/";
 

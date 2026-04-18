@@ -1,5 +1,5 @@
 import axios, { AxiosError } from "axios";
-import { baseBowlsApi, baseEventsApi, baseTmntsApi, baseUsersApi } from "@/lib/api/apiPaths";
+import { baseBowlsApi, baseDivsApi, baseEventsApi, baseTmntsApi, baseUsersApi } from "@/lib/api/apiPaths";
 import { testBaseBowlsApi, testBaseDivsApi, testBaseEventsApi, testBaseTmntsApi, testBaseUsersApi } from "../../../testApi";
 import type { bowlType, brktSeedType, tmntType, userDataType } from "@/lib/types/types";
 import { blankBrktSeed, initTmnt } from "@/lib/db/initVals";
@@ -34,28 +34,35 @@ import { cloneDeep } from "lodash";
 //      d) directly to the left of the drop down select, click the green play button
 //         This will start the server in debug mode.
 
-const url = testBaseTmntsApi.startsWith("undefined")
-  ? baseTmntsApi
-  : testBaseTmntsApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const url = process.env.NODE_ENV === "test" && testBaseTmntsApi
+  ? testBaseTmntsApi
+  : baseTmntsApi;
+
 const fullUrl = url + "/full/";
 const fullEntriesUrl = url + "/fullEntries/";
 const tmntUrl = url + "/tmnt/";
 
-const userUrl = testBaseUsersApi.startsWith("undefined")
-  ? baseUsersApi
-  : testBaseUsersApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const userUrl = process.env.NODE_ENV === "test" && testBaseUsersApi
+  ? testBaseUsersApi
+  : baseUsersApi;  
 
-const bowlUrl = testBaseBowlsApi.startsWith("undefined")
-  ? baseBowlsApi
-  : testBaseBowlsApi;
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const bowlUrl = process.env.NODE_ENV === "test" && testBaseBowlsApi
+  ? testBaseBowlsApi
+  : baseBowlsApi;  
 
-const eventsUrl = testBaseEventsApi.startsWith("undefined")
-  ? baseEventsApi + "/event/"
-  : testBaseEventsApi + "/event/";
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const eventsUrl = process.env.NODE_ENV === "test" && testBaseEventsApi
+  ? testBaseEventsApi
+  : baseEventsApi;  
 
-const divsUrl = testBaseDivsApi.startsWith("undefined")
-  ? baseEventsApi + "/div/"
-  : testBaseDivsApi + "/div/";
+// If running tests AND a test URL is defined, use it; otherwise use the app API path
+const divsUrl = process.env.NODE_ENV === "test" && testBaseDivsApi
+  ? testBaseDivsApi
+  : baseDivsApi;
+
 
 describe("Tmnts - API: /api/tmnts", () => {  
   const notFoundTmntId = "tmt_00000000000000000000000000000000"; // not in database
