@@ -22,8 +22,7 @@ import {
 import type {
   brktSeedType,
   dataOneSquadEntriesType,
-  dataOneTmntType,
-  fullStageType,
+  dataOneTmntType,  
   oneBrktType,
 } from "@/lib/types/types";
 import {
@@ -60,7 +59,6 @@ import {
   tmntId,
   userId,
 } from "../tmntFullData/mockTmntFullData";
-import { SquadStage } from "@prisma/client";
 
 export const benId1 = "ben_0123456789abcdef0123456789abcdef"; 
 export const benId2 = "ben_0133456789abcdef0123456789abcdef";
