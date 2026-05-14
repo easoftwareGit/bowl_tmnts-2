@@ -40,6 +40,7 @@ interface ChildProps {
   elims: elimType[];
   setAcdnErr: (objAcdnErr: AcdnErrType) => void;
   isDisabled: boolean;
+  markPendingChanges?: (pending: boolean) => void;
 }
 interface AddOrDelButtonProps {
   id: string;
@@ -157,6 +158,7 @@ const OneToNDivs: React.FC<ChildProps> = ({
   elims,
   setAcdnErr,
   isDisabled,
+  markPendingChanges,
 }) => {
   const defaultTabKey = divs[0].id;
 
@@ -170,6 +172,8 @@ const OneToNDivs: React.FC<ChildProps> = ({
   const delBtnStyle = isDisabled ? "btn-dark" : "btn-danger";
 
   const handleAdd = () => {
+    markPendingChanges?.(true);
+
     const newDiv: divType = {
       ...initDiv,
       id: btDbUuid("div"),
@@ -182,7 +186,12 @@ const OneToNDivs: React.FC<ChildProps> = ({
     setDivs([...divs, newDiv]);
   };
 
+  /**
+   *  runs when user confirmed delete - does the actual deletion
+   */
   const confirmedDelete = () => {
+    markPendingChanges?.(true);
+
     const idToDel = confModalObj.id;
     setConfModalObj(initModalObj); // reset modal object (hides modal)
 
@@ -261,6 +270,7 @@ const OneToNDivs: React.FC<ChildProps> = ({
   const handlePercentValueChange =
     (id: string) =>
     (value: string | undefined): void => {
+      markPendingChanges?.(true);
       let rawValue = value === undefined ? "undefined" : value;
       rawValue = rawValue || " ";
       // if user types fast, % might not be at end of string
@@ -320,8 +330,8 @@ const OneToNDivs: React.FC<ChildProps> = ({
 
   const handleInputChange =
     (id: string) => (e: ChangeEvent<HTMLInputElement>) => {
-      const { name, value, checked } = e.target;
-      const nameErr = name + "_err";
+      markPendingChanges?.(true);
+      const { name, value, checked } = e.target;      
 
       setDivs(
         divs.map((div) => {
@@ -388,6 +398,7 @@ const OneToNDivs: React.FC<ChildProps> = ({
     const { name, value } = e.target;
 
     if (value === "") {
+      markPendingChanges?.(true);
       setDivs(
         divs.map((div) => {
           if (div.id === id) {
@@ -426,6 +437,7 @@ const OneToNDivs: React.FC<ChildProps> = ({
       );
     }
     if (name === `hdcp`) {
+      markPendingChanges?.(true);
       const doDisable = value === "" || parseInt(value) === 0;
       const hcdpFromInput = document.getElementById(
         `inputHdcpFrom${id}`,
@@ -452,6 +464,12 @@ const OneToNDivs: React.FC<ChildProps> = ({
     }
   };
 
+  /**
+   * Add or delete button component
+   *
+   * @param {*} { id, sortOrder }
+   * @return {*} add or delete button
+   */
   const AddOrDelButton: React.FC<AddOrDelButtonProps> = ({ id, sortOrder }) => {
     if (sortOrder === 1) {
       return (

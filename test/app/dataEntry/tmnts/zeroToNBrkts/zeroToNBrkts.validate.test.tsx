@@ -37,6 +37,10 @@ const mockSetAcdnErr = jest.fn();
 
 describe("zeroToNBrkts - validate", () => {
 
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe('validateBrkt() - ONE bracket', () => { 
 
     const mockBrkts = cloneDeep(mockTmntFullData.brkts);

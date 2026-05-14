@@ -12,6 +12,7 @@ import { getBrktOrElimName } from "@/lib/getName";
 const mockSetElims = jest.fn();
 const mockSetAcdnErr = jest.fn();
 const mockSetShowingModal = jest.fn();
+const mockMarkPendingChanges = jest.fn();
 
 const mockElims = mockTmntFullData.elims;
 const mockDivs = mockTmntFullData.divs;
@@ -25,6 +26,7 @@ const mockZeroToNElimsProps = {
   setAcdnErr: mockSetAcdnErr,
   setShowingModal: mockSetShowingModal,
   isDisabled: false,
+  markPendingChanges: mockMarkPendingChanges
 }
 
 const renderCreateElim = (elims: elimType[] = []) => {
@@ -41,12 +43,17 @@ const renderCreateElim = (elims: elimType[] = []) => {
       setAcdnErr={mockSetAcdnErr}
       setShowingModal={mockSetShowingModal}
       isDisabled={false}
+      markPendingChanges={mockMarkPendingChanges}
     />
   );
 };
 
 describe('zeroToNElims - interactions', () => { 
 
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  
   describe("zeroToNElims - Create Eliminator tab", () => {
     // NOTE:
     // We do not test "non-numeric fee input" here because EaCurrencyInput
@@ -54,10 +61,6 @@ describe('zeroToNElims - interactions', () => {
     // both in browser behavior and in test environments.
     // Therefore the user cannot enter values like "abc", making that scenario
     // untestable as an interaction for zeroToNBrkts.
-    
-    beforeEach(() => {
-      jest.clearAllMocks();
-    });  
     
     it("shows Division error and does not add a eliminator when Division is not selected", async () => {
       const user = userEvent.setup();
@@ -476,6 +479,8 @@ describe('zeroToNElims - interactions', () => {
       expect(feeError).toHaveTextContent('');      
       expect(startError).toHaveTextContent('');
       expect(gamesError).toHaveTextContent('');
+
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
       expect(mockZeroToNElimsProps.setElims).toHaveBeenCalled();
     })
   })
@@ -511,6 +516,7 @@ describe('zeroToNElims - interactions', () => {
       // ACT
       await user.click(yesBtn);
       // ASSERT
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
       expect(toDelProps.setElims).toHaveBeenCalled();                    
     })
     it('cancels deleting an eliminator', async () => {      
@@ -538,6 +544,7 @@ describe('zeroToNElims - interactions', () => {
       await user.click(noBtn);
       // ASSERT
       expect(mockSetShowingModal).toHaveBeenCalledWith(false);
+      expect(mockMarkPendingChanges).not.toHaveBeenCalled();
       expect(mockSetElims).not.toHaveBeenCalled();      
     })      
 
@@ -565,6 +572,7 @@ describe('zeroToNElims - interactions', () => {
           setAcdnErr={mockSetAcdnErr}
           setShowingModal={mockSetShowingModal}
           isDisabled={false}
+          markPendingChanges={mockMarkPendingChanges}
         />
       );
 
@@ -581,6 +589,7 @@ describe('zeroToNElims - interactions', () => {
 
       await user.clear(elimFeeInput);
       await user.type(elimFeeInput, "10");
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
 
       // handler should have called setElims at least once
       expect(mockSetElims).toHaveBeenCalled();
@@ -630,6 +639,7 @@ describe('zeroToNElims - interactions', () => {
           setAcdnErr={mockSetAcdnErr}
           setShowingModal={mockSetShowingModal}
           isDisabled={false}
+          markPendingChanges={mockMarkPendingChanges}
         />
       );
 
@@ -647,6 +657,7 @@ describe('zeroToNElims - interactions', () => {
       await user.clear(secondElimFeeInput);
       await user.type(secondElimFeeInput, "7");
 
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
       expect(mockSetElims).toHaveBeenCalled();
 
       const lastAcdnErrArg =
@@ -689,6 +700,7 @@ describe('zeroToNElims - interactions', () => {
 
       // Now we *know* the fee is invalid, so validateElims must catch it
       expect(isValid).toBe(false);
+
       expect(parentSetElims).toHaveBeenCalledTimes(1);
 
       const validatedElims = parentSetElims.mock.calls[0][0] as elimType[];
@@ -740,6 +752,7 @@ describe('zeroToNElims - interactions', () => {
           setAcdnErr={mockSetAcdnErr}
           setShowingModal={mockSetShowingModal}
           isDisabled={false}
+          markPendingChanges={mockMarkPendingChanges}
         />
       );
 
@@ -758,6 +771,7 @@ describe('zeroToNElims - interactions', () => {
       await user.clear(secondElimFeeInput);
       await user.type(secondElimFeeInput, "7");
 
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
       expect(mockSetElims).toHaveBeenCalled();
 
       // Grab the last setElims call and inspect the updated elims
@@ -790,5 +804,108 @@ describe('zeroToNElims - interactions', () => {
       );
     });
   });
+
+  describe("optional markPendingChanges prop", () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it("adds an eliminator without crashing when markPendingChanges is omitted", async () => {
+      const user = userEvent.setup();
+
+      render(
+        <ZeroToNElims
+          elims={[]}
+          setElims={mockSetElims}
+          divs={mockDivs}
+          squads={mockSquads}
+          setAcdnErr={mockSetAcdnErr}
+          setShowingModal={mockSetShowingModal}
+          isDisabled={false}
+        />
+      );
+
+      await user.click(screen.getByLabelText(/scratch/i));
+
+      const feeInput = screen.getByLabelText(/fee/i);
+      await user.clear(feeInput);
+      await user.type(feeInput, "5");
+
+      const startInput = screen.getByLabelText(/^Start$/i);
+      await user.clear(startInput);
+      await user.type(startInput, "1");
+
+      const gamesInput = screen.getByLabelText(/^Games$/i);
+      await user.clear(gamesInput);
+      await user.type(gamesInput, "3");
+
+      await user.click(
+        screen.getByRole("button", { name: /add eliminator/i })
+      );
+
+      expect(mockSetElims).toHaveBeenCalled();
+    });
+
+    it("deletes an eliminator without crashing when markPendingChanges is omitted", async () => {
+      const user = userEvent.setup();
+
+      render(
+        <ZeroToNElims
+          elims={mockElims}
+          setElims={mockSetElims}
+          divs={mockDivs}
+          squads={mockSquads}
+          setAcdnErr={mockSetAcdnErr}
+          setShowingModal={mockSetShowingModal}
+          isDisabled={false}
+        />
+      );
+
+      const tabs = screen.getAllByRole("tab");
+      await user.click(tabs[1]);
+
+      const delBtns = screen.getAllByText("Delete Eliminator");
+
+      await user.click(delBtns[0]);
+
+      const yesBtn = await screen.findByRole("button", {
+        name: /yes/i,
+      });
+
+      await user.click(yesBtn);
+
+      expect(mockSetElims).toHaveBeenCalled();
+    });
+
+    it("updates existing eliminator fee without crashing when markPendingChanges is omitted", async () => {
+      const user = userEvent.setup();
+
+      render(
+        <ZeroToNElims
+          elims={mockElims}
+          setElims={mockSetElims}
+          divs={mockDivs}
+          squads={mockSquads}
+          setAcdnErr={mockSetAcdnErr}
+          setShowingModal={mockSetShowingModal}
+          isDisabled={false}
+        />
+      );
+
+      const tabs = screen.getAllByRole("tab");
+      await user.click(tabs[1]);
+
+      const feeInputs = screen.getAllByRole("textbox", {
+        name: /fee/i,
+      }) as HTMLInputElement[];
+
+      const elimFeeInput = feeInputs[1];
+
+      await user.clear(elimFeeInput);
+      await user.type(elimFeeInput, "10");
+
+      expect(mockSetElims).toHaveBeenCalled();
+    });
+  });  
 
 })

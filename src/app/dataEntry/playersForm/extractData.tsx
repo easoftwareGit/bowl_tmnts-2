@@ -9,12 +9,12 @@ import type {
 } from "@/lib/types/types";
 import type { playerEntryRow } from "./populateRows";
 import {
-  brktsColNameEnd,
   divEntryHdcpColName,
   entryFeeColName,
+  brktsColNameEnd,  
   feeColNameEnd,  
-  timeStampColName,  
-} from "./createColumns";
+  timeStampColName,
+} from "./sfCreateColumns";
 import {  
   initDivEntry,
   initElimEntry,
@@ -29,7 +29,7 @@ import { isValidBtDbId } from "@/lib/validation/validation";
 /**
  * extarcts data from rows in grid
  *
- * @param {playerEntryRow[]} rows - array of playerEntryData in data grid
+ * @param {playerEntryRow[]} rows - array of  in data grid
  * @param {string} squadId - squad id 
  * @param {BracketList[]} brktLists - array of BracketLists
  * @returns {gridTmntEntryDataType} - gridTmntEntryDataType object
@@ -151,27 +151,6 @@ export const extractDataFromRows = (
             time_stamp: row[timeStampColName(brktId)],
           });              
         }
-        // if (row[brktNumColName] > brktList.totalBrackets) {
-        //   brktEntries.push({
-        //     ...initBrktEntry,
-        //     id: btDbUuid('ben'),
-        //     brkt_id: brktId,
-        //     player_id: row.id,
-        //     num_brackets: row[brktNumColName],
-        //     num_refunds: row[brktNumColName] - brktList.totalBrackets,
-        //     fee: row[entryFeeColName(brktId)] + '',
-        //     time_stamp: row[timeStampColName(brktId)],
-        //   });
-        // } else {
-        //   brktEntries.push({
-        //     ...initBrktEntry,
-        //     id: btDbUuid('ben'),
-        //     brkt_id: brktId,
-        //     player_id: row.id,
-        //     num_brackets: row[brktNumColName],
-        //     fee: row[entryFeeColName(brktId)] + '',
-        //     time_stamp: row[timeStampColName(brktId)],
-        //   });            
       }
     });
 

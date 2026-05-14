@@ -39,8 +39,9 @@ jest.mock("@/lib/getName", () => ({
 
 // mock populateRows (controls "rows" used by the page)
 const mockPopulateRows = jest.fn();
-jest.mock("@/app/dataEntry/playersForm/populateRows", () => ({
-  populateRows: (tmntFullData: any) => mockPopulateRows(tmntFullData),
+jest.mock("@/app/dataEntry/playersForm2/populateRows2", () => ({
+  populateRows: (tmntFullData: any) =>
+    mockPopulateRows(tmntFullData),
 }));
 
 /**
@@ -50,21 +51,73 @@ jest.mock("@/app/dataEntry/playersForm/populateRows", () => ({
  */
 let lastPlayersEntryFormProps: any = null;
 
-jest.mock("@/app/dataEntry/playersForm/playersForm", () => ({
+// jest.mock("@/app/dataEntry/playersForm2/playersForm2a", () => ({
+//   __esModule: true,
+//   default: (props: any) => {
+//     lastPlayersEntryFormProps = props;
+
+//     return (
+//       <div data-testid="PlayersEntryFormMock">
+//         <div data-testid="rowsLen">
+//           {props.rows?.length ?? -1}
+//         </div>
+
+//         <button
+//           type="button"
+//           onClick={() =>
+//             props.setRows([
+//               ...(props.rows ?? []),
+//               { id: "new_row" },
+//             ])
+//           }
+//         >
+//           Add Row
+//         </button>
+
+//         <button
+//           type="button"
+//           onClick={() =>
+//             props.setRows([{ id: "edited_only" }])
+//           }
+//         >
+//           Replace Rows
+//         </button>
+//       </div>
+//     );
+//   },
+// }));
+
+jest.mock("@/app/dataEntry/playersForm2/playersForm2a", () => ({
   __esModule: true,
   default: (props: any) => {
     lastPlayersEntryFormProps = props;
+
     return (
       <div data-testid="PlayersEntryFormMock">
-        <div data-testid="rowsLen">{props.rows?.length ?? -1}</div>
-        <div data-testid="hasFindCountError">
-          {String(typeof props.findCountError === "function")}
+        <div data-testid="rowsLen">
+          {props.rows?.length ?? -1}
+        </div>
+
+        <div data-testid="enableEditing">
+          {String(props.enableEditing)}
         </div>
 
         <button
           type="button"
           onClick={() =>
-            props.setRows([...(props.rows ?? []), { id: "new_row" }])
+            props.onNavigateAfterSave?.()
+          }
+        >
+          Trigger Navigate After Save
+        </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            props.setRows([
+              ...(props.rows ?? []),
+              { id: "new_row" },
+            ])
           }
         >
           Add Row
@@ -72,7 +125,9 @@ jest.mock("@/app/dataEntry/playersForm/playersForm", () => ({
 
         <button
           type="button"
-          onClick={() => props.setRows([{ id: "edited_only" }])}
+          onClick={() =>
+            props.setRows([{ id: "edited_only" }])
+          }
         >
           Replace Rows
         </button>
@@ -95,10 +150,11 @@ jest.mock("@/components/modal/waitModal", () => ({
 }));
 
 // mock usePreventUnload (side-effect hook)
-const mockUsePreventUnload = jest.fn();
-jest.mock("@/components/preventUnload/preventUnload", () => ({
-  __esModule: true,
-  default: (fn: any) => mockUsePreventUnload(fn),
+const mockUseUnsavedChangesGuard = jest.fn();
+
+jest.mock("@/hooks/useUnsavedChangesGuard", () => ({
+  useUnsavedChangesGuard: (...args: any[]) =>
+    mockUseUnsavedChangesGuard(...args),
 }));
 
 // mock BracketList class
@@ -143,21 +199,6 @@ jest.mock("@/lib/db/initVals", () => ({
   defaultPlayersPerMatch: 2,
 }));
 
-// mock rowInfo used by findCountError
-const mockGetCounts = jest.fn(() => ({ ok: true }));
-const mockGetCountErrMsg = jest.fn(() => "");
-
-// mock rowInfo used by findCountError
-// (don't deeply test its logic here; just ensure wiring works)
-jest.mock("@/app/dataEntry/playersForm/rowInfo", () => ({
-  getDivsPotsBrktsElimsCounts: function (...args: unknown[]) {
-    return mockGetCounts.apply(null, args);
-  },
-  getDivsPotsBrktsElimsCountErrMsg: function (...args: unknown[]) {
-    return mockGetCountErrMsg.apply(null, args);
-  },
-}));
-
 /**
  * react-bootstrap mock:
  * - renders children
@@ -188,10 +229,19 @@ jest.mock("react-bootstrap", () => ({
   ),
 }));
 
+const mockGetSquadStage = jest.fn();
+
+jest.mock("@/app/dataEntry/tmntForm/tmntTools", () => ({
+  getSquadStage: (...args: any[]) =>
+    mockGetSquadStage(...args),
+}));
+
 import EditPlayersPage from "@/app/dataEntry/editPlayers/[tmntId]/page";
+import { SquadStage } from "@prisma/client";
 
 // test fixtures
 const makeTmntFullData = (overrides: Partial<any> = {}) => ({
+  squads: [{ id: "sqd_1" }],
   divs: [{ id: "div_1", div_name: "Scratch" }],
   pots: [{ id: "pot_1", pot_type: "Game" }],
   brkts: [{ id: "brk_1", brkt_name: "A Bracket" }],
@@ -212,9 +262,7 @@ describe("EditPlayersPage", () => {
     mockPopulateRows.mockReturnValue([]);
     mockGetStatus.mockReturnValue("idle");
     mockGetError.mockReturnValue(null);
-
-    mockGetCounts.mockImplementation(() => ({ ok: true }));
-    mockGetCountErrMsg.mockImplementation(() => "");
+    mockGetSquadStage.mockResolvedValue(SquadStage.SCORES);
   });
 
   it("shows WaitModal when load status is loading", () => {
@@ -266,8 +314,7 @@ describe("EditPlayersPage", () => {
 
     // PlayersEntryForm got rows
     expect(screen.getByTestId("rowsLen")).toHaveTextContent("3");
-    expect(screen.getByTestId("hasFindCountError")).toHaveTextContent("true");
-
+    
     // Wait for the rows-driven effect to compute counts and render into inputs
     // Div fee count: div_1_fee has >0 in r1 and r3 => 2
     await waitFor(() => {                               
@@ -307,8 +354,12 @@ describe("EditPlayersPage", () => {
     expect(within(brkTab).getByText(/\*/)).toBeInTheDocument();
 
     // usePreventUnload should be wired up with a function
-    expect(mockUsePreventUnload).toHaveBeenCalled();
-    expect(typeof mockUsePreventUnload.mock.calls[0]?.[0]).toBe("function");
+    expect(mockUseUnsavedChangesGuard)
+      .toHaveBeenCalled();
+
+    expect(
+      typeof mockUseUnsavedChangesGuard.mock.calls[0]?.[0]
+    ).toBe("function");
   });
 
   it("when fetchTmntFullData fails: renders error message and no main UI", () => {
@@ -344,25 +395,6 @@ describe("EditPlayersPage", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("findCountError returns {id:'counts', msg} when rowInfo reports an error", async () => {
-    const tmntFullData = makeTmntFullData();
-    mockState = { tmntFullData: { tmntFullData } };
-    mockGetStatus.mockReturnValue("succeeded");
-    mockGetError.mockReturnValue(null);
-
-    mockPopulateRows.mockReturnValue([{ id: "r1", div_1_fee: 0, pot_1_fee: 0, elm_1_fee: 0, brk_1_num_brkts: 0 }]);
-
-    mockGetCountErrMsg.mockReturnValue("Need at least 1 entry in each division");
-
-    render(<EditPlayersPage />);
-
-    await screen.findByTestId("PlayersEntryFormMock");
-    expect(typeof lastPlayersEntryFormProps?.findCountError).toBe("function");
-
-    const err = lastPlayersEntryFormProps.findCountError();
-    expect(err).toEqual({ id: "counts", msg: "Need at least 1 entry in each division" });
-  });
-
   it("does not render refund asterisk when BracketList.playersWithRefunds is false", async () => {
     const tmntFullData = makeTmntFullData();
     tmntFullData.brkts = [{ id: "brk_2", brkt_name: "No Refund Bracket" }];
@@ -383,48 +415,57 @@ describe("EditPlayersPage", () => {
     expect(within(brkTab).queryByText(/\*/)).not.toBeInTheDocument();
   });
 
-  it("usePreventUnload callback returns false initially and true after rows change", async () => {
+  it("calls useUnsavedChangesGuard with a change detection function", async () => {
     const user = userEvent.setup();
 
     const tmntFullData = makeTmntFullData();
-    mockState = { tmntFullData: { tmntFullData } };
+
+    mockState = {
+      tmntFullData: {
+        tmntFullData,
+      },
+    };
+
     mockGetStatus.mockReturnValue("succeeded");
     mockGetError.mockReturnValue(null);
 
     mockPopulateRows.mockReturnValue([
-      { id: "r1", div_1_fee: 10, pot_1_fee: 0, elm_1_fee: 0, brk_1_num_brkts: 1 },
+      {
+        id: "r1",
+        div_1_fee: 10,
+        pot_1_fee: 0,
+        elm_1_fee: 0,
+        brk_1_num_brkts: 1,
+      },
     ]);
 
     render(<EditPlayersPage />);
 
     await screen.findByTestId("PlayersEntryFormMock");
 
-    // wait for init effect to write rows + origRowsRef (rowsLen shows current page state)
-    await waitFor(() => {
-      expect(screen.getByTestId("rowsLen")).toHaveTextContent("1");
-    });
+    expect(mockUseUnsavedChangesGuard).toHaveBeenCalled();
 
-    // grab the most recent callback (after init re-render)
-    const getLatestGuardFn = () =>
-      mockUsePreventUnload.mock.calls[mockUsePreventUnload.mock.calls.length - 1]?.[0];
+    const getLatestChangeFn = () =>
+      mockUseUnsavedChangesGuard.mock.calls[
+        mockUseUnsavedChangesGuard.mock.calls.length - 1
+      ]?.[0];
 
     await waitFor(() => {
-      expect(typeof getLatestGuardFn()).toBe("function");
+      expect(typeof getLatestChangeFn()).toBe("function");
     });
 
-    // no edits yet
-    expect(getLatestGuardFn()()).toBe(false);
+    expect(getLatestChangeFn()()).toBe(false);
 
-    // simulate user edit by changing rows via PlayersEntryForm mock button
-    await user.click(screen.getByRole("button", { name: "Add Row" }));
+    await user.click(
+      screen.getByRole("button", { name: "Add Row" })
+    );
 
-    // allow state/effects to flush
     await waitFor(() => {
-      expect(screen.getByTestId("rowsLen")).toHaveTextContent("2");
+      expect(screen.getByTestId("rowsLen"))
+        .toHaveTextContent("2");
     });
 
-    // grab latest again (rows changed => new callback)
-    expect(getLatestGuardFn()()).toBe(true);
+    expect(getLatestChangeFn()()).toBe(true);   
   });
 
   it("does not overwrite user-edited rows if redux tmntFullData changes after initialization", async () => {
@@ -493,20 +534,115 @@ describe("EditPlayersPage", () => {
     });
   });  
 
-  it("when succeeded but tmntFullData is null: still renders page without crashing", async () => {
-    mockState = { tmntFullData: { tmntFullData: null } };
+  it("throws when succeeded but tmntFullData is null", () => {
+    mockState = {
+      tmntFullData: {
+        tmntFullData: null,
+      },
+    };
+
     mockGetStatus.mockReturnValue("succeeded");
     mockGetError.mockReturnValue(null);
 
-    mockPopulateRows.mockReturnValue([]); // should be unused, but safe
+    expect(() => render(<EditPlayersPage />)).toThrow(
+      "EditPlayersPage: tournament data is required",
+    );
+  });  
+
+  it("throws when tournament squads data is missing", () => {
+    mockState = {
+      tmntFullData: {
+        tmntFullData: makeTmntFullData({
+          squads: undefined,
+        }),
+      },
+    };
+
+    mockGetStatus.mockReturnValue("succeeded");
+    mockGetError.mockReturnValue(null);
+
+    expect(() => render(<EditPlayersPage />)).toThrow(
+      "EditPlayersPage: squads data is required",
+    );
+  });  
+
+  it("throws when tournament has no squads", () => {
+    mockState = {
+      tmntFullData: {
+        tmntFullData: makeTmntFullData({
+          squads: [],
+        }),
+      },
+    };
+
+    mockGetStatus.mockReturnValue("succeeded");
+    mockGetError.mockReturnValue(null);
+
+    expect(() => render(<EditPlayersPage />)).toThrow(
+      "EditPlayersPage: tournament must contain at least one squad",
+    );
+  });
+    
+  it("throws when first squad has no id", () => {
+    mockState = {
+      tmntFullData: {
+        tmntFullData: makeTmntFullData({
+          squads: [{}],
+        }),
+      },
+    };
+
+    mockGetStatus.mockReturnValue("succeeded");
+    mockGetError.mockReturnValue(null);
+
+    expect(() => render(<EditPlayersPage />)).toThrow(
+      "EditPlayersPage: first squad must contain an id",
+    );
+  });  
+
+  it("keeps enableEditing true during navigate-after-save transition", async () => {
+    const user = userEvent.setup();
+
+    const tmntFullData = makeTmntFullData({
+      squads: [{ id: "sqd_1" }],
+    });
+
+    mockState = {
+      tmntFullData: {
+        tmntFullData,
+      },
+    };
+
+    mockGetStatus.mockReturnValue("succeeded");
+    mockGetError.mockReturnValue(null);
+
+    // readonly stage
+    mockGetSquadStage.mockResolvedValue(SquadStage.SCORES);
+
+    mockPopulateRows.mockReturnValue([{ id: "r1" }]);
 
     render(<EditPlayersPage />);
 
-    expect(await screen.findByRole("heading", { name: "Bowlers" })).toBeInTheDocument();
-    expect(screen.getByTestId("PlayersEntryFormMock")).toBeInTheDocument();
+    await screen.findByTestId("PlayersEntryFormMock");
 
-    // Div/Pot/Brkt/Elim lists are empty => no count inputs
-    expect(screen.queryByTestId("inputDivEntryCountdiv_1")).not.toBeInTheDocument();
-  });
+    // initially readonly because stage === SCORES
+    await waitFor(() => {
+      expect(screen.getByTestId("enableEditing"))
+        .toHaveTextContent("false");
+    });
+
+    // simulate child callback
+    await user.click(
+      screen.getByRole("button", {
+        name: "Trigger Navigate After Save",
+      })
+    );
+
+    // should temporarily force enableEditing=true
+    await waitFor(() => {
+      expect(screen.getByTestId("enableEditing"))
+        .toHaveTextContent("true");
+    });
+  });  
 
 });

@@ -12,6 +12,7 @@ import { noAcdnErr } from "@/app/dataEntry/tmntForm/errors";
 const mockSetSquads = jest.fn();
 const mockSetLanes = jest.fn();
 const mockSetAcdnErr = jest.fn();
+const mockMarkPendingChanges = jest.fn();
 
 const mockOneToNSquadsProps = {
   squads: mockSquads,
@@ -21,9 +22,14 @@ const mockOneToNSquadsProps = {
   events: mockEvents,
   setAcdnErr: mockSetAcdnErr,
   isDisabled: false,
+  markPendingChanges: mockMarkPendingChanges
 };
 
 describe("OneToNSquads - interactions", () => { 
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
   describe("render the component - 2 squads", () => {
 
@@ -400,6 +406,7 @@ describe("OneToNSquads - interactions", () => {
       await user.click(addBtn);
       // ASSERT
       expect(toAddProps.setSquads).toHaveBeenCalled();
+      expect(toAddProps.markPendingChanges).toHaveBeenCalledWith(true);
 
       // ACT
       const tabs = screen.getAllByRole("tab");
@@ -446,11 +453,23 @@ describe("OneToNSquads - interactions", () => {
       await user.click(addBtn);
 
       expect(setSquads).toHaveBeenCalled();
+      expect(toAddProps.markPendingChanges).toHaveBeenCalledWith(true);
       const [updatedSquads] = setSquads.mock.calls.at(-1) as [squadType[]];
 
       expect(updatedSquads).toHaveLength(mockSquads.length + 1);
       const newSquad = updatedSquads[updatedSquads.length - 1];
       expect(newSquad.squad_name).toBe("Squad 3"); // default 3rd squad name      
+    });    
+
+    it("Add Squad marks pending changes", async () => {
+      const user = userEvent.setup();
+
+      render(<OneToNSquads {...mockOneToNSquadsProps} />);
+
+      const addBtn = screen.getByRole("button", { name: /add/i });
+      await user.click(addBtn);
+
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
     });    
   })
 
@@ -499,6 +518,7 @@ describe("OneToNSquads - interactions", () => {
 
       // Now the component should have called setSquads with the filtered array
       expect(localSetSquads).toHaveBeenCalledTimes(1);
+      expect(props.markPendingChanges).toHaveBeenCalledWith(true);
       const [updatedSquads] = localSetSquads.mock.calls[0] as [typeof localSquads];
       
       // The squad should be deleted
@@ -581,6 +601,7 @@ describe("OneToNSquads - interactions", () => {
 
       // Now the component should have called setLanes with the filtered array
       expect(localSetLanes).toHaveBeenCalledTimes(1);
+      expect(props.markPendingChanges).toHaveBeenCalledWith(true);
       const [updatedLanes] = localSetLanes.mock.calls[0] as [typeof localLanes];
       
       // The squad lanes should be deleted
@@ -666,6 +687,7 @@ describe("OneToNSquads - interactions", () => {
 
       expect(setSquads).not.toHaveBeenCalled();
       expect(setLanes).not.toHaveBeenCalled();
+      expect(mockOneToNSquadsProps.markPendingChanges).not.toHaveBeenCalled();
     });
 
   })
@@ -688,6 +710,7 @@ describe("OneToNSquads - interactions", () => {
       const nameInputs = screen.getAllByRole("textbox", { name: /squad name/i });
       fireEvent.change(nameInputs[0], { target: { value: "New Name" } });
 
+      expect(mockOneToNSquadsProps.markPendingChanges).toHaveBeenCalledWith(true);
       expect(setSquads).toHaveBeenCalled();
       const [updatedSquads] = setSquads.mock.calls.at(-1) as [squadType[]];
 
@@ -713,6 +736,7 @@ describe("OneToNSquads - interactions", () => {
       const gamesInput = screen.getAllByRole("spinbutton", { name: /squad games/i });
       fireEvent.change(gamesInput[0], { target: { value: 6 } });
 
+      expect(mockOneToNSquadsProps.markPendingChanges).toHaveBeenCalledWith(true);
       expect(setSquads).toHaveBeenCalled();
       const [updatedSquads] = setSquads.mock.calls.at(-1) as [squadType[]];
 
@@ -738,6 +762,7 @@ describe("OneToNSquads - interactions", () => {
       const startLaneInput = screen.getAllByRole("spinbutton", { name: /starting lane/i });
       fireEvent.change(startLaneInput[0], { target: { value: 15 } });
 
+      expect(mockOneToNSquadsProps.markPendingChanges).toHaveBeenCalledWith(true);
       expect(setSquads).toHaveBeenCalled();
       const [updatedSquads] = setSquads.mock.calls.at(-1) as [squadType[]];
 
@@ -766,6 +791,7 @@ describe("OneToNSquads - interactions", () => {
       
       fireEvent.input(lanesInput[0], { target: { value: "16" } });
 
+      expect(mockOneToNSquadsProps.markPendingChanges).toHaveBeenCalledWith(true);
       expect(setSquads).toHaveBeenCalled();
       const [updatedSquads] = setSquads.mock.calls.at(-1) as [squadType[]];
 
@@ -797,6 +823,7 @@ describe("OneToNSquads - interactions", () => {
       const newEventId = mockEvents[1].id;
       fireEvent.change(select, { target: { value: newEventId } });      
 
+      expect(mockOneToNSquadsProps.markPendingChanges).toHaveBeenCalledWith(true);
       expect(setSquads).toHaveBeenCalled();
       const [updatedSquads] = setSquads.mock.calls.at(-1) as [squadType[]];
 
@@ -828,6 +855,7 @@ describe("OneToNSquads - interactions", () => {
       
       fireEvent.change(dateInputs[0], { target: { value: newDate } });
 
+      expect(mockOneToNSquadsProps.markPendingChanges).toHaveBeenCalledWith(true);
       expect(setSquads).toHaveBeenCalled();
       const [updatedSquads] = setSquads.mock.calls.at(-1) as [squadType[]];
 
@@ -857,6 +885,7 @@ describe("OneToNSquads - interactions", () => {
 
       fireEvent.change(timeInputs[0], { target: { value: newTime } });
 
+      expect(mockOneToNSquadsProps.markPendingChanges).toHaveBeenCalledWith(true);
       expect(setSquads).toHaveBeenCalled();
       const [updatedSquads] = setSquads.mock.calls.at(-1) as [squadType[]];
 
@@ -885,6 +914,7 @@ describe("OneToNSquads - interactions", () => {
       const startLaneInput = screen.getAllByRole("spinbutton", { name: /starting lane/i });
       fireEvent.change(startLaneInput[0], { target: { value: 15 } });
 
+      expect(mockOneToNSquadsProps.markPendingChanges).toHaveBeenCalledWith(true);
       expect(setLanes).toHaveBeenCalled();
       
       const [updatedLanesParam] = setLanes.mock.calls.at(-1) as [laneType[]];
@@ -908,6 +938,7 @@ describe("OneToNSquads - interactions", () => {
       const startLaneInputs = screen.getAllByRole("spinbutton", { name: /starting lane/i });
       fireEvent.change(startLaneInputs[0], { target: { value: "2" } }); // even → invalid
 
+      expect(mockOneToNSquadsProps.markPendingChanges).toHaveBeenCalledWith(true);
       expect(setLanes).toHaveBeenCalled();
 
       const [updatedLanes] = setLanes.mock.calls.at(-1) as [laneType[]];
@@ -930,6 +961,7 @@ describe("OneToNSquads - interactions", () => {
       const laneCounts = screen.getAllByRole("spinbutton", { name: /of lanes/i });
       fireEvent.change(laneCounts[0], { target: { value: "16" } });
 
+      expect(mockOneToNSquadsProps.markPendingChanges).toHaveBeenCalledWith(true);
       expect(setLanes).toHaveBeenCalled();
 
       const [updatedLanesParam] = setLanes.mock.calls.at(-1) as [laneType[]];      
@@ -953,6 +985,7 @@ describe("OneToNSquads - interactions", () => {
       const laneCounts = screen.getAllByRole("spinbutton", { name: /of lanes/i });
       fireEvent.change(laneCounts[0], { target: { value: "11" } }); // odd → invalid
 
+      expect(mockOneToNSquadsProps.markPendingChanges).toHaveBeenCalledWith(true);
       expect(setLanes).toHaveBeenCalled();
 
       const [updatedLanes] = setLanes.mock.calls.at(-1) as [laneType[]];
@@ -991,4 +1024,157 @@ describe("OneToNSquads - interactions", () => {
     });
   })
 
+  describe("optional markPendingChanges prop", () => {
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it("adds a squad without crashing when markPendingChanges is omitted", async () => {
+      const user = userEvent.setup();
+
+      const setSquads = jest.fn();
+      const setLanes = jest.fn();
+
+      const props = {
+        ...cloneDeep(mockOneToNSquadsProps),
+        setSquads,
+        setLanes,
+      };
+
+      delete (props as Partial<typeof props>).markPendingChanges;
+
+      render(<OneToNSquads {...props} />);
+
+      const addBtn = screen.getByRole("button", { name: /add/i });
+
+      await user.click(addBtn);
+
+      expect(setSquads).toHaveBeenCalled();
+      expect(setLanes).toHaveBeenCalled();
+    });
+
+    it("updates squad name without crashing when markPendingChanges is omitted", async () => {
+      const user = userEvent.setup();
+
+      const setSquads = jest.fn();
+
+      const props = {
+        ...cloneDeep(mockOneToNSquadsProps),
+        setSquads,
+      };
+
+      delete (props as Partial<typeof props>).markPendingChanges;
+
+      render(<OneToNSquads {...props} />);
+
+      const squadNames = screen.getAllByRole("textbox", {
+        name: /squad name/i,
+      }) as HTMLInputElement[];
+
+      fireEvent.change(squadNames[0], {
+        target: { value: "Updated Squad" },
+      });
+
+      expect(setSquads).toHaveBeenCalled();
+    });
+
+    it("updates squad event without crashing when markPendingChanges is omitted", async () => {
+      const setSquads = jest.fn();
+
+      const props = {
+        ...cloneDeep(mockOneToNSquadsProps),
+        setSquads,
+      };
+
+      delete (props as Partial<typeof props>).markPendingChanges;
+
+      render(<OneToNSquads {...props} />);
+
+      const selects = screen.getAllByRole("combobox", {
+        name: /event/i,
+      }) as HTMLSelectElement[];
+
+      fireEvent.change(selects[0], {
+        target: { selectedIndex: 1 },
+      });
+
+      expect(setSquads).toHaveBeenCalled();
+    });
+
+    it("updates starting lane without crashing when markPendingChanges is omitted", () => {
+      const setSquads = jest.fn();
+      const setLanes = jest.fn();
+
+      const props = {
+        ...cloneDeep(mockOneToNSquadsProps),
+        setSquads,
+        setLanes,
+      };
+
+      delete (props as Partial<typeof props>).markPendingChanges;
+
+      render(<OneToNSquads {...props} />);
+
+      const startingLaneInputs = screen.getAllByRole("spinbutton", {
+        name: /starting lane/i,
+      });
+
+      fireEvent.change(startingLaneInputs[0], {
+        target: { value: "15" },
+      });
+
+      expect(setSquads).toHaveBeenCalled();
+      expect(setLanes).toHaveBeenCalled();
+    });
+
+    it("deletes a squad without crashing when markPendingChanges is omitted", async () => {
+      const user = userEvent.setup();
+
+      const localSquads = cloneDeep(mockSquads);
+
+      localSquads.push({
+        ...initSquad,
+        id: "3",
+        sort_order: 3,
+        squad_name: "Trios",
+        tab_title: "Trios",
+        event_id: mockEvents[0].id,
+      });
+
+      const setSquads = jest.fn();
+      const setLanes = jest.fn();
+
+      const props = {
+        ...cloneDeep(mockOneToNSquadsProps),
+        squads: localSquads,
+        setSquads,
+        setLanes,
+      };
+
+      delete (props as Partial<typeof props>).markPendingChanges;
+
+      render(<OneToNSquads {...props} />);
+
+      const tabs = screen.getAllByRole("tab");
+
+      await user.click(tabs[2]);
+
+      const delBtns = screen.getAllByText("Delete Squad");
+
+      await user.click(delBtns[1]);
+
+      const dialog = await screen.findByRole("dialog");
+
+      const yesBtn = within(dialog).getByRole("button", {
+        name: /yes/i,
+      });
+
+      await user.click(yesBtn);
+
+      expect(setSquads).toHaveBeenCalled();
+      expect(setLanes).toHaveBeenCalled();
+    });
+
+  });  
 })

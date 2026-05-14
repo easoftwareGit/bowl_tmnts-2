@@ -34,7 +34,9 @@ interface ChildProps {
   setSquads: (squds: squadType[]) => void;
   setAcdnErr: (objAcdnErr: AcdnErrType) => void;   
   isDisabled: boolean;
+  markPendingChanges?: (pending: boolean) => void;
 }
+
 interface AddOrDelButtonProps {
   id: string,
   sortOrder: number;
@@ -261,6 +263,7 @@ const OneToNEvents: React.FC<ChildProps> = ({
   setSquads,
   setAcdnErr,  
   isDisabled,
+  markPendingChanges,
 }) => {
   
   const defaultTabKey = events[0].id;
@@ -276,6 +279,8 @@ const OneToNEvents: React.FC<ChildProps> = ({
   const delBtnStyle = isDisabled ? 'btn-dark' : 'btn-danger';
 
   const handleAdd = () => {
+    markPendingChanges?.(true);
+
     const newEvent: eventType = {
       ...initEvent,      
       id: btDbUuid('evt'),
@@ -288,7 +293,12 @@ const OneToNEvents: React.FC<ChildProps> = ({
     setEvents([...events, newEvent]);    
   };
 
-  const confirmedDelete = () => {    
+  /**
+   *  runs when user confirmed delete - does the actual deletion
+   */
+  const confirmedDelete = () => {
+    markPendingChanges?.(true);
+
     const idToDel = confModalObj.id;
     setConfModalObj(initModalObj); // reset modal object (hides modal)
 
@@ -318,6 +328,12 @@ const OneToNEvents: React.FC<ChildProps> = ({
     setErrModalObj(initModalObj); // reset modal object (hides modal)
   };
 
+  /**
+   * checks if event has squads
+   *
+   * @param {eventType} eventToDel - event to check
+   * @return {boolean} - true if event has squads
+   */
   const eventHasSquads = (eventToDel: eventType): boolean => {    
     return squads.some((squad) => squad.event_id === eventToDel.id);
   }
@@ -346,6 +362,8 @@ const OneToNEvents: React.FC<ChildProps> = ({
   };
 
   const handleAmountValueChange = (id: string, name: string) => (value: string | undefined): void => {
+    markPendingChanges?.(true);
+
     const nameErr = name + "_err";
     let rawValue = value === undefined ? 'undefined' : value;
     rawValue = (rawValue || ' ');
@@ -417,6 +435,8 @@ const OneToNEvents: React.FC<ChildProps> = ({
   };
   
   const handleInputChange = (id: string) => (e: ChangeEvent<HTMLInputElement>) => {
+    markPendingChanges?.(true);
+
     const { name, value } = e.target;
     const nameErr = name + "_err";
 
@@ -509,6 +529,14 @@ const OneToNEvents: React.FC<ChildProps> = ({
     );
   };
 
+  /**
+   * Update LPOX value in event
+   *
+   * @param {eventType} event - event to update
+   * @param {string} name - name of field
+   * @param {string} value - value of field
+   * @return {eventType} - updated event
+   */
   const updateLPOX = (event: eventType, name: string, value: string): eventType => {
     const nameErr = name + "_err";
     const valNoSymb = value.replace(currRexEx, '')
@@ -536,6 +564,7 @@ const OneToNEvents: React.FC<ChildProps> = ({
     const { name, value } = e.target;
     
     if (amountFields.includes(name) && (value)) {
+      markPendingChanges?.(true);
       setEvents(
         events.map((event) => {
           if (event.id === id) {
@@ -551,6 +580,7 @@ const OneToNEvents: React.FC<ChildProps> = ({
     }
 
     if (!value.trim()) {
+      markPendingChanges?.(true);
       setEvents(
         events.map((event) => {
           if (event.id === id) {
@@ -595,6 +625,12 @@ const OneToNEvents: React.FC<ChildProps> = ({
     }
   };
 
+  /**
+   * Add or delete button component
+   *
+   * @param {*} { id, sortOrder }
+   * @return {*} add or delete button
+   */
   const AddOrDelButton: React.FC<AddOrDelButtonProps> = ({ id, sortOrder }) => {
     if (sortOrder === 1) {
       return (

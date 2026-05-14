@@ -3,9 +3,10 @@ import { ioStatusType } from "@/redux/statusTypes";
 import { RootState } from "@/redux/store";
 import { getGameResultsForTmnt } from "@/lib/db/results/dbResults";
 import { cloneDeep } from "lodash";
+import { TmntGameResult } from "@/lib/types/resultsTypes";
 
 export interface oneTmntGameResultsState {
-  games: any[];
+  games: TmntGameResult[];
   tmntId: string;
   loadStatus: ioStatusType;
   error: string | undefined;
@@ -20,7 +21,7 @@ const initialState: oneTmntGameResultsState = {
 
 export const fetchOneTmntGameResults = createAsyncThunk(
   "oneTmntGameResults/fetchOneTmntGameResults",
-  async (tmntId: string, { getState }) => {
+  async (tmntId: string, { getState }): Promise<TmntGameResult[] | null> => {
 
     const state = getState() as RootState;
     const currentTmntId = state.oneTmntGameResults.tmntId;
@@ -35,8 +36,7 @@ export const fetchOneTmntGameResults = createAsyncThunk(
     if (!gotData) {
       return null;
     }
-    const gameData = cloneDeep(gotData);
-    return gameData as any[];
+    return cloneDeep(gotData);    
   }
 )
 

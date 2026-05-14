@@ -14,7 +14,7 @@ import type { divDataType } from "@/lib/types/types";
 import WaitModal from "@/components/modal/waitModal";
 import { blankDivData } from "@/lib/db/initVals";
 import { getMonthDay, removeTimeFromISODateStr } from "@/lib/dateTools";
-import TmntResultsForm from "./divForm";
+import TmntResultsForm from "./tmntResultsForm";
 import "./tmntResults.css";
 
 // gold pin
@@ -104,6 +104,7 @@ const DivResultsPage = () => {
             >
               {tmntDivs.map((div) => (
                 <Tab key={div.id} eventKey={`${div.id}`} title={div.div_name}>
+                  {/* <TmntResultsForm divid={div.id} tmntResults={tmntResults} /> */}
                   <TmntResultsForm divid={div.id} tmntResults={tmntResults} />
                 </Tab>
               ))}

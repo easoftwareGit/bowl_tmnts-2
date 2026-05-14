@@ -12,6 +12,7 @@ import { cloneDeep } from "lodash";
 const mockSetEvents = jest.fn();
 const mockSetSquads = jest.fn();
 const mockSetAcdnErr = jest.fn();
+const mockMarkPendingChanges = jest.fn();
 
 const mockOneToNEventsProps = {
   events: mockEvents,
@@ -20,9 +21,13 @@ const mockOneToNEventsProps = {
   setSquads: mockSetSquads,
   setAcdnErr: mockSetAcdnErr,
   isDisabled: false,
+  markPendingChanges: mockMarkPendingChanges
 };
 
 describe("OneToNEvents - Component", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
   describe("render the component", () => {
     

@@ -215,6 +215,8 @@ jest.mock("react-bootstrap", () => {
 });
 ;  
 
+const mockMarkPendingChanges = jest.fn();
+
 const tmntProps: tmntFormDataType = { 
   tmntFullData: mockTmntFullData, 
   stage: SquadStage.DEFINE,
@@ -226,7 +228,8 @@ describe('TmntDataForm - validate', () => {
   describe('validation - validateTmnt and validateTmntInfo', () => {
     beforeEach(() => {
       jest.restoreAllMocks();
-      jest.clearAllMocks();        
+      jest.clearAllMocks();    
+      mockMarkPendingChanges.mockClear();
     });
 
     it('shows all required errors when fields are empty', async () => {
@@ -241,7 +244,10 @@ describe('TmntDataForm - validate', () => {
       const store = makeStore([mockBowl]);         
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={blankTmntProps} />
+          <TmntDataForm
+            tmntProps={blankTmntProps}
+            markPendingChanges={mockMarkPendingChanges}
+          />
         </Provider>
       )
       // Simulate save click
@@ -271,7 +277,10 @@ describe('TmntDataForm - validate', () => {
       const store = makeStore([mockBowl]); 
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={invalidTmntProps} />
+          <TmntDataForm
+            tmntProps={invalidTmntProps}
+            markPendingChanges={mockMarkPendingChanges}
+          />
         </Provider>
       )
       // Simulate save click
@@ -290,7 +299,8 @@ describe('TmntDataForm - validate', () => {
   describe('validation - child components', () => {
     beforeEach(() => {
       jest.restoreAllMocks();
-      jest.clearAllMocks();        
+      jest.clearAllMocks();  
+      mockMarkPendingChanges.mockClear();
     })
 
     it('calls saveTmntFullData when all child validations pass', async () => {
@@ -304,7 +314,10 @@ describe('TmntDataForm - validate', () => {
       const store = makeStore([mockBowl]); 
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={tmntProps} />
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={mockMarkPendingChanges}
+          />
         </Provider>
       )
       // Simulate save click
@@ -326,7 +339,10 @@ describe('TmntDataForm - validate', () => {
       const store = makeStore([mockBowl]); 
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={tmntProps} />
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={mockMarkPendingChanges}
+          />
         </Provider>
       )
       // Simulate save click
@@ -343,6 +359,7 @@ describe('TmntDataForm - validate', () => {
     beforeEach(() => {
       jest.restoreAllMocks();
       jest.clearAllMocks();
+      mockMarkPendingChanges.mockClear();
     })
 
     it('shows Events accordian error message and class when validateEvents sets an error', async () => {
@@ -369,7 +386,10 @@ describe('TmntDataForm - validate', () => {
       const store = makeStore([mockBowl]);
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={tmntProps} />
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={mockMarkPendingChanges}
+          />
         </Provider>
       );
 
@@ -409,7 +429,10 @@ describe('TmntDataForm - validate', () => {
       const store = makeStore([mockBowl]);
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={tmntProps} />
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={mockMarkPendingChanges}
+          />
         </Provider>
       );
 
@@ -446,7 +469,10 @@ describe('TmntDataForm - validate', () => {
       const store = makeStore([mockBowl]);
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={tmntProps} />
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={mockMarkPendingChanges}
+          />
         </Provider>
       );
 
@@ -483,7 +509,10 @@ describe('TmntDataForm - validate', () => {
       const store = makeStore([mockBowl]);
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={tmntProps} />
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={mockMarkPendingChanges}
+          />
         </Provider>
       );
 
@@ -520,7 +549,10 @@ describe('TmntDataForm - validate', () => {
       const store = makeStore([mockBowl]);
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={tmntProps} />
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={mockMarkPendingChanges}
+          />
         </Provider>
       );
 
@@ -557,7 +589,10 @@ describe('TmntDataForm - validate', () => {
       const store = makeStore([mockBowl]);
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={tmntProps} />
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={mockMarkPendingChanges}
+          />
         </Provider>
       );
 

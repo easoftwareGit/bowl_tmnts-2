@@ -7,6 +7,7 @@ import {
   oneDivGameResultsState,
   oneDivGameResultsSlice
 } from '@/redux/features/oneDivGameResults/oneDivGameResultsSlice';
+import type { TmntGameResult } from "@/lib/types/resultsTypes";
 
 // Mock the dependencies
 jest.mock('@/lib/db/results/dbResults', () => ({  
@@ -75,8 +76,31 @@ describe('oneDivGameResultsSlice', () => {
     it('should handle fetchOneDivGameResults fulfilled', async () => { 
       // Arrange
       const divId = '123';
-      const games = [{ id: 1, name: 'Game 1' }];
-      const action = fetchOneDivGameResults.fulfilled(games, divId, 'succeeded');
+      const games: TmntGameResult[] = [
+        {
+          player_id: "ply_123",
+          div_id: "div_123",
+          div_name: "Scratch",
+          sort_order: 1,
+          tmnt_name: "Test Tournament",
+          start_date: "2026-04-30T00:00:00.000Z",
+
+          full_name: "John Doe",
+          average: 200,
+          hdcp: 10,
+          total: 600,
+          "total + Hdcp": 630,
+
+          "Game 1": 200,
+          "Game 1 + Hdcp": 210,
+          "Game 2": 190,
+          "Game 2 + Hdcp": 200,
+          "Game 3": 210,
+          "Game 3 + Hdcp": 220,
+        },
+      ];
+
+      const action = fetchOneDivGameResults.fulfilled(games, 'succeeded', divId);
 
       // Act
       store.dispatch(action);
@@ -136,12 +160,33 @@ describe('oneDivGameResultsSlice', () => {
     });
   
     it('selectOneDivGameResults should return the updated games from state', () => {
-      store.dispatch({
-        type: 'oneDivGameResultsState/fetchOneDivGameResults/fulfilled',
-        payload: [{ id: 1, name: 'Game 1' }]
-      });
+      const divId = '123';
+      const games: TmntGameResult[] = [
+        {
+          player_id: "ply_123",
+          div_id: divId,
+          div_name: "Scratch",
+          sort_order: 1,
+          tmnt_name: "Test Tournament",
+          start_date: "2026-04-30T00:00:00.000Z",
+          full_name: "John Doe",
+          average: 200,
+          hdcp: 10,
+          total: 600,
+          "total + Hdcp": 630,
+          "Game 1": 200,
+          "Game 1 + Hdcp": 210,
+          "Game 2": 190,
+          "Game 2 + Hdcp": 200,
+          "Game 3": 210,
+          "Game 3 + Hdcp": 220,
+        },
+      ];
+
+      store.dispatch(fetchOneDivGameResults.fulfilled(games, "succeeded", divId));
       const state = store.getState();
-      expect(selectOneDivGameResults(state)).toEqual([{ id: 1, name: 'Game 1' }]);
+      expect(selectOneDivGameResults(state)).toEqual(games);
+      expect(state.oneDivGameResults.divId).toBe(divId);
     });  
     it('getOneDivGameResultsLoadStatus should return updated load status from state', () => {
       store.dispatch({

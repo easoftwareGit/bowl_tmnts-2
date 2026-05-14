@@ -1,0 +1,24 @@
+.reportOptions {
+  position: absolute;
+  top: 0px;
+  right: 0;
+
+  width: 320px;
+
+  padding: 1rem;
+
+  z-index: 2000;
+
+  background-color: white;
+  border-radius: 0.5rem;
+}
+
+.btn-close-red {
+  filter:
+    invert(16%)
+    sepia(95%)
+    saturate(7477%)
+    hue-rotate(1deg)
+    brightness(103%)
+    contrast(118%);
+}

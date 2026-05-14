@@ -257,10 +257,14 @@ describe('tmntDataForm - saving and stages', () => {
       parentForm: tmntFormParent.NEW,
     };
 
-    // 5) Render
+    // 5) Render    
+    const markPendingChangesMock = jest.fn();
     render(
       <Provider store={store}>
-        <TmntDataForm tmntProps={newTmntProps} />
+        <TmntDataForm
+          tmntProps={newTmntProps}
+          markPendingChanges={markPendingChangesMock}
+        />
       </Provider>
     );
 
@@ -271,6 +275,7 @@ describe('tmntDataForm - saving and stages', () => {
       target: { name: "tmnt_name", value: newName },
     });
     expect(nameInput.value).toBe(newName);
+    expect(markPendingChangesMock).toHaveBeenCalledWith(true);
 
     // 7) Click Save
     const saveBtn = screen.getByText("Save Tournament");
@@ -279,6 +284,7 @@ describe('tmntDataForm - saving and stages', () => {
 
     // 8) unwrap() called once (i.e., save "succeeded")
     await waitFor(() => expect(unwrapMock).toHaveBeenCalledTimes(1));
+    expect(markPendingChangesMock).toHaveBeenCalledWith(false);
 
     // 9) Stage rows created from *saved* squads (because newTmnt === true)
     await waitFor(() =>
@@ -329,9 +335,13 @@ describe('tmntDataForm - saving and stages', () => {
       parentForm: tmntFormParent.EDIT,
     };
 
+    const markPendingChangesMock = jest.fn();
     render(
       <Provider store={store}>
-        <TmntDataForm tmntProps={editedProps} />
+        <TmntDataForm
+          tmntProps={editedProps}
+          markPendingChanges={markPendingChangesMock}
+        />
       </Provider>
     );
 
@@ -340,13 +350,13 @@ describe('tmntDataForm - saving and stages', () => {
     fireEvent.click(saveBtn);
 
     await waitFor(() => expect(unwrapMock).toHaveBeenCalledTimes(1));
+    expect(markPendingChangesMock).toHaveBeenCalledWith(false);
 
-    // 👉 Now we expect a call for EDIT as well (since we changed the code above)
+    // expect a call for EDIT as well as a call for DEFINE 
     await waitFor(() =>
       expect(postInitialStageForSquadMock).toHaveBeenCalledTimes(0)
     );
-    // expect(postInitialStageForSquadMock).toHaveBeenCalledWith("sqd_999");
-
+    
     const errModal = screen.getByTestId("ModalErrorMsgMock");
     expect(errModal).toHaveAttribute("data-show", "true");
     expect(errModal).toHaveAttribute("data-title", "Tournament Saved");
@@ -356,4 +366,37 @@ describe('tmntDataForm - saving and stages', () => {
     );
   });
 
+  it("saves without markPendingChanges prop", async () => {
+    (validateEvents as jest.Mock).mockReturnValue(true);
+    (validateDivs as jest.Mock).mockReturnValue(true);
+    (validateSquads as jest.Mock).mockReturnValue(true);
+    (validatePots as jest.Mock).mockReturnValue(true);
+    (validateBrkts as jest.Mock).mockReturnValue(true);
+    (validateElims as jest.Mock).mockReturnValue(true);
+
+    const unwrapMock = jest.fn().mockResolvedValue(mockTmntFullData);
+
+    const store = makeStore([mockBowl]);
+    jest.spyOn(store, "dispatch").mockReturnValue({
+      unwrap: unwrapMock,
+    } as any);
+
+    const props: tmntFormDataType = {
+      tmntFullData: mockTmntFullData,
+      stage: SquadStage.DEFINE,
+      parentForm: tmntFormParent.EDIT,
+    };
+
+    render(
+      <Provider store={store}>
+        <TmntDataForm tmntProps={props} />
+      </Provider>,
+    );
+
+    const saveBtn = screen.getByText("Save Tournament");
+    saveBtn.focus();
+    fireEvent.click(saveBtn);
+
+    await waitFor(() => expect(unwrapMock).toHaveBeenCalledTimes(1));
+  });  
 })

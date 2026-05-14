@@ -10,6 +10,7 @@ interface ChildProps {
   setLanes: (lanes: laneType[]) => void;
   squads: squadType[];
   isDisabled: boolean;
+  markPendingChanges?: (pending: boolean) => void;
 }
 
 // const defaultTabKey = 'squad1'
@@ -19,6 +20,7 @@ const OneToNLanes: React.FC<ChildProps> = ({
   setLanes,
   squads,
   isDisabled,
+  markPendingChanges
 }) => {
   
   const defaultTabKey = (!squads || !isArray(squads) || squads.length === 0)
@@ -54,6 +56,7 @@ const OneToNLanes: React.FC<ChildProps> = ({
               lanes={lanes}
               setLanes={setLanes}
               isDisabled={isDisabled}
+              markPendingChanges={markPendingChanges}
             />
           </Tab>
         )}

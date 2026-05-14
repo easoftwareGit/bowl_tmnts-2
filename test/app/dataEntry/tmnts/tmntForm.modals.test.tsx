@@ -43,6 +43,8 @@ const makeStore = (bowls: bowlType[] = []) =>
     },
   });
    
+const markPendingChangesMock = jest.fn();
+
 // Mock useRouter:
 jest.mock("next/navigation", () => ({
   useRouter: jest.fn(() => ({
@@ -165,7 +167,10 @@ describe('TmntDataForm - Save Modals', () => {
       const store = makeStore([mockBowl]);       
       render( 
         <Provider store={store}> 
-          <TmntDataForm tmntProps={tmntProps} /> 
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={markPendingChangesMock}
+          />
         </Provider> 
       ); 
 
@@ -178,6 +183,9 @@ describe('TmntDataForm - Save Modals', () => {
       await user.click(saveBtn);
       
       await screen.findByRole('dialog', undefined);
+
+      expect(markPendingChangesMock).toHaveBeenCalledWith(false);
+
       expect(screen.getByText("Tournament Saved")).toBeInTheDocument();
       expect(
         screen.getByText(`Tournament: ${mockTmntFullData.tmnt.tmnt_name} saved.`)
@@ -203,7 +211,11 @@ describe('TmntDataForm - Save Modals', () => {
       const store = makeStore([mockBowl]);
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={tmntProps} />
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={markPendingChangesMock}
+          />
+
         </Provider>
       );
 
@@ -226,7 +238,11 @@ describe('TmntDataForm - Save Modals', () => {
       const store = makeStore([mockBowl]);
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={tmntProps} />
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={markPendingChangesMock}
+          />
+
         </Provider>
       );
 
@@ -247,7 +263,11 @@ describe('TmntDataForm - Save Modals', () => {
       const store = makeStore([mockBowl]);
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={tmntProps} />
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={markPendingChangesMock}
+          />
+
         </Provider>
       );
 
@@ -268,7 +288,11 @@ describe('TmntDataForm - Save Modals', () => {
       const store = makeStore([mockBowl]);
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={tmntProps} />
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={markPendingChangesMock}
+          />
+
         </Provider>
       );
 
@@ -289,7 +313,11 @@ describe('TmntDataForm - Save Modals', () => {
       const store = makeStore([mockBowl]);
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={tmntProps} />
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={markPendingChangesMock}
+          />
+
         </Provider>
       );
 
@@ -312,7 +340,11 @@ describe('TmntDataForm - Save Modals', () => {
       const store = makeStore([mockBowl]);
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={tmntProps} />
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={markPendingChangesMock}
+          />
+
         </Provider>
       );
 
@@ -333,7 +365,11 @@ describe('TmntDataForm - Save Modals', () => {
       const store = makeStore([mockBowl]);
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={tmntProps} />
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={markPendingChangesMock}
+          />
+
         </Provider>
       );
 
@@ -356,7 +392,11 @@ describe('TmntDataForm - Save Modals', () => {
       const store = makeStore([mockBowl]);
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={tmntProps} />
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={markPendingChangesMock}
+          />
+
         </Provider>
       );
 
@@ -377,7 +417,11 @@ describe('TmntDataForm - Save Modals', () => {
       const store = makeStore([mockBowl]);
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={tmntProps} />
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={markPendingChangesMock}
+          />
+
         </Provider>
       );
 
@@ -402,7 +446,10 @@ describe('TmntDataForm - Save Modals', () => {
         const store = makeStore([mockBowl]);
         render(
           <Provider store={store}>
-            <TmntDataForm tmntProps={tmntPropsNew} />
+            <TmntDataForm
+              tmntProps={tmntPropsNew}
+              markPendingChanges={markPendingChangesMock}
+            />
           </Provider>
         );
 
@@ -435,7 +482,10 @@ describe('TmntDataForm - Save Modals', () => {
         const store = makeStore([mockBowl]);
         render(
           <Provider store={store}>
-            <TmntDataForm tmntProps={tmntPropsNew} />
+            <TmntDataForm
+              tmntProps={tmntPropsNew}
+              markPendingChanges={markPendingChangesMock}
+            />
           </Provider>
         );
 
@@ -470,7 +520,10 @@ describe('TmntDataForm - Save Modals', () => {
         const store = makeStore([mockBowl]);
         render(
           <Provider store={store}>
-            <TmntDataForm tmntProps={tmntPropsNew} />
+            <TmntDataForm
+              tmntProps={tmntPropsNew}
+              markPendingChanges={markPendingChangesMock}
+            />
           </Provider>
         );
 
@@ -501,7 +554,11 @@ describe('TmntDataForm - Save Modals', () => {
         const store = makeStore([mockBowl]);
         render(
           <Provider store={store}>
-            <TmntDataForm tmntProps={tmntProps} />
+            <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={markPendingChangesMock}
+          />
+
           </Provider>
         );
 
@@ -534,7 +591,11 @@ describe('TmntDataForm - Save Modals', () => {
         const store = makeStore([mockBowl]);
         render(
           <Provider store={store}>
-            <TmntDataForm tmntProps={tmntProps} />
+            <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={markPendingChangesMock}
+          />
+
           </Provider>
         );
 
@@ -569,7 +630,11 @@ describe('TmntDataForm - Save Modals', () => {
         const store = makeStore([mockBowl]);
         render(
           <Provider store={store}>
-            <TmntDataForm tmntProps={tmntProps} />
+            <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={markPendingChangesMock}
+          />
+
           </Provider>
         );
 
@@ -625,7 +690,11 @@ describe('TmntDataForm - Save Modals', () => {
       // use storeSaving, not makeStore
       const { rerender } = render(
         <Provider store={storeSaving}>
-          <TmntDataForm tmntProps={tmntProps} />
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={markPendingChangesMock}
+          />
+
         </Provider>
       );
 
@@ -659,7 +728,11 @@ describe('TmntDataForm - Save Modals', () => {
       // use storeIdle, not makeStore or storeSaving
       rerender(
         <Provider store={storeIdle}>
-          <TmntDataForm tmntProps={tmntProps} />
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={markPendingChangesMock}
+          />
+
         </Provider>
       );
 
@@ -708,7 +781,11 @@ describe('TmntDataForm - Save Modals', () => {
 
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={tmntProps} />
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={markPendingChangesMock}
+          />
+
         </Provider>
       );
 

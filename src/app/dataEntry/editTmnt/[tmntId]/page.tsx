@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { tmntFormDataType } from "@/lib/types/types";
 import { tmntFormParent } from "@/lib/enums/enums";
 import TmntDataForm from "../../tmntForm/tmntForm";
@@ -14,6 +14,7 @@ import { AppDispatch, RootState } from "@/redux/store";
 import WaitModal from "@/components/modal/waitModal";
 import { getBlankTmntFullData, getSquadStage } from "../../tmntForm/tmntTools";
 import { SquadStage } from "@prisma/client";
+import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 
 // http://localhost:3000/dataEntry/editTmnt/tmt_d237a388a8fc4641a2e37233f1d6bebd
 
@@ -32,11 +33,32 @@ export default function EditTmntPage() {
   const [stage, setStage] = useState<SquadStage | null>(null);
   const [stageError, setStageError] = useState<string | null>(null);
 
+  /*************************
+   * Unsaved Changes Guard *
+   *************************/
+  const hasPendingChangesRef = useRef(false);
+
+  const markPendingChanges = useCallback((pending: boolean): void => {
+    hasPendingChangesRef.current = pending;
+  }, []);
+
+  const dataWasChanged = useCallback((): boolean => {
+    return hasPendingChangesRef.current;
+  }, []);
+
+  useUnsavedChangesGuard(dataWasChanged);
+
+  /**********************
+   * fetch TmntFullData *
+   **********************/
   useEffect(() => {
     if (!tmntId) return;
     dispatch(fetchTmntFullData(tmntId));
   }, [tmntId, dispatch]);
 
+  /***************
+   * Squad Stage *
+   ***************/
   // NOTE: Squad stage is intentionally *not* stored in Redux.
   // always read it directly from the DB via getSquadStage to avoid stale stage
   // values when other processes update the stage.
@@ -80,6 +102,10 @@ export default function EditTmntPage() {
     };
   }, [tmntLoadStatus, stateTmntFullData]);
 
+
+  /*************
+   * Form Data *
+   *************/
   const tmntFormData = useMemo<tmntFormDataType>(() => {
     if (tmntLoadStatus === "succeeded" && stage !== null) {
       return {
@@ -118,7 +144,10 @@ export default function EditTmntPage() {
               </div>
             )}
             <h2 className="mb-3">Edit Tournament</h2>
-            <TmntDataForm tmntProps={tmntFormData} />
+            <TmntDataForm
+              tmntProps={tmntFormData}
+              markPendingChanges={markPendingChanges}
+            />
           </div>
         </div>
       )}

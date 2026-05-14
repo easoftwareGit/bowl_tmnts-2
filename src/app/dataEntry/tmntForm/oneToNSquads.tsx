@@ -35,6 +35,7 @@ interface ChildProps {
   events: eventType[];
   setAcdnErr: (objAcdnErr: AcdnErrType) => void;  
   isDisabled: boolean;
+  markPendingChanges?: (pending: boolean) => void;
 }
 interface AddOrDelButtonProps {
   id: string;
@@ -265,6 +266,7 @@ const OneToNSquads: React.FC<ChildProps> = ({
   setLanes,
   setAcdnErr,
   isDisabled,
+  markPendingChanges,
 }) => {
 
   const defaultTabKey = squads[0].id;
@@ -282,6 +284,8 @@ const OneToNSquads: React.FC<ChildProps> = ({
   }
 
   const handleAdd = () => {    
+    markPendingChanges?.(true);
+
     const newSquad: squadType = {
       ...initSquad,
       id: btDbUuid('sqd'),
@@ -294,7 +298,12 @@ const OneToNSquads: React.FC<ChildProps> = ({
     setLanes(updatedLanes(lanes, newSquad));    
   };
 
+  /**
+   *  runs when user confirmed delete - does the actual deletion
+   */
   const confirmedDelete = () => {
+    markPendingChanges?.(true);
+
     const idToDel = modalObj.id
     setModalObj(initModalObj); // reset modal object (hides modal)
 
@@ -356,6 +365,8 @@ const OneToNSquads: React.FC<ChildProps> = ({
   };
 
   const handleInputChange = (id: string) => (e: ChangeEvent<HTMLInputElement>) => {
+    markPendingChanges?.(true);
+    
     const { name, value } = e.target;
     const nameErr = name + "_err";
 
@@ -464,6 +475,7 @@ const OneToNSquads: React.FC<ChildProps> = ({
     const { name, value } = e.target;
 
     if (!value.trim()) {
+      markPendingChanges?.(true);
       setSquads(
         squads.map((squad) => {
           if (squad.id === id) {
@@ -534,6 +546,8 @@ const OneToNSquads: React.FC<ChildProps> = ({
   };
 
   const handleEventSelectChange = (id: string) => (e: ChangeEvent<HTMLSelectElement>) => {
+    markPendingChanges?.(true);
+
     const { selectedIndex } = e.target;
     setSquads(
       squads.map(squad => {

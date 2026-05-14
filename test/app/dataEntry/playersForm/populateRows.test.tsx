@@ -1,12 +1,12 @@
-import { populateRows } from "@/app/dataEntry/playersForm/populateRows";
+import { playerEntryData, populateRows } from "@/app/dataEntry/playersForm/populateRows";
 import {
   entryFeeColName,
   divEntryHdcpColName,
   entryNumBrktsColName,
   timeStampColName,
-  feeColNameEnd,
-  playerEntryData,
-} from "@/app/dataEntry/playersForm/createColumns";
+  feeColNameEnd,  
+} from "@/app/dataEntry/playersForm/sfCreateColumns";
+
 import {
   mockTmntFullData,
   brktId1,
@@ -20,6 +20,7 @@ import {
   playerId4,
   potId1,
   mockByePlayer,
+  timeStampNumber,
 } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { cloneDeep } from "lodash";
 
@@ -156,9 +157,7 @@ describe("populateRows", () => {
   });
 
   it("populates bracket num_brackets, fee, and timestamp columns for each player/bracket entry", () => {
-
-    const before = new Date().getTime();
-
+    
     const rows = populateRows(mockTmntFullData);
 
     const r1 = rows.find((r: any) => r.player_id === playerId1);
@@ -182,19 +181,10 @@ describe("populateRows", () => {
     expect(r2![entryNumBrktsColName(brktId2)]).toBe(8);
     expect(r2![entryFeeColName(brktId2)]).toBe(40);
 
-    const after = new Date().getTime();
-    const oneMinute = 60 * 1000;
-
-    // timestamps: blankBrktEntry likely has time_stamp default 0.
-    // populateRows sets Number(brktEntry.time_stamp) || 0, which is within one minute of now
-    expect(r1![timeStampColName(brktId1)]).toBeGreaterThanOrEqual(before - oneMinute);
-    expect(r1![timeStampColName(brktId1)]).toBeLessThanOrEqual(after + oneMinute);
-    expect(r2![timeStampColName(brktId1)]).toBeGreaterThanOrEqual(before - oneMinute);
-    expect(r2![timeStampColName(brktId1)]).toBeLessThanOrEqual(after + oneMinute);
-    expect(r1![timeStampColName(brktId2)]).toBeGreaterThanOrEqual(before - oneMinute);
-    expect(r1![timeStampColName(brktId2)]).toBeLessThanOrEqual(after + oneMinute);
-    expect(r2![timeStampColName(brktId2)]).toBeGreaterThanOrEqual(before - oneMinute);
-    expect(r2![timeStampColName(brktId2)]).toBeLessThanOrEqual(after + oneMinute);
+    expect(r1![timeStampColName(brktId1)]).toBe(timeStampNumber);
+    expect(r2![timeStampColName(brktId1)]).toBe(timeStampNumber);
+    expect(r1![timeStampColName(brktId2)]).toBe(timeStampNumber);
+    expect(r2![timeStampColName(brktId2)]).toBe(timeStampNumber);
   });
 
   it("populates eliminator entry fees using dynamic fee column names", () => {

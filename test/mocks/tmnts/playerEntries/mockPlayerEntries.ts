@@ -3,7 +3,7 @@ import {
   entryFeeColName,
   entryNumBrktsColName,
   timeStampColName,
-} from "@/app/dataEntry/playersForm/createColumns";
+} from "@/app/dataEntry/playersForm/sfCreateColumns";
 import {
   initBrkt,
   initDiv,
@@ -23,6 +23,7 @@ import type {
   brktSeedType,
   dataOneSquadEntriesType,
   dataOneTmntType,
+  fullStageType,
   oneBrktType,
 } from "@/lib/types/types";
 import {
@@ -59,6 +60,7 @@ import {
   tmntId,
   userId,
 } from "../tmntFullData/mockTmntFullData";
+import { SquadStage } from "@prisma/client";
 
 export const benId1 = "ben_0123456789abcdef0123456789abcdef"; 
 export const benId2 = "ben_0133456789abcdef0123456789abcdef";
@@ -76,7 +78,6 @@ export const eenId4 = "een_0153456789abcdef0123456789abcdef";
 export const penId1 = "pen_0123456789abcdef0123456789abcdef";
 export const penId2 = "pen_0133456789abcdef0123456789abcdef";
 export const penId3 = "pen_0143456789abcdef0123456789abcdef";
-
 
 const timeStamp = new Date().getTime();
 export const mockOrigData: dataOneSquadEntriesType = {

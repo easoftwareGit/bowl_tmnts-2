@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import TmntDataForm from "../../tmntForm/tmntForm";
 import { useParams, useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
@@ -13,6 +13,7 @@ import { initModalObj } from "@/components/modal/modalObjType";
 import { fetchTmntFullData, getTmntFullDataError, getTmntFullDataLoadStatus } from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import { getBlankTmntFullData, getSquadStage } from "../../tmntForm/tmntTools";
 import { SquadStage } from "@prisma/client";
+import ReportOptions from "@/components/reports/reportOptions";
 
 // http://localhost:3000/dataEntry/runTmnt/tmt_d237a388a8fc4641a2e37233f1d6bebd
 
@@ -29,9 +30,17 @@ const RunTmntPage = () => {
   const stateTmntFullData = useSelector(
     (state: RootState) => state.tmntFullData.tmntFullData
   )
-  const [stage, setStage] = useState<SquadStage | null>(null);
+  const [stage, setStage] = useState<SquadStage | null>(null);  
   const [stageError, setStageError] = useState<string | null>(null);
+  const [gotStage, setGotStage] = useState(false);
   const [errModalObj, setErrModalObj] = useState(initModalObj);
+  const [showReportOptions, setShowReportOptions] = useState<boolean>(false);
+
+  const hasPendingChangesRef = useRef(false);
+
+  const markPendingChanges = useCallback((pending: boolean): void => {
+    hasPendingChangesRef.current = pending;
+  }, []);
 
   useEffect(() => {
     if (!tmntId) return;
@@ -59,11 +68,12 @@ const RunTmntPage = () => {
     let cancelled = false;
 
     (async () => {
-      try {
+      try {        
         const s = await getSquadStage(firstSquadId);
+        setGotStage(true);
         if (!cancelled) {
           setStage(s);
-          setStageError(null);
+          setStageError(null);          
         }
       } catch (err) {
         if (!cancelled) {
@@ -104,21 +114,13 @@ const RunTmntPage = () => {
   };
 
   const handleEditBowlersClick = () => {
-    if (stage === SquadStage.DEFINE || stage === SquadStage.ENTRIES) {
-      router.push(`/dataEntry/editPlayers/${tmntId}`);
-    } else { 
-      setErrModalObj({
-        show: true,
-        title: "Cannot Edit Bowlers",
-        message: `This tournament has been finalized and moved into the entering scores stage.`,
-        id: "none",
-      });
-    }
+
+    router.push(`/dataEntry/editPlayers/${tmntId}`);
   }
 
   return (
     <>
-      <WaitModal show={tmntLoadStatus === 'loading'} message="Loading..." />
+      <WaitModal show={tmntLoadStatus === 'loading' || gotStage === false} message="Loading..." />
       <ModalErrorMsg
         show={errModalObj.show}
         title={errModalObj.title}
@@ -173,9 +175,16 @@ const RunTmntPage = () => {
                 </Link>
               </div> 
               <div className="col-2">
-                <Link className="btn btn-info" href="#">
+                {/* <Link className="btn btn-info" href="#">
                   Print Reports
-                </Link>
+                </Link> */}
+                <button
+                  type="button"
+                  className="btn btn-info" 
+                  onClick={() => setShowReportOptions(true)}
+                >
+                  Print Reports
+                </button>
               </div> 
               <div className="col-2 d-grid gap-2">
                 <Link className="btn btn-block btn-dark" href="#" >                  
@@ -195,7 +204,14 @@ const RunTmntPage = () => {
                 </Link>
               </div> 
             </div>
-            <TmntDataForm tmntProps={tmntFormData} />
+            <ReportOptions
+              show={showReportOptions}
+              onClose={() => setShowReportOptions(false)}
+            />
+            <TmntDataForm
+              tmntProps={tmntFormData}
+              markPendingChanges={markPendingChanges}
+            />
           </div>
         </div> 
       )}  

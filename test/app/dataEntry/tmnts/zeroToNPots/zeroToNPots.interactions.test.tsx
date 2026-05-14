@@ -11,6 +11,7 @@ import { before, cloneDeep } from "lodash";
 const mockSetPots = jest.fn();
 const mockSetAcdnErr = jest.fn();
 const mockSetShowingModal = jest.fn();
+const mockMarkPendingChanges = jest.fn();
 
 const mockPots = mockTmntFullData.pots;
 const mockDivs = mockTmntFullData.divs;
@@ -31,6 +32,7 @@ const renderCreatePot = (pots: potType[] = []) => {
       setAcdnErr={mockSetAcdnErr}
       setShowingModal={mockSetShowingModal}
       isDisabled={false}
+      markPendingChanges={mockMarkPendingChanges}
     />
   );
 };
@@ -42,7 +44,8 @@ const mockZeroToNPotsProps = {
   squads: mockSquads,
   setAcdnErr: mockSetAcdnErr,
   setShowingModal: mockSetShowingModal,
-  isDisabled: false
+  isDisabled: false,
+  markPendingChanges: mockMarkPendingChanges,
 }
 
 describe("zeroToNPots - interactions", () => {
@@ -77,7 +80,7 @@ describe("zeroToNPots - interactions", () => {
       await user.type(feeInput, minFee.toString());
 
       // Click Add Pot without selecting a Pot Type
-      await user.click(within(createPotPanel).getByRole("button", { name: /add pot/i }));
+      await user.click(within(createPotPanel).getByRole("button", { name: /add pot/i }));      
 
       // Pot Type error should appear
       expect(screen.getByTestId("dangerPotType")).toHaveTextContent(/pot type is required/i);
@@ -85,8 +88,8 @@ describe("zeroToNPots - interactions", () => {
       // Division and Fee should *not* show errors (they're valid)
       expect(screen.getByTestId("dangerDiv")).toHaveTextContent("");
       expect(screen.getByTestId("dangerPotFee")).toHaveTextContent("");
-
-      // No pot was added
+      
+      // No pot was added      
       expect(mockSetPots).not.toHaveBeenCalled();
     });
     it("shows Division error and does not add a pot when Division is not selected", async () => {
@@ -115,7 +118,7 @@ describe("zeroToNPots - interactions", () => {
       expect(screen.getByTestId("dangerPotType")).toHaveTextContent("");
       expect(screen.getByTestId("dangerPotFee")).toHaveTextContent("");
 
-      // No pot was added
+      // No pot was added      
       expect(mockSetPots).not.toHaveBeenCalled();
     });
     it("shows fee error when fee is too low and does not add a pot", async () => {
@@ -176,6 +179,7 @@ describe("zeroToNPots - interactions", () => {
 
       await user.click(screen.getByRole("button", { name: /add pot/i }));
 
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
       expect(mockSetPots).toHaveBeenCalledTimes(1);
 
       const newPots = mockSetPots.mock.calls[0][0] as potType[];
@@ -299,6 +303,8 @@ describe("zeroToNPots - interactions", () => {
       expect(potTypeError).toHaveTextContent('');
       expect(divError).toHaveTextContent('');
       expect(feeError).toHaveTextContent('');
+
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
       expect(mockZeroToNPotsProps.setPots).toHaveBeenCalled();
     })    
 
@@ -324,6 +330,7 @@ describe("zeroToNPots - interactions", () => {
 
       // Edit the fee
       fireEvent.change(potFeeInput, { target: { value: '34' } });
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
 
       // Component should call setPots with an updated pots array
       expect(mockSetPots).toHaveBeenCalled();
@@ -371,6 +378,7 @@ describe("zeroToNPots - interactions", () => {
 
       // Edit the fee
       fireEvent.change(potFeeInput, { target: { value: '34' } });
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
 
       // Component should call setPots with an updated pots array
       expect(mockSetPots).toHaveBeenCalled();
@@ -466,6 +474,7 @@ describe("zeroToNPots - interactions", () => {
       // ACT
       await user.click(yesBtn);
       // ASSERT
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
       expect(addPotsProps.setPots).toHaveBeenCalled();            
     })    
     it('delete pot - then cancel', async () => { 
@@ -492,6 +501,7 @@ describe("zeroToNPots - interactions", () => {
       // ASSERT
       expect(mockSetShowingModal).toHaveBeenCalledWith(false);
       expect(delPotsProps.setPots).not.toHaveBeenCalled();
+      expect(mockMarkPendingChanges).not.toHaveBeenCalled();
     })    
 
   })

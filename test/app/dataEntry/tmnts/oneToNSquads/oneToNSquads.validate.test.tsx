@@ -36,6 +36,7 @@ const baseMockSquad: squadType = {
 const mockSetSquads = jest.fn();
 const mockSetLanes = jest.fn();
 const mockSetAcdnErr = jest.fn();
+const mockMarkPendingChanges = jest.fn();
 
 const mockOneToNSquadsProps = {
   squads: mockSquads,
@@ -45,6 +46,7 @@ const mockOneToNSquadsProps = {
   events: mockEvents,
   setAcdnErr: mockSetAcdnErr,
   isDisabled: false,
+  markPendingChanges: mockMarkPendingChanges
 };
 
 
@@ -63,6 +65,10 @@ const makeSquad = (overrides: Partial<squadType> = {}): squadType => ({
 });
 
 describe("OneToNSquads - validate", () => {
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
   describe('validateSquads', () => { 
 
@@ -629,6 +635,7 @@ describe("OneToNSquads - validate", () => {
         target: { name: "name", value: "" },
       } as any);
 
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
       expect(setSquads).toHaveBeenCalled();
 
       const [updatedSquads] = setSquads.mock.calls.at(-1) as [squadType[]];
@@ -667,6 +674,7 @@ describe("OneToNSquads - validate", () => {
         target: { name: "games", value: "" },
       } as any);
 
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
       expect(setSquads).toHaveBeenCalled();
       const [updatedSquads] = setSquads.mock.calls.at(-1) as [squadType[]];
       const sq0 = updatedSquads[0];
@@ -698,6 +706,7 @@ describe("OneToNSquads - validate", () => {
         target: { name: "starting_lane", value: "" },
       } as any);
 
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
       expect(setSquads).toHaveBeenCalled();
       const [updatedSquads] = setSquads.mock.calls.at(-1) as [squadType[]];
       const sq0 = updatedSquads[0];
@@ -729,6 +738,7 @@ describe("OneToNSquads - validate", () => {
         target: { name: "lane_count", value: "" },
       } as any);
 
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
       expect(setSquads).toHaveBeenCalled();
       const [updatedSquads] = setSquads.mock.calls.at(-1) as [squadType[]];
       const sq0 = updatedSquads[0];
@@ -759,6 +769,7 @@ describe("OneToNSquads - validate", () => {
         target: { name: "squad_date_str", value: "" },
       } as any);
 
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
       expect(setSquads).toHaveBeenCalled();
       const [updatedSquads] = setSquads.mock.calls.at(-1) as [squadType[]];
       const sq0 = updatedSquads[0];
@@ -789,6 +800,7 @@ describe("OneToNSquads - validate", () => {
         target: { name: "squad_time", value: "" },
       } as any);
 
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
       expect(setSquads).toHaveBeenCalled();
       const [updatedSquads] = setSquads.mock.calls.at(-1) as [squadType[]];
       const sq0 = updatedSquads[0];

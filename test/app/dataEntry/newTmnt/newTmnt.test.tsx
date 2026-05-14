@@ -1,6 +1,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import NewTmntPage from "@/app/dataEntry/newTmnt/page";
+import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 
 // ---- Mocks ----
 jest.mock("next-auth/react", () => ({
@@ -15,15 +16,26 @@ jest.mock("@/app/dataEntry/tmntForm/tmntTools", () => ({
 
 jest.mock("@/app/dataEntry/tmntForm/tmntForm", () => ({
   __esModule: true,
-  default: jest.fn(({ tmntProps }: any) => (
+  default: jest.fn(({ tmntProps, markPendingChanges }: any) => (
     <div data-testid="TmntDataFormMock">
-      {/* expose what the page passes down */}
       <pre data-testid="tmntPropsJson">{JSON.stringify(tmntProps)}</pre>
+      <button
+        type="button"
+        data-testid="markPendingChangesButton"
+        onClick={() => markPendingChanges(true)}
+      >
+        Mark Pending
+      </button>
     </div>
   )),
 }));
 
-// import AFETR mocks so jest can replace the real imports with the mocks
+jest.mock("@/hooks/useUnsavedChangesGuard", () => ({
+  __esModule: true,
+  useUnsavedChangesGuard: jest.fn(),
+}));
+
+// import AFTER mocks so jest can replace the real imports with the mocks
 import { useSession } from "next-auth/react";
 import { getBlankTmntFullData } from "@/app/dataEntry/tmntForm/tmntTools";
 import TmntDataForm from "@/app/dataEntry/tmntForm/tmntForm";
@@ -32,6 +44,7 @@ import { SquadStage } from "@prisma/client";
 const mockUseSession = useSession as jest.Mock;
 const mockGetBlank = getBlankTmntFullData as jest.Mock;
 const mockTmntDataForm = TmntDataForm as unknown as jest.Mock;
+const mockUseUnsavedChangesGuard = useUnsavedChangesGuard as jest.Mock;
 
 describe("NewTmntPage", () => {
   beforeEach(() => {
@@ -135,4 +148,27 @@ describe("NewTmntPage", () => {
     expect(tmntProps.tmntFullData.tmnt.user_id).toBe("");
     expect(tmntProps.stage).toBe(SquadStage.DEFINE);
   });
+
+  it("uses the unsaved changes guard", () => {
+    mockUseSession.mockReturnValue({ status: "unauthenticated", data: null });
+    mockGetBlank.mockReturnValue(makeBlankTmnt());
+
+    render(<NewTmntPage />);
+
+    expect(mockUseUnsavedChangesGuard).toHaveBeenCalledTimes(1);
+    expect(mockUseUnsavedChangesGuard).toHaveBeenCalledWith(expect.any(Function));
+  });
+
+  it("passes markPendingChanges to TmntDataForm", () => {
+    mockUseSession.mockReturnValue({ status: "unauthenticated", data: null });
+    mockGetBlank.mockReturnValue(makeBlankTmnt());
+
+    render(<NewTmntPage />);
+
+    const callArg = mockTmntDataForm.mock.calls[0][0];
+
+    expect(callArg).toHaveProperty("markPendingChanges");
+    expect(callArg.markPendingChanges).toEqual(expect.any(Function));
+  });
+
 });

@@ -9,6 +9,7 @@ interface LanesListProps {
   lanes: laneType[],
   setLanes: (lanes: laneType[]) => void,
   isDisabled: boolean,
+  markPendingChanges?: (pending: boolean) => void;
 }
 
 /**
@@ -91,7 +92,7 @@ export const pairsOfLanes = (squadId: string, lanes: laneType[]): pairsOfLanesTy
 }
 
 const LanesList: FC<LanesListProps> = (props) => {
-  const { squadId, lanes, setLanes, isDisabled } = props;
+  const { squadId, lanes, setLanes, isDisabled, markPendingChanges } = props;
   const initPairs = pairsOfLanes(squadId, lanes);
 
   const [pairs, setPairs] = useState(initPairs);
@@ -101,6 +102,8 @@ const LanesList: FC<LanesListProps> = (props) => {
   },[squadId, lanes])
 
   const handleInputChange = (id: string) => (e: ChangeEvent<HTMLInputElement>) => { 
+    markPendingChanges?.(true);
+    
     const { checked } = e.target;
 
     if (checked) { 

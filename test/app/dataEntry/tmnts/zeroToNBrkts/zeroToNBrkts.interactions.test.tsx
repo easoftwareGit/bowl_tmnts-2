@@ -11,6 +11,7 @@ import { cloneDeep } from "lodash";
 const mockSetBrkts = jest.fn();
 const mockSetAcdnErr = jest.fn();
 const mockSetShowingModal = jest.fn();
+const mockMarkPendingChanges = jest.fn();
 
 const mockZeroToNBrktsProps = {
   brkts: mockTmntFullData.brkts, 
@@ -20,6 +21,7 @@ const mockZeroToNBrktsProps = {
   setAcdnErr: mockSetAcdnErr,
   setShowingModal: mockSetShowingModal,  
   isDisabled: false,
+  markPendingChanges: mockMarkPendingChanges
 }
 
 const mockSquads = mockTmntFullData.squads;
@@ -27,12 +29,17 @@ const mockSquads = mockTmntFullData.squads;
 const renderCreateBrkt = (brktsOverride?: brktType[]) => {
   mockSetBrkts.mockClear();
   mockSetAcdnErr.mockClear();
+  mockMarkPendingChanges.mockClear();
 
   const brkts = brktsOverride ?? [];
   render(<ZeroToNBrackets {...mockZeroToNBrktsProps} brkts={brkts} />);
 };
 
 describe("zeroToNBrackets - interactions", () => {
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });    
 
   describe("zeroToNBrackets - create Bracket tab", () => {
     // NOTE:
@@ -41,10 +48,6 @@ describe("zeroToNBrackets - interactions", () => {
     // both in browser behavior and in test environments.
     // Therefore the user cannot enter values like "abc", making that scenario
     // untestable as an interaction for zeroToNBrkts.
-
-    beforeEach(() => {
-      jest.clearAllMocks();
-    });    
 
     it("shows Division error and does not add a brkt when Division is not selected", async () => {
       const user = userEvent.setup();
@@ -64,6 +67,9 @@ describe("zeroToNBrackets - interactions", () => {
       // Click Add bracket
       await user.click(within(createBrktPanel).getByRole("button", { name: /add bracket/i }));
 
+      // Pending changes should be marked
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
+
       // Division error should appear
       expect(screen.getByTestId("dangerBrktDivRadio")).toHaveTextContent(/division is required/i);
 
@@ -71,7 +77,7 @@ describe("zeroToNBrackets - interactions", () => {
       expect(screen.getByTestId("dangerCreateBrktFee")).toHaveTextContent("");
       expect(screen.getByTestId("dangerCreateBrktStart")).toHaveTextContent("");
 
-      // No pot was added
+      // No brkt was added      
       expect(mockSetBrkts).not.toHaveBeenCalled();
     });
     it("shows fee error when fee is too low and does not add a brkt", async () => {
@@ -92,6 +98,9 @@ describe("zeroToNBrackets - interactions", () => {
       // Click Add bracket
       await user.click(within(createBrktPanel).getByRole("button", { name: /add bracket/i }));
 
+      // Pending changes should be marked
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
+
       // error visible
       expect(screen.getByTestId("dangerCreateBrktFee")).toHaveTextContent(
         /cannot be less than/i
@@ -100,7 +109,7 @@ describe("zeroToNBrackets - interactions", () => {
       expect(screen.getByTestId("dangerBrktDivRadio")).toHaveTextContent("");
       expect(screen.getByTestId("dangerCreateBrktStart")).toHaveTextContent("");
 
-      // no pot added
+      // no brkt added      
       expect(mockSetBrkts).not.toHaveBeenCalled();
     });
     it("shows fee error when fee is too high and does not add a brkt", async () => {
@@ -121,6 +130,9 @@ describe("zeroToNBrackets - interactions", () => {
       // Click Add bracket
       await user.click(within(createBrktPanel).getByRole("button", { name: /add bracket/i }));
 
+      // Pending changes should be marked
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
+
       // error visible
       expect(screen.getByTestId("dangerCreateBrktFee")).toHaveTextContent(
         /cannot be more than/i
@@ -129,7 +141,7 @@ describe("zeroToNBrackets - interactions", () => {
       expect(screen.getByTestId("dangerBrktDivRadio")).toHaveTextContent("");
       expect(screen.getByTestId("dangerCreateBrktStart")).toHaveTextContent("");
 
-      // no pot added
+      // no brkt added      
       expect(mockSetBrkts).not.toHaveBeenCalled();
     });
     it("shows fee error when start is too low and does not add a brkt", async () => {
@@ -153,6 +165,9 @@ describe("zeroToNBrackets - interactions", () => {
       // Click Add bracket
       await user.click(within(createBrktPanel).getByRole("button", { name: /add bracket/i }));
 
+      // Pending changes should be marked
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
+
       // error visible
       expect(screen.getByTestId("dangerCreateBrktStart")).toHaveTextContent(
         /cannot be less than/i
@@ -161,7 +176,7 @@ describe("zeroToNBrackets - interactions", () => {
       expect(screen.getByTestId("dangerBrktDivRadio")).toHaveTextContent("");
       expect(screen.getByTestId("dangerCreateBrktFee")).toHaveTextContent("");
 
-      // no pot added
+      // no brkt added      
       expect(mockSetBrkts).not.toHaveBeenCalled();
     });
     it("shows fee error when start is too high and does not add a brkt", async () => {
@@ -185,6 +200,9 @@ describe("zeroToNBrackets - interactions", () => {
       // Click Add bracket
       await user.click(within(createBrktPanel).getByRole("button", { name: /add bracket/i }));
 
+      // Pending changes should be marked
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
+
       // error visible
       expect(screen.getByTestId("dangerCreateBrktStart")).toHaveTextContent(
         /cannot be more than/i
@@ -193,7 +211,7 @@ describe("zeroToNBrackets - interactions", () => {
       expect(screen.getByTestId("dangerBrktDivRadio")).toHaveTextContent("");
       expect(screen.getByTestId("dangerCreateBrktFee")).toHaveTextContent("");
 
-      // no pot added
+      // no brkt added      
       expect(mockSetBrkts).not.toHaveBeenCalled();
     });
     it("prevents adding a duplicate brkt (same Division and Start)", async () => {
@@ -219,11 +237,14 @@ describe("zeroToNBrackets - interactions", () => {
 
       await user.click(screen.getByRole("button", { name: /add bracket/i }));
 
+      // Pending changes should be marked
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
+
       expect(screen.getByTestId("dangerCreateBrktStart")).toHaveTextContent(
         /already exists/i
       );
 
-      // no new pot added
+      // no new brkt added      
       expect(mockSetBrkts).not.toHaveBeenCalled();
     });
 
@@ -250,6 +271,7 @@ describe("zeroToNBrackets - interactions", () => {
 
         await user.click(within(createBrktPanel).getByRole("button", { name: /add bracket/i }));
 
+        expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
         expect(mockSetBrkts).toHaveBeenCalledTimes(1);
 
         const newBrkts = mockSetBrkts.mock.calls[0][0] as brktType[];
@@ -317,11 +339,13 @@ describe("zeroToNBrackets - interactions", () => {
         expect(divError).toHaveTextContent('');
         expect(feeError).toHaveTextContent('');
         expect(startError).toHaveTextContent('');
+        expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
         expect(mockZeroToNBrktsProps.setBrkts).toHaveBeenCalled();            
       })
     })
 
     describe('do not add bracket with errors', () => { 
+
       it("shows Division error and does not add a bracket when Division is not selected", async () => {
         const user = userEvent.setup();
         renderCreateBrkt([]); // no existing brackets
@@ -341,6 +365,9 @@ describe("zeroToNBrackets - interactions", () => {
         // click add bracket withour selecting a division
         await user.click(within(createBrktPanel).getByRole("button", { name: /add bracket/i }));
 
+        // Mark pending changes
+        expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
+
         // Division error visible
         expect(screen.getByTestId("dangerBrktDivRadio")).toHaveTextContent(
           /division is required/i
@@ -349,7 +376,7 @@ describe("zeroToNBrackets - interactions", () => {
         expect(screen.getByTestId('dangerCreateBrktFee')).toHaveTextContent('');
         expect(screen.getByTestId('dangerCreateBrktStart')).toHaveTextContent('');
 
-        // no bracket added
+        // no bracket added        
         expect(mockSetBrkts).not.toHaveBeenCalled();
       });
       it("shows fee error when fee is too low and does not add a bracket", async () => {
@@ -372,6 +399,9 @@ describe("zeroToNBrackets - interactions", () => {
         await user.type(feeInput, (minFee - 0.01).toString());
 
         await user.click(within(createBrktPanel).getByRole("button", { name: /add bracket/i }));
+
+        // Mark pending changes
+        expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
 
         // fee error visible
         expect(screen.getByTestId("dangerCreateBrktFee")).toHaveTextContent(
@@ -399,6 +429,8 @@ describe("zeroToNBrackets - interactions", () => {
 
         await user.click(within(createBrktPanel).getByRole("button", { name: /add bracket/i }));
 
+        expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
+
         expect(screen.getByTestId("dangerCreateBrktFee")).toHaveTextContent(
           /cannot be more than/i
         );
@@ -411,6 +443,8 @@ describe("zeroToNBrackets - interactions", () => {
         const createBrktPanel = screen.getByRole("tabpanel", { name: /create bracket/i });
 
         await user.click(within(createBrktPanel).getByLabelText(/scratch/i));
+
+        expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
 
         const feeInput = within(createBrktPanel).getByLabelText(/fee/i);
         await user.clear(feeInput);
@@ -434,6 +468,8 @@ describe("zeroToNBrackets - interactions", () => {
         const createBrktPanel = screen.getByRole("tabpanel", { name: /create bracket/i });
 
         await user.click(within(createBrktPanel).getByLabelText(/scratch/i));
+
+        expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
 
         const feeInput = within(createBrktPanel).getByLabelText(/fee/i);
         await user.clear(feeInput);
@@ -480,17 +516,20 @@ describe("zeroToNBrackets - interactions", () => {
 
         await user.click(within(createBrktPanel).getByRole("button", { name: /add bracket/i }));
 
+        expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
+
         // duplicate error appears on Start
         expect(screen.getByTestId("dangerCreateBrktStart")).toHaveTextContent(
           /already exists/i
         );
 
-        // no new bracket added
+        // no new bracket added        
         expect(mockSetBrkts).not.toHaveBeenCalled();
       });
     })
 
     describe('render the create bracket with errors', () => { 
+
       it('render errors', async () => { 
         // ARRANGE
         const user = userEvent.setup();
@@ -547,10 +586,6 @@ describe("zeroToNBrackets - interactions", () => {
 
   describe('delete a bracket', () => { 
 
-    beforeEach(() => {
-      jest.clearAllMocks();
-    });    
-
     it('deletes bracket', async () => {      
       // ARRANGE
       const user = userEvent.setup();
@@ -575,6 +610,7 @@ describe("zeroToNBrackets - interactions", () => {
       // ACT
       await user.click(yesBtn);
       // ASSERT
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
       expect(delBrktProps.setBrkts).toHaveBeenCalled();                    
     })      
     it('cancels deleting a bracket', async () => {      
@@ -604,15 +640,12 @@ describe("zeroToNBrackets - interactions", () => {
       await user.click(noBtn);
       // ASSERT
       expect(mockSetShowingModal).toHaveBeenCalledWith(false);
+      expect(mockMarkPendingChanges).not.toHaveBeenCalled();
       expect(delBrktProps.setBrkts).not.toHaveBeenCalled()
     })      
   })
 
   describe('edit a bracket', () => { 
-
-    beforeEach(() => {
-      jest.clearAllMocks();
-    });    
 
     it('clears fee and accordion errors while editing an existing bracket fee', async () => {
 
@@ -632,6 +665,9 @@ describe("zeroToNBrackets - interactions", () => {
       const feeInputs = screen.getAllByRole("textbox", { name: /fee/i }) as HTMLInputElement[];
       await user.clear(feeInputs[2]);
       await user.type(feeInputs[2], "0.99"); // or whatever
+
+      // Child should have called markPendingChanges
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
 
       // Child should have called setBrkts
       expect(mockSetBrkts).toHaveBeenCalled();
@@ -678,6 +714,7 @@ describe("zeroToNBrackets - interactions", () => {
       // Now we *know* the fee is invalid, so validateBrkts must catch it
       expect(isValid).toBe(false);
       expect(parentSetBrkts).toHaveBeenCalledTimes(1);
+      expect(mockMarkPendingChanges).not.toHaveBeenCalled();
 
       const validatedBrkts = parentSetBrkts.mock.calls[0][0] as brktType[];
       const editedAfter = validatedBrkts.find((b) => b.id === editedId)!;
@@ -718,6 +755,7 @@ describe("zeroToNBrackets - interactions", () => {
             setAcdnErr={mockSetAcdnErr}
             setShowingModal={mockSetShowingModal}
             isDisabled={false}
+            markPendingChanges={mockMarkPendingChanges}
           />
         );
       };
@@ -757,6 +795,8 @@ describe("zeroToNBrackets - interactions", () => {
       const fsaInputs = screen.getAllByRole("textbox", {
         name: /f\+s\+a/i,
       }) as HTMLInputElement[];
+
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
 
       // We don't assume exact currency formatting, just that the numeric part is correct
       // updateFSA logic: first = fee * 5, second = fee * 2, admin = fee * 1, fsa = fee * 8
@@ -792,6 +832,7 @@ describe("zeroToNBrackets - interactions", () => {
             setAcdnErr={mockSetAcdnErr}
             setShowingModal={mockSetShowingModal}
             isDisabled={false}
+            markPendingChanges={mockMarkPendingChanges}
           />
         );
       };
@@ -814,6 +855,8 @@ describe("zeroToNBrackets - interactions", () => {
       await user.clear(existingFeeInput);
       await user.type(existingFeeInput, "7");
       fireEvent.blur(existingFeeInput);
+
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
 
       // Now we should have 2 sets of money fields:
       // index 0 = Create, index 1 = existing bracket we just edited
@@ -841,4 +884,164 @@ describe("zeroToNBrackets - interactions", () => {
     });
 
   })
+
+  describe("optional markPendingChanges prop", () => {
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it("adds a bracket without crashing when markPendingChanges is omitted", async () => {
+      const user = userEvent.setup();
+
+      const setBrkts = jest.fn();
+
+      const props = {
+        ...cloneDeep(mockZeroToNBrktsProps),
+        brkts: [],
+        setBrkts,
+      };
+
+      delete (props as Partial<typeof props>).markPendingChanges;
+
+      render(<ZeroToNBrackets {...props} />);
+
+      const createBrktPanel = screen.getByRole("tabpanel", {
+        name: /create bracket/i,
+      });
+
+      await user.click(
+        within(createBrktPanel).getByLabelText(/scratch/i)
+      );
+
+      const feeInput = within(createBrktPanel).getByLabelText(/fee/i);
+
+      await user.clear(feeInput);
+      await user.type(feeInput, "5");
+
+      const addBtn = within(createBrktPanel).getByRole("button", {
+        name: /add bracket/i,
+      });
+
+      await user.click(addBtn);
+
+      expect(setBrkts).toHaveBeenCalled();
+    });
+
+    it("updates create bracket fee without crashing when markPendingChanges is omitted", async () => {
+      const user = userEvent.setup();
+
+      const props = {
+        ...cloneDeep(mockZeroToNBrktsProps),
+      };
+
+      delete (props as Partial<typeof props>).markPendingChanges;
+
+      render(<ZeroToNBrackets {...props} />);
+
+      const createBrktPanel = screen.getByRole("tabpanel", {
+        name: /create bracket/i,
+      });
+
+      const feeInput = within(createBrktPanel).getByLabelText(/fee/i);
+
+      await user.clear(feeInput);
+      await user.type(feeInput, "7");
+
+      fireEvent.blur(feeInput);
+
+      expect(
+        within(createBrktPanel).getByLabelText(/first/i)      
+      ).toHaveValue("$35.00");
+    });
+
+    it("updates existing bracket fee without crashing when markPendingChanges is omitted", async () => {
+      const user = userEvent.setup();
+
+      const setBrkts = jest.fn();
+
+      const props = {
+        ...cloneDeep(mockZeroToNBrktsProps),
+        setBrkts,
+      };
+
+      delete (props as Partial<typeof props>).markPendingChanges;
+
+      render(<ZeroToNBrackets {...props} />);
+
+      const tabs = screen.getAllByRole("tab");
+
+      await user.click(tabs[1]);
+
+      const feeInputs = screen.getAllByRole("textbox", {
+        name: /fee/i,
+      }) as HTMLInputElement[];
+
+      await user.clear(feeInputs[1]);
+      await user.type(feeInputs[1], "7");
+
+      fireEvent.blur(feeInputs[1]);
+
+      expect(setBrkts).toHaveBeenCalled();
+    });
+
+    it("deletes a bracket without crashing when markPendingChanges is omitted", async () => {
+      const user = userEvent.setup();
+
+      const setBrkts = jest.fn();
+
+      const props = {
+        ...cloneDeep(mockZeroToNBrktsProps),
+        setBrkts,
+      };
+
+      delete (props as Partial<typeof props>).markPendingChanges;
+
+      render(<ZeroToNBrackets {...props} />);
+
+      const tabs = screen.getAllByRole("tab");
+
+      await user.click(tabs[2]);
+
+      const delBtns = screen.getAllByText("Delete Bracket");
+
+      await user.click(delBtns[1]);
+
+      const dialog = await screen.findByRole("dialog");
+
+      const yesBtn = within(dialog).getByRole("button", {
+        name: /yes/i,
+      });
+
+      await user.click(yesBtn);
+
+      expect(setBrkts).toHaveBeenCalled();
+    });
+
+    it("clears create bracket fee without crashing when markPendingChanges is omitted", async () => {
+      const user = userEvent.setup();
+
+      const props = {
+        ...cloneDeep(mockZeroToNBrktsProps),
+      };
+
+      delete (props as Partial<typeof props>).markPendingChanges;
+
+      render(<ZeroToNBrackets {...props} />);
+
+      const createBrktPanel = screen.getByRole("tabpanel", {
+        name: /create bracket/i,
+      });
+
+      const feeInput = within(createBrktPanel).getByLabelText(/fee/i);
+
+      await user.clear(feeInput);
+      fireEvent.blur(feeInput);
+
+      expect(
+        within(createBrktPanel).getByTestId("dangerCreateBrktFee")
+      ).toBeInTheDocument();
+    });
+
+  });  
 });

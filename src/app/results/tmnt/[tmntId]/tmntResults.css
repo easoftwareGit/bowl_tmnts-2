@@ -1,9 +1,9 @@
-.tmnt-results-container {
+/* .tmnt-results-container {
   max-width: 100%;
   width: auto;
   margin: 0 auto;
   padding: 20px;
-}
+} */
 
 /* @media (min-width: 1400px) {
   .tmnt-results-container {    
@@ -17,7 +17,31 @@
   font-weight: bold;
 } */
 
-.resultsHeader {
+/* .resultsHeader {
   background-color: rgb(164, 219, 244);
   font-weight: bold;
+} */
+ 
+/* grid size and justification */
+.tmnt-results-grid-outer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+  margin-bottom: 10px;
+}
+
+.tmnt-results-grid-inner {
+  width: max-content;
+}
+
+/* column header text */
+.e-grid .e-headercell.column-header .e-headertext {
+  color: rgb(0, 0, 0);
+  font-weight: 700;
+}
+
+/* cell text */
+.tmnt-results-grid-outer .e-grid .e-rowcell {
+  color: rgb(0, 0, 0);
 }

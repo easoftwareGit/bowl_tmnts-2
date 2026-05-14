@@ -34,9 +34,10 @@ import { SquadStage } from "@prisma/client";
 
 interface FormProps {
   tmntProps: tmntFormDataType;
+  markPendingChanges?: (pending: boolean) => void;
 }
 
-const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
+const TmntDataForm: React.FC<FormProps> = ({ tmntProps,  markPendingChanges }) => {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
 
@@ -50,7 +51,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
   const cancelAction = newTmnt ? "entering new" : "editing";
   const cancelTitle = newTmnt ? "New" : "Editing";
   
-  const isRunForm = parentForm === tmntFormParent.RUN;
+  const isRunForm = (parentForm === tmntFormParent.RUN);
   const isDisabled = isRunForm ? true : squadStage !== SquadStage.DEFINE;
   const showSaveAndCancel = !isRunForm;  
   const showCantEdit = isRunForm
@@ -96,6 +97,8 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
   const handleBowlSelectChange = (e: ChangeEvent<HTMLSelectElement>) => {
     const { value } = e.target;
 
+    markPendingChanges?.(true);
+    
     setTmnt({
       ...tmnt,
       bowl_id: value,
@@ -106,6 +109,9 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     const nameErr = name + "_err";
+
+    markPendingChanges?.(true);
+
     if (name === "tmnt_name" || name === "bowl_id") {
       setTmnt({
         ...tmnt,
@@ -295,6 +301,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
       const savedTmnt: tmntFullType = await dispatch(
         saveTmntFullData(tmntFullDataToSave),
       ).unwrap();
+      markPendingChanges?.(false);
 
       // 2) Only create initial stage rows when making a NEW tournament
       if (newTmnt) {
@@ -517,6 +524,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
                 setSquads={setSquads}
                 setAcdnErr={setEventAcdnErr}
                 isDisabled={isDisabled}
+                markPendingChanges={markPendingChanges}
               />
             </Accordion.Body>
           </AccordionItem>
@@ -539,6 +547,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
                 elims={elims}
                 setAcdnErr={setDivAcdnErr}
                 isDisabled={isDisabled}
+                markPendingChanges={markPendingChanges}
               />
             </Accordion.Body>
           </AccordionItem>
@@ -561,6 +570,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
                 events={events}
                 setAcdnErr={setSquadAcdnErr}
                 isDisabled={isDisabled}
+                markPendingChanges={markPendingChanges}
               />
             </Accordion.Body>
           </AccordionItem>
@@ -575,6 +585,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
                 setLanes={setLanes}
                 squads={squads}
                 isDisabled={isDisabled}
+                markPendingChanges={markPendingChanges}
               />
             </Accordion.Body>
           </AccordionItem>
@@ -597,6 +608,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
                 setAcdnErr={setPotAcdnErr}
                 setShowingModal={setShowingModal}
                 isDisabled={isDisabled}
+                markPendingChanges={markPendingChanges}
               />
             </Accordion.Body>
           </AccordionItem>
@@ -619,6 +631,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
                 setAcdnErr={setBrktAcdnErr}
                 setShowingModal={setShowingModal}
                 isDisabled={isDisabled}
+                markPendingChanges={markPendingChanges}
               />
             </Accordion.Body>
           </AccordionItem>
@@ -641,6 +654,7 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps }) => {
                 setAcdnErr={setElimAcdnErr}
                 setShowingModal={setShowingModal}
                 isDisabled={isDisabled}
+                markPendingChanges={markPendingChanges}
               />
             </Accordion.Body>
           </AccordionItem>

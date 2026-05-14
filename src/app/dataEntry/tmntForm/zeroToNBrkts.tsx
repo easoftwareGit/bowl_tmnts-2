@@ -35,6 +35,7 @@ interface ChildProps {
   setAcdnErr: (objAcdnErr: AcdnErrType) => void;
   setShowingModal: (showingModal: boolean) => void;
   isDisabled: boolean;
+  markPendingChanges?: (pending: boolean) => void;
 }
 interface NumberProps {
   brkt: brktType;
@@ -208,6 +209,7 @@ const ZeroToNBrackets: React.FC<ChildProps> = ({
   setAcdnErr,
   setShowingModal,
   isDisabled,
+  markPendingChanges,
 }) => {
   
   const defaultTabKey = (isDisabled && brkts.length > 0 && brkts[0].id)
@@ -249,8 +251,9 @@ const ZeroToNBrackets: React.FC<ChildProps> = ({
     return (vBrkt.start_err === "" && vBrkt.div_err === "" && vBrkt.fee_err === "");
   };
 
-  const handleAdd = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAdd = () => {
+    markPendingChanges?.(true);
+    
     if (validNewBrkt()) {
       // if brket is valid, make sure error are cleared 
       if (createBrkt.div_err !== '') {
@@ -279,7 +282,12 @@ const ZeroToNBrackets: React.FC<ChildProps> = ({
     }
   };
 
+  /**
+   *  runs when user confirmed delete - does the actual deletion
+   */
   const confirmedDelete = () => {
+    markPendingChanges?.(true);
+
     const idToDel = modalObj.id
     setShowingModal(false);
     setModalObj(initModalObj); // reset modal object (hides modal)
@@ -307,6 +315,8 @@ const ZeroToNBrackets: React.FC<ChildProps> = ({
   };
 
   const handleCreateBrktInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    markPendingChanges?.(true);
+
     const { id, name, value } = e.target;
     const ids = id.split("-");
     
@@ -335,7 +345,9 @@ const ZeroToNBrackets: React.FC<ChildProps> = ({
   };
 
   const handlCreateBrktAmountValueChange = (id: string) => (value: string | undefined): void => {
-  let rawValue = value === undefined ? "undefined" : value;
+    markPendingChanges?.(true);
+
+    let rawValue = value === undefined ? "undefined" : value;
     rawValue = rawValue || " ";
     if (rawValue && Number.isNaN(Number(rawValue))) {
       rawValue = "";
@@ -352,12 +364,14 @@ const ZeroToNBrackets: React.FC<ChildProps> = ({
   const handleCreateBrktBlur = (id: string) => (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     if (value) {
+      markPendingChanges?.(true);
       const temp_brkt = updateFSA(createBrkt, value);
       setCreateBrkt(temp_brkt);
     }
 
     if (!value.trim()) {
       // if cleared entry
+      markPendingChanges?.(true);
       const temp_brkt = updateFSA(createBrkt, value);
       temp_brkt.fee = "";
       temp_brkt.fee_err = "";
@@ -366,6 +380,8 @@ const ZeroToNBrackets: React.FC<ChildProps> = ({
   };
 
   const handleAmountValueChange = (id: string) => (value: string | undefined): void => {
+    markPendingChanges?.(true);    
+
     let rawValue = value === undefined ? "undefined" : value;
     rawValue = rawValue || " ";
 
@@ -411,6 +427,8 @@ const ZeroToNBrackets: React.FC<ChildProps> = ({
   };
 
   const updateFSA = (brkt: brktType, value: string): brktType => {
+    markPendingChanges?.(true);
+
     const valNoSymb = value.replace(currRexEx, "");
     let formattedValue = value ? formatValue2Dec(valNoSymb, localConfig) : "";
     if (formattedValue === "NaN") {
@@ -449,6 +467,7 @@ const ZeroToNBrackets: React.FC<ChildProps> = ({
   const handleBlur = (id: string) => (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     if (value) {
+      markPendingChanges?.(true);
       setBrkts(
         brkts.map((brkt) => {
           if (brkt.id === id) {
@@ -465,6 +484,7 @@ const ZeroToNBrackets: React.FC<ChildProps> = ({
 
     if (!value.trim()) {
       // if cleared entry
+      markPendingChanges?.(true);
       setBrkts(
         brkts.map((brkt) => {
           if (brkt.id === id) {
@@ -713,6 +733,7 @@ const ZeroToNBrackets: React.FC<ChildProps> = ({
                 </div>
                 <div className="col-sm-2 d-flex justify-content-center align-items-start">
                   <button
+                    type="button"
                     className="btn btn-success mx-3"
                     onClick={handleAdd}
                   >
@@ -841,6 +862,7 @@ const ZeroToNBrackets: React.FC<ChildProps> = ({
               </div>
               <div className="col-sm-2 d-flex justify-content-center align-items-start">
                 <button
+                  type="button"
                   className={`btn ${delBtnStyle} mx-3`}
                   onClick={() => handleDelete(brkt.id)}
                   disabled={isDisabled}

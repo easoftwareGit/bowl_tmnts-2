@@ -17,6 +17,7 @@ import { cloneDeep } from "lodash";
 const mockSetSquads = jest.fn();
 const mockSetLanes = jest.fn();
 const mockSetAcdnErr = jest.fn();
+const mockMarkPendingChanges = jest.fn();
 
 const mockOneToNSquadsProps = {
   squads: mockSquads,
@@ -26,9 +27,14 @@ const mockOneToNSquadsProps = {
   events: mockEvents,
   setAcdnErr: mockSetAcdnErr,
   isDisabled: false,
+  markPendingChanges: mockMarkPendingChanges
 };
 
 describe("OneToNSquads - render", () => { 
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
   describe('validLanes(squad)', () => {
 
@@ -217,6 +223,7 @@ describe("OneToNSquads - render", () => {
       events: mockEvents,
       setAcdnErr: mockSetAcdnErr,
       isDisabled: false,
+      markPendingChanges: mockMarkPendingChanges
     };
     
     it('render number of squads', () => { 
@@ -429,6 +436,43 @@ describe("OneToNSquads - render", () => {
         const squadTimeErrs = screen.queryAllByTestId("dangerSquadTime");
         expect(squadTimeErrs).toHaveLength(2);
         expect(squadTimeErrs[0]).toHaveTextContent("");
+      })
+      it("marks pending changes when Add is clicked", async () => {
+        const user = userEvent.setup();
+
+        render(<OneToNSquads {...mockOneToNSquadsProps} />);
+
+        const addBtn = screen.getByRole("button", { name: /add/i });
+        await user.click(addBtn);
+
+        expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
+      })
+      it("marks pending changes when squad name changes", async () => {
+        const user = userEvent.setup();
+
+        render(<OneToNSquads {...mockOneToNSquadsProps} />);
+
+        const squadNames = screen.getAllByRole("textbox", {
+          name: /squad name/i,
+        }) as HTMLInputElement[];
+
+        await user.clear(squadNames[0]);
+        await user.type(squadNames[0], "Updated Squad");
+
+        expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
+      })   
+      it("marks pending changes when event changes", async () => {
+        const user = userEvent.setup();
+
+        render(<OneToNSquads {...mockOneToNSquadsProps} />);
+
+        const squadEvents = screen.getAllByRole("combobox", {
+          name: /event/i,
+        }) as HTMLSelectElement[];
+
+        await user.selectOptions(squadEvents[0], mockEvents[1].id);
+
+        expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
       })
     })
 

@@ -1,5 +1,5 @@
 import React from "react"; 
-import { render, screen } from "@testing-library/react"; 
+import { fireEvent, render, screen } from "@testing-library/react"; 
 import "@testing-library/jest-dom"; 
 import { Provider } from "react-redux"; 
 import { configureStore } from "@reduxjs/toolkit"; 
@@ -205,17 +205,36 @@ jest.mock("react-bootstrap", () => {
   };
 });
 
+const mockMarkPendingChanges = jest.fn();
+
+// const renderForm = (
+//   props: tmntFormDataType,
+//   bowls: bowlType[] = [mockBowl]
+// ) => {
+//   const store = makeStore(bowls);
+//   return render(
+//     <Provider store={store}>
+//       <TmntDataForm tmntProps={props} />
+//     </Provider>
+//   );
+// };
+
 const renderForm = (
   props: tmntFormDataType,
-  bowls: bowlType[] = [mockBowl]
+  bowls: bowlType[] = [mockBowl],
+  markPendingChanges = mockMarkPendingChanges,
 ) => {
   const store = makeStore(bowls);
+
   return render(
     <Provider store={store}>
-      <TmntDataForm tmntProps={props} />
+      <TmntDataForm
+        tmntProps={props}
+        markPendingChanges={markPendingChanges}
+      />
     </Provider>
   );
-};  
+};
 
 const tmntProps: tmntFormDataType = { 
   tmntFullData: mockTmntFullData, 
@@ -227,7 +246,9 @@ describe('tmntDataForm - render', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockMarkPendingChanges.mockClear();
   });
+
   it("renders the top-level modals (hidden by default)", () => {
     renderForm(tmntProps);
 
@@ -439,5 +460,18 @@ describe('tmntDataForm - render', () => {
     expect(screen.getByText("MockBrkts")).toBeInTheDocument();
     expect(screen.getByText("MockElims")).toBeInTheDocument();
   });
+  it("calls markPendingChanges(true) when tournament name changes", () => {
+    renderForm(tmntProps);
 
+    const input = screen.getByLabelText(/tournament name/i);
+
+    fireEvent.change(input, {
+      target: {
+        name: "tmnt_name",
+        value: "Updated Tournament",
+      },
+    });
+
+    expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
+  });
 })

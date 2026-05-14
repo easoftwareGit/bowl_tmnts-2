@@ -8,6 +8,7 @@ import { cloneDeep } from "lodash";
 
 const mockSetDivs = jest.fn();
 const mockSetAcdnErr = jest.fn();
+const mockMarkPendingChanges = jest.fn();
 
 const mockOneToNDivsProps = {
   divs: mockDivs,
@@ -17,9 +18,13 @@ const mockOneToNDivsProps = {
   elims: mockElims,
   setAcdnErr: mockSetAcdnErr,
   isDisabled: false,
+  markPendingChanges: mockMarkPendingChanges,
 }
 
 describe("OneToNDivs - render", () => { 
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
   describe("render the component", () => { 
 
@@ -152,6 +157,16 @@ describe("OneToNDivs - render", () => {
 
         const delBtn = screen.getByRole("button", { name: /delete div/i });
         expect(delBtn).toHaveClass("btn-dark");
+      });   
+      it("marks pending changes when Add is clicked", async () => {
+        const user = userEvent.setup();
+
+        render(<OneToNDivs {...mockOneToNDivsProps} />);
+
+        const addBtn = screen.getByRole("button", { name: /add/i });
+        await user.click(addBtn);
+
+        expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
       });      
     })
 

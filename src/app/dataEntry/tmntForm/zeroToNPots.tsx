@@ -35,6 +35,7 @@ interface ChildProps {
   setAcdnErr: (objAcdnErr: AcdnErrType) => void;
   setShowingModal: (showingModal: boolean) => void;
   isDisabled: boolean;
+  markPendingChanges?: (pending: boolean) => void;
 }
 
 const createPotTitle = "Create Pot";
@@ -142,6 +143,7 @@ const ZeroToNPots: React.FC<ChildProps> = ({
   setAcdnErr,
   setShowingModal,
   isDisabled,
+  markPendingChanges,
 }) => {
   const defaultTabKey =
     isDisabled && pots.length > 0 && pots[0].id ? pots[0].id : "createPot";
@@ -210,8 +212,9 @@ const ZeroToNPots: React.FC<ChildProps> = ({
     return isPotValid;
   };
 
-  const handleAdd = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAdd = () => {
+    markPendingChanges?.(true);
+    
     if (validNewPot()) {
       // create a new pot with a new id
       const newPot: potType = {
@@ -231,7 +234,12 @@ const ZeroToNPots: React.FC<ChildProps> = ({
     }
   };
 
+  /**
+   *  runs when user confirmed delete - does the actual deletion
+   */  
   const confirmedDelete = () => {
+    markPendingChanges?.(true);
+
     const idToDel = modalObj.id;
     setShowingModal(false);
     setModalObj(initModalObj); // reset modal object (hides modal)
@@ -259,6 +267,8 @@ const ZeroToNPots: React.FC<ChildProps> = ({
   };
 
   const handleCreatePotInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    markPendingChanges?.(true);
+
     const { id, name, value } = e.target;
     const ids = id.split("-");
 
@@ -286,6 +296,7 @@ const ZeroToNPots: React.FC<ChildProps> = ({
   const handleCreatePotAmountValueChange =
     (id: string) =>
     (value: string | undefined): void => {
+      markPendingChanges?.(true);
       let rawValue = value === undefined ? "undefined" : value;
       rawValue = rawValue || " ";
 
@@ -303,6 +314,7 @@ const ZeroToNPots: React.FC<ChildProps> = ({
   const handleAmountValueChange =
     (id: string) =>
     (value: string | undefined): void => {
+      markPendingChanges?.(true);
       let rawValue = value === undefined ? "undefined" : value;
       rawValue = rawValue || " ";
 
@@ -439,7 +451,11 @@ const ZeroToNPots: React.FC<ChildProps> = ({
                   </div>
                 </div>
                 <div className="col-sm-3 d-flex justify-content-center align-items-start">
-                  <button className="btn btn-success mx-3" onClick={handleAdd}>
+                  <button
+                    type="button"
+                    className="btn btn-success mx-3"
+                    onClick={handleAdd}
+                  >
                     Add Pot
                   </button>
                 </div>

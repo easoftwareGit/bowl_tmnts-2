@@ -12,6 +12,7 @@ import { cloneDeep } from "lodash";
 const mockSetEvents = jest.fn();
 const mockSetSquads = jest.fn();
 const mockSetAcdnErr = jest.fn();
+const mockMarkPendingChanges = jest.fn();
 
 const mockOneToNEventsProps = {
   events: mockEvents,
@@ -20,6 +21,7 @@ const mockOneToNEventsProps = {
   setSquads: mockSetSquads,
   setAcdnErr: mockSetAcdnErr,
   isDisabled: false,
+  markPendingChanges: mockMarkPendingChanges,
 };
 
 // mock the modals
@@ -61,11 +63,15 @@ const makeProps = (overrides: Partial<React.ComponentProps<typeof OneToNEvents>>
     setSquads: jest.fn(),
     setAcdnErr: jest.fn(),
     isDisabled: false,
+    markPendingChanges: jest.fn(),
     ...overrides,
   } as React.ComponentProps<typeof OneToNEvents>;
 };
 
 describe("OneToNEvents - Interactions", () => { 
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
   describe("add event", () => {
     beforeAll(() => {
@@ -104,6 +110,7 @@ describe("OneToNEvents - Interactions", () => {
       await user.clear(eventNames[2])
       await user.type(eventNames[2], "Trios")
       expect(eventNames[2]).toHaveValue(mockEvents[2].event_name);      
+      expect(mockOneToNEventsProps.markPendingChanges).toHaveBeenCalledWith(true);
     });
     it('enter team size', async () => {
       // ARRANGE
@@ -119,6 +126,7 @@ describe("OneToNEvents - Interactions", () => {
       await user.type(teamSizes[2], "3")
       // ASSERT
       expect(teamSizes[2]).toHaveValue(mockEvents[2].team_size);
+      expect(mockOneToNEventsProps.markPendingChanges).toHaveBeenCalledWith(true);
     })
     it('enter games', async () => {
       const user = userEvent.setup()
@@ -131,6 +139,7 @@ describe("OneToNEvents - Interactions", () => {
       await user.clear(games[2])
       await user.type(games[2], "5")
       expect(games[2]).toHaveValue(mockEvents[2].games);
+      expect(mockOneToNEventsProps.markPendingChanges).toHaveBeenCalledWith(true);
     })
     it('enter added money', async () => {
       const user = userEvent.setup()
@@ -145,6 +154,7 @@ describe("OneToNEvents - Interactions", () => {
       expect(addeds[2]).toHaveValue(
         formatValueSymbSep2Dec(mockEvents[2].added_money, localConfig)
       );
+      expect(mockOneToNEventsProps.markPendingChanges).toHaveBeenCalledWith(true);
     })
     it('enter entry fee', async () => {
       const user = userEvent.setup()
@@ -159,6 +169,7 @@ describe("OneToNEvents - Interactions", () => {
       expect(fees[2]).toHaveValue(
         formatValueSymbSep2Dec(mockEvents[2].entry_fee, localConfig)
       );
+      expect(mockOneToNEventsProps.markPendingChanges).toHaveBeenCalledWith(true);
     })
     it('enter lineage', async () => {
       const user = userEvent.setup()
@@ -173,6 +184,7 @@ describe("OneToNEvents - Interactions", () => {
       expect(lineages[2]).toHaveValue(
         formatValueSymbSep2Dec(mockEvents[2].lineage, localConfig)
       );
+      expect(mockOneToNEventsProps.markPendingChanges).toHaveBeenCalledWith(true);
     })
     it('enter prize fund', async () => {
       const user = userEvent.setup()
@@ -187,6 +199,7 @@ describe("OneToNEvents - Interactions", () => {
       expect(prizes[2]).toHaveValue(
         formatValueSymbSep2Dec(mockEvents[2].prize_fund, localConfig)
       );
+      expect(mockOneToNEventsProps.markPendingChanges).toHaveBeenCalledWith(true);
     })
     it('enter other', async () => {
       const user = userEvent.setup()
@@ -201,6 +214,7 @@ describe("OneToNEvents - Interactions", () => {
       expect(others[2]).toHaveValue(
         formatValueSymbSep2Dec(mockEvents[2].other, localConfig)
       );
+      expect(mockOneToNEventsProps.markPendingChanges).toHaveBeenCalledWith(true);
     })
     it('enter expenses', async () => {
       const user = userEvent.setup()
@@ -215,6 +229,7 @@ describe("OneToNEvents - Interactions", () => {
       expect(expenses[2]).toHaveValue(
         formatValueSymbSep2Dec(mockEvents[2].expenses, localConfig)
       );
+      expect(mockOneToNEventsProps.markPendingChanges).toHaveBeenCalledWith(true);
     })
     it('test if LPOX is recalculated', async () => {
       const logSpy = jest.spyOn(global.console, 'log')
@@ -236,6 +251,7 @@ describe("OneToNEvents - Interactions", () => {
       expect(lpoxs[2]).toHaveValue(
         formatValueSymbSep2Dec(mockEvents[2].lpox, localConfig)
       );      
+      expect(mockOneToNEventsProps.markPendingChanges).toHaveBeenCalledWith(true);
       expect(lpoxs[2]).toHaveClass('form-control')
     })
     it('test if LPOX is correct', async () => {
@@ -281,6 +297,7 @@ describe("OneToNEvents - Interactions", () => {
       await user.click(addBtn);
       // ASSERT
       expect(mockOneToNEventsProps.setEvents).toHaveBeenCalled();
+      expect(mockOneToNEventsProps.markPendingChanges).toHaveBeenCalledWith(true);
 
       // ACT
       const tabs = screen.getAllByRole('tab');
@@ -334,18 +351,26 @@ describe("OneToNEvents - Interactions", () => {
       // ARRANGE
       const user = userEvent.setup();
       render(<OneToNEvents {...mockOneToNEventsProps} />);
-      // ACT
+
       const tabs = screen.getAllByRole("tab");
-      // ARRANGE
       await user.click(tabs[2]);
+
       const delBtns = screen.getAllByText("Delete Event");
-      // ASSERT
       expect(delBtns).toHaveLength(2);
-      // ACT
+
+      // ACT - first click only opens confirm modal
       await user.click(delBtns[1]);
-      // ASSERT
+
+      const confirmModal = await screen.findByTestId("confirm-modal");
+      expect(confirmModal).toBeInTheDocument();
+
+      const confirmButton = within(confirmModal).getByText("Confirm");
+      await user.click(confirmButton);
+
+      // ASSERT - delete happens after confirm
       expect(mockOneToNEventsProps.setEvents).toHaveBeenCalled();
-    });
+      expect(mockOneToNEventsProps.markPendingChanges).toHaveBeenCalledWith(true);
+    });    
   });
   
   describe("setSquads sync when event.games changes", () => {
@@ -368,7 +393,8 @@ describe("OneToNEvents - Interactions", () => {
       // Simulate the user changing the value to "5"
       fireEvent.change(gamesInputs[0], { target: { value: "5" } });
 
-      expect(setSquads).toHaveBeenCalled();      
+      expect(setSquads).toHaveBeenCalled();  
+      expect(props.markPendingChanges).toHaveBeenCalledWith(true);
 
       const [[updatedSquads]] = setSquads.mock.calls as any;
       const linkedSquad = updatedSquads.find(
@@ -394,6 +420,7 @@ describe("OneToNEvents - Interactions", () => {
       const delBtn = screen.queryByText("Delete Event");
       expect(delBtn).not.toBeInTheDocument();
       expect(setEvents).not.toHaveBeenCalled();
+      expect(mockOneToNEventsProps.markPendingChanges).not.toHaveBeenCalledWith(true);
     });
 
     it("shows error modal and does not delete when event has squads", async () => {
@@ -420,6 +447,7 @@ describe("OneToNEvents - Interactions", () => {
 
       // No delete was actually performed
       expect(setEvents).not.toHaveBeenCalled();
+      expect(mockOneToNEventsProps.markPendingChanges).not.toHaveBeenCalledWith(true);
       // And we never showed the confirm modal
       expect(screen.queryByTestId("confirm-modal")).not.toBeInTheDocument();
     });
@@ -448,7 +476,8 @@ describe("OneToNEvents - Interactions", () => {
       const confirmButton = within(confirmModal).getByText("Confirm");
       await user.click(confirmButton);
 
-      expect(setEvents).toHaveBeenCalled();
+      expect(setEvents).toHaveBeenCalled();      
+      expect(props.markPendingChanges).toHaveBeenCalledWith(true);
 
       const [[updatedEvents]] = setEvents.mock.calls as any;
       // One less event
@@ -479,6 +508,7 @@ describe("OneToNEvents - Interactions", () => {
       await user.type(feeInputs[0], "abc"); // non-numeric
 
       expect(setEvents).toHaveBeenCalled();
+      expect(props.markPendingChanges).toHaveBeenCalledWith(true);      
 
       const [[updatedEvents]] = setEvents.mock.calls as any;
       const ev0 = updatedEvents.find(
@@ -509,6 +539,7 @@ describe("OneToNEvents - Interactions", () => {
       await user.type(lineageInputs[0], "12");
 
       expect(setEvents).toHaveBeenCalled();
+      expect(props.markPendingChanges).toHaveBeenCalledWith(true);      
 
       // Look at the *last* call (final state)
       const lastCall = setEvents.mock.calls[setEvents.mock.calls.length - 1] as any;
@@ -547,6 +578,7 @@ describe("OneToNEvents - Interactions", () => {
       fireEvent.blur(firstNameInput);
 
       expect(setEvents).toHaveBeenCalled();
+      expect(props.markPendingChanges).toHaveBeenCalledWith(true);      
 
       // Use the last call (the blur handler)
       const lastCall = setEvents.mock.calls[setEvents.mock.calls.length - 1] as any;
@@ -574,6 +606,7 @@ describe("OneToNEvents - Interactions", () => {
       fireEvent.blur(teamInputs[0]);
 
       expect(setEvents).toHaveBeenCalled();
+      expect(props.markPendingChanges).toHaveBeenCalledWith(true);      
 
       const lastCall = setEvents.mock.calls[setEvents.mock.calls.length - 1] as any;
       const [updatedEvents] = lastCall;
@@ -600,6 +633,7 @@ describe("OneToNEvents - Interactions", () => {
       fireEvent.blur(gamesInputs[0]);      
 
       expect(setEvents).toHaveBeenCalled();
+      expect(props.markPendingChanges).toHaveBeenCalledWith(true);      
 
       const lastCall = setEvents.mock.calls[setEvents.mock.calls.length - 1] as any;
       const [updatedEvents] = lastCall;
@@ -613,4 +647,85 @@ describe("OneToNEvents - Interactions", () => {
     });
   });
 
+  describe("optional markPendingChanges prop", () => {
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it("adds an event without crashing when markPendingChanges is omitted", async () => {
+      const user = userEvent.setup();
+
+      const setEvents = jest.fn();
+
+      const props = makeProps({
+        setEvents,
+      });
+
+      delete (props as Partial<typeof props>).markPendingChanges;
+
+      render(<OneToNEvents {...props} />);
+
+      const addBtn = screen.getByRole("button", { name: /add/i });
+
+      await user.click(addBtn);
+
+      expect(setEvents).toHaveBeenCalled();
+    });
+
+    it("updates event_name without crashing when markPendingChanges is omitted", async () => {
+      const user = userEvent.setup();
+
+      const setEvents = jest.fn();
+
+      const props = makeProps({
+        setEvents,
+      });
+
+      delete (props as Partial<typeof props>).markPendingChanges;
+
+      render(<OneToNEvents {...props} />);
+
+      const nameInputs = screen.getAllByRole("textbox", {
+        name: /event name/i,
+      }) as HTMLInputElement[];
+
+      await user.clear(nameInputs[0]);
+      await user.type(nameInputs[0], "Updated Event");
+
+      expect(setEvents).toHaveBeenCalled();
+    });
+
+    it("deletes an event without crashing when markPendingChanges is omitted", async () => {
+      const user = userEvent.setup();
+
+      const props = makeProps({
+        setEvents: jest.fn(),
+      });
+
+      // ensure second event has no squads tied to it
+      props.squads = props.squads.filter(
+        (s) => s.event_id !== props.events[1].id
+      );
+
+      delete (props as Partial<typeof props>).markPendingChanges;
+
+      render(<OneToNEvents {...props} />);
+
+      const tabs = screen.getAllByRole("tab");
+      await user.click(tabs[1]);
+
+      const delBtn = screen.getByText("Delete Event");
+      await user.click(delBtn);
+
+      const confirmModal = await screen.findByTestId("confirm-modal");
+
+      const confirmButton = within(confirmModal).getByText("Confirm");
+
+      await user.click(confirmButton);
+
+      expect(props.setEvents).toHaveBeenCalled();
+    });
+
+  });  
 })

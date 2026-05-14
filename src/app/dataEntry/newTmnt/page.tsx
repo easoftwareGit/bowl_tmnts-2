@@ -1,11 +1,12 @@
 "use client";
-import React from "react";
+import React, { useCallback, useRef } from "react";
 import { useSession } from "next-auth/react"; 
 import TmntDataForm from "../tmntForm/tmntForm";
 import type { tmntFormDataType, tmntFullType } from "@/lib/types/types";
 import { tmntFormParent } from "@/lib/enums/enums";
 import { getBlankTmntFullData } from "../tmntForm/tmntTools";
 import { SquadStage } from "@prisma/client";
+import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 
 const NewTmntPage = () => {
 
@@ -21,12 +22,30 @@ const NewTmntPage = () => {
     parentForm: tmntFormParent.NEW,
   }
   
+  /*************************
+   * Unsaved Changes Guard *
+   *************************/
+  const hasPendingChangesRef = useRef(false);
+
+  const markPendingChanges = useCallback((pending: boolean): void => {
+    hasPendingChangesRef.current = pending;
+  }, []);
+
+  const dataWasChanged = useCallback((): boolean => {
+    return hasPendingChangesRef.current;
+  }, []);
+
+  useUnsavedChangesGuard(dataWasChanged);
+
   return (
     <>      
       <div className="d-flex flex-column justify-content-center align-items-center">
         <div className="shadow p-3 m-3 rounded-3 container">
           <h2 className="mb-3">New Tournament</h2>                    
-          <TmntDataForm tmntProps={dataOneTmnt} />
+          <TmntDataForm
+            tmntProps={dataOneTmnt}
+            markPendingChanges={markPendingChanges}
+          />
         </div>
       </div>
     </>

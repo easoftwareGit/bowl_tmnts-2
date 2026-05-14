@@ -20,6 +20,7 @@ interface ChildProps {
   setAcdnErr: (objAcdnErr: AcdnErrType) => void;
   setShowingModal: (showingModal: boolean) => void;
   isDisabled: boolean;
+  markPendingChanges?: (pending: boolean) => void;
 }
 interface NumberProps {
   elim: elimType;
@@ -202,6 +203,7 @@ const ZeroToNElims: React.FC<ChildProps> = ({
   setAcdnErr,
   setShowingModal,
   isDisabled,
+  markPendingChanges,
 }) => {
   
   const defaultTabKey = (isDisabled && elims.length > 0 && elims[0].id)
@@ -240,8 +242,9 @@ const ZeroToNElims: React.FC<ChildProps> = ({
     return (vElim.start_err === "" && vElim.div_err === "" && vElim.fee_err === "" && vElim.games_err === "");
   }
 
-  const handleAdd = (e: React.FormEvent) => { 
-    e.preventDefault();
+  const handleAdd = () => {     
+    markPendingChanges?.(true);
+
     if (validNewElim()) {
       // if elim is valid, make sure errors are cleared
       if (createElim.div_err !== '') {
@@ -273,7 +276,12 @@ const ZeroToNElims: React.FC<ChildProps> = ({
     }
   }
 
+  /**
+   *  runs when user confirmed delete - does the actual deletion
+   */
   const confirmedDelete = () => { 
+    markPendingChanges?.(true);
+
     const idToDel = modalObj.id
     setShowingModal(false);
     setModalObj(initModalObj)   // reset modal object (hides modal)
@@ -301,6 +309,8 @@ const ZeroToNElims: React.FC<ChildProps> = ({
   }
 
   const handleCreateElimInputChange = (id: string) => (e: ChangeEvent<HTMLInputElement>) => { 
+    markPendingChanges?.(true);
+
     const { id, name, value } = e.target;      
     const ids = id.split("-");    
     
@@ -331,6 +341,8 @@ const ZeroToNElims: React.FC<ChildProps> = ({
   }
 
   const handleCreateElimAmountValueChange = (id: string, name: string) => (value: string | undefined): void => { 
+    markPendingChanges?.(true);
+
     const nameErr = name + "_err";
     let rawValue = value === undefined ? 'undefined' : value;
     rawValue = (rawValue || ' ');
@@ -346,6 +358,8 @@ const ZeroToNElims: React.FC<ChildProps> = ({
   }
 
   const handleAmountValueChange = (id: string, name: string) => (value: string | undefined): void => { 
+    markPendingChanges?.(true);
+    
     const nameErr = name + "_err";
     let rawValue = value === undefined ? 'undefined' : value;
     rawValue = (rawValue || ' ');
@@ -546,7 +560,11 @@ const ZeroToNElims: React.FC<ChildProps> = ({
                   </div>
                 </div>
                 <div className="col-sm-3 d-flex justify-content-center align-items-start">
-                  <button className="btn btn-success mx-3" onClick={handleAdd}>
+                  <button
+                    type="button"
+                    className="btn btn-success mx-3"
+                    onClick={handleAdd}
+                  >
                     Add Eliminator
                   </button>
                 </div>
@@ -630,6 +648,7 @@ const ZeroToNElims: React.FC<ChildProps> = ({
               />
               <div className="col-sm-3 d-flex justify-content-center align-items-start">
                 <button
+                  type='button'
                   className={`btn ${delBtnStyle} mx-3`}
                   onClick={() => handleDelete(elim.id)}
                   disabled={isDisabled}

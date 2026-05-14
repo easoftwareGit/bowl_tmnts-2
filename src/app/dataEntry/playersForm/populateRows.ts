@@ -4,11 +4,23 @@ import {
   entryFeeColName,
   entryNumBrktsColName,
   feeColNameEnd,
-  playerEntryData,
+  // playerEntryData,
   timeStampColName,
-} from "./createColumns";
+} from "./sfCreateColumns";
 import { cloneDeep } from "lodash";
 import { isValidBtDbId } from "@/lib/validation/validation";
+
+export const playerEntryData: { [key: string]: any } = {
+  id: "",
+  player_id: "",
+  first_name: "",
+  last_name: "",
+  average: 0,
+  lane: 0,
+  position: "",
+  lanePos: "",
+  feeTotal: 0,
+};
 
 export type playerEntryRow = typeof playerEntryData;
 

@@ -15,6 +15,7 @@ import { cloneDeep } from "lodash";
 const mockSetBrkts = jest.fn();
 const mockSetAcdnErr = jest.fn();
 const mockSetShowingModal = jest.fn();
+const mockMarkPendingChanges = jest.fn();
 
 const mockZeroToNBrktsProps = {
   brkts: mockBrkts, 
@@ -24,10 +25,15 @@ const mockZeroToNBrktsProps = {
   setAcdnErr: mockSetAcdnErr,
   setShowingModal: mockSetShowingModal,  
   isDisabled: false,
+  markPendingChanges: mockMarkPendingChanges,
 }
 
 describe("ZeroToNBrackets - render", () => {
     
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe('render the Create Bracket tab - not brackets exist', () => { 
     const noBrkts: brktType[] = [];
     const mockNoBrkts = cloneDeep(mockZeroToNBrktsProps);
@@ -640,6 +646,7 @@ describe("ZeroToNBrackets - render", () => {
         setAcdnErr: mockSetAcdnErr,
         setShowingModal: mockSetShowingModal,
         isDisabled: false,
+        markPendingChanges: mockMarkPendingChanges,
       }
       dataWithErrs.brkts = brktsWithErrors;
       const user = userEvent.setup();        

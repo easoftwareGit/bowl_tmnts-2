@@ -1,0 +1,77 @@
+/* PLAYERS */
+.e-grid .e-headercell.group-players,
+.e-grid .e-stackedheadercell.group-players {
+  background-color: rgb(234, 153, 153);  
+}
+
+/* DIVISIONS */
+.e-grid .e-headercell.group-divs,
+.e-grid .e-stackedheadercell.group-divs {
+  background-color: rgb(249, 203, 156);
+}
+
+/* POTS */
+.e-grid .e-headercell.group-pots,
+.e-grid .e-stackedheadercell.group-pots {
+  background-color: rgb(255, 229, 153);
+}
+
+/* BRACKETS */
+.e-grid .e-headercell.group-brkts,
+.e-grid .e-stackedheadercell.group-brkts {
+  background-color: rgb(182, 215, 168);
+}
+
+/* ELIMS */
+.e-grid .e-headercell.group-elims,
+.e-grid .e-stackedheadercell.group-elims {
+  background-color: rgb(164, 194, 244);
+}
+
+/* TOTAL */
+.e-grid .e-headercell.group-total,
+.e-grid .e-stackedheadercell.group-total {
+  background-color: rgb(213, 166, 189);
+}
+
+/* OK button */
+.e-footer-content .e-btn.e-primary.e-flat:not([DISABLED]) {
+  background-color: rgb(25, 135, 84);
+  border-color: rgb(25, 135, 84);
+}
+
+/* Cancel button */
+.e-footer-content .e-btn.e-flat:not([DISABLED]) {
+  background-color: rgb(220, 53, 69);
+  color: white;
+  border-color: white;
+}
+
+/* toolbar icons inherit button color */
+.e-grid .e-toolbar .e-tbar-btn .e-icons {
+  color: inherit;
+}
+/* toolbar icon: add  */
+.e-grid .e-toolbar .e-tbar-btn .e-icons.e-add {
+  color: rgb(40, 167, 69);
+}
+/* toolbar icon: delete  */
+.e-grid .e-toolbar .e-tbar-btn .e-icons.e-delete {
+  color: rgb(220, 53, 69);
+}
+/* toolbar icon: cancel  */
+.e-grid .e-toolbar .e-tbar-btn .e-icons.e-cancel {
+  color: rgb(220, 53, 69);
+}
+/* toolbar icon: check  */
+.e-grid .e-toolbar .e-tbar-btn .e-icons.e-check {
+  color: rgb(40, 167, 69);
+}
+/* toolbar icon: update  */
+.e-grid .e-toolbar .e-tbar-btn .e-icons.e-update {
+  color: rgb(13, 110, 253);
+}
+/* toolbar icon: close  */
+.e-grid .e-toolbar .e-tbar-btn .e-icons.e-back {
+  color: rgb(220, 53, 69);
+}

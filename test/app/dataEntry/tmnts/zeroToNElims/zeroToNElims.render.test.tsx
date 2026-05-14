@@ -15,6 +15,7 @@ import { cloneDeep } from "lodash";
 const mockSetElims = jest.fn();
 const mockSetAcdnErr = jest.fn();
 const mockSetShowingModal = jest.fn();
+const mockMarkPendingChanges = jest.fn();
 
 const mockZeroToNElimsProps = {
   elims: mockElims, 
@@ -24,9 +25,14 @@ const mockZeroToNElimsProps = {
   setAcdnErr: mockSetAcdnErr,
   setShowingModal: mockSetShowingModal,
   isDisabled: false,
+  markPendingChanges: mockMarkPendingChanges
 }
 
 describe('ZeroToNElims - render', () => { 
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
   describe('render the component', () => { 
 
@@ -475,6 +481,7 @@ describe('ZeroToNElims - render', () => {
           setAcdnErr: mockSetAcdnErr,
           setShowingModal: mockSetShowingModal,
           isDisabled: false,
+          markPendingChanges: mockMarkPendingChanges
         }
         
         const user = userEvent.setup()

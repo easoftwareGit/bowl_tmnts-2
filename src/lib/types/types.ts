@@ -796,6 +796,29 @@ export type tmntFullDataErrType = {
 
 export type DateInput = string | number | Date | null | undefined;
 
+export type syncfusionColumnDef = {
+  field: string;
+  headerText: string;
+  width?: string;
+  textAlign?: "Right" | "Left" | "Center";
+  isPrimaryKey?: boolean;
+  allowEditing?: boolean;
+  displayAsCheckBox?: boolean;
+  editType?: string;
+  format?: string;
+  type?: string;
+  edit?: Record<string, any>;
+  validationRules?: Record<string, unknown>;
+  customAttributes?: Record<string, string>;
+};
+
+export type syncfusionStackedColDef = {
+  headerText: string;
+  columns: syncfusionColumnDef[];
+  customAttributes?: Record<string, string>;
+  textAlign?: "Right" | "Left" | "Center";
+};
+
 export type testDateType = {
   id: number,
   sod: Date,

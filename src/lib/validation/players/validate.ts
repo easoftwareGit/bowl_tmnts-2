@@ -71,12 +71,10 @@ export const validAverage = (average: unknown): boolean => {
   if (typeof average !== "number" || !Number.isInteger(average)) return false;
   return Number.isInteger(average) && average >= 0 && average <= 300;
 };
-
 export const validLane = (lane: number): boolean => {
   if (typeof lane !== "number") return false;
   return Number.isInteger(lane) && lane > 0 && lane <= maxStartLane;
 };
-
 export const validPosition = (position: string): boolean => {
   return isValidName(position, 1); // only 1 character
 };

@@ -14,16 +14,19 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    // "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
-    "isolatedModules": true,
-    // "jsx": "preserve",
+    "isolatedModules": true,    
     "jsx": "preserve",
     "incremental": true,
     "paths": {
       "@/*": [
         "./src/*"
-      ]
+      ],
+      "react": [
+        "./node_modules/@types/react"
+      ] // workaround for JSX typing issue with Syncfusion directive components
     },
     "plugins": [
       {
@@ -37,7 +40,9 @@
     "**/*.ts",
     "**/*.tsx",
     "**/*.d.ts",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
   ],
   "exclude": [
     "node_modules"

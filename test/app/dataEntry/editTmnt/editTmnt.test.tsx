@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import EditTmntPage from "@/app/dataEntry/editTmnt/[tmntId]/page";
 import { SquadStage } from "@prisma/client";
@@ -36,10 +36,24 @@ jest.mock("@/components/modal/waitModal", () => ({
   ),
 }));
 
+jest.mock("@/hooks/useUnsavedChangesGuard", () => ({
+  __esModule: true,
+  useUnsavedChangesGuard: jest.fn(),
+}));
+
 jest.mock("@/app/dataEntry/tmntForm/tmntForm", () => ({
   __esModule: true,
-  default: ({ tmntProps }: any) => (
-    <div data-testid="TmntDataFormMock">{JSON.stringify(tmntProps)}</div>
+  default: ({ tmntProps, markPendingChanges }: any) => (
+    <div data-testid="TmntDataFormMock">
+      <button
+        type="button"
+        data-testid="markPendingChangesButton"
+        onClick={() => markPendingChanges(true)}
+      >
+        Mark Pending Changes
+      </button>
+      <span data-testid="TmntDataFormProps">{JSON.stringify(tmntProps)}</span>
+    </div>
   ),
 }));
 
@@ -48,6 +62,7 @@ jest.mock("@/app/dataEntry/tmntForm/tmntTools", () => ({
   getBlankTmntFullData: jest.fn(),
   getSquadStage: jest.fn(),
 }));
+
 
 // Imports for typed access to mocks AFTER mocks, so imports use the mocks
 import { useParams } from "next/navigation";
@@ -62,6 +77,7 @@ import {
   getSquadStage,
 } from "@/app/dataEntry/tmntForm/tmntTools";
 import { tmntFormParent } from "@/lib/enums/enums";
+import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 
 // Typed mock handles
 const useDispatchMock =
@@ -96,6 +112,11 @@ type MockState = {
     tmntFullData: any;
   };
 };
+
+const useUnsavedChangesGuardMock =
+  useUnsavedChangesGuard as unknown as jest.MockedFunction<
+    typeof useUnsavedChangesGuard
+  >;
 
 describe("EditTmntPage (src/app/dataEntry/editTmnt/[tmntId]/page.tsx)", () => {
   const dispatchMock = jest.fn();
@@ -146,6 +167,9 @@ describe("EditTmntPage (src/app/dataEntry/editTmnt/[tmntId]/page.tsx)", () => {
 
     // default squadStage for tests that don't override it
     getSquadStageMock.mockResolvedValue(SquadStage.DEFINE);
+
+    // default: no unsaved changes
+    useUnsavedChangesGuardMock.mockImplementation(() => undefined);
   });
 
   it("dispatches fetchTmntFullData(tmntId) on mount (when tmntId exists)", () => {
@@ -268,8 +292,10 @@ describe("EditTmntPage (src/app/dataEntry/editTmnt/[tmntId]/page.tsx)", () => {
     render(<EditTmntPage />);
 
     const form = await screen.findByTestId("TmntDataFormMock");
-    const props = JSON.parse(form.textContent ?? "{}");
-
+    // const props = JSON.parse(form.textContent ?? "{}");
+    const propsText = screen.getByTestId("TmntDataFormProps").textContent ?? "{}";
+    const props = JSON.parse(propsText);
+    
     expect(props).toEqual({
       tmntFullData: stateData,
       stage: SquadStage.DEFINE,
@@ -292,7 +318,9 @@ describe("EditTmntPage (src/app/dataEntry/editTmnt/[tmntId]/page.tsx)", () => {
     render(<EditTmntPage />);
 
     const form = await screen.findByTestId("TmntDataFormMock");
-    const props = JSON.parse(form.textContent ?? "{}");
+    // const props = JSON.parse(form.textContent ?? "{}");
+    const propsText = screen.getByTestId("TmntDataFormProps").textContent ?? "{}";
+    const props = JSON.parse(propsText);    
 
     expect(props).toEqual({
       tmntFullData: stateData,
@@ -367,7 +395,9 @@ describe("EditTmntPage (src/app/dataEntry/editTmnt/[tmntId]/page.tsx)", () => {
 
     // form should still render (with DISABLE)
     const form = await screen.findByTestId("TmntDataFormMock");
-    const props = JSON.parse(form.textContent ?? "{}");
+    // const props = JSON.parse(form.textContent ?? "{}");
+    const propsText = screen.getByTestId("TmntDataFormProps").textContent ?? "{}";
+    const props = JSON.parse(propsText);    
 
     expect(props).toEqual({
       tmntFullData: stateData,
@@ -404,4 +434,46 @@ describe("EditTmntPage (src/app/dataEntry/editTmnt/[tmntId]/page.tsx)", () => {
     // verified the cleanup works.
   });
 
+  it("uses useUnsavedChangesGuard with a dataWasChanged callback", () => {
+    setupSelectors({
+      status: "loading",
+      error: undefined,
+      stateTmntFullData: { tmnt: { id: "tmt_from_state" }, squads: [] },
+    });
+
+    render(<EditTmntPage />);
+
+    expect(useUnsavedChangesGuardMock).toHaveBeenCalledTimes(1);
+
+    const dataWasChanged = useUnsavedChangesGuardMock.mock.calls[0][0];
+
+    expect(typeof dataWasChanged).toBe("function");
+    expect(dataWasChanged()).toBe(false);
+  });
+
+  it("passes markPendingChanges to TmntDataForm and updates the unsaved-changes callback", async () => {
+    const stateData = { tmnt: { id: "tmt_real" }, squads: [{ id: "sqd_1" }] };
+
+    setupSelectors({
+      status: "succeeded",
+      error: undefined,
+      stateTmntFullData: stateData,
+    });
+
+    getSquadStageMock.mockResolvedValueOnce(SquadStage.DEFINE);
+
+    render(<EditTmntPage />);
+
+    await screen.findByTestId("TmntDataFormMock");
+
+    const lastHookCall = useUnsavedChangesGuardMock.mock.calls.at(-1);
+    const dataWasChanged = lastHookCall?.[0];
+
+    expect(dataWasChanged).toBeDefined();
+    expect(dataWasChanged!()).toBe(false);
+
+    fireEvent.click(screen.getByTestId("markPendingChangesButton"));
+
+    expect(dataWasChanged!()).toBe(true);
+  });  
 });

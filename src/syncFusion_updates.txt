@@ -1,0 +1,125 @@
+1) get syncfusion installed
+  npm install @syncfusion/ej2-react-grids
+  npm install @syncfusion/ej2-react-notifications
+  npm install @syncfusion/react-base
+
+2) in src\app\globals.css, added at the top:
+  @import '../../node_modules/@syncfusion/ej2-base/styles/material.css';
+  @import '../../node_modules/@syncfusion/ej2-buttons/styles/material.css';
+  @import '../../node_modules/@syncfusion/ej2-inputs/styles/material.css';
+  @import '../../node_modules/@syncfusion/ej2-popups/styles/material.css';
+  @import '../../node_modules/@syncfusion/ej2-navigations/styles/material.css';
+  @import '../../node_modules/@syncfusion/ej2-grids/styles/material.css';
+
+  note: for <MessageComponent />
+  @import '../../node_modules/@syncfusion/ej2-react-notifications/styles/material.css';  
+
+3) in src\app\page.tsx, right after "use client", added:
+  // IMPORTANT: import FIRST
+  import "@/lib/syncfusion-license";
+
+4) in .env.local, added:
+  NEXT_PUBLIC_SYNCFUSION_LICENSE_KEY="My Syncfusion Essential Studio 33.xx.xx License Key"
+
+5) create src\lib\syncfusion-license.tsx:
+  "use client";
+
+  import { registerLicense } from "@syncfusion/ej2-base";
+  import { registerLicense as registerPureReactLicense } from "@syncfusion/react-base";
+
+  // Runs immediately when this module is imported
+  const key = process.env.NEXT_PUBLIC_SYNCFUSION_LICENSE_KEY;
+
+  if (key) {
+    registerLicense(key);
+    registerPureReactLicense(key);
+  } else {
+    console.warn("Syncfusion license key not found.");
+  }
+
+  // No component needed
+  export { };
+
+6) update src\app\page.tsx to test syncFusion license key is working:
+  'use client';
+
+  // IMPORTANT: import FIRST
+  import "@/lib/syncfusion-license";
+
+  // just for syncFusion testing
+  import { MessageComponent, Severity } from "@syncfusion/ej2-react-notifications";
+
+  export default function Home() {  
+    return (
+      <div>
+        <h1>Home Page</h1>
+        {/* just for syncFusion license testing */}
+        <MessageComponent severity={Severity.Success}>
+          syncFusion Notification is working!
+        </MessageComponent>        
+      </div>
+    )
+  }
+
+7) in the Run and Debug window,   
+  a) click on the drop down button to the right of the green play button
+  b) seletect "Node.js: debug server-side"
+  c) directly to the left of the drop down select, click the green play button
+     This will start the server in debug mode.
+  d) click on the drop down button to the right of the green play button
+  e) select "Launch Chrome against localhost"
+  f) click the green play button
+  g) web page should open with syncFusion notifications
+  h) close web page
+  g) kill debug server
+
+8) reset src\app\page.tsx:
+  'use client';
+
+  // IMPORTANT: import FIRST
+  import "@/lib/syncfusion-license";
+
+  export default function Home() {  
+    return (
+      <div>
+        <h1>Home Page</h1>
+      </div>
+    )
+  }
+
+9) create files:
+  src\app\dataEntry\playerForm2\playerForm2.tsx
+  src\app\dataEntry\playerForm2\populateRows2.tsx
+  src\app\dataEntry\playerForm2\createColumns2.tsx
+
+10) update tsconfig.json. changed:
+    "moduleResolution": "node",
+    "paths": {
+      "@/*": ["./src/*"],
+    },
+
+  to:
+    "moduleResolution": "bundler",
+    "paths": {
+      "@/*": ["./src/*"],
+      "react": ["./node_modules/@types/react"]
+    },
+
+  updated "include" from:
+    "include": [
+      "next-env.d.ts",
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.d.ts",
+      ".next/types/**/*.ts",
+    ],
+    to (added ".next/dev/types/**/*.ts", "**/*.mts"):
+      "include": [
+        "next-env.d.ts",
+        "**/*.ts",
+        "**/*.tsx",
+        "**/*.d.ts",
+        ".next/types/**/*.ts",
+        ".next/dev/types/**/*.ts",
+        "**/*.mts"    
+      ],

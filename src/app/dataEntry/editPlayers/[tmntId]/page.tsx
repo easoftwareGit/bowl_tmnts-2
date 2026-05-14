@@ -12,18 +12,12 @@ import {
   entryFeeColName,
   entryNumBrktsColName,
   feeColNameEnd,
-} from "../../playersForm/createColumns";
+} from "../../playersForm/sfCreateColumns";
 import { getBrktOrElimName, getPotName } from "@/lib/getName";
 import { OverlayTrigger, Tooltip, Tab, Tabs } from "react-bootstrap";
 import { BracketList } from "@/components/brackets/bracketListClass";
-import usePreventUnload from "@/components/preventUnload/preventUnload";
 import WaitModal from "@/components/modal/waitModal";
 import { defaultBrktGames, defaultPlayersPerMatch } from "@/lib/db/initVals";
-import {
-  errInfoType,
-  getDivsPotsBrktsElimsCountErrMsg,
-  getDivsPotsBrktsElimsCounts,
-} from "../../playersForm/rowInfo";
 import {
   getTmntFullDataError,
   getTmntFullDataLoadStatus,
@@ -31,6 +25,8 @@ import {
 import { playerEntryRow, populateRows } from "../../playersForm/populateRows";
 import { SquadStage } from "@prisma/client";
 import { createByePlayer } from "@/components/brackets/byePlayer";
+import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
+import { getSquadStage } from "../../tmntForm/tmntTools";
 
 // run tmnt:
 // http://localhost:3000/dataEntry/runTmnt/tmt_d237a388a8fc4641a2e37233f1d6bebd
@@ -78,6 +74,12 @@ export default function EditPlayersPage() {
   const [allBrktsList, setAllBrktsList] = useState<Record<string, BracketList>>({});
   const [gotRefunds, setGotRefunds] = useState<Record<string, boolean>>({});
 
+  const [stage, setStage] = useState<SquadStage | null>(null);
+  // const [stageError, setStageError] = useState<string | null>(null);
+  const [gotStage, setGotStage] = useState(false);
+
+  const [isNavigatingAfterSave, setIsNavigatingAfterSave] = useState(false);
+  
   const defaultTabKey = "divs";
   const [tabKey, setTabKey] = useState(defaultTabKey);
 
@@ -170,6 +172,66 @@ export default function EditPlayersPage() {
     initializedRef.current = true;
   }, [tmntLoadStatus, initValues]);
 
+  // NOTE: Squad stage is intentionally *not* stored in Redux.
+  // always read it directly from the DB via getSquadStage to avoid stale stage
+  // values when other processes update the stage.
+  useEffect(() => {
+    if (tmntLoadStatus !== "succeeded") {
+      setStage(null);
+      // setStageError(null);
+      setGotStage(false);
+      return;
+    }
+
+    if (!stateTmntFullData) {
+      throw new Error("EditPlayersPage: tournament data is required");
+    }
+    if (!stateTmntFullData.squads) {
+      throw new Error("EditPlayersPage: squads data is required");
+    }
+    if (!stateTmntFullData.squads[0]) {
+      throw new Error("EditPlayersPage: tournament must contain at least one squad");
+    }
+    if (!stateTmntFullData.squads[0].id) {
+      throw new Error("EditPlayersPage: first squad must contain an id");
+    }
+
+    const firstSquadId = stateTmntFullData.squads[0]?.id;
+
+    if (!firstSquadId) {
+      setStage(SquadStage.ERROR);
+      // setStageError("Tournament has no squad");
+      setGotStage(true);
+      return;
+    }
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const s = await getSquadStage(firstSquadId);
+
+        if (!cancelled) {
+          setStage(s);
+          // setStageError(null);
+          setGotStage(true);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setStage(SquadStage.ERROR);
+          // setStageError(
+          //   err instanceof Error ? err.message : "Failed to load squad stage",
+          // );
+          setGotStage(true);
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tmntLoadStatus, stateTmntFullData]);
+
   // when grid data is changed
   useEffect(() => {
     if (Object.keys(entriesCount).length === 0) return;
@@ -227,7 +289,18 @@ export default function EditPlayersPage() {
     return false;
   }, [rows]);  
 
-  usePreventUnload(dataWasChanged);
+  useUnsavedChangesGuard(dataWasChanged);
+
+  // const isLoading = (tmntLoadStatus === "loading" || !gotStage);
+  const isLoading =
+    tmntLoadStatus === "loading" ||
+    (tmntLoadStatus === "succeeded" && !gotStage);  
+
+  // const enableEditing = (stage === SquadStage.DEFINE || stage === SquadStage.ENTRIES);
+  const enableEditing =
+    isNavigatingAfterSave ||
+    stage === SquadStage.DEFINE ||
+    stage === SquadStage.ENTRIES;  
 
   const DivCounts: React.FC = ({}) => {
     return (
@@ -497,32 +570,6 @@ export default function EditPlayersPage() {
     );
   };
 
-  /**
-   * find and return any count errors for divisions, pots, brackets, and eliminations.
-   * must have at last 1 in each division, pot, and elimination.
-   * must have (defaultBrktPlayers - 1) players in each bracket.
-   *
-   * @returns {errInfoType} - returns an object with id and msg properties.
-   */
-  const findCountError = (): errInfoType => {
-    const errInfo: errInfoType = {
-      id: "",
-      msg: "",
-    };
-
-    const counts = getDivsPotsBrktsElimsCounts(entriesCount, allBrktsList);
-    const errMsg = getDivsPotsBrktsElimsCountErrMsg(
-      counts,
-      tmntFormData?.tmntFullData
-    );
-    if (errMsg) {
-      errInfo.id = "counts";
-      errInfo.msg = errMsg;
-    }
-
-    return errInfo;
-  };
-
   const handleTabSelect = (key: string | null) => {
     if (key) {
       setTabKey(key);
@@ -532,31 +579,29 @@ export default function EditPlayersPage() {
   return (
     <>
       <div>
-        {tmntLoadStatus === "loading" && (
-          <>
-            <WaitModal
-              show={tmntLoadStatus === "loading"}
-              message="Loading Tournament configuration..."
-            />
-          </>
-        )}
+
+        <WaitModal
+          show={isLoading}
+          message="Loading Tournament configuration..."
+        />
 
         {tmntLoadStatus !== "loading" &&
           tmntLoadStatus !== "succeeded" &&
           tmntError && (
-            <>
-              <div>Tmnt Error: {tmntError}</div>
-            </>
-          )}
+            <div>Tmnt Error: {tmntError}</div>
+        )}
 
-        {tmntLoadStatus === "succeeded" && (
+        {tmntLoadStatus === "succeeded" && gotStage && (
           <>
             <h2>Bowlers</h2>
-            <PlayersEntryForm              
+
+            <PlayersEntryForm
               rows={rows}
               setRows={setRows}
-              findCountError={findCountError}
+              enableEditing={enableEditing}
+              onNavigateAfterSave={() => setIsNavigatingAfterSave(true)}
             />
+
             <Tabs
               defaultActiveKey={defaultTabKey}
               id="entries-tabs"
@@ -567,12 +612,15 @@ export default function EditPlayersPage() {
               <Tab key="divs" eventKey="divs" title="Divisions">
                 <DivCounts />
               </Tab>
+
               <Tab key="pots" eventKey="pots" title="Pots">
                 <PotCounts />
               </Tab>
+
               <Tab key="brkts" eventKey="brkts" title="Brackets">
                 <BrktCounts />
               </Tab>
+
               <Tab key="elims" eventKey="elims" title="Elims">
                 <ElimCounts />
               </Tab>

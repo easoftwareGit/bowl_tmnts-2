@@ -7,7 +7,6 @@ import { maxMoney, minFee } from "@/lib/validation/constants";
 const baseMockPot: potType = {
   ...mockTmntFullData.pots[0],  // assumes you have at least 1 mock pot
 };
-const div1Name = mockTmntFullData.divs[0].div_name;
 
 // helper like your other files
 const makePot = (overrides: Partial<potType> = {}): potType => ({

@@ -7,19 +7,23 @@ import { pairsOfLanes } from "@/components/tmnts/lanesList";
 
 const mockSetSquads = jest.fn();
 const mockSetLanes = jest.fn();
+const mockMarkPendingChanges = jest.fn();
 
 const mockOneToNLanesProps = {
   lanes: mockLanes,
   setLanes: mockSetLanes,
-  squads: mockSquads,
-  setSquads: mockSetSquads,
+  squads: mockSquads,  
   isDisabled: false,
+  markPendingChanges: mockMarkPendingChanges
 };
 
 const oneSquad = mockSquads.filter(squad => squad.id === 'sqd_e214ede16c5c46a4950e9a48bfeef61a');
 const lanesOneSquad = mockLanes.filter(lane => lane.squad_id === 'sqd_e214ede16c5c46a4950e9a48bfeef61a');
 
 describe("OneToNLanes - Component", () => { 
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });  
 
   describe('Render the component - 1 Squad', () => { 
     const justOneSquadProps = {      
@@ -28,6 +32,7 @@ describe("OneToNLanes - Component", () => {
       squads: oneSquad,
       setSquads: mockSetSquads,
       isDisabled: false,
+      markPendingChanges: mockMarkPendingChanges,
     }
     it('should render the component', () => { 
       render(<OneToNLanes {...justOneSquadProps} />)
@@ -160,6 +165,7 @@ describe("OneToNLanes - Component", () => {
           setLanes={mockSetLanes}
           squads={[]} // triggers squads.length === 0 branch
           isDisabled={false}
+          markPendingChanges={mockMarkPendingChanges}
         />
       );
 
@@ -200,6 +206,7 @@ describe("OneToNLanes - Component", () => {
       squads: oneSquad,
       setSquads: mockSetSquads,
       isDisabled: true,
+      markPendingChanges: mockMarkPendingChanges
     }
     it('should render checkboxes in the "In Use" column with correct values', () => {
       render(<OneToNLanes {...justOneSquadProps} />)
@@ -220,6 +227,7 @@ describe("OneToNLanes - Component", () => {
         squads: oneSquad,
         setSquads: mockSetSquads,
         isDisabled: true,
+        markPendingChanges: mockMarkPendingChanges
       };
 
       render(<OneToNLanes {...justOneSquadProps} />);
@@ -243,6 +251,7 @@ describe("OneToNLanes - Component", () => {
       squads: oneSquad,
       setSquads: mockSetSquads,
       isDisabled: false,
+      markPendingChanges: mockMarkPendingChanges
     }
 
     it('check the "In Use" checkboxes', async () => {
@@ -269,6 +278,7 @@ describe("OneToNLanes - Component", () => {
       squads: oneSquad,
       setSquads: mockSetSquads,
       isDisabled: false,
+      markPendingChanges: mockMarkPendingChanges
     };
 
     beforeEach(() => {
@@ -347,6 +357,52 @@ describe("OneToNLanes - Component", () => {
       expect(pairsAfterRecheck.some(p => p.left_lane === 21)).toBe(false);
       expect(pairsAfterRecheck.some(p => p.left_lane === 22)).toBe(false);
     });
+  });
+
+  describe("optional markPendingChanges prop", () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('toggles an "In Use" checkbox without crashing when markPendingChanges is omitted', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <OneToNLanes
+          lanes={lanesOneSquad}
+          setLanes={mockSetLanes}
+          squads={oneSquad}
+          isDisabled={false}
+        />
+      );
+
+      const checkboxes = screen.getAllByRole("checkbox");
+
+      expect(checkboxes[0]).toBeChecked();
+
+      await user.click(checkboxes[0]);
+
+      expect(mockSetLanes).toHaveBeenCalled();
+
+      const updatedLanes =
+        mockSetLanes.mock.calls[mockSetLanes.mock.calls.length - 1][0];
+
+      expect(updatedLanes).toBeDefined();
+    });
+
+    it("renders without crashing when markPendingChanges is omitted", () => {
+      render(
+        <OneToNLanes
+          lanes={mockLanes}
+          setLanes={mockSetLanes}
+          squads={mockSquads}
+          isDisabled={false}
+        />
+      );
+
+      expect(screen.getAllByRole("table")).toHaveLength(2);
+    });
+    
   });
 
 })

@@ -14,6 +14,7 @@ import { mockBowl, mockTmntFullData } from "../../../mocks/tmnts/tmntFullData/mo
 import { ioStatusType } from "@/redux/statusTypes"; 
   
 const mockPush = jest.fn();
+const mockMarkPendingChanges = jest.fn();
 
 // Mock useRouter: 
 jest.mock("next/navigation", () => ({ 
@@ -37,11 +38,6 @@ jest.mock("@/app/dataEntry/tmntForm/oneToNDivs", () => ({
   validateDivs: jest.fn().mockReturnValue(true), 
 })); 
 let lastSquadsProp: squadType[] = [];
-// jest.mock("@/app/dataEntry/tmntForm/oneToNSquads", () => ({ 
-//   __esModule: true, 
-//   default: () => <div>MockSquads</div>, 
-//   validateSquads: jest.fn().mockReturnValue(true), 
-// })); 
 jest.mock("@/app/dataEntry/tmntForm/oneToNSquads", () => ({
   __esModule: true,
   // Capture the squads passed from TmntDataForm
@@ -216,6 +212,20 @@ jest.mock("react-bootstrap", () => {
   };
 });
 
+let lastEventsMarkPendingChanges:
+  | ((pending: boolean) => void)
+  | undefined;
+
+jest.mock("@/app/dataEntry/tmntForm/oneToNEvents", () => ({
+  __esModule: true,
+  default: (props: {
+    markPendingChanges?: (pending: boolean) => void;
+  }) => {
+    lastEventsMarkPendingChanges = props.markPendingChanges;
+    return <div>MockEvents</div>;
+  },
+  validateEvents: jest.fn().mockReturnValue(true),
+}));
 
 const tmntProps: tmntFormDataType = { 
   tmntFullData: mockTmntFullData, 
@@ -225,50 +235,64 @@ const tmntProps: tmntFormDataType = {
 
 describe('tmntDataForm - interactions', () => { 
   
-  describe('handleInputChange', () => {
-    beforeEach(() => {
-      jest.restoreAllMocks();
-      jest.clearAllMocks();
-      lastSquadsProp = [];
-    });
+  beforeEach(() => {
+    jest.restoreAllMocks();
+    jest.clearAllMocks();
+    mockMarkPendingChanges.mockClear();
+    lastEventsMarkPendingChanges = undefined;
+    lastSquadsProp = [];
+  });
 
+  describe('handleInputChange', () => {
     it('should update the tmnt_name when input changes', () => {
       const store = makeStore([mockBowl]); 
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={tmntProps} />
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={mockMarkPendingChanges}
+          />
         </Provider>
       )
 
       const nameInput = screen.getByLabelText(/Tournament Name/i) as HTMLInputElement;
       fireEvent.change(nameInput, { target: { name: 'tmnt_name', value: 'New Value' } });
 
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
       expect(nameInput.value).toBe('New Value');
     });
     it('should update start_date and adjust squads within range', () => {
       const store = makeStore([mockBowl]); 
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={tmntProps} />
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={mockMarkPendingChanges}
+          />
         </Provider>
       )
 
       const startDateInput = screen.getByTestId("inputStartDate") as HTMLInputElement;
       fireEvent.change(startDateInput, { target: { name: "start_date", value: "2025-01-02" } });
 
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
       expect(startDateInput.value).toBe("2025-01-02");
     });
     it('should update end_date and adjust squads within range', () => {
       const store = makeStore([mockBowl]); 
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={tmntProps} />
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={mockMarkPendingChanges}
+          />
         </Provider>
       )
 
       const endDateInput = screen.getByTestId("inputEndDate") as HTMLInputElement;
       fireEvent.change(endDateInput, { target: { name: "end_date", value: "2025-01-02" } });
 
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
       expect(endDateInput.value).toBe("2025-01-02");
     });
     it("clamps squad_date_str to the new start date when squad date is outside the range", () => {
@@ -297,7 +321,10 @@ describe('tmntDataForm - interactions', () => {
 
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={props} />
+          <TmntDataForm
+            tmntProps={props}
+            markPendingChanges={mockMarkPendingChanges}
+          />
         </Provider>
       );
 
@@ -316,38 +343,57 @@ describe('tmntDataForm - interactions', () => {
       // 3) After handleInputChange runs, squads are re-mapped and passed to OneToNSquads again
       //    Any squad whose date is outside the [startDate, endDate] range should be set to start date
       expect(lastSquadsProp[0].squad_date_str).toBe(newStart);
+    }); 
+    
+    it("does not throw when markPendingChanges is not provided", () => {
+      const store = makeStore([mockBowl]);
+
+      render(
+        <Provider store={store}>
+          <TmntDataForm tmntProps={tmntProps} />
+        </Provider>,
+      );
+
+      const nameInput = screen.getByLabelText(
+        /Tournament Name/i,
+      ) as HTMLInputElement;
+
+      expect(() => {
+        fireEvent.change(nameInput, {
+          target: {
+            name: "tmnt_name",
+            value: "New Value",
+          },
+        });
+      }).not.toThrow();
+
+      expect(nameInput.value).toBe("New Value");
     });    
   })
 
   describe('handleSelectChange', () => {
-    beforeEach(() => {
-      jest.restoreAllMocks();
-      jest.clearAllMocks();        
-    });
-
     it('should update the bowl_id when select changes', async () => {
       const store = makeStore([mockBowl]); 
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={tmntProps} />
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={mockMarkPendingChanges}
+          />
         </Provider>
       )
 
       const bowlSelect = screen.getByTestId('inputBowlName') as HTMLInputElement;
       await userEvent.selectOptions(bowlSelect, mockBowl.id);
-
-      const selectedOption = screen.getByRole('option', { name: `${mockBowl.bowl_name} - ${mockBowl.city}, ${mockBowl.state}` }) as HTMLOptionElement;
+      
+      const selectedOption = screen.getByRole('option', { name: `${mockBowl.bowl_name} - ${mockBowl.city}, ${mockBowl.state}` }) as HTMLOptionElement;      
       expect(selectedOption.selected).toBe(true);
       expect(bowlSelect.value).toBe(mockBowl.id);
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
     });
   });
 
   describe('error clearing on change', () => {
-    beforeEach(() => {
-      jest.restoreAllMocks();
-      jest.clearAllMocks();        
-    });
-    
     it('clears tmnt_name_err when user types a valid tournament name after required error', async () => {
       const user = userEvent.setup();
 
@@ -364,7 +410,10 @@ describe('tmntDataForm - interactions', () => {
 
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={props} />
+          <TmntDataForm
+            tmntProps={props}
+            markPendingChanges={mockMarkPendingChanges}
+          />
         </Provider>
       );
 
@@ -403,10 +452,12 @@ describe('tmntDataForm - interactions', () => {
 
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={props} />
+          <TmntDataForm
+            tmntProps={props}
+            markPendingChanges={mockMarkPendingChanges}
+          />
         </Provider>
       );
-
       // Save -> missing bowl produces required error
       const saveBtn = screen.getByRole("button", { name: /save tournament/i });
       saveBtn.focus();
@@ -427,11 +478,6 @@ describe('tmntDataForm - interactions', () => {
   });
 
   describe('getLanesTabTitle', () => {
-    beforeEach(() => {
-      jest.restoreAllMocks();
-      jest.clearAllMocks();        
-    });
-
     it('renders "Lanes -" with a single lane_count', () => {
       const tmntPropsOne: tmntFormDataType = {
         tmntFullData: {
@@ -445,7 +491,10 @@ describe('tmntDataForm - interactions', () => {
 
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={tmntPropsOne} />
+          <TmntDataForm
+            tmntProps={tmntPropsOne}
+            markPendingChanges={mockMarkPendingChanges}
+          />
         </Provider>
       );
 
@@ -469,7 +518,10 @@ describe('tmntDataForm - interactions', () => {
 
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={tmntPropsMulti} />
+          <TmntDataForm
+            tmntProps={tmntPropsMulti}
+            markPendingChanges={mockMarkPendingChanges}
+          />
         </Provider>
       );
 
@@ -489,7 +541,10 @@ describe('tmntDataForm - interactions', () => {
 
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={tmntPropsEmpty} />
+          <TmntDataForm
+            tmntProps={tmntPropsEmpty}
+            markPendingChanges={mockMarkPendingChanges}
+          />
         </Provider>
       );
 
@@ -498,10 +553,6 @@ describe('tmntDataForm - interactions', () => {
   });
 
   describe("TmntDataForm - cancel behavior", () => {
-    beforeEach(() => {
-      jest.clearAllMocks();
-    });
-
     it('when stage is not DEFINE, clicking Cancel navigates directly back to "/user/tmnts" and does not show confirm modal', () => {
       const disableProps: tmntFormDataType = {
         ...tmntProps,
@@ -512,7 +563,10 @@ describe('tmntDataForm - interactions', () => {
 
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={disableProps} />
+          <TmntDataForm
+            tmntProps={disableProps}
+            markPendingChanges={mockMarkPendingChanges}
+          />
         </Provider>
       );
 
@@ -537,7 +591,10 @@ describe('tmntDataForm - interactions', () => {
 
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={tmntProps} />
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={mockMarkPendingChanges}
+          />
         </Provider>
       );
 
@@ -563,10 +620,6 @@ describe('tmntDataForm - interactions', () => {
   });
 
   describe("Save button interactions / active element guard", () => {
-    beforeEach(() => {
-      jest.clearAllMocks();
-    });
-
     it('does NOT attempt save when Save button is not the active element (activeElement guard)', () => {
       // We intentionally make a tournament that is valid (so validation won't block save)
       const props: tmntFormDataType = {
@@ -582,7 +635,10 @@ describe('tmntDataForm - interactions', () => {
 
       render(
         <Provider store={store}>
-          <TmntDataForm tmntProps={props} />
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={mockMarkPendingChanges}
+          />
         </Provider>
       );
 
@@ -607,5 +663,37 @@ describe('tmntDataForm - interactions', () => {
     });
 
   })  
+
+  describe('pass markPendingChanges to grandChild components', () => { 
+    it("passes markPendingChanges to OneToNEvents", () => {
+      const store = makeStore([mockBowl]);
+
+      render(
+        <Provider store={store}>
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={mockMarkPendingChanges}
+          />
+        </Provider>,
+      );
+
+      expect(lastEventsMarkPendingChanges).toBe(mockMarkPendingChanges);
+    });    
+
+    it("passes markPendingChanges to OneToNEvents", () => {
+      const store = makeStore([mockBowl]);
+
+      render(
+        <Provider store={store}>
+          <TmntDataForm
+            tmntProps={tmntProps}
+            markPendingChanges={mockMarkPendingChanges}
+          />
+        </Provider>,
+      );
+
+      expect(lastEventsMarkPendingChanges).toBe(mockMarkPendingChanges);
+    });    
+  })
 
 })

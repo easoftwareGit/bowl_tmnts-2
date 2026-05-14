@@ -10,6 +10,7 @@ import { maxHdcpFrom, minHdcpFrom } from "@/lib/validation/constants";
 
 const mockSetDivs = jest.fn();
 const mockSetAcdnErr = jest.fn();
+const mockMarkPendingChanges = jest.fn();
 
 const mockOneToNDivsProps = {
   divs: mockDivs,
@@ -19,6 +20,7 @@ const mockOneToNDivsProps = {
   elims: mockElims,
   setAcdnErr: mockSetAcdnErr,
   isDisabled: false,
+  markPendingChanges: mockMarkPendingChanges,
 }
 
 describe("OneToNDivs - interactions", () => { 
@@ -27,6 +29,7 @@ describe("OneToNDivs - interactions", () => {
     beforeEach(() => {
       mockSetDivs.mockClear();
       mockSetAcdnErr.mockClear();
+      mockMarkPendingChanges.mockClear();
     });
 
     it("adds a new division and passes updated array with correct defaults to setDivs", async () => {
@@ -115,6 +118,7 @@ describe("OneToNDivs - interactions", () => {
 
       // ACT – add a new division
       await user.click(addBtn);
+      expect(mockMarkPendingChanges).toHaveBeenCalledWith(true);
 
       // After state update, there should now be 3 tabs
       tabs = screen.getAllByRole("tab");
@@ -130,7 +134,12 @@ describe("OneToNDivs - interactions", () => {
   }); 
 
   describe("delete division", () => { 
-
+    let localMarkPendingChanges: jest.Mock;
+    
+    beforeEach(() => {
+      localMarkPendingChanges = jest.fn();
+    });
+    
     it("delete division", async () => {
       const user = userEvent.setup();
       
@@ -146,11 +155,12 @@ describe("OneToNDivs - interactions", () => {
         tmnt_id: localDivs[0].tmnt_id,
       });
 
-      const localSetDivs = jest.fn();
+      const localSetDivs = jest.fn();      
       const props = {
         ...mockOneToNDivsProps,
         divs: localDivs,
         setDivs: localSetDivs,
+        markPendingChanges: localMarkPendingChanges,
       };
 
       render(<OneToNDivs {...props} />);
@@ -173,7 +183,8 @@ describe("OneToNDivs - interactions", () => {
       // Inside the dialog, click the [yes] button      
       const yesBtn = within(dialog).getByRole("button", { name: /yes/i });
       await user.click(yesBtn);
-
+      expect(localMarkPendingChanges).toHaveBeenCalledWith(true);
+      
       // Now the component should have called setDivs with the filtered array
       expect(localSetDivs).toHaveBeenCalledTimes(1);
       const [updatedDivs] = localSetDivs.mock.calls[0] as [typeof localDivs];
@@ -209,6 +220,7 @@ describe("OneToNDivs - interactions", () => {
         elims: [], // no elims
         setDivs: localSetDivs,
         setAcdnErr: localSetAcdnErr,
+        markPendingChanges: localMarkPendingChanges,
       };
 
       render(<OneToNDivs {...props} />);
@@ -233,7 +245,8 @@ describe("OneToNDivs - interactions", () => {
       ).toBeInTheDocument();
 
       // No delete actually performed
-      expect(localSetDivs).not.toHaveBeenCalled();
+      expect(localSetDivs).not.toHaveBeenCalled();      
+      expect(localMarkPendingChanges).not.toHaveBeenCalled();
 
       // Optional: close the error modal by clicking the close button
       const closeBtn = within(dialog).getByRole("button", { name: /close/i });
@@ -264,6 +277,7 @@ describe("OneToNDivs - interactions", () => {
         elims: [],
         setDivs: localSetDivs,
         setAcdnErr: localSetAcdnErr,
+        markPendingChanges: localMarkPendingChanges,
       };
 
       render(<OneToNDivs {...props} />);
@@ -282,8 +296,10 @@ describe("OneToNDivs - interactions", () => {
           `Cannot delete Division: ${targetDiv.div_name}. It has a Bracket.`
         )
       ).toBeInTheDocument();
-
+      
+      // No delete actually performed
       expect(localSetDivs).not.toHaveBeenCalled();
+      expect(localMarkPendingChanges).not.toHaveBeenCalled();
 
       const closeBtn = within(dialog).getByRole("button", { name: /close/i });
       await user.click(closeBtn);
@@ -313,6 +329,7 @@ describe("OneToNDivs - interactions", () => {
         elims: localElims,
         setDivs: localSetDivs,
         setAcdnErr: localSetAcdnErr,
+        markPendingChanges: localMarkPendingChanges,
       };
 
       render(<OneToNDivs {...props} />);
@@ -332,7 +349,9 @@ describe("OneToNDivs - interactions", () => {
         )
       ).toBeInTheDocument();
 
+      // No delete actually performed
       expect(localSetDivs).not.toHaveBeenCalled();
+      expect(localMarkPendingChanges).not.toHaveBeenCalled();
 
       const closeBtn = within(dialog).getByRole("button", { name: /close/i });
       await user.click(closeBtn);
@@ -364,6 +383,7 @@ describe("OneToNDivs - interactions", () => {
         elims: [],
         setDivs: localSetDivs,
         setAcdnErr: localSetAcdnErr,
+        markPendingChanges: localMarkPendingChanges,
       };
 
       render(<OneToNDivs {...props} />);
@@ -384,6 +404,7 @@ describe("OneToNDivs - interactions", () => {
 
       // No delete should have happened
       expect(localSetDivs).not.toHaveBeenCalled();
+      expect(localMarkPendingChanges).not.toHaveBeenCalled();
 
       // Confirm modal should be gone
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -391,6 +412,12 @@ describe("OneToNDivs - interactions", () => {
   })
 
   describe("editing fields", () => {
+    let localMarkPendingChanges: jest.Mock;
+    
+    beforeEach(() => {
+      localMarkPendingChanges = jest.fn();
+    });
+
     it("updates div_name and tab title and clears field & accordion errors when user enters a valid name", async () => {
       const user = userEvent.setup();
 
@@ -417,6 +444,7 @@ describe("OneToNDivs - interactions", () => {
         divs: localDivs,
         setDivs: localSetDivs,
         setAcdnErr: localSetAcdnErr,
+        markPendingChanges: localMarkPendingChanges,
       };
 
       render(<OneToNDivs {...props} />);
@@ -432,6 +460,7 @@ describe("OneToNDivs - interactions", () => {
       fireEvent.change(input, { target: { value: "New Division Name" } });
 
       expect(localSetDivs).toHaveBeenCalled();
+      expect(localMarkPendingChanges).toHaveBeenCalledWith(true);
 
       const lastCall = localSetDivs.mock.calls[localSetDivs.mock.calls.length - 1] as any;
       const [updatedDivs] = lastCall;
@@ -440,6 +469,7 @@ describe("OneToNDivs - interactions", () => {
       // Name + tab title updated
       expect(updated.div_name).toBe("New Division Name");
       expect(updated.tab_title).toBe("New Division Name");
+      expect(localMarkPendingChanges).toHaveBeenCalledWith(true);
 
       // Field errors cleared
       expect(updated.div_name_err).toBe("");
@@ -479,6 +509,7 @@ describe("OneToNDivs - interactions", () => {
         divs: localDivs,
         setDivs: localSetDivs,
         setAcdnErr: localSetAcdnErr,
+        markPendingChanges: localMarkPendingChanges,
       };
 
       render(<OneToNDivs {...props} />);
@@ -498,6 +529,7 @@ describe("OneToNDivs - interactions", () => {
       fireEvent.change(hdcpFromInput, { target: { value: validValue } });
 
       expect(localSetDivs).toHaveBeenCalled();
+      expect(localMarkPendingChanges).toHaveBeenCalledWith(true);
 
       const lastCall = localSetDivs.mock.calls[localSetDivs.mock.calls.length - 1] as any;
       const [updatedDivs] = lastCall;
@@ -539,6 +571,7 @@ describe("OneToNDivs - interactions", () => {
         divs: localDivs,
         setDivs: localSetDivs,
         setAcdnErr: localSetAcdnErr,
+        markPendingChanges: localMarkPendingChanges,
       };
 
       render(<OneToNDivs {...props} />);
@@ -556,6 +589,7 @@ describe("OneToNDivs - interactions", () => {
       fireEvent.change(hdcpInput, { target: { value: '10' } });
 
       expect(localSetDivs).toHaveBeenCalled();
+      expect(localMarkPendingChanges).toHaveBeenCalledWith(true);
 
       const lastCall = localSetDivs.mock.calls[localSetDivs.mock.calls.length - 1] as any;
       const [updatedDivs] = lastCall;
@@ -602,6 +636,7 @@ describe("OneToNDivs - interactions", () => {
         divs: localDivs,
         setDivs: localSetDivs,
         setAcdnErr: localSetAcdnErr,
+        markPendingChanges: localMarkPendingChanges,
       };
 
       render(<OneToNDivs {...props} />);
@@ -618,6 +653,7 @@ describe("OneToNDivs - interactions", () => {
       fireEvent.change(hdcpInput, { target: { value: '0' } });
 
       expect(localSetDivs).toHaveBeenCalled();
+      expect(localMarkPendingChanges).toHaveBeenCalledWith(true);
 
       const lastCall = localSetDivs.mock.calls[localSetDivs.mock.calls.length - 1] as any;
       const [updatedDivs] = lastCall;
@@ -639,6 +675,12 @@ describe("OneToNDivs - interactions", () => {
   });
 
   describe("handleBlur defaults behavior", () => {
+    let localMarkPendingChanges: jest.Mock;
+    
+    beforeEach(() => {
+      localMarkPendingChanges = jest.fn();
+    });
+
     it("when div_name is blurred empty, it resets to 'Division <sort_order>' and updates tab_title", () => {
       const localDivs = cloneDeep(mockDivs).map((d) => ({
         ...d,
@@ -659,6 +701,7 @@ describe("OneToNDivs - interactions", () => {
         divs: localDivs,
         setDivs: localSetDivs,
         setAcdnErr: localSetAcdnErr,
+        markPendingChanges: localMarkPendingChanges,
       };
 
       render(<OneToNDivs {...props} />);
@@ -677,6 +720,7 @@ describe("OneToNDivs - interactions", () => {
       });
 
       expect(localSetDivs).toHaveBeenCalled();
+      expect(localMarkPendingChanges).toHaveBeenCalledWith(true);
 
       const lastCall = localSetDivs.mock.calls[localSetDivs.mock.calls.length - 1] as any;
       const [updatedDivs] = lastCall;
@@ -717,6 +761,7 @@ describe("OneToNDivs - interactions", () => {
         divs: localDivs,
         setDivs: localSetDivs,
         setAcdnErr: localSetAcdnErr,
+        markPendingChanges: localMarkPendingChanges,
       };
 
       render(<OneToNDivs {...props} />);
@@ -735,6 +780,7 @@ describe("OneToNDivs - interactions", () => {
       });
 
       expect(localSetDivs).toHaveBeenCalled();
+      expect(localMarkPendingChanges).toHaveBeenCalledWith(true);
 
       const lastCall = localSetDivs.mock.calls[localSetDivs.mock.calls.length - 1] as any;
       const [updatedDivs] = lastCall;
@@ -770,6 +816,7 @@ describe("OneToNDivs - interactions", () => {
         divs: localDivs,
         setDivs: localSetDivs,
         setAcdnErr: localSetAcdnErr,
+        markPendingChanges: localMarkPendingChanges,
       };
 
       render(<OneToNDivs {...props} />);
@@ -788,6 +835,7 @@ describe("OneToNDivs - interactions", () => {
       });
 
       expect(localSetDivs).toHaveBeenCalled();
+      expect(localMarkPendingChanges).toHaveBeenCalledWith(true);
 
       const lastCall = localSetDivs.mock.calls[localSetDivs.mock.calls.length - 1] as any;
       const [updatedDivs] = lastCall;
@@ -800,6 +848,12 @@ describe("OneToNDivs - interactions", () => {
   });
 
   describe("isDisabled = true - no side effects", () => {
+    let localMarkPendingChanges: jest.Mock;
+    
+    beforeEach(() => {
+      localMarkPendingChanges = jest.fn();
+    });
+
     it("clicking Add does not call setDivs or setAcdnErr", async () => {
       const user = userEvent.setup();
 
@@ -813,6 +867,7 @@ describe("OneToNDivs - interactions", () => {
         setDivs: localSetDivs,
         setAcdnErr: localSetAcdnErr,
         isDisabled: true,
+        markPendingChanges: localMarkPendingChanges,
       };
 
       render(<OneToNDivs {...props} />);
@@ -824,6 +879,7 @@ describe("OneToNDivs - interactions", () => {
 
       expect(localSetDivs).not.toHaveBeenCalled();
       expect(localSetAcdnErr).not.toHaveBeenCalled();
+      expect(localMarkPendingChanges).not.toHaveBeenCalled();
     });
 
     it("clicking Delete does not call setDivs or open a confirm modal", async () => {
@@ -850,6 +906,7 @@ describe("OneToNDivs - interactions", () => {
         setDivs: localSetDivs,
         setAcdnErr: localSetAcdnErr,
         isDisabled: true,
+        markPendingChanges: localMarkPendingChanges,
       };
 
       render(<OneToNDivs {...props} />);
@@ -867,6 +924,7 @@ describe("OneToNDivs - interactions", () => {
       // No side effects
       expect(localSetDivs).not.toHaveBeenCalled();
       expect(localSetAcdnErr).not.toHaveBeenCalled();
+      expect(localMarkPendingChanges).not.toHaveBeenCalled();
       expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     });
 
@@ -883,6 +941,7 @@ describe("OneToNDivs - interactions", () => {
         setDivs: localSetDivs,
         setAcdnErr: localSetAcdnErr,
         isDisabled: true,
+        markPendingChanges: localMarkPendingChanges,
       };
 
       render(<OneToNDivs {...props} />);
@@ -899,6 +958,7 @@ describe("OneToNDivs - interactions", () => {
 
       expect(localSetDivs).not.toHaveBeenCalled();
       expect(localSetAcdnErr).not.toHaveBeenCalled();
+      expect(localMarkPendingChanges).not.toHaveBeenCalled();
     });
 
     it("changing Hdcp % via user input does not call setDivs or setAcdnErr when disabled", async () => {
@@ -914,6 +974,7 @@ describe("OneToNDivs - interactions", () => {
         setDivs: localSetDivs,
         setAcdnErr: localSetAcdnErr,
         isDisabled: true,
+        markPendingChanges: localMarkPendingChanges,
       };
 
       render(<OneToNDivs {...props} />);
@@ -929,6 +990,7 @@ describe("OneToNDivs - interactions", () => {
 
       expect(localSetDivs).not.toHaveBeenCalled();
       expect(localSetAcdnErr).not.toHaveBeenCalled();
+      expect(localMarkPendingChanges).not.toHaveBeenCalled();
     });
 
     it("changing Hdcp From via user input does not call setDivs or setAcdnErr when disabled", async () => {
@@ -944,6 +1006,7 @@ describe("OneToNDivs - interactions", () => {
         setDivs: localSetDivs,
         setAcdnErr: localSetAcdnErr,
         isDisabled: true,
+        markPendingChanges: localMarkPendingChanges,
       };
 
       render(<OneToNDivs {...props} />);
@@ -959,8 +1022,62 @@ describe("OneToNDivs - interactions", () => {
 
       expect(localSetDivs).not.toHaveBeenCalled();
       expect(localSetAcdnErr).not.toHaveBeenCalled();
+      expect(localMarkPendingChanges).not.toHaveBeenCalled();
     });
 
   });
 
+  describe("optional markPendingChanges prop", () => {
+
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it("adds a division without crashing when markPendingChanges is omitted", async () => {
+      const user = userEvent.setup();
+
+      const localSetDivs = jest.fn();
+
+      const props = {
+        ...mockOneToNDivsProps,
+        setDivs: localSetDivs,
+      };
+
+      // omit markPendingChanges
+      delete (props as Partial<typeof props>).markPendingChanges;
+
+      render(<OneToNDivs {...props} />);
+
+      const addBtn = screen.getByRole("button", { name: /add/i });
+
+      await user.click(addBtn);
+
+      expect(localSetDivs).toHaveBeenCalled();
+    });
+
+    it("updates div_name without crashing when markPendingChanges is omitted", () => {
+      const localSetDivs = jest.fn();
+
+      const props = {
+        ...mockOneToNDivsProps,
+        setDivs: localSetDivs,
+      };
+
+      // omit markPendingChanges
+      delete (props as Partial<typeof props>).markPendingChanges;
+
+      render(<OneToNDivs {...props} />);
+
+      const nameInputs = screen.getAllByRole("textbox", {
+        name: /div name/i,
+      }) as HTMLInputElement[];
+
+      fireEvent.change(nameInputs[0], {
+        target: { value: "Updated Div" },
+      });
+
+      expect(localSetDivs).toHaveBeenCalled();
+    });
+
+  });  
 })

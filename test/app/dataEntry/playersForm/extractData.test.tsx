@@ -1,4 +1,7 @@
-import { extractDataFromRows, extractFullBrktsData } from "@/app/dataEntry/playersForm/extractData";
+import {
+  extractDataFromRows,
+  extractFullBrktsData
+} from "@/app/dataEntry/playersForm/extractData";
 import type { gridTmntEntryDataType } from "@/lib/types/types";
 import {
   brkt1FeeColName,
@@ -28,8 +31,7 @@ import {
   squadId1,
 } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { Bracket } from "@/components/brackets/bracketClass";
-import { clone, cloneDeep } from "lodash";
-import { mock } from "node:test";
+import { cloneDeep } from "lodash";
 
 describe("extractData", () => {
 

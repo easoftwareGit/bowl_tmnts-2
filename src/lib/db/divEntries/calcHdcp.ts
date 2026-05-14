@@ -31,12 +31,6 @@ export const calcHandicap = (
   ) return 0;
   let hdcp = 0;
   if (hdcpPer > 0 && average < hdcpFrom) {
-    // calc hdcp and round to 1 decimal
-    // if (intHdcp) {
-    //   hdcp = Math.floor(((hdcpFrom - average) * hdcpPer));
-    // } else {
-      // hdcp = Math.round(((hdcpFrom - average) * hdcpPer) * 10) / 10;
-    // }   
     hdcp = (hdcpFrom - average) * hdcpPer
     if (hdcpFor.toLocaleLowerCase() === "series" && games > 1) {
       hdcp = hdcp * games;
@@ -67,15 +61,5 @@ export const divEntriesWithHdcp = (
       divEntry.div.hdcp_per,
       divEntry.div.int_hdcp,
     ),
-    // hdcp:
-    //   divEntry.player.average < divEntry.div.hdcp_from
-    //     ? divEntry.div.int_hdcp
-    //       ? Math.floor(
-    //           (divEntry.div.hdcp_from - divEntry.player.average) *
-    //             divEntry.div.hdcp_per
-    //         )
-    //       : (divEntry.div.hdcp_from - divEntry.player.average) *
-    //         divEntry.div.hdcp_per
-    //     : 0,
   }));
 };

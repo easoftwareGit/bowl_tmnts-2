@@ -2,7 +2,7 @@ import { Bracket } from "./bracketClass";
 import {
   entryNumBrktsColName,
   timeStampColName,
-} from "@/app/dataEntry/playersForm/createColumns";
+} from "@/app/dataEntry/playersForm/sfCreateColumns";
 import { isOdd } from "@/lib/validation/validation";
 import { maxBrackets } from "@/lib/validation/constants";
 import {

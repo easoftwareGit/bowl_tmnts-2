@@ -1,535 +1,961 @@
 "use client";
-import React, { useState, useMemo } from "react";
+
+import "@/lib/syncfusion-license";
+
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "@/redux/store";
-import type { tmntFullType } from "@/lib/types/types";
+import type { AppDispatch, RootState } from "@/redux/store";
+import type { syncfusionStackedColDef, tmntFullType } from "@/lib/types/types";
 import {
-  DataGrid,
-  GridAlignment,
-  GridColumnGroupingModel,  
-  GridRowModel,
-  GridRowModesModel,
-  GridRowSelectionModel,
-  GridRowsProp,
-} from "@mui/x-data-grid";
-import {  
-  createDivEntryColumns,
+  Aggregate,
+  AggregateColumnDirective,
+  AggregateColumnsDirective,
+  AggregateDirective,
+  AggregatesDirective,
+  ColumnDirective,
+  ColumnsDirective,
+  Edit,
+  GridComponent,
+  Inject,
+  Resize,
+  Sort,
+  Toolbar,
+  type ActionEventArgs,
+  type EditEventArgs,
+  type EditSettingsModel,
+  type RecordClickEventArgs,
+  type RecordDoubleClickEventArgs,  
+} from "@syncfusion/ej2-react-grids";
+import type { ClickEventArgs, ItemModel } from "@syncfusion/ej2-navigations";
+import {
+  createStackedColumns,
   entryFeeColName,
-  divEntryHdcpColName,
-  createPotEntryColumns,
-  createBrktEntryColumns,
   entryNumBrktsColName,
-  createElimEntryColumns,
-  feeTotalColumn,
-  createPlayerEntryColumns,
-  isBrktsColumnName,
+  divEntryHdcpColName,
+  timeStampColName,
   getBrktIdFromColName,
-} from "./createColumns";
-import { currencyFormatter } from "@/lib/currency/formatValue";
+  isBrktsColumnName,  
+} from "./sfCreateColumns";
+import { createAggregates } from "./sfAggregates";
+import type { playerEntryRow } from "./populateRows";
 import { btDbUuid } from "@/lib/uuid";
-import ModalConfirm, {
-  delConfTitle,
-  cancelConfTitle,
-} from "@/components/modal/confirmModal";
-import ModalErrorMsg from "@/components/modal/errorModal";
-import { initModalObj } from "@/components/modal/modalObjType";
-import {
-  CheckType,
-  errInfoType,
-  findNextError,
-  getRowPlayerName,
-} from "./rowInfo";
 import { useRouter } from "next/navigation";
 import {
   getTmntDataSaveStatus,
   saveTmntEntriesData,
 } from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import WaitModal from "@/components/modal/waitModal";
-import { useIsTouchDevice } from "@/hooks/useIsTouchDevice";
-import { OverlayTrigger, Tooltip } from "react-bootstrap";
-import { ButtonWithTooltip } from "@/components/mobile/mobileToolTipButton";
 import { BracketList } from "@/components/brackets/bracketListClass";
-import { defaultBrktGames, defaultPlayersPerMatch } from "@/lib/db/initVals";
 import { extractDataFromRows, extractFullBrktsData } from "./extractData";
 import { SquadStage } from "@prisma/client";
-import type { playerEntryRow } from "./populateRows";
-import { createByePlayer } from "@/components/brackets/byePlayer";
-import { cloneDeep } from "lodash";
-import styles from "./grid.module.css";
+import { sanitizeName } from "@/lib/validation/sanitize";
+import {  
+  maxBrackets,
+  maxFirstNameLength,
+  maxLastNameLength,
+} from "@/lib/validation/constants";
+import { calcHandicap } from "@/lib/db/divEntries/calcHdcp";
+import { validAverage } from "@/lib/validation/players/validate";
+import ModalConfirm, {
+  delConfTitle,
+  cancelConfTitle
+} from "@/components/modal/confirmModal";
+import ModalErrorMsg from "@/components/modal/errorModal";
+import { type modalObjectType, initModalObj } from "@/components/modal/modalObjType";
+import "./playersForm.css";
+import { validateFinalizeRows } from "./finalizeValidation";
+import { randomizeAllBrkts } from "./buildBrktList";
 
-// full tmnt
-// http://localhost:3000/dataEntry/runTmnt/tmt_d237a388a8fc4641a2e37233f1d6bebd
-// http://localhost:3000/dataEntry/editPlayers/tmt_d237a388a8fc4641a2e37233f1d6bebd
-// squadId: "sqd_8e4266e1174642c7a1bcec47a50f275f"
-//
-// new years eve
-// http://localhost:3000/dataEntry/runTmnt/tmt_fe8ac53dad0f400abe6354210a8f4cd1
-// http://localhost:3000/dataEntry/editPlayers/tmt_fe8ac53dad0f400abe6354210a8f4cd1
-// eventId: "evt_9a58f0a486cb4e6c92ca3348702b1a62"
-// squadId: "sqd_3397da1adc014cf58c44e07c19914f71"
-
-type PlayerEntryRow = {
+export type errInfoType = {
   id: string;
-  player_id: string;
-  first_name: string;
-  last_name: string;
-  average?: number;
-  lane?: number;
-  position?: string;
-  lanePos?: string;
-  feeTotal: number;
-  // plus dynamic fee columns:
-  [key: string]: any;
+  column: string;
+  msg: string;
 };
 
-type Row = PlayerEntryRow;
-
-declare module "@mui/x-data-grid" {
-  interface ToolbarPropsOverrides {
-    setRows: (newRows: (oldRows: GridRowsProp) => GridRowsProp) => void;
-    setRowModesModel: (
-      newModel: (oldModel: GridRowModesModel) => GridRowModesModel
-    ) => void;
-  }
-}
-
-interface ChildProps {  
+interface ChildProps {
   rows: playerEntryRow[];
-  setRows: React.Dispatch<React.SetStateAction<playerEntryRow[]>>;  
-  findCountError: () => errInfoType;
+  setRows: React.Dispatch<React.SetStateAction<playerEntryRow[]>>;    
+  enableEditing?: boolean;
+  onNavigateAfterSave?: () => void;
 }
 
-const PlayersEntryForm: React.FC<ChildProps> = ({  
+const PlayersEntryForm: React.FC<ChildProps> = ({
   rows,
   setRows,
-  findCountError,
+  enableEditing = true,
+  onNavigateAfterSave,
 }) => {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
 
-  const tmntData = useSelector((state: RootState) => state.tmntFullData.tmntFullData);
+  const tmntData = useSelector(
+    (state: RootState) => state.tmntFullData.tmntFullData,
+  );
+  const entriesSaveStatus = useSelector(getTmntDataSaveStatus);  
 
-  const entriesSaveStatus = useSelector(getTmntDataSaveStatus);
-  const [gridEditMode, setGridEditMode] = useState<"cell" | "row">("cell");
-  const [selectedRowId, setSelectedRowId] = useState<string>("");
-
-  const [confModalObj, setConfModalObj] = useState(initModalObj);
-  const [errModalObj, setErrModalObj] = useState(initModalObj);
+  const gridRef = useRef<GridComponent | null>(null);
+  const hasPendingChangesRef = useRef(false);
+  const pendingSaveAllRef = useRef(false);
+  const editFocusFieldRef = useRef<string | null>(null);  
+  const navigatingAfterSaveRef = useRef(false);
 
   const lanes = tmntData?.lanes ?? [];
   const squadMinLane = lanes[0]?.lane_number ?? 1;
-  const squadMaxLane =
-    lanes.length ? lanes[lanes.length - 1].lane_number : squadMinLane + 1;
+  const squadMaxLane = lanes.length
+    ? lanes[lanes.length - 1].lane_number
+    : squadMinLane + 1;
   
-  const isTouchDevice = useIsTouchDevice();
+  const [confModalObj, setConfModalObj] = useState<modalObjectType>(initModalObj);
+  const [errModalObj, setErrModalObj] = useState<modalObjectType>(initModalObj);
+  const [saving, setSaving] = useState<boolean>(false);
+   
+  const validateTitle = 'Validate Bowlers';
 
-  const noErrorsTitle = "No Errors Found";
+  /*******************
+   * modal functions *
+   *******************/
 
-  // re-compute totals when tmntData changes
-  const baseTotals = useMemo(() => {
-    if (!tmntData) return {};
+  /**
+   * runs when the user clicks yes in the confirm modal
+   * does all the actions when the user clicks yes 
+   *  - delete
+   *  - cancel (Cancel All, not Cancel row edit)
+   *  - validate
+   *
+   * @return {Promise<void>}
+   */
+  const confirmYes = async (): Promise<void> => {
+    /**********
+     * delete *
+     **********/     
+    if (confModalObj.title === delConfTitle) {
+      const idToDelete = confModalObj.id;
 
-    let initTotals: { [key: string]: number } = { feeTotal: 0 };
-    tmntData.divs.forEach((div) => {
-      initTotals[entryFeeColName(div.id)] = 0;
-    });
-    tmntData.pots.forEach((pot) => {
-      initTotals[entryFeeColName(pot.id)] = 0;
-    });
-    tmntData.brkts.forEach((brkt) => {
-      initTotals[entryFeeColName(brkt.id)] = 0;
-    });
-    tmntData.elims.forEach((elim) => {
-      initTotals[entryFeeColName(elim.id)] = 0;
-    });
-    return initTotals;
-  }, [tmntData]);
+      // delete the row
+      const updatedRows = rows.filter((row) => row.id !== idToDelete);
+      const normalizedRows = updatedRows.map((row) =>
+        normalizeEditedRow({ ...row })
+      );
+      
+      setRows(normalizedRows);
 
-  // re-compute totals when ever rows OR baseTotals change
-  const entriesTotals = useMemo(() => {
-    if (!rows || Object.keys(baseTotals).length === 0) return baseTotals;
+      // defer aggregate refresh until the grid reflects the deleted row
+      setTimeout(() => {
+        refreshGridAndAggregates(normalizedRows);
+      }, 0);
 
-    const updatedTotals = { ...baseTotals };
-    let overallTotal = 0;
-
-    Object.keys(baseTotals).forEach((key) => {
-      if (key !== "feeTotal") {
-        const colTotal = rows.reduce(
-          (total, row) => total + (isNaN(row[key]) ? 0 : Number(row[key])),
-          0
-        );
-        overallTotal += colTotal;
-        updatedTotals[key] = colTotal;
-      }
-    });
-
-    updatedTotals.feeTotal = overallTotal;
-    return updatedTotals;
-  }, [rows, baseTotals]);
-
-  // create columns for the grid when get tmntData
-  const columns = useMemo(() => {
-    const playersColumns = createPlayerEntryColumns(tmntData?.divs, squadMaxLane, squadMinLane);
-    const divsEntryCols = createDivEntryColumns(tmntData?.divs);
-    const potsEntryCols = createPotEntryColumns(tmntData?.pots, tmntData?.divs);
-    const brktEntryCols = createBrktEntryColumns(tmntData?.brkts, tmntData?.divs);
-    const elimEntryCols = createElimEntryColumns(tmntData?.elims, tmntData?.divs);
-    const feeTotalCol = feeTotalColumn();
-    return playersColumns.concat(divsEntryCols, potsEntryCols, brktEntryCols, elimEntryCols, feeTotalCol);
-  }, [tmntData, squadMaxLane, squadMinLane]);
-
-  // create column groupings for the grid when get tmntData
-  const columnGroupings = useMemo<GridColumnGroupingModel>(() => {
-    const playersColGroup: GridColumnGroupingModel = [
-      {
-        groupId: "players",
-        headerName: "Players",
-        headerAlign: "center",
-        headerClassName: styles.playersHeader,
-        children: [
-          {
-            groupId: "totals",
-            headerName: "Column Totals->",
-            headerAlign: "right",
-            headerClassName: styles.playersHeader,
-            children: [
-              { field: "first_name" },
-              { field: "last_name" },
-              { field: "average" },
-              { field: "lane" },
-              { field: "position" },
-              { field: "lanePos" },
-            ],
-          },
-        ],
-      },
-    ];
-
-    const createDivEntryGroup = (): GridColumnGroupingModel => {
-      // create divs group
-      const divsGroup: GridColumnGroupingModel = [
-        {
-          groupId: "divisions",
-          headerName: "Divsions",
-          headerAlign: "center",
-          headerClassName: styles.divsHeader,
-          children: [],
-        },
-      ];
-      // add the fee totals
-      tmntData?.divs.forEach((div) => {
-        const totalGroupName = div.id + "_total";
-        const divFeeName = entryFeeColName(div.id);
-        const divFeeTotalChild = {
-          groupId: totalGroupName,
-          headerName: currencyFormatter.format(entriesTotals[divFeeName]),
-          headerAlign: "right" as GridAlignment,
-          headerClassName: styles.divsHeader,
-          children: [{ field: divFeeName }],
-        };
-        divsGroup[0].children?.push(divFeeTotalChild);
-        const hdcpChild = {
-          groupId: divEntryHdcpColName(div.id),
-          headerName: " ",
-          headerClassName: styles.divsHeader,
-          children: [{ field: divEntryHdcpColName(div.id) }],
-        };
-        divsGroup[0].children?.push(hdcpChild);
-      });
-      return divsGroup;
-    };
-
-    const createPotsEntryGroup = (): GridColumnGroupingModel => {
-      // create pots group
-      const potsGroup: GridColumnGroupingModel = [
-        {
-          groupId: "pots",
-          headerName: "Pots",
-          headerAlign: "center",
-          headerClassName: styles.potsHeader,
-          children: [],
-        },
-      ];
-      // add the fee totals
-      tmntData?.pots.forEach((pot) => {
-        const totalGroupName = pot.id + "_total";
-        const potFeeName = entryFeeColName(pot.id);
-        const potFeeTotalChild = {
-          groupId: totalGroupName,
-          headerName: currencyFormatter.format(entriesTotals[potFeeName]),
-          headerAlign: "right" as GridAlignment,
-          headerClassName: styles.potsHeader,
-          children: [{ field: potFeeName }],
-        };
-        potsGroup[0].children?.push(potFeeTotalChild);
-      });
-      return potsGroup;
-    };
-
-    const createBrktsEntryGroup = (): GridColumnGroupingModel => {
-      // create brkts group
-      const brktsGroup: GridColumnGroupingModel = [
-        {
-          groupId: "brkts",
-          headerName: "Brackets",
-          headerAlign: "center",
-          headerClassName: styles.brktsHeader,
-          children: [],
-        },
-      ];
-      // add the fee totals
-      tmntData?.brkts.forEach((brkt) => {
-        const brktsColName = entryNumBrktsColName(brkt.id);
-        const nameChild = {
-          groupId: brktsColName,
-          headerName: " ",
-          headerClassName: styles.brktsHeader,
-          children: [{ field: brktsColName }],
-        };
-        brktsGroup[0].children?.push(nameChild);
-
-        const totalGroupName = brkt.id + "_total";
-        const brktFeeName = entryFeeColName(brkt.id);
-        const brktFeeTotalChild = {
-          groupId: totalGroupName,
-          headerName: currencyFormatter.format(entriesTotals[brktFeeName]),
-          headerAlign: "right" as GridAlignment,
-          headerClassName: styles.brktsHeader,
-          children: [{ field: brktFeeName }],
-        };
-        brktsGroup[0].children?.push(brktFeeTotalChild);
-      });
-      return brktsGroup;
-    };
-
-    const createElimsEntryGroup = (): GridColumnGroupingModel => {
-      // create elims group
-      const elimsGroup: GridColumnGroupingModel = [
-        {
-          groupId: "elims",
-          headerName: "Eliminators",
-          headerAlign: "center",
-          headerClassName: styles.elimsHeader,
-          children: [],
-        },
-      ];
-      // add the fee totals
-      tmntData?.elims.forEach((elim) => {
-        const totalGroupName = elim.id + "_total";
-        const elimFeeName = entryFeeColName(elim.id);
-        const elimFeeTotalChild = {
-          groupId: totalGroupName,
-          headerName: currencyFormatter.format(entriesTotals[elimFeeName]),
-          headerAlign: "right" as GridAlignment,
-          headerClassName: styles.elimsHeader,
-          children: [{ field: elimFeeName }],
-        };
-        elimsGroup[0].children?.push(elimFeeTotalChild);
-      });
-      return elimsGroup;
-    };
-
-    const createTotalEntryGroup = (): GridColumnGroupingModel => {
-      // create total group
-      const totalGroup: GridColumnGroupingModel = [
-        {
-          groupId: "total",
-          headerName: "Total",
-          headerAlign: "center",
-          headerClassName: styles.totalHeader,
-          children: [
-            {
-              groupId: "playerTotal",
-              headerName: currencyFormatter.format(entriesTotals.feeTotal),
-              headerAlign: "right" as GridAlignment,
-              headerClassName: styles.totalHeader,
-              children: [{ field: "feeTotal" }],
-            },
-          ],
-        },
-      ];
-      return totalGroup;
-    };
-
-    const divsColGroup = createDivEntryGroup();
-    const potsColGroup = createPotsEntryGroup();
-    const brktsColGroup = createBrktsEntryGroup();
-    const elimsColGroup = createElimsEntryGroup();
-    const totalColGroup = createTotalEntryGroup();
-
-    return playersColGroup.concat(
-      divsColGroup,
-      potsColGroup,
-      brktsColGroup,
-      elimsColGroup,
-      totalColGroup
-    );
-  }, [tmntData, entriesTotals]);
-
-  const handleRowSelectionModelChange = (
-    model: GridRowSelectionModel
-  ) => {
-    const idValue = model[0];
-    setSelectedRowId(typeof idValue === "string" ? idValue : "");
-  };
-
-  const processRowUpdate = (newRow: GridRowModel) => {
-    setGridEditMode("cell");
-
-    let total = 0;
-    for (const key of Object.keys(baseTotals)) { 
-      if (key === "feeTotal") continue;
-      const v = Number(newRow[key]);
-      total += Number.isFinite(v) ? v : 0;
+      setConfModalObj(initModalObj);
+      setCommitRowEnabled(false);
+      markPendingChanges(true);
+      return;
     }
 
-    // get the current row with the fee totals
-    // const updatedRow: Row = { ...newRow, feeTotal: total };
-    const updatedRow = { ...(newRow as Row), feeTotal: total };
-
-    setRows((prev) => prev.map((r) => (r.id === updatedRow.id ? updatedRow : r)));
-    return updatedRow;
-  };
-
-  const confirmYes = () => {
-    // if confirmed delete
-    if (confModalObj.title === delConfTitle) {
-      const idToDel = confModalObj.id;
-      setConfModalObj(initModalObj); // reset modal object (hides modal)
-
-      // filter out deleted row
-      setRows((prev) => prev.filter((row) => row.id !== idToDel));
-      // setRows(rows.filter((row) => row.id !== idToDel));
-      setSelectedRowId("");
-
-      // if confirmed cancel
-    } else if (confModalObj.title === cancelConfTitle) {
+    /**********
+     * cancel *
+     **********/     
+    if (confModalObj.title === cancelConfTitle) {
       setConfModalObj(initModalObj); // reset modal object (hides modal)
       // go back to run tournament page
       router.push(`/dataEntry/runTmnt/${tmntData.tmnt.id}`);
-    } else if (confModalObj.title === noErrorsTitle) {
-      // if confirmed finalize check
+      return;
+    }
+    
+    /************
+     * validate *
+     ************/
+    if (confModalObj.title === validateTitle) {
       setConfModalObj(initModalObj); // reset modal object (hides modal)
-      canFinalize(); // no need to used return value
+
+      const validateErr = validateFinalizeRows({
+        rows,
+        tmntData,
+      });
+
+      if (validateErr) {
+        setErrModalObj({
+          show: true,
+          title: "Validate Error",
+          message: validateErr.msg,
+          id: validateErr.id
+        });
+        focusGridCell(validateErr.id, validateErr.column);
+        return;
+      }
+
+      const ramdomizedBrkts = randomizeAllBrkts({ rows, tmntData });
+      if (!(ramdomizedBrkts instanceof Array)) {
+        const { id, column, msg } = ramdomizedBrkts;
+        setErrModalObj({ show: true, title: "Brackets Error", message: msg, id });
+        // do not focus grid cell. 
+        return;
+      }
+
+      // save and go back to run tournament page
+      await doSave(rows, ramdomizedBrkts);   
+      router.push(`/dataEntry/runTmnt/${tmntData.tmnt.id}`);
     }
   };
 
-  const confirmNo = () => {
+  const confirmNo = (): void => {
     setConfModalObj(initModalObj); // reset modal object (hides modal)
-  };
+  };  
 
   const canceledModalErr = () => {
     setErrModalObj(initModalObj); // reset modal object (hides modal)
   };
 
-  const handleCancel = () => {
-    if (rows.length === 0) {
-      router.push(`/dataEntry/runTmnt/${tmntData.tmnt.id}`);
-      return;
-    }
-    setConfModalObj({
-      show: true,
-      title: cancelConfTitle,
-      message: `Do you want to cancel editing bowlers for this tournament?`,
-      id: "0",
-    }); // cancel done in confirmYes
+  /******************************
+   * create the grid components *
+   ******************************/
+
+  /**
+   * create a mutable copy of the rows for the Syncfusion grid
+   * useMemo so this only reruns when rows change, not on every render
+   *
+   * @returns {void}
+   */
+  const gridData = useMemo<playerEntryRow[]>(() => {
+    return rows.map((row) => ({ ...row }));
+  }, [rows]);
+
+  const CANCEL_ALL_ID = "cancel_all";
+  const COMMIT_ROW_ID = "commit_row";
+  const VALIDATE_ID = "validate";
+  const SAVE_ID = "save";  
+
+  const cancelAlltext = enableEditing ? "Cancel All" : "Return to Run";
+  const cancelAllTooltip = enableEditing
+    ? "Cancel all changes and return to the Run Tournament page"
+    : "Return to the Run Tournament page";
+
+  const toolbarOptions: (string | ItemModel)[] = [
+    "Add",
+    "Edit",
+    "Delete",
+    "Cancel",
+    {
+      text: "Commit Row",
+      tooltipText: "Commit the current row edit",
+      id: COMMIT_ROW_ID,
+      prefixIcon: "e-icons e-check",
+    },
+    {
+      text: "Save",
+      tooltipText: "Save all rows (incomplete allowed)",
+      id: SAVE_ID,
+      prefixIcon: "e-icons e-update",
+    },
+    {
+      text: "Validate & Save",
+      tooltipText: "Validate all required fields, randomize brackets and save",
+      id: VALIDATE_ID,
+      prefixIcon: "e-icons e-lock",
+    },
+    {
+      text: cancelAlltext,
+      tooltipText: cancelAllTooltip,
+      id: CANCEL_ALL_ID,
+      prefixIcon: "e-icons e-back",
+    },    
+  ];
+
+  const editSettings: EditSettingsModel = {
+    allowEditing: enableEditing,
+    allowAdding: enableEditing,
+    allowDeleting: enableEditing,
+    mode: "Normal",
+    showDeleteConfirmDialog: false,
   };
 
-  const handleDelete = () => {
-    if (selectedRowId === "") {
-      setErrModalObj({
-        show: true,
-        title: "No row selected",
-        message: `Click on the row to delete before clicking the delete button.`,
-        id: "none",
-      });
-    } else {
-      if (!rows || rows.length === 0 || selectedRowId === "") return;
-      const rowToDel = rows.find((row) => row.id === selectedRowId);
-      if (!rowToDel) return;
+  /****************************
+   * helpers for calculations *
+   ****************************/
 
-      const toDelName: string = getRowPlayerName(rows, rowToDel);
-      setConfModalObj({
-        show: true,
-        title: delConfTitle,
-        message: `Do you want to delete: ${toDelName}?`,
-        id: selectedRowId,
-      }); // deletion done in confirmedDelete
-    }
-  };
+  /**
+   * normalize the edited row before saving
+   *
+   * @param {playerEntryRow} row - the edited row
+   * @return {playerEntryRow} - the normalized row
+   */
+  const normalizeEditedRow = (row: playerEntryRow): playerEntryRow => {
+    const updated = { ...row };
 
-  const handleAddClick = () => {
-    setGridEditMode("cell");
-    const id = btDbUuid("ply");
-    const newRow: playerEntryRow = {
-      id,
-      player_id: id,
-      first_name: "",
-      last_name: "",
-      feeTotal: 0,
-    };
-    setRows([...rows, newRow]);
-  };
+    // names
+    updated.first_name = sanitizeName(updated.first_name).slice(0, maxFirstNameLength,);    
+    updated.last_name = sanitizeName(updated.last_name).slice(0, maxLastNameLength,);
 
-  const canFinalize = (): boolean => {
-    const errInfo: errInfoType = findNextError(rows, tmntData, CheckType.FINAL);
-    if (errInfo.msg !== "") {
-      setErrModalObj({
-        show: true,
-        title: "Cannot Finalize",
-        message: errInfo.msg,
-        id: errInfo.id,
-      });
-      return false;
-    } else {
-      // now check if got divs, pots, brkts, elims
-      const countErrInfo = findCountError();
+    // average: blank if no valid value
+    const averageNum = Number(updated.average);
+    updated.average =
+      updated.average == null ||
+      updated.average === "" ||
+      !Number.isFinite(averageNum)
+        ? undefined
+        : Math.trunc(averageNum);
 
-      if (countErrInfo.msg !== "") {
-        setErrModalObj({
-          show: true,
-          title: "Cannot Finalize",
-          message: countErrInfo.msg,
-          id: countErrInfo.id,
-        });
-        return false;
+    // lane: blank if no valid value
+    const laneNum = Number(updated.lane);
+    updated.lane =
+      updated.lane == null || updated.lane === "" || !Number.isFinite(laneNum)
+        ? undefined
+        : Math.trunc(laneNum);
+
+    // position: blank or one valid character
+    updated.position =
+      updated.position == null
+        ? undefined
+        : String(updated.position)
+            .toUpperCase()
+            .replace(/[^A-Z1-9]/g, "")
+            .slice(0, 1);
+
+    // division fees and handicap
+    tmntData?.divs?.forEach((div) => {
+      const feeField = entryFeeColName(div.id);
+      const hdcpField = divEntryHdcpColName(div.id);
+
+      const rawFee = updated[feeField];
+      const divFeeNum = Number(rawFee);
+
+      const averageNum = Number(updated.average);
+      const validFee =
+        rawFee != null &&
+        rawFee !== "" &&
+        Number.isFinite(divFeeNum) &&
+        divFeeNum > 0;
+
+      const validAvg = validAverage(averageNum);
+
+      updated[feeField] = validFee ? divFeeNum : undefined;
+
+      updated[hdcpField] =
+        validFee && validAvg
+          ? calcHandicap(
+              averageNum,
+              div.hdcp_from,
+              div.hdcp_per,
+              div.int_hdcp,
+              div.hdcp_for,
+              tmntData?.events?.[0]?.games ?? 1,
+            )
+          : undefined;
+    });
+
+    // bracket counts, fees, timestamps
+    tmntData?.brkts?.forEach((brkt) => {
+      const countField = entryNumBrktsColName(brkt.id);
+      const feeField = entryFeeColName(brkt.id);
+      const timestampField = timeStampColName(brkt.id);
+
+      const rawCount = updated[countField];
+      const countNum = Number(rawCount);
+
+      const validCount =
+        rawCount != null &&
+        rawCount !== "" &&
+        Number.isFinite(countNum) &&
+        Number.isInteger(countNum) &&
+        countNum > 0 &&
+        countNum <= maxBrackets;
+
+      if (!validCount) {
+        updated[countField] = undefined;
+        updated[feeField] = undefined;
+        updated[timestampField] = 0;
+        return;
       }
-      return true;
-    }
-  };
 
-  const handleFindPrelimErrorClick = () => {
-    const errInfo: errInfoType = findNextError(
-      rows,
-      tmntData,
-      CheckType.PRELIM
+      const safeCount = Math.trunc(countNum);
+      const feePerBracket = Number(brkt.fee ?? 0);
+
+      updated[countField] = safeCount;
+      updated[feeField] = safeCount * feePerBracket;
+
+      const existingTimestamp = Number(updated[timestampField] ?? 0);
+      // only set timestamp when the player first enters this bracket
+      if (!existingTimestamp) {
+        updated[timestampField] = Date.now();
+      }
+    });
+
+    // pot fees
+    tmntData?.pots?.forEach((pot) => {
+      const field = entryFeeColName(pot.id);
+      const rawVal = updated[field];
+      const valNum = Number(rawVal);
+
+      updated[field] =
+        rawVal == null ||
+        rawVal === "" ||
+        !Number.isFinite(valNum) ||
+        valNum === 0
+          ? undefined
+          : valNum;
+    });
+
+    // elim fees
+    tmntData?.elims?.forEach((elim) => {
+      const field = entryFeeColName(elim.id);
+      const rawVal = updated[field];
+      const valNum = Number(rawVal);
+
+      updated[field] =
+        rawVal == null ||
+        rawVal === "" ||
+        !Number.isFinite(valNum) ||
+        valNum === 0
+          ? undefined
+          : valNum;
+    });
+
+    // total fee
+    updated.feeTotal = Object.entries(updated).reduce(
+      (total, [field, value]) => {
+        if (!field.endsWith("_fee")) return total;
+
+        const num = Number(value);
+        return Number.isFinite(num) ? total + num : total;
+      },
+      0,
     );
-    if (errInfo.msg !== "") {
-      setErrModalObj({
-        show: true,
-        title: "Error in Entries",
-        message: errInfo.msg,
-        id: errInfo.id,
-      });
-    } else {
-      setConfModalObj({
-        show: true,
-        title: "No Errors Found",
-        message: `No errors found in preliminary check. You can save the entries. Do you want to run the finalize check?`,
-        id: "prelimCheck",
-      }); // finalize check done in confirmYes
+
+    return updated;
+  };
+
+  /**
+   * updates the fee for a bracket
+   * 
+   * need to use useCallback because called from funcs that are useCallback(...)
+   *
+   * @param {string} brktCol - the name of the bracket column
+   * @returns {void}
+   */
+  const updateBrktFee = useCallback(
+    (brktCol: string): void => {
+      const grid = gridRef.current;
+      if (!grid) return;
+      if (!isBrktsColumnName(brktCol)) return;
+
+      const numBrkts = parseEditorNumber(brktCol);
+      const brktId = getBrktIdFromColName(brktCol);
+
+      const brkt = tmntData?.brkts?.find((b) => b.id === brktId);
+      const feePerBracket = Number(brkt?.fee ?? 0);
+
+      const brktFeeColName = entryFeeColName(brktId);
+      const brktTimeStampColName = timeStampColName(brktId);
+
+      const brktFeeInput = grid.element.querySelector(
+        `input[name = "${brktFeeColName}"]`,
+      ) as HTMLInputElement | null;
+
+      if (!brktFeeInput) return;
+      // get the selected row from the dataGrid
+      const selectedRow = grid.getSelectedRecords()[0] as
+        | playerEntryRow
+        | undefined;
+      if (
+        !brktId ||
+        numBrkts == null ||
+        numBrkts <= 0 ||
+        numBrkts > maxBrackets
+      ) {
+        brktFeeInput.value = "";
+
+        if (selectedRow) {
+          selectedRow[brktTimeStampColName] = 0;
+        }
+        return;
+      }
+
+      brktFeeInput.value = String(numBrkts * feePerBracket);
+      // update the timestamp field
+      if (selectedRow) {
+        const existingTimeStamp = Number(
+          selectedRow[brktTimeStampColName] ?? 0,
+        );
+        // only update timestamp if not already set
+        if (!existingTimeStamp) {
+          selectedRow[brktTimeStampColName] = Date.now();
+        }
+      }
+    },
+    [tmntData?.brkts],
+  );
+
+  /**
+   * updates all division handicap columns for the current edit row.
+   * If average is invalid or the matching division fee is empty/invalid,
+   * the handicap cell is cleared.
+   * 
+   * need to use useCallback because called from funcs that are useCallback(...)
+   * 
+   * @returns {void}
+   */
+  const updateDivHdcps = useCallback((): void => {
+    const grid = gridRef.current;
+    if (!grid) return;
+
+    const average = parseEditorNumber("average");
+    const games = tmntData?.events?.[0]?.games ?? 1;
+
+    tmntData?.divs?.forEach((div) => {
+      const feeField = entryFeeColName(div.id);
+      const hdcpField = divEntryHdcpColName(div.id);
+
+      const fee = parseEditorNumber(feeField);
+      const hdcpInput = grid.element.querySelector(
+        `input[name = "${hdcpField}"]`,
+      ) as HTMLInputElement | null;
+
+      if (!hdcpInput) return;
+
+      // use your existing validator
+      if (
+        !validAverage(average) ||
+        fee == null ||
+        !Number.isFinite(fee) ||
+        fee <= 0
+      ) {
+        hdcpInput.value = "";
+        return;
+      }
+
+      hdcpInput.value = String(
+        calcHandicap(
+          average ?? 0,
+          div.hdcp_from,
+          div.hdcp_per,
+          div.int_hdcp,
+          div.hdcp_for,
+          games,
+        ),
+      );
+    });
+  }, [tmntData?.divs, tmntData?.events]);
+
+  /**
+   * update the lanePos field.
+   * 
+   * need to use useCallback because called from funcs that are useCallback(...)
+   *
+   * @returns {void}
+   */
+  const updateLanePos = useCallback((): void => {
+    const grid = gridRef.current;
+    if (!grid) return;
+
+    const lane = parseEditorNumber("lane");
+    const position = parseEditorString("position");
+    const pos =
+      position == null ? "" : position.trim().toUpperCase().slice(0, 1);
+
+    const lanePosInput = grid.element.querySelector(
+      `input[name = "lanePos"]`,
+    ) as HTMLInputElement | null;
+    if (lanePosInput) {
+      if (!lane || !pos) {
+        lanePosInput.value = "";
+      } else {
+        lanePosInput.value = `${lane}-${pos}`;
+      }
+    }
+  }, [gridRef]); // gridRef is stable, but safe to include
+
+  /**
+   * Updates the total column
+   * 
+   * need to use useCallback because called from funcs that are useCallback(...)
+   *
+   * @return {void}
+   */
+  const updateFeeTotal = useCallback((): void => {
+    const grid = gridRef.current;
+    if (!grid) return;
+
+    let total = 0;
+    grid.getColumns().forEach((col) => {
+      if (!col.field.endsWith("_fee")) return;
+      const num = parseEditorNumber(col.field);
+
+      total += num ?? 0; // treats (num = null or num = undefined) as 0
+      // total += isNull(num) ? 0 : num;
+    });
+    const feeTotalInput = grid.element.querySelector(
+      `input[name = "feeTotal"]`,
+    ) as HTMLInputElement | null;
+
+    if (feeTotalInput) {
+      feeTotalInput.value = total == null ? "" : String(total);
+    }
+  }, [gridRef]);
+
+  /********************
+   * helper functions *
+   ********************/
+
+  /**
+   * Focuses the desired editor
+   *
+   * @param {EditEventArgs} args - The edit event arguments
+   * @return {void}
+   */
+  const focusDesiredEditor = (args: EditEventArgs): void => {
+    const grid = gridRef.current;
+    const fieldName = editFocusFieldRef.current;
+    if (!grid || !fieldName || !args.form) return;
+
+    const editor = args.form.querySelector(
+      `#${grid.element.id}${fieldName}`,
+    ) as HTMLElement | null;
+
+    editor?.focus();
+  };
+
+  /**
+   * Focuses the editor for the specified field
+   *
+   * @param {string} fieldName - The name of the field
+   * @return {void}
+   */
+  const focusEditorByField = (fieldName: string): void => {
+    const grid = gridRef.current;
+    if (!grid) return;
+
+    setTimeout(() => {
+      const input = grid.element.querySelector(
+        `input[name="${fieldName}"]`,
+      ) as HTMLInputElement | null;
+
+      input?.focus();
+    }, 0);
+  };
+
+  /**
+   * Focus a specific grid cell by row id and column field name.
+   *
+   * @param rowId - primary key value for the row
+   * @param fieldName - column field name
+   * @param beginEdit - if true, start editing the row
+   */
+  const focusGridCell = (
+    rowId: string,
+    fieldName: string,
+    beginEdit = false
+  ): void => {
+    const grid = gridRef.current;
+    if (!grid) return;
+
+    // current rows in grid
+    const rows = grid.getCurrentViewRecords() as playerEntryRow[];
+
+    // locate row index
+    const rowIndex = rows.findIndex((r) => r.id === rowId);
+    if (rowIndex < 0) return;
+
+    // locate column index
+    const columnIndex = grid
+      .getColumns()
+      .findIndex((col) => col.field === fieldName);
+
+    if (columnIndex < 0) return;
+
+    // select the row
+    grid.selectRow(rowIndex);
+
+    // focus the cell
+    grid.selectCell({ rowIndex, cellIndex: columnIndex });
+
+    // optionally begin editing
+    if (beginEdit) {
+      grid.startEdit();
+
+      // allow editor to render first
+      setTimeout(() => {
+        const input = grid.element.querySelector<HTMLElement>(
+          `[name="${fieldName}"]`
+        );
+
+        input?.focus();
+      }, 0);
     }
   };
 
-  const doSave = async (brktLists: BracketList[]) => { 
+  /**
+   * Returns the id of the toolbar item
+   *
+   * @param {string} suffix - The suffix of the toolbar item
+   * @return {string | null} - The id of the toolbar item or null
+   */
+  const getToolbarItemId = (suffix: string): string | null => {
+    const grid = gridRef.current;
+    if (!grid) return null;
+
+    const item = grid.element.querySelector(
+      `[id="${suffix}"], [id$="_${suffix}"]`,
+    ) as HTMLElement | null;
+
+    return item?.id ?? null;
+  };
+
+  /**
+   * Checks if a value has a name (called for firstName and lastName)
+   *
+   * @param {unknown} value - The value to check
+   * @return {boolean} - True if the value has a name, false otherwise
+   */
+  const hasNameValue = (value: unknown): boolean => {
+    return sanitizeName(value).trim().length > 0;
+  };
+
+  /**
+   * Marks the grid as having pending changes
+   *
+   * @param {boolean} pending - Whether the grid has pending changes
+   * @return {void}
+   */
+  const markPendingChanges = (pending: boolean): void => {
+    hasPendingChangesRef.current = pending;
+    syncSaveButtonsEnabled();
+  };
+
+  /**
+   * Returns the value of the number editor as a number
+   *
+   * @param {string} fieldName - The name of the field
+   * @return {number | null} - The value of the number editor as a number or null
+   */
+  const parseEditorNumber = (fieldName: string): number | null => {
+    const grid = gridRef.current;
+    if (!grid) return null;
+
+    // Syncfusion only has one row in edit state at a time
+    // gets the input element for field in the edit row
+    const input = grid.element.querySelector(
+      `input[name = "${fieldName}"]`,
+    ) as HTMLInputElement | null;
+    if (!input) return null;
+
+    const value = input.value.trim();
+    if (value === "") return null;
+
+    const num = Number(value);
+    return Number.isNaN(num) ? null : num;
+  };
+
+  /**
+   * Returns the value of the string editor as a string
+   *
+   * @param {string} fieldName - The name of the field
+   * @return {string | null} - The value of the string editor as a string or null    
+   */
+  const parseEditorString = (fieldName: string): string | null => {
+    const grid = gridRef.current;
+    if (!grid) return null;
+
+    const input = grid.element.querySelector(
+      `input[name = "${fieldName}"]`,
+    ) as HTMLInputElement | null;
+    if (!input) return null;
+
+    const value = input.value.trim();
+    return value === "" ? null : value;
+  };
+
+  /**
+   * Refreshes the grid and aggregates (grid totals)
+   * 
+   * @param {playerEntryRow[]} data - The data to refresh
+   * @return {void}
+   */
+  const refreshGridAndAggregates = (data: playerEntryRow[]): void => {
+    const grid = gridRef.current;
+    if (!grid) return;
+
+    // refresh the grid
+    grid.dataSource = data;
+    grid.refresh();
+
+    // refresh the aggregates
+    grid.aggregateModule?.refresh(data, grid.element);
+  };
+
+  /**
+   * Stores the field name of the last clicked/double-clicked cell
+   * used to restore focus to that column when edit mode starts
+   *
+   * @param {number} cellIndex - The index of the cell
+   * @return {void} 
+   */
+  const rememberClickedField = (cellIndex: number): void => {
+    const grid = gridRef.current;
+    if (!grid) return;
+
+    const column = grid.getColumnByIndex(cellIndex);
+    if (!column?.field) return;
+
+    editFocusFieldRef.current = column.field;
+  };
+
+  /**
+   * Enables or disables the commit row toolbar item
+   *
+   * @param {boolean} enabled - Whether the commit row toolbar item should be enabled
+   * @return {void}
+   */
+  const setCommitRowEnabled = (enabled: boolean): void => {
+    if (navigatingAfterSaveRef.current) return;
+    const grid = gridRef.current;
+    if (!grid) return;    
+
+    if (!enableEditing) { 
+
+      const commitRowToolbarItemId = getToolbarItemId(COMMIT_ROW_ID);
+      if (commitRowToolbarItemId) {
+        grid.enableToolbarItems([commitRowToolbarItemId], false);
+      }
+
+      const saveAllToolbarItemId = getToolbarItemId(SAVE_ID);
+      if (saveAllToolbarItemId) {
+        grid.enableToolbarItems([saveAllToolbarItemId], false);
+      }
+
+      const validateToolbarItemId = getToolbarItemId(VALIDATE_ID);
+      if (validateToolbarItemId) {
+        grid.enableToolbarItems([validateToolbarItemId], false);
+      }
+
+      const cancelAllToolbarItemId = getToolbarItemId(CANCEL_ALL_ID);
+      if (cancelAllToolbarItemId) {
+        grid.enableToolbarItems([cancelAllToolbarItemId], true);
+      }
+    } else {
+      const commitRowToolbarItemId = getToolbarItemId(COMMIT_ROW_ID);
+      if (commitRowToolbarItemId) {
+        grid.enableToolbarItems([commitRowToolbarItemId], enabled);
+      }
+
+      const saveAllToolbarItemId = getToolbarItemId(SAVE_ID);
+      if (saveAllToolbarItemId) {
+        grid.enableToolbarItems([saveAllToolbarItemId], !enabled);
+      }
+
+      const validateToolbarItemId = getToolbarItemId(VALIDATE_ID);
+      if (validateToolbarItemId) {
+        grid.enableToolbarItems([validateToolbarItemId], !enabled);
+      }
+    }
+  };
+
+  /**
+   * Enables or disables the toolbar items Save and Validate
+   *
+   * @param {boolean} enabled - Whether toolbar items Save and Validate should be enabled
+   * @return {void}
+   */
+  const setSaveButtonsEnabled = useCallback((enabled: boolean): void => {
+    if (navigatingAfterSaveRef.current) return;
+		const grid = gridRef.current;
+		if (!grid) return;
+
+		const saveId = getToolbarItemId(SAVE_ID);
+
+		if (saveId) {
+			grid.toolbarModule.enableItems([saveId], enabled);
+		}
+	}, []);
+
+  /**
+   * Synchronizes the rows in the grid with the parent component
+   *
+   * @return {playerEntryRow[]} - The rows in the grid
+   */
+  const syncRowsToParent = (): playerEntryRow[] => {
+    const grid = gridRef.current;
+    if (!grid) return rows;
+
+    // getCurrentViewRecords() is used instead of grid.dataSource because
+    // grid.dataSource can still contain stale row values after editing an
+    // existing row. getCurrentViewRecords() reflects the grid's committed
+    // current records after endEdit/save.
+    const currentRows = grid.getCurrentViewRecords() as playerEntryRow[];
+
+    const normalizedRows = currentRows.map((row) =>
+      normalizeEditedRow({ ...row })
+    );
+   
+    setRows(normalizedRows); // update parent's rows state
+    return normalizedRows;   // return normalized rows (setRows is not async)
+  };
+
+  /**
+   * Synchronizes the Save toolbar button with pending changes
+   *
+   * @return {void}
+   */
+  const syncSaveButtonsEnabled = (): void => {
+    if (navigatingAfterSaveRef.current) return;
+    setSaveButtonsEnabled(hasPendingChangesRef.current);
+  };
+
+  /**
+   * Updates a row in the grid's data source
+   *
+   * @param {playerEntryRow} updatedRow - The updated row
+   * @return {void} 
+   */
+  const updateGridDataSourceRow = (updatedRow: playerEntryRow): void => {
+    const grid = gridRef.current;
+    if (!grid) return;
+
+    // get the data source as a playerEntryRow[]
+    const dataSource = grid.dataSource as playerEntryRow[];
+
+    if (!Array.isArray(dataSource)) return;
+
+    // find the index of the updated row
+    const index = dataSource.findIndex((row) => row.id === updatedRow.id);
+    if (index < 0) return;
+
+    // replace the stale row with the normalized row before aggregate recalculation
+    dataSource[index] = updatedRow;
+  };  
+
+  /*************
+   * save data *
+   *************/
+
+  /**
+   * Does the save
+   *
+   * @param {playerEntryRow[]} rowsToSave - The rows to save
+   * @param {BracketList[]} brktLists - The bracket lists
+   * @return {void} 
+   */
+  const doSave = async (
+    rowsToSave: playerEntryRow[],
+    brktLists: BracketList[],
+  ): Promise<void> => {
+    if (!tmntData) return;
+    
     try {
-      // stage_set_at value set in replaceTmntEntriesData 
+      navigatingAfterSaveRef.current = true;
+      setSaving(true);
+      onNavigateAfterSave?.();
+
+      // update the stage 
       const updatedStage: SquadStage =
         brktLists.length === 0 ? SquadStage.ENTRIES : SquadStage.SCORES;
 
-      const entriesData = extractDataFromRows(rows, tmntData.squads[0].id, brktLists);      
+      // extract the data from the rows
+      const entriesData = extractDataFromRows(
+        rowsToSave,
+        tmntData.squads[0].id,
+        brktLists,
+      );
       const brktsData = extractFullBrktsData(brktLists);
 
+      // create the tmnt to save
       const tmntToSave: tmntFullType = {
         ...tmntData,
         players: [...entriesData.players],
@@ -541,347 +967,424 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
         potEntries: [...entriesData.potEntries],
         stage: {
           ...tmntData.stage,
-          stage: updatedStage
-        },  
-      }
-
-      // add one, and only one, bye player if needed
+          stage: updatedStage,
+        },
+      };
+      // add the bye player if needed
       for (const brktList of brktLists) {
         if (brktList.oneByeCount > 0) {
           const foundByePlayer = tmntToSave.players.find(
-            p => p.id === brktList.byePlayer.id
+            (p) => p.id === brktList.byePlayer.id,
           );
-
+          // if did not find the bye player, add it
           if (!foundByePlayer) {
             tmntToSave.players.push(brktList.byePlayer);
-            break; // EXIT LOOP immediately after adding bye player
+            break;
           }
         }
       }
 
+      // alert('dispatching saveTmntEntriesData...');
+      // return; // just for testing calculations, remove when ready to test save
+      
       await dispatch(saveTmntEntriesData(tmntToSave)).unwrap();
+      // router.push(`/dataEntry/runTmnt/${tmntData.tmnt.id}`);      
+    } catch (error) {
+      navigatingAfterSaveRef.current = false;
+      setSaving(false);
+    }
+  };
 
-      router.push(`/dataEntry/runTmnt/${tmntData.tmnt.id}`);
-    } catch (err: any) {
-      setErrModalObj({
-        show: true,
-        title: "Cannot Save",
-        message: err.message,
-        id: "saveError",
-      });
-    }    
-  }
+  /******************
+   * event handlers *
+   ******************/
 
-  const handleFinalizeClick = async () => {
+  const handleActionBegin = (args: ActionEventArgs): void => {
+    if (args.requestType === "add") {
+      const newId = btDbUuid("ply");
+      const newRow = args.data as playerEntryRow;
 
-    if (!tmntData || !tmntData.squads.length) return;
-    if (!canFinalize()) return;
-    const squadId = tmntData?.squads?.[0]?.id;  // only 1 squad per tmnt
-    if (!squadId) {
-      setErrModalObj({
-        show: true,
-        title: "Cannot Finalize",
-        message: "Squad data not loaded. Please try again.",
-        id: "squad",
-      });
+      newRow.id = newId;
+      newRow.player_id = newId;
+
+      editFocusFieldRef.current = "first_name";
       return;
-    }      
-
-    // get bracket id's and corresponding bracket names
-    const numBrktsCols = columns.filter((col) =>
-      isBrktsColumnName(col.field)
-    );
-    let gotBrktsErr = false;
-    const brktLists: BracketList[] = [];    
-    const byePlayer = createByePlayer(squadId); // create bye player for all bracket lists
-    if (numBrktsCols && numBrktsCols.length > 0) {
-      for (let b = 0; b < numBrktsCols.length; b++) {
-        const brktId = getBrktIdFromColName(numBrktsCols[b].field);
-        // right now only 2 players per match, 3 games in bracket
-        const brktList = new BracketList(
-          brktId,
-          defaultPlayersPerMatch,
-          defaultBrktGames,
-          byePlayer,
-        );
-        brktList.calcTotalBrkts(rows); // calc total brkts - simple math calc
-        if (brktList.canRandomize()) {
-          brktList.randomize([]);
-          if (brktList.errorCode !== BracketList.noError) {
-            // empty array of brackets
-            brktLists.length = 0;
-            // show error message why could not randomize
-            const brktName = numBrktsCols[b].headerName;
-            setErrModalObj({
-              show: true,
-              title: "Cannot Randomize Brackets",
-              message: "Error in " + brktName + ": " + brktList.errorMessage,
-              id: brktId,
-            });
-            gotBrktsErr = true;
-            return; // exit for loop
-          }
-        } else {
-          // empty array of brackets
-          brktLists.length = 0;
-          // show error message why can not randomize
-          const brktName = numBrktsCols[b].headerName;
-          setErrModalObj({
-            show: true,
-            title: "Cannot Randomize Brackets",
-            message: "Error in " + brktName + ": " + brktList.errorMessage,
-            id: brktId,
-          });
-          gotBrktsErr = true;
-          return; // exit for loop
-        }
-        brktLists.push(brktList);
-      }
-      if (gotBrktsErr) return;
     }
-    await doSave(brktLists);
-  };
 
-  const handleSaveClick = async () => {
-    const errInfo: errInfoType = findNextError(
-      rows,
-      tmntData,
-      CheckType.PRELIM
-    );
-    if (errInfo.msg !== "") {
-      setErrModalObj({
+    if (args.requestType === "delete") {
+      args.cancel = true; // cancel the delete
+
+      // get the row to delete
+      const deletedRows = Array.isArray(args.data)
+        ? (args.data as playerEntryRow[])
+        : [args.data as playerEntryRow];
+
+      const rowToDelete = deletedRows[0];
+      if (!rowToDelete) return;
+
+      const playerName = `${rowToDelete.first_name ?? ""} ${
+        rowToDelete.last_name ?? ""
+      }`.trim();
+
+      // show the confirm delete modal
+      setConfModalObj({
         show: true,
-        title: "Cannot Save",
-        message: errInfo.msg,
-        id: errInfo.id,
+        id: rowToDelete.id,        
+        title: delConfTitle,        
+        message: `Do you want to delete: ${playerName}?`,
       });
-    } else {
-      await doSave([]); // pass empry array because not calculating/randomizing brackets
+
+      return;
+    }
+
+    if (args.requestType === SAVE_ID) {
+      const row = args.data as playerEntryRow;
+
+      if (!hasNameValue(row.first_name)) {
+        args.cancel = true;
+        editFocusFieldRef.current = "first_name";
+        focusEditorByField("first_name");
+        return;
+      }
+
+      if (!hasNameValue(row.last_name)) {
+        args.cancel = true;
+        editFocusFieldRef.current = "last_name";
+        focusEditorByField("last_name");
+        return;
+      }
+
+      const normalized = normalizeEditedRow({ ...row });
+
+      Object.assign(row, normalized);
+
+      // update Syncfusion's backing data before it recalculates aggregates
+      updateGridDataSourceRow(normalized);
+    }    
+  };
+
+  const handleActionComplete = async (args: ActionEventArgs): Promise<void> => {
+    
+    if (args.requestType === "beginEdit" || args.requestType === "add") {
+      setCommitRowEnabled(true);
+
+      setTimeout(() => {
+        focusDesiredEditor(args as EditEventArgs);
+      }, 0);
+
+      return;
+    }
+
+    if (args.requestType === "delete") {
+      setCommitRowEnabled(false);
+
+      syncRowsToParent();
+
+      markPendingChanges(true);
+      return;
+    }
+
+    if (args.requestType === "cancel") {
+      setCommitRowEnabled(false);      
+      return;
+    }
+
+    if (args.requestType === SAVE_ID) {
+      setCommitRowEnabled(false);
+
+      const normalizedRows = syncRowsToParent();
+      
+      markPendingChanges(true);
+
+      if (pendingSaveAllRef.current) {
+        pendingSaveAllRef.current = false;
+
+        await doSave(normalizedRows, []);
+        markPendingChanges(false);
+        router.push(`/dataEntry/runTmnt/${tmntData.tmnt.id}`);
+      }
+
+      return;
     }
   };
 
-  const handleDebug1Click = () => {
-    const newId = btDbUuid("ply");
-    const newRow = cloneDeep(rows[0]);
-    const addedRow: playerEntryRow = {
-      ...newRow,
-      id: newId,
-      player_id: newId,
-      first_name: "Linda",
-      last_name: "Lindgren",
-      average: 201,
-      lane: 40,
-      position: "G",
-    };
-    setRows([...rows, addedRow]);
+  const handleAverageChange = useCallback((): void => {
+    updateDivHdcps();
+  }, [updateDivHdcps]);
+
+  const handleCreated = (): void => {
+    // wait for the grid to be created, toolbar rendered, buttons exits in DOM
+    setTimeout(() => {
+      setCommitRowEnabled(false);
+      markPendingChanges(false);
+    }, 0);
   };
 
-  const renderSaveToolTip = (props: any) => (
-    <Tooltip id="button-tooltip" {...props}>
-      Save bowlers and entry info. Must finalize BEFORE you can enter scores.
-    </Tooltip>
+  const handleDivPotElimFeeChange = useCallback((): void => {
+    updateDivHdcps();
+    updateFeeTotal();
+  }, [updateDivHdcps, updateFeeTotal]);
+
+  const handleLaneOrPosChange = useCallback((): void => {
+    updateLanePos();
+  }, [updateLanePos]);
+
+  const handleNumBrktChange = useCallback(
+    (brktCol: string): void => {
+      updateBrktFee(brktCol);
+      updateFeeTotal();
+    },
+    [updateBrktFee, updateFeeTotal],
   );
-  const renderFinalizeToolTip = (props: any) => (
-    <Tooltip id="button-tooltip" {...props}>
-      Save bowlers and entry info. Additional error checks. Randomizes brackets.
-      Must Finalize BEFORE you can enter scores.
-    </Tooltip>
+
+  const handleRecordClick = (args: RecordClickEventArgs): void => {
+    if (typeof args.cellIndex === "number") {
+      rememberClickedField(args.cellIndex);
+    }
+  };
+
+  const handleRecordDoubleClick = (args: RecordDoubleClickEventArgs): void => {
+    const cell = args.cell as HTMLTableCellElement | null;
+
+    if (cell && typeof cell.cellIndex === "number") {
+      rememberClickedField(cell.cellIndex);
+    }
+  };
+
+  const handleToolbarClick = async (args: ClickEventArgs): Promise<void> => {
+    const grid = gridRef.current;
+    if (!grid) return;
+
+    const clickedId = args.item.id ?? "";
+
+    const isEditing =
+      (grid as GridComponent & { isEdit?: boolean }).isEdit === true;
+
+    if (clickedId === COMMIT_ROW_ID || clickedId.endsWith("_" + COMMIT_ROW_ID)) {
+      if (isEditing) {
+        grid.endEdit();
+      }
+      return;
+    }
+
+    if (clickedId === SAVE_ID || clickedId.endsWith("_" + SAVE_ID)) {
+      if (isEditing) {
+        pendingSaveAllRef.current = true;
+        grid.endEdit();
+        return;
+      }
+
+      const normalizedRows = syncRowsToParent();
+
+      await doSave(normalizedRows, []);
+      markPendingChanges(false);
+      return;
+    }
+
+    if (clickedId === VALIDATE_ID || clickedId.endsWith("_" + VALIDATE_ID)) {
+      if (rows.length === 0) {
+        setErrModalObj({
+          show: true,
+          title: "No rows to validate",
+          message: `Enter player data before validating.`,
+          id: "none",
+        });
+        return;
+      }
+      setConfModalObj({
+        show: true,
+        title: validateTitle,
+        message: 'Do you want to validate all bowler entries for this tournament? This will also randomize brackets (if any).\n\n Note: you will not be able to edit bowlers after this.',
+        id: "0",
+      })
+    }
+
+    if (clickedId === CANCEL_ALL_ID || clickedId.endsWith("_" + CANCEL_ALL_ID)) {
+      // if no data in grid or not editing
+      if (rows.length === 0 || !enableEditing) {
+        router.push(`/dataEntry/runTmnt/${tmntData.tmnt.id}`);
+        return;
+      }
+      if (enableEditing) {
+        setConfModalObj({
+          show: true,
+          title: cancelConfTitle,
+          message: `Do you want to cancel editing bowlers for this tournament?`,
+          id: "0",
+        }); // cancel done in confirmYes
+        return;        
+      } 
+    }    
+  };
+
+  // create the stacked/grouped columns
+  // place the tmntData objects that are used to create the columns in the useMemo
+  // array as the 2nd parameter so this only reruns when those objects change
+  const stackedColumnGroups = useMemo(
+    () =>
+      createStackedColumns(
+        tmntData?.divs ?? [],
+        tmntData?.pots ?? [],
+        tmntData?.brkts ?? [],
+        tmntData?.elims ?? [],
+        squadMaxLane,
+        squadMinLane,
+        handleLaneOrPosChange,
+        handleDivPotElimFeeChange,
+        handleNumBrktChange,
+        handleAverageChange,
+      ),
+    [
+      tmntData?.divs,
+      tmntData?.pots,
+      tmntData?.brkts,
+      tmntData?.elims,
+      squadMaxLane,
+      squadMinLane,
+      handleLaneOrPosChange,
+      handleDivPotElimFeeChange,
+      handleNumBrktChange,
+      handleAverageChange,
+    ],
   );
-  const renderCancelToolTip = (props: any) => (
-    <Tooltip id="button-tooltip" {...props}>
-      Cancel edits. All changes will be lost.
-    </Tooltip>
+
+  /**
+   * create the column footer summaries
+   * place the tmntData objects that are used to create the columns in the useMemo
+   * array as the 2nd parameter so this only reruns when those objects change
+   *
+   * @returns {syncfusionStackedColDef[]} - array of column footer summaries
+   */
+  const gridAggregates = useMemo(
+    () =>
+      createAggregates(
+        tmntData?.divs ?? [],
+        tmntData?.pots ?? [],
+        tmntData?.brkts ?? [],
+        tmntData?.elims ?? [],
+      ),
+    [tmntData?.divs, tmntData?.pots, tmntData?.brkts, tmntData?.elims],
+  );
+
+  const enhanceStackedColumns = useCallback(
+    (groups: syncfusionStackedColDef[]): syncfusionStackedColDef[] => {
+      return groups.map((group) => ({
+        ...group,
+        columns: group.columns.map((col) => {
+          if (col.field === "lane" || col.field === "position") {
+            return {
+              ...col,
+              edit: {
+                ...(col.edit ?? {}),
+                params: {
+                  ...(col.edit?.params ?? {}),
+                  change: handleLaneOrPosChange,
+                },
+              },
+            };
+          }
+          if (col.field === "first_name") {
+            return {
+              ...col,
+              validationRules: {
+                ...(col.validationRules ?? {}),
+                required: [true, "First Name is required"],
+              },
+            };
+          }
+          if (col.field === "last_name") {
+            return {
+              ...col,
+              validationRules: {
+                ...(col.validationRules ?? {}),
+                required: [true, "Last Name is required"],
+              },
+            };
+          }          
+
+          return col;
+        }),
+      }));
+    },
+    [handleLaneOrPosChange], // <-- important
+  );
+
+  const enhancedGroups = useMemo(
+    () => enhanceStackedColumns(stackedColumnGroups),
+    [stackedColumnGroups, enhanceStackedColumns],
   );
 
   return (
     <>
+      <WaitModal show={entriesSaveStatus === "saving"} message="Saving..." />
+
+      <ModalConfirm
+        show={confModalObj.show}
+        title={confModalObj.title}
+        message={confModalObj.message}
+        onConfirm={confirmYes}
+        onCancel={confirmNo}
+      />      
+
+      <ModalErrorMsg
+        show={errModalObj.show}
+        title={errModalObj.title}
+        message={errModalObj.message}
+        onCancel={canceledModalErr}
+      />      
+      
       <div>
-        <ModalConfirm
-          show={confModalObj.show}
-          title={confModalObj.title}
-          message={confModalObj.message}
-          onConfirm={confirmYes}
-          onCancel={confirmNo}
-        />
-        <ModalErrorMsg
-          show={errModalObj.show}
-          title={errModalObj.title}
-          message={errModalObj.message}
-          onCancel={canceledModalErr}
-        />
-        <WaitModal
-          show={entriesSaveStatus === "saving" && !errModalObj.show}
-          message="Saving..."
-        />
-        <div>
-          <h5>Tournament: {tmntData?.tmnt.tmnt_name}</h5>
-          <h6>Entries: {rows.length}</h6>
-          <div className="d-flex gap-2 mb-2">
-            {/* add button */}
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={handleAddClick}
-              name="Add"
-            >
-              <svg
-                xmlns="/plus-circle.svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                className="bi bi-plus-circle"
-                viewBox="0 0 16 16"
-                style={{ transform: "translateY(-2px)" }}
-              >
-                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"></path>
-                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"></path>
-              </svg>
-              &ensp;Add
-            </button>
-            {/* delete button */}
-            <button
-              type="button"
-              className="btn btn-danger"
-              onClick={handleDelete}
-              name="Delete"
-            >
-              <svg
-                xmlns="/trash.svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                className="bi bi-trash"
-                viewBox="0 0 16 16"
-                style={{ transform: "translateY(-2px)" }}
-              >
-                <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z" />
-                <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z" />
-              </svg>
-              &ensp;Delete
-            </button>
-            {/* find next error button */}
-            <button
-              type="button"
-              className="btn btn-warning"
-              onClick={handleFindPrelimErrorClick}
-              name="Find"
-            >
-              <svg
-                xmlns="/exclamation-diamond.svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                className="bi bi-exclamation-diamond"
-                viewBox="0 0 16 16"
-                style={{ transform: "translateY(-2px)" }}
-              >
-                <path d="M6.95.435c.58-.58 1.52-.58 2.1 0l6.515 6.516c.58.58.58 1.519 0 2.098L9.05 15.565c-.58.58-1.519.58-2.098 0L.435 9.05a1.48 1.48 0 0 1 0-2.098zm1.4.7a.495.495 0 0 0-.7 0L1.134 7.65a.495.495 0 0 0 0 .7l6.516 6.516a.495.495 0 0 0 .7 0l6.516-6.516a.495.495 0 0 0 0-.7L8.35 1.134z" />
-                <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z" />
-              </svg>
-              &ensp;Find Error
-            </button>
-            {/* save button */}
-            <ButtonWithTooltip
-              onClick={handleSaveClick}
-              isTouchDevice={isTouchDevice}
-              renderTooltip={renderSaveToolTip}              
-              buttonText="Save"
-              buttonColor="success"
-              icon={
-                <svg
-                  xmlns="/save.svg"
-                  width="16"
-                  height="16"
-                  fill="currentColor"
-                  className="bi bi-save"
-                  viewBox="0 0 16 16"
-                >
-                  <path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H9.5a1 1 0 0 0-1 1v7.293l2.646-2.647a.5.5 0 0 1 .708.708l-3.5 3.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L7.5 9.293V2a2 2 0 0 1 2-2H14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h2.5a.5.5 0 0 1 0 1z" />
-                </svg>
-              }
-            />
-            {/* finalize button */}
-            <ButtonWithTooltip
-              onClick={handleFinalizeClick}
-              isTouchDevice={isTouchDevice}
-              renderTooltip={renderFinalizeToolTip}
-              buttonText="Finalize"
-              buttonColor="info"
-              icon={
-                <svg
-                  xmlns="/skip-end.svg"
-                  width="16"
-                  height="16"
-                  fill="currentColor"
-                  className="bi bi-skip-end"
-                  viewBox="0 0 16 16"
-                >
-                  <path d="M12.5 4a.5.5 0 0 0-1 0v3.248L5.233 3.612C4.713 3.31 4 3.655 4 4.308v7.384c0 .653.713.998 1.233.696L11.5 8.752V12a.5.5 0 0 0 1 0zM5 4.633 10.804 8 5 11.367z" />
-                </svg>
-              }
-            />
-            {/* cancel button */}
-            <OverlayTrigger
-              placement="right"
-              delay={{ show: 250, hide: 1000 }}
-              overlay={renderCancelToolTip}
-            >
-              <button
-                type="button"
-                className="btn btn-danger"
-                onClick={handleCancel}
-                name="Cancel"
-                // title="Cancel. All changes will be lost."
-              >
-                <svg
-                  xmlns="/x-circle.svg"
-                  width="16"
-                  height="16"
-                  fill="currentColor"
-                  className="bi bi-x-circle"
-                  viewBox="0 0 16 16"
-                >
-                  <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
-                  <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708" />
-                </svg>
-                &ensp;Cancel
-              </button>
-            </OverlayTrigger>
-            {/* debug button  */}
-            {/* <button
-              type="button"
-              className="btn btn-info"
-              onClick={handleDebug1Click}              
-              title="Debug"
-            >
-              Debug 1
-            </button> */}
+        <h5>Tournament: {tmntData?.tmnt.tmnt_name}</h5>
+        <h6>Entries: {rows.length}</h6>
+        {!enableEditing && !saving && (
+          <div className="alert alert-warning">
+            This tournament has been validated. Bowler editing is disabled.
           </div>
-        </div>
-        <div
-          id="playerEntryGrid"
-          style={{
-            height: 350,
-            width: "100%",
-            overflow: "auto",
-            marginBottom: 10,
-          }}
-          tabIndex={90}
-        >
-          <DataGrid
-            rows={rows}
-            columns={columns}
-            editMode={gridEditMode}
-            rowSelectionModel={selectedRowId ? [selectedRowId] : []}
-            onRowSelectionModelChange={handleRowSelectionModelChange}
-            processRowUpdate={processRowUpdate}
-            rowHeight={25}
-            columnHeaderHeight={25}
-            hideFooter
-            columnGroupingModel={columnGroupings}
-          />
-        </div>
+        )}
       </div>
+      <GridComponent
+        id="playersGrid"
+        ref={gridRef}
+        dataSource={gridData}
+        allowResizing={true}
+        allowSorting={true}
+        disabled={!enableEditing}
+        editSettings={editSettings}
+        gridLines="Both"
+        height="450"
+        readOnly={!enableEditing}
+        toolbar={toolbarOptions}
+        actionBegin={handleActionBegin}
+        actionComplete={handleActionComplete}
+        created={handleCreated}        
+        recordClick={handleRecordClick}
+        recordDoubleClick={handleRecordDoubleClick}
+        toolbarClick={handleToolbarClick}        
+      >
+        <ColumnsDirective>
+          {enhancedGroups.map((group) => (
+            <ColumnDirective
+              key={group.headerText}
+              headerText={group.headerText}
+              columns={group.columns}
+              customAttributes={group.customAttributes}
+              textAlign={group.textAlign}
+            />
+          ))}
+        </ColumnsDirective>
+
+        <AggregatesDirective>
+          <AggregateDirective>
+            <AggregateColumnsDirective>
+              {gridAggregates.map((col) => (
+                <AggregateColumnDirective key={col.field} {...col} />
+              ))}
+            </AggregateColumnsDirective>
+          </AggregateDirective>
+        </AggregatesDirective>
+
+        <Inject services={[Aggregate, Edit, Resize, Sort, Toolbar]} />
+      </GridComponent>
     </>
   );
 };

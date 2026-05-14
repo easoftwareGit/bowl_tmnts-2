@@ -13,6 +13,7 @@ import { cloneDeep } from "lodash";
 const mockSetPots = jest.fn();
 const mockSetAcdnErr = jest.fn();
 const mockSetShowingModal = jest.fn();
+const mockMarkPendingChanges = jest.fn();
 
 const mockZeroToNPotsProps = {
   pots: mockPots, 
@@ -21,10 +22,15 @@ const mockZeroToNPotsProps = {
   squads: mockSquads,
   setAcdnErr: mockSetAcdnErr,
   setShowingModal: mockSetShowingModal,
-  isDisabled: false
+  isDisabled: false,
+  markPendingChanges: mockMarkPendingChanges
 }
 
 describe("ZeroToNPots - render", () => { 
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
   describe("render the component", () => {
 
