@@ -10,7 +10,11 @@ import Link from "next/link";
 import WaitModal from "@/components/modal/waitModal";
 import ModalErrorMsg from "@/components/modal/errorModal";
 import { initModalObj } from "@/components/modal/modalObjType";
-import { fetchTmntFullData, getTmntFullDataError, getTmntFullDataLoadStatus } from "@/redux/features/tmntFullData/tmntFullDataSlice";
+import {
+  fetchTmntFullData,
+  getTmntFullDataError,
+  getTmntFullDataLoadStatus
+} from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import { getBlankTmntFullData, getSquadStage } from "../../tmntForm/tmntTools";
 import { SquadStage } from "@prisma/client";
 import ReportOptions from "@/components/reports/reportOptions";
@@ -174,7 +178,7 @@ const RunTmntPage = () => {
                   Set Prize Fund
                 </Link>
               </div> 
-              <div className="col-2">
+              <div className="col-2 d-grid gap-2">
                 {/* <Link className="btn btn-info" href="#">
                   Print Reports
                 </Link> */}
@@ -183,13 +187,19 @@ const RunTmntPage = () => {
                   className="btn btn-info" 
                   onClick={() => setShowReportOptions(true)}
                 >
-                  Print Reports
+                  Reports
                 </button>
               </div> 
               <div className="col-2 d-grid gap-2">
-                <Link className="btn btn-block btn-dark" href="#" >                  
+                {/* <Link className="btn btn-block btn-dark" href="#" >                  
                   Finalize
-                </Link>
+                </Link> */}
+                <button
+                  type="button"
+                  className="btn btn-block btn-dark"                   
+                >
+                  Finalize
+                </button>
               </div> 
               <div className="col-2">
                 {/* <button
@@ -206,6 +216,7 @@ const RunTmntPage = () => {
             </div>
             <ReportOptions
               show={showReportOptions}
+              tmntId={tmntId}
               onClose={() => setShowReportOptions(false)}
             />
             <TmntDataForm

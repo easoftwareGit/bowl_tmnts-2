@@ -15,6 +15,7 @@
     "@emotion/styled": "^11.14.0",
     "@prisma/adapter-pg": "^7.0.0",
     "@prisma/client": "^7.8.0",
+    "@react-pdf/renderer": "^4.5.1",
     "@reduxjs/toolkit": "^2.8.2",
     "@syncfusion/ej2-react-grids": "^33.1.49",
     "@syncfusion/ej2-react-notifications": "^33.1.49",

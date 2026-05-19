@@ -1,28 +1,38 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import "./reportOptions.css";
 
-const reports = [
-  "Brackets",
-  "Bracket Summary",  
-  "Lane Assignments",
-  "Recaps - per Pair",
-  "Recaps - per Team",
-  "Standings",  
+type ReportOption = {
+  id: string;
+  label: string;
+};
+
+const reports: ReportOption[] = [
+  // { id: "brackets", label: "Brackets" },
+  // { id: "bracketSummary", label: "Bracket Summary" },
+  // { id: "laneAssignments", label: "Lane Assignments" },
+  { id: "recapsPerPair", label: "Recaps - per Pair" },
+  { id: "recapsPerTeam", label: "Recaps - per Team" },
+  // { id: "standings", label: "Standings" },
 ];
 
 type ReportOptionsProps = {
   show: boolean;
+  tmntId: string;
   onClose: () => void;
 };
 
 const ReportOptions: React.FC<ReportOptionsProps> = ({
   show,
+  tmntId,
   onClose,
 }) => {
-  
-  const [selectReport, setSelectReport] = useState(reports[0]);
+    
+  const [selectedReportId, setSelectedReportId] = useState(reports[0].id);  
+
+  const router = useRouter();
 
   // get the panel where this component is rendered
   const panelRef = useRef<HTMLDivElement | null>(null);
@@ -45,10 +55,12 @@ const ReportOptions: React.FC<ReportOptionsProps> = ({
   }, [show, onClose]);
     
   const handlePrint = (): void => {
-    console.log("print report: ", selectReport);
+    console.log("print report id: ", selectedReportId);
 
-    // pring logic goes here
-    window.print();
+    router.push(`/reports/${tmntId}/${selectedReportId}`);
+    // // pring logic goes here
+    // // window.print();    
+    // router.push(`/reports/${tmntId}`);
   }
 
   return (
@@ -73,7 +85,7 @@ const ReportOptions: React.FC<ReportOptionsProps> = ({
               Select Report
             </label>
 
-            <select
+            {/* <select
               className="form-select"
               value={selectReport}
               onChange={(e) => setSelectReport(e.target.value)}
@@ -86,15 +98,29 @@ const ReportOptions: React.FC<ReportOptionsProps> = ({
                   {report}
                 </option>
               ))}
-            </select>
+            </select> */}
+            <select
+              className="form-select"
+              value={selectedReportId}
+              onChange={(e) => setSelectedReportId(e.target.value)}
+            >
+              {reports.map((report) => (
+                <option
+                  key={report.id}
+                  value={report.id}
+                >
+                  {report.label}
+                </option>
+              ))}
+            </select>            
           </div>
 
           <button
             type="button"
-            className="btn btn-success w-100"
+            className="btn btn-info w-100"
             onClick={handlePrint}
           >
-            Print
+            Generate
           </button>
         </div>
       )}
