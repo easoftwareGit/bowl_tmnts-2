@@ -28,16 +28,16 @@ import {
 } from "@syncfusion/ej2-react-grids";
 import type { ClickEventArgs, ItemModel } from "@syncfusion/ej2-navigations";
 import {
-  createStackedColumns,
+  createStackedPlayerColumns,
   entryFeeColName,
   entryNumBrktsColName,
   divEntryHdcpColName,
   timeStampColName,
   getBrktIdFromColName,
   isBrktsColumnName,  
-} from "./sfCreateColumns";
+} from "./sfCreatePlayerColumns";
 import { createAggregates } from "./sfAggregates";
-import type { playerEntryRow } from "./populateRows";
+import type { playerEntryRow } from "./populatePlayerRows";
 import { btDbUuid } from "@/lib/uuid";
 import { useRouter } from "next/navigation";
 import {
@@ -62,15 +62,9 @@ import ModalConfirm, {
 } from "@/components/modal/confirmModal";
 import ModalErrorMsg from "@/components/modal/errorModal";
 import { type modalObjectType, initModalObj } from "@/components/modal/modalObjType";
-import "./playersForm.css";
 import { validateFinalizeRows } from "./finalizeValidation";
 import { randomizeAllBrkts } from "./buildBrktList";
-
-export type errInfoType = {
-  id: string;
-  column: string;
-  msg: string;
-};
+import "./playersForm.css";
 
 interface ChildProps {
   rows: playerEntryRow[];
@@ -1222,7 +1216,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
   // array as the 2nd parameter so this only reruns when those objects change
   const stackedColumnGroups = useMemo(
     () =>
-      createStackedColumns(
+      createStackedPlayerColumns(
         tmntData?.divs ?? [],
         tmntData?.pots ?? [],
         tmntData?.brkts ?? [],
@@ -1335,7 +1329,8 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
       
       <div>
         <h5>Tournament: {tmntData?.tmnt.tmnt_name}</h5>
-        <h6>Entries: {rows.length}</h6>
+        {/* <h6>Entries: {rows.length}</h6> */}
+        <h6>Entries: {gridData.length}</h6>
         {!enableEditing && !saving && (
           <div className="alert alert-warning">
             This tournament has been validated. Bowler editing is disabled.

@@ -12,7 +12,7 @@ import {
   entryFeeColName,
   entryNumBrktsColName,
   feeColNameEnd,
-} from "../../playersForm/sfCreateColumns";
+} from "../../playersForm/sfCreatePlayerColumns";
 import { getBrktOrElimName, getPotName } from "@/lib/getName";
 import { OverlayTrigger, Tooltip, Tab, Tabs } from "react-bootstrap";
 import { BracketList } from "@/components/brackets/bracketListClass";
@@ -22,7 +22,7 @@ import {
   getTmntFullDataError,
   getTmntFullDataLoadStatus,
 } from "@/redux/features/tmntFullData/tmntFullDataSlice";
-import { playerEntryRow, populateRows } from "../../playersForm/populateRows";
+import { playerEntryRow, populatePlayerRows } from "../../playersForm/populatePlayerRows";
 import { SquadStage } from "@prisma/client";
 import { createByePlayer } from "@/components/brackets/byePlayer";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
@@ -74,8 +74,7 @@ export default function EditPlayersPage() {
   const [allBrktsList, setAllBrktsList] = useState<Record<string, BracketList>>({});
   const [gotRefunds, setGotRefunds] = useState<Record<string, boolean>>({});
 
-  const [stage, setStage] = useState<SquadStage | null>(null);
-  // const [stageError, setStageError] = useState<string | null>(null);
+  const [stage, setStage] = useState<SquadStage | null>(null);  
   const [gotStage, setGotStage] = useState(false);
 
   const [isNavigatingAfterSave, setIsNavigatingAfterSave] = useState(false);
@@ -85,7 +84,10 @@ export default function EditPlayersPage() {
 
   // get original rows for change detection (useRef -> no re-renders)
   const origRowsRef = useRef<playerEntryRow[]>([]);
+
   // so only initialize state once when data first becomes available
+  // prevents the page from reinitializing state multiple times.
+  // redux updates, rerenders, async fetches could overwrite user edits
   const initializedRef = useRef(false);
 
   // redux selectors
@@ -101,6 +103,8 @@ export default function EditPlayersPage() {
   };
 
   // init values for form when retrieving data from state
+  // computes ALL initial derived values from tournament data.
+  // calculations only need to be done once, no recalc after every render
   const initValues = useMemo(() => {
     const entriesCountInit: Record<string, number> = {};
     const priorCountInit: Record<string, number> = {};
@@ -131,7 +135,7 @@ export default function EditPlayersPage() {
     });
 
     // build rows - most of the work
-    const currentRows = populateRows(stateTmntFullData);
+    const currentRows = populatePlayerRows(stateTmntFullData);
     /// build brkt lists
     const allBrktsListInit = buildBrktList(stateTmntFullData.brkts, currentRows);
     // got refunds for initial stte
@@ -177,8 +181,7 @@ export default function EditPlayersPage() {
   // values when other processes update the stage.
   useEffect(() => {
     if (tmntLoadStatus !== "succeeded") {
-      setStage(null);
-      // setStageError(null);
+      setStage(null);      
       setGotStage(false);
       return;
     }
@@ -212,16 +215,12 @@ export default function EditPlayersPage() {
         const s = await getSquadStage(firstSquadId);
 
         if (!cancelled) {
-          setStage(s);
-          // setStageError(null);
+          setStage(s);          
           setGotStage(true);
         }
       } catch (err) {
         if (!cancelled) {
           setStage(SquadStage.ERROR);
-          // setStageError(
-          //   err instanceof Error ? err.message : "Failed to load squad stage",
-          // );
           setGotStage(true);
         }
       }
@@ -290,8 +289,7 @@ export default function EditPlayersPage() {
   }, [rows]);  
 
   useUnsavedChangesGuard(dataWasChanged);
-
-  // const isLoading = (tmntLoadStatus === "loading" || !gotStage);
+  
   const isLoading =
     tmntLoadStatus === "loading" ||
     (tmntLoadStatus === "succeeded" && !gotStage);  

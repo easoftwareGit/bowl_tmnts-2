@@ -1,6 +1,6 @@
 import { BracketList } from "@/components/brackets/bracketListClass";
 import { randomizeAllBrkts } from "@/app/dataEntry/playersForm/buildBrktList";
-import type { playerEntryRow } from "@/app/dataEntry/playersForm/populateRows";
+import type { playerEntryRow } from "@/app/dataEntry/playersForm/populatePlayerRows";
 import type { tmntFullType } from "@/lib/types/types";
 import {
   brktId1,

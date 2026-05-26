@@ -6,6 +6,7 @@ import { sanitizePlayer, validatePlayer } from "../../../lib/validation/players/
 import { ErrorCode } from "@/lib/enums/enums";
 import { standardCatchReturn } from "../apiCatch";
 import { playerDataForPrisma } from "./playerDataForPrisma";
+import { testBaseUsersApi } from "../../../../test/testApi";
 
 // routes /api/players
 
@@ -76,5 +77,55 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ player }, { status: 201 });
   } catch (error) {
     return standardCatchReturn(error, "error creating player");
+  }
+}
+
+// TESTING ONLY
+export async function PUT(
+  req: Request,  
+) {
+  try {
+    const players = await req.json();
+    
+    if (!Array.isArray(players)) {
+      return NextResponse.json(
+        { error: "players must be an array" },
+        { status: 400 }
+      );
+    }
+    
+    const upsertedPlayers = await prisma.$transaction(
+      players.map((player) =>
+        prisma.player.upsert({
+          where: {
+            id: player.id,
+          },
+          update: {
+            squad_id: player.squad_id,
+            first_name: player.first_name,
+            last_name: player.last_name,
+            average: player.average,
+            lane: player.lane,
+            position: player.position,
+          },
+          create: {
+            id: player.id,
+            squad_id: player.squad_id,
+            first_name: player.first_name,
+            last_name: player.last_name,
+            average: player.average,
+            lane: player.lane,
+            position: player.position,
+          },
+        })
+      )
+    );
+
+    return NextResponse.json(
+      { players: upsertedPlayers },
+      { status: 200 }
+    );
+  } catch (error) {
+    return standardCatchReturn(error, "error upserting players");
   }
 }

@@ -1,5 +1,6 @@
 import type { syncfusionColumnDef } from "@/lib/types/types";
 import type { TmntGameResult } from "@/lib/types/resultsTypes";
+import { TotalHdcpName, TotalPlusTotalHdcpName } from "@/lib/validation/constants";
 
 const playerNameWidth = "150";
 const aveHdcpWidth = "80"
@@ -78,7 +79,7 @@ export const createResultsColumns2 = (tmntResults: any[], maxHdcp: number): sync
 
   const totalHdcpColumn: syncfusionColumnDef[] = [
     {
-      field: "total_hdcp",
+      field: TotalHdcpName,
       headerText: "Total + HDCP",
       width: totalHdcpWidth,
       textAlign: "Right",
@@ -90,7 +91,7 @@ export const createResultsColumns2 = (tmntResults: any[], maxHdcp: number): sync
 
   const totalPlusTotalHdcpColumn: syncfusionColumnDef[] = [
     {
-      field: "total_plus_total_hdcp",
+      field: TotalPlusTotalHdcpName,
       headerText: "Total + HDCP",
       width: totalHdcpWidth,
       textAlign: "Right",

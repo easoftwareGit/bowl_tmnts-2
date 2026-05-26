@@ -1,10 +1,13 @@
-import axios, { AxiosError } from "axios";
-import { baseGamesApi  } from "@/lib/api/apiPaths";
-import { testBaseGamesApi } from "../../../testApi";
+import { privateApi } from "@/lib/api/axios";
+import { AxiosError } from "axios";
+import { baseBowlsApi, baseEventsApi, baseGamesApi, basePlayersApi, baseSquadsApi, baseTmntsApi, baseUsersApi } from "@/lib/api/apiPaths";
+import { testBaseBowlsApi, testBaseEventsApi, testBaseGamesApi, testBasePlayersApi, testBaseSquadsApi, testBaseTmntsApi, testBaseUsersApi } from "../../../testApi";
 import type { gameType } from "@/lib/types/types";
 import { initGame } from "@/lib/db/initVals";
-import { isValidBtDbId } from "@/lib/validation/validation";
 import { maxGames, maxScore } from "@/lib/validation/constants";
+import { mockBowl, mockGames, mockTmntFullData, mockUser } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
+import { cloneDeep } from "lodash";
+import { isValidBtDbId } from "@/lib/validation/validation";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -27,13 +30,41 @@ const url = process.env.NODE_ENV === "test" && testBaseGamesApi
   : baseGamesApi;
 
 const oneGameUrl = url + "/game/";
-const squadUrl = url + "/squad/";
+const gamesSquadUrl = url + "/squad/";
+
+const userBaseUrl = process.env.NODE_ENV === "test" && testBaseUsersApi
+  ? testBaseUsersApi
+  : baseUsersApi;  
+const mockUserUrl = userBaseUrl + "/user/";
+
+const tmntBaseUrl = process.env.NODE_ENV === "test" && testBaseTmntsApi
+  ? testBaseTmntsApi
+  : baseTmntsApi;  
+const mockTmntUrl = tmntBaseUrl + "/tmnt/";
+
+const bowlBaseUrl = process.env.NODE_ENV === "test" && testBaseBowlsApi
+  ? testBaseBowlsApi
+  : baseBowlsApi;  
+const mockBowlUrl = bowlBaseUrl + "/bowl/";
+
+const squadBaseUrl = process.env.NODE_ENV === "test" && testBaseSquadsApi
+  ? testBaseSquadsApi
+  : baseSquadsApi;
+
+const eventBaseUrl = process.env.NODE_ENV === "test" && testBaseEventsApi
+  ? testBaseEventsApi
+  : baseEventsApi;
+
+const playersBaseUrl = process.env.NODE_ENV === "test" && testBasePlayersApi
+  ? testBasePlayersApi
+  : basePlayersApi;
 
 const notFoundId = "gam_01234567890123456789012345678901";
 const notFoundSquadId = "sqd_01234567890123456789012345678901";
+const notFoundplayerId = "ply_01234567890123456789012345678901";
 const userId = "usr_01234567890123456789012345678901";
 
-const squad2Id = 'sqd_1a6c885ee19a49489960389193e8f819';
+const squad2Id = 'sqd_1a6c885ee19a49489960389193e8f819'; // from prisma\seed.ts
 const player2Id = 'ply_aa6c885ee19a49489960389193e8f819';
 
 const testGame: gameType = {
@@ -54,19 +85,18 @@ const gameToPost: gameType = {
   score: 292,
 }
 
-
 const deletePostedGame = async (id: string) => { 
   try {
-    await axios.delete(oneGameUrl + id, { withCredentials: true });    
+    await privateApi.delete(oneGameUrl + id, { withCredentials: true });    
   } catch (err) {
-    if (err instanceof AxiosError) console.log(err.message);    
+    if (err instanceof Error) console.log(err.message);    
   }
 }
 
 const resetGame = async () => { 
   // make sure test game is reset in database
   const gameJSON = JSON.stringify(testGame);
-  await axios.put(oneGameUrl + testGame.id, gameJSON, { withCredentials: true });
+  await privateApi.put(oneGameUrl + testGame.id, gameJSON, { withCredentials: true });
 }
 
 describe('Games - API: /api/games', () => { 
@@ -84,7 +114,7 @@ describe('Games - API: /api/games', () => {
     })
 
     it('should get all games', async () => {
-      const response = await axios.get(url);
+      const response = await privateApi.get(url);
       const games = response.data.games;
       // 61 rows in prisma/seed.ts
       expect(games.length).toBe(61);
@@ -98,7 +128,7 @@ describe('Games - API: /api/games', () => {
     })
 
     it('should get game by id', async () => { 
-      const response = await axios.get(oneGameUrl + testGame.id);
+      const response = await privateApi.get(oneGameUrl + testGame.id);
       expect(response.status).toBe(200);
       const game = response.data.game;
       expect(game.id).toBe(testGame.id);
@@ -109,7 +139,7 @@ describe('Games - API: /api/games', () => {
     })
     it('should NOT get game by id when ID is invalid', async () => { 
       try {
-        const response = await axios.get(oneGameUrl + 'invalid');
+        const response = await privateApi.get(oneGameUrl + 'invalid');
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -121,7 +151,7 @@ describe('Games - API: /api/games', () => {
     })
     it('should NOT get game by id when ID is not found', async () => { 
       try {
-        const response = await axios.get(oneGameUrl + notFoundId);
+        const response = await privateApi.get(oneGameUrl + notFoundId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -133,7 +163,7 @@ describe('Games - API: /api/games', () => {
     })  
     it('should NOT get game by id when ID is valid, but not a game ID', async () => { 
       try {
-        const response = await axios.get(oneGameUrl + userId);
+        const response = await privateApi.get(oneGameUrl + userId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -155,16 +185,17 @@ describe('Games - API: /api/games', () => {
     const squadId = 'sqd_7116ce5f80164830830a7157eb093396'
 
     it('should get all games for squad', async () => { 
-      const response = await axios.get(squadUrl + squadId);
+      const response = await privateApi.get(gamesSquadUrl + squadId);
       const games = response.data.games;
       expect(games.length).toBe(18);
       for (let i = 0; i < games.length; i++) {
-        expect(games[i].squad_id).toBe(squadId)        
+        expect(games[i].squad_id).toBe(squadId);
+        expect(games[i].game_num).toBe((i % 6) + 1); // 1...6
       }
     })
     it('should NOT get all games for a squad when ID is invalid', async () => { 
       try {
-        const response = await axios.get(squadUrl + 'invalid');
+        const response = await privateApi.get(gamesSquadUrl + 'invalid');
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -176,7 +207,7 @@ describe('Games - API: /api/games', () => {
     })
     it('should NOT get all games for a squad when ID is valid, but not a squad id', async () => { 
       try {
-        const response = await axios.get(squadUrl + userId);
+        const response = await privateApi.get(gamesSquadUrl + userId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -187,90 +218,11 @@ describe('Games - API: /api/games', () => {
       }
     })
     it('should return empty array when squad is not found', async () => { 
-      const response = await axios.get(squadUrl + notFoundSquadId);
+      const response = await privateApi.get(gamesSquadUrl + notFoundSquadId);
       const games = response.data.games;
       expect(games.length).toBe(0); 
     })
   })
-
-  // describe('GET all games for div API: /api/games/div/:divId', () => { 
-  //   beforeAll(async () => {
-  //     await deletePostedGame();
-  //   })
-
-  //   it('should get all games for div - NO HDCP', async () => { 
-  //     const response = await axios.get(divUrl + divId);
-  //     const games = response.data.games;
-  //     expect(games.length).toBe(3); // 3 players
-  //     expect(games[0]).toHaveProperty('player_id');
-  //     expect(games[0]).toHaveProperty('full_name');
-  //     expect(games[0]).toHaveProperty('average');
-  //     expect(games[0]).toHaveProperty('hdcp');
-  //     expect(games[0]).toHaveProperty('Game 1');
-  //     expect(games[0]).toHaveProperty('Game 1 + Hdcp');
-  //     expect(games[0]).toHaveProperty('Game 2');
-  //     expect(games[0]).toHaveProperty('Game 2 + Hdcp');
-  //     expect(games[0]).toHaveProperty('Game 3');
-  //     expect(games[0]).toHaveProperty('Game 3 + Hdcp');
-  //     expect(games[0]).toHaveProperty('Game 4');
-  //     expect(games[0]).toHaveProperty('Game 4 + Hdcp');
-  //     expect(games[0]).toHaveProperty('Game 5');
-  //     expect(games[0]).toHaveProperty('Game 5 + Hdcp');
-  //     expect(games[0]).toHaveProperty('Game 6');
-  //     expect(games[0]).toHaveProperty('Game 6 + Hdcp');
-  //     expect(games[0]).toHaveProperty('total');
-  //     expect(games[0]).toHaveProperty('total + Hdcp');
-
-  //     expect(games[0].hdcp).toBe(0);
-  //     expect(games[0]['Game 1']).toBe(games[0]['Game 1 + Hdcp']);
-  //     expect(games[0].total).toBe(games[0]['total + Hdcp']);
-  //   })
-  //   it('should get all games for div - WITH HDCP', async () => { 
-  //     const response = await axios.get(divUrl + divIdhdcp);
-  //     const games = response.data.games;
-  //     expect(games.length).toBe(3); // 3 players
-  //     expect(games[0]).toHaveProperty('player_id');
-  //     expect(games[0]).toHaveProperty('full_name');
-  //     expect(games[0]).toHaveProperty('average');
-  //     expect(games[0]).toHaveProperty('hdcp');
-  //     expect(games[0]).toHaveProperty('Game 1');
-  //     expect(games[0]).toHaveProperty('Game 1 + Hdcp');
-  //     expect(games[0]).toHaveProperty('Game 2');
-  //     expect(games[0]).toHaveProperty('Game 2 + Hdcp');
-  //     expect(games[0]).toHaveProperty('Game 3');
-  //     expect(games[0]).toHaveProperty('Game 3 + Hdcp');
-  //     expect(games[0]).toHaveProperty('Game 4');
-  //     expect(games[0]).toHaveProperty('Game 4 + Hdcp');
-  //     expect(games[0]).toHaveProperty('Game 5');
-  //     expect(games[0]).toHaveProperty('Game 5 + Hdcp');
-  //     expect(games[0]).toHaveProperty('Game 6');
-  //     expect(games[0]).toHaveProperty('Game 6 + Hdcp');
-  //     expect(games[0]).toHaveProperty('total');
-  //     expect(games[0]).toHaveProperty('total + Hdcp');
-
-  //     expect(games[0].hdcp).toBeGreaterThan(0);
-  //     expect(Number.isInteger(games[0].hdcp)).toBe(true);
-  //     expect(games[0]['Game 1 + Hdcp']).toBe(games[0]['Game 1'] + games[0].hdcp); 
-  //     expect(games[0]['total + Hdcp']).toBe(games[0].total + (games[0].hdcp * 6));
-  //   })
-  //   it('should NOT get all games for a div when ID is invalid', async () => { 
-  //     try {
-  //       const response = await axios.get(divUrl + 'invalid');
-  //       expect(response.status).toBe(404);
-  //     } catch (err) {
-  //       if (err instanceof AxiosError) {
-  //         expect(err.response?.status).toBe(404);
-  //       } else {
-  //         expect(true).toBeFalsy();
-  //       }
-  //     }
-  //   })
-  //   it('should return empty array when div is not found', async () => { 
-  //     const response = await axios.get(divUrl + notFoundDivId);
-  //     const games = response.data.games;
-  //     expect(games.length).toBe(0); 
-  //   })
-  // })
 
   describe('POST', () => { 
       
@@ -292,7 +244,7 @@ describe('Games - API: /api/games', () => {
 
     it('should create new game', async () => {
       const gamesJSON = JSON.stringify(gameToPost);
-      const response = await axios.post(url, gamesJSON, {
+      const response = await privateApi.post(url, gamesJSON, {
         withCredentials: true
       })
       expect(response.status).toBe(201);
@@ -311,7 +263,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -328,7 +280,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -345,7 +297,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -362,7 +314,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -379,7 +331,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -396,7 +348,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -413,7 +365,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -430,7 +382,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -447,7 +399,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -464,7 +416,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -481,7 +433,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -498,7 +450,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -515,7 +467,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -532,7 +484,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -549,7 +501,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -566,7 +518,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -583,7 +535,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -600,7 +552,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -617,7 +569,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -634,7 +586,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -651,7 +603,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -668,7 +620,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -685,7 +637,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -702,7 +654,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -719,7 +671,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -751,7 +703,7 @@ describe('Games - API: /api/games', () => {
 
     it('should update game by id', async () => {
       const gameJSON = JSON.stringify(putGame);
-      const response = await axios.put(oneGameUrl + testGame.id, gameJSON, {
+      const response = await privateApi.put(oneGameUrl + testGame.id, gameJSON, {
         withCredentials: true
       });
       const game = response.data.game;
@@ -764,7 +716,7 @@ describe('Games - API: /api/games', () => {
     it('should NOT update game by id when ID is invalid', async () => {
       try {
         const gameJSON = JSON.stringify(putGame);
-        const response = await axios.put(oneGameUrl + 'test', gameJSON, {
+        const response = await privateApi.put(oneGameUrl + 'test', gameJSON, {
           withCredentials: true
         });
         expect(response.status).toBe(404);
@@ -779,7 +731,7 @@ describe('Games - API: /api/games', () => {
     it('should NOT update game by id when ID is valid, but not a game ID', async () => {
       try {
         const gameJSON = JSON.stringify(putGame);
-        const response = await axios.put(oneGameUrl + userId, gameJSON, {
+        const response = await privateApi.put(oneGameUrl + userId, gameJSON, {
           withCredentials: true
         });
         expect(response.status).toBe(404);
@@ -794,7 +746,7 @@ describe('Games - API: /api/games', () => {
     it('should NOT update game by id when ID is not found', async () => {
       try {
         const gameJSON = JSON.stringify(putGame);
-        const response = await axios.put(oneGameUrl + notFoundId, gameJSON, {
+        const response = await privateApi.put(oneGameUrl + notFoundId, gameJSON, {
           withCredentials: true
         });
         expect(response.status).toBe(404);
@@ -813,7 +765,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.put(oneGameUrl + invalidGame.id, invalidJSON, {
+        const response = await privateApi.put(oneGameUrl + invalidGame.id, invalidJSON, {
           withCredentials: true
         });
         expect(response.status).toBe(422);
@@ -832,7 +784,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.put(oneGameUrl + invalidGame.id, invalidJSON, {
+        const response = await privateApi.put(oneGameUrl + invalidGame.id, invalidJSON, {
           withCredentials: true
         });
         expect(response.status).toBe(422);
@@ -851,7 +803,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.put(oneGameUrl + invalidGame.id, invalidJSON, {
+        const response = await privateApi.put(oneGameUrl + invalidGame.id, invalidJSON, {
           withCredentials: true
         });
         expect(response.status).toBe(422);
@@ -870,7 +822,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.put(oneGameUrl + invalidGame.id, invalidJSON, {
+        const response = await privateApi.put(oneGameUrl + invalidGame.id, invalidJSON, {
           withCredentials: true
         });
         expect(response.status).toBe(422);
@@ -889,7 +841,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.put(oneGameUrl + invalidGame.id, invalidJSON, {
+        const response = await privateApi.put(oneGameUrl + invalidGame.id, invalidJSON, {
           withCredentials: true
         });
         expect(response.status).toBe(422);
@@ -908,7 +860,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.put(oneGameUrl + invalidGame.id, invalidJSON, {
+        const response = await privateApi.put(oneGameUrl + invalidGame.id, invalidJSON, {
           withCredentials: true
         });
         expect(response.status).toBe(422);
@@ -927,7 +879,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.put(oneGameUrl + invalidGame.id, invalidJSON, {
+        const response = await privateApi.put(oneGameUrl + invalidGame.id, invalidJSON, {
           withCredentials: true
         });
         expect(response.status).toBe(422);
@@ -946,7 +898,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.put(oneGameUrl + invalidGame.id, invalidJSON, {
+        const response = await privateApi.put(oneGameUrl + invalidGame.id, invalidJSON, {
           withCredentials: true
         });
         expect(response.status).toBe(422);
@@ -965,7 +917,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.put(oneGameUrl + invalidGame.id, invalidJSON, {
+        const response = await privateApi.put(oneGameUrl + invalidGame.id, invalidJSON, {
           withCredentials: true
         });
         expect(response.status).toBe(422);
@@ -984,7 +936,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.put(oneGameUrl + invalidGame.id, invalidJSON, {
+        const response = await privateApi.put(oneGameUrl + invalidGame.id, invalidJSON, {
           withCredentials: true
         });
         expect(response.status).toBe(422);
@@ -1003,7 +955,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.put(oneGameUrl + invalidGame.id, invalidJSON, {
+        const response = await privateApi.put(oneGameUrl + invalidGame.id, invalidJSON, {
           withCredentials: true
         });
         expect(response.status).toBe(422);
@@ -1022,7 +974,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.put(oneGameUrl + invalidGame.id, invalidJSON, {
+        const response = await privateApi.put(oneGameUrl + invalidGame.id, invalidJSON, {
           withCredentials: true
         });
         expect(response.status).toBe(422);
@@ -1036,12 +988,479 @@ describe('Games - API: /api/games', () => {
     })
   })
 
-  describe('PATCH by ID - API: /api/pots/:id', () => { 
+  describe('PUT all games for a squad API: /api/games/squad/:squadId', () => { 
+
+    beforeAll(async () => {
+      try {
+        // remove any old mock data
+        let tmntId = mockTmntFullData.tmnt.id;          
+        await privateApi.delete(mockTmntUrl + tmntId);
+        
+        let bowlId = mockBowl.id;        
+        await privateApi.delete(mockBowlUrl + bowlId);
+
+        let userId = mockUser.id;        
+        await privateApi.delete(mockUserUrl + userId);
+
+        // add mock data
+        const userJSON = JSON.stringify(mockUser);
+        let response = await privateApi.post(userBaseUrl, userJSON);
+
+        const bowlJSON = JSON.stringify(mockBowl);        
+        response = await privateApi.post(bowlBaseUrl, bowlJSON);
+
+        const tmntJSON = JSON.stringify(mockTmntFullData.tmnt);
+        response = await privateApi.post(tmntBaseUrl, tmntJSON);        
+
+        const eventJSON = JSON.stringify(mockTmntFullData.events[0]);
+        response = await privateApi.post(eventBaseUrl, eventJSON);        
+
+        const squadJSON = JSON.stringify(mockTmntFullData.squads[0]);
+        response = await privateApi.post(squadBaseUrl, squadJSON);      
+        
+        // upserts many players
+        const playersJSON = JSON.stringify(mockTmntFullData.players);
+        response = await privateApi.put(playersBaseUrl, playersJSON);
+        
+      } catch (err) {
+        if (err instanceof Error) console.log(err.message);
+      }
+    })
+
+    afterEach(async () => {
+      try {
+        // remove any old mock data
+        let tmntId = mockTmntFullData.tmnt.id;          
+        let response = await privateApi.delete(mockTmntUrl + tmntId);
+        
+        let bowlId = mockBowl.id;        
+        response = await privateApi.delete(mockBowlUrl + bowlId);
+
+        let userId = mockUser.id;        
+        response = await privateApi.delete(mockUserUrl + userId);
+
+      } catch (err) {
+        if (err instanceof Error) console.log(err.message);
+      }
+    })
+
+    it('should upsert all games for a squad', async () => { 
+      const squadGamesJSON = JSON.stringify(mockGames);
+      const response = await privateApi.put(
+        gamesSquadUrl + mockTmntFullData.squads[0].id,
+        squadGamesJSON
+      );
+      expect(response.status).toBe(200);
+      expect(response.data.games).toHaveLength(mockGames.length);
+    })
+    it('should not upsert all games for a squad when game data has invalid id', async () => { 
+      const invalidGames = cloneDeep(mockGames);
+      invalidGames[1].id = 'invalid';
+      const invalidJSON = JSON.stringify(invalidGames);
+      try {
+        const response = await privateApi.put(
+          gamesSquadUrl + mockTmntFullData.squads[0].id,
+          invalidJSON
+        );
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not upsert all games for a squad when game data has missing id', async () => { 
+      const invalidGames = cloneDeep(mockGames);
+      invalidGames[1].id = null as any;
+      const invalidJSON = JSON.stringify(invalidGames);
+      try {
+        const response = await privateApi.put(
+          gamesSquadUrl + mockTmntFullData.squads[0].id,
+          invalidJSON
+        );
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not upsert all games for a squad when game data id, but not a valid game id', async () => { 
+      const invalidGames = cloneDeep(mockGames);
+      invalidGames[1].id = userId;
+      const invalidJSON = JSON.stringify(invalidGames);
+      try {
+        const response = await privateApi.put(
+          gamesSquadUrl + mockTmntFullData.squads[0].id,
+          invalidJSON
+        );
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+
+    it('should not upsert all games for a squad when game data has invalid squad_id', async () => { 
+      const invalidGames = cloneDeep(mockGames);
+      invalidGames[1].squad_id = 'invalid';
+      const invalidJSON = JSON.stringify(invalidGames);
+      try {
+        const response = await privateApi.put(
+          gamesSquadUrl + mockTmntFullData.squads[0].id,
+          invalidJSON
+        );
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not upsert all games for a squad when game data has missing squad_id', async () => { 
+      const invalidGames = cloneDeep(mockGames);
+      invalidGames[1].squad_id = null as any;
+      const invalidJSON = JSON.stringify(invalidGames);
+      try {
+        const response = await privateApi.put(
+          gamesSquadUrl + mockTmntFullData.squads[0].id,
+          invalidJSON
+        );
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not upsert all games for a squad when game data has squad id, but not a valid squad id', async () => { 
+      const invalidGames = cloneDeep(mockGames);
+      invalidGames[1].squad_id = userId;
+      const invalidJSON = JSON.stringify(invalidGames);
+      try {
+        const response = await privateApi.put(
+          gamesSquadUrl + mockTmntFullData.squads[0].id,
+          invalidJSON
+        );
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not upsert all games for a squad when game data has valid but not found squad_id', async () => { 
+      const invalidGames = cloneDeep(mockGames);
+      invalidGames[1].squad_id = notFoundSquadId;
+      const invalidJSON = JSON.stringify(invalidGames);
+      try {
+        const response = await privateApi.put(
+          gamesSquadUrl + mockTmntFullData.squads[0].id,
+          invalidJSON
+        );
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not upsert all games for a squad when game data has more than 1 squad_id', async () => { 
+      const invalidGames = cloneDeep(mockGames);
+      invalidGames[1].squad_id = squad2Id;
+      const invalidJSON = JSON.stringify(invalidGames);
+      try {
+        const response = await privateApi.put(
+          gamesSquadUrl + mockTmntFullData.squads[0].id,
+          invalidJSON
+        );
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+
+    it('should not upsert all games for a squad when game data has invalid player_id', async () => { 
+      const invalidGames = cloneDeep(mockGames);
+      invalidGames[1].player_id = 'invalid';
+      const invalidJSON = JSON.stringify(invalidGames);
+      try {
+        const response = await privateApi.put(
+          gamesSquadUrl + mockTmntFullData.squads[0].id,
+          invalidJSON
+        );
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not upsert all games for a squad when game data has missing player_id', async () => { 
+      const invalidGames = cloneDeep(mockGames);
+      invalidGames[1].player_id = null as any;
+      const invalidJSON = JSON.stringify(invalidGames);
+      try {
+        const response = await privateApi.put(
+          gamesSquadUrl + mockTmntFullData.squads[0].id,
+          invalidJSON
+        );
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not upsert all games for a squad when game data has player id, but not a valid player id', async () => { 
+      const invalidGames = cloneDeep(mockGames);
+      invalidGames[1].player_id = userId;
+      const invalidJSON = JSON.stringify(invalidGames);
+      try {
+        const response = await privateApi.put(
+          gamesSquadUrl + mockTmntFullData.squads[0].id,
+          invalidJSON
+        );
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not upsert all games for a squad when game data has valid but not found player_id', async () => { 
+      const invalidGames = cloneDeep(mockGames);
+      invalidGames[1].squad_id = notFoundplayerId;
+      const invalidJSON = JSON.stringify(invalidGames);
+      try {
+        const response = await privateApi.put(
+          gamesSquadUrl + mockTmntFullData.squads[0].id,
+          invalidJSON
+        );
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+
+    it('should not upsert all games for a squad when game data has game_num too low', async () => { 
+      const invalidGames = cloneDeep(mockGames);
+      invalidGames[1].game_num = 0;
+      const invalidJSON = JSON.stringify(invalidGames);
+      try {
+        const response = await privateApi.put(
+          gamesSquadUrl + mockTmntFullData.squads[0].id,
+          invalidJSON
+        );
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not upsert all games for a squad when game data has game_num too high', async () => { 
+      const invalidGames = cloneDeep(mockGames);
+      invalidGames[1].game_num = maxGames + 1;
+      const invalidJSON = JSON.stringify(invalidGames);
+      try {
+        const response = await privateApi.put(
+          gamesSquadUrl + mockTmntFullData.squads[0].id,
+          invalidJSON
+        );
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not upsert all games for a squad when game data has missing game_num', async () => { 
+      const invalidGames = cloneDeep(mockGames);
+      invalidGames[1].game_num = null as any;
+      const invalidJSON = JSON.stringify(invalidGames);
+      try {
+        const response = await privateApi.put(
+          gamesSquadUrl + mockTmntFullData.squads[0].id,
+          invalidJSON
+        );
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not upsert all games for a squad when game data has game_num not a number', async () => { 
+      const invalidGames = cloneDeep(mockGames);
+      invalidGames[1].game_num = 'not a number' as any;
+      const invalidJSON = JSON.stringify(invalidGames);
+      try {
+        const response = await privateApi.put(
+          gamesSquadUrl + mockTmntFullData.squads[0].id,
+          invalidJSON
+        );
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not upsert all games for a squad when game data has game_num not an integer', async () => { 
+      const invalidGames = cloneDeep(mockGames);
+      invalidGames[1].game_num = 1.5;
+      const invalidJSON = JSON.stringify(invalidGames);
+      try {
+        const response = await privateApi.put(
+          gamesSquadUrl + mockTmntFullData.squads[0].id,
+          invalidJSON
+        );
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+
+    it('should not upsert all games for a squad when game data has score too low', async () => { 
+      const invalidGames = cloneDeep(mockGames);
+      invalidGames[1].score = -1;
+      const invalidJSON = JSON.stringify(invalidGames);
+      try {
+        const response = await privateApi.put(
+          gamesSquadUrl + mockTmntFullData.squads[0].id,
+          invalidJSON
+        );
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not upsert all games for a squad when game data has score too high', async () => { 
+      const invalidGames = cloneDeep(mockGames);
+      invalidGames[1].score = maxScore + 1;
+      const invalidJSON = JSON.stringify(invalidGames);
+      try {
+        const response = await privateApi.put(
+          gamesSquadUrl + mockTmntFullData.squads[0].id,
+          invalidJSON
+        );
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not upsert all games for a squad when game data has missing score', async () => { 
+      const invalidGames = cloneDeep(mockGames);
+      invalidGames[1].score = null as any;
+      const invalidJSON = JSON.stringify(invalidGames);
+      try {
+        const response = await privateApi.put(
+          gamesSquadUrl + mockTmntFullData.squads[0].id,
+          invalidJSON
+        );
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not upsert all games for a squad when game data has score not a number', async () => { 
+      const invalidGames = cloneDeep(mockGames);
+      invalidGames[1].score = 'not a number' as any;
+      const invalidJSON = JSON.stringify(invalidGames);
+      try {
+        const response = await privateApi.put(
+          gamesSquadUrl + mockTmntFullData.squads[0].id,
+          invalidJSON
+        );
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not upsert all games for a squad when game data has score not an integer', async () => { 
+      const invalidGames = cloneDeep(mockGames);
+      invalidGames[1].score = 1.5;
+      const invalidJSON = JSON.stringify(invalidGames);
+      try {
+        const response = await privateApi.put(
+          gamesSquadUrl + mockTmntFullData.squads[0].id,
+          invalidJSON
+        );
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+  })
+
+  describe('PATCH by ID - API: /api/games/game/:id', () => { 
 
     beforeAll(async () => {
       try {
         const gameJSON = JSON.stringify(testGame);
-        await axios.put(oneGameUrl + testGame.id, gameJSON, { withCredentials: true });
+        await privateApi.put(oneGameUrl + testGame.id, gameJSON, { withCredentials: true });
       } catch (err) {
         if (err instanceof AxiosError) console.log(err.message);
       }
@@ -1050,7 +1469,7 @@ describe('Games - API: /api/games', () => {
     afterEach(async () => {
       try {
         const gameJSON = JSON.stringify(testGame);
-        await axios.put(oneGameUrl + testGame.id, gameJSON, { withCredentials: true });
+        await privateApi.put(oneGameUrl + testGame.id, gameJSON, { withCredentials: true });
       } catch (err) {
         if (err instanceof AxiosError) console.log(err.message);
       }
@@ -1062,7 +1481,7 @@ describe('Games - API: /api/games', () => {
         game_num: 12
       }
       const gameJSON = JSON.stringify(patchGame);
-      const response = await axios.patch(oneGameUrl + patchGame.id, gameJSON, {
+      const response = await privateApi.patch(oneGameUrl + patchGame.id, gameJSON, {
         withCredentials: true
       })
       expect(response.status).toBe(200);
@@ -1075,7 +1494,7 @@ describe('Games - API: /api/games', () => {
         score: 282,
       }
       const gameJSON = JSON.stringify(patchGame);
-      const response = await axios.patch(oneGameUrl + patchGame.id, gameJSON, {
+      const response = await privateApi.patch(oneGameUrl + patchGame.id, gameJSON, {
         withCredentials: true
       })
       expect(response.status).toBe(200);
@@ -1088,7 +1507,7 @@ describe('Games - API: /api/games', () => {
         squad_id: squad2Id,
       }
       const invalidJSON = JSON.stringify(invalidGame);
-      const response = await axios.patch(oneGameUrl + invalidGame.id, invalidJSON, {
+      const response = await privateApi.patch(oneGameUrl + invalidGame.id, invalidJSON, {
         withCredentials: true
       })
       expect(response.status).toBe(200);
@@ -1103,7 +1522,7 @@ describe('Games - API: /api/games', () => {
       }
       const gameJSON = JSON.stringify(patchGame);
       // no error, but player_id is not updated
-      const response = await axios.patch(oneGameUrl + patchGame.id, gameJSON, {
+      const response = await privateApi.patch(oneGameUrl + patchGame.id, gameJSON, {
         withCredentials: true
       })
       expect(response.status).toBe(200);
@@ -1118,7 +1537,7 @@ describe('Games - API: /api/games', () => {
       }
       const gameJSON = JSON.stringify(patchGame);
       try {
-        const response = await axios.patch(oneGameUrl + 'test', gameJSON, {
+        const response = await privateApi.patch(oneGameUrl + 'test', gameJSON, {
           withCredentials: true
         });
         expect(response.status).toBe(404);
@@ -1137,7 +1556,7 @@ describe('Games - API: /api/games', () => {
       }
       const gameJSON = JSON.stringify(patchGame);
       try {
-        const response = await axios.patch(oneGameUrl + notFoundId, gameJSON, {
+        const response = await privateApi.patch(oneGameUrl + notFoundId, gameJSON, {
           withCredentials: true
         });
         expect(response.status).toBe(404);
@@ -1156,7 +1575,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.patch(oneGameUrl + userId, invalidJSON, {
+        const response = await privateApi.patch(oneGameUrl + userId, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(404);
@@ -1175,7 +1594,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.patch(oneGameUrl + invalidGame.id, invalidJSON, {
+        const response = await privateApi.patch(oneGameUrl + invalidGame.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1194,7 +1613,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.patch(oneGameUrl + invalidGame.id, invalidJSON, {
+        const response = await privateApi.patch(oneGameUrl + invalidGame.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1213,7 +1632,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.patch(oneGameUrl + invalidGame.id, invalidJSON, {
+        const response = await privateApi.patch(oneGameUrl + invalidGame.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1232,7 +1651,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.patch(oneGameUrl + invalidGame.id, invalidJSON, {
+        const response = await privateApi.patch(oneGameUrl + invalidGame.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1251,7 +1670,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.patch(oneGameUrl + invalidGame.id, invalidJSON, {
+        const response = await privateApi.patch(oneGameUrl + invalidGame.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1270,7 +1689,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.patch(oneGameUrl + invalidGame.id, invalidJSON, {
+        const response = await privateApi.patch(oneGameUrl + invalidGame.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1289,7 +1708,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.patch(oneGameUrl + invalidGame.id, invalidJSON, {
+        const response = await privateApi.patch(oneGameUrl + invalidGame.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1308,7 +1727,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.patch(oneGameUrl + invalidGame.id, invalidJSON, {
+        const response = await privateApi.patch(oneGameUrl + invalidGame.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1327,7 +1746,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.patch(oneGameUrl + invalidGame.id, invalidJSON, {
+        const response = await privateApi.patch(oneGameUrl + invalidGame.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1346,7 +1765,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await axios.patch(oneGameUrl + invalidGame.id, invalidJSON, {
+        const response = await privateApi.patch(oneGameUrl + invalidGame.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1381,13 +1800,13 @@ describe('Games - API: /api/games', () => {
       if (!didDel) return;
       try {
         const gameJSON = JSON.stringify(toDelGame);
-        await axios.post(url, gameJSON, { withCredentials: true });
+        await privateApi.post(url, gameJSON, { withCredentials: true });
       } catch (err) {
         if (err instanceof Error) console.log(err.message);
       }
     })
     it('should delete a game by ID', async () => {
-      const response = await axios.delete(oneGameUrl + toDelGame.id, {
+      const response = await privateApi.delete(oneGameUrl + toDelGame.id, {
         withCredentials: true,
       });
       didDel = true;
@@ -1395,7 +1814,7 @@ describe('Games - API: /api/games', () => {
       expect(response.data.count).toBe(1);
     })
     it('should NOT delete a game by ID when ID is not found', async () => { 
-      const response = await axios.delete(oneGameUrl + notFoundId, {
+      const response = await privateApi.delete(oneGameUrl + notFoundId, {
         withCredentials: true,
       });
       expect(response.status).toBe(200);
@@ -1403,7 +1822,7 @@ describe('Games - API: /api/games', () => {
     })
     it('should NOT delete a game by ID when ID is invalid', async () => { 
       try {
-        const response = await axios.delete(oneGameUrl + 'test', {
+        const response = await privateApi.delete(oneGameUrl + 'test', {
           withCredentials: true,
         });
         expect(response.status).toBe(404);
@@ -1417,7 +1836,7 @@ describe('Games - API: /api/games', () => {
     })
     it('should NOT delete a game by ID when ID is valid, but not an game id', async () => { 
       try {
-        const response = await axios.delete(oneGameUrl + userId, {
+        const response = await privateApi.delete(oneGameUrl + userId, {
           withCredentials: true,
         });
         expect(response.status).toBe(404);

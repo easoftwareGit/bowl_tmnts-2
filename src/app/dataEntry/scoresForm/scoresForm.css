@@ -1,0 +1,74 @@
+/* Cancel button */
+.e-footer-content .e-btn.e-flat:not([DISABLED]) {
+  background-color: rgb(220, 53, 69);
+  color: white;
+  border-color: white;
+}
+
+/* toolbar icons inherit button color */
+.e-grid .e-toolbar .e-tbar-btn .e-icons {
+  color: inherit;
+}
+/* toolbar icon: cancel  */
+.e-grid .e-toolbar .e-tbar-btn .e-icons.e-cancel {
+  color: rgb(220, 53, 69);
+}
+/* toolbar icon: check  */
+.e-grid .e-toolbar .e-tbar-btn .e-icons.e-check {
+  color: rgb(40, 167, 69);
+}
+/* toolbar icon: update  */
+.e-grid .e-toolbar .e-tbar-btn .e-icons.e-update {
+  color: rgb(13, 110, 253);
+}
+/* toolbar icon: close  */
+.e-grid .e-toolbar .e-tbar-btn .e-icons.e-back {
+  color: rgb(220, 53, 69);
+}
+
+/* center the entire scores section */
+.scores-page-wrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+/* width shrinks to fit the grid */
+.scores-content {
+  width: max-content;
+}
+
+/* keep Syncfusion from stretching columns */
+#gameScoresGrid {
+  width: auto !important;
+}
+
+/* optional:
+   prevents the grid from trying to fill parent width
+*/
+#gameScoresGrid .e-gridheader,
+#gameScoresGrid .e-gridcontent,
+#gameScoresGrid .e-table {
+  width: auto !important;
+}
+
+/* readonly/display columns */
+#gameScoresGrid .readonly-col {
+  background-color: #f1f3f5;
+}
+
+/* PLAYERS */
+#gameScoresGrid .e-headercell {
+  background-color: rgb(190, 234, 235);  
+}
+
+/* grid header text bold */
+#gameScoresGrid .e-headercell .e-headertext {
+  font-weight: 700;
+}
+
+.e-grid .e-headercell.right-header .e-headertext {
+  text-align: right;
+  width: 100%;
+  display: block;
+}

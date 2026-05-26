@@ -4,7 +4,7 @@ import { createAggregates } from "@/app/dataEntry/playersForm/sfAggregates";
 import {
   entryFeeColName,
   entryNumBrktsColName,
-} from "@/app/dataEntry/playersForm/sfCreateColumns";
+} from "@/app/dataEntry/playersForm/sfCreatePlayerColumns";
 
 const getChildren = (node: ReactNode): ReactNode => {
   expect(React.isValidElement(node)).toBe(true);

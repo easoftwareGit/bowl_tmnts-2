@@ -5,7 +5,7 @@ import { ErrorCode } from "@/lib/enums/enums";
 import { validateLane, sanitizeLane } from "@/lib/validation/lanes/validate";
 import type { laneType } from "@/lib/types/types";
 import { initLane } from "@/lib/db/initVals";
-import { getErrorStatus, standardCatchReturn } from "@/app/api/apiCatch";
+import { standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/lanes/lane/:id
 

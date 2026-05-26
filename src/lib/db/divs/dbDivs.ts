@@ -3,9 +3,7 @@ import { baseDivsApi } from "@/lib/api/apiPaths";
 import { testBaseDivsApi } from "../../../../test/testApi";
 import type { divType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation/validation";
-import { ErrorCode } from "@/lib/enums/enums";
 import { blankDiv } from "../initVals";
-import { validateDivs } from "@/lib/validation/divs/validate";
 
 // If running tests AND a test URL is defined, use it; otherwise use the app API path
 const url = process.env.NODE_ENV === "test" && testBaseDivsApi
@@ -13,7 +11,7 @@ const url = process.env.NODE_ENV === "test" && testBaseDivsApi
   : baseDivsApi;
 
 const divUrl = url + "/div/";
-const manyUrl = url + "/many";
+// const manyUrl = url + "/many";
 const tmntUrl = url + "/tmnt/";
 
 /**
@@ -98,52 +96,6 @@ export const postDiv = async (div: divType): Promise<divType | null> => {
     return mapDiv(response.data.div);
   } catch (err) {
     throw new Error(`postDiv failed: ${err instanceof Error ? err.message : err}`);
-  }
-};
-
-/**
- * post many divs
- *
- * @param {divType[]} divs - array of divs to post
- * @returns {number} - number of divs posted
- * @throws {Error} - if divs are invalid or API call fails
- */
-export const postManyDivs = async (divs: divType[]): Promise<number> => {
-  if (!divs || !Array.isArray(divs)) {
-    throw new Error("Invalid div data");
-  }
-  if (divs.length === 0) return 0;
-
-  const validDivs = validateDivs(divs);
-  if (
-    validDivs.errorCode !== ErrorCode.NONE ||
-    validDivs.divs.length !== divs.length
-  ) {
-    if (validDivs.divs.length === 0) {
-      throw new Error("Invalid div data at index 0");
-    }
-
-    const errorIndex = divs.findIndex((div) => !isValidBtDbId(div.id, "div"));
-    if (errorIndex < 0) {
-      throw new Error(`Invalid div data at index ${validDivs.divs.length}`);
-    } else {
-      throw new Error(`Invalid div data at index ${errorIndex}`);
-    }
-  }
-
-  try {
-    const divsJSON = JSON.stringify(divs);
-    const response = await privateApi.post(manyUrl, divsJSON);
-
-    if (typeof response.data?.count !== "number") {
-      throw new Error("Error posting divs");
-    }
-
-    return response.data.count;
-  } catch (err) {
-    throw new Error(
-      `postManyDivs failed: ${err instanceof Error ? err.message : err}`
-    );
   }
 };
 

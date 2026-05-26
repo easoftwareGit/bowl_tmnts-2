@@ -7,14 +7,14 @@ import type {
   gridTmntEntryDataType,
   fullBrktsDataType,
 } from "@/lib/types/types";
-import type { playerEntryRow } from "./populateRows";
+import type { playerEntryRow } from "./populatePlayerRows";
 import {
   divEntryHdcpColName,
   entryFeeColName,
   brktsColNameEnd,  
   feeColNameEnd,  
   timeStampColName,
-} from "./sfCreateColumns";
+} from "./sfCreatePlayerColumns";
 import {  
   initDivEntry,
   initElimEntry,

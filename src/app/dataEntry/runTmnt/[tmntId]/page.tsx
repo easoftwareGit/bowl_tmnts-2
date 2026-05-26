@@ -73,14 +73,15 @@ const RunTmntPage = () => {
 
     (async () => {
       try {        
-        const s = await getSquadStage(firstSquadId);
-        setGotStage(true);
+        const s = await getSquadStage(firstSquadId);        
         if (!cancelled) {
+          setGotStage(true);
           setStage(s);
           setStageError(null);          
         }
       } catch (err) {
         if (!cancelled) {
+          setGotStage(false);
           setStage(SquadStage.ERROR);
           setStageError(
             err instanceof Error ? err.message : "Failed to load squad stage"
@@ -122,6 +123,20 @@ const RunTmntPage = () => {
     router.push(`/dataEntry/editPlayers/${tmntId}`);
   }
 
+  const handleEnterScoresClick = () => {
+    const squadId = stateTmntFullData.squads[0]?.id; // only 1 squad at this point
+    if (stage !== SquadStage.SCORES) { 
+      setErrModalObj({
+        show: true,
+        title: "Enter Scores Error",
+        message: 'Cannot enter scores until stage is Validated. Click the "Validate and Save" button when editing bowlers.',
+        id: squadId
+      });
+      return;
+    }
+    router.push(`/dataEntry/scores/${squadId}`);
+  }
+
   return (
     <>
       <WaitModal show={tmntLoadStatus === 'loading' || gotStage === false} message="Loading..." />
@@ -157,21 +172,28 @@ const RunTmntPage = () => {
                 <button
                   type="button"
                   className="btn btn-primary"
-                  onClick={handleEditBowlersClick}                  
+                  onClick={handleEditBowlersClick}
                 >
                   Edit Bowlers
                 </button>
                 {/* <Link
                   className="btn btn-primary"
-                  href={`/dataEntry/editPlayers/${tmntId}`}                  
+                  href={`/dataEntry/editPlayers/${tmntId}`}
                 >
                   Edit Bowlers
                 </Link> */}
               </div> 
               <div className="col-2">
-                <Link className="btn btn-primary" href="#">
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleEnterScoresClick}
+                >
                   Enter Scores
-                </Link>
+                </button>
+                {/* <Link className="btn btn-primary" href="#">
+                  Enter Scores
+                </Link> */}
               </div> 
               <div className="col-2">
                 <Link className="btn btn-success" href="#">

@@ -4,6 +4,7 @@ import {
   nonGameColCount,
   tmntResultsData,
 } from "@/app/results/tmnt/[tmntId]/createResultsColumns";
+import { TotalHdcpName, TotalPlusTotalHdcpName } from "@/lib/validation/constants";
 
 describe("createResultsColumns2", () => {
   describe("tmntResultsData", () => {
@@ -153,8 +154,8 @@ describe("createResultsColumns2", () => {
         "Game 5",
         "Game 6",
         "total",
-        "total_hdcp",
-        "total_plus_total_hdcp",
+        TotalHdcpName,
+        TotalPlusTotalHdcpName,
       ]);
     });
 
@@ -230,11 +231,11 @@ describe("createResultsColumns2", () => {
       const result = createResultsColumns2(mockResults, 10);
 
       const totalHdcpColumn = result.find(
-        (col) => col.field === "total_hdcp"
+        (col) => col.field === TotalHdcpName
       );
 
       expect(totalHdcpColumn).toEqual({
-        field: "total_hdcp",
+        field: TotalHdcpName,
         headerText: "Total + HDCP",
         width: "120",
         textAlign: "Right",
@@ -248,11 +249,11 @@ describe("createResultsColumns2", () => {
       const result = createResultsColumns2(mockResults, 10);
 
       const totalPlusTotalHdcpColumn = result.find(
-        (col) => col.field === "total_plus_total_hdcp"
+        (col) => col.field === TotalPlusTotalHdcpName
       );
 
       expect(totalPlusTotalHdcpColumn).toEqual({
-        field: "total_plus_total_hdcp",
+        field: TotalPlusTotalHdcpName,
         headerText: "Total + HDCP",
         width: "120",
         textAlign: "Right",

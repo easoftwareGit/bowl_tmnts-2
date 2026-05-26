@@ -54,6 +54,7 @@ import {
   calcNumGames,
   createResultsColumns2,
 } from "@/app/results/tmnt/[tmntId]/createResultsColumns";
+import { TotalHdcpName } from "@/lib/validation/constants";
 
 const mockCalcNumGames =
   calcNumGames as jest.MockedFunction<
@@ -400,7 +401,7 @@ describe("TmntResultsForm", () => {
         mockGridComponent.mock.calls[0][0];
 
       expect(gridProps.dataSource[0])
-        .toHaveProperty("total_hdcp", 0);
+        .toHaveProperty(TotalHdcpName, 0);
     });
 
     it("calculates total_hdcp when hdcp is zero", () => {
@@ -422,7 +423,7 @@ describe("TmntResultsForm", () => {
         mockGridComponent.mock.calls[0][0];
 
       expect(gridProps.dataSource[0])
-        .toHaveProperty("total_hdcp", 0);
+        .toHaveProperty(TotalHdcpName, 0);
     });
   });
 

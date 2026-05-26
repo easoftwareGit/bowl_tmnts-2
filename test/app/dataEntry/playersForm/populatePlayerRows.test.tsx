@@ -1,11 +1,14 @@
-import { playerEntryData, populateRows } from "@/app/dataEntry/playersForm/populateRows";
+import {
+  playerEntryData,
+  populatePlayerRows
+} from "@/app/dataEntry/playersForm/populatePlayerRows";
 import {
   entryFeeColName,
   divEntryHdcpColName,
   entryNumBrktsColName,
   timeStampColName,
   feeColNameEnd,  
-} from "@/app/dataEntry/playersForm/sfCreateColumns";
+} from "@/app/dataEntry/playersForm/sfCreatePlayerColumns";
 
 import {
   mockTmntFullData,
@@ -26,7 +29,7 @@ import { cloneDeep } from "lodash";
 
 describe("populateRows", () => {
   it("creates one row per player and populates core fields including lanePos", () => {
-    const rows = populateRows(mockTmntFullData);
+    const rows = populatePlayerRows(mockTmntFullData);
 
     expect(rows).toHaveLength(mockTmntFullData.players.length);
 
@@ -63,7 +66,7 @@ describe("populateRows", () => {
   it("creates one row per player, but ignores bye player", () => {
     const byeTmnt = cloneDeep(mockTmntFullData);
     byeTmnt.players.push(mockByePlayer);
-    const rows = populateRows(byeTmnt);
+    const rows = populatePlayerRows(byeTmnt);
 
     expect(rows).toHaveLength(byeTmnt.players.length - 1);
 
@@ -103,7 +106,7 @@ describe("populateRows", () => {
   it("does not mutate the playerEntryData template and rows do not share references", () => {
     const templateBefore = cloneDeep(playerEntryData);
 
-    const rows = populateRows(mockTmntFullData);
+    const rows = populatePlayerRows(mockTmntFullData);
 
     // rows are distinct objects
     expect(rows[0]).not.toBe(rows[1]);
@@ -117,7 +120,7 @@ describe("populateRows", () => {
   });
 
   it("populates division fee and hdcp using dynamic column names (fee numeric, hdcp numeric)", () => {
-    const rows = populateRows(mockTmntFullData);
+    const rows = populatePlayerRows(mockTmntFullData);
 
     const r1 = rows.find((r: any) => r.player_id === playerId1);
     expect(r1).toBeDefined();
@@ -135,7 +138,7 @@ describe("populateRows", () => {
   });
 
   it("populates pot entry fees using dynamic fee column names", () => {
-    const rows = populateRows(mockTmntFullData);
+    const rows = populatePlayerRows(mockTmntFullData);
 
     const r1 = rows.find((r: any) => r.player_id === playerId1);
     expect(r1).toBeDefined();
@@ -158,7 +161,7 @@ describe("populateRows", () => {
 
   it("populates bracket num_brackets, fee, and timestamp columns for each player/bracket entry", () => {
     
-    const rows = populateRows(mockTmntFullData);
+    const rows = populatePlayerRows(mockTmntFullData);
 
     const r1 = rows.find((r: any) => r.player_id === playerId1);
     expect(r1).toBeDefined();
@@ -188,7 +191,7 @@ describe("populateRows", () => {
   });
 
   it("populates eliminator entry fees using dynamic fee column names", () => {
-    const rows = populateRows(mockTmntFullData);
+    const rows = populatePlayerRows(mockTmntFullData);
 
     const r1 = rows.find((r: any) => r.player_id === playerId1);
     expect(r1).toBeDefined();
@@ -207,7 +210,7 @@ describe("populateRows", () => {
   });
 
   it("computes feeTotal as sum of ALL keys that end with feeColNameEnd ('_fee')", () => {
-    const rows = populateRows(mockTmntFullData);
+    const rows = populatePlayerRows(mockTmntFullData);
 
     const r1 = rows.find((r: any) => r.player_id === playerId1);
     expect(r1).toBeDefined();
@@ -296,7 +299,7 @@ describe("populateRows", () => {
       fee: "999",
     });
 
-    const rows = populateRows(tmnt);
+    const rows = populatePlayerRows(tmnt);
 
     // still only the real players
     expect(rows).toHaveLength(mockTmntFullData.players.length);
@@ -319,14 +322,14 @@ describe("populateRows", () => {
     const tmnt = cloneDeep(mockTmntFullData);
     tmnt.players = [];
 
-    const rows = populateRows(tmnt);
+    const rows = populatePlayerRows(tmnt);
 
     expect(rows).toEqual([]);
   });
 
   it("feeTotal does not become NaN if a fee column contains a non-numeric value (finite guard)", () => {
     const tmnt = cloneDeep(mockTmntFullData);
-    const rows = populateRows(tmnt);
+    const rows = populatePlayerRows(tmnt);
 
     const r1 = rows.find((r: any) => r.player_id === playerId1);
     expect(r1).toBeDefined();

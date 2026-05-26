@@ -2,7 +2,7 @@ import { Bracket } from "./bracketClass";
 import {
   entryNumBrktsColName,
   timeStampColName,
-} from "@/app/dataEntry/playersForm/sfCreateColumns";
+} from "@/app/dataEntry/playersForm/sfCreatePlayerColumns";
 import { isOdd } from "@/lib/validation/validation";
 import { maxBrackets } from "@/lib/validation/constants";
 import {
@@ -12,7 +12,7 @@ import {
 } from "@/lib/db/initVals";
 import { shuffleArray } from "@/lib/tools";
 import type { playerType } from "@/lib/types/types";
-import type { playerEntryRow } from "@/app/dataEntry/playersForm/populateRows";
+import type { playerEntryRow } from "@/app/dataEntry/playersForm/populatePlayerRows";
 import { cloneDeep } from "lodash";
 
 export type findPlayerResult = {

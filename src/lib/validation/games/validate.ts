@@ -143,21 +143,28 @@ export const validateGame = (game: gameType): ErrorCode => {
 /**
  * validates array of games
  *
- * @param games - array of games to validate 
- * @returns - {games: gameType[], errorCode: ErrorCode.NONE | ErrorCode.MISSING_DATA | ErrorCode.INVALID_DATA | ErrorCode.OtherError}
+ * @param {string} squadId - squad id
+ * @param {gameType[]} games - array of games to validate 
+ * @returns {games: gameType[], errorCode: ErrorCode.NONE | ErrorCode.MISSING_DATA | ErrorCode.INVALID_DATA | ErrorCode.OtherError}
  */
-export const validateGames = (games: gameType[]): validGamesType => {
+export const validateGames = (squadId: string, games: gameType[]): validGamesType => {
+  if (!isValidBtDbId(squadId, "sqd")) {
+    return { games: [], errorCode: ErrorCode.INVALID_DATA };
+  }
   const blankGames: gameType[] = [];
   const okGames: gameType[] = [];
   if (!Array.isArray(games) || games.length === 0) {
     return { games: blankGames, errorCode: ErrorCode.MISSING_DATA };
   }
-  let i = 0;
+  let i = 0;  
   while (i < games.length) {
     const toPush = sanitizeGame(games[i]);
     const errCode = validateGame(toPush);
     if (errCode !== ErrorCode.NONE) {
       return { games: okGames, errorCode: errCode };
+    }
+    if (toPush.squad_id !== squadId) {
+      return { games: okGames, errorCode: ErrorCode.INVALID_DATA };
     }
     okGames.push(toPush);
     i++;

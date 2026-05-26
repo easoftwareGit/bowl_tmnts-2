@@ -1,4 +1,5 @@
 import axios, { AxiosError } from "axios";
+import { publicApi, privateApi } from "@/lib/api/axios";
 import { baseBowlsApi, baseDivsApi, baseEventsApi, baseTmntsApi, baseUsersApi } from "@/lib/api/apiPaths";
 import { testBaseBowlsApi, testBaseDivsApi, testBaseEventsApi, testBaseTmntsApi, testBaseUsersApi } from "../../../testApi";
 import type { bowlType, brktSeedType, tmntType, userDataType } from "@/lib/types/types";
@@ -137,7 +138,8 @@ describe("Tmnts - API: /api/tmnts", () => {
   const postUser = async (user: userDataType) => {
     try {
       const userJSON = JSON.stringify(user);
-      await axios.post(userUrl, userJSON, { withCredentials: true });
+      // await axios.post(userUrl, userJSON, { withCredentials: true });
+      await privateApi.post(userUrl, userJSON);
     } catch (err) {
       if (err instanceof AxiosError) console.log(err.message);
     }

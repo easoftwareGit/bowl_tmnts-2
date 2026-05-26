@@ -23,3 +23,10 @@ export enum ErrorCode {
   INVALID_DATA,
   OTHER_ERROR,
 }
+
+export enum scoreRow { 
+  SCORES,
+  PLUSMINUS,
+  HDCP,
+  TOTAL,
+}

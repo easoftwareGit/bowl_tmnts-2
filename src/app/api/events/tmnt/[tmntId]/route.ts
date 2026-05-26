@@ -28,11 +28,6 @@ export async function GET(
     })    
     // no matching rows is ok
 
-    // // add in lpox
-    // const events = prismaEvents.map(event => ({
-    //   ...event,
-    //   lpox: event.entry_fee
-    // }))
     return NextResponse.json({ events }, { status: 200 });        
   } catch (error) {
     return standardCatchReturn(error, "error getting events for tmnt");

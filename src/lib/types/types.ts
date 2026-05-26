@@ -801,6 +801,7 @@ export type syncfusionColumnDef = {
   headerText: string;
   width?: string;
   textAlign?: "Right" | "Left" | "Center";
+  visible?: boolean;
   isPrimaryKey?: boolean;
   allowEditing?: boolean;
   displayAsCheckBox?: boolean;
@@ -817,6 +818,17 @@ export type syncfusionStackedColDef = {
   columns: syncfusionColumnDef[];
   customAttributes?: Record<string, string>;
   textAlign?: "Right" | "Left" | "Center";
+};
+
+export type SyncfusionValidationArgs = {
+  value: unknown;
+  element?: HTMLElement;
+};
+
+export type errInfoType = {
+  id: string;
+  column: string;
+  msg: string;
 };
 
 export type testDateType = {

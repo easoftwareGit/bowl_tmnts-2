@@ -3,7 +3,7 @@ import type { brktType, divType, elimType, potType } from "@/lib/types/types";
 import {
   entryFeeColName,
   entryNumBrktsColName,
-} from "./sfCreateColumns";
+} from "./sfCreatePlayerColumns";
 
 type AggregateFooterProps = Partial<{
   Sum: number;

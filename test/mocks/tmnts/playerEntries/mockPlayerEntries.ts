@@ -3,7 +3,7 @@ import {
   entryFeeColName,
   entryNumBrktsColName,
   timeStampColName,
-} from "@/app/dataEntry/playersForm/sfCreateColumns";
+} from "@/app/dataEntry/playersForm/sfCreatePlayerColumns";
 import {
   initBrkt,
   initDiv,

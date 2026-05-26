@@ -1,7 +1,6 @@
-import type { playerEntryRow } from "./populateRows";
-import type { tmntFullType } from "@/lib/types/types";
-import type { errInfoType } from "./playersForm";
-import { entryFeeColName, entryNumBrktsColName } from "./sfCreateColumns";
+import type { playerEntryRow } from "./populatePlayerRows";
+import type { tmntFullType, errInfoType } from "@/lib/types/types";
+import { entryFeeColName, entryNumBrktsColName } from "./sfCreatePlayerColumns";
 import { getBrktOrElimName, getPotShortName } from "@/lib/getName";
 
 type ValidateFinalizeArgs = {

@@ -1,9 +1,9 @@
-import type { playerEntryRow } from "@/app/dataEntry/playersForm/populateRows";
+import type { playerEntryRow } from "@/app/dataEntry/playersForm/populatePlayerRows";
 import type { tmntFullType } from "@/lib/types/types";
 import {
   entryFeeColName,
   entryNumBrktsColName,
-} from "@/app/dataEntry/playersForm/sfCreateColumns";
+} from "@/app/dataEntry/playersForm/sfCreatePlayerColumns";
 import { validateFinalizeRows } from "@/app/dataEntry/playersForm/finalizeValidation";
 import {
   brktId1,

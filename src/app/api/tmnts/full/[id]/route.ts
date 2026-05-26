@@ -8,7 +8,6 @@ import { standardCatchReturn } from "@/app/api/apiCatch";
 import { sanitizeFullTmnt, validateFullTmnt } from "@/lib/validation/tmnts/full/validate";
 import { Prisma } from "@prisma/client";
 
-
 // routes /api/tmnts/full/:id
 
 export async function GET(
@@ -50,6 +49,9 @@ export async function GET(
                 },
                 stage: true,
               },
+              orderBy: {
+                sort_order: "asc",
+              },
             },
           },
         },
@@ -67,6 +69,9 @@ export async function GET(
                     brkt_seeds: true,
                   },
                 }                
+              },
+              orderBy: {
+                sort_order: "asc",
               },
             },
             div_entries: {
@@ -94,13 +99,22 @@ export async function GET(
               include: {
                 elim_entries: true
               },
+              orderBy: {
+                sort_order: "asc", // sort elims ascending
+              },
             },
             pots: {
               include: {
                 pot_entries: true
               },
+              orderBy: {
+                sort_order: "asc", // sort pots ascending
+              },
             },
-          },          
+          },
+          orderBy: {
+            sort_order: "asc", // sort divs ascending
+          },
         },
       },
     });

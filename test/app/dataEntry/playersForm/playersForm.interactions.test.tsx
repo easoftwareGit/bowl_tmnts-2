@@ -17,8 +17,8 @@ import { ioDataError } from "@/lib/enums/enums";
 import PlayersEntryForm from "@/app/dataEntry/playersForm/playersForm";
 import {
   playerEntryRow,
-  populateRows,
-} from "@/app/dataEntry/playersForm/populateRows";
+  populatePlayerRows,
+} from "@/app/dataEntry/playersForm/populatePlayerRows";
 import { SquadStage } from "@prisma/client";
 
 const mockPush = jest.fn();
@@ -344,7 +344,7 @@ const makeStore = (bowls: bowlType[] = []) =>
 const renderForm = (opts?: { rows?: playerEntryRow[]; bowls?: bowlType[] }) => {
   const store = makeStore(opts?.bowls ?? [mockBowl]);
 
-  let rowsState = opts?.rows ?? populateRows(mockTmntFullData);
+  let rowsState = opts?.rows ?? populatePlayerRows(mockTmntFullData);
 
   const setRows = jest.fn((updater: React.SetStateAction<playerEntryRow[]>) => {
     rowsState = typeof updater === "function" ? updater(rowsState) : updater;
@@ -709,7 +709,7 @@ describe("PlayersEntryForm2a - interactions", () => {
       render(
         <Provider store={store}>
           <PlayersEntryForm
-            rows={populateRows(mockTmntFullData)}
+            rows={populatePlayerRows(mockTmntFullData)}
             setRows={jest.fn()}
             onNavigateAfterSave={onNavigateAfterSave}
           />
@@ -723,7 +723,7 @@ describe("PlayersEntryForm2a - interactions", () => {
     
     it("calls onNavigateAfterSave before saving", async () => {
       const onNavigateAfterSave = jest.fn();
-      const rows = populateRows(mockTmntFullData);
+      const rows = populatePlayerRows(mockTmntFullData);
 
       const store = makeStore([mockBowl]);
 
@@ -1099,7 +1099,7 @@ describe("PlayersEntryForm2a - interactions", () => {
       render(
         <Provider store={store}>
           <PlayersEntryForm
-            rows={populateRows(mockTmntFullData)}
+            rows={populatePlayerRows(mockTmntFullData)}
             setRows={jest.fn()}
             enableEditing={false}
           />
@@ -1119,7 +1119,7 @@ describe("PlayersEntryForm2a - interactions", () => {
       render(
         <Provider store={store}>
           <PlayersEntryForm
-            rows={populateRows(mockTmntFullData)}
+            rows={populatePlayerRows(mockTmntFullData)}
             setRows={jest.fn()}
             enableEditing={false}
           />

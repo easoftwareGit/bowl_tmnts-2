@@ -7,8 +7,7 @@ import {
   deleteAllDivsForTmnt,
   deleteDiv,
   getAllDivsForTmnt,
-  postDiv,
-  postManyDivs,
+  postDiv,  
   putDiv,
 } from "@/lib/db/divs/dbDivs";
 
@@ -141,44 +140,6 @@ describe("non standard throw cases", () => {
 
       await expect(postDiv(manyDivs[0])).rejects.toThrow(
         "postDiv failed: testing 123"
-      );
-
-      expect(mockedPrivateApi.post).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("postManyDivs - non standard throw cases", () => {
-    it("should throw an error when response.data.count is missing", async () => {
-      mockedPrivateApi.post.mockResolvedValue({
-        data: {},
-      });
-
-      await expect(postManyDivs(manyDivs)).rejects.toThrow(
-        "postManyDivs failed: Error posting divs"
-      );
-
-      expect(mockedPrivateApi.post).toHaveBeenCalledTimes(1);
-      expect(mockedPrivateApi.post).toHaveBeenCalledWith(
-        manyUrl,
-        JSON.stringify(manyDivs)
-      );
-    });
-
-    it("should throw with custom message if privateApi.post rejects", async () => {
-      mockedPrivateApi.post.mockRejectedValueOnce(new Error("Network Error"));
-
-      await expect(postManyDivs(manyDivs)).rejects.toThrow(
-        "postManyDivs failed: Network Error"
-      );
-
-      expect(mockedPrivateApi.post).toHaveBeenCalledTimes(1);
-    });
-
-    it("should throw an error when privateApi.post rejects with non-error", async () => {
-      mockedPrivateApi.post.mockRejectedValueOnce("testing 123");
-
-      await expect(postManyDivs(manyDivs)).rejects.toThrow(
-        "postManyDivs failed: testing 123"
       );
 
       expect(mockedPrivateApi.post).toHaveBeenCalledTimes(1);

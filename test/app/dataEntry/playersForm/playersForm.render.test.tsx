@@ -17,8 +17,8 @@ import { ioDataError } from "@/lib/enums/enums";
 import PlayersEntryForm from "@/app/dataEntry/playersForm/playersForm";
 import {
   playerEntryRow,
-  populateRows,
-} from "@/app/dataEntry/playersForm/populateRows";
+  populatePlayerRows,
+} from "@/app/dataEntry/playersForm/populatePlayerRows";
 
 const mockPush = jest.fn();
 
@@ -285,7 +285,7 @@ const renderForm = (opts?: {
 }) => {
   const store = makeStore(opts?.bowls ?? [mockBowl]);
 
-  let rowsState = opts?.rows ?? populateRows(mockTmntFullData);
+  let rowsState = opts?.rows ?? populatePlayerRows(mockTmntFullData);
 
   const setRows = jest.fn((updater: React.SetStateAction<playerEntryRow[]>) => {
     rowsState = typeof updater === "function" ? updater(rowsState) : updater;
@@ -305,7 +305,7 @@ const renderForm = (opts?: {
   };
 };
 
-const currentRows = populateRows(mockTmntFullData);
+const currentRows = populatePlayerRows(mockTmntFullData);
 
 describe("PlayersEntryForm2a - render", () => {
   beforeEach(() => {

@@ -1,9 +1,8 @@
 import { BracketList } from "@/components/brackets/bracketListClass";
 import { createByePlayer } from "@/components/brackets/byePlayer";
-import type { tmntFullType } from "@/lib/types/types";
-import { playerEntryRow } from "./populateRows";
+import type { tmntFullType, errInfoType } from "@/lib/types/types";
+import { playerEntryRow } from "./populatePlayerRows";
 import { defaultBrktGames, defaultPlayersPerMatch } from "@/lib/db/initVals";
-import { errInfoType } from "./playersForm";
 import { getBrktOrElimName } from "@/lib/getName";
 
 type createBrktListArgs = {

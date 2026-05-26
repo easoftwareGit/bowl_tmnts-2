@@ -4,9 +4,8 @@ import {
   entryFeeColName,
   entryNumBrktsColName,
   feeColNameEnd,
-  // playerEntryData,
   timeStampColName,
-} from "./sfCreateColumns";
+} from "./sfCreatePlayerColumns";
 import { cloneDeep } from "lodash";
 import { isValidBtDbId } from "@/lib/validation/validation";
 
@@ -31,7 +30,7 @@ export type playerEntryRow = typeof playerEntryData;
  * @returns {playerEntryRow[]} - array of playerEntryRow
  */
 
-export const populateRows = (tmntFullData: tmntFullType): playerEntryRow[] => {
+export const populatePlayerRows = (tmntFullData: tmntFullType): playerEntryRow[] => {
   const pRows: playerEntryRow[] = [];
   // populate all players
   tmntFullData?.players?.forEach((player) => {

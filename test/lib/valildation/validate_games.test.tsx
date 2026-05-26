@@ -4,6 +4,7 @@ import type { gameType, validGamesType } from "@/lib/types/types";
 import { maxGames, maxScore } from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
 import { mockGamesToPost } from "../../mocks/tmnts/singlesAndDoubles/mockSquads";
+import { squadId2, userId } from "../../mocks/tmnts/tmntFullData/mockTmntFullData";
 
 const { gotGameData, validGameNumber, validScore, validGameData } = exportedForTesting;
 
@@ -389,8 +390,11 @@ describe('tests for game validation', () => {
 
   describe('validdateGames', () => { 
 
-    it('should validate games with id set and required', () => { 
-      const validGames: validGamesType = validateGames(mockGamesToPost);
+    const otherSquadId = 'sqd_7116ce5f80164830830a7157eb093396';
+    const validSquadId = mockGamesToPost[0].squad_id;
+
+    it('should validate games with id set and required', () => {       
+      const validGames: validGamesType = validateGames(validSquadId, mockGamesToPost);
       expect(validGames.errorCode).toBe(ErrorCode.NONE);
       expect(validGames.games.length).toBe(mockGamesToPost.length);
       for (let i = 0; i < mockGamesToPost.length; i++) {
@@ -401,6 +405,24 @@ describe('tests for game validation', () => {
         expect(validGames.games[i].score).toBe(mockGamesToPost[i].score)
       }
     })
+
+    it('should return ErrorCode.INVALID_DATA when squadId is invalid', () => { 
+      const validGames: validGamesType = validateGames('abc', mockGamesToPost);
+      expect(validGames.errorCode).toBe(ErrorCode.INVALID_DATA);
+    })
+    it('should return ErrorCode.INVALID_DATA when squadId is null', () => { 
+      const validGames: validGamesType = validateGames(null as any, mockGamesToPost);
+      expect(validGames.errorCode).toBe(ErrorCode.INVALID_DATA);
+    })
+    it('should return ErrorCode.INVALID_DATA when squadId is valid, but not a squad id', () => { 
+      const validGames: validGamesType = validateGames(userId, mockGamesToPost);
+      expect(validGames.errorCode).toBe(ErrorCode.INVALID_DATA);
+    })
+    it('should return ErrorCode.INVALID_DATA when squadId is valid, but not in games[]', () => {
+      const validGames: validGamesType = validateGames(otherSquadId, mockGamesToPost);
+      expect(validGames.errorCode).toBe(ErrorCode.INVALID_DATA);
+    })
+
     it('should return ErrorCode.MISSING_DATA when id is invalid then sanitized', () => { 
       const invalidData = [
         {
@@ -414,7 +436,7 @@ describe('tests for game validation', () => {
           ...mockGamesToPost[2],          
         },
       ]
-      const validGames: validGamesType = validateGames(invalidData);
+      const validGames: validGamesType = validateGames(validSquadId, invalidData);
       expect(validGames.errorCode).toBe(ErrorCode.MISSING_DATA);      
     })
     it('should return ErrorCode.MISSING_DATA when id is null', () => { 
@@ -430,7 +452,7 @@ describe('tests for game validation', () => {
           ...mockGamesToPost[2],          
         },
       ]
-      const validGames: validGamesType = validateGames(invalidData);
+      const validGames: validGamesType = validateGames(validSquadId, invalidData);
       expect(validGames.errorCode).toBe(ErrorCode.MISSING_DATA);
     })
     it('should return ErrorCode.MISSING_DATA when squad_id is blank', () => { 
@@ -446,7 +468,7 @@ describe('tests for game validation', () => {
           ...mockGamesToPost[2],          
         },
       ]
-      const validGames: validGamesType = validateGames(invalidData);
+      const validGames: validGamesType = validateGames(validSquadId, invalidData);
       expect(validGames.errorCode).toBe(ErrorCode.MISSING_DATA);
     })
     it('should return ErrorCode.MISSING_DATA when squad_id is null', () => { 
@@ -462,7 +484,7 @@ describe('tests for game validation', () => {
           ...mockGamesToPost[2],          
         },
       ]
-      const validGames: validGamesType = validateGames(invalidData);
+      const validGames: validGamesType = validateGames(validSquadId, invalidData);
       expect(validGames.errorCode).toBe(ErrorCode.MISSING_DATA);
     })
     it('should return ErrorCode.MISSING_DATA when squad_id is invalid', () => { 
@@ -478,7 +500,7 @@ describe('tests for game validation', () => {
           ...mockGamesToPost[2],          
         },
       ]
-      const validGames: validGamesType = validateGames(invalidData);
+      const validGames: validGamesType = validateGames(validSquadId, invalidData);
       expect(validGames.errorCode).toBe(ErrorCode.MISSING_DATA);
     })
     it('should return ErrorCode.MISSING_DATA when player_id is blank', () => { 
@@ -494,7 +516,7 @@ describe('tests for game validation', () => {
           ...mockGamesToPost[2],          
         },
       ]
-      const validGames: validGamesType = validateGames(invalidData);
+      const validGames: validGamesType = validateGames(validSquadId, invalidData);
       expect(validGames.errorCode).toBe(ErrorCode.MISSING_DATA);
     })
     it('should return ErrorCode.MISSING_DATA when player_id is null', () => { 
@@ -510,7 +532,7 @@ describe('tests for game validation', () => {
           ...mockGamesToPost[2],          
         },
       ]
-      const validGames: validGamesType = validateGames(invalidData);
+      const validGames: validGamesType = validateGames(validSquadId, invalidData);
       expect(validGames.errorCode).toBe(ErrorCode.MISSING_DATA);
     })
     it('should return ErrorCode.MISSING_DATA when player_id is invalid', () => { 
@@ -526,7 +548,7 @@ describe('tests for game validation', () => {
           ...mockGamesToPost[2],          
         },
       ]
-      const validGames: validGamesType = validateGames(invalidData);
+      const validGames: validGamesType = validateGames(validSquadId, invalidData);
       expect(validGames.errorCode).toBe(ErrorCode.MISSING_DATA);
     })
     it('should return ErrorCode.MISSING_DATA when game_num is null', () => { 
@@ -542,7 +564,7 @@ describe('tests for game validation', () => {
           ...mockGamesToPost[2],          
         },
       ]
-      const validGames: validGamesType = validateGames(invalidData);
+      const validGames: validGamesType = validateGames(validSquadId, invalidData);
       expect(validGames.errorCode).toBe(ErrorCode.MISSING_DATA);
     })
     it('should return ErrorCode.MISSING_DATA when score is null', () => { 
@@ -558,7 +580,7 @@ describe('tests for game validation', () => {
           ...mockGamesToPost[2],          
         },
       ]
-      const validGames: validGamesType = validateGames(invalidData);
+      const validGames: validGamesType = validateGames(validSquadId, invalidData);
       expect(validGames.errorCode).toBe(ErrorCode.MISSING_DATA);
     })
     it('should return ErrorCode.INVALID_DATA when game_num is invalid', () => { 
@@ -574,7 +596,7 @@ describe('tests for game validation', () => {
           ...mockGamesToPost[2],          
         },
       ]
-      const validGames: validGamesType = validateGames(invalidData);
+      const validGames: validGamesType = validateGames(validSquadId, invalidData);
       expect(validGames.errorCode).toBe(ErrorCode.INVALID_DATA);
     })
     it('should return ErrorCode.INVALID_DATA when score is invalid', () => { 
@@ -590,9 +612,24 @@ describe('tests for game validation', () => {
           ...mockGamesToPost[2],          
         },
       ]
-      const validGames: validGamesType = validateGames(invalidData);
+      const validGames: validGamesType = validateGames(validSquadId, invalidData);
       expect(validGames.errorCode).toBe(ErrorCode.INVALID_DATA);
     })
-
+    it('should return ErrorCode.INVALID_DATA when all squad_ids are not the same', () => { 
+      const invalidData = [
+        {
+          ...mockGamesToPost[0],          
+        },
+        {
+          ...mockGamesToPost[1],
+          squad_id: squadId2
+        },
+        {
+          ...mockGamesToPost[2],          
+        },
+      ]
+      const validGames: validGamesType = validateGames(validSquadId, invalidData);
+      expect(validGames.errorCode).toBe(ErrorCode.INVALID_DATA);
+    })
   })
 })

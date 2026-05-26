@@ -1,4 +1,4 @@
-import axios from "axios";
+import { privateApi } from "@/lib/api/axios";
 import { baseGamesApi } from "@/lib/api/apiPaths";
 import { testBaseGamesApi } from "../../../../test/testApi";
 import type { gameType } from "@/lib/types/types";
@@ -25,9 +25,7 @@ export const getAllGamesForSquad = async (squadId: string): Promise<gameType[]> 
   }
   let response;
   try { 
-    response = await axios.get(squadUrl + squadId, {
-      withCredentials: true,
-    });
+    response = await privateApi.get(squadUrl + squadId);
   } catch (err) {
     throw new Error(`getAllGamesForSquad failed: ${err instanceof Error ? err.message : err}`);
   }
@@ -42,4 +40,34 @@ export const getAllGamesForSquad = async (squadId: string): Promise<gameType[]> 
     game_num: game.game_num,
     score: game.score,
   }));
+}
+
+/**
+ * upserts all games for a squad
+ * 
+ * @param {gameType[]} games - array of games to upsert
+ * @returns {gameType[]} - array of games
+ * @throws {Error} - if games are invalid or API call fails
+ */
+export const upsertAllGamesForSquad = async(squadId: string, games: gameType[]): Promise<gameType[]> => {
+  // data validation is done in PUT route
+  try {
+    if (!isValidBtDbId(squadId, 'sqd')) {
+      throw new Error('Invalid squad id');
+    }
+    const found = games.filter((game) => game.squad_id !== squadId);
+    if (found.length > 0) {
+      throw new Error('All games must have passed squad id');
+    }
+    const gamesJSON = JSON.stringify(games); 
+    const response = await privateApi.put(squadUrl + squadId, gamesJSON);
+    if (response.status !== 200) {
+      throw new Error(`Unexpected status ${response.status} when upserting games`);
+    }    
+    return response.data.games;
+  } catch (err) {
+    throw new Error(
+      `upsertAllGamesForSquad failed: ${err instanceof Error ? err.message : err}`
+    );
+  }
 }

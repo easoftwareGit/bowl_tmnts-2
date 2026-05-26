@@ -58,3 +58,6 @@ export const idTypeSeparator = "_"; // separator between id type and id
 export const idTypeSeparatorLength = 1; // length of id type separator, e.g
 export const uuidLength = 32; // length of a uuid without hyphens, e.g. 123e4567e89b12d3a456426655440000
 export const baseIdLength = idTypeLength + idTypeSeparatorLength + uuidLength; // length of a base id, e.g. usr_123e4567e89b12d3a456426655440000
+
+export const TotalHdcpName = "total_hdcp";
+export const TotalPlusTotalHdcpName = "total_plus_total_hdcp";

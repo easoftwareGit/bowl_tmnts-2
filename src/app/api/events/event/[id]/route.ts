@@ -26,11 +26,6 @@ export async function GET(
     if (!event) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
-    // // add in lpox
-    // const event = {
-    //   ...prismaEvent,
-    //   lpox: prismaEvent.entry_fee,
-    // }
     return NextResponse.json({ event }, { status: 200 });
   } catch (error) {
     return standardCatchReturn(error, "error getting event");    
@@ -117,11 +112,6 @@ export async function PUT(
         sort_order: toPut.sort_order,
       },
     });
-    // // add in lpox
-    // const event = {
-    //   ...putEvent,
-    //   lpox: putEvent.entry_fee,
-    // };
     return NextResponse.json({ event }, { status: 200 });
   } catch (error) {
     return standardCatchReturn(error, "error updating event");  
@@ -303,16 +293,6 @@ export async function PATCH(
         sort_order: toPatch.sort_order || undefined,
       },
     });
-    // let event;
-    // // add in lpox if needed
-    // if (jsonProps.includes("entry_fee")) {
-    //   event = {
-    //     ...patchEvent,
-    //     lpox: patchEvent.entry_fee,
-    //   };
-    // } else {
-    //   event = patchEvent;
-    // }
     return NextResponse.json({ event }, { status: 200 });
   } catch (error) {
     return standardCatchReturn(error, "error patching event");
