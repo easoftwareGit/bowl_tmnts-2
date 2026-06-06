@@ -6,6 +6,7 @@ export type OptionalIntegerEditArgs = {
   min?: number;
   max?: number;
   onCommit?: () => void;
+  onAutoCommit?: () => void;
 };
 
 export type SyncfusionEditor = {
@@ -56,6 +57,7 @@ export const setNumericNull = (control: NumericTextBox): void => {
  *   @param {number} min - minimum value, with a default of 0,
  *   @param {number} max - maximum value, with a default of maxBrackets,
  *   @param {() => void} onCommit - callback used to recalculate totals
+ *   @param {() => void} onAutoCommit - callback used to auto-commit after 3 digits are typed
  * }
  * @return {*}  {SyncfusionEditor}
  */
@@ -64,49 +66,62 @@ export const createOptionalIntegerEdit = ({
   min = 0,
   max = maxBrackets,
   onCommit,
+  onAutoCommit,
 }: OptionalIntegerEditArgs): SyncfusionEditor => {
   let inputEl: HTMLInputElement | null = null;
   let numericObj: NumericTextBox | null = null;
   let actualInput: HTMLInputElement | null = null;
+
   let keydownHandler: ((e: KeyboardEvent) => void) | null = null;
+  let inputHandler: ((e: Event) => void) | null = null;
   let blurHandler: ((e: FocusEvent) => void) | null = null;
 
-  // set validateNow to true or false for both the visible and hidden inputs
+  let isAutoCommitting = false;
+
+  /**
+   * Sets the data-validate-now attribute on the input to control when Syncfusion validation occurs.
+   * 
+   * @param validate - whether to enable validation on the next input event
+   */
   const setValidateNow = (validate: boolean): void => {
     const value = validate ? "true" : "false";
 
     if (actualInput) actualInput.dataset.validateNow = value;
-    
+
     const hiddenInput = (numericObj as any)?.hiddenInput as
       | HTMLInputElement
       | undefined;
 
-    if (hiddenInput) hiddenInput.dataset.validateNow = value;    
+    if (hiddenInput) hiddenInput.dataset.validateNow = value;
   };
 
-  // parse the visible textbox value, not just the numericObj.value
+  /**
+   * Parses the value from the input field
+   * 
+   * @returns {number | null} - parsed integer value or null if input is empty or invalid
+   */
   const parseInputValue = (): number | null => {
     if (!actualInput) return null;
 
     const raw = actualInput.value.trim();
-
     if (raw === "") return null;
 
     const num = Number(raw);
-
     if (!Number.isFinite(num)) return null;
     if (!Number.isInteger(num)) return null;
-    if (num === 0) return null;
 
     return Math.trunc(num);
   };
 
-  // parse the visible textbox value, not just the numericObj.value
+  /**
+   * Syncs the numeric value from the input field
+   * 
+   * @returns {number | null} - parsed integer value or null if input is empty or invalid
+   */
   const syncNumericFromInput = (): number | null => {
     if (!numericObj) return null;
 
     const parsed = parseInputValue();
-
     if (parsed == null) {
       setNumericNull(numericObj);
       return null;
@@ -114,36 +129,67 @@ export const createOptionalIntegerEdit = ({
 
     numericObj.setProperties({ value: parsed }, true);
     numericObj.dataBind();
-
     return parsed;
   };
 
-  // normalize the input and calls onCommit callback (recalcualte total) if provided
+  /**
+   * Syncs the input field from the numeric value
+   */
   const normalizeAndNotify = (): void => {
     syncNumericFromInput();
     onCommit?.();
   };
 
+  /**
+   * try to Auto-commit after 3 digits are typed
+   */
+  const tryAutoCommit = (): void => {
+    if (!actualInput) return;
+    if (isAutoCommitting) return;
+
+    const rawDigits = actualInput.value.replace(/\D/g, "");
+
+    // Auto-commit only after exactly 3 typed digits:
+    // 001, 099, 234, 300 
+    // note: syncFusion allows 00# and 0## for autoCommit, 
+    // but shows # or ## after committing. This is the desired behavior
+    if (rawDigits.length !== 3) return;
+
+    const value = Number(rawDigits);
+
+    if (!Number.isInteger(value)) return;
+    if (value < min || value > max) return;
+
+    isAutoCommitting = true;
+
+    actualInput.value = rawDigits;
+
+    setValidateNow(true);
+    normalizeAndNotify();
+
+    setTimeout(() => {
+      onAutoCommit?.();
+      isAutoCommitting = false;
+    }, 0);
+  };
+
   return {
-    // create the input element
     create: (): HTMLInputElement => {
       inputEl = document.createElement("input");
       inputEl.type = "text";
       return inputEl;
     },
 
-    // write the value when row goes into edit mode
     write: (args: {
       rowData: Record<string, unknown>;
       column: { field: string };
     }): void => {
       if (!inputEl) return;
 
-      // gets the current value of the field
       const rawValue = args.rowData[args.column.field];
-      // convert it to a number (use undefined if null, empty string or 0)
+
       const initialValue: number | undefined =
-        rawValue == null || rawValue === "" || Number(rawValue) === 0
+        rawValue == null || rawValue === ""
           ? undefined
           : Number(rawValue);
 
@@ -160,57 +206,54 @@ export const createOptionalIntegerEdit = ({
       });
 
       numericObj.appendTo(inputEl);
-      // get the input element
+
       actualInput = numericObj.element as HTMLInputElement | null;
       if (!actualInput) return;
 
-      // while typing, do not show exact-fee validation yet
       setValidateNow(false);
 
-      // handle keydown and blur
       keydownHandler = (e: KeyboardEvent): void => {
         if (e.key === "Enter") {
-          // set the flag to show exact-fee validation          
           setValidateNow(true);
-          normalizeAndNotify();    
+          normalizeAndNotify();
           return;
         }
 
         if (e.key === "Tab") {
-          // set the flag to show exact-fee validation          
           setValidateNow(true);
           normalizeAndNotify();
+          return;
         }
 
-        // If the user starts typing or deleting again, suppress 
-        // validation until they leave or commit the cell.
         if (
           e.key.length === 1 ||
           e.key === "Backspace" ||
           e.key === "Delete"
         ) {
-          setValidateNow(false);          
+          setValidateNow(false);
         }
       };
 
+      inputHandler = (): void => {
+        setValidateNow(false);
+        tryAutoCommit();
+      };
+
       blurHandler = (): void => {
-        // set the flag to show exact-fee validation        
         setValidateNow(true);
-        // let blur formatting finish first
+
         setTimeout(() => {
           normalizeAndNotify();
         }, 0);
       };
 
-      // actualInput.addEventListener("keydown", keydownHandler);
       actualInput.addEventListener("keydown", keydownHandler, true);
+      actualInput.addEventListener("input", inputHandler);
       actualInput.addEventListener("blur", blurHandler);
     },
 
     read: (): number | null => {
       setValidateNow(true);
-      // VERY IMPORTANT:
-      // force one final sync right before Grid reads the editor value
       return syncNumericFromInput();
     },
 
@@ -219,17 +262,23 @@ export const createOptionalIntegerEdit = ({
         actualInput.removeEventListener("keydown", keydownHandler, true);
       }
 
+      if (actualInput && inputHandler) {
+        actualInput.removeEventListener("input", inputHandler);
+      }
+
       if (actualInput && blurHandler) {
         actualInput.removeEventListener("blur", blurHandler);
       }
 
       keydownHandler = null;
+      inputHandler = null;
       blurHandler = null;
       actualInput = null;
 
       numericObj?.destroy();
       numericObj = null;
       inputEl = null;
+      isAutoCommitting = false;
     },
   };
 };

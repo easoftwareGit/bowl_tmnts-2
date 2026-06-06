@@ -17,7 +17,7 @@ export const gameScoreColHeaderName = (gameNum: number) => `Gm ${gameNum}`;
 
 export const createScoreColumns = (
   fullTmntData: tmntFullType,
-  onGameScoreChange?: () => void,
+  onAutoCommit?: () => void,
 ): syncfusionColumnDef[] => { 
 
   if (!fullTmntData ||
@@ -105,7 +105,7 @@ export const createScoreColumns = (
         placeholder: `Gm ${g}`,
         min: 0,
         max: maxScore,
-        // onCommit: () => onGameScoreChange?.(),        
+        onAutoCommit,
       }),      
       validationRules: {
         scoreRangeRule: [

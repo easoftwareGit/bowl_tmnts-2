@@ -1,7 +1,7 @@
 import { privateApi } from "@/lib/api/axios";
 import { baseBowlsApi, baseEventsApi, baseGamesApi, basePlayersApi, baseSquadsApi, baseTmntsApi, baseUsersApi } from "@/lib/api/apiPaths";
 import { testBaseBowlsApi, testBaseEventsApi, testBaseGamesApi, testBasePlayersApi, testBaseSquadsApi, testBaseTmntsApi, testBaseUsersApi } from "../../../testApi";
-import { getAllGamesForSquad, upsertAllGamesForSquad } from "@/lib/db/games/dbGames";
+import { getAllGamesForSquad, upsertGamesForSquad } from "@/lib/db/games/dbGames";
 import { mockBowl, mockGames, mockTmntFullData, mockUser, squadId1, userId } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { cloneDeep } from "lodash";
 import { maxGames, maxScore } from "@/lib/validation/constants";
@@ -174,7 +174,7 @@ describe('dbGames', () => {
     })
 
     it('should upsert all games for a squad', async () => { 
-      const games = await upsertAllGamesForSquad(squadId1, mockGames);
+      const games = await upsertGamesForSquad(squadId1, mockGames);
       expect(games).toBeDefined();
       if (!games) return
       expect(games).toHaveLength(mockGames.length);
@@ -182,7 +182,7 @@ describe('dbGames', () => {
 
     it('should not upsert all games for a squad when squadId is invalid', async () => { 
       try {
-        await upsertAllGamesForSquad('invalid', mockGames);
+        await upsertGamesForSquad('invalid', mockGames);
       } catch (err) {
         expect(err).toBeInstanceOf(Error);
         expect((err as Error).message).toBe("upsertAllGamesForSquad failed: Invalid squad id");
@@ -190,7 +190,7 @@ describe('dbGames', () => {
     })
     it('should not upsert all games for a squad when squadId is null', async () => {       
       try {
-        await upsertAllGamesForSquad(null as any, mockGames);
+        await upsertGamesForSquad(null as any, mockGames);
       } catch (err) {
         expect(err).toBeInstanceOf(Error);
         expect((err as Error).message).toBe("upsertAllGamesForSquad failed: Invalid squad id");
@@ -198,7 +198,7 @@ describe('dbGames', () => {
     })
     it('should not upsert all games for a squad when squadId is valid, but not a squad id', async () => { 
       try {
-        await upsertAllGamesForSquad(userId, mockGames);
+        await upsertGamesForSquad(userId, mockGames);
       } catch (err) {
         expect(err).toBeInstanceOf(Error);
         expect((err as Error).message).toBe("upsertAllGamesForSquad failed: Invalid squad id");
@@ -206,7 +206,7 @@ describe('dbGames', () => {
     })
     it('should not upsert all games for a squad when squadId is valid, but does not appear in games', async () => { 
       try {
-        await upsertAllGamesForSquad(notFoundSquadId, mockGames);
+        await upsertGamesForSquad(notFoundSquadId, mockGames);
       } catch (err) {
         expect(err).toBeInstanceOf(Error);
         expect((err as Error).message).toBe("upsertAllGamesForSquad failed: All games must have passed squad id");
@@ -217,7 +217,7 @@ describe('dbGames', () => {
       const invalidGames = cloneDeep(mockGames);
       invalidGames[1].id = 'invalid';
       try {
-        await upsertAllGamesForSquad(squadId1, invalidGames);
+        await upsertGamesForSquad(squadId1, invalidGames);
       } catch (err) {
         expect(err).toBeInstanceOf(Error);
         expect((err as Error).message).toBe("upsertAllGamesForSquad failed: Request failed with status code 404");
@@ -227,7 +227,7 @@ describe('dbGames', () => {
       const invalidGames = cloneDeep(mockGames);
       invalidGames[1].id = null as any;
       try {
-        await upsertAllGamesForSquad(squadId1, invalidGames);
+        await upsertGamesForSquad(squadId1, invalidGames);
       } catch (err) {
         expect(err).toBeInstanceOf(Error);
         expect((err as Error).message).toBe("upsertAllGamesForSquad failed: Request failed with status code 404");
@@ -237,7 +237,7 @@ describe('dbGames', () => {
       const invalidGames = cloneDeep(mockGames);
       invalidGames[1].id = userId;
       try {
-        await upsertAllGamesForSquad(squadId1, invalidGames);
+        await upsertGamesForSquad(squadId1, invalidGames);
       } catch (err) {
         expect(err).toBeInstanceOf(Error);
         expect((err as Error).message).toBe("upsertAllGamesForSquad failed: Request failed with status code 404");
@@ -247,7 +247,7 @@ describe('dbGames', () => {
       const invalidGames = cloneDeep(mockGames);
       invalidGames[1].squad_id = 'invalid';
       try {
-        await upsertAllGamesForSquad(squadId1, invalidGames);
+        await upsertGamesForSquad(squadId1, invalidGames);
       } catch (err) {
         expect(err).toBeInstanceOf(Error);
         expect((err as Error).message).toBe("upsertAllGamesForSquad failed: All games must have passed squad id");
@@ -257,7 +257,7 @@ describe('dbGames', () => {
       const invalidGames = cloneDeep(mockGames);
       invalidGames[1].squad_id = null as any;
       try {
-        await upsertAllGamesForSquad(squadId1, invalidGames);
+        await upsertGamesForSquad(squadId1, invalidGames);
       } catch (err) {
         expect(err).toBeInstanceOf(Error);
         expect((err as Error).message).toBe("upsertAllGamesForSquad failed: All games must have passed squad id");
@@ -267,7 +267,7 @@ describe('dbGames', () => {
       const invalidGames = cloneDeep(mockGames);
       invalidGames[1].squad_id = userId;
       try {
-        await upsertAllGamesForSquad(squadId1, invalidGames);
+        await upsertGamesForSquad(squadId1, invalidGames);
       } catch (err) {
         expect(err).toBeInstanceOf(Error);
         expect((err as Error).message).toBe("upsertAllGamesForSquad failed: All games must have passed squad id");
@@ -277,7 +277,7 @@ describe('dbGames', () => {
       const invalidGames = cloneDeep(mockGames);
       invalidGames[1].squad_id = notFoundSquadId;
       try {
-        await upsertAllGamesForSquad(squadId1, invalidGames);
+        await upsertGamesForSquad(squadId1, invalidGames);
       } catch (err) {
         expect(err).toBeInstanceOf(Error);
         expect((err as Error).message).toBe("upsertAllGamesForSquad failed: All games must have passed squad id");
@@ -287,7 +287,7 @@ describe('dbGames', () => {
       const invalidGames = cloneDeep(mockGames);
       invalidGames[1].squad_id = squad2Id;
       try {
-        await upsertAllGamesForSquad(squadId1, invalidGames);
+        await upsertGamesForSquad(squadId1, invalidGames);
       } catch (err) {
         expect(err).toBeInstanceOf(Error);
         expect((err as Error).message).toBe("upsertAllGamesForSquad failed: All games must have passed squad id");
@@ -297,7 +297,7 @@ describe('dbGames', () => {
       const invalidGames = cloneDeep(mockGames);
       invalidGames[1].player_id = 'invalid';
       try {
-        await upsertAllGamesForSquad(squadId1, invalidGames);
+        await upsertGamesForSquad(squadId1, invalidGames);
       } catch (err) {
         expect(err).toBeInstanceOf(Error);
         expect((err as Error).message).toBe("upsertAllGamesForSquad failed: Request failed with status code 404");
@@ -307,7 +307,7 @@ describe('dbGames', () => {
       const invalidGames = cloneDeep(mockGames);
       invalidGames[1].player_id = null as any;
       try {
-        await upsertAllGamesForSquad(squadId1, invalidGames);
+        await upsertGamesForSquad(squadId1, invalidGames);
       } catch (err) {
         expect(err).toBeInstanceOf(Error);
         expect((err as Error).message).toBe("upsertAllGamesForSquad failed: Request failed with status code 404");
@@ -317,7 +317,7 @@ describe('dbGames', () => {
       const invalidGames = cloneDeep(mockGames);
       invalidGames[1].player_id = userId;
       try {
-        await upsertAllGamesForSquad(squadId1, invalidGames);
+        await upsertGamesForSquad(squadId1, invalidGames);
       } catch (err) {
         expect(err).toBeInstanceOf(Error);
         expect((err as Error).message).toBe("upsertAllGamesForSquad failed: Request failed with status code 404");
@@ -327,7 +327,7 @@ describe('dbGames', () => {
       const invalidGames = cloneDeep(mockGames);
       invalidGames[1].player_id = notFoundplayerId;
       try {
-        await upsertAllGamesForSquad(squadId1, invalidGames);
+        await upsertGamesForSquad(squadId1, invalidGames);
       } catch (err) {
         expect(err).toBeInstanceOf(Error);
         expect((err as Error).message).toBe("upsertAllGamesForSquad failed: Request failed with status code 409");
@@ -337,7 +337,7 @@ describe('dbGames', () => {
       const invalidGames = cloneDeep(mockGames);
       invalidGames[1].game_num = 0;
       try {
-        await upsertAllGamesForSquad(squadId1, invalidGames);
+        await upsertGamesForSquad(squadId1, invalidGames);
       } catch (err) {
         expect(err).toBeInstanceOf(Error);
         expect((err as Error).message).toBe("upsertAllGamesForSquad failed: Request failed with status code 404");
@@ -347,7 +347,7 @@ describe('dbGames', () => {
       const invalidGames = cloneDeep(mockGames);
       invalidGames[1].game_num = maxGames + 1;
       try {
-        await upsertAllGamesForSquad(squadId1, invalidGames);
+        await upsertGamesForSquad(squadId1, invalidGames);
       } catch (err) {
         expect(err).toBeInstanceOf(Error);
         expect((err as Error).message).toBe("upsertAllGamesForSquad failed: Request failed with status code 404");
@@ -357,7 +357,7 @@ describe('dbGames', () => {
       const invalidGames = cloneDeep(mockGames);
       invalidGames[1].game_num = null as any;
       try {
-        await upsertAllGamesForSquad(squadId1, invalidGames);
+        await upsertGamesForSquad(squadId1, invalidGames);
       } catch (err) {
         expect(err).toBeInstanceOf(Error);
         expect((err as Error).message).toBe("upsertAllGamesForSquad failed: Request failed with status code 404");
@@ -367,7 +367,7 @@ describe('dbGames', () => {
       const invalidGames = cloneDeep(mockGames);
       invalidGames[1].game_num = 'invalid' as any;
       try {
-        await upsertAllGamesForSquad(squadId1, invalidGames);
+        await upsertGamesForSquad(squadId1, invalidGames);
       } catch (err) {
         expect(err).toBeInstanceOf(Error);
         expect((err as Error).message).toBe("upsertAllGamesForSquad failed: Request failed with status code 404");
@@ -377,7 +377,7 @@ describe('dbGames', () => {
       const invalidGames = cloneDeep(mockGames);
       invalidGames[1].game_num = 1.1;
       try {
-        await upsertAllGamesForSquad(squadId1, invalidGames);
+        await upsertGamesForSquad(squadId1, invalidGames);
       } catch (err) {
         expect(err).toBeInstanceOf(Error);
         expect((err as Error).message).toBe("upsertAllGamesForSquad failed: Request failed with status code 404");
@@ -387,7 +387,7 @@ describe('dbGames', () => {
       const invalidGames = cloneDeep(mockGames);
       invalidGames[1].score = -1;
       try {
-        await upsertAllGamesForSquad(squadId1, invalidGames);
+        await upsertGamesForSquad(squadId1, invalidGames);
       } catch (err) {
         expect(err).toBeInstanceOf(Error);
         expect((err as Error).message).toBe("upsertAllGamesForSquad failed: Request failed with status code 404");
@@ -397,7 +397,7 @@ describe('dbGames', () => {
       const invalidGames = cloneDeep(mockGames);
       invalidGames[1].score = maxScore + 1;
       try {
-        await upsertAllGamesForSquad(squadId1, invalidGames);
+        await upsertGamesForSquad(squadId1, invalidGames);
       } catch (err) {
         expect(err).toBeInstanceOf(Error);
         expect((err as Error).message).toBe("upsertAllGamesForSquad failed: Request failed with status code 404");
@@ -407,7 +407,7 @@ describe('dbGames', () => {
       const invalidGames = cloneDeep(mockGames);
       invalidGames[1].score = null as any;
       try {
-        await upsertAllGamesForSquad(squadId1, invalidGames);
+        await upsertGamesForSquad(squadId1, invalidGames);
       } catch (err) {
         expect(err).toBeInstanceOf(Error);
         expect((err as Error).message).toBe("upsertAllGamesForSquad failed: Request failed with status code 404");
@@ -417,7 +417,7 @@ describe('dbGames', () => {
       const invalidGames = cloneDeep(mockGames);
       invalidGames[1].score = 'invalid' as any;
       try {
-        await upsertAllGamesForSquad(squadId1, invalidGames);
+        await upsertGamesForSquad(squadId1, invalidGames);
       } catch (err) {
         expect(err).toBeInstanceOf(Error);
         expect((err as Error).message).toBe("upsertAllGamesForSquad failed: Request failed with status code 404");
@@ -427,7 +427,7 @@ describe('dbGames', () => {
       const invalidGames = cloneDeep(mockGames);
       invalidGames[1].score = 1.1;
       try {
-        await upsertAllGamesForSquad(squadId1, invalidGames);
+        await upsertGamesForSquad(squadId1, invalidGames);
       } catch (err) {
         expect(err).toBeInstanceOf(Error);
         expect((err as Error).message).toBe("upsertAllGamesForSquad failed: Request failed with status code 404");

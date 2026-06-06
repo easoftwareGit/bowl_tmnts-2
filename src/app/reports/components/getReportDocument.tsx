@@ -4,6 +4,7 @@ import type { tmntFullType } from "@/lib/types/types";
 import RecapsPerPairReport from "./RecapsPerPairReport";
 import RecapsPerTeamReport from "./RecapsPerTeamReport";
 import ReportNotFound from "./ReportNotFound";
+import GridScoresReport from "./GridScoresReport";
 
 export type ReportDocument = {
   title: string;
@@ -35,6 +36,17 @@ export function getReportDocument(
             tmntFullData={tmntFullData}
             onRender={onRender}
           />
+        ),
+      };
+
+    case "scoreGrid":
+      return {
+        title: "Scores Grid",
+        document: (
+          <GridScoresReport
+            tmntFullData={tmntFullData}
+            onRender={onRender}
+          />  
         ),
       };
 

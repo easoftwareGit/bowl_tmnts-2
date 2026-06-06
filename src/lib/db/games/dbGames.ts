@@ -43,13 +43,13 @@ export const getAllGamesForSquad = async (squadId: string): Promise<gameType[]> 
 }
 
 /**
- * upserts all games for a squad
+ * upserts games for a squad
  * 
  * @param {gameType[]} games - array of games to upsert
  * @returns {gameType[]} - array of games
  * @throws {Error} - if games are invalid or API call fails
  */
-export const upsertAllGamesForSquad = async(squadId: string, games: gameType[]): Promise<gameType[]> => {
+export const upsertGamesForSquad = async(squadId: string, games: gameType[]): Promise<gameType[]> => {
   // data validation is done in PUT route
   try {
     if (!isValidBtDbId(squadId, 'sqd')) {
@@ -67,7 +67,7 @@ export const upsertAllGamesForSquad = async(squadId: string, games: gameType[]):
     return response.data.games;
   } catch (err) {
     throw new Error(
-      `upsertAllGamesForSquad failed: ${err instanceof Error ? err.message : err}`
+      `upsertGamesForSquad failed: ${err instanceof Error ? err.message : err}`
     );
   }
 }

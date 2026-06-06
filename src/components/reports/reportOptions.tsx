@@ -15,6 +15,7 @@ const reports: ReportOption[] = [
   // { id: "laneAssignments", label: "Lane Assignments" },
   { id: "recapsPerPair", label: "Recaps - per Pair" },
   { id: "recapsPerTeam", label: "Recaps - per Team" },
+  { id: "scoreGrid", label: "Scores Grid" },
   // { id: "standings", label: "Standings" },
 ];
 
@@ -55,7 +56,6 @@ const ReportOptions: React.FC<ReportOptionsProps> = ({
   }, [show, onClose]);
     
   const handlePrint = (): void => {
-    console.log("print report id: ", selectedReportId);
 
     router.push(`/reports/${tmntId}/${selectedReportId}`);
     // // pring logic goes here

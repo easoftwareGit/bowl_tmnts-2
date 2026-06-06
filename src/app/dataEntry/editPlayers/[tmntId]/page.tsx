@@ -294,7 +294,6 @@ export default function EditPlayersPage() {
     tmntLoadStatus === "loading" ||
     (tmntLoadStatus === "succeeded" && !gotStage);  
 
-  // const enableEditing = (stage === SquadStage.DEFINE || stage === SquadStage.ENTRIES);
   const enableEditing =
     isNavigatingAfterSave ||
     stage === SquadStage.DEFINE ||

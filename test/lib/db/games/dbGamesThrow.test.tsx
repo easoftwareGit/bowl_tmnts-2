@@ -1,7 +1,7 @@
 import { privateApi } from "@/lib/api/axios";
 import { baseGamesApi } from "@/lib/api/apiPaths";
 import { testBaseGamesApi } from "../../../../test/testApi";
-import { getAllGamesForSquad, upsertAllGamesForSquad } from "@/lib/db/games/dbGames";
+import { getAllGamesForSquad, upsertGamesForSquad } from "@/lib/db/games/dbGames";
 import { mockGames } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 
 // If running tests AND a test URL is defined, use it; otherwise use the app API path
@@ -69,7 +69,7 @@ describe("non standard throw cases", () => {
     });
   });
 
-  describe("upsertAllGamesForSquad - non standard throw cases", () => {
+  describe("upsertGamesForSquad - non standard throw cases", () => {
     
     afterEach(() => {
       jest.restoreAllMocks();
@@ -82,8 +82,8 @@ describe("non standard throw cases", () => {
         data: {},
       });
 
-      await expect(upsertAllGamesForSquad(mockGames[0].squad_id, mockGames)).rejects.toThrow(
-        "upsertAllGamesForSquad failed: Unexpected status 500 when upserting games"
+      await expect(upsertGamesForSquad(mockGames[0].squad_id, mockGames)).rejects.toThrow(
+        "upsertGamesForSquad failed: Unexpected status 500 when upserting games"
       );
 
       expect(mockPrivatePut).toHaveBeenCalledTimes(1);
@@ -95,8 +95,8 @@ describe("non standard throw cases", () => {
     it("should throw with custom message if axios.get rejects", async () => {
       mockPrivatePut.mockRejectedValueOnce(new Error("Network Error"));
 
-      await expect(upsertAllGamesForSquad(mockGames[0].squad_id, mockGames)).rejects.toThrow(
-        "upsertAllGamesForSquad failed: Network Error"
+      await expect(upsertGamesForSquad(mockGames[0].squad_id, mockGames)).rejects.toThrow(
+        "upsertGamesForSquad failed: Network Error"
       );
 
       expect(mockPrivatePut).toHaveBeenCalledTimes(1);
@@ -104,8 +104,8 @@ describe("non standard throw cases", () => {
     it("should throw an error when axios.put rejects with non-error", async () => {
       mockPrivatePut.mockRejectedValueOnce("testing 123");
 
-      await expect(upsertAllGamesForSquad(mockGames[0].squad_id, mockGames)).rejects.toThrow(
-        "upsertAllGamesForSquad failed: testing 123"
+      await expect(upsertGamesForSquad(mockGames[0].squad_id, mockGames)).rejects.toThrow(
+        "upsertGamesForSquad failed: testing 123"
       );
 
       expect(mockPrivatePut).toHaveBeenCalledTimes(1);
@@ -114,9 +114,9 @@ describe("non standard throw cases", () => {
     it("should throw when squad id is invalid", async () => {
 
       await expect(
-        upsertAllGamesForSquad("invalid", mockGames)
+        upsertGamesForSquad("invalid", mockGames)
       ).rejects.toThrow(
-        "upsertAllGamesForSquad failed: Invalid squad id"
+        "upsertGamesForSquad failed: Invalid squad id"
       );
 
       expect(mockPrivatePut).not.toHaveBeenCalled();
@@ -131,9 +131,9 @@ describe("non standard throw cases", () => {
       invalidGames[0].squad_id = "sqd_different12345678901234567890";
 
       await expect(
-        upsertAllGamesForSquad(mockGames[0].squad_id, invalidGames)
+        upsertGamesForSquad(mockGames[0].squad_id, invalidGames)
       ).rejects.toThrow(
-        "upsertAllGamesForSquad failed: All games must have passed squad id"
+        "upsertGamesForSquad failed: All games must have passed squad id"
       );
 
       expect(mockPrivatePut).not.toHaveBeenCalled();

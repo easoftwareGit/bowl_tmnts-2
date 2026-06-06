@@ -3,9 +3,9 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
-import { useParams } from "next/navigation";
-import { fetchGamesForSquad, getGamesForSquadStatus } from "@/redux/features/gamesForSquad/gamesForSquadSlice";
-import { populateScoreRows, scoreEntryRow } from "../../scoresForm/populateScoreRows";
+import { useParams, useRouter } from "next/navigation";
+import { fetchGamesForSquad, getGamesForSquadLoadStatus } from "@/redux/features/gamesForSquad/gamesForSquadSlice";
+import { populateScoreRows, scoreEntryRow } from "../../scoresForm/scoreRows";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 import { getTmntFullDataLoadStatus } from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import ScoresEntryForm from "../../scoresForm/scoresForm";
@@ -14,6 +14,8 @@ import WaitModal from "@/components/modal/waitModal";
 export default function EditScoresPage() { 
   const dispatch = useDispatch<AppDispatch>();
   const params = useParams<{ squadId: string }>();
+  const router = useRouter();
+
   const squadId = params.squadId;
 
   const [rows, setRows] = useState<scoreEntryRow[]>([]);
@@ -35,59 +37,58 @@ export default function EditScoresPage() {
   );  
 
   const tmntLoadStatus = useSelector(getTmntFullDataLoadStatus);
-  const gamesLoadStatus = useSelector(getGamesForSquadStatus);
+  const gamesLoadStatus = useSelector(getGamesForSquadLoadStatus);
 
   const [isNavigatingAfterSave, setIsNavigatingAfterSave] = useState(false);
+  const [dataWasChanged, setDataWasChanged] = useState(false);
+
+  const runTmntUrl = `/dataEntry/runTmnt/${tmntFullData?.tmnt.id}`;
 
   // fetch games for this squad
   useEffect(() => {
     if (!squadId) return;
     dispatch(fetchGamesForSquad(squadId));
   }, [dispatch, squadId]);
-  
-  // init values for form when retrieving data from state
-  // computes ALL initial derived values from tournament data.
-  // calculations only need to be done once, no recalc after every render
-  const initValues = useMemo(() => { 
-    // if no tmnt data or non array for games 
-    if (!tmntFullData || !Array.isArray(games)) {      
-      return { currRows: [] as scoreEntryRow[] };
-    }
-    // build rows - most of the work
-    return {
-      currRows: populateScoreRows(tmntFullData, games)
-    } 
-  }, [tmntFullData, games]);
 
   // write init values into state "once", when tmnt data finishes loading
   // guard with initializedRef to avoid overwriting user edits if redux data updates later
   useEffect(() => {
     if (tmntLoadStatus !== "succeeded" || gamesLoadStatus !== "succeeded") return;
     if (initializedRef.current) return; // run only once
-    
-    const { currRows } = initValues;
+
+    const currRows = populateScoreRows(
+      tmntFullData,
+      games,
+    );
+
     setRows(currRows);
 
     origRowsRef.current = currRows;
     initializedRef.current = true;    
-  }, [tmntLoadStatus, gamesLoadStatus, initValues]);
 
-  const dataWasChanged = useCallback(() => {
-    const orig = origRowsRef.current || [];
-    for (let i = 0; i < rows.length; i++) {
-      if (JSON.stringify(rows[i]) !== JSON.stringify(orig[i])) return true;
-    }
-    return false;
-  }, [rows]);  
+  }, [tmntLoadStatus, gamesLoadStatus, tmntFullData, games, setRows]);
 
-  useUnsavedChangesGuard(dataWasChanged);
+  // useUnsavedChangesGuard(() => dataWasChanged);
+  useUnsavedChangesGuard(() => dataWasChanged && !isNavigatingAfterSave);
 
   const isLoading =
-    tmntLoadStatus === "loading" ||
-    gamesLoadStatus === "loading";
+    !initializedRef.current &&
+    (
+      tmntLoadStatus === "loading" ||
+      gamesLoadStatus === "loading"
+    );
 
   const enableEditing = true;  
-  
+
+  // after save, if user tries to navigate away, don't want to show the unsaved changes prompt
+  useEffect(() => {
+    if (!isNavigatingAfterSave) return;
+    if (dataWasChanged) return;
+    if (!tmntFullData?.tmnt.id) return;
+
+    router.push(runTmntUrl);
+  }, [isNavigatingAfterSave, dataWasChanged, tmntFullData, router, runTmntUrl]);
+
   return (
     <>
       <div className="scores-page-wrapper">
@@ -104,7 +105,15 @@ export default function EditScoresPage() {
                 rows={rows}
                 setRows={setRows}
                 enableEditing={enableEditing}
+                dataWasChanged={dataWasChanged}
+                onDataChanged={() => setDataWasChanged(true)}
+                onDataReset={() => setDataWasChanged(false)}
                 onNavigateAfterSave={() => setIsNavigatingAfterSave(true)}
+                onSaveComplete={(savedRows) => {
+                  setRows(savedRows);
+                  origRowsRef.current = savedRows.map(row => ({ ...row }));
+                  setDataWasChanged(false);
+                }}
               />
             </>
           )}
