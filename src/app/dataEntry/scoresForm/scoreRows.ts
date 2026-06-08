@@ -76,44 +76,6 @@ export const extractGameScores = (
   return gameScores;
 };
 
-// export const extractGameScores = (
-//   rows: scoreEntryRow[],
-//   games: gameType[],
-//   squadId: string,
-// ): gameType[] => {
-//   const gameScores: gameType[] = [];
-//   rows.forEach((row) => {
-//     for (const [key, value] of Object.entries(row)) {
-//       if (key.startsWith("game_") && value !== null) {
-//         const gameNum = parseInt(key.split("_")[1]);
-//         const existingGame = games.find(
-//           (game) =>
-//             game.player_id === row.player_id && game.game_num === gameNum,
-//         );
-//         if (existingGame) {
-//           if (existingGame.score !== value) { // if game score was edited
-//             // update game
-//             gameScores.push({
-//               ...existingGame,
-//               score: value,
-//             });
-//           }
-//         } else {
-//           // new game score   
-//           gameScores.push({
-//             id: btDbUuid('gam'), 
-//             squad_id: squadId,
-//             player_id: row.player_id,
-//             game_num: gameNum,
-//             score: value,
-//           });
-//         }
-//       }
-//     }
-//   });
-//   return gameScores;
-// };
-
 /**
  * Populate rows for scores form
  *

@@ -33,6 +33,10 @@ import { initModalObj, modalObjectType } from "@/components/modal/modalObjType";
 import "./scoresForm.css";
 import WaitModal from "@/components/modal/waitModal";
 
+/*********
+ * Types *
+ *********/
+
 type totalType = {
   total: number;
   plusMinus: string;
@@ -66,16 +70,19 @@ const ScoresEntryForm: React.FC<ChildProps> = ({
   
   const [confModalObj, setConfModalObj] = useState<modalObjectType>(initModalObj);
 
+  /***********************
+   * Toolbar Constants   *
+   ***********************/
+
   const CANCEL_ID = "undo_all";
-  const CANCEL_CLOSE_ID = "cancel";
+  const BACK_ID = "back";
   const EDIT_ID = "edit";
   const SAVE_ID = "save";
   const SAVE_CLOSE_ID = "done";
 
-  const cancelClosetext = enableEditing ? "Cancel and Close" : "Return to Run";
-  const cancelCloseTooltip = enableEditing
-    ? "Cancel all changes and return to the Run Tournament page"
-    : "Return to the Run Tournament page";
+  /*******************
+   * Toolbar Options *
+   *******************/
 
   const toolbarOptions: (string | ItemModel)[] = [    
     {
@@ -103,12 +110,16 @@ const ScoresEntryForm: React.FC<ChildProps> = ({
       prefixIcon: "e-icons e-cancel",
     },
     {
-      text: cancelClosetext,
-      tooltipText: cancelCloseTooltip,
-      id: CANCEL_CLOSE_ID,
+      text: "Back",
+      tooltipText: "Back to the Run Tournament page",
+      id: BACK_ID,
       prefixIcon: "e-icons e-back",
     },
   ];
+
+  /*****************
+   * edit setiings *
+   *****************/
 
   const editSettings: EditSettingsModel = {
     allowEditing: enableEditing,
@@ -119,6 +130,10 @@ const ScoresEntryForm: React.FC<ChildProps> = ({
     showDeleteConfirmDialog: false,
   };
 
+  /****************
+   * Redux State  *
+   ****************/
+
   const tmntFullData = useSelector(
     (state: RootState) => state.tmntFullData.tmntFullData,
   );
@@ -127,6 +142,10 @@ const ScoresEntryForm: React.FC<ChildProps> = ({
   );
   const saveStatus = useSelector(getGamesForSquadSaveStatus);
   const loadStatus = useSelector(getGamesForSquadLoadStatus);
+
+  /********
+   * Refs *
+   ********/
 
   const gridRef = useRef<GridComponent | null>(null);
   const lastFocusedRowIndexRef = useRef<number | null | undefined>(null);
@@ -145,11 +164,74 @@ const ScoresEntryForm: React.FC<ChildProps> = ({
   const saveRequestedRef = useRef(false);
   const closeAfterSaveRef = useRef(false);
 
-  const runTmntUrl = `/dataEntry/runTmnt/${tmntFullData?.tmnt.id}`;
+  /******************
+   * Derived Values *
+   ******************/
 
-  /*******************
-   * modal functions *
-   *******************/
+  const runTmntUrl = `/dataEntry/runTmnt/${tmntFullData?.tmnt.id}`;  
+
+  /*********************
+   * Utility Functions *
+   *********************/
+
+  const returnToRunTmnt = useCallback(() => {
+    router.push(runTmntUrl);
+  }, [router, runTmntUrl]);
+
+  /**
+   * Calculates the totals for a row of scores
+   *
+   * @param {scoreEntryRow} row - The row with game scores to calculate totals 
+   * @param {number} hdcp - The handicap value
+   * @returns {totalType} - The calculated totals
+   */
+  const calcRowTotals = (row: scoreEntryRow, hdcp: number): totalType => {
+    let total = 0;
+    let plusMinus = 0;
+    let totalHdcp = 0;
+    let totalPlusHdcp = 0;
+
+    let games = 0;
+    Object.entries(row).forEach(([key, value]) => {
+      if (!key.startsWith("game_")) return;
+
+      const num = Number(value);
+      if (Number.isFinite(num)) {
+        total += num;
+      }
+      if (value !== null) games++;
+    });
+    plusMinus = total - (games * 200); // 200 is par for bowling
+    totalHdcp = total + (hdcp * games);
+    totalPlusHdcp = total + totalHdcp;
+
+    return {
+      total,
+      plusMinus: plusMinus > 0 ? `+${plusMinus}` : `${plusMinus}`,
+      totalHdcp,
+      totalPlusHdcp,    
+    };
+  };
+
+  /**
+   * Gets the first editable field in the grid
+   * 
+   * @returns {string | null} - name of first editable field or null if none found
+   */
+  const getFirstEditableField = (): string | null => {
+    const grid = gridRef.current;
+    if (!grid) return null;
+
+    const col = grid
+      .getColumns()
+      .find((c) => c.field?.startsWith("game_"));
+
+    return col?.field ?? null;
+  };
+
+  /******************
+   * modal Handlers *
+   ******************/
 
   /**
    * runs when the user clicks yes in the confirm modal
@@ -180,10 +262,10 @@ const ScoresEntryForm: React.FC<ChildProps> = ({
       return;
     }
     
-    /********************
-     * cancel and close *
-     ********************/
-    if (confModalObj.id === CANCEL_CLOSE_ID) {
+    /********
+     * back *
+     ********/
+    if (confModalObj.id === BACK_ID) {
       
       setConfModalObj(initModalObj); // reset modal object (hides modal)
 
@@ -194,7 +276,8 @@ const ScoresEntryForm: React.FC<ChildProps> = ({
       pendingMoveRef.current = null;
 
       // go back to run tournament page
-      router.push(runTmntUrl);
+      // router.push(runTmntUrl);
+      returnToRunTmnt();
       return;
     }
   };
@@ -202,6 +285,10 @@ const ScoresEntryForm: React.FC<ChildProps> = ({
   const confirmNo = (): void => {
     setConfModalObj(initModalObj); // reset modal object (hides modal)
   };  
+
+  /****************
+   * Grid Helpers *
+   ****************/
 
   /**
    * create a mutable copy of the rows for the Syncfusion grid
@@ -236,89 +323,10 @@ const ScoresEntryForm: React.FC<ChildProps> = ({
   }, []);
 
   /**
-   * Updates the toolbar state based on whether data has changed
+   * Starts editing the first editable field in the grid
    *
    * @returns {void}
    */
-  const updateToolbarState = useCallback(() => {
-    const grid = gridRef.current;
-    if (!grid) return;
-
-    grid.toolbarModule.enableItems(
-      [SAVE_ID, SAVE_CLOSE_ID, CANCEL_ID],
-      dataWasChanged
-    );
-  }, [dataWasChanged]);
-
-  /**
-   * Updates the toolbar state when the rows change
-   *
-   * @returns {void}
-   */
-  useEffect(() => {
-    updateToolbarState();
-  }, [updateToolbarState]);
-
-  /**
-   * Calculates the totals for a row of scores
-   *
-   * @param {scoreEntryRow} row - The row with game scores to calculate totals 
-   * @param {number} hdcp - The handicap value
-   * @returns {totalType} - The calculated totals
-   */
-  const calcRowTotals = (row: scoreEntryRow, hdcp: number): totalType => {
-    let total = 0;
-    let plusMinus = 0;
-    let totalHdcp = 0;
-    let totalPlusHdcp = 0;
-
-    let games = 0;
-    Object.entries(row).forEach(([key, value]) => {
-      if (!key.startsWith("game_")) return;
-
-      const num = Number(value);
-      if (Number.isFinite(num)) {
-        total += num;
-      }
-      if (value !== null) games++;
-    });
-    plusMinus = total - (games * 200); // 200 is par for bowling
-    totalHdcp = total + (hdcp * games);
-    totalPlusHdcp = total + totalHdcp;
-
-    return {
-      total,
-      plusMinus: plusMinus >= 0 ? `+${plusMinus}` : `${plusMinus}`,
-      totalHdcp,
-      totalPlusHdcp,    
-    };
-  };
-
-  /**
-   * Creates the columns for the Syncfusion grid
-   */
-  const gameScoreColumns = useMemo(
-    () =>
-      createScoreColumns(tmntFullData, autoCommitAndMove),
-    [ tmntFullData, autoCommitAndMove ],
-  );
-
-  /**
-   * Gets the first editable field in the grid
-   * 
-   * @returns {string | null} - name of first editable field or null if none found
-   */
-  const getFirstEditableField = (): string | null => {
-    const grid = gridRef.current;
-    if (!grid) return null;
-
-    const col = grid
-      .getColumns()
-      .find((c) => c.field?.startsWith("game_"));
-
-    return col?.field ?? null;
-  };
-
   const beginToolbarEdit = useCallback((): void => {
     const grid = gridRef.current;
     if (!grid) return;
@@ -350,42 +358,37 @@ const ScoresEntryForm: React.FC<ChildProps> = ({
     }, 0);
   }, [gridData.length]);
 
-  const toolbarClick = useCallback((args: ClickEventArgs): void => {
+  /**
+   * Updates the toolbar state based on whether data has changed
+   *
+   * @returns {void}
+   */
+  const updateToolbarState = useCallback(() => {
     const grid = gridRef.current;
     if (!grid) return;
 
-    switch (args.item.id) {
-      case EDIT_ID:
-        beginToolbarEdit();
-        break;
-      case SAVE_ID:
-        saveRequestedRef.current = true;
-        closeAfterSaveRef.current = false;
-        grid.editModule.batchSave();
-        break;
-      case SAVE_CLOSE_ID:   
-        saveRequestedRef.current = true;
-        closeAfterSaveRef.current = true;
-        grid.editModule.batchSave();
-        break;
-      case CANCEL_ID:
-        setConfModalObj({
-          show: true,
-          id: CANCEL_ID,        
-          title: cancelConfTitle,        
-          message: 'Do you want to cancel edits?',
-        });
-        break;          
-      case CANCEL_CLOSE_ID:
-        setConfModalObj({
-          show: true,
-          id: CANCEL_CLOSE_ID,        
-          title: cancelConfTitle,        
-          message: 'Do you want to cancel edits and return to the Run Tournament page?',
-        });
-        break;
-    }
-  }, [beginToolbarEdit] );
+    grid.toolbarModule.enableItems(
+      [SAVE_ID, SAVE_CLOSE_ID, CANCEL_ID],
+      dataWasChanged
+    );
+  }, [dataWasChanged]);
+
+  /***********
+   * Effects *
+   ***********/
+
+  /**
+   * Updates the toolbar state when the rows change
+   *
+   * @returns {void}
+   */
+  useEffect(() => {
+    updateToolbarState();
+  }, [updateToolbarState]);
+
+  /**********************
+   * Grid Event Handlers *
+   **********************/
 
   const handleActionComplete = useCallback(
     async (args: ActionEventArgs) => {
@@ -443,30 +446,6 @@ const ScoresEntryForm: React.FC<ChildProps> = ({
     ],
   );
 
-  const handleRecordClick = useCallback(
-    (args: RecordClickEventArgs): void => {
-      lastFocusedRowIndexRef.current = args.rowIndex;
-
-      const field = (args.column as { field?: string })?.field;
-      if (field) {
-        lastFocusedFieldRef.current = field;
-      }
-    }, 
-    [],
-  );
-
-  const handleRecordDoubleClick = useCallback(
-    (args: RecordDoubleClickEventArgs): void => {
-      lastFocusedRowIndexRef.current = args.rowIndex;
-
-      const field = (args.column as { field?: string })?.field;
-      if (field) {
-        lastFocusedFieldRef.current = field;
-      }
-    }, 
-    [],
-  );
-
   const handleCellSaved = useCallback((args: CellSaveArgs): void => {
     const grid = gridRef.current;
     if (!grid) return;
@@ -504,9 +483,7 @@ const ScoresEntryForm: React.FC<ChildProps> = ({
       setTimeout(() => {
         const currentGrid = gridRef.current;
         if (!currentGrid) return;
-        // currentGrid.startEdit is needed to prevent a Syncfusion error 
-        // about editing multiple cells at once
-        currentGrid.startEdit;
+        // Small timeout allows Syncfusion to finish the current
         // move to the next cell
         currentGrid.editCell(
           pendingMove.rowIndex,
@@ -518,6 +495,88 @@ const ScoresEntryForm: React.FC<ChildProps> = ({
     currentEditRef.current = null;
   }, [gridData.length, onDataChanged] );
 
+  const handleRecordClick = useCallback(
+    (args: RecordClickEventArgs): void => {
+      lastFocusedRowIndexRef.current = args.rowIndex;
+
+      const field = (args.column as { field?: string })?.field;
+      if (field) {
+        lastFocusedFieldRef.current = field;
+      }
+    }, 
+    [],
+  );
+
+  const handleRecordDoubleClick = useCallback(
+    (args: RecordDoubleClickEventArgs): void => {
+      lastFocusedRowIndexRef.current = args.rowIndex;
+
+      const field = (args.column as { field?: string })?.field;
+      if (field) {
+        lastFocusedFieldRef.current = field;
+      }
+    }, 
+    [],
+  );
+
+  const toolbarClick = useCallback((args: ClickEventArgs): void => {
+    const grid = gridRef.current;
+    if (!grid) return;
+
+    switch (args.item.id) {
+      case EDIT_ID:
+        beginToolbarEdit();
+        break;
+      case SAVE_ID:
+        saveRequestedRef.current = true;
+        closeAfterSaveRef.current = false;
+        grid.editModule.batchSave();
+        break;
+      case SAVE_CLOSE_ID:   
+        saveRequestedRef.current = true;
+        closeAfterSaveRef.current = true;
+        grid.editModule.batchSave();
+        break;
+      case CANCEL_ID:
+        setConfModalObj({
+          show: true,
+          id: CANCEL_ID,        
+          title: cancelConfTitle,        
+          message: 'Do you want to cancel edits?',
+        });
+        break;          
+      case BACK_ID:
+        if (dataWasChanged) {
+          setConfModalObj({
+            show: true,
+            id: BACK_ID,
+            title: cancelConfTitle,
+            message: 'There are unsaved edits. Do you want to cancel edits and return to the Run Tournament page?',
+          });
+        } else { 
+          returnToRunTmnt();
+        }
+        break;
+    }
+  }, [beginToolbarEdit, dataWasChanged, returnToRunTmnt] );
+
+  /******************
+   * Memoized Data  *
+   ******************/
+
+  /**
+   * Creates the columns for the Syncfusion grid
+   */
+  const gameScoreColumns = useMemo(
+    () =>
+      createScoreColumns(tmntFullData, autoCommitAndMove),
+    [ tmntFullData, autoCommitAndMove ],
+  );
+
+  /**********
+   * Render *
+   **********/
+  
   return (
     <>
       <WaitModal show={loadStatus === "loading"} message="Loading..." />

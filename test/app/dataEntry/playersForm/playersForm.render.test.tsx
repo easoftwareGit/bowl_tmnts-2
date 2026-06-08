@@ -378,8 +378,8 @@ describe("PlayersEntryForm2a - render", () => {
             id: "validate",
           }),
           expect.objectContaining({
-            text: "Cancel All",
-            id: "cancel_all",
+            text: "Back",
+            id: "back",
           }),
         ]),
       );
@@ -395,7 +395,7 @@ describe("PlayersEntryForm2a - render", () => {
       expect(lastAggregateColumnDirectives.length).toBeGreaterThan(0);
     });
 
-    it("enables Finalize and disables Save on initial render", async () => {
+    it("enables Validate and disables Save on initial render", async () => {
       renderForm({ rows: currentRows });
 
       act(() => {
@@ -552,9 +552,10 @@ describe("PlayersEntryForm2a - render", () => {
     it("navigates immediately when cancel all is clicked with no rows", async () => {
       renderForm({ rows: [] });
 
+      expect(lastGridProps?.toolbarClick).toBeDefined();
       await lastGridProps?.toolbarClick?.({
         item: {
-          id: "cancel_all",
+          id: "back",
         },
       });
 
@@ -563,41 +564,23 @@ describe("PlayersEntryForm2a - render", () => {
       );
     });
 
-    it("opens cancel confirmation modal when rows exist", async () => {
+    it("navigates immediately when Back is clicked and no pending changes exist", async () => {
       renderForm({ rows: currentRows });
 
+      expect(lastGridProps?.toolbarClick).toBeDefined();
       await act(async () => {
         await lastGridProps?.toolbarClick?.({
           item: {
-            id: "cancel_all",
+            id: "back",
           },
         });
       });
-
-      expect(screen.getByTestId("ModalConfirmMock")).toBeInTheDocument();
-
-      expect(screen.getByTestId("confirm-title")).toHaveTextContent(
-        "Cancel All",
-      );
-    });
-
-    it("navigates away when cancel all is confirmed", async () => {
-      renderForm({ rows: currentRows });
-
-      await act(async () => {
-        await lastGridProps?.toolbarClick?.({
-          item: {
-            id: "cancel_all",
-          },
-        });
-      });
-
-      screen.getByRole("button", { name: "Yes" }).click();
 
       expect(mockPush).toHaveBeenCalledWith(
         `/dataEntry/runTmnt/${mockTmntFullData.tmnt.id}`,
-      );
+      );      
     });
+
   });
 
   describe("delete actions", () => {
@@ -667,29 +650,6 @@ describe("PlayersEntryForm2a - render", () => {
       ).toBeInTheDocument();
     });
 
-    it("changes cancel button text to Return to Run", () => {
-      const store = makeStore([mockBowl]);
-
-      render(
-        <Provider store={store}>
-          <PlayersEntryForm
-            rows={currentRows}
-            setRows={jest.fn()}
-            enableEditing={false}
-          />
-        </Provider>,
-      );
-
-      expect(lastGridProps?.toolbar).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            text: "Return to Run",
-            id: "cancel_all",
-          }),
-        ]),
-      );
-    });
-
     it("disables editing in editSettings when readonly", () => {
       const store = makeStore([mockBowl]);
 
@@ -709,8 +669,31 @@ describe("PlayersEntryForm2a - render", () => {
         allowDeleting: false,
         mode: "Normal",
         showDeleteConfirmDialog: false,
-      });
+      });      
     });
+
+    it("shows Back toolbar button in readonly mode", () => {
+      const store = makeStore([mockBowl]);
+
+      render(
+        <Provider store={store}>
+          <PlayersEntryForm
+            rows={currentRows}
+            setRows={jest.fn()}
+            enableEditing={false}
+          />
+        </Provider>,
+      );
+
+      expect(lastGridProps?.toolbar).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            text: "Back",
+            id: "back",
+          }),
+        ]),
+      );
+    });    
 
     it("navigates immediately when Return to Run is clicked", async () => {
       const store = makeStore([mockBowl]);
@@ -725,10 +708,10 @@ describe("PlayersEntryForm2a - render", () => {
         </Provider>,
       );
 
-      await act(async () => {
+      await act(async () => {        
         await lastGridProps?.toolbarClick?.({
           item: {
-            id: "cancel_all",
+            id: "back",
           },
         });
       });

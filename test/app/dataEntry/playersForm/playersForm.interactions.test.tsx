@@ -937,24 +937,32 @@ describe("PlayersEntryForm2a - interactions", () => {
       );
     });
 
-    it("opens cancel confirmation modal", async () => {
+    it("navigates immediately when Cancel All is clicked with no pending changes", async () => {
       renderForm();
 
       await callToolbarClick("playersGrid_cancel_all");
 
-      const dlg = screen.getByRole("dialog", {
-        name: "confirm",
-      });
+      expect(mockPush).toHaveBeenCalledWith(
+        `/dataEntry/runTmnt/${mockTmntFullData.tmnt.id}`,
+      );
 
       expect(
-        within(dlg).getByTestId("confirm-title"),
-      ).toHaveTextContent("Cancel All");
+        screen.queryByRole("dialog", {
+          name: "confirm",
+        }),
+      ).not.toBeInTheDocument();
     });
 
     it("navigates when Cancel All confirm Yes is clicked", async () => {
       const user = userEvent.setup();
 
       renderForm();
+
+      await callActionComplete({
+        requestType: "save",
+      });
+
+      mockPush.mockClear();
 
       await callToolbarClick("playersGrid_cancel_all");
 
@@ -978,6 +986,12 @@ describe("PlayersEntryForm2a - interactions", () => {
 
       renderForm();
 
+      await callActionComplete({
+        requestType: "save",
+      });
+
+      mockPush.mockClear();
+
       await callToolbarClick("playersGrid_cancel_all");
 
       const dlg = screen.getByRole("dialog", {
@@ -992,6 +1006,42 @@ describe("PlayersEntryForm2a - interactions", () => {
 
       expect(mockPush).not.toHaveBeenCalled();
     });
+
+    it("opens cancel confirmation modal when pending changes exist", async () => {
+      renderForm();
+
+      await callActionComplete({
+        requestType: "save",
+      });
+
+      await callToolbarClick("playersGrid_cancel_all");
+
+      const dlg = screen.getByRole("dialog", {
+        name: "confirm",
+      });
+
+      expect(
+        within(dlg).getByTestId("confirm-title"),
+      ).toHaveTextContent("Cancel All");
+    });    
+
+    it("does not show cancel confirmation after a successful save", async () => {
+      renderForm();
+
+      await callActionComplete({
+        requestType: "save",
+      });
+
+      await callToolbarClick("playersGrid_save");
+
+      mockPush.mockClear();
+
+      await callToolbarClick("playersGrid_cancel_all");
+
+      expect(mockPush).toHaveBeenCalledWith(
+        `/dataEntry/runTmnt/${mockTmntFullData.tmnt.id}`,
+      );
+    });    
   });
 
   describe("record click focus tracking", () => {

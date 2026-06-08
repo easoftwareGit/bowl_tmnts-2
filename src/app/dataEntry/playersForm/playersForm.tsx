@@ -91,7 +91,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
   const hasPendingChangesRef = useRef(false);
   const pendingSaveAllRef = useRef(false);
   const editFocusFieldRef = useRef<string | null>(null);  
-  const navigatingAfterSaveRef = useRef(false);
+  const navigatingAfterSaveRef = useRef(false);  
 
   const lanes = tmntData?.lanes ?? [];
   const squadMinLane = lanes[0]?.lane_number ?? 1;
@@ -103,7 +103,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
   const [errModalObj, setErrModalObj] = useState<modalObjectType>(initModalObj);
   const [saving, setSaving] = useState<boolean>(false);
    
-  const validateTitle = 'Validate Bowlers';
+  const validateTitle = 'Validate Bowlers';  
 
   /*******************
    * modal functions *
@@ -140,7 +140,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
 
       setConfModalObj(initModalObj);
       setCommitRowEnabled(false);
-      markPendingChanges(true);
+      markPendingChanges(true);      
       return;
     }
 
@@ -212,15 +212,10 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
     return rows.map((row) => ({ ...row }));
   }, [rows]);
 
-  const CANCEL_ALL_ID = "cancel_all";
+  const BACK_ID = "back";
   const COMMIT_ROW_ID = "commit_row";
   const VALIDATE_ID = "validate";
   const SAVE_ID = "save";  
-
-  const cancelAlltext = enableEditing ? "Cancel All" : "Return to Run";
-  const cancelAllTooltip = enableEditing
-    ? "Cancel all changes and return to the Run Tournament page"
-    : "Return to the Run Tournament page";
 
   const toolbarOptions: (string | ItemModel)[] = [
     "Add",
@@ -246,9 +241,9 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
       prefixIcon: "e-icons e-lock",
     },
     {
-      text: cancelAlltext,
-      tooltipText: cancelAllTooltip,
-      id: CANCEL_ALL_ID,
+      text: "Back",
+      tooltipText: "Back to the Run Tournament page",
+      id: BACK_ID,
       prefixIcon: "e-icons e-back",
     },    
   ];
@@ -819,7 +814,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
         grid.enableToolbarItems([validateToolbarItemId], false);
       }
 
-      const cancelAllToolbarItemId = getToolbarItemId(CANCEL_ALL_ID);
+      const cancelAllToolbarItemId = getToolbarItemId(BACK_ID);
       if (cancelAllToolbarItemId) {
         grid.enableToolbarItems([cancelAllToolbarItemId], true);
       }
@@ -1156,7 +1151,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
 
     if (clickedId === COMMIT_ROW_ID || clickedId.endsWith("_" + COMMIT_ROW_ID)) {
       if (isEditing) {
-        grid.endEdit();
+        grid.endEdit();        
       }
       return;
     }
@@ -1193,20 +1188,25 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
       })
     }
 
-    if (clickedId === CANCEL_ALL_ID || clickedId.endsWith("_" + CANCEL_ALL_ID)) {
+    if (clickedId === BACK_ID || clickedId.endsWith("_" + BACK_ID)) {
       // if no data in grid or not editing
       if (rows.length === 0 || !enableEditing) {
         router.push(`/dataEntry/runTmnt/${tmntData.tmnt.id}`);
         return;
       }
       if (enableEditing) {
-        setConfModalObj({
-          show: true,
-          title: cancelConfTitle,
-          message: `Do you want to cancel editing bowlers for this tournament?`,
-          id: "0",
-        }); // cancel done in confirmYes
-        return;        
+        if (hasPendingChangesRef.current) { // if data has changed, show confirm cancel modal
+          setConfModalObj({
+            show: true,
+            title: cancelConfTitle,
+            message: 'There are unsaved edits. Do you want to cancel edits and return to the Run Tournament page?',
+            id: BACK_ID,
+          }); // cancel done in confirmYes
+          return;        
+        } else { // if no data has changed, return to the Run Tournament page
+          router.push(`/dataEntry/runTmnt/${tmntData.tmnt.id}`);
+          return;
+        }
       } 
     }    
   };

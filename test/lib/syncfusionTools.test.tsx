@@ -126,6 +126,61 @@ describe("syncfusionTools", () => {
       expect(input.type).toBe("text");
     });
 
+    it("initializes validateNow to false", () => {
+      const editor = createOptionalIntegerEdit({
+        placeholder: "Score",
+      });
+
+      editor.create();
+
+      editor.write({
+        rowData: { score: "" },
+        column: { field: "score" },
+      });
+
+      const NumericTextBoxMock =
+        jest.requireMock("@syncfusion/ej2-inputs").NumericTextBox;
+
+      const numericInstance =
+        NumericTextBoxMock.mock.results[0].value;
+
+      expect(
+        numericInstance.element.dataset.validateNow,
+      ).toBe("false");
+    });
+
+    it("sets validateNow false when typing", () => {
+      const editor = createOptionalIntegerEdit({
+        placeholder: "Score",
+      });
+
+      editor.create();
+
+      editor.write({
+        rowData: { score: "" },
+        column: { field: "score" },
+      });
+
+      const NumericTextBoxMock =
+        jest.requireMock("@syncfusion/ej2-inputs").NumericTextBox;
+
+      const numericInstance =
+        NumericTextBoxMock.mock.results[0].value;
+
+      numericInstance.element.dataset.validateNow = "true";
+
+      numericInstance.element.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          key: "5",
+          bubbles: true,
+        }),
+      );
+
+      expect(
+        numericInstance.element.dataset.validateNow,
+      ).toBe("false");
+    });
+
     it("creates NumericTextBox with integer options", () => {
       const editor = createOptionalIntegerEdit({
         placeholder: "Average",
@@ -211,24 +266,70 @@ describe("syncfusionTools", () => {
       expect(editor.read()).toBeNull();
     });
 
-    it("read treats 0 as null", () => {
+    // it("read treats 0 as null", () => {
+    //   const editor = createOptionalIntegerEdit({
+    //     placeholder: "Brackets",
+    //   });
+
+    //   editor.create();
+
+    //   editor.write({
+    //     rowData: { brk1_brkts: 3 },
+    //     column: { field: "brk1_brkts" },
+    //   });
+
+    //   const NumericTextBoxMock =
+    //     jest.requireMock("@syncfusion/ej2-inputs").NumericTextBox;
+
+    //   const numericInstance = NumericTextBoxMock.mock.results[0].value;
+
+    //   numericInstance.element.value = "0";
+
+    //   expect(editor.read()).toBeNull();
+    // });
+
+    it("read returns 0 when input contains 0", () => {
       const editor = createOptionalIntegerEdit({
-        placeholder: "Brackets",
+        placeholder: "Score",
       });
 
       editor.create();
 
       editor.write({
-        rowData: { brk1_brkts: 3 },
-        column: { field: "brk1_brkts" },
+        rowData: { score: "" },
+        column: { field: "score" },
       });
 
       const NumericTextBoxMock =
         jest.requireMock("@syncfusion/ej2-inputs").NumericTextBox;
 
-      const numericInstance = NumericTextBoxMock.mock.results[0].value;
+      const numericInstance =
+        NumericTextBoxMock.mock.results[0].value;
 
       numericInstance.element.value = "0";
+
+      expect(editor.read()).toBe(0);
+    });
+
+    it("read returns null for blank input", () => {
+      const editor = createOptionalIntegerEdit({
+        placeholder: "Score",
+      });
+
+      editor.create();
+
+      editor.write({
+        rowData: { score: "" },
+        column: { field: "score" },
+      });
+
+      const NumericTextBoxMock =
+        jest.requireMock("@syncfusion/ej2-inputs").NumericTextBox;
+
+      const numericInstance =
+        NumericTextBoxMock.mock.results[0].value;
+
+      numericInstance.element.value = "";
 
       expect(editor.read()).toBeNull();
     });
@@ -334,6 +435,112 @@ describe("syncfusionTools", () => {
       expect(onCommit).toHaveBeenCalledTimes(1);
 
       jest.useRealTimers();
+    });
+
+    it("calls onAutoCommit after exactly three digits when typing - if autoCommit is enabled", () => {
+      jest.useFakeTimers();
+
+      const onAutoCommit = jest.fn();
+      const onCommit = jest.fn();
+
+      const editor = createOptionalIntegerEdit({
+        min: 0,
+        max: 300,
+        onCommit,
+        onAutoCommit,
+      });
+
+      editor.create();
+
+      editor.write({
+        rowData: { score: "" },
+        column: { field: "score" },
+      });
+
+      const NumericTextBoxMock =
+        jest.requireMock("@syncfusion/ej2-inputs").NumericTextBox;
+
+      const numericInstance =
+        NumericTextBoxMock.mock.results[0].value;
+
+      numericInstance.element.value = "234";
+
+      numericInstance.element.dispatchEvent(
+        new Event("input", {
+          bubbles: true,
+        }),
+      );
+
+      jest.runOnlyPendingTimers();
+
+      expect(onCommit).toHaveBeenCalledTimes(1);
+      expect(onAutoCommit).toHaveBeenCalledTimes(1);
+
+      jest.useRealTimers();
+    });
+
+    it("does not auto commit for two digits", () => {
+      const onAutoCommit = jest.fn();
+
+      const editor = createOptionalIntegerEdit({
+        onAutoCommit,
+      });
+
+      editor.create();
+
+      editor.write({
+        rowData: { score: "" },
+        column: { field: "score" },
+      });
+
+      const NumericTextBoxMock =
+        jest.requireMock("@syncfusion/ej2-inputs").NumericTextBox;
+
+      const numericInstance =
+        NumericTextBoxMock.mock.results[0].value;
+
+      numericInstance.element.value = "99";
+
+      numericInstance.element.dispatchEvent(
+        new Event("input", {
+          bubbles: true,
+        }),
+      );
+
+      expect(onAutoCommit).not.toHaveBeenCalled();
+    });    
+
+    it("does not auto commit when value exceeds max", () => {
+      const onAutoCommit = jest.fn();
+
+      const editor = createOptionalIntegerEdit({
+        min: 0,
+        max: 300,
+        onAutoCommit,
+      });
+
+      editor.create();
+
+      editor.write({
+        rowData: { score: "" },
+        column: { field: "score" },
+      });
+
+      const NumericTextBoxMock =
+        jest.requireMock("@syncfusion/ej2-inputs").NumericTextBox;
+
+      const numericInstance =
+        NumericTextBoxMock.mock.results[0].value;
+
+      numericInstance.element.value = "999";
+
+      numericInstance.element.dispatchEvent(
+        new Event("input", {
+          bubbles: true,
+        }),
+      );
+
+      expect(onAutoCommit).not.toHaveBeenCalled();
     });
 
     it("destroys NumericTextBox", () => {
