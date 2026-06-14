@@ -6,7 +6,7 @@ import {
   isValidName,
 } from "@/lib/validation/validation";
 import { ErrorCode } from "@/lib/enums/enums";
-import { sanitizeName } from "@/lib/validation/sanitize";
+import { sanitizeBtDbId, sanitizeName } from "@/lib/validation/sanitize";
 import type { userDataType, userFormType } from "@/lib/types/types";
 import { phone as phoneChecking } from "phone";
 import { blankUserData, blankUserForm } from "@/lib/db/initVals";
@@ -167,8 +167,8 @@ export const sanitizeUser = (user: UserInput): SanitizedUser => {
       role: "",
     };
 
-    if (isValidBtDbId(user.id, "usr")) {
-      sanitizedUser.id = user.id;
+    if (user.id) {
+      sanitizedUser.id = sanitizeBtDbId(user.id);
     }
     sanitizedUser.first_name = sanitizeName(user.first_name);
     sanitizedUser.last_name = sanitizeName(user.last_name);

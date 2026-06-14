@@ -1,6 +1,6 @@
 import { isValidBtDbId, validSortOrder, isNumber } from "@/lib/validation/validation";
 import { ErrorCode } from "@/lib/enums/enums";
-import { sanitizeCurrency, sanitizeName } from "@/lib/validation/sanitize";
+import { sanitizeBtDbId, sanitizeCurrency, sanitizeName } from "@/lib/validation/sanitize";
 import { validBtdbMoney, validMoney } from "@/lib/currency/validate";
 import type { potType, potCategoriesTypes, idTypes, validPotsType } from "@/lib/types/types";
 import { blankPot } from "@/lib/db/initVals";
@@ -112,14 +112,14 @@ export const sanitizePot = (pot: potType): potType => {
     ... blankPot,
     sort_order: null as any,
   };    
-  if (isValidBtDbId(pot.id, "pot")) {
-    sanitizedPot.id = pot.id;
+  if (pot.id) {
+    sanitizedPot.id = sanitizeBtDbId(pot.id);
   }
-  if (validPotFkId(pot.div_id, "div")) {
-    sanitizedPot.div_id = pot.div_id
+  if (pot.div_id) {
+    sanitizedPot.div_id = sanitizeBtDbId(pot.div_id);
   };
-  if (validPotFkId(pot.squad_id, "sqd")) {
-    sanitizedPot.squad_id = pot.squad_id
+  if (pot.squad_id) {
+    sanitizedPot.squad_id = sanitizeBtDbId(pot.squad_id);
   };
   if (validPotType(pot.pot_type)) {    
     sanitizedPot.pot_type = sanitizeName(pot.pot_type) as potCategoriesTypes;

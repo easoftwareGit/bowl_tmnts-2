@@ -1,12 +1,8 @@
-import axios, { AxiosError } from "axios";
+import { privateApi } from "@/lib/api/axios";
+import { AxiosError } from "axios";
 import { basePotEntriesApi } from "@/lib/api/apiPaths";
 import { testBasePotEntriesApi } from "../../../testApi";
 import { initPotEntry } from "@/lib/db/initVals";
-import { mockPotEntriesToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
-import {
-  getAllPotEntriesForSquad,  
-} from "@/lib/db/potEntries/dbPotEntries";
-import { cloneDeep } from "lodash";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -69,7 +65,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
 
   const deletePostedPotEntry = async (potEntryId: string) => {
     try {
-      await axios.delete(onePotEntryUrl + potEntryId, { withCredentials: true });
+      await privateApi.delete(onePotEntryUrl + potEntryId);
     } catch (err) {
       if (err instanceof Error) console.log(err.message);
     }     
@@ -81,7 +77,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
     });
 
     it("should get all potEntries", async () => {
-      const response = await axios.get(url);
+      const response = await privateApi.get(url);
       expect(response.status).toBe(200);
       // 43 rows in prisma/seed.ts
       expect(response.data.potEntries).toHaveLength(43);
@@ -104,7 +100,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
     it("should get one potEntry by ID", async () => {
       try {
         const urlToUse = onePotEntryUrl + testPotEntry.id;
-        const response = await axios.get(urlToUse);
+        const response = await privateApi.get(urlToUse);
         expect(response.status).toBe(200);
         const potEntry = response.data.potEntry;
         expect(potEntry.id).toEqual(testPotEntry.id);
@@ -121,7 +117,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
     });
     it("should not get one potEntry by ID when id is invalid", async () => {
       try {
-        const response = await axios.get(onePotEntryUrl + "test");
+        const response = await privateApi.get(onePotEntryUrl + "test");
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -133,7 +129,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
     });
     it("should not get one potEntry by ID when id is valid, but not a potEntry id", async () => {
       try {
-        const response = await axios.get(onePotEntryUrl + userId);
+        const response = await privateApi.get(onePotEntryUrl + userId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -145,7 +141,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
     });
     it("should not get one potEntry by ID when id is not found", async () => {
       try {
-        const response = await axios.get(onePotEntryUrl + notFoundId);
+        const response = await privateApi.get(onePotEntryUrl + notFoundId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -163,7 +159,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
     });
 
     it("should get all potEntries for one div", async () => {
-      const response = await axios.get(divUrl + divIdForPotEntries);
+      const response = await privateApi.get(divUrl + divIdForPotEntries);
       expect(response.status).toBe(200);
       const potEntries = response.data.potEntries;
       expect(potEntries).toHaveLength(4); // 4 potEntries for div in prisma/seeds.ts
@@ -176,7 +172,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
     });
     it("should not get all potEntries for one div when divId is invalid", async () => {
       try {
-        const response = await axios.get(divUrl + "test");
+        const response = await privateApi.get(divUrl + "test");
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -188,7 +184,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
     });
     it("should not get all potEntries for one div when divId is valid, but not a div id", async () => {
       try {
-        const response = await axios.get(divUrl + userId);
+        const response = await privateApi.get(divUrl + userId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -199,7 +195,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
       }
     });
     it("should not get all potEntries for one div when divId is not found", async () => {
-      const response = await axios.get(divUrl + notFoundDivId);
+      const response = await privateApi.get(divUrl + notFoundDivId);
       expect(response.status).toBe(200);
       const potEntries = response.data.potEntries;
       expect(potEntries).toHaveLength(0);
@@ -212,7 +208,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
     });
 
     it("should get all potEntries for one squad", async () => {
-      const response = await axios.get(squadUrl + squadIdForPotEntries);
+      const response = await privateApi.get(squadUrl + squadIdForPotEntries);
       expect(response.status).toBe(200);
       const potEntries = response.data.potEntries;
       expect(potEntries).toHaveLength(4); // 4 potEntries for squad is prisma/seeds.ts
@@ -225,7 +221,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
     });
     it("should not get all potEntries for one squad when squadId is invalid", async () => {
       try {
-        const response = await axios.get(squadUrl + "test");
+        const response = await privateApi.get(squadUrl + "test");
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -237,7 +233,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
     });
     it("should not get all potEntries for one squad when squadId is valid, but not a div id", async () => {
       try {
-        const response = await axios.get(squadUrl + userId);
+        const response = await privateApi.get(squadUrl + userId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -248,7 +244,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
       }
     });
     it("should not get all potEntries for one squad when squadId is not found", async () => {
-      const response = await axios.get(squadUrl + notFoundSquadId);
+      const response = await privateApi.get(squadUrl + notFoundSquadId);
       expect(response.status).toBe(200);
       const potEntries = response.data.potEntries;
       expect(potEntries).toHaveLength(0);
@@ -261,7 +257,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
     });
 
     it("should get all potEntries for one tmnt", async () => {
-      const response = await axios.get(tmntUrl + tmntIdForPotEntries);
+      const response = await privateApi.get(tmntUrl + tmntIdForPotEntries);
       expect(response.status).toBe(200);
       const potEntries = response.data.potEntries;
       expect(potEntries).toHaveLength(4); // 4 potEntries for tmnt is prisma/seeds.ts
@@ -274,7 +270,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
     });
     it("should not get all potEntries for one tmnt when tmntId is invalid", async () => {
       try {
-        const response = await axios.get(tmntUrl + "test");
+        const response = await privateApi.get(tmntUrl + "test");
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -286,7 +282,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
     });
     it("should not get all potEntries for one tmnt when tmntId is valid, but not a div id", async () => {
       try {
-        const response = await axios.get(tmntUrl + userId);
+        const response = await privateApi.get(tmntUrl + userId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -297,7 +293,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
       }
     });
     it("should not get all potEntries for one tmnt when tmntId is not found", async () => {
-      const response = await axios.get(tmntUrl + notFoundTmntId);
+      const response = await privateApi.get(tmntUrl + notFoundTmntId);
       expect(response.status).toBe(200);
       const potEntries = response.data.potEntries;
       expect(potEntries).toHaveLength(0);
@@ -324,9 +320,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
 
     it("should post one potEntry", async () => {
       const potEntryJSON = JSON.stringify(potEntryToPost);
-      const response = await axios.post(url, potEntryJSON, {
-        withCredentials: true,
-      });
+      const response = await privateApi.post(url, potEntryJSON);
       expect(response.status).toBe(201);
       createdPotEntry = true;
       const potEntry = response.data.potEntry;
@@ -342,9 +336,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
       };
       const potEntryJSON = JSON.stringify(toSanitize);
       try {
-        const response = await axios.post(url, potEntryJSON, {
-          withCredentials: true,
-        });
+        const response = await privateApi.post(url, potEntryJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -361,9 +353,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
       };
       const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios.post(url, invalidJSON, {
-          withCredentials: true,
-        });        
+        const response = await privateApi.post(url, invalidJSON);        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -380,9 +370,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
       };
       const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios.post(url, invalidJSON, {
-          withCredentials: true,
-        });
+        const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -399,9 +387,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
       };
       const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios.post(url, invalidJSON, {
-          withCredentials: true,
-        });
+        const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -418,9 +404,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
       };
       const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios.post(url, invalidJSON, {
-          withCredentials: true,
-        });
+        const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -437,12 +421,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
       };
       const potEntryJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios({
-          method: "post",
-          withCredentials: true,
-          url: url,
-          data: potEntryJSON,
-        });
+        const response = await privateApi.post(url, potEntryJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -459,9 +438,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
       };
       const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios.post(url, invalidJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -478,9 +455,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
       };
       const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios.post(url, invalidJSON, {
-          withCredentials: true,
-        });
+        const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -497,9 +472,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
       };
       const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios.post(url, invalidJSON, {
-          withCredentials: true,
-        });
+        const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -516,9 +489,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
       };
       const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios.post(url, invalidJSON, {
-          withCredentials: true,
-        });
+        const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -535,9 +506,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
       };
       const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios.post(url, invalidJSON, {
-          withCredentials: true,
-        });
+        const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -554,9 +523,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
       };
       const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios.post(url, invalidJSON, {
-          withCredentials: true,
-        });
+        const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -573,9 +540,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
       };
       const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios.post(url, invalidJSON, {
-          withCredentials: true,
-        });
+        const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -591,9 +556,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
     const resetPotEntry = async () => {
       // make sure test player is reset in database
       const potEntryJSON = JSON.stringify(testPotEntry);
-      await axios.put(onePotEntryUrl + testPotEntry.id, potEntryJSON,
-        { withCredentials: true }
-      );
+      await privateApi.put(onePotEntryUrl + testPotEntry.id, potEntryJSON);
     };
 
     const putPotEntry = {
@@ -621,9 +584,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
 
     it("should update a potEntry by ID", async () => {
       const potEntryJSON = JSON.stringify(putPotEntry);
-      const response = await axios.put(onePotEntryUrl + putPotEntry.id, potEntryJSON,
-        { withCredentials: true }
-      );
+      const response = await privateApi.put(onePotEntryUrl + putPotEntry.id, potEntryJSON);
       expect(response.status).toBe(200);
       didPut = true;
       const puttedPotEntry = response.data.potEntry;
@@ -637,9 +598,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
         fee: "23.000",
       };
       const potEntryJSON = JSON.stringify(toSanitize);
-      const response = await axios.put(onePotEntryUrl + putPotEntry.id, potEntryJSON,
-        { withCredentials: true }
-      );
+      const response = await privateApi.put(onePotEntryUrl + putPotEntry.id, potEntryJSON);
       expect(response.status).toBe(200);
       didPut = true;
       const puttedPotEntry = response.data.potEntry;
@@ -654,9 +613,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
       };
       const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios.put(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
-          { withCredentials: true }
-        );
+        const response = await privateApi.put(onePotEntryUrl + invalidPotEntry.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -673,9 +630,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
       };
       const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios.put(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
-          { withCredentials: true }
-        );
+        const response = await privateApi.put(onePotEntryUrl + invalidPotEntry.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -692,9 +647,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
       };
       const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios.put(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
-          { withCredentials: true }
-        );
+        const response = await privateApi.put(onePotEntryUrl + invalidPotEntry.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -711,9 +664,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
       };
       const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios.put(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
-          { withCredentials: true }
-        );
+        const response = await privateApi.put(onePotEntryUrl + invalidPotEntry.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -730,9 +681,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
       };
       const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios.put(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
-          { withCredentials: true }
-        );
+        const response = await privateApi.put(onePotEntryUrl + invalidPotEntry.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -749,9 +698,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
       };
       const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios.put(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
-          { withCredentials: true }
-        );
+        const response = await privateApi.put(onePotEntryUrl + invalidPotEntry.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -764,16 +711,21 @@ describe("Pot Entries - API's: /api/potEntries", () => {
   });
 
   describe("PATCH one potEntry API: /api/potEntries/potEntry/:id", () => {
-    const toPatch = {
-      id: testPotEntry.id,
-    };
 
-    const doResetPotEntry = async () => {
+    const toPatchId = "pen_8c8b607b7ebb4e84a0753307afce256e";
+
+    const toPatch = {
+      ...initPotEntry,
+      id: toPatchId,
+      pot_id: "pot_791fb6d8a9a04cb4b3372e212da2a3b0",
+      player_id: "ply_bb0fd8bbd9e34d34a7fa90b4111c6e40",
+      fee: '20',      
+    }
+
+    const resetPatched = async () => {
       try {
-        const playerJSON = JSON.stringify(testPotEntry);
-        await axios.put(onePotEntryUrl + testPotEntry.id, playerJSON, {
-          withCredentials: true
-        });
+        const playerJSON = JSON.stringify(toPatch);
+        await privateApi.put(onePotEntryUrl + toPatchId, playerJSON);
       } catch (err) {
         if (err instanceof AxiosError) console.log(err.message);
       }
@@ -782,7 +734,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
     let didPatch = false;
 
     beforeAll(async () => {
-      await doResetPotEntry();
+      await resetPatched();
     });
 
     beforeEach(() => {
@@ -791,220 +743,138 @@ describe("Pot Entries - API's: /api/potEntries", () => {
 
     afterEach(async () => {
       if (didPatch) {
-        await doResetPotEntry();
+        await resetPatched();
       }
     });
 
-    it("should patch pot_id in a potEntry by ID", async () => {
-      const toPatchedPotId = "pot_89fd8f787de942a1a92aaa2df3e7c185";
-      const patchPotEntry = {
-        ...toPatch,
-        pot_id: toPatchedPotId,
-      };
-      const potEntryJSON = JSON.stringify(patchPotEntry);
-      const response = await axios.patch(onePotEntryUrl + patchPotEntry.id, potEntryJSON,
-        { withCredentials: true }
-      );
-      expect(response.status).toBe(200);
-      didPatch = true;
-      const patchedPotEntry = response.data.potEntry;
-      expect(patchedPotEntry.id).toBe(toPatch.id);
-      expect(patchedPotEntry.pot_id).toBe(toPatchedPotId);
-    });
-    it("should patch player_id in a potEntry by ID", async () => {
-      const toPatchedPlayerId = "ply_a01758cff1cc4bab9d9133e661bd49b0";
-      const patchPotEntry = {
-        ...toPatch,
-        player_id: toPatchedPlayerId,
-      };
-      const potEntryJSON = JSON.stringify(patchPotEntry);
-      const response = await axios.patch(onePotEntryUrl + patchPotEntry.id, potEntryJSON,
-        { withCredentials: true }
-      );
-      expect(response.status).toBe(200);
-      didPatch = true;
-      const patchedPotEntry = response.data.potEntry;
-      expect(patchedPotEntry.id).toBe(toPatch.id);
-      expect(patchedPotEntry.player_id).toBe(toPatchedPlayerId);
-    });
     it("should patch fee in a potEntry by ID", async () => {
       const toPatchedFee = "23";
-      const patchPotEntry = {
-        ...toPatch,
+      const patchPotEntry = {        
         fee: toPatchedFee,
       };
       const potEntryJSON = JSON.stringify(patchPotEntry);
-      const response = await axios.patch(onePotEntryUrl + patchPotEntry.id, potEntryJSON,
-        { withCredentials: true }
-      );
+      const response = await privateApi.patch(onePotEntryUrl + toPatchId, potEntryJSON);
       expect(response.status).toBe(200);
       didPatch = true;
       const patchedPotEntry = response.data.potEntry;
       expect(patchedPotEntry.id).toBe(toPatch.id);
       expect(patchedPotEntry.fee).toBe(toPatchedFee);
     });
-    it("should not patch a potEntry by ID when pot_id is blank", async () => {
-      const invalidPotEntry = {
-        ...toPatch,
-        pot_id: "",
+    it("should patch sanitized fee in a potEntry by ID", async () => {
+      const toPatchedFee = "12.533";
+      const patchPotEntry = {        
+        fee: toPatchedFee,
       };
-      const invalidJSON = JSON.stringify(invalidPotEntry);
+      const potEntryJSON = JSON.stringify(patchPotEntry);
+      const response = await privateApi.patch(onePotEntryUrl + toPatchId, potEntryJSON);
+      expect(response.status).toBe(200);
+      didPatch = true;
+      const patchedPotEntry = response.data.potEntry;
+      expect(patchedPotEntry.id).toBe(toPatch.id);
+      expect(patchedPotEntry.fee).toBe('12.53');
+    });
+
+    it('should not patch potEntry by ID when just passing in ID', async () => {
       try {
-        const response = await axios.patch(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
-          { withCredentials: true }
-        );
-        expect(response.status).toBe(422);
+        const invalidJSON = JSON.stringify({          
+          id: toPatchId,
+        })
+        const response = await privateApi.patch(onePotEntryUrl + toPatchId, invalidJSON)
+        expect(response.status).toBe(400);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
+          expect(err.response?.status).toBe(400);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not patch potEntry by ID when ID is invalid', async () => {
+      try {
+        const invalidJSON = JSON.stringify({          
+          fee: '14',
+        })
+        const response = await privateApi.patch(onePotEntryUrl + 'test', invalidJSON)
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not patch money by ID when ID is valid, but not found', async () => {
+      try {
+        const invalidJSON = JSON.stringify({          
+          fee: '14',
+        })
+        const response = await privateApi.patch(onePotEntryUrl + notFoundId, invalidJSON)
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not patch money by ID when ID is valid, but not a money id', async () => {
+      try {
+        const invalidJSON = JSON.stringify({          
+          fee: '14',
+        })
+        const response = await privateApi.patch(onePotEntryUrl + userId, invalidJSON)
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+
+    it("should NOT patch pot_id in a potEntry by ID", async () => {
+      const toPatchedPotId = "pot_89fd8f787de942a1a92aaa2df3e7c185";
+      try {
+        const invalidJSON = JSON.stringify({          
+          toPatchedPotId,
+        })
+        const response = await privateApi.patch(onePotEntryUrl + toPatchId, invalidJSON)
+        expect(response.status).toBe(400);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(400);
         } else {
           expect(true).toBeFalsy();
         }
       }
     });
-    it("should not patch a potEntry by ID when pot_id is valid, but not a div id", async () => {
-      const invalidPotEntry = {
-        ...toPatch,
-        pot_id: userId,
-      };
-      const invalidJSON = JSON.stringify(invalidPotEntry);
+    it("should NOT patch player_id in a potEntry by ID", async () => {
+      const toPatchedPlayerId = "ply_a01758cff1cc4bab9d9133e661bd49b0";
       try {
-        const response = await axios.patch(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
-          { withCredentials: true }
-        );
-        expect(response.status).toBe(422);
+        const invalidJSON = JSON.stringify({          
+          player_id: toPatchedPlayerId,
+        })
+        const response = await privateApi.patch(onePotEntryUrl + toPatchId, invalidJSON)
+        expect(response.status).toBe(400);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
+          expect(err.response?.status).toBe(400);
         } else {
           expect(true).toBeFalsy();
         }
       }
     });
-    it("should not patch a potEntry by ID when pot_id is invalid", async () => {
-      const invalidPotEntry = {
-        ...toPatch,
-        pot_id: "test",
-      };
-      const invalidJSON = JSON.stringify(invalidPotEntry);
-      try {
-        const response = await axios.patch(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
-          { withCredentials: true }
-        );
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should not patch a potEntry by ID when pot_id is valid, but not a pot id", async () => {
-      const invalidPotEntry = {
-        ...toPatch,
-        pot_id: userId,
-      };
-      const invalidJSON = JSON.stringify(invalidPotEntry);
-      try {
-        const response = await axios.patch(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
-          { withCredentials: true }
-        );
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should not patch a potEntry by ID when player_id is blank", async () => {
-      const invalidPotEntry = {
-        ...toPatch,
-        player_id: "",
-      };
-      const invalidJSON = JSON.stringify(invalidPotEntry);
-      try {
-        const response = await axios.patch(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
-          { withCredentials: true }
-        );
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should not patch a potEntry by ID when player_id is invalid", async () => {
-      const invalidPotEntry = {
-        ...toPatch,
-        player_id: "test",
-      };
-      const invalidJSON = JSON.stringify(invalidPotEntry);
-      try {
-        const response = await axios.patch(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
-          { withCredentials: true }
-        );
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should not patch a potEntry by ID when player_id is valid, but not a player id", async () => {
-      const invalidPotEntry = {
-        ...toPatch,
-        player_id: userId,
-      };
-      const invalidJSON = JSON.stringify(invalidPotEntry);
-      try {
-        const response = await axios.patch(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
-          { withCredentials: true }
-        );
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should not patch a potEntry by ID when fee is blank", async () => {
-      const invalidPotEntry = {
-        ...toPatch,
-        fee: "",
-      };
-      const invalidJSON = JSON.stringify(invalidPotEntry);
-      try {
-        const response = await axios.patch(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
-          { withCredentials: true }
-        );
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
+
     it("should not patch a potEntry by ID when fee is too low", async () => {
-      const invalidPotEntry = {
-        ...toPatch,
+      const invalidPotEntry = {        
         fee: "-1",
       };
       const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios.patch(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
-          { withCredentials: true }
-        );
+        const response = await privateApi.patch(onePotEntryUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1015,15 +885,12 @@ describe("Pot Entries - API's: /api/potEntries", () => {
       }
     });
     it("should not patch a potEntry by ID when fee is too high", async () => {
-      const invalidPotEntry = {
-        ...toPatch,
+      const invalidPotEntry = {        
         fee: "1234567890",
       };
       const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios.patch(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
-          { withCredentials: true }
-        );
+        const response = await privateApi.patch(onePotEntryUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1034,15 +901,28 @@ describe("Pot Entries - API's: /api/potEntries", () => {
       }
     });
     it("should not patch a potEntry by ID when fee is not a number", async () => {
-      const invalidPotEntry = {
-        ...toPatch,
+      const invalidPotEntry = {        
         fee: "abc",
       };
       const invalidJSON = JSON.stringify(invalidPotEntry);
       try {
-        const response = await axios.patch(onePotEntryUrl + invalidPotEntry.id, invalidJSON,
-          { withCredentials: true }
-        );
+        const response = await privateApi.patch(onePotEntryUrl + toPatchId, invalidJSON);
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    });
+    it("should not patch a potEntry by ID when fee is blank", async () => {
+      const invalidPotEntry = {        
+        fee: "",
+      };
+      const invalidJSON = JSON.stringify(invalidPotEntry);
+      try {
+        const response = await privateApi.patch(onePotEntryUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1075,32 +955,26 @@ describe("Pot Entries - API's: /api/potEntries", () => {
       // if deleted event, add event back
       try {
         const potEntryJSON = JSON.stringify(toDelPotEntry);
-        await axios.post(url, potEntryJSON, { withCredentials: true });
+        await privateApi.post(url, potEntryJSON);
       } catch (err) {
         if (err instanceof Error) console.log(err.message);
       }
     });
 
     it("should delete a potEntry by ID", async () => {
-      const response = await axios.delete(onePotEntryUrl + toDelPotEntry.id,
-        { withCredentials: true }
-      );
+      const response = await privateApi.delete(onePotEntryUrl + toDelPotEntry.id);
       expect(response.status).toBe(200);
       didDel = true;
       expect(response.data.count).toBe(1);      
     });
     it("should return 0 when deleting a potEntry by ID when id is not found", async () => {
-      const response = await axios.delete(onePotEntryUrl + notFoundId,
-        { withCredentials: true }
-      );
+      const response = await privateApi.delete(onePotEntryUrl + notFoundId);
       expect(response.status).toBe(200);
       expect(response.data.count).toBe(0);
     });
     it("should NOT delete a potEntry by ID when ID is invalid", async () => {
       try {
-        const response = await axios.delete(onePotEntryUrl + "invalid_id",
-          { withCredentials: true }
-        );
+        const response = await privateApi.delete(onePotEntryUrl + "invalid_id");
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1112,9 +986,7 @@ describe("Pot Entries - API's: /api/potEntries", () => {
     });
     it("should NOT delete a potEntry by ID when id is valid, bit noy a potEntry id", async () => {
       try {
-        const response = await axios.delete(onePotEntryUrl + userId,
-          { withCredentials: true }
-        );
+        const response = await privateApi.delete(onePotEntryUrl + userId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {

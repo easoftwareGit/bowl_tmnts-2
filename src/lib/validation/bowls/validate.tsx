@@ -6,7 +6,7 @@ import {
   maxUrlLength
 } from "../constants";
 import { ErrorCode } from "@/lib/enums/enums";
-import { sanitizeCity, sanitizeName, sanitizeTournamentName, sanitizeUrl } from "@/lib/validation/sanitize";
+import { sanitizeBtDbId, sanitizeCity, sanitizeName, sanitizeTournamentName, sanitizeUrl } from "@/lib/validation/sanitize";
 import type { bowlType } from "@/lib/types/types";
 import { blankBowl } from "@/lib/db/initVals";
 import { cloneDeep } from "lodash";
@@ -94,8 +94,8 @@ const validBowlData = (bowl: bowlType): ErrorCode => {
 export const sanitizeBowl = (bowl: bowlType): bowlType => {
   if (!bowl) return null as any;
   const sanitizedBowl: bowlType = cloneDeep(blankBowl);
-  if (isValidBtDbId(bowl.id, "bwl")) {
-    sanitizedBowl.id = bowl.id;
+  if (bowl.id) {
+    sanitizedBowl.id = sanitizeBtDbId(bowl.id);
   }
   sanitizedBowl.bowl_name = sanitizeTournamentName(bowl.bowl_name);
   sanitizedBowl.city = sanitizeCity(bowl.city);

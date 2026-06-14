@@ -10,7 +10,7 @@ import {
   maxGames,  
 } from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
-import { sanitizeEDS, sanitizeCurrency } from "@/lib/validation/sanitize";
+import { sanitizeBtDbId, sanitizeEDS, sanitizedMoneyString } from "@/lib/validation/sanitize";
 import { validBtdbMoney, validMoney } from "@/lib/currency/validate";
 import type { eventType, idTypes, validEventsType } from "@/lib/types/types";
 import { blankEvent } from "@/lib/db/initVals";
@@ -168,6 +168,9 @@ export const allEventMoneyValid = (event: eventType): boolean => {
 const validEventData = (event: eventType): ErrorCode => {
   try {
     if (!event) return ErrorCode.INVALID_DATA;
+    if (!isValidBtDbId(event.id, "evt")) {
+      return ErrorCode.INVALID_DATA;
+    }
     if (!isValidBtDbId(event.tmnt_id, "tmt")) {
       return ErrorCode.INVALID_DATA;
     }
@@ -196,23 +199,6 @@ const validEventData = (event: eventType): ErrorCode => {
 };
 
 /**
- * sanitizes an event money string
- *   "" is valid, and sanitized to "0"
- *   all 0's is ok, return "0"
- *   sanitizeCurrency removes trailing zeros
- *
- * @param moneyStr - money string to sanitize
- * @returns {string} - sanitized money string
- */
-const sanitizedEventMoney = (moneyStr: string): string => {
-  if (moneyStr === null
-    || moneyStr === undefined
-    || typeof moneyStr !== "string") return "";  
-  if (moneyStr === "" || moneyStr.replace(/^0+/, '') === "") return "0";
-  return sanitizeCurrency(moneyStr);
-}
-
-/**
  * sanitizes an event object
  *
  * @param {eventType} event - event to sanitize
@@ -227,11 +213,11 @@ export const sanitizeEvent = (event: eventType): eventType => {
     games: null as any,
     sort_order: null as any,
   };
-  if (isValidBtDbId(event.id, "evt")) {
-    sanitizedEvent.id = event.id;
+  if (event.id) {
+    sanitizedEvent.id = sanitizeBtDbId(event.id);
   }
-  if (validEventFkId(event.tmnt_id, "tmt")) {
-    sanitizedEvent.tmnt_id = event.tmnt_id;
+  if (event.tmnt_id) {
+    sanitizedEvent.tmnt_id = sanitizeBtDbId(event.tmnt_id);
   }
   sanitizedEvent.event_name = sanitizeEDS(event.event_name);
   if ((event.team_size === null) || isNumber(event.team_size)) {
@@ -240,27 +226,27 @@ export const sanitizeEvent = (event: eventType): eventType => {
   if ((event.games === null) || isNumber(event.games)) {
     sanitizedEvent.games = event.games;
   }
-  // sanitizedEventMoney removes trailing zeros
+  // sanitizedMoneyString removes trailing zeros
   if (validEventMoney(event.added_money)) {
-    sanitizedEvent.added_money = sanitizedEventMoney(event.added_money); 
+    sanitizedEvent.added_money = sanitizedMoneyString(event.added_money); 
   }
   if (validEventMoney(event.entry_fee)) {
-    sanitizedEvent.entry_fee = sanitizedEventMoney(event.entry_fee);
+    sanitizedEvent.entry_fee = sanitizedMoneyString(event.entry_fee);
   }
   if (validEventMoney(event.lineage)) {
-    sanitizedEvent.lineage = sanitizedEventMoney(event.lineage);
+    sanitizedEvent.lineage = sanitizedMoneyString(event.lineage);
   }
   if (validEventMoney(event.prize_fund)) {
-    sanitizedEvent.prize_fund = sanitizedEventMoney(event.prize_fund);
+    sanitizedEvent.prize_fund = sanitizedMoneyString(event.prize_fund);
   }
   if (validEventMoney(event.other)) {
-    sanitizedEvent.other = sanitizedEventMoney(event.other);
+    sanitizedEvent.other = sanitizedMoneyString(event.other);
   }
   if (validEventMoney(event.expenses)) {
-    sanitizedEvent.expenses = sanitizedEventMoney(event.expenses);
+    sanitizedEvent.expenses = sanitizedMoneyString(event.expenses);
   }
   if (validEventMoney(event.lpox)) {
-    sanitizedEvent.lpox = sanitizedEventMoney(event.lpox);
+    sanitizedEvent.lpox = sanitizedMoneyString(event.lpox);
   }
   if ((event.sort_order === null) || isNumber(event.sort_order)) {
     sanitizedEvent.sort_order = event.sort_order;
@@ -329,6 +315,5 @@ export const validateEvents = (events: eventType[]): validEventsType => {
 export const exportedForTesting = {
   gotEventMoney,
   gotEventData,
-  sanitizedEventMoney,
   validEventData,
 };

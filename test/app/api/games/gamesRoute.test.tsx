@@ -87,7 +87,7 @@ const gameToPost: gameType = {
 
 const deletePostedGame = async (id: string) => { 
   try {
-    await privateApi.delete(oneGameUrl + id, { withCredentials: true });    
+    await privateApi.delete(oneGameUrl + id);    
   } catch (err) {
     if (err instanceof Error) console.log(err.message);    
   }
@@ -96,7 +96,7 @@ const deletePostedGame = async (id: string) => {
 const resetGame = async () => { 
   // make sure test game is reset in database
   const gameJSON = JSON.stringify(testGame);
-  await privateApi.put(oneGameUrl + testGame.id, gameJSON, { withCredentials: true });
+  await privateApi.put(oneGameUrl + testGame.id, gameJSON);
 }
 
 describe('Games - API: /api/games', () => { 
@@ -244,9 +244,7 @@ describe('Games - API: /api/games', () => {
 
     it('should create new game', async () => {
       const gamesJSON = JSON.stringify(gameToPost);
-      const response = await privateApi.post(url, gamesJSON, {
-        withCredentials: true
-      })
+      const response = await privateApi.post(url, gamesJSON);
       expect(response.status).toBe(201);
       const postedGame = response.data.game;
       createdGame = true;
@@ -263,7 +261,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON);        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -280,7 +278,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON);        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -297,7 +295,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON);        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -314,7 +312,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON);        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -331,7 +329,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON);        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -348,7 +346,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON);        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -365,7 +363,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON);        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -382,7 +380,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON);        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -399,7 +397,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON);        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -416,7 +414,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON);        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -433,7 +431,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON);        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -450,7 +448,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON);        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -467,7 +465,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON);        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -484,7 +482,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON);        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -501,7 +499,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON);        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -518,7 +516,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON);        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -535,7 +533,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON);        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -552,7 +550,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON);        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -569,7 +567,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON);        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -586,7 +584,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON);        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -603,7 +601,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON);        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -620,7 +618,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON);        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -637,7 +635,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON);        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -654,7 +652,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON);        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -671,7 +669,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.post(url, invalidJSON, { withCredentials: true });        
+        const response = await privateApi.post(url, invalidJSON);        
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -693,21 +691,24 @@ describe('Games - API: /api/games', () => {
       score: 291
     }
 
+    let didPatch = false;
+
     beforeAll(async () => {
       await resetGame();
     })
 
     afterEach(async () => {
-      await resetGame();
+      if (didPatch) {
+        await resetGame();
+      }      
     })
 
     it('should update game by id', async () => {
       const gameJSON = JSON.stringify(putGame);
-      const response = await privateApi.put(oneGameUrl + testGame.id, gameJSON, {
-        withCredentials: true
-      });
+      const response = await privateApi.put(oneGameUrl + testGame.id, gameJSON);
       const game = response.data.game;
-      expect(response.status).toBe(200);      
+      expect(response.status).toBe(200);
+      didPatch = true;
       expect(game.squad_id).toBe(putGame.squad_id);
       expect(game.player_id).toBe(putGame.player_id);      
       expect(game.game_num).toBe(putGame.game_num);      
@@ -716,9 +717,7 @@ describe('Games - API: /api/games', () => {
     it('should NOT update game by id when ID is invalid', async () => {
       try {
         const gameJSON = JSON.stringify(putGame);
-        const response = await privateApi.put(oneGameUrl + 'test', gameJSON, {
-          withCredentials: true
-        });
+        const response = await privateApi.put(oneGameUrl + 'test', gameJSON);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -731,9 +730,7 @@ describe('Games - API: /api/games', () => {
     it('should NOT update game by id when ID is valid, but not a game ID', async () => {
       try {
         const gameJSON = JSON.stringify(putGame);
-        const response = await privateApi.put(oneGameUrl + userId, gameJSON, {
-          withCredentials: true
-        });
+        const response = await privateApi.put(oneGameUrl + userId, gameJSON);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -746,9 +743,7 @@ describe('Games - API: /api/games', () => {
     it('should NOT update game by id when ID is not found', async () => {
       try {
         const gameJSON = JSON.stringify(putGame);
-        const response = await privateApi.put(oneGameUrl + notFoundId, gameJSON, {
-          withCredentials: true
-        });
+        const response = await privateApi.put(oneGameUrl + notFoundId, gameJSON);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -765,9 +760,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.put(oneGameUrl + invalidGame.id, invalidJSON, {
-          withCredentials: true
-        });
+        const response = await privateApi.put(oneGameUrl + invalidGame.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -784,9 +777,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.put(oneGameUrl + invalidGame.id, invalidJSON, {
-          withCredentials: true
-        });
+        const response = await privateApi.put(oneGameUrl + putGame.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -803,9 +794,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.put(oneGameUrl + invalidGame.id, invalidJSON, {
-          withCredentials: true
-        });
+        const response = await privateApi.put(oneGameUrl + putGame.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -822,9 +811,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.put(oneGameUrl + invalidGame.id, invalidJSON, {
-          withCredentials: true
-        });
+        const response = await privateApi.put(oneGameUrl + putGame.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -841,9 +828,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.put(oneGameUrl + invalidGame.id, invalidJSON, {
-          withCredentials: true
-        });
+        const response = await privateApi.put(oneGameUrl + putGame.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -860,9 +845,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.put(oneGameUrl + invalidGame.id, invalidJSON, {
-          withCredentials: true
-        });
+        const response = await privateApi.put(oneGameUrl + putGame.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -879,9 +862,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.put(oneGameUrl + invalidGame.id, invalidJSON, {
-          withCredentials: true
-        });
+        const response = await privateApi.put(oneGameUrl + putGame.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -898,9 +879,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.put(oneGameUrl + invalidGame.id, invalidJSON, {
-          withCredentials: true
-        });
+        const response = await privateApi.put(oneGameUrl + putGame.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -917,9 +896,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.put(oneGameUrl + invalidGame.id, invalidJSON, {
-          withCredentials: true
-        });
+        const response = await privateApi.put(oneGameUrl + putGame.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -936,9 +913,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.put(oneGameUrl + invalidGame.id, invalidJSON, {
-          withCredentials: true
-        });
+        const response = await privateApi.put(oneGameUrl + putGame.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -955,9 +930,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.put(oneGameUrl + invalidGame.id, invalidJSON, {
-          withCredentials: true
-        });
+        const response = await privateApi.put(oneGameUrl + putGame.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -974,9 +947,7 @@ describe('Games - API: /api/games', () => {
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.put(oneGameUrl + invalidGame.id, invalidJSON, {
-          withCredentials: true
-        });
+        const response = await privateApi.put(oneGameUrl + putGame.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1457,146 +1428,156 @@ describe('Games - API: /api/games', () => {
 
   describe('PATCH by ID - API: /api/games/game/:id', () => { 
 
+    const toPatchId = "gam_c1dfffcefd344ef0a9a2aaacda98635a";
+
+    const toPatch = {
+      ...initGame,
+      id: toPatchId,
+      squad_id: "sqd_1a6c885ee19a49489960389193e8f819",
+      player_id: "ply_bb0fd8bbd9e34d34a7fa90b4111c6e40",
+      game_num: 1,
+      score: 222,
+    }
+
+    const resetPatched = async () => { 
+      const gameJSON = JSON.stringify(toPatch);
+      await privateApi.put(oneGameUrl + toPatch.id, gameJSON);
+    }
+
+    let didPatch = false;
+
     beforeAll(async () => {
-      try {
-        const gameJSON = JSON.stringify(testGame);
-        await privateApi.put(oneGameUrl + testGame.id, gameJSON, { withCredentials: true });
-      } catch (err) {
-        if (err instanceof AxiosError) console.log(err.message);
-      }
+      await resetPatched();
     })
       
     afterEach(async () => {
-      try {
-        const gameJSON = JSON.stringify(testGame);
-        await privateApi.put(oneGameUrl + testGame.id, gameJSON, { withCredentials: true });
-      } catch (err) {
-        if (err instanceof AxiosError) console.log(err.message);
+      if (didPatch) {
+        await resetPatched();
       }
     })
 
     it('should patch game_num for a game by ID', async () => { 
-      const patchGame = {
-        ...blankGame,
+      const patchGame = {        
         game_num: 12
       }
       const gameJSON = JSON.stringify(patchGame);
-      const response = await privateApi.patch(oneGameUrl + patchGame.id, gameJSON, {
-        withCredentials: true
-      })
+      const response = await privateApi.patch(oneGameUrl+ toPatchId, gameJSON);
       expect(response.status).toBe(200);
+      didPatch = true;
       const patchedGame = response.data.game;
       expect(patchedGame.game_num).toBe(patchGame.game_num);
     })
     it('should patch score for a game by ID', async () => {
-      const patchGame = {
-        ...blankGame,
+      const patchGame = {        
         score: 282,
       }
       const gameJSON = JSON.stringify(patchGame);
-      const response = await privateApi.patch(oneGameUrl + patchGame.id, gameJSON, {
-        withCredentials: true
-      })
+      const response = await privateApi.patch(oneGameUrl+ toPatchId, gameJSON);
       expect(response.status).toBe(200);
+      didPatch = true;
       const patchedGame = response.data.game;
       expect(patchedGame.score).toBe(patchGame.score);
     })
-    it('should NOT patch squad_id for a game by ID', async () => {
-      const invalidGame = {
-        ...blankGame,
-        squad_id: squad2Id,
+
+    it('should not patch game by ID when just passing in ID', async () => {
+      try {
+        const invalidJSON = JSON.stringify({          
+          id: toPatchId,
+        })
+        const response = await privateApi.patch(oneGameUrl + toPatchId, invalidJSON)
+        expect(response.status).toBe(400);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(400);
+        } else {
+          expect(true).toBeFalsy();
+        }
       }
-      const invalidJSON = JSON.stringify(invalidGame);
-      const response = await privateApi.patch(oneGameUrl + invalidGame.id, invalidJSON, {
-        withCredentials: true
-      })
-      expect(response.status).toBe(200);
-      const patchedGame = response.data.game;
-      // for squad_id, compare to blankGame.squad_id
-      expect(patchedGame.squad_id).toBe(blankGame.squad_id);
+    })
+    it('should not patch game by ID when ID is invalid', async () => {
+      try {
+        const invalidJSON = JSON.stringify({          
+          game_num: 12,
+        })
+        const response = await privateApi.patch(oneGameUrl + 'test', invalidJSON)
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not patch money by ID when ID is valid, but not found', async () => {
+      try {
+        const invalidJSON = JSON.stringify({          
+          game_num: 12,
+        })
+        const response = await privateApi.patch(oneGameUrl + notFoundId, invalidJSON)
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not patch game by ID when ID is valid, but not a game id', async () => {
+      try {
+        const invalidJSON = JSON.stringify({          
+          game_num: 12,
+        })
+        const response = await privateApi.patch(oneGameUrl + userId, invalidJSON)
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+
+    it('should NOT patch squad_id for a game by ID', async () => {
+      try {
+        const invalidJSON = JSON.stringify({          
+          squad_id: squad2Id,
+        })
+        const response = await privateApi.patch(oneGameUrl + toPatchId, invalidJSON)
+        expect(response.status).toBe(400);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(400);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
     })
     it('should NOT patch player_id for a game by ID', async () => {
-      const patchGame = {
-        ...blankGame,
-        player_id: player2Id,
-      }
-      const gameJSON = JSON.stringify(patchGame);
-      // no error, but player_id is not updated
-      const response = await privateApi.patch(oneGameUrl + patchGame.id, gameJSON, {
-        withCredentials: true
-      })
-      expect(response.status).toBe(200);
-      const patchedGame = response.data.game;
-      // for player_id, compare to blankGame.div_id
-      expect(patchedGame.player_id).toBe(blankGame.player_id);
-    })
-    it('should NOT patch a game when ID is invalid', async () => {
-      const patchGame = {
-        ...blankGame,
-        game_num: 13,
-      }
-      const gameJSON = JSON.stringify(patchGame);
       try {
-        const response = await privateApi.patch(oneGameUrl + 'test', gameJSON, {
-          withCredentials: true
-        });
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a game when ID is not found', async () => {
-      const patchGame = {
-        ...blankGame,
-        game_num: 13,
-      }
-      const gameJSON = JSON.stringify(patchGame);
-      try {
-        const response = await privateApi.patch(oneGameUrl + notFoundId, gameJSON, {
-          withCredentials: true
-        });
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a game when ID is valid, but not a game ID', async () => {
-      const invalidGame = {
-        ...blankGame,
-        game_num: 13,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.patch(oneGameUrl + userId, invalidJSON, {
-          withCredentials: true
+        const invalidJSON = JSON.stringify({          
+          squad_id: player2Id,
         })
-        expect(response.status).toBe(404);
+        const response = await privateApi.patch(oneGameUrl + toPatchId, invalidJSON)
+        expect(response.status).toBe(400);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(400);
         } else {
           expect(true).toBeFalsy();
         }
       }
     })
+
     it('should NOT patch a game when game_num is too low', async () => {
-      const invalidGame = {
-        ...blankGame,
+      const invalidGame = {        
         game_num: -1,
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.patch(oneGameUrl + invalidGame.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneGameUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1607,15 +1588,12 @@ describe('Games - API: /api/games', () => {
       }
     })
     it('should NOT patch a game when game_num is too high', async () => {
-      const invalidGame = {
-        ...blankGame,
+      const invalidGame = {        
         game_num: maxGames + 1,
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.patch(oneGameUrl + invalidGame.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneGameUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1626,15 +1604,12 @@ describe('Games - API: /api/games', () => {
       }
     })
     it('should NOT patch a game when game_num is not an integer', async () => {
-      const invalidGame = {
-        ...blankGame,
+      const invalidGame = {        
         game_num: 1.3,
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.patch(oneGameUrl + invalidGame.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneGameUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1645,15 +1620,12 @@ describe('Games - API: /api/games', () => {
       }
     })
     it('should NOT patch a game when game_num is not a number', async () => {
-      const invalidGame = {
-        ...blankGame,
+      const invalidGame = {        
         game_num: 'test',
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.patch(oneGameUrl + invalidGame.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneGameUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1663,35 +1635,14 @@ describe('Games - API: /api/games', () => {
         }
       }
     })
-    it('should NOT patch a game when game_num is null', async () => {
-      const invalidGame = {
-        ...blankGame,
-        game_num: null,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.patch(oneGameUrl + invalidGame.id, invalidJSON, {
-          withCredentials: true
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
+
     it('should NOT patch a game when score is too low', async () => {
       const invalidGame = {
-        ...blankGame,
         score: -1,
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.patch(oneGameUrl + invalidGame.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneGameUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1702,15 +1653,12 @@ describe('Games - API: /api/games', () => {
       }
     })
     it('should NOT patch a game when score is too high', async () => {
-      const invalidGame = {
-        ...blankGame,
+      const invalidGame = {        
         score: maxScore + 1,
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.patch(oneGameUrl + invalidGame.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneGameUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1721,15 +1669,12 @@ describe('Games - API: /api/games', () => {
       }
     })
     it('should NOT patch a game when score is not an integer', async () => {
-      const invalidGame = {
-        ...blankGame,
+      const invalidGame = {        
         score: 1.3,
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.patch(oneGameUrl + invalidGame.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneGameUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1740,34 +1685,12 @@ describe('Games - API: /api/games', () => {
       }
     })
     it('should NOT patch a game when score is not a number', async () => {
-      const invalidGame = {
-        ...blankGame,
+      const invalidGame = {        
         score: 'test',
       }
       const invalidJSON = JSON.stringify(invalidGame);
       try {
-        const response = await privateApi.patch(oneGameUrl + invalidGame.id, invalidJSON, {
-          withCredentials: true
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a game when score is null', async () => {
-      const invalidGame = {
-        ...blankGame,
-        score: null,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.patch(oneGameUrl + invalidGame.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneGameUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1800,31 +1723,25 @@ describe('Games - API: /api/games', () => {
       if (!didDel) return;
       try {
         const gameJSON = JSON.stringify(toDelGame);
-        await privateApi.post(url, gameJSON, { withCredentials: true });
+        await privateApi.post(url, gameJSON);
       } catch (err) {
         if (err instanceof Error) console.log(err.message);
       }
     })
     it('should delete a game by ID', async () => {
-      const response = await privateApi.delete(oneGameUrl + toDelGame.id, {
-        withCredentials: true,
-      });
+      const response = await privateApi.delete(oneGameUrl + toDelGame.id);
       didDel = true;
       expect(response.status).toBe(200);
       expect(response.data.count).toBe(1);
     })
     it('should NOT delete a game by ID when ID is not found', async () => { 
-      const response = await privateApi.delete(oneGameUrl + notFoundId, {
-        withCredentials: true,
-      });
+      const response = await privateApi.delete(oneGameUrl + notFoundId);
       expect(response.status).toBe(200);
       expect(response.data.count).toBe(0);
     })
     it('should NOT delete a game by ID when ID is invalid', async () => { 
       try {
-        const response = await privateApi.delete(oneGameUrl + 'test', {
-          withCredentials: true,
-        });
+        const response = await privateApi.delete(oneGameUrl + 'test');
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1836,9 +1753,7 @@ describe('Games - API: /api/games', () => {
     })
     it('should NOT delete a game by ID when ID is valid, but not an game id', async () => { 
       try {
-        const response = await privateApi.delete(oneGameUrl + userId, {
-          withCredentials: true,
-        });
+        const response = await privateApi.delete(oneGameUrl + userId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {

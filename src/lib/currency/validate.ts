@@ -3,10 +3,10 @@ import { maxMoney } from "../validation/constants";
 /**
  * checks if money string is valid
  * 
- * @param moneyStr {unknown} - money to check
- * @param min {number} - minimum amount
- * @param max {number} - maximum amount
- * @returns boolean - true if amount is valid
+ * @param {unknown} moneyStr - money to check
+ * @param {number} min - minimum amount
+ * @param {number} max - maximum amount
+ * @returns {boolean} - true if amount is valid
  */
 export const validMoney = (moneyStr: unknown, min: number, max: number): boolean => {  
   if (moneyStr == null) return false;

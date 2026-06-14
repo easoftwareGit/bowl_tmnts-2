@@ -366,7 +366,7 @@ describe("tests for divEntry validation", () => {
         id: 'abc'
       }
       const sanitizedDivEntry = sanitizeDivEntry(testDivEntry);
-      expect(sanitizedDivEntry.id).toEqual('');
+      expect(sanitizedDivEntry.id).toEqual('abc'); // sanitzied, not valildated
     })
     it('should return a sanitized divEntry when div_id is invalid', () => { 
       const testDivEntry = {
@@ -374,7 +374,7 @@ describe("tests for divEntry validation", () => {
         div_id: 'abc'
       }
       const sanitizedDivEntry = sanitizeDivEntry(testDivEntry); 
-      expect(sanitizedDivEntry.div_id).toEqual('');
+      expect(sanitizedDivEntry.div_id).toEqual('abc'); // sanitzied, not valildated
     })
     it('should return a sanitized divEntry when player_id is invalid', () => { 
       const testDivEntry = {
@@ -382,7 +382,7 @@ describe("tests for divEntry validation", () => {
         player_id: 'abc'
       }
       const sanitizedDivEntry = sanitizeDivEntry(testDivEntry);
-      expect(sanitizedDivEntry.player_id).toEqual('');
+      expect(sanitizedDivEntry.player_id).toEqual('abc'); // sanitzied, not valildated
     })  
     it('should return a sanitized divEntry when fee is invalid', () => { 
       const testDivEntry = {
@@ -425,9 +425,9 @@ describe("tests for divEntry validation", () => {
         fee: '<script>alert(1)</script>',        
       }
       const sanitizedDivEntry = sanitizeDivEntry(testDivEntry);
-      expect(sanitizedDivEntry.id).toEqual('');
-      expect(sanitizedDivEntry.div_id).toEqual('');
-      expect(sanitizedDivEntry.player_id).toEqual('');
+      expect(sanitizedDivEntry.id).toEqual('scriptalert1script'); // sanitized, not valildated
+      expect(sanitizedDivEntry.div_id).toEqual('scriptalert1script'); // sanitized, not valildated
+      expect(sanitizedDivEntry.player_id).toEqual('scriptalert1script'); // sanitized, not valildated
       expect(sanitizedDivEntry.fee).toEqual(''); // sanitized, not valildated
     })    
 
@@ -582,23 +582,23 @@ describe("tests for divEntry validation", () => {
       expect(validDivEntries.divEntries.length).toBe(divEntriesToValidate.length);
       expect(validDivEntries.divEntries[1].fee).toBe('85');
     })
-    it('should return ErrorCode.MISSING_DATA when id is sanitzied to ""', () => { 
+    it('should return ErrorCode.INVALID_DATA when id is sanitzied to ""', () => { 
       const divEntriesToValidate = [...mockDivEntriesToPost];
       divEntriesToValidate[1].id = '<script>alert("xss")</script>'
       const validDivEntries: validDivEntriesType = validateDivEntries(divEntriesToValidate);
-      expect(validDivEntries.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validDivEntries.errorCode).toBe(ErrorCode.INVALID_DATA);
     })
-    it('should return ErrorCode.MISSING_DATA when squad_id is sanitzied to ""', () => {
+    it('should return ErrorCode.INVALID_DATA when squad_id is sanitzied to ""', () => {
       const divEntriesToValidate = [...mockDivEntriesToPost];
       divEntriesToValidate[1].squad_id = 'test'
       const validDivEntries: validDivEntriesType = validateDivEntries(divEntriesToValidate);
-      expect(validDivEntries.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validDivEntries.errorCode).toBe(ErrorCode.INVALID_DATA);
     })
-    it('should return ErrorCode.MISSING_DATA when div_id is sanitzied to ""', () => { 
+    it('should return ErrorCode.INVALID_DATA when div_id is sanitzied to ""', () => { 
       const divEntriesToValidate = [...mockDivEntriesToPost];
       divEntriesToValidate[1].div_id = 'test'
       const validDivEntries: validDivEntriesType = validateDivEntries(divEntriesToValidate);
-      expect(validDivEntries.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validDivEntries.errorCode).toBe(ErrorCode.INVALID_DATA);
     })
     it('should return ErrorCode.MISSING_DATA when player_id is sanitzied to ""', () => { 
       const divEntriesToValidate = [...mockDivEntriesToPost];

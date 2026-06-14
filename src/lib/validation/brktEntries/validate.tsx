@@ -17,7 +17,7 @@ import {
 } from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
 import { cloneDeep } from "lodash";
-import { sanitizeCurrency } from "../sanitize";
+import { sanitizeBtDbId, sanitizeCurrency, sanitizedMoneyString } from "../sanitize";
 
 /**
  * checks if brktEntry object has missing data - DOES NOT SANITIZE OR VALIDATE
@@ -149,23 +149,6 @@ const validBrktEntryData = (brktEntry: brktEntryType, checkFee: boolean = true):
 };
 
 /**
- * sanitizes a brkt entry money string
- *   "" is valid, and sanitized to "0"
- *   all 0's is ok, return "0"
- *   sanitizeCurrency removes trailing zeros
- *
- * @param moneyStr - money string to sanitize
- * @returns {string} - sanitized money string
- */
-const sanitizedBrktEntryMoney = (moneyStr: string): string => {
-  if (moneyStr === null
-    || moneyStr === undefined
-    || typeof moneyStr !== "string") return "";  
-  if (moneyStr === "" || moneyStr.replace(/^0+/, '') === "") return "0";
-  return sanitizeCurrency(moneyStr);
-}
-
-/**
  * sanitizes brktEntry
  * 
  * @param {brktEntryType} brktEntry - brktEntry to sanitize
@@ -173,14 +156,14 @@ const sanitizedBrktEntryMoney = (moneyStr: string): string => {
  */
 export const sanitizeBrktEntry = (brktEntry: brktEntryType): brktEntryType => { 
   const sanitziedBrktEntry: brktEntryType = cloneDeep(blankBrktEntry);  
-  if (isValidBtDbId(brktEntry.id, "ben")) {
-    sanitziedBrktEntry.id = brktEntry.id;
+  if (brktEntry.id) {
+    sanitziedBrktEntry.id = sanitizeBtDbId(brktEntry.id);
   }
-  if (isValidBtDbId(brktEntry.brkt_id, "brk")) {
-    sanitziedBrktEntry.brkt_id = brktEntry.brkt_id;
+  if (brktEntry.brkt_id) {
+    sanitziedBrktEntry.brkt_id = sanitizeBtDbId(brktEntry.brkt_id);
   }
-  if (isValidBtDbId(brktEntry.player_id, "ply")) {
-    sanitziedBrktEntry.player_id = brktEntry.player_id;
+  if (brktEntry.player_id) {
+    sanitziedBrktEntry.player_id = sanitizeBtDbId(brktEntry.player_id);
   }
   if (!Number.isNaN(brktEntry.num_brackets) && Number.isSafeInteger(brktEntry.num_brackets)) {
     sanitziedBrktEntry.num_brackets = brktEntry.num_brackets;
@@ -189,65 +172,12 @@ export const sanitizeBrktEntry = (brktEntry: brktEntryType): brktEntryType => {
   if (brktEntry.num_refunds == null || !Number.isNaN(brktEntry.num_refunds) && Number.isSafeInteger(brktEntry.num_refunds)) {
     sanitziedBrktEntry.num_refunds = brktEntry.num_refunds;
   }
-  sanitziedBrktEntry.fee = sanitizedBrktEntryMoney(brktEntry.fee);  
+  sanitziedBrktEntry.fee = sanitizedMoneyString(brktEntry.fee);  
   if (!Number.isNaN(brktEntry.time_stamp) && Number.isSafeInteger(brktEntry.time_stamp)) {
     sanitziedBrktEntry.time_stamp = brktEntry.time_stamp;
   }  
   return sanitziedBrktEntry;
 }
-
-// /**
-//  * sanitizes brktEntry
-//  *
-//  * @param {brktEntryType} brktEntry - brktEntry to sanitize
-//  * @returns {brktEntrySanitizedResult} - sanitized brktEntry
-//  */
-// export const sanitizeBrktEntry = (
-//   brktEntry: brktEntryType,
-// ): brktEntrySanitizedResult => {
-//   if (!brktEntry)
-//     return { brktEntry: null as any, errorCode: ErrorCode.MISSING_DATA };
-//   const sanitziedBrktEntry: brktEntryType = cloneDeep(blankBrktEntry);
-//   let errorCode = ErrorCode.NONE;
-//   sanitziedBrktEntry.time_stamp = 0;
-//   if (isValidBtDbId(brktEntry.id, "ben")) {
-//     sanitziedBrktEntry.id = brktEntry.id;
-//   }
-//   if (isValidBtDbId(brktEntry.brkt_id, "brk")) {
-//     sanitziedBrktEntry.brkt_id = brktEntry.brkt_id;
-//   }
-//   if (isValidBtDbId(brktEntry.player_id, "ply")) {
-//     sanitziedBrktEntry.player_id = brktEntry.player_id;
-//   }
-//   if (
-//     typeof brktEntry.num_brackets === "number" &&
-//     !isNaN(brktEntry.num_brackets)
-//   ) {
-//     sanitziedBrktEntry.num_brackets = brktEntry.num_brackets;
-//   } else if (
-//     typeof brktEntry.num_brackets === "string" &&
-//     (brktEntry.num_brackets as string).trim() !== "" &&
-//     !isNaN(Number(brktEntry.num_brackets))
-//   ) {
-//     sanitziedBrktEntry.num_brackets = Number(brktEntry.num_brackets);
-//   }
-//   if (brktEntry.num_refunds == null) {
-//     sanitziedBrktEntry.num_refunds = brktEntry.num_refunds;
-//   } else {
-//     if (!isNaN(Number(brktEntry.num_refunds))) {
-//       sanitziedBrktEntry.num_refunds = Number(brktEntry.num_refunds);
-//     } else {
-//       errorCode = ErrorCode.INVALID_DATA;
-//     }
-//   }
-//   if (validMoney(brktEntry.fee, 0, maxMoney)) {
-//     sanitziedBrktEntry.fee = brktEntry.fee;
-//   }
-//   if (brktEntry.time_stamp && isValidTimeStamp(brktEntry.time_stamp)) {
-//     sanitziedBrktEntry.time_stamp = brktEntry.time_stamp;
-//   }
-//   return { brktEntry: sanitziedBrktEntry, errorCode };
-// };
 
 /**
  * validates brktEntry
@@ -303,7 +233,6 @@ export const validateBrktEntries = (
 };
 
 export const exportedForTesting = {
-  gotBrktEntryData,
-  sanitizedBrktEntryMoney,
+  gotBrktEntryData,  
   validBrktEntryData,
 };

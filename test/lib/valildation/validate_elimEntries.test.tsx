@@ -312,7 +312,7 @@ describe("tests for elimEntry validation", () => {
         id: 'abc'
       }
       const sanitizedElimEntry = sanitizeElimEntry(testElimEntry);
-      expect(sanitizedElimEntry.id).toEqual('');
+      expect(sanitizedElimEntry.id).toEqual('abc'); // sanitzied, not valildated
     })
     it('should return a sanitized elimEntry when elim_id is invalid', () => { 
       const testElimEntry = {
@@ -320,7 +320,7 @@ describe("tests for elimEntry validation", () => {
         elim_id: 'abc'
       }
       const sanitizedElimEntry = sanitizeElimEntry(testElimEntry); 
-      expect(sanitizedElimEntry.elim_id).toEqual('');
+      expect(sanitizedElimEntry.elim_id).toEqual('abc'); // sanitzied, not valildated
     })
     it('should return a sanitized elimEntry when player_id is invalid', () => { 
       const testElimEntry = {
@@ -328,7 +328,7 @@ describe("tests for elimEntry validation", () => {
         player_id: 'abc'
       }
       const sanitizedElimEntry = sanitizeElimEntry(testElimEntry);
-      expect(sanitizedElimEntry.player_id).toEqual('');
+      expect(sanitizedElimEntry.player_id).toEqual('abc'); // sanitzied, not valildated
     })  
     it('should return a sanitized elimEntry when fee is invalid', () => { 
       const testElimEntry = {
@@ -371,9 +371,9 @@ describe("tests for elimEntry validation", () => {
         fee: '<script>alert(1)</script>',        
       }
       const sanitizedElimEntry = sanitizeElimEntry(testElimEntry);
-      expect(sanitizedElimEntry.id).toEqual('');
-      expect(sanitizedElimEntry.elim_id).toEqual('');
-      expect(sanitizedElimEntry.player_id).toEqual('');      
+      expect(sanitizedElimEntry.id).toEqual('scriptalert1script'); // sanitized, not valildated
+      expect(sanitizedElimEntry.elim_id).toEqual('scriptalert1script'); // sanitized, not valildated
+      expect(sanitizedElimEntry.player_id).toEqual('scriptalert1script'); // sanitized, not valildated
       expect(sanitizedElimEntry.fee).toEqual(''); // sanitized, not valildated
     })    
 
@@ -535,17 +535,17 @@ describe("tests for elimEntry validation", () => {
       expect(validElimEntries.elimEntries.length).toBe(elimEntriesToValidate.length);
       expect(validElimEntries.elimEntries[1].fee).toBe('85');
     })
-    it('should return ErrorCode.MISSING_DATA when id is sanitzied to ""', () => { 
+    it('should return ErrorCode.INVALID_DATA when id is sanitzied to ""', () => { 
       const elimEntriesToValidate = [...mockElimEntriesToPost];
       elimEntriesToValidate[1].id = '<script>alert("xss")</script>'
       const validElimEntries: validElimEntriesType = validateElimEntries(elimEntriesToValidate);
-      expect(validElimEntries.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validElimEntries.errorCode).toBe(ErrorCode.INVALID_DATA);
     })
-    it('should return ErrorCode.MISSING_DATA when elim_id is sanitzied to ""', () => { 
+    it('should return ErrorCode.INVALID_DATA when elim_id is sanitzied to ""', () => { 
       const elimEntriesToValidate = [...mockElimEntriesToPost];
       elimEntriesToValidate[1].elim_id = 'test'
       const validElimEntries: validElimEntriesType = validateElimEntries(elimEntriesToValidate);
-      expect(validElimEntries.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validElimEntries.errorCode).toBe(ErrorCode.INVALID_DATA);
     })
     it('should return ErrorCode.MISSING_DATA when player_id is sanitzied to ""', () => { 
       const elimEntriesToValidate = [...mockElimEntriesToPost];

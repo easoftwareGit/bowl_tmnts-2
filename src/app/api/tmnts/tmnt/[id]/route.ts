@@ -4,8 +4,8 @@ import { isValidBtDbId } from "@/lib/validation/validation";
 import { ErrorCode } from "@/lib/enums/enums";
 import { sanitizeTmnt, validateTmnt } from "@/lib/validation/tmnts/valildate";
 import type { tmntType } from "@/lib/types/types";
-import { initTmnt } from "@/lib/db/initVals";
-import { dateTo_UTC_yyyyMMdd, startOfDayFromString } from "@/lib/dateTools";
+import { blankTmnt, initTmnt } from "@/lib/db/initVals";
+import { dateTo_UTC_yyyyMMdd, startOfDayFromString, todayStr } from "@/lib/dateTools";
 import { getErrorStatus, standardCatchReturn } from "@/app/api/apiCatch";
 import { tmntDataForPrisma } from "../../tmntDataForPrisma";
 
@@ -121,39 +121,54 @@ export async function PATCH(
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
 
-    const currentTmnt = await prisma.tmnt.findUnique({
-      where: { id: id },
-    });
-    if (!currentTmnt) {
-      return NextResponse.json({ error: "not found" }, { status: 404 });
+    // fake data that will pass sanitation and validation
+    const fakeTmnt = {
+      ...initTmnt,
+      id,
+      user_id: "usr_00000000000000000000000000000000",
+      tmnt_name: "Gold Pin",
+      bowl_id: "bwl_00000000000000000000000000000000",
+      start_date_str: todayStr,
+      end_date_str: todayStr,
+    }
+
+    // populate toCheck with fake data 
+    const toCheck: tmntType = {
+      ...initTmnt, 
+      id, 
+      user_id: fakeTmnt.user_id,
+      tmnt_name: fakeTmnt.tmnt_name,
+      bowl_id: fakeTmnt.bowl_id,
+      start_date_str: fakeTmnt.start_date_str,
+      end_date_str: fakeTmnt.end_date_str,
     }
 
     const json = await request.json();
-    // populate toCheck with json
+    // re-populate toCheck with json data, only for fields that are in json
     const jsonProps = Object.getOwnPropertyNames(json);
-    const toCheck: tmntType = {
-      ...initTmnt,
-      tmnt_name: currentTmnt.tmnt_name,
-      start_date_str: dateTo_UTC_yyyyMMdd(currentTmnt.start_date),
-      end_date_str: dateTo_UTC_yyyyMMdd(currentTmnt.end_date),
-      user_id: currentTmnt.user_id,
-      bowl_id: currentTmnt.bowl_id,
-    };
-
+    let gotDataToPatch = false;
     if (jsonProps.includes("tmnt_name")) {
       toCheck.tmnt_name = json.tmnt_name;
+      gotDataToPatch = true;
     }
     if (jsonProps.includes("start_date_str")) {
       toCheck.start_date_str = json.start_date_str; 
+      gotDataToPatch = true;
     }
     if (jsonProps.includes("end_date_str")) {
       toCheck.end_date_str = json.end_date_str;
+      gotDataToPatch = true;
     }
     if (jsonProps.includes("bowl_id")) {      
       toCheck.bowl_id = json.bowl_id;
+      gotDataToPatch = true;
     }
-    if (jsonProps.includes("user_id")) {
-      toCheck.user_id = json.user_id;
+    // if (jsonProps.includes("user_id")) {
+    //   toCheck.user_id = json.user_id;
+    // }
+
+    if (!gotDataToPatch) {
+      return NextResponse.json({ error: "no data to patch" }, { status: 400 });
     }
 
     const toBePatched = sanitizeTmnt(toCheck);
@@ -181,6 +196,9 @@ export async function PATCH(
       bowl_id: "",
       user_id: "",
     };
+    // const toPatch = {
+    //   ...blankTmnt,
+    // }
     let gotEmptyStartDate = undefined;
     let gotEmptyEndDate = undefined;
     if (jsonProps.includes("tmnt_name")) {
@@ -188,10 +206,11 @@ export async function PATCH(
     }
     if (jsonProps.includes("start_date_str")) {
       toPatch.start_date = startOfDayFromString(toBePatched.start_date_str)      
+      
       gotEmptyStartDate = '';
     }
     if (jsonProps.includes("end_date_str")) {
-      toPatch.end_date = startOfDayFromString(toBePatched.end_date_str)      
+      toPatch.end_date = startOfDayFromString(toBePatched.end_date_str)            
       gotEmptyEndDate = '';
     }
     if (jsonProps.includes("bowl_id")) {

@@ -1,5 +1,5 @@
 import type { BracketList } from "@/components/brackets/bracketListClass";
-import type { SquadStage } from "@prisma/client";
+import type { SquadStage, MoneyDescrip } from "@prisma/client";
 import { ErrorCode, tmntFormParent } from "@/lib/enums/enums";
 import { idTypesArray } from "../validation/validation";
 
@@ -567,7 +567,6 @@ export type brktEntryDataFromPrismaType = {
   brkt_refunds: brktRefundDataFromPrismaType | null;
 }
 
-
 export type brktEntrySanitizedResult = {
   brktEntry: brktEntryType,
   errorCode: ErrorCode
@@ -654,6 +653,24 @@ export type validGamesType = {
   errorCode: ErrorCode
 }
 
+export type tmntMoneyType = {
+  id: string,
+  event_id: string,
+  squad_id: string,
+  div_id: string,
+  descrip: MoneyDescrip,
+  amount: number | null,
+  pot_id: string | null,
+  brkt_id: string | null,
+  elim_id: string | null,  
+  sort_order: number,
+}
+
+export type validTmntMoneyType = {
+  tmntMoneys: tmntMoneyType[],
+  errorCode: ErrorCode
+}
+
 export type AcdnErrType = {
   errClassName: string,
   message: string,
@@ -713,8 +730,7 @@ export type tmntPropsType = {
   elims: elimType[];
   setElims: (elims: elimType[]) => void;
   brkts: brktType[];
-  setBrkts: (brkts: brktType[]) => void;  
-  // origData: dataOneTmntType;  
+  setBrkts: (brkts: brktType[]) => void;    
 }
 
 export type putManyReturnType = {

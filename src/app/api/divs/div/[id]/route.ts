@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { ErrorCode } from "@/lib/enums/enums";
-import { sanitizeDiv, validateDiv, validIntHdcp } from "../../../../../lib/validation/divs/validate";
+import { sanitizeDiv, validateDiv } from "../../../../../lib/validation/divs/validate";
 import type { divType, HdcpForTypes } from "@/lib/types/types";
 import { initDiv } from "@/lib/db/initVals";
-import { getErrorStatus, standardCatchReturn } from "@/app/api/apiCatch";
+import { standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/divs/:id
 
@@ -117,29 +117,42 @@ export async function PATCH(
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
 
-    const currentDiv = await prisma.div.findUnique({
-      where: {
-        id: id,
-      },
-    });    
-    if (!currentDiv) {
-      return NextResponse.json({ error: "not found" }, { status: 404 });
+    // fake data that will pass sanitation and validation
+    const fakeDiv = {
+      ...initDiv,
+      id,              
+      tmnt_id: "tmt_00000000000000000000000000000000",
+      div_name: "HDCP",
+      hdcp_per: 0.9,
+      hdcp_from: 230,
+      int_hdcp: true,
+      hdcp_for: "Game",
+      sort_order: 10,      
     }
+
+    // const currentDiv = await prisma.div.findUnique({
+    //   where: {
+    //     id: id,
+    //   },
+    // });    
+    // if (!currentDiv) {
+    //   return NextResponse.json({ error: "not found" }, { status: 404 });
+    // }
+
+    const toCheck: divType = {
+      ...initDiv,
+      tmnt_id: fakeDiv.tmnt_id, 
+      div_name: fakeDiv.div_name,
+      hdcp_per: fakeDiv.hdcp_per,
+      hdcp_from: fakeDiv.hdcp_from,
+      int_hdcp: fakeDiv.int_hdcp,
+      hdcp_for: fakeDiv.hdcp_for as HdcpForTypes,
+      sort_order: fakeDiv.sort_order,
+    };
 
     const json = await request.json();
     // populate toCheck with json
     const jsonProps = Object.getOwnPropertyNames(json);    
-    const toCheck: divType = {
-      ...initDiv,
-      tmnt_id: currentDiv.tmnt_id, 
-      div_name: currentDiv.div_name,
-      hdcp_per: currentDiv.hdcp_per,
-      hdcp_from: currentDiv.hdcp_from,
-      int_hdcp: currentDiv.int_hdcp,
-      hdcp_for: currentDiv.hdcp_for as HdcpForTypes,
-      sort_order: currentDiv.sort_order,
-    };
-
     let gotDataToPatch = false;
     if (jsonProps.includes("div_name")) {
       toCheck.div_name = json.div_name;
@@ -167,8 +180,9 @@ export async function PATCH(
     }
 
     if (!gotDataToPatch) {
-      return NextResponse.json({ div: currentDiv }, { status: 200 });
+      return NextResponse.json({ error: "no data to patch" }, { status: 400 });    
     }
+    
     const toBePatched = sanitizeDiv(toCheck);
     const errCode = validateDiv(toBePatched);
     if (errCode !== ErrorCode.NONE) {

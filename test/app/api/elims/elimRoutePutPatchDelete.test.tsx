@@ -1,4 +1,5 @@
-import axios, { AxiosError } from "axios";
+import { privateApi } from "@/lib/api/axios";
+import { AxiosError } from "axios";
 import { baseElimsApi } from "@/lib/api/apiPaths";
 import { testBaseElimsApi } from "../../../testApi";
 import type { elimType } from "@/lib/types/types";
@@ -28,6 +29,7 @@ const oneElimUrl = url + "/elim/";
 
 const notFoundId = "elm_01234567890123456789012345678901";
 const nonElimId = "usr_01234567890123456789012345678901";
+const userId = "usr_01234567890123456789012345678901";
 
 const elim3Id = "elm_b4c3939adca140898b1912b75b3725f8";
 
@@ -55,7 +57,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
   const resetElim = async () => { 
     // make sure test elim is reset in database
     const elimJSON = JSON.stringify(testElim);
-    await axios.put(oneElimUrl + testElim.id, elimJSON, {
+    await privateApi.put(oneElimUrl + testElim.id, elimJSON, {
       withCredentials: true
     })
   }
@@ -82,9 +84,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
 
     it("should update a elim by ID", async () => {
       const elimJSON = JSON.stringify(putElim);
-      const response = await axios.put(oneElimUrl + testElim.id, elimJSON, {
-        withCredentials: true,
-      })
+      const response = await privateApi.put(oneElimUrl + testElim.id, elimJSON);
       expect(response.status).toBe(200);
       const elim = response.data.elim;      
       expect(elim.squad_id).toBe(putElim.squad_id);
@@ -100,9 +100,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
         fee: "5.460",
       };
       const elimJSON = JSON.stringify(toSanitizeElim);
-      const response = await axios.put(oneElimUrl + testElim.id, elimJSON, {
-        withCredentials: true,
-      })
+      const response = await privateApi.put(oneElimUrl + testElim.id, elimJSON);
       expect(response.status).toBe(200);
       const elim = response.data.elim;
       expect(elim.fee).toBe("5.46");
@@ -111,9 +109,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
     it("should NOT update elim by ID when ID is invalid", async () => {
       try {
         const elimJSON = JSON.stringify(putElim);
-        const response = await axios.put(oneElimUrl + "test", elimJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.put(oneElimUrl + "test", elimJSON);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -126,9 +122,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
     it("should NOT update elim by ID when ID is valid, but not an elim ID", async () => {
       try {
         const elimJSON = JSON.stringify(putElim);
-        const response = await axios.put(oneElimUrl + nonElimId, elimJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.put(oneElimUrl + nonElimId, elimJSON);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -141,9 +135,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
     it("should NOT update elim by ID when ID is not found", async () => {
       try {
         const elimJSON = JSON.stringify(putElim);
-        const response = await axios.put(oneElimUrl + notFoundId, elimJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.put(oneElimUrl + notFoundId, elimJSON);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -160,9 +152,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(invalidElim);
       try {
-        const response = await axios.put(oneElimUrl + notFoundId, invalidJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.put(oneElimUrl + notFoundId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -179,9 +169,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(invalidElim);
       try {
-        const response = await axios.put(oneElimUrl + notFoundId, invalidJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.put(oneElimUrl + notFoundId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -198,9 +186,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(invalidElim);
       try {
-        const response = await axios.put(oneElimUrl + notFoundId, invalidJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.put(oneElimUrl + notFoundId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -217,9 +203,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(invalidElim);
       try {
-        const response = await axios.put(oneElimUrl + notFoundId, invalidJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.put(oneElimUrl + notFoundId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -236,9 +220,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(invalidElim);
       try {
-        const response = await axios.put(oneElimUrl + notFoundId, invalidJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.put(oneElimUrl + notFoundId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -255,9 +237,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(invalidElim);
       try {
-        const response = await axios.put(oneElimUrl + notFoundId, invalidJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.put(oneElimUrl + notFoundId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -274,9 +254,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(invalidElim);
       try {
-        const response = await axios.put(oneElimUrl + notFoundId, invalidJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.put(oneElimUrl + notFoundId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -293,9 +271,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(invalidElim);
       try {
-        const response = await axios.put(oneElimUrl + notFoundId, invalidJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.put(oneElimUrl + notFoundId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -312,9 +288,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(invalidElim);
       try {
-        const response = await axios.put(oneElimUrl + notFoundId, invalidJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.put(oneElimUrl + notFoundId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -331,9 +305,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(invalidElim);
       try {
-        const response = await axios.put(oneElimUrl + notFoundId, invalidJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.put(oneElimUrl + notFoundId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -350,9 +322,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(invalidElim);
       try {
-        const response = await axios.put(oneElimUrl + notFoundId, invalidJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.put(oneElimUrl + notFoundId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -369,9 +339,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(invalidElim);
       try {
-        const response = await axios.put(oneElimUrl + notFoundId, invalidJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.put(oneElimUrl + notFoundId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -388,9 +356,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(invalidElim);
       try {
-        const response = await axios.put(oneElimUrl + notFoundId, invalidJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.put(oneElimUrl + notFoundId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -407,9 +373,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(invalidElim);
       try {
-        const response = await axios.put(oneElimUrl + notFoundId, invalidJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.put(oneElimUrl + notFoundId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -426,9 +390,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(invalidElim);
       try {
-        const response = await axios.put(oneElimUrl + notFoundId, invalidJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.put(oneElimUrl + notFoundId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -445,9 +407,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(invalidElim);
       try {
-        const response = await axios.put(oneElimUrl + notFoundId, invalidJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.put(oneElimUrl + notFoundId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -464,9 +424,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(invalidElim);
       try {
-        const response = await axios.put(oneElimUrl + notFoundId, invalidJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.put(oneElimUrl + notFoundId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -483,9 +441,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(invalidElim);
       try {
-        const response = await axios.put(oneElimUrl + notFoundId, invalidJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.put(oneElimUrl + notFoundId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -502,9 +458,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(invalidElim);
       try {
-        const response = await axios.put(oneElimUrl + notFoundId, invalidJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.put(oneElimUrl + notFoundId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -521,9 +475,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(invalidElim);
       try {
-        const response = await axios.put(oneElimUrl + notFoundId, invalidJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.put(oneElimUrl + notFoundId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -540,9 +492,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(invalidElim);
       try {
-        const response = await axios.put(oneElimUrl + notFoundId, invalidJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.put(oneElimUrl + notFoundId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -565,9 +515,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(invalidElim);
       try {
-        const response = await axios.put(oneElimUrl + notFoundId, invalidJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.put(oneElimUrl + notFoundId, invalidJSON);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -582,220 +530,177 @@ describe("Elims - PUT, PATCH, DELETE", () => {
 
   describe("PATCH by ID - API: /api/elims/elim/:id", () => {
 
+    const toPatchId = 'elm_4c5aad9baa7246c19e07f215561e58c4';
+
+    const toPatch = {
+      ...initElim,
+      id: toPatchId,
+      squad_id: "sqd_1234ec18b3d44c0189c83f6ac5fd4ad6",
+      div_id: "div_18997d3fd7ef4eb7ad2b53a9e93f9ce5",
+      sort_order: 1,
+      start: 1,
+      games: 3,
+      fee: '10',
+    }
+
+    const resetToPatch = async () => {
+      // make sure test event is reset in database
+      const moneyJSON = JSON.stringify(toPatch);
+      await privateApi.put(oneElimUrl + toPatchId, moneyJSON);      
+    }
+
     beforeAll(async () => {
-      await resetElim();
+      await resetToPatch();
     });
 
     afterEach(async () => {
-      await resetElim();
+      await resetToPatch();
     });
 
     it("should patch start for a elim by id", async () => {
-      const patchElim = {
-        ...blankElim,
+      const patchElim = {        
         start: 2,
       };
       const elimJSON = JSON.stringify(patchElim);
-      const response = await axios.patch(oneElimUrl + testElim.id, elimJSON, {
-        withCredentials: true,        
-      })
+      const response = await privateApi.patch(oneElimUrl + testElim.id, elimJSON);
       expect(response.status).toBe(200);
       const elim = response.data.elim;
       expect(elim.start).toBe(2);
     });
     it("should patch games for a elim by id", async () => {
-      const patchElim = {
-        ...blankElim,
+      const patchElim = {        
         games: 4,
       };
       const elimJSON = JSON.stringify(patchElim);
-      const response = await axios.patch(oneElimUrl + testElim.id, elimJSON, {
-        withCredentials: true,        
-      })
+      const response = await privateApi.patch(oneElimUrl + testElim.id, elimJSON);
       expect(response.status).toBe(200);
       const elim = response.data.elim;
       expect(elim.games).toBe(4);
     });
     it("should patch fee for a elim by id", async () => {
-      const patchElim = {
-        ...blankElim,
+      const patchElim = {       
         fee: "13",
       };
       const elimJSON = JSON.stringify(patchElim);
-      const response = await axios.patch(oneElimUrl + testElim.id, elimJSON, {
-        withCredentials: true,        
-      })
+      const response = await privateApi.patch(oneElimUrl + testElim.id, elimJSON);
       expect(response.status).toBe(200);
       const elim = response.data.elim;
       expect(elim.fee).toBe("13");
     });
     it("should patch sort_order for a elim by id", async () => {
-      const patchElim = {
-        ...blankElim,
+      const patchElim = {        
         sort_order: 12,
       };
       const elimJSON = JSON.stringify(patchElim);
-      const response = await axios.patch(oneElimUrl + testElim.id, elimJSON, {
-        withCredentials: true,        
-      })
+      const response = await privateApi.patch(oneElimUrl + testElim.id, elimJSON);
       expect(response.status).toBe(200);
       const elim = response.data.elim;
       expect(elim.sort_order).toBe(12);
     });
+
+    it('should not patch elim by ID when just passing in ID', async () => {
+      try {
+        const invalidJSON = JSON.stringify({          
+          id: toPatchId,
+        })
+        const response = await privateApi.patch(oneElimUrl + toPatchId, invalidJSON)
+        expect(response.status).toBe(400);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(400);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not patch elim by ID when ID is invalid', async () => {
+      try {
+        const invalidJSON = JSON.stringify({          
+          sort_order: 1234,
+        })
+        const response = await privateApi.patch(oneElimUrl + 'test', invalidJSON)
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not patch elim by ID when ID is valid, but not found', async () => {
+      try {
+        const invalidJSON = JSON.stringify({          
+          sort_order: 1234,
+        })
+        const response = await privateApi.patch(oneElimUrl + notFoundId, invalidJSON)
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not patch elim by ID when ID is valid, but not a money id', async () => {
+      try {
+        const invalidJSON = JSON.stringify({          
+          sort_order: 1234,
+        })
+        const response = await privateApi.patch(oneElimUrl + userId, invalidJSON)
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+
     it("should NOT patch squad_id for a elim by id", async () => {
       // not an error, just do not patch squad_id
-      const patchElim = {
-        ...blankElim,
+      const patchElim = {        
         squad_id: squad2Id,
       };
-      const elimJSON = JSON.stringify(patchElim);      
-      const response = await axios.patch(oneElimUrl + testElim.id, elimJSON, {
-        withCredentials: true,        
-      })
-      expect(response.status).toBe(200);
-      const elim = response.data.elim;
-      // for squad_id, compare to blackElim.squad_id
-      expect(elim.squad_id).toBe(blankElim.squad_id);
+      const invalidJSON = JSON.stringify(patchElim);
+      try {
+        const response = await privateApi.patch(oneElimUrl + toPatchId, invalidJSON);
+        expect(response.status).toBe(400);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(400);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
     });
     it("should NOT patch div_id for a elim by id", async () => {
       // not an error, just do not patch div_id
-      const patchElim = {
-        ...blankElim,
+      const patchElim = {        
         div_id: div2Id,
       };
-      const elimJSON = JSON.stringify(patchElim);
-      const response = await axios.patch(oneElimUrl + testElim.id, elimJSON, {
-        withCredentials: true,        
-      })
-      expect(response.status).toBe(200);
-      const elim = response.data.elim;
-      // for div_id, compare to blackElim.div_id
-      expect(elim.div_id).toBe(blankElim.div_id);
-    });
-    it("should NOT patch an elim when ID is invalid", async () => {
-      const patchElim = {
-        ...blankElim,
-        fee: "13",
-      };
-      const elimJSON = JSON.stringify(patchElim);
+      const invalidJSON = JSON.stringify(patchElim);
       try {
-        const response = await axios.patch(oneElimUrl + "test", elimJSON, {
-          withCredentials: true,        
-        })
-        expect(response.status).toBe(404);
+        const response = await privateApi.patch(oneElimUrl + toPatchId, invalidJSON);
+        expect(response.status).toBe(400);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(400);
         } else {
           expect(true).toBeFalsy();
         }
       }
     });
-    it("should NOT patch an elim when ID is not found", async () => {
-      const patchElim = {
-        ...blankElim,
-        fee: "13",
-      };
-      const elimJSON = JSON.stringify(patchElim);
-      try {
-        const response = await axios.patch(oneElimUrl + notFoundId, elimJSON, {
-          withCredentials: true,        
-        })
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should NOT patch an elim when ID is valid, but not an elim ID", async () => {
-      const patchElim = {
-        ...blankElim,
-        fee: "13",
-      };
-      const elimJSON = JSON.stringify(patchElim);
-      try {
-        const response = await axios.patch(oneElimUrl + nonElimId, elimJSON, {
-          withCredentials: true,        
-        })
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
+
     it("should NOT patch an elim when start is null", async () => {
-      const patchElim = {
-        ...blankElim,
+      const patchElim = {        
         start: null,
       };
       const invalidJSON = JSON.stringify(patchElim);
       try {
-        const response = await axios.patch(oneElimUrl + patchElim.id, invalidJSON, {
-          withCredentials: true,        
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should NOT patch an elim when games is null", async () => {
-      const patchElim = {
-        ...blankElim,
-        games: null,
-      };
-      const invalidJSON = JSON.stringify(patchElim);
-      try {
-        const response = await axios.patch(oneElimUrl + patchElim.id, invalidJSON, {
-          withCredentials: true,        
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should NOT patch an elim when fee is blank", async () => {
-      const patchElim = {
-        ...blankElim,
-        fee: "",
-      };
-      const invalidJSON = JSON.stringify(patchElim);
-      try {
-        const response = await axios.patch(oneElimUrl + patchElim.id, invalidJSON, {
-          withCredentials: true,        
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    });
-    it("should NOT patch an sort_order when start is null", async () => {
-      const patchElim = {
-        ...blankElim,
-        sort_order: null,
-      };
-      const invalidJSON = JSON.stringify(patchElim);
-      try {
-        const response = await axios.patch(oneElimUrl + patchElim.id, invalidJSON, {
-          withCredentials: true,        
-        })
+        const response = await privateApi.patch(oneElimUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -812,9 +717,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(patchElim);
       try {
-        const response = await axios.patch(oneElimUrl + patchElim.id, invalidJSON, {
-          withCredentials: true,        
-        })
+        const response = await privateApi.patch(oneElimUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -831,9 +734,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(patchElim);
       try {
-        const response = await axios.patch(oneElimUrl + patchElim.id, invalidJSON, {
-          withCredentials: true,        
-        })
+        const response = await privateApi.patch(oneElimUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -850,9 +751,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(patchElim);
       try {
-        const response = await axios.patch(oneElimUrl + patchElim.id, invalidJSON, {
-          withCredentials: true,        
-        })
+        const response = await privateApi.patch(oneElimUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -862,16 +761,14 @@ describe("Elims - PUT, PATCH, DELETE", () => {
         }
       }
     });
-    it("should NOT patch an elim when start is not a number", async () => {
-      const patchElim = {
-        ...blankElim,
-        start: "abc",
+
+    it("should NOT patch an elim when games is null", async () => {
+      const patchElim = {        
+        games: null,
       };
       const invalidJSON = JSON.stringify(patchElim);
       try {
-        const response = await axios.patch(oneElimUrl + patchElim.id, invalidJSON, {
-          withCredentials: true,        
-        })
+        const response = await privateApi.patch(oneElimUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -888,9 +785,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(patchElim);
       try {
-        const response = await axios.patch(oneElimUrl + patchElim.id, invalidJSON, {
-          withCredentials: true,        
-        })
+        const response = await privateApi.patch(oneElimUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -907,9 +802,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(patchElim);
       try {
-        const response = await axios.patch(oneElimUrl + patchElim.id, invalidJSON, {
-          withCredentials: true,        
-        })
+        const response = await privateApi.patch(oneElimUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -926,9 +819,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(patchElim);
       try {
-        const response = await axios.patch(oneElimUrl + patchElim.id, invalidJSON, {
-          withCredentials: true,        
-        })
+        const response = await privateApi.patch(oneElimUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -945,9 +836,24 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(patchElim);
       try {
-        const response = await axios.patch(oneElimUrl + patchElim.id, invalidJSON, {
-          withCredentials: true,        
-        })
+        const response = await privateApi.patch(oneElimUrl + toPatchId, invalidJSON);
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    });
+
+    it("should NOT patch an elim when fee is blank", async () => {
+      const patchElim = {        
+        fee: "",
+      };
+      const invalidJSON = JSON.stringify(patchElim);
+      try {
+        const response = await privateApi.patch(oneElimUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -964,9 +870,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(patchElim);
       try {
-        const response = await axios.patch(oneElimUrl + patchElim.id, invalidJSON, {
-          withCredentials: true,        
-        })
+        const response = await privateApi.patch(oneElimUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -983,9 +887,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(patchElim);
       try {
-        const response = await axios.patch(oneElimUrl + patchElim.id, invalidJSON, {
-          withCredentials: true,        
-        })
+        const response = await privateApi.patch(oneElimUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1002,9 +904,24 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(patchElim);
       try {
-        const response = await axios.patch(oneElimUrl + patchElim.id, invalidJSON, {
-          withCredentials: true,        
-        })
+        const response = await privateApi.patch(oneElimUrl + toPatchId, invalidJSON);
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    });
+
+    it("should NOT patch an sort_order when start is null", async () => {
+      const patchElim = {        
+        sort_order: null,
+      };
+      const invalidJSON = JSON.stringify(patchElim);
+      try {
+        const response = await privateApi.patch(oneElimUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1021,9 +938,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(patchElim);
       try {
-        const response = await axios.patch(oneElimUrl + patchElim.id, invalidJSON, {
-          withCredentials: true,        
-        })
+        const response = await privateApi.patch(oneElimUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1040,9 +955,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(patchElim);
       try {
-        const response = await axios.patch(oneElimUrl + patchElim.id, invalidJSON, {
-          withCredentials: true,        
-        })
+        const response = await privateApi.patch(oneElimUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1059,9 +972,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(patchElim);
       try {
-        const response = await axios.patch(oneElimUrl + patchElim.id, invalidJSON, {
-          withCredentials: true,        
-        })
+        const response = await privateApi.patch(oneElimUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1078,9 +989,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(patchElim);
       try {
-        const response = await axios.patch(oneElimUrl + patchElim.id, invalidJSON, {
-          withCredentials: true,        
-        })
+        const response = await privateApi.patch(oneElimUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1090,6 +999,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
         }
       }
     });
+
     it("should NOT update elim by ID when div_id + start + games is not unique", async () => {
       const invalidElim = {
         ...blankElim,
@@ -1100,9 +1010,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       };
       const invalidJSON = JSON.stringify(invalidElim);
       try {
-        const response = await axios.patch(oneElimUrl + invalidElim.id, invalidJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.patch(oneElimUrl + invalidElim.id, invalidJSON);
         expect(response.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1112,15 +1020,14 @@ describe("Elims - PUT, PATCH, DELETE", () => {
         }
       }
     });
-    it("should update elom by id with sanitized data", async () => {
+
+    it("should update elim by id with sanitized data", async () => {
       const toSanitizeElim = {
         ...blankElim,
         fee: "5.460",
       };
       const elimJSON = JSON.stringify(toSanitizeElim);   
-      const response = await axios.patch(oneElimUrl + toSanitizeElim.id, elimJSON, {
-        withCredentials: true,
-      })
+      const response = await privateApi.patch(oneElimUrl + toSanitizeElim.id, elimJSON);
       expect(response.status).toBe(200);
       const elim = response.data.elim;
       expect(elim.fee).toBe("5.46");
@@ -1151,31 +1058,25 @@ describe("Elims - PUT, PATCH, DELETE", () => {
       if (!didDel) return;
       try {
         const elimJSON = JSON.stringify(toDelElim);
-        await axios.post(url, elimJSON, { withCredentials: true });
+        await privateApi.post(url, elimJSON);
       } catch (err) {
         if (err instanceof Error) console.log(err.message);
       }
     });
 
     it("should delete elim by ID", async () => {
-      const response = await axios.delete(oneElimUrl + toDelElim.id, {
-        withCredentials: true,
-      })
+      const response = await privateApi.delete(oneElimUrl + toDelElim.id);
       didDel = true;
       expect(response.status).toBe(200);
     });
     it("should NOT delete an elim by ID when ID is not found", async () => {
-      const response = await axios.delete(oneElimUrl + notFoundId, {
-        withCredentials: true,
-      })
+      const response = await privateApi.delete(oneElimUrl + notFoundId);
       expect(response.status).toBe(200);
       expect(response.data.count).toBe(0);
     });
     it("should NOT delete an elim by ID when ID is invalid", async () => {
       try {
-        const response = await axios.delete(oneElimUrl + "test", {
-          withCredentials: true,
-        })
+        const response = await privateApi.delete(oneElimUrl + "test");
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1187,9 +1088,7 @@ describe("Elims - PUT, PATCH, DELETE", () => {
     });
     it("should NOT delete an elim by ID when ID is valid, but not an pot id", async () => {
       try {
-        const response = await axios.delete(oneElimUrl + nonElimId, {
-          withCredentials: true,
-        })
+        const response = await privateApi.delete(oneElimUrl + nonElimId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {

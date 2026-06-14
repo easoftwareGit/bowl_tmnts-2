@@ -50,7 +50,6 @@ import { sanitizeFullStage, validateFullStage } from "../../stages/validate";
 import { getBlankTmntFullData } from "@/app/dataEntry/tmntForm/tmntTools";
 import { cloneDeep } from "lodash";
 
-
 const noError: tmntFullDataErrType = {
   errorCode: ErrorCode.NONE,
   errorTable: "",

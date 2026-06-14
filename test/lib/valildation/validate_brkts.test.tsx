@@ -366,7 +366,7 @@ describe("tests for bracket validation", () => {
         id: 'test123',
       }
       const sanitizedBrkt = sanitizeBrkt(testBrkt);
-      expect(sanitizedBrkt.id).toEqual('')
+      expect(sanitizedBrkt.id).toEqual('test123'); //sanitized, not validated
     })
     it('should return sanitized brkt when bracket is not sanitzed', () => { 
       // no numerical fields
@@ -381,8 +381,8 @@ describe("tests for bracket validation", () => {
         fsa: '******',
       }
       const sanitizedBrkt = sanitizeBrkt(testBrkt);
-      expect(sanitizedBrkt.div_id).toEqual('')
-      expect(sanitizedBrkt.squad_id).toEqual('')
+      expect(sanitizedBrkt.div_id).toEqual('scriptalert1script'); // sanitized, not valildated
+      expect(sanitizedBrkt.squad_id).toEqual('usr_12345678901234567890123456789012'); // sanitized
       expect(sanitizedBrkt.start).toEqual(1)
       expect(sanitizedBrkt.games).toEqual(3)
       expect(sanitizedBrkt.players).toEqual(8)
@@ -696,7 +696,7 @@ describe("tests for bracket validation", () => {
       const validBrkts: validBrktsType = validateBrkts(invalidBrkts);
       expect(validBrkts.errorCode).toBe(ErrorCode.MISSING_DATA);
     })
-    it('should return ErrorCode.MISSING_DATA when squad_id is not a valid squad_id', () => { 
+    it('should return ErrorCode.INVALID_DATA when squad_id is not a valid squad_id', () => { 
       const invalidBrkts = [
         {
           ...mockBrktsToPost[0],          
@@ -713,9 +713,9 @@ describe("tests for bracket validation", () => {
         },
       ]
       const validBrkts: validBrktsType = validateBrkts(invalidBrkts);
-      expect(validBrkts.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validBrkts.errorCode).toBe(ErrorCode.INVALID_DATA);
     })
-    it('should return ErrorCode.MISSING_DATA when div_id is not a valid div_id', () => { 
+    it('should return ErrorCode.INVALID_DATA when div_id is not a valid div_id', () => { 
       const invalidBrkts = [
         {
           ...mockBrktsToPost[0],          
@@ -732,7 +732,7 @@ describe("tests for bracket validation", () => {
         },
       ]
       const validBrkts: validBrktsType = validateBrkts(invalidBrkts);
-      expect(validBrkts.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validBrkts.errorCode).toBe(ErrorCode.INVALID_DATA);
     })
     it('should return ErrorCode.MISSING_DATA when passed an empty array', async () => { 
       const validBrkts = validateBrkts([]);

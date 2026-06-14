@@ -406,7 +406,7 @@ describe('tests for div validation', () => {
         id: 'abc_123',
       }
       const sanitizedDiv = sanitizeDiv(testDiv)
-      expect(sanitizedDiv.id).toEqual('')      
+      expect(sanitizedDiv.id).toEqual('abc_123') // sanitized, not validated
     })
     it('should return a sanitized div when div is NOT already sanitized', () => {
       // no numerical fields in this test
@@ -418,7 +418,7 @@ describe('tests for div validation', () => {
         int_hdcp: 'true' as any,
       }
       const sanitizedDiv = sanitizeDiv(testDiv)
-      expect(sanitizedDiv.tmnt_id).toEqual('') 
+      expect(sanitizedDiv.tmnt_id).toEqual('abc_123') // sanitized, not validated
       expect(sanitizedDiv.div_name).toEqual('Test')            
       expect(sanitizedDiv.hdcp_for).toEqual('')
       expect(sanitizedDiv.int_hdcp).toBeNull()
@@ -701,7 +701,7 @@ describe('tests for div validation', () => {
       const validDivs: validDivsType = validateDivs(toSanitzie);
       expect(validDivs.errorCode).toBe(ErrorCode.NONE);
       expect(validDivs.divs[0].div_name).toBe('Scratch');
-      expect(validDivs.divs[1].div_name).toBe('Hdcp');
+      expect(validDivs.divs[1].div_name).toBe('scriptHdcpscript');
     })
     it('should return ErrorCode.MISSING_DATA when required data is missing', async () => { 
       const invalidDivs = [
@@ -717,7 +717,7 @@ describe('tests for div validation', () => {
       expect(valildDivs.errorCode).toBe(ErrorCode.MISSING_DATA); 
       expect(valildDivs.divs.length).toBe(0);
     })
-    it('should return ErrorCode.MISSING_DATA when tmnt_id is not a valid tmnt_id', async () => { 
+    it('should return ErrorCode.INVALID_DATA when tmnt_id is not a valid tmnt_id', async () => { 
       // ErroCode.MissingData because sanitize will change invalid tmnt_id to ''
       const invalidDivs = [
         {
@@ -729,9 +729,9 @@ describe('tests for div validation', () => {
         },
       ]
       const valildDivs = validateDivs(invalidDivs);
-      expect(valildDivs.errorCode).toBe(ErrorCode.MISSING_DATA); 
+      expect(valildDivs.errorCode).toBe(ErrorCode.INVALID_DATA); 
     })
-    it('should return ErrorCode.MISSING_DATA when 1st div is valid and 2nd is not', async () => { 
+    it('should return ErrorCode.INVALID_DATA when 1st div is valid and 2nd is not', async () => { 
       // ErroCode.MissingData because sanitize will change invalid tmnt_id to ''
       const invalidDivs = [
         {
@@ -743,7 +743,7 @@ describe('tests for div validation', () => {
         },
       ]
       const valildDivs = validateDivs(invalidDivs);
-      expect(valildDivs.errorCode).toBe(ErrorCode.MISSING_DATA); 
+      expect(valildDivs.errorCode).toBe(ErrorCode.INVALID_DATA); 
       expect(valildDivs.divs.length).toBe(1); // fisrt event valid
     })
     it("should return ErrorCode.INVALID_DATA when all tmnt_id's are not the same", async () => {
@@ -760,7 +760,7 @@ describe('tests for div validation', () => {
       expect(valildDivs.errorCode).toBe(ErrorCode.INVALID_DATA); 
       expect(valildDivs.divs.length).toBe(1); // fisrt event valid
     })
-    it('should return ErrorCode.MISSING_DATA when required data is invalid', async () => { 
+    it('should return ErrorCode.INVALID_DATA when required data is invalid', async () => { 
       const invalidDivs = [
         {
           ...mockDivs[0],       
@@ -771,7 +771,7 @@ describe('tests for div validation', () => {
         },
       ]      
       const valildDivs = validateDivs(invalidDivs);
-      expect(valildDivs.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(valildDivs.errorCode).toBe(ErrorCode.INVALID_DATA);
     })
     it('should return ErrorCode.INVALID_DATA when id is not a valid div id', async () => { 
       const invalidDivs = [

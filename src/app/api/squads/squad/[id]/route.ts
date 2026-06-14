@@ -5,7 +5,7 @@ import { ErrorCode } from "@/lib/enums/enums";
 import { sanitizeSquad, validateSquad } from "@/lib/validation/squads/validate";
 import type { squadType } from "@/lib/types/types";
 import { initSquad } from "@/lib/db/initVals";
-import { dateTo_UTC_yyyyMMdd, startOfDayFromString } from "@/lib/dateTools";
+import { startOfDayFromString, todayStr } from "@/lib/dateTools";
 import { standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/squads/squad/:id
@@ -119,58 +119,75 @@ export async function PATCH(
       return NextResponse.json({ error: "invalid request" }, { status: 404 });
     }
 
-    const json = await request.json();
-    // populate toCheck with json
-    const jsonProps = Object.getOwnPropertyNames(json);
-    
-    const currentSquad = await prisma.squad.findUnique({
-      where: {
-        id: id,
-      },
-    });    
-    if (!currentSquad) {
-      return NextResponse.json({ error: "not found" }, { status: 404 });
+    // fake data that will pass sanitation and validation
+    const fakeSquad = {
+      ...initSquad,
+      id,
+      event_id: "evt_00000000000000000000000000000000",
+      squad_name: "Fake Squad",
+      games: 1,
+      starting_lane: 1,
+      lane_count: 2,
+      squad_date_str: todayStr,
+      squad_time: "10:00",
+      sort_order: 1,
     }
 
+    // populate toCheck with fake data 
     const toCheck: squadType = {
       ...initSquad,
-      event_id: currentSquad.event_id,
-      squad_name: currentSquad.squad_name,
-      games: currentSquad.games,
-      starting_lane: currentSquad.starting_lane,
-      lane_count: currentSquad.lane_count,
-      squad_date_str: dateTo_UTC_yyyyMMdd(currentSquad.squad_date),
-      squad_time: currentSquad.squad_time!,
-      sort_order: currentSquad.sort_order,
+      event_id: fakeSquad.event_id,
+      squad_name: fakeSquad.squad_name,
+      games: fakeSquad.games,
+      starting_lane: fakeSquad.starting_lane,
+      lane_count: fakeSquad.lane_count,
+      squad_date_str: fakeSquad.squad_date_str,
+      squad_time: fakeSquad.squad_time,
+      sort_order: fakeSquad.sort_order,
     };
 
-    if (jsonProps.includes("event_id")) {
-      toCheck.event_id = json.event_id;
-    }
+    const json = await request.json();
+    // re-populate toCheck with json data, only for fields that are in json
+    const jsonProps = Object.getOwnPropertyNames(json);    
+    let gotDataToPatch = false;
+    // if (jsonProps.includes("event_id")) {
+    //   toCheck.event_id = json.event_id;
+    //   gotDataToPatch = true;
+    // }
     if (jsonProps.includes("squad_name")) {
       toCheck.squad_name = json.squad_name;
+      gotDataToPatch = true;
     }
     if (jsonProps.includes("games")) {
       toCheck.games = json.games;
+      gotDataToPatch = true;
     }
     if (jsonProps.includes("starting_lane")) {
       toCheck.starting_lane = json.starting_lane;
+      gotDataToPatch = true;
     }
     if (jsonProps.includes("lane_count")) {
       toCheck.lane_count = json.lane_count;
+      gotDataToPatch = true;
     }
-    if (jsonProps.includes("squad_date_str")) {      
+    if (jsonProps.includes("squad_date_str")) {
       toCheck.squad_date_str = json.squad_date_str;
+      gotDataToPatch = true;
     }
     if (jsonProps.includes("squad_time")) {
       toCheck.squad_time = json.squad_time;
+      gotDataToPatch = true;
     }
     if (jsonProps.includes("sort_order")) {
       toCheck.sort_order = json.sort_order;
+      gotDataToPatch = true;
+    }
+    if (!gotDataToPatch) {
+      return NextResponse.json({ error: "no data to patch" }, { status: 400 });
     }
 
-    const toBePatched = sanitizeSquad(toCheck);
-    const errCode = validateSquad(toBePatched);
+    const toPut = sanitizeSquad(toCheck);
+    const errCode = validateSquad(toPut);
     if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
@@ -187,61 +204,25 @@ export async function PATCH(
       return NextResponse.json({ error: errMsg }, { status: 422 });
     }
     
-    let gotEmptySquadDate = undefined;
-    let gotEmptySquadTime = undefined;
-    const toPatch = {      
-      event_id: "", 
-      squad_name: "",
-      games: null as number | null,
-      starting_lane: null as number | null,
-      lane_count: null as number | null,
-      squad_date: null as Date | null,
-      squad_time: null as string | null,
-      sort_order: null as number | null
-    };
-    if (jsonProps.includes("event_id")) {
-      toPatch.event_id = toBePatched.event_id;
+    const squadDate = startOfDayFromString(toPut.squad_date_str) as Date
+    if (!squadDate) {
+      return NextResponse.json({ error: "invalid data" }, { status: 422 });
     }
-    if (jsonProps.includes("squad_name")) {
-      toPatch.squad_name = toBePatched.squad_name;
-    }
-    if (jsonProps.includes("games")) {
-      toPatch.games = toBePatched.games;
-    }
-    if (jsonProps.includes("starting_lane")) {
-      toPatch.starting_lane = toBePatched.starting_lane;
-    }
-    if (jsonProps.includes("lane_count")) {
-      toPatch.lane_count = toBePatched.lane_count;
-    }
-    if (jsonProps.includes("squad_date_str")) {
-      toPatch.squad_date = startOfDayFromString(toBePatched.squad_date_str);
-      gotEmptySquadDate = '';
-    }
-    if (jsonProps.includes("squad_time")) {
-      toPatch.squad_time = toBePatched.squad_time;
-      gotEmptySquadTime = toBePatched.squad_time;
-    }
-    if (jsonProps.includes("sort_order")) {
-      toPatch.sort_order = toBePatched.sort_order;
-    }
-
     const squad = await prisma.squad.update({
       where: {
         id: id,
       },
       data: {
-        // event_id: toPatch.event_id ?? undefined, // do not patch event_id
-        squad_name: toPatch.squad_name ?? undefined,
-        games: toPatch.games ?? undefined,
-        starting_lane: toPatch.starting_lane ?? undefined,
-        lane_count: toPatch.lane_count ?? undefined,
-        squad_date: toPatch.squad_date ?? gotEmptySquadDate,
-        squad_time: toPatch.squad_time ?? gotEmptySquadTime,
-        sort_order: toPatch.sort_order ?? undefined,
+        // event_id: toPut.event_id, // do not update event_id
+        squad_name: toPut.squad_name,
+        games: toPut.games,
+        starting_lane: toPut.starting_lane,
+        lane_count: toPut.lane_count,
+        squad_date: squadDate,
+        squad_time: toPut.squad_time,
+        sort_order: toPut.sort_order,
       },
     });
-
     return NextResponse.json({ squad }, { status: 200 });
   } catch (error) {
     return standardCatchReturn(error, "error patching squad");

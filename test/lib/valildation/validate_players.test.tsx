@@ -250,8 +250,8 @@ describe("player table data validation", () => {
       expect(result).toBe(false);
     });
     it("should sanitize first name", () => {
-      const result = validPlayerFirstName("<script>alert(1)</script>");
-      expect(result).toBe(true); // sanitizes to 'alert1'
+      const result = validPlayerFirstName("<script>(1)</script>");
+      expect(result).toBe(true); // sanitizes to 'script1cript' 
     });
     it("should return false when passed null", () => {
       const result = validPlayerFirstName(null as any);
@@ -673,28 +673,28 @@ describe("player table data validation", () => {
         ...mockPlayer,
         id: "abc_123",
       });
-      expect(result.id).toBe("");
+      expect(result.id).toBe("abc_123"); // sanitized, not validated
     });
     it("should return a sanitized player when squad_id is invalid", () => {
       const result = sanitizePlayer({
         ...mockPlayer,
         squad_id: "abc_123",
       });
-      expect(result.squad_id).toBe("");
+      expect(result.squad_id).toBe("abc_123"); // sanitized, not validated
     });
     it("should return a sanitized player when first_name is not sanitized", () => {
       const result = sanitizePlayer({
         ...mockPlayer,
         first_name: "<script>alert(1)</script>",
       });
-      expect(result.first_name).toBe("alert1");
+      expect(result.first_name).toBe("scriptalertscript"); // sanitized, not validated
     });
     it("should return a sanitized player when last_name is not sanitized", () => {
       const result = sanitizePlayer({
         ...mockPlayer,
         last_name: "<script>alert(1)</script>",
       });
-      expect(result.last_name).toBe("alert1");
+      expect(result.last_name).toBe("scriptalertscript"); // sanitized, not validated
     });
     it("should return a sanitized player when average is not sanitized", () => {
       const result = sanitizePlayer({
@@ -722,7 +722,7 @@ describe("player table data validation", () => {
         ...mockPlayer,
         position: "<script>alert(1)</script>",
       });
-      expect(result.position).toBe("alert1"); // not valid but sanitied
+      expect(result.position).toBe("scriptalertscript"); // not valid but sanitied
     });
     it("should return null when passed null", () => {
       const result = sanitizePlayer(null as any);
@@ -740,28 +740,28 @@ describe("player table data validation", () => {
         ...byePlayer,
         id: "abc_123",
       });
-      expect(result.id).toBe("");
+      expect(result.id).toBe("abc_123"); // sanitized, not validated
     });
     it("should return a sanitized player when squad_id is invalid", () => {
       const result = sanitizePlayer({
         ...byePlayer,
         squad_id: "abc_123",
       });
-      expect(result.squad_id).toBe("");
+      expect(result.squad_id).toBe("abc_123"); // sanitized, not validated
     });
     it("should return a sanitized player when first_name is not sanitized", () => {
       const result = sanitizePlayer({
         ...byePlayer,
         first_name: "<script>alert(1)</script>",
       });
-      expect(result.first_name).toBe("alert1");
+      expect(result.first_name).toBe("scriptalertscript"); // sanitized, not validated
     });
     it("should return a sanitized player when last_name is not sanitized", () => {
       const result = sanitizePlayer({
         ...byePlayer,
         last_name: "<script>alert(1)</script>",
       });
-      expect(result.last_name).toBe("alert1");
+      expect(result.last_name).toBe("scriptalertscript"); // sanitized, not validated
     });
     it("should return a sanitized player when average is not sanitized", () => {
       const result = sanitizePlayer({
@@ -789,7 +789,7 @@ describe("player table data validation", () => {
         ...byePlayer,
         position: "<script>alert(1)</script>",
       });
-      expect(result.position).toBe("alert1"); // not valid but sanitied
+      expect(result.position).toBe("scriptalertscript"); // not valid but sanitied
     });
   });
 
@@ -802,7 +802,7 @@ describe("player table data validation", () => {
       const result = validatePlayer(mockPlayer);
       expect(result).toBe(ErrorCode.NONE);
     });
-    it("should return ErrorCode.NONE when all fields are properly sanitied", () => {
+    it("should return ErrorCode.INVALID_DATA when all fields are properly sanitied", () => {
       const toSanitize = {
         ...mockPlayer,
         first_name: "<script>alert(1)</script>",
@@ -810,7 +810,7 @@ describe("player table data validation", () => {
         position: "<a>A",
       };
       const result = validatePlayer(toSanitize);
-      expect(result).toBe(ErrorCode.NONE);
+      expect(result).toBe(ErrorCode.INVALID_DATA);      
     });
     it("should return ErrorCode.MISSING_DATA when id is missing", () => {
       const result = validatePlayer({
@@ -867,9 +867,9 @@ describe("player table data validation", () => {
     });
     it("should return ErrorCode.NONE when properly sanitize players", () => {
       const toSanitize = cloneDeep(allPlayers);
-      toSanitize[0].first_name = "<script>alert(1)</script>";
+      toSanitize[0].first_name = "<script>(1)</script>";
       toSanitize[0].last_name = "   Last Name ***";
-      toSanitize[0].position = "<a>A";
+      toSanitize[0].position = "<A>";
       const result = validatePlayers(toSanitize);
       expect(result.errorCode).toBe(ErrorCode.NONE);
       expect(result.players.length).toBe(allPlayers.length);
@@ -888,11 +888,11 @@ describe("player table data validation", () => {
       expect(result.errorCode).toBe(ErrorCode.MISSING_DATA);
       expect(result.players.length).toBe(0);
     });
-    it("should return ErrorCode.MISSING_DATA when id is invalid", () => {
+    it("should return ErrorCode.INVALID_DATA when id is invalid", () => {
       const invalidData = cloneDeep(allPlayers);
       invalidData[1].id = "abc_123";
       const result = validatePlayers(invalidData);
-      expect(result.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(result.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(result.players.length).toBe(1);
     });
     it("should return ErrorCode.MISSING_DATA when first_name is missing", () => {

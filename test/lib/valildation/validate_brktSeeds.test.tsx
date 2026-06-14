@@ -220,7 +220,7 @@ describe("test for brktSeeds validation", () => {
       const testBrktSeed = cloneDeep(validBrktSeed);
       testBrktSeed.one_brkt_id = '<script>id</script>';
       const sanitized = sanitizeBrktSeed(testBrktSeed);
-      expect(sanitized.one_brkt_id).toEqual('');
+      expect(sanitized.one_brkt_id).toEqual('scriptidscript');
     });
     it('should return sanitized brktSeed when seed not sanitzied', () => {
       const testBrktSeed = cloneDeep(validBrktSeed);
@@ -357,21 +357,21 @@ describe("test for brktSeeds validation", () => {
       expect(validBrktSeeds.brktSeeds.length).toBe(0);
       expect(validBrktSeeds.errorCode).toBe(ErrorCode.MISSING_DATA);
     });
-    it('should return MissingData when there is a brktSeed with invalid one_brkt_id', () => {
+    it('should return INVALID_DATA when there is a brktSeed with invalid one_brkt_id', () => {
       const toValidate = cloneDeep(mockBrktSeedsToPost);
       toValidate[1].one_brkt_id = "test";
       const validBrktSeeds: validBrktSeedsType = validateBrktSeeds(toValidate);
       expect(validBrktSeeds).toBeDefined();
       expect(validBrktSeeds.brktSeeds.length).toBe(1);
-      expect(validBrktSeeds.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validBrktSeeds.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
-    it('should return MissingData when there is a brktSeed with valid one_brkt_id, but not a one_bbrkt_id', () => {
+    it('should return INVALID_DATA when there is a brktSeed with valid one_brkt_id, but not a one_bbrkt_id', () => {
       const toValidate = cloneDeep(mockBrktSeedsToPost);
       toValidate[2].one_brkt_id = userId;
       const validBrktSeeds: validBrktSeedsType = validateBrktSeeds(toValidate);
       expect(validBrktSeeds).toBeDefined();
       expect(validBrktSeeds.brktSeeds.length).toBe(2);
-      expect(validBrktSeeds.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validBrktSeeds.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
     it('should return MissingData when there is a brktSeed with blank one_brkt_id', () => {
       const toValidate = cloneDeep(mockBrktSeedsToPost);

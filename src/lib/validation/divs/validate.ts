@@ -11,7 +11,7 @@ import {
   maxHdcpFrom,
 } from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
-import { sanitizeEDS } from "@/lib/validation/sanitize";
+import { sanitizeBtDbId, sanitizeEDS } from "@/lib/validation/sanitize";
 import type { HdcpForTypes, idTypes, validDivsType, divType } from "@/lib/types/types";
 import { blankDiv } from "@/lib/db/initVals";
 
@@ -135,11 +135,11 @@ export const sanitizeDiv = (div: divType): divType => {
     hdcp_for: "" as any,
     sort_order: null as any
   }
-  if (isValidBtDbId(div.id, "div")) {
-    sanitizedDiv.id = div.id;
+  if (div.id) {
+    sanitizedDiv.id = sanitizeBtDbId(div.id);
   }
-  if (validDivFkId(div.tmnt_id, 'tmt')) {
-    sanitizedDiv.tmnt_id = div.tmnt_id
+  if (div.tmnt_id) {
+    sanitizedDiv.tmnt_id = sanitizeBtDbId(div.tmnt_id);
   }
   sanitizedDiv.div_name = sanitizeEDS(div.div_name)
   if ((div.hdcp_per === null) || isNumber(div.hdcp_per)) {

@@ -4,6 +4,7 @@ import { isValidBtDbId, isNumber, validInteger } from "@/lib/validation/validati
 import { maxScore, maxGames } from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
 import { cloneDeep } from "lodash";
+import { sanitizeBtDbId } from "../sanitize";
 
 /**
  * checks if game object has missing data
@@ -106,14 +107,14 @@ const validGameData = (game: gameType): ErrorCode => {
 export const sanitizeGame = (game: gameType): gameType => {
   if (!game) return null as any;
   const sanitizedGame = cloneDeep(blankGame);
-  if (isValidBtDbId(game.id, "gam")) {
-    sanitizedGame.id = game.id;
+  if (game.id) {
+    sanitizedGame.id = sanitizeBtDbId(game.id);
   }  
-  if (isValidBtDbId(game.squad_id, "sqd")) {
-    sanitizedGame.squad_id = game.squad_id;
+  if (game.squad_id) {
+    sanitizedGame.squad_id = sanitizeBtDbId(game.squad_id);
   }
-  if (isValidBtDbId(game.player_id, "ply")) {
-    sanitizedGame.player_id = game.player_id;
+  if (game.player_id) {
+    sanitizedGame.player_id = sanitizeBtDbId(game.player_id);
   }
   if (isNumber(game.game_num) && Number.isInteger(game.game_num) && validInteger(game.game_num)) {
     sanitizedGame.game_num = game.game_num;

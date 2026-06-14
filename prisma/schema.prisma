@@ -5,7 +5,7 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"  
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -16,10 +16,23 @@ datasource db {
 
 // use: import type { SquadStage } from "@prisma/client"; to import type
 // use: import { SquadStage } from "@prisma/client"; to import enum value(s)
-enum SquadStage {     
+enum SquadStage {
   DEFINE
   ENTRIES
   SCORES
+  ERROR
+}
+
+// use: import type { MoneyDescrip } from "@prisma/client"; to import type
+// use: import { MoneyDescrip } from "@prisma/client"; to import enum value(s)
+enum MoneyDescrip {
+  ENTRIES
+  PRIZEFUND
+  LINEAGE
+  EXPENSES
+  ADDED
+  OTHER
+  REFUNDS
   ERROR
 }
 
@@ -87,6 +100,7 @@ model Event {
   sort_order  Int
   tmnt        Tmnt     @relation(fields: [tmnt_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   squads      Squad[]
+  moneys      Money[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -107,6 +121,7 @@ model Div {
   brkts       Brkt[]
   elims       Elim[]
   div_entries Div_Entry[]
+  moneys      Money[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
@@ -114,25 +129,26 @@ model Div {
 }
 
 model Squad {
-  id                      String      @id @default(dbgenerated("concat('sqd_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
-  event_id                String      @db.Text
-  squad_name              String
-  squad_date              DateTime
-  squad_time              String?     @db.Text
-  games                   Int
-  lane_count              Int
-  starting_lane           Int
-  sort_order              Int
-  stage                   Stage?    // 1:1 with Stage, no array of stages
-  lanes                   Lane[]
-  pots                    Pot[]
-  brkts                   Brkt[]
-  elims                   Elim[]
-  players                 Player[]
-  div_entries             Div_Entry[]
-  event                   Event       @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  createdAt               DateTime    @default(now())
-  updatedAt               DateTime    @updatedAt
+  id            String      @id @default(dbgenerated("concat('sqd_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  event_id      String      @db.Text
+  squad_name    String
+  squad_date    DateTime
+  squad_time    String?     @db.Text
+  games         Int
+  lane_count    Int
+  starting_lane Int
+  sort_order    Int
+  stage         Stage? // 1:1 with Stage, no array of stages
+  lanes         Lane[]
+  pots          Pot[]
+  brkts         Brkt[]
+  elims         Elim[]
+  players       Player[]
+  div_entries   Div_Entry[]
+  moneys        Money[]
+  event         Event       @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
   @@unique([event_id, squad_name])
 }
@@ -150,17 +166,17 @@ model Lane {
 }
 
 model Stage {
-  id                      String      @id @default(dbgenerated("concat('stg_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
-  squad_id                String      @unique @db.Text	
-	stage                   SquadStage  @default(DEFINE)
-	stage_set_at            DateTime?
-  scores_started_at       DateTime?	
-  stage_override_enabled  Boolean     @default(false)  
-  stage_override_at       DateTime?
-  stage_override_reason   String?
-  squad                   Squad       @relation(fields: [squad_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  createdAt               DateTime    @default(now())
-  updatedAt               DateTime    @updatedAt
+  id                     String     @id @default(dbgenerated("concat('stg_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  squad_id               String     @unique @db.Text
+  stage                  SquadStage @default(DEFINE)
+  stage_set_at           DateTime?
+  scores_started_at      DateTime?
+  stage_override_enabled Boolean    @default(false)
+  stage_override_at      DateTime?
+  stage_override_reason  String?
+  squad                  Squad      @relation(fields: [squad_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
 }
 
 model Pot {
@@ -171,6 +187,7 @@ model Pot {
   fee         Decimal     @db.Decimal(9, 2)
   pot_type    String
   pot_entries Pot_Entry[]
+  pot_moneys  Money[]
   div         Div         @relation(fields: [div_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   squad       Squad       @relation(fields: [squad_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   createdAt   DateTime    @default(now())
@@ -191,8 +208,9 @@ model Brkt {
   first        Decimal      @db.Decimal(9, 2)
   second       Decimal      @db.Decimal(9, 2)
   admin        Decimal      @db.Decimal(9, 2)
-  brkt_entries Brkt_Entry[]  
+  brkt_entries Brkt_Entry[]
   one_brkts    One_Brkt[]
+  brkt_moneys  Money[]
   div          Div          @relation(fields: [div_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   squad        Squad        @relation(fields: [squad_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   createdAt    DateTime     @default(now())
@@ -210,6 +228,7 @@ model Elim {
   games        Int
   fee          Decimal      @db.Decimal(9, 2)
   elim_entries Elim_Entry[]
+  elim_moneys  Money[]
   div          Div          @relation(fields: [div_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   squad        Squad        @relation(fields: [squad_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   createdAt    DateTime     @default(now())
@@ -230,12 +249,12 @@ model Player {
   div_entries  Div_Entry[]
   pot_entries  Pot_Entry[]
   brkt_entries Brkt_Entry[]
-  elim_entries Elim_Entry[]  
+  elim_entries Elim_Entry[]
   brkt_seeds   Brkt_Seed[]
   games        Game[]
   squad        Squad        @relation(fields: [squad_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt @default(now())
+  updatedAt    DateTime     @default(now()) @updatedAt
 }
 
 model Div_Entry {
@@ -248,7 +267,7 @@ model Div_Entry {
   div       Div      @relation(fields: [div_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   player    Player   @relation(fields: [player_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   @@unique([squad_id, div_id, player_id])
 }
@@ -261,7 +280,7 @@ model Pot_Entry {
   pot       Pot      @relation(fields: [pot_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   player    Player   @relation(fields: [player_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   @@unique([pot_id, player_id])
 }
@@ -270,13 +289,13 @@ model Brkt_Entry {
   id           String       @id @default(dbgenerated("concat('bre_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
   brkt_id      String       @db.Text
   player_id    String       @db.Text
-  num_brackets Int  
+  num_brackets Int
   time_stamp   DateTime     @default(now())
   brkt         Brkt         @relation(fields: [brkt_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  player       Player       @relation(fields: [player_id], references: [id], onDelete: Cascade, onUpdate: NoAction)    
-  brkt_refunds Brkt_Refund? 
+  player       Player       @relation(fields: [player_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  brkt_refunds Brkt_Refund?
   createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt @default(now())
+  updatedAt    DateTime     @default(now()) @updatedAt
 
   @@unique([brkt_id, player_id])
 }
@@ -289,7 +308,7 @@ model Elim_Entry {
   elim      Elim     @relation(fields: [elim_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   player    Player   @relation(fields: [player_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   @@unique([elim_id, player_id])
 }
@@ -310,37 +329,81 @@ model Game {
 
 model Brkt_Refund {
   brkt_entry_id String     @id @db.Text
-  num_refunds   Int    
+  num_refunds   Int
   brkt_entry    Brkt_Entry @relation(fields: [brkt_entry_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt @default(now())
+  updatedAt     DateTime   @default(now()) @updatedAt
 
   @@unique([brkt_entry_id])
 }
 
 model One_Brkt {
-  id           String   @id @default(dbgenerated("concat('obk_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
-  brkt_id      String   @db.Text
-  bindex       Int
-  brkt         Brkt     @relation(fields: [brkt_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  brkt_seeds   Brkt_Seed[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id         String      @id @default(dbgenerated("concat('obk_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  brkt_id    String      @db.Text
+  bindex     Int
+  brkt       Brkt        @relation(fields: [brkt_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  brkt_seeds Brkt_Seed[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
 
   @@unique([brkt_id, bindex])
 }
 
-model Brkt_Seed {  
+model Brkt_Seed {
   one_brkt_id String   @db.Text
   seed        Int
-  player_id   String   @db.Text  
+  player_id   String   @db.Text
   one_brkt    One_Brkt @relation(fields: [one_brkt_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  player      Player   @relation(fields: [player_id], references: [id], onDelete: Cascade, onUpdate: NoAction)  
+  player      Player   @relation(fields: [player_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
 
-	@@id([one_brkt_id, seed])
+  @@id([one_brkt_id, seed])
   @@unique([one_brkt_id, player_id])
+}
+
+// DB CHECK constraint in migration:
+// Money_only_one_source_check:
+// Only one of pot_id, brkt_id, elim_id may be non-null.
+// If all three are null, the row is division-level money.
+model Money {
+  id         String       @id @default(dbgenerated("concat('pri_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  event_id   String       @db.Text
+  squad_id   String       @db.Text
+  div_id     String       @db.Text
+  descrip    MoneyDescrip
+  amount     Decimal      @db.Decimal(9, 2)
+  pot_id     String?      @db.Text
+  brkt_id    String?      @db.Text
+  elim_id    String?      @db.Text
+  sort_order Int
+  event      Event        @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  squad      Squad        @relation(fields: [squad_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  div        Div          @relation(fields: [div_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  pot        Pot?         @relation(fields: [pot_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  brkt       Brkt?        @relation(fields: [brkt_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  elim       Elim?        @relation(fields: [elim_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  payouts    Payout[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  // indexes when needed
+  // @@index([event_id])
+  // @@index([squad_id])
+  // @@index([div_id])
+  // @@index([pot_id])
+  // @@index([brkt_id])
+  // @@index([elim_id])  
+  // @@index([div_id, descrip])
+}
+
+model Payout {
+  id        String   @id @default(dbgenerated("concat('pay_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  money_id  String   @db.Text
+  fee       Decimal  @db.Decimal(9, 2)
+  moneys    Money    @relation(fields: [money_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model testDate {

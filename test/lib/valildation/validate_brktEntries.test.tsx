@@ -14,7 +14,7 @@ import { mockBrktEntriesToPost } from "../../mocks/tmnts/singlesAndDoubles/mockS
 import type { validBrktEntriesType } from "@/lib/types/types";
 import { cloneDeep } from "lodash";
 
-const { gotBrktEntryData, sanitizedBrktEntryMoney, validBrktEntryData } =
+const { gotBrktEntryData, validBrktEntryData } =
   exportedForTesting;
 
 const validBrktEntry = {
@@ -516,51 +516,6 @@ describe("tests for brktEntry validation", () => {
     });
   });
 
-  describe("sanitizedBrktEntryMoney", () => {
-    it("should return sanitized format when given a valid currency string", () => {
-      const input = "$1,234.56";
-      const expectedOutput = "1234.56";
-      const result = sanitizedBrktEntryMoney(input);
-      expect(result).toBe(expectedOutput);
-    });
-    it("should return an empty string when given an invalid currency format", () => {
-      const input = "invalid_currency";
-      const expectedOutput = "";
-      const result = sanitizedBrktEntryMoney(input);
-      expect(result).toBe(expectedOutput);
-    });
-    it('should return "0" when the input string is empty', () => {
-      const input = "";
-      const expectedOutput = "0";
-      const result = sanitizedBrktEntryMoney(input);
-      expect(result).toBe(expectedOutput);
-    });
-    it("should return sanitized format when given a valid currency string", () => {
-      const input = "$1,234.56";
-      const expectedOutput = "1234.56";
-      const result = sanitizedBrktEntryMoney(input);
-      expect(result).toBe(expectedOutput);
-    });
-    it('should return sanitized format for currency string ending with ".00"', () => {
-      const input = "100.00";
-      const expectedOutput = "100";
-      const result = sanitizedBrktEntryMoney(input);
-      expect(result).toBe(expectedOutput);
-    });
-    it("should convert NaN values to an empty string when provided with a non-numeric string", () => {
-      const input = "invalid";
-      const expectedOutput = "";
-      const result = sanitizedBrktEntryMoney(input);
-      expect(result).toBe(expectedOutput);
-    });
-    it("should return empty string for null input", () => {
-      const input = null;
-      const expectedOutput = "";
-      const result = sanitizedBrktEntryMoney(input as any);
-      expect(result).toBe(expectedOutput);
-    });
-  });
-
   describe("sanitizeBrktEntry()", () => {
     it("should return a sanitized brktEntry with no refunds", () => {
       const testBrktEntry = {
@@ -599,7 +554,7 @@ describe("tests for brktEntry validation", () => {
         id: "abc",
       };
       const sanitized = sanitizeBrktEntry(testBrktEntry);
-      expect(sanitized.id).toEqual("");
+      expect(sanitized.id).toEqual("abc"); // sanitzied, not valildated
     });
     it("should return a sanitized brktEntry when brkt_id is invalid", () => {
       const testBrktEntry = {
@@ -607,7 +562,7 @@ describe("tests for brktEntry validation", () => {
         brkt_id: "abc",
       };
       const sanitized = sanitizeBrktEntry(testBrktEntry);
-      expect(sanitized.brkt_id).toEqual("");
+      expect(sanitized.brkt_id).toEqual("abc"); // sanitzied, not valildated
     });
     it("should return a sanitized brktEntry when player_id is invalid", () => {
       const testBrktEntry = {
@@ -615,7 +570,7 @@ describe("tests for brktEntry validation", () => {
         player_id: "abc",
       };
       const sanitized = sanitizeBrktEntry(testBrktEntry);
-      expect(sanitized.player_id).toEqual("");
+      expect(sanitized.player_id).toEqual("abc"); // sanitzied, not valildated
     });
     it("should return a sanitized brktEntry when num_brackets is not a number", () => {
       const testBrktEntry = {
@@ -746,9 +701,9 @@ describe("tests for brktEntry validation", () => {
         fee: "<script>alert(1)</script>",
       };
       const sanitized = sanitizeBrktEntry(testBrktEntry);
-      expect(sanitized.id).toEqual("");
-      expect(sanitized.brkt_id).toEqual("");
-      expect(sanitized.player_id).toEqual("");
+      expect(sanitized.id).toEqual("scriptalert1script"); // sanitized, not valildated
+      expect(sanitized.brkt_id).toEqual("scriptalert1script"); // sanitized, not valildated
+      expect(sanitized.player_id).toEqual("scriptalert1script"); // sanitized, not valildated
       expect(sanitized.fee).toEqual(""); // sanitized, not valildated
       expect(sanitized.time_stamp).toBeGreaterThanOrEqual(0);
       expect(sanitized.time_stamp).toBeLessThanOrEqual(Number.MAX_SAFE_INTEGER);
@@ -1040,7 +995,7 @@ describe("tests for brktEntry validation", () => {
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(
         brktEntriesToValidate,
       );
-      expect(validBrktEntries.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
     it('should return ErrorCode.INVALID_DATA when brkt_id is sanitzied to ""', () => {
       const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
@@ -1048,7 +1003,7 @@ describe("tests for brktEntry validation", () => {
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(
         brktEntriesToValidate,
       );
-      expect(validBrktEntries.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
     it('should return ErrorCode.MISSING_DATA when player_id is sanitzied to ""', () => {
       const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
@@ -1082,29 +1037,29 @@ describe("tests for brktEntry validation", () => {
       );
       expect(validBrktEntries.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
-    it("should return ErrorCode.MISSING_DATA when id is invalid", () => {
+    it("should return ErrorCode.INVALID_DATA when id is invalid", () => {
       const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].id = "abc";
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(
         brktEntriesToValidate,
       );
-      expect(validBrktEntries.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
-    it("should return ErrorCode.MISSING_DATA when id is valid, but not a brktEntry id", () => {
+    it("should return ErrorCode.INVALID_DATA when id is valid, but not a brktEntry id", () => {
       const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].id = userId;
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(
         brktEntriesToValidate,
       );
-      expect(validBrktEntries.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
-    it("should return ErrorCode.MISSING_DATA when brkt_id is invalid", () => {
+    it("should return ErrorCode.INVALID_DATA when brkt_id is invalid", () => {
       const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].brkt_id = "abc";
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(
         brktEntriesToValidate,
       );
-      expect(validBrktEntries.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
     it("should return ErrorCode.MISSING_DATA when id is null", () => {
       const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
@@ -1114,13 +1069,13 @@ describe("tests for brktEntry validation", () => {
       );
       expect(validBrktEntries.errorCode).toBe(ErrorCode.MISSING_DATA);
     });
-    it("should return ErrorCode.MISSING_DATA when brkt_id is valid, but not a div id", () => {
+    it("should return ErrorCode.INVALID_DATA when brkt_id is valid, but not a div id", () => {
       const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].brkt_id = userId;
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(
         brktEntriesToValidate,
       );
-      expect(validBrktEntries.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
     it("should return ErrorCode.MISSING_DATA when brkt_id is null", () => {
       const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
@@ -1130,21 +1085,21 @@ describe("tests for brktEntry validation", () => {
       );
       expect(validBrktEntries.errorCode).toBe(ErrorCode.MISSING_DATA);
     });
-    it("should return ErrorCode.MISSING_DATA when player_id is invalid", () => {
+    it("should return ErrorCode.INVALID_DATA when player_id is invalid", () => {
       const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].player_id = "abc";
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(
         brktEntriesToValidate,
       );
-      expect(validBrktEntries.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
-    it("should return ErrorCode.MISSING_DATA when player_id is valid, but not a player id", () => {
+    it("should return ErrorCode.INVALID_DATA when player_id is valid, but not a player id", () => {
       const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);
       brktEntriesToValidate[1].player_id = userId;
       const validBrktEntries: validBrktEntriesType = validateBrktEntries(
         brktEntriesToValidate,
       );
-      expect(validBrktEntries.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validBrktEntries.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
     it("should return ErrorCode.MISSING_DATA when player_id is null", () => {
       const brktEntriesToValidate = cloneDeep(mockBrktEntriesToPost);

@@ -3,6 +3,7 @@ import { ErrorCode } from "@/lib/enums/enums";
 import type { brktSeedType, validBrktSeedsType } from "@/lib/types/types";
 import { blankBrktSeed, defaultBrktPlayers } from "@/lib/db/initVals";
 import { validPlayerId } from "../players/validate";
+import { sanitizeBtDbId } from "../sanitize";
 
 /**
  * checks if brktSeed object has missing data - DOES NOT SANITIZE OR VALIDATE
@@ -83,7 +84,9 @@ export const sanitizeBrktSeed = (brktSeed: brktSeedType): brktSeedType => {
   const sanitziedOneBrkt: brktSeedType = {
     ...blankBrktSeed,
   }
-  if (isValidBtDbId(brktSeed.one_brkt_id, 'obk')) sanitziedOneBrkt.one_brkt_id = brktSeed.one_brkt_id;
+  if (brktSeed.one_brkt_id) {
+    sanitziedOneBrkt.one_brkt_id = sanitizeBtDbId(brktSeed.one_brkt_id);
+  };
   if (validPlayerId(brktSeed.player_id)) sanitziedOneBrkt.player_id = brktSeed.player_id;
   if (validSeed(brktSeed.seed)) sanitziedOneBrkt.seed = brktSeed.seed;
   return sanitziedOneBrkt;

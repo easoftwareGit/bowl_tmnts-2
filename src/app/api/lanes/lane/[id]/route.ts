@@ -11,8 +11,8 @@ import { standardCatchReturn } from "@/app/api/apiCatch";
 
 export async function GET(
   request: Request,
-	{ params }: { params: Promise<{ id: string }> }
-) { 
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
     if (!isValidBtDbId(id, "lan")) {
@@ -34,8 +34,8 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-	{ params }: { params: Promise<{ id: string }> }
-) { 
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
     if (!isValidBtDbId(id, "lan")) {
@@ -48,7 +48,7 @@ export async function PUT(
       lane_number,
       squad_id,
     };
-    
+
     const toPut = sanitizeLane(toCheck);
     const errCode = validateLane(toPut);
     if (errCode !== ErrorCode.NONE) {
@@ -66,7 +66,7 @@ export async function PUT(
       }
       return NextResponse.json({ error: errMsg }, { status: 422 });
     }
-    
+
     const lane = await prisma.lane.update({
       where: {
         id: id,
@@ -84,42 +84,56 @@ export async function PUT(
 
 export async function PATCH(
   request: Request,
-	{ params }: { params: Promise<{ id: string }> }
-) { 
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
     if (!isValidBtDbId(id, "lan")) {
       return NextResponse.json({ error: "invalid request" }, { status: 404 });
     }
 
-    const json = await request.json();
-    // populate toCheck with json
-    const jsonProps = Object.getOwnPropertyNames(json);
-    
-    const currentLane = await prisma.lane.findUnique({
-      where: {
-        id: id,
-      },
-    });    
-    if (!currentLane) {
-      return NextResponse.json({ error: "not found" }, { status: 404 });
-    }
-
+    // fake data that will pass sanitation and validation
+    const fakeLane = {
+      ...initLane,
+      id,
+      lane_number: 1,
+      squad_id: "sqd_00000000000000000000000000000000",
+      in_use: true,
+    };
+    // populate toCheck with fake data
     const toCheck: laneType = {
       ...initLane,
-      lane_number: currentLane.lane_number,
-      squad_id: currentLane.squad_id,
+      id,
+      lane_number: fakeLane.lane_number,
+      squad_id: fakeLane.squad_id,
+      in_use: fakeLane.in_use,
     };
 
+    const json = await request.json();
+    // re-populate toCheck with json data, only for fields that are in json
+    const jsonProps = Object.getOwnPropertyNames(json);
+    let gotDataToPatch = false;
     if (jsonProps.includes("lane_number")) {
       toCheck.lane_number = json.lane_number;
+      gotDataToPatch = true;
     }
-    if (jsonProps.includes("squad_id")) {
-      toCheck.squad_id = json.squad_id;
+    if (jsonProps.includes("in_use")) {
+      toCheck.in_use = json.in_use;
+      gotDataToPatch = true;
+    }
+    if (!gotDataToPatch) {
+      return NextResponse.json({ error: "no data to patch" }, { status: 400 });
     }
 
     const toBePatched = sanitizeLane(toCheck);
-    const errCode = validateLane(toBePatched);
+    let errCode = validateLane(toBePatched);
+    if (
+      errCode === ErrorCode.NONE &&
+      jsonProps.includes("in_use") &&
+      toCheck.in_use !== toBePatched.in_use
+    ) {
+      errCode = ErrorCode.INVALID_DATA;
+    }
     if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
@@ -135,26 +149,48 @@ export async function PATCH(
       }
       return NextResponse.json({ error: errMsg }, { status: 422 });
     }
-    
+
     const toPatch = {
       lane_number: null as number | null,
-      squad_id: "", 
+      in_use: null as boolean | null,
     };
+    let setInUse = false;
     if (jsonProps.includes("lane_number")) {
       toPatch.lane_number = toBePatched.lane_number;
     }
-    if (jsonProps.includes("squad_id")) {
-      toPatch.squad_id = toBePatched.squad_id;
+    if (jsonProps.includes("in_use")) {
+      setInUse = true;
+      toPatch.in_use = toBePatched.in_use;
     }
+
+    const data: {
+      lane_number?: number;
+      in_use?: boolean;
+    } = {};
+
+    if (jsonProps.includes("lane_number")) {
+      data.lane_number = toBePatched.lane_number;
+    }
+
+    if (jsonProps.includes("in_use")) {
+      data.in_use = toBePatched.in_use;
+    }
+
     const lane = await prisma.lane.update({
-      where: {
-        id: id,
-      },
-      data: {
-        lane_number: toPatch.lane_number || undefined,
-        // squad_id: toPatch.squad_id || undefined, // do not patch squad_id
-      },
+      where: { id },
+      data,
     });
+
+    // const lane = await prisma.lane.update({
+    //   where: {
+    //     id: id,
+    //   },
+    //   data: {
+    //     // squad_id: toPatch.squad_id || undefined, // do not patch squad_id
+    //     lane_number: toPatch.lane_number || undefined,
+    //     in_use: setInUse ? toPatch.in_use : undefined,
+    //   },
+    // });
 
     return NextResponse.json({ lane }, { status: 200 });
   } catch (error) {
@@ -164,8 +200,8 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-	{ params }: { params: Promise<{ id: string }> }
-) { 
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const { id } = await params;
     if (!isValidBtDbId(id, "lan")) {

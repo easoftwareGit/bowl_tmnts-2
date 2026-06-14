@@ -105,13 +105,13 @@ describe("validate tmntFullData", () => {
       expect(err.errorTable).toBe("events");
     });
 
-    it("returns MISSING_DATA when event has wrong tmnt_id (parent missing)", () => {
+    it("returns INVALID_DATA when event has wrong tmnt_id (parent missing)", () => {
       const tmnt = cloneDeep(mockTmntFullData);
       tmnt.events[0].tmnt_id = "invalid";
       const err = getEventsError(tmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("events");
-      expect(err.message).toContain('events has missing data at index 0');
+      expect(err.message).toContain('events has invalid data at index 0');
     });
   });
 
@@ -131,13 +131,13 @@ describe("validate tmntFullData", () => {
       expect(err.errorTable).toBe("divs");
     });
 
-    it("returns MISSING_DATA when div has wrong tmnt_id (parent missing)", () => {
+    it("returns INVALID_DATA when div has wrong tmnt_id (parent missing)", () => {
       const tmnt = cloneDeep(mockTmntFullData);
       tmnt.divs[0].tmnt_id = "invalid";
       const err = getDivsError(tmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("divs");
-      expect(err.message).toContain("divs has missing data at index 0");
+      expect(err.message).toContain("divs has invalid data at index 0");
     });
   });
 
@@ -157,13 +157,13 @@ describe("validate tmntFullData", () => {
       expect(err.errorTable).toBe("squads");
     });
 
-    it("returns MISSING_DATA when squad has no parent event", () => {
+    it("returns INVALID_DATA when squad has no parent event", () => {
       const tmnt = cloneDeep(mockTmntFullData);
       tmnt.squads[0].event_id = "invalid";
       const err = getSquadsError(tmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("squads");
-      expect(err.message).toContain("squads has missing data at index 0");
+      expect(err.message).toContain("squads has invalid data at index 0");
     });
   });
 
@@ -210,13 +210,13 @@ describe("validate tmntFullData", () => {
       expect(err.errorTable).toBe("lanes");
     });
 
-    it("returns MISSING_DATA when lane has no parent squad", () => {
+    it("returns INVALID_DATA when lane has no parent squad", () => {
       const tmnt = cloneDeep(mockTmntFullData);
       tmnt.lanes[0].squad_id = "invalid";
       const err = getLanesError(tmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("lanes");
-      expect(err.message).toContain("lanes has missing data at index 0");
+      expect(err.message).toContain("lanes has invalid data at index 0");
     });
   });
 
@@ -253,31 +253,31 @@ describe("validate tmntFullData", () => {
       expect(err.message).toBe("no divEntries parent data");
     });
 
-    it("returns MISSING_DATA when a divEntry has no parent squad", () => {
+    it("returns INVALID_DATA when a divEntry has no parent squad", () => {
       const tmnt = cloneDeep(mockTmntFullData);
       tmnt.divEntries[0].squad_id = "invalid";
       const err = getDivEntriesError(tmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("divEntries");
-      expect(err.message).toContain("divEntries has missing data at index 0");
+      expect(err.message).toContain("divEntries has invalid data at index 0");
     });
 
-    it("returns MISSING_DATA when a divEntry has no parent div", () => {
+    it("returns INVALID_DATA when a divEntry has no parent div", () => {
       const tmnt = cloneDeep(mockTmntFullData);
       tmnt.divEntries[0].div_id = "invalid";
       const err = getDivEntriesError(tmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("divEntries");
-      expect(err.message).toContain("divEntries has missing data at index 0");
+      expect(err.message).toContain("divEntries has invalid data at index 0");
     });
 
-    it("returns MISSING_DATA when a divEntry has no parent player", () => {
+    it("returns INVALID_DATA when a divEntry has no parent player", () => {
       const tmnt = cloneDeep(mockTmntFullData);
       tmnt.divEntries[0].player_id = "invalid";
       const err = getDivEntriesError(tmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("divEntries");
-      expect(err.message).toContain("divEntries has missing data at index 0");
+      expect(err.message).toContain("divEntries has invalid data at index 0");
     });
   });
 
@@ -314,22 +314,22 @@ describe("validate tmntFullData", () => {
       expect(err.message).toBe("no brkts parent data");
     });
 
-    it("returns MISSING_DATA when a brkt has no parent div", () => {
+    it("returns INVALID_DATA when a brkt has no parent div", () => {
       const tmnt = cloneDeep(mockTmntFullData);
       tmnt.brkts[0].div_id = "invalid";
       const err = getBrktsError(tmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("brkts");
-      expect(err.message).toContain("brkts has missing data at index 0");
+      expect(err.message).toContain("brkts has invalid data at index 0");
     });
 
-    it("returns MISSING_DATA when a brkt has no parent squad", () => {
+    it("returns INVALID_DATA when a brkt has no parent squad", () => {
       const tmnt = cloneDeep(mockTmntFullData);
       tmnt.brkts[0].squad_id = "invalid";
       const err = getBrktsError(tmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("brkts");
-      expect(err.message).toContain("brkts has missing data at index 0");
+      expect(err.message).toContain("brkts has invalid data at index 0");
     });
   });
 
@@ -378,22 +378,22 @@ describe("validate tmntFullData", () => {
       expect(err.message).toBe("no brktEntries parent data");
     });
 
-    it("returns MISSING_DATA when a brktEntry has no parent brkt", () => {
+    it("returns INVALID_DATA when a brktEntry has no parent brkt", () => {
       const tmnt = cloneDeep(mockTmntFullData);
       tmnt.brktEntries[0].brkt_id = "invalid";
       const err = getBrktEntriesError(tmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("brktEntries");
-      expect(err.message).toContain("brktEntries has missing data at index 0");
+      expect(err.message).toContain("brktEntries has invalid data at index 0");
     });
 
-    it("returns MISSING_DATA when a brktEntry has no parent player", () => {
+    it("returns INVALID_DATA when a brktEntry has no parent player", () => {
       const tmnt = cloneDeep(mockTmntFullData);
       tmnt.brktEntries[0].player_id = "invalid";
       const err = getBrktEntriesError(tmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("brktEntries");
-      expect(err.message).toContain("brktEntries has missing data at index 0");
+      expect(err.message).toContain("brktEntries has invalid data at index 0");
     });
 
     it("returns INVALID_DATA when a brktEntry has no parent div", () => {
@@ -439,13 +439,13 @@ describe("validate tmntFullData", () => {
       expect(err.message).toBe("no oneBrkts parent data");
     });
 
-    it("returns MISSING_DATA when a oneBrkt has no parent brkt", () => {
+    it("returns INVALID_DATA when a oneBrkt has no parent brkt", () => {
       const tmnt = cloneDeep(mockTmntFullData);
       tmnt.oneBrkts[0].brkt_id = "invalid";
       const err = getOneBrktsError(tmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("oneBrkts");
-      expect(err.message).toContain("oneBrkts has missing data at index 0");
+      expect(err.message).toContain("oneBrkts has invalid data at index 0");
     });
   });
 
@@ -482,13 +482,13 @@ describe("validate tmntFullData", () => {
       expect(err.message).toBe("no brktSeeds parent data");
     });
 
-    it("returns MISSING_DATA when a brktSeed has no parent oneBrkt", () => {
+    it("returns INVALID_DATA when a brktSeed has no parent oneBrkt", () => {
       const tmnt = cloneDeep(mockTmntFullData);
       tmnt.brktSeeds[0].one_brkt_id = "invalid";
       const err = getBrktSeedsError(tmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("brktSeeds");
-      expect(err.message).toContain("brktSeeds has missing data at index 0");
+      expect(err.message).toContain("brktSeeds has invalid data at index 0");
     });
 
     it("returns MISSING_DATA when a brktSeed has no parent player (but bye player is allowed if present)", () => {
@@ -534,22 +534,22 @@ describe("validate tmntFullData", () => {
       expect(err.message).toBe("no elims parent data");
     });
 
-    it("returns MISSING_DATA when an elim has no parent div", () => {
+    it("returns INVALID_DATA when an elim has no parent div", () => {
       const tmnt = cloneDeep(mockTmntFullData);
       tmnt.elims[0].div_id = "invalid";
       const err = getElimsError(tmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("elims");
-      expect(err.message).toContain("elims has missing data at index 0");
+      expect(err.message).toContain("elims has invalid data at index 0");
     });
 
-    it("returns MISSING_DATA when an elim has no parent squad", () => {
+    it("returns INVALID_DATA when an elim has no parent squad", () => {
       const tmnt = cloneDeep(mockTmntFullData);
       tmnt.elims[0].squad_id = "invalid";
       const err = getElimsError(tmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("elims");
-      expect(err.message).toContain("elims has missing data at index 0");
+      expect(err.message).toContain("elims has invalid data at index 0");
     });
   });
 
@@ -587,22 +587,22 @@ describe("validate tmntFullData", () => {
       expect(err.message).toBe("no elimEntries parent data");
     });
 
-    it("returns MISSING_DATA when an elimEntry has no parent elim", () => {
+    it("returns INVALID_DATA when an elimEntry has no parent elim", () => {
       const tmnt = cloneDeep(mockTmntFullData);
       tmnt.elimEntries[0].elim_id = "invalid";
       const err = getElimEntriesError(tmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("elimEntries");
-      expect(err.message).toContain("elimEntries has missing data at index 0");
+      expect(err.message).toContain("elimEntries has invalid data at index 0");
     });
 
-    it("returns MISSING_DATA when an elimEntry has no parent player", () => {
+    it("returns INVALID_DATA when an elimEntry has no parent player", () => {
       const tmnt = cloneDeep(mockTmntFullData);
       tmnt.elimEntries[0].player_id = "invalid";
       const err = getElimEntriesError(tmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("elimEntries");
-      expect(err.message).toContain("elimEntries has missing data at index 0");
+      expect(err.message).toContain("elimEntries has invalid data at index 0");
     });
 
     it("returns INVALID_DATA when elimEntry fee does not match elim fee", () => {
@@ -648,22 +648,22 @@ describe("validate tmntFullData", () => {
       expect(err.message).toBe("no pots parent data");
     });
 
-    it("returns MISSING_DATA when a pot has no parent div", () => {
+    it("returns INVALID_DATA when a pot has no parent div", () => {
       const tmnt = cloneDeep(mockTmntFullData);
       tmnt.pots[0].div_id = "invalid";
       const err = getPotsError(tmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("pots");
-      expect(err.message).toContain("pots has missing data at index 0");
+      expect(err.message).toContain("pots has invalid data at index 0");
     });
 
-    it("returns MISSING_DATA when a pot has no parent squad", () => {
+    it("returns INVALID_DATA when a pot has no parent squad", () => {
       const tmnt = cloneDeep(mockTmntFullData);
       tmnt.pots[0].squad_id = "invalid";
       const err = getPotsError(tmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("pots");
-      expect(err.message).toContain("pots has missing data at index 0");
+      expect(err.message).toContain("pots has invalid data at index 0");
     });
   });
 
@@ -701,22 +701,22 @@ describe("validate tmntFullData", () => {
       expect(err.message).toBe("no potEntries parent data");
     });
 
-    it("returns MISSING_DATA when a potEntry has no parent pot", () => {
+    it("returns INVALID_DATA when a potEntry has no parent pot", () => {
       const tmnt = cloneDeep(mockTmntFullData);
       tmnt.potEntries[0].pot_id = "invalid";
       const err = getPotEntriesError(tmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("potEntries");
-      expect(err.message).toContain("potEntries has missing data at index 0");
+      expect(err.message).toContain("potEntries has invalid data at index 0");
     });
 
-    it("returns MISSING_DATA when a potEntry has no parent player", () => {
+    it("returns INVALID_DATA when a potEntry has no parent player", () => {
       const tmnt = cloneDeep(mockTmntFullData);
       tmnt.potEntries[0].player_id = "invalid";
       const err = getPotEntriesError(tmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("potEntries");
-      expect(err.message).toContain("potEntries has missing data at index 0");
+      expect(err.message).toContain("potEntries has invalid data at index 0");
     });
 
     it("returns INVALID_DATA when potEntry fee does not match pot fee", () => {
@@ -762,13 +762,13 @@ describe("validate tmntFullData", () => {
       expect(err.message).toBe("no players parent data");
     });
 
-    it("returns MISSING_DATA when a player has no parent squad", () => {
+    it("returns INVALID_DATA when a player has no parent squad", () => {
       const tmnt = cloneDeep(mockTmntFullData);
       tmnt.players[0].squad_id = "invalid";
       const err = getPlayersError(tmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("players");
-      expect(err.message).toContain("players has missing data at index 0");
+      expect(err.message).toContain("players has invalid data at index 0");
     });
   });
 
@@ -788,70 +788,70 @@ describe("validate tmntFullData", () => {
       const badTmnt = cloneDeep(mockTmntFullData)
       badTmnt.brkts[0].id = 'test'
       const err = validateFullTmnt(badTmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("brkts");
     });
     it('returns error when brktsEntries are invalid', () => {
       const badTmnt = cloneDeep(mockTmntFullData)
       badTmnt.brktEntries[0].id = 'test'
       const err = validateFullTmnt(badTmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("brktEntries");
     });
     it('returns error when brktSeeds are invalid', () => {
       const badTmnt = cloneDeep(mockTmntFullData)
       badTmnt.brktSeeds[0].one_brkt_id = 'test'
       const err = validateFullTmnt(badTmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("brktSeeds");
     });
     it('returns error when divs are invalid', () => {
       const badTmnt = cloneDeep(mockTmntFullData)
       badTmnt.divs[0].id = 'test'
       const err = validateFullTmnt(badTmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("divs");
     });
     it('returns error when divEntries are invalid', () => {
       const badTmnt = cloneDeep(mockTmntFullData)
       badTmnt.divEntries[0].id = 'test'
       const err = validateFullTmnt(badTmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("divEntries");
     });
     it('returns error when elims are invalid', () => {
       const badTmnt = cloneDeep(mockTmntFullData)
       badTmnt.elims[0].id = 'test'
       const err = validateFullTmnt(badTmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("elims");
     });
     it('returns error when elimEntries are invalid', () => {
       const badTmnt = cloneDeep(mockTmntFullData)
       badTmnt.elimEntries[0].id = 'test'
       const err = validateFullTmnt(badTmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("elimEntries");
     });
     it('returns error when events are invalid', () => {
       const badTmnt = cloneDeep(mockTmntFullData)
       badTmnt.events[0].id = 'test'
       const err = validateFullTmnt(badTmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("events");
     });
     it('returns error when lanes are invalid', () => {
       const badTmnt = cloneDeep(mockTmntFullData)
       badTmnt.lanes[0].id = 'test'
       const err = validateFullTmnt(badTmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("lanes");
     });
     it('returns error when oneBrkts are invalid', () => {
       const badTmnt = cloneDeep(mockTmntFullData)
       badTmnt.oneBrkts[0].id = 'test'
       const err = validateFullTmnt(badTmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("oneBrkts");
     });
     it('returns error when players are invalid', () => {
@@ -860,28 +860,28 @@ describe("validate tmntFullData", () => {
       badPlayer.id = 'test';
       badTmnt.players.push(badPlayer);
       const err = validateFullTmnt(badTmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("players");
     });
     it("returns error when pots are invalid", () => {
       const badTmnt = cloneDeep(mockTmntFullData)
       badTmnt.pots[0].id = 'test'      
       const err = validateFullTmnt(badTmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("pots");
     });
     it('returns error when potEntries are invalid', () => {
       const badTmnt = cloneDeep(mockTmntFullData)
       badTmnt.potEntries[0].id = 'test'
       const err = validateFullTmnt(badTmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("potEntries");
     });
     it('returns error when squads are invalid', () => {
       const badTmnt = cloneDeep(mockTmntFullData)
       badTmnt.squads[0].id = 'test'
       const err = validateFullTmnt(badTmnt);
-      expect(err.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(err.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(err.errorTable).toBe("squads");
     });
     it('returns error when stage is invalid', () => {

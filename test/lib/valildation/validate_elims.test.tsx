@@ -316,7 +316,7 @@ describe("tests for eliminator validation", () => {
         id: 'test123',
       }
       const sanitizedElim = sanitizeElim(testElim);
-      expect(sanitizedElim.id).toEqual('')
+      expect(sanitizedElim.id).toEqual('test123') // sanitized, not valildated
     })
     it('should return sanitized elim when elim is not sanitzed', () => { 
       // no numerical fields
@@ -327,8 +327,8 @@ describe("tests for eliminator validation", () => {
         fee: '1234567890',
       }
       const sanitizedBrkt = sanitizeElim(testElim);
-      expect(sanitizedBrkt.div_id).toEqual('')
-      expect(sanitizedBrkt.squad_id).toEqual('')
+      expect(sanitizedBrkt.div_id).toEqual('scriptalert1script') // sanitized, not valildated
+      expect(sanitizedBrkt.squad_id).toEqual('usr_12345678901234567890123456789012') // sanitized, not valildated
       expect(sanitizedBrkt.fee).toEqual('')
     })
     it('should return sanitized elim when numerical values are null', () => { 
@@ -560,7 +560,7 @@ describe("tests for eliminator validation", () => {
       const validElims: validElimsType = validateElims(invalidElims);
       expect(validElims.errorCode).toBe(ErrorCode.MISSING_DATA);
     })
-    it('should return ErrorCode.MISSING_DATA when squad_id is not a valid squad_id', () => { 
+    it('should return ErrorCode.INVALID_DATA when squad_id is not a valid squad_id', () => { 
       const invalidElims = [
         {
           ...mockElimsToPost[0],          
@@ -577,9 +577,9 @@ describe("tests for eliminator validation", () => {
         },
       ]
       const validElims: validElimsType = validateElims(invalidElims);
-      expect(validElims.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validElims.errorCode).toBe(ErrorCode.INVALID_DATA);
     })
-    it('should return ErrorCode.MISSING_DATA when div_id is not a valid div_id', () => { 
+    it('should return ErrorCode.INVALID_DATA when div_id is not a valid div_id', () => { 
       const invalidElims = [
         {
           ...mockElimsToPost[0],          
@@ -596,7 +596,7 @@ describe("tests for eliminator validation", () => {
         },
       ]
       const validElims: validElimsType = validateElims(invalidElims);
-      expect(validElims.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validElims.errorCode).toBe(ErrorCode.INVALID_DATA);
     })
     it('should return ErrorCode.MISSING_DATA when passed an empty array', async () => { 
       const validElims = validateElims([]);

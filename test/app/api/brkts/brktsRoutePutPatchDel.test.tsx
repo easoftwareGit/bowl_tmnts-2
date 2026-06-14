@@ -1,4 +1,5 @@
-import axios, { AxiosError } from "axios";
+import { privateApi } from "@/lib/api/axios";
+import { AxiosError } from "axios";
 import { baseBrktsApi } from "@/lib/api/apiPaths";
 import { testBaseBrktsApi } from "../../../testApi";
 import type { brktType } from "@/lib/types/types";
@@ -108,7 +109,7 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
   const resetBrkt = async () => { 
     // make sure test brkt is reset in database
     const brktJSON = JSON.stringify(testBrkt);
-    await axios.put(oneBrktUrl + testBrkt.id, brktJSON, {
+    await privateApi.put(oneBrktUrl + testBrkt.id, brktJSON, {
       withCredentials: true
     });
   }
@@ -153,7 +154,7 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
 
     it('should update brkt by ID', async () => {
       const brktJSON = JSON.stringify(putBrkt);
-      const response = await axios.put(oneBrktUrl + testBrkt.id, brktJSON, {
+      const response = await privateApi.put(oneBrktUrl + testBrkt.id, brktJSON, {
         withCredentials: true
       })
       expect(response.status).toBe(200);
@@ -173,9 +174,7 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     it('should NOT update brkt by ID when ID is invalid', async () => {
       try {
         const brktJSON = JSON.stringify(putBrkt);
-        const response = await axios.put(oneBrktUrl + 'test', brktJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.put(oneBrktUrl + 'test', brktJSON)
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -188,9 +187,7 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     it('should NOT update brkt by ID when ID is valid, but not a brkt ID', async () => {
       try {
         const brktJSON = JSON.stringify(putBrkt);
-        const response = await axios.put(oneBrktUrl + nonBrktId, brktJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.put(oneBrktUrl + nonBrktId, brktJSON)
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -203,9 +200,7 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     it('should NOT update brkt by ID when ID is not found', async () => {
       try {
         const brktJSON = JSON.stringify(putBrkt);
-        const response = await axios.put(oneBrktUrl + notFoundId, brktJSON, {
-          withCredentials: true
-        })        
+        const response = await privateApi.put(oneBrktUrl + notFoundId, brktJSON)        
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -223,10 +218,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -244,10 +237,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -265,10 +256,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -286,10 +275,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -307,10 +294,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -328,10 +313,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -349,10 +332,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -370,10 +351,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -391,10 +370,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -412,10 +389,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -433,10 +408,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -454,10 +427,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -475,10 +446,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -496,10 +465,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -517,10 +484,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -538,10 +503,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -559,10 +522,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -580,10 +541,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -601,10 +560,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -622,10 +579,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -643,10 +598,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -664,10 +617,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -685,10 +636,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -706,10 +655,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -727,10 +674,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -748,10 +693,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -769,10 +712,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -790,10 +731,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -811,10 +750,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -832,10 +769,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -853,10 +788,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -874,10 +807,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -895,10 +826,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -916,10 +845,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -937,10 +864,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -958,10 +883,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -979,10 +902,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1000,10 +921,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1021,10 +940,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1042,10 +959,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1064,10 +979,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1088,10 +1001,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1111,10 +1022,8 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       const invalidJSON
  = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.put(oneBrktUrl + testBrkt.id, invalidJSON
-, {
-          withCredentials: true
-        })      
+        const response = await privateApi.put(oneBrktUrl + testBrkt.id, invalidJSON
+)      
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1134,7 +1043,7 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
         fsa: '24.001',
       }
       const toSanitzeJSON = JSON.stringify(toSanitizeBrkt);
-      const response = await axios.put(oneBrktUrl + testBrkt.id, toSanitzeJSON, {
+      const response = await privateApi.put(oneBrktUrl + testBrkt.id, toSanitzeJSON, {
         withCredentials: true
       })
       expect(response.status).toBe(200);
@@ -1151,23 +1060,43 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
 
   describe('PATCH by ID - API: /api/brkts/brkt/:id', () => {
 
+    const patchId = "brk_400737cab3584ab7a59b7a4411da4474";
+
+    const toPatch = {
+      ...initBrkt, 
+      id: patchId,
+      squad_id: "sqd_853edbcc963745b091829e3eadfcf064",
+      div_id: "div_621bfee84e774d5a9dc2e9b6bdc5d31c",
+      sort_order: 3,
+      start: 2,
+      games: 3,
+      players: 8,
+      fee: "5",
+      first: "25",
+      second: "10",
+      admin: "5",
+      fsa: "40",
+    }
+
+    const resetPatch = async () => {
+      const brktJSON = JSON.stringify(toPatch);
+      await privateApi.put(oneBrktUrl + toPatch.id, brktJSON)
+    }
+
     beforeAll(async () => {
-      await resetBrkt();
+      await resetPatch();
     })
       
     afterEach(async () => {
-      await resetBrkt();
+      await resetPatch();
     })
 
     it('should patch start for a brkt by ID', async () => {
-      const patchBrkt = {
-        ...blankBrkt,
-        start: 2,
+      const patchBrkt = {        
+        start: 3,
       }
       const brktJSON = JSON.stringify(patchBrkt);
-      const response = await axios.patch(oneBrktUrl + patchBrkt.id, brktJSON, {
-        withCredentials: true
-      })
+      const response = await privateApi.patch(oneBrktUrl + patchId, brktJSON)
       expect(response.status).toBe(200);
       const patchedBrkt = response.data.brkt;
       expect(patchedBrkt.start).toBe(patchBrkt.start);
@@ -1175,8 +1104,7 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     // games = 3, players = 8 no patch testing for games or players
     // no patching for fsa
     it('should patch fee, first, second, admin and fsa for a brkt by ID', async () => {
-      const patchBrkt = {
-        ...blankBrkt,
+      const patchBrkt = {        
         fee: '3',
         first: '15',
         second: '6',
@@ -1184,9 +1112,7 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
         fsa: '24',
       }
       const brktJSON = JSON.stringify(patchBrkt);
-      const response = await axios.patch(oneBrktUrl + patchBrkt.id, brktJSON, {
-        withCredentials: true
-      })
+      const response = await privateApi.patch(oneBrktUrl + patchId, brktJSON)
       expect(response.status).toBe(200);
       const patchedBrkt = response.data.brkt;
       expect(patchedBrkt.fee).toBe(patchBrkt.fee);
@@ -1196,15 +1122,12 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       // expect(patchedBrkt.fsa + '').toBe(patchBrkt.fsa);
     })
     it('should NOT patch brkt by ID when ID is invalid', async () => {
-      const invalidBrkt = {
-        ...blankBrkt,
+      const invalidBrkt = {        
         id: 'test',
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + invalidBrkt.id, invalidJSON)
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1215,15 +1138,12 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       }
     })
     it('should NOT patch brkt by ID when ID is valid, but not a brkt ID', async () => {
-      const invalidBrkt = {
-        ...blankBrkt,
+      const invalidBrkt = {        
         id: nonBrktId,
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + invalidBrkt.id, invalidJSON)
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1234,34 +1154,45 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       }
     })
     it('should NOT patch brkt by ID when ID is not found', async () => {
-      const invalidBrkt = {
-        ...blankBrkt,
+      const invalidBrkt = {        
         id: notFoundId,
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
-        expect(response.status).toBe(404);
+        const response = await privateApi.patch(oneBrktUrl + invalidBrkt.id, invalidJSON)
+        expect(response.status).toBe(400);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(400);
         } else {
           expect(true).toBeFalsy();
         }
       }
     })
+    it('should NOT patch brkt by ID when just passing ID', async () => {
+      const invalidBrkt = {        
+        id: patchId,
+      }
+      const invalidJSON = JSON.stringify(invalidBrkt);
+      try {
+        const response = await privateApi.patch(oneBrktUrl + invalidBrkt.id, invalidJSON)
+        expect(response.status).toBe(400);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(400);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+
     it('should NOT patch a brkt when start is null', async () => {
-      const invalidBrkt = {
-        ...blankBrkt,
+      const invalidBrkt = {        
         start: null,
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1272,15 +1203,12 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       }
     })
     it('should NOT patch a brkt when games is null', async () => {
-      const invalidBrkt = {
-        ...blankBrkt,
+      const invalidBrkt = {        
         games: null,
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1291,15 +1219,12 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       }
     })
     it('should NOT patch a brkt when players is null', async () => {
-      const invalidBrkt = {
-        ...blankBrkt,
+      const invalidBrkt = {        
         players: null,
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1310,15 +1235,12 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       }
     })
     it('should NOT patch a brkt when fee is blank', async () => {
-      const invalidBrkt = {
-        ...blankBrkt,
+      const invalidBrkt = {        
         fee: "",
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1330,14 +1252,11 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     })
     it('should NOT patch a brkt when first is blank', async () => {
       const invalidBrkt = {
-        ...blankBrkt,
         first: "",
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1348,15 +1267,12 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       }
     })
     it('should NOT patch a brkt when second is blank', async () => {
-      const invalidBrkt = {
-        ...blankBrkt,
+      const invalidBrkt = {        
         second: "",
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1367,15 +1283,12 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       }
     })
     it('should NOT patch a brkt when admin is blank', async () => {
-      const invalidBrkt = {
-        ...blankBrkt,
+      const invalidBrkt = {        
         admin: "",
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1386,15 +1299,12 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       }
     })
     it('should NOT patch a brkt when sort_order is null', async () => {
-      const invalidBrkt = {
-        ...blankBrkt,
+      const invalidBrkt = {        
         sort_order: null,
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1405,15 +1315,12 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       }
     })
     it('should NOT patch a brkt when start is too low', async () => {
-      const invalidBrkt = {
-        ...blankBrkt,
+      const invalidBrkt = {        
         start: 0,
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1424,15 +1331,12 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       }
     })
     it('should NOT patch a brkt when start is too high', async () => {
-      const invalidBrkt = {
-        ...blankBrkt,
+      const invalidBrkt = {        
         start: 100,
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1443,15 +1347,12 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       }
     })
     it('should NOT patch a brkt when start is not an integer', async () => {
-      const invalidBrkt = {
-        ...blankBrkt,
+      const invalidBrkt = {        
         start: 1.5,
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1462,15 +1363,12 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       }
     })
     it('should NOT patch a brkt when start is not a number', async () => {
-      const invalidBrkt = {
-        ...blankBrkt,
+      const invalidBrkt = {        
         start: 'abc',
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1481,15 +1379,12 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       }
     })
     it('should NOT patch a brkt when games is too low', async () => {
-      const invalidBrkt = {
-        ...blankBrkt,
+      const invalidBrkt = {        
         games: 0,
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1500,15 +1395,12 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       }
     })
     it('should NOT patch a brkt when games is too high', async () => {
-      const invalidBrkt = {
-        ...blankBrkt,
+      const invalidBrkt = {        
         games: 100,
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1519,15 +1411,12 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       }
     })
     it('should NOT patch a brkt when games is not an integer', async () => {
-      const invalidBrkt = {
-        ...blankBrkt,
+      const invalidBrkt = {        
         games: 1.5,
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1538,15 +1427,12 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       }
     })
     it('should NOT patch a brkt when games is not a number', async () => {
-      const invalidBrkt = {
-        ...blankBrkt,
+      const invalidBrkt = {        
         games: 'abc',
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1557,15 +1443,12 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       }
     })
     it('should NOT patch a brkt when players is too low', async () => {
-      const invalidBrkt = {
-        ...blankBrkt,
+      const invalidBrkt = {        
         players: 0,
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1576,15 +1459,12 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       }
     })
     it('should NOT patch a brkt when players is too high', async () => {
-      const invalidBrkt = {
-        ...blankBrkt,
+      const invalidBrkt = {        
         players: 100,
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1595,15 +1475,12 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       }
     })
     it('should NOT patch a brkt when players is not an integer', async () => {
-      const invalidBrkt = {
-        ...blankBrkt,
+      const invalidBrkt = {        
         players: 1.5,
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1614,15 +1491,12 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       }
     })
     it('should NOT patch a brkt when players is not a number', async () => {
-      const invalidBrkt = {
-        ...blankBrkt,
+      const invalidBrkt = {        
         players: 'abc',
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1634,14 +1508,11 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     })
     it('should NOT patch a brkt when fee is too low', async () => {
       const invalidBrkt = {
-        ...blankBrkt,
         fee: '0',
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1653,14 +1524,11 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     })
     it('should NOT patch a brkt when fee is too high', async () => {
       const invalidBrkt = {
-        ...blankBrkt,
         fee: '1234567',
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1672,14 +1540,11 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     })
     it('should NOT patch a brkt when fee is not a number', async () => {
       const invalidBrkt = {
-        ...blankBrkt,
         fee: 'abc',
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1691,14 +1556,11 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     })
     it('should NOT patch a brkt when first is too low', async () => {
       const invalidBrkt = {
-        ...blankBrkt,
         first: '0',
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1710,14 +1572,11 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     })
     it('should NOT patch a brkt when first is too high', async () => {
       const invalidBrkt = {
-        ...blankBrkt,
         first: '1234567',
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1729,14 +1588,11 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     })
     it('should NOT patch a brkt when first is not a number', async () => {
       const invalidBrkt = {
-        ...blankBrkt,
         first: 'abc',
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1748,14 +1604,11 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     })
     it('should NOT patch a brkt when second is too low', async () => {
       const invalidBrkt = {
-        ...blankBrkt,
         second: '0',
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1767,14 +1620,11 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     })
     it('should NOT patch a brkt when second is too high', async () => {
       const invalidBrkt = {
-        ...blankBrkt,
         second: '1234567',
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1786,14 +1636,11 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     })
     it('should NOT patch a brkt when second is not a number', async () => {
       const invalidBrkt = {
-        ...blankBrkt,
         second: 'abc',
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1805,14 +1652,11 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     })
     it('should NOT patch a brkt when admin is too low', async () => {
       const invalidBrkt = {
-        ...blankBrkt,
         admin: '0',
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1824,14 +1668,11 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     })
     it('should NOT patch a brkt when admin is too high', async () => {
       const invalidBrkt = {
-        ...blankBrkt,
         admin: '1234567',
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1843,14 +1684,11 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     })
     it('should NOT patch a brkt when admin is not a number', async () => {
       const invalidBrkt = {
-        ...blankBrkt,
         admin: 'abc',
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1862,14 +1700,11 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     })
     it('should NOT patch a brkt when sort_order is too low', async () => {
       const invalidBrkt = {
-        ...blankBrkt,
         sort_order: 0,
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1881,14 +1716,11 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     })
     it('should NOT patch a brkt when sort_order is too high', async () => {
       const invalidBrkt = {
-        ...blankBrkt,
         sort_order: 1234567,
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1900,14 +1732,11 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     })
     it('should NOT patch a brkt when sort_order is not an integer', async () => {
       const invalidBrkt = {
-        ...blankBrkt,
         sort_order: 1.5,
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1919,14 +1748,11 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     })
     it('should NOT patch a brkt when sort_order is not a number', async () => {
       const invalidBrkt = {
-        ...blankBrkt,
         sort_order: 'abc',
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1937,21 +1763,18 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       }
     })
     it('it should NOT patch a brkt by ID when div_id + start is not unique', async () => {
-      const invalidBrkt: brktType = {
-        ...initBrkt,
+      const invalidBrkt = {        
         squad_id: squad2Id,
         div_id: div2Id,
-        start: 1
+        start: 4,        
       }
       const invalidJSON = JSON.stringify(invalidBrkt);
       try {
-        const response = await axios.patch(oneBrktUrl + invalidBrkt.id, invalidJSON, {
-          withCredentials: true
-        })
-        expect(response.status).toBe(404);
+        const response = await privateApi.patch(oneBrktUrl + patchId, invalidJSON)
+        expect(response.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(409);
         } else {
           expect(true).toBeFalsy();
         }
@@ -1967,9 +1790,7 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
         fsa: '24.001',
       }
       const brktJSON = JSON.stringify(toSanitizeBrkt);
-      const response = await axios.patch(oneBrktUrl + toSanitizeBrkt.id, brktJSON, {
-        withCredentials: true
-      })
+      const response = await privateApi.patch(oneBrktUrl + toSanitizeBrkt.id, brktJSON)
 
       expect(response.status).toBe(200);
       const brkt = response.data.brkt;
@@ -2011,14 +1832,14 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
       if (!didDel) return;
       try {
         const brktJSON = JSON.stringify(toDelBrkt);
-        await axios.post(url, brktJSON, { withCredentials: true });
+        await privateApi.post(url, brktJSON, { withCredentials: true });
       } catch (err) {
         if (err instanceof Error) console.log(err.message);
       }
     })
     
     it('should delete a brkt by ID', async () => {
-      const response = await axios.delete(oneBrktUrl + toDelBrkt.id, {
+      const response = await privateApi.delete(oneBrktUrl + toDelBrkt.id, {
         withCredentials: true,
       })
       didDel = true;
@@ -2027,7 +1848,7 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     })
     it('should NOT delete a brkt by ID when ID is invalid', async () => { 
       try {
-        const response = await axios.delete(oneBrktUrl + 'test', {        
+        const response = await privateApi.delete(oneBrktUrl + 'test', {        
           withCredentials: true,
         })
         expect(response.status).toBe(404);
@@ -2041,7 +1862,7 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     })
     it('should NOT delete a brkt by ID when ID is not found', async () => { 
       try {
-        const response = await axios.delete(oneBrktUrl + notFoundId, {        
+        const response = await privateApi.delete(oneBrktUrl + notFoundId, {        
           withCredentials: true,
         })
         expect(response.status).toBe(200);
@@ -2055,7 +1876,7 @@ describe('Brkts - PUT, PATCH, DELETE', () => {
     })
     it('should NOT delete a brkt by ID when ID is valid, but not an brkt id', async () => { 
       try {
-        const response = await axios.delete(oneBrktUrl + nonBrktId, {        
+        const response = await privateApi.delete(oneBrktUrl + nonBrktId, {        
           withCredentials: true,
         })
         expect(response.status).toBe(404);

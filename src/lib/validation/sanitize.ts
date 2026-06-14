@@ -1,5 +1,24 @@
 import { maxUrlLength } from "./constants";
 
+const idRegex = /[^A-Za-z0-9_]/g;
+const maxIdLength = 36;
+
+/**
+ * sanitize id fields
+ * - allows uppercase letters, lowercase letters, numbers, and "_"
+ * - trims to max length 36
+ *
+ * @param {unknown} id - id to sanitize
+ * @returns {string} sanitized id
+ */
+export function sanitizeBtDbId(id: unknown): string {
+  if (typeof id !== "string") return "";
+
+  return id
+    .replace(idRegex, "")
+    .slice(0, maxIdLength);
+}
+
 const nameRegex = /[^\p{L}\p{M}\p{Zs}'\-]/gu;
 
 /**
@@ -208,3 +227,39 @@ export function sanitizeCurrency(currency: string): string {
 
   return numberStr;
 }
+
+/**
+ * sanitizes a money string
+ *   "" is valid, and sanitized to "0"
+ *   all 0's is ok, return "0"
+ *   sanitizeCurrency removes trailing zeros
+ *
+ * @param {string} moneyStr - money string to sanitize
+ * @returns {string} - sanitized money string
+ */
+export const sanitizedMoneyString = (moneyStr: string): string => {
+  if (moneyStr === null
+    || moneyStr === undefined
+    || typeof moneyStr !== "string") return "";  
+  if (moneyStr === "" || moneyStr.replace(/^0+/, '') === "") return "0";
+  return sanitizeCurrency(moneyStr);
+}
+
+/**
+ * sanitizes a money amount
+ * 
+ * @param {unknown} amount - amount to sanitize
+ * @returns {number | null} - sanitized amount or null if amount is invalid  
+ */
+export const sanitizeMoneyAmount = (
+  amount: unknown,
+): number | null => {
+  if (amount == null) return null;
+  const num = Number(amount);
+
+  if (!Number.isFinite(num)) {
+    return null;
+  }
+
+  return Math.round(num * 100) / 100;
+};

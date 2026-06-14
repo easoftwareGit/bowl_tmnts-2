@@ -406,7 +406,7 @@ describe("user table data validation", () => {
 
       const sanitized = sanitizeUser(toSanitize);
 
-      expect(sanitized.id).toEqual("");
+      expect(sanitized.id).toEqual("scriptascript"); // sanitized, not validated
       expect(sanitized.first_name).toEqual("scriptascript");
       expect(sanitized.last_name).toEqual("CdivEaCdivE");
       expect(sanitized.email).toEqual("");
@@ -422,8 +422,7 @@ describe("user table data validation", () => {
       toSanitize.id = tmntId;
 
       const sanitized = sanitizeUser(toSanitize);
-
-      expect(sanitized.id).toBe("");
+      expect(sanitized.id).toBe("tmt_0123388a8fc4641a2e37233f1d6bebd1"); // sanitized, not validated
     });
 
     it("should return sanitized userFormType with invalid email/phone/password/role blanked", () => {

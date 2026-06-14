@@ -4,12 +4,12 @@ import type { divEntryType, validDivEntriesType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { maxMoney } from "../constants";
 import { ErrorCode } from "@/lib/enums/enums";
-import { sanitizeCurrency } from "../sanitize";
+import { sanitizeBtDbId, sanitizedMoneyString } from "../sanitize";
 
 /**
  * checks if divEntry object has missing data - DOES NOT SANITIZE OR VALIDATE
  * 
- * @param divEntry - divEntry to check for missing data
+ * @param {divEntryType} divEntry - divEntry to check for missing data
  * @returns {ErrorCode.MISSING_DATA | ErrorCode.NONE | ErrorCode.OTHER_ERROR} - error code
  */
 const gotDivEntryData = (divEntry: divEntryType): ErrorCode => {
@@ -32,7 +32,7 @@ const gotDivEntryData = (divEntry: divEntryType): ErrorCode => {
 /**
  * checks if fee is valid
  * 
- * @param moneyStr {unknown} - money to check
+ * @param {unknown} moneyStr - money to check
  * @returns {boolean} - true if amount is valid and not blank; else false
  */
 export const validDivEntryFee = (moneyStr: unknown): boolean => {
@@ -71,23 +71,6 @@ const validDivEntryData = (divEntry: divEntryType): ErrorCode => {
 }
 
 /**
- * sanitizes a div entry money string
- *   "" is valid, and sanitized to "0"
- *   all 0's is ok, return "0"
- *   sanitizeCurrency removes trailing zeros
- *
- * @param moneyStr - money string to sanitize
- * @returns {string} - sanitized money string
- */
-const sanitizedDivEntryMoney = (moneyStr: string): string => {
-  if (moneyStr === null
-    || moneyStr === undefined
-    || typeof moneyStr !== "string") return "";  
-  if (moneyStr === "" || moneyStr.replace(/^0+/, '') === "") return "0";
-  return sanitizeCurrency(moneyStr);
-}
-
-/**
  * sanitizes divEntry
  * 
  * @param {divEntryType} divEntry - divEntry to sanitize
@@ -98,26 +81,26 @@ export const sanitizeDivEntry = (divEntry: divEntryType): divEntryType => {
   const sanitziedDivEntry: divEntryType = {
     ...blankDivEntry
   }
-  if (isValidBtDbId(divEntry.id, "den")) {
-    sanitziedDivEntry.id = divEntry.id;
+  if (divEntry.id) {
+    sanitziedDivEntry.id = sanitizeBtDbId(divEntry.id);
   }
-  if (isValidBtDbId(divEntry.squad_id, "sqd")) {
-    sanitziedDivEntry.squad_id = divEntry.squad_id;
+  if (divEntry.squad_id) {
+    sanitziedDivEntry.squad_id = sanitizeBtDbId(divEntry.squad_id);
   }
-  if (isValidBtDbId(divEntry.div_id, "div")) {
-    sanitziedDivEntry.div_id = divEntry.div_id;
+  if (divEntry.div_id) {
+    sanitziedDivEntry.div_id = sanitizeBtDbId(divEntry.div_id);
   }
-  if (isValidBtDbId(divEntry.player_id, "ply")) {
-    sanitziedDivEntry.player_id = divEntry.player_id;
+  if (divEntry.player_id) {
+    sanitziedDivEntry.player_id = sanitizeBtDbId(divEntry.player_id);
   }
-  sanitziedDivEntry.fee = sanitizedDivEntryMoney(divEntry.fee);  
+  sanitziedDivEntry.fee = sanitizedMoneyString(divEntry.fee);  
   return sanitziedDivEntry;
 }
 
 /**
  * validates divEntry
  * 
- * @param divEntry - divEntry to validate
+ * @param {divEntryType} divEntry - divEntry to validate
  * @returns {ErrorCode.NONE | ErrorCode.MISSING_DATA | ErrorCode.INVALID_DATA | ErrorCode.OTHER_ERROR} - error code
  */
 export const validateDivEntry = (divEntry: divEntryType): ErrorCode => { 

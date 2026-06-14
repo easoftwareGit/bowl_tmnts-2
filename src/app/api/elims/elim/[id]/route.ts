@@ -107,53 +107,70 @@ export async function PATCH(
     if (!isValidBtDbId(id, "elm")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
-    const json = await request.json();
-    // populate toCheck with json
-    const jsonProps = Object.getOwnPropertyNames(json);
-    
-    const currentElim = await prisma.elim.findUnique({
-      where: {
-        id: id,
-      },
-    });    
 
-    if (!currentElim) {
-      return NextResponse.json({ error: "not found" }, { status: 404 });
+    // fake data that will pass sanitation and validation
+    const fakeElim = {
+      ...initElim,
+      id,
+      squad_id: "sqd_00000000000000000000000000000000",
+      div_id: "div_00000000000000000000000000000000",
+      sort_order: 1,
+      start: 1,
+      games: 3,
+      fee: 10,      
     }
 
     const toCheck: elimType = {
       ...initElim,
-      div_id: currentElim.div_id,
-      squad_id: currentElim.squad_id,
-      fee: currentElim.fee + "",
-      start: currentElim.start,
-      games: currentElim.games,
-      sort_order: currentElim.sort_order,
+      id, 
+      div_id: fakeElim.div_id,
+      squad_id: fakeElim.squad_id,
+      fee: fakeElim.fee + "",
+      start: fakeElim.start,
+      games: fakeElim.games,
+      sort_order: fakeElim.sort_order,
     };
 
-    if (jsonProps.includes("div_id")) {
-      toCheck.div_id = json.div_id;
-    }
-    if (jsonProps.includes("squad_id")) {
-      toCheck.squad_id = json.squad_id;
-    }
+    const json = await request.json();
+    // populate toCheck with json
+    const jsonProps = Object.getOwnPropertyNames(json);
+    let gotDataToPatch = false;
+    // if (jsonProps.includes("div_id")) {
+    //   toCheck.div_id = json.div_id;
+    //   gotDataToPatch = true;
+    // }
+    // if (jsonProps.includes("squad_id")) {
+    //   toCheck.squad_id = json.squad_id;
+    //   gotDataToPatch = true;
+    // }
     if (jsonProps.includes("fee")) {
       toCheck.fee = json.fee;
+      gotDataToPatch = true;
     }
     if (jsonProps.includes("start")) {
       toCheck.start = json.start;
+      gotDataToPatch = true;
     }    
     if (jsonProps.includes("games")) {
       toCheck.games = json.games;
+      gotDataToPatch = true;
     }
     if (jsonProps.includes("sort_order")) {
       toCheck.sort_order = json.sort_order;
+      gotDataToPatch = true;
+    }
+    if (!gotDataToPatch) {
+      return NextResponse.json({ error: "no data to patch" }, { status: 400 });
     }
 
-    const errCode = validateElim(toCheck);
+    const toBePatched = sanitizeElim(toCheck);
+    const errCode = validateElim(toBePatched);
     if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
+        case ErrorCode.MISSING_DATA:
+          errMsg = 'missing data'
+          break;
         case ErrorCode.INVALID_DATA:
           errMsg = "invalid data";
           break;
@@ -163,8 +180,7 @@ export async function PATCH(
       }
       return NextResponse.json({ error: errMsg }, { status: 422 });
     }
-
-    const toBePatched = sanitizeElim(toCheck);
+    
     const toPatch = {
       ...initElim,
       div_id: "",

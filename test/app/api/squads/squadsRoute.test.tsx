@@ -1,10 +1,12 @@
-import axios, { AxiosError } from "axios";
-import { baseSquadsApi, baseEventsApi } from "@/lib/api/apiPaths";
-import { testBaseSquadsApi, testBaseEventsApi } from "../../../testApi";
+import { privateApi } from "@/lib/api/axios";
+import { AxiosError } from "axios";
+import { baseSquadsApi } from "@/lib/api/apiPaths";
+import { testBaseSquadsApi } from "../../../testApi";
 import type { squadType } from "@/lib/types/types";
 import { initSquad } from "@/lib/db/initVals";
 import { removeTimeFromISODateStr, startOfDayFromString } from "@/lib/dateTools";
 import { isValidBtDbId } from "@/lib/validation/validation";
+import { maxGames, maxLaneCount, maxSortOrder } from "@/lib/validation/constants";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -38,6 +40,7 @@ const nonSquadId = "usr_01234567890123456789012345678901";
 const squad4Id = 'sqd_796c768572574019a6fa79b3b1c8fa57';
 const event2Id = 'evt_dadfd0e9c11a4aacb87084f1609a0afd';
 const event3Id = 'evt_06055deb80674bd592a357a4716d8ef2';
+const userId = "usr_01234567890123456789012345678901";
 
 const testSquad: squadType = {
   ...initSquad,
@@ -65,14 +68,9 @@ const squadToPost: squadType = {
   sort_order: 1,
 }
 
-const testPatchSquad = {
-  id: testSquad.id,
-  event_id: testSquad.event_id,
-}
-
 const deletePostedSquad = async (squadId: string) => {
   try {
-      const response = await axios.delete(oneSquadUrl + squadId, { withCredentials: true });
+    await privateApi.delete(oneSquadUrl + squadId);
   } catch (err) {
     if (err instanceof AxiosError) console.log(err.message);
   }
@@ -82,9 +80,7 @@ const resetSquad = async (squad: squadType) => {
   // make sure test squad is reset in database
   try {
     const squadJSON = JSON.stringify(squad);
-    await axios.put(oneSquadUrl + squad.id, squadJSON, {
-      withCredentials: true
-    });
+    await privateApi.put(oneSquadUrl + squad.id, squadJSON);
   } catch (err) {
     if (err instanceof AxiosError) console.log(err.message);
   }
@@ -93,7 +89,7 @@ const resetSquad = async (squad: squadType) => {
 const rePostSquad = async (squad: squadType) => {
   try {
     // if squad already in database, then don't re-post
-    const getResponse = await axios.get(oneSquadUrl + squad.id);
+    const getResponse = await privateApi.get(oneSquadUrl + squad.id);
     const found = getResponse.data.squad;
     if (found) return;
   } catch (err) {
@@ -107,7 +103,7 @@ const rePostSquad = async (squad: squadType) => {
   try {
     // if not in database, then re-post
     const squadJSON = JSON.stringify(squad);
-    await axios.post(url, squadJSON, {
+    await privateApi.post(url, squadJSON, {
       withCredentials: true
     })    
   } catch (err) {
@@ -124,7 +120,7 @@ describe('Squads - API: /api/squads', () => {
     })
 
     it('should get all squads', async () => {
-      const response = await axios.get(url);
+      const response = await privateApi.get(url);
       expect(response.status).toBe(200);
       // 12 rows in prisma/seed.ts
       expect(response.data.squads).toHaveLength(12);
@@ -145,7 +141,7 @@ describe('Squads - API: /api/squads', () => {
       const eventSquadId2 = 'sqd_796c768572574019a6fa79b3b1c8fa57';
       const eventSquadId3 = 'sqd_1234ec18b3d44c0189c83f6ac5fd4ad6';
       
-      const response = await axios.get(eventUrl + multiSquadEventId);
+      const response = await privateApi.get(eventUrl + multiSquadEventId);
       expect(response.status).toBe(200);
       // 3 rows for tmnt in prisma/seed.ts
       expect(response.data.squads).toHaveLength(3);
@@ -157,7 +153,7 @@ describe('Squads - API: /api/squads', () => {
     })
     it('should return 404 status code for an invalid event id', async () => {
       try {
-        const response = await axios.get(eventUrl + 'test');
+        const response = await privateApi.get(eventUrl + 'test');
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -168,17 +164,13 @@ describe('Squads - API: /api/squads', () => {
       }
     })
     it('should return 0 squads for an non existing event', async () => {
-      const response = await axios.get(eventUrl + notfoundEventId);
+      const response = await privateApi.get(eventUrl + notfoundEventId);
       expect(response.status).toBe(200);
       expect(response.data.squads).toHaveLength(0);
     })
     it('should return 404 for when id is valid, but not an event id', async () => {
       try {
-        const response = await axios({
-          method: "get",
-          withCredentials: true,
-          url: eventUrl + squad4Id,
-        })
+        const response = await privateApi.get(eventUrl + squad4Id);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -202,7 +194,7 @@ describe('Squads - API: /api/squads', () => {
       const tmntSquadId2 = 'sqd_796c768572574019a6fa79b3b1c8fa57';
       const tmntSquadId3 = 'sqd_1234ec18b3d44c0189c83f6ac5fd4ad6';
 
-      const response = await axios.get(tmntUrl + tmntId);
+      const response = await privateApi.get(tmntUrl + tmntId);
       expect(response.status).toBe(200);
       // 3 rows for tmnt in prisma/seed.ts
       expect(response.data.squads).toHaveLength(3);
@@ -216,7 +208,7 @@ describe('Squads - API: /api/squads', () => {
       const tmntId = 'tmt_2d494e9bb51f4b9abba428c3f37131c9';
       const tmntSquadId1 = 'sqd_853edbcc963745b091829e3eadfcf064';
       const tmntSquadId2 = 'sqd_a8daec18b3d44c0189c83f6ac5fd4ad6';
-      const response = await axios.get(tmntUrl + tmntId);
+      const response = await privateApi.get(tmntUrl + tmntId);
       expect(response.status).toBe(200);
       // 2 rows for tmnt in prisma/seed.ts
       expect(response.data.squads).toHaveLength(2);
@@ -227,7 +219,7 @@ describe('Squads - API: /api/squads', () => {
     })
     it('should return code 404 for an invalid tmnt id', async () => {
       try {
-        const response = await axios.get(tmntUrl + 'test');
+        const response = await privateApi.get(tmntUrl + 'test');
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -238,13 +230,13 @@ describe('Squads - API: /api/squads', () => {
       }
     })
     it('should return 0 squads for an non existing tmnt', async () => {
-      const response = await axios.get(tmntUrl + notfoundTmntId);
+      const response = await privateApi.get(tmntUrl + notfoundTmntId);
       expect(response.status).toBe(200);
       expect(response.data.squads).toHaveLength(0);
     })
     it('should return code 404 for when id is valid, but not an tmnt id', async () => {
       try {
-        const response = await axios.get(tmntUrl + squad4Id);
+        const response = await privateApi.get(tmntUrl + squad4Id);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -263,7 +255,7 @@ describe('Squads - API: /api/squads', () => {
     })
 
     it('should get squad by ID', async () => {
-      const response = await axios.get(oneSquadUrl + testSquad.id);
+      const response = await privateApi.get(oneSquadUrl + testSquad.id);
       const squad = response.data.squad;
       expect(response.status).toBe(200);
       expect(squad.id).toBe(testSquad.id);
@@ -278,7 +270,7 @@ describe('Squads - API: /api/squads', () => {
     })
     it('should NOT get a squad by ID when ID is invalid', async () => {
       try {
-        const response = await axios.get(oneSquadUrl + 'test');
+        const response = await privateApi.get(oneSquadUrl + 'test');
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -290,7 +282,7 @@ describe('Squads - API: /api/squads', () => {
     })
     it('should NOT get a squad by ID when ID is valid, but not a squad ID', async () => {
       try {
-        const response = await axios.get(oneSquadUrl + nonSquadId);
+        const response = await privateApi.get(oneSquadUrl + nonSquadId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -302,7 +294,7 @@ describe('Squads - API: /api/squads', () => {
     })
     it('should NOT get a squad by ID when ID is not found', async () => {
       try {
-        const response = await axios.get(oneSquadUrl + notFoundId);
+        const response = await privateApi.get(oneSquadUrl + notFoundId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -313,99 +305,6 @@ describe('Squads - API: /api/squads', () => {
       }
     })
   })
-
-  // // make sure to comment out these tests
-  // describe('GET all entries for one squad API: /api/squads/entries/squad/:id', () => { 
-    
-  //   it('should get all entries for one squad', async () => {
-  //     const squadID = mockCurData.squads[0].id;
-  //     const response = await axios({
-  //       method: "get",
-  //       withCredentials: true,
-  //       url: entriesUrl + squadID,        
-  //       params: { curData: JSON.stringify(mockCurData) }
-  //     });
-  //     expect(response.status).toBe(200);
-  //     const squadEntries = response.data.squadEntries;
-  //     expect(squadEntries).toHaveLength(6);
-  //   })
-  //   it('should return code 404 for when id does not match squad id in curData', async () => {      
-  //     const squadID = 'sqd_3397da1adc014cf58c44e07c19914f70'; // changed last digit to not match
-  //     try {
-  //       const response = await axios({
-  //         method: "get",
-  //         withCredentials: true,
-  //         url: entriesUrl + squadID,          
-  //         params: { curData: JSON.stringify(mockCurData) }
-  //       });
-  //       expect(response.status).toBe(404);
-  //     } catch (err) {
-  //       if (err instanceof AxiosError) {
-  //         expect(err.response?.status).toBe(404);
-  //       } else {
-  //         expect(true).toBeFalsy();
-  //       }
-  //     }
-  //   })
-  //   it('should return code 404 for when squads is null in curData', async () => {      
-  //     const squadID = mockCurData.squads[0].id;
-  //     const invalidData = cloneDeep(mockCurData)
-  //     invalidData.squads = null as any;
-  //     try {
-  //       const response = await axios({
-  //         method: "get",
-  //         withCredentials: true,
-  //         url: entriesUrl + squadID,          
-  //         params: { curData: JSON.stringify(invalidData) }
-  //       });
-  //       expect(response.status).toBe(404);
-  //     } catch (err) {
-  //       if (err instanceof AxiosError) {
-  //         expect(err.response?.status).toBe(404);
-  //       } else {
-  //         expect(true).toBeFalsy();
-  //       }
-  //     }
-  //   })
-  //   it('should return code 404 for with empty squads in curData', async () => {      
-  //     const squadID = mockCurData.squads[0].id;
-  //     const invalidData = cloneDeep(mockCurData)
-  //     invalidData.squads = [];
-  //     try {
-  //       const response = await axios({
-  //         method: "get",
-  //         withCredentials: true,
-  //         url: entriesUrl + squadID,          
-  //         params: { curData: JSON.stringify(invalidData) }
-  //       });
-  //       expect(response.status).toBe(404);
-  //     } catch (err) {
-  //       if (err instanceof AxiosError) {
-  //         expect(err.response?.status).toBe(404);
-  //       } else {
-  //         expect(true).toBeFalsy();
-  //       }
-  //     }
-  //   })
-  //   it('should return code 400 for when no curData', async () => {      
-  //     const squadID = 'sqd_3397da1adc014cf58c44e07c19914f70'; // changed last digit to not match
-  //     try {
-  //       const response = await axios({
-  //         method: "get",
-  //         withCredentials: true,
-  //         url: entriesUrl + squadID,          
-  //         params: { curData: JSON.stringify({}) }
-  //       });
-  //       expect(response.status).toBe(404);
-  //     } catch (err) {
-  //       if (err instanceof AxiosError) {
-  //         expect(err.response?.status).toBe(404);
-  //       } else {
-  //         expect(true).toBeFalsy();
-  //       }
-  //     }
-  //   })    
-  // })
 
   describe("GET squad's one brkts and seeds API: /api/squads/oneBrkts/squad/:id", () => {
     
@@ -418,7 +317,7 @@ describe('Squads - API: /api/squads', () => {
     })
 
     it('should get squad one brkts and seeds', async () => {
-      const response = await axios.get(oneBrktsUrl + squadId);
+      const response = await privateApi.get(oneBrktsUrl + squadId);
       expect(response.status).toBe(200);
       const oneBrktsAndSeeds = response.data.oneBrktsAndSeeds;
       expect(oneBrktsAndSeeds).toHaveLength(32);
@@ -434,7 +333,7 @@ describe('Squads - API: /api/squads', () => {
     it('should return code 404 when passed invalid squad id', async () => {
       const invalidSquadId = 'test';
       try {
-        const response = await axios.get(oneBrktsUrl + invalidSquadId);
+        const response = await privateApi.get(oneBrktsUrl + invalidSquadId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -446,7 +345,7 @@ describe('Squads - API: /api/squads', () => {
     })
     it('should return code 404 when passed valid id, but not a squad id', async () => {
       try {
-        const response = await axios.get(oneBrktsUrl + brktId);
+        const response = await privateApi.get(oneBrktsUrl + brktId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -458,7 +357,7 @@ describe('Squads - API: /api/squads', () => {
     })
     it('should return code 404 when passed empty string', async () => {
       try {
-        const response = await axios.get(oneBrktsUrl);
+        const response = await privateApi.get(oneBrktsUrl);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -490,7 +389,7 @@ describe('Squads - API: /api/squads', () => {
 
     it('should create a new squad', async () => {
       const squadJSON = JSON.stringify(squadToPost);
-      const response = await axios.post(url, squadJSON, {
+      const response = await privateApi.post(url, squadJSON, {
         withCredentials: true
       });
       expect(response.status).toBe(201);
@@ -512,7 +411,7 @@ describe('Squads - API: /api/squads', () => {
         squad_time: '',
       }
       const squadJSON = JSON.stringify(noTimeSuqd);
-      const response = await axios.post(url, squadJSON, {
+      const response = await privateApi.post(url, squadJSON, {
         withCredentials: true
       });
       expect(response.status).toBe(201);
@@ -526,7 +425,7 @@ describe('Squads - API: /api/squads', () => {
         squad_date_str: '10/20/2024',
       }
       const squadJSON = JSON.stringify(dateSquad);
-      const response = await axios.post(url, squadJSON, {
+      const response = await privateApi.post(url, squadJSON, {
         withCredentials: true
       })
       expect(response.status).toBe(201);
@@ -541,7 +440,7 @@ describe('Squads - API: /api/squads', () => {
         squad_name: "<script>N</script>",
       }
       const squadJSON = JSON.stringify(toSanitizeSquad);
-      const response = await axios.post(url, squadJSON, {
+      const response = await privateApi.post(url, squadJSON, {
         withCredentials: true
       });
       expect(response.status).toBe(201);
@@ -556,7 +455,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -575,7 +474,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -594,7 +493,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -613,7 +512,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -632,7 +531,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -651,7 +550,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -670,7 +569,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -689,7 +588,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -708,7 +607,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -727,7 +626,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -746,7 +645,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -765,7 +664,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -784,7 +683,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(409);
@@ -803,7 +702,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -822,7 +721,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -841,7 +740,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -860,7 +759,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -879,7 +778,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -898,7 +797,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -917,7 +816,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -936,7 +835,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -955,7 +854,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -974,7 +873,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -993,7 +892,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1012,7 +911,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1031,7 +930,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1050,7 +949,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1069,7 +968,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1088,7 +987,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1107,7 +1006,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1126,7 +1025,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1145,7 +1044,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1165,7 +1064,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.post(url, invalidJSON, {
+        const response = await privateApi.post(url, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(409);
@@ -1215,7 +1114,7 @@ describe('Squads - API: /api/squads', () => {
 
     it('should update a squad by ID', async () => {
       const squadJSON = JSON.stringify(putSquad);
-      const response = await axios.put(oneSquadUrl + testSquad.id, squadJSON, {
+      const response = await privateApi.put(oneSquadUrl + testSquad.id, squadJSON, {
         withCredentials: true
       });
       expect(response.status).toBe(200);
@@ -1237,7 +1136,7 @@ describe('Squads - API: /api/squads', () => {
         squad_date_str: '10/20/2022',
       }
       const squadJSON = JSON.stringify(noTimeSquad);
-      const response = await axios.put(oneSquadUrl + noTimeSquad.id, squadJSON, {
+      const response = await privateApi.put(oneSquadUrl + noTimeSquad.id, squadJSON, {
         withCredentials: true
       })
       expect(response.status).toBe(200);
@@ -1250,7 +1149,7 @@ describe('Squads - API: /api/squads', () => {
         squad_time: '',
       }
       const squadJSON = JSON.stringify(noTimeSquad);
-      const response = await axios.put(oneSquadUrl + noTimeSquad.id, squadJSON, {
+      const response = await privateApi.put(oneSquadUrl + noTimeSquad.id, squadJSON, {
         withCredentials: true
       })
       expect(response.status).toBe(200);
@@ -1260,7 +1159,7 @@ describe('Squads - API: /api/squads', () => {
     it('should NOT update a squad by ID when ID is invalid', async () => {
       try {
         const squadJSON = JSON.stringify(putSquad);
-        const response = await axios.put(oneSquadUrl + 'test', squadJSON, {
+        const response = await privateApi.put(oneSquadUrl + 'test', squadJSON, {
           withCredentials: true
         });
         expect(response.status).toBe(404);
@@ -1275,7 +1174,7 @@ describe('Squads - API: /api/squads', () => {
     it('should NOT update a squad by ID when ID is valid, but not a squad ID', async () => {
       try {
         const squadJSON = JSON.stringify(putSquad);
-        const response = await axios.put(oneSquadUrl + nonSquadId, squadJSON, {
+        const response = await privateApi.put(oneSquadUrl + nonSquadId, squadJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(404);
@@ -1290,7 +1189,7 @@ describe('Squads - API: /api/squads', () => {
     it('should NOT update a squad by ID when ID is not found.', async () => {
       try {
         const squadJSON = JSON.stringify(putSquad);
-        const response = await axios.put(oneSquadUrl + notFoundId, squadJSON, {
+        const response = await privateApi.put(oneSquadUrl + notFoundId, squadJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(404);
@@ -1309,7 +1208,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1328,7 +1227,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1347,7 +1246,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1366,7 +1265,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1385,7 +1284,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1404,7 +1303,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1423,7 +1322,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1442,7 +1341,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1461,7 +1360,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1480,7 +1379,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1499,7 +1398,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1518,7 +1417,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1537,7 +1436,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1556,7 +1455,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1575,7 +1474,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1594,7 +1493,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1613,7 +1512,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1632,7 +1531,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1651,7 +1550,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1670,7 +1569,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1689,7 +1588,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1708,7 +1607,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1727,7 +1626,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1746,7 +1645,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -1767,7 +1666,7 @@ describe('Squads - API: /api/squads', () => {
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.put(oneSquadUrl + invalidSquad.id, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(409);
@@ -1785,12 +1684,7 @@ describe('Squads - API: /api/squads', () => {
         squad_name: "<script>N</script>   ",
       }
       const squadJSON = JSON.stringify(toSanitizeSquad);
-      const response = await axios({
-        method: "put",
-        data: squadJSON,
-        withCredentials: true,
-        url: oneSquadUrl + testSquad.id,
-      })
+      const response = await privateApi.put(oneSquadUrl + testSquad.id, squadJSON);
       expect(response.status).toBe(200);
       expect(response.data.squad.squad_name).toBe('scriptNscript');
     })
@@ -1799,344 +1693,279 @@ describe('Squads - API: /api/squads', () => {
 
   describe('PATCH by ID - API: /api/squads/squad/:id', () => {
 
+    const toPatchId = "sqd_3397da1adc014cf58c44e07c19914f72";
+
+    const toPatch = {
+      ...initSquad,
+      id: toPatchId,
+      event_id: "evt_c0b2bb31d647414a9bea003bd835f3a0",
+      squad_name: "Squad X",
+      squad_date: startOfDayFromString("2023-09-16") as Date,
+      squad_time: "02:00 PM",
+      games: 6,
+      lane_count: 24,
+      starting_lane: 1,
+      sort_order: 3,
+    }
+
+    const resetPatched = async () => {
+      // make sure toPatch is reset in database
+      const squadJSON = JSON.stringify(toPatch);
+      await privateApi.put(oneSquadUrl + toPatch.id, squadJSON);      
+    }
+
+    let didPatch = false;
+
     beforeAll(async () => {
-      await resetSquad(testSquad);
+      await resetPatched();
     })
       
     afterEach(async () => {
-      await resetSquad(testSquad);
+      if (didPatch) {
+        await resetPatched();
+      }      
     })
 
     it('should patch squad_name in a squad by ID', async () => {
-      const patchSquad = {
-        ...testPatchSquad,
+      const patchSquad = {        
         squad_name: 'Patched Squad'
       }
       const squadJSON = JSON.stringify(patchSquad);
-      const response = await axios.patch(oneSquadUrl + patchSquad.id, squadJSON, {
-        withCredentials: true
-      })
+      const response = await privateApi.patch(oneSquadUrl + toPatchId, squadJSON);
       expect(response.status).toBe(200);
+      didPatch = true;
       const patchedSquad = response.data.squad;
       expect(patchedSquad.squad_name).toBe(patchSquad.squad_name);
     })
     it('should patch squad_date in a squad by ID', async () => {
-      const patchSquad = {
-        ...testPatchSquad,
+      const patchSquad = {        
         squad_date_str: '2022-08-22',
       }
       const squadJSON = JSON.stringify(patchSquad);
-      const response = await axios.patch(oneSquadUrl + patchSquad.id, squadJSON, {
-        withCredentials: true
-      })
+      const response = await privateApi.patch(oneSquadUrl + toPatchId, squadJSON);
       expect(response.status).toBe(200);
+      didPatch = true;
       const patchedSquad = response.data.squad;
       expect(removeTimeFromISODateStr(patchedSquad.squad_date)).toBe('2022-08-22')
     })
     it('should patch squad_time in a squad by ID', async () => {
-      const patchSquad = {
-        ...testPatchSquad,
+      const patchSquad = {        
         squad_time: '12:30'
       }
       const squadJSON = JSON.stringify(patchSquad);
-      const response = await axios.patch(oneSquadUrl + patchSquad.id, squadJSON, {
-        withCredentials: true
-      })
+      const response = await privateApi.patch(oneSquadUrl + toPatchId, squadJSON);
       expect(response.status).toBe(200);
+      didPatch = true;
       const patchedSquad = response.data.squad;
       expect(patchedSquad.squad_time).toBe(patchSquad.squad_time);
     })
     it('should patch games in a squad by ID', async () => {
-      const patchSquad = {
-        ...testPatchSquad,
+      const patchSquad = {        
         games: 5
       }
       const squadJSON = JSON.stringify(patchSquad);
-      const response = await axios.patch(oneSquadUrl + patchSquad.id, squadJSON, {
-        withCredentials: true
-      })
+      const response = await privateApi.patch(oneSquadUrl + toPatchId, squadJSON);
       expect(response.status).toBe(200);
+      didPatch = true;
       const patchedSquad = response.data.squad;
       expect(patchedSquad.games).toBe(patchSquad.games);
     })
     it('should patch lane_count in a squad by ID', async () => {
-      const patchSquad = {
-        ...testPatchSquad,
+      const patchSquad = {        
         lane_count: 10
       }
       const squadJSON = JSON.stringify(patchSquad);
-      const response = await axios.patch(oneSquadUrl + patchSquad.id, squadJSON, {
-        withCredentials: true
-      })
+      const response = await privateApi.patch(oneSquadUrl + toPatchId, squadJSON);
       expect(response.status).toBe(200);
+      didPatch = true;
       const patchedSquad = response.data.squad;
       expect(patchedSquad.lane_count).toBe(patchSquad.lane_count);
     })
     it('should patch starting_lane in a squad by ID', async () => {
-      const patchSquad = {
-        ...testPatchSquad,
+      const patchSquad = {        
         starting_lane: 1
       }
       const squadJSON = JSON.stringify(patchSquad);
-      const response = await axios.patch(oneSquadUrl + patchSquad.id, squadJSON, {
-        withCredentials: true
-      })
+      const response = await privateApi.patch(oneSquadUrl + toPatchId, squadJSON);
       expect(response.status).toBe(200);
+      didPatch = true;
       const patchedSquad = response.data.squad;
       expect(patchedSquad.starting_lane).toBe(patchSquad.starting_lane);
     })
     it('should patch sort_order in a squad by ID', async () => {
-      const patchSquad = {
-        ...testPatchSquad,
+      const patchSquad = {        
         sort_order: 10
       }
       const squadJSON = JSON.stringify(patchSquad);
-      const response = await axios.patch(oneSquadUrl + patchSquad.id, squadJSON, {
-        withCredentials: true
-      })
+      const response = await privateApi.patch(oneSquadUrl + toPatchId, squadJSON);
       expect(response.status).toBe(200);
+      didPatch = true;
       const patchedSquad = response.data.squad;
       expect(patchedSquad.sort_order).toBe(patchSquad.sort_order);
     })
+
     it('should patch a squad with a sanitzed squad name', async () => {
-      const patchSquad = {
-        ...testPatchSquad,
+      const patchSquad = {        
         squad_name: "    <script>P</script>   ",
       }
       const squadJSON = JSON.stringify(patchSquad);
-      const response = await axios.patch(oneSquadUrl + patchSquad.id, squadJSON, {
-        withCredentials: true
-      })
+      const response = await privateApi.patch(oneSquadUrl + toPatchId, squadJSON);
       expect(response.status).toBe(200);
+      didPatch = true;
       const patchedSquad = response.data.squad;
       expect(patchedSquad.squad_name).toBe("scriptPscript");
     })
     it('should patch a squad with a blank squad_time', async () => {
-      const patchSquad = {
-        ...testPatchSquad,
+      const patchSquad = {    
         squad_time: "",
       }
       const squadJSON = JSON.stringify(patchSquad);
-      const response = await axios.patch(oneSquadUrl + patchSquad.id, squadJSON, {
-        withCredentials: true
-      })
+      const response = await privateApi.patch(oneSquadUrl + toPatchId, squadJSON);
       expect(response.status).toBe(200);
+      didPatch = true;
       const patchedSquad = response.data.squad;
       expect(patchedSquad.squad_time).toBe("");
     })
 
+    it('should not patch squad by ID when just passing in ID', async () => {
+      try {
+        const invalidJSON = JSON.stringify({          
+          id: toPatchId,
+        })
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON)
+        expect(response.status).toBe(400);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(400);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not patch squad by ID when ID is invalid', async () => {
+      try {
+        const invalidJSON = JSON.stringify({          
+          sort_order: 1234,
+        })
+        const response = await privateApi.patch(oneSquadUrl + 'test', invalidJSON)
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not patch squad by ID when ID is valid, but not found', async () => {
+      try {
+        const invalidJSON = JSON.stringify({          
+          sort_order: 1234,
+        })
+        const response = await privateApi.patch(oneSquadUrl + notFoundId, invalidJSON)
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not patch squad by ID when ID is valid, but not a squad id', async () => {
+      try {
+        const invalidJSON = JSON.stringify({          
+          sort_order: 1234,
+        })
+        const response = await privateApi.patch(oneSquadUrl + userId, invalidJSON)
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+
     it('should NOT patch event_id in a squad by ID', async () => {
-      const invalidSquad = {
-        ...testPatchSquad,
-        event_id: event2Id
-      }
-      const invalidJSON = JSON.stringify(invalidSquad);
-      const response = await axios.patch(oneSquadUrl + invalidSquad.id, invalidJSON, {
-        withCredentials: true
-      })
-      expect(response.status).toBe(200);
-      const patchedSquad = response.data.squad;
-      // test vs blankSquad, not patchSquad
-      expect(patchedSquad.event_id).toBe(testPatchSquad.event_id);
-    })
-    it('should NOT patch a squad when ID is invalid', async () => {
       try {
-        const patchSquad = {
-          ...testPatchSquad,
-          squad_name: 'Patched Squad',
-        }
-        const squadJSON = JSON.stringify(patchSquad);
-        const response = await axios.patch(oneSquadUrl + 'test', squadJSON, {
-          withCredentials: true
+        const invalidJSON = JSON.stringify({          
+          event_id: event2Id
         })
-        expect(response.status).toBe(404);
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON)
+        expect(response.status).toBe(400);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(400);
         } else {
           expect(true).toBeFalsy();
         }
       }
     })
-    it('should NOT patch a squad when ID is not found', async () => {
-      try {
-        const patchSquad = {
-          ...testPatchSquad,
-          squad_name: 'Patched Squad',
-        }
-        const squadJSON = JSON.stringify(patchSquad);
-        const response = await axios.patch(oneSquadUrl + notFoundId, squadJSON, {
-          withCredentials: true
-        })
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a squad when ID is valid, but not a squad ID', async () => {
-      try {
-        const patchSquad = {
-          ...testPatchSquad,
-          squad_name: 'Patched Squad',
-        }
-        const squadJSON = JSON.stringify(patchSquad);
-        const response = await axios.patch(oneSquadUrl + nonSquadId, squadJSON, {
-          withCredentials: true
-        })
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a squad when event_id is blank', async () => {
-      try {
-        const invalidSquad = {
-          ...testPatchSquad,
-          event_id: '',
-        }
-        const invalidJSON = JSON.stringify(invalidSquad);
-        const response = await axios.patch(oneSquadUrl + invalidSquad.id, invalidJSON, {
-          withCredentials: true
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a squad when squad_name is blank', async () => {
-      try {
-        const invalidSquad = {
-          ...testPatchSquad,
-          squad_name: '',
-        }
-        const invalidJSON = JSON.stringify(invalidSquad);
-        const response = await axios.patch(oneSquadUrl + invalidSquad.id, invalidJSON, {
-          withCredentials: true
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a squad when squad_date_str is blank', async () => {
-      try {
-        const invalidSquad = {
-          ...testPatchSquad,
-          squad_date_str: '',
-        }
-        const invalidJSON = JSON.stringify(invalidSquad);
-        const response = await axios.patch(oneSquadUrl + invalidSquad.id, invalidJSON, {
-          withCredentials: true
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a squad when games is null', async () => {
-      try {
-        const invalidSquad = {
-          ...testPatchSquad,
-          games: null,
-        }
-        const invalidJSON = JSON.stringify(invalidSquad);
-        const response = await axios.patch(oneSquadUrl + invalidSquad.id, invalidJSON, {
-          withCredentials: true
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a squad when lane_count is null', async () => {
-      try {
-        const invalidSquad = {
-          ...testPatchSquad,
-          lane_count: null,
-        }
-        const invalidJSON = JSON.stringify(invalidSquad);
-        const response = await axios.patch(oneSquadUrl + invalidSquad.id, invalidJSON, {
-          withCredentials: true
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a squad when starting_lane is null', async () => {
-      try {
-        const invalidSquad = {
-          ...testPatchSquad,
-          starting_lane: null,
-        }
-        const invalidJSON = JSON.stringify(invalidSquad);
-        const response = await axios.patch(oneSquadUrl + invalidSquad.id, invalidJSON, {
-          withCredentials: true
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a squad when sort_order is null', async () => {
-      try {
-        const invalidSquad = {
-          ...testPatchSquad,
-          sort_order: null,
-        }
-        const invalidJSON = JSON.stringify(invalidSquad);
-        const response = await axios.patch(oneSquadUrl + invalidSquad.id, invalidJSON, {
-          withCredentials: true
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
+
     it('should NOT patch a squad when squad_name is too long', async () => {
       try {
-        const invalidSquad = {
-          ...testPatchSquad,
+        const invalidSquad = {          
           squad_name: 'a'.repeat(256),
         }
         const invalidJSON = JSON.stringify(invalidSquad);
-        const response = await axios.patch(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON, {
+          withCredentials: true
+        })
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+
+    it('should NOT patch a squad when squad_date_str is blank', async () => {
+      try {
+        const invalidSquad = {          
+          squad_date_str: '',
+        }
+        const invalidJSON = JSON.stringify(invalidSquad);
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON, {
+          withCredentials: true
+        })
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should NOT patch a squad when squad_date_str is invalid', async () => {
+      try {
+        const invalidSquad = {          
+          squad_date_str: '2026-32-32',
+        }
+        const invalidJSON = JSON.stringify(invalidSquad);
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON, {
+          withCredentials: true
+        })
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should NOT patch a squad when squad_date_str is not a date', async () => {
+      try {
+        const invalidSquad = {          
+          squad_date_str: 'test',
+        }
+        const invalidJSON = JSON.stringify(invalidSquad);
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -2150,12 +1979,11 @@ describe('Squads - API: /api/squads', () => {
     })
     it('should NOT patch a squad when squad date is in too far in the past', async () => {
       try {
-        const invalidSquad = {
-          ...testPatchSquad,
+        const invalidSquad = {          
           squad_date_str: '1800-01-01',
         }
         const invalidJSON = JSON.stringify(invalidSquad);
-        const response = await axios.patch(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -2169,12 +1997,11 @@ describe('Squads - API: /api/squads', () => {
     })
     it('should NOT patch a squad when squad date is in too far in the future', async () => {
       try {
-        const invalidSquad = {
-          ...testPatchSquad,
+        const invalidSquad = {          
           squad_date_str: '2300-03-02',
         }
         const invalidJSON = JSON.stringify(invalidSquad);
-        const response = await axios.patch(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -2186,14 +2013,14 @@ describe('Squads - API: /api/squads', () => {
         }
       }
     })
+
     it('should NOT patch a squad when squad_time is invalid', async () => {
       try {
-        const invalidSquad = {
-          ...testPatchSquad,
+        const invalidSquad = {          
           squad_time: '13:00 PM',
         }
         const invalidJSON = JSON.stringify(invalidSquad);
-        const response = await axios.patch(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -2205,14 +2032,25 @@ describe('Squads - API: /api/squads', () => {
         }
       }
     })
+    it('should patch a squad when squad_time is not a time, sanitized to blank', async () => {
+      const patchSquad = {        
+        squad_time: 'test',
+      }
+      const squadJSON = JSON.stringify(patchSquad);
+      const response = await privateApi.patch(oneSquadUrl + toPatchId, squadJSON);
+      expect(response.status).toBe(200);
+      didPatch = true;
+      const patchedSquad = response.data.squad;
+      expect(patchedSquad.squad_time).toBe('');
+    })
+
     it('should NOT patch a squad when games is too low', async () => {
       try {
         const invalidSquad = {
-          ...testPatchSquad,
           games: 0,
         }
         const invalidJSON = JSON.stringify(invalidSquad);
-        const response = await axios.patch(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -2227,11 +2065,10 @@ describe('Squads - API: /api/squads', () => {
     it('should NOT patch a squad when games is too high', async () => {
       try {
         const invalidSquad = {
-          ...testPatchSquad,
-          games: 100,
+          games: maxGames + 1,
         }
         const invalidJSON = JSON.stringify(invalidSquad);
-        const response = await axios.patch(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -2243,14 +2080,13 @@ describe('Squads - API: /api/squads', () => {
         }
       }
     })
-    it('should NOT patch a squad when games is not an integer', async () => {
+    it('should NOT patch a squad when games is too low', async () => {
       try {
         const invalidSquad = {
-          ...testPatchSquad,
-          games: 5.5,
+          games: 0,
         }
         const invalidJSON = JSON.stringify(invalidSquad);
-        const response = await axios.patch(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -2262,14 +2098,68 @@ describe('Squads - API: /api/squads', () => {
         }
       }
     })
+    it('should NOT patch a squad when games is too high', async () => {
+      try {
+        const invalidSquad = {
+          games: maxGames + 1,
+        }
+        const invalidJSON = JSON.stringify(invalidSquad);
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON, {
+          withCredentials: true
+        })
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should NOT patch a squad when games is moy am integer', async () => {
+      try {
+        const invalidSquad = {
+          games: 1.4,
+        }
+        const invalidJSON = JSON.stringify(invalidSquad);
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON, {
+          withCredentials: true
+        })
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should NOT patch a squad when games is not a number', async () => {
+      try {
+        const invalidSquad = {
+          games: 'abc',
+        }
+        const invalidJSON = JSON.stringify(invalidSquad);
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON, {
+          withCredentials: true
+        })
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+
     it('should NOT patch a squad when lane_count is too low', async () => {
       try {
-        const invalidSquad = {
-          ...testPatchSquad,
-          lane_count: 0,
+        const invalidSquad = {          
+          lane_count: 1,
         }
         const invalidJSON = JSON.stringify(invalidSquad);
-        const response = await axios.patch(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -2283,31 +2173,11 @@ describe('Squads - API: /api/squads', () => {
     })
     it('should NOT patch a squad when lane_count is too high', async () => {
       try {
-        const invalidSquad = {
-          ...testPatchSquad,
-          lane_count: 202,
+        const invalidSquad = {          
+          lane_count: maxLaneCount + 1,
         }
         const invalidJSON = JSON.stringify(invalidSquad);
-        const response = await axios.patch(oneSquadUrl + invalidSquad.id, invalidJSON, {
-          withCredentials: true
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a squad when lane_count is odd', async () => {
-      try {
-        const invalidSquad = {
-          ...testPatchSquad,
-          lane_count: 13,
-        }
-        const invalidJSON = JSON.stringify(invalidSquad);
-        const response = await axios.patch(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -2321,12 +2191,11 @@ describe('Squads - API: /api/squads', () => {
     })
     it('should NOT patch a squad when lane_count is not an integer', async () => {
       try {
-        const invalidSquad = {
-          ...testPatchSquad,
-          lane_count: 13.5,
+        const invalidSquad = {          
+          lane_count: 1.5,
         }
         const invalidJSON = JSON.stringify(invalidSquad);
-        const response = await axios.patch(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -2338,14 +2207,50 @@ describe('Squads - API: /api/squads', () => {
         }
       }
     })
+    it('should NOT patch a squad when lane_count is not a number', async () => {
+      try {
+        const invalidSquad = {          
+          lane_count: 'abc',
+        }
+        const invalidJSON = JSON.stringify(invalidSquad);
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON, {
+          withCredentials: true
+        })
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should NOT patch a squad when lane_count is not even', async () => {
+      try {
+        const invalidSquad = {          
+          lane_count: 11,
+        }
+        const invalidJSON = JSON.stringify(invalidSquad);
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON, {
+          withCredentials: true
+        })
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+
     it('should NOT patch a squad when starting_lane is too low', async () => {
       try {
-        const invalidSquad = {
-          ...testPatchSquad,
+        const invalidSquad = {          
           starting_lane: 0,
         }
         const invalidJSON = JSON.stringify(invalidSquad);
-        const response = await axios.patch(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -2359,31 +2264,11 @@ describe('Squads - API: /api/squads', () => {
     })
     it('should NOT patch a squad when starting_lane is too high', async () => {
       try {
-        const invalidSquad = {
-          ...testPatchSquad,
-          starting_lane: 202,
+        const invalidSquad = {          
+          starting_lane: maxLaneCount + 1,
         }
         const invalidJSON = JSON.stringify(invalidSquad);
-        const response = await axios.patch(oneSquadUrl + invalidSquad.id, invalidJSON, {
-          withCredentials: true
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a squad when starting_lane is even', async () => {
-      try {
-        const invalidSquad = {
-          ...testPatchSquad,
-          starting_lane: 12,
-        }
-        const invalidJSON = JSON.stringify(invalidSquad);
-        const response = await axios.patch(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -2397,12 +2282,11 @@ describe('Squads - API: /api/squads', () => {
     })
     it('should NOT patch a squad when starting_lane is not an integer', async () => {
       try {
-        const invalidSquad = {
-          ...testPatchSquad,
-          starting_lane: 12.5,
+        const invalidSquad = {          
+          starting_lane: 1.5,
         }
         const invalidJSON = JSON.stringify(invalidSquad);
-        const response = await axios.patch(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -2414,14 +2298,50 @@ describe('Squads - API: /api/squads', () => {
         }
       }
     })
+    it('should NOT patch a squad when starting_lane is not a number', async () => {
+      try {
+        const invalidSquad = {          
+          starting_lane: 'abc',
+        }
+        const invalidJSON = JSON.stringify(invalidSquad);
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON, {
+          withCredentials: true
+        })
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should NOT patch a squad when starting_lane is an even integer', async () => {
+      try {
+        const invalidSquad = {          
+          starting_lane: 2
+        }
+        const invalidJSON = JSON.stringify(invalidSquad);
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON, {
+          withCredentials: true
+        })
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+
     it('should NOT patch a squad when sort_order is too low', async () => {
       try {
-        const invalidSquad = {
-          ...testPatchSquad,
+        const invalidSquad = {          
           sort_order: 0,
         }
         const invalidJSON = JSON.stringify(invalidSquad);
-        const response = await axios.patch(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -2435,12 +2355,11 @@ describe('Squads - API: /api/squads', () => {
     })
     it('should NOT patch a squad when sort_order is too high', async () => {
       try {
-        const invalidSquad = {
-          ...testPatchSquad,
-          sort_order: 1234567,
+        const invalidSquad = {          
+          sort_order: maxSortOrder + 1,
         }
         const invalidJSON = JSON.stringify(invalidSquad);
-        const response = await axios.patch(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -2454,12 +2373,11 @@ describe('Squads - API: /api/squads', () => {
     })
     it('should NOT patch a squad when sort_order is not an integer', async () => {
       try {
-        const invalidSquad = {
-          ...testPatchSquad,
-          sort_order: 5.5,
+        const invalidSquad = {          
+          sort_order: 1.5,
         }
         const invalidJSON = JSON.stringify(invalidSquad);
-        const response = await axios.patch(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(422);
@@ -2471,16 +2389,33 @@ describe('Squads - API: /api/squads', () => {
         }
       }
     })
+    it('should NOT patch a squad when sort_order is not a number', async () => {
+      try {
+        const invalidSquad = {          
+          sort_order: 'abc',
+        }
+        const invalidJSON = JSON.stringify(invalidSquad);
+        const response = await privateApi.patch(oneSquadUrl + toPatchId, invalidJSON, {
+          withCredentials: true
+        })
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    
     it('should NOT patch a new squad when event_id + squad_name is not unique', async () => {
+      const dupSquadId = "sqd_796c768572574019a6fa79b3b1c8fa57";
       const invalidSquad = {
-        ...testPatchSquad,
-        id: squad4Id,
-        event_id: event3Id,
         squad_name: "A Squad",
       }
       const invalidJSON = JSON.stringify(invalidSquad);
       try {
-        const response = await axios.patch(oneSquadUrl + invalidSquad.id, invalidJSON, {
+        const response = await privateApi.patch(oneSquadUrl + dupSquadId, invalidJSON, {
           withCredentials: true
         })
         expect(response.status).toBe(409);
@@ -2492,6 +2427,7 @@ describe('Squads - API: /api/squads', () => {
         }
       }
     })
+
   })
 
   describe('DELETE by ID - API: /api/squads/:id', () => {
@@ -2520,14 +2456,14 @@ describe('Squads - API: /api/squads', () => {
       if (!didDel) return;
       try {
         const squadJSON = JSON.stringify(toDelSquad);
-        await axios.post(url, squadJSON, { withCredentials: true });
+        await privateApi.post(url, squadJSON, { withCredentials: true });
       } catch (err) {
         if (err instanceof Error) console.log(err.message);
       }
     })
 
     it('should delete a squad by ID', async () => {
-      const response = await axios.delete(oneSquadUrl + toDelSquad.id, {
+      const response = await privateApi.delete(oneSquadUrl + toDelSquad.id, {
         withCredentials: true
       });
       didDel = true;
@@ -2535,7 +2471,7 @@ describe('Squads - API: /api/squads', () => {
       expect(response.data.count).toBe(1);
     })
     it('should return 0 when delete a squad by ID when ID is not found', async () => {
-      const response = await axios.delete(oneSquadUrl + notFoundId, {
+      const response = await privateApi.delete(oneSquadUrl + notFoundId, {
         withCredentials: true
       });
       didDel = true;
@@ -2544,7 +2480,7 @@ describe('Squads - API: /api/squads', () => {
     })
     it('should NOT delete a squad by ID when ID is invalid', async () => {
       try {
-        const response = await axios.delete(oneSquadUrl + 'test', {
+        const response = await privateApi.delete(oneSquadUrl + 'test', {
           withCredentials: true
         })
         expect(response.status).toBe(404);
@@ -2558,7 +2494,7 @@ describe('Squads - API: /api/squads', () => {
     })
     it('should NOT delete a squad by ID when ID is valid, but not an squad id', async () => {
       try {
-        const response = await axios.delete(oneSquadUrl + nonSquadId, {
+        const response = await privateApi.delete(oneSquadUrl + nonSquadId, {
           withCredentials: true
         })
         expect(response.status).toBe(404);

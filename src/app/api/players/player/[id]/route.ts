@@ -2,10 +2,10 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { ErrorCode } from "@/lib/enums/enums";
-import { initPlayer } from "@/lib/db/initVals";
+import { blankPlayer, initPlayer } from "@/lib/db/initVals";
 import type { playerType } from "@/lib/types/types";
 import { sanitizePlayer, validatePlayer, validPlayerId } from "../../../../../lib/validation/players/validate";
-import { getErrorStatus, standardCatchReturn } from "@/app/api/apiCatch";
+import { standardCatchReturn } from "@/app/api/apiCatch";
 
 // routes /api/players/player/:id
 
@@ -102,31 +102,43 @@ export async function PATCH(
     if (!isValidBtDbId(id, "ply")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }  
-    const currentPlayer = await prisma.player.findUnique({
-      where: { id: id },
-    });
-    if (!currentPlayer) {
-      return NextResponse.json({ error: "not found" }, { status: 404 });
+
+    // fake data that will pass sanitation and validation
+    const fakePlayer = {
+      ...initPlayer,
+      id,
+      squad_id: "sqd_00000000000000000000000000000000",
+      first_name: "Fake",
+      last_name: "Name",
+      average: 1,
+      lane: 1,
+      position: 'A',
     }
+    // populate toCheck with fake data 
+    const toCheck: playerType = {
+      ...initPlayer, 
+      id, 
+      squad_id: fakePlayer.squad_id, 
+      first_name: fakePlayer.first_name, 
+      last_name: fakePlayer.last_name, 
+      average: fakePlayer.average, 
+      lane: fakePlayer.lane, 
+      position: fakePlayer.position, 
+    };
+    // const toCheck: playerType = {
+    //   ...initPlayer,
+    //   squad_id: currentPlayer.squad_id,
+    //   first_name: currentPlayer.first_name,
+    //   average: currentPlayer.average,
+    // };
+    // if (currentPlayer.last_name) toCheck.last_name = currentPlayer.last_name;
+    // if (currentPlayer.lane) toCheck.lane = currentPlayer.lane;
+    // if (currentPlayer.position) toCheck.position = currentPlayer.position;
 
     const json = await request.json();
     // populate toCheck with json
     const jsonProps = Object.getOwnPropertyNames(json);
-    const toCheck: playerType = {
-      ...initPlayer,
-      squad_id: currentPlayer.squad_id,
-      first_name: currentPlayer.first_name,
-      average: currentPlayer.average,
-    };
-    if (currentPlayer.last_name) toCheck.last_name = currentPlayer.last_name;
-    if (currentPlayer.lane) toCheck.lane = currentPlayer.lane;
-    if (currentPlayer.position) toCheck.position = currentPlayer.position;
-    
     let gotDataToPatch = false;
-    if (jsonProps.includes("squad_id")) {
-      toCheck.squad_id = json.squad_id;
-      gotDataToPatch = true;
-    }
     if (jsonProps.includes("first_name")) {
       toCheck.first_name = json.first_name;
       gotDataToPatch = true;
@@ -147,15 +159,18 @@ export async function PATCH(
       toCheck.position = json.position;
       gotDataToPatch = true;
     }
-
     if (!gotDataToPatch) {
-      return NextResponse.json({ player: currentPlayer }, { status: 200 });
+      return NextResponse.json({ error: "no data to patch" }, { status: 400 });
     }
+
     const toBePatched = sanitizePlayer(toCheck);
     const errCode = validatePlayer(toBePatched);
     if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
+        case ErrorCode.MISSING_DATA:
+          errMsg = "missing data";
+          break;
         case ErrorCode.INVALID_DATA:
           errMsg = "invalid data";
           break;
@@ -167,7 +182,7 @@ export async function PATCH(
     }
 
     const toPatch = {
-      ...initPlayer,
+      ...blankPlayer,
       squad_id: '',
     }
     if (jsonProps.includes("first_name")) {

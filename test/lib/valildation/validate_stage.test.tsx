@@ -770,7 +770,7 @@ describe("tests for stage validation", () => {
         id: "test123",
       };
       const sanitizedFullStage = sanitizeFullStage(testFullStage);
-      expect(sanitizedFullStage.id).toEqual("");
+      expect(sanitizedFullStage.id).toEqual("test123"); // sanitized, not validated
     });
     it("should return a sanitized fullStage when fullStage is NOT already sanitized", () => {
       // do not incluide numerical or boolean fields      
@@ -782,7 +782,7 @@ describe("tests for stage validation", () => {
         stage_override_reason: " <alert> test </alert>  ",
       };
       const sanitizedFullStage = sanitizeFullStage(testFullStage);
-      expect(sanitizedFullStage.squad_id).toEqual("");
+      expect(sanitizedFullStage.squad_id).toEqual("abc_123"); // sanitized, not validated
       expect(sanitizedFullStage.scores_started_at).toEqual(dateStr);
       expect(sanitizedFullStage.stage_override_at).toEqual(dateStr);
       expect(sanitizedFullStage.stage_override_reason).toEqual("test");
@@ -882,7 +882,7 @@ describe("tests for stage validation", () => {
       expect(result.id).toBe(stageId);
     });
 
-    it("should replace an invalid stage id with the blankSquad id", () => {
+    it("should sanitzie an invalid stage id", () => {
       const invalidIdStage: justStageType = {
         ...baseStage,
         id: "not-a-valid-sqd-id",
@@ -891,7 +891,7 @@ describe("tests for stage validation", () => {
       const result = sanitizeJustStage(invalidIdStage);
 
       // invalid id should not survive; we expect the default (blankSquad.id)
-      expect(result.id).toBe(blankFullStage.id);
+      expect(result.id).toBe("notavalidsqdid");
       expect(result.id).not.toBe(invalidIdStage.id);
     });
 
@@ -935,7 +935,7 @@ describe("tests for stage validation", () => {
       expect(result.id).toBe(stageId);
     });
 
-    it("should replace an invalid stage id with the blankSquad id", () => {
+    it("should sanitioze an invalid stage id", () => {
       const invalidOverride: justStageOverrideType = {
         ...baseJustOverride,
         id: "not-a-valid-sqd-id",
@@ -943,7 +943,7 @@ describe("tests for stage validation", () => {
 
       const result = sanitizeJustStageOverride(invalidOverride);
 
-      expect(result.id).toBe(blankJustStageOverride.id);
+      expect(result.id).toBe("notavalidsqdid");
       expect(result.id).not.toBe(invalidOverride.id);
     });
 

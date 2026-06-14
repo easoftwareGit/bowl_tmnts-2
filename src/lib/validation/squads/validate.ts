@@ -17,7 +17,7 @@ import {
   minDate,
 } from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
-import { sanitizeEDS } from "@/lib/validation/sanitize";
+import { sanitizeBtDbId, sanitizeEDS } from "@/lib/validation/sanitize";
 import { compareAsc, isValid } from "date-fns";
 import type {
   squadType,
@@ -198,12 +198,12 @@ export const sanitizeSquad = (squad: squadType): squadType => {
     starting_lane: null as any,
     sort_order: null as any,
   };
-  if (isValidBtDbId(squad.id, "sqd")) {
-    sanitizedSquad.id = squad.id;
+  if (squad.id) {
+    sanitizedSquad.id = sanitizeBtDbId(squad.id);
   }
   sanitizedSquad.squad_name = sanitizeEDS(squad.squad_name);
-  if (validEventFkId(squad.event_id, "evt")) {
-    sanitizedSquad.event_id = squad.event_id;
+  if (squad.event_id) {
+    sanitizedSquad.event_id = sanitizeBtDbId(squad.event_id);
   }
   if (squad.games === null || isNumber(squad.games)) {
     sanitizedSquad.games = squad.games;

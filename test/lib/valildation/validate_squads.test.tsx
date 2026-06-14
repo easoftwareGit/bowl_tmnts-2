@@ -502,7 +502,7 @@ describe("tests for squad validation", () => {
         id: "test123",
       };
       const sanitizedSquad = sanitizeSquad(testSquad);
-      expect(sanitizedSquad.id).toEqual("");
+      expect(sanitizedSquad.id).toEqual("test123"); // sanitized, not validated
     });
     it("should return a sanitized squad when squad is NOT already sanitized", () => {
       // do not incluide numerical or boolean fields
@@ -518,7 +518,7 @@ describe("tests for squad validation", () => {
         stage_override_reason: " <alert> test </alert>  ",
       };
       const sanitizedSquad = sanitizeSquad(testSquad);
-      expect(sanitizedSquad.event_id).toEqual("");
+      expect(sanitizedSquad.event_id).toEqual("abc_123"); // sanitized, not validated
       expect(sanitizedSquad.squad_name).toEqual("Test Squad");
       expect(sanitizedSquad.squad_date_str).toEqual("2022-12-31");
       expect(sanitizedSquad.squad_time).toEqual("23:59");
@@ -806,9 +806,7 @@ describe("tests for squad validation", () => {
       expect(validSquads.squads[0].squad_name).toBe(
         mockSquadsToPost[0].squad_name
       );
-      expect(validSquads.squads[1].squad_name).toBe(
-        mockSquadsToPost[1].squad_name
-      );
+      expect(validSquads.squads[1].squad_name).toBe("scriptTest 2script");
     });
     it("should return ErrorCode.MISSING_DATA when required data is missing", async () => {
       const invalidSquads = [
@@ -824,7 +822,7 @@ describe("tests for squad validation", () => {
       expect(validSquads.errorCode).toBe(ErrorCode.MISSING_DATA);
       expect(validSquads.squads.length).toBe(0);
     });
-    it("should return ErrorCode.MISSING_DATA and return squads length 1 when 1st squad is valid, 2nd is not", async () => {
+    it("should return ErrorCode.INVALID_DATA and return squads length 1 when 1st squad is valid, 2nd is not", async () => {
       const invalidSquads = [
         {
           ...mockSquadsToPost[0],
@@ -835,7 +833,7 @@ describe("tests for squad validation", () => {
         },
       ];
       const validSquads = validateSquads(invalidSquads);
-      expect(validSquads.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validSquads.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(validSquads.squads.length).toBe(1);
     });
     it("should return ErrorCode.INVALID_DATA when required data is invalid", async () => {
@@ -851,7 +849,7 @@ describe("tests for squad validation", () => {
       const validSquads = validateSquads(invalidSquads);
       expect(validSquads.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
-    it("should return ErrorCode.MISSING_DATA when event_id is not a valid event id", async () => {
+    it("should return ErrorCode.INVALID_DATA when event_id is not a valid event id", async () => {
       const invalidSquads = [
         {
           ...mockSquadsToPost[0],
@@ -862,7 +860,7 @@ describe("tests for squad validation", () => {
         },
       ];
       const validSquads = validateSquads(invalidSquads);
-      expect(validSquads.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validSquads.errorCode).toBe(ErrorCode.INVALID_DATA);
       expect(validSquads.squads.length).toBe(1);
     });
     it("should return ErrorCode.MISSING_DATA when passed an empty array", async () => {

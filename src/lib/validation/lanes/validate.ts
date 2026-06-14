@@ -3,6 +3,7 @@ import { minLane, maxLaneCount } from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
 import type { idTypes, laneType, validLanesType } from "@/lib/types/types";
 import { blankLane } from "@/lib/db/initVals";
+import { sanitizeBtDbId } from "../sanitize";
 
 /**
  * checks if lane object has missing data - DOES NOT SANITIZE OR VALIDATE
@@ -88,11 +89,11 @@ export const sanitizeLane = (lane: laneType): laneType => {
     ...blankLane,
     lane_number: null as any
   }  
-  if (isValidBtDbId(lane.id, "lan")) {
-    sanitizedLane.id = lane.id;
+  if (lane.id) {
+    sanitizedLane.id = sanitizeBtDbId(lane.id);
   }
-  if (validLaneFkId(lane.squad_id, 'sqd')) {
-    sanitizedLane.squad_id = lane.squad_id
+  if (lane.squad_id) {
+    sanitizedLane.squad_id = sanitizeBtDbId(lane.squad_id);
   }
   if ((lane.lane_number === null) || isNumber(lane.lane_number)) {
     sanitizedLane.lane_number = lane.lane_number

@@ -4,7 +4,7 @@ import { validateEvent, sanitizeEvent, allEventMoneyValid } from "@/lib/validati
 import { ErrorCode } from "@/lib/enums/enums";
 import type { eventType } from "@/lib/types/types";
 import { initEvent } from "@/lib/db/initVals";
-import { getErrorStatus, standardCatchReturn } from "../apiCatch";
+import { standardCatchReturn } from "../apiCatch";
 import { eventDataForPrisma } from "./eventDataForPrisma";
 
 // routes /api/events

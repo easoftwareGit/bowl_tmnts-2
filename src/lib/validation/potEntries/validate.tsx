@@ -4,7 +4,7 @@ import type { potEntryType, validPotEntriesType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { maxMoney } from "../constants";
 import { ErrorCode } from "@/lib/enums/enums";
-import { sanitizeCurrency } from "../sanitize";
+import { sanitizeBtDbId, sanitizedMoneyString } from "../sanitize";
 
 /**
  * checks if potEntry object has missing data - DOES NOT SANITIZE OR VALIDATE
@@ -67,23 +67,6 @@ const validPotEntryData = (potEntry: potEntryType): ErrorCode => {
 }
 
 /**
- * sanitizes a pot entry money string
- *   "" is valid, and sanitized to "0"
- *   all 0's is ok, return "0"
- *   sanitizeCurrency removes trailing zeros
- *
- * @param moneyStr - money string to sanitize
- * @returns {string} - sanitized money string
- */
-const sanitizedPotEntryMoney = (moneyStr: string): string => {
-  if (moneyStr === null
-    || moneyStr === undefined
-    || typeof moneyStr !== "string") return "";  
-  if (moneyStr === "" || moneyStr.replace(/^0+/, '') === "") return "0";
-  return sanitizeCurrency(moneyStr);
-}
-
-/**
  * sanitizes potEntry
  * 
  * @param {potEntryType} potEntry - potEntry to sanitize
@@ -94,16 +77,16 @@ export const sanitizePotEntry = (potEntry: potEntryType): potEntryType => {
   const sanitzedPotEntry: potEntryType = {
     ...blankPotEntry,
   }
-  if (isValidBtDbId(potEntry.id, "pen")) {
-    sanitzedPotEntry.id = potEntry.id;
+  if (potEntry.id) {
+    sanitzedPotEntry.id = sanitizeBtDbId(potEntry.id);
   }
-  if (isValidBtDbId(potEntry.pot_id, "pot")) {
-    sanitzedPotEntry.pot_id = potEntry.pot_id;
+  if (potEntry.pot_id) {
+    sanitzedPotEntry.pot_id = sanitizeBtDbId(potEntry.pot_id);
   }
-  if (isValidBtDbId(potEntry.player_id, "ply")) {
-    sanitzedPotEntry.player_id = potEntry.player_id;
+  if (potEntry.player_id) {
+    sanitzedPotEntry.player_id = sanitizeBtDbId(potEntry.player_id);
   }
-  sanitzedPotEntry.fee = sanitizedPotEntryMoney(potEntry.fee);  
+  sanitzedPotEntry.fee = sanitizedMoneyString(potEntry.fee);  
   return sanitzedPotEntry;
 }
 

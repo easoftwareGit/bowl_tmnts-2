@@ -9,7 +9,7 @@ import {
   maxGames,  
 } from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
-import { sanitizeCurrency } from "@/lib/validation/sanitize";
+import { sanitizeBtDbId, sanitizeCurrency } from "@/lib/validation/sanitize";
 import { validMoney } from "@/lib/currency/validate";
 import type { elimType, idTypes, validElimsType } from "@/lib/types/types";
 import { blankElim } from "@/lib/db/initVals";
@@ -121,14 +121,14 @@ export const sanitizeElim = (elim: elimType): elimType => {
     games: null as any,
     sort_order: null as any,
   };
-  if (isValidBtDbId(elim.id, "elm")) {
-    sanitizedElim.id = elim.id;
+  if (elim.id) {
+    sanitizedElim.id = sanitizeBtDbId(elim.id);
   }
-  if (validElimFkId(elim.div_id, "div")) {
-    sanitizedElim.div_id = elim.div_id;
+  if (elim.div_id) {
+    sanitizedElim.div_id = sanitizeBtDbId(elim.div_id);
   }
-  if (validElimFkId(elim.squad_id, "sqd")) {
-    sanitizedElim.squad_id = elim.squad_id;
+  if (elim.squad_id) {
+    sanitizedElim.squad_id = sanitizeBtDbId(elim.squad_id);
   }
   if ((elim.start === null) || isNumber(elim.start)) {
     sanitizedElim.start = elim.start;

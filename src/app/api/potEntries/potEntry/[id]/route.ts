@@ -93,44 +93,52 @@ export async function PATCH(
     if (!isValidBtDbId(id, "pen")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }  
-    const currentPotEntry = await prisma.pot_Entry.findUnique({
-      where: { id: id },
-    });
-    if (!currentPotEntry) {
-      return NextResponse.json({ error: "not found" }, { status: 404 });
+
+    // fake data that will pass sanitation and validation
+    const fakePotEntry = {
+      ...initPotEntry,
+      id,
+      pot_id: "pot_00000000000000000000000000000000",
+      player_id: "ply_00000000000000000000000000000000",
+      fee: '10',
+    }
+    // populate toCheck with fake data 
+    const toCheck: potEntryType = {
+      ...initPotEntry,      
+      pot_id: fakePotEntry.pot_id,
+      player_id: fakePotEntry.player_id,
+      fee: fakePotEntry.fee,
     }
 
     const json = await request.json();
     // populate toCheck with json
     const jsonProps = Object.getOwnPropertyNames(json);
-    const toCheck: potEntryType = {
-      ...initPotEntry,      
-      pot_id: currentPotEntry.pot_id,
-      player_id: currentPotEntry.player_id,
-      fee: currentPotEntry.fee + '',
-    };    
     let gotDataToPatch = false;
-    if (jsonProps.includes("pot_id")) {
-      toCheck.pot_id = json.pot_id;
-      gotDataToPatch = true;
-    }
-    if (jsonProps.includes("player_id")) {
-      toCheck.player_id = json.player_id;
-      gotDataToPatch = true;
-    }
+    // if (jsonProps.includes("pot_id")) {
+    //   toCheck.pot_id = json.pot_id;
+    //   gotDataToPatch = true;
+    // }
+    // if (jsonProps.includes("player_id")) {
+    //   toCheck.player_id = json.player_id;
+    //   gotDataToPatch = true;
+    // }
     if (jsonProps.includes("fee")) {
       toCheck.fee = json.fee;
       gotDataToPatch = true;
     }
 
     if (!gotDataToPatch) {
-      return NextResponse.json({ potEntry: currentPotEntry }, { status: 200 });
+      return NextResponse.json({ error: "no data to patch" }, { status: 400 });
     }
+
     const toBePatched = sanitizePotEntry(toCheck);
     const errCode = validatePotEntry(toBePatched);
     if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
+        case ErrorCode.MISSING_DATA:
+          errMsg = "missing data";
+          break;
         case ErrorCode.INVALID_DATA:
           errMsg = "invalid data";
           break;
@@ -144,12 +152,12 @@ export async function PATCH(
     const toPatch = {
       ...initPotEntry,      
     }
-    if (jsonProps.includes("pot_id")) {
-      toPatch.pot_id = toBePatched.pot_id;
-    }
-    if (jsonProps.includes("player_id")) {    
-      toPatch.player_id = toBePatched.player_id;  
-    }
+    // if (jsonProps.includes("pot_id")) {
+    //   toPatch.pot_id = toBePatched.pot_id;
+    // }
+    // if (jsonProps.includes("player_id")) {    
+    //   toPatch.player_id = toBePatched.player_id;  
+    // }
     if (jsonProps.includes("fee")) {    
       toPatch.fee = toBePatched.fee;  
     }
@@ -159,8 +167,8 @@ export async function PATCH(
         id: id,
       },
       data: {        
-        pot_id: toPatch.pot_id || undefined,
-        player_id: toPatch.player_id || undefined,
+        // pot_id: toPatch.pot_id || undefined,
+        // player_id: toPatch.player_id || undefined,
         fee: toPatch.fee || undefined,
       },
     });

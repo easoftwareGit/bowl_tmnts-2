@@ -131,7 +131,7 @@ describe("test for brktRefunds validation", () => {
       const testBrktRefund = cloneDeep(validBrktRefund);
       testBrktRefund.brkt_entry_id = '<script>id</script>';
       const sanitized = sanitizeBrktRefund(testBrktRefund);
-      expect(sanitized.brkt_entry_id).toEqual('');
+      expect(sanitized.brkt_entry_id).toEqual('scriptidscript'); // sanitized, not validated
     });
     it('should return sanitized brktRefund when num_refunds not sanitzied', () => {
       const testBrktRefund = cloneDeep(validBrktRefund);
@@ -236,21 +236,21 @@ describe("test for brktRefunds validation", () => {
       expect(validBrktRefunds.brktRefunds.length).toBe(0);
       expect(validBrktRefunds.errorCode).toBe(ErrorCode.MISSING_DATA);
     });
-    it('should return MissingData when there is a brktRefund with invalid brkt_entry_id', () => {
+    it('should return INVALID_DATA when there is a brktRefund with invalid brkt_entry_id', () => {
       const toValidate = cloneDeep(mockBrktRefundsToPost);
       toValidate[1].brkt_entry_id = "test";
       const validBrktRefunds: validBrktRefundsType = validateBrktRefunds(toValidate);
       expect(validBrktRefunds).toBeDefined();
       expect(validBrktRefunds.brktRefunds.length).toBe(1);
-      expect(validBrktRefunds.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validBrktRefunds.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
-    it('should return MissingData when there is a brktRefund with valid brkt_entry_id, but not a one_bbrkt_id', () => {
+    it('should return INVALID_DATA when there is a brktRefund with valid brkt_entry_id, but not a one_bbrkt_id', () => {
       const toValidate = cloneDeep(mockBrktRefundsToPost);
       toValidate[1].brkt_entry_id = userId;
       const validBrktRefunds: validBrktRefundsType = validateBrktRefunds(toValidate);
       expect(validBrktRefunds).toBeDefined();
       expect(validBrktRefunds.brktRefunds.length).toBe(1);
-      expect(validBrktRefunds.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validBrktRefunds.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
     it('should return MissingData when there is a brktRefund with blank brkt_entry_id', () => {
       const toValidate = cloneDeep(mockBrktRefundsToPost);

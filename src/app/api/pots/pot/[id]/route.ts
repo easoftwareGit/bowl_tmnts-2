@@ -101,42 +101,50 @@ export async function PATCH(
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
 
+    // fake data that will pass sanitation and validation
+    const fakePot = {
+      ...initPot,
+      id,
+      div_id: "div_00000000000000000000000000000000",
+      squad_id: "sqd_00000000000000000000000000000000",
+      pot_type: "Game" as potCategoriesTypes,
+      fee: "1",
+      sort_order: 1,
+    }
+    // populate toCheck with fake data 
+    const toCheck: potType = {
+      ...initPot,
+      div_id: fakePot.div_id,
+      squad_id: fakePot.squad_id,
+      pot_type: fakePot.pot_type as potCategoriesTypes,
+      fee: fakePot.fee,
+      sort_order: fakePot.sort_order,
+    };
+
     const json = await request.json();
     // populate toCheck with json
     const jsonProps = Object.getOwnPropertyNames(json);
-    
-    const currentPot = await prisma.pot.findUnique({
-      where: {
-        id: id,
-      },
-    });    
-
-    if (!currentPot) {
-      return NextResponse.json({ error: "not found" }, { status: 404 });
-    }
-    const toCheck: potType = {
-      ...initPot,
-      div_id: currentPot.div_id,
-      squad_id: currentPot.squad_id,
-      pot_type: currentPot.pot_type as potCategoriesTypes,
-      fee: currentPot.fee + '',      
-      sort_order: currentPot.sort_order,
-    };
-
-    if (jsonProps.includes("div_id")) {
-      toCheck.div_id = json.div_id;
-    }
-    if (jsonProps.includes("squad_id")) {
-      toCheck.squad_id = json.squad_id;
-    }
+    let gotDataToPatch = false;
+    // if (jsonProps.includes("div_id")) {
+    //   toCheck.div_id = json.div_id;
+    // }
+    // if (jsonProps.includes("squad_id")) {
+    //   toCheck.squad_id = json.squad_id;
+    // }
     if (jsonProps.includes("pot_type")) {
       toCheck.pot_type = json.pot_type;
+      gotDataToPatch = true;
     }
     if (jsonProps.includes("fee")) {
       toCheck.fee = json.fee;
+      gotDataToPatch = true;
     }
     if (jsonProps.includes("sort_order")) {
       toCheck.sort_order = json.sort_order;
+      gotDataToPatch = true;
+    }
+    if (!gotDataToPatch) {
+      return NextResponse.json({ error: "no data to patch" }, { status: 400 });
     }
 
     const toBePatched = sanitizePot(toCheck);
@@ -158,19 +166,17 @@ export async function PATCH(
     }
     
     const toPatch = {      
-      div_id: "",
-      squad_id: "",
-      pot_type: "",
+      pot_type: "" as potCategoriesTypes,
       fee: "",
       sort_order: null as number | null,
     };
 
-    if (jsonProps.includes("div_id")) {
-      toPatch.div_id = toBePatched.div_id;
-    }
-    if (jsonProps.includes("squad_id")) {
-      toPatch.squad_id = toBePatched.squad_id;
-    }
+    // if (jsonProps.includes("div_id")) {
+    //   toPatch.div_id = toBePatched.div_id;
+    // }
+    // if (jsonProps.includes("squad_id")) {
+    //   toPatch.squad_id = toBePatched.squad_id;
+    // }
     if (jsonProps.includes("pot_type")) {
       toPatch.pot_type = toBePatched.pot_type;
     }

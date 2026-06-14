@@ -3,6 +3,7 @@ import { maxBrackets } from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
 import type { brktRefundType, validBrktRefundsType } from "@/lib/types/types";
 import { blankBrktRefund } from "@/lib/db/initVals";
+import { sanitizeBtDbId } from "../sanitize";
 
 /**
  * checks if brktRefund object has missing data - DOES NOT SANITIZE OR VALIDATE
@@ -74,8 +75,8 @@ export const sanitizeBrktRefund = (
   const sanitziedBrktRefund: brktRefundType = {
     ...blankBrktRefund,
   };
-  if (isValidBtDbId(brktRefund.brkt_entry_id, "ben"))
-    sanitziedBrktRefund.brkt_entry_id = brktRefund.brkt_entry_id;
+  if (brktRefund.brkt_entry_id)
+    sanitziedBrktRefund.brkt_entry_id = sanitizeBtDbId(brktRefund.brkt_entry_id);
   if (validNumRefunds(brktRefund.num_refunds))
     sanitziedBrktRefund.num_refunds = brktRefund.num_refunds;
   return sanitziedBrktRefund;

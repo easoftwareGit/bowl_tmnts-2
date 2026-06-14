@@ -1,7 +1,10 @@
 import {
-  isAllZeros,
+  isAllZeros,  
+  sanitizeBtDbId,
   sanitizeCity,
   sanitizeCurrency,
+  sanitizedMoneyString,
+  sanitizeMoneyAmount,
   sanitizeEDS,
   sanitizeName,
   sanitizeNotes,
@@ -10,6 +13,85 @@ import {
 } from "@/lib/validation/sanitize";
 
 describe("sanitize inputs", () => {
+
+  describe("sanitizeBtDbId", () => {
+    it("returns empty string for non-string inputs", () => {
+      expect(sanitizeBtDbId(null)).toBe("");
+      expect(sanitizeBtDbId(undefined)).toBe("");
+      expect(sanitizeBtDbId(123)).toBe("");
+      expect(sanitizeBtDbId(NaN)).toBe("");
+      expect(sanitizeBtDbId(Infinity)).toBe("");
+      expect(sanitizeBtDbId({})).toBe("");
+    });
+
+    it("keeps uppercase letters, lowercase letters, numbers, and underscores", () => {
+      expect(
+        sanitizeBtDbId("tmt_123ABCdef"),
+      ).toBe("tmt_123ABCdef");
+    });
+
+    it("removes invalid characters", () => {
+      expect(
+        sanitizeBtDbId("tmt-123@ABC#def!")
+      ).toBe("tmt123ABCdef");
+    });
+
+    it("removes spaces", () => {
+      expect(
+        sanitizeBtDbId("tmt 123 ABC def")
+      ).toBe("tmt123ABCdef");
+    });
+
+    it("removes punctuation and symbols", () => {
+      expect(
+        sanitizeBtDbId("tmt_123!@#$%^&*()+=[]{}|\\:;\"'<>,.?/")
+      ).toBe("tmt_123");
+    });
+
+    it("removes unicode letters that are not A-Z", () => {
+      expect(
+        sanitizeBtDbId("tmt_123_é_क_中")
+      ).toBe("tmt_123___");
+    });
+
+    it("removes emojis", () => {
+      expect(
+        sanitizeBtDbId("tmt_123😀ABC")
+      ).toBe("tmt_123ABC");
+    });
+
+    it("trims values longer than 36 characters", () => {
+      const input = "a".repeat(40);
+
+      expect(
+        sanitizeBtDbId(input)
+      ).toBe("a".repeat(36));
+    });
+
+    it("keeps values exactly 36 characters long", () => {
+      const input = "a".repeat(36);
+
+      expect(
+        sanitizeBtDbId(input)
+      ).toBe(input);
+    });
+
+    it("returns empty string when all characters are invalid", () => {
+      expect(
+        sanitizeBtDbId("!@#$%^&*()")
+      ).toBe("");
+    });
+
+    it("preserves typical Bowl Tmnts ids", () => {
+      expect(
+        sanitizeBtDbId("tmt_4ff710c8493f4a218d2e2b045442974a")
+      ).toBe("tmt_4ff710c8493f4a218d2e2b045442974a");
+
+      expect(
+        sanitizeBtDbId("ply_a01758cff1cc4bab9d9133e661bd49b0")
+      ).toBe("ply_a01758cff1cc4bab9d9133e661bd49b0");
+    });
+  });
 
   describe("sanitizeName", () => {
     it("returns empty string for non-string inputs", () => {
@@ -323,4 +405,108 @@ describe("sanitize inputs", () => {
       expect(sanitizeCurrency(-123.45 as any)).toBe("-123.45");
     });
   });
+
+  describe('sanitizedMoneyString', () => {
+    it('should return sanitized format when given a valid currency string', () => {
+      const input = "$1,234.56";
+      const expectedOutput = "1234.56";
+      const result = sanitizedMoneyString(input);
+      expect(result).toBe(expectedOutput);
+    });
+    it('should return an empty string when given an invalid currency format', () => {
+      const input = "invalid_currency";
+      const expectedOutput = "";
+      const result = sanitizedMoneyString(input);
+      expect(result).toBe(expectedOutput);
+    });
+    it('should return "0" when the input string is empty', () => {
+      const input = "";
+      const expectedOutput = "0";
+      const result = sanitizedMoneyString(input);
+      expect(result).toBe(expectedOutput);
+    });
+    it('should return sanitized format when given a valid currency string', () => {
+      const input = "$1,234.56";
+      const expectedOutput = "1234.56";
+      const result = sanitizedMoneyString(input);
+      expect(result).toBe(expectedOutput);
+    });
+    it('should return sanitized format for currency string ending with ".00"', () => {
+      const input = "100.00";
+      const expectedOutput = "100";
+      const result = sanitizedMoneyString(input);
+      expect(result).toBe(expectedOutput);
+    });
+    it('should convert NaN values to an empty string when provided with a non-numeric string', () => {
+      const input = "invalid";
+      const expectedOutput = "";
+      const result = sanitizedMoneyString(input);
+      expect(result).toBe(expectedOutput);
+    });
+    it('should return empty string for null input', () => {
+      const input = null;
+      const expectedOutput = "";
+      const result = sanitizedMoneyString(input as any);
+      expect(result).toBe(expectedOutput);
+    });
+  });
+
+  describe("sanitizeMoneyAmount", () => {
+    it("returns the same number when given a valid integer", () => {
+      expect(sanitizeMoneyAmount(123)).toBe(123);
+    });
+
+    it("returns the same number when given a valid decimal with 2 places", () => {
+      expect(sanitizeMoneyAmount(123.45)).toBe(123.45);
+    });
+
+    it("rounds values to 2 decimal places", () => {
+      expect(sanitizeMoneyAmount(123.456)).toBe(123.46);
+      expect(sanitizeMoneyAmount(123.454)).toBe(123.45);
+    });
+
+    it("accepts numeric strings", () => {
+      expect(sanitizeMoneyAmount("123.45")).toBe(123.45);
+      expect(sanitizeMoneyAmount("100")).toBe(100);
+    });
+
+    it("returns null for null", () => {
+      expect(sanitizeMoneyAmount(null)).toBeNull();
+    });
+
+    it("returns null for undefined", () => {
+      expect(sanitizeMoneyAmount(undefined)).toBeNull();
+    });
+
+    it("returns null for NaN", () => {
+      expect(sanitizeMoneyAmount(NaN)).toBeNull();
+    });
+
+    it("returns null for Infinity", () => {
+      expect(sanitizeMoneyAmount(Infinity)).toBeNull();
+    });
+
+    it("returns null for negative Infinity", () => {
+      expect(sanitizeMoneyAmount(-Infinity)).toBeNull();
+    });
+
+    it("returns null for non-numeric strings", () => {
+      expect(sanitizeMoneyAmount("abc")).toBeNull();      
+    });
+
+    it("returns 0 for empty strings", () => {      
+      expect(sanitizeMoneyAmount("")).toBe(0);
+    });
+
+    it("preserves negative values", () => {
+      expect(sanitizeMoneyAmount(-123.45)).toBe(-123.45);
+      expect(sanitizeMoneyAmount(-123.456)).toBe(-123.46);
+    });
+
+    it("rounds half-up correctly", () => {
+      expect(sanitizeMoneyAmount(1.005)).toBe(1);
+      expect(sanitizeMoneyAmount(1.015)).toBe(1.01);
+    });
+  });  
+
 });

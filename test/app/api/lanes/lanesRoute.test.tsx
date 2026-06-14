@@ -1,8 +1,10 @@
-import axios, { AxiosError } from "axios";
-import { baseLanesApi, baseSquadsApi } from "@/lib/api/apiPaths";
-import { testBaseLanesApi, testBaseSquadsApi } from "../../../testApi";
+import { privateApi } from "@/lib/api/axios";
+import { AxiosError } from "axios";
+import { baseLanesApi } from "@/lib/api/apiPaths";
+import { testBaseLanesApi } from "../../../testApi";
 import type { laneType } from "@/lib/types/types";
 import { initLane } from "@/lib/db/initVals";
+import { maxLaneCount } from "@/lib/validation/constants";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -52,7 +54,7 @@ const laneToPost: laneType = {
 
 const deletePostedLane = async (id: string) => { 
   try {
-    await axios.delete(oneLaneUrl + id, { withCredentials: true });
+    await privateApi.delete(oneLaneUrl + id);
   } catch (err) {
     if (err instanceof AxiosError) console.log(err.message);
   }
@@ -61,7 +63,7 @@ const deletePostedLane = async (id: string) => {
 const resetLane = async () => {
   // make sure test lane is reset in database
   const laneJSON = JSON.stringify(testLane);
-  await axios.put(oneLaneUrl + testLane.id, laneJSON, { withCredentials: true });
+  await privateApi.put(oneLaneUrl + testLane.id, laneJSON);
 }
 
 describe('Lanes - API: /api/lanes', () => { 
@@ -85,7 +87,7 @@ describe('Lanes - API: /api/lanes', () => {
     })
 
     it('should get all lanes', async () => {
-      const response = await axios.get(url, { withCredentials: true });
+      const response = await privateApi.get(url);
       expect(response.status).toEqual(200);
       // 87 rows in prisma/seed.ts
       expect(response.data.lanes).toHaveLength(87);
@@ -100,7 +102,7 @@ describe('Lanes - API: /api/lanes', () => {
     })
 
     it('should get a lane by ID', async () => { 
-      const response = await axios.get(oneLaneUrl + testLane.id, { withCredentials: true });
+      const response = await privateApi.get(oneLaneUrl + testLane.id);
       const lane = response.data.lane;
       expect(response.status).toBe(200);
       expect(lane.id).toBe(testLane.id);
@@ -109,7 +111,7 @@ describe('Lanes - API: /api/lanes', () => {
     })
     it('should NOT get a lane by ID when ID is invalid', async () => {
       try {
-        const response = await axios.get(oneLaneUrl + 'invalid');
+        const response = await privateApi.get(oneLaneUrl + 'invalid');
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -121,7 +123,7 @@ describe('Lanes - API: /api/lanes', () => {
     })
     it('should NOT get a lane by ID when ID is valid, but not a lane ID', async () => {
       try {
-        const response = await axios.get(oneLaneUrl + userId, { withCredentials: true });
+        const response = await privateApi.get(oneLaneUrl + userId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -133,7 +135,7 @@ describe('Lanes - API: /api/lanes', () => {
     })
     it('should NOT get a lane by ID when ID is not found', async () => {
       try {
-        const response = await axios.get(oneLaneUrl + notFoundId, { withCredentials: true });
+        const response = await privateApi.get(oneLaneUrl + notFoundId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -158,9 +160,7 @@ describe('Lanes - API: /api/lanes', () => {
       const squadLaneId1 = 'lan_7b5b9d9e6b6e4c5b9f6b7d9e7f9b6c5d';
       const squadLaneId12 = 'lan_8b78890d8b8e4c5b9f6b7d9e7f9b6abc';
       
-      const response = await axios.get(squadUrl + multiLaneSquadId, {
-        withCredentials: true
-      })
+      const response = await privateApi.get(squadUrl + multiLaneSquadId);
       expect(response.status).toBe(200);
       // 12 rows for tmnt in prisma/seed.ts
       expect(response.data.lanes).toHaveLength(12);
@@ -170,13 +170,13 @@ describe('Lanes - API: /api/lanes', () => {
       expect(lanes[11].id).toBe(squadLaneId12);      
     }) 
     it('should return code 200 if squad not found, 0 rows returned', async () => { 
-      const response = await axios.get(squadUrl + notfoundSquadId, { withCredentials: true });        
+      const response = await privateApi.get(squadUrl + notfoundSquadId);        
       expect(response.status).toBe(200);      
       expect(response.data.lanes).toHaveLength(0);
     })
     it('should return code 404 if squad id is invalid', async () => { 
       try {
-        const response = await axios.get(squadUrl + 'test123', { withCredentials: true });        
+        const response = await privateApi.get(squadUrl + 'test123');        
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -188,7 +188,7 @@ describe('Lanes - API: /api/lanes', () => {
     })
     it('should return code 404 if squad id is valid, but not a squad_id', async () => { 
       try {
-        const response = await axios.get(squadUrl + userId, { withCredentials: true });        
+        const response = await privateApi.get(squadUrl + userId);        
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -209,7 +209,7 @@ describe('Lanes - API: /api/lanes', () => {
     })
 
     it('should get all lanes for a tmnt', async () => { 
-      const response = await axios.get(tmntUrl + tmntId, { withCredentials: true });
+      const response = await privateApi.get(tmntUrl + tmntId);
       expect(response.status).toBe(200);
       // 20 rows for tmnt in prisma/seed.ts
       expect(response.data.lanes).toHaveLength(20);
@@ -219,13 +219,13 @@ describe('Lanes - API: /api/lanes', () => {
       expect(lanes[19].id).toBe('lan_be24c5cc04f6463d89f24e6e19a12610');
     })
     it('should return empty array if tmnt not found', async () => { 
-      const response = await axios.get(tmntUrl + notFoundTmntId, { withCredentials: true });
+      const response = await privateApi.get(tmntUrl + notFoundTmntId);
       expect(response.status).toBe(200);      
       expect(response.data.lanes).toHaveLength(0);
     })
     it('should return code 404 if tmnt id is invalid', async () => {       
       try {
-        const response = await axios.get(tmntUrl + 'test123', { withCredentials: true });
+        const response = await privateApi.get(tmntUrl + 'test123');
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -237,7 +237,7 @@ describe('Lanes - API: /api/lanes', () => {
     })
     it('should return code 404 if tmnt id is valid, but not a tmnt id', async () => { 
       try {
-        const response = await axios.get(tmntUrl + userId, { withCredentials: true });
+        const response = await privateApi.get(tmntUrl + userId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -270,7 +270,7 @@ describe('Lanes - API: /api/lanes', () => {
 
     it('should create a lane', async () => { 
       const laneJSON = JSON.stringify(laneToPost);
-      const response = await axios.post(url, laneJSON, { withCredentials: true });
+      const response = await privateApi.post(url, laneJSON);
       expect(response.status).toBe(201);
       const postedLane = response.data.lane;
       createdLane = true;
@@ -285,7 +285,7 @@ describe('Lanes - API: /api/lanes', () => {
       }
       const invalidJSON = JSON.stringify(invalidLane);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });
+        const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -302,7 +302,7 @@ describe('Lanes - API: /api/lanes', () => {
       }
       const invalidJSON = JSON.stringify(invalidLane);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });
+        const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -319,7 +319,7 @@ describe('Lanes - API: /api/lanes', () => {
       }
       const invalidJSON = JSON.stringify(invalidLane);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });
+        const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -336,7 +336,7 @@ describe('Lanes - API: /api/lanes', () => {
       }
       const invalidJSON = JSON.stringify(invalidLane);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });
+        const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -353,7 +353,7 @@ describe('Lanes - API: /api/lanes', () => {
       }
       const invalidJSON = JSON.stringify(invalidLane);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });
+        const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -370,7 +370,7 @@ describe('Lanes - API: /api/lanes', () => {
       }
       const invalidJSON = JSON.stringify(invalidLane);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });
+        const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -387,7 +387,7 @@ describe('Lanes - API: /api/lanes', () => {
       }
       const invalidJSON = JSON.stringify(invalidLane);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });
+        const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -404,7 +404,7 @@ describe('Lanes - API: /api/lanes', () => {
       }
       const invalidJSON = JSON.stringify(invalidLane);
       try {
-        const response = await axios.post(url, invalidJSON, { withCredentials: true });
+        const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -435,9 +435,7 @@ describe('Lanes - API: /api/lanes', () => {
 
     it('should update a lane by ID', async () => { 
       const laneJSON = JSON.stringify(putLane);   
-      const response = await axios.put(oneLaneUrl + testLane.id, laneJSON, {
-        withCredentials: true
-      });
+      const response = await privateApi.put(oneLaneUrl + testLane.id, laneJSON);;
       const lane = response.data.lane;
       expect(response.status).toBe(200);
       // did not update ssquad_id
@@ -448,9 +446,7 @@ describe('Lanes - API: /api/lanes', () => {
     it('should NOT update a lane by ID when ID is invalid', async () => { 
       try {
         const laneJSON = JSON.stringify(putLane);
-        const response = await axios.put(oneLaneUrl + 'test', laneJSON, {
-          withCredentials: true
-        });
+        const response = await privateApi.put(oneLaneUrl + 'test', laneJSON);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -463,9 +459,7 @@ describe('Lanes - API: /api/lanes', () => {
     it('should NOT update a lane by ID when ID is valid, but not a lane ID', async () => { 
       try {
         const laneJSON = JSON.stringify(putLane);
-        const response = await axios.put(oneLaneUrl + userId, laneJSON, {
-          withCredentials: true
-        });
+        const response = await privateApi.put(oneLaneUrl + userId, laneJSON);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -478,9 +472,7 @@ describe('Lanes - API: /api/lanes', () => {
     it('should NOT update a lane by ID when ID is not found', async () => { 
       try {
         const laneJSON = JSON.stringify(putLane);
-        const response = await axios.put(oneLaneUrl + notFoundId, laneJSON, {
-          withCredentials: true
-        });
+        const response = await privateApi.put(oneLaneUrl + notFoundId, laneJSON);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -497,9 +489,7 @@ describe('Lanes - API: /api/lanes', () => {
           lane_number: null,
         }
         const invalidJSON = JSON.stringify(invalidLane);
-        const response = await axios.put(oneLaneUrl + invalidLane.id, invalidJSON, {
-          withCredentials: true
-        });
+        const response = await privateApi.put(oneLaneUrl + invalidLane.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -516,9 +506,7 @@ describe('Lanes - API: /api/lanes', () => {
           lane_number: 0,
         }
         const invalidJSON = JSON.stringify(invalidLane);
-        const response = await axios.put(oneLaneUrl + invalidLane.id, invalidJSON, {
-          withCredentials: true
-        });
+        const response = await privateApi.put(oneLaneUrl + invalidLane.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -535,9 +523,7 @@ describe('Lanes - API: /api/lanes', () => {
           lane_number: 201,
         }
         const invalidJSON = JSON.stringify(invalidLane);
-        const response = await axios.put(oneLaneUrl + invalidLane.id, invalidJSON, {
-          withCredentials: true
-        });
+        const response = await privateApi.put(oneLaneUrl + invalidLane.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -555,12 +541,7 @@ describe('Lanes - API: /api/lanes', () => {
       }
       const invalidJSON = JSON.stringify(invalidLane);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneLaneUrl + invalidLane.id,
-        })
+        const response = await privateApi.put(oneLaneUrl + invalidLane.id, invalidJSON)
         expect(response.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -575,51 +556,77 @@ describe('Lanes - API: /api/lanes', () => {
 
   describe('PATCH by ID - API: /api/lanes/lane/:id', () => { 
 
+    const toPatchId = "lan_255dd3b8755f4dea956445e7a3511d91";
+
+    const toPatch = {
+      ...initLane,
+      id: toPatchId,
+      lane_number: 99,
+      squad_id: "sqd_bb2de887bf274242af5d867476b029b8",
+      in_use: true,
+    }
+
+    const resetPatched = async () => {
+      const laneJSON = JSON.stringify(toPatch);
+      await privateApi.put(oneLaneUrl + toPatch.id, laneJSON);
+    }
+
+    let didPatch = false;
+
     beforeAll(async () => {
-      await resetLane();
+      await resetPatched();
     })
       
     afterEach(async () => {
-      await resetLane();
+      if (didPatch) {
+        await resetPatched();
+      }      
     })
 
-    it('should patch a lane by ID', async () => { 
-      const patchLane = {
-        ...testLane,
+    it('should patch a lane number by ID', async () => { 
+      const patchLane = {        
         lane_number: 101,
       }
       const laneJSON = JSON.stringify(patchLane);
-      const response = await axios.patch(oneLaneUrl + patchLane.id, laneJSON, {
-        withCredentials: true,
-      })
+      const response = await privateApi.patch(oneLaneUrl + toPatchId, laneJSON);
       expect(response.status).toBe(200);
+      didPatch = true;
       const patchedlane = response.data.lane;
       expect(patchedlane.lane_number).toBe(101);
     })
-    it('should NOT patch squad_id for a lane by ID', async () => { 
-      const patchLane = {
-        ...testLane,
-        squad_id: squad2Id,
+    it('should patch a lane in use by ID', async () => { 
+      const patchLane = {        
+        in_use: false,
       }
       const laneJSON = JSON.stringify(patchLane);
-      const response = await axios.patch(oneLaneUrl + patchLane.id, laneJSON, {
-        withCredentials: true,
-      })
+      const response = await privateApi.patch(oneLaneUrl + toPatchId, laneJSON);
       expect(response.status).toBe(200);
+      didPatch = true;
       const patchedlane = response.data.lane;
-      // should not have patched squad_id
-      expect(patchedlane.squad_id).toBe(testLane.squad_id);
-    })    
-    it('should NOT patch a lane by ID when ID is invalid', async () => { 
-      const patchLane = {
-        ...testLane,
-        lane_number: 10,
-      }
+      expect(patchedlane.in_use).toBe(false);
+    })
+
+    it('should not patch lane by ID when just passing in ID', async () => {
       try {
-        const laneJSON = JSON.stringify(patchLane);
-        const response = await axios.patch(oneLaneUrl + 'test', laneJSON, {
-          withCredentials: true,
+        const invalidJSON = JSON.stringify({          
+          id: toPatchId,
         })
+        const response = await privateApi.patch(oneLaneUrl + toPatchId, invalidJSON)
+        expect(response.status).toBe(400);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(400);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not patch lane by ID when ID is invalid', async () => {
+      try {
+        const invalidJSON = JSON.stringify({          
+          sort_order: 1234,
+        })
+        const response = await privateApi.patch(oneLaneUrl + 'test', invalidJSON)
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -629,16 +636,27 @@ describe('Lanes - API: /api/lanes', () => {
         }
       }
     })
-    it('should NOT patch a lane by ID when ID is valid, but not a lane ID', async () => { 
-      const patchLane = {
-        ...testLane,
-        lane_number: 10,
-      }
+    it('should not patch lane by ID when ID is valid, but not found', async () => {
       try {
-        const laneJSON = JSON.stringify(patchLane);
-        const response = await axios.patch(oneLaneUrl + userId, laneJSON, {
-          withCredentials: true,
+        const invalidJSON = JSON.stringify({          
+          sort_order: 1234,
         })
+        const response = await privateApi.patch(oneLaneUrl + notFoundId, invalidJSON)
+        expect(response.status).toBe(400);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(400);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not patch lane by ID when ID is valid, but not a money id', async () => {
+      try {
+        const invalidJSON = JSON.stringify({          
+          sort_order: 1234,
+        })
+        const response = await privateApi.patch(oneLaneUrl + userId, invalidJSON)
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -648,54 +666,30 @@ describe('Lanes - API: /api/lanes', () => {
         }
       }
     })
-    it('should NOT patch a lane by ID when id is not found', async () => { 
-      const patchLane = {
-        ...testLane,
-        lane_number: 10,
-      }
+
+    it('should NOT patch squad_id for a lane by ID', async () => {
       try {
-        const laneJSON = JSON.stringify(patchLane);
-        const response = await axios.patch(oneLaneUrl + notFoundId, laneJSON, {
-          withCredentials: true,
+        const invalidJSON = JSON.stringify({
+          squad_id: squad1Id,
         })
-        expect(response.status).toBe(404);
+        const response = await privateApi.patch(oneLaneUrl + toPatchId, invalidJSON)
+        expect(response.status).toBe(400);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      } 
-    })
-    it('should NOT patch a lane by ID when lane_number is null', async () => { 
-      try {
-        const invalidLane = {
-          ...testLane,
-          lane_number: null,
-        }
-        const invalidJSON = JSON.stringify(invalidLane);
-        const response = await axios.patch(oneLaneUrl + invalidLane.id, invalidJSON, {
-          withCredentials: true,
-        })
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
+          expect(err.response?.status).toBe(400);
         } else {
           expect(true).toBeFalsy();
         }
       }
-    })
+    });
+
     it('should NOT patch a lane by ID when lane_number is less than 1', async () => { 
       try {
-        const invalidLane = {
-          ...testLane,
+        const invalidLane = {          
           lane_number: 0,
         }
         const invalidJSON = JSON.stringify(invalidLane);
-        const response = await axios.patch(oneLaneUrl + invalidLane.id, invalidJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.patch(oneLaneUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -705,16 +699,14 @@ describe('Lanes - API: /api/lanes', () => {
         }
       }
     })
-    it('should NOT patch a lane by ID when lane_number is more than 200', async () => { 
+    it('should NOT patch a lane by ID when lane_number is too high', async () => { 
       try {
         const invalidLane = {
           ...testLane,
-          lane_number: 201,
+          lane_number: maxLaneCount + 1,
         }
         const invalidJSON = JSON.stringify(invalidLane);
-        const response = await axios.patch(oneLaneUrl + invalidLane.id, invalidJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.patch(oneLaneUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -726,14 +718,11 @@ describe('Lanes - API: /api/lanes', () => {
     })
     it('should NOT patch a lane by ID when lane_number is not an integer', async () => { 
       try {
-        const invalidLane = {
-          ...testLane,
+        const invalidLane = {          
           lane_number: 1.5,
         }
         const invalidJSON = JSON.stringify(invalidLane);
-        const response = await axios.patch(oneLaneUrl + invalidLane.id, invalidJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.patch(oneLaneUrl + toPatchId, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -742,18 +731,33 @@ describe('Lanes - API: /api/lanes', () => {
           expect(true).toBeFalsy();
         }
       }
-    })   
+    }) 
+    
+    it('should NOT patch a lane by ID when in_use is not a boolean', async () => { 
+      try {
+        const invalidLane = {          
+          in_use: 'test',
+        }
+        const invalidJSON = JSON.stringify(invalidLane);
+        const response = await privateApi.patch(oneLaneUrl + toPatchId, invalidJSON);
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    }) 
+
     it('should NOT patch a lane when lane number + squd_id is not unique', async () => {
-      const invalidLane = {
-        ...testLane,
-        squad_id: squad1Id,
+      const dupLaneId = 'lan_7b5b9d9e6b6e4c5b9f6b7d9e7f9b6c5d';
+      const invalidLane = {                
         lane_number: 30,
       }
       const invalidJSON = JSON.stringify(invalidLane);
       try {
-        const response = await axios.patch(oneLaneUrl + invalidLane.id, invalidJSON, {
-          withCredentials: true,
-        })
+        const response = await privateApi.patch(oneLaneUrl + dupLaneId, invalidJSON);
         expect(response.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -785,33 +789,27 @@ describe('Lanes - API: /api/lanes', () => {
       if (!didDel) return;
       try {
         const divJSON = JSON.stringify(toDelLane);
-        await axios.post(url, divJSON, { withCredentials: true });        
+        await privateApi.post(url, divJSON);        
       } catch (err) {
         if (err instanceof Error) console.log(err.message);
       }
     })
 
     it('should delete a lane by ID', async () => {
-      const response = await axios.delete(oneLaneUrl + toDelLane.id, {
-        withCredentials: true,
-      })      
+      const response = await privateApi.delete(oneLaneUrl + toDelLane.id);      
       didDel = true;
       expect(response.status).toBe(200);
       expect(response.data.count).toBe(1);
     })
     it('should NOT delete a lane by ID when ID is not found', async () => {
-      const response = await axios.delete(oneLaneUrl + notFoundId, {
-        withCredentials: true,
-      })      
+      const response = await privateApi.delete(oneLaneUrl + notFoundId);      
       didDel = true;
       expect(response.status).toBe(200);
       expect(response.data.count).toBe(0);
     })
     it('should NOT delete a lane by ID when ID is invalid', async () => {
       try {
-        const response = await axios.delete(oneLaneUrl + 'test', {
-          withCredentials: true
-        })
+        const response = await privateApi.delete(oneLaneUrl + 'test');
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -823,9 +821,7 @@ describe('Lanes - API: /api/lanes', () => {
     })
     it('should NOT delete a lane by ID when ID is valid, bit not an lane id', async () => {
       try {
-        const response = await axios.delete(oneLaneUrl + userId, {
-          withCredentials: true 
-        })
+        const response = await privateApi.delete(oneLaneUrl + userId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {

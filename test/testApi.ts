@@ -45,6 +45,8 @@ export const testBaseGamesApi = testBaseApi + '/games'
 
 export const testBaseResultsApi = testBaseApi + '/results'
 
+export const testBaseMoneyApi = testBaseApi + '/moneys'
+
 export const testBaseBcryptApi = testBaseApi + '/bcrypt'
 
 export const testPostSecret = process.env.TEST_POST_SECRET!

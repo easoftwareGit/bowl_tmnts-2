@@ -163,7 +163,7 @@ describe("tests for one bracket validation", () => {
         id: '<script>id</script>',
       };
       const sanitized = sanitizeOneBrkt(testOneBrkt);
-      expect(sanitized.id).toEqual('');
+      expect(sanitized.id).toEqual('scriptidscript'); // sanitized, not valildated
     });
     it('should return a sanitized oneBrkt when brkt_id is not sanitized', () => {
       const testOneBrkt = {
@@ -171,7 +171,7 @@ describe("tests for one bracket validation", () => {
         brkt_id: '<script>brk</script>',
       };
       const sanitized = sanitizeOneBrkt(testOneBrkt);
-      expect(sanitized.brkt_id).toEqual('');
+      expect(sanitized.brkt_id).toEqual('scriptbrkscript'); // sanitized, not valildated
     });
     it('should return a sanitized oneBrkt when brkt_id is not sanitized', () => {
       const testOneBrkt = {
@@ -295,21 +295,21 @@ describe("tests for one bracket validation", () => {
       expect(validOneBrkts.oneBrkts.length).toBe(0);
       expect(validOneBrkts.errorCode).toBe(ErrorCode.MISSING_DATA);
     });
-    it('should return MissingData when there is a oneBrkt with invalid id', () => {
+    it('should return INVALID_DATA when there is a oneBrkt with invalid id', () => {
       const toValidate = cloneDeep(mockOneBrktsToPost);
       toValidate[0].id = 'invalid_id';
       const validOneBrkts: validOneBrktsType = validateOneBrkts(toValidate);
       expect(validOneBrkts).toBeDefined();
       expect(validOneBrkts.oneBrkts.length).toBe(0);
-      expect(validOneBrkts.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validOneBrkts.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
-    it('should return MissingData when there is a oneBrkt with valid id, but not a oneBrkt id', () => {
+    it('should return INVALID_DATA when there is a oneBrkt with valid id, but not a oneBrkt id', () => {
       const toValidate = cloneDeep(mockOneBrktsToPost);
       toValidate[0].id = userId
       const validOneBrkts: validOneBrktsType = validateOneBrkts(toValidate);
       expect(validOneBrkts).toBeDefined();
       expect(validOneBrkts.oneBrkts.length).toBe(0);
-      expect(validOneBrkts.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validOneBrkts.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
     it('should return MissingData when there is a oneBrkt with no id', () => {
       const toValidate = cloneDeep(mockOneBrktsToPost);
@@ -319,21 +319,21 @@ describe("tests for one bracket validation", () => {
       expect(validOneBrkts.oneBrkts.length).toBe(0);
       expect(validOneBrkts.errorCode).toBe(ErrorCode.MISSING_DATA);
     });
-    it('should return MissingData when there is a oneBrkt with invalid brkt_id', () => {
+    it('should return INVALID_DATA when there is a oneBrkt with invalid brkt_id', () => {
       const toValidate = cloneDeep(mockOneBrktsToPost);
       toValidate[0].brkt_id = 'invalid_brkt_id';
       const validOneBrkts: validOneBrktsType = validateOneBrkts(toValidate);
       expect(validOneBrkts).toBeDefined();
       expect(validOneBrkts.oneBrkts.length).toBe(0);
-      expect(validOneBrkts.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validOneBrkts.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
-    it('should return MissingData when there is a oneBrkt with valid brkt_id, but not a brkt_id', () => {
+    it('should return INVALID_DATA when there is a oneBrkt with valid brkt_id, but not a brkt_id', () => {
       const toValidate = cloneDeep(mockOneBrktsToPost);
       toValidate[0].brkt_id = userId;
       const validOneBrkts: validOneBrktsType = validateOneBrkts(toValidate);
       expect(validOneBrkts).toBeDefined();
       expect(validOneBrkts.oneBrkts.length).toBe(0);
-      expect(validOneBrkts.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validOneBrkts.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
     it('should return MissingData when there is a oneBrkt with missing brkt_id', () => {
       const toValidate = cloneDeep(mockOneBrktsToPost);

@@ -114,23 +114,35 @@ export async function PATCH(
     if (!isValidBtDbId(id, "den")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }  
-    const currentDivEntry = await prisma.div_Entry.findUnique({
-      where: { id: id },
-    });
-    if (!currentDivEntry) {
-      return NextResponse.json({ error: "not found" }, { status: 404 });
+
+    // fake data that will pass sanitation and validation
+    const fakeDivEntry = {
+      ...initDivEntry,
+      id, 
+      squad_id: "sqd_00000000000000000000000000000000",
+      div_id: "div_00000000000000000000000000000000",
+      player_id: "ply_00000000000000000000000000000000",
+      fee: "80",
     }
+
+    // const currentDivEntry = await prisma.div_Entry.findUnique({
+    //   where: { id: id },
+    // });
+    // if (!currentDivEntry) {
+    //   return NextResponse.json({ error: "not found" }, { status: 404 });
+    // }
+
+    const toCheck: divEntryType = {
+      ...initDivEntry,
+      squad_id: fakeDivEntry.squad_id,
+      div_id: fakeDivEntry.div_id,
+      player_id: fakeDivEntry.player_id,
+      fee: fakeDivEntry.fee + '',
+    };    
 
     const json = await request.json();
     // populate toCheck with json
     const jsonProps = Object.getOwnPropertyNames(json);
-    const toCheck: divEntryType = {
-      ...initDivEntry,
-      squad_id: currentDivEntry.squad_id,
-      div_id: currentDivEntry.div_id,
-      player_id: currentDivEntry.player_id,
-      fee: currentDivEntry.fee + '',
-    };    
     let gotDataToPatch = false;
     if (jsonProps.includes("squad_id")) {
       toCheck.squad_id = json.squad_id;
@@ -150,13 +162,16 @@ export async function PATCH(
     }
 
     if (!gotDataToPatch) {
-      return NextResponse.json({ divEntry: currentDivEntry }, { status: 200 });
+      return NextResponse.json({ error: "no data to patch" }, { status: 400 });
     }
     const toBePatched = sanitizeDivEntry(toCheck);
     const errCode = validateDivEntry(toBePatched);
     if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
+        case ErrorCode.MISSING_DATA:
+          errMsg = 'missing data'
+          break;
         case ErrorCode.INVALID_DATA:
           errMsg = "invalid data";
           break;

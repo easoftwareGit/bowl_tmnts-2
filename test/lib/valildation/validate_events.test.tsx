@@ -18,7 +18,7 @@ import { ErrorCode } from "@/lib/enums/enums";
 import { startOfDayFromString, todayStr } from "@/lib/dateTools";
 import { mockEvents } from "../../mocks/tmnts/singlesAndDoubles/mockEvents";
 
-const { gotEventMoney, gotEventData, validEventData, sanitizedEventMoney } = exportedForTesting;
+const { gotEventMoney, gotEventData, validEventData } = exportedForTesting;
 
 const eventId = 'evt_cb97b73cb538418ab993fc867f860510'
 const notfoundParentId = "tmt_01234567890123456789012345678901";
@@ -830,6 +830,40 @@ describe("tests for event validation", () => {
       const result = validEventData(noAddedMoneyEvent);
       expect(result).toBe(ErrorCode.NONE);
     });
+
+    it("should return ErrorCode.INVALID_DATA when id is empty", () => {
+      const invalidEvent = {
+        ...initEvent,
+        id: "",
+      };
+      const result = validEventData(invalidEvent);
+      expect(result).toBe(ErrorCode.INVALID_DATA);
+    });
+    it("should return ErrorCode.INVALID_DATA when id is null", () => {
+      const invalidEvent = {
+        ...initEvent,
+        id: null as any,
+      };
+      const result = validEventData(invalidEvent);
+      expect(result).toBe(ErrorCode.INVALID_DATA);
+    });
+    it("should return ErrorCode.INVALID_DATA when id is invalid", () => {
+      const invalidEvent = {
+        ...initEvent,
+        id: "test",
+      };
+      const result = validEventData(invalidEvent);
+      expect(result).toBe(ErrorCode.INVALID_DATA);
+    });
+    it("should return ErrorCode.INVALID_DATA when id is valid, but not an event id", () => {
+      const invalidEvent = {
+        ...initEvent,
+        id: "usr_12345678901234567890123456789012",
+      };
+      const result = validEventData(invalidEvent);
+      expect(result).toBe(ErrorCode.INVALID_DATA);
+    });
+
     it("should return ErrorCode.INVALID_DATA when tmnt_id is empty", () => {
       const invalidEvent = {
         ...initEvent,
@@ -969,51 +1003,6 @@ describe("tests for event validation", () => {
     });
   });
 
-  describe('sanitizedEventMoney', () => {
-    it('should return sanitized format when given a valid currency string', () => {
-      const input = "$1,234.56";
-      const expectedOutput = "1234.56";
-      const result = sanitizedEventMoney(input);
-      expect(result).toBe(expectedOutput);
-    });
-    it('should return an empty string when given an invalid currency format', () => {
-      const input = "invalid_currency";
-      const expectedOutput = "";
-      const result = sanitizedEventMoney(input);
-      expect(result).toBe(expectedOutput);
-    });
-    it('should return "0" when the input string is empty', () => {
-      const input = "";
-      const expectedOutput = "0";
-      const result = sanitizedEventMoney(input);
-      expect(result).toBe(expectedOutput);
-    });
-    it('should return sanitized format when given a valid currency string', () => {
-      const input = "$1,234.56";
-      const expectedOutput = "1234.56";
-      const result = sanitizedEventMoney(input);
-      expect(result).toBe(expectedOutput);
-    });
-    it('should return sanitized format for currency string ending with ".00"', () => {
-      const input = "100.00";
-      const expectedOutput = "100";
-      const result = sanitizedEventMoney(input);
-      expect(result).toBe(expectedOutput);
-    });
-    it('should convert NaN values to an empty string when provided with a non-numeric string', () => {
-      const input = "invalid";
-      const expectedOutput = "";
-      const result = sanitizedEventMoney(input);
-      expect(result).toBe(expectedOutput);
-    });
-    it('should return empty string for null input', () => {
-      const input = null;
-      const expectedOutput = "";
-      const result = sanitizedEventMoney(input as any);
-      expect(result).toBe(expectedOutput);
-    });    
-  })
-
   describe("sanitizeEvent function", () => {
     it("should return a sanitized event when event is already sanitized", () => {
       const sanitizedEvent = sanitizeEvent(validEvent);
@@ -1044,7 +1033,7 @@ describe("tests for event validation", () => {
         expenses: "5.00",
       };
       const sanitizedEvent = sanitizeEvent(testEvent);
-      expect(sanitizedEvent.tmnt_id).toEqual("");   
+      expect(sanitizedEvent.tmnt_id).toEqual("abc_123"); // sanitzied, not validated
       expect(sanitizedEvent.event_name).toEqual("Test Name");
       expect(sanitizedEvent.added_money).toEqual("500");
       expect(sanitizedEvent.entry_fee).toEqual("100");
@@ -1079,7 +1068,7 @@ describe("tests for event validation", () => {
         id: 'abc',
       };
       const sanitizedEvent = sanitizeEvent(testEvent);
-      expect(sanitizedEvent.id).toEqual('');
+      expect(sanitizedEvent.id).toEqual('abc'); // sanitized, not validated
     })
     it('should return a sanitized event when event has an invalid added_money', () => { 
       const testEvent = {
@@ -1651,7 +1640,7 @@ describe("tests for event validation", () => {
       const validEvents = validateEvents(toSanotzize);
       expect(validEvents.errorCode).toEqual(ErrorCode.NONE);  
       expect(validEvents.events[0].event_name).toEqual('Event 1');
-      expect(validEvents.events[1].event_name).toEqual('Event 2');
+      expect(validEvents.events[1].event_name).toEqual('scriptEvent 2script');
     })
     it('should return ErrorCode.MISSING_DATA when required data is missing', async () => { 
       const invalidEvents = [
@@ -1667,8 +1656,7 @@ describe("tests for event validation", () => {
       expect(validEvents.errorCode).toEqual(ErrorCode.MISSING_DATA);
       expect(validEvents.events.length).toEqual(0);
     })
-    it('should return ErroCode.MissingData when tmnt_id is not a valid tmnt id', async () => {       
-      // ErroCode.MissingData because sanitize will change invalid tmnt_id to ''
+    it('should return ErroCode.INVALID_DATA when tmnt_id is not a valid tmnt id', async () => {             
       const invalidEvents = [
         {
           ...mockEvents[0],          
@@ -1679,10 +1667,9 @@ describe("tests for event validation", () => {
         }
       ]
       const validEvents = validateEvents(invalidEvents);
-      expect(validEvents.errorCode).toEqual(ErrorCode.MISSING_DATA);      
+      expect(validEvents.errorCode).toEqual(ErrorCode.INVALID_DATA);      
     })
-    it('should return ErroCode.MissingData and return events length 1 when 1st event is valid, 2nd is not', async () => { 
-      // ErroCode.MissingData because sanitize will change invalid tmnt_id to ''
+    it('should return ErroCode.INVALID_DATA and return events length 1 when 1st event is valid, 2nd is not', async () => {       
       const invalidEvents = [
         {
           ...mockEvents[0],          
@@ -1693,7 +1680,7 @@ describe("tests for event validation", () => {
         }
       ]
       const validEvents = validateEvents(invalidEvents);
-      expect(validEvents.errorCode).toEqual(ErrorCode.MISSING_DATA);      
+      expect(validEvents.errorCode).toEqual(ErrorCode.INVALID_DATA);      
       expect(validEvents.events.length).toEqual(1);
     })
     it("should return ErroCode.InvalidData when all tmnt_id's are not the same", async () => { 
@@ -1723,7 +1710,7 @@ describe("tests for event validation", () => {
       const validEvents = validateEvents(invalidEvents);
       expect(validEvents.errorCode).toEqual(ErrorCode.INVALID_DATA);
     })
-    it('should return ErroCode.MissingData when id is not a valid event id', async () => { 
+    it('should return ErroCode.INVALID_DATA when id is not a valid event id', async () => { 
       const invalidEvents = [
         {
           ...mockEvents[0],
@@ -1734,7 +1721,7 @@ describe("tests for event validation", () => {
         }
       ]
       const validEvents = validateEvents(invalidEvents);
-      expect(validEvents.errorCode).toEqual(ErrorCode.MISSING_DATA);
+      expect(validEvents.errorCode).toEqual(ErrorCode.INVALID_DATA);
     })
     it('should return ErrorCode.MISSING_DATA when passed empty array', async () => {
       const validEvents = validateEvents([]);

@@ -9,7 +9,7 @@ import { maxReasonLength } from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
 import { SquadStage } from "@prisma/client";
 import { blankFullStage, initFullStage } from "@/lib/db/initVals";
-import { sanitizeNotes } from "../sanitize";
+import { sanitizeBtDbId, sanitizeNotes } from "../sanitize";
 
 const gotFullStageData = (stage: fullStageType): ErrorCode => {
   try {
@@ -95,6 +95,12 @@ const gotJustStageOverrideData = (
   }
 };
 
+/**
+ * checks if stage value is valid
+ *
+ * @param {unknown} stage - stage value to validate
+ * @returns {boolean} - true if valid, false otherwise
+ */
 export const validStageValue = (stage: unknown): stage is SquadStage => {
   return (
     typeof stage === "string" &&
@@ -261,11 +267,11 @@ export const sanitizeFullStage = (fullStage: fullStageType): fullStageType => {
     scores_started_at: null as any,
     stage_override_at: null as any,
   };
-  if (isValidBtDbId(fullStage.id, "stg")) {
-    sanitizedStage.id = fullStage.id;
+  if (fullStage.id) {
+    sanitizedStage.id = sanitizeBtDbId(fullStage.id);
   }
-  if (isValidBtDbId(fullStage.squad_id, "sqd")) {
-    sanitizedStage.squad_id = fullStage.squad_id;
+  if (fullStage.squad_id) {
+    sanitizedStage.squad_id = sanitizeBtDbId(fullStage.squad_id);
   }
   if (validStageValue(fullStage.stage)) {
     sanitizedStage.stage = fullStage.stage;

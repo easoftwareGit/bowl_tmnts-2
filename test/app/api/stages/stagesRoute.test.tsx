@@ -1,4 +1,5 @@
-import axios, { AxiosError } from "axios";
+import { privateApi } from "@/lib/api/axios";
+import { AxiosError } from "axios";
 import { baseStagesApi } from "@/lib/api/apiPaths";
 import { testBaseStagesApi } from "../../../testApi";
 import type { fullStageType } from "@/lib/types/types";
@@ -6,6 +7,7 @@ import { mockStageToPost, mockSquadsToPost } from "../../../mocks/tmnts/singlesA
 import { maxReasonLength } from "@/lib/validation/constants";
 import { SquadStage } from "@prisma/client";
 import { deleteSquad, postSquad } from "@/lib/db/squads/dbSquads";
+import { initFullStage } from "@/lib/db/initVals";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -32,6 +34,8 @@ const squadUrl = url + "/squad/"
 
 const notFoundStageId = "stg_01234567890123456789012345678901";
 const notFoundSquadId = "sqd_01234567890123456789012345678901";
+const userId = "usr_01234567890123456789012345678901";
+
 const toPostStageId = mockStageToPost.id;
 const toPostSquadId = mockSquadsToPost[0].id;
 
@@ -51,7 +55,8 @@ const testStage: fullStageType = {
 const wholeTmntStage: fullStageType = {
   id: "stg_124dd9efc30f4352b691dfd93d1e284e",
   squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-  stage: "ENTRIES",
+  // stage: "DEFINE",
+  stage: "SCORES",
   stage_set_at: "2024-07-01T00:00:00.000Z",
   scores_started_at: null,
   stage_override_enabled: false,
@@ -72,7 +77,7 @@ const toDeleteStage: fullStageType = {
 const deletePostedStage = async (stageId: string) => {
   
   try {      
-    await axios.delete(oneStageUrl + stageId, { withCredentials: true });          
+    await privateApi.delete(oneStageUrl + stageId);
   } catch (err) {
     if (err instanceof AxiosError) console.log(err.message);
   }
@@ -82,9 +87,7 @@ const resetStage = async (fullStage: fullStageType) => {
   // make sure test stage is reset in database
   try {
     const stageJSON = JSON.stringify(fullStage);    
-    await axios.put(oneStageUrl + fullStage.id, stageJSON, {
-      withCredentials: true
-    });
+    await privateApi.put(oneStageUrl + fullStage.id, stageJSON);
   } catch (err) {
     if (err instanceof AxiosError) console.log(err.message);
   }
@@ -93,7 +96,7 @@ const resetStage = async (fullStage: fullStageType) => {
 const rePostStage = async (stageToRepost: fullStageType) => {
   
   try {
-    const response = await axios.get(oneStageUrl + stageToRepost.id);        
+    const response = await privateApi.get(oneStageUrl + stageToRepost.id);        
     const found = response.data.stage;
     if (found) return;    
   } catch (err) {     
@@ -105,7 +108,7 @@ const rePostStage = async (stageToRepost: fullStageType) => {
   }
   try {
     const stageJSON = JSON.stringify(stageToRepost);
-    await axios.post(url, stageJSON, { withCredentials: true });    
+    await privateApi.post(url, stageJSON);    
   } catch (err) {
     if (err instanceof AxiosError) console.log(err.message);
   }
@@ -121,7 +124,7 @@ describe('Stages - API: /api/stages', () => {
     })
 
     it('should get all stages', async () => {
-      const response = await axios.get(url);
+      const response = await privateApi.get(url);
       expect(response.status).toBe(200);
       // 12 rows in prisma/seed.ts
       expect(response.data.stages).toHaveLength(12);
@@ -138,7 +141,7 @@ describe('Stages - API: /api/stages', () => {
     it('should get one stage', async () => {
       const before = Date.now();
 
-      const response = await axios.get(oneStageUrl + testStage.id);
+      const response = await privateApi.get(oneStageUrl + testStage.id);
       expect(response.status).toBe(200);
       const gotStage = response.data.stage;
 
@@ -163,7 +166,7 @@ describe('Stages - API: /api/stages', () => {
       ).toBe(true);
     })
     it('should get one stage - Whole tmnt', async () => {       
-      const response = await axios.get(oneStageUrl + wholeTmntStage.id);
+      const response = await privateApi.get(oneStageUrl + wholeTmntStage.id);
       expect(response.status).toBe(200);
       const gotStage = response.data.stage;
       expect(gotStage.id).toBe(wholeTmntStage.id);
@@ -180,7 +183,7 @@ describe('Stages - API: /api/stages', () => {
     })
     it('should NOT get a stage by ID when ID is invalid', async () => {
       try {
-        const response = await axios.get(oneStageUrl + 'test');
+        const response = await privateApi.get(oneStageUrl + 'test');
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -192,7 +195,7 @@ describe('Stages - API: /api/stages', () => {
     })
     it('should NOT get a stage by ID when ID is valid, but not a stage ID', async () => {
       try {
-        const response = await axios.get(oneStageUrl + toPostSquadId);
+        const response = await privateApi.get(oneStageUrl + toPostSquadId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -204,7 +207,7 @@ describe('Stages - API: /api/stages', () => {
     })
     it('should NOT get a squad by ID when ID is not found', async () => {
       try {
-        const response = await axios.get(oneStageUrl + notFoundStageId);        
+        const response = await privateApi.get(oneStageUrl + notFoundStageId);        
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -231,9 +234,7 @@ describe('Stages - API: /api/stages', () => {
         await deletePostedStage(toPostStageId);        
         try {
           const stageJSON = JSON.stringify(editedStage);
-          await axios.put(oneStageUrl + editedStage.id, stageJSON, {
-            withCredentials: true
-          });
+          await privateApi.put(oneStageUrl + editedStage.id, stageJSON);
         }
         catch (err) {
           if (err instanceof AxiosError) console.log(err.message);
@@ -247,7 +248,7 @@ describe('Stages - API: /api/stages', () => {
       it('should get an edited stage', async () => {
         const before = Date.now();
 
-        const response = await axios.get(oneStageUrl + editedStage.id);
+        const response = await privateApi.get(oneStageUrl + editedStage.id);
         expect(response.status).toBe(200);
         const postedStage = response.data.stage;
 
@@ -286,7 +287,7 @@ describe('Stages - API: /api/stages', () => {
 
       const before = Date.now();
 
-      const response = await axios.get(squadUrl + testStage.squad_id);
+      const response = await privateApi.get(squadUrl + testStage.squad_id);
       expect(response.status).toBe(200);
       const gotStage = response.data.stage;
 
@@ -311,7 +312,7 @@ describe('Stages - API: /api/stages', () => {
       ).toBe(true);
     })
     it('should get one stage - Whole tmnt', async () => {       
-      const response = await axios.get(squadUrl + wholeTmntStage.squad_id);
+      const response = await privateApi.get(squadUrl + wholeTmntStage.squad_id);
       expect(response.status).toBe(200);
       const gotStage = response.data.stage;
       expect(gotStage.id).toBe(wholeTmntStage.id);
@@ -328,7 +329,7 @@ describe('Stages - API: /api/stages', () => {
     })
     it('should NOT get a stage by ID when ID is invalid', async () => {
       try {
-        const response = await axios.get(squadUrl + 'test');
+        const response = await privateApi.get(squadUrl + 'test');
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -340,7 +341,7 @@ describe('Stages - API: /api/stages', () => {
     })
     it('should NOT get a stage by ID when ID is valid, but not a squad ID', async () => {
       try {
-        const response = await axios.get(squadUrl + toPostStageId);
+        const response = await privateApi.get(squadUrl + toPostStageId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -352,7 +353,7 @@ describe('Stages - API: /api/stages', () => {
     })
     it('should NOT get a squad by ID when ID is not found', async () => {
       try {
-        const response = await axios.get(squadUrl + notFoundSquadId);        
+        const response = await privateApi.get(squadUrl + notFoundSquadId);        
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -379,9 +380,7 @@ describe('Stages - API: /api/stages', () => {
         await deletePostedStage(toPostStageId);        
         try {
           const stageJSON = JSON.stringify(editedStage);
-          await axios.put(oneStageUrl + editedStage.id, stageJSON, {
-            withCredentials: true
-          });
+          await privateApi.put(oneStageUrl + editedStage.id, stageJSON);
         }
         catch (err) {
           if (err instanceof AxiosError) console.log(err.message);
@@ -395,7 +394,7 @@ describe('Stages - API: /api/stages', () => {
       it('should get an edited stage', async () => {
         const before = Date.now();
 
-        const response = await axios.get(squadUrl + editedStage.squad_id);
+        const response = await privateApi.get(squadUrl + editedStage.squad_id);
 
         expect(response.status).toBe(200);
         const postedStage = response.data.stage;
@@ -449,11 +448,7 @@ describe('Stages - API: /api/stages', () => {
 
     it('should post a full stage', async () => {
       const before = Date.now();
-      const response = await axios.post(
-        url,
-        JSON.stringify(mockStageToPost),
-        { withCredentials: true }
-      );
+      const response = await privateApi.post(url, JSON.stringify(mockStageToPost));
       expect(response.status).toBe(201);
       didPost = true;
       const postedStage = response.data.stage;
@@ -484,7 +479,7 @@ describe('Stages - API: /api/stages', () => {
         stage_override_reason: "test reason"
       }
       const stageJSON = JSON.stringify(allStageFields);
-      const response = await axios.post(url, stageJSON, { withCredentials: true });
+      const response = await privateApi.post(url, stageJSON);
       expect(response.status).toBe(201);
       didPost = true;
       const postedStage = response.data.stage;
@@ -522,11 +517,7 @@ describe('Stages - API: /api/stages', () => {
         stage_override_at: aDateStr,
         stage_override_reason: 'test reason',
       };
-      const response = await axios.post(
-        url,
-        JSON.stringify(ignoreDatesStage),
-        { withCredentials: true }
-      );
+      const response = await privateApi.post(url, JSON.stringify(ignoreDatesStage));
       expect(response.status).toBe(201);
       didPost = true;
       const postedStage = response.data.stage;
@@ -565,11 +556,7 @@ describe('Stages - API: /api/stages', () => {
         stage_override_at: aDateStr,
         stage_override_reason: '     test  reason    ',
       };
-      const response = await axios.post(
-        url,
-        JSON.stringify(toSanitzeStage),
-        { withCredentials: true }
-      );
+      const response = await privateApi.post(url,JSON.stringify(toSanitzeStage));
       expect(response.status).toBe(201);
       didPost = true;
       const postedStage = response.data.stage;
@@ -604,11 +591,7 @@ describe('Stages - API: /api/stages', () => {
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.post(
-          url,
-          stageJSON,
-          { withCredentials: true }
-        );
+        const response = await privateApi.post(url, stageJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -625,11 +608,7 @@ describe('Stages - API: /api/stages', () => {
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.post(
-          url,
-          stageJSON,
-          { withCredentials: true }
-        );
+        const response = await privateApi.post(url, stageJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -646,11 +625,7 @@ describe('Stages - API: /api/stages', () => {
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.post(
-          url,
-          stageJSON,
-          { withCredentials: true }
-        );
+        const response = await privateApi.post(url, stageJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -667,11 +642,7 @@ describe('Stages - API: /api/stages', () => {
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.post(
-          url,
-          stageJSON,
-          { withCredentials: true }
-        );
+        const response = await privateApi.post(url, stageJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -688,11 +659,7 @@ describe('Stages - API: /api/stages', () => {
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.post(
-          url,
-          stageJSON,
-          { withCredentials: true }
-        );
+        const response = await privateApi.post(url, stageJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -709,11 +676,7 @@ describe('Stages - API: /api/stages', () => {
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.post(
-          url,
-          stageJSON,
-          { withCredentials: true }
-        );
+        const response = await privateApi.post(url, stageJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -730,11 +693,7 @@ describe('Stages - API: /api/stages', () => {
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.post(
-          url,
-          stageJSON,
-          { withCredentials: true }
-        );
+        const response = await privateApi.post(url, stageJSON);
         expect(response.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -751,11 +710,7 @@ describe('Stages - API: /api/stages', () => {
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.post(
-          url,
-          stageJSON,
-          { withCredentials: true }
-        );
+        const response = await privateApi.post(url, stageJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -772,11 +727,7 @@ describe('Stages - API: /api/stages', () => {
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.post(
-          url,
-          stageJSON,
-          { withCredentials: true }
-        );
+        const response = await privateApi.post(url, stageJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -793,11 +744,7 @@ describe('Stages - API: /api/stages', () => {
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.post(
-          url,
-          stageJSON,
-          { withCredentials: true }
-        );
+        const response = await privateApi.post(url, stageJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -814,11 +761,7 @@ describe('Stages - API: /api/stages', () => {
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.post(
-          url,
-          stageJSON,
-          { withCredentials: true }
-        );
+        const response = await privateApi.post(url, stageJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -837,11 +780,7 @@ describe('Stages - API: /api/stages', () => {
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.post(
-          url,
-          stageJSON,
-          { withCredentials: true }
-        );
+        const response = await privateApi.post(url, stageJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -860,11 +799,7 @@ describe('Stages - API: /api/stages', () => {
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.post(
-          url,
-          stageJSON,
-          { withCredentials: true }
-        );
+        const response = await privateApi.post(url, stageJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -883,11 +818,7 @@ describe('Stages - API: /api/stages', () => {
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.post(
-          url,
-          stageJSON,
-          { withCredentials: true }
-        );
+        const response = await privateApi.post(url, stageJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -905,11 +836,7 @@ describe('Stages - API: /api/stages', () => {
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.post(
-          url,
-          stageJSON,
-          { withCredentials: true }
-        );
+        const response = await privateApi.post(url, stageJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -949,10 +876,9 @@ describe('Stages - API: /api/stages', () => {
         ...testStage,
         stage: SquadStage.ENTRIES,        
       }
-      const response = await axios.put(
+      const response = await privateApi.put(
         oneStageUrl + stageToPut.id,
         JSON.stringify(stageToPut),
-        { withCredentials: true }
       );
       expect(response.status).toBe(200);
       const updatedStage = response.data.stage;
@@ -981,10 +907,9 @@ describe('Stages - API: /api/stages', () => {
         ...testStage,
         stage: SquadStage.SCORES,
       }
-      const response = await axios.put(
-        oneStageUrl + stageToPut.id,
-        JSON.stringify(stageToPut),
-        { withCredentials: true }
+      const response = await privateApi.put(
+        oneStageUrl + stageToPut.id, 
+        JSON.stringify(stageToPut),        
       );
       expect(response.status).toBe(200);
       const updatedStage = response.data.stage;
@@ -1016,10 +941,9 @@ describe('Stages - API: /api/stages', () => {
         stage_override_enabled: true,                
         stage_override_reason: "test reason",
       }
-      const response = await axios.put(
+      const response = await privateApi.put(
         oneStageUrl + stageToPut.id,
         JSON.stringify(stageToPut),
-        { withCredentials: true }
       );
       expect(response.status).toBe(200);
       const updatedStage = response.data.stage;
@@ -1054,10 +978,9 @@ describe('Stages - API: /api/stages', () => {
         stage_override_enabled: true,                
         stage_override_reason: "test reason",
       }
-      const response = await axios.put(
+      const response = await privateApi.put(
         oneStageUrl + stageToPut.id,
         JSON.stringify(stageToPut),
-        { withCredentials: true }
       );
       expect(response.status).toBe(200);
       const updatedStage = response.data.stage;
@@ -1094,10 +1017,9 @@ describe('Stages - API: /api/stages', () => {
         stage_override_enabled: true,
         stage_override_reason: '   test  reason     ',
       };
-      const response = await axios.put(
+      const response = await privateApi.put(
         oneStageUrl + toSanitzeStage.id,
-        JSON.stringify(toSanitzeStage),
-        { withCredentials: true }
+        JSON.stringify(toSanitzeStage),        
       );
       expect(response.status).toBe(200);
       didUpdate = true;
@@ -1134,10 +1056,9 @@ describe('Stages - API: /api/stages', () => {
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.put(
+        const response = await privateApi.put(
           oneStageUrl + invalidStage.id,
-          stageJSON,
-          { withCredentials: true }
+          stageJSON,          
         );
         expect(response.status).toBe(404);
       } catch (err) {
@@ -1155,10 +1076,9 @@ describe('Stages - API: /api/stages', () => {
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.put(
+        const response = await privateApi.put(
           oneStageUrl + invalidStage.id,
-          stageJSON,
-          { withCredentials: true }
+          stageJSON,          
         );
         expect(response.status).toBe(404);
       } catch (err) {
@@ -1176,10 +1096,9 @@ describe('Stages - API: /api/stages', () => {
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.put(
+        const response = await privateApi.put(
           oneStageUrl + invalidStage.id,
-          stageJSON,
-          { withCredentials: true }
+          stageJSON,          
         );
         expect(response.status).toBe(404);
       } catch (err) {
@@ -1197,10 +1116,9 @@ describe('Stages - API: /api/stages', () => {
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.put(
+        const response = await privateApi.put(
           oneStageUrl + invalidStage.id,
           stageJSON,
-          { withCredentials: true }
         );
         expect(response.status).toBe(404);
       } catch (err) {
@@ -1218,10 +1136,9 @@ describe('Stages - API: /api/stages', () => {
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.put(
+        const response = await privateApi.put(
           oneStageUrl + invalidStage.id,
           stageJSON,
-          { withCredentials: true }
         );
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1239,10 +1156,9 @@ describe('Stages - API: /api/stages', () => {
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.put(
+        const response = await privateApi.put(
           oneStageUrl + invalidStage.id,
           stageJSON,
-          { withCredentials: true }
         );
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1260,10 +1176,9 @@ describe('Stages - API: /api/stages', () => {
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.put(
+        const response = await privateApi.put(
           oneStageUrl + invalidStage.id,
           stageJSON,
-          { withCredentials: true }
         );
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1281,10 +1196,9 @@ describe('Stages - API: /api/stages', () => {
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.put(
+        const response = await privateApi.put(
           oneStageUrl + invalidStage.id,
           stageJSON,
-          { withCredentials: true }
         );
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1302,10 +1216,9 @@ describe('Stages - API: /api/stages', () => {
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.put(
+        const response = await privateApi.put(
           oneStageUrl + invalidStage.id,
           stageJSON,
-          { withCredentials: true }
         );
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1323,10 +1236,9 @@ describe('Stages - API: /api/stages', () => {
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.put(
+        const response = await privateApi.put(
           oneStageUrl + invalidStage.id,
           stageJSON,
-          { withCredentials: true }
         );
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1344,10 +1256,9 @@ describe('Stages - API: /api/stages', () => {
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.put(
+        const response = await privateApi.put(
           oneStageUrl + invalidStage.id,
           stageJSON,
-          { withCredentials: true }
         );
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1367,10 +1278,9 @@ describe('Stages - API: /api/stages', () => {
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.put(
+        const response = await privateApi.put(
           oneStageUrl + invalidStage.id,
           stageJSON,
-          { withCredentials: true }
         );
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1390,10 +1300,9 @@ describe('Stages - API: /api/stages', () => {
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.put(
+        const response = await privateApi.put(
           oneStageUrl + invalidStage.id,
           stageJSON,
-          { withCredentials: true }
         );
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1408,6 +1317,26 @@ describe('Stages - API: /api/stages', () => {
   })
 
   describe('PATCH by ID - API: /api/stages/stage/:id', () => { 
+
+    const toPatchId = "stg_dd11c8a65dee4e5db60ee5353a7f0b26";
+
+    const toPatch = {
+      ...initFullStage,
+      id: "stg_dd11c8a65dee4e5db60ee5353a7f0b26",
+      squad_id: "sqd_ae4266e1174642c7a1bcec47a50f275f",
+      stage: "DEFINE",
+      stage_set_at: new Date("2024-12-01"),
+      scores_started_at: null,
+      stage_override_enabled: false,
+      stage_override_at: null,
+      stage_override_reason: null,
+    }
+
+    const resetPatched = async () => {
+      // make sure toPatch is reset in database
+      const stageJSON = JSON.stringify(toPatch);
+      await privateApi.put(oneStageUrl + toPatch.id, stageJSON);      
+    }
 
     let didUpdate = false;
 
@@ -1429,78 +1358,75 @@ describe('Stages - API: /api/stages', () => {
       await resetStage(testStage)      
     })
 
-    // it('should patch a stage - Just stage', async () => {
-    //   const before = Date.now();
-    //   const stageToPatch = {
-    //     id: testStage.id,
-    //     stage: SquadStage.ENTRIES,        
-    //   }
-    //   const response = await axios.patch(
-    //     oneStageUrl + stageToPatch.id,
-    //     JSON.stringify(stageToPatch),
-    //     { withCredentials: true }
-    //   );
-    //   expect(response.status).toBe(200);
-    //   const patchedStage = response.data.stage;
-    //   didUpdate = true;
-
-    //   const after = Date.now()
-    //   const twoMinutes = 2 * 60 * 1000;
-    //   const stageSetAtMs = new Date(patchedStage.stage_set_at).getTime();
-      
-    //   expect(patchedStage.id).toBe(stageToPatch.id);
-    //   expect(patchedStage.squad_id).toBe(testStage.squad_id);
-    //   expect(patchedStage.stage).toBe(stageToPatch.stage);
-
-    //   expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-    //   expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
-
-    //   expect(patchedStage.scores_started_at).toBe(testStage.scores_started_at);
-    //   expect(patchedStage.stage_override_enabled).toBe(testStage.stage_override_enabled);
-    //   expect(patchedStage.stage_override_at).toBe(testStage.stage_override_at);
-    //   expect(patchedStage.stage_override_reason).toBe(testStage.stage_override_reason);
-    // })
-    // it('should patch a stage - Just stage when .stage = "SCORES"', async () => {
-    //   const before = Date.now();
-    //   const stageToPatch = {
-    //     id: testStage.id,
-    //     stage: SquadStage.SCORES,
-    //   }
-    //   const response = await axios.patch(
-    //     oneStageUrl + stageToPatch.id,
-    //     JSON.stringify(stageToPatch),
-    //     { withCredentials: true }
-    //   );
-    //   expect(response.status).toBe(200);
-    //   const patchedStage = response.data.stage;
-    //   didUpdate = true;
-
-    //   const after = Date.now()
-    //   const twoMinutes = 2 * 60 * 1000;
-    //   const stageSetAtMs = new Date(patchedStage.stage_set_at).getTime();      
-      
-    //   expect(patchedStage.id).toBe(stageToPatch.id);
-    //   expect(patchedStage.squad_id).toBe(testStage.squad_id);
-    //   expect(patchedStage.stage).toBe(stageToPatch.stage);
-
-    //   expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-    //   expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);      
-
-    //   expect(patchedStage.stage_override_enabled).toBe(testStage.stage_override_enabled);
-    //   expect(patchedStage.stage_override_at).toBe(testStage.stage_override_at);
-    //   expect(patchedStage.stage_override_reason).toBe(testStage.stage_override_reason);
-    // })
-    it('should patch a stage - just stage_override_enabled', async () => {
+    it('should patch a stage - Just stage', async () => {
       const before = Date.now();
       const stageToPatch = {
         id: testStage.id,
+        stage: SquadStage.ENTRIES,        
+      }
+      const response = await privateApi.patch(
+        oneStageUrl + stageToPatch.id,
+        JSON.stringify(stageToPatch)
+      );
+      expect(response.status).toBe(200);
+      const patchedStage = response.data.stage;
+      didUpdate = true;
+
+      const after = Date.now()
+      const twoMinutes = 2 * 60 * 1000;
+      const stageSetAtMs = new Date(patchedStage.stage_set_at).getTime();
+      
+      expect(patchedStage.id).toBe(stageToPatch.id);
+      expect(patchedStage.squad_id).toBe(testStage.squad_id);
+      expect(patchedStage.stage).toBe(stageToPatch.stage);
+
+      expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
+      expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
+
+      expect(patchedStage.scores_started_at).toBe(testStage.scores_started_at);
+      expect(patchedStage.stage_override_enabled).toBe(testStage.stage_override_enabled);
+      expect(patchedStage.stage_override_at).toBe(testStage.stage_override_at);
+      expect(patchedStage.stage_override_reason).toBe(testStage.stage_override_reason);
+    })
+    it('should patch a stage - Just stage when .stage = "SCORES"', async () => {
+      const before = Date.now();
+      const stageToPatch = {
+        id: testStage.id,
+        stage: SquadStage.SCORES,
+      }
+      const response = await privateApi.patch(
+        oneStageUrl + stageToPatch.id,
+        JSON.stringify(stageToPatch)
+      );
+      expect(response.status).toBe(200);
+      const patchedStage = response.data.stage;
+      didUpdate = true;
+
+      const after = Date.now()
+      const twoMinutes = 2 * 60 * 1000;
+      const stageSetAtMs = new Date(patchedStage.stage_set_at).getTime();      
+      
+      expect(patchedStage.id).toBe(stageToPatch.id);
+      expect(patchedStage.squad_id).toBe(testStage.squad_id);
+      expect(patchedStage.stage).toBe(stageToPatch.stage);
+
+      expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
+      expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);      
+
+      expect(patchedStage.stage_override_enabled).toBe(testStage.stage_override_enabled);
+      expect(patchedStage.stage_override_at).toBe(testStage.stage_override_at);
+      expect(patchedStage.stage_override_reason).toBe(testStage.stage_override_reason);
+    })
+    
+    it('should patch a stage - just stage_override_enabled', async () => {
+      const before = Date.now();
+      const stageToPatch = {        
         stage_override_enabled: true,
         stage_override_reason: "test reason"
       }
-      const response = await axios.patch(
-        oneStageUrl + stageToPatch.id,
+      const response = await privateApi.patch(
+        oneStageUrl + toPatchId,
         JSON.stringify(stageToPatch),
-        { withCredentials: true }
       );
       expect(response.status).toBe(200);
       const patchedStage = response.data.stage;
@@ -1509,9 +1435,8 @@ describe('Stages - API: /api/stages', () => {
       const after = Date.now()
       const twoMinutes = 2 * 60 * 1000;
       const stageOverrideAtMs = new Date(patchedStage.stage_override_at).getTime();
-      
-      expect(patchedStage.id).toBe(stageToPatch.id);
-      expect(patchedStage.squad_id).toBe(testStage.squad_id);      
+
+      expect(patchedStage.squad_id).toBe(toPatch.squad_id);      
       expect(patchedStage.stage_override_enabled).toBe(stageToPatch.stage_override_enabled);
 
       expect(stageOverrideAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
@@ -1521,8 +1446,7 @@ describe('Stages - API: /api/stages', () => {
     })
     it('should patch a full stage, and ignore dates', async () => {
       const before = Date.now();
-      const stageToPatch = {
-        id: testStage.id,
+      const stageToPatch = {        
         stage: SquadStage.SCORES,        
         stage_set_at: new Date("2022-01-01T00:00:00.000Z"),
         scores_started_at: new Date("2022-01-01T00:00:00.000Z"),
@@ -1530,10 +1454,9 @@ describe('Stages - API: /api/stages', () => {
         stage_override_at: new Date("2022-01-01T00:00:00.000Z"),
         stage_override_reason: "test reason 3"
       }
-      const response = await axios.patch(
-        oneStageUrl + stageToPatch.id,
+      const response = await privateApi.patch(
+        oneStageUrl + toPatchId,
         JSON.stringify(stageToPatch),
-        { withCredentials: true }
       );
       expect(response.status).toBe(200);
       const patchedStage = response.data.stage;
@@ -1544,9 +1467,7 @@ describe('Stages - API: /api/stages', () => {
       const stageSetAtMs = new Date(patchedStage.stage_set_at).getTime();
       const scoresStartedAtMs = new Date(patchedStage.scores_started_at).getTime();
       const stageOverrideAtMs = new Date(patchedStage.stage_override_at).getTime();
-      
-      expect(patchedStage.id).toBe(stageToPatch.id);
-      expect(patchedStage.squad_id).toBe(testStage.squad_id);      
+                  
       expect(patchedStage.stage).toBe(stageToPatch.stage);
 
       expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
@@ -1561,35 +1482,28 @@ describe('Stages - API: /api/stages', () => {
       
       expect(patchedStage.stage_override_reason).toBe(stageToPatch.stage_override_reason);
     })
-    it('should ignore squad_id', async () => {
-      const stageToPatch = {
-        id: testStage.id,
-        squad_id: testStage.squad_id,
-        stage: SquadStage.ENTRIES
-      }
-      const response = await axios.patch(
-        oneStageUrl + stageToPatch.id,
-        JSON.stringify(stageToPatch),
-        { withCredentials: true }
-      );
-      expect(response.status).toBe(200);
-      const patchedStage = response.data.stage;
-      expect(patchedStage.id).toBe(stageToPatch.id);
-      expect(patchedStage.squad_id).toBe(testStage.squad_id);
-      expect(patchedStage.stage).toBe(stageToPatch.stage);
-    })
-    it('should NOT patch a full stage when id is missing', async () => { 
-      const invalidStage = {        
-        id: null,
-        stage: SquadStage.ENTRIES,        
-      };
-      const stageJSON = JSON.stringify(invalidStage);
+
+    it('should not patch stage by ID when just passing in ID', async () => {
       try {
-        const response = await axios.patch(
-          oneStageUrl + invalidStage.id,
-          stageJSON,
-          { withCredentials: true }
-        );
+        const invalidJSON = JSON.stringify({          
+          id: toPatchId,
+        })
+        const response = await privateApi.patch(oneStageUrl + toPatchId, invalidJSON)
+        expect(response.status).toBe(400);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(400);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not patch stage by ID when ID is invalid', async () => {
+      try {
+        const invalidJSON = JSON.stringify({          
+          sort_order: 1234,
+        })
+        const response = await privateApi.patch(oneStageUrl + 'test', invalidJSON)
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1599,18 +1513,12 @@ describe('Stages - API: /api/stages', () => {
         }
       }
     })
-    it('should NOT patch a full stage when id is blank', async () => { 
-      const invalidStage = {        
-        id: "",
-        stage: SquadStage.ENTRIES,        
-      };
-      const stageJSON = JSON.stringify(invalidStage);
+    it('should not patch stage by ID when ID is valid, but not found', async () => {
       try {
-        const response = await axios.patch(
-          oneStageUrl + invalidStage.id,
-          stageJSON,
-          { withCredentials: true }
-        );
+        const invalidJSON = JSON.stringify({          
+          stage: "DEFINE",
+        })
+        const response = await privateApi.patch(oneStageUrl + notFoundStageId, invalidJSON)
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1620,18 +1528,12 @@ describe('Stages - API: /api/stages', () => {
         }
       }
     })
-    it('should NOT patch a full stage when id is invalid', async () => { 
-      const invalidStage = {        
-        id: "test",
-        stage: SquadStage.ENTRIES,        
-      };
-      const stageJSON = JSON.stringify(invalidStage);
+    it('should not patch stage by ID when ID is valid, but not a stage id', async () => {
       try {
-        const response = await axios.patch(
-          oneStageUrl + invalidStage.id,
-          stageJSON,
-          { withCredentials: true }
-        );
+        const invalidJSON = JSON.stringify({          
+          stage: "DEFINE",
+        })
+        const response = await privateApi.patch(oneStageUrl + userId, invalidJSON)
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1641,168 +1543,32 @@ describe('Stages - API: /api/stages', () => {
         }
       }
     })
-    it('should NOT patch a full stage when id is not found', async () => { 
-      const invalidStage = {        
-        id: notFoundStageId,
-        stage: SquadStage.ENTRIES,        
-      };
-      const stageJSON = JSON.stringify(invalidStage);
+
+    it('should not patch squad ID when patching stage by ID', async () => {
       try {
-        const response = await axios.patch(
-          oneStageUrl + invalidStage.id,
-          stageJSON,
-          { withCredentials: true }
-        );
-        expect(response.status).toBe(404);
+        const invalidJSON = JSON.stringify({          
+          squad_id: testStage.squad_id,
+        })
+        const response = await privateApi.patch(oneStageUrl + toPatchId, invalidJSON)
+        expect(response.status).toBe(400);
       } catch (err) {
         if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
+          expect(err.response?.status).toBe(400);
         } else {
           expect(true).toBeFalsy();
         }
       }
     })
-    it('should NOT patch a full stage when id is valid, but not a stage id', async () => { 
-      const invalidStage = {        
-        id: testStage.squad_id,
-        stage: SquadStage.ENTRIES,        
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await axios.patch(
-          oneStageUrl + invalidStage.id,
-          stageJSON,
-          { withCredentials: true }
-        );
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a full stage when squad_id is null', async () => { 
-      const invalidStage = {        
-        id: testStage.id,
-        squad_id: null,
-        stage: SquadStage.ENTRIES,        
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await axios.patch(
-          oneStageUrl + invalidStage.id,
-          stageJSON,
-          { withCredentials: true }
-        );
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a full stage when squad_id is blank', async () => { 
-      const invalidStage = {        
-        id: testStage.id,
-        squad_id: '',
-        stage: SquadStage.ENTRIES,        
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await axios.patch(
-          oneStageUrl + invalidStage.id,
-          stageJSON,
-          { withCredentials: true }
-        );
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a full stage when squad_id is valid, but not a squad id', async () => { 
-      const invalidStage = {        
-        id: testStage.id,
-        squad_id: testStage.id,
-        stage: SquadStage.ENTRIES,        
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await axios.patch(
-          oneStageUrl + invalidStage.id,
-          stageJSON,
-          { withCredentials: true }
-        );
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a full stage when stage is null', async () => { 
-      const invalidStage = {        
-        id: testStage.id,        
-        stage: null
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await axios.patch(
-          oneStageUrl + invalidStage.id,
-          stageJSON,
-          { withCredentials: true }
-        );
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a full stage when stage is invalid', async () => { 
-      const invalidStage = {        
-        id: testStage.id,        
-        stage: 'test'
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await axios.patch(
-          oneStageUrl + invalidStage.id,
-          stageJSON,
-          { withCredentials: true }
-        );
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a full stage when stage_override_enabled is null', async () => { 
-      const invalidStage = {        
-        id: testStage.id,        
-        stage_override_enabled: null,
+
+    it('should NOT patch a full stage when stage_override_enabled is not included and stage_override_reason is valid', async () => { 
+      const invalidStage = {                          
         stage_override_reason: 'test reason'
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.patch(
-          oneStageUrl + invalidStage.id,
+        const response = await privateApi.patch(
+          oneStageUrl + toPatchId,
           stageJSON,
-          { withCredentials: true }
         );
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1815,16 +1581,14 @@ describe('Stages - API: /api/stages', () => {
     })
     it('should NOT patch a full stage when stage_override_enabled is invalid', async () => { 
       const invalidStage = {        
-        id: testStage.id,        
         stage_override_enabled: 'test',
         stage_override_reason: 'test reason'
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.patch(
-          oneStageUrl + invalidStage.id,
+        const response = await privateApi.patch(
+          oneStageUrl + toPatchId,
           stageJSON,
-          { withCredentials: true }
         );
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1837,15 +1601,13 @@ describe('Stages - API: /api/stages', () => {
     })
     it('should NOT patch a full stage when stage_override_enabled = TRUE and stage_override_reason is missing', async () => { 
       const invalidStage = {        
-        id: testStage.id,        
         stage_override_enabled: true,
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.patch(
-          oneStageUrl + invalidStage.id,
+        const response = await privateApi.patch(
+          oneStageUrl + toPatchId,
           stageJSON,
-          { withCredentials: true }
         );
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1857,17 +1619,15 @@ describe('Stages - API: /api/stages', () => {
       }
     })
     it('should NOT patch a full stage when stage_override_enabled = TRUE and stage_override_reason is null', async () => { 
-      const invalidStage = {        
-        id: testStage.id,        
+      const invalidStage = {                
         stage_override_enabled: true,
         stage_override_reason: null
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.patch(
-          oneStageUrl + invalidStage.id,
+        const response = await privateApi.patch(
+          oneStageUrl + toPatchId,
           stageJSON,
-          { withCredentials: true }
         );
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1879,17 +1639,15 @@ describe('Stages - API: /api/stages', () => {
       }
     })
     it('should NOT patch a full stage when stage_override_enabled = TRUE and stage_override_reason is blank', async () => { 
-      const invalidStage = {        
-        id: testStage.id,        
+      const invalidStage = {                
         stage_override_enabled: true,
         stage_override_reason: ''
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.patch(
-          oneStageUrl + invalidStage.id,
+        const response = await privateApi.patch(
+          oneStageUrl + toPatchId,
           stageJSON,
-          { withCredentials: true }
         );
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1901,17 +1659,15 @@ describe('Stages - API: /api/stages', () => {
       }
     })
     it('should NOT patch a full stage when stage_override_enabled = TRUE and stage_override_reason is invalid', async () => { 
-      const invalidStage = {        
-        id: testStage.id,        
+      const invalidStage = {                
         stage_override_enabled: true,
         stage_override_reason: 'a'.repeat(maxReasonLength + 1)
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.patch(
-          oneStageUrl + invalidStage.id,
+        const response = await privateApi.patch(
+          oneStageUrl + toPatchId,
           stageJSON,
-          { withCredentials: true }
         );
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1923,17 +1679,15 @@ describe('Stages - API: /api/stages', () => {
       }
     })
     it('should NOT patch a full stage when stage_override_enabled = FALSE and stage_override_reason is valid', async () => { 
-      const invalidStage = {        
-        id: testStage.id,        
+      const invalidStage = {                      
         stage_override_enabled: false,
         stage_override_reason: 'test reason'
       };
       const stageJSON = JSON.stringify(invalidStage);
       try {
-        const response = await axios.patch(
-          oneStageUrl + invalidStage.id,
+        const response = await privateApi.patch(
+          oneStageUrl + toPatchId,
           stageJSON,
-          { withCredentials: true }
         );
         expect(response.status).toBe(422);
       } catch (err) {
@@ -1968,18 +1722,15 @@ describe('Stages - API: /api/stages', () => {
     })
 
     it('should delete a stage', async () => {
-      const response = await axios.delete(
-        oneStageUrl + toDeleteStage.id,
-        { withCredentials: true }
+      const response = await privateApi.delete(
+        oneStageUrl + toDeleteStage.id,        
       );
       expect(response.status).toBe(200);
       didDelete = true;
     })
     it('should NOT delete a stage when ID is invalid', async () => {
       try {
-        const response = await axios.delete(oneStageUrl + "/invalid", {
-          withCredentials: true,
-        });
+        const response = await privateApi.delete(oneStageUrl + "/invalid");
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1991,9 +1742,7 @@ describe('Stages - API: /api/stages', () => {
     })
     it('should NOT delete a stage when ID is valid, but not a stage ID', async () => {
       try {
-        const response = await axios.delete(oneStageUrl + '/' + toDeleteStage.squad_id, {
-          withCredentials: true,
-        });
+        const response = await privateApi.delete(oneStageUrl + '/' + toDeleteStage.squad_id);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2004,9 +1753,7 @@ describe('Stages - API: /api/stages', () => {
       }
     })
     it('should not delete a stage when id is not found', async () => {
-      const response = await axios.delete(oneStageUrl + notFoundStageId, {
-        withCredentials: true,
-      });
+      const response = await privateApi.delete(oneStageUrl + notFoundStageId);
       expect(response.status).toBe(200);
       expect(response.data.count).toBe(0);
     })

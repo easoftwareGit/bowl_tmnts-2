@@ -171,7 +171,7 @@ describe("tests for lane validation", () => {
         id: 'abc_123',
       }
       const sanitizedLane = sanitizeLane(testLane)
-      expect(sanitizedLane.id).toEqual('')
+      expect(sanitizedLane.id).toEqual('abc_123') // sanitized, not validated
     })
     it('should return a sanitized lane when lane is NOT already sanitized', () => {
       // no numerical fields
@@ -180,7 +180,7 @@ describe("tests for lane validation", () => {
         squad_id: 'abc_123'
       }
       const sanitizedLane = sanitizeLane(testLane)      
-      expect(sanitizedLane.squad_id).toEqual('')
+      expect(sanitizedLane.squad_id).toEqual('abc_123') // sanitized, not validated
     })    
     it('should return a sanitized lane when numerical fields are null', () => {
       const testLane = {
@@ -371,7 +371,7 @@ describe("tests for lane validation", () => {
       expect(validLanes.errorCode).toEqual(ErrorCode.MISSING_DATA);
       expect(validLanes.lanes.length).toEqual(1);
     })
-    it('should return ErrorCode.MISSING_DATA when squad_id os not a valid squad_id', () => { 
+    it('should return ErrorCode.INVALID_DATA when squad_id os not a valid squad_id', () => { 
       const invalidLanes = [
         {
           ...mockLanesToPost[0],
@@ -388,7 +388,7 @@ describe("tests for lane validation", () => {
         },
       ]
       const validLanes = validateLanes(invalidLanes)
-      expect(validLanes.errorCode).toEqual(ErrorCode.MISSING_DATA);
+      expect(validLanes.errorCode).toEqual(ErrorCode.INVALID_DATA);
       expect(validLanes.lanes.length).toEqual(1);
     })
     it('should return ErrorCode.MISSING_DATA when in_use is missing', () => { 

@@ -94,22 +94,29 @@ export async function PATCH(
     if (!isValidBtDbId(id, "een")) {
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }  
-    const currentElimEntry = await prisma.elim_Entry.findUnique({
-      where: { id: id },
-    });
-    if (!currentElimEntry) {
-      return NextResponse.json({ error: "not found" }, { status: 404 });
+
+    // fake data that will pass sanitation and validation
+    const fakeElimEntry = {
+      ...initElimEntry,
+      id,
+      elim_id: "elm_00000000000000000000000000000000",
+      player_id: "ply_00000000000000000000000000000000",      
+      fee: "5",
     }
+
+    // populate toCheck with fake data 
+    const toCheck: elimEntryType = {
+      ...initElimEntry,
+      id,
+      elim_id: fakeElimEntry.elim_id,
+      player_id: fakeElimEntry.player_id,      
+      fee: fakeElimEntry.fee,
+    };    
 
     const json = await request.json();
     // populate toCheck with json
     const jsonProps = Object.getOwnPropertyNames(json);
-    const toCheck: elimEntryType = {
-      ...initElimEntry,      
-      elim_id: currentElimEntry.elim_id,
-      player_id: currentElimEntry.player_id,      
-      fee: currentElimEntry.fee + '',
-    };    
+
     let gotDataToPatch = false;
     if (jsonProps.includes("elim_id")) {
       toCheck.elim_id = json.elim_id;
@@ -125,14 +132,18 @@ export async function PATCH(
     }
 
     if (!gotDataToPatch) {
-      return NextResponse.json({ elimEntry: currentElimEntry }, { status: 200 });
+      return NextResponse.json({ error: "no data to patch" }, { status: 400 });
     }
+
     const toBePatched = sanitizeElimEntry(toCheck);
     const errCode = validateElimEntry(toBePatched);
     if (errCode !== ErrorCode.NONE) {
       let errMsg: string;
       switch (errCode) {
-        case ErrorCode.INVALID_DATA:
+        case ErrorCode.MISSING_DATA:
+          errMsg = 'missing data'
+          break;
+        case ErrorCode.INVALID_DATA:          
           errMsg = "invalid data";
           break;
         default:

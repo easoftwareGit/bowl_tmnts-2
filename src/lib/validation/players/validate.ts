@@ -1,5 +1,5 @@
 import { blankPlayer } from "@/lib/db/initVals";
-import { sanitizeName } from "@/lib/validation/sanitize";
+import { sanitizeBtDbId, sanitizeName } from "@/lib/validation/sanitize";
 import type { idTypes, playerType, validPlayersType } from "@/lib/types/types";
 import {  
   isValidBtDbId,  
@@ -160,11 +160,11 @@ export const sanitizePlayer = (player: playerType): playerType => {
   if (!player) return null as any;
   const sanitizedPlayer: playerType = { ...blankPlayer };
   sanitizedPlayer.average = -1; // sanitize to invalid value, but not dangerous
-  if (validPlayerId(player.id)) {
-    sanitizedPlayer.id = player.id;
+  if (player.id) {
+    sanitizedPlayer.id = sanitizeBtDbId(player.id);
   }
-  if (validPlayerFkId(player.squad_id, "sqd")) {
-    sanitizedPlayer.squad_id = player.squad_id;
+  if (player.squad_id) {
+    sanitizedPlayer.squad_id = sanitizeBtDbId(player.squad_id);
   }
   sanitizedPlayer.first_name = sanitizeName(player.first_name);
   if (player.average === null || isNumber(player.average)) {

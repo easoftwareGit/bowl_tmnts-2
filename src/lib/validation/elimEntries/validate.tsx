@@ -4,7 +4,7 @@ import type { elimEntryType, validElimEntriesType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { maxMoney, minElimEntryFee } from "../constants";
 import { ErrorCode } from "@/lib/enums/enums";
-import { sanitizeCurrency } from "../sanitize";
+import { sanitizeBtDbId, sanitizedMoneyString } from "../sanitize";
 
 /**
  * checks if elimEntry object has missing data - DOES NOT SANITIZE OR VALIDATE
@@ -67,23 +67,6 @@ const validElimEntryData = (elimEntry: elimEntryType): ErrorCode => {
 }
 
 /**
- * sanitizes an elim entry money string
- *   "" is valid, and sanitized to "0"
- *   all 0's is ok, return "0"
- *   sanitizeCurrency removes trailing zeros
- *
- * @param moneyStr - money string to sanitize
- * @returns {string} - sanitized money string
- */
-const sanitizedElimEntryMoney = (moneyStr: string): string => {
-  if (moneyStr === null
-    || moneyStr === undefined
-    || typeof moneyStr !== "string") return "";  
-  if (moneyStr === "" || moneyStr.replace(/^0+/, '') === "") return "0";
-  return sanitizeCurrency(moneyStr);
-}
-
-/**
  * sanitizes elimEntry
  * 
  * @param {elimEntryType} elimEntry - elimEntry to sanitize
@@ -94,16 +77,16 @@ export const sanitizeElimEntry = (elimEntry: elimEntryType): elimEntryType => {
   const sanitziedElimEntry: elimEntryType = {
     ...blankElimEntry
   }
-  if (isValidBtDbId(elimEntry.id, "een")) {
-    sanitziedElimEntry.id = elimEntry.id;
+  if (elimEntry.id) {
+    sanitziedElimEntry.id = sanitizeBtDbId(elimEntry.id);
   }
-  if (isValidBtDbId(elimEntry.elim_id, "elm")) {
-    sanitziedElimEntry.elim_id = elimEntry.elim_id;
+  if (elimEntry.elim_id) {
+    sanitziedElimEntry.elim_id = sanitizeBtDbId(elimEntry.elim_id);
   }
-  if (isValidBtDbId(elimEntry.player_id, "ply")) {
-    sanitziedElimEntry.player_id = elimEntry.player_id;
+  if (elimEntry.player_id) {
+    sanitziedElimEntry.player_id = sanitizeBtDbId(elimEntry.player_id);
   }
-  sanitziedElimEntry.fee = sanitizedElimEntryMoney(elimEntry.fee);
+  sanitziedElimEntry.fee = sanitizedMoneyString(elimEntry.fee);
   return sanitziedElimEntry;
 }
 

@@ -9,7 +9,7 @@ import {
   maxGames,  
 } from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
-import { sanitizeCurrency } from "@/lib/validation/sanitize";
+import { sanitizeBtDbId, sanitizeCurrency } from "@/lib/validation/sanitize";
 import { validMoney } from "@/lib/currency/validate";
 import type { brktType, validBrktsType } from "@/lib/types/types";
 import { blankBrkt, defaultBrktGames, defaultBrktPlayers } from "@/lib/db/initVals";
@@ -178,14 +178,14 @@ export const sanitizeBrkt = (brkt: brktType): brktType => {
     players: null as any,
     sort_order: null as any,
   };
-  if (isValidBtDbId(brkt.id, "brk")) {
-    sanitizedBrkt.id = brkt.id;
+  if (brkt.id) {
+    sanitizedBrkt.id = sanitizeBtDbId(brkt.id);
   }
-  if (isValidBtDbId(brkt.div_id, "div")) {
-    sanitizedBrkt.div_id = brkt.div_id;
+  if (brkt.div_id) {
+    sanitizedBrkt.div_id = sanitizeBtDbId(brkt.div_id);
   }
-  if (isValidBtDbId(brkt.squad_id, "sqd")) {
-    sanitizedBrkt.squad_id = brkt.squad_id;
+  if (brkt.squad_id) {
+    sanitizedBrkt.squad_id = sanitizeBtDbId(brkt.squad_id);
   }
   if ((brkt.start === null) || isNumber(brkt.start)) {
     sanitizedBrkt.start = brkt.start;

@@ -6,6 +6,7 @@ import { isValidBtDbId } from "@/lib/validation/validation";
 import { ErrorCode } from "@/lib/enums/enums";
 import { sanitizeBowl, validateBowl } from "../../../../../lib/validation/bowls/validate";
 import { getErrorStatus, standardCatchReturn } from "@/app/api/apiCatch";
+import { init } from "next/dist/compiled/webpack/webpack";
 
 export async function GET(
   request: Request,
@@ -97,39 +98,50 @@ export async function PATCH(
       return NextResponse.json({ error: "not found" }, { status: 404 });
     }
 
-    const currentBowl = await prisma.bowl.findUnique({
-      where: {
-        id: id,
-      },
-    });    
-    if (!currentBowl) {
-      return NextResponse.json({ error: "not found" }, { status: 404 });
+    const fakeBowl = {
+      ...initBowl,      
+      id: "bwl_00000000000000000000000000000000",
+      bowl_name: "Fake Lanes",
+      city: "Faveville",
+      state: "CA",
+      url: "http://fakelanes.com",
     }
 
-    const json = await request.json();
-    // populate toCheck with json
-    const jsonProps = Object.getOwnPropertyNames(json);
+    // populate toCheck with fake data 
     const toCheck: bowlType = {
       ...initBowl,
-      bowl_name: currentBowl.bowl_name,
-      city: currentBowl.city,
-      state: currentBowl.state,
-      url: currentBowl.url,
+      id: fakeBowl.id,
+      bowl_name: fakeBowl.bowl_name,
+      city: fakeBowl.city,
+      state: fakeBowl.state,
+      url: fakeBowl.url,
     };
+
+    const json = await request.json();
+    // re-populate toCheck with json data, only for fields that are in json
+    const jsonProps = Object.getOwnPropertyNames(json);   
+    let gotDataToPatch = false;
 
     if (jsonProps.includes("bowl_name")) {
       toCheck.bowl_name = json.bowl_name;
+      gotDataToPatch = true;
     }
     if (jsonProps.includes("city")) {
       toCheck.city = json.city;
+      gotDataToPatch = true;
     }
     if (jsonProps.includes("state")) {
       toCheck.state = json.state;
+      gotDataToPatch = true;
     }
     if (jsonProps.includes("url")) {
       toCheck.url = json.url;
+      gotDataToPatch = true;
     }
 
+    if (!gotDataToPatch) {
+      return NextResponse.json({ error: "no data to patch" }, { status: 400 });
+    }
     const toBePatched = sanitizeBowl(toCheck);
     const errCode = validateBowl(toBePatched);
     if (errCode !== ErrorCode.NONE) {

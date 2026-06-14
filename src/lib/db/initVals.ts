@@ -29,8 +29,9 @@ import type {
   justStageType,
   justStageOverrideType,
   fullStageType,
+  tmntMoneyType,
 } from "../types/types";
-import { User, Bowl, Tmnt, SquadStage } from "@prisma/client";
+import { User, Bowl, Tmnt, SquadStage, MoneyDescrip } from "@prisma/client";
 import { todayStr } from "@/lib/dateTools";
 import { btDbUuid } from "../uuid";
 import { startOfToday } from "date-fns";
@@ -394,6 +395,10 @@ export const initBrkt: brktType = {
 export const blankBrkt: brktType = {
   ...initBrkt,
   id: "",
+  start: null as any,
+  games: null as any,
+  players: null as any,
+  sort_order: null as any,  
 }
 
 export const initBrkts: brktType[] = [];
@@ -548,6 +553,30 @@ export const blankGame: gameType = {
   ...initGame,  
   id: "",
   game_num: 0,
+}
+
+export const initTmntMoney: tmntMoneyType = {
+  id: btDbUuid('mon'),
+  event_id: "",
+  squad_id: "",
+  div_id: "",  
+  descrip: MoneyDescrip.ERROR,
+  amount: 0,
+  pot_id: null,
+  brkt_id: null,
+  elim_id: null,
+  sort_order: 0,  
+}
+
+export const blankTmntMoney: tmntMoneyType = {
+  ...initTmntMoney,
+  id: "",
+  event_id: null as any,
+  squad_id: null as any,
+  div_id: null as any,
+  descrip: null as any,
+  amount: null as any,
+  sort_order: null as any,
 }
 
 export const blankDataOneTmnt = (): dataOneTmntType => {

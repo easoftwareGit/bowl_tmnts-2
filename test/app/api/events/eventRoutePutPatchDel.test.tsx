@@ -1,4 +1,5 @@
-import axios, { AxiosError } from "axios";
+import { privateApi } from "@/lib/api/axios";
+import { AxiosError } from "axios";
 import { baseEventsApi } from "@/lib/api/apiPaths";
 import { testBaseEventsApi } from "../../../testApi";
 import type { eventType } from "@/lib/types/types";
@@ -53,6 +54,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
   const notFoundId = "evt_01234567890123456789012345678901";
   const notfoundParentId = "tmt_01234567890123456789012345678901";
   const nonEventId = "usr_01234567890123456789012345678901";
+  const userId = "usr_01234567890123456789012345678901";
 
   const event2Id = 'evt_dadfd0e9c11a4aacb87084f1609a0afd';
   const event5Id = 'evt_cb55703a8a084acb86306e2944320e8d'; // doubles
@@ -64,7 +66,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     const resetEvent = async () => {
       // make sure test event is reset in database
       const eventJSON = JSON.stringify(testEvent);
-      await axios.put(oneEventUrl + testEvent.id, eventJSON, { withCredentials: true });      
+      await privateApi.put(oneEventUrl + testEvent.id, eventJSON);      
     }
 
     const putEvent = { 
@@ -117,9 +119,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
 
     it('should update an event by ID', async () => { 
       const eventJSON = JSON.stringify(putEvent);
-      const response = await axios.put(oneEventUrl + testEvent.id, eventJSON, {
-        withCredentials: true
-      });
+      const response = await privateApi.put(oneEventUrl + testEvent.id, eventJSON);
       expect(response.status).toBe(200);
       didPut = true;
       const puttedEvent = response.data.event;
@@ -138,21 +138,19 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       expect(puttedEvent.sort_order).toEqual(putEvent.sort_order);
     })
     it('should update an event when by ID with blank added money', async () => {
-      const testEvent = {
+      const otherEvent = {
         ...putEvent,
         added_money: '',
       }
-      const eventJSON = JSON.stringify(testEvent); 
-      const response = await axios.put(oneEventUrl + testEvent.id, eventJSON, {
-        withCredentials: true
-      });
+      const eventJSON = JSON.stringify(otherEvent); 
+      const response = await privateApi.put(oneEventUrl + otherEvent.id, eventJSON);
       expect(response.status).toBe(200);
       didPut = true;
       const puttedEvent = response.data.event;
       expect(puttedEvent.added_money).toEqual('0');
     })
-    it('should update an event when by ID with all money flieds blank', async () => {
-      const testEvent = {
+    it('should update an event when by ID with all money fields blank', async () => {
+      const otherEvent = {
         ...putEvent,
         added_money: '',
         entry_fee: '',
@@ -162,10 +160,8 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         expenses: '',
         lpox: '',
       }
-      const eventJSON = JSON.stringify(testEvent);     
-      const response = await axios.put(oneEventUrl + testEvent.id, eventJSON, {
-        withCredentials: true
-      });      
+      const eventJSON = JSON.stringify(otherEvent);     
+      const response = await privateApi.put(oneEventUrl + otherEvent.id, eventJSON);
       expect(response.status).toBe(200);
       didPut = true;
       const puttedEvent = response.data.event;
@@ -189,12 +185,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         lpox: '80.002',
       }
       const eventJSON = JSON.stringify(validEvent);
-      const response = await axios({
-        method: "put",
-        data: eventJSON,
-        withCredentials: true,
-        url: oneEventUrl + testEvent.id,
-      })
+      const response = await privateApi.put(oneEventUrl + testEvent.id, eventJSON)
       const puttedEvent = response.data.event;
       expect(response.status).toBe(200);
       expect(puttedEvent.event_name).toEqual('scriptNamescript');
@@ -208,9 +199,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     it('should NOT update an event by ID when ID is invalid', async () => {
       const eventJSON = JSON.stringify(putEvent);
       try {
-        const response = await axios.put(oneEventUrl + 'test', eventJSON, {
-          withCredentials: true
-        });
+        const response = await privateApi.put(oneEventUrl + 'test', eventJSON);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -223,9 +212,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     it('should NOT update an event by ID when ID is valid, but not an event ID', async () => {
       const eventJSON = JSON.stringify(putEvent);
       try {
-        const response = await axios.put(oneEventUrl + nonEventId, eventJSON, {
-          withCredentials: true
-        });
+        const response = await privateApi.put(oneEventUrl + nonEventId, eventJSON);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -240,9 +227,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     it('should NOT update an event by ID when ID is not found', async () => {
       const eventJSON = JSON.stringify(putEvent);
       try {
-        const response = await axios.put(oneEventUrl + notFoundId, eventJSON, {
-          withCredentials: true
-        });
+        const response = await privateApi.put(oneEventUrl + notFoundId, eventJSON);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -255,7 +240,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
     })
     it('should NOT update an event by ID when missing tmnt id', async () => {
-      // need to pass a vlaid tmnt id for data validation
+      // need to pass a valid tmnt id for data validation
       // even though it is not used
       const invalidEvent = {
         ...putEvent,
@@ -263,12 +248,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -285,12 +265,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -307,12 +282,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -329,12 +299,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -351,12 +316,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -373,12 +333,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -395,12 +350,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -417,12 +367,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -439,12 +384,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -461,12 +401,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -483,12 +418,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -507,12 +437,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -531,12 +456,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -553,12 +473,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -575,12 +490,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -597,12 +507,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -619,12 +524,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -641,12 +541,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -663,12 +558,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -685,12 +575,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -707,12 +592,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -729,12 +609,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -751,12 +626,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -773,12 +643,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -795,12 +660,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -817,12 +677,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -839,12 +694,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -861,12 +711,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -883,12 +728,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -905,12 +745,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -927,12 +762,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -949,12 +779,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -971,12 +796,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -993,12 +813,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1015,12 +830,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1037,12 +847,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1059,12 +864,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1081,12 +881,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1103,12 +898,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1125,12 +915,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1147,12 +932,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1169,12 +949,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1191,12 +966,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1213,12 +983,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1235,12 +1000,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1257,12 +1017,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1279,12 +1034,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1301,12 +1051,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1323,12 +1068,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1345,12 +1085,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1367,12 +1102,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1389,12 +1119,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1411,12 +1136,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1433,12 +1153,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + testEvent.id,
-        });
+        const response = await privateApi.put(oneEventUrl + testEvent.id, invalidJSON);
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1458,12 +1173,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "put",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + event5Id,
-        });
+        const response = await privateApi.put(oneEventUrl + event5Id, invalidJSON);
         expect(response.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1477,10 +1187,29 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
 
   describe('PATCH by ID - API: /api/events/event/:id', () => {
 
-    const doResetEvent = async () => {
+    const toPatchId = 'evt_bd63777a6aee43be8372e4d008c1d6d0';
+
+    const toPatch = {
+      ...initEvent,
+      id: toPatchId,
+      tmnt_id: "tmt_467e51d71659d2e412cbc64a0d19ecb4",
+      event_name: "Singles",
+      team_size: 1,
+      games: 6,
+      entry_fee: '80',
+      lineage: '18',
+      prize_fund: '55',
+      other: '2',
+      expenses: '5',
+      added_money: '0',
+      lpox: '80',
+      sort_order: 1,
+    }
+
+    const resetPatch = async () => {
       try {
-        const eventJSON = JSON.stringify(testEvent);
-        await axios.put(oneEventUrl + testEvent.id, eventJSON, { withCredentials: true });
+        const eventJSON = JSON.stringify(toPatch);
+        await privateApi.put(oneEventUrl + toPatchId, eventJSON);
       } catch (err) {
         if (err instanceof AxiosError) console.log(err.message);
       }
@@ -1489,7 +1218,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     let didPatch = false;
 
     beforeAll(async () => {
-      await doResetEvent();
+      await resetPatch();
     })
 
     beforeEach(() => {
@@ -1498,132 +1227,65 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
 
     afterEach(async () => {
       if (didPatch) {
-        await doResetEvent();
+        await resetPatch();
       }
     })
 
-    it('should return 200 when just passing in tmnt_id, no patching done', async () => {
-      // last tmnt is seeds, also used for delete test 
-      const tmntNoEventsId = 'tmt_e134ac14c5234d708d26037ae812ac33';
-      const patchEvent = {
-        ...blankEvent,
-        tmnt_id: tmntNoEventsId,
-      }
-      const eventJSON = JSON.stringify(patchEvent);
-      const response = await axios.patch(oneEventUrl + patchEvent.id, eventJSON, {
-        withCredentials: true
-      });
-      const patchedEvent = response.data.event;
-      expect(response.status).toBe(200);
-      didPatch = true;
-      // for tmnt_id, check vs testEvent, not patchEvent 
-      expect(patchedEvent.tmnt_id).toEqual(testEvent.tmnt_id);
-    })
-    it('should patch sanitized data in an event by ID', async () => {
-      const patchEvent = {
-        ...blankEvent,
-        event_name: '<script>Name</script>',        
-        entry_fee: '81.001',
-        expenses: '6.001',
-        lpox: '81.002',
-      }
-      const eventJSON = JSON.stringify(patchEvent);
-      const response = await axios({
-        method: "patch",
-        data: eventJSON,
-        withCredentials: true,
-        url: oneEventUrl + blankEvent.id,
-      })
-      const patchedEvent = response.data.event;
-      expect(response.status).toBe(200);
-      didPatch = true;
-      expect(patchedEvent.event_name).toEqual('scriptNamescript');
-      expect(patchedEvent.entry_fee).toEqual('81');
-      expect(patchedEvent.expenses).toEqual('6');
-    })
-    it('should return 200 when just passing in blank tmnt_id, no patching done', async () => {            
-      const patchEvent = {
-        ...blankEvent,
-        tmnt_id: '',
-      }
-      const eventJSON = JSON.stringify(patchEvent);      
-      // do not patch tmnt_id, no error
-      const response = await axios.patch(oneEventUrl + patchEvent.id, eventJSON, {
-        withCredentials: true
-      })
-      const patchedEvent = response.data.event;
-      expect(response.status).toBe(200);
-      didPatch = true;
-      // for tmnt_id, check vs testEvent, not patchEvent 
-      expect(patchedEvent.tmnt_id).toEqual(testEvent.tmnt_id);
-    })
     it('should patch event_name in an event by ID', async () => {
-      const patchEvent = {
-        ...blankEvent,
+      const patchEvent = {        
         event_name: 'Updated Event Name',
       }
       const eventJSON = JSON.stringify(patchEvent);
-      const response = await axios.patch(oneEventUrl + patchEvent.id, eventJSON, {
-        withCredentials: true
-      })
+      const response = await privateApi.patch(oneEventUrl+ toPatchId, eventJSON)
       const patchedEvent = response.data.event;
       expect(response.status).toBe(200);
       didPatch = true;
       expect(patchedEvent.event_name).toEqual(patchEvent.event_name);
     })
     it('should patch team_size in an event by ID', async () => {
-      const patchEvent = {
-        ...blankEvent,
+      const patchEvent = {        
         team_size: 2,
       }
       const eventJSON = JSON.stringify(patchEvent);
-      const response = await axios.patch(oneEventUrl + patchEvent.id, eventJSON, {
-        withCredentials: true
-      })
+      const response = await privateApi.patch(oneEventUrl+ toPatchId, eventJSON)
       const patchedEvent = response.data.event;
       expect(response.status).toBe(200);
       didPatch = true;
       expect(patchedEvent.team_size).toEqual(patchEvent.team_size);
     })
     it('should patch games in an event by ID', async () => {
-      const patchEvent = {
-        ...blankEvent,
+      const patchEvent = {        
         games: 4,
       }
       const eventJSON = JSON.stringify(patchEvent);
-      const response = await axios.patch(oneEventUrl + patchEvent.id, eventJSON, {
-        withCredentials: true
-      })
+      const response = await privateApi.patch(oneEventUrl+ toPatchId, eventJSON)
       const patchedEvent = response.data.event;
       expect(response.status).toBe(200);
       didPatch = true;
       expect(patchedEvent.games).toEqual(patchEvent.games);
     })
     it('should patch added_money in an event by ID', async () => {
-      const patchEvent = {
-        ...blankEvent,
+      const patchEvent = {        
         added_money: '10',
       }
       const eventJSON = JSON.stringify(patchEvent);
-      const response = await axios.patch(oneEventUrl + patchEvent.id, eventJSON, {
-        withCredentials: true
-      })
+      const response = await privateApi.patch(oneEventUrl+ toPatchId, eventJSON)
       const patchedEvent = response.data.event;
       expect(response.status).toBe(200);
       didPatch = true;
       expect(patchedEvent.added_money).toEqual(patchEvent.added_money);
     })
     it('should patch entry fee, and lineage in an event by ID', async () => {
-      const patchEvent = {
-        ...blankEvent,
+      const patchEvent = {        
         entry_fee: '81',
+        prize_fund: '55',
+        other: '2',
+        expenses: '5',
         lineage: '19',
         lpox: '81',
       }
       const eventJSON = JSON.stringify(patchEvent);
-      const response = await axios.patch(oneEventUrl + patchEvent.id, eventJSON, {
-        withCredentials: true
-      })
+      const response = await privateApi.patch(oneEventUrl+ toPatchId, eventJSON)
       const patchedEvent = response.data.event;
       expect(response.status).toBe(200);
       didPatch = true;
@@ -1631,16 +1293,16 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       expect(patchedEvent.lineage).toEqual(patchEvent.lineage);
     })
     it('should patch entry fee, and prize fund in an event by ID', async () => {
-      const patchEvent = {
-        ...blankEvent,
+      const patchEvent = {        
         entry_fee: '81',
         prize_fund: '56',
+        other: '2',
+        expenses: '5',
+        lineage: '18',
         lpox: '81',
       }
       const eventJSON = JSON.stringify(patchEvent);
-      const response = await axios.patch(oneEventUrl + patchEvent.id, eventJSON, {
-        withCredentials: true
-      })
+      const response = await privateApi.patch(oneEventUrl+ toPatchId, eventJSON)
       const patchedEvent = response.data.event;
       expect(response.status).toBe(200);
       didPatch = true;
@@ -1648,16 +1310,16 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       expect(patchedEvent.prize_fund).toEqual(patchEvent.prize_fund);      
     })
     it('should patch entry fee and other in an event by ID', async () => {
-      const patchEvent = {
-        ...blankEvent,
+      const patchEvent = {        
         entry_fee: '81',
         other: '3',
+        prize_fund: '55',        
+        expenses: '5',
+        lineage: '18',
         lpox: '81',
       }
       const eventJSON = JSON.stringify(patchEvent);
-      const response = await axios.patch(oneEventUrl + patchEvent.id, eventJSON, {
-        withCredentials: true
-      })
+      const response = await privateApi.patch(oneEventUrl+ toPatchId, eventJSON)
       const patchedEvent = response.data.event;
       expect(response.status).toBe(200);
       didPatch = true;
@@ -1665,34 +1327,107 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       expect(patchedEvent.other).toEqual(patchEvent.other);      
     })
     it('should patch entry fee, expenses, lpox in an event by ID', async () => {
-      const patchEvent = {
-        ...blankEvent,
+      const patchEvent = {        
         entry_fee: '81',
         expenses: '6',
+        other: '2',
+        prize_fund: '55',                
+        lineage: '18',
         lpox: '81',
       }
       const eventJSON = JSON.stringify(patchEvent);
-      const response = await axios.patch(oneEventUrl + patchEvent.id, eventJSON, {
-        withCredentials: true
-      })
+      const response = await privateApi.patch(oneEventUrl+ toPatchId, eventJSON)
       const patchedEvent = response.data.event;
       expect(response.status).toBe(200);
       didPatch = true;
       expect(patchedEvent.entry_fee).toEqual(patchEvent.entry_fee);
       expect(patchedEvent.expenses).toEqual(patchEvent.expenses);
     })
+
+    it('should not patch event by ID when just passing in ID', async () => {
+      try {
+        const invalidJSON = JSON.stringify({          
+          id: toPatchId,
+        })
+        const response = await privateApi.patch(oneEventUrl + toPatchId, invalidJSON)
+        expect(response.status).toBe(400);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(400);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not patch event by ID when ID is invalid', async () => {
+      try {
+        const invalidJSON = JSON.stringify({          
+          sort_order: 1234,
+        })
+        const response = await privateApi.patch(oneEventUrl + 'test', invalidJSON)
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not event money by ID when ID is valid, but not found', async () => {
+      try {
+        const invalidJSON = JSON.stringify({          
+          sort_order: 1234,
+        })
+        const response = await privateApi.patch(oneEventUrl + notFoundId, invalidJSON)
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should not patch event by ID when ID is valid, but not a event id', async () => {
+      try {
+        const invalidJSON = JSON.stringify({          
+          sort_order: 1234,
+        })
+        const response = await privateApi.patch(oneEventUrl + userId, invalidJSON)
+        expect(response.status).toBe(404);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(404);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+
+    it('should return 400 when just passing in tmnt_id, no patching done', async () => {      
+      const tmntNoEventsId = 'tmt_e134ac14c5234d708d26037ae812ac33';
+      try {
+        const invalidJSON = JSON.stringify({          
+          tmnt_id: tmntNoEventsId,
+        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
+        expect(response.status).toBe(400);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(400);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+
     it('should not patch event name when event name is missing in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           event_name: "",
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1704,16 +1439,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch event name when event name is too long in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           event_name: "a".repeat(256),
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1725,16 +1454,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch team size when team size is not a nummber an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           team_size: 'abc',
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1746,16 +1469,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch team size when team size is too low in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           team_size: 0,
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1767,16 +1484,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch team size when team size is too high in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           team_size: 1001,
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1788,16 +1499,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch games when games is not a number in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           games: 'abc',
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1809,16 +1514,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch games when games is too low in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           games: 0,
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1830,16 +1529,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch games when games is too high in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           games: 1001,
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1851,16 +1544,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch added money when added money is a number not a string in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           added_money: 200 as any,
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1872,16 +1559,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch added money when added money is not a number in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           added_money: 'abc',
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1893,16 +1574,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch added money when added money is negitive in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           added_money: '-1',
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1914,16 +1589,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch added money when added money is too high in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
-          added_money: '1234567',
+        const invalidJSON = JSON.stringify({          
+          added_money: '1234567890',
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1935,16 +1604,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch entry fee when entry fee is a number not a string, in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           entry_fee: 100 as any,
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1956,16 +1619,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch entry fee when entry fee is not a number in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           entry_fee: 'abc',
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1977,16 +1634,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch entry fee when entry fee is negitive in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           entry_fee: '-1',
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -1998,16 +1649,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch entry fee when entry fee is too high in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           entry_fee: '1234567',
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2019,16 +1664,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch lineage when lineage is a number not a string,  in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           lineage: 20 as any,
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2040,16 +1679,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch lineage when lineage is not a number in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           lineage: 'abc',
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2061,16 +1694,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch lineage when lineage is negitive in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           lineage: '-1',
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2082,16 +1709,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch lineage when lineage is too high in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           lineage: '1234567',
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2103,16 +1724,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch prize fund when prize fund is a number not a string, in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           prize_fund: 75 as any,
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2124,16 +1739,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch prize fund when prize fund is not a number in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           prize_fund: 'abc',
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2146,15 +1755,9 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     it('should not patch prize fund when prize fund is negitive in an event by ID', async () => {
       try {
         const invalidJSON = JSON.stringify({
-          ...blankEvent,
           prize_fund: '-1',
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2166,16 +1769,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch prize fund when prize fund is too high in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           prize_fund: '1234567',
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2187,16 +1784,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch other when other is not number not a string, in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           other: 2 as any,
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2208,16 +1799,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch other when other is not a number in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           other: 'abc',
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2229,16 +1814,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch other when other is negitive in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           other: '-1',
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2250,16 +1829,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch other when other is too high in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           other: '1234567',
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2271,16 +1844,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch expenses when expenses is a number not a string, in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           expenses: 10 as any,
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2292,16 +1859,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch expenses when expenses is not a number in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           expenses: 'abc',
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2313,16 +1874,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch expenses when expenses is negitive in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           expenses: '-1',
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2334,16 +1889,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch expenses when expenses is too high in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           expenses: '1234567',
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2355,16 +1904,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch sort_order when sort_order is not a number in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           sort_order: 'abc',
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2376,16 +1919,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch sort_order when sort_order is too low in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           sort_order: 0,
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2397,16 +1934,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch sort_order when sort_order is too high in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           sort_order: 1234567,
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2418,16 +1949,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch event when entry fee !== lpox in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           lpox: '81',
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2439,16 +1964,10 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should not patch event when entry fee !== (lineage + prize fund + other + expenses) in an event by ID', async () => {
       try {
-        const invalidJSON = JSON.stringify({
-          ...blankEvent,
+        const invalidJSON = JSON.stringify({          
           entry_fee: '81',
         })
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + blankEvent.id,
-        })
+        const response = await privateApi.patch(oneEventUrl+ toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2460,20 +1979,14 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should NOT update an event by ID when tmnt_id + event_name are not unique', async () => {
       const TriosName = 'Trios';      
-      const invalidEvent = {
-        ...blankEvent,
+      const invalidEvent = {        
         tmnt_id: teamsTmntId,   
         event_name: TriosName,
         sort_order: 2,
       }
       const invalidJSON = JSON.stringify(invalidEvent);
       try {
-        const response = await axios({
-          method: "patch",
-          data: invalidJSON,
-          withCredentials: true,
-          url: oneEventUrl + event5Id,
-        });
+        const response = await privateApi.patch(oneEventUrl + event5Id, invalidJSON);
         expect(response.status).toBe(409);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2483,6 +1996,27 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
         }
       }
     })
+
+    it('should patch sanitized data in an event by ID', async () => {
+      const patchEvent = {        
+        event_name: '<script>Name</script>',        
+        entry_fee: '81.001',
+        expenses: '6.001',
+        added_money: '100.001',
+        other: '2.002',
+        lineage: '18.002',
+        prize_fund: '55.002',
+        lpox: '81.002',
+      }
+      const eventJSON = JSON.stringify(patchEvent);
+      const response = await privateApi.patch(oneEventUrl+ toPatchId, eventJSON)
+      const patchedEvent = response.data.event;
+      expect(response.status).toBe(200);
+      didPatch = true;
+      expect(patchedEvent.event_name).toEqual('scriptNamescript');
+      expect(patchedEvent.entry_fee).toEqual('81');
+      expect(patchedEvent.expenses).toEqual('6');
+    })    
   })
 
   describe('DELETE by ID - API: /api/events/event/:id', () => {
@@ -2515,7 +2049,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       // if deleted event, add event back
       try {
         const eventJSON = JSON.stringify(toDelEvent);
-        await axios.post(url, eventJSON, { withCredentials: true });
+        await privateApi.post(url, eventJSON);
       } catch (err) {
         if (err instanceof Error) console.log(err.message);
       }
@@ -2523,9 +2057,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
 
     it('should delete an event by ID', async () => {
       try {
-        const response = await axios.delete(oneEventUrl + toDelEvent.id, {
-          withCredentials: true
-        })
+        const response = await privateApi.delete(oneEventUrl + toDelEvent.id)
         expect(response.status).toBe(200);
         didDel = true;
       } catch (err) {
@@ -2537,17 +2069,13 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
       }
     })
     it('should NOT delete an event by ID when ID is valid, but not found', async () => {
-      const response = await axios.delete(oneEventUrl + notFoundId, {
-        withCredentials: true
-      });
+      const response = await privateApi.delete(oneEventUrl + notFoundId);
       expect(response.status).toBe(200);
       expect(response.data.count).toBe(0);
     })    
     it('should NOT delete an event by ID when ID is invalid', async () => {
       try {
-        const response = await axios.delete(oneEventUrl + 'test', {
-          withCredentials: true
-        });
+        const response = await privateApi.delete(oneEventUrl + 'test');
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -2559,9 +2087,7 @@ describe('Events - PUT, PATCH, DELETE API: /api/events/event/:id', () => {
     })
     it('should NOT delete an event by ID when ID is valid, but not an event ID', async () => {
       try {
-        const response = await axios.delete(oneEventUrl + nonEventId, {
-          withCredentials: true
-        });
+        const response = await privateApi.delete(oneEventUrl + nonEventId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {

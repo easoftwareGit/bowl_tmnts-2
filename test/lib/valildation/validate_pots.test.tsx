@@ -246,7 +246,7 @@ describe("tests for pot validation", () => {
         pot_type: '<script>Game</script>' as any,
       }
       const sanitizedPot = sanitizePot(testPot)
-      expect(sanitizedPot.pot_type).toEqual('Game')
+      expect(sanitizedPot.pot_type).toEqual('')
     })
     it('should return sanitized pot when pot has an invalid id', () => {
       const testPot = {
@@ -254,7 +254,7 @@ describe("tests for pot validation", () => {
         id: 'test',
       }
       const sanitizedPot = sanitizePot(testPot)
-      expect(sanitizedPot.id).toEqual('')
+      expect(sanitizedPot.id).toEqual('test') // sanitized, but not valid
     })
     it('should return sanitized pot when pot is not already sanitized', () => {
       // no numerical fields
@@ -266,9 +266,9 @@ describe("tests for pot validation", () => {
         fee: "1234567890",        
       }
       const sanitizedPot = sanitizePot(testPot)
-      expect(sanitizedPot.div_id).toEqual('')
-      expect(sanitizedPot.squad_id).toEqual('')
-      expect(sanitizedPot.pot_type).toEqual('')
+      expect(sanitizedPot.div_id).toEqual('abc_123') // sanitized, but not valid
+      expect(sanitizedPot.squad_id).toEqual('usr_12345678901234567890123456789012') // sanitized, but not valid
+      expect(sanitizedPot.pot_type).toEqual('') // sanitized, but not valid
       expect(sanitizedPot.fee).toEqual('')      
     })
     it('should return sanitized pot when pot numerical values are null', () => {
@@ -423,7 +423,7 @@ describe("tests for pot validation", () => {
         expect(validPots.pots[i].sort_order).toBe(potsToValidate[i].sort_order)
       }
     })
-    it('should return ErrorCode.NONE when data is sanitized', () => { 
+    it('should return ErrorCode.MISSING_DATA when data is sanitized, but invalid', () => { 
       const invalidPots = [
         {
           ...mockPotsToPost[0],
@@ -437,7 +437,7 @@ describe("tests for pot validation", () => {
         },
       ]
       const validPots = validatePots(invalidPots)
-      expect(validPots.errorCode).toBe(ErrorCode.NONE)
+      expect(validPots.errorCode).toBe(ErrorCode.MISSING_DATA)
     })
     it('should return ErrorCode.MISSING_DATA when data pot_type is not valid (sanitized to blank)', () => { 
       const invalidPots = [
@@ -488,7 +488,7 @@ describe("tests for pot validation", () => {
       expect(validPots.errorCode).toBe(ErrorCode.MISSING_DATA)
       expect(validPots.pots.length).toBe(1)
     })
-    it('should return ErrorCode.MISSING_DATA when squad_id is not a valid squad_id', () => {
+    it('should return ErrorCode.INVALID_DATA when squad_id is not a valid squad_id', () => {
       const invalidPots = [
         {
           ...mockPotsToPost[0],
@@ -502,9 +502,9 @@ describe("tests for pot validation", () => {
         },
       ]
       const validPots = validatePots(invalidPots)
-      expect(validPots.errorCode).toBe(ErrorCode.MISSING_DATA)
+      expect(validPots.errorCode).toBe(ErrorCode.INVALID_DATA)
     })
-    it('should return ErrorCode.MISSING_DATA when div_id is not a valid div_id', () => {
+    it('should return ErrorCode.INVALID_DATA when div_id is not a valid div_id', () => {
       const invalidPots = [
         {
           ...mockPotsToPost[0],
@@ -518,7 +518,7 @@ describe("tests for pot validation", () => {
         },
       ]
       const validPots = validatePots(invalidPots)
-      expect(validPots.errorCode).toBe(ErrorCode.MISSING_DATA)
+      expect(validPots.errorCode).toBe(ErrorCode.INVALID_DATA)
     })
     it('should return ErrorCode.MISSING_DATA when passed an empty array', async () => { 
       const validLanes = validatePots([]);

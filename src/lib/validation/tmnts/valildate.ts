@@ -1,7 +1,7 @@
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { maxTmntNameLength, minDate, maxDate } from "@/lib/validation/constants";
 import { ErrorCode } from "@/lib/enums/enums";
-import { sanitizeTournamentName } from "@/lib/validation/sanitize";
+import { sanitizeBtDbId, sanitizeTournamentName } from "@/lib/validation/sanitize";
 import { isValid, compareAsc } from "date-fns";
 import type { idTypes, tmntFullType, tmntType } from "@/lib/types/types";
 import { blankTmnt } from "@/lib/db/initVals";
@@ -138,8 +138,8 @@ export const sanitizeTmnt = (tmnt: tmntType): tmntType => {
     start_date_str: '',
     end_date_str: '',
   }  
-  if (isValidBtDbId(tmnt.id, 'tmt')) {
-    sanditizedTmnt.id = tmnt.id
+  if (tmnt.id) {
+    sanditizedTmnt.id = sanitizeBtDbId(tmnt.id);
   }
   sanditizedTmnt.tmnt_name = sanitizeTournamentName(tmnt.tmnt_name) 
   if (typeof tmnt.start_date_str === 'string' && validDateString(tmnt.start_date_str)) {
@@ -148,11 +148,11 @@ export const sanitizeTmnt = (tmnt: tmntType): tmntType => {
   if (typeof tmnt.end_date_str === 'string' && validDateString(tmnt.end_date_str)) {
     sanditizedTmnt.end_date_str = tmnt.end_date_str
   }
-  if (isValidBtDbId(tmnt.bowl_id, 'bwl')) {    
-    sanditizedTmnt.bowl_id = tmnt.bowl_id  
+  if (tmnt.bowl_id) {    
+    sanditizedTmnt.bowl_id = sanitizeBtDbId(tmnt.bowl_id);
   } 
-  if (isValidBtDbId(tmnt.user_id, 'usr')) {
-    sanditizedTmnt.user_id = tmnt.user_id
+  if (tmnt.user_id) {
+    sanditizedTmnt.user_id = sanitizeBtDbId(tmnt.user_id);
   } 
   return sanditizedTmnt
 }

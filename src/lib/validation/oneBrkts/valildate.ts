@@ -2,6 +2,7 @@ import { isValidBtDbId, isNumber } from "@/lib/validation/validation";
 import { ErrorCode } from "@/lib/enums/enums";
 import type { oneBrktType, validOneBrktsType } from "@/lib/types/types";
 import { blankOneBrkt } from "@/lib/db/initVals";
+import { sanitizeBtDbId } from "../sanitize";
 
 /**
  * checks if oneBrkt object has missing data - DOES NOT SANITIZE OR VALIDATE
@@ -68,8 +69,12 @@ export const sanitizeOneBrkt = (oneBrkt: oneBrktType): oneBrktType => {
   const sanitziedOneBrkt: oneBrktType = {
     ...blankOneBrkt,
   }
-  if (isValidBtDbId(oneBrkt.id, 'obk')) sanitziedOneBrkt.id = oneBrkt.id;
-  if (isValidBtDbId(oneBrkt.brkt_id, 'brk')) sanitziedOneBrkt.brkt_id = oneBrkt.brkt_id;
+  if (oneBrkt.id) {
+    sanitziedOneBrkt.id = sanitizeBtDbId(oneBrkt.id);
+  }
+  if (oneBrkt.brkt_id) {
+    sanitziedOneBrkt.brkt_id = sanitizeBtDbId(oneBrkt.brkt_id);
+  }  
   if (validBindex(oneBrkt.bindex)) sanitziedOneBrkt.bindex = oneBrkt.bindex;
   return sanitziedOneBrkt;
 }

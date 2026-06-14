@@ -64,9 +64,10 @@ const validRoles = ["ADMIN", "DIRECTOR", "USER"];
 // gam - game
 // obk - one individual bracket
 // bsd - bracket seed
+// mon - money
 export const idTypesArray = [
-  'usr', 'bwl', 'tmt', 'evt', 'div', 'sqd', 'stg', 'lan', 'pot', 'brk',
-  'elm', 'ply', 'bye', 'den', 'pen', 'ben', 'een', 'gam', 'obk', 'bsd'
+  'usr', 'bwl', 'tmt', 'evt', 'div', 'sqd', 'stg', 'lan', 'pot', 'brk', 'elm',
+  'ply', 'bye', 'den', 'pen', 'ben', 'een', 'gam', 'obk', 'bsd', 'mon',
 ] as const;
 const validTypes = new Set(idTypesArray);
 

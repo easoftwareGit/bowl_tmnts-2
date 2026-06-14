@@ -310,7 +310,7 @@ describe("tests for potEntry validation", () => {
         id: "abc",
       };
       const sanitizedPotEntry = sanitizePotEntry(testPotEntry);
-      expect(sanitizedPotEntry.id).toEqual("");
+      expect(sanitizedPotEntry.id).toEqual("abc"); // sanitized, not valildated
     });
     it("should return a sanitized potEntry when pot_id is invalid", () => {
       const testPotEntry = {
@@ -318,7 +318,7 @@ describe("tests for potEntry validation", () => {
         pot_id: "abc",
       };
       const sanitizedPotEntry = sanitizePotEntry(testPotEntry);
-      expect(sanitizedPotEntry.pot_id).toEqual("");
+      expect(sanitizedPotEntry.pot_id).toEqual("abc"); // sanitized, not valildated
     });
     it("should return a sanitized potEntry when player_id is invalid", () => {
       const testPotEntry = {
@@ -326,7 +326,7 @@ describe("tests for potEntry validation", () => {
         player_id: "abc",
       };
       const sanitizedPotEntry = sanitizePotEntry(testPotEntry);
-      expect(sanitizedPotEntry.player_id).toEqual("");
+      expect(sanitizedPotEntry.player_id).toEqual("abc"); // sanitized, not valildated
     });
     it("should return a sanitized potEntry when fee is invalid", () => {
       const testPotEntry = {
@@ -369,9 +369,9 @@ describe("tests for potEntry validation", () => {
         fee: "<script>alert(1)</script>",
       };
       const sanitizedPotEntry = sanitizePotEntry(testPotEntry);
-      expect(sanitizedPotEntry.id).toEqual("");
-      expect(sanitizedPotEntry.pot_id).toEqual("");
-      expect(sanitizedPotEntry.player_id).toEqual("");
+      expect(sanitizedPotEntry.id).toEqual("scriptalert1script"); // sanitized, not valildated
+      expect(sanitizedPotEntry.pot_id).toEqual("scriptalert1script"); // sanitized, not valildated
+      expect(sanitizedPotEntry.player_id).toEqual("scriptalert1script"); // sanitized, not valildated
       expect(sanitizedPotEntry.fee).toEqual(""); // sanitized, not valildated
     });
   });
@@ -536,19 +536,19 @@ describe("tests for potEntry validation", () => {
       );
       expect(validpotEntries.potEntries[1].fee).toBe("20");
     });
-    it('should return ErrorCode.MISSING_DATA when id is sanitzied to ""', () => {
+    it('should return ErrorCode.INVALID_DATA when id is sanitzied to ""', () => {
       const potEntriesToValidate = [...mockPotEntriesToPost];
       potEntriesToValidate[1].id = '<script>alert("xss")</script>';
       const validpotEntries: validPotEntriesType =
         validatePotEntries(potEntriesToValidate);
-      expect(validpotEntries.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validpotEntries.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
-    it('should return ErrorCode.MISSING_DATA when pot_id is sanitzied to ""', () => {
+    it('should return ErrorCode.INVALID_DATA when pot_id is sanitzied to ""', () => {
       const potEntriesToValidate = [...mockPotEntriesToPost];
       potEntriesToValidate[1].pot_id = "test";
       const validpotEntries: validPotEntriesType =
         validatePotEntries(potEntriesToValidate);
-      expect(validpotEntries.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(validpotEntries.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
     it('should return ErrorCode.MISSING_DATA when player_id is sanitzied to ""', () => {
       const potEntriesToValidate = [...mockPotEntriesToPost];
