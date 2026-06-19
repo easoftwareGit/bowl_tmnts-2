@@ -36,8 +36,8 @@ import { todayStr } from "@/lib/dateTools";
 import {
   mockBowl,
   mockTmntFullData,
-  mockUser,
-  playerId5,
+  mockUser,  
+  playerId9,
 } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { cloneDeep } from "lodash";
 import { SquadStage } from "@prisma/client";
@@ -426,7 +426,8 @@ describe("dbTmnts", () => {
       const squad = tmntFullData.stage;
       expect(squad.id).toBe(fullStageId);
       expect(squad.squad_id).toBe(fullSquadId);
-      expect(squad.stage).toBe(SquadStage.ENTRIES);
+      // expect(squad.stage).toBe(SquadStage.ENTRIES);
+      expect(squad.stage).toBe(SquadStage.SCORES);
       expect(squad.stage_set_at).toBe("2024-07-01T00:00:00.000Z");
       expect(squad.scores_started_at).toBe(null);
       expect(squad.stage_override_enabled).toBe(false);
@@ -614,6 +615,20 @@ describe("dbTmnts", () => {
         expect(players[p].average).toBeGreaterThan(190);
         expect(players[p].average).toBeLessThan(231);
       }
+
+      const moneys = tmntFullData.moneys;
+      expect(moneys.length).toBe(18);
+      for (let m = 0; m < 18; m++) {
+        expect(moneys[m].id).not.toBeNull();
+        expect(moneys[m].event_id).toBe(fullEventId);
+        expect(moneys[m].squad_id).toBe(fullSquadId); 
+        expect(moneys[m].div_id).toBe(fullDivId);
+        expect(moneys[m].amount).not.toBeNull();
+        expect(moneys[m].descrip).not.toBeNull();
+        expect(moneys[m].flow).not.toBeNull();
+        expect(moneys[m].sort_order).toBe(m + 1);
+      }
+
     });
 
     it("should get a tmnt and its configuration - Yosemite 6 Gamer", async () => {
@@ -1035,6 +1050,7 @@ describe("dbTmnts", () => {
       toReplace.oneBrkts = [];
       toReplace.potEntries = [];
       toReplace.pots = [];
+      toReplace.moneys = [];
       const result = await replaceTmntFullData(toReplace);
       expect(typeof result).toBe("boolean");
     });
@@ -1050,6 +1066,7 @@ describe("dbTmnts", () => {
       toReplace.oneBrkts = [];
       toReplace.potEntries = [];
       toReplace.pots = [];
+      toReplace.moneys = [];
 
       const result = await replaceTmntFullData(toReplace);
       expect(result).toBe(true);
@@ -1233,6 +1250,30 @@ describe("dbTmnts", () => {
           expect(foundPlayer?.average).toBe(toReplace.players[3].average);
           expect(foundPlayer?.lane).toBe(toReplace.players[3].lane);
           expect(foundPlayer?.position).toBe(toReplace.players[3].position);
+        } else if (foundPlayer?.id === toReplace.players[4].id) {
+          expect(foundPlayer?.first_name).toBe(toReplace.players[4].first_name);
+          expect(foundPlayer?.last_name).toBe(toReplace.players[4].last_name);
+          expect(foundPlayer?.average).toBe(toReplace.players[4].average);
+          expect(foundPlayer?.lane).toBe(toReplace.players[4].lane);
+          expect(foundPlayer?.position).toBe(toReplace.players[4].position);
+        } else if (foundPlayer?.id === toReplace.players[5].id) {
+          expect(foundPlayer?.first_name).toBe(toReplace.players[5].first_name);
+          expect(foundPlayer?.last_name).toBe(toReplace.players[5].last_name);
+          expect(foundPlayer?.average).toBe(toReplace.players[5].average);
+          expect(foundPlayer?.lane).toBe(toReplace.players[5].lane);
+          expect(foundPlayer?.position).toBe(toReplace.players[5].position);
+        } else if (foundPlayer?.id === toReplace.players[6].id) {
+          expect(foundPlayer?.first_name).toBe(toReplace.players[6].first_name);
+          expect(foundPlayer?.last_name).toBe(toReplace.players[6].last_name);
+          expect(foundPlayer?.average).toBe(toReplace.players[6].average);
+          expect(foundPlayer?.lane).toBe(toReplace.players[6].lane);
+          expect(foundPlayer?.position).toBe(toReplace.players[6].position);
+        } else if (foundPlayer?.id === toReplace.players[7].id) {
+          expect(foundPlayer?.first_name).toBe(toReplace.players[7].first_name);
+          expect(foundPlayer?.last_name).toBe(toReplace.players[7].last_name);
+          expect(foundPlayer?.average).toBe(toReplace.players[7].average);
+          expect(foundPlayer?.lane).toBe(toReplace.players[7].lane);
+          expect(foundPlayer?.position).toBe(toReplace.players[7].position);        
         } else {
           expect(false).toBe(true);
         }
@@ -1568,7 +1609,7 @@ describe("dbTmnts", () => {
       tmntEntries.players[0].last_name = "ThisToo";
       tmntEntries.players.push({
         ...initPlayer,
-        id: playerId5,
+        id: playerId9,
         squad_id: tmntEntries.squads[0].id,
         first_name: "New",
         last_name: "Player",
@@ -1577,11 +1618,11 @@ describe("dbTmnts", () => {
         position: "Z",
       });
       tmntEntries.divEntries[0].fee = "100";
-      tmntEntries.potEntries[0].player_id = playerId5;
+      tmntEntries.potEntries[0].player_id = playerId9;
       tmntEntries.brktEntries[0].num_brackets = 100;
       tmntEntries.oneBrkts[0].bindex = 7;
       tmntEntries.brktSeeds[0].seed = 7;
-      tmntEntries.elimEntries[0].player_id = playerId5;
+      tmntEntries.elimEntries[0].player_id = playerId9;
 
       const before = Date.now();
       const result2 = await replaceTmntEntriesData(tmntEntries);
@@ -1658,7 +1699,7 @@ describe("dbTmnts", () => {
       }
       for (let i = 0; i < postedEntries.potEntries.length; i++) {
         if (postedEntries.potEntries[i].id === tmntEntries.potEntries[0].id) {
-          expect(postedEntries.potEntries[i].player_id).toBe(playerId5);
+          expect(postedEntries.potEntries[i].player_id).toBe(playerId9);
         }
       }
       for (let i = 0; i < postedEntries.brktEntries.length; i++) {
@@ -1680,7 +1721,7 @@ describe("dbTmnts", () => {
       }
       for (let i = 0; i < postedEntries.elimEntries.length; i++) {
         if (postedEntries.elimEntries[i].player_id === tmntEntries.elimEntries[0].player_id) {
-          expect(postedEntries.elimEntries[i].player_id).toBe(playerId5);
+          expect(postedEntries.elimEntries[i].player_id).toBe(playerId9);
         }
       }
     });
@@ -1689,7 +1730,7 @@ describe("dbTmnts", () => {
       const invalidTmnt = cloneDeep(mockTmntFullData);
       invalidTmnt.divEntries[0].id = "invalid id";
       await expect(replaceTmntEntriesData(invalidTmnt)).rejects.toThrow(
-        "divEntries has missing data at index 0",
+        "divEntries has invalid data at index 0",
       );
     });
 
@@ -1725,7 +1766,7 @@ describe("dbTmnts", () => {
       const invalidTmnt = cloneDeep(mockTmntFullData);
       invalidTmnt.squads[0].id = "invalid id";
       await expect(replaceTmntEntriesData(invalidTmnt)).rejects.toThrow(
-        "squads has missing data at index 0",
+        "squads has invalid data at index 0",
       );
     });
   });

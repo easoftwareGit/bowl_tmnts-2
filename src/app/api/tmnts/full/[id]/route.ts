@@ -47,7 +47,12 @@ export async function GET(
                     },
                   ],
                 },
-                stage: true,
+                moneys: {
+                  orderBy: {
+                    sort_order: "asc",
+                  },
+                },
+                stage: true,                
               },
               orderBy: {
                 sort_order: "asc",
@@ -196,7 +201,8 @@ export async function PUT(
       prisma.player.createMany({ data: prismaTmntFullData.playersData }),
       prisma.div_Entry.createMany({ data: prismaTmntFullData.divEntriesData }),
       prisma.pot_Entry.createMany({ data: prismaTmntFullData.potEntriesData }),      
-      prisma.elim_Entry.createMany({ data: prismaTmntFullData.elimEntriesData }),      
+      prisma.elim_Entry.createMany({ data: prismaTmntFullData.elimEntriesData }),  
+      prisma.money.createMany({ data: prismaTmntFullData.moneysData }),
     );
     // 3e1 - brktEntries w/o refunds
     if (beNoRefunds.length > 0) {

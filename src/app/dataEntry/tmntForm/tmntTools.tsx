@@ -42,7 +42,8 @@ export const getBlankTmntFullData = (initialize: boolean = true): tmntFullType =
       potEntries: [],
       pots: initPots,
       squads: [{ ...blankSquad }],   
-      stage: { ...blankFullStage },          
+      stage: { ...blankFullStage },    
+      moneys: [],
     }
     return allBlankTmntFullData;
   }
@@ -79,6 +80,7 @@ export const getBlankTmntFullData = (initialize: boolean = true): tmntFullType =
       ...blankFullStage,
       id: btDbUuid("stg"),      
     },
+    moneys: [],
   };
   blankTmntFullData.stage.squad_id = blankTmntFullData.squads[0].id;
   for (let i = 0; i < blankTmntFullData.events.length; i++) {

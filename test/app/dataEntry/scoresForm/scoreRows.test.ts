@@ -70,14 +70,6 @@ describe("scoreRows", () => {
 
   describe("extractGameScores", () => {
 
-    // beforeEach(() => {
-    //   jest.clearAllMocks();
-
-    //   mockBtDbUuid.mockReturnValue(
-    //     "gam_new",
-    //   );
-    // });
-
     it("returns empty array when no scores changed", () => {
       const rows = populateScoreRows(
         mockTmntFullData,
@@ -177,14 +169,6 @@ describe("scoreRows", () => {
   });
 
   describe("populateScoreRows", () => {
-
-    // beforeEach(() => {
-    //   jest.clearAllMocks();
-
-    //   mockIsValidBtDbId.mockReturnValue(
-    //     true,
-    //   );
-    // });
 
     it("creates one score row for each player", () => {
       const rows = populateScoreRows(

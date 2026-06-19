@@ -5,11 +5,12 @@ import {
   validateTmntMoneys,
   validTmntMoneyAmount,
   validDescripValue,
+  validFlowValue,
 } from "@/lib/validation/moneys/validate";
 
 import { blankTmntMoney, initTmntMoney } from "@/lib/db/initVals";
 import { ErrorCode } from "@/lib/enums/enums";
-import { MoneyDescrip } from "@prisma/client";
+import { MoneyDescrip, MoneyFlow } from "@prisma/client";
 import type {
   validTmntMoneyType,
   tmntMoneyType,
@@ -26,6 +27,7 @@ const validTmntMoney: tmntMoneyType = {
   squad_id: "sqd_7116ce5f80164830830a7157eb093396",
   div_id: "div_f30aea2c534f4cfe87f4315531cef8ef",
   descrip: MoneyDescrip.ENTRIES,
+  flow: MoneyFlow.IN,
   amount: 80,
   pot_id: null as any,
   brkt_id: null as any,
@@ -93,6 +95,15 @@ describe('validate tmntMoneys', () => {
         gotTmntMoneyData({
           ...validTmntMoney,
           descrip: null as any,
+        }),
+      ).toBe(ErrorCode.MISSING_DATA);
+    });
+
+    it("should return ErrorCode.MISSING_DATA when flow is missing", () => {
+      expect(
+        gotTmntMoneyData({
+          ...validTmntMoney,
+          flow: null as any,
         }),
       ).toBe(ErrorCode.MISSING_DATA);
     });
@@ -211,6 +222,12 @@ describe('validate tmntMoneys', () => {
       ).toBe(true);
     });
 
+    it("should return true for ERROR", () => {
+      expect(
+        validDescripValue(MoneyDescrip.ERROR),
+      ).toBe(true);
+    });
+
     it("should return false for invalid value", () => {
       expect(
         validDescripValue("BAD_VALUE"),
@@ -220,6 +237,32 @@ describe('validate tmntMoneys', () => {
     it("should return false for null", () => {
       expect(
         validDescripValue(null),
+      ).toBe(false);
+    });
+  });
+
+  describe("validFlowValue()", () => {
+    it("should return true for IN", () => {
+      expect(
+        validFlowValue(MoneyFlow.IN),
+      ).toBe(true);
+    });
+
+    it("should return true for OUT", () => {
+      expect(
+        validFlowValue(MoneyFlow.OUT),
+      ).toBe(true);
+    });
+
+    it("should return false for invalid value", () => {
+      expect(
+        validFlowValue("BAD_VALUE"),
+      ).toBe(false);
+    });
+
+    it("should return false for null", () => {
+      expect(
+        validFlowValue(null),
       ).toBe(false);
     });
   });
@@ -280,6 +323,15 @@ describe('validate tmntMoneys', () => {
         validTmntMoneyData({
           ...validTmntMoney,
           descrip: "BAD" as any,
+        }),
+      ).toBe(ErrorCode.INVALID_DATA);
+    });
+
+    it("should return ErrorCode.INVALID_DATA when flow is invalid", () => {
+      expect(
+        validTmntMoneyData({
+          ...validTmntMoney,
+          flow: "BAD" as any,
         }),
       ).toBe(ErrorCode.INVALID_DATA);
     });
@@ -454,6 +506,15 @@ describe('validate tmntMoneys', () => {
       });
 
       expect(result.descrip).toBeNull();
+    });
+
+    it("should reset invalid flow", () => {
+      const result = sanitizeTmntMoney({
+        ...validTmntMoney,
+        flow: "BAD" as any,
+      });
+
+      expect(result.flow).toBeNull();
     });
 
     it("should sanitize amount", () => {
@@ -823,7 +884,7 @@ describe('validate tmntMoneys', () => {
       expect(result.errorCode).toBe(ErrorCode.MISSING_DATA);
     });
 
-    it("should return ErrorCode.MISSING_DATA when null descrip", () => {
+    it("should return ErrorCode.MISSING_DATA when descrip is null", () => {
       const tmntMoneysToValidate = [
         ...mockTmntMoneys,
       ];
@@ -831,6 +892,23 @@ describe('validate tmntMoneys', () => {
       tmntMoneysToValidate[1] = {
         ...tmntMoneysToValidate[1],
         descrip: null as any,
+      };
+
+      const result: validTmntMoneyType =
+        validateTmntMoneys(tmntMoneysToValidate);
+
+      expect(result.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(result.tmntMoneys).toHaveLength(1);
+    });
+
+    it("should return ErrorCode.MISSING_DATA when flow is null", () => {
+      const tmntMoneysToValidate = [
+        ...mockTmntMoneys,
+      ];
+
+      tmntMoneysToValidate[1] = {
+        ...tmntMoneysToValidate[1],
+        flow: null as any,
       };
 
       const result: validTmntMoneyType =

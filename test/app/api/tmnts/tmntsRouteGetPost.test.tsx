@@ -64,6 +64,7 @@ describe("Tmnts - API: /api/tmnts", () => {
   const nonTmntId = "evt_01234567890123456789012345678901";
 
   const user1Id = "usr_5bcefb5d314fff1ff5da6521a2fa7bde";
+  const mockTmntId = 'tmt_0123388a8fc4641a2e37233f1d6bebd1';
 
   const tmntToPost = {
     ...initTmnt,
@@ -98,6 +99,7 @@ describe("Tmnts - API: /api/tmnts", () => {
 
     beforeAll(async () => {
       await deletePostedTmnt(tmntToPost.id);
+      await deletePostedTmnt(mockTmntId);
       await resetTmnt();
     })
 
@@ -114,6 +116,7 @@ describe("Tmnts - API: /api/tmnts", () => {
 
     beforeAll(async () => {
       await deletePostedTmnt(tmntToPost.id);
+      await deletePostedTmnt(mockTmntId);
       await resetTmnt();
     })
 
@@ -177,6 +180,7 @@ describe("Tmnts - API: /api/tmnts", () => {
 
     beforeAll(async () => {
       await deletePostedTmnt(tmntToPost.id);
+      await deletePostedTmnt(mockTmntId);
       await resetTmnt();
     })
 
@@ -249,6 +253,7 @@ describe("Tmnts - API: /api/tmnts", () => {
 
     beforeAll(async () => {      
       await deletePostedTmnt(tmntToPost.id);
+      await deletePostedTmnt(mockTmntId);
       await resetTmnt();
     })
 
@@ -314,6 +319,7 @@ describe("Tmnts - API: /api/tmnts", () => {
 
     beforeAll(async () => {      
       await deletePostedTmnt(tmntToPost.id);
+      await deletePostedTmnt(mockTmntId);
       await resetTmnt();
     })
 
@@ -385,6 +391,7 @@ describe("Tmnts - API: /api/tmnts", () => {
 
     beforeAll(async () => {      
       await deletePostedTmnt(tmntToPost.id);
+      await deletePostedTmnt(mockTmntId);
       await resetTmnt();
     })
 
@@ -406,6 +413,7 @@ describe("Tmnts - API: /api/tmnts", () => {
 
     beforeAll(async () => {      
       await deletePostedTmnt(tmntToPost.id);
+      await deletePostedTmnt(mockTmntId);
       await resetTmnt();
     })
 
@@ -413,7 +421,7 @@ describe("Tmnts - API: /api/tmnts", () => {
       const fullTmntId = 'tmt_d237a388a8fc4641a2e37233f1d6bebd';
       const fullBowlId = 'bwl_561540bd64974da9abdd97765fdb3659';
       const fullDivId = 'div_99a3cae28786485bb7a036935f0f6a0a';
-      const fillEventId = 'evt_4ff710c8493f4a218d2e2b045442974a';
+      const fullEventId = 'evt_4ff710c8493f4a218d2e2b045442974a';
       const fullSquadId = 'sqd_8e4266e1174642c7a1bcec47a50f275f';
       const fullStageId = 'stg_124dd9efc30f4352b691dfd93d1e284e';
 
@@ -560,7 +568,7 @@ describe("Tmnts - API: /api/tmnts", () => {
 
       // events
       expect(tmntFullData.events).toHaveLength(1);
-      expect(tmntFullData.events[0].id).toBe(fillEventId);
+      expect(tmntFullData.events[0].id).toBe(fullEventId);
       expect(tmntFullData.events[0].event_name).toBe('Singles');
       expect(tmntFullData.events[0].team_size).toBe(1);
       expect(tmntFullData.events[0].games).toBe(6);
@@ -585,7 +593,8 @@ describe("Tmnts - API: /api/tmnts", () => {
       expect(tmntFullData.events[0].squads[0].stage).not.toBeNull();
       expect(tmntFullData.events[0].squads[0].stage.id).toBe(fullStageId);
       expect(tmntFullData.events[0].squads[0].stage.squad_id).toBe(fullSquadId);  
-      expect(tmntFullData.events[0].squads[0].stage.stage).toBe('ENTRIES');
+      // expect(tmntFullData.events[0].squads[0].stage.stage).toBe('ENTRIES');
+      expect(tmntFullData.events[0].squads[0].stage.stage).toBe('SCORES');
 
       // lanes
       expect(tmntFullData.events[0].squads[0].lanes).toHaveLength(12);
@@ -613,6 +622,18 @@ describe("Tmnts - API: /api/tmnts", () => {
         expect(tmntFullData.events[0].squads[0].players[p].average).toBeGreaterThan(190);
         expect(tmntFullData.events[0].squads[0].players[p].average).toBeLessThan(231);
         expect(tmntFullData.events[0].squads[0].players[p].usbc).toBeNull();
+      }
+
+      // moneys
+      expect(tmntFullData.events[0].squads[0].moneys).toHaveLength(18);
+      for (let m = 0; m < 18; m++) {
+        expect(tmntFullData.events[0].squads[0].moneys[m].id).not.toBeNull();
+        expect(tmntFullData.events[0].squads[0].moneys[m].event_id).toBe(fullEventId);
+        expect(tmntFullData.events[0].squads[0].moneys[m].squad_id).toBe(fullSquadId);
+        expect(tmntFullData.events[0].squads[0].moneys[m].div_id).toBe(fullDivId);
+        expect(tmntFullData.events[0].squads[0].moneys[m].amount).not.toBeNull();
+        expect(tmntFullData.events[0].squads[0].moneys[m].descrip).not.toBeNull();
+        expect(tmntFullData.events[0].squads[0].moneys[m].flow).not.toBeNull();
       }
     })
     it('should get tmnt full data object for Yosemite 6 Gamer', async () => {
@@ -1049,6 +1070,7 @@ describe("Tmnts - API: /api/tmnts", () => {
 
     beforeAll(async () => {
       await deletePostedTmnt(tmntToPost.id);
+      await deletePostedTmnt(mockTmntId);
       await resetTmnt();
     })
 

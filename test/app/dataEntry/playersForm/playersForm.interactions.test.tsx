@@ -242,13 +242,13 @@ const makeGridMock = (dataSource: playerEntryRow[]): GridMock => {
   const validateButton = document.createElement("button");
   validateButton.id = "playersGrid_validate";
   
-  const cancelAllButton = document.createElement("button");
-  cancelAllButton.id = "playersGrid_cancel_all";
+  const backButton = document.createElement("button");
+  backButton.id = "playersGrid_back";
 
   element.appendChild(commitButton);
   element.appendChild(saveButton);
   element.appendChild(validateButton);
-  element.appendChild(cancelAllButton);
+  element.appendChild(backButton);
 
   return {
     element,
@@ -371,6 +371,7 @@ const seedHappyPathExtracts = () => {
     elimEntries: [...mockTmntFullData.elimEntries],
     brktEntries: [...mockTmntFullData.brktEntries],
     potEntries: [...mockTmntFullData.potEntries],
+    moneys: [...mockTmntFullData.moneys],
   });
 
   mockExtractFullBrktsData.mockReturnValue({
@@ -926,21 +927,21 @@ describe("PlayersEntryForm2a - interactions", () => {
     });
   });  
 
-  describe("toolbar Cancel All", () => {
-    it("navigates immediately when Cancel All is clicked with no rows", async () => {
+  describe("toolbar Back", () => {
+    it("navigates immediately when back is clicked with no rows", async () => {
       renderForm({ rows: [] });
 
-      await callToolbarClick("playersGrid_cancel_all");
+      await callToolbarClick("playersGrid_back");
 
       expect(mockPush).toHaveBeenCalledWith(
         `/dataEntry/runTmnt/${mockTmntFullData.tmnt.id}`,
       );
     });
 
-    it("navigates immediately when Cancel All is clicked with no pending changes", async () => {
+    it("navigates immediately when Back is clicked with no pending changes", async () => {
       renderForm();
 
-      await callToolbarClick("playersGrid_cancel_all");
+      await callToolbarClick("playersGrid_back");
 
       expect(mockPush).toHaveBeenCalledWith(
         `/dataEntry/runTmnt/${mockTmntFullData.tmnt.id}`,
@@ -953,7 +954,7 @@ describe("PlayersEntryForm2a - interactions", () => {
       ).not.toBeInTheDocument();
     });
 
-    it("navigates when Cancel All confirm Yes is clicked", async () => {
+    it("navigates when Back confirm Yes is clicked", async () => {
       const user = userEvent.setup();
 
       renderForm();
@@ -964,7 +965,7 @@ describe("PlayersEntryForm2a - interactions", () => {
 
       mockPush.mockClear();
 
-      await callToolbarClick("playersGrid_cancel_all");
+      await callToolbarClick("playersGrid_back");
 
       const dlg = screen.getByRole("dialog", {
         name: "confirm",
@@ -981,7 +982,7 @@ describe("PlayersEntryForm2a - interactions", () => {
       );
     });
 
-    it("does not navigate when Cancel All confirm No is clicked", async () => {
+    it("does not navigate when Back confirm No is clicked", async () => {
       const user = userEvent.setup();
 
       renderForm();
@@ -992,7 +993,7 @@ describe("PlayersEntryForm2a - interactions", () => {
 
       mockPush.mockClear();
 
-      await callToolbarClick("playersGrid_cancel_all");
+      await callToolbarClick("playersGrid_back");
 
       const dlg = screen.getByRole("dialog", {
         name: "confirm",
@@ -1014,7 +1015,7 @@ describe("PlayersEntryForm2a - interactions", () => {
         requestType: "save",
       });
 
-      await callToolbarClick("playersGrid_cancel_all");
+      await callToolbarClick("playersGrid_back");
 
       const dlg = screen.getByRole("dialog", {
         name: "confirm",
@@ -1036,7 +1037,7 @@ describe("PlayersEntryForm2a - interactions", () => {
 
       mockPush.mockClear();
 
-      await callToolbarClick("playersGrid_cancel_all");
+      await callToolbarClick("playersGrid_back");
 
       expect(mockPush).toHaveBeenCalledWith(
         `/dataEntry/runTmnt/${mockTmntFullData.tmnt.id}`,
@@ -1163,7 +1164,7 @@ describe("PlayersEntryForm2a - interactions", () => {
       ).toBeInTheDocument();
     });
 
-    it("navigates immediately when Cancel All is clicked in readonly mode", async () => {
+    it("navigates immediately when Back is clicked in readonly mode", async () => {
       const store = makeStore([mockBowl]);
 
       render(
@@ -1176,7 +1177,7 @@ describe("PlayersEntryForm2a - interactions", () => {
         </Provider>,
       );
 
-      await callToolbarClick("playersGrid_cancel_all");
+      await callToolbarClick("playersGrid_back");
 
       expect(mockPush).toHaveBeenCalledWith(
         `/dataEntry/runTmnt/${mockTmntFullData.tmnt.id}`,

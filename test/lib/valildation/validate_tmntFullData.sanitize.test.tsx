@@ -17,6 +17,7 @@ import { sanitizeBrktEntry } from "@/lib/validation/brktEntries/validate";
 import { sanitizeOneBrkt } from "@/lib/validation/oneBrkts/valildate";
 import { sanitizeBrktSeed } from "@/lib/validation/brktSeeds/validate";
 import { sanitizeElimEntry } from "@/lib/validation/elimEntries/validate";
+import { sanitizeTmntMoney } from "@/lib/validation/moneys/validate";
 import type {
   tmntFullType,
   tmntType,
@@ -35,6 +36,7 @@ import type {
   oneBrktType,
   brktSeedType,
   elimEntryType,
+  tmntMoneyType,
 } from "@/lib/types/types";
 import { cloneDeep } from "lodash";
 
@@ -127,6 +129,11 @@ jest.mock("@/lib/validation/stages/validate", () => ({
   validateFullStage: jest.fn(),
 }));
 
+jest.mock("@/lib/validation/moneys/validate", () => ({
+  sanitizeTmntMoney: jest.fn(),
+  validateTmntMoneys: jest.fn(),
+}));
+
 describe("sanitizeFullTmnt", () => {
   // typed sentinels
   let tmntSentinel: tmntType;
@@ -153,6 +160,7 @@ describe("sanitizeFullTmnt", () => {
       oneBrkts: [],
       brktSeeds: [],
       elimEntries: [],
+      moneys: [],
     } satisfies tmntFullType);
 
     // Build sentinels with correct shape (use input as base so required fields exist)
@@ -178,6 +186,7 @@ describe("sanitizeFullTmnt", () => {
     (sanitizeOneBrkt as jest.Mock).mockImplementation((x: oneBrktType) => ({ ...x }));
     (sanitizeBrktSeed as jest.Mock).mockImplementation((x: brktSeedType) => ({ ...x }));
     (sanitizeElimEntry as jest.Mock).mockImplementation((x: elimEntryType) => ({ ...x }));
+    (sanitizeTmntMoney as jest.Mock).mockImplementation((x: tmntMoneyType) => ({ ...x }));
   });
 
   it("builds a sanitized full tournament using the blank template + child sanitizers", () => {
@@ -211,6 +220,7 @@ describe("sanitizeFullTmnt", () => {
     expect(sanitizeOneBrkt).toHaveBeenCalledTimes(mockTmntFullData.oneBrkts.length);
     expect(sanitizeBrktSeed).toHaveBeenCalledTimes(mockTmntFullData.brktSeeds.length);
     expect(sanitizeElimEntry).toHaveBeenCalledTimes(mockTmntFullData.elimEntries.length);
+    expect(sanitizeTmntMoney).toHaveBeenCalledTimes(mockTmntFullData.moneys.length);
 
     // sizes preserved
     expect(result.events).toHaveLength(mockTmntFullData.events.length);
@@ -245,6 +255,7 @@ describe("sanitizeFullTmnt", () => {
     expect(result.oneBrkts).not.toBe(mockTmntFullData.oneBrkts);
     expect(result.brktSeeds).not.toBe(mockTmntFullData.brktSeeds);
     expect(result.elimEntries).not.toBe(mockTmntFullData.elimEntries);
+    expect(result.moneys).not.toBe(mockTmntFullData.moneys);
   });
 
   it("passes the exact list items into each sanitizer (spot checks)", () => {
@@ -255,5 +266,6 @@ describe("sanitizeFullTmnt", () => {
     expect((sanitizeSquad as jest.Mock).mock.calls[0][0]).toBe(mockTmntFullData.squads[0]);
     expect((sanitizePlayer as jest.Mock).mock.calls[0][0]).toBe(mockTmntFullData.players[0]);
     expect((sanitizeBrktEntry as jest.Mock).mock.calls[0][0]).toBe(mockTmntFullData.brktEntries[0]);
+    expect((sanitizeTmntMoney as jest.Mock).mock.calls[0][0]).toBe(mockTmntFullData.moneys[0]);
   });
 });

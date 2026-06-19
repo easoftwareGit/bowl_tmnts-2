@@ -19,6 +19,10 @@ import { BracketList } from "@/components/brackets/bracketListClass";
 import {
   brktId1,
   brktId2,
+  divId1,
+  elimId1,
+  elimId2,
+  eventId1,
   mockByePlayer,
   playerId1,
   playerId2,
@@ -28,9 +32,11 @@ import {
   playerId6,
   playerId7,
   playerId8,
-  squadId1,
+  potId1,
+  squadId1,  
 } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { Bracket } from "@/components/brackets/bracketClass";
+import { MoneyDescrip, MoneyFlow } from "@prisma/client";
 import { cloneDeep } from "lodash";
 
 describe("extractData", () => {
@@ -45,7 +51,7 @@ describe("extractData", () => {
 
   describe("extractDataFromRows", () => {
     it("should return valid and populated data", () => {      
-      const result = extractDataFromRows(mockPlayerRows, squadId1, mockBracketLists);
+      const result = extractDataFromRows(mockPlayerRows, mockDataOneTmnt, mockBracketLists);
       const tmntEntriesData = result as gridTmntEntryDataType;
 
       expect(tmntEntriesData.players.length).toBe(11);
@@ -58,7 +64,7 @@ describe("extractData", () => {
 
   describe("extract correct players data from rows", () => {
     it("should return valid and populated data for players", () => {
-      const result = extractDataFromRows(mockPlayerRows, squadId1, mockBracketLists);
+      const result = extractDataFromRows(mockPlayerRows, mockDataOneTmnt, mockBracketLists);
       const tmntEntriesData = result as gridTmntEntryDataType;
 
       expect(tmntEntriesData.players.length).toBe(11);
@@ -79,7 +85,7 @@ describe("extractData", () => {
 
   describe("extract correct div entries data from rows", () => {
     it("should return valid and populated data for divs", () => {
-      const result = extractDataFromRows(mockPlayerRows, squadId1, mockBracketLists);
+      const result = extractDataFromRows(mockPlayerRows, mockDataOneTmnt, mockBracketLists);
       const tmntEntriesData = result as gridTmntEntryDataType;
 
       expect(tmntEntriesData.divEntries.length).toBe(12);
@@ -148,7 +154,7 @@ describe("extractData", () => {
 
   describe("extract correct pot entries data from rows", () => {
     it("should return valid and populated data for pots", () => {
-      const result = extractDataFromRows(mockPlayerRows, squadId1, mockBracketLists);
+      const result = extractDataFromRows(mockPlayerRows, mockDataOneTmnt, mockBracketLists);
       const tmntEntriesData = result as gridTmntEntryDataType;
 
       expect(tmntEntriesData.potEntries.length).toBe(19);
@@ -239,7 +245,7 @@ describe("extractData", () => {
 
   describe("extract correct brkt entries data from rows - including refunds if needed", () => {
     it("should return valid and populated data for brkts", () => {
-      const result = extractDataFromRows(mockPlayerRows, squadId1, mockBracketLists);
+      const result = extractDataFromRows(mockPlayerRows, mockDataOneTmnt, mockBracketLists);
       const tmntEntriesData = result as gridTmntEntryDataType;
 
       expect(tmntEntriesData.brktEntries.length).toBe(16);
@@ -525,7 +531,7 @@ describe("extractData", () => {
 
     it("should return valid and populated data for brkts - empty mockBracketLists", () => {
       const emptyMockBracketsLists: BracketList[] = [];
-      const result = extractDataFromRows(mockPlayerRows, squadId1, emptyMockBracketsLists);
+      const result = extractDataFromRows(mockPlayerRows, mockDataOneTmnt, emptyMockBracketsLists);
       const tmntEntriesData = result as gridTmntEntryDataType;
 
       expect(tmntEntriesData.brktEntries.length).toBe(16);
@@ -814,7 +820,7 @@ describe("extractData", () => {
 
   describe("extract correct elim entries data from rows", () => {
     it("should return valid and populated data for elim", () => {
-      const result = extractDataFromRows(mockPlayerRows, squadId1, mockBracketLists);      
+      const result = extractDataFromRows(mockPlayerRows, mockDataOneTmnt, mockBracketLists);      
       const tmntEntriesData = result as gridTmntEntryDataType;
 
       expect(tmntEntriesData.elimEntries.length).toBe(14);
@@ -1303,45 +1309,6 @@ describe("extractData", () => {
         brktSeeds: [],
       });
     });
-    // it("returns expected structure when passed valid mock data", () => {
-    //   const mockLists = createMockBrktLists();
-    //   const result = extractFullBrktsData(mockLists);
-
-    //   expect(result).toHaveProperty("oneBrkts");
-    //   expect(result).toHaveProperty("brktSeeds");
-    //   expect(Array.isArray(result.oneBrkts)).toBe(true);
-    //   expect(Array.isArray(result.brktSeeds)).toBe(true);
-    //   expect(result.oneBrkts.length).toBeGreaterThan(0);
-    //   expect(result.brktSeeds.length).toBeGreaterThan(0);
-    // });
-    // it("creates consistent one_brkt_id across seeds of the same bracket", () => {
-    //   const mockLists = createMockBrktLists();
-    //   const result = extractFullBrktsData(mockLists);
-
-    //   // Every set of seeds in one bracket should share the same one_brkt_id
-    //   const oneBrktIds = new Set(result.brktSeeds.map((s) => s.one_brkt_id));
-    //   expect(oneBrktIds.size).toBe(result.oneBrkts.length);
-    // });
-    // it("calls btDbUuid for each bracket", () => {
-    //   const mockLists = createMockBrktLists();
-    //   extractFullBrktsData(mockLists);
-
-    //   // Verify btDbUuid called once per bracket
-    //   const totalBrkts = mockLists.reduce(
-    //     (count, list) => count + list.brackets.length,
-    //     0
-    //   );
-    //   expect(btDbUuid).toHaveBeenCalledTimes(totalBrkts);
-    //   expect(btDbUuid).toHaveBeenCalledWith("obk");
-    // });
-    // it("handles multiple BracketLists and accumulates data correctly", () => {
-    //   const mockLists = [...createMockBrktLists(), ...createMockBrktLists()];
-    //   const result = extractFullBrktsData(mockLists);
-
-    //   // Validate accumulation
-    //   expect(result.oneBrkts.length).toBeGreaterThan(1);
-    //   expect(result.brktSeeds.length).toBeGreaterThan(result.oneBrkts.length);
-    // });    
   });
 
   describe('return empty data when passed invalid or empty data for rows, 1st param', () => { 
@@ -1349,7 +1316,7 @@ describe("extractData", () => {
       const emptyRows = cloneDeep(mockPlayerRows);
       emptyRows.length = 0;
 
-      const result = extractDataFromRows(emptyRows, squadId1, mockBracketLists);
+      const result = extractDataFromRows(emptyRows, mockDataOneTmnt, mockBracketLists);
       const tmntEntriesData = result as gridTmntEntryDataType;
 
       expect(tmntEntriesData.players.length).toBe(0);
@@ -1359,7 +1326,7 @@ describe("extractData", () => {
       expect(tmntEntriesData.elimEntries.length).toBe(0);
     });
     it('returns empty data when passed null as row array', () => {
-      const result = extractDataFromRows(null as any, squadId1, mockBracketLists);
+      const result = extractDataFromRows(null as any, mockDataOneTmnt, mockBracketLists);
       const tmntEntriesData = result as gridTmntEntryDataType;
 
       expect(tmntEntriesData.players.length).toBe(0);
@@ -1370,9 +1337,9 @@ describe("extractData", () => {
     });
   })
 
-  describe('return empty data when passed invalid data for squadId, 2nd param', () => { 
+  describe('return empty data when passed invalid data for tmntData', () => { 
     it('returns empty data when passed invalid id', () => {
-      const result = extractDataFromRows(mockPlayerRows, 'test', mockBracketLists);      
+      const result = extractDataFromRows(mockPlayerRows, 'test' as any, mockBracketLists);      
       const tmntEntriesData = result as gridTmntEntryDataType;
 
       expect(tmntEntriesData.players.length).toBe(0);
@@ -1381,18 +1348,87 @@ describe("extractData", () => {
       expect(tmntEntriesData.brktEntries.length).toBe(0);
       expect(tmntEntriesData.elimEntries.length).toBe(0);
     });
-    it('returns empty data when passed valid id, but not a squad id', () => {
-      const result = extractDataFromRows(mockPlayerRows, playerId1, mockBracketLists);
-      const tmntEntriesData = result as gridTmntEntryDataType;
-
-      expect(tmntEntriesData.players.length).toBe(0);
-      expect(tmntEntriesData.divEntries.length).toBe(0);
-      expect(tmntEntriesData.potEntries.length).toBe(0);
-      expect(tmntEntriesData.brktEntries.length).toBe(0);
-      expect(tmntEntriesData.elimEntries.length).toBe(0);
-    });
-    it('returns empty data when passed null for squadId', () => {
+    it('returns empty data when passed null for tmntData', () => {
       const result = extractDataFromRows(mockPlayerRows, null as any, mockBracketLists);
+      const tmntEntriesData = result as gridTmntEntryDataType;
+
+      expect(tmntEntriesData.players.length).toBe(0);
+      expect(tmntEntriesData.divEntries.length).toBe(0);
+      expect(tmntEntriesData.potEntries.length).toBe(0);
+      expect(tmntEntriesData.brktEntries.length).toBe(0);
+      expect(tmntEntriesData.elimEntries.length).toBe(0);
+    });
+    it('returns empty data when passed tmntData with events set to null', () => {
+      const invalidTmnt = cloneDeep(mockDataOneTmnt);
+      invalidTmnt.events = null as any;
+
+      const result = extractDataFromRows(mockPlayerRows, invalidTmnt, mockBracketLists);
+      const tmntEntriesData = result as gridTmntEntryDataType;
+
+      expect(tmntEntriesData.players.length).toBe(0);
+      expect(tmntEntriesData.divEntries.length).toBe(0);
+      expect(tmntEntriesData.potEntries.length).toBe(0);
+      expect(tmntEntriesData.brktEntries.length).toBe(0);
+      expect(tmntEntriesData.elimEntries.length).toBe(0);
+    });
+    it('returns empty data when passed tmntData with events empty', () => {
+      const invalidTmnt = cloneDeep(mockDataOneTmnt);
+      invalidTmnt.events.length = 0;
+
+      const result = extractDataFromRows(mockPlayerRows, invalidTmnt, mockBracketLists);
+      const tmntEntriesData = result as gridTmntEntryDataType;
+
+      expect(tmntEntriesData.players.length).toBe(0);
+      expect(tmntEntriesData.divEntries.length).toBe(0);
+      expect(tmntEntriesData.potEntries.length).toBe(0);
+      expect(tmntEntriesData.brktEntries.length).toBe(0);
+      expect(tmntEntriesData.elimEntries.length).toBe(0);
+    });
+    it('returns empty data when passed tmntData with events[0].id invalid', () => {
+      const invalidTmnt = cloneDeep(mockDataOneTmnt);
+      invalidTmnt.events[0].id = 'test';
+
+      const result = extractDataFromRows(mockPlayerRows, invalidTmnt, mockBracketLists);
+      const tmntEntriesData = result as gridTmntEntryDataType;
+
+      expect(tmntEntriesData.players.length).toBe(0);
+      expect(tmntEntriesData.divEntries.length).toBe(0);
+      expect(tmntEntriesData.potEntries.length).toBe(0);
+      expect(tmntEntriesData.brktEntries.length).toBe(0);
+      expect(tmntEntriesData.elimEntries.length).toBe(0);
+    });
+
+    it('returns empty data when passed tmntData with squads set to null', () => {
+      const invalidTmnt = cloneDeep(mockDataOneTmnt);
+      invalidTmnt.squads = null as any;
+
+      const result = extractDataFromRows(mockPlayerRows, invalidTmnt, mockBracketLists);
+      const tmntEntriesData = result as gridTmntEntryDataType;
+
+      expect(tmntEntriesData.players.length).toBe(0);
+      expect(tmntEntriesData.divEntries.length).toBe(0);
+      expect(tmntEntriesData.potEntries.length).toBe(0);
+      expect(tmntEntriesData.brktEntries.length).toBe(0);
+      expect(tmntEntriesData.elimEntries.length).toBe(0);
+    });
+    it('returns empty data when passed tmntData with squads empty', () => {
+      const invalidTmnt = cloneDeep(mockDataOneTmnt);
+      invalidTmnt.squads.length = 0;
+
+      const result = extractDataFromRows(mockPlayerRows, invalidTmnt, mockBracketLists);
+      const tmntEntriesData = result as gridTmntEntryDataType;
+
+      expect(tmntEntriesData.players.length).toBe(0);
+      expect(tmntEntriesData.divEntries.length).toBe(0);
+      expect(tmntEntriesData.potEntries.length).toBe(0);
+      expect(tmntEntriesData.brktEntries.length).toBe(0);
+      expect(tmntEntriesData.elimEntries.length).toBe(0);
+    });
+    it('returns empty data when passed tmntData with squads[0].id invalid', () => {
+      const invalidTmnt = cloneDeep(mockDataOneTmnt);
+      invalidTmnt.squads[0].id = 'test';
+
+      const result = extractDataFromRows(mockPlayerRows, invalidTmnt, mockBracketLists);
       const tmntEntriesData = result as gridTmntEntryDataType;
 
       expect(tmntEntriesData.players.length).toBe(0);
@@ -1405,7 +1441,7 @@ describe("extractData", () => {
 
   describe('return valid data when passed invalid data for bracketLists, 3rd param', () => {
     it('returns empty data when passed invalid brktLists', () => {
-      const result = extractDataFromRows(mockPlayerRows, squadId1, "test" as any);      
+      const result = extractDataFromRows(mockPlayerRows, mockDataOneTmnt, "test" as any);      
       const tmntEntriesData = result as gridTmntEntryDataType;
 
       expect(tmntEntriesData.players.length).toBe(0);
@@ -1415,7 +1451,7 @@ describe("extractData", () => {
       expect(tmntEntriesData.elimEntries.length).toBe(0);
     });
     it('returns empty data when passed null for brktLists', () => {
-      const result = extractDataFromRows(mockPlayerRows, playerId1, null as any);
+      const result = extractDataFromRows(mockPlayerRows, mockDataOneTmnt, null as any);
       const tmntEntriesData = result as gridTmntEntryDataType;
 
       expect(tmntEntriesData.players.length).toBe(0);
@@ -1423,6 +1459,144 @@ describe("extractData", () => {
       expect(tmntEntriesData.potEntries.length).toBe(0);
       expect(tmntEntriesData.brktEntries.length).toBe(0);
       expect(tmntEntriesData.elimEntries.length).toBe(0);
+    });
+  });
+
+  describe("extract correct money totals data from rows", () => {
+    it("should create correct money totals", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        mockDataOneTmnt,
+        mockBracketLists
+      );
+
+      const moneys = result.moneys;
+      expect(moneys.length).toBe(6);
+
+      //
+      // Division
+      //
+      const divMoney = moneys.find(
+        (m) =>
+          m.div_id === divId1 &&
+          m.pot_id === null &&
+          m.brkt_id === null &&
+          m.elim_id === null
+      );
+      expect(divMoney).toMatchObject({
+        event_id: eventId1,
+        squad_id: squadId1,
+        div_id: divId1,
+        descrip: MoneyDescrip.ENTRIES,
+        flow: MoneyFlow.IN,
+        amount: 850, // 10 players @ 85, 1 player no entry
+        pot_id: null,
+        brkt_id: null,
+        elim_id: null,
+        sort_order: 2,  // extracted data starts with sort_order = 2
+      });
+
+      //
+      // Pot
+      //
+      const potMoney = moneys.find(
+        (m) => m.pot_id === potId1
+      );
+      expect(potMoney).toMatchObject({
+        event_id: eventId1,
+        squad_id: squadId1,
+        div_id: divId1,
+        descrip: MoneyDescrip.ENTRIES,
+        flow: MoneyFlow.IN,
+        amount: 200, // 10 players @ 20, 1 player no entry
+        pot_id: potId1,
+        brkt_id: null,
+        elim_id: null,
+        sort_order: 3,
+      });
+
+      //
+      // Bracket 1
+      //
+      const brkt1Money = moneys.find(
+        (m) => m.brkt_id === brktId1
+      );
+      expect(brkt1Money).toMatchObject({
+        event_id: eventId1,
+        squad_id: squadId1,
+        div_id: divId1,
+        descrip: MoneyDescrip.ENTRIES,
+        flow: MoneyFlow.IN,
+        amount: 280, // 56 brkt entries
+        pot_id: null,
+        brkt_id: brktId1,
+        elim_id: null,
+        sort_order: 4,
+      });      
+
+      //
+      // Bracket 2
+      //
+      const brkt2Money = moneys.find(
+        (m) => m.brkt_id === brktId2
+      );
+      expect(brkt2Money).toMatchObject({
+        event_id: eventId1,
+        squad_id: squadId1,
+        div_id: divId1,
+        descrip: MoneyDescrip.ENTRIES,
+        flow: MoneyFlow.IN,
+        amount: 280, // 56 brkt entries
+        pot_id: null,
+        brkt_id: brktId2,
+        elim_id: null,
+        sort_order: 5,
+      });      
+
+      //
+      // Eliminator 1
+      //
+      const elim1Money = moneys.find(
+        (m) => m.elim_id === elimId1
+      );
+      expect(elim1Money).toMatchObject({
+        event_id: eventId1,
+        squad_id: squadId1,
+        div_id: divId1,
+        descrip: MoneyDescrip.ENTRIES,
+        flow: MoneyFlow.IN,
+        amount: 35, // 7 players @ 5
+        pot_id: null,
+        brkt_id: null,
+        elim_id: elimId1,
+        sort_order: 6,
+      });      
+
+      //
+      // Eliminator 2
+      //
+      const elim2Money = moneys.find(
+        (m) => m.elim_id === elimId2
+      );
+      expect(elim2Money).toMatchObject({
+        event_id: eventId1,
+        squad_id: squadId1,
+        div_id: divId1,
+        descrip: MoneyDescrip.ENTRIES,
+        flow: MoneyFlow.IN,
+        amount: 35, // 7 players @ 5
+        pot_id: null,
+        brkt_id: null,
+        elim_id: elimId2,
+        sort_order: 7,
+      });      
+
+      //
+      // Verify all rows have valid ids
+      //
+      moneys.forEach((money) => {
+        expect(isValidBtDbId(money.id, "mon")).toBe(true);
+      });
     });
   });
 

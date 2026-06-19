@@ -37,16 +37,17 @@ describe('Events - GETs and POST API: /api/events', () => {
 
   const testMoney: tmntMoneyType = {
     ...initTmntMoney,
-    id: "mon_02b6e6fcaa8343d0b18b56a71e8c160a",
+    id: "mon_03b6e6fcaa8343d0b18b56a71e8c160a",
     event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
     squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
     div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
     descrip: "ENTRIES",
+    flow: "IN",
     amount: 600,
     pot_id: "pot_89fd8f787de942a1a92aaa2df3e7c185",
     brkt_id: null as any,
     elim_id: null as any,
-    sort_order: 2,
+    sort_order: 3,
   }
 
   const moneyToPost: tmntMoneyType = {
@@ -56,6 +57,7 @@ describe('Events - GETs and POST API: /api/events', () => {
     squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
     div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
     descrip: "ENTRIES",
+    flow: "IN",
     amount: 500,
     pot_id: null as any,
     brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
@@ -80,14 +82,15 @@ describe('Events - GETs and POST API: /api/events', () => {
     it('should get all moneys', async () => {
       const response = await privateApi.get(url);
       expect(response.status).toBe(200);
-      // 22 rows in prisma/seed.ts
-      expect(response.data.moneys).toHaveLength(22);
+      // 23 rows in prisma/seed.ts
+      expect(response.data.moneys).toHaveLength(23);
       const moneys: tmntMoneyType[] = response.data.moneys;
       moneys.forEach((money: tmntMoneyType) => {
         expect(money.event_id).not.toBeNull();
         expect(money.squad_id).not.toBeNull();
         expect(money.div_id).not.toBeNull();
         expect(money.descrip).not.toBeNull();
+        expect(money.flow).not.toBeNull();
         expect(money.amount).not.toBeNull();
         expect(money.sort_order).not.toBeNull();
       })
@@ -110,6 +113,7 @@ describe('Events - GETs and POST API: /api/events', () => {
       expect(money.squad_id).toBe(testMoney.squad_id);
       expect(money.div_id).toBe(testMoney.div_id);
       expect(money.descrip).toBe(testMoney.descrip);
+      expect(money.flow).toBe(testMoney.flow);
       expect(Number(money.amount)).toBe(testMoney.amount);
       expect(money.sort_order).toBe(testMoney.sort_order);
       expect(money.pot_id).toBe(testMoney.pot_id);
@@ -172,8 +176,8 @@ describe('Events - GETs and POST API: /api/events', () => {
         withCredentials: true
       });
       expect(response.status).toBe(200);
-      // 17 money rows for tmnt in prisma/seed.ts
-      expect(response.data.moneys).toHaveLength(17);
+      // 18 money rows for tmnt in prisma/seed.ts
+      expect(response.data.moneys).toHaveLength(18);
       const moneys: tmntMoneyType[] = response.data.moneys;
       // query in /api/moneys/tmnt GET sorts by sort_order
       for (let i = 0; i < moneys.length; i++) {
@@ -181,6 +185,7 @@ describe('Events - GETs and POST API: /api/events', () => {
         expect(moneys[i].squad_id).toBe(squadId);
         expect(moneys[i].div_id).toBe(divId);
         expect(moneys[i].descrip).not.toBeNull();
+        expect(moneys[i].flow).not.toBeNull();
         expect(moneys[i].amount).not.toBeNull();        
         expect(moneys[i].sort_order).toBe(i + 1);
       }
@@ -252,6 +257,7 @@ describe('Events - GETs and POST API: /api/events', () => {
       expect(postedMoney.squad_id).toEqual(moneyToPost.squad_id);
       expect(postedMoney.div_id).toEqual(moneyToPost.div_id);
       expect(postedMoney.descrip).toEqual(moneyToPost.descrip);
+      expect(postedMoney.flow).toEqual(moneyToPost.flow);
       expect(Number(postedMoney.amount)).toEqual(moneyToPost.amount);
       expect(postedMoney.pot_id).toEqual(moneyToPost.pot_id);
       expect(postedMoney.brkt_id).toEqual(moneyToPost.brkt_id);
@@ -484,6 +490,40 @@ describe('Events - GETs and POST API: /api/events', () => {
       const invalidMoney = {
         ...moneyToPost,
         descrip: "test",
+      }
+      const invalidJSON = JSON.stringify(invalidMoney);
+      try {
+        const response = await privateApi.post(url, invalidJSON);
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should NOT create a new money when flow is blank', async () => { 
+      const invalidMoney = {
+        ...moneyToPost,
+        flow: null as any,
+      }
+      const invalidJSON = JSON.stringify(invalidMoney);
+      try {
+        const response = await privateApi.post(url, invalidJSON);
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should NOT create a new money when flow is invalid', async () => { 
+      const invalidMoney = {
+        ...moneyToPost,
+        flow: "test",
       }
       const invalidJSON = JSON.stringify(invalidMoney);
       try {
@@ -740,6 +780,7 @@ describe('Events - GETs and POST API: /api/events', () => {
     const putMoney = {
       ...testMoney,      
       descrip: "PRIZEFUND",
+      flow: "OUT",
       amount: 2000,
       pot_id: null,
       brkt_id: null,
@@ -775,6 +816,7 @@ describe('Events - GETs and POST API: /api/events', () => {
       expect(puttedMoney.squad_id).toEqual(putMoney.squad_id);
       expect(puttedMoney.div_id).toEqual(putMoney.div_id);
       expect(puttedMoney.descrip).toEqual(putMoney.descrip);
+      expect(puttedMoney.flow).toEqual(putMoney.flow);
       expect(Number(puttedMoney.amount)).toEqual(putMoney.amount);
       expect(puttedMoney.sort_order).toEqual(putMoney.sort_order);
       expect(puttedMoney.pot_id).toEqual(putMoney.pot_id);
@@ -1071,6 +1113,41 @@ describe('Events - GETs and POST API: /api/events', () => {
       const invalidMoney = {
         ...putMoney,
         descrip: "test",
+      }
+      const invalidJSON = JSON.stringify(invalidMoney);
+      try {
+        const response = await privateApi.put(oneMoneyUrl + invalidMoney.id, invalidJSON);
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+
+    it('should NOT update a money by ID when missing flow', async () => {
+      const invalidMoney = {
+        ...putMoney,
+        flow: null as any,
+      }
+      const invalidJSON = JSON.stringify(invalidMoney);
+      try {
+        const response = await privateApi.put(oneMoneyUrl + invalidMoney.id, invalidJSON);
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+    it('should NOT update a money by ID with invalid flow', async () => {
+      const invalidMoney = {
+        ...putMoney,
+        flow: "test",
       }
       const invalidJSON = JSON.stringify(invalidMoney);
       try {
@@ -1396,6 +1473,7 @@ describe('Events - GETs and POST API: /api/events', () => {
       squad_id: "sqd_3397da1adc014cf58c44e07c19914f71",
       div_id: "div_24b1cd5dee0542038a1244fc2978e862",
       descrip: "ENTRIES",
+      flow: "IN",
       amount: 1,
       pot_id: null,
       brkt_id: null,
@@ -1474,6 +1552,19 @@ describe('Events - GETs and POST API: /api/events', () => {
       didPatch = true;
       expect(patchedMoney.descrip).toEqual(patchMoney.descrip);
     })
+    it('should patch descrip when patching a money by ID', async () => { 
+      const patchMoney = {
+        id: toPatchId,
+        flow: 'OUT',
+      }
+      const moneyJSON = JSON.stringify(patchMoney);
+      const response = await privateApi.patch(oneMoneyUrl + patchMoney.id, moneyJSON);
+      const patchedMoney = response.data.money;
+      expect(response.status).toBe(200);
+      didPatch = true;
+      expect(patchedMoney.flow).toEqual(patchMoney.flow);
+    })
+
     it('should patch amount when patching a money by ID', async () => { 
       const patchMoney = {
         id: toPatchId,
@@ -1695,6 +1786,22 @@ describe('Events - GETs and POST API: /api/events', () => {
       try {
         const invalidJSON = JSON.stringify({          
           descrip: 'test',
+        })
+        const response = await privateApi.patch(oneMoneyUrl + toPatchId, invalidJSON)
+        expect(response.status).toBe(422);
+      } catch (err) {
+        if (err instanceof AxiosError) {
+          expect(err.response?.status).toBe(422);
+        } else {
+          expect(true).toBeFalsy();
+        }
+      }
+    })
+
+    it('should not patch flow when patching a money by ID when flow is invalid', async () => { 
+      try {
+        const invalidJSON = JSON.stringify({          
+          flow: 'test',
         })
         const response = await privateApi.patch(oneMoneyUrl + toPatchId, invalidJSON)
         expect(response.status).toBe(422);

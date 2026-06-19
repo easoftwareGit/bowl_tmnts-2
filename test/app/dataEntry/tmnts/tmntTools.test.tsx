@@ -50,6 +50,7 @@ describe("tmntTools.tsx", () => {
       expect(blank.oneBrkts).toEqual([]);
       expect(blank.players).toEqual([]);
       expect(blank.potEntries).toEqual([]);
+      expect(blank.moneys).toEqual([]);
     });
 
     it("creates exactly 1 event, 1 div, 1 squad, and 2 lanes with required defaults", () => {

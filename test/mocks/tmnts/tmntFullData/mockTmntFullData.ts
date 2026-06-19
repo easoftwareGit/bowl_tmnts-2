@@ -6,6 +6,7 @@ import {
   blankOneBrkt,
   blankPlayer,
   blankPotEntry,
+  blankTmntMoney,
   initBrkt,
   initDiv,
   initElim,
@@ -24,7 +25,7 @@ import type {
   tmntFullType,
   gameType,    
 } from "@/lib/types/types";
-import { SquadStage } from "@prisma/client";
+import { MoneyDescrip, MoneyFlow, SquadStage } from "@prisma/client";
 
 export const brktId1 = "brk_0123f51cc1ca4748ad5e8abab88277ea";
 export const brktId2 = "brk_0123f51cc1ca4748ad5e8abab88277eb";
@@ -90,6 +91,15 @@ export const laneId1 = "lan_01239d9e6b6e4c5b9f6b7d9e7f9b6c5a";
 export const laneId2 = "lan_01239d9e6b6e4c5b9f6b7d9e7f9b6c5b";
 export const laneId3 = "lan_01239d9e6b6e4c5b9f6b7d9e7f9b6c5c";
 export const laneId4 = "lan_01239d9e6b6e4c5b9f6b7d9e7f9b6c5d";
+
+export const moneyId1 = "mon_0123e6fcaa8343d0b18b56a71e8c160a";
+export const moneyId2 = "mon_0123e6fcaa8343d0b18b56a71e8c160b";
+export const moneyId3 = "mon_0123e6fcaa8343d0b18b56a71e8c160c";
+export const moneyId4 = "mon_0123e6fcaa8343d0b18b56a71e8c160d";
+export const moneyId5 = "mon_0123e6fcaa8343d0b18b56a71e8c160e";
+export const moneyId6 = "mon_0123e6fcaa8343d0b18b56a71e8c160f";
+export const moneyId7 = "mon_0123e6fcaa8343d0b18b56a71e8c1610";                         
+
 export const oneBrktId1 = "obk_01238f787de942a1a92aaa2df3e7c18a";
 export const oneBrktId2 = "obk_01238f787de942a1a92aaa2df3e7c18b";
 export const oneBrktId3 = "obk_01238f787de942a1a92aaa2df3e7c18c";
@@ -433,6 +443,90 @@ export const mockTmntFullData: tmntFullType = {
       lane_number: 32,
       squad_id: squadId1,
       in_use: true,
+    },
+  ],
+  moneys: [
+    {
+      ...blankTmntMoney,
+      id: moneyId1,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
+      descrip: MoneyDescrip.ADDED,
+      flow: MoneyFlow.IN,
+      amount: 0,
+      sort_order: 1,
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId2,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
+      descrip: MoneyDescrip.ENTRIES,
+      flow: MoneyFlow.IN,
+      amount: 340,
+      sort_order: 2,
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId3,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
+      descrip: MoneyDescrip.ENTRIES,
+      flow: MoneyFlow.IN,
+      amount: 80,
+      sort_order: 3,
+      pot_id: potId1,
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId4,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
+      descrip: MoneyDescrip.ENTRIES,
+      flow: MoneyFlow.IN,
+      amount: 90,
+      sort_order: 4,
+      brkt_id: brktId1,
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId5,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
+      descrip: MoneyDescrip.ENTRIES,
+      flow: MoneyFlow.IN,
+      amount: 90,
+      sort_order: 5,
+      brkt_id: brktId2,
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId6,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
+      descrip: MoneyDescrip.ENTRIES,
+      flow: MoneyFlow.IN,
+      amount: 10,
+      sort_order: 6,
+      elim_id: elimId1,
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId7,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
+      descrip: MoneyDescrip.ENTRIES,
+      flow: MoneyFlow.IN,
+      amount: 10,
+      sort_order: 7,
+      elim_id: elimId2,
     },
   ],
   oneBrkts: [

@@ -36,6 +36,13 @@ enum MoneyDescrip {
   ERROR
 }
 
+// use: import type { MoneyFlow } from "@prisma/client"; to import type
+// use: import { MoneyFlow } from "@prisma/client"; to import enum value(s)
+enum MoneyFlow {
+  IN
+  OUT
+}
+
 // notes:
 // password_hash is optional because when authenticating via Google, no password is saved in the database
 model User {
@@ -372,6 +379,7 @@ model Money {
   squad_id   String       @db.Text
   div_id     String       @db.Text
   descrip    MoneyDescrip
+  flow       MoneyFlow
   amount     Decimal      @db.Decimal(9, 2)
   pot_id     String?      @db.Text
   brkt_id    String?      @db.Text

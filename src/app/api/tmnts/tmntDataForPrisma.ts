@@ -14,6 +14,7 @@ import type {
   tmntDataType,
   tmntFullDataForPrismaType,
   tmntFullType,
+  tmntMoneyDataType,
   tmntType,
 } from "@/lib/types/types";
 import { eventDataForPrisma } from "../events/eventDataForPrisma";
@@ -27,6 +28,7 @@ import { divEntryDataForPrisma } from "../divEntries/divEntryDataForPrisma";
 import { potEntryDataForPrisma } from "../potEntries/potEntriesDataForPrisma";
 import { brktEntryDataForPrisma } from "../brktEntries/brktEntryDataForPrisma";
 import { elimEntryDataForPrisma } from "../elimEntries/elimEntriesDataForPrisma";
+import { tmntMoneyDataForPrisma } from "../moneys/moneyDataForPrisma";
 
 /**
  * Converts tournament data for prisma
@@ -103,7 +105,9 @@ export const tmntFullDataForPrisma = (
     const elimEntriesData: elimEntryDataType[] = tmntFullData.elimEntries
       .map((elimEntry) => elimEntryDataForPrisma(elimEntry))
       .filter((data): data is elimEntryDataType => data !== null);
-
+    const moneysData: tmntMoneyDataType[] = tmntFullData.moneys
+      .map((money) => tmntMoneyDataForPrisma(money))
+      .filter((data): data is tmntMoneyDataType => data !== null);
     const forPrisma: tmntFullDataForPrismaType = {
       tmntData,
       eventsData,
@@ -120,7 +124,8 @@ export const tmntFullDataForPrisma = (
       potsData,
       playersData,
       elimEntriesData,
-      elimsData,
+      elimsData,    
+      moneysData,
     };
     return forPrisma;
   } catch (error) {

@@ -7,7 +7,7 @@ import { blankTmntMoney, initTmntMoney } from "@/lib/db/initVals";
 import { standardCatchReturn } from "@/app/api/apiCatch";
 import { sanitizeTmntMoney, validateTmntMoney } from "@/lib/validation/moneys/validate";
 import { validBtdbMoney } from "@/lib/currency/validate";
-import { MoneyDescrip } from "@prisma/client";
+import { MoneyDescrip, MoneyFlow } from "@prisma/client";
 
 // routes /api/moneys/money/:id
 
@@ -48,6 +48,7 @@ export async function PUT(
       squad_id,
       div_id,
       descrip,
+      flow,
       amount,
       sort_order,
       pot_id,
@@ -60,7 +61,8 @@ export async function PUT(
       event_id, 
       squad_id, 
       div_id, 
-      descrip,      
+      descrip,
+      flow,
       amount, 
       sort_order, 
       pot_id, 
@@ -98,6 +100,7 @@ export async function PUT(
         squad_id: toPut.squad_id,
         div_id: toPut.div_id,
         descrip: toPut.descrip,
+        flow: toPut.flow,
         amount: toPut.amount as number,
         sort_order: toPut.sort_order,
         pot_id: toPut.pot_id,
@@ -129,6 +132,7 @@ export async function PATCH(
       squad_id: "sqd_00000000000000000000000000000000",
       div_id: "div_00000000000000000000000000000000",
       descrip: MoneyDescrip.OTHER,
+      flow: MoneyFlow.IN,
       amount: 0,
       sort_order: 1,
       pot_id: null,
@@ -142,8 +146,9 @@ export async function PATCH(
       event_id: fakeMoney.event_id, 
       squad_id: fakeMoney.squad_id, 
       div_id: fakeMoney.div_id, 
-      descrip: fakeMoney.descrip,      
       amount: Number(fakeMoney.amount), 
+      descrip: fakeMoney.descrip,
+      flow: fakeMoney.flow,
       sort_order: fakeMoney.sort_order, 
       pot_id: fakeMoney.pot_id, 
       brkt_id: fakeMoney.brkt_id, 
@@ -168,6 +173,10 @@ export async function PATCH(
     }
     if (jsonProps.includes("descrip")) {
       toCheck.descrip = json.descrip;
+      gotDataToPatch = true;
+    }
+    if (jsonProps.includes("flow")) {
+      toCheck.flow = json.flow;
       gotDataToPatch = true;
     }
     if (jsonProps.includes("amount")) {
@@ -230,6 +239,9 @@ export async function PATCH(
     if (jsonProps.includes("descrip")) {
       toPatch.descrip = toBePatched.descrip;
     }
+    if (jsonProps.includes("flow")) {
+      toPatch.flow = toBePatched.flow;
+    }
     if (jsonProps.includes("amount")) {
       toPatch.amount = toBePatched.amount;
     }
@@ -254,6 +266,7 @@ export async function PATCH(
         squad_id: toPatch.squad_id || undefined,
         div_id: toPatch.div_id || undefined,
         descrip: toPatch.descrip || undefined,
+        flow: toPatch.flow || undefined,
         amount: toPatch.amount || undefined,
         pot_id: toPatch.pot_id || undefined,
         brkt_id: toPatch.brkt_id || undefined,

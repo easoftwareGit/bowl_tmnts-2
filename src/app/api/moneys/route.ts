@@ -8,7 +8,6 @@ import {
 } from "../../../lib/validation/moneys/validate";
 import { ErrorCode } from "@/lib/enums/enums";
 import { standardCatchReturn } from "../apiCatch";
-import type { MoneyDescrip } from "@prisma/client";
 
 // routes /api/moneys
 
@@ -37,6 +36,7 @@ export async function POST(request: NextRequest) {
       squad_id,
       div_id,
       descrip,
+      flow,
       amount,
       sort_order,
       pot_id,
@@ -51,6 +51,7 @@ export async function POST(request: NextRequest) {
       squad_id,
       div_id,
       descrip,
+      flow,
       amount,
       sort_order,
       pot_id,
@@ -84,6 +85,7 @@ export async function POST(request: NextRequest) {
       squad_id: toPost.squad_id,
       div_id: toPost.div_id,
       descrip: toPost.descrip,
+      flow: toPost.flow,
       amount: toPost.amount as number,
       sort_order: toPost.sort_order,
       pot_id: toPost.pot_id,

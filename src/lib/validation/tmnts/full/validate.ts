@@ -14,6 +14,7 @@ import type {
   squadType,
   tmntFullDataErrType,
   tmntFullType,
+  tmntMoneyType,
   validBrktEntriesType,
   validBrktSeedsType,
   validBrktsType,
@@ -28,6 +29,7 @@ import type {
   validPotEntriesType,
   validPotsType,
   validSquadsType,
+  validTmntMoneyType,
 } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { ErrorCode } from "@/lib/enums/enums";
@@ -49,6 +51,7 @@ import { sanitizeElimEntry, validateElimEntries } from "../../elimEntries/valida
 import { sanitizeFullStage, validateFullStage } from "../../stages/validate";
 import { getBlankTmntFullData } from "@/app/dataEntry/tmntForm/tmntTools";
 import { cloneDeep } from "lodash";
+import { sanitizeTmntMoney, validateTmntMoneys } from "../../moneys/validate";
 
 const noError: tmntFullDataErrType = {
   errorCode: ErrorCode.NONE,
@@ -931,6 +934,113 @@ const getLanesError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
 };
 
 /**
+ * gets moneys error
+ *
+ * @param {tmntFullType} tmntFullData - tmnt full data
+ * @returns {tmntFullDataErrType} - error information
+ */
+const getMoneysError = (tmntFullData: tmntFullType): tmntFullDataErrType => {
+  const brkts: brktType[] = tmntFullData.brkts;
+  const divs: divType[] = tmntFullData.divs;
+  const elims: elimType[] = tmntFullData.elims;
+  const events: eventType[] = tmntFullData.events; 
+  const squads: squadType[] = tmntFullData.squads;
+  const pots: potType[] = tmntFullData.pots;  
+
+  const moneys: tmntMoneyType[] = tmntFullData.moneys;
+  
+  // must have moneys array 
+  if (!moneys || !Array.isArray(moneys)) {
+    return {
+      errorCode: ErrorCode.MISSING_DATA,
+      errorTable: "moneys",
+      errorIndex: 0,
+      message: "no moneys data",
+    };
+  }
+  // must have parents if have child data
+  if (
+    !events ||
+    !Array.isArray(events) ||
+    !divs ||
+    !Array.isArray(divs) ||
+    !squads ||
+    !Array.isArray(squads) ||
+    ((divs.length === 0 || squads.length === 0) && moneys.length > 0)
+  ) {
+    return {
+      errorTable: "moneys",
+      errorCode: ErrorCode.MISSING_DATA,
+      errorIndex: 0,
+      message: "no moneys parent data",
+    };
+  }
+
+  // ok to have 0 moneys
+  let validMoneys: validTmntMoneyType = { tmntMoneys: [], errorCode: ErrorCode.NONE };
+  const moneysErr: tmntFullDataErrType = {
+    ...noError,
+  };
+  // ok to have 0 pots
+  if (moneys.length === 0) return moneysErr;
+
+  validMoneys = validateTmntMoneys(moneys);
+  if (
+    validMoneys.errorCode !== ErrorCode.NONE ||
+    validMoneys.tmntMoneys.length !== moneys.length
+  ) {
+    moneysErr.errorTable = "moneys";
+    moneysErr.errorCode = validMoneys.errorCode;
+    if (validMoneys.tmntMoneys.length === 0) {
+      moneysErr.errorIndex = 0;
+    } else {
+      const errorIndex = moneys.findIndex((money) => !isValidBtDbId(money.id, "mon"));
+      if (errorIndex < 0) {
+        moneysErr.errorIndex = validMoneys.tmntMoneys.length;
+      } else {
+        moneysErr.errorIndex = errorIndex;
+      }
+    }
+    moneysErr.message = advancedErrMsg(moneysErr);
+    return moneysErr;
+  }
+  // validateMoneys is called without parent event, div or squad data
+  // check parent/child relationships here
+  for (let i = 0; i < moneys.length; i++) {
+    const tmntMoney = moneys[i];
+    const event = events.find((e) => e.id === tmntMoney.event_id);
+    if (!event) {
+      moneysErr.errorTable = "moneys";
+      moneysErr.errorCode = ErrorCode.MISSING_DATA;
+      moneysErr.errorIndex = i;
+      moneysErr.message = "moneys has no parent event at index " + moneysErr.errorIndex;
+      return moneysErr;
+    }
+    const div = divs.find((d) => d.id === tmntMoney.div_id);
+    if (!div) {
+      moneysErr.errorTable = "moneys";
+      moneysErr.errorCode = ErrorCode.MISSING_DATA;
+      moneysErr.errorIndex = i;
+      moneysErr.message = "moneys has no parent div at index " + moneysErr.errorIndex;
+      return moneysErr;
+    }
+    const squad = squads.find((s) => s.id === tmntMoney.squad_id);
+    if (!squad) {
+      moneysErr.errorTable = "moneys";
+      moneysErr.errorCode = ErrorCode.MISSING_DATA;
+      moneysErr.errorIndex = i;
+      moneysErr.message =
+        "moneys has no parent squad at index " + moneysErr.errorIndex;
+      return moneysErr;
+    }
+  }
+  // if got here, then no errors in moneys
+  // replace moneys with sanitized moneys
+  tmntFullData.moneys = validMoneys.tmntMoneys;
+  return moneysErr;
+};
+
+/**
  * gets oneBrkts error
  *
  * @param {tmntFullType} tmntFullData - tmnt full data
@@ -1417,6 +1527,8 @@ export const sanitizeFullTmnt = (tmntFullData: tmntFullType): tmntFullType => {
   sanitizedFullTmnt.brktSeeds = tmntFullData.brktSeeds.map(sanitizeBrktSeed);
 
   sanitizedFullTmnt.elimEntries = tmntFullData.elimEntries.map(sanitizeElimEntry);
+
+  sanitizedFullTmnt.moneys = tmntFullData.moneys.map(sanitizeTmntMoney);
   return sanitizedFullTmnt;
 }
 
@@ -1504,6 +1616,10 @@ export const validateFullTmnt = (
   fullTmntErr = getElimEntriesError(tmntFullData);
   if (fullTmntErr.errorCode !== ErrorCode.NONE) return fullTmntErr;
 
+  // validate moneys
+  fullTmntErr = getMoneysError(tmntFullData);
+  if (fullTmntErr.errorCode !== ErrorCode.NONE) return fullTmntErr;
+
   // validate pots
   fullTmntErr = getPotsError(tmntFullData);
   if (fullTmntErr.errorCode !== ErrorCode.NONE) return fullTmntErr;
@@ -1530,6 +1646,7 @@ export const exportedForTesting = {
   getEventsError,
   getElimEntriesError,
   getElimsError,
+  getMoneysError,
   getLanesError,
   getOneBrktsError,
   getPlayersError,

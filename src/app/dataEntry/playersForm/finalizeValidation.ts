@@ -16,7 +16,6 @@ const hasPositiveNumber = (value: unknown): boolean => {
   return Number.isFinite(num) && num > 0;
 };
 
-
 /**
  * Validates the rows to be finalized
  * 

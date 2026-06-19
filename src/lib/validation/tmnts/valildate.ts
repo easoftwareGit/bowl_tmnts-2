@@ -190,6 +190,7 @@ export function isTmntFullType(input: unknown): input is tmntFullType {
     "elims" in input &&
     "events" in input &&
     "lanes" in input &&
+    "moneys" in input &&
     "oneBrkts" in input &&
     "players" in input &&
     "potEntries" in input &&
@@ -204,6 +205,7 @@ export function isTmntFullType(input: unknown): input is tmntFullType {
     Array.isArray((input as any).elims) &&
     Array.isArray((input as any).events) &&
     Array.isArray((input as any).lanes) &&
+    Array.isArray((input as any).moneys) &&
     Array.isArray((input as any).oneBrkts) &&
     Array.isArray((input as any).players) &&
     Array.isArray((input as any).potEntries) &&

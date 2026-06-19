@@ -4,7 +4,7 @@ import { isValidBtDbId } from "@/lib/validation/validation";
 import { ErrorCode } from "@/lib/enums/enums";
 import type { tmntFullType } from "@/lib/types/types";
 import { tmntFullDataForPrisma } from "../../tmntDataForPrisma";
-import { getErrorStatus, standardCatchReturn } from "@/app/api/apiCatch";
+import { standardCatchReturn } from "@/app/api/apiCatch";
 import { SquadStage } from "@prisma/client";
 import { sanitizeFullTmnt, validateFullTmnt } from "@/lib/validation/tmnts/full/validate";
 
@@ -81,9 +81,9 @@ export async function PUT(
       });
       const brktIds = brkts.map((brkt) => brkt.id);
       // 2c - delete one_brkt data
-      await tx.one_Brkt.deleteMany({
-        where: { brkt_id: { in: brktIds } },
-      });
+      await tx.one_Brkt.deleteMany({ where: { brkt_id: { in: brktIds } }, });      
+      // 2d - delete moneys data
+      await tx.money.deleteMany({ where: { squad_id: squadId } });
 
       // 3 replace data with edited data
       await tx.player.createMany({
@@ -98,6 +98,10 @@ export async function PUT(
       await tx.elim_Entry.createMany({
         data: prismaTmntFullEntriesData.elimEntriesData,
       });
+      await tx.money.createMany({
+        data: prismaTmntFullEntriesData.moneysData,
+      })
+      
       // 3a - update stage
       const updatedStage = await tx.stage.update({
         where: { id: stage.id },

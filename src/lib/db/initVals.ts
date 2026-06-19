@@ -31,7 +31,7 @@ import type {
   fullStageType,
   tmntMoneyType,
 } from "../types/types";
-import { User, Bowl, Tmnt, SquadStage, MoneyDescrip } from "@prisma/client";
+import { User, Bowl, Tmnt, SquadStage, MoneyDescrip, MoneyFlow } from "@prisma/client";
 import { todayStr } from "@/lib/dateTools";
 import { btDbUuid } from "../uuid";
 import { startOfToday } from "date-fns";
@@ -561,6 +561,7 @@ export const initTmntMoney: tmntMoneyType = {
   squad_id: "",
   div_id: "",  
   descrip: MoneyDescrip.ERROR,
+  flow: MoneyFlow.IN,
   amount: 0,
   pot_id: null,
   brkt_id: null,
@@ -575,6 +576,7 @@ export const blankTmntMoney: tmntMoneyType = {
   squad_id: null as any,
   div_id: null as any,
   descrip: null as any,
+  flow: null as any,
   amount: null as any,
   sort_order: null as any,
 }
@@ -720,6 +722,7 @@ export const linkedInitTmntFullData = (userId: string): tmntFullType => {
         lane_number: 2
       },
     ],
+    moneys: [],
     oneBrkts: [],
     players: [],
     potEntries: [],

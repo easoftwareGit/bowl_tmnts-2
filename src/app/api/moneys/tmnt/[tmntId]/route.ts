@@ -21,7 +21,10 @@ export async function GET(
           tmnt_id: tmntId,
         },        
       },
-      orderBy: [        
+      orderBy: [
+        { event_id: "asc" },
+        { squad_id: "asc" },
+        { div_id: "asc" },
         { sort_order: "asc" },
       ],
     });

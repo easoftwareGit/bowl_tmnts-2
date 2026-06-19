@@ -65,7 +65,8 @@ describe("NewTmntPage", () => {
     pots: [],
     potEntries: [],
     squads: [],
-    players: [],
+    players: [],    
+    moneys: [],
   });
 
   it('renders the heading "New Tournament"', () => {

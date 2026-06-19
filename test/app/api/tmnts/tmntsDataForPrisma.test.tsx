@@ -101,16 +101,34 @@ describe('tmntDataForPrisma', () => {
       stage_override_at: mockTmntFullData.stage.stage_override_at,
       stage_override_reason: mockTmntFullData.stage.stage_override_reason
     })
-    expect(result.brktEntriesData.length).toBe(4);
-    expect(result.brktSeedsData.length).toBe(8);
-    expect(result.brktsData.length).toBe(2);
-    expect(result.divEntriesData.length).toBe(4);
-    expect(result.elimEntriesData.length).toBe(4);
-    expect(result.elimsData.length).toBe(2);
-    expect(result.oneBrktsData.length).toBe(2);
-    expect(result.playersData.length).toBe(4);
-    expect(result.potEntriesData.length).toBe(4);
-    expect(result.potsData.length).toBe(2);            
+    expect(result.brktEntriesData.length).toBe(mockTmntFullData.brktEntries.length);
+    expect(result.brktSeedsData.length).toBe(mockTmntFullData.brktSeeds.length);
+    expect(result.brktsData.length).toBe(mockTmntFullData.brkts.length);
+    expect(result.divEntriesData.length).toBe(mockTmntFullData.divEntries.length);
+    expect(result.elimEntriesData.length).toBe(mockTmntFullData.elimEntries.length);
+    expect(result.elimsData.length).toBe(mockTmntFullData.elims.length);
+    expect(result.oneBrktsData.length).toBe(mockTmntFullData.oneBrkts.length);
+    expect(result.playersData.length).toBe(mockTmntFullData.players.length);
+    expect(result.potEntriesData.length).toBe(mockTmntFullData.potEntries.length);
+    expect(result.potsData.length).toBe(mockTmntFullData.pots.length);
+    expect(result.moneysData.length).toBe(mockTmntFullData.moneys.length);
+
+    if (mockTmntFullData.moneys.length > 0) {
+      expect(result.moneysData[0]).toMatchObject({
+        id: mockTmntFullData.moneys[0].id,
+        event_id: mockTmntFullData.moneys[0].event_id,
+        squad_id: mockTmntFullData.moneys[0].squad_id,
+        div_id: mockTmntFullData.moneys[0].div_id,
+        descrip: mockTmntFullData.moneys[0].descrip,
+        flow: mockTmntFullData.moneys[0].flow,
+        amount: mockTmntFullData.moneys[0].amount,
+        pot_id: mockTmntFullData.moneys[0].pot_id,
+        brkt_id: mockTmntFullData.moneys[0].brkt_id,
+        elim_id: mockTmntFullData.moneys[0].elim_id,
+        sort_order: mockTmntFullData.moneys[0].sort_order,
+      });
+    }    
+
   });
 
 })

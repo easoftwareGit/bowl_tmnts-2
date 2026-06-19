@@ -1,5 +1,5 @@
 import { validMoney } from "@/lib/currency/validate";
-import { MoneyDescrip } from "@prisma/client";
+import { MoneyDescrip, MoneyFlow } from "@prisma/client";
 import { isValidBtDbId, isNumber, validSortOrder } from "@/lib/validation/validation";
 import { baseIdLength, maxMoney } from "../constants";
 import { ErrorCode } from "@/lib/enums/enums";
@@ -21,6 +21,7 @@ const gotTmntMoneyData = (tmntMoney: tmntMoneyType): ErrorCode => {
       !tmntMoney.squad_id ||
       !tmntMoney.div_id ||
       !tmntMoney.descrip ||
+      !tmntMoney.flow ||
       (tmntMoney.amount == null) ||
       !tmntMoney.sort_order)
     {
@@ -51,9 +52,22 @@ export const validTmntMoneyAmount = (moneyNum: unknown): boolean => {
  */
 export const validDescripValue = (descrip: unknown): descrip is MoneyDescrip => {
   return (
-    typeof descrip === "string" &&
-    descrip !== MoneyDescrip.ERROR &&
+    typeof descrip === "string" &&    
     (Object.values(MoneyDescrip) as string[]).includes(descrip)
+  );
+};
+
+/**
+ * checks if flow is valid
+ * 
+ * @param {unknown} flow - descrip to check
+ * @returns {boolean} - true if descrip is valid; else false
+ */
+export const validFlowValue = (flow: unknown): flow is MoneyFlow => {
+  const validFlow = (Object.values(MoneyFlow) as string[]).includes(flow as string);
+  return (
+    typeof flow === "string" &&      
+    (Object.values(MoneyFlow) as string[]).includes(flow)
   );
 };
 
@@ -79,6 +93,9 @@ const validTmntMoneyData = (tmntMoney: tmntMoneyType): ErrorCode => {
       return ErrorCode.INVALID_DATA;
     }
     if (!validDescripValue(tmntMoney.descrip)) {
+      return ErrorCode.INVALID_DATA;
+    }
+    if (!validFlowValue(tmntMoney.flow)) {
       return ErrorCode.INVALID_DATA;
     }
     if (!validTmntMoneyAmount(tmntMoney.amount)) {
@@ -139,6 +156,9 @@ export const sanitizeTmntMoney = (tmntMoney: tmntMoneyType): tmntMoneyType => {
   }
   if (validDescripValue(tmntMoney.descrip)) {
     sanitziedTmntMoney.descrip = tmntMoney.descrip;
+  }
+  if (validFlowValue(tmntMoney.flow)) {
+    sanitziedTmntMoney.flow = tmntMoney.flow;
   }
   if (tmntMoney.amount !== null) {
     sanitziedTmntMoney.amount = sanitizeMoneyAmount(tmntMoney.amount);

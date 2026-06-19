@@ -28,6 +28,7 @@ import { extractPlayers } from "../players/dbPlayers";
 import { SquadStage } from "@prisma/client";
 import { validateFullTmnt } from "@/lib/validation/tmnts/full/validate";
 import { ErrorCode } from "@/lib/enums/enums";
+import { extractTmntMoneys } from "../moneys/dbMoneys";
 
 // If running tests AND a test URL is defined, use it; otherwise use the app API path
 const url = process.env.NODE_ENV === "test" && testBaseTmntsApi
@@ -380,6 +381,9 @@ export const getTmntFullData = async (
 
         const extractedPlayers = extractPlayers(dbSquad.players);
         tmntFullData.players.push(...extractedPlayers);
+
+        const extractedTmntMoneys = extractTmntMoneys(dbSquad.moneys);
+        tmntFullData.moneys.push(...extractedTmntMoneys);
       });
     });
   }

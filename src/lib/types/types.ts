@@ -1,5 +1,5 @@
 import type { BracketList } from "@/components/brackets/bracketListClass";
-import type { SquadStage, MoneyDescrip } from "@prisma/client";
+import type { SquadStage, MoneyDescrip, MoneyFlow } from "@prisma/client";
 import { ErrorCode, tmntFormParent } from "@/lib/enums/enums";
 import { idTypesArray } from "../validation/validation";
 
@@ -658,11 +658,26 @@ export type tmntMoneyType = {
   event_id: string,
   squad_id: string,
   div_id: string,
-  descrip: MoneyDescrip,
+  descrip: MoneyDescrip,  
+  flow: MoneyFlow,
   amount: number | null,
   pot_id: string | null,
   brkt_id: string | null,
   elim_id: string | null,  
+  sort_order: number,
+}
+
+export type tmntMoneyDataType = {
+  id: string,
+  event_id: string,
+  squad_id: string,
+  div_id: string,
+  descrip: MoneyDescrip,
+  flow: MoneyFlow,
+  amount: number,
+  pot_id: string | null,
+  brkt_id: string | null,
+  elim_id: string | null,
   sort_order: number,
 }
 
@@ -693,6 +708,7 @@ export type gridTmntEntryDataType = {
   potEntries: potEntryType[];    
   brktEntries: brktEntryType[];  
   elimEntries: elimEntryType[];  
+  moneys: tmntMoneyType[];
 }
 
 export type dataOneSquadEntriesType = {  
@@ -775,7 +791,8 @@ export type tmntFullType = {
   potEntries: potEntryType[];
   pots: potType[];
   squads: squadType[];  
-  stage: fullStageType;
+  stage: fullStageType;  
+  moneys: tmntMoneyType[];
 }
 
 export type tmntFullDataForPrismaType = {
@@ -795,6 +812,7 @@ export type tmntFullDataForPrismaType = {
   potsData: potDataType[];
   squadsData: squadDataType[];
   stageData: fullStageType;
+  moneysData: tmntMoneyDataType[];
 }
 
 export type tmntFormDataType = {
@@ -846,6 +864,13 @@ export type errInfoType = {
   column: string;
   msg: string;
 };
+
+export type reportGridCol = {
+  key: string,
+  label: string,
+  width: number,
+  align: "left" | "center" | "right",
+}
 
 export type testDateType = {
   id: number,

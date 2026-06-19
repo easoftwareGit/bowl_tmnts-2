@@ -939,7 +939,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
       // extract the data from the rows
       const entriesData = extractDataFromRows(
         rowsToSave,
-        tmntData.squads[0].id,
+        tmntData,
         brktLists,
       );
       const brktsData = extractFullBrktsData(brktLists);
@@ -958,6 +958,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
           ...tmntData.stage,
           stage: updatedStage,
         },
+        moneys: [...entriesData.moneys],
       };
       // add the bye player if needed
       for (const brktList of brktLists) {
