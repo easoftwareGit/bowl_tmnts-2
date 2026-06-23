@@ -1,7 +1,7 @@
 import { privateApi } from "@/lib/api/axios";
 import { AxiosError } from "axios";
 import { baseMoneyApi } from "@/lib/api/apiPaths";
-import { testBaseMoneyApi } from "../../../testApi";
+import { testBaseMoneysApi } from "../../../testApi";
 import type { tmntMoneyType } from "@/lib/types/types";
 import { initTmntMoney } from "@/lib/db/initVals";
 import { maxMoney, maxSortOrder } from "@/lib/validation/constants";
@@ -22,8 +22,8 @@ import { maxMoney, maxSortOrder } from "@/lib/validation/constants";
 //         This will start the server in debug mode. 
 
 // If running tests AND a test URL is defined, use it; otherwise use the app API path
-const url = process.env.NODE_ENV === "test" && testBaseMoneyApi
-  ? testBaseMoneyApi
+const url = process.env.NODE_ENV === "test" && testBaseMoneysApi
+  ? testBaseMoneysApi
   : baseMoneyApi;
 
 const oneMoneyUrl = url + "/money/";
@@ -33,7 +33,7 @@ const notFoundId = "mon_01234567890123456789012345678901";
 const notFoundTmntId = "tmt_01234567890123456789012345678901";
 const userId = "usr_01234567890123456789012345678901";
 
-describe('Events - GETs and POST API: /api/events', () => { 
+describe('Moneys - GETs and POST API: /api/moneys', () => { 
 
   const testMoney: tmntMoneyType = {
     ...initTmntMoney,
@@ -1552,7 +1552,7 @@ describe('Events - GETs and POST API: /api/events', () => {
       didPatch = true;
       expect(patchedMoney.descrip).toEqual(patchMoney.descrip);
     })
-    it('should patch descrip when patching a money by ID', async () => { 
+    it('should patch flow when patching a money by ID', async () => { 
       const patchMoney = {
         id: toPatchId,
         flow: 'OUT',

@@ -40,4 +40,6 @@ export const baseResultsApi = '/results'
 
 export const baseMoneyApi = '/moneys'
 
+export const baseDivPfsApi = '/divPfs'
+
 export const baseBcryptApi = '/bcrypt'

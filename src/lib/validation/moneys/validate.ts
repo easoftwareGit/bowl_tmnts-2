@@ -1,7 +1,7 @@
 import { validMoney } from "@/lib/currency/validate";
 import { MoneyDescrip, MoneyFlow } from "@prisma/client";
 import { isValidBtDbId, isNumber, validSortOrder } from "@/lib/validation/validation";
-import { baseIdLength, maxMoney } from "../constants";
+import { maxMoney } from "../constants";
 import { ErrorCode } from "@/lib/enums/enums";
 import { sanitizeBtDbId, sanitizeMoneyAmount } from "../sanitize";
 import { tmntMoneyType, validTmntMoneyType } from "@/lib/types/types";
@@ -74,7 +74,7 @@ export const validFlowValue = (flow: unknown): flow is MoneyFlow => {
 /**
  * checks if tmntMoney data is valid
  * 
- * @param {tmntMoneyType} tmntMoney - divEntry to validate
+ * @param {tmntMoneyType} tmntMoney - tmntMoney to validate
  * @returns {ErrorCode.NONE | ErrorCode.INVALID_DATA | ErrorCode.OTHER_ERROR} - error code
  */
 const validTmntMoneyData = (tmntMoney: tmntMoneyType): ErrorCode => { 

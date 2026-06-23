@@ -16,7 +16,6 @@ import {
 import { mockPlayerRows } from "../../../mocks/tmnts/playerEntries/mockPlayerEntries";
 import { cloneDeep } from "lodash";
 
-
 const cloneRows = (): playerEntryRow[] =>
   cloneDeep(mockPlayerRows.filter((row) => row.feeTotal > 0)) as playerEntryRow[];
 

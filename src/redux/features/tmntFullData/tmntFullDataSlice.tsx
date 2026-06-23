@@ -35,6 +35,7 @@ const initialState: tmntFullDataState = {
     pots: [],
     squads: [],
     stage: blankFullStage,
+    moneys: [],
   },
   loadStatus: "idle",
   saveStatus: "idle",

@@ -2,15 +2,16 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import "./reportOptions.css";
+import { SquadStage } from "@prisma/client";
+// import "./reportOptions.css";
+import "../popupOptions.css";
 
-type ReportOption = {
+type reportOption = {
   id: string;
   label: string;
 };
 
-const reports: ReportOption[] = [
-  // { id: "brackets", label: "Brackets" },
+const reports: reportOption[] = [    
   // { id: "bracketSummary", label: "Bracket Summary" },
   // { id: "laneAssignments", label: "Lane Assignments" },
   { id: "recapsPerPair", label: "Recaps - per Pair" },
@@ -23,12 +24,14 @@ type ReportOptionsProps = {
   show: boolean;
   tmntId: string;
   onClose: () => void;
+  stage: SquadStage;
 };
 
 const ReportOptions: React.FC<ReportOptionsProps> = ({
   show,
   tmntId,
   onClose,
+  stage,
 }) => {
     
   const [selectedReportId, setSelectedReportId] = useState(reports[0].id);  
@@ -55,20 +58,39 @@ const ReportOptions: React.FC<ReportOptionsProps> = ({
     };
   }, [show, onClose]);
     
-  const handlePrint = (): void => {
+  const isReportEnabled = (reportId: string): boolean => {    
+    switch (reportId) {
+      case "recapsPerPair":
+      case "recapsPerTeam":
+        return stage === SquadStage.ENTRIES || stage === SquadStage.SCORES;
+      
+      case "scoreGrid":
+        return stage === SquadStage.SCORES;        
 
+      default:
+        return false;
+    }
+  };
+
+  const numReportsEnabled = (): number => {
+    return reports.filter((report) => isReportEnabled(report.id)).length;
+  };
+  
+  const handlePrint = (): void => {
+    if (!isReportEnabled(selectedReportId)) {
+      return;
+    }
     router.push(`/reports/${tmntId}/${selectedReportId}`);
-    // // pring logic goes here
-    // // window.print();    
-    // router.push(`/reports/${tmntId}`);
   }
+
+  const reportsEnabled = numReportsEnabled() > 0;
 
   return (
     <div className="position-relative">
       {show && (
         <div
           ref={panelRef}
-          className="reportOptions card shadow"
+          className="popupOptions card shadow"
         >
           <div className="d-flex justify-content-between align-items-center mb-3">
             <h5 className="m-0">Reports</h5>
@@ -84,44 +106,38 @@ const ReportOptions: React.FC<ReportOptionsProps> = ({
             <label className="form-label">
               Select Report
             </label>
-
-            {/* <select
-              className="form-select"
-              value={selectReport}
-              onChange={(e) => setSelectReport(e.target.value)}
-            >
-              {reports.map((report) => (
-                <option
-                  key={report}
-                  value={report}
-                >
-                  {report}
-                </option>
-              ))}
-            </select> */}
             <select
               className="form-select"
               value={selectedReportId}
-              onChange={(e) => setSelectedReportId(e.target.value)}
+              onChange={(e) => setSelectedReportId(e.target.value)}              
             >
               {reports.map((report) => (
                 <option
                   key={report.id}
                   value={report.id}
+                  disabled={!isReportEnabled(report.id)}
                 >
                   {report.label}
                 </option>
               ))}
             </select>            
           </div>
-
-          <button
-            type="button"
-            className="btn btn-info w-100"
-            onClick={handlePrint}
+          <div
+            title={ 
+              reportsEnabled
+                ? undefined
+                : "No reports enabled yet. Edit bowlers, then Valiadte & Save."
+            }
           >
-            Generate
-          </button>
+            <button
+              type="button"
+              className="btn btn-info w-100"
+              onClick={handlePrint}
+              disabled={!reportsEnabled}            
+            >
+              Generate
+            </button>
+          </div>
         </div>
       )}
     </div>    

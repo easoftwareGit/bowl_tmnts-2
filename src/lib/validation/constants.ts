@@ -41,6 +41,8 @@ export const minBrktEntryFee = 0.01;
 export const minSortOrder = 1;
 export const maxSortOrder = 1000000;
 
+export const maxPosition = 1000000;
+
 export const minYear = 1900;
 export const maxYear = 2200;
 export const minDate = new Date(Date.UTC(minYear, 0, 1, 0, 0, 0, 0));

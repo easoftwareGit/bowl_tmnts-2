@@ -11699,6 +11699,319 @@ async function moneysUpsert() {
 
 }
 
+async function divPfUpserts() {
+  
+  async function divPfUpsert_GoldPin() { 
+    try {
+      let prizeFund = await prisma.div_PF.upsert({
+        where: {
+          id: "dpf_ce55c52bd60d4943bb747590a03c9732",
+        },
+        update: {
+          div_id: "div_f30aea2c534f4cfe87f4315531cef8ef",
+          position: 1,
+          amount: 300,
+        },
+        create: {
+          id: "dpf_ce55c52bd60d4943bb747590a03c9732",
+          div_id: "div_f30aea2c534f4cfe87f4315531cef8ef",
+          position: 1,
+          amount: 300,
+        }
+      });
+      prizeFund = await prisma.div_PF.upsert({
+        where: {
+          id: "dpf_ce55c52bd60d4943bb747590a03c9733",
+        },
+        update: {
+          div_id: "div_f30aea2c534f4cfe87f4315531cef8ef",
+          position: 2,
+          amount: 200,
+        },
+        create: {
+          id: "dpf_ce55c52bd60d4943bb747590a03c9733",
+          div_id: "div_f30aea2c534f4cfe87f4315531cef8ef",
+          position: 2,
+          amount: 200,
+        }
+      });
+      return 2;
+    } catch (error) {
+      console.log(error);
+      return -1;
+    }    
+  }
+
+  async function divPfUpsert_WholeTmnt() {
+    try { 
+      let prizeFund = await prisma.div_PF.upsert({
+        where: {
+          id: "dpf_801d5496e32e4b94ba4affc8a4996cc2",
+        },
+        update: {
+          div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+          position: 1,
+          amount: 532,
+        },
+        create: {
+          id: "dpf_801d5496e32e4b94ba4affc8a4996cc2",
+          div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+          position: 1,
+          amount: 532,
+        }        
+      });
+      prizeFund = await prisma.div_PF.upsert({
+        where: {
+          id: "dpf_802d5496e32e4b94ba4affc8a4996cc2",
+        },
+        update: {
+          div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+          position: 2,
+          amount: 420,
+        },
+        create: {
+          id: "dpf_802d5496e32e4b94ba4affc8a4996cc2",
+          div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+          position: 2,
+          amount: 420,
+        }        
+      });
+      prizeFund = await prisma.div_PF.upsert({
+        where: {
+          id: "dpf_803d5496e32e4b94ba4affc8a4996cc2",
+        },
+        update: {
+          div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+          position: 3,
+          amount: 320,
+        },
+        create: {
+          id: "dpf_803d5496e32e4b94ba4affc8a4996cc2",
+          div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+          position: 3,
+          amount: 320,
+        }        
+      });
+      prizeFund = await prisma.div_PF.upsert({
+        where: {
+          id: "dpf_804d5496e32e4b94ba4affc8a4996cc2",
+        },
+        update: {
+          div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+          position: 4,
+          amount: 250,
+        },
+        create: {
+          id: "dpf_804d5496e32e4b94ba4affc8a4996cc2",
+          div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+          position: 4,
+          amount: 250,
+        }        
+      });
+      prizeFund = await prisma.div_PF.upsert({
+        where: {
+          id: "dpf_805d5496e32e4b94ba4affc8a4996cc2",
+        },
+        update: {
+          div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+          position: 5,
+          amount: 190,
+        },
+        create: {
+          id: "dpf_805d5496e32e4b94ba4affc8a4996cc2",
+          div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+          position: 5,
+          amount: 190,
+        }        
+      });
+      prizeFund = await prisma.div_PF.upsert({
+        where: {
+          id: "dpf_806d5496e32e4b94ba4affc8a4996cc2",
+        },
+        update: {
+          div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+          position: 6,
+          amount: 190,
+        },
+        create: {
+          id: "dpf_806d5496e32e4b94ba4affc8a4996cc2",
+          div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+          position: 6,
+          amount: 160,
+        }        
+      });
+      prizeFund = await prisma.div_PF.upsert({
+        where: {
+          id: "dpf_807d5496e32e4b94ba4affc8a4996cc2",
+        },
+        update: {
+          div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+          position: 7,
+          amount: 140,
+        },
+        create: {
+          id: "dpf_807d5496e32e4b94ba4affc8a4996cc2",
+          div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+          position: 7,
+          amount: 140,
+        }        
+      });
+      prizeFund = await prisma.div_PF.upsert({
+        where: {
+          id: "dpf_808d5496e32e4b94ba4affc8a4996cc2",
+        },
+        update: {
+          div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+          position: 8,
+          amount: 120,
+        },
+        create: {
+          id: "dpf_808d5496e32e4b94ba4affc8a4996cc2",
+          div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+          position: 8,
+          amount: 120,
+        }        
+      });
+      prizeFund = await prisma.div_PF.upsert({
+        where: {
+          id: "dpf_809d5496e32e4b94ba4affc8a4996cc2",
+        },
+        update: {
+          div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+          position: 9,
+          amount: 100,
+        },
+        create: {
+          id: "dpf_809d5496e32e4b94ba4affc8a4996cc2",
+          div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+          position: 9,
+          amount: 100,
+        }        
+      });
+      return 9;
+    } catch (error) { 
+      console.log(error);
+      return -1;
+    }
+  }
+
+  async function divPfUpsert_NewYearsEve() { 
+    try { 
+      let prizeFund = await prisma.div_PF.upsert({
+        where: {
+          id: "dpf_2516979e653f441b92646e7885cb3a50",
+        },
+        update: {
+          div_id: "div_578834e04e5e4885bbae79229d8b96e8",
+          position: 1,
+          amount: 250,
+        },
+        create: {
+          id: "dpf_2516979e653f441b92646e7885cb3a50",
+          div_id: "div_578834e04e5e4885bbae79229d8b96e8",
+          position: 1,
+          amount: 250,
+        }        
+      });
+      prizeFund = await prisma.div_PF.upsert({
+        where: {
+          id: "dpf_2526979e653f441b92646e7885cb3a50",
+        },
+        update: {
+          div_id: "div_578834e04e5e4885bbae79229d8b96e8",
+          position: 2,
+          amount: 150,
+        },
+        create: {
+          id: "dpf_2526979e653f441b92646e7885cb3a50",
+          div_id: "div_578834e04e5e4885bbae79229d8b96e8",
+          position: 2,
+          amount: 150,
+        }        
+      });
+      prizeFund = await prisma.div_PF.upsert({
+        where: {
+          id: "dpf_2536979e653f441b92646e7885cb3a50",
+        },
+        update: {
+          div_id: "div_fe72ab97edf8407186c8e6df7f7fb741",
+          position: 1,
+          amount: 275,
+        },
+        create: {
+          id: "dpf_2536979e653f441b92646e7885cb3a50",
+          div_id: "div_fe72ab97edf8407186c8e6df7f7fb741",
+          position: 1,
+          amount: 275,
+        }        
+      });
+      prizeFund = await prisma.div_PF.upsert({
+        where: {
+          id: "dpf_2546979e653f441b92646e7885cb3a50",
+        },
+        update: {
+          div_id: "div_fe72ab97edf8407186c8e6df7f7fb741",
+          position: 2,
+          amount: 175,
+        },
+        create: {
+          id: "dpf_2546979e653f441b92646e7885cb3a50",
+          div_id: "div_fe72ab97edf8407186c8e6df7f7fb741",
+          position: 2,
+          amount: 175,
+        }        
+      });
+      return 4;
+    } catch (error) { 
+      console.log(error);
+      return -1;
+    }
+  }
+
+  async function divPfUpsert_ToDelete() { 
+    try { 
+      let prizeFund = await prisma.div_PF.upsert({
+        where: {
+          id: "dpf_880335b1a15845c8aeb59efad19d6100",
+        },
+        update: {
+          div_id: "div_24b1cd5dee0542038a1244fc2978e862",
+          position: 1,
+          amount: 123,
+        },
+        create: {
+          id: "dpf_880335b1a15845c8aeb59efad19d6100",
+          div_id: "div_24b1cd5dee0542038a1244fc2978e862",
+          position: 1,
+          amount: 123,
+        }        
+      });      
+      return 1;
+    } catch (error) { 
+      console.log(error);
+      return -1;
+    }
+  }
+
+  try {
+    const gpCount = await divPfUpsert_GoldPin();
+    const wtCount = await divPfUpsert_WholeTmnt();
+    const nyCount = await divPfUpsert_NewYearsEve();
+    const delCount = await divPfUpsert_ToDelete();
+
+    console.log(
+      "Upserted div_pf: ",
+      gpCount + wtCount + nyCount + delCount
+    );    
+    // 2 + 9 + 4 + 1 = 16
+    return gpCount + wtCount + nyCount + delCount;
+  } catch (error) {
+    console.log(error);
+    return -1;
+  }
+
+}
+
 async function testDateUpsert() {
   try {
     const nowTime = new Date();
@@ -11988,6 +12301,9 @@ async function main() {
   if (count < 0) return;
 
   count = await moneysUpsert();
+  if (count < 0) return;
+
+  count = await divPfUpserts();
   if (count < 0) return;
 
   count = await testDateUpsert();

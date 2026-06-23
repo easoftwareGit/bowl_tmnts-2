@@ -17,7 +17,9 @@ import {
 } from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import { getBlankTmntFullData, getSquadStage } from "../../tmntForm/tmntTools";
 import { SquadStage } from "@prisma/client";
+import PrizeFundOptions from "@/components/prizeFunds/prizeFundOptions";
 import ReportOptions from "@/components/reports/reportOptions";
+
 
 // http://localhost:3000/dataEntry/runTmnt/tmt_d237a388a8fc4641a2e37233f1d6bebd
 
@@ -38,6 +40,7 @@ const RunTmntPage = () => {
   const [stageError, setStageError] = useState<string | null>(null);
   const [gotStage, setGotStage] = useState(false);
   const [errModalObj, setErrModalObj] = useState(initModalObj);
+  const [showPrizeFundOptions, setShowPrizeFundOptions] = useState<boolean>(false);
   const [showReportOptions, setShowReportOptions] = useState<boolean>(false);
 
   const hasPendingChangesRef = useRef(false);
@@ -176,12 +179,6 @@ const RunTmntPage = () => {
                 >
                   Edit Bowlers
                 </button>
-                {/* <Link
-                  className="btn btn-primary"
-                  href={`/dataEntry/editPlayers/${tmntId}`}
-                >
-                  Edit Bowlers
-                </Link> */}
               </div> 
               <div className="col-2">
                 <button
@@ -191,26 +188,47 @@ const RunTmntPage = () => {
                 >
                   Enter Scores
                 </button>
-                {/* <Link className="btn btn-primary" href="#">
-                  Enter Scores
-                </Link> */}
-              </div> 
-              <div className="col-2">
-                <Link className="btn btn-success" href="#">
-                  Set Prize Fund
-                </Link>
               </div> 
               <div className="col-2 d-grid gap-2">
-                {/* <Link className="btn btn-info" href="#">
-                  Print Reports
-                </Link> */}
-                <button
+                <div className="position-relative">
+                  <button
+                    type="button"
+                    className="btn btn-success h-100 w-100" 
+                    onClick={() => setShowPrizeFundOptions(true)}                  
+                  >
+                    Prize Fund
+                  </button>
+                  <PrizeFundOptions
+                    show={showPrizeFundOptions}
+                    fullTmntData={stateTmntFullData}
+                    onClose={() => setShowPrizeFundOptions(false)}
+                    stage={stage ?? SquadStage.ERROR}
+                  />
+                </div>
+              </div> 
+              <div className="col-2 d-grid gap-2">
+                <div className="position-relative">
+                  <button
+                    type="button"
+                    className="btn btn-info h-100 w-100" 
+                    onClick={() => setShowReportOptions(true)}                
+                  >
+                    Reports
+                  </button>
+                  <ReportOptions
+                    show={showReportOptions}
+                    tmntId={tmntId}
+                    onClose={() => setShowReportOptions(false)}
+                    stage={stage ?? SquadStage.ERROR}
+                  />
+                </div>
+                {/* <button
                   type="button"
                   className="btn btn-info" 
-                  onClick={() => setShowReportOptions(true)}
+                  onClick={() => setShowReportOptions(true)}                  
                 >
                   Reports
-                </button>
+                </button> */}
               </div> 
               <div className="col-2 d-grid gap-2">
                 {/* <Link className="btn btn-block btn-dark" href="#" >                  
@@ -236,11 +254,12 @@ const RunTmntPage = () => {
                 </Link>
               </div> 
             </div>
-            <ReportOptions
+            {/* <ReportOptions
               show={showReportOptions}
               tmntId={tmntId}
               onClose={() => setShowReportOptions(false)}
-            />
+              stage={stage ?? SquadStage.ERROR}
+            /> */}
             <TmntDataForm
               tmntProps={tmntFormData}
               markPendingChanges={markPendingChanges}

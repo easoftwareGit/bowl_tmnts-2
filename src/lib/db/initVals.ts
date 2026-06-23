@@ -30,6 +30,7 @@ import type {
   justStageOverrideType,
   fullStageType,
   tmntMoneyType,
+  divPfType,
 } from "../types/types";
 import { User, Bowl, Tmnt, SquadStage, MoneyDescrip, MoneyFlow } from "@prisma/client";
 import { todayStr } from "@/lib/dateTools";
@@ -581,6 +582,20 @@ export const blankTmntMoney: tmntMoneyType = {
   sort_order: null as any,
 }
 
+export const initDivPf: divPfType = {
+  id: btDbUuid('dpf'),
+  div_id: "",  
+  position: 1,
+  amount: 0,
+}
+
+export const blankDivPf: divPfType = {
+  ...initDivPf,  
+  id: "",
+  position: null as any,
+  amount: null as any,
+}
+
 export const blankDataOneTmnt = (): dataOneTmntType => {
   const initData: dataOneTmntType = {    
     tmnt: cloneDeep(blankTmnt),
@@ -599,7 +614,7 @@ export const blankDataOneTmnt = (): dataOneTmntType => {
     }],
     pots: [],    
     brkts: [],
-    elims: [],
+    elims: [],    
   }
   return initData;
 };

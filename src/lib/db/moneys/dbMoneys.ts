@@ -1,13 +1,13 @@
 import { publicApi, privateApi } from "@/lib/api/axios";
 import { baseMoneyApi } from "@/lib/api/apiPaths";
-import { testBaseMoneyApi } from "../../../../test/testApi";
+import { testBaseMoneysApi } from "../../../../test/testApi";
 import type { tmntMoneyType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { blankTmntMoney } from "../initVals";
 
 // If running tests AND a test URL is defined, use it; otherwise use the app API path
-const url = process.env.NODE_ENV === "test" && testBaseMoneyApi
-  ? testBaseMoneyApi
+const url = process.env.NODE_ENV === "test" && testBaseMoneysApi
+  ? testBaseMoneysApi
   : baseMoneyApi;  
 
 const oneMoneyUrl = url + "/money/";

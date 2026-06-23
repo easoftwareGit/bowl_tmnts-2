@@ -65,9 +65,13 @@ const validRoles = ["ADMIN", "DIRECTOR", "USER"];
 // obk - one individual bracket
 // bsd - bracket seed
 // mon - money
+// epf - event prize fund
+// ppf - pot prize fund
+// lpf - eliminator prize fund
 export const idTypesArray = [
   'usr', 'bwl', 'tmt', 'evt', 'div', 'sqd', 'stg', 'lan', 'pot', 'brk', 'elm',
-  'ply', 'bye', 'den', 'pen', 'ben', 'een', 'gam', 'obk', 'bsd', 'mon',
+  'ply', 'bye', 'den', 'pen', 'ben', 'een', 'gam', 'obk', 'bsd', 'mon', 'dpf',
+  'ppf', 'lpf'
 ] as const;
 const validTypes = new Set(idTypesArray);
 

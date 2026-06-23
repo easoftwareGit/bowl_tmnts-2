@@ -1,29 +1,22 @@
-import {
-  extractDataFromRows,
-  extractFullBrktsData
-} from "@/app/dataEntry/playersForm/extractData";
 import type { gridTmntEntryDataType } from "@/lib/types/types";
 import {
-  brkt1FeeColName,
   brkt1NumColName,
-  brkt1TimeStartColName,
-  brkt2FeeColName,
   brkt2NumColName,
-  brkt2TimeStartColName,
   mockDataOneTmnt,
   mockPlayerRows,  
 } from "../../../mocks/tmnts/playerEntries/mockPlayerEntries";
-import { isValidBtDbId } from "@/lib/validation/validation";
-import { calcHandicap } from "@/lib/db/divEntries/calcHdcp";
-import { BracketList } from "@/components/brackets/bracketListClass";
 import {
   brktId1,
   brktId2,
   divId1,
+  divId2,
   elimId1,
   elimId2,
-  eventId1,
   mockByePlayer,
+  oneBrktId1,
+  oneBrktId2,
+  oneBrktId3,
+  oneBrktId4,
   playerId1,
   playerId2,
   playerId3,
@@ -32,1572 +25,1742 @@ import {
   playerId6,
   playerId7,
   playerId8,
+  playerId10,
   potId1,
-  squadId1,  
+  potId2,
+  squadId1,
 } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
-import { Bracket } from "@/components/brackets/bracketClass";
+
+const mockBtDbUuid = jest.fn();
+
+jest.mock("@/lib/uuid", () => ({
+  btDbUuid: jest.fn((prefix: string) =>
+    `${prefix}_00000000000000000000000000000000`
+  ),
+}));
+
+import {
+  extractDataFromRows,
+  extractFullBrktsData
+} from "@/app/dataEntry/playersForm/extractData";
+import { BracketList } from "@/components/brackets/bracketListClass";
 import { MoneyDescrip, MoneyFlow } from "@prisma/client";
 import { cloneDeep } from "lodash";
+import { entryFeeColName } from "@/app/dataEntry/playersForm/sfCreatePlayerColumns";
+
+const mockBracketLists: BracketList[] = [];
+const mockBracketList1 = new BracketList(brktId1, 2, 3, mockByePlayer);
+mockBracketList1.calcTotalBrkts(mockPlayerRows);
+const mockBracketList2 = new BracketList(brktId2, 2, 3, mockByePlayer);
+mockBracketList2.calcTotalBrkts(mockPlayerRows);
+mockBracketLists.push(mockBracketList1, mockBracketList2);
 
 describe("extractData", () => {
 
-  const mockBracketLists: BracketList[] = [];    
+  beforeEach(() => {
+    let counter = 0;
 
-  const mockBracketList1 = new BracketList(brktId1, 2, 3, mockByePlayer);
-  mockBracketList1.calcTotalBrkts(mockPlayerRows);
-  const mockBracketList2 = new BracketList(brktId2, 2, 3, mockByePlayer);
-  mockBracketList2.calcTotalBrkts(mockPlayerRows);
-  mockBracketLists.push(mockBracketList1, mockBracketList2);
-
-  describe("extractDataFromRows", () => {
-    it("should return valid and populated data", () => {      
-      const result = extractDataFromRows(mockPlayerRows, mockDataOneTmnt, mockBracketLists);
-      const tmntEntriesData = result as gridTmntEntryDataType;
-
-      expect(tmntEntriesData.players.length).toBe(11);
-      expect(tmntEntriesData.divEntries.length).toBe(12);  // 10 scratch + 2 hdcp
-      expect(tmntEntriesData.potEntries.length).toBe(19);  // 10 scratch + 9 hdcp
-      expect(tmntEntriesData.brktEntries.length).toBe(16); // 8 + 8
-      expect(tmntEntriesData.elimEntries.length).toBe(14); // 7 + 7
+    mockBtDbUuid.mockImplementation((prefix: string) => {
+      counter++;
+      return `${prefix}_${counter.toString().padStart(32, "0")}`;
     });
   });
 
-  describe("extract correct players data from rows", () => {
-    it("should return valid and populated data for players", () => {
-      const result = extractDataFromRows(mockPlayerRows, mockDataOneTmnt, mockBracketLists);
-      const tmntEntriesData = result as gridTmntEntryDataType;
+  describe("extractDataFromRows() validation", () => {
 
-      expect(tmntEntriesData.players.length).toBe(11);
-      for (let i = 0; i < tmntEntriesData.players.length; i++) {
-        expect(tmntEntriesData.players[i].id).toBe(mockPlayerRows[i].id);
-        expect(tmntEntriesData.players[i].first_name).toBe(
-          mockPlayerRows[i].first_name
-        );
-        expect(tmntEntriesData.players[i].last_name).toBe(
-          mockPlayerRows[i].last_name
-        );
-        expect(tmntEntriesData.players[i].average).toBe(mockPlayerRows[i].average);
-        expect(tmntEntriesData.players[i].lane).toBe(mockPlayerRows[i].lane);
-        expect(tmntEntriesData.players[i].position).toBe(mockPlayerRows[i].position);
-      }
-    });
-  });
-
-  describe("extract correct div entries data from rows", () => {
-    it("should return valid and populated data for divs", () => {
-      const result = extractDataFromRows(mockPlayerRows, mockDataOneTmnt, mockBracketLists);
-      const tmntEntriesData = result as gridTmntEntryDataType;
-
-      expect(tmntEntriesData.divEntries.length).toBe(12);
-      for (let i = 0; i < tmntEntriesData.divEntries.length; i++) {
-        expect(isValidBtDbId(tmntEntriesData.divEntries[i].id, "den")).toBe(true);
-        expect(tmntEntriesData.divEntries[i].squad_id).toBe(squadId1);
-        expect(tmntEntriesData.divEntries[i].fee).toBe("85");
-        if (i === 0) {
-          expect(tmntEntriesData.divEntries[i].div_id).toBe(
-            mockDataOneTmnt.divs[0].id
-          );
-          expect(tmntEntriesData.divEntries[i].player_id).toBe(mockPlayerRows[0].id);
-          expect(tmntEntriesData.divEntries[i].hdcp).toBe(0);
-        } else if (i === 1) {
-          expect(tmntEntriesData.divEntries[i].div_id).toBe(
-            mockDataOneTmnt.divs[0].id
-          );
-          expect(tmntEntriesData.divEntries[i].player_id).toBe(mockPlayerRows[2].id);
-          expect(tmntEntriesData.divEntries[i].hdcp).toBe(0);
-        } else if (i === 2) {
-          expect(tmntEntriesData.divEntries[i].div_id).toBe(
-            mockDataOneTmnt.divs[1].id
-          );
-          expect(tmntEntriesData.divEntries[i].player_id).toBe(mockPlayerRows[2].id);
-          const hdcp = calcHandicap(
-            mockPlayerRows[2].average,
-            mockDataOneTmnt.divs[1].hdcp_from,
-            mockDataOneTmnt.divs[1].hdcp_per,
-            mockDataOneTmnt.divs[1].int_hdcp
-          );
-          expect(tmntEntriesData.divEntries[i].hdcp).toBe(hdcp);
-        } else if (i === 3) {
-          expect(tmntEntriesData.divEntries[i].div_id).toBe(
-            mockDataOneTmnt.divs[0].id
-          );
-          expect(tmntEntriesData.divEntries[i].player_id).toBe(mockPlayerRows[3].id);
-          expect(tmntEntriesData.divEntries[i].hdcp).toBe(0);
-        } else if (i === 4) {
-          expect(tmntEntriesData.divEntries[i].div_id).toBe(
-            mockDataOneTmnt.divs[1].id
-          );
-          expect(tmntEntriesData.divEntries[i].player_id).toBe(mockPlayerRows[3].id);
-          const hdcp = calcHandicap(
-            mockPlayerRows[3].average,
-            mockDataOneTmnt.divs[1].hdcp_from,
-            mockDataOneTmnt.divs[1].hdcp_per,
-            mockDataOneTmnt.divs[1].int_hdcp
-          );
-          expect(tmntEntriesData.divEntries[i].hdcp).toBe(hdcp);
-        } else if (i === 5) {
-          expect(tmntEntriesData.divEntries[i].div_id).toBe(
-            mockDataOneTmnt.divs[0].id
-          );
-          expect(tmntEntriesData.divEntries[i].player_id).toBe(mockPlayerRows[4].id);
-          expect(tmntEntriesData.divEntries[i].hdcp).toBe(0);
-        } else if (i === 6) {
-          expect(tmntEntriesData.divEntries[i].div_id).toBe(
-            mockDataOneTmnt.divs[0].id
-          );
-          expect(tmntEntriesData.divEntries[i].player_id).toBe(mockPlayerRows[5].id);
-          expect(tmntEntriesData.divEntries[i].hdcp).toBe(0);
-        }
-      }
-    });
-  });
-
-  describe("extract correct pot entries data from rows", () => {
-    it("should return valid and populated data for pots", () => {
-      const result = extractDataFromRows(mockPlayerRows, mockDataOneTmnt, mockBracketLists);
-      const tmntEntriesData = result as gridTmntEntryDataType;
-
-      expect(tmntEntriesData.potEntries.length).toBe(19);
-      for (let i = 0; i < tmntEntriesData.potEntries.length; i++) {
-        expect(isValidBtDbId(tmntEntriesData.potEntries[i].id, "pen")).toBe(true);
-        if (i === 0) {
-          expect(tmntEntriesData.potEntries[i].player_id).toBe(mockPlayerRows[0].id);
-        } else if (i === 1) {
-          expect(tmntEntriesData.potEntries[i].fee).toBe(
-            mockDataOneTmnt.pots[0].fee
-          );
-          expect(tmntEntriesData.potEntries[i].player_id).toBe(mockPlayerRows[2].id);
-        } else if (i === 2) {
-          expect(tmntEntriesData.potEntries[i].fee).toBe(
-            mockDataOneTmnt.pots[1].fee
-          );
-          expect(tmntEntriesData.potEntries[i].player_id).toBe(mockPlayerRows[2].id);
-        } else if (i === 3) {
-          expect(tmntEntriesData.potEntries[i].fee).toBe(
-            mockDataOneTmnt.pots[0].fee
-          );
-          expect(tmntEntriesData.potEntries[i].player_id).toBe(mockPlayerRows[3].id);
-        } else if (i === 4) {
-          expect(tmntEntriesData.potEntries[i].fee).toBe(
-            mockDataOneTmnt.pots[1].fee
-          );
-          expect(tmntEntriesData.potEntries[i].player_id).toBe(mockPlayerRows[3].id);
-        } else if (i === 5) {
-          expect(tmntEntriesData.potEntries[i].fee).toBe(
-            mockDataOneTmnt.pots[0].fee
-          );          
-        } else if (i === 6) {
-          expect(tmntEntriesData.potEntries[i].fee).toBe(
-            mockDataOneTmnt.pots[1].fee
-          );          
-        } else if (i === 7) {
-          expect(tmntEntriesData.potEntries[i].fee).toBe(
-            mockDataOneTmnt.pots[0].fee
-          )
-        } else if (i === 8) {
-          expect(tmntEntriesData.potEntries[i].fee).toBe(
-            mockDataOneTmnt.pots[1].fee
-          )
-        } else if (i === 9) {
-          expect(tmntEntriesData.potEntries[i].fee).toBe(
-            mockDataOneTmnt.pots[0].fee
-          )
-        } else if (i === 10) {
-          expect(tmntEntriesData.potEntries[i].fee).toBe(
-            mockDataOneTmnt.pots[1].fee
-          )
-        } else if (i === 11) {
-          expect(tmntEntriesData.potEntries[i].fee).toBe(
-            mockDataOneTmnt.pots[0].fee
-          )
-        } else if (i === 12) {
-          expect(tmntEntriesData.potEntries[i].fee).toBe(
-            mockDataOneTmnt.pots[1].fee
-          )
-        } else if (i === 13) {
-          expect(tmntEntriesData.potEntries[i].fee).toBe(
-            mockDataOneTmnt.pots[0].fee
-          )
-        } else if (i === 14) {
-          expect(tmntEntriesData.potEntries[i].fee).toBe(
-            mockDataOneTmnt.pots[1].fee
-          )
-        } else if (i === 15) {
-          expect(tmntEntriesData.potEntries[i].fee).toBe(
-            mockDataOneTmnt.pots[0].fee
-          )
-        } else if (i === 16) {
-          expect(tmntEntriesData.potEntries[i].fee).toBe(
-            mockDataOneTmnt.pots[1].fee
-          )
-        } else if (i === 17) {
-          expect(tmntEntriesData.potEntries[i].fee).toBe(
-            mockDataOneTmnt.pots[0].fee
-          )
-        } else if (i === 18) {
-          expect(tmntEntriesData.potEntries[i].fee).toBe(
-            mockDataOneTmnt.pots[1].fee
-          )
-        }
-      }
-    });
-  });
-
-  describe("extract correct brkt entries data from rows - including refunds if needed", () => {
-    it("should return valid and populated data for brkts", () => {
-      const result = extractDataFromRows(mockPlayerRows, mockDataOneTmnt, mockBracketLists);
-      const tmntEntriesData = result as gridTmntEntryDataType;
-
-      expect(tmntEntriesData.brktEntries.length).toBe(16);
-      for (let i = 0; i < tmntEntriesData.brktEntries.length; i++) {
-        expect(isValidBtDbId(tmntEntriesData.brktEntries[i].id, "ben")).toBe(
-          true
-        );
-        if (i === 0) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[0].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[0].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[0][brkt1NumColName]
-          );          
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[0][brkt1FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[0][brkt1TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        } else if (i === 1) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[1].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[0].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[0][brkt2NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[0][brkt2FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[0][brkt2TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        } else if (i === 2) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[0].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[4].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[4][brkt1NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[4][brkt1FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[4][brkt1TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        } else if (i === 3) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[1].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[4].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[4][brkt2NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[4][brkt2FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[4][brkt2TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        } else if (i === 4) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[0].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[5].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[5][brkt1NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[5][brkt1FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[5][brkt1TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        } else if (i === 5) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[1].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[5].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[5][brkt2NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[5][brkt2FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[5][brkt2TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        } else if (i === 6) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[0].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[6].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[6][brkt1NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[6][brkt1FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[6][brkt1TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        } else if (i === 7) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[1].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[6].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[6][brkt2NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[6][brkt2FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[6][brkt2TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        } else if (i === 8) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[0].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[7].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[7][brkt1NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[7][brkt1FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[7][brkt1TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        } else if (i === 9) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[1].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[7].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[7][brkt2NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[7][brkt2FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[7][brkt2TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        } else if (i === 10) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[0].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[8].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[8][brkt1NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[8][brkt1FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[8][brkt1TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        } else if (i === 11) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[1].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[8].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[8][brkt2NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[8][brkt2FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[8][brkt2TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        } else if (i === 12) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[0].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[9].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[9][brkt1NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[9][brkt1FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[9][brkt1TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(10);
-        } else if (i === 13) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[1].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[9].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[9][brkt2NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[9][brkt2FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[9][brkt2TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(10);
-        } else if (i === 14) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[0].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[10].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[10][brkt1NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[10][brkt1FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[10][brkt1TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        } else if (i === 15) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[1].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[10].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[10][brkt2NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[10][brkt2FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[10][brkt2TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        }
-      }
-    });
-
-    it("should return valid and populated data for brkts - empty mockBracketLists", () => {
-      const emptyMockBracketsLists: BracketList[] = [];
-      const result = extractDataFromRows(mockPlayerRows, mockDataOneTmnt, emptyMockBracketsLists);
-      const tmntEntriesData = result as gridTmntEntryDataType;
-
-      expect(tmntEntriesData.brktEntries.length).toBe(16);
-      for (let i = 0; i < tmntEntriesData.brktEntries.length; i++) {
-        expect(isValidBtDbId(tmntEntriesData.brktEntries[i].id, "ben")).toBe(
-          true
-        );
-        if (i === 0) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[0].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[0].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[0][brkt1NumColName]
-          );          
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[0][brkt1FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[0][brkt1TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        } else if (i === 1) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[1].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[0].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[0][brkt2NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[0][brkt2FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[0][brkt2TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        } else if (i === 2) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[0].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[4].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[4][brkt1NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[4][brkt1FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[4][brkt1TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        } else if (i === 3) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[1].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[4].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[4][brkt2NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[4][brkt2FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[4][brkt2TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        } else if (i === 4) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[0].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[5].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[5][brkt1NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[5][brkt1FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[5][brkt1TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        } else if (i === 5) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[1].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[5].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[5][brkt2NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[5][brkt2FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[5][brkt2TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        } else if (i === 6) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[0].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[6].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[6][brkt1NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[6][brkt1FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[6][brkt1TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        } else if (i === 7) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[1].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[6].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[6][brkt2NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[6][brkt2FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[6][brkt2TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        } else if (i === 8) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[0].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[7].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[7][brkt1NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[7][brkt1FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[7][brkt1TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        } else if (i === 9) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[1].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[7].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[7][brkt2NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[7][brkt2FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[7][brkt2TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        } else if (i === 10) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[0].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[8].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[8][brkt1NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[8][brkt1FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[8][brkt1TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        } else if (i === 11) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[1].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[8].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[8][brkt2NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[8][brkt2FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[8][brkt2TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        } else if (i === 12) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[0].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[9].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[9][brkt1NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[9][brkt1FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[9][brkt1TimeStartColName]
-          );
-          // SHOULD BE 0 beacise empty BracketList
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        } else if (i === 13) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[1].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[9].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[9][brkt2NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[9][brkt2FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[9][brkt2TimeStartColName]
-          );
-          // SHOULD BE 0 beacise empty BracketList
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        } else if (i === 14) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[0].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[10].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[10][brkt1NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[10][brkt1FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[10][brkt1TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        } else if (i === 15) {
-          expect(tmntEntriesData.brktEntries[i].brkt_id).toBe(
-            mockDataOneTmnt.brkts[1].id
-          );
-          expect(tmntEntriesData.brktEntries[i].player_id).toBe(
-            mockPlayerRows[10].id
-          );
-          expect(tmntEntriesData.brktEntries[i].num_brackets).toBe(
-            mockPlayerRows[10][brkt2NumColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].fee).toBe(
-            mockPlayerRows[10][brkt2FeeColName] + ""
-          );
-          expect(tmntEntriesData.brktEntries[i].time_stamp).toBe(
-            mockPlayerRows[10][brkt2TimeStartColName]
-          );
-          expect(tmntEntriesData.brktEntries[i].num_refunds).toBe(0);
-        }
-      }
-    });
-  });
-
-  describe("extract correct elim entries data from rows", () => {
-    it("should return valid and populated data for elim", () => {
-      const result = extractDataFromRows(mockPlayerRows, mockDataOneTmnt, mockBracketLists);      
-      const tmntEntriesData = result as gridTmntEntryDataType;
-
-      expect(tmntEntriesData.elimEntries.length).toBe(14);
-      for (let i = 0; i < tmntEntriesData.elimEntries.length; i++) {
-        expect(isValidBtDbId(tmntEntriesData.elimEntries[i].id, "een")).toBe(
-          true
-        );
-        if (i === 0) {
-          expect(tmntEntriesData.elimEntries[i].elim_id).toBe(
-            mockDataOneTmnt.elims[0].id
-          );
-          expect(tmntEntriesData.elimEntries[i].player_id).toBe(
-            mockPlayerRows[0].id
-          );
-          expect(tmntEntriesData.elimEntries[i].fee).toBe(
-            mockDataOneTmnt.elims[0].fee + ""
-          );
-        } else if (i === 1) {
-          expect(tmntEntriesData.elimEntries[i].elim_id).toBe(
-            mockDataOneTmnt.elims[1].id
-          );
-          expect(tmntEntriesData.elimEntries[i].player_id).toBe(
-            mockPlayerRows[0].id
-          );
-          expect(tmntEntriesData.elimEntries[i].fee).toBe(
-            mockDataOneTmnt.elims[1].fee + ""
-          );
-        } else if (i === 2) {
-          expect(tmntEntriesData.elimEntries[i].elim_id).toBe(
-            mockDataOneTmnt.elims[0].id
-          );
-          expect(tmntEntriesData.elimEntries[i].player_id).toBe(
-            mockPlayerRows[4].id
-          );
-          expect(tmntEntriesData.elimEntries[i].fee).toBe(
-            mockDataOneTmnt.elims[0].fee + ""
-          );
-        } else if (i === 3) {
-          expect(tmntEntriesData.elimEntries[i].elim_id).toBe(
-            mockDataOneTmnt.elims[1].id
-          );
-          expect(tmntEntriesData.elimEntries[i].player_id).toBe(
-            mockPlayerRows[4].id
-          );
-          expect(tmntEntriesData.elimEntries[i].fee).toBe(
-            mockDataOneTmnt.elims[1].fee + ""
-          );
-        } else if (i === 4) {
-          expect(tmntEntriesData.elimEntries[i].elim_id).toBe(
-            mockDataOneTmnt.elims[0].id
-          );
-          expect(tmntEntriesData.elimEntries[i].player_id).toBe(
-            mockPlayerRows[5].id
-          );
-          expect(tmntEntriesData.elimEntries[i].fee).toBe(
-            mockDataOneTmnt.elims[0].fee + ""
-          );
-        } else if (i === 5) {
-          expect(tmntEntriesData.elimEntries[i].elim_id).toBe(
-            mockDataOneTmnt.elims[1].id
-          );
-          expect(tmntEntriesData.elimEntries[i].player_id).toBe(
-            mockPlayerRows[5].id
-          );
-          expect(tmntEntriesData.elimEntries[i].fee).toBe(
-            mockDataOneTmnt.elims[1].fee + ""
-          );
-        } else if (i === 6) {
-          expect(tmntEntriesData.elimEntries[i].elim_id).toBe(
-            mockDataOneTmnt.elims[0].id
-          );
-          expect(tmntEntriesData.elimEntries[i].player_id).toBe(
-            mockPlayerRows[6].id
-          );
-          expect(tmntEntriesData.elimEntries[i].fee).toBe(
-            mockDataOneTmnt.elims[0].fee + ""
-          );
-        } else if (i === 7) {
-          expect(tmntEntriesData.elimEntries[i].elim_id).toBe(
-            mockDataOneTmnt.elims[1].id
-          );
-          expect(tmntEntriesData.elimEntries[i].player_id).toBe(
-            mockPlayerRows[6].id
-          );
-          expect(tmntEntriesData.elimEntries[i].fee).toBe(
-            mockDataOneTmnt.elims[1].fee + ""
-          );
-        } else if (i === 8) {
-          expect(tmntEntriesData.elimEntries[i].elim_id).toBe(
-            mockDataOneTmnt.elims[0].id
-          );
-          expect(tmntEntriesData.elimEntries[i].player_id).toBe(
-            mockPlayerRows[7].id
-          );
-          expect(tmntEntriesData.elimEntries[i].fee).toBe(
-            mockDataOneTmnt.elims[0].fee + ""
-          );
-        } else if (i === 9) {
-          expect(tmntEntriesData.elimEntries[i].elim_id).toBe(
-            mockDataOneTmnt.elims[1].id
-          );
-          expect(tmntEntriesData.elimEntries[i].player_id).toBe(
-            mockPlayerRows[7].id
-          );
-          expect(tmntEntriesData.elimEntries[i].fee).toBe(
-            mockDataOneTmnt.elims[1].fee + ""
-          );
-        } else if (i === 10) {
-          expect(tmntEntriesData.elimEntries[i].elim_id).toBe(
-            mockDataOneTmnt.elims[0].id
-          );
-          expect(tmntEntriesData.elimEntries[i].player_id).toBe(
-            mockPlayerRows[8].id
-          );
-          expect(tmntEntriesData.elimEntries[i].fee).toBe(
-            mockDataOneTmnt.elims[0].fee + ""
-          );
-        } else if (i === 11) {
-          expect(tmntEntriesData.elimEntries[i].elim_id).toBe(
-            mockDataOneTmnt.elims[1].id
-          );
-          expect(tmntEntriesData.elimEntries[i].player_id).toBe(
-            mockPlayerRows[8].id
-          );
-          expect(tmntEntriesData.elimEntries[i].fee).toBe(
-            mockDataOneTmnt.elims[1].fee + ""
-          );
-        } else if (i === 12) {
-          expect(tmntEntriesData.elimEntries[i].elim_id).toBe(
-            mockDataOneTmnt.elims[0].id
-          );
-          expect(tmntEntriesData.elimEntries[i].player_id).toBe(
-            mockPlayerRows[9].id
-          );
-          expect(tmntEntriesData.elimEntries[i].fee).toBe(
-            mockDataOneTmnt.elims[0].fee + ""
-          );
-        } else if (i === 13) {
-          expect(tmntEntriesData.elimEntries[i].elim_id).toBe(
-            mockDataOneTmnt.elims[1].id
-          );
-          expect(tmntEntriesData.elimEntries[i].player_id).toBe(
-            mockPlayerRows[9].id
-          );
-          expect(tmntEntriesData.elimEntries[i].fee).toBe(
-            mockDataOneTmnt.elims[1].fee + ""
-          );
-        }
-      }
-    });
-  });
- 
-  describe("extractFullBrktsData", () => { 
-
-    const createMockBrktLists = (): BracketList[] => { 
-      const mockWithBrackets = cloneDeep(mockBracketLists)
-
-      const brktList1 = mockWithBrackets[0]
-      const brkt1 = new Bracket(brktList1, brktId1);
-      brkt1.addPlayer(playerId1);
-      brkt1.addPlayer(playerId2);
-      brkt1.addPlayer(playerId3);
-      brkt1.addPlayer(playerId4);
-      brkt1.addPlayer(playerId5);
-      brkt1.addPlayer(playerId6);
-      brkt1.addPlayer(playerId7);
-      brkt1.addPlayer(playerId8);
-      brktList1.brackets.push(brkt1);
-      const brkt2 = new Bracket(brktList1, brktId1);
-      brkt2.addPlayer(playerId1);
-      brkt2.addPlayer(playerId2);
-      brkt2.addPlayer(playerId3);
-      brkt2.addPlayer(playerId4);
-      brkt2.addPlayer(playerId5);
-      brkt2.addPlayer(playerId6);
-      brkt2.addPlayer(playerId7);
-      brkt2.addPlayer(playerId8);
-      brktList1.brackets.push(brkt2);      
-
-      const brktList2 = mockWithBrackets[1]
-      const brkt3 = new Bracket(brktList2, brktId2);
-      brkt3.addPlayer(playerId1);
-      brkt3.addPlayer(playerId2);
-      brkt3.addPlayer(playerId3);
-      brkt3.addPlayer(playerId4);
-      brkt3.addPlayer(playerId5);
-      brkt3.addPlayer(playerId6);
-      brkt3.addPlayer(playerId7);
-      brkt3.addPlayer(playerId8);
-      brktList2.brackets.push(brkt3);
-      const brkt4 = new Bracket(brktList2, brktId2);
-      brkt4.addPlayer(playerId1);
-      brkt4.addPlayer(playerId2);
-      brkt4.addPlayer(playerId3);
-      brkt4.addPlayer(playerId4);
-      brkt4.addPlayer(playerId5);
-      brkt4.addPlayer(playerId6);
-      brkt4.addPlayer(playerId7);
-      brkt4.addPlayer(playerId8);
-      brktList2.brackets.push(brkt4);
-
-      return mockWithBrackets
-    }
-
-    it("should return expected structure when passed valid mock data", () => {
-      const mockLists = createMockBrktLists();
-      const result = extractFullBrktsData(mockLists);
-
-      expect(result).toHaveProperty("oneBrkts");
-      expect(result).toHaveProperty("brktSeeds");
-      expect(Array.isArray(result.oneBrkts)).toBe(true);
-      expect(Array.isArray(result.brktSeeds)).toBe(true);
-      expect(result.oneBrkts.length).toBe(4);
-      expect(result.brktSeeds.length).toBe(32);
-
-      expect(isValidBtDbId(result.oneBrkts[0].id, "obk")).toBe(true);
-      expect(result.oneBrkts[0].brkt_id).toBe(brktId1);
-      expect(result.oneBrkts[0].bindex).toBe(0);
-      expect(isValidBtDbId(result.oneBrkts[1].id, "obk")).toBe(true);
-      expect(result.oneBrkts[1].brkt_id).toBe(brktId1);
-      expect(result.oneBrkts[1].bindex).toBe(1);
-      expect(isValidBtDbId(result.oneBrkts[2].id, "obk")).toBe(true);
-      expect(result.oneBrkts[2].brkt_id).toBe(brktId2);
-      expect(result.oneBrkts[2].bindex).toBe(0);
-      expect(isValidBtDbId(result.oneBrkts[3].id, "obk")).toBe(true);
-      expect(result.oneBrkts[3].brkt_id).toBe(brktId2);
-      expect(result.oneBrkts[3].bindex).toBe(1);
-
-      expect(result.brktSeeds[0].one_brkt_id).toBe(result.oneBrkts[0].id);
-      expect(result.brktSeeds[0].seed).toBe(0);
-      expect(result.brktSeeds[0].player_id).toBe(playerId1);
-      expect(result.brktSeeds[1].one_brkt_id).toBe(result.oneBrkts[0].id);
-      expect(result.brktSeeds[1].seed).toBe(1);
-      expect(result.brktSeeds[1].player_id).toBe(playerId2);
-      expect(result.brktSeeds[2].one_brkt_id).toBe(result.oneBrkts[0].id);
-      expect(result.brktSeeds[2].seed).toBe(2);
-      expect(result.brktSeeds[2].player_id).toBe(playerId3);
-      expect(result.brktSeeds[3].one_brkt_id).toBe(result.oneBrkts[0].id);
-      expect(result.brktSeeds[3].seed).toBe(3);
-      expect(result.brktSeeds[3].player_id).toBe(playerId4);
-      expect(result.brktSeeds[4].one_brkt_id).toBe(result.oneBrkts[0].id);
-      expect(result.brktSeeds[4].seed).toBe(4);
-      expect(result.brktSeeds[4].player_id).toBe(playerId5);
-      expect(result.brktSeeds[5].one_brkt_id).toBe(result.oneBrkts[0].id);
-      expect(result.brktSeeds[5].seed).toBe(5);
-      expect(result.brktSeeds[5].player_id).toBe(playerId6);
-      expect(result.brktSeeds[6].one_brkt_id).toBe(result.oneBrkts[0].id);
-      expect(result.brktSeeds[6].seed).toBe(6);
-      expect(result.brktSeeds[6].player_id).toBe(playerId7);
-      expect(result.brktSeeds[7].one_brkt_id).toBe(result.oneBrkts[0].id);
-      expect(result.brktSeeds[7].seed).toBe(7);
-      expect(result.brktSeeds[7].player_id).toBe(playerId8);
-
-      expect(result.brktSeeds[8].one_brkt_id).toBe(result.oneBrkts[1].id);
-      expect(result.brktSeeds[8].seed).toBe(0);
-      expect(result.brktSeeds[8].player_id).toBe(playerId1);
-      expect(result.brktSeeds[9].one_brkt_id).toBe(result.oneBrkts[1].id);
-      expect(result.brktSeeds[9].seed).toBe(1);
-      expect(result.brktSeeds[9].player_id).toBe(playerId2);
-      expect(result.brktSeeds[10].one_brkt_id).toBe(result.oneBrkts[1].id);
-      expect(result.brktSeeds[10].seed).toBe(2);
-      expect(result.brktSeeds[10].player_id).toBe(playerId3);
-      expect(result.brktSeeds[11].one_brkt_id).toBe(result.oneBrkts[1].id);
-      expect(result.brktSeeds[11].seed).toBe(3);
-      expect(result.brktSeeds[11].player_id).toBe(playerId4);
-      expect(result.brktSeeds[12].one_brkt_id).toBe(result.oneBrkts[1].id);
-      expect(result.brktSeeds[12].seed).toBe(4);
-      expect(result.brktSeeds[12].player_id).toBe(playerId5);
-      expect(result.brktSeeds[13].one_brkt_id).toBe(result.oneBrkts[1].id);
-      expect(result.brktSeeds[13].seed).toBe(5);
-      expect(result.brktSeeds[13].player_id).toBe(playerId6);
-      expect(result.brktSeeds[14].one_brkt_id).toBe(result.oneBrkts[1].id);
-      expect(result.brktSeeds[14].seed).toBe(6);
-      expect(result.brktSeeds[14].player_id).toBe(playerId7);
-      expect(result.brktSeeds[15].one_brkt_id).toBe(result.oneBrkts[1].id);
-      expect(result.brktSeeds[15].seed).toBe(7);
-      expect(result.brktSeeds[15].player_id).toBe(playerId8);
-
-      expect(result.brktSeeds[16].one_brkt_id).toBe(result.oneBrkts[2].id);
-      expect(result.brktSeeds[16].seed).toBe(0);
-      expect(result.brktSeeds[16].player_id).toBe(playerId1);
-      expect(result.brktSeeds[17].one_brkt_id).toBe(result.oneBrkts[2].id);
-      expect(result.brktSeeds[17].seed).toBe(1);
-      expect(result.brktSeeds[17].player_id).toBe(playerId2);
-      expect(result.brktSeeds[18].one_brkt_id).toBe(result.oneBrkts[2].id);
-      expect(result.brktSeeds[18].seed).toBe(2);
-      expect(result.brktSeeds[18].player_id).toBe(playerId3);
-      expect(result.brktSeeds[19].one_brkt_id).toBe(result.oneBrkts[2].id);
-      expect(result.brktSeeds[19].seed).toBe(3);
-      expect(result.brktSeeds[19].player_id).toBe(playerId4);
-      expect(result.brktSeeds[20].one_brkt_id).toBe(result.oneBrkts[2].id);
-      expect(result.brktSeeds[20].seed).toBe(4);
-      expect(result.brktSeeds[20].player_id).toBe(playerId5);
-      expect(result.brktSeeds[21].one_brkt_id).toBe(result.oneBrkts[2].id);
-      expect(result.brktSeeds[21].seed).toBe(5);
-      expect(result.brktSeeds[21].player_id).toBe(playerId6);
-      expect(result.brktSeeds[22].one_brkt_id).toBe(result.oneBrkts[2].id);
-      expect(result.brktSeeds[22].seed).toBe(6);
-      expect(result.brktSeeds[22].player_id).toBe(playerId7);
-      expect(result.brktSeeds[23].one_brkt_id).toBe(result.oneBrkts[2].id);
-      expect(result.brktSeeds[23].seed).toBe(7);
-      expect(result.brktSeeds[23].player_id).toBe(playerId8);
-
-      expect(result.brktSeeds[24].one_brkt_id).toBe(result.oneBrkts[3].id);
-      expect(result.brktSeeds[24].seed).toBe(0);
-      expect(result.brktSeeds[24].player_id).toBe(playerId1);
-      expect(result.brktSeeds[25].one_brkt_id).toBe(result.oneBrkts[3].id);
-      expect(result.brktSeeds[25].seed).toBe(1);
-      expect(result.brktSeeds[25].player_id).toBe(playerId2);
-      expect(result.brktSeeds[26].one_brkt_id).toBe(result.oneBrkts[3].id);
-      expect(result.brktSeeds[26].seed).toBe(2);
-      expect(result.brktSeeds[26].player_id).toBe(playerId3);
-      expect(result.brktSeeds[27].one_brkt_id).toBe(result.oneBrkts[3].id);
-      expect(result.brktSeeds[27].seed).toBe(3);
-      expect(result.brktSeeds[27].player_id).toBe(playerId4);
-      expect(result.brktSeeds[28].one_brkt_id).toBe(result.oneBrkts[3].id);
-      expect(result.brktSeeds[28].seed).toBe(4);
-      expect(result.brktSeeds[28].player_id).toBe(playerId5);
-      expect(result.brktSeeds[29].one_brkt_id).toBe(result.oneBrkts[3].id);
-      expect(result.brktSeeds[29].seed).toBe(5);
-      expect(result.brktSeeds[29].player_id).toBe(playerId6);
-      expect(result.brktSeeds[30].one_brkt_id).toBe(result.oneBrkts[3].id);
-      expect(result.brktSeeds[30].seed).toBe(6);
-      expect(result.brktSeeds[30].player_id).toBe(playerId7);
-      expect(result.brktSeeds[31].one_brkt_id).toBe(result.oneBrkts[3].id);
-      expect(result.brktSeeds[31].seed).toBe(7);
-      expect(result.brktSeeds[31].player_id).toBe(playerId8);
-    });
-    it("should return expected structure when passed valid mock data with bye players", () => {
-      
-      const mockByeLists = createMockBrktLists();
-      mockByeLists[0].brackets[0].players[0] = mockByeLists[0].byePlayer.id
-      mockByeLists[0].brackets[1].players[1] = mockByeLists[0].byePlayer.id
-      mockByeLists[1].brackets[0].players[2] = mockByeLists[1].byePlayer.id
-      mockByeLists[1].brackets[1].players[3] = mockByeLists[1].byePlayer.id
-
-      const result = extractFullBrktsData(mockByeLists);
-
-      expect(result).toHaveProperty("oneBrkts");
-      expect(result).toHaveProperty("brktSeeds");
-      expect(Array.isArray(result.oneBrkts)).toBe(true);
-      expect(Array.isArray(result.brktSeeds)).toBe(true);
-      expect(result.oneBrkts.length).toBe(4);
-      expect(result.brktSeeds.length).toBe(32);
-
-      expect(isValidBtDbId(result.oneBrkts[0].id, "obk")).toBe(true);
-      expect(result.oneBrkts[0].brkt_id).toBe(brktId1);
-      expect(result.oneBrkts[0].bindex).toBe(0);
-      expect(isValidBtDbId(result.oneBrkts[1].id, "obk")).toBe(true);
-      expect(result.oneBrkts[1].brkt_id).toBe(brktId1);
-      expect(result.oneBrkts[1].bindex).toBe(1);
-      expect(isValidBtDbId(result.oneBrkts[2].id, "obk")).toBe(true);
-      expect(result.oneBrkts[2].brkt_id).toBe(brktId2);
-      expect(result.oneBrkts[2].bindex).toBe(0);
-      expect(isValidBtDbId(result.oneBrkts[3].id, "obk")).toBe(true);
-      expect(result.oneBrkts[3].brkt_id).toBe(brktId2);
-      expect(result.oneBrkts[3].bindex).toBe(1);
-
-      expect(result.brktSeeds[0].one_brkt_id).toBe(result.oneBrkts[0].id);
-      expect(result.brktSeeds[0].seed).toBe(0);
-      expect(result.brktSeeds[0].player_id).toBe(mockByeLists[0].byePlayer.id);
-      expect(result.brktSeeds[1].one_brkt_id).toBe(result.oneBrkts[0].id);
-      expect(result.brktSeeds[1].seed).toBe(1);
-      expect(result.brktSeeds[1].player_id).toBe(playerId2);
-      expect(result.brktSeeds[2].one_brkt_id).toBe(result.oneBrkts[0].id);
-      expect(result.brktSeeds[2].seed).toBe(2);
-      expect(result.brktSeeds[2].player_id).toBe(playerId3);
-      expect(result.brktSeeds[3].one_brkt_id).toBe(result.oneBrkts[0].id);
-      expect(result.brktSeeds[3].seed).toBe(3);
-      expect(result.brktSeeds[3].player_id).toBe(playerId4);
-      expect(result.brktSeeds[4].one_brkt_id).toBe(result.oneBrkts[0].id);
-      expect(result.brktSeeds[4].seed).toBe(4);
-      expect(result.brktSeeds[4].player_id).toBe(playerId5);
-      expect(result.brktSeeds[5].one_brkt_id).toBe(result.oneBrkts[0].id);
-      expect(result.brktSeeds[5].seed).toBe(5);
-      expect(result.brktSeeds[5].player_id).toBe(playerId6);
-      expect(result.brktSeeds[6].one_brkt_id).toBe(result.oneBrkts[0].id);
-      expect(result.brktSeeds[6].seed).toBe(6);
-      expect(result.brktSeeds[6].player_id).toBe(playerId7);
-      expect(result.brktSeeds[7].one_brkt_id).toBe(result.oneBrkts[0].id);
-      expect(result.brktSeeds[7].seed).toBe(7);
-      expect(result.brktSeeds[7].player_id).toBe(playerId8);
-
-      expect(result.brktSeeds[8].one_brkt_id).toBe(result.oneBrkts[1].id);
-      expect(result.brktSeeds[8].seed).toBe(0);
-      expect(result.brktSeeds[8].player_id).toBe(playerId1);
-      expect(result.brktSeeds[9].one_brkt_id).toBe(result.oneBrkts[1].id);
-      expect(result.brktSeeds[9].seed).toBe(1);
-      expect(result.brktSeeds[9].player_id).toBe(mockByeLists[0].byePlayer.id);
-      expect(result.brktSeeds[10].one_brkt_id).toBe(result.oneBrkts[1].id);
-      expect(result.brktSeeds[10].seed).toBe(2);
-      expect(result.brktSeeds[10].player_id).toBe(playerId3);
-      expect(result.brktSeeds[11].one_brkt_id).toBe(result.oneBrkts[1].id);
-      expect(result.brktSeeds[11].seed).toBe(3);
-      expect(result.brktSeeds[11].player_id).toBe(playerId4);
-      expect(result.brktSeeds[12].one_brkt_id).toBe(result.oneBrkts[1].id);
-      expect(result.brktSeeds[12].seed).toBe(4);
-      expect(result.brktSeeds[12].player_id).toBe(playerId5);
-      expect(result.brktSeeds[13].one_brkt_id).toBe(result.oneBrkts[1].id);
-      expect(result.brktSeeds[13].seed).toBe(5);
-      expect(result.brktSeeds[13].player_id).toBe(playerId6);
-      expect(result.brktSeeds[14].one_brkt_id).toBe(result.oneBrkts[1].id);
-      expect(result.brktSeeds[14].seed).toBe(6);
-      expect(result.brktSeeds[14].player_id).toBe(playerId7);
-      expect(result.brktSeeds[15].one_brkt_id).toBe(result.oneBrkts[1].id);
-      expect(result.brktSeeds[15].seed).toBe(7);
-      expect(result.brktSeeds[15].player_id).toBe(playerId8);
-
-      expect(result.brktSeeds[16].one_brkt_id).toBe(result.oneBrkts[2].id);
-      expect(result.brktSeeds[16].seed).toBe(0);
-      expect(result.brktSeeds[16].player_id).toBe(playerId1);
-      expect(result.brktSeeds[17].one_brkt_id).toBe(result.oneBrkts[2].id);
-      expect(result.brktSeeds[17].seed).toBe(1);
-      expect(result.brktSeeds[17].player_id).toBe(playerId2);
-      expect(result.brktSeeds[18].one_brkt_id).toBe(result.oneBrkts[2].id);
-      expect(result.brktSeeds[18].seed).toBe(2);
-      expect(result.brktSeeds[18].player_id).toBe(mockByeLists[1].byePlayer.id);
-      expect(result.brktSeeds[19].one_brkt_id).toBe(result.oneBrkts[2].id);
-      expect(result.brktSeeds[19].seed).toBe(3);
-      expect(result.brktSeeds[19].player_id).toBe(playerId4);
-      expect(result.brktSeeds[20].one_brkt_id).toBe(result.oneBrkts[2].id);
-      expect(result.brktSeeds[20].seed).toBe(4);
-      expect(result.brktSeeds[20].player_id).toBe(playerId5);
-      expect(result.brktSeeds[21].one_brkt_id).toBe(result.oneBrkts[2].id);
-      expect(result.brktSeeds[21].seed).toBe(5);
-      expect(result.brktSeeds[21].player_id).toBe(playerId6);
-      expect(result.brktSeeds[22].one_brkt_id).toBe(result.oneBrkts[2].id);
-      expect(result.brktSeeds[22].seed).toBe(6);
-      expect(result.brktSeeds[22].player_id).toBe(playerId7);
-      expect(result.brktSeeds[23].one_brkt_id).toBe(result.oneBrkts[2].id);
-      expect(result.brktSeeds[23].seed).toBe(7);
-      expect(result.brktSeeds[23].player_id).toBe(playerId8);
-
-      expect(result.brktSeeds[24].one_brkt_id).toBe(result.oneBrkts[3].id);
-      expect(result.brktSeeds[24].seed).toBe(0);
-      expect(result.brktSeeds[24].player_id).toBe(playerId1);
-      expect(result.brktSeeds[25].one_brkt_id).toBe(result.oneBrkts[3].id);
-      expect(result.brktSeeds[25].seed).toBe(1);
-      expect(result.brktSeeds[25].player_id).toBe(playerId2);
-      expect(result.brktSeeds[26].one_brkt_id).toBe(result.oneBrkts[3].id);
-      expect(result.brktSeeds[26].seed).toBe(2);
-      expect(result.brktSeeds[26].player_id).toBe(playerId3);
-      expect(result.brktSeeds[27].one_brkt_id).toBe(result.oneBrkts[3].id);
-      expect(result.brktSeeds[27].seed).toBe(3);
-      expect(result.brktSeeds[27].player_id).toBe(mockByeLists[1].byePlayer.id);
-      expect(result.brktSeeds[28].one_brkt_id).toBe(result.oneBrkts[3].id);
-      expect(result.brktSeeds[28].seed).toBe(4);
-      expect(result.brktSeeds[28].player_id).toBe(playerId5);
-      expect(result.brktSeeds[29].one_brkt_id).toBe(result.oneBrkts[3].id);
-      expect(result.brktSeeds[29].seed).toBe(5);
-      expect(result.brktSeeds[29].player_id).toBe(playerId6);
-      expect(result.brktSeeds[30].one_brkt_id).toBe(result.oneBrkts[3].id);
-      expect(result.brktSeeds[30].seed).toBe(6);
-      expect(result.brktSeeds[30].player_id).toBe(playerId7);
-      expect(result.brktSeeds[31].one_brkt_id).toBe(result.oneBrkts[3].id);
-      expect(result.brktSeeds[31].seed).toBe(7);
-      expect(result.brktSeeds[31].player_id).toBe(playerId8);
-    });
-    it("should return empty arrays when parameter is null", () => {
-      const result = extractFullBrktsData(null as unknown as BracketList[]);
+    const expectEmptyResult = (result: gridTmntEntryDataType) => {
       expect(result).toEqual({
-        oneBrkts: [],
-        brktSeeds: [],
+        players: [],
+        divEntries: [],
+        potEntries: [],
+        brktEntries: [],
+        elimEntries: [],
+        moneys: [],
       });
-    });
-    it("should return empty arrays when parameter is not an array", () => {
-      const result = extractFullBrktsData({} as unknown as BracketList[]);
-      expect(result).toEqual({
-        oneBrkts: [],
-        brktSeeds: [],
-      });
-    });
-    it("should return empty arrays when parameter is an empty array", () => {
-      const result = extractFullBrktsData([]);
-      expect(result).toEqual({
-        oneBrkts: [],
-        brktSeeds: [],
-      });
-    });
-    it("should return empty arrays when an exception is thrown", () => {
-      // simulate a malformed object that will throw when accessing brackets
-      const badInput = [{ brackets: null }] as unknown as BracketList[];
-      const result = extractFullBrktsData(badInput);
-      expect(result).toEqual({
-        oneBrkts: [],
-        brktSeeds: [],
-      });
-    });
-  });
+    };
 
-  describe('return empty data when passed invalid or empty data for rows, 1st param', () => { 
-    it('returns empty data when passed empty row array', () => {
-      const emptyRows = cloneDeep(mockPlayerRows);
-      emptyRows.length = 0;
+    it("returns empty result when rows is empty", () => {
+      const result = extractDataFromRows(
+        [],
+        mockDataOneTmnt,
+        [],
+      );
 
-      const result = extractDataFromRows(emptyRows, mockDataOneTmnt, mockBracketLists);
-      const tmntEntriesData = result as gridTmntEntryDataType;
-
-      expect(tmntEntriesData.players.length).toBe(0);
-      expect(tmntEntriesData.divEntries.length).toBe(0);
-      expect(tmntEntriesData.potEntries.length).toBe(0);
-      expect(tmntEntriesData.brktEntries.length).toBe(0);
-      expect(tmntEntriesData.elimEntries.length).toBe(0);
-    });
-    it('returns empty data when passed null as row array', () => {
-      const result = extractDataFromRows(null as any, mockDataOneTmnt, mockBracketLists);
-      const tmntEntriesData = result as gridTmntEntryDataType;
-
-      expect(tmntEntriesData.players.length).toBe(0);
-      expect(tmntEntriesData.divEntries.length).toBe(0);
-      expect(tmntEntriesData.potEntries.length).toBe(0);
-      expect(tmntEntriesData.brktEntries.length).toBe(0);
-      expect(tmntEntriesData.elimEntries.length).toBe(0);
-    });
-  })
-
-  describe('return empty data when passed invalid data for tmntData', () => { 
-    it('returns empty data when passed invalid id', () => {
-      const result = extractDataFromRows(mockPlayerRows, 'test' as any, mockBracketLists);      
-      const tmntEntriesData = result as gridTmntEntryDataType;
-
-      expect(tmntEntriesData.players.length).toBe(0);
-      expect(tmntEntriesData.divEntries.length).toBe(0);
-      expect(tmntEntriesData.potEntries.length).toBe(0);
-      expect(tmntEntriesData.brktEntries.length).toBe(0);
-      expect(tmntEntriesData.elimEntries.length).toBe(0);
-    });
-    it('returns empty data when passed null for tmntData', () => {
-      const result = extractDataFromRows(mockPlayerRows, null as any, mockBracketLists);
-      const tmntEntriesData = result as gridTmntEntryDataType;
-
-      expect(tmntEntriesData.players.length).toBe(0);
-      expect(tmntEntriesData.divEntries.length).toBe(0);
-      expect(tmntEntriesData.potEntries.length).toBe(0);
-      expect(tmntEntriesData.brktEntries.length).toBe(0);
-      expect(tmntEntriesData.elimEntries.length).toBe(0);
-    });
-    it('returns empty data when passed tmntData with events set to null', () => {
-      const invalidTmnt = cloneDeep(mockDataOneTmnt);
-      invalidTmnt.events = null as any;
-
-      const result = extractDataFromRows(mockPlayerRows, invalidTmnt, mockBracketLists);
-      const tmntEntriesData = result as gridTmntEntryDataType;
-
-      expect(tmntEntriesData.players.length).toBe(0);
-      expect(tmntEntriesData.divEntries.length).toBe(0);
-      expect(tmntEntriesData.potEntries.length).toBe(0);
-      expect(tmntEntriesData.brktEntries.length).toBe(0);
-      expect(tmntEntriesData.elimEntries.length).toBe(0);
-    });
-    it('returns empty data when passed tmntData with events empty', () => {
-      const invalidTmnt = cloneDeep(mockDataOneTmnt);
-      invalidTmnt.events.length = 0;
-
-      const result = extractDataFromRows(mockPlayerRows, invalidTmnt, mockBracketLists);
-      const tmntEntriesData = result as gridTmntEntryDataType;
-
-      expect(tmntEntriesData.players.length).toBe(0);
-      expect(tmntEntriesData.divEntries.length).toBe(0);
-      expect(tmntEntriesData.potEntries.length).toBe(0);
-      expect(tmntEntriesData.brktEntries.length).toBe(0);
-      expect(tmntEntriesData.elimEntries.length).toBe(0);
-    });
-    it('returns empty data when passed tmntData with events[0].id invalid', () => {
-      const invalidTmnt = cloneDeep(mockDataOneTmnt);
-      invalidTmnt.events[0].id = 'test';
-
-      const result = extractDataFromRows(mockPlayerRows, invalidTmnt, mockBracketLists);
-      const tmntEntriesData = result as gridTmntEntryDataType;
-
-      expect(tmntEntriesData.players.length).toBe(0);
-      expect(tmntEntriesData.divEntries.length).toBe(0);
-      expect(tmntEntriesData.potEntries.length).toBe(0);
-      expect(tmntEntriesData.brktEntries.length).toBe(0);
-      expect(tmntEntriesData.elimEntries.length).toBe(0);
+      expectEmptyResult(result);
     });
 
-    it('returns empty data when passed tmntData with squads set to null', () => {
-      const invalidTmnt = cloneDeep(mockDataOneTmnt);
-      invalidTmnt.squads = null as any;
+    it("returns empty result when rows is not an array", () => {
+      const result = extractDataFromRows(
+        null as any,
+        mockDataOneTmnt,
+        [],
+      );
 
-      const result = extractDataFromRows(mockPlayerRows, invalidTmnt, mockBracketLists);
-      const tmntEntriesData = result as gridTmntEntryDataType;
-
-      expect(tmntEntriesData.players.length).toBe(0);
-      expect(tmntEntriesData.divEntries.length).toBe(0);
-      expect(tmntEntriesData.potEntries.length).toBe(0);
-      expect(tmntEntriesData.brktEntries.length).toBe(0);
-      expect(tmntEntriesData.elimEntries.length).toBe(0);
+      expectEmptyResult(result);
     });
-    it('returns empty data when passed tmntData with squads empty', () => {
-      const invalidTmnt = cloneDeep(mockDataOneTmnt);
-      invalidTmnt.squads.length = 0;
 
-      const result = extractDataFromRows(mockPlayerRows, invalidTmnt, mockBracketLists);
-      const tmntEntriesData = result as gridTmntEntryDataType;
+    it("returns empty result when oneTmntData is invalid", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        {} as any,
+        [],
+      );
 
-      expect(tmntEntriesData.players.length).toBe(0);
-      expect(tmntEntriesData.divEntries.length).toBe(0);
-      expect(tmntEntriesData.potEntries.length).toBe(0);
-      expect(tmntEntriesData.brktEntries.length).toBe(0);
-      expect(tmntEntriesData.elimEntries.length).toBe(0);
+      expectEmptyResult(result);
     });
-    it('returns empty data when passed tmntData with squads[0].id invalid', () => {
-      const invalidTmnt = cloneDeep(mockDataOneTmnt);
-      invalidTmnt.squads[0].id = 'test';
 
-      const result = extractDataFromRows(mockPlayerRows, invalidTmnt, mockBracketLists);
-      const tmntEntriesData = result as gridTmntEntryDataType;
-
-      expect(tmntEntriesData.players.length).toBe(0);
-      expect(tmntEntriesData.divEntries.length).toBe(0);
-      expect(tmntEntriesData.potEntries.length).toBe(0);
-      expect(tmntEntriesData.brktEntries.length).toBe(0);
-      expect(tmntEntriesData.elimEntries.length).toBe(0);
-    });
-  })
-
-  describe('return valid data when passed invalid data for bracketLists, 3rd param', () => {
-    it('returns empty data when passed invalid brktLists', () => {
-      const result = extractDataFromRows(mockPlayerRows, mockDataOneTmnt, "test" as any);      
-      const tmntEntriesData = result as gridTmntEntryDataType;
-
-      expect(tmntEntriesData.players.length).toBe(0);
-      expect(tmntEntriesData.divEntries.length).toBe(0);
-      expect(tmntEntriesData.potEntries.length).toBe(0);
-      expect(tmntEntriesData.brktEntries.length).toBe(0);
-      expect(tmntEntriesData.elimEntries.length).toBe(0);
-    });
-    it('returns empty data when passed null for brktLists', () => {
-      const result = extractDataFromRows(mockPlayerRows, mockDataOneTmnt, null as any);
-      const tmntEntriesData = result as gridTmntEntryDataType;
-
-      expect(tmntEntriesData.players.length).toBe(0);
-      expect(tmntEntriesData.divEntries.length).toBe(0);
-      expect(tmntEntriesData.potEntries.length).toBe(0);
-      expect(tmntEntriesData.brktEntries.length).toBe(0);
-      expect(tmntEntriesData.elimEntries.length).toBe(0);
-    });
-  });
-
-  describe("extract correct money totals data from rows", () => {
-    it("should create correct money totals", () => {
+    it("returns empty result when brktLists is not an array", () => {
       const result = extractDataFromRows(
         mockPlayerRows,
         mockDataOneTmnt,
-        mockBracketLists
+        null as any,
       );
 
-      const moneys = result.moneys;
-      expect(moneys.length).toBe(6);
+      expectEmptyResult(result);
+    });
 
-      //
-      // Division
-      //
-      const divMoney = moneys.find(
-        (m) =>
-          m.div_id === divId1 &&
-          m.pot_id === null &&
-          m.brkt_id === null &&
-          m.elim_id === null
+    it("returns empty result when there are 0 events", () => {
+      const oneTmntData = cloneDeep(mockDataOneTmnt);
+      oneTmntData.events = [];
+
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        oneTmntData,
+        [],
       );
-      expect(divMoney).toMatchObject({
-        event_id: eventId1,
+
+      expectEmptyResult(result);
+    });
+
+    it("returns empty result when there are 0 squads", () => {
+      const oneTmntData = cloneDeep(mockDataOneTmnt);
+      oneTmntData.squads = [];
+
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        oneTmntData,
+        [],
+      );
+
+      expectEmptyResult(result);
+    });
+
+    it("returns empty result when there are 0 divisions", () => {
+      const oneTmntData = cloneDeep(mockDataOneTmnt);
+      oneTmntData.divs = [];
+
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        oneTmntData,
+        [],
+      );
+
+      expectEmptyResult(result);
+    });
+
+    it("passes validation with 1 division", () => {
+      const oneTmntData = cloneDeep(mockDataOneTmnt);
+      oneTmntData.divs = [oneTmntData.divs[0]];
+
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        oneTmntData,
+        [],
+      );
+
+      expect(result.players).toHaveLength(mockPlayerRows.length);
+    });
+
+    it("passes validation with 2 divisions", () => {
+      const oneTmntData = cloneDeep(mockDataOneTmnt);
+
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        oneTmntData,
+        [],
+      );
+
+      expect(result.players).toHaveLength(mockPlayerRows.length);
+    });
+
+    it("passes validation with 0 pots", () => {
+      const oneTmntData = cloneDeep(mockDataOneTmnt);
+      oneTmntData.pots = [];
+
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        oneTmntData,
+        [],
+      );
+
+      expect(result.players).toHaveLength(mockPlayerRows.length);
+    });
+
+    it("passes validation with 1 pot", () => {
+      const oneTmntData = cloneDeep(mockDataOneTmnt);
+      oneTmntData.pots = [oneTmntData.pots[0]];
+
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        oneTmntData,
+        [],
+      );
+
+      expect(result.players).toHaveLength(mockPlayerRows.length);
+    });
+
+    it("passes validation with 2 pots", () => {
+      const oneTmntData = cloneDeep(mockDataOneTmnt);
+
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        oneTmntData,
+        [],
+      );
+
+      expect(result.players).toHaveLength(mockPlayerRows.length);
+    });
+
+    it("passes validation with 0 brackets", () => {
+      const oneTmntData = cloneDeep(mockDataOneTmnt);
+      oneTmntData.brkts = [];
+
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        oneTmntData,
+        [],
+      );
+
+      expect(result.players).toHaveLength(mockPlayerRows.length);
+    });
+
+    it("passes validation with 1 bracket", () => {
+      const oneTmntData = cloneDeep(mockDataOneTmnt);
+      oneTmntData.brkts = [oneTmntData.brkts[0]];
+
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        oneTmntData,
+        mockBracketLists,
+      );
+
+      expect(result.players).toHaveLength(mockPlayerRows.length);
+    });
+
+    it("passes validation with 2 brackets", () => {
+      const oneTmntData = cloneDeep(mockDataOneTmnt);
+
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        oneTmntData,
+        mockBracketLists,
+      );
+
+      expect(result.players).toHaveLength(mockPlayerRows.length);
+    });
+
+    it("passes validation with 0 eliminators", () => {
+      const oneTmntData = cloneDeep(mockDataOneTmnt);
+      oneTmntData.elims = [];
+
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        oneTmntData,
+        [],
+      );
+
+      expect(result.players).toHaveLength(mockPlayerRows.length);
+    });
+
+    it("passes validation with 1 eliminator", () => {
+      const oneTmntData = cloneDeep(mockDataOneTmnt);
+      oneTmntData.elims = [oneTmntData.elims[0]];
+
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        oneTmntData,
+        [],
+      );
+
+      expect(result.players).toHaveLength(mockPlayerRows.length);
+    });
+
+    it("passes validation with 2 eliminators", () => {
+      const oneTmntData = cloneDeep(mockDataOneTmnt);
+
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        oneTmntData,
+        [],
+      );
+
+      expect(result.players).toHaveLength(mockPlayerRows.length);
+    });
+
+    it("passes validation with 2 pots, 2 brackets, and 2 eliminators", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        mockDataOneTmnt,
+        mockBracketLists,
+      );
+
+      expect(result.players).toHaveLength(mockPlayerRows.length);
+    });
+
+    it("returns empty result when event id is invalid", () => {
+      const oneTmntData = cloneDeep(mockDataOneTmnt);
+      oneTmntData.events[0].id = "bad_event_id";
+
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        oneTmntData,
+        [],
+      );
+
+      expectEmptyResult(result);
+    });
+
+    it("returns empty result when squad id is invalid", () => {
+      const oneTmntData = cloneDeep(mockDataOneTmnt);
+      oneTmntData.squads[0].id = "bad_squad_id";
+
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        oneTmntData,
+        [],
+      );
+
+      expectEmptyResult(result);
+    });
+
+    it("returns empty result when division id is invalid", () => {
+      const oneTmntData = cloneDeep(mockDataOneTmnt);
+      oneTmntData.divs[0].id = "bad_div_id";
+
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        oneTmntData,
+        [],
+      );
+
+      expectEmptyResult(result);
+    });
+
+  });  
+
+  describe("player extraction", () => {
+    it("creates one player for every row", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        mockDataOneTmnt,
+        [],
+      );
+
+      expect(result.players).toHaveLength(
+        mockPlayerRows.length,
+      );
+    });
+
+    it("copies player fields correctly", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        mockDataOneTmnt,
+        [],
+      );
+
+      const player = result.players.find(
+        (p) => p.id === playerId1,
+      );
+
+      expect(player).toMatchObject({
+        id: playerId1,
         squad_id: squadId1,
-        div_id: divId1,
-        descrip: MoneyDescrip.ENTRIES,
-        flow: MoneyFlow.IN,
-        amount: 850, // 10 players @ 85, 1 player no entry
-        pot_id: null,
-        brkt_id: null,
-        elim_id: null,
-        sort_order: 2,  // extracted data starts with sort_order = 2
-      });
-
-      //
-      // Pot
-      //
-      const potMoney = moneys.find(
-        (m) => m.pot_id === potId1
-      );
-      expect(potMoney).toMatchObject({
-        event_id: eventId1,
-        squad_id: squadId1,
-        div_id: divId1,
-        descrip: MoneyDescrip.ENTRIES,
-        flow: MoneyFlow.IN,
-        amount: 200, // 10 players @ 20, 1 player no entry
-        pot_id: potId1,
-        brkt_id: null,
-        elim_id: null,
-        sort_order: 3,
-      });
-
-      //
-      // Bracket 1
-      //
-      const brkt1Money = moneys.find(
-        (m) => m.brkt_id === brktId1
-      );
-      expect(brkt1Money).toMatchObject({
-        event_id: eventId1,
-        squad_id: squadId1,
-        div_id: divId1,
-        descrip: MoneyDescrip.ENTRIES,
-        flow: MoneyFlow.IN,
-        amount: 280, // 56 brkt entries
-        pot_id: null,
-        brkt_id: brktId1,
-        elim_id: null,
-        sort_order: 4,
-      });      
-
-      //
-      // Bracket 2
-      //
-      const brkt2Money = moneys.find(
-        (m) => m.brkt_id === brktId2
-      );
-      expect(brkt2Money).toMatchObject({
-        event_id: eventId1,
-        squad_id: squadId1,
-        div_id: divId1,
-        descrip: MoneyDescrip.ENTRIES,
-        flow: MoneyFlow.IN,
-        amount: 280, // 56 brkt entries
-        pot_id: null,
-        brkt_id: brktId2,
-        elim_id: null,
-        sort_order: 5,
-      });      
-
-      //
-      // Eliminator 1
-      //
-      const elim1Money = moneys.find(
-        (m) => m.elim_id === elimId1
-      );
-      expect(elim1Money).toMatchObject({
-        event_id: eventId1,
-        squad_id: squadId1,
-        div_id: divId1,
-        descrip: MoneyDescrip.ENTRIES,
-        flow: MoneyFlow.IN,
-        amount: 35, // 7 players @ 5
-        pot_id: null,
-        brkt_id: null,
-        elim_id: elimId1,
-        sort_order: 6,
-      });      
-
-      //
-      // Eliminator 2
-      //
-      const elim2Money = moneys.find(
-        (m) => m.elim_id === elimId2
-      );
-      expect(elim2Money).toMatchObject({
-        event_id: eventId1,
-        squad_id: squadId1,
-        div_id: divId1,
-        descrip: MoneyDescrip.ENTRIES,
-        flow: MoneyFlow.IN,
-        amount: 35, // 7 players @ 5
-        pot_id: null,
-        brkt_id: null,
-        elim_id: elimId2,
-        sort_order: 7,
-      });      
-
-      //
-      // Verify all rows have valid ids
-      //
-      moneys.forEach((money) => {
-        expect(isValidBtDbId(money.id, "mon")).toBe(true);
+        first_name: "Amy",
+        last_name: "Davis",
+        average: 212,
+        lane: 29,
+        position: "X",
       });
     });
+    
+  });
+
+  describe("division entries", () => {
+
+    const getPrizeFundOutRow = (result: gridTmntEntryDataType) =>
+      result.moneys.find(
+        (m) =>
+          m.descrip === MoneyDescrip.PRIZEFUND &&
+          m.flow === MoneyFlow.OUT &&
+          !m.pot_id &&
+          !m.brkt_id &&
+          !m.elim_id,
+      );
+
+    const getLineageOutRow = (result: gridTmntEntryDataType) =>
+      result.moneys.find(
+        (m) =>
+          m.descrip === MoneyDescrip.LINEAGE &&
+          m.flow === MoneyFlow.OUT,
+      );
+
+    it("creates division entries", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        mockDataOneTmnt,
+        [],
+      );
+
+      expect(result.divEntries.length).toBeGreaterThan(0);
+    });
+
+    it("creates no division entry when player has no division fee columns with data", () => {
+      const rows = [mockPlayerRows[1]]; // Betty
+
+      const result = extractDataFromRows(
+        rows,
+        mockDataOneTmnt,
+        [],
+      );
+
+      expect(result.divEntries).toHaveLength(0);
+    });
+
+    it("creates one division entry when player enters one division", () => {
+      const rows = [mockPlayerRows[0]]; // Amy
+
+      const result = extractDataFromRows(
+        rows,
+        mockDataOneTmnt,
+        [],
+      );
+
+      expect(result.divEntries).toHaveLength(1);
+
+      expect(result.divEntries[0]).toMatchObject({
+        player_id: playerId1,
+        div_id: divId1,
+        fee: "85",
+        hdcp: 0,
+      });
+    });
+        
+    it("creates division entry when only second division has data", () => {
+      const row = cloneDeep(mockPlayerRows[2]);
+
+      row[`${divId1}_fee`] = "";
+      row[`${divId2}_fee`] = 85;
+
+      const result = extractDataFromRows(
+        [row],
+        mockDataOneTmnt,
+        [],
+      );
+
+      expect(result.divEntries).toHaveLength(1);
+
+      expect(result.divEntries[0].div_id).toBe(divId2);
+    });
+
+    it("creates two division entries when both division fees are entered", () => {
+      const result = extractDataFromRows(
+        [mockPlayerRows[2]],
+        mockDataOneTmnt,
+        [],
+      );
+
+      expect(result.divEntries).toHaveLength(2);
+
+      expect(
+        result.divEntries.filter(
+          (d) => d.player_id === playerId3,
+        ),
+      ).toHaveLength(2);
+    });
+        
+    it("stores handicap value for handicap division", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        mockDataOneTmnt,
+        [],
+      );
+
+      const hdcpEntry = result.divEntries.find(
+        (d) =>
+          d.player_id === playerId3 &&
+          d.div_id === divId2,
+      );
+
+      expect(hdcpEntry?.hdcp).toBe(18);
+    });
+
+    it("does not create division money out amounts when no division fees exist", () => {
+      const result = extractDataFromRows(
+        [mockPlayerRows[1]],
+        mockDataOneTmnt,
+        [],
+      );
+
+      const lineageRow = getLineageOutRow(result);
+
+      expect(lineageRow?.amount).toBe(0);
+    });
+
+    it("allocates lineage, other, expenses and prize fund from one division entry", () => {
+      const result = extractDataFromRows(
+        [mockPlayerRows[0]],
+        mockDataOneTmnt,
+        [],
+      );
+
+      const prizeFundRow = getPrizeFundOutRow(result);
+
+      expect(prizeFundRow?.amount).toBe(57);
+    });
+        
+    it("calculates prize fund for two equal division fees by deducting expenses only once", () => {
+      const result = extractDataFromRows(
+        [mockPlayerRows[2]],
+        mockDataOneTmnt,
+        [],
+      );
+
+      const prizeFundRow = getPrizeFundOutRow(result);
+
+      expect(prizeFundRow?.amount).toBe(142);
+    });
+
+    it("only deducts expenses from the first matching highest division fee", () => {
+      const result = extractDataFromRows(
+        [mockPlayerRows[2]], // Carol has div1 = 85 and div2 = 85
+        mockDataOneTmnt,
+        [],
+      );
+
+      const prizeFundOutRow = result.moneys.find(
+        (m) =>
+          m.descrip === MoneyDescrip.PRIZEFUND &&
+          m.flow === MoneyFlow.OUT &&
+          m.pot_id === null &&
+          m.brkt_id === null &&
+          m.elim_id === null,
+      );
+
+      // Div 1: 85 - lineage 21 - other 2 - expenses 5 = 57
+      // Div 2: 85 full amount to prize fund
+      // Total: 57 + 85 = 142
+      expect(prizeFundOutRow?.amount).toBe(142);
+    });
+        
+    it("only charges lineage, other, and expenses once when player enters two divisions", () => {
+      const result = extractDataFromRows(
+        [mockPlayerRows[2]],
+        mockDataOneTmnt,
+        [],
+      );
+
+      const lineageRow = result.moneys.find(
+        (m) =>
+          m.descrip === MoneyDescrip.LINEAGE &&
+          m.flow === MoneyFlow.OUT,
+      );
+
+      const otherRow = result.moneys.find(
+        (m) =>
+          m.descrip === MoneyDescrip.OTHER &&
+          m.flow === MoneyFlow.OUT,
+      );
+
+      const expensesRow = result.moneys.find(
+        (m) =>
+          m.descrip === MoneyDescrip.EXPENSES &&
+          m.flow === MoneyFlow.OUT &&
+          m.pot_id === null &&
+          m.brkt_id === null &&
+          m.elim_id === null,
+      );
+
+      expect(lineageRow?.amount).toBe(21);
+      expect(otherRow?.amount).toBe(2);
+      expect(expensesRow?.amount).toBe(5);
+    });    
+
+  });
+
+  describe("pot entries", () => {
+
+    const getPotPrizeFundRow = (
+      result: gridTmntEntryDataType,
+      potId: string,
+    ) =>
+      result.moneys.find(
+        (m) =>
+          m.descrip === MoneyDescrip.PRIZEFUND &&
+          m.flow === MoneyFlow.OUT &&
+          m.pot_id === potId,
+      );
+
+    it("creates pot entries", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        mockDataOneTmnt,
+        [],
+      );
+
+      expect(result.potEntries.length).toBeGreaterThan(0);
+    });
+
+    it("creates pot entry for Amy", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        mockDataOneTmnt,
+        [],
+      );
+
+      expect(
+        result.potEntries.some(
+          (p) =>
+            p.player_id === playerId1 &&
+            p.pot_id === potId1,
+        ),
+      ).toBe(true);
+    });
+
+    it("creates no pot entries when tournament has 0 pots", () => {
+      const oneTmntData = cloneDeep(mockDataOneTmnt);
+      oneTmntData.pots = [];
+
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        oneTmntData,
+        [],
+      );
+
+      expect(result.potEntries).toHaveLength(0);
+    });
+        
+    it("creates no pot entries when player has no pot fee columns with data", () => {
+      const result = extractDataFromRows(
+        [mockPlayerRows[1]],
+        mockDataOneTmnt,
+        [],
+      );
+
+      expect(result.potEntries).toHaveLength(0);
+    });
+
+    it("creates one pot entry when player enters one pot", () => {
+      const result = extractDataFromRows(
+        [mockPlayerRows[0]],
+        mockDataOneTmnt,
+        [],
+      );
+
+      expect(result.potEntries).toHaveLength(1);
+
+      expect(result.potEntries[0]).toMatchObject({
+        player_id: playerId1,
+        pot_id: potId1,
+        fee: "20",
+      });
+    });    
+        
+    it("creates one pot entry when second pot is blank", () => {
+      const result = extractDataFromRows(
+        [mockPlayerRows[0]],
+        mockDataOneTmnt,
+        [],
+      );
+
+      expect(result.potEntries).toHaveLength(1);
+
+      expect(
+        result.potEntries.some(
+          (p) =>
+            p.player_id === playerId1 &&
+            p.pot_id === potId1,
+        ),
+      ).toBe(true);
+    });
+
+    it("creates one pot entry when only second pot has data", () => {
+      const row = cloneDeep(mockPlayerRows[2]);
+
+      const pot1FeeColName = entryFeeColName(potId1);
+      const pot2FeeColName = entryFeeColName(potId2);
+      row[pot1FeeColName] = "";
+      row[pot2FeeColName] = 20;
+
+      const result = extractDataFromRows(
+        [row],
+        mockDataOneTmnt,
+        [],
+      );
+
+      expect(result.potEntries).toHaveLength(1);
+
+      expect(result.potEntries[0].pot_id).toBe(potId2);
+    });
+
+    it("creates two pot entries when both pot fees are entered", () => {
+      const result = extractDataFromRows(
+        [mockPlayerRows[2]],
+        mockDataOneTmnt,
+        [],
+      );
+
+      expect(result.potEntries).toHaveLength(2);
+
+      expect(
+        result.potEntries.filter(
+          (p) => p.player_id === playerId3,
+        ),
+      ).toHaveLength(2);
+    });
+        
+    it("updates pot prize fund amount", () => {
+      const result = extractDataFromRows(
+        [mockPlayerRows[0]],
+        mockDataOneTmnt,
+        [],
+      );
+
+      const potPrizeFundRow =
+        getPotPrizeFundRow(result, potId1);
+
+      expect(potPrizeFundRow?.amount).toBe(20);
+    });
+
+    it("updates each pot prize fund independently", () => {
+      const result = extractDataFromRows(
+        [mockPlayerRows[2]],
+        mockDataOneTmnt,
+        [],
+      );
+
+      const pot1Row =
+        getPotPrizeFundRow(result, potId1);
+
+      const pot2Row =
+        getPotPrizeFundRow(result, potId2);
+
+      expect(pot1Row?.amount).toBe(20);
+      expect(pot2Row?.amount).toBe(20);
+    });
+        
+    it("accumulates pot prize fund totals across players", () => {
+      const result = extractDataFromRows(
+        [
+          mockPlayerRows[0],
+          mockPlayerRows[2],
+          mockPlayerRows[3],
+        ],
+        mockDataOneTmnt,
+        [],
+      );
+
+      const potPrizeFundRow =
+        getPotPrizeFundRow(result, potId1);
+
+      expect(potPrizeFundRow?.amount).toBe(60);
+    });    
+    
+  });  
+
+  describe("bracket refunds", () => {
+
+    const getBracketPrizeFundRow = (
+      result: gridTmntEntryDataType,
+      brktId: string,
+    ) =>
+      result.moneys.find(
+        (m) =>
+          m.descrip === MoneyDescrip.PRIZEFUND &&
+          m.flow === MoneyFlow.OUT &&
+          m.brkt_id === brktId,
+      );
+
+    const getBracketExpensesRow = (
+      result: gridTmntEntryDataType,
+      brktId: string,
+    ) =>
+      result.moneys.find(
+        (m) =>
+          m.descrip === MoneyDescrip.EXPENSES &&
+          m.flow === MoneyFlow.OUT &&
+          m.brkt_id === brktId,
+      );
+
+    const getBracketRefundsRow = (
+      result: gridTmntEntryDataType,
+      brktId: string,
+    ) =>
+      result.moneys.find(
+        (m) =>
+          m.descrip === MoneyDescrip.REFUNDS &&
+          m.flow === MoneyFlow.OUT &&
+          m.brkt_id === brktId,
+      );
+
+    it("creates no bracket entries when tournament has 0 brackets", () => {
+      const oneTmntData = cloneDeep(mockDataOneTmnt);
+      oneTmntData.brkts = [];
+
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        oneTmntData,
+        [],
+      );
+
+      expect(result.brktEntries).toHaveLength(0);
+    });
+        
+    it("creates no bracket entries when player has no bracket data", () => {
+      const result = extractDataFromRows(
+        [mockPlayerRows[1]],
+        mockDataOneTmnt,
+        mockBracketLists,
+      );
+
+      expect(result.brktEntries).toHaveLength(0);
+    });
+
+    it("creates one bracket entry when player enters one bracket", () => {
+      const row = cloneDeep(mockPlayerRows[0]);
+      row[brkt2NumColName] = "";
+
+      const result = extractDataFromRows(
+        [row],
+        mockDataOneTmnt,
+        mockBracketLists,
+      );
+
+      expect(result.brktEntries).toHaveLength(1);
+
+      expect(result.brktEntries[0]).toMatchObject({
+        player_id: playerId1,
+        brkt_id: brktId1,
+      });
+    });    
+
+    it("creates one bracket entry when only second bracket has data", () => {
+      const row = cloneDeep(mockPlayerRows[2]);
+
+      row[brkt1NumColName] = "";
+      row[brkt2NumColName] = 2;
+
+      const result = extractDataFromRows(
+        [row],
+        mockDataOneTmnt,
+        mockBracketLists,
+      );
+
+      expect(result.brktEntries).toHaveLength(1);
+
+      expect(result.brktEntries[0].brkt_id).toBe(brktId2);
+    });
+
+    it("creates two bracket entries when both bracket columns have data", () => {
+      const result = extractDataFromRows(
+        [mockPlayerRows[0]],
+        mockDataOneTmnt,
+        mockBracketLists,
+      );
+
+      expect(result.brktEntries).toHaveLength(2);
+    });
+
+    it("calculates bracket refunds", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        mockDataOneTmnt,
+        mockBracketLists,
+      );
+
+      const entry = result.brktEntries.find(
+        (b) =>
+          b.player_id === playerId10 &&
+          b.brkt_id === brktId1,
+      );
+
+      expect(entry?.num_refunds).toBeGreaterThan(0);
+    });
+
+    it("updates refund money row", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        mockDataOneTmnt,
+        mockBracketLists,
+      );
+
+      const refundsRow =
+        getBracketRefundsRow(result, brktId1);
+
+      expect(refundsRow?.amount).toBeGreaterThan(0);
+    });
+
+    it("updates bracket prize fund money row", () => {
+      const result = extractDataFromRows(
+        [mockPlayerRows[0]],
+        mockDataOneTmnt,
+        mockBracketLists,
+      );
+
+      const prizeFundRow =
+        getBracketPrizeFundRow(result, brktId1);
+
+      expect(prizeFundRow?.amount).toBeGreaterThan(0);
+    });
+
+    it("updates bracket expenses money row", () => {
+      const result = extractDataFromRows(
+        [mockPlayerRows[0]],
+        mockDataOneTmnt,
+        mockBracketLists,
+      );
+
+      const expensesRow =
+        getBracketExpensesRow(result, brktId1);
+
+      expect(expensesRow?.amount).toBeGreaterThan(0);
+    });
+        
+    it("ignores bracket columns that do not exist in tournament data", () => {
+      const oneTmntData = cloneDeep(mockDataOneTmnt);
+      oneTmntData.brkts = [];
+
+      const result = extractDataFromRows(
+        [mockPlayerRows[0]],
+        oneTmntData,
+        [],
+      );
+
+      expect(result.brktEntries).toHaveLength(0);
+
+      expect(
+        result.moneys.filter(
+          (m) => m.brkt_id !== null,
+        ),
+      ).toHaveLength(0);
+    });    
+    
+  });
+
+  describe("eliminator entries", () => {
+    const getElimPrizeFundRow = (
+      result: gridTmntEntryDataType,
+      elimId: string,
+    ) =>
+      result.moneys.find(
+        (m) =>
+          m.descrip === MoneyDescrip.PRIZEFUND &&
+          m.flow === MoneyFlow.OUT &&
+          m.elim_id === elimId,
+      );
+
+    const elim1FeeColName = entryFeeColName(elimId1);
+    const elim2FeeColName = entryFeeColName(elimId2);
+    
+    it("creates eliminator entries", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        mockDataOneTmnt,
+        [],
+      );
+
+      expect(result.elimEntries.length).toBeGreaterThan(0);
+    });
+
+    it("creates no eliminator entries when tournament has 0 eliminators", () => {
+      const oneTmntData = cloneDeep(mockDataOneTmnt);
+      oneTmntData.elims = [];
+
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        oneTmntData,
+        [],
+      );
+
+      expect(result.elimEntries).toHaveLength(0);
+    });
+        
+    it("creates no eliminator entries when player has no eliminator fee columns with data", () => {
+      const result = extractDataFromRows(
+        [mockPlayerRows[1]],
+        mockDataOneTmnt,
+        [],
+      );
+
+      expect(result.elimEntries).toHaveLength(0);
+    });
+
+    it("creates one eliminator entry when player enters one eliminator", () => {
+      const row = cloneDeep(mockPlayerRows[0]);
+      row[elim2FeeColName] = "";
+
+      const result = extractDataFromRows(
+        [row],
+        mockDataOneTmnt,
+        [],
+      );
+
+      expect(result.elimEntries).toHaveLength(1);
+
+      expect(result.elimEntries[0]).toMatchObject({
+        player_id: playerId1,
+        elim_id: elimId1,
+      });
+    });
+
+    it("creates one eliminator entry when second eliminator is blank", () => {
+      const row = cloneDeep(mockPlayerRows[0]);
+      row[elim2FeeColName] = "";
+
+      const result = extractDataFromRows(
+        [row],
+        mockDataOneTmnt,
+        [],
+      );
+
+      expect(result.elimEntries).toHaveLength(1);
+
+      expect(
+        result.elimEntries.some(
+          (e) =>
+            e.player_id === playerId1 &&
+            e.elim_id === elimId1,
+        ),
+      ).toBe(true);
+    });
+
+    it("creates one eliminator entry when only second eliminator has data", () => {
+      const row = cloneDeep(mockPlayerRows[0]);
+
+      row[elim1FeeColName] = "";
+      row[elim2FeeColName] = 20;
+
+      const result = extractDataFromRows(
+        [row],
+        mockDataOneTmnt,
+        [],
+      );
+
+      expect(result.elimEntries).toHaveLength(1);
+
+      expect(result.elimEntries[0].elim_id).toBe(elimId2);
+    });
+        
+    it("creates two eliminator entries when both eliminator columns have data", () => {
+      const result = extractDataFromRows(
+        [mockPlayerRows[0]],
+        mockDataOneTmnt,
+        [],
+      );
+
+      expect(result.elimEntries).toHaveLength(2);
+    });
+        
+    it("updates eliminator prize fund amount", () => {
+      const row = cloneDeep(mockPlayerRows[0]);
+      row[elim2FeeColName] = "";
+
+      const result = extractDataFromRows(
+        [row],
+        mockDataOneTmnt,
+        [],
+      );
+
+      const prizeFundRow =
+        getElimPrizeFundRow(result, elimId1);
+
+      expect(prizeFundRow?.amount).toBe(5);
+    });
+
+    it("updates each eliminator prize fund independently", () => {
+      const result = extractDataFromRows(
+        [mockPlayerRows[0]],
+        mockDataOneTmnt,
+        [],
+      );
+
+      const elim1Row =
+        getElimPrizeFundRow(result, elimId1);
+
+      const elim2Row =
+        getElimPrizeFundRow(result, elimId2);
+
+      expect(elim1Row?.amount).toBeGreaterThan(0);
+      expect(elim2Row?.amount).toBeGreaterThan(0);
+    });
+
+    it("accumulates eliminator prize fund totals across players", () => {
+      const result = extractDataFromRows(
+        [
+          mockPlayerRows[0],
+          mockPlayerRows[3],
+          mockPlayerRows[4],
+        ],
+        mockDataOneTmnt,
+        [],
+      );
+
+      const elim1Row =
+        getElimPrizeFundRow(result, elimId1);
+
+      expect(elim1Row?.amount).toBe(10);
+    });
+        
+    it("ignores eliminator columns that do not exist in tournament data", () => {
+      const oneTmntData = cloneDeep(mockDataOneTmnt);
+      oneTmntData.elims = [];
+
+      const result = extractDataFromRows(
+        [mockPlayerRows[0]],
+        oneTmntData,
+        [],
+      );
+
+      expect(result.elimEntries).toHaveLength(0);
+
+      expect(
+        result.moneys.filter(
+          (m) => m.elim_id !== null,
+        ),
+      ).toHaveLength(0);
+    });    
+    
+  }); 
+  
+  describe("money rows", () => {
+    it("creates money rows", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        mockDataOneTmnt,
+        [],
+      );
+
+      expect(result.moneys.length).toBeGreaterThan(0);
+    });
+
+    it("creates one ADDED money row", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        mockDataOneTmnt,
+        [],
+      );
+
+      const addedRows = result.moneys.filter(
+        (m) =>
+          m.descrip === MoneyDescrip.ADDED &&
+          m.flow === MoneyFlow.IN,
+      );
+
+      expect(addedRows).toHaveLength(1);
+    });
+
+    it("creates lineage out row", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        mockDataOneTmnt,
+        [],
+      );
+
+      expect(
+        result.moneys.some(
+          (m) =>
+            m.descrip === MoneyDescrip.LINEAGE &&
+            m.flow === MoneyFlow.OUT,
+        ),
+      ).toBe(true);
+    });
+
+    it("assigns sequential sort order values", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        mockDataOneTmnt,
+        [],
+      );
+
+      result.moneys.forEach((money, index) => {
+        expect(money.sort_order).toBe(index + 1);
+      });
+    });
+
+    it("creates only division money rows when no pots brackets or eliminators exist", () => {
+      const oneTmntData = cloneDeep(mockDataOneTmnt);
+
+      oneTmntData.pots = [];
+      oneTmntData.brkts = [];
+      oneTmntData.elims = [];
+
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        oneTmntData,
+        [],
+      );
+
+      expect(
+        result.moneys.some((m) => m.pot_id !== null),
+      ).toBe(false);
+
+      expect(
+        result.moneys.some((m) => m.brkt_id !== null),
+      ).toBe(false);
+
+      expect(
+        result.moneys.some((m) => m.elim_id !== null),
+      ).toBe(false);
+    });
+
+    it("creates pot money rows when tournament has pots", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        mockDataOneTmnt,
+        [],
+      );
+
+      expect(
+        result.moneys.some((m) => m.pot_id === potId1),
+      ).toBe(true);
+    });
+
+    it("creates bracket money rows when tournament has brackets", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        mockDataOneTmnt,
+        mockBracketLists,
+      );
+
+      expect(
+        result.moneys.some((m) => m.brkt_id === brktId1),
+      ).toBe(true);
+    });
+
+    it("creates eliminator money rows when tournament has eliminators", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        mockDataOneTmnt,
+        [],
+      );
+
+      expect(
+        result.moneys.some((m) => m.elim_id === elimId1),
+      ).toBe(true);
+    });
+
+    it("creates money rows for divisions pots brackets and eliminators together", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        mockDataOneTmnt,
+        mockBracketLists,
+      );
+
+      expect(
+        result.moneys.some((m) => m.pot_id === potId1),
+      ).toBe(true);
+
+      expect(
+        result.moneys.some((m) => m.brkt_id === brktId1),
+      ).toBe(true);
+
+      expect(
+        result.moneys.some((m) => m.elim_id === elimId1),
+      ).toBe(true);
+    });
+
+    it("creates exactly one ADDED money row", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        mockDataOneTmnt,
+        mockBracketLists,
+      );
+
+      const addedRows = result.moneys.filter(
+        (m) =>
+          m.descrip === MoneyDescrip.ADDED &&
+          m.flow === MoneyFlow.IN,
+      );
+
+      expect(addedRows).toHaveLength(1);
+    });
+    
+    it("creates exactly one lineage out row", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        mockDataOneTmnt,
+        mockBracketLists,
+      );
+
+      const lineageRows = result.moneys.filter(
+        (m) =>
+          m.descrip === MoneyDescrip.LINEAGE &&
+          m.flow === MoneyFlow.OUT,
+      );
+
+      expect(lineageRows).toHaveLength(1);
+    });
+
+    it("creates exactly one other out row", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        mockDataOneTmnt,
+        mockBracketLists,
+      );
+
+      const otherRows = result.moneys.filter(
+        (m) =>
+          m.descrip === MoneyDescrip.OTHER &&
+          m.flow === MoneyFlow.OUT,
+      );
+
+      expect(otherRows).toHaveLength(1);
+    });
+
+    it("creates exactly one event expenses out row", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        mockDataOneTmnt,
+        mockBracketLists,
+      );
+
+      const eventExpensesRows = result.moneys.filter(
+        (m) =>
+          m.descrip === MoneyDescrip.EXPENSES &&
+          m.flow === MoneyFlow.OUT &&
+          m.pot_id === null &&
+          m.brkt_id === null &&
+          m.elim_id === null,
+      );
+
+      expect(eventExpensesRows).toHaveLength(1);
+    });
+
+    it("creates exactly one event prize fund out row", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        mockDataOneTmnt,
+        mockBracketLists,
+      );
+
+      const eventPrizeFundRows = result.moneys.filter(
+        (m) =>
+          m.descrip === MoneyDescrip.PRIZEFUND &&
+          m.flow === MoneyFlow.OUT &&
+          m.pot_id === null &&
+          m.brkt_id === null &&
+          m.elim_id === null,
+      );
+
+      expect(eventPrizeFundRows).toHaveLength(1);
+    });
+
+    it("creates one entries in row per configured division fee column", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        mockDataOneTmnt,
+        mockBracketLists,
+      );
+
+      const divEntryMoneyRows = result.moneys.filter(
+        (m) =>
+          m.descrip === MoneyDescrip.ENTRIES &&
+          m.flow === MoneyFlow.IN &&
+          m.pot_id === null &&
+          m.brkt_id === null &&
+          m.elim_id === null,
+      );
+
+      expect(divEntryMoneyRows).toHaveLength(2);
+    });
+
+    it("creates one pot entries in row per configured pot fee column", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        mockDataOneTmnt,
+        mockBracketLists,
+      );
+
+      const potEntryMoneyRows = result.moneys.filter(
+        (m) =>
+          m.descrip === MoneyDescrip.ENTRIES &&
+          m.flow === MoneyFlow.IN &&
+          m.pot_id !== null,
+      );
+
+      expect(potEntryMoneyRows).toHaveLength(2);
+    });
+
+    it("creates one bracket entries in row per configured bracket fee column", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        mockDataOneTmnt,
+        mockBracketLists,
+      );
+
+      const brktEntryMoneyRows = result.moneys.filter(
+        (m) =>
+          m.descrip === MoneyDescrip.ENTRIES &&
+          m.flow === MoneyFlow.IN &&
+          m.brkt_id !== null,
+      );
+
+      expect(brktEntryMoneyRows).toHaveLength(2);
+    });
+
+    it("creates one eliminator entries in row per configured eliminator fee column", () => {
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        mockDataOneTmnt,
+        mockBracketLists,
+      );
+
+      const elimEntryMoneyRows = result.moneys.filter(
+        (m) =>
+          m.descrip === MoneyDescrip.ENTRIES &&
+          m.flow === MoneyFlow.IN &&
+          m.elim_id !== null,
+      );
+
+      expect(elimEntryMoneyRows).toHaveLength(2);
+    });
+
+  });  
+
+  describe("integration", () => {
+
+    it("extracts all data structures when divisions pots brackets and eliminators are configured", () => {
+      const result: gridTmntEntryDataType =
+        extractDataFromRows(
+          mockPlayerRows,
+          mockDataOneTmnt,
+          mockBracketLists,
+        );
+
+      expect(result.players).toHaveLength(11);
+
+      expect(result.divEntries.length).toBeGreaterThan(0);
+      expect(result.potEntries.length).toBeGreaterThan(0);
+      expect(result.brktEntries.length).toBeGreaterThan(0);
+      expect(result.elimEntries.length).toBeGreaterThan(0);
+      expect(result.moneys.length).toBeGreaterThan(0);
+
+      expect(
+        result.moneys.some((m) => m.pot_id !== null),
+      ).toBe(true);
+
+      expect(
+        result.moneys.some((m) => m.brkt_id !== null),
+      ).toBe(true);
+
+      expect(
+        result.moneys.some((m) => m.elim_id !== null),
+      ).toBe(true);
+
+      result.moneys.forEach((money, index) => {
+        expect(money.sort_order).toBe(index + 1);
+      });
+    });
+
+    it("extracts correctly with only one division configured", () => {
+      const oneTmntData = cloneDeep(mockDataOneTmnt);
+      oneTmntData.divs = [oneTmntData.divs[0]];
+
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        oneTmntData,
+        mockBracketLists,
+      );
+
+      expect(result.players).toHaveLength(mockPlayerRows.length);
+      expect(result.divEntries.length).toBeGreaterThan(0);
+
+      expect(
+        result.divEntries.every((entry) => entry.div_id === divId1),
+      ).toBe(true);
+
+      expect(result.moneys.length).toBeGreaterThan(0);
+
+      result.moneys.forEach((money, index) => {
+        expect(money.sort_order).toBe(index + 1);
+      });
+    });
+
+    it("extracts correctly with no pots brackets or eliminators configured", () => {
+      const oneTmntData = cloneDeep(mockDataOneTmnt);
+
+      oneTmntData.pots = [];
+      oneTmntData.brkts = [];
+      oneTmntData.elims = [];
+
+      const result = extractDataFromRows(
+        mockPlayerRows,
+        oneTmntData,
+        [],
+      );
+
+      expect(result.players).toHaveLength(mockPlayerRows.length);
+      expect(result.divEntries.length).toBeGreaterThan(0);
+
+      expect(result.potEntries).toHaveLength(0);
+      expect(result.brktEntries).toHaveLength(0);
+      expect(result.elimEntries).toHaveLength(0);
+
+      expect(
+        result.moneys.some((m) => m.pot_id !== null),
+      ).toBe(false);
+
+      expect(
+        result.moneys.some((m) => m.brkt_id !== null),
+      ).toBe(false);
+
+      expect(
+        result.moneys.some((m) => m.elim_id !== null),
+      ).toBe(false);
+
+      result.moneys.forEach((money, index) => {
+        expect(money.sort_order).toBe(index + 1);
+      });
+    });
+
+
+  });  
+
+});
+
+describe("extractFullBrktsData()", () => {
+
+  const mockOneBrktId = "obk_00000000000000000000000000000000";
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+
+    mockBtDbUuid
+      .mockReturnValueOnce(oneBrktId1)
+      .mockReturnValueOnce(oneBrktId2)
+      .mockReturnValueOnce(oneBrktId3)
+      .mockReturnValueOnce(oneBrktId4);
+  });
+
+  describe("validation", () => {
+
+    it("returns empty arrays for undefined", () => {
+      const result = extractFullBrktsData(
+        undefined as unknown as BracketList[],
+      );
+
+      expect(result).toEqual({
+        oneBrkts: [],
+        brktSeeds: [],
+      });
+    });
+
+    it("returns empty arrays for null", () => {
+      const result = extractFullBrktsData(
+        null as unknown as BracketList[],
+      );
+
+      expect(result).toEqual({
+        oneBrkts: [],
+        brktSeeds: [],
+      });
+    });
+
+    it("returns empty arrays for empty array", () => {
+      const result = extractFullBrktsData([]);
+
+      expect(result).toEqual({
+        oneBrkts: [],
+        brktSeeds: [],
+      });
+    });
+
+    it("returns empty arrays for non-array input", () => {
+      const result = extractFullBrktsData(
+        {} as unknown as BracketList[],
+      );
+
+      expect(result).toEqual({
+        oneBrkts: [],
+        brktSeeds: [],
+      });
+    });
+
+  });
+
+  describe("one bracket list", () => {
+
+    it("creates oneBrkt row and seed rows for a single bracket", () => {
+
+      const brktLists = [
+        {
+          brktId: brktId1,
+          brackets: [
+            {
+              players: [
+                playerId1,
+                playerId2,
+                playerId3,
+                playerId4,
+              ],
+            },
+          ],
+        },
+      ] as unknown as BracketList[];
+
+      const result = extractFullBrktsData(brktLists);
+
+      expect(result.oneBrkts).toEqual([
+        {
+          id: mockOneBrktId,
+          brkt_id: brktId1,
+          bindex: 0,
+        },
+      ]);
+
+      expect(result.brktSeeds).toEqual([
+        {
+          one_brkt_id: mockOneBrktId,
+          seed: 0,
+          player_id: playerId1,
+        },
+        {
+          one_brkt_id: mockOneBrktId,
+          seed: 1,
+          player_id: playerId2,
+        },
+        {
+          one_brkt_id: mockOneBrktId,
+          seed: 2,
+          player_id: playerId3,
+        },
+        {
+          one_brkt_id: mockOneBrktId,
+          seed: 3,
+          player_id: playerId4,
+        },
+      ]);
+    });
+
+  });
+
+  describe("multiple bracket lists", () => {
+
+    it("creates oneBrkts for multiple bracket lists", () => {
+
+      const brktLists = [
+        {
+          brktId: brktId1,
+          brackets: [
+            { players: [playerId1, playerId2] },
+            { players: [playerId3, playerId4] },
+          ],
+        },
+        {
+          brktId: brktId2,
+          brackets: [
+            { players: [playerId5, playerId6] },
+            { players: [playerId7, playerId8] },
+          ],
+        },
+      ] as unknown as BracketList[];
+
+      const result = extractFullBrktsData(brktLists);
+
+      expect(result.oneBrkts).toHaveLength(4);
+
+      expect(result.oneBrkts).toEqual([
+        {
+          id: mockOneBrktId,
+          brkt_id: brktId1,
+          bindex: 0,
+        },
+        {
+          id: mockOneBrktId,
+          brkt_id: brktId1,
+          bindex: 1,
+        },
+        {
+          id: mockOneBrktId,
+          brkt_id: brktId2,
+          bindex: 0,
+        },
+        {
+          id: mockOneBrktId,
+          brkt_id: brktId2,
+          bindex: 1,
+        },
+      ]);
+    });
+
+  });
+
+  describe("seed generation", () => {
+
+    it("creates seeds in correct order", () => {
+
+      const brktLists = [
+        {
+          brktId: brktId1,
+          brackets: [
+            {
+              players: [
+                playerId8,
+                playerId4,
+                playerId2,
+                playerId6,
+              ],
+            },
+          ],
+        },
+      ] as unknown as BracketList[];
+
+      const result = extractFullBrktsData(brktLists);
+
+      expect(result.brktSeeds).toEqual([
+        {
+          one_brkt_id: mockOneBrktId,
+          seed: 0,
+          player_id: playerId8,
+        },
+        {
+          one_brkt_id: mockOneBrktId,
+          seed: 1,
+          player_id: playerId4,
+        },
+        {
+          one_brkt_id: mockOneBrktId,
+          seed: 2,
+          player_id: playerId2,
+        },
+        {
+          one_brkt_id: mockOneBrktId,
+          seed: 3,
+          player_id: playerId6,
+        },
+      ]);
+    });
+
+  });
+
+  describe("error handling", () => {
+
+    it("returns empty arrays when exception is thrown", () => {
+
+      const brktLists = [
+        {
+          brktId: brktId1,
+          brackets: null,
+        },
+      ] as unknown as BracketList[];
+
+      const result = extractFullBrktsData(brktLists);
+
+      expect(result).toEqual({
+        oneBrkts: [],
+        brktSeeds: [],
+      });
+    });
+
   });
 
 });

@@ -93,23 +93,23 @@ model Tmnt {
 }
 
 model Event {
-  id          String   @id @default(dbgenerated("concat('evt_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
-  tmnt_id     String   @db.Text
+  id          String       @id @default(dbgenerated("concat('evt_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  tmnt_id     String       @db.Text
   event_name  String
   team_size   Int
   games       Int
-  entry_fee   Decimal  @db.Decimal(9, 2)
-  lineage     Decimal  @db.Decimal(9, 2)
-  prize_fund  Decimal  @db.Decimal(9, 2)
-  other       Decimal  @db.Decimal(9, 2)
-  expenses    Decimal  @db.Decimal(9, 2)
-  added_money Decimal  @db.Decimal(9, 2)
+  entry_fee   Decimal      @db.Decimal(9, 2)
+  lineage     Decimal      @db.Decimal(9, 2)
+  prize_fund  Decimal      @db.Decimal(9, 2)
+  other       Decimal      @db.Decimal(9, 2)
+  expenses    Decimal      @db.Decimal(9, 2)
+  added_money Decimal      @db.Decimal(9, 2)
   sort_order  Int
-  tmnt        Tmnt     @relation(fields: [tmnt_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tmnt        Tmnt         @relation(fields: [tmnt_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   squads      Squad[]
-  moneys      Money[]
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  moneys      Money[]  
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
   @@unique([tmnt_id, event_name])
 }
@@ -129,6 +129,7 @@ model Div {
   elims       Elim[]
   div_entries Div_Entry[]
   moneys      Money[]
+  div_pfs     Div_PF[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
@@ -187,18 +188,19 @@ model Stage {
 }
 
 model Pot {
-  id          String      @id @default(dbgenerated("concat('pot_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
-  squad_id    String      @db.Text
-  div_id      String      @db.Text
+  id          String       @id @default(dbgenerated("concat('pot_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  squad_id    String       @db.Text
+  div_id      String       @db.Text
   sort_order  Int
-  fee         Decimal     @db.Decimal(9, 2)
+  fee         Decimal      @db.Decimal(9, 2)
   pot_type    String
   pot_entries Pot_Entry[]
   pot_moneys  Money[]
-  div         Div         @relation(fields: [div_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  squad       Squad       @relation(fields: [squad_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  pot_pfs     Pot_PF[]
+  div         Div          @relation(fields: [div_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  squad       Squad        @relation(fields: [squad_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
   @@unique([div_id, pot_type])
 }
@@ -236,6 +238,7 @@ model Elim {
   fee          Decimal      @db.Decimal(9, 2)
   elim_entries Elim_Entry[]
   elim_moneys  Money[]
+  elim_pfs     Elim_PF[]
   div          Div          @relation(fields: [div_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   squad        Squad        @relation(fields: [squad_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   createdAt    DateTime     @default(now())
@@ -259,6 +262,7 @@ model Player {
   elim_entries Elim_Entry[]
   brkt_seeds   Brkt_Seed[]
   games        Game[]
+  payouts      Payout[]
   squad        Squad        @relation(fields: [squad_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @default(now()) @updatedAt
@@ -374,26 +378,26 @@ model Brkt_Seed {
 // Only one of pot_id, brkt_id, elim_id may be non-null.
 // If all three are null, the row is division-level money.
 model Money {
-  id         String       @id @default(dbgenerated("concat('pri_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
-  event_id   String       @db.Text
-  squad_id   String       @db.Text
-  div_id     String       @db.Text
-  descrip    MoneyDescrip
-  flow       MoneyFlow
-  amount     Decimal      @db.Decimal(9, 2)
-  pot_id     String?      @db.Text
-  brkt_id    String?      @db.Text
-  elim_id    String?      @db.Text
-  sort_order Int
-  event      Event        @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  squad      Squad        @relation(fields: [squad_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  div        Div          @relation(fields: [div_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  pot        Pot?         @relation(fields: [pot_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  brkt       Brkt?        @relation(fields: [brkt_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  elim       Elim?        @relation(fields: [elim_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  payouts    Payout[]
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
+  id          String       @id @default(dbgenerated("concat('pri_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  event_id    String       @db.Text
+  squad_id    String       @db.Text
+  div_id      String       @db.Text
+  descrip     MoneyDescrip
+  flow        MoneyFlow
+  amount      Decimal      @db.Decimal(9, 2)
+  pot_id      String?      @db.Text
+  brkt_id     String?      @db.Text
+  elim_id     String?      @db.Text
+  sort_order  Int
+  event       Event        @relation(fields: [event_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  squad       Squad        @relation(fields: [squad_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  div         Div          @relation(fields: [div_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  pot         Pot?         @relation(fields: [pot_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  brkt        Brkt?        @relation(fields: [brkt_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  elim        Elim?        @relation(fields: [elim_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  payouts     Payout[]  
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
   // indexes when needed
   // @@index([event_id])
@@ -405,11 +409,51 @@ model Money {
   // @@index([div_id, descrip])
 }
 
+model Div_PF {
+  id        String   @id @default(dbgenerated("concat('dpf_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  div_id    String?  @db.Text
+  position  Int
+  amount    Decimal  @db.Decimal(9, 2)
+  div       Div?     @relation(fields: [div_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([div_id, position])
+}
+
+model Pot_PF {
+  id        String   @id @default(dbgenerated("concat('ppf_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  pot_id    String?  @db.Text
+  game_num  Int
+  position  Int  
+  amount    Decimal  @db.Decimal(9, 2)
+  pot       Pot?     @relation(fields: [pot_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([pot_id, game_num, position])
+}
+
+model Elim_PF {
+  id        String   @id @default(dbgenerated("concat('epf_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
+  elim_id   String?  @db.Text  
+  position  Int  
+  amount    Decimal  @db.Decimal(9, 2)
+  elim      Elim?    @relation(fields: [elim_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([elim_id, position])
+}
+
 model Payout {
   id        String   @id @default(dbgenerated("concat('pay_', replace(cast(gen_random_uuid() as text), '-', ''))")) @db.Text
   money_id  String   @db.Text
-  fee       Decimal  @db.Decimal(9, 2)
+  player_id String   @db.Text
+  amount    Decimal  @db.Decimal(9, 2)
+  position  Int
   moneys    Money    @relation(fields: [money_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  player    Player   @relation(fields: [player_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

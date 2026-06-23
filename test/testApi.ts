@@ -45,7 +45,9 @@ export const testBaseGamesApi = testBaseApi + '/games'
 
 export const testBaseResultsApi = testBaseApi + '/results'
 
-export const testBaseMoneyApi = testBaseApi + '/moneys'
+export const testBaseMoneysApi = testBaseApi + '/moneys'
+
+export const testBaseDivPfsApi = testBaseApi + '/divPfs'
 
 export const testBaseBcryptApi = testBaseApi + '/bcrypt'
 

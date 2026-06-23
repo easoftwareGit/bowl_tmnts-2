@@ -686,9 +686,21 @@ export type validTmntMoneyType = {
   errorCode: ErrorCode
 }
 
+export type divPfType = {
+  id: string,
+  div_id: string,
+  position: number | null,
+  amount: number | null,  
+}
+
 export type AcdnErrType = {
   errClassName: string,
   message: string,
+}
+
+export type validDivPfsType = {
+  divPfs: divPfType[],
+  errorCode: ErrorCode
 }
 
 export type dataOneTmntType = {
