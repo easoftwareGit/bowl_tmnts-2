@@ -23,8 +23,8 @@ jest.mock("@/redux/features/tmntFullData/tmntFullDataSlice", () => ({
   getTmntFullDataError: (state: any) => mockGetError(state),
 }));
 
-// mock createColumns helpers
-jest.mock("@/app/dataEntry/playersForm/createColumns", () => ({
+// mock sfCreatePlayerColumns helpers
+jest.mock("@/app/dataEntry/playersForm/sfCreatePlayerColumns", () => ({
   feeColNameEnd: "_fee",
   entryFeeColName: (id: string) => `${id}_fee`,
   entryNumBrktsColName: (id: string) => `${id}_num_brkts`,  
@@ -37,11 +37,11 @@ jest.mock("@/lib/getName", () => ({
   getBrktOrElimName: (obj: any) => `NAME:${obj.brkt_name ?? obj.elim_name ?? obj.id}`,
 }));
 
-// mock populateRows (controls "rows" used by the page)
-const mockPopulateRows = jest.fn();
-jest.mock("@/app/dataEntry/playersForm2/populateRows2", () => ({
-  populateRows: (tmntFullData: any) =>
-    mockPopulateRows(tmntFullData),
+// mock populatePlayerRows (controls "rows" used by the page)
+const mockPopulatePlayerRows = jest.fn();
+jest.mock("@/app/dataEntry/playersForm/populatePlayerRows", () => ({
+  populatePlayerRows: (tmntFullData: any) =>
+    mockPopulatePlayerRows(tmntFullData),
 }));
 
 /**
@@ -51,43 +51,7 @@ jest.mock("@/app/dataEntry/playersForm2/populateRows2", () => ({
  */
 let lastPlayersEntryFormProps: any = null;
 
-// jest.mock("@/app/dataEntry/playersForm2/playersForm2a", () => ({
-//   __esModule: true,
-//   default: (props: any) => {
-//     lastPlayersEntryFormProps = props;
-
-//     return (
-//       <div data-testid="PlayersEntryFormMock">
-//         <div data-testid="rowsLen">
-//           {props.rows?.length ?? -1}
-//         </div>
-
-//         <button
-//           type="button"
-//           onClick={() =>
-//             props.setRows([
-//               ...(props.rows ?? []),
-//               { id: "new_row" },
-//             ])
-//           }
-//         >
-//           Add Row
-//         </button>
-
-//         <button
-//           type="button"
-//           onClick={() =>
-//             props.setRows([{ id: "edited_only" }])
-//           }
-//         >
-//           Replace Rows
-//         </button>
-//       </div>
-//     );
-//   },
-// }));
-
-jest.mock("@/app/dataEntry/playersForm2/playersForm2a", () => ({
+jest.mock("@/app/dataEntry/playersForm/playersForm", () => ({
   __esModule: true,
   default: (props: any) => {
     lastPlayersEntryFormProps = props;
@@ -259,7 +223,7 @@ describe("EditPlayersPage", () => {
       },
     };
 
-    mockPopulateRows.mockReturnValue([]);
+    mockPopulatePlayerRows.mockReturnValue([]);
     mockGetStatus.mockReturnValue("idle");
     mockGetError.mockReturnValue(null);
     mockGetSquadStage.mockResolvedValue(SquadStage.SCORES);
@@ -300,7 +264,7 @@ describe("EditPlayersPage", () => {
     // rows used to compute counts:
     // - fee columns: count rows where value > 0
     // - num_brkts columns: sum values across rows
-    mockPopulateRows.mockReturnValue([
+    mockPopulatePlayerRows.mockReturnValue([
       { id: "r1",  div_1_fee: 10, pot_1_fee: 0, elm_1_fee: 5, brk_1_num_brkts: 2 },
       { id: "r2", div_1_fee: 0, pot_1_fee: 20, elm_1_fee: 0, brk_1_num_brkts: 1 },
       { id: "r3", div_1_fee: 10, pot_1_fee: 20, elm_1_fee: 0, brk_1_num_brkts: 0 },
@@ -353,13 +317,13 @@ describe("EditPlayersPage", () => {
     const brkTab = screen.getByTestId("Tab-brkts");    
     expect(within(brkTab).getByText(/\*/)).toBeInTheDocument();
 
-    // usePreventUnload should be wired up with a function
+    // usePreventUnload should be wired up with a boolean
     expect(mockUseUnsavedChangesGuard)
       .toHaveBeenCalled();
 
     expect(
       typeof mockUseUnsavedChangesGuard.mock.calls[0]?.[0]
-    ).toBe("function");
+    ).toBe("boolean");
   });
 
   it("when fetchTmntFullData fails: renders error message and no main UI", () => {
@@ -403,7 +367,7 @@ describe("EditPlayersPage", () => {
     mockGetStatus.mockReturnValue("succeeded");
     mockGetError.mockReturnValue(null);
 
-    mockPopulateRows.mockReturnValue([
+    mockPopulatePlayerRows.mockReturnValue([
       { id: "r1", div_1_fee: 10, pot_1_fee: 0, elm_1_fee: 0, brk_2_num_brkts: 1 },
     ]);
 
@@ -415,7 +379,7 @@ describe("EditPlayersPage", () => {
     expect(within(brkTab).queryByText(/\*/)).not.toBeInTheDocument();
   });
 
-  it("calls useUnsavedChangesGuard with a change detection function", async () => {
+  it("calls useUnsavedChangesGuard with a boolean hasUnsavedChanges value", async () => {
     const user = userEvent.setup();
 
     const tmntFullData = makeTmntFullData();
@@ -429,7 +393,7 @@ describe("EditPlayersPage", () => {
     mockGetStatus.mockReturnValue("succeeded");
     mockGetError.mockReturnValue(null);
 
-    mockPopulateRows.mockReturnValue([
+    mockPopulatePlayerRows.mockReturnValue([
       {
         id: "r1",
         div_1_fee: 10,
@@ -443,31 +407,23 @@ describe("EditPlayersPage", () => {
 
     await screen.findByTestId("PlayersEntryFormMock");
 
-    expect(mockUseUnsavedChangesGuard).toHaveBeenCalled();
-
-    const getLatestChangeFn = () =>
-      mockUseUnsavedChangesGuard.mock.calls[
-        mockUseUnsavedChangesGuard.mock.calls.length - 1
-      ]?.[0];
-
     await waitFor(() => {
-      expect(typeof getLatestChangeFn()).toBe("function");
+      expect(mockUseUnsavedChangesGuard).toHaveBeenLastCalledWith(false);
     });
 
-    expect(getLatestChangeFn()()).toBe(false);
-
     await user.click(
-      screen.getByRole("button", { name: "Add Row" })
+      screen.getByRole("button", { name: "Add Row" }),
     );
 
     await waitFor(() => {
-      expect(screen.getByTestId("rowsLen"))
-        .toHaveTextContent("2");
+      expect(screen.getByTestId("rowsLen")).toHaveTextContent("2");
     });
 
-    expect(getLatestChangeFn()()).toBe(true);   
+    await waitFor(() => {
+      expect(mockUseUnsavedChangesGuard).toHaveBeenLastCalledWith(true);
+    });
   });
-
+  
   it("does not overwrite user-edited rows if redux tmntFullData changes after initialization", async () => {
     const user = userEvent.setup();
 
@@ -478,7 +434,7 @@ describe("EditPlayersPage", () => {
     mockGetError.mockReturnValue(null);
 
     // initial populateRows gives 1 row
-    mockPopulateRows.mockReturnValue([{ id: "r1" }]);
+    mockPopulatePlayerRows.mockReturnValue([{ id: "r1" }]);
 
     const { rerender } = render(<EditPlayersPage />);
 
@@ -501,7 +457,7 @@ describe("EditPlayersPage", () => {
     mockState = { tmntFullData: { tmntFullData: tmntFullDataV2 } };
 
     // populateRows would try to reset to 1 row (or anything different)
-    mockPopulateRows.mockReturnValue([{ id: "rA" }]);
+    mockPopulatePlayerRows.mockReturnValue([{ id: "rA" }]);
 
     rerender(<EditPlayersPage />);
 
@@ -517,7 +473,7 @@ describe("EditPlayersPage", () => {
     mockGetStatus.mockReturnValue("succeeded");
     mockGetError.mockReturnValue(null);
 
-    mockPopulateRows.mockReturnValue([{ id: "r1" }]);
+    mockPopulatePlayerRows.mockReturnValue([{ id: "r1" }]);
 
     render(<EditPlayersPage />);
 
@@ -619,7 +575,7 @@ describe("EditPlayersPage", () => {
     // readonly stage
     mockGetSquadStage.mockResolvedValue(SquadStage.SCORES);
 
-    mockPopulateRows.mockReturnValue([{ id: "r1" }]);
+    mockPopulatePlayerRows.mockReturnValue([{ id: "r1" }]);
 
     render(<EditPlayersPage />);
 

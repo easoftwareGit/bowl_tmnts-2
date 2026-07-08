@@ -1,6 +1,6 @@
 "use client";
-import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { useSelector } from "react-redux";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useSelector } from "react-redux"
 import { RootState } from "@/redux/store";
 import PlayersEntryForm from "../../playersForm/playersForm";
 import type {
@@ -279,16 +279,20 @@ export default function EditPlayersPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rows]); // DO NOT INCLUDE entriesCount or priorCount in array
 
-  const dataWasChanged = useCallback(() => {
+  const dataWasChanged = useMemo(() => {
     const orig = origRowsRef.current || [];
     if (rows.length !== orig.length) return true;
-    for (let i = 0; i < rows.length; i++) {
-      if (JSON.stringify(rows[i]) !== JSON.stringify(orig[i])) return true;
-    }
-    return false;
-  }, [rows]);  
 
-  useUnsavedChangesGuard(dataWasChanged);
+    for (let i = 0; i < rows.length; i++) {
+      if (JSON.stringify(rows[i]) !== JSON.stringify(orig[i])) {
+        return true;
+      }
+    }
+
+    return false;
+  }, [rows]);
+  
+  useUnsavedChangesGuard(dataWasChanged && !isNavigatingAfterSave);  
   
   const isLoading =
     tmntLoadStatus === "loading" ||

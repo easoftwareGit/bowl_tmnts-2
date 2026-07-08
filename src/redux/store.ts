@@ -1,6 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit'
 import { TypedUseSelectorHook, useSelector } from 'react-redux';
 import bowlsReducer from './features/bowls/bowlsSlice';
+import divPfsReducer from './features/divPfs/divPfsSlice';
 import gamesForSquadReducer from './features/gamesForSquad/gamesForSquadSlice';
 import oneDivGameResultsReducer from './features/oneDivGameResults/oneDivGameResultsSlice';
 import oneTmntGameResultsReducer from './features/oneTmntGameResults/oneTmntGameResultsSlice';
@@ -13,7 +14,8 @@ import testdatesReducer from './features/testdates/testdatesSlice';
 // create the store, include reduces in object
 export const store = configureStore({
   reducer: {
-    bowls: bowlsReducer,    
+    bowls: bowlsReducer,
+    divPfs: divPfsReducer,
     gamesForSquad: gamesForSquadReducer,
     oneDivGameResults: oneDivGameResultsReducer,
     oneTmntGameResults: oneTmntGameResultsReducer,

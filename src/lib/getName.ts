@@ -11,9 +11,10 @@ export const getDivName = (id: string, divs: divType[]): string => {
     : '';
 }
 
-export const getPotName = (pot: potType, divs: divType[]): string => {
+export const getPotName = (pot: potType | undefined, divs: divType[]): string => {
+  if (!pot || !pot.pot_type) return "";
   const foundDiv: divType | undefined = findDiv(pot.div_id, divs)
-  return (foundDiv)
+  return (foundDiv && pot && pot.pot_type)
     ? foundDiv.div_name + ': ' + pot.pot_type
     : '';
 }

@@ -9,6 +9,7 @@ import {
   blankTmntMoney,
   initBrkt,
   initDiv,
+  initDivPf,
   initElim,
   initEvent,
   initLane,
@@ -23,7 +24,8 @@ import type {
   fullStageType,
   playerType,
   tmntFullType,
-  gameType,    
+  gameType,
+  divPfType,    
 } from "@/lib/types/types";
 import { MoneyDescrip, MoneyFlow, SquadStage } from "@prisma/client";
 
@@ -33,6 +35,12 @@ export const bowlId = "bwl_0123388a8fc4641a2e37233f1d6bebd1";
 export const byeId = "bye_0123388a8fc4641a2e37233f1d6beab1";
 export const divId1 = "div_0123cae28786485bb7a036935f0f6a0a";
 export const divId2 = "div_0123cae28786485bb7a036935f0f6a0b";
+export const divPfId1 = "dpf_0123cae28786485bb7a036935f0f6a0a";
+export const divPfId2 = "dpf_0123cae28786485bb7a036935f0f6a0b";
+export const divPfId3 = "dpf_0123cae28786485bb7a036935f0f6a0c";
+export const divPfId4 = "dpf_0123cae28786485bb7a036935f0f6a0d";
+export const divPfId5 = "dpf_0123cae28786485bb7a036935f0f6a0e";
+export const divPfId6 = "dpf_0123cae28786485bb7a036935f0f6a0f";
 export const elimId1 = "elm_01234ec07f824b0e93169ae78e8b4b1a";
 export const elimId2 = "elm_01234ec07f824b0e93169ae78e8b4b1b";
 export const eventId1 = "evt_012310c8493f4a218d2e2b045442974a";
@@ -98,7 +106,8 @@ export const moneyId3 = "mon_0123e6fcaa8343d0b18b56a71e8c160c";
 export const moneyId4 = "mon_0123e6fcaa8343d0b18b56a71e8c160d";
 export const moneyId5 = "mon_0123e6fcaa8343d0b18b56a71e8c160e";
 export const moneyId6 = "mon_0123e6fcaa8343d0b18b56a71e8c160f";
-export const moneyId7 = "mon_0123e6fcaa8343d0b18b56a71e8c1610";                         
+export const moneyId7 = "mon_0123e6fcaa8343d0b18b56a71e8c1610";
+export const moneyId8 = "mon_0123e6fcaa8343d0b18b56a71e8c1611";
 
 export const oneBrktId1 = "obk_01238f787de942a1a92aaa2df3e7c18a";
 export const oneBrktId2 = "obk_01238f787de942a1a92aaa2df3e7c18b";
@@ -130,6 +139,8 @@ export const timeStampDate = "2026-03-19T01:45:18.741Z";
 export const timeStampNumber = 1742348718741;
 export const tmntId = "tmt_0123388a8fc4641a2e37233f1d6bebd1";
 export const userId = "usr_0123fb5d314fff1ff5da6521a2fa7bda";
+
+export const mockDivPrizeFund = 1575;
 
 export const mockUser: userFormType  = {
   id: userId,
@@ -527,6 +538,17 @@ export const mockTmntFullData: tmntFullType = {
       amount: 10,
       sort_order: 7,
       elim_id: elimId2,
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId8,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
+      descrip: MoneyDescrip.PRIZEFUND,
+      flow: MoneyFlow.OUT,
+      amount: mockDivPrizeFund,
+      sort_order: 8,      
     },
   ],
   oneBrkts: [
@@ -1060,3 +1082,43 @@ export const mockGames: gameType[] = [
     score: 235,   
   },
 ]
+
+export const mockDivPfs: divPfType[] = [
+  {
+    ...initDivPf,
+    id: divPfId1,
+    div_id: divId1,
+    position: 1,
+    amount: 500,
+  },
+  {
+    id: divPfId1,
+    div_id: divId1,
+    position: 2,
+    amount: 350,
+  },
+  {
+    id: divPfId3,
+    div_id: divId1,
+    position: 3,
+    amount: 275,
+  },
+  {
+    id: divPfId4,
+    div_id: divId1,
+    position: 4,
+    amount: 200,
+  },
+  {
+    id: divPfId5,
+    div_id: divId1,
+    position: 5,
+    amount: 150,
+  },
+  {
+    id: divPfId6,
+    div_id: divId1,
+    position: 6,
+    amount: 100,
+  },
+];

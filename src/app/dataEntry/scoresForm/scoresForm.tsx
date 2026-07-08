@@ -28,10 +28,10 @@ import {
   scoreEntryPlusMinusColName,
   scoreEntryTotalColName
 } from "./sfCreateScoreColumns";
-import ModalConfirm, { cancelConfTitle, delConfTitle } from "@/components/modal/confirmModal";
+import ModalConfirm, { cancelConfTitle } from "@/components/modal/confirmModal";
 import { initModalObj, modalObjectType } from "@/components/modal/modalObjType";
-import "./scoresForm.css";
 import WaitModal from "@/components/modal/waitModal";
+import "./scoresForm.css";
 
 /*********
  * Types *
@@ -594,11 +594,6 @@ const ScoresEntryForm: React.FC<ChildProps> = ({
       <div>
         <h5>Tournament: {tmntFullData?.tmnt.tmnt_name}</h5>
         <h6>Players: {gridData.length}</h6>        
-        {/* {!enableEditing && !saving && (
-          <div className="alert alert-warning">
-            This tournament has been finalized. Score editing is disabled.
-          </div>
-        )} */}
       </div>
       <GridComponent
         id="gameScoresGrid"

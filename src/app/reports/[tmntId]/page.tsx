@@ -52,8 +52,7 @@ export default function ReportPreviewPage() {
         onClick={handleBackToTmntButtonClick}
       >
         Back to Run Tournament
-      </button>
-      {/* <PDFDownloadLink document={<MyReport />} fileName="report.pdf">Download PDF</PDFDownloadLink> */}
+      </button>      
       <PDFViewer style={{ width: "100%", height: "800px" }}>       
         <MyReport />
       </PDFViewer>

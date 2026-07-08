@@ -1,5 +1,5 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import NewTmntPage from "@/app/dataEntry/newTmnt/page";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 
@@ -150,16 +150,16 @@ describe("NewTmntPage", () => {
     expect(tmntProps.stage).toBe(SquadStage.DEFINE);
   });
 
-  it("uses the unsaved changes guard", () => {
+  it("uses the unsaved changes guard with hasPendingChanges=false initially", () => {
     mockUseSession.mockReturnValue({ status: "unauthenticated", data: null });
     mockGetBlank.mockReturnValue(makeBlankTmnt());
 
     render(<NewTmntPage />);
 
     expect(mockUseUnsavedChangesGuard).toHaveBeenCalledTimes(1);
-    expect(mockUseUnsavedChangesGuard).toHaveBeenCalledWith(expect.any(Function));
+    expect(mockUseUnsavedChangesGuard).toHaveBeenCalledWith(false);
   });
-
+  
   it("passes markPendingChanges to TmntDataForm", () => {
     mockUseSession.mockReturnValue({ status: "unauthenticated", data: null });
     mockGetBlank.mockReturnValue(makeBlankTmnt());
@@ -171,5 +171,22 @@ describe("NewTmntPage", () => {
     expect(callArg).toHaveProperty("markPendingChanges");
     expect(callArg.markPendingChanges).toEqual(expect.any(Function));
   });
+
+  it("passes markPendingChanges to TmntDataForm and updates useUnsavedChangesGuard", async () => {
+    mockUseSession.mockReturnValue({ status: "unauthenticated", data: null });
+    mockGetBlank.mockReturnValue(makeBlankTmnt());
+
+    render(<NewTmntPage />);
+
+    await waitFor(() => {
+      expect(mockUseUnsavedChangesGuard).toHaveBeenLastCalledWith(false);
+    });
+
+    fireEvent.click(screen.getByTestId("markPendingChangesButton"));
+
+    await waitFor(() => {
+      expect(mockUseUnsavedChangesGuard).toHaveBeenLastCalledWith(true);
+    });
+  });  
 
 });

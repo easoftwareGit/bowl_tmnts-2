@@ -36,18 +36,15 @@ export default function EditTmntPage() {
   /*************************
    * Unsaved Changes Guard *
    *************************/
-  const hasPendingChangesRef = useRef(false);
+
+  const [hasPendingChanges, setHasPendingChanges] = useState(false);
 
   const markPendingChanges = useCallback((pending: boolean): void => {
-    hasPendingChangesRef.current = pending;
+    setHasPendingChanges(pending);
   }, []);
 
-  const dataWasChanged = useCallback((): boolean => {
-    return hasPendingChangesRef.current;
-  }, []);
-
-  useUnsavedChangesGuard(dataWasChanged);
-
+  useUnsavedChangesGuard(hasPendingChanges);
+  
   /**********************
    * fetch TmntFullData *
    **********************/

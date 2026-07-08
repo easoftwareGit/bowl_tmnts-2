@@ -63,6 +63,17 @@ describe("getName functions", () => {
       const potName = getPotName(mockPots[1], []);
       expect(potName).toBe("");
     }); 
+
+    it("getPotName returns an empty string if pot is undefined", () => {
+      const potName = getPotName(undefined, mockDivs);
+      expect(potName).toBe("");
+    }); 
+
+    it("getPotName returns an empty string if pot is null", () => {
+      const potName = getPotName(undefined, mockDivs);
+      expect(potName).toBe("");
+    }); 
+
   })
 
   describe('getPotShortName', () => {

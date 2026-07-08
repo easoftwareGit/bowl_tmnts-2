@@ -5,6 +5,7 @@ import RecapsPerPairReport from "./RecapsPerPairReport";
 import RecapsPerTeamReport from "./RecapsPerTeamReport";
 import ReportNotFound from "./ReportNotFound";
 import GridScoresReport from "./GridScoresReport";
+import BalanceSheetReport from "./BalanceSheetReport";
 
 export type ReportDocument = {
   title: string;
@@ -49,6 +50,18 @@ export function getReportDocument(
           />  
         ),
       };
+
+    case "balanceSheet":
+      return {
+        title: "Balance Sheet",
+        document: (
+          <BalanceSheetReport
+            tmntFullData={tmntFullData}
+            onRender={onRender}
+          />  
+        ),
+      };
+
 
     // case "fees":
     //   return {

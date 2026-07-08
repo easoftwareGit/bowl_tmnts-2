@@ -1,6 +1,6 @@
 import React, { type ReactElement, type ReactNode } from "react";
 import type { brktType, divType, elimType, potType } from "@/lib/types/types";
-import { createAggregates } from "@/app/dataEntry/playersForm/sfAggregates"; 
+import { createAggregates } from "@/app/dataEntry/playersForm/sfPlayerAggregates"; 
 import {
   entryFeeColName,
   entryNumBrktsColName,

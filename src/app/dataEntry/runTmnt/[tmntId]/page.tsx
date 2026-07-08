@@ -196,7 +196,7 @@ const RunTmntPage = () => {
                     className="btn btn-success h-100 w-100" 
                     onClick={() => setShowPrizeFundOptions(true)}                  
                   >
-                    Prize Fund
+                    Prize Funds
                   </button>
                   <PrizeFundOptions
                     show={showPrizeFundOptions}

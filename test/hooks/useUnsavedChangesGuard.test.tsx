@@ -6,7 +6,7 @@ const TestComponent = ({
   hasUnsavedChanges,
   message,
 }: {
-  hasUnsavedChanges: () => boolean;
+  hasUnsavedChanges: boolean;
   message?: string;
 }) => {
   useUnsavedChangesGuard(hasUnsavedChanges, message ? { message } : undefined);
@@ -39,8 +39,14 @@ describe("useUnsavedChangesGuard", () => {
     window.history.pushState = originalPushState;
   });
 
-  it("adds a history entry when mounted", () => {
-    render(<TestComponent hasUnsavedChanges={() => false} />);
+  it("does not add a history entry when mounted without unsaved changes", () => {
+    render(<TestComponent hasUnsavedChanges={false} />);
+
+    expect(window.history.pushState).not.toHaveBeenCalled();
+  });
+
+  it("adds a history entry when mounted with unsaved changes", () => {
+    render(<TestComponent hasUnsavedChanges={true} />);
 
     expect(window.history.pushState).toHaveBeenCalledWith(
       null,
@@ -49,8 +55,26 @@ describe("useUnsavedChangesGuard", () => {
     );
   });
 
+  it("does not add repeated history entries while unsaved changes stay true", () => {
+    const { rerender } = render(<TestComponent hasUnsavedChanges={true} />);
+
+    rerender(<TestComponent hasUnsavedChanges={true} />);
+    rerender(<TestComponent hasUnsavedChanges={true} />);
+
+    expect(window.history.pushState).toHaveBeenCalledTimes(1);
+  });
+
+  it("can arm again after unsaved changes are cleared and then become true again", () => {
+    const { rerender } = render(<TestComponent hasUnsavedChanges={true} />);
+
+    rerender(<TestComponent hasUnsavedChanges={false} />);
+    rerender(<TestComponent hasUnsavedChanges={true} />);
+
+    expect(window.history.pushState).toHaveBeenCalledTimes(2);
+  });
+
   it("does not warn on beforeunload when there are no unsaved changes", () => {
-    render(<TestComponent hasUnsavedChanges={() => false} />);
+    render(<TestComponent hasUnsavedChanges={false} />);
 
     const event = new Event("beforeunload", {
       cancelable: true,
@@ -65,7 +89,7 @@ describe("useUnsavedChangesGuard", () => {
   });
 
   it("warns on beforeunload when there are unsaved changes", () => {
-    render(<TestComponent hasUnsavedChanges={() => true} />);
+    render(<TestComponent hasUnsavedChanges={true} />);
 
     const event = new Event("beforeunload", {
       cancelable: true,
@@ -77,14 +101,14 @@ describe("useUnsavedChangesGuard", () => {
 
     expect(preventDefaultSpy).toHaveBeenCalled();
     expect(event.defaultPrevented).toBe(true);
-  });  
+  });
 
   it("uses custom message for link click confirmation", () => {
     (window.confirm as jest.Mock).mockReturnValue(false);
 
     render(
       <TestComponent
-        hasUnsavedChanges={() => true}
+        hasUnsavedChanges={true}
         message="Custom warning message"
       />,
     );
@@ -95,7 +119,7 @@ describe("useUnsavedChangesGuard", () => {
   });
 
   it("does not confirm link click when there are no unsaved changes", () => {
-    render(<TestComponent hasUnsavedChanges={() => false} />);
+    render(<TestComponent hasUnsavedChanges={false} />);
 
     fireEvent.click(screen.getByRole("link", { name: "Other Page" }));
 
@@ -105,7 +129,7 @@ describe("useUnsavedChangesGuard", () => {
   it("allows link click when user confirms", () => {
     (window.confirm as jest.Mock).mockReturnValue(true);
 
-    render(<TestComponent hasUnsavedChanges={() => true} />);
+    render(<TestComponent hasUnsavedChanges={true} />);
 
     const link = screen.getByRole("link", { name: "Other Page" });
 
@@ -125,7 +149,7 @@ describe("useUnsavedChangesGuard", () => {
   it("prevents link click when user cancels", () => {
     (window.confirm as jest.Mock).mockReturnValue(false);
 
-    render(<TestComponent hasUnsavedChanges={() => true} />);
+    render(<TestComponent hasUnsavedChanges={true} />);
 
     const link = screen.getByRole("link", { name: "Other Page" });
 
@@ -143,7 +167,7 @@ describe("useUnsavedChangesGuard", () => {
   });
 
   it("does not confirm when clicking same-page link", () => {
-    render(<TestComponent hasUnsavedChanges={() => true} />);
+    render(<TestComponent hasUnsavedChanges={true} />);
 
     fireEvent.click(screen.getByRole("link", { name: "Same Page" }));
 
@@ -151,7 +175,7 @@ describe("useUnsavedChangesGuard", () => {
   });
 
   it("does not confirm when clicking target blank link", () => {
-    render(<TestComponent hasUnsavedChanges={() => true} />);
+    render(<TestComponent hasUnsavedChanges={true} />);
 
     fireEvent.click(screen.getByRole("link", { name: "New Tab" }));
 
@@ -159,7 +183,7 @@ describe("useUnsavedChangesGuard", () => {
   });
 
   it("does not confirm when clicking non-link element", () => {
-    render(<TestComponent hasUnsavedChanges={() => true} />);
+    render(<TestComponent hasUnsavedChanges={true} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Regular Button" }));
 
@@ -167,7 +191,7 @@ describe("useUnsavedChangesGuard", () => {
   });
 
   it("does not confirm popstate when there are no unsaved changes", () => {
-    render(<TestComponent hasUnsavedChanges={() => false} />);
+    render(<TestComponent hasUnsavedChanges={false} />);
 
     window.dispatchEvent(new Event("popstate"));
 
@@ -177,7 +201,7 @@ describe("useUnsavedChangesGuard", () => {
   it("allows popstate when user confirms", () => {
     (window.confirm as jest.Mock).mockReturnValue(true);
 
-    render(<TestComponent hasUnsavedChanges={() => true} />);
+    render(<TestComponent hasUnsavedChanges={true} />);
 
     window.dispatchEvent(new Event("popstate"));
 
@@ -191,7 +215,7 @@ describe("useUnsavedChangesGuard", () => {
   it("pushes current URL back onto history when user cancels popstate", () => {
     (window.confirm as jest.Mock).mockReturnValue(false);
 
-    render(<TestComponent hasUnsavedChanges={() => true} />);
+    render(<TestComponent hasUnsavedChanges={true} />);
 
     window.dispatchEvent(new Event("popstate"));
 
@@ -208,11 +232,7 @@ describe("useUnsavedChangesGuard", () => {
   });
 
   it("removes event listeners on unmount", () => {
-    const hasUnsavedChanges = jest.fn(() => true);
-
-    const { unmount } = render(
-      <TestComponent hasUnsavedChanges={hasUnsavedChanges} />,
-    );
+    const { unmount } = render(<TestComponent hasUnsavedChanges={true} />);
 
     unmount();
 

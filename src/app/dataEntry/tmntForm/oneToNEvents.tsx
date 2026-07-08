@@ -474,20 +474,19 @@ const OneToNEvents: React.FC<ChildProps> = ({
                 games_err: "",
               };    
               if (gamesNum >= minGames && gamesNum <= maxGames) {                
-                  setSquads(
-                    squads.map((squad) => {
-                      if (squad.event_id === event.id) {
-                        const squadGames = (squad.games === event.games || event.games === 0) ? updatedEvent.games : squad.games;
-                        return {
-                          ...squad,
-                          games: squadGames,
-                        }
-                      } else {
-                        return squad;
+                setSquads(
+                  squads.map((squad) => {
+                    if (squad.event_id === event.id) {
+                      const squadGames = (squad.games === event.games || event.games === 0) ? updatedEvent.games : squad.games;
+                      return {
+                        ...squad,
+                        games: squadGames,
                       }
-                    })
-                  )
-                // }
+                    } else {
+                      return squad;
+                    }
+                  })
+                )
               }
             } else {
               updatedEvent = {

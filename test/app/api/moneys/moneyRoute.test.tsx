@@ -82,8 +82,8 @@ describe('Moneys - GETs and POST API: /api/moneys', () => {
     it('should get all moneys', async () => {
       const response = await privateApi.get(url);
       expect(response.status).toBe(200);
-      // 23 rows in prisma/seed.ts
-      expect(response.data.moneys).toHaveLength(23);
+      // 22 rows in prisma/seed.ts
+      expect(response.data.moneys).toHaveLength(22);
       const moneys: tmntMoneyType[] = response.data.moneys;
       moneys.forEach((money: tmntMoneyType) => {
         expect(money.event_id).not.toBeNull();
@@ -176,8 +176,8 @@ describe('Moneys - GETs and POST API: /api/moneys', () => {
         withCredentials: true
       });
       expect(response.status).toBe(200);
-      // 18 money rows for tmnt in prisma/seed.ts
-      expect(response.data.moneys).toHaveLength(18);
+      // 17 money rows for tmnt in prisma/seed.ts
+      expect(response.data.moneys).toHaveLength(17);
       const moneys: tmntMoneyType[] = response.data.moneys;
       // query in /api/moneys/tmnt GET sorts by sort_order
       for (let i = 0; i < moneys.length; i++) {

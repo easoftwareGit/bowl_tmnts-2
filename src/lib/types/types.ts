@@ -2,6 +2,7 @@ import type { BracketList } from "@/components/brackets/bracketListClass";
 import type { SquadStage, MoneyDescrip, MoneyFlow } from "@prisma/client";
 import { ErrorCode, tmntFormParent } from "@/lib/enums/enums";
 import { idTypesArray } from "../validation/validation";
+import type { ReactNode } from "react";
 
 export type roleTypes = "ADMIN" | "DIRECTOR" | "USER"
 
@@ -693,6 +694,21 @@ export type divPfType = {
   amount: number | null,  
 }
 
+export type divPfDataType = {
+  id: string,
+  div_id: string,
+  position: number,
+  amount: number,  
+}
+
+export type divPfEntryRow = {
+  id: string,
+  div_id: string,
+  position: number,
+  amount: number,
+  percentage: number,
+}
+
 export type AcdnErrType = {
   errClassName: string,
   message: string,
@@ -842,6 +858,13 @@ export type tmntFullDataErrType = {
 
 export type DateInput = string | number | Date | null | undefined;
 
+export type MoneyEditArgs = {
+  feeLabel: string;
+  onCommit?: () => void;
+  min?: number;
+  max?: number;
+};
+
 export type syncfusionColumnDef = {
   field: string;
   headerText: string;
@@ -869,6 +892,23 @@ export type syncfusionStackedColDef = {
 export type SyncfusionValidationArgs = {
   value: unknown;
   element?: HTMLElement;
+};
+
+export type AggregateFooterProps = Partial<{
+  Sum: number;
+  Average: number;
+  Min: number;
+  Max: number;
+  Count: number;
+  Custom: number;
+}>;
+
+export type syncFusionAggregateDef = {
+  field: string;
+  type: "Sum" | "Average" | "Min" | "Max" | "Custom";
+  format?: string;
+  customAggregate?: (data: unknown) => number | string;
+  footerTemplate?: (props: AggregateFooterProps) => ReactNode;
 };
 
 export type errInfoType = {

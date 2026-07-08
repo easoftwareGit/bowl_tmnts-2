@@ -138,13 +138,24 @@ export const validateDivPfs = (divPfs: divPfType[]): validDivPfsType => {
   };
   // cannot use forEach because if got an error need exit loop
   let i = 0;  
+  let firstDivId = "";
   while (i < divPfs.length) {
     const toPost = sanitizeDivPf(divPfs[i]);
     const errCode = validateDivPf(toPost);
     if (errCode !== ErrorCode.NONE) {
       return { divPfs: okDivPfs, errorCode: errCode };
     }
-    okDivPfs.push(toPost);
+    // all divPfs MUST have same div_id
+    if (i === 0) {
+      firstDivId = toPost.div_id;      
+    } else if (firstDivId !== toPost.div_id) {
+      return { divPfs: okDivPfs, errorCode: ErrorCode.INVALID_DATA };
+    }
+    // all divPfs MUST have sequential positions, starting at 1
+    if (divPfs[i].position !== i + 1) {
+      return { divPfs: okDivPfs, errorCode: ErrorCode.INVALID_DATA };      
+    }
+    okDivPfs.push(toPost);    
     i++;
   }
   return { divPfs: okDivPfs, errorCode: ErrorCode.NONE };

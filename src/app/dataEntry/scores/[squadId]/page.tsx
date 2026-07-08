@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { useParams, useRouter } from "next/navigation";
@@ -67,9 +67,8 @@ export default function EditScoresPage() {
     initializedRef.current = true;    
 
   }, [tmntLoadStatus, gamesLoadStatus, tmntFullData, games, setRows]);
-
-  // useUnsavedChangesGuard(() => dataWasChanged);
-  useUnsavedChangesGuard(() => dataWasChanged && !isNavigatingAfterSave);
+  
+  useUnsavedChangesGuard(dataWasChanged && !isNavigatingAfterSave);
 
   const isLoading =
     !initializedRef.current &&

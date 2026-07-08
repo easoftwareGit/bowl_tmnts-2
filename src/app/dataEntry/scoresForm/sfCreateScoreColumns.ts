@@ -1,7 +1,7 @@
 import { isTouchDevice } from "@/lib/mobileDevices/mobileDevices";
 import { createOptionalIntegerEdit, isOptionalIntegerValid } from "@/lib/syncfusionTools";
 import type { syncfusionColumnDef, SyncfusionValidationArgs, tmntFullType } from "@/lib/types/types";
-import { maxScore, TotalHdcpName, TotalPlusTotalHdcpName } from "@/lib/validation/constants";
+import { maxScore } from "@/lib/validation/constants";
 
 export const scoreEntryIdColName = "id";
 export const scoreEntryPlayerIdColName = "player_id";

@@ -101,7 +101,6 @@ export default function UserTmntsPage() {
             </div>
           </div>
           <div className="row g-1 mb-1 justify-content-md-center align-items-center">
-            <div className="flex-grow-1 bg-secondary-subtle"></div>
             {/* style width is in pixels */}
             <div
               className="d-flex justify-content-center"

@@ -24,3 +24,51 @@
   font-weight: bold;
   border-radius: 10px;
 }
+
+/******************
+* Syncfusion Grid *
+******************/
+
+/* column headers */
+.e-grid .e-headercelldiv {
+  font-weight: 600;
+}
+
+/* stacked/group headers */
+.e-grid .e-stackedheadercelldiv {
+  font-weight: 600;
+}
+
+/* aggregate footers */
+.e-grid .e-summarycell {
+  font-weight: 600;
+}
+
+/* toolbar icons inherit button color */
+.e-grid .e-toolbar .e-tbar-btn .e-icons {
+  color: inherit;
+}
+/* toolbar icon: add  */
+.e-grid .e-toolbar .e-tbar-btn .e-icons.e-add {
+  color: rgb(40, 167, 69);
+}
+/* toolbar icon: delete  */
+.e-grid .e-toolbar .e-tbar-btn .e-icons.e-delete {
+  color: rgb(220, 53, 69);
+}
+/* toolbar icon: cancel  */
+.e-grid .e-toolbar .e-tbar-btn .e-icons.e-cancel {
+  color: rgb(220, 53, 69);
+}
+/* toolbar icon: check  */
+.e-grid .e-toolbar .e-tbar-btn .e-icons.e-check {
+  color: rgb(40, 167, 69);
+}
+/* toolbar icon: update  */
+.e-grid .e-toolbar .e-tbar-btn .e-icons.e-update {
+  color: rgb(13, 110, 253);
+}
+/* toolbar icon: close  */
+.e-grid .e-toolbar .e-tbar-btn .e-icons.e-back {
+  color: rgb(220, 53, 69);
+}

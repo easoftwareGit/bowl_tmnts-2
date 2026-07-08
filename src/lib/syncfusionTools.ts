@@ -1,4 +1,5 @@
-import { maxBrackets } from "./validation/constants";
+import { MoneyEditArgs } from "./types/types";
+import { maxBrackets, maxMoney } from "./validation/constants";
 import { NumericTextBox } from "@syncfusion/ej2-inputs";
 
 export type OptionalIntegerEditArgs = {
@@ -300,4 +301,179 @@ export const isOptionalIntegerValid = (
   const num = Number(value);
   if (!Number.isInteger(num)) return false;
   return num >= min && num <= max;
+};
+
+/**
+ * Creates a money editor for a column
+ * 
+ * @param {MoneyEditArgs} args - Editor setuparguments
+ *    @param {string} args.feeLabel - Placeholder label shown in the money editor
+ *    @param {() => void} args.onCommit - Optional callback used to recalculate totals
+ *    @param {number} args.min - Optional minimum value
+ *    @param {number} args.max - Optional maximum value
+ * @returns 
+ */
+export const createMoneyEdit = ({
+  feeLabel,
+  onCommit,
+  min = 1,
+  max = maxMoney,
+}: MoneyEditArgs): SyncfusionEditor => {
+
+  
+  let inputEl: HTMLInputElement | null = null;
+  let numericObj: NumericTextBox | null = null;
+  let actualInput: HTMLInputElement | null = null;
+  let keydownHandler: ((e: KeyboardEvent) => void) | null = null;
+  let blurHandler: ((e: FocusEvent) => void) | null = null;
+
+  const setValidateNow = (validate: boolean): void => {
+    const value = validate ? "true" : "false";
+
+    if (actualInput) actualInput.dataset.validateNow = value;
+
+    const hiddenInput = (numericObj as any)?.hiddenInput as
+      | HTMLInputElement
+      | undefined;
+
+    if (hiddenInput) hiddenInput.dataset.validateNow = value;
+  };
+
+  const parseInputValue = (): number | null => {
+    if (!numericObj || !actualInput) return null;
+
+    const raw = actualInput.value.trim();
+
+    // Required money: blank is invalid
+    if (raw === "") return null;
+
+    const cleaned = raw.replace(/[$,]/g, "");
+    const num = Number(cleaned);
+
+    // Invalid text is invalid
+    if (!Number.isFinite(num)) return null;
+
+    // Keep 0 and out-of-range values.
+    // Do NOT convert 0 to null.
+    // Let Syncfusion validationRules reject values below min or above max.
+    return Math.round((num + Number.EPSILON) * 100) / 100;
+  };
+
+  const syncNumericFromInput = (): number | null => {
+    if (!numericObj) return null;
+
+    const parsed = parseInputValue();
+
+    if (parsed == null) {
+      setNumericNull(numericObj);
+      return null;
+    }
+
+    numericObj.setProperties({ value: parsed }, true);
+    numericObj.dataBind();
+
+    return parsed;
+  };
+
+  const normalizeAndNotify = (): void => {
+    syncNumericFromInput();
+    onCommit?.();
+  };
+
+  return {
+    create: (): HTMLInputElement => {
+      inputEl = document.createElement("input");
+      inputEl.type = "text";
+      return inputEl;
+    },
+
+    write: (args: {
+      rowData: Record<string, unknown>;
+      column: { field: string };
+    }): void => {
+      if (!inputEl) return;
+
+      const rawValue = args.rowData[args.column.field];
+
+      const initialValue: number | undefined =
+        rawValue == null || rawValue === ""
+          ? undefined
+          : Number(rawValue);
+
+      numericObj = new NumericTextBox({
+        value: initialValue,
+        decimals: 2,
+        format: "n2",
+        min,
+        max,
+        strictMode: false,
+        showSpinButton: false,
+        validateDecimalOnType: true,
+        placeholder: feeLabel,
+      });
+
+      numericObj.appendTo(inputEl);
+
+      actualInput = numericObj.element as HTMLInputElement | null;
+      if (!actualInput) return;
+
+      setValidateNow(false);
+
+      keydownHandler = (e: KeyboardEvent): void => {
+        if (e.key === "Enter") {
+          setValidateNow(true);
+          normalizeAndNotify();
+          return;
+        }
+
+        if (e.key === "Tab") {
+          setValidateNow(true);
+          normalizeAndNotify();
+          return;
+        }
+
+        if (
+          e.key.length === 1 ||
+          e.key === "Backspace" ||
+          e.key === "Delete"
+        ) {
+          setValidateNow(false);
+        }
+      };
+
+      blurHandler = (): void => {
+        setValidateNow(true);
+
+        setTimeout(() => {
+          normalizeAndNotify();
+        }, 0);
+      };
+
+      actualInput.addEventListener("keydown", keydownHandler);
+      actualInput.addEventListener("blur", blurHandler);
+    },
+
+    read: (): number | null => {
+      setValidateNow(true);
+      return syncNumericFromInput();
+    },
+
+    destroy: (): void => {
+      if (actualInput && keydownHandler) {
+        actualInput.removeEventListener("keydown", keydownHandler);
+      }
+
+      if (actualInput && blurHandler) {
+        actualInput.removeEventListener("blur", blurHandler);
+      }
+
+      keydownHandler = null;
+      blurHandler = null;
+      actualInput = null;
+
+      numericObj?.destroy();
+      numericObj = null;
+      inputEl = null;
+    },
+  };
 };

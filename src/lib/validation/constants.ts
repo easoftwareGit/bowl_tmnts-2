@@ -41,6 +41,7 @@ export const minBrktEntryFee = 0.01;
 export const minSortOrder = 1;
 export const maxSortOrder = 1000000;
 
+export const defaultRatio = 3;
 export const maxPosition = 1000000;
 
 export const minYear = 1900;

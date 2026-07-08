@@ -1,5 +1,5 @@
 import { AxiosError } from "axios";
-import { publicApi, privateApi } from "@/lib/api/axios";
+import { privateApi } from "@/lib/api/axios";
 import { baseDivsApi } from "@/lib/api/apiPaths";
 import { testBaseDivsApi } from "../../../testApi";
 import type { divType, HdcpForTypes } from "@/lib/types/types";
@@ -414,7 +414,7 @@ describe("dbDivs", () => {
     };
 
     const rePostToDel = async () => {
-      const response = await publicApi.get(url);
+      const response = await privateApi.get(url);
       const divs = response.data?.divs ?? [];
       const foundToDel = divs.find((d: divType) => d.id === toDel.id);
 

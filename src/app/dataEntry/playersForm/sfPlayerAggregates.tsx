@@ -1,25 +1,12 @@
-import type { ReactNode } from "react";
-import type { brktType, divType, elimType, potType } from "@/lib/types/types";
-import {
-  entryFeeColName,
-  entryNumBrktsColName,
-} from "./sfCreatePlayerColumns";
-
-type AggregateFooterProps = Partial<{
-  Sum: number;
-  Average: number;
-  Min: number;
-  Max: number;
-  Count: number;
-}>;
-
-export type syncFusionAggregateDef = {
-  field: string;
-  type: "Sum" | "Average" | "Min" | "Max" | "Custom";
-  format?: string;
-  customAggregate?: (props: AggregateFooterProps) => string;
-  footerTemplate?: (props: AggregateFooterProps) => ReactNode;
-};
+import type {
+  brktType,
+  divType,
+  elimType,
+  potType,
+  AggregateFooterProps,
+  syncFusionAggregateDef,
+} from "@/lib/types/types";
+import { entryFeeColName, entryNumBrktsColName } from "./sfCreatePlayerColumns";
 
 const emptyCustomAggregate = () => "";
 
@@ -31,7 +18,7 @@ function footerSum(props: AggregateFooterProps) {
 
 /**
  * Create the aggregates for the syncfusion grid
- * 
+ *
  * @param {divType[]} divs - array of divs
  * @param {potType[]} pots - array of pots
  * @param {brktType[]} brkts - array of brkts
@@ -42,7 +29,7 @@ export const createAggregates = (
   divs: divType[],
   pots: potType[],
   brkts: brktType[],
-  elims: elimType[]
+  elims: elimType[],
 ): syncFusionAggregateDef[] => {
   const fixedAggregates: syncFusionAggregateDef[] = [
     {

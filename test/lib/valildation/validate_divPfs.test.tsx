@@ -472,14 +472,9 @@ describe("validate divPfs", () => {
         id: '<script>alert("xss")</script>',
       };
 
-      const result =
-        validateDivPfs(divPfsToValidate);
-
-      expect(result.errorCode).toBe(
-        ErrorCode.INVALID_DATA,
-      );
+      const result = validateDivPfs(divPfsToValidate);
+      expect(result.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
-
     it("should return ErrorCode.INVALID_DATA when div_id is invalid", () => {
       const divPfsToValidate = [
         ...mockDivPfs,
@@ -490,12 +485,21 @@ describe("validate divPfs", () => {
         div_id: "abc",
       };
 
-      const result =
-        validateDivPfs(divPfsToValidate);
+      const result = validateDivPfs(divPfsToValidate);
+      expect(result.errorCode).toBe(ErrorCode.INVALID_DATA);
+    });
+    it("should return ErrorCode.INVALID_DATA when all div_id are not the same", () => {
+      const divPfsToValidate = [
+        ...mockDivPfs,
+      ];
 
-      expect(result.errorCode).toBe(
-        ErrorCode.INVALID_DATA,
-      );
+      divPfsToValidate[1] = {
+        ...divPfsToValidate[1],                
+        div_id: "div_00000000000000000000000000000000",
+      };
+
+      const result = validateDivPfs(divPfsToValidate);
+      expect(result.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
 
     it("should return ErrorCode.MISSING_DATA when position is null", () => {
@@ -508,13 +512,35 @@ describe("validate divPfs", () => {
         position: null as any,
       };
 
-      const result =
-        validateDivPfs(divPfsToValidate);
-
-      expect(result.errorCode).toBe(
-        ErrorCode.MISSING_DATA,
-      );
+      const result = validateDivPfs(divPfsToValidate);
+      expect(result.errorCode).toBe(ErrorCode.MISSING_DATA);
     });
+    it("should return ErrorCode.INVALID_DATA when position is invalid", () => {
+      const divPfsToValidate = [
+        ...mockDivPfs,
+      ];
+
+      divPfsToValidate[1] = {
+        ...divPfsToValidate[1],
+        position: -1,
+      };
+
+      const result = validateDivPfs(divPfsToValidate);
+      expect(result.errorCode).toBe(ErrorCode.INVALID_DATA);
+    });
+    it("should return ErrorCode.INVALID_DATA when position is not sequential", () => {
+      const divPfsToValidate = [
+        ...mockDivPfs,
+      ];
+
+      divPfsToValidate[1] = {
+        ...divPfsToValidate[1],
+        position: 3, // valid value, bit not sequential
+      };
+
+      const result = validateDivPfs(divPfsToValidate);
+      expect(result.errorCode).toBe(ErrorCode.INVALID_DATA);      
+    })
 
     it("should return ErrorCode.MISSING_DATA when amount is null", () => {
       const divPfsToValidate = [
@@ -526,30 +552,8 @@ describe("validate divPfs", () => {
         amount: null as any,
       };
 
-      const result =
-        validateDivPfs(divPfsToValidate);
-
-      expect(result.errorCode).toBe(
-        ErrorCode.MISSING_DATA,
-      );
-    });
-
-    it("should return ErrorCode.INVALID_DATA when position is invalid", () => {
-      const divPfsToValidate = [
-        ...mockDivPfs,
-      ];
-
-      divPfsToValidate[1] = {
-        ...divPfsToValidate[1],
-        position: -1,
-      };
-
-      const result =
-        validateDivPfs(divPfsToValidate);
-
-      expect(result.errorCode).toBe(
-        ErrorCode.INVALID_DATA,
-      );
+      const result = validateDivPfs(divPfsToValidate);
+      expect(result.errorCode).toBe(ErrorCode.MISSING_DATA);
     });
 
     it("should return ErrorCode.INVALID_DATA when amount is invalid", () => {
@@ -562,12 +566,8 @@ describe("validate divPfs", () => {
         amount: maxMoney + 1,
       };
 
-      const result =
-        validateDivPfs(divPfsToValidate);
-
-      expect(result.errorCode).toBe(
-        ErrorCode.INVALID_DATA,
-      );
+      const result = validateDivPfs(divPfsToValidate);
+      expect(result.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
 
   });

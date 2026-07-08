@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useState } from "react";
 import { useSession } from "next-auth/react"; 
 import TmntDataForm from "../tmntForm/tmntForm";
 import type { tmntFormDataType, tmntFullType } from "@/lib/types/types";
@@ -25,17 +25,25 @@ const NewTmntPage = () => {
   /*************************
    * Unsaved Changes Guard *
    *************************/
-  const hasPendingChangesRef = useRef(false);
+  // const hasPendingChangesRef = useRef(false);
+
+  // const markPendingChanges = useCallback((pending: boolean): void => {
+  //   hasPendingChangesRef.current = pending;
+  // }, []);
+
+  // const dataWasChanged = useCallback((): boolean => {
+  //   return hasPendingChangesRef.current;
+  // }, []);
+
+  // useUnsavedChangesGuard(dataWasChanged);
+
+  const [hasPendingChanges, setHasPendingChanges] = useState(false);
 
   const markPendingChanges = useCallback((pending: boolean): void => {
-    hasPendingChangesRef.current = pending;
+    setHasPendingChanges(pending);
   }, []);
 
-  const dataWasChanged = useCallback((): boolean => {
-    return hasPendingChangesRef.current;
-  }, []);
-
-  useUnsavedChangesGuard(dataWasChanged);
+  useUnsavedChangesGuard(hasPendingChanges);  
 
   return (
     <>      

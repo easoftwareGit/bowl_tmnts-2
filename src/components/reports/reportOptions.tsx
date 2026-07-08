@@ -17,6 +17,7 @@ const reports: reportOption[] = [
   { id: "recapsPerPair", label: "Recaps - per Pair" },
   { id: "recapsPerTeam", label: "Recaps - per Team" },
   { id: "scoreGrid", label: "Scores Grid" },
+  { id: "balanceSheet", label: "Balance Sheet" },
   // { id: "standings", label: "Standings" },
 ];
 
@@ -62,6 +63,7 @@ const ReportOptions: React.FC<ReportOptionsProps> = ({
     switch (reportId) {
       case "recapsPerPair":
       case "recapsPerTeam":
+      case "balanceSheet":
         return stage === SquadStage.ENTRIES || stage === SquadStage.SCORES;
       
       case "scoreGrid":

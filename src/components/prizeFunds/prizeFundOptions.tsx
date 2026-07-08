@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { SquadStage } from "@prisma/client";
 import { tmntFullType } from "@/lib/types/types";
 import { getBrktOrElimName, getPotShortName } from "@/lib/getName";
-// import "./prizeFundOptions.css";
 import "../popupOptions.css";
 
 type prizeFundOption = {
@@ -26,12 +25,10 @@ const PrizeFundOptions: React.FC<prizeFundOptionsProps> = ({
   onClose,
   stage,
 }) => {
-    
-  const tmntId = fullTmntData.tmnt.id;
 
   const prizeFunds: prizeFundOption[] = [];
-  fullTmntData.events.forEach((event) => {
-    prizeFunds.push({ id: event.id, label: `Event - ${event.event_name}` });
+  fullTmntData.divs.forEach((div) => {
+    prizeFunds.push({ id: div.id, label: `Division - ${div.div_name}` });
   })
   fullTmntData.pots.forEach((pot) => {
     prizeFunds.push({
@@ -71,7 +68,7 @@ const PrizeFundOptions: React.FC<prizeFundOptionsProps> = ({
   }, [show, onClose]);
     
   const isPrizeFundEnabled = (prizeFundId: string): boolean => {
-    if (prizeFundId.startsWith("evt")) {
+    if (prizeFundId.startsWith("div")) {
       return stage === SquadStage.ENTRIES || stage === SquadStage.SCORES;
     } else if (prizeFundId.startsWith("pot")) {
       return stage === SquadStage.SCORES;
@@ -90,9 +87,9 @@ const PrizeFundOptions: React.FC<prizeFundOptionsProps> = ({
     if (!isPrizeFundEnabled(selectedPrizeFundId)) {
       return;
     }
-    let url = `/prizeFunds/`;
-    if (selectedPrizeFundId.startsWith("evt")) {
-      url += `event/${selectedPrizeFundId}`;
+    let url = `/dataEntry/prizeFunds/tmnt/${fullTmntData.tmnt.id}/`;
+    if (selectedPrizeFundId.startsWith("div")) {
+      url += `div/${selectedPrizeFundId}`;
     } else if (selectedPrizeFundId.startsWith("pot")) {
       url += `pot/${selectedPrizeFundId}`;
     } else if (selectedPrizeFundId.startsWith("elm")) {

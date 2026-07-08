@@ -434,25 +434,28 @@ describe("EditTmntPage (src/app/dataEntry/editTmnt/[tmntId]/page.tsx)", () => {
     // verified the cleanup works.
   });
 
-  it("uses useUnsavedChangesGuard with a dataWasChanged callback", () => {
+  it("calls useUnsavedChangesGuard with hasUnsavedChanges=false initially", () => {
     setupSelectors({
       status: "loading",
       error: undefined,
-      stateTmntFullData: { tmnt: { id: "tmt_from_state" }, squads: [] },
+      stateTmntFullData: {
+        tmnt: { id: "tmt_from_state" },
+        squads: [],
+      },
     });
 
     render(<EditTmntPage />);
 
     expect(useUnsavedChangesGuardMock).toHaveBeenCalledTimes(1);
 
-    const dataWasChanged = useUnsavedChangesGuardMock.mock.calls[0][0];
-
-    expect(typeof dataWasChanged).toBe("function");
-    expect(dataWasChanged()).toBe(false);
+    expect(useUnsavedChangesGuardMock).toHaveBeenCalledWith(false);
   });
 
-  it("passes markPendingChanges to TmntDataForm and updates the unsaved-changes callback", async () => {
-    const stateData = { tmnt: { id: "tmt_real" }, squads: [{ id: "sqd_1" }] };
+  it("passes markPendingChanges to TmntDataForm and updates useUnsavedChangesGuard", async () => {
+    const stateData = {
+      tmnt: { id: "tmt_real" },
+      squads: [{ id: "sqd_1" }],
+    };
 
     setupSelectors({
       status: "succeeded",
@@ -466,14 +469,16 @@ describe("EditTmntPage (src/app/dataEntry/editTmnt/[tmntId]/page.tsx)", () => {
 
     await screen.findByTestId("TmntDataFormMock");
 
-    const lastHookCall = useUnsavedChangesGuardMock.mock.calls.at(-1);
-    const dataWasChanged = lastHookCall?.[0];
+    await waitFor(() => {
+      expect(useUnsavedChangesGuardMock).toHaveBeenLastCalledWith(false);
+    });
 
-    expect(dataWasChanged).toBeDefined();
-    expect(dataWasChanged!()).toBe(false);
+    fireEvent.click(
+      screen.getByTestId("markPendingChangesButton"),
+    );
 
-    fireEvent.click(screen.getByTestId("markPendingChangesButton"));
-
-    expect(dataWasChanged!()).toBe(true);
-  });  
+    await waitFor(() => {
+      expect(useUnsavedChangesGuardMock).toHaveBeenLastCalledWith(true);
+    });
+  });
 });

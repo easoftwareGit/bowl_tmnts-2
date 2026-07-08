@@ -36,7 +36,7 @@ import {
   getBrktIdFromColName,
   isBrktsColumnName,  
 } from "./sfCreatePlayerColumns";
-import { createAggregates } from "./sfAggregates";
+import { createAggregates } from "./sfPlayerAggregates";
 import type { playerEntryRow } from "./populatePlayerRows";
 import { btDbUuid } from "@/lib/uuid";
 import { useRouter } from "next/navigation";

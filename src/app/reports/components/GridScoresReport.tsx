@@ -28,9 +28,20 @@ const styles = StyleSheet.create({
     padding: 36,
   },
 
+  titleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+
   title: {
     fontSize: 16,
-    marginBottom: 4,
+  },
+
+  pageNumber: {
+    fontSize: 10,
+    textAlign: "right",
   },
 
   gridScoresHeader: {
@@ -340,8 +351,20 @@ export default function GridScoresReport({
     if (currentPageRows.length === 0) return;
 
     pages.push(
-      <Page key={`page_${pageNum}`} size="LETTER" style={styles.page}>
-        <Text style={styles.title}>{tmntName} {tmntDateStr}</Text>
+      <Page key={`page_${pageNum}`} size="LETTER" style={styles.page}>        
+        <View style={styles.titleRow}>
+          <Text style={styles.title}>
+            {tmntName} {tmntDateStr}
+          </Text>
+          {/* use react-pdf page number component */}
+          <Text
+            style={styles.pageNumber}
+            render={({ pageNumber, totalPages }) =>
+              `Page ${pageNumber} of ${totalPages}`
+            }
+            fixed
+          />
+        </View>
         <Text style={styles.gridScoresHeader}>Scores Grid</Text>
         {createHeaderRow(headerCols, `header_${pageNum}`)}
         {currentPageRows}
