@@ -38,7 +38,7 @@ const manyDivPfs: divPfType[] = [
   {
     ...initDivPf,
     id: "dpf_ce55c52bd60d4943bb747590a03c9733",
-    div_id: "div_f30aea2c534f4cfe87f4315531cef8ef",
+    div_id: divId,
     position: 2,
     amount: 200,
   },

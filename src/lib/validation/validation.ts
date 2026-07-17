@@ -2,6 +2,8 @@ import { sanitizeName } from "./sanitize";
 import type { DateInput, fullStageType, idTypes } from "@/lib/types/types";
 import { SquadStage } from "@prisma/client";
 import {
+  maxMoney,
+  maxPosition,
   maxSortOrder,
   maxTimeStamp,
   maxYear,
@@ -9,6 +11,7 @@ import {
   minTimeStamp,
   minYear
 } from "./constants";
+import { validMoney } from "../currency/validate";
 
 /**
  * checks if string is in a valid email format
@@ -71,7 +74,7 @@ const validRoles = ["ADMIN", "DIRECTOR", "USER"];
 export const idTypesArray = [
   'usr', 'bwl', 'tmt', 'evt', 'div', 'sqd', 'stg', 'lan', 'pot', 'brk', 'elm',
   'ply', 'bye', 'den', 'pen', 'ben', 'een', 'gam', 'obk', 'bsd', 'mon', 'dpf',
-  'ppf', 'lpf'
+  'ppf', 'epf'
 ] as const;
 const validTypes = new Set(idTypesArray);
 
@@ -276,6 +279,27 @@ export const validSortOrder = (sortOrder: unknown): boolean => {
 };
 
 /**
+ * Checks if a money value is a number between min and max
+ * note: null, undefined, and "" are not valid
+ *
+ * @param {unknown} value - value to check
+ * @param {number} min - minimum value
+ * @param {number} max - maximum value
+ * @return {boolean} - true if value is a number between min and max
+ */
+export const isMoneyValueValid = (
+  value: unknown,
+  min: number,
+  max: number
+): boolean => {  
+  if (value === null || value === undefined || value === "") {
+    return false;
+  }
+  const num = Number(value);
+  return Number.isFinite(num) && num >= min && num <= max;
+};
+
+/**
  * validates a name string
  *
  * @param {string} name - name to validate
@@ -348,4 +372,30 @@ export const isFullStageType = (value: unknown): value is fullStageType => {
 
 export const exportedForTesting = {
   isValidDateObject,
+};
+
+/**
+ * checks if position is valid
+ * 
+ * @param {unknown} positionNum - money to check
+ * @returns {boolean} - true if amount is valid and not blank; else false
+ */
+export const validPfPosition = (positionNum: unknown): boolean => {
+  if (positionNum == null || typeof positionNum !== 'number') return false;
+  return (
+    validInteger(positionNum) &&
+    positionNum > 0 &&
+    positionNum < maxPosition
+  ) ? true : false;  
+};
+
+/**
+ * checks if amount is valid
+ * 
+ * @param {unknown} moneyNum - money to check
+ * @returns {boolean} - true if amount is valid and not blank; else false
+ */
+export const validPfAmount = (moneyNum: unknown): boolean => {
+  if (moneyNum == null || typeof moneyNum !== 'number') return false;
+  return validMoney(moneyNum, 0, maxMoney);
 };

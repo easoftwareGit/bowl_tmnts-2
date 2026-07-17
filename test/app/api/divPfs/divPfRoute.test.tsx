@@ -34,7 +34,7 @@ const notFoundId = "dpf_01234567890123456789012345678901";
 const notFoundDivId = "div_01234567890123456789012345678901";
 const userId = "usr_01234567890123456789012345678901";
 
-describe('Events - GETs and POST API: /api/events', () => {
+describe('DivPfs - GETs and POST API: /api/divPfs', () => {
 
   const testDivPf: divPfType = {
     ...initDivPf,
@@ -86,7 +86,7 @@ describe('Events - GETs and POST API: /api/events', () => {
       await deletePostedDivPf(divPfToPost.id);
     });
 
-    it('should get one money', async () => {
+    it('should get one divPf', async () => {
       const response = await privateApi.get(oneDivPfUrl + testDivPf.id);
       expect(response.status).toBe(200);
       // the "GET" returns json'ed data, so decimal values return as strings
@@ -96,7 +96,7 @@ describe('Events - GETs and POST API: /api/events', () => {
       expect(divPf.position).toBe(testDivPf.position);
       expect(Number(divPf.amount)).toBe(testDivPf.amount);
     });
-    it('should not get one money when ID is invalid', async () => {
+    it('should not get one divPf when ID is invalid', async () => {
       try {
         const response = await privateApi.get(oneDivPfUrl + "/test");
         expect(true).toBeFalsy();
@@ -108,7 +108,7 @@ describe('Events - GETs and POST API: /api/events', () => {
         }
       }
     });
-    it('should not get one money when ID is valid, but not a money ID', async () => {
+    it('should not get one divPf when ID is valid, but not a divPf ID', async () => {
       try {
         const response = await privateApi.get(oneDivPfUrl + userId);
         expect(true).toBeFalsy();
@@ -120,7 +120,7 @@ describe('Events - GETs and POST API: /api/events', () => {
         }
       }
     })
-    it('should not get one money when ID is not found', async () => {
+    it('should not get one divPf when ID is not found', async () => {
       try {
         const response = await privateApi.get(oneDivPfUrl + notFoundId);
         expect(response.status).toBe(404);
@@ -148,7 +148,7 @@ describe('Events - GETs and POST API: /api/events', () => {
         withCredentials: true
       });
       expect(response.status).toBe(200);
-      // 18 money rows for tmnt in prisma/seed.ts
+      // 9 divPf rows for tmnt in prisma/seed.ts
       expect(response.data.divPfs).toHaveLength(9);
       const divPfs: divPfType[] = response.data.divPfs;
       // query in /api/divPfs/div GET sorts by position
@@ -193,13 +193,13 @@ describe('Events - GETs and POST API: /api/events', () => {
         }
       }
     })
-  })
+  });
 
-  describe('POST one divPf API: /api/divPfs', () => { 
+  describe('POST one divPf API: /api/divPfs', () => {
 
-    let createdDivPf = false;    
+    let createdDivPf = false;
 
-    beforeAll(async () => { 
+    beforeAll(async () => {
       await deletePostedDivPf(divPfToPost.id);
     })
 
@@ -210,10 +210,10 @@ describe('Events - GETs and POST API: /api/events', () => {
     afterEach(async () => {
       if (createdDivPf) {
         await deletePostedDivPf(divPfToPost.id);
-      }      
+      }
     })
 
-    it('should create a new divPf', async () => { 
+    it('should create a new divPf', async () => {
       const divPfJSON = JSON.stringify(divPfToPost);
       const response = await privateApi.post(url, divPfJSON);
       expect(response.status).toBe(201);
@@ -224,9 +224,9 @@ describe('Events - GETs and POST API: /api/events', () => {
       expect(postedDivPf.div_id).toEqual(divPfToPost.div_id);
       expect(Number(postedDivPf.position)).toEqual(divPfToPost.position);
       expect(Number(postedDivPf.amount)).toEqual(divPfToPost.amount);
-    })  
+    })
     
-    it('should NOT create a new divPf when ID is blank', async () => { 
+    it('should NOT create a new divPf when ID is blank', async () => {
       const invalidDivPf = {
         ...divPfToPost,
         id: "",
@@ -243,7 +243,7 @@ describe('Events - GETs and POST API: /api/events', () => {
         }
       }
     })
-    it('should NOT create a new divPf when ID is invalid', async () => { 
+    it('should NOT create a new divPf when ID is invalid', async () => {
       const invalidDivPf = {
         ...divPfToPost,
         id: "test",
@@ -260,7 +260,7 @@ describe('Events - GETs and POST API: /api/events', () => {
         }
       }
     })
-    it('should NOT create a new divPf when ID is valid, but not a divPf ID', async () => { 
+    it('should NOT create a new divPf when ID is valid, but not a divPf ID', async () => {
       const invalidDivPf = {
         ...divPfToPost,
         id: userId,
@@ -277,7 +277,7 @@ describe('Events - GETs and POST API: /api/events', () => {
         }
       }
     })
-    it('should NOT create a new divPf when div_id is blank', async () => { 
+    it('should NOT create a new divPf when div_id is blank', async () => {
       const invalidDivPf = {
         ...divPfToPost,
         div_id: "",
@@ -294,7 +294,7 @@ describe('Events - GETs and POST API: /api/events', () => {
         }
       }
     })
-    it('should NOT create a new divPf when div_id is invalid', async () => { 
+    it('should NOT create a new divPf when div_id is invalid', async () => {
       const invalidDivPf = {
         ...divPfToPost,
         div_id: "test",
@@ -311,7 +311,7 @@ describe('Events - GETs and POST API: /api/events', () => {
         }
       }
     })
-    it('should NOT create a new divPf when div_id is valid, but not an divPf ID', async () => { 
+    it('should NOT create a new divPf when div_id is valid, but not an div ID', async () => {
       const invalidDivPf = {
         ...divPfToPost,
         div_id: userId,
@@ -328,7 +328,7 @@ describe('Events - GETs and POST API: /api/events', () => {
         }
       }
     })
-    it('should NOT create a new divPf when position is null', async () => { 
+    it('should NOT create a new divPf when position is null', async () => {
       const invalidDivPf = {
         ...divPfToPost,
         position: null as any,
@@ -345,7 +345,7 @@ describe('Events - GETs and POST API: /api/events', () => {
         }
       }
     })
-    it('should NOT create a new divPf when position is too low', async () => { 
+    it('should NOT create a new divPf when position is too low', async () => {
       const invalidDivPf = {
         ...divPfToPost,
         position: 0,
@@ -362,7 +362,7 @@ describe('Events - GETs and POST API: /api/events', () => {
         }
       }
     })
-    it('should NOT create a new divPf when position is too high', async () => { 
+    it('should NOT create a new divPf when position is too high', async () => {
       const invalidDivPf = {
         ...divPfToPost,
         position: maxPosition + 1,
@@ -379,7 +379,7 @@ describe('Events - GETs and POST API: /api/events', () => {
         }
       }
     })
-    it('should NOT create a new divPf when position is not a number', async () => { 
+    it('should NOT create a new divPf when position is not a number', async () => {
       const invalidDivPf = {
         ...divPfToPost,
         position: "test",
@@ -396,7 +396,7 @@ describe('Events - GETs and POST API: /api/events', () => {
         }
       }
     })
-    it('should NOT create a new divPf when position is not an integer', async () => { 
+    it('should NOT create a new divPf when position is not an integer', async () => {
       const invalidDivPf = {
         ...divPfToPost,
         position: 1.5,
@@ -413,7 +413,7 @@ describe('Events - GETs and POST API: /api/events', () => {
         }
       }
     })
-    it('should NOT create a new divPf when amount is null', async () => { 
+    it('should NOT create a new divPf when amount is null', async () => {
       const invalidDivPf = {
         ...divPfToPost,
         amount: null as any,
@@ -430,7 +430,7 @@ describe('Events - GETs and POST API: /api/events', () => {
         }
       }
     })
-    it('should NOT create a new divPf when amount is too low', async () => { 
+    it('should NOT create a new divPf when amount is too low', async () => {
       const invalidDivPf = {
         ...divPfToPost,
         amount: -1,
@@ -447,7 +447,7 @@ describe('Events - GETs and POST API: /api/events', () => {
         }
       }
     })
-    it('should NOT create a new divPf when amount is too high', async () => { 
+    it('should NOT create a new divPf when amount is too high', async () => {
       const invalidDivPf = {
         ...divPfToPost,
         amount: maxMoney + 1,
@@ -464,7 +464,7 @@ describe('Events - GETs and POST API: /api/events', () => {
         }
       }
     })
-    it('should NOT create a new divPf when amount is not a number', async () => { 
+    it('should NOT create a new divPf when amount is not a number', async () => {
       const invalidDivPf = {
         ...divPfToPost,
         amount: "test",
@@ -481,7 +481,7 @@ describe('Events - GETs and POST API: /api/events', () => {
         }
       }
     })
-  })  
+  });
 
   describe('PUT one divPf API: /api/divPfs/divPf/:id', () => { 
 
@@ -1333,7 +1333,7 @@ describe('Events - GETs and POST API: /api/events', () => {
         }
       }
     })
-    it('should not patch div_id when patching a divPf by ID when div_id is valid, but not an event_id', async () => { 
+    it('should not patch div_id when patching a divPf by ID when div_id is valid, but not a div id', async () => { 
       try {
         const invalidJSON = JSON.stringify({          
           div_id: userId,
@@ -1476,7 +1476,7 @@ describe('Events - GETs and POST API: /api/events', () => {
 
     afterEach(async () => {
       if (!didDel) return;
-      // if deleted event, add event back
+      // if deleted divPf, add divPf back
       try {
         const divPfJSON = JSON.stringify(toDelDivPf);
         await privateApi.post(url, divPfJSON);

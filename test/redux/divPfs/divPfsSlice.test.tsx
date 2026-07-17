@@ -8,7 +8,6 @@ import {
   updateAllDivPfsForDiv,
 } from "@/lib/db/divPfs/dbDivPfs";
 import { mockDivPfs } from "../../mocks/tmnts/tmntFullData/mockTmntFullData";
-// import type { divPfType } from "@/lib/types/types";
 import { configureStore } from "@reduxjs/toolkit";
 import { ioDataError } from "@/lib/enums/enums";
 import { cloneDeep } from "lodash";
@@ -86,9 +85,6 @@ describe("divPfsSlice reducer + thunk", () => {
     });
 
     it("should handle saveDivPfs.fulfilled", () => {
-      // const mockDivPfs = makeMockDivPfs({
-      //   amount: 125,
-      // });
 
       const state = reducer(initialState, {
         type: saveDivPfs.fulfilled.type,
@@ -117,8 +113,7 @@ describe("divPfsSlice reducer + thunk", () => {
   });
 
   describe("Thunk tests fetchDivPfs", () => {
-    it("dispatches fulfilled when getAllDivPfsForDiv resolves", async () => {
-      // const mockDivPfs = makeMockDivPfs();
+    it("dispatches fulfilled when getAllDivPfsForDiv resolves", async () => {      
 
       mockedGetAllDivPfsForDiv.mockResolvedValueOnce(mockDivPfs);
 
@@ -207,11 +202,6 @@ describe("divPfsSlice reducer + thunk", () => {
 
   describe("Thunk tests saveDivPfs", () => {
     it("dispatches fulfilled when updateAllDivPfsForDiv resolves", async () => {
-      // const mockDivPfs = makeMockDivPfs();
-
-      // const updatedDivPfs = makeMockDivPfs({
-      //   amount: 150,
-      // });
 
       const updatedDivPfs = cloneDeep(mockDivPfs);
       updatedDivPfs[0].amount = 450;
@@ -239,8 +229,7 @@ describe("divPfsSlice reducer + thunk", () => {
     });
 
     it("dispatches rejected when updateAllDivPfsForDiv resolves undefined", async () => {
-      // const mockDivPfs = makeMockDivPfs();
-
+      
       mockedUpdateAllDivPfsForDiv.mockResolvedValueOnce(undefined as any);
 
       const store = configureStore({
@@ -261,8 +250,7 @@ describe("divPfsSlice reducer + thunk", () => {
       expect(state.divPfs).toEqual([]);
     });
 
-    it("dispatches rejected when updateAllDivPfsForDiv rejects", async () => {
-      // const mockDivPfs = makeMockDivPfs();
+    it("dispatches rejected when updateAllDivPfsForDiv rejects", async () => {      
 
       mockedUpdateAllDivPfsForDiv.mockRejectedValueOnce(new Error("Save failed"));
 

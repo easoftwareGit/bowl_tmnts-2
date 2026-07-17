@@ -869,6 +869,7 @@ async function eventUpsert() {
 
 async function divUpsert() {
   try {
+    // gold pin
     let div = await prisma.div.upsert({
       where: {
         id: "div_f30aea2c534f4cfe87f4315531cef8ef",
@@ -3279,6 +3280,7 @@ async function stageUpsert() {
 
 async function potsUpsert() {
   try {
+    // gold pin
     let pot = await prisma.pot.upsert({
       where: {
         id: "pot_b2a7b02d761b4f5ab5438be84f642c3b",
@@ -3299,6 +3301,7 @@ async function potsUpsert() {
         pot_type: "Game",
       },
     });
+    // yosemite 6 gamer
     pot = await prisma.pot.upsert({
       where: {
         id: "pot_98b3a008619b43e493abf17d9f462a65",
@@ -12163,6 +12166,271 @@ async function divPfUpserts() {
 
 }
 
+async function potPfUpserts() { 
+
+  async function potPfUpsert_GoldPin() {
+    try {
+      let prizeFund = await prisma.pot_PF.upsert({
+        where: {
+          id: "ppf_59eac0c17bf74348b44041e97469ad76",
+        },
+        update: {
+          pot_id: "pot_b2a7b02d761b4f5ab5438be84f642c3b",
+          position: 1,
+          amount: 50,
+        },
+        create: {
+          id: "ppf_59eac0c17bf74348b44041e97469ad76",
+          pot_id: "pot_b2a7b02d761b4f5ab5438be84f642c3b",
+          position: 1,
+          amount: 50,
+        }
+      });
+      prizeFund = await prisma.pot_PF.upsert({
+        where: {
+          id: "ppf_0fed31aae5374e6690b6535ced1ebff5",
+        },
+        update: {
+          pot_id: "pot_b2a7b02d761b4f5ab5438be84f642c3b",
+          position: 2,
+          amount: 10,
+        },
+        create: {
+          id: "ppf_0fed31aae5374e6690b6535ced1ebff5",
+          pot_id: "pot_b2a7b02d761b4f5ab5438be84f642c3b",
+          position: 2,
+          amount: 10,
+        }
+      });
+      return 2;
+    } catch (error) {
+      console.log(error);
+      return -1;
+    }
+  }
+ 
+  async function potPfUpsert_WholeTmnt() {
+    try {
+      let prizeFund = await prisma.pot_PF.upsert({
+        where: {
+          id: "ppf_42c133340c174d05ba7098930e2f0f90",
+        },
+        update: {
+          pot_id: "pot_89fd8f787de942a1a92aaa2df3e7c185",
+          position: 1,
+          amount: 70,
+        },
+        create: {
+          id: "ppf_42c133340c174d05ba7098930e2f0f90",
+          pot_id: "pot_89fd8f787de942a1a92aaa2df3e7c185",
+          position: 1,
+          amount: 70,
+        }
+      });
+      prizeFund = await prisma.pot_PF.upsert({
+        where: {
+          id: "ppf_97594d1f0f7043c48dacec19091d1494",
+        },
+        update: {
+          pot_id: "pot_89fd8f787de942a1a92aaa2df3e7c185",
+          position: 2,
+          amount: 25,
+        },
+        create: {
+          id: "ppf_97594d1f0f7043c48dacec19091d1494",
+          pot_id: "pot_89fd8f787de942a1a92aaa2df3e7c185",
+          position: 2,
+          amount: 25,
+        }
+      });
+      return 2;
+    } catch (error) {
+      console.log(error);
+      return -1;
+    }
+  }
+
+  async function potPfUpsert_NewYearsEve() {
+    try {
+      let prizeFund = await prisma.pot_PF.upsert({
+        where: {
+          id: "ppf_094a1a974e034940b847bef5b67a4b63",
+        },
+        update: {
+          pot_id: "pot_791fb6d8a9a04cb4b3372e212da2a3b0",
+          position: 1,
+          amount: 40,
+        },
+        create: {
+          id: "ppf_094a1a974e034940b847bef5b67a4b63",
+          pot_id: "pot_791fb6d8a9a04cb4b3372e212da2a3b0",
+          position: 1,
+          amount: 40,
+        }
+      });
+      prizeFund = await prisma.pot_PF.upsert({
+        where: {
+          id: "ppf_710eda589d3f4106abe78006195e328a",
+        },
+        update: {
+          pot_id: "pot_791fb6d8a9a04cb4b3372e212da2a3b0",
+          position: 2,
+          amount: 10,
+        },
+        create: {
+          id: "ppf_710eda589d3f4106abe78006195e328a",
+          pot_id: "pot_791fb6d8a9a04cb4b3372e212da2a3b0",
+          position: 2,
+          amount: 10,
+        }
+      });
+      prizeFund = await prisma.pot_PF.upsert({
+        where: {
+          id: "ppf_7e44498e84034bc1a080bfff569680bb",
+        },
+        update: {
+          pot_id: "pot_781fb6d8a9a04cb4b3372e212da2a3b0",
+          position: 1,
+          amount: 80,
+        },
+        create: {
+          id: "ppf_7e44498e84034bc1a080bfff569680bb",
+          pot_id: "pot_781fb6d8a9a04cb4b3372e212da2a3b0",
+          position: 1,
+          amount: 80,
+        }
+      });
+      prizeFund = await prisma.pot_PF.upsert({
+        where: {
+          id: "ppf_9032c654c42240d78eeea91de320049f",
+        },
+        update: {
+          pot_id: "pot_781fb6d8a9a04cb4b3372e212da2a3b0",
+          position: 2,
+          amount: 20,
+        },
+        create: {
+          id: "ppf_9032c654c42240d78eeea91de320049f",
+          pot_id: "pot_781fb6d8a9a04cb4b3372e212da2a3b0",
+          position: 2,
+          amount: 20,
+        }
+      });
+      prizeFund = await prisma.pot_PF.upsert({
+        where: {
+          id: "ppf_7e7d7dca4de74085b609030192aa15a5",
+        },
+        update: {
+          pot_id: "pot_771fb6d8a9a04cb4b3372e212da2a3b0",
+          position: 1,
+          amount: 40,
+        },
+        create: {
+          id: "ppf_7e7d7dca4de74085b609030192aa15a5",
+          pot_id: "pot_771fb6d8a9a04cb4b3372e212da2a3b0",
+          position: 1,
+          amount: 40,
+        }
+      });
+      prizeFund = await prisma.pot_PF.upsert({
+        where: {
+          id: "ppf_b14d1847af30480aa4123594b0072cb1",
+        },
+        update: {
+          pot_id: "pot_771fb6d8a9a04cb4b3372e212da2a3b0",
+          position: 2,
+          amount: 10,
+        },
+        create: {
+          id: "ppf_b14d1847af30480aa4123594b0072cb1",
+          pot_id: "pot_771fb6d8a9a04cb4b3372e212da2a3b0",
+          position: 2,
+          amount: 10,
+        }
+      });
+      prizeFund = await prisma.pot_PF.upsert({
+        where: {
+          id: "ppf_560a2316645844bb9bdeb094911b9e9d",
+        },
+        update: {
+          pot_id: "pot_761fb6d8a9a04cb4b3372e212da2a3b0",
+          position: 1,
+          amount: 75,
+        },
+        create: {
+          id: "ppf_560a2316645844bb9bdeb094911b9e9d",
+          pot_id: "pot_761fb6d8a9a04cb4b3372e212da2a3b0",
+          position: 1,
+          amount: 75,
+        }
+      });
+      prizeFund = await prisma.pot_PF.upsert({
+        where: {
+          id: "ppf_840e009bd5bd4e4aa389ddd02df50f23",
+        },
+        update: {
+          pot_id: "pot_761fb6d8a9a04cb4b3372e212da2a3b0",
+          position: 2,
+          amount: 15,
+        },
+        create: {
+          id: "ppf_840e009bd5bd4e4aa389ddd02df50f23",
+          pot_id: "pot_761fb6d8a9a04cb4b3372e212da2a3b0",
+          position: 2,
+          amount: 15,
+        }
+      });
+
+      return 8;
+    } catch (error) {
+      console.log(error);
+      return -1;
+    }
+  }
+  
+  async function potPfUpsert_ToDelete() {
+    try {
+      let prizeFund = await prisma.pot_PF.upsert({
+        where: {
+          id: "ppf_af2a95c8c1e348acbaccf306f54a6087",
+        },
+        update: {
+          pot_id: "pot_ab80213899ea424b938f52a062deacfe",
+          position: 1,
+          amount: 100,
+        },
+        create: {
+          id: "ppf_af2a95c8c1e348acbaccf306f54a6087",
+          pot_id: "pot_ab80213899ea424b938f52a062deacfe",
+          position: 1,
+          amount: 100,
+        }
+      });
+      return 1;
+    } catch (error) {
+      console.log(error);
+      return -1;
+    }
+  }
+
+  try {
+    const gpCount = await potPfUpsert_GoldPin();
+    const wtCount = await potPfUpsert_WholeTmnt();
+    const nyCount = await potPfUpsert_NewYearsEve();
+    const delCount = await potPfUpsert_ToDelete();
+
+    console.log(
+      "Upserted pot_pf: ",
+      gpCount + wtCount + nyCount + delCount
+    );    
+    // 2 + 2 + 8 + 1 = 13
+    return gpCount + wtCount + nyCount + delCount;
+  } catch (error) {
+    console.log(error);
+    return -1;
+  }  
+}
+
 async function testDateUpsert() {
   try {
     const nowTime = new Date();
@@ -12455,6 +12723,9 @@ async function main() {
   if (count < 0) return;
 
   count = await divPfUpserts();
+  if (count < 0) return;
+
+  count = await potPfUpserts();
   if (count < 0) return;
 
   count = await testDateUpsert();

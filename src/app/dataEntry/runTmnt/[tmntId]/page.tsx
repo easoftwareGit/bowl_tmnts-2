@@ -222,18 +222,8 @@ const RunTmntPage = () => {
                     stage={stage ?? SquadStage.ERROR}
                   />
                 </div>
-                {/* <button
-                  type="button"
-                  className="btn btn-info" 
-                  onClick={() => setShowReportOptions(true)}                  
-                >
-                  Reports
-                </button> */}
               </div> 
               <div className="col-2 d-grid gap-2">
-                {/* <Link className="btn btn-block btn-dark" href="#" >                  
-                  Finalize
-                </Link> */}
                 <button
                   type="button"
                   className="btn btn-block btn-dark"                   

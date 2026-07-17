@@ -1,7 +1,7 @@
 import type { divPfDataType, divPfType } from "@/lib/types/types";
 
 /**
- * Converts div to divPfDataType
+ * Converts divPfType to divPfDataType
  * 
  * @param {divPfType} divPf  - divPf to convert to divPfDataType
  * @returns {divPfDataType} - divDataType

@@ -1,6 +1,4 @@
-import { validMoney } from "@/lib/currency/validate";
-import { isValidBtDbId, validInteger, isNumber } from "@/lib/validation/validation";
-import { maxMoney, maxPosition } from "../constants";
+import { isValidBtDbId, isNumber, validPfPosition, validPfAmount } from "@/lib/validation/validation";
 import { ErrorCode } from "@/lib/enums/enums";
 import { sanitizeBtDbId, sanitizeMoneyAmount } from "../sanitize";
 import { divPfType, validDivPfsType } from "@/lib/types/types";
@@ -29,32 +27,6 @@ const gotDivPfData = (divPf: divPfType): ErrorCode => {
 };
 
 /**
- * checks if position is valid
- * 
- * @param {unknown} positionNum - money to check
- * @returns {boolean} - true if amount is valid and not blank; else false
- */
-export const validDivPfPosition = (positionNum: unknown): boolean => {
-  if (positionNum == null || typeof positionNum !== 'number') return false;
-  return (
-    validInteger(positionNum) &&
-    positionNum > 0 &&
-    positionNum < maxPosition
-  ) ? true : false;  
-};
-
-/**
- * checks if amount is valid
- * 
- * @param {unknown} moneyNum - money to check
- * @returns {boolean} - true if amount is valid and not blank; else false
- */
-export const validDivPfAmount = (moneyNum: unknown): boolean => {
-  if (moneyNum == null || typeof moneyNum !== 'number') return false;
-  return validMoney(moneyNum, 0, maxMoney);
-};
-
-/**
  * checks if divPf data is valid
  * 
  * @param {divPfType} divPf - divPf to validate
@@ -69,10 +41,10 @@ const validDivPfData = (divPf: divPfType): ErrorCode => {
     if (!isValidBtDbId(divPf.div_id, "div")) {
       return ErrorCode.INVALID_DATA;
     }
-    if (!validDivPfPosition(divPf.position)) {
+    if (!validPfPosition(divPf.position)) {
       return ErrorCode.INVALID_DATA;
     }
-    if (!validDivPfAmount(divPf.amount)) {
+    if (!validPfAmount(divPf.amount)) {
       return ErrorCode.INVALID_DATA;
     }
     return ErrorCode.NONE;
@@ -126,7 +98,7 @@ export const validateDivPf = (divPf: divPfType): ErrorCode => {
 /**
  * validates array of divPfs
  * 
- * @param {divPfType[]} tmntMoneys - array of tmntMoneys to validate
+ * @param {divPfType[]} divPfs - array of divPfType to validate
  * @returns {divPfs: divPfType[], errorCode: ErrorCode.NONE | ErrorCode.MISSING_DATA | ErrorCode.INVALID_DATA | ErrorCode.OtherError}
  */
 export const validateDivPfs = (divPfs: divPfType[]): validDivPfsType => {

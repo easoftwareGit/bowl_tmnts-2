@@ -16,11 +16,11 @@ describe("divPfDataForPrisma", () => {
     });
   });
 
-  it("should return null if div is null", () => {
+  it("should return null if divPf is null", () => {
     const result = divPfDataForPrisma(null as any);
     expect(result).toBe(null);
   });
-  it("should return null if div is not an object", () => {
+  it("should return null if divPf is not an object", () => {
     const result = divPfDataForPrisma('test' as any);
     expect(result).toBe(null);
   });

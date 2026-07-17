@@ -15,6 +15,7 @@ import {
   initLane,
   initPlayer,
   initPot,
+  initPotPf,
   initSquad,
   initTmnt,
 } from "@/lib/db/initVals";
@@ -25,7 +26,8 @@ import type {
   playerType,
   tmntFullType,
   gameType,
-  divPfType,    
+  divPfType,
+  potPfType,    
 } from "@/lib/types/types";
 import { MoneyDescrip, MoneyFlow, SquadStage } from "@prisma/client";
 
@@ -131,6 +133,10 @@ export const playerId15 = "ply_0123e9e6b6e4c5b9f6b7d9e7f9b6c5bd";
 export const playerId16 = "ply_0123e9e6b6e4c5b9f6b7d9e7f9b6c5be";
 export const potId1 = "pot_01238f787de942a1a92aaa2df3e7c18a";
 export const potId2 = "pot_01238f787de942a1a92aaa2df3e7c18b";
+export const potPfId1 = "ppf_0123cae28786485bb7a036935f0f6a0a";
+export const potPfId2 = "ppf_0123cae28786485bb7a036935f0f6a0b";
+export const potPfId3 = "ppf_0123cae28786485bb7a036935f0f6a0c";
+export const potPfId4 = "ppf_0123cae28786485bb7a036935f0f6a0d";
 export const squadId1 = "sqd_012366e1174642c7a1bcec47a50f275a";
 export const squadId2 = "sqd_012366e1174642c7a1bcec47a50f275b";
 export const stageId1 = "stg_01238f787de942a1a92aaa2df3e7c18a";
@@ -141,6 +147,10 @@ export const tmntId = "tmt_0123388a8fc4641a2e37233f1d6bebd1";
 export const userId = "usr_0123fb5d314fff1ff5da6521a2fa7bda";
 
 export const mockDivPrizeFund = 1575;
+export const mockPot1PrizeFund = 660;
+export const mockPot1PerGamePrizeFund = 110;
+export const mockPot2PrizeFund = 275;
+export const mockPot2PerGamePrizeFund = 275;
 
 export const mockUser: userFormType  = {
   id: userId,
@@ -1092,7 +1102,7 @@ export const mockDivPfs: divPfType[] = [
     amount: 500,
   },
   {
-    id: divPfId1,
+    id: divPfId2,
     div_id: divId1,
     position: 2,
     amount: 350,
@@ -1120,5 +1130,33 @@ export const mockDivPfs: divPfType[] = [
     div_id: divId1,
     position: 6,
     amount: 100,
+  },
+];
+
+export const mockPotPfs: potPfType[] = [
+  {
+    ...initPotPf,
+    id: potPfId1,
+    pot_id: potId1,
+    position: 1,
+    amount: 75,
+  },
+  {
+    id: divPfId2,
+    pot_id: potId1,
+    position: 2,
+    amount: 35,
+  },
+  {
+    id: divPfId3,
+    pot_id: potId2,
+    position: 1,
+    amount: 200,
+  },
+  {
+    id: divPfId4,
+    pot_id: potId2,
+    position: 2,
+    amount: 75,
   },
 ];

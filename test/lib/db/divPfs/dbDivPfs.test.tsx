@@ -64,79 +64,79 @@ describe("dbDivPfs", () => {
     await privateApi.post(url, pm2JSON);
   }
 
-  // describe('extractDivPfs', () => { 
-  //   it('should extract divPfs from a div', () => {
-  //     const rawDivPfs = [
-  //       {
-  //         id: "dpf_01234567890123456789012345678901",
-  //         div_id: "div_01234567890123456789012345678901",
-  //         position: "1",
-  //         amount: "1234.56",
-  //       },
-  //       {
-  //         id: "dpf_01234567890123456789012345678902",
-  //         div_id: "div_01234567890123456789012345678901",
-  //         position: "2",
-  //         amount: "234.56",
-  //       },
-  //     ]
-  //     const divPfs = extractDivPfs(rawDivPfs);
-  //     expect(divPfs.length).toBe(rawDivPfs.length);
-  //     expect(divPfs[0].id).toBe("dpf_01234567890123456789012345678901");
-  //     expect(divPfs[0].div_id).toBe("div_01234567890123456789012345678901");
-  //     expect(divPfs[0].position).toBe(1);
-  //     expect(divPfs[0].amount).toBe(1234.56);
-  //     expect(divPfs[1].id).toBe("dpf_01234567890123456789012345678902");
-  //     expect(divPfs[1].div_id).toBe("div_01234567890123456789012345678901");
-  //     expect(divPfs[1].position).toBe(2);
-  //     expect(divPfs[1].amount).toBe(234.56);
-  //   });
-  //   it('should return empty array if no divPfs', () => {
-  //     const divPfs = extractDivPfs([]);
-  //     expect(divPfs).toEqual([]);
-  //   });
-  //   it('should return empty array if divPfs is null', () => {
-  //     const divPfs = extractDivPfs(null as any);
-  //     expect(divPfs).toEqual([]); 
-  //   })
-  //   it('should return empty array if divPfs is not an array', () => {
-  //     const divPfs = extractDivPfs({} as any);
-  //     expect(divPfs).toEqual([]);
-  //   })
-  // })
+  describe('extractDivPfs', () => { 
+    it('should extract divPfs from a div', () => {
+      const rawDivPfs = [
+        {
+          id: "dpf_01234567890123456789012345678901",
+          div_id: "div_01234567890123456789012345678901",
+          position: "1",
+          amount: "1234.56",
+        },
+        {
+          id: "dpf_01234567890123456789012345678902",
+          div_id: "div_01234567890123456789012345678901",
+          position: "2",
+          amount: "234.56",
+        },
+      ]
+      const divPfs = extractDivPfs(rawDivPfs);
+      expect(divPfs.length).toBe(rawDivPfs.length);
+      expect(divPfs[0].id).toBe("dpf_01234567890123456789012345678901");
+      expect(divPfs[0].div_id).toBe("div_01234567890123456789012345678901");
+      expect(divPfs[0].position).toBe(1);
+      expect(divPfs[0].amount).toBe(1234.56);
+      expect(divPfs[1].id).toBe("dpf_01234567890123456789012345678902");
+      expect(divPfs[1].div_id).toBe("div_01234567890123456789012345678901");
+      expect(divPfs[1].position).toBe(2);
+      expect(divPfs[1].amount).toBe(234.56);
+    });
+    it('should return empty array if no divPfs', () => {
+      const divPfs = extractDivPfs([]);
+      expect(divPfs).toEqual([]);
+    });
+    it('should return empty array if divPfs is null', () => {
+      const divPfs = extractDivPfs(null as any);
+      expect(divPfs).toEqual([]); 
+    })
+    it('should return empty array if divPfs is not an array', () => {
+      const divPfs = extractDivPfs({} as any);
+      expect(divPfs).toEqual([]);
+    })
+  })
 
-  // describe('getAllDivPfsForDiv- get all divPfs for a div', () => { 
+  describe('getAllDivPfsForDiv- get all divPfs for a div', () => { 
 
-  //   beforeAll(async () => {
-  //     await restoreDivPfs();
-  //   })
+    beforeAll(async () => {
+      await restoreDivPfs();
+    })
     
-  //   it('should get all divPfs for a div', async () => {
-  //     const divPfs = await getAllDivPfsForDiv(pmDivId);
-  //     expect(divPfs.length).toBe(2);
-  //     expect(divPfs[0].id).toBe(pmDivPf1.id);
-  //     expect(divPfs[0].div_id).toBe(pmDivPf1.div_id);
-  //     expect(divPfs[0].position).toBe(pmDivPf1.position);
-  //     expect(divPfs[0].amount).toBe(pmDivPf1.amount);
-  //     expect(divPfs[1].id).toBe(pmDivPf2.id);
-  //     expect(divPfs[1].div_id).toBe(pmDivPf2.div_id);
-  //     expect(divPfs[1].position).toBe(pmDivPf2.position);
-  //     expect(divPfs[1].amount).toBe(pmDivPf2.amount);
-  //   })
-  //   it('should return empty array when div id is not found', async () => {
-  //     const divPfs = await getAllDivPfsForDiv(notFoundDivId);
-  //     expect(divPfs).toEqual([]);      
-  //   })
-  //   it('should throw error when div id is invalid', async () => {
-  //     await expect(getAllDivPfsForDiv("test")).rejects.toThrow("Invalid div id");
-  //   })
-  //   it('should throw an error when div id is valid but not a div id', async () => {
-  //     await expect(getAllDivPfsForDiv(userId)).rejects.toThrow("Invalid div id");
-  //   })
-  //   it('should throw an error when div id is null', async () => {
-  //     await expect(getAllDivPfsForDiv(null as any)).rejects.toThrow("Invalid div id");
-  //   })
-  // })
+    it('should get all divPfs for a div', async () => {
+      const divPfs = await getAllDivPfsForDiv(pmDivId);
+      expect(divPfs.length).toBe(2);
+      expect(divPfs[0].id).toBe(pmDivPf1.id);
+      expect(divPfs[0].div_id).toBe(pmDivPf1.div_id);
+      expect(divPfs[0].position).toBe(pmDivPf1.position);
+      expect(divPfs[0].amount).toBe(pmDivPf1.amount);
+      expect(divPfs[1].id).toBe(pmDivPf2.id);
+      expect(divPfs[1].div_id).toBe(pmDivPf2.div_id);
+      expect(divPfs[1].position).toBe(pmDivPf2.position);
+      expect(divPfs[1].amount).toBe(pmDivPf2.amount);
+    })
+    it('should return empty array when div id is not found', async () => {
+      const divPfs = await getAllDivPfsForDiv(notFoundDivId);
+      expect(divPfs).toEqual([]);      
+    })
+    it('should throw error when div id is invalid', async () => {
+      await expect(getAllDivPfsForDiv("test")).rejects.toThrow("Invalid div id");
+    })
+    it('should throw an error when div id is valid but not a div id', async () => {
+      await expect(getAllDivPfsForDiv(userId)).rejects.toThrow("Invalid div id");
+    })
+    it('should throw an error when div id is null', async () => {
+      await expect(getAllDivPfsForDiv(null as any)).rejects.toThrow("Invalid div id");
+    })
+  })
 
   describe('updateAllDivPfsForDiv - update all divPfs for a div', () => {
 
@@ -232,7 +232,7 @@ describe("dbDivPfs", () => {
       expect(updated.length).toBe(pmDivPfs.length);
     });
 
-    it('should not update many divPfs for a div whne passed invalid data', async () => {
+    it('should not update many divPfs for a div when passed invalid data', async () => {
       const invalid = 'test';
       await expect(updateAllDivPfsForDiv(pmDivId, invalid as any)).rejects.toThrow('Invalid divPfs array');
     });

@@ -31,6 +31,7 @@ import type {
   fullStageType,
   tmntMoneyType,
   divPfType,
+  potPfType,
 } from "../types/types";
 import { User, Bowl, Tmnt, SquadStage, MoneyDescrip, MoneyFlow } from "@prisma/client";
 import { todayStr } from "@/lib/dateTools";
@@ -591,6 +592,20 @@ export const initDivPf: divPfType = {
 
 export const blankDivPf: divPfType = {
   ...initDivPf,  
+  id: "",
+  position: null as any,
+  amount: null as any,
+}
+
+export const initPotPf: potPfType = {
+  id: btDbUuid('ppf'),
+  pot_id: "",  
+  position: 1,
+  amount: 0,
+}
+
+export const blankPotPf: potPfType = {
+  ...initPotPf,  
   id: "",
   position: null as any,
   amount: null as any,

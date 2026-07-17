@@ -5,6 +5,7 @@ import divPfsReducer from './features/divPfs/divPfsSlice';
 import gamesForSquadReducer from './features/gamesForSquad/gamesForSquadSlice';
 import oneDivGameResultsReducer from './features/oneDivGameResults/oneDivGameResultsSlice';
 import oneTmntGameResultsReducer from './features/oneTmntGameResults/oneTmntGameResultsSlice';
+import potPfsReducer from './features/potPfs/potPfsSlice';
 import tmntFullDataReducer from './features/tmntFullData/tmntFullDataSlice';
 import tmntsReducer from './features/tmnts/tmntsSlice';
 import tmntYearsReducer from './features/tmnts/yearsSlice';
@@ -19,6 +20,7 @@ export const store = configureStore({
     gamesForSquad: gamesForSquadReducer,
     oneDivGameResults: oneDivGameResultsReducer,
     oneTmntGameResults: oneTmntGameResultsReducer,
+    potPfs: potPfsReducer,
     tmntFullData: tmntFullDataReducer,
     tmnts: tmntsReducer,
     tmntYears: tmntYearsReducer,

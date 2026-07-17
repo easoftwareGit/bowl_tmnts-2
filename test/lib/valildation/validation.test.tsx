@@ -17,12 +17,15 @@ import {
   toValidDateOrNull,
   safeNumericEqual,
   exportedForTesting,
-  isFullStageType
+  isFullStageType,
+  validPfPosition,
+  validPfAmount,
+  isMoneyValueValid
 } from "@/lib/validation/validation";
 import { initDiv, initEvent } from "@/lib/db/initVals";
 import type { fullStageType } from "@/lib/types/types";
 import { SquadStage } from "@prisma/client";
-import { maxFirstNameLength, maxSortOrder } from "@/lib/validation/constants";
+import { maxFirstNameLength, maxMoney, maxPosition, maxSortOrder } from "@/lib/validation/constants";
 
 const { isValidDateObject } = exportedForTesting;
 
@@ -785,6 +788,73 @@ describe("tests for validation functions", () => {
     });
   });
 
+  describe("isMoneyValueValid function", () => { 
+
+    it("returns true for a number within the range", () => {
+      expect(isMoneyValueValid(25, 0, 100)).toBe(true);
+    });
+
+    it("returns true for numeric strings within the range", () => {
+      expect(isMoneyValueValid("25.50", 0, 100)).toBe(true);
+    });
+
+    it("returns true when the value equals the minimum", () => {
+      expect(isMoneyValueValid(0, 0, 100)).toBe(true);
+    });
+
+    it("returns true when the value equals the maximum", () => {
+      expect(isMoneyValueValid(100, 0, 100)).toBe(true);
+    });
+
+    it("returns false when the value is below the minimum", () => {
+      expect(isMoneyValueValid(-0.01, 0, 100)).toBe(false);
+    });
+
+    it("returns false when the value is above the maximum", () => {
+      expect(isMoneyValueValid(100.01, 0, 100)).toBe(false);
+    });
+
+    it("returns false for null", () => {
+      expect(isMoneyValueValid(null, 0, 100)).toBe(false);
+    });
+
+    it("returns false for undefined", () => {
+      expect(isMoneyValueValid(undefined, 0, 100)).toBe(false);
+    });
+
+    it("returns false for an empty string", () => {
+      expect(isMoneyValueValid("", 0, 100)).toBe(false);
+    });
+
+    it("returns false for a non-numeric string", () => {
+      expect(isMoneyValueValid("abc", 0, 100)).toBe(false);
+    });
+
+    it("returns false for NaN", () => {
+      expect(isMoneyValueValid(Number.NaN, 0, 100)).toBe(false);
+    });
+
+    it("returns false for Infinity", () => {
+      expect(isMoneyValueValid(Number.POSITIVE_INFINITY, 0, 100)).toBe(false);
+    });
+
+    it("returns false for negative Infinity", () => {
+      expect(isMoneyValueValid(Number.NEGATIVE_INFINITY, 0, 100)).toBe(false);
+    });
+
+    it("returns true for a string with leading and trailing whitespace", () => {
+      expect(isMoneyValueValid(" 25.50 ", 0, 100)).toBe(true);
+    });
+
+    it("returns true for zero when it is within the range", () => {
+      expect(isMoneyValueValid(0, -100, 100)).toBe(true);
+    });
+
+    it("returns true for negative values within the range", () => {
+      expect(isMoneyValueValid(-25.75, -100, 100)).toBe(true);
+    });    
+  });  
+
   describe('IsValidName function', () => { 
     const maxLength = 15;
     it('should return true when name is within max length', () => {
@@ -1003,4 +1073,99 @@ describe("tests for validation functions", () => {
 
   });
 
+  describe("validPfAmount()", () => {
+
+    it("should return true for valid position", () => {
+      expect(validPfPosition(1)).toBe(true);
+    });
+
+    it("should return true for max valid position", () => {
+      expect(
+        validPfPosition(maxPosition - 1),
+      ).toBe(true);
+    });
+
+    it("should return false for null", () => {
+      expect(
+        validPfPosition(null as any),
+      ).toBe(false);
+    });
+
+    it("should return false for undefined", () => {
+      expect(
+        validPfPosition(undefined as any),
+      ).toBe(false);
+    });
+
+    it("should return false for string", () => {
+      expect(
+        validPfPosition("1" as any),
+      ).toBe(false);
+    });
+
+    it("should return false for 0", () => {
+      expect(
+        validPfPosition(0),
+      ).toBe(false);
+    });
+
+    it("should return false for negative value", () => {
+      expect(
+        validPfPosition(-1),
+      ).toBe(false);
+    });
+
+    it("should return false for decimal value", () => {
+      expect(
+        validPfPosition(1.5),
+      ).toBe(false);
+    });
+
+    it("should return false when equal to maxPosition", () => {
+      expect(
+        validPfPosition(maxPosition),
+      ).toBe(false);
+    });
+
+  }); 
+  
+  describe("validDivPfAmount()", () => {
+
+    it("should return true when amount is valid", () => {
+      expect(validPfAmount(100)).toBe(true);
+    });
+
+    it("should return true when amount is 0", () => {
+      expect(validPfAmount(0)).toBe(true);
+    });
+
+    it("should return false when amount is null", () => {
+      expect(validPfAmount(null as any)).toBe(false);
+    });
+
+    it("should return false when amount is undefined", () => {
+      expect(validPfAmount(undefined as any)).toBe(false);
+    });
+
+    it("should return false when amount is string", () => {
+      expect(validPfAmount("100" as any)).toBe(false);
+    });
+
+    it("should return false when amount is negative", () => {
+      expect(validPfAmount(-1)).toBe(false);
+    });
+
+    it("should return false when amount exceeds maxMoney", () => {
+      expect(
+        validPfAmount(maxMoney + 1),
+      ).toBe(false);
+    });
+
+    it("should return true when amount contains decimals", () => {
+      expect(
+        validPfAmount(12.34),
+      ).toBe(true);
+    });
+
+  });  
 });

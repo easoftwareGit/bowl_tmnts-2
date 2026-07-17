@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { standardCatchReturn } from "@/app/api/apiCatch";
-import { extractDivPfs } from "@/lib/db/divPfs/dbDivPfs";
 import { divPfDataForPrisma } from "../../divPfsDataForPrisma";
 import { divPfDataType, validDivPfsType } from "@/lib/types/types";
 import { validateDivPfs } from "@/lib/validation/divPfs/validate";

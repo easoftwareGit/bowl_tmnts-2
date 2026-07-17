@@ -3,8 +3,6 @@ import {
   sanitizeDivPf,
   validateDivPf,
   validateDivPfs,
-  validDivPfAmount,
-  validDivPfPosition,
 } from "@/lib/validation/divPfs/validate";
 import { blankDivPf, initDivPf } from "@/lib/db/initVals";
 import { ErrorCode } from "@/lib/enums/enums";
@@ -96,102 +94,6 @@ describe("validate divPfs", () => {
           amount: 0,
         }),
       ).toBe(ErrorCode.NONE);
-    });
-
-  });
-
-  describe("validDivPfPosition()", () => {
-
-    it("should return true for valid position", () => {
-      expect(validDivPfPosition(1)).toBe(true);
-    });
-
-    it("should return true for max valid position", () => {
-      expect(
-        validDivPfPosition(maxPosition - 1),
-      ).toBe(true);
-    });
-
-    it("should return false for null", () => {
-      expect(
-        validDivPfPosition(null as any),
-      ).toBe(false);
-    });
-
-    it("should return false for undefined", () => {
-      expect(
-        validDivPfPosition(undefined as any),
-      ).toBe(false);
-    });
-
-    it("should return false for string", () => {
-      expect(
-        validDivPfPosition("1" as any),
-      ).toBe(false);
-    });
-
-    it("should return false for 0", () => {
-      expect(
-        validDivPfPosition(0),
-      ).toBe(false);
-    });
-
-    it("should return false for negative value", () => {
-      expect(
-        validDivPfPosition(-1),
-      ).toBe(false);
-    });
-
-    it("should return false for decimal value", () => {
-      expect(
-        validDivPfPosition(1.5),
-      ).toBe(false);
-    });
-
-    it("should return false when equal to maxPosition", () => {
-      expect(
-        validDivPfPosition(maxPosition),
-      ).toBe(false);
-    });
-
-  });
-
-  describe("validDivPfAmount()", () => {
-
-    it("should return true when amount is valid", () => {
-      expect(validDivPfAmount(100)).toBe(true);
-    });
-
-    it("should return true when amount is 0", () => {
-      expect(validDivPfAmount(0)).toBe(true);
-    });
-
-    it("should return false when amount is null", () => {
-      expect(validDivPfAmount(null as any)).toBe(false);
-    });
-
-    it("should return false when amount is undefined", () => {
-      expect(validDivPfAmount(undefined as any)).toBe(false);
-    });
-
-    it("should return false when amount is string", () => {
-      expect(validDivPfAmount("100" as any)).toBe(false);
-    });
-
-    it("should return false when amount is negative", () => {
-      expect(validDivPfAmount(-1)).toBe(false);
-    });
-
-    it("should return false when amount exceeds maxMoney", () => {
-      expect(
-        validDivPfAmount(maxMoney + 1),
-      ).toBe(false);
-    });
-
-    it("should return true when amount contains decimals", () => {
-      expect(
-        validDivPfAmount(12.34),
-      ).toBe(true);
     });
 
   });

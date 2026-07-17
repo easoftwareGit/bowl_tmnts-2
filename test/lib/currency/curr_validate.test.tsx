@@ -1,7 +1,7 @@
 import { validBtdbMoney, validMoney } from "@/lib/currency/validate";
 import { maxMoney } from "@/lib/validation/constants";
 
-describe("validAmount", () => {
+describe("validMoney", () => {
   it("should return true if amount is a valid number", () => {
     expect(validMoney("5", 0, maxMoney)).toBe(true);
     expect(validMoney("0", 0, maxMoney)).toBe(true);

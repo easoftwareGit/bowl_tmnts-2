@@ -687,6 +687,21 @@ export type validTmntMoneyType = {
   errorCode: ErrorCode
 }
 
+export type prizeFundType = {
+  id: string,
+  parent_id: string,
+  position: number | null,
+  amount: number | null,  
+}
+
+export type prizeFundEntryRow = {
+  id: string,
+  parent_id: string,
+  position: number,
+  amount: number,
+  percentage: number,  
+}
+
 export type divPfType = {
   id: string,
   div_id: string,
@@ -709,14 +724,68 @@ export type divPfEntryRow = {
   percentage: number,
 }
 
-export type AcdnErrType = {
-  errClassName: string,
-  message: string,
-}
-
 export type validDivPfsType = {
   divPfs: divPfType[],
   errorCode: ErrorCode
+}
+
+export type potPfType = {
+  id: string,
+  pot_id: string,
+  position: number | null,
+  amount: number | null,  
+}
+
+export type potPfDataType = {
+  id: string,
+  pot_id: string,
+  position: number,
+  amount: number,  
+}
+
+export type potPfEntryRow = {
+  id: string,
+  pot_id: string,
+  position: number,
+  amount: number,
+  percentage: number,
+}
+
+export type validPotPfsType = {
+  potPfs: potPfType[],
+  errorCode: ErrorCode
+}
+
+export type elimPfType = {
+  id: string,
+  elim_id: string,
+  position: number | null,
+  amount: number | null,  
+}
+
+export type elimPfDataType = {
+  id: string,
+  elim_id: string,
+  position: number,
+  amount: number,  
+}
+
+export type elimPfEntryRow = {
+  id: string,
+  elim_id: string,
+  position: number,
+  amount: number,
+  percentage: number,
+}
+
+export type validElimPfsType = {
+  elimPfs: elimPfType[],
+  errorCode: ErrorCode
+}
+
+export type AcdnErrType = {
+  errClassName: string,
+  message: string,
 }
 
 export type dataOneTmntType = {

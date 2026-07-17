@@ -1,3 +1,4 @@
+import { moneyNumber } from "./convert";
 import { maxMoney } from "../validation/constants";
 
 /**
@@ -9,37 +10,13 @@ import { maxMoney } from "../validation/constants";
  * @returns {boolean} - true if amount is valid
  */
 export const validMoney = (moneyStr: unknown, min: number, max: number): boolean => {  
-  if (moneyStr == null) return false;
-  let mStr: string = "";
-  if (typeof moneyStr === "string") {
-    mStr = moneyStr;
-  }
-  else {
-    if (typeof moneyStr === "number" && Number.isFinite(moneyStr)) {
-      mStr = (moneyStr as number).toString();
-    } else {
-      return false;
-    }    
-  }    
-  // test comma locations (decimal point ok, leading '-' and/or '$' ok)
-  const regexWithCommas = /^-?\$?(\d{1,3})(,\d{3})*(\.\d+)?$/;
-  const regexWithoutCommas = /^-?\$?\d+(\.\d+)?$/;
-  if (!(regexWithCommas.test(mStr) || regexWithoutCommas.test(mStr))) return false;
-
-  // remove commas
-  mStr = mStr.replace(/,/g, "");
-  // remove $ (ig got here, passed location of $ tests above)
-  mStr = mStr.replace('$', "");  
-  if (!mStr) return false;
   try {
-    const numVal = Number(mStr)
-    if (isNaN(numVal) || numVal < min || numVal > max) {
-      return false
-    }
-    return true
+    const mNum = moneyNumber(moneyStr)
+    if (mNum == null) return false
+    return mNum >= min && mNum <= max
   } catch (error) {
     return false
-  }  
+  }
 }
 
 /**
@@ -68,8 +45,7 @@ export const validBtdbMoney = (moneyStr: unknown , min: number = 0, max: number 
   // a blank value for money is OK
   // all 0's is ok
   if (mStr === "" || mStr.replace(/^0+/, '') === "") {
-    mStr = "0";
-    // return true;
+    mStr = "0";    
   }
   if (!mStr) return false;
   return validMoney(mStr, min, max);
