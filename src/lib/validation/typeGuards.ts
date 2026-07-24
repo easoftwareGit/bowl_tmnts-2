@@ -22,6 +22,7 @@ import type {
 } from "@/lib/types/types";
 
 import { SquadStage } from "@prisma/client";
+import { ptGame, ptLastGame, ptSeries } from "./constants";
 
 /* --------------------------------------------------
    basic helpers
@@ -273,9 +274,9 @@ export const isPlayerData = (obj: unknown): obj is playerDataType => {
 };
 
 const potCategoryValues: readonly potCategoriesTypes[] = [
-  "Game",
-  "Last Game",
-  "Series",
+  ptGame,
+  ptLastGame,
+  ptSeries,
   "",
 ] as const;
 

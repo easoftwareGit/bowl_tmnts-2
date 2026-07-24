@@ -1,3 +1,4 @@
+import { ptGame, ptLastGame, ptSeries } from "@/lib/validation/constants";
 import {
   isBrktData,
   isBrktDataFromPrisma,
@@ -41,9 +42,9 @@ describe("typeGuards", () => {
 
   describe("isPotCategoryType", () => {
     it("returns true for valid potCategoriesTypes", () => {
-      expect(isPotCategoryType("Game")).toBe(true);
-      expect(isPotCategoryType("Last Game")).toBe(true);
-      expect(isPotCategoryType("Series")).toBe(true);
+      expect(isPotCategoryType(ptGame)).toBe(true);
+      expect(isPotCategoryType(ptLastGame)).toBe(true);
+      expect(isPotCategoryType(ptSeries)).toBe(true);
       expect(isPotCategoryType("")).toBe(true);
     });
 

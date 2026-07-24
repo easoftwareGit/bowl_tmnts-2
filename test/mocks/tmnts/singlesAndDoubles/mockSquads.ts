@@ -38,6 +38,7 @@ import {
   initPotEntry,
   initSquad,
 } from "@/lib/db/initVals";
+import { ptGame, ptLastGame, ptSeries } from "@/lib/validation/constants";
 
 export const tmntToDelId = "tmt_467e51d71659d2e412cbc64a0d19ecb4";
 
@@ -513,7 +514,7 @@ export const mockPotsToPost: potType[] = [
     div_id: "div_18997d3fd7ef4eb7ad2b53a9e93f9ce5",
     sort_order: 1,
     fee: "20",
-    pot_type: "Game" as potCategoriesTypes,
+    pot_type: ptGame as potCategoriesTypes,
   },
   {
     ...initPot,
@@ -522,7 +523,7 @@ export const mockPotsToPost: potType[] = [
     div_id: "div_18997d3fd7ef4eb7ad2b53a9e93f9ce5",
     sort_order: 2,
     fee: "10",
-    pot_type: "Last Game" as potCategoriesTypes,
+    pot_type: ptLastGame as potCategoriesTypes,
   },
   {
     ...initPot,
@@ -531,7 +532,7 @@ export const mockPotsToPost: potType[] = [
     div_id: "div_18997d3fd7ef4eb7ad2b53a9e93f9ce5",
     sort_order: 3,
     fee: "5",
-    pot_type: "Series" as potCategoriesTypes,
+    pot_type: ptSeries as potCategoriesTypes,
   },
 ];
 

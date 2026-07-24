@@ -17,7 +17,7 @@ import {
   userId,
 } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { SquadStage } from "@prisma/client";
-import { maxTmntNameLength } from "@/lib/validation/constants";
+import { maxTmntNameLength, ptSeries } from "@/lib/validation/constants";
 import { cloneDeep } from "lodash";
 import { addDays } from "date-fns";
 
@@ -1265,7 +1265,7 @@ describe("Tmnts - API: /api/tmnts", () => {
       tmntEntries.divs[0].div_name = 'DoNotUpdate';
       tmntEntries.squads[0].squad_name = 'DoNotUpdate';
       tmntEntries.lanes[0].lane_number = 100;
-      tmntEntries.pots[0].pot_type = 'Series';
+      tmntEntries.pots[0].pot_type = ptSeries;
       tmntEntries.brkts[0].start = 2;
       tmntEntries.elims[0].start = 2;
       // values that will update
@@ -1417,7 +1417,7 @@ describe("Tmnts - API: /api/tmnts", () => {
       tmntEntries.divs[0].div_name = 'DoNotUpdate';
       tmntEntries.squads[0].squad_name = 'DoNotUpdate';
       tmntEntries.lanes[0].lane_number = 100;
-      tmntEntries.pots[0].pot_type = 'Series';
+      tmntEntries.pots[0].pot_type = ptSeries;
       tmntEntries.brkts[0].start = 2;
       tmntEntries.elims[0].start = 2;
       // values that will update
@@ -1485,7 +1485,7 @@ describe("Tmnts - API: /api/tmnts", () => {
       tmntEntries.divs[0].div_name = 'DoNotUpdate';
       tmntEntries.squads[0].squad_name = 'DoNotUpdate';
       tmntEntries.lanes[0].lane_number = 100;
-      tmntEntries.pots[0].pot_type = 'Series';
+      tmntEntries.pots[0].pot_type = ptSeries;
       tmntEntries.brkts[0].start = 2;
       tmntEntries.elims[0].start = 2;
       // values that will update

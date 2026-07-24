@@ -16,6 +16,11 @@ jest.mock("@/app/reports/components/GridScoresReport", () => ({
   default: jest.fn(() => null),
 }));
 
+jest.mock("@/app/reports/components/BalanceSheetReport.tsx", () => ({
+  __esModule: true,
+  default: jest.fn(() => null),
+}));
+
 jest.mock("@/app/reports/components/ReportNotFound", () => ({
   __esModule: true,
   default: jest.fn(() => null),
@@ -24,6 +29,7 @@ jest.mock("@/app/reports/components/ReportNotFound", () => ({
 import RecapsPerPairReport from "@/app/reports/components/RecapsPerPairReport";
 import RecapsPerTeamReport from "@/app/reports/components/RecapsPerTeamReport";
 import GridScoresReport from "@/app/reports/components/GridScoresReport";
+import BalanceSheetReport from "@/app/reports/components/BalanceSheetReport";
 import ReportNotFound from "@/app/reports/components/ReportNotFound";
 
 describe("getReportDocument", () => {
@@ -79,6 +85,21 @@ describe("getReportDocument", () => {
 
     expect(result.title).toBe("Scores Grid");
     expect(result.document.type).toBe(GridScoresReport);
+    expect(result.document.props).toEqual({
+      tmntFullData: mockTmntFullData,
+      onRender: mockOnRender,
+    });
+  });
+
+  it("returns Balance Sheet report for balanceSheet reportId", () => {
+    const result = getReportDocument(
+      "balanceSheet",
+      mockTmntFullData,
+      mockOnRender,
+    );
+
+    expect(result.title).toBe("Balance Sheet");
+    expect(result.document.type).toBe(BalanceSheetReport);
     expect(result.document.props).toEqual({
       tmntFullData: mockTmntFullData,
       onRender: mockOnRender,

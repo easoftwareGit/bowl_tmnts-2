@@ -7,6 +7,7 @@ import {
 } from "../mocks/tmnts/twoDivs/mockDivs";
 import { initDivs } from "@/lib/db/initVals";
 import { cloneDeep } from "lodash";
+import { ptSeries } from "@/lib/validation/constants";
 
 const { findDiv } = exportedForTesting;
 
@@ -87,7 +88,7 @@ describe("getName functions", () => {
     });    
     it("getPotName returns the correct short name for series", () => {
       const testPots = cloneDeep(mockPots);
-      testPots[1].pot_type = "Series"; // Change pot type to Series
+      testPots[1].pot_type = ptSeries; // Change pot type to Series
       const potName = getPotShortName(testPots[1], mockDivs);
       expect(potName).toBe("Scratch: Sr");
     });    

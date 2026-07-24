@@ -5,7 +5,7 @@ import type {
   potType,
   brktType,
   elimType,
-  HdcpForTypes,
+  HdcpForTypes,  
 } from "../../../lib/types/types";
 import { defaultHdcpFrom, initDiv } from "../../../lib/db/initVals";
 import { Tabs, Tab, OverlayTrigger, Tooltip } from "react-bootstrap";

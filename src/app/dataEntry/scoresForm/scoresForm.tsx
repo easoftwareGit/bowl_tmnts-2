@@ -44,6 +44,18 @@ type totalType = {
   totalPlusHdcp: number;
 }
 
+/*********************
+ * Toolbar Constants *
+ *********************/
+
+const TOOLBAR_IDS = {
+  CANCEL: "undo_all",
+  BACK: "back",
+  EDIT: "edit",
+  SAVE: "save",
+  SAVE_CLOSE: "done",
+} as const;
+
 interface ChildProps {
   rows: scoreEntryRow[];
   setRows: React.Dispatch<React.SetStateAction<scoreEntryRow[]>>;    
@@ -70,16 +82,6 @@ const ScoresEntryForm: React.FC<ChildProps> = ({
   
   const [confModalObj, setConfModalObj] = useState<modalObjectType>(initModalObj);
 
-  /***********************
-   * Toolbar Constants   *
-   ***********************/
-
-  const CANCEL_ID = "undo_all";
-  const BACK_ID = "back";
-  const EDIT_ID = "edit";
-  const SAVE_ID = "save";
-  const SAVE_CLOSE_ID = "done";
-
   /*******************
    * Toolbar Options *
    *******************/
@@ -88,31 +90,31 @@ const ScoresEntryForm: React.FC<ChildProps> = ({
     {
       text: "Double-click to edit a score",
       tooltipText: "Double-click to edit a score",
-      id: EDIT_ID,
+      id: TOOLBAR_IDS.EDIT,
       prefixIcon: "e-icons e-edit",
     },
     {
       text: "Save",
       tooltipText: "Save the scores",
-      id: SAVE_ID,
+      id: TOOLBAR_IDS.SAVE,
       prefixIcon: "e-icons e-check",
     },
     {
       text: "Save and Close",
       tooltipText: "Save the scores and return to the Run Tournament page",
-      id: SAVE_CLOSE_ID,
+      id: TOOLBAR_IDS.SAVE_CLOSE,
       prefixIcon: "e-icons e-update",
     },
     {
       text: "Cancel",
       tooltipText: "cancel all changes since last save",
-      id: CANCEL_ID,
+      id: TOOLBAR_IDS.CANCEL,
       prefixIcon: "e-icons e-cancel",
     },
     {
       text: "Back",
       tooltipText: "Back to the Run Tournament page",
-      id: BACK_ID,
+      id: TOOLBAR_IDS.BACK,
       prefixIcon: "e-icons e-back",
     },
   ];
@@ -248,7 +250,7 @@ const ScoresEntryForm: React.FC<ChildProps> = ({
     /**********
      * cancel *
      **********/
-    if (confModalObj.id === CANCEL_ID) {
+    if (confModalObj.id === TOOLBAR_IDS.CANCEL) {
       setConfModalObj(initModalObj); // reset modal object (hides modal)
 
       grid.editModule.batchCancel();
@@ -265,7 +267,7 @@ const ScoresEntryForm: React.FC<ChildProps> = ({
     /********
      * back *
      ********/
-    if (confModalObj.id === BACK_ID) {
+    if (confModalObj.id === TOOLBAR_IDS.BACK) {
       
       setConfModalObj(initModalObj); // reset modal object (hides modal)
 
@@ -368,7 +370,7 @@ const ScoresEntryForm: React.FC<ChildProps> = ({
     if (!grid) return;
 
     grid.toolbarModule.enableItems(
-      [SAVE_ID, SAVE_CLOSE_ID, CANCEL_ID],
+      [TOOLBAR_IDS.SAVE, TOOLBAR_IDS.SAVE_CLOSE, TOOLBAR_IDS.CANCEL],
       dataWasChanged
     );
   }, [dataWasChanged]);
@@ -524,32 +526,32 @@ const ScoresEntryForm: React.FC<ChildProps> = ({
     if (!grid) return;
 
     switch (args.item.id) {
-      case EDIT_ID:
+      case TOOLBAR_IDS.EDIT:
         beginToolbarEdit();
         break;
-      case SAVE_ID:
+      case TOOLBAR_IDS.SAVE:
         saveRequestedRef.current = true;
         closeAfterSaveRef.current = false;
         grid.editModule.batchSave();
         break;
-      case SAVE_CLOSE_ID:   
+      case TOOLBAR_IDS.SAVE_CLOSE:   
         saveRequestedRef.current = true;
         closeAfterSaveRef.current = true;
         grid.editModule.batchSave();
         break;
-      case CANCEL_ID:
+      case TOOLBAR_IDS.CANCEL:
         setConfModalObj({
           show: true,
-          id: CANCEL_ID,        
+          id: TOOLBAR_IDS.CANCEL,        
           title: cancelConfTitle,        
           message: 'Do you want to cancel edits?',
         });
         break;          
-      case BACK_ID:
+      case TOOLBAR_IDS.BACK:
         if (dataWasChanged) {
           setConfModalObj({
             show: true,
-            id: BACK_ID,
+            id: TOOLBAR_IDS.BACK,
             title: cancelConfTitle,
             message: 'There are unsaved edits. Do you want to cancel edits and return to the Run Tournament page?',
           });

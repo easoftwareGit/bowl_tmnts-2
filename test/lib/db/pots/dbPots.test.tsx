@@ -13,6 +13,7 @@ import {
   extractPots,
 } from "@/lib/db/pots/dbPots";
 import { cloneDeep } from "lodash";
+import { ptGame, ptLastGame } from "@/lib/validation/constants";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -186,7 +187,7 @@ describe("dbPots", () => {
         div_id: "div_1f42042f9ef24029a0a2d48cc276a087",
         sort_order: 1,
         fee: "10",
-        pot_type: "Game",
+        pot_type: ptGame,
       },
       {
         ...initPot,
@@ -195,7 +196,7 @@ describe("dbPots", () => {
         div_id: "div_1f42042f9ef24029a0a2d48cc276a087",
         sort_order: 2,
         fee: "10",
-        pot_type: "Last Game",
+        pot_type: ptLastGame,
       },
     ];
 
@@ -256,7 +257,7 @@ describe("dbPots", () => {
         div_id: "div_1f42042f9ef24029a0a2d48cc276a087",
         sort_order: 1,
         fee: "10",
-        pot_type: "Game",
+        pot_type: ptGame,
       },
       {
         ...initPot,
@@ -265,7 +266,7 @@ describe("dbPots", () => {
         div_id: "div_1f42042f9ef24029a0a2d48cc276a087",
         sort_order: 2,
         fee: "10",
-        pot_type: "Last Game",
+        pot_type: ptLastGame,
       },
     ];
 
@@ -402,7 +403,7 @@ describe("dbPots", () => {
       div_id: "div_f30aea2c534f4cfe87f4315531cef8ef",
       sort_order: 13,
       fee: "13",
-      pot_type: "Last Game" as potCategoriesTypes,
+      pot_type: ptLastGame as potCategoriesTypes,
     };
 
     const putUrl = potUrl + potToPut.id;
@@ -414,7 +415,7 @@ describe("dbPots", () => {
       div_id: "div_f30aea2c534f4cfe87f4315531cef8ef",
       sort_order: 1,
       fee: "20",
-      pot_type: "Game" as potCategoriesTypes,
+      pot_type: ptGame as potCategoriesTypes,
     };
 
     const doReset = async () => {

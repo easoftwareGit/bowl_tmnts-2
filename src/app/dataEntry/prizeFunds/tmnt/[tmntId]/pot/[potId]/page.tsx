@@ -28,8 +28,8 @@ import { initModalObj, modalObjectType } from "@/components/modal/modalObjType";
 import { btDbUuid } from "@/lib/uuid";
 import { getPotName } from "@/lib/getName";
 import { potPfsToPrizeFunds } from "@/app/dataEntry/prizeFunds/prizeFundGrid/convertPfTypes";
+import { ptGame } from "@/lib/validation/constants";
 import "../../../../prizeFund.css";
-import { moneyNumber } from "@/lib/currency/convert";
 
 export default function PotPrizeFundEntry() {
   const params = useParams();
@@ -56,11 +56,15 @@ export default function PotPrizeFundEntry() {
     (state: RootState) => state.tmntFullData.tmntFullData,
   );
   const pot = tmntData?.pots?.find((pot) => pot.id === potId);
+  const potType = pot?.pot_type;   
   
   const potName = getPotName(pot, tmntData?.divs || []); 
-  const games = tmntData?.events[0]?.games || 0;
+  // const games = tmntData?.events[0]?.games || 0;
+  const games = (tmntData && tmntData.events && tmntData.events.length > 0)
+    ? tmntData.events[0].games
+    : 0;
   const potEntryFees =
-    tmntData.moneys.find(
+    tmntData?.moneys?.find(
       (money) =>        
         money.descrip === "ENTRIES" &&
         money.flow === "IN" &&
@@ -69,7 +73,7 @@ export default function PotPrizeFundEntry() {
         money.elim_id === null,
     )?.amount ?? 0;
   const potPrizeFund =
-    tmntData.moneys.find(
+    tmntData?.moneys?.find(
       (money) =>        
         money.descrip === "PRIZEFUND" &&
         money.flow === "OUT" &&
@@ -78,7 +82,7 @@ export default function PotPrizeFundEntry() {
         money.elim_id === null,
     )?.amount ?? 0;
   const potExpenses =
-    tmntData.moneys.find(
+    tmntData?.moneys?.find(
       (money) =>        
         money.descrip === "EXPENSES" &&
         money.flow === "OUT" &&
@@ -90,16 +94,23 @@ export default function PotPrizeFundEntry() {
   const potEntries = tmntData?.potEntries?.filter((entry) => entry.pot_id === potId);
   const numPlayers = potEntries?.length || 0;
 
+  // if potPfs is empty, or all potPfs belong to the current pot
+  const potPfsBelongToCurrentPot =
+    potPfs.length === 0 ||
+    potPfs.every((potPf) => potPf.pot_id === potId);
+
   const [rows, setRows] = useState<prizeFundEntryRow[]>([]);
 
   // get original rows for change detection (useRef -> no re-renders)
   const origRowsRef = useRef<prizeFundEntryRow[]>([]);
+  // get original potId for change detection
+  const initializedPotIdRef = useRef<string | null>(null);
   
   const [cashers, setCashers] = useState(1);
   const [cashersErr, setCashersErr] = useState("");
   const [expenses, setExpenses] = useState(potExpenses);  
   const [expensesText, setExpensesText] = useState(potExpenses.toFixed(2));
-  const [allGamesPrizeFund, setAllGamesPrizeFund] = useState(potEntryFees - potExpenses);
+  const [totalPotPrizeFund, setTotalPotPrizeFund] = useState(potEntryFees - potExpenses);
   const [expensesErr, setExpensesErr] = useState("");
   const [prizeFund, setPrizeFund] = useState(0);
   const [perGame, setPerGame] = useState(0);
@@ -136,7 +147,7 @@ export default function PotPrizeFundEntry() {
 
   // Fetch tournament if missing
   useEffect(() => {
-    if ((!tmntData || tmntData.tmnt.id !== tmntId) && tmntId) {
+    if ((!tmntData || tmntData?.tmnt?.id !== tmntId) && tmntId) {
       dispatch(fetchTmntFullData(tmntId));
     }
   }, [tmntData, tmntId, dispatch]);
@@ -159,50 +170,59 @@ export default function PotPrizeFundEntry() {
   useEffect(() => {
     if (
       potPfsLoadStatus !== "succeeded" ||
+      !potPfsBelongToCurrentPot ||
       !tmntData ||
-      tmntData.tmnt.id !== tmntId
-    )
+      tmntData.tmnt?.id !== tmntId
+    ) {
       return;
-    if (initializedRef.current) return; // run only once
+    }
 
-    const calcPerGame = games > 0 ? potPrizeFund / games : 0;    
-    const numCashers = potPfs.length;    
+    if (initializedRef.current) return;
+
+    const calcPerGame =
+      games > 0 ? potPrizeFund / games : 0;
+
+    const numCashers = potPfs.length;
     const prizeFunds = potPfsToPrizeFunds(potPfs);
-    const currentRows = populatePfRows(prizeFunds, potId, calcPerGame, numCashers);    
+
+    const popRowsPf =
+      potType === ptGame
+        ? calcPerGame
+        : potPrizeFund;
+
+    const currentRows = populatePfRows(
+      prizeFunds,
+      potId,
+      popRowsPf,
+      numCashers,
+    );
 
     setRows(currentRows);
-    origRowsRef.current = currentRows;
-    setCashers(numCashers);    
+    origRowsRef.current = currentRows.map((row) => ({
+      ...row,
+    }));
+
+    setCashers(numCashers);
     setExpenses(potExpenses);
     setExpensesText(potExpenses.toFixed(2));
     setPrizeFund(potPrizeFund);
     setPerGame(calcPerGame);
 
-    if (numCashers > 0) {
-      lastCashersRef.current = numCashers;
-    } else {
-      lastCashersRef.current = 0;
-    }
-    if (potExpenses > 0) {
-      lastExpensesRef.current = potExpenses;
-    } else {
-      lastExpensesRef.current = 0;
-    }
+    lastCashersRef.current = numCashers;
+    lastExpensesRef.current = potExpenses;
 
     initializedRef.current = true;
   }, [
     potPfsLoadStatus,
-    tmntData,    
+    potPfsBelongToCurrentPot,
+    tmntData,
     tmntId,
     potPfs,
     potId,
     potPrizeFund,
     potExpenses,
     games,
-    setRows,
-    setCashers,
-    setExpenses,
-    setExpensesText,
+    potType,
   ]);
 
   /**
@@ -260,7 +280,7 @@ export default function PotPrizeFundEntry() {
     setConfModalObj(initModalObj); // reset modal object (hides modal)
   };
 
-  const gotTmntData = tmntData.tmnt.id === tmntId;
+  const gotTmntData = tmntData?.tmnt?.id === tmntId;
 
   /**
    * Applies a requested number of cashers to the prize-fund grid.
@@ -462,7 +482,7 @@ export default function PotPrizeFundEntry() {
     if (value == null || Number.isNaN(value)) {
       setExpenses(0);
       setExpensesText("0.00");
-      setAllGamesPrizeFund(potEntryFees);
+      setTotalPotPrizeFund(potEntryFees);
       return;
     }
 
@@ -473,12 +493,9 @@ export default function PotPrizeFundEntry() {
     lastExpensesRef.current = safeValue;    
 
     const allGamesPf = potEntryFees - safeValue;
-    setAllGamesPrizeFund(allGamesPf);
+    setTotalPotPrizeFund(allGamesPf);
 
     const newPerGame = (games > 0 ? allGamesPf / games : 0);
-
-    console.log(newPerGame);
-    
     setPerGame(newPerGame);    
   }
 
@@ -554,9 +571,10 @@ export default function PotPrizeFundEntry() {
 
   const canRender =
     potPfsLoadStatus === "succeeded" &&
+    potPfsBelongToCurrentPot &&
     tmntLoadStatus === "succeeded" &&
     gotTmntData;
-
+  
   return (
     <>
       <WaitModal show={isLoading} message="Loading..." />
@@ -686,32 +704,34 @@ export default function PotPrizeFundEntry() {
                   id="prizeFund"
                   name="prizeFund"
                   className="form-control text-end money-align"
-                  value={allGamesPrizeFund}
+                  value={totalPotPrizeFund}
                   disabled={true}
                 />
               </div>
             </div>
-            <div className="row g-3 mb-0">
-              <div className="col-md-5">
-                <label htmlFor="perGame" className="form-label">
-                  Per Game
-                </label>
-              </div>
-              <div className="col-md-4">
-                <EaCurrencyInput
-                  id="perGame"
-                  name="perGame"
-                  className="form-control text-end money-align"
-                  value={perGame}
-                  disabled={true}
-                />
-              </div>
-            </div>
+            {potType === ptGame && (
+              <div className="row g-3 mb-0">
+                <div className="col-md-5">
+                  <label htmlFor="perGame" className="form-label">
+                    Per Game
+                  </label>
+                </div>
+                <div className="col-md-4">
+                  <EaCurrencyInput
+                    id="perGame"
+                    name="perGame"
+                    className="form-control text-end money-align"
+                    value={perGame}
+                    disabled={true}
+                  />
+                </div>
+              </div>              
+            )}
             <PotPrizeFundGrid
               ref={prizeFundGridRef}
               rows={rows}
               setRows={setRows}              
-              totalPrizeFund={perGame}
+              totalPrizeFund={potType === ptGame ? perGame : totalPotPrizeFund}
               enableEditing={true}              
               gridDataWasChanged={gridDataWasChanged}
               onGridDataChanged={() => setGridDataWasChanged(true)}

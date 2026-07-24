@@ -3,6 +3,11 @@ import type { SquadStage, MoneyDescrip, MoneyFlow } from "@prisma/client";
 import { ErrorCode, tmntFormParent } from "@/lib/enums/enums";
 import { idTypesArray } from "../validation/validation";
 import type { ReactNode } from "react";
+import {
+  ptGame,
+  ptLastGame,
+  ptSeries,
+} from "@/lib/validation/constants";
 
 export type roleTypes = "ADMIN" | "DIRECTOR" | "USER"
 
@@ -280,7 +285,11 @@ export type pairsOfLanesType = {
   in_use: boolean,
 }
 
-export type potCategoriesTypes = "Game" | "Last Game" | "Series" | "";
+export type potCategoriesTypes = 
+  | typeof ptGame
+  | typeof ptLastGame
+  | typeof ptSeries
+  | "";
 
 export type PotCategoryObjType = {
   id: number,

@@ -5,7 +5,7 @@ import { testBasePotsApi } from "../../../testApi";
 import type { potCategoriesTypes, potType } from "@/lib/types/types";
 import { initPot} from "@/lib/db/initVals";
 import { isValidBtDbId } from "@/lib/validation/validation";
-import { maxSortOrder } from "@/lib/validation/constants";
+import { maxSortOrder, ptLastGame, ptSeries } from "@/lib/validation/constants";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -313,26 +313,26 @@ describe('Pots - API: /api/pots', () => {
     it('should create a new pot with a pot_type of "Last Game"', async () => {
       const lgPot = {
         ...potToPost,
-        pot_type: "Last Game" as potCategoriesTypes,
+        pot_type: ptLastGame as potCategoriesTypes,
       }
       const potJSON = JSON.stringify(lgPot);
       const response = await privateApi.post(url, potJSON);
       expect(response.status).toBe(201);
       const postedPot = response.data.pot;
       createdPot = true;
-      expect(postedPot.pot_type).toBe('Last Game');
+      expect(postedPot.pot_type).toBe(ptLastGame);
     })
     it('should create a new pot with a pot_type of "Series"', async () => {
       const seriesPot = {
         ...potToPost,
-        pot_type: "Series",
+        pot_type: ptSeries as potCategoriesTypes,
       }
       const potJSON = JSON.stringify(seriesPot);
       const response = await privateApi.post(url, potJSON);
       expect(response.status).toBe(201);
       const postedPot = response.data.pot;
       createdPot = true;
-      expect(postedPot.pot_type).toBe('Series');
+      expect(postedPot.pot_type).toBe(ptSeries);
     })
     it('should create a new pot with sanitzied values', async () => { 
       const toSanitizePot = {
@@ -647,7 +647,7 @@ describe('Pots - API: /api/pots', () => {
       squad_id: 'sqd_3397da1adc014cf58c44e07c19914f72',
       div_id: 'div_29b9225d8dd44a4eae276f8bde855729',
       fee: '13',
-      pot_type: "Series",
+      pot_type: ptSeries,
       sort_order: 10,
     }
 
@@ -999,7 +999,7 @@ describe('Pots - API: /api/pots', () => {
     })
     it('should patch pot_type for a pot by ID', async () => {
       const patchPot = {        
-        pot_type: 'Series',
+        pot_type: ptSeries,
       }
       const potJSON = JSON.stringify(patchPot);
       const response = await privateApi.patch(onePotUrl + toPatchId, potJSON);

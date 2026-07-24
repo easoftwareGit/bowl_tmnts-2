@@ -29,6 +29,7 @@ import type {
   divPfType,
   potPfType,    
 } from "@/lib/types/types";
+import { ptGame, ptLastGame } from "@/lib/validation/constants";
 import { MoneyDescrip, MoneyFlow, SquadStage } from "@prisma/client";
 
 export const brktId1 = "brk_0123f51cc1ca4748ad5e8abab88277ea";
@@ -110,11 +111,46 @@ export const moneyId5 = "mon_0123e6fcaa8343d0b18b56a71e8c160e";
 export const moneyId6 = "mon_0123e6fcaa8343d0b18b56a71e8c160f";
 export const moneyId7 = "mon_0123e6fcaa8343d0b18b56a71e8c1610";
 export const moneyId8 = "mon_0123e6fcaa8343d0b18b56a71e8c1611";
+export const moneyId9 = "mon_0123e6fcaa8343d0b18b56a71e8c1612";
+export const moneyId10 = "mon_0123e6fcaa8343d0b18b56a71e8c1613";
+export const moneyId11 = "mon_0123e6fcaa8343d0b18b56a71e8c1614";
+export const moneyId12 = "mon_0123e6fcaa8343d0b18b56a71e8c1615";
+export const moneyId13 = "mon_0123e6fcaa8343d0b18b56a71e8c1616";
+export const moneyId14 = "mon_0123e6fcaa8343d0b18b56a71e8c1617";
+export const moneyId15 = "mon_0123e6fcaa8343d0b18b56a71e8c1618";
+export const moneyId16 = "mon_0123e6fcaa8343d0b18b56a71e8c1619";
+export const moneyId17 = "mon_0123e6fcaa8343d0b18b56a71e8c161a";
+export const moneyId18 = "mon_0123e6fcaa8343d0b18b56a71e8c161b";
+export const moneyId19 = "mon_0123e6fcaa8343d0b18b56a71e8c161c";
+export const moneyId20 = "mon_0123e6fcaa8343d0b18b56a71e8c161d";
+export const moneyId21 = "mon_0123e6fcaa8343d0b18b56a71e8c161e";
+export const moneyId22 = "mon_0123e6fcaa8343d0b18b56a71e8c161f";
+export const moneyId23 = "mon_0123e6fcaa8343d0b18b56a71e8c1620";
+export const moneyId24 = "mon_0123e6fcaa8343d0b18b56a71e8c1621";
+export const moneyId25 = "mon_0123e6fcaa8343d0b18b56a71e8c1622";
+export const moneyId26 = "mon_0123e6fcaa8343d0b18b56a71e8c1623";
+export const moneyId27 = "mon_0123e6fcaa8343d0b18b56a71e8c1624";
+export const moneyId28 = "mon_0123e6fcaa8343d0b18b56a71e8c1625";
+export const moneyId29 = "mon_0123e6fcaa8343d0b18b56a71e8c1626";
+export const moneyId30 = "mon_0123e6fcaa8343d0b18b56a71e8c1627";
+export const moneyId31 = "mon_0123e6fcaa8343d0b18b56a71e8c1628";
+export const moneyId32 = "mon_0123e6fcaa8343d0b18b56a71e8c1629";
+export const moneyId33 = "mon_0123e6fcaa8343d0b18b56a71e8c162a";
 
 export const oneBrktId1 = "obk_01238f787de942a1a92aaa2df3e7c18a";
 export const oneBrktId2 = "obk_01238f787de942a1a92aaa2df3e7c18b";
 export const oneBrktId3 = "obk_01238f787de942a1a92aaa2df3e7c18c";
 export const oneBrktId4 = "obk_01238f787de942a1a92aaa2df3e7c18d";
+
+export const penId1 = "pen_0123111c721147f7a2bf2702056947ca";
+export const penId2 = "pen_0123111c721147f7a2bf2702056947cb";
+export const penId3 = "pen_0123111c721147f7a2bf2702056947cc";
+export const penId4 = "pen_0123111c721147f7a2bf2702056947cd";
+export const penId5 = "pen_0123111c721147f7a2bf2702056947ce";
+export const penId6 = "pen_0123111c721147f7a2bf2702056947cf";
+export const penId7 = "pen_0123111c721147f7a2bf2702056947d0";
+export const penId8 = "pen_0123111c721147f7a2bf2702056947d1";
+
 export const playerId1 = "ply_0123e9e6b6e4c5b9f6b7d9e7f9b6c5aa";
 export const playerId2 = "ply_0123e9e6b6e4c5b9f6b7d9e7f9b6c5bb";
 export const playerId3 = "ply_0123e9e6b6e4c5b9f6b7d9e7f9b6c5cc";
@@ -150,7 +186,6 @@ export const mockDivPrizeFund = 1575;
 export const mockPot1PrizeFund = 660;
 export const mockPot1PerGamePrizeFund = 110;
 export const mockPot2PrizeFund = 275;
-export const mockPot2PerGamePrizeFund = 275;
 
 export const mockUser: userFormType  = {
   id: userId,
@@ -509,9 +544,9 @@ export const mockTmntFullData: tmntFullType = {
       div_id: divId1,      
       descrip: MoneyDescrip.ENTRIES,
       flow: MoneyFlow.IN,
-      amount: 90,
+      amount: 40,
       sort_order: 4,
-      brkt_id: brktId1,
+      pot_id: potId2,
     },
     {
       ...blankTmntMoney,
@@ -523,7 +558,7 @@ export const mockTmntFullData: tmntFullType = {
       flow: MoneyFlow.IN,
       amount: 90,
       sort_order: 5,
-      brkt_id: brktId2,
+      brkt_id: brktId1,
     },
     {
       ...blankTmntMoney,
@@ -533,9 +568,9 @@ export const mockTmntFullData: tmntFullType = {
       div_id: divId1,      
       descrip: MoneyDescrip.ENTRIES,
       flow: MoneyFlow.IN,
-      amount: 10,
+      amount: 90,
       sort_order: 6,
-      elim_id: elimId1,
+      brkt_id: brktId2,
     },
     {
       ...blankTmntMoney,
@@ -547,7 +582,7 @@ export const mockTmntFullData: tmntFullType = {
       flow: MoneyFlow.IN,
       amount: 10,
       sort_order: 7,
-      elim_id: elimId2,
+      elim_id: elimId1,
     },
     {
       ...blankTmntMoney,
@@ -555,10 +590,306 @@ export const mockTmntFullData: tmntFullType = {
       event_id: eventId1,
       squad_id: squadId1,
       div_id: divId1,      
+      descrip: MoneyDescrip.ENTRIES,
+      flow: MoneyFlow.IN,
+      amount: 10,
+      sort_order: 8,
+      elim_id: elimId2,
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId9,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
+      descrip: MoneyDescrip.LINEAGE,
+      flow: MoneyFlow.OUT,
+      amount: 21 * 6 * 8, // events[0].lineage * events[0].games * players.length
+      sort_order: 9,      
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId10,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
+      descrip: MoneyDescrip.OTHER,
+      flow: MoneyFlow.OUT,
+      amount: 2 * 8, // events[0].other * players.length
+      sort_order: 10,      
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId11,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
+      descrip: MoneyDescrip.EXPENSES,
+      flow: MoneyFlow.OUT,
+      amount: 5 * 8, // events[0].expenses * players.length 
+      sort_order: 11,      
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId12,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
       descrip: MoneyDescrip.PRIZEFUND,
       flow: MoneyFlow.OUT,
-      amount: mockDivPrizeFund,
-      sort_order: 8,      
+      amount: (57 * 8) + 0, // (events[0].prizefund * players.length) + events[0].added_money
+      sort_order: 12,      
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId13,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
+      pot_id: potId1,
+      descrip: MoneyDescrip.PRIZEFUND,
+      flow: MoneyFlow.OUT,
+      amount: 80 - 10, // (pots[0].fee * number of pot[0] entries) - pot1 expenses
+      sort_order: 13,
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId14,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
+      pot_id: potId1,
+      descrip: MoneyDescrip.EXPENSES,
+      flow: MoneyFlow.OUT,
+      amount: 10, 
+      sort_order: 14,
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId15,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
+      pot_id: potId2,
+      descrip: MoneyDescrip.PRIZEFUND,
+      flow: MoneyFlow.OUT,
+      amount: 40 - 5, // (pots[1].fee * number of pot[1] entries) - pot2 expenses
+      sort_order: 15,
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId16,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
+      pot_id: potId2,
+      descrip: MoneyDescrip.EXPENSES,
+      flow: MoneyFlow.OUT,
+      amount: 5, // (pots[1].fee * number of pot[1] entries) - pot2 expenses
+      sort_order: 16,
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId17,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
+      brkt_id: brktId1,
+      descrip: MoneyDescrip.PRIZEFUND,
+      flow: MoneyFlow.OUT,
+      amount: (17 * 8 * 5) + (4 * 6 * 5), // (#full brackets * 7 * entry fee) + (#1 bye brackets * 6 * entry fee)
+      sort_order: 17,
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId18,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
+      brkt_id: brktId1,
+      descrip: MoneyDescrip.EXPENSES,
+      flow: MoneyFlow.OUT,
+      amount: (21 * 5), // (# brackets * entry fee)
+      sort_order: 18,
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId19,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
+      brkt_id: brktId1,
+      descrip: MoneyDescrip.REFUNDS,
+      flow: MoneyFlow.OUT,
+      amount: (4 * 5), // (# refunds * entry fee)
+      sort_order: 19,
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId20,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
+      brkt_id: brktId2,
+      descrip: MoneyDescrip.PRIZEFUND,
+      flow: MoneyFlow.OUT,
+      amount: (17 * 8 * 5) + (4 * 6 * 5), // (#full brackets * 7 * entry fee) + (#1 bye brackets * 6 * entry fee)
+      sort_order: 20,
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId21,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
+      brkt_id: brktId2,
+      descrip: MoneyDescrip.EXPENSES,
+      flow: MoneyFlow.OUT,
+      amount: (21 * 5), // (# brackets * entry fee)
+      sort_order: 21,
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId22,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
+      brkt_id: brktId2,
+      descrip: MoneyDescrip.REFUNDS,
+      flow: MoneyFlow.OUT,
+      amount: (4 * 5), // (# refunds * entry fee)
+      sort_order: 22,
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId23,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
+      brkt_id: elimId1,
+      descrip: MoneyDescrip.PRIZEFUND,
+      flow: MoneyFlow.OUT,
+      amount: (2 * 5) - 3, // (elims[0].fee * # elim[0] entries) - expenses
+      sort_order: 23,
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId24,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
+      brkt_id: elimId1,
+      descrip: MoneyDescrip.EXPENSES,
+      flow: MoneyFlow.OUT,
+      amount: 3, // elims[0].expenses
+      sort_order: 24,
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId25,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
+      brkt_id: elimId2,
+      descrip: MoneyDescrip.PRIZEFUND,
+      flow: MoneyFlow.OUT,
+      amount: (2 * 5) - 3, // (elims[0].fee * # elim[0] entries) - expenses
+      sort_order: 25,
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId26,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
+      brkt_id: elimId2,
+      descrip: MoneyDescrip.EXPENSES,
+      flow: MoneyFlow.OUT,
+      amount: 3, // elims[0].expenses
+      sort_order: 26,
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId27,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
+      descrip: MoneyDescrip.EXPENSES,
+      flow: MoneyFlow.OUT,
+      amount: 0,
+      sort_order: 27,
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId28,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
+      pot_id: potId1,
+      descrip: MoneyDescrip.EXPENSES,
+      flow: MoneyFlow.OUT,
+      amount: 80 - 10, // (pots[0].fee * number of pot[0] entries) - pot1 expenses
+      sort_order: 28,
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId29,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,      
+      pot_id: potId2,
+      descrip: MoneyDescrip.EXPENSES,
+      flow: MoneyFlow.OUT,
+      amount: 40 - 5, // (pots[1].fee * number of pot[1] entries) - pot2 expenses
+      sort_order: 29,
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId30,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,
+      brkt_id: brktId1,
+      descrip: MoneyDescrip.EXPENSES,
+      flow: MoneyFlow.OUT,
+      amount: (21 * 5), // (# brackets * entry fee)
+      sort_order: 30,
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId31,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,
+      brkt_id: brktId2,
+      descrip: MoneyDescrip.EXPENSES,
+      flow: MoneyFlow.OUT,
+      amount: (21 * 5), // (# brackets * entry fee)
+      sort_order: 31,
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId32,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,
+      elim_id: elimId1,
+      descrip: MoneyDescrip.EXPENSES,
+      flow: MoneyFlow.OUT,
+      amount: 3, // elims[0].expenses
+      sort_order: 32,
+    },
+    {
+      ...blankTmntMoney,
+      id: moneyId33,
+      event_id: eventId1,
+      squad_id: squadId1,
+      div_id: divId1,
+      brkt_id: elimId2,
+      descrip: MoneyDescrip.EXPENSES,
+      flow: MoneyFlow.OUT,
+      amount: 3, // elims[0].expenses
+      sort_order: 33,
     },
   ],
   oneBrkts: [
@@ -660,31 +991,59 @@ export const mockTmntFullData: tmntFullType = {
   potEntries: [
     {
       ...blankPotEntry,
-      id: "pen_0123111c721147f7a2bf2702056947ca",
+      id: penId1,
       pot_id: potId1,
       player_id: playerId1,
       fee: "20",
     },
     {
       ...blankPotEntry,
-      id: "pen_0123111c721147f7a2bf2702056947cb",
+      id: penId2,
       pot_id: potId1,
       player_id: playerId2,
       fee: "20",
     },
     {
       ...blankPotEntry,
-      id: "pen_0123111c721147f7a2bf2702056947cc",
+      id: penId3,
       pot_id: potId1,
       player_id: playerId3,
       fee: "20",
     },
     {
       ...blankPotEntry,
-      id: "pen_0123111c721147f7a2bf2702056947cd",
+      id: penId4,
       pot_id: potId1,
       player_id: playerId4,
       fee: "20",
+    },
+    {
+      ...blankPotEntry,
+      id: penId5,
+      pot_id: potId2,
+      player_id: playerId1,
+      fee: "10",
+    },
+    {
+      ...blankPotEntry,
+      id: penId6,
+      pot_id: potId2,
+      player_id: playerId2,
+      fee: "10",
+    },
+    {
+      ...blankPotEntry,
+      id: penId7,
+      pot_id: potId2,
+      player_id: playerId3,
+      fee: "10",
+    },
+    {
+      ...blankPotEntry,
+      id: penId8,
+      pot_id: potId2,
+      player_id: playerId4,
+      fee: "10",
     },
   ],
   pots: [
@@ -695,7 +1054,7 @@ export const mockTmntFullData: tmntFullType = {
       div_id: divId1,
       sort_order: 1,
       fee: "20",
-      pot_type: "Game",
+      pot_type: ptGame,
     },
     {
       ...initPot,
@@ -704,7 +1063,7 @@ export const mockTmntFullData: tmntFullType = {
       div_id: divId1,
       sort_order: 2,
       fee: "10",
-      pot_type: "Last Game",
+      pot_type: ptLastGame,
     },
   ],
   squads: [
@@ -1142,19 +1501,19 @@ export const mockPotPfs: potPfType[] = [
     amount: 75,
   },
   {
-    id: divPfId2,
+    id: potPfId2,
     pot_id: potId1,
     position: 2,
     amount: 35,
   },
   {
-    id: divPfId3,
+    id: potPfId3,
     pot_id: potId2,
     position: 1,
     amount: 200,
   },
   {
-    id: divPfId4,
+    id: potPfId4,
     pot_id: potId2,
     position: 2,
     amount: 75,

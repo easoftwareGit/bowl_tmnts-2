@@ -268,6 +268,51 @@ describe("potPfsSlice reducer + thunk", () => {
       expect(state.error).toBe("Save failed");
       expect(state.potPfs).toEqual([]);
     });
+
+    it("dispatches rejected when savePotPfs is called with an empty array", async () => {
+      const store = configureStore({
+        reducer: {
+          potPfs: reducer,
+        },
+      });
+
+      const action = await store.dispatch(
+        savePotPfs([]) as any,
+      );
+
+      expect(savePotPfs.rejected.match(action)).toBe(true);
+      expect(mockedUpdateAllPotPfsForPot).not.toHaveBeenCalled();
+
+      const state = store.getState().potPfs;
+
+      expect(state.loadStatus).toBe("idle");
+      expect(state.saveStatus).toBe("failed");
+      expect(state.error).toBe("Invalid potPfs array");
+      expect(state.potPfs).toEqual([]);
+    });
+
+    it("dispatches rejected when savePotPfs is called with a non-array value", async () => {
+      const store = configureStore({
+        reducer: {
+          potPfs: reducer,
+        },
+      });
+
+      const action = await store.dispatch(
+        savePotPfs(undefined as any),
+      );
+
+      expect(savePotPfs.rejected.match(action)).toBe(true);
+      expect(mockedUpdateAllPotPfsForPot).not.toHaveBeenCalled();
+
+      const state = store.getState().potPfs;
+
+      expect(state.loadStatus).toBe("idle");
+      expect(state.saveStatus).toBe("failed");
+      expect(state.error).toBe("Invalid potPfs array");
+      expect(state.potPfs).toEqual([]);
+    });    
+    
   });
 
 });

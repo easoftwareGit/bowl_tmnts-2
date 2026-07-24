@@ -1,27 +1,22 @@
 import React from "react";
 import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import {
-  sortedDivsByOrder,
-  sortedPlayersByLanePos,
   tmntObjectHasData,
 } from "@/lib/reportTools";
 import type {
   tmntFullType,
-  divEntryType,
-  divType,
-  playerType,
   tmntMoneyType,
-  tmntFullDataErrType,
   reportGridCol,
 } from "@/lib/types/types";
 import { dateTo_MMddyyyy } from "@/lib/dateTools";
 import { MoneyDescrip, MoneyFlow } from "@prisma/client";
 import { getBrktOrElimName, getDivName, getPotName } from "@/lib/getName";
 import { localConfig } from "@/lib/currency/const";
-import { formatValue2Dec, formatValueSymbSep2Dec } from "@/lib/currency/formatValue";
+import { formatValueSymbSep2Dec } from "@/lib/currency/formatValue";
 
 type reportGroupType = {
   groupId: string,
+  mainGroup: string,
   rows: React.ReactNode[],
 };
 
@@ -183,17 +178,6 @@ const createHeaderCols = (page: number): reportGridCol[] => {
   return [descripCol, sourceCol, amountCol, totalCol];
 };
 
-const createGroupHeaderCols = (page: number): reportGridCol[] => {
-  const pageStr = page.toString();
-  const groupCol: reportGridCol = {
-    key: "group" + pageStr,
-    label: "",
-    width: descripColWidth + sourceColWidth,
-    align: "left",
-  };
-  return [groupCol];
-};
-
 /********************
  * create grid rows *
  ********************/
@@ -223,35 +207,18 @@ const createHeaderRow = (
 };
 
 const createGroupHeaderRow = (
-  groupText: string,
-  page: number,
-): React.ReactNode => {
-  const pageStr = page.toString();
-  let rowKey = "none" + pageStr;
-  switch (groupText) {
-    case "In Flows":
-      rowKey = "inFlows" + pageStr;
-      break;
-    case "Out Flows":
-      rowKey = "outFlows" + pageStr;
-      break;
-    case "Expenses":
-      rowKey = "expenses" + pageStr;
-      break;
-    default:
-      rowKey = "none" + pageStr;
-      break;
-  }
-  return (
-    <View key={rowKey} style={styles.tableRow}>
-      <Text style={styles.groupHeaderCell}>{groupText}</Text>
-    </View>
-  );
-};
+  key: string,
+  text: string,
+): React.ReactNode => (
+  <View key={key} style={styles.tableRow}>
+    <Text style={styles.groupHeaderCell}>{text}</Text>
+  </View>
+);
 
 const createFlowRow = (
   money: tmntMoneyType,
   tmntFullData: tmntFullType,
+  groupType: string,
   lastRow: boolean,
 ): React.ReactNode => {
   const descrip = getMoneyRowDecrip(money);
@@ -259,7 +226,7 @@ const createFlowRow = (
   const amount = formatValueSymbSep2Dec(money.amount!.toString(), localConfig);
   const cellStyle = lastRow ? styles.lastRowCell : styles.cell;
   return (
-    <View key={money.id} style={styles.tableRow}>
+    <View key={money.id + groupType} style={styles.tableRow}>
       <View
         key={money.id + "descrip"}
         style={[cellStyle, { width: descripColWidth }]}
@@ -531,7 +498,7 @@ export default function BalanceSheetReport({
   let pageNumber = 1;
 
   const headerCols = createHeaderCols(pageNumber);
-  const groupHeaderCols = createGroupHeaderCols(pageNumber);
+  // const groupHeaderCols = createGroupHeaderCols(pageNumber);
 
   const flushPage = () => {
     if (currentPageRows.length === 0) return;
@@ -577,29 +544,29 @@ export default function BalanceSheetReport({
     (total, inFlow) => total + inFlow.amount!,
     0,
   );
-  let lastRow = false;  
-  groupRows.push(createGroupHeaderRow("In Flows", pageNumber));
+  let lastRow = false;    
+  groupRows.push(createGroupHeaderRow(`inFlowsheader_${pageNumber}`, "In Flows"));
   for (let i = 0; i < inFlows.length; i++) {
     const inFlow = inFlows[i];
     if (i === inFlows.length - 1) lastRow = true;
-    groupRows.push(createFlowRow(inFlow, tmntFullData, lastRow));
+    groupRows.push(createFlowRow(inFlow, tmntFullData, "inflows", lastRow));
   }
   groupRows.push(createTotalRow("totalInFlows", totalInFlows));
-  reportGroups.push({groupId: "inFlows", rows: [...groupRows]});
+  reportGroups.push({groupId: "inFlows", mainGroup: "In Flows", rows: [...groupRows]});
 
   // out flows 
   groupRows.length = 0;
   const totalOutFlows = outFlows.reduce(
     (total, divOutFlows) => total + divOutFlows.amount!,
     0,
-  );
-  groupRows.push(createGroupHeaderRow("Out Flows", pageNumber));
+  );  
+  groupRows.push(createGroupHeaderRow(`outFlowsHeader_${pageNumber}`, "Out Flows"));
   let subGroupTotal = 0;  
   for (let i = 0; i < outFlows.length; i++) {
     const outFlow = outFlows[i];
     lastRow = isLastInSubGroup(i);
     subGroupTotal += outFlow.amount!;
-    groupRows.push(createFlowRow(outFlow, tmntFullData, lastRow));
+    groupRows.push(createFlowRow(outFlow, tmntFullData, "outFlows", lastRow));
     if (lastRow) {
       const keyStart = "subGroupTotal";
       let key = keyStart + outFlow.div_id; 
@@ -619,7 +586,7 @@ export default function BalanceSheetReport({
         groupRows.push(createTotalRow("totalOutFlows", totalOutFlows));
         groupRows.push(createEmptyRow(outFlow.id));
       }
-      reportGroups.push({groupId: key, rows: [...groupRows]});
+      reportGroups.push({groupId: key, mainGroup: "Out Flows", rows: [...groupRows]});
 
       // reset for next group
       groupRows.length = 0;
@@ -627,29 +594,58 @@ export default function BalanceSheetReport({
     }
   }
 
-  // add expenses excluding linage and other   
+  // add expenses excluding linage and other  
   groupRows.length = 0;
   const totalExpenses = expenses.reduce(
     (total, expenses) => total + expenses.amount!,
     0,
-  );
-  groupRows.push(createGroupHeaderRow("Expenses excluding Lineage and Other", pageNumber));  
+  );  
+  groupRows.push(createGroupHeaderRow(
+    `expensesHeader_${pageNumber}`,
+    "Expenses excluding Lineage and Other"
+  ));
   for (let i = 0; i < expenses.length; i++) { 
     const expense = expenses[i];    
-    groupRows.push(createFlowRow(expense, tmntFullData, lastRow));
+    groupRows.push(createFlowRow(expense, tmntFullData, "expenses",lastRow));
   }
   groupRows.push(createTotalRow("totalExpenses", totalExpenses, true));
-  reportGroups.push({groupId: "expenses", rows: [...groupRows]});
-
+  reportGroups.push({
+    groupId: "expenses",
+    mainGroup: "Expenses excluding Lineage and Other",
+    rows: [...groupRows]
+  });
+  
+  let lastMainGroupOnPage = "";
   // now flush/print the groups
   for (const reportGroup of reportGroups) {
-    // if at the end of a page, flush and start a new page
-    if (currentPageRows.length + reportGroup.rows.length > maxRowsPerPage) {
-      flushPage();            
+
+    // Will this group fit on the current page?
+    if (
+      currentPageRows.length > 0 &&
+      currentPageRows.length + reportGroup.rows.length > maxRowsPerPage
+    ) {
+      // Remember which main group was on the page we are finishing.
+      const previousMainGroup = lastMainGroupOnPage;
+
+      flushPage();
+
+      // if continuing the same main group, use a "continued" header.
+      if (reportGroup.mainGroup === previousMainGroup) {
+        currentPageRows.push(
+          createGroupHeaderRow(
+            `continued_${pageNumber}`,
+            `${reportGroup.mainGroup} - continued`,
+          )
+        );
+      }
     }
-    // add the group to the current page
+
     currentPageRows.push(...reportGroup.rows);
-  }
+
+    // Remember the last main group placed on this page.
+    lastMainGroupOnPage = reportGroup.mainGroup;
+  }  
+
   // flush the last page
   if (currentPageRows.length > 0) {
     flushPage();

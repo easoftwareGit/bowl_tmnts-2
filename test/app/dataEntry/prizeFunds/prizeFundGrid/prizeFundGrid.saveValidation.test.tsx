@@ -9,6 +9,18 @@ import {
   savedRowsCopy,
   standardBeforeEach,
 } from "./prizeFundGrid.testSetup";
+import { maxMoney } from "@/lib/validation/constants";
+import { formatValueSymbSep2Dec } from "@/lib/currency/formatValue";
+import { localConfig } from "@/lib/currency/const";
+
+const minAmountText = formatValueSymbSep2Dec(
+  "1.00",
+  localConfig,
+);
+const maxAmountText = formatValueSymbSep2Dec(
+  maxMoney.toString(),
+  localConfig,
+);
 
 describe("PrizeFundGrid save validation", () => {
   beforeEach(standardBeforeEach);
@@ -94,20 +106,16 @@ describe("PrizeFundGrid save validation", () => {
         expect(getLatestErrorModalProps()?.show).toBe(true);
       });
 
-      expect(getLatestErrorModalProps()?.title).toBe(
-        "Validate Error",
-      );
-
+      expect(getLatestErrorModalProps()?.title).toBe("Validate Error");
       expect(getLatestErrorModalProps()?.message).toBe(
-        "A lower finishing position cannot receive more prize money than a higher finishing position.",
+        "Prize amounts must be in descending order of finishing position.",
       );
-
       expect(mockBatchSave).not.toHaveBeenCalled();
     });
 
     it("allows prize fund amounts in descending order", async () => {
       const mRows = makeRows();
-      const rows = savedRowsCopy(mRows)
+      const rows = savedRowsCopy(mRows);
 
       const { user } = setup({
         rows,
@@ -123,12 +131,38 @@ describe("PrizeFundGrid save validation", () => {
 
       expect(getLatestErrorModalProps()?.show).toBe(false);
     });
+
+    it("allows equal prize amounts for consecutive finishing positions", async () => {
+      const rows = savedRowsCopy(makeRows());
+
+      // 100, 60, 60
+      rows[2].amount = rows[1].amount!;
+
+      const totalPrizeFund =
+        rows[0].amount! +
+        rows[1].amount! +
+        rows[2].amount!;
+
+      const { user } = setup({
+        rows,
+        currentRows: rows,
+        totalPrizeFund,
+      });
+
+      await clickSave(user);
+
+      await waitFor(() => {
+        expect(mockBatchSave).toHaveBeenCalledTimes(1);
+      });
+
+      expect(getLatestErrorModalProps()?.show).toBe(false);
+    });    
   });
 
   describe("changed batch records", () => {
     it("validates changed batch records instead of the original rows", async () => {
       const mRows = makeRows();
-      const rows = savedRowsCopy(mRows)
+      const rows = savedRowsCopy(mRows);
 
       const { user } = setup({
         rows,
@@ -154,15 +188,14 @@ describe("PrizeFundGrid save validation", () => {
       });
 
       expect(getLatestErrorModalProps()?.message).toBe(
-        "A lower finishing position cannot receive more prize money than a higher finishing position.",
+        "Prize amounts must be in descending order of finishing position.",
       );
-
       expect(mockBatchSave).not.toHaveBeenCalled();
     });
 
     it("uses changed batch records when the edit fixes the validation error", async () => {
       const mRows = makeRows();
-      const rows = savedRowsCopy(mRows.slice(0, 2)); 
+      const rows = savedRowsCopy(mRows.slice(0, 2));
       const tpf = rows[0].amount! + 80; // rows[0].amount! + 80, 100 + 80
       const { user } = setup({
         rows,
@@ -191,5 +224,116 @@ describe("PrizeFundGrid save validation", () => {
       expect(getLatestErrorModalProps()?.show).toBe(false);
     });
 
-  })
+  });
+
+  describe("amount range validation", () => {
+    it("shows an error when an amount is less than 1", async () => {
+      const rows = savedRowsCopy(makeRows());
+
+      rows[rows.length - 1].amount = 0; // change value in last row
+
+      const { user } = setup({
+        rows,
+        currentRows: rows,
+        totalPrizeFund: rows.reduce(
+          (sum, row) => sum + row.amount,
+          0,
+        ),
+      });
+
+      await clickSave(user);
+
+      await waitFor(() => {
+        expect(getLatestErrorModalProps()?.show).toBe(true);
+      });
+
+      expect(getLatestErrorModalProps()?.message).toBe(
+        `Prize amounts must be between ${minAmountText} and ${maxAmountText}.`
+      );
+
+      expect(mockBatchSave).not.toHaveBeenCalled();
+    });
+
+    it("shows an error when an amount is more than maxMoney", async () => {
+      const rows = savedRowsCopy(makeRows());
+
+      rows[0].amount = maxMoney + 1;
+
+      const { user } = setup({
+        rows,
+        currentRows: rows,
+        totalPrizeFund: rows.reduce(
+          (sum, row) => sum + row.amount,
+          0,
+        ),
+      });
+
+      await clickSave(user);
+
+      await waitFor(() => {
+        expect(getLatestErrorModalProps()?.show).toBe(true);
+      });
+
+      expect(getLatestErrorModalProps()?.message).toBe(
+        `Prize amounts must be between ${minAmountText} and ${maxAmountText}.`
+      );
+
+      expect(mockBatchSave).not.toHaveBeenCalled();
+    });
+
+  });  
+
+  describe("there are prize fund rows", () => {
+    it("shows an error when there are no prize fund rows", async () => {
+      const { user } = setup({
+        rows: [],
+        currentRows: [],
+        totalPrizeFund: 0,
+      });
+
+      await clickSave(user);
+
+      await waitFor(() => {
+        expect(getLatestErrorModalProps()?.show).toBe(true);
+      });
+
+      expect(getLatestErrorModalProps()?.title).toBe(
+        "Validate Error",
+      );
+
+      expect(getLatestErrorModalProps()?.message).toBe(
+        "Prize amounts must have at least one row.",
+      );
+
+      expect(mockBatchSave).not.toHaveBeenCalled();
+    });
+  });  
+
+  describe("all-row validation", () => {
+    it("validates all rows", async () => {
+      const rows = savedRowsCopy(makeRows());
+
+      rows[0].amount = 0;
+
+      const { user } = setup({
+        rows,
+        currentRows: rows,
+        totalPrizeFund:
+          rows[1].amount! + rows[2].amount!,
+      });
+
+      await clickSave(user);
+
+      await waitFor(() => {
+        expect(getLatestErrorModalProps()?.show).toBe(true);
+      });
+
+      expect(getLatestErrorModalProps()?.message).toBe(
+        `Prize amounts must be between ${minAmountText} and ${maxAmountText}.`,
+      );
+
+      expect(mockBatchSave).not.toHaveBeenCalled();
+    });
+  });
+
 });

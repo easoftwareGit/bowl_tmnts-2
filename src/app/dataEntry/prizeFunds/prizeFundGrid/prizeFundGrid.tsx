@@ -45,6 +45,33 @@ import {
   createPfTotalAggregates,
 } from "./sfPfAggregates";
 import ModalErrorMsg from "@/components/modal/errorModal";
+import { maxMoney } from "@/lib/validation/constants";
+import { localConfig } from "@/lib/currency/const";
+import { formatValueSymbSep2Dec } from "@/lib/currency/formatValue";
+
+
+/*********************
+ * Validation Errors *
+ *********************/
+
+enum validationError {
+  NONE = 0,
+  NO_ROWS = -1,
+  INVALID_AMOUNT = -2,
+  INVALID_SEQUENCE = -3,
+}
+
+/*********************
+ * Toolbar Constants *
+ *********************/
+
+const TOOLBAR_IDS = {
+  CANCEL: "undo_all",
+  BACK: "back",
+  EDIT: "edit",
+  SAVE: "save",
+  SAVE_CLOSE: "done",
+} as const;
 
 /**
  * Methods exposed to the parent component through React.forwardRef().
@@ -98,7 +125,7 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
       setRows,
       totalPrizeFund,
       enableEditing = true,
-      gridHeight = "350",
+      gridHeight = "150",
       gridDataWasChanged = false,
       saveStatus,
       onGridDataChanged,
@@ -119,20 +146,8 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
     )
       throw new Error("prizeFundType must be 'div', 'pot', or 'elm'");
 
-    const [confModalObj, setConfModalObj] =
-      useState<modalObjectType>(initModalObj);
-    const [errModalObj, setErrModalObj] =
-      useState<modalObjectType>(initModalObj);
-
-    /***********************
-     * Toolbar Constants   *
-     ***********************/
-
-    const CANCEL_ID = "undo_all";
-    const BACK_ID = "back";
-    const EDIT_ID = "edit";
-    const SAVE_ID = "save";
-    const SAVE_CLOSE_ID = "done";
+    const [confModalObj, setConfModalObj] = useState<modalObjectType>(initModalObj);
+    const [errModalObj, setErrModalObj] = useState<modalObjectType>(initModalObj);
 
     /*******************
      * Toolbar Options *
@@ -142,31 +157,31 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
       {
         text: "Edit",
         tooltipText: "Double-click to edit an amount",
-        id: EDIT_ID,
+        id: TOOLBAR_IDS.EDIT,
         prefixIcon: "e-icons e-edit",
       },
       {
         text: "Save",
-        tooltipText: "Save the scores",
-        id: SAVE_ID,
+        tooltipText: "Save the amounts",
+        id: TOOLBAR_IDS.SAVE,
         prefixIcon: "e-icons e-check",
       },
       {
         text: "Save and Close",
-        tooltipText: "Save the scores and return to the Run Tournament page",
-        id: SAVE_CLOSE_ID,
+        tooltipText: "Save the amounts and return to the Run Tournament page",
+        id: TOOLBAR_IDS.SAVE_CLOSE,
         prefixIcon: "e-icons e-update",
       },
       {
         text: "Cancel",
         tooltipText: "cancel all changes since last save",
-        id: CANCEL_ID,
+        id: TOOLBAR_IDS.CANCEL,
         prefixIcon: "e-icons e-cancel",
       },
       {
         text: "Back",
         tooltipText: "Back to the Run Tournament page",
-        id: BACK_ID,
+        id: TOOLBAR_IDS.BACK,
         prefixIcon: "e-icons e-back",
       },
     ];
@@ -228,7 +243,7 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
       /**********
        * cancel *
        **********/
-      if (confModalObj.id === CANCEL_ID) {
+      if (confModalObj.id === TOOLBAR_IDS.CANCEL) {
         setConfModalObj(initModalObj); // reset modal object (hides modal)
 
         grid.editModule.batchCancel();
@@ -355,41 +370,57 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
      * than 100 rows, so the additional O(n) pass has negligible performance
      * impact while keeping each function focused on a single responsibility.
      *
-     * @returns {boolean} true if all prize amounts are valid
+     * @returns {validationErrors} true if all prize amounts are valid
      */
-    const validatePrizeFundAmounts = (): boolean => {
-      const grid = gridRef.current;
-      if (!grid) return true;
+    const validatePrizeFundAmounts = useCallback(
+      (): validationError => {
+        const grid = gridRef.current;
+        if (!grid) return validationError.NONE;
 
-      const currentRows = grid.getCurrentViewRecords() as prizeFundEntryRow[];
+        const currentRows =
+          grid.getCurrentViewRecords() as prizeFundEntryRow[];
 
-      const batchChanges = grid.getBatchChanges() as {
-        changedRecords?: prizeFundEntryRow[];
-      };
-
-      const changedRecords = batchChanges.changedRecords ?? [];
-
-      const currentRowsWithChanges = currentRows.map((row) => {
-        const changedRow = changedRecords.find(
-          (changed) => changed.id === row.id,
-        );
-
-        return changedRow ? { ...row, ...changedRow } : row;
-      });
-
-      for (let i = 1; i < currentRowsWithChanges.length; i++) {
-        const previousAmount =
-          Number(currentRowsWithChanges[i - 1].amount) || 0;
-        const currentAmount = Number(currentRowsWithChanges[i].amount) || 0;
-
-        if (currentAmount > previousAmount) {
-          return false;
+        if (currentRows.length === 0) {
+          return validationError.NO_ROWS;
         }
-      }
 
-      return true;
-    };
+        const batchChanges = grid.getBatchChanges() as {
+          changedRecords?: prizeFundEntryRow[];
+        };
 
+        const changedRecords = batchChanges.changedRecords ?? [];
+
+        const currentRowsWithChanges = currentRows.map((row) => {
+          const changedRow = changedRecords.find(
+            (changed) => changed.id === row.id,
+          );
+
+          return changedRow
+            ? { ...row, ...changedRow }
+            : row;
+        });
+
+        for (let i = 0; i < currentRowsWithChanges.length; i++) {
+          const currentAmount = Number(currentRowsWithChanges[i].amount) || 0;
+
+          if (currentAmount < 1 || currentAmount > maxMoney) {
+            return validationError.INVALID_AMOUNT;
+          }
+
+          if (i > 0) {
+            const previousAmount = 
+              Number(currentRowsWithChanges[i - 1].amount) || 0;
+
+            if (currentAmount > previousAmount) {
+              return validationError.INVALID_SEQUENCE;
+            }
+          }
+        }
+
+        return validationError.NONE;
+      }, [],
+    );    
+    
     /**
      * gets the index of a field in the grid
      *
@@ -452,13 +483,29 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
             return;
           }
 
-          if (!validatePrizeFundAmounts()) {
-            const amountPositionErrMsg =
-              "A lower finishing position cannot receive more prize money than a higher finishing position.";
+          const validationResult = validatePrizeFundAmounts();
+          if (validationResult !== validationError.NONE) {
+            let message = "";
+            switch (validationResult) {
+              case validationError.NO_ROWS:
+                message = "Prize amounts must have at least one row.";
+                break;
+              case validationError.INVALID_AMOUNT:
+                const minStr = formatValueSymbSep2Dec("1.00", localConfig);
+                const maxStr = formatValueSymbSep2Dec(maxMoney.toString(), localConfig);
+                message = `Prize amounts must be between ${minStr} and ${maxStr}.`;
+                break;
+              case validationError.INVALID_SEQUENCE:
+                message =
+                  "Prize amounts must be in descending order of finishing position.";
+                break;
+              default:
+                message = "An unknown error occurred.";
+            }
             setErrModalObj({
               show: true,
               title: "Validate Error",
-              message: amountPositionErrMsg,
+              message,
               id: "validate_error",
             });
             return;
@@ -470,7 +517,11 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
           grid.editModule.batchSave();
         }, 0);
       },
-      [totalPrizeFund, prizeFundType],
+      [
+        validatePrizeFundAmounts,
+        totalPrizeFund,
+        prizeFundType,                
+      ],
     );
 
     /********************
@@ -513,7 +564,7 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
       if (!grid) return;
 
       grid.toolbarModule.enableItems(
-        [SAVE_ID, SAVE_CLOSE_ID, CANCEL_ID],
+        [TOOLBAR_IDS.SAVE, TOOLBAR_IDS.SAVE_CLOSE, TOOLBAR_IDS.CANCEL],
         gridDataWasChanged,
       );
     }, [gridDataWasChanged]);
@@ -524,24 +575,24 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
         if (!grid) return;
 
         switch (args.item.id) {
-          case EDIT_ID:
+          case TOOLBAR_IDS.EDIT:
             beginToolbarEdit();
             break;
-          case SAVE_ID:
+          case TOOLBAR_IDS.SAVE:
             validateAndSave(false);
             break;
-          case SAVE_CLOSE_ID:
+          case TOOLBAR_IDS.SAVE_CLOSE:
             validateAndSave(true);
             break;
-          case CANCEL_ID:
+          case TOOLBAR_IDS.CANCEL:
             setConfModalObj({
               show: true,
-              id: CANCEL_ID,
+              id: TOOLBAR_IDS.CANCEL,
               title: cancelConfTitle,
               message: "Do you want to cancel edits?",
             });
             break;
-          case BACK_ID:
+          case TOOLBAR_IDS.BACK:
             onBack();
             break;
         }

@@ -40,6 +40,9 @@ export const saveDivPfs = createAsyncThunk(
   async (divPfs: divPfType[]) => {
     // Do not use try / catch blocks here. Need the promise to be fulfilled or
     // rejected which will have the appropriate response in the extraReducers.
+    if (!Array.isArray(divPfs) || divPfs.length === 0) {
+      throw new Error("Invalid divPfs array");
+    }
     const updated = await updateAllDivPfsForDiv(divPfs[0].div_id, divPfs);
     if (!updated) {
       throw new Error("Error updating divPfs");

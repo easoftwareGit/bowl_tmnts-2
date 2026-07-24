@@ -9,6 +9,7 @@ import {
   startOfDayFromString,
 } from "../src/lib/dateTools";
 import { addDays, addMilliseconds, endOfDay, startOfDay } from "date-fns";
+import { ptGame, ptLastGame } from "@/lib/validation/constants";
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
@@ -441,7 +442,7 @@ async function tmntUpsert() {
         end_date: startOfDayFromString("2024-12-20") as Date,
       },
     });
-    // whole tmnt
+    // full tmnt
     tmnt = await prisma.tmnt.upsert({
       where: {
         id: "tmt_d237a388a8fc4641a2e37233f1d6bebd",
@@ -759,7 +760,7 @@ async function eventUpsert() {
         sort_order: 1,
       },
     });
-    // whole tmnt event
+    // full tmnt event
     event = await prisma.event.upsert({
       where: {
         id: "evt_4ff710c8493f4a218d2e2b045442974a",
@@ -1087,7 +1088,7 @@ async function divUpsert() {
         sort_order: 3,
       },
     });
-    // whole tmnt div
+    // full tmnt div
     div = await prisma.div.upsert({
       where: {
         id: "div_99a3cae28786485bb7a036935f0f6a0a",
@@ -2527,7 +2528,7 @@ async function laneUpsert() {
     }
   }
 
-  async function laneUpsert_WholeTmnt() {
+  async function laneUpsert_FullTmnt() {
     try {
       let lane = await prisma.lane.upsert({
         where: {
@@ -2959,15 +2960,15 @@ async function laneUpsert() {
     const yCount = await laneUpsert_YosemiteLanes();
     const abCount = await laneUpsert_AandB();
     const nyCount = await laneUpsert_NewYears();
-    const wtCount = await laneUpsert_WholeTmnt();
+    const ftCount = await laneUpsert_FullTmnt();
     const ntCount = await laneUpsert_NewTmnt();
     const delCount = await laneUpsert_ToDelete();
     console.log(
       "Upserted lanes: ",
-      gpCount + yCount + abCount + nyCount + wtCount + +ntCount + delCount
+      gpCount + yCount + abCount + nyCount + ftCount + +ntCount + delCount
     );
     // 12 + 24 + 20 + 6 + 12 + 12 + 1 = 87
-    return gpCount + yCount + abCount + nyCount + wtCount + +ntCount + delCount;
+    return gpCount + yCount + abCount + nyCount + ftCount + +ntCount + delCount;
   } catch (error) {
     console.log(error);
     return -1;
@@ -3193,7 +3194,7 @@ async function stageUpsert() {
         stage_override_reason: null,
       },
     });
-    // whole tmnt squad
+    // full tmnt squad
     stage = await prisma.stage.upsert({
       where: {
         id: "stg_124dd9efc30f4352b691dfd93d1e284e",
@@ -3290,7 +3291,7 @@ async function potsUpsert() {
         div_id: "div_f30aea2c534f4cfe87f4315531cef8ef",
         sort_order: 1,
         fee: 20,
-        pot_type: "Game",
+        pot_type: ptGame,
       },
       create: {
         id: "pot_b2a7b02d761b4f5ab5438be84f642c3b",
@@ -3298,7 +3299,7 @@ async function potsUpsert() {
         div_id: "div_f30aea2c534f4cfe87f4315531cef8ef",
         sort_order: 1,
         fee: 20,
-        pot_type: "Game",
+        pot_type: ptGame,
       },
     });
     // yosemite 6 gamer
@@ -3311,7 +3312,7 @@ async function potsUpsert() {
         div_id: "div_1f42042f9ef24029a0a2d48cc276a087",
         sort_order: 1,
         fee: 10,
-        pot_type: "Game",
+        pot_type: ptGame,
       },
       create: {
         id: "pot_98b3a008619b43e493abf17d9f462a65",
@@ -3319,7 +3320,7 @@ async function potsUpsert() {
         div_id: "div_1f42042f9ef24029a0a2d48cc276a087",
         sort_order: 1,
         fee: 10,
-        pot_type: "Game",
+        pot_type: ptGame,
       },
     });
     pot = await prisma.pot.upsert({
@@ -3331,7 +3332,7 @@ async function potsUpsert() {
         div_id: "div_1f42042f9ef24029a0a2d48cc276a087",
         sort_order: 2,
         fee: 10,
-        pot_type: "Last Game",
+        pot_type: ptLastGame
       },
       create: {
         id: "pot_ab80213899ea424b938f52a062deacfe",
@@ -3339,7 +3340,7 @@ async function potsUpsert() {
         div_id: "div_1f42042f9ef24029a0a2d48cc276a087",
         sort_order: 2,
         fee: 10,
-        pot_type: "Last Game",
+        pot_type: ptLastGame
       },
     });
     // new years eve
@@ -3352,7 +3353,7 @@ async function potsUpsert() {
         div_id: "div_578834e04e5e4885bbae79229d8b96e8",
         sort_order: 1,
         fee: 20,
-        pot_type: "Game",
+        pot_type: ptGame,
       },
       create: {
         id: "pot_791fb6d8a9a04cb4b3372e212da2a3b0",
@@ -3360,7 +3361,7 @@ async function potsUpsert() {
         div_id: "div_578834e04e5e4885bbae79229d8b96e8",
         sort_order: 1,
         fee: 20,
-        pot_type: "Game",
+        pot_type: ptGame,
       },
     });
     pot = await prisma.pot.upsert({
@@ -3372,7 +3373,7 @@ async function potsUpsert() {
         div_id: "div_578834e04e5e4885bbae79229d8b96e8",
         sort_order: 2,
         fee: 10,
-        pot_type: "Last Game",
+        pot_type: ptLastGame
       },
       create: {
         id: "pot_781fb6d8a9a04cb4b3372e212da2a3b0",
@@ -3380,7 +3381,7 @@ async function potsUpsert() {
         div_id: "div_578834e04e5e4885bbae79229d8b96e8",
         sort_order: 2,
         fee: 10,
-        pot_type: "Last Game",
+        pot_type: ptLastGame
       },
     });
     pot = await prisma.pot.upsert({
@@ -3392,7 +3393,7 @@ async function potsUpsert() {
         div_id: "div_fe72ab97edf8407186c8e6df7f7fb741",
         sort_order: 3,
         fee: 20,
-        pot_type: "Game",
+        pot_type: ptGame,
       },
       create: {
         id: "pot_771fb6d8a9a04cb4b3372e212da2a3b0",
@@ -3400,7 +3401,7 @@ async function potsUpsert() {
         div_id: "div_fe72ab97edf8407186c8e6df7f7fb741",
         sort_order: 3,
         fee: 20,
-        pot_type: "Game",
+        pot_type: ptGame,
       },
     });
     pot = await prisma.pot.upsert({
@@ -3412,7 +3413,7 @@ async function potsUpsert() {
         div_id: "div_fe72ab97edf8407186c8e6df7f7fb741",
         sort_order: 4,
         fee: 10,
-        pot_type: "Last Game",
+        pot_type: ptLastGame
       },
       create: {
         id: "pot_761fb6d8a9a04cb4b3372e212da2a3b0",
@@ -3420,10 +3421,10 @@ async function potsUpsert() {
         div_id: "div_fe72ab97edf8407186c8e6df7f7fb741",
         sort_order: 4,
         fee: 10,
-        pot_type: "Last Game",
+        pot_type: ptLastGame
       },
     });
-    // whole tmnt pot
+    // full tmnt pot
     pot = await prisma.pot.upsert({
       where: {
         id: "pot_89fd8f787de942a1a92aaa2df3e7c185",
@@ -3433,7 +3434,7 @@ async function potsUpsert() {
         div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
         sort_order: 1,
         fee: 20,
-        pot_type: "Game",
+        pot_type: ptGame,
       },
       create: {
         id: "pot_89fd8f787de942a1a92aaa2df3e7c185",
@@ -3441,7 +3442,27 @@ async function potsUpsert() {
         div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
         sort_order: 1,
         fee: 20,
-        pot_type: "Game",
+        pot_type: ptGame,
+      },
+    });
+    pot = await prisma.pot.upsert({
+      where: {
+        id: "pot_aa5268ed78ad4a1599675b6a85d193b3",
+      },
+      update: {
+        squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+        div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+        sort_order: 2,
+        fee: 10,
+        pot_type: ptLastGame
+      },
+      create: {
+        id: "pot_aa5268ed78ad4a1599675b6a85d193b3",
+        squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+        div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+        sort_order: 2,
+        fee: 10,
+        pot_type: ptLastGame
       },
     });
     // new tmnt pot
@@ -3454,7 +3475,7 @@ async function potsUpsert() {
         div_id: "div_a9a3cae28786485bb7a036935f0f6a0a",
         sort_order: 1,
         fee: 20,
-        pot_type: "Game",
+        pot_type: ptGame,
       },
       create: {
         id: "pot_a9fd8f787de942a1a92aaa2df3e7c185",
@@ -3462,7 +3483,7 @@ async function potsUpsert() {
         div_id: "div_a9a3cae28786485bb7a036935f0f6a0a",
         sort_order: 1,
         fee: 20,
-        pot_type: "Game",
+        pot_type: ptGame,
       },
     });
     // pot to delete
@@ -3475,7 +3496,7 @@ async function potsUpsert() {
         div_id: "div_621bfee84e774d5a9dc2e9b6bdc5d31c",
         sort_order: 1,
         fee: 20,
-        pot_type: "Game",
+        pot_type: ptGame,
       },
       create: {
         id: "pot_e3758d99c5494efabb3b0d273cf22e7a",
@@ -3483,12 +3504,12 @@ async function potsUpsert() {
         div_id: "div_621bfee84e774d5a9dc2e9b6bdc5d31c",
         sort_order: 1,
         fee: 20,
-        pot_type: "Game",
+        pot_type: ptGame,
       },
     });
 
-    console.log("Upserted pots:", 10);
-    return 10;
+    console.log("Upserted pots:", 11);
+    return 11;
   } catch (error) {
     console.log(error);
     return -1;
@@ -3798,7 +3819,7 @@ async function brktUpsert() {
         admin: 5,
       },
     });
-    // whole tmnt brkts
+    // full tmnt brkts
     brkt = await prisma.brkt.upsert({
       where: {
         id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
@@ -4138,7 +4159,7 @@ async function elimUpsert() {
         fee: 5,
       },
     });
-    // whole tmnt elims
+    // full tmnt elims
     elim = await prisma.elim.upsert({
       where: {
         id: "elm_c47a4ec07f824b0e93169ae78e8b4b1e",
@@ -4468,7 +4489,7 @@ async function playersUpsert() {
     }
   }
 
-  async function playersUpsert_WholeTmnt() {
+  async function playersUpsert_FullTmnt() {
     try {
       let player = await prisma.player.upsert({
         where: {
@@ -5465,12 +5486,12 @@ async function playersUpsert() {
 
   try {
     const gpCount = await playerUpsert_GoldPin();
-    const wtCount = await playersUpsert_WholeTmnt();
+    const ftCount = await playersUpsert_FullTmnt();
     const nyCount = await playersUpsert_NewYearsEve();
     const delCount = await playersUpsert_ToDelete();
-    console.log("Upserted players: ", gpCount + wtCount + nyCount + delCount);
+    console.log("Upserted players: ", gpCount + ftCount + nyCount + delCount);
     // 9 + 36 + 6 + 1 = 52
-    return gpCount + wtCount + nyCount + delCount;
+    return gpCount + ftCount + nyCount + delCount;
   } catch (error) {
     console.log(error);
     return -1;
@@ -5559,7 +5580,7 @@ async function divEntryUpsert() {
     }
   }
 
-  async function divEntriesUpsert_WholeTmnt() {
+  async function divEntriesUpsert_FullTmnt() {
     try {
       let divEntry = await prisma.div_Entry.upsert({
         where: {
@@ -6399,15 +6420,15 @@ async function divEntryUpsert() {
 
   try {
     const gpCount = await divEntryUpsert_GoldPin();
-    const wtCount = await divEntriesUpsert_WholeTmnt();
+    const ftCount = await divEntriesUpsert_FullTmnt();
     const nyCount = await divEntriesUpsert_NewYearEve();
     const delCount = await divEntriesUpsert_ToDelete();
     console.log(
       "Upserted DivEntries: ",
-      gpCount + wtCount + nyCount + delCount
+      gpCount + ftCount + nyCount + delCount
     );
     // 4 + 36 + 8 + 1 = 49
-    return gpCount + wtCount + delCount;
+    return gpCount + ftCount + delCount;
   } catch (error) {
     console.log(error);
     return -1;
@@ -6488,7 +6509,7 @@ async function potEntriesUpsert() {
     }
   }
 
-  async function potEntryUpsert_WholeTmnt() {
+  async function potEntryUpsert_FullTmnt() {
     try {
       let potEntry = await prisma.pot_Entry.upsert({
         where: {
@@ -6971,7 +6992,137 @@ async function potEntriesUpsert() {
         },
       });
 
-      return 30;
+      /** last game */
+
+      potEntry = await prisma.pot_Entry.upsert({
+        where: {
+          id: "pen_c5dd7ce6725d4db1be69e5ea11b63fe5",
+        },
+        update: {
+          pot_id: "pot_aa5268ed78ad4a1599675b6a85d193b3",
+          player_id: "ply_a01758cff1cc4bab9d9133e661bd49b0",
+          fee: 10,
+        },
+        create: {
+          id: "pen_c5dd7ce6725d4db1be69e5ea11b63fe5",
+          pot_id: "pot_aa5268ed78ad4a1599675b6a85d193b3",
+          player_id: "ply_a01758cff1cc4bab9d9133e661bd49b0",
+          fee: 10,
+        },
+      });
+      potEntry = await prisma.pot_Entry.upsert({
+        where: {
+          id: "pen_b4961fa8c1654e309a196682689d38e9",
+        },
+        update: {
+          pot_id: "pot_aa5268ed78ad4a1599675b6a85d193b3",
+          player_id: "ply_a02758cff1cc4bab9d9133e661bd49b0",
+          fee: 10,
+        },
+        create: {
+          id: "pen_b4961fa8c1654e309a196682689d38e9",
+          pot_id: "pot_aa5268ed78ad4a1599675b6a85d193b3",
+          player_id: "ply_a02758cff1cc4bab9d9133e661bd49b0",
+          fee: 10,
+        },
+      });
+      potEntry = await prisma.pot_Entry.upsert({
+        where: {
+          id: "pen_12e42e6e28064cecb31aebdd241f1747",
+        },
+        update: {
+          pot_id: "pot_aa5268ed78ad4a1599675b6a85d193b3",
+          player_id: "ply_a03758cff1cc4bab9d9133e661bd49b0",
+          fee: 10,
+        },
+        create: {
+          id: "pen_12e42e6e28064cecb31aebdd241f1747",
+          pot_id: "pot_aa5268ed78ad4a1599675b6a85d193b3",
+          player_id: "ply_a03758cff1cc4bab9d9133e661bd49b0",
+          fee: 10,
+        },
+      });
+      potEntry = await prisma.pot_Entry.upsert({
+        where: {
+          id: "pen_731708348f774e7e96ae66494aaff8e8",
+        },
+        update: {
+          pot_id: "pot_aa5268ed78ad4a1599675b6a85d193b3",
+          player_id: "ply_a04758cff1cc4bab9d9133e661bd49b0",
+          fee: 10,
+        },
+        create: {
+          id: "pen_731708348f774e7e96ae66494aaff8e8",
+          pot_id: "pot_aa5268ed78ad4a1599675b6a85d193b3",
+          player_id: "ply_a04758cff1cc4bab9d9133e661bd49b0",
+          fee: 10,
+        },
+      });
+      potEntry = await prisma.pot_Entry.upsert({
+        where: {
+          id: "pen_343d4f799ee442258a15b503b9f0313e",
+        },
+        update: {
+          pot_id: "pot_aa5268ed78ad4a1599675b6a85d193b3",
+          player_id: "ply_a05758cff1cc4bab9d9133e661bd49b0",
+          fee: 10,
+        },
+        create: {
+          id: "pen_343d4f799ee442258a15b503b9f0313e",
+          pot_id: "pot_aa5268ed78ad4a1599675b6a85d193b3",
+          player_id: "ply_a05758cff1cc4bab9d9133e661bd49b0",
+          fee: 10,
+        },
+      });
+      potEntry = await prisma.pot_Entry.upsert({
+        where: {
+          id: "pen_67255e063e6f45dcad037053938aebfd",
+        },
+        update: {
+          pot_id: "pot_aa5268ed78ad4a1599675b6a85d193b3",
+          player_id: "ply_a06758cff1cc4bab9d9133e661bd49b0",
+          fee: 10,
+        },
+        create: {
+          id: "pen_67255e063e6f45dcad037053938aebfd",
+          pot_id: "pot_aa5268ed78ad4a1599675b6a85d193b3",
+          player_id: "ply_a06758cff1cc4bab9d9133e661bd49b0",
+          fee: 10,
+        },
+      });
+      potEntry = await prisma.pot_Entry.upsert({
+        where: {
+          id: "pen_b0ea413c21424cc7a52d60e4dc268d5d",
+        },
+        update: {
+          pot_id: "pot_aa5268ed78ad4a1599675b6a85d193b3",
+          player_id: "ply_a07758cff1cc4bab9d9133e661bd49b0",
+          fee: 10,
+        },
+        create: {
+          id: "pen_b0ea413c21424cc7a52d60e4dc268d5d",
+          pot_id: "pot_aa5268ed78ad4a1599675b6a85d193b3",
+          player_id: "ply_a07758cff1cc4bab9d9133e661bd49b0",
+          fee: 10,
+        },
+      });
+      potEntry = await prisma.pot_Entry.upsert({
+        where: {
+          id: "pen_eace15ae5ee74080a63da4a3c101d880",
+        },
+        update: {
+          pot_id: "pot_aa5268ed78ad4a1599675b6a85d193b3",
+          player_id: "ply_a08758cff1cc4bab9d9133e661bd49b0",
+          fee: 10,
+        },
+        create: {
+          id: "pen_eace15ae5ee74080a63da4a3c101d880",
+          pot_id: "pot_aa5268ed78ad4a1599675b6a85d193b3",
+          player_id: "ply_a08758cff1cc4bab9d9133e661bd49b0",
+          fee: 10,
+        },
+      });
+      return 38;
     } catch (error) {
       console.log(error);
       return -1;
@@ -7143,15 +7294,15 @@ async function potEntriesUpsert() {
 
   try {
     const gpCount = await potEntryUpsert_GoldPin();
-    const wtCount = await potEntryUpsert_WholeTmnt();
+    const ftCount = await potEntryUpsert_FullTmnt();
     const nyCount = await potEntryUpsert_NewYear();
     const delCount = await potEntryUpsert_ToDelete();
     console.log(
       "Upserted potEntries: ",
-      gpCount + wtCount + nyCount + delCount
+      gpCount + ftCount + nyCount + delCount
     );
-    // 4 + 30 + 8 + 1 = 43
-    return gpCount + wtCount + delCount;
+    // 4 + 38 + 8 + 1 = 51
+    return gpCount + ftCount + nyCount + delCount;
   } catch (error) {
     console.log(error);
     return -1;
@@ -7233,7 +7384,7 @@ async function brktEntriesUpsert() {
     }
   }
 
-  async function brktEntryUpsert_WholeTmnt() {
+  async function brktEntryUpsert_FullTmnt() {
     try {
       let brktEntry = await prisma.brkt_Entry.upsert({
         where: {
@@ -8048,17 +8199,17 @@ async function brktEntriesUpsert() {
 
   try {
     const gpCount = await brktEntryUpsert_GoldPin();
-    const wtCount = await brktEntryUpsert_WholeTmnt();
+    const ftCount = await brktEntryUpsert_FullTmnt();
     const nyCount = await brktEntryUpsert_NewYearsEve();
     const delCount = await brktEntryUpsert_ToDelete();
 
     console.log(
       "Upserted brktEntries: ",
-      gpCount + wtCount + nyCount + delCount
+      gpCount + ftCount + nyCount + delCount
     );
     // console.log("Upserted potEntries: ", delCount);
     // 4 + 40 + 8 + 1 = 53
-    return gpCount + wtCount + nyCount + delCount;
+    return gpCount + ftCount + nyCount + delCount;
     // return delCount;
   } catch (error) {
     console.log(error);
@@ -9050,7 +9201,7 @@ async function elimEntriesUpsert() {
     }
   }
 
-  async function brktEntryUpsert_WholeTmnt() {
+  async function brktEntryUpsert_FullTmnt() {
     try {
       let elimEntry = await prisma.elim_Entry.upsert({
         where: {
@@ -9601,14 +9752,14 @@ async function elimEntriesUpsert() {
   try {
     const gpCount = await elimEntryUpsert_GoldPin();
     const nyCount = await elimEntryUpsert_NewYearsEve();
-    const wtCount = await brktEntryUpsert_WholeTmnt();
+    const ftCount = await brktEntryUpsert_FullTmnt();
     const delCount = await brktEntryUpsert_ToDelete();
     console.log(
       "Upserted elimEntries: ",
-      gpCount + nyCount + wtCount + delCount
+      gpCount + nyCount + ftCount + delCount
     );
     // 4 + 8 + 32 + 1 = 45
-    return gpCount + wtCount + delCount;
+    return gpCount + ftCount + delCount;
   } catch (error) {
     console.log(error);
     return -1;
@@ -10421,7 +10572,7 @@ async function gamesUpsert() {
     }
   }
 
-  async function gamesUpsert_WholeTmnt() {
+  async function gamesUpsert_FullTmnt() {
     try {
       let randomScore = Math.floor(Math.random() * (230 - 190 + 1)) + 190;
       let game = await prisma.game.upsert({
@@ -10801,12 +10952,12 @@ async function gamesUpsert() {
 
   try {
     const gpCount = await gamesUpsert_GoldPin();
-    const wtCount = await gamesUpsert_WholeTmnt();
+    const ftCount = await gamesUpsert_FullTmnt();
     const nyCount = await gamesUpsert_NewYearsEve();
     const delCount = await gamesUpsert_ToDelete();
-    console.log("Upserted Games: ", gpCount + wtCount + nyCount + delCount);
+    console.log("Upserted Games: ", gpCount + ftCount + nyCount + delCount);
     // 18 + 18 + 24 + 1 = 61
-    return gpCount + wtCount + nyCount + delCount;
+    return gpCount + ftCount + nyCount + delCount;
   } catch (error) {
     console.log(error);
     return -1;
@@ -10847,7 +10998,7 @@ async function brktRefundsUpsert() {
     }
   }
 
-  async function brktRefundUpsert_WholeTmnt() {
+  async function brktRefundUpsert_FullTmnt() {
     try {
       let brktRefund = await prisma.brkt_Refund.upsert({
         where: {
@@ -10936,17 +11087,17 @@ async function brktRefundsUpsert() {
 
   try {
     const gpCount = await brktRefundUpsert_GoldPin();
-    const wtCount = await brktRefundUpsert_WholeTmnt();
+    const ftCount = await brktRefundUpsert_FullTmnt();
     const nyCount = await brktRefundUpsert_NewYearsEve();
     const delCount = await brktRefundUpsert_ToDelete();
 
     console.log(
       "Upserted brktRefunds: ",
-      gpCount + wtCount + nyCount + delCount
+      gpCount + ftCount + nyCount + delCount
     );
     // console.log("Upserted potEntries: ", delCount);
     // 2 + 2 + 2 + 1 = 7
-    return gpCount + wtCount + nyCount + delCount;
+    return gpCount + ftCount + nyCount + delCount;
   } catch (error) {
     console.log(error);
     return -1;
@@ -11024,7 +11175,7 @@ async function moneysUpsert() {
     }
   }
 
-  async function moneysUpsert_WholeTmnt() {
+  async function moneysUpsert_FullTmnt() {
     try {
       let money = await prisma.money.upsert({
         where: {
@@ -11126,9 +11277,9 @@ async function moneysUpsert() {
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
           descrip: "ENTRIES",
           flow: "IN",
-          amount: 670,
-          pot_id: null,
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          amount: 80,
+          pot_id: "pot_aa5268ed78ad4a1599675b6a85d193b3",
+          brkt_id: null,
           elim_id: null,
           sort_order: 4,
         },
@@ -11139,9 +11290,9 @@ async function moneysUpsert() {
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
           descrip: "ENTRIES",
           flow: "IN",
-          amount: 670,
-          pot_id: null,
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          amount: 80,
+          pot_id: "pot_aa5268ed78ad4a1599675b6a85d193b3",
+          brkt_id: null,
           elim_id: null,
           sort_order: 4,
         },
@@ -11158,7 +11309,7 @@ async function moneysUpsert() {
           flow: "IN",
           amount: 670,
           pot_id: null,
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           elim_id: null,
           sort_order: 5,
         },
@@ -11171,7 +11322,7 @@ async function moneysUpsert() {
           flow: "IN",
           amount: 670,
           pot_id: null,
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           elim_id: null,
           sort_order: 5,
         },
@@ -11186,10 +11337,10 @@ async function moneysUpsert() {
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
           descrip: "ENTRIES",
           flow: "IN",
-          amount: 80,
+          amount: 670,
           pot_id: null,
-          brkt_id: null,
-          elim_id: "elm_c47a4ec07f824b0e93169ae78e8b4b1e",
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          elim_id: null,
           sort_order: 6,
         },
         create: {
@@ -11199,10 +11350,10 @@ async function moneysUpsert() {
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
           descrip: "ENTRIES",
           flow: "IN",
-          amount: 80,
+          amount: 670,
           pot_id: null,
-          brkt_id: null,
-          elim_id: "elm_c47a4ec07f824b0e93169ae78e8b4b1e",
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          elim_id: null,
           sort_order: 6,
         },
       });
@@ -11219,7 +11370,7 @@ async function moneysUpsert() {
           amount: 80,
           pot_id: null,
           brkt_id: null,
-          elim_id: "elm_461eece3c50241e9925e9a520730ac7e",
+          elim_id: "elm_c47a4ec07f824b0e93169ae78e8b4b1e",
           sort_order: 7,
         },
         create: {
@@ -11232,24 +11383,24 @@ async function moneysUpsert() {
           amount: 80,
           pot_id: null,
           brkt_id: null,
-          elim_id: "elm_461eece3c50241e9925e9a520730ac7e",
+          elim_id: "elm_c47a4ec07f824b0e93169ae78e8b4b1e",
           sort_order: 7,
         },
       });
       money = await prisma.money.upsert({
         where: {
-          id: "mon_08b6e6fcaa8343d0b18b56a71e8c160a"
+          id: "mon_08b6e6fcaa8343d0b18b56a71e8c160a",
         },
         update: {
           event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
-          descrip: "LINEAGE",
-          flow: "OUT",
-          amount: 756,
+          descrip: "ENTRIES",
+          flow: "IN",
+          amount: 80,
           pot_id: null,
           brkt_id: null,
-          elim_id: null,
+          elim_id: "elm_461eece3c50241e9925e9a520730ac7e",
           sort_order: 8,
         },
         create: {
@@ -11257,12 +11408,12 @@ async function moneysUpsert() {
           event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
-          descrip: "LINEAGE",
-          flow: "OUT",
-          amount: 756,
+          descrip: "ENTRIES",
+          flow: "IN",
+          amount: 80,
           pot_id: null,
           brkt_id: null,
-          elim_id: null,
+          elim_id: "elm_461eece3c50241e9925e9a520730ac7e",
           sort_order: 8,
         },
       });
@@ -11274,9 +11425,9 @@ async function moneysUpsert() {
           event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
-          descrip: "OTHER",
+          descrip: "LINEAGE",
           flow: "OUT",
-          amount: 72,
+          amount: 756,
           pot_id: null,
           brkt_id: null,
           elim_id: null,
@@ -11287,9 +11438,9 @@ async function moneysUpsert() {
           event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
-          descrip: "OTHER",
+          descrip: "LINEAGE",
           flow: "OUT",
-          amount: 72,
+          amount: 756,
           pot_id: null,
           brkt_id: null,
           elim_id: null,
@@ -11304,9 +11455,9 @@ async function moneysUpsert() {
           event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
-          descrip: "EXPENSES",
+          descrip: "OTHER",
           flow: "OUT",
-          amount: 180,
+          amount: 72,
           pot_id: null,
           brkt_id: null,
           elim_id: null,
@@ -11317,9 +11468,9 @@ async function moneysUpsert() {
           event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
-          descrip: "EXPENSES",
+          descrip: "OTHER",
           flow: "OUT",
-          amount: 180,
+          amount: 72,
           pot_id: null,
           brkt_id: null,
           elim_id: null,
@@ -11334,9 +11485,9 @@ async function moneysUpsert() {
           event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
-          descrip: "PRIZEFUND",
+          descrip: "EXPENSES",
           flow: "OUT",
-          amount: 2232,
+          amount: 180,
           pot_id: null,
           brkt_id: null,
           elim_id: null,
@@ -11347,9 +11498,9 @@ async function moneysUpsert() {
           event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
-          descrip: "PRIZEFUND",
+          descrip: "EXPENSES",
           flow: "OUT",
-          amount: 2232,
+          amount: 180,
           pot_id: null,
           brkt_id: null,
           elim_id: null,
@@ -11366,8 +11517,8 @@ async function moneysUpsert() {
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
           descrip: "PRIZEFUND",
           flow: "OUT",
-          amount: 570,
-          pot_id: "pot_89fd8f787de942a1a92aaa2df3e7c185",
+          amount: 2232,
+          pot_id: null,
           brkt_id: null,
           elim_id: null,
           sort_order: 12,
@@ -11379,8 +11530,8 @@ async function moneysUpsert() {
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
           descrip: "PRIZEFUND",
           flow: "OUT",
-          amount: 570,
-          pot_id: "pot_89fd8f787de942a1a92aaa2df3e7c185",
+          amount: 2232,
+          pot_id: null,
           brkt_id: null,
           elim_id: null,
           sort_order: 12,
@@ -11394,9 +11545,9 @@ async function moneysUpsert() {
           event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
-          descrip: "EXPENSES",
+          descrip: "PRIZEFUND",
           flow: "OUT",
-          amount: 30,
+          amount: 570,
           pot_id: "pot_89fd8f787de942a1a92aaa2df3e7c185",
           brkt_id: null,
           elim_id: null,
@@ -11407,9 +11558,9 @@ async function moneysUpsert() {
           event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
-          descrip: "EXPENSES",
+          descrip: "PRIZEFUND",
           flow: "OUT",
-          amount: 30,
+          amount: 570,
           pot_id: "pot_89fd8f787de942a1a92aaa2df3e7c185",
           brkt_id: null,
           elim_id: null,
@@ -11424,11 +11575,11 @@ async function moneysUpsert() {
           event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
-          descrip: "PRIZEFUND",
+          descrip: "EXPENSES",
           flow: "OUT",
-          amount: 565,
-          pot_id: null,
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          amount: 30,
+          pot_id: "pot_89fd8f787de942a1a92aaa2df3e7c185",
+          brkt_id: null,
           elim_id: null,
           sort_order: 14,
         },
@@ -11437,11 +11588,11 @@ async function moneysUpsert() {
           event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
-          descrip: "PRIZEFUND",
+          descrip: "EXPENSES",
           flow: "OUT",
-          amount: 565,
-          pot_id: null,
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          amount: 30,
+          pot_id: "pot_89fd8f787de942a1a92aaa2df3e7c185",
+          brkt_id: null,
           elim_id: null,
           sort_order: 14,
         },
@@ -11454,11 +11605,11 @@ async function moneysUpsert() {
           event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
-          descrip: "EXPENSES",
+          descrip: "PRIZEFUND",
           flow: "OUT",
-          amount: 85,
-          pot_id: null,
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          amount: 75,
+          pot_id: "pot_aa5268ed78ad4a1599675b6a85d193b3",
+          brkt_id: null,
           elim_id: null,
           sort_order: 15,
         },
@@ -11467,11 +11618,11 @@ async function moneysUpsert() {
           event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
-          descrip: "EXPENSES",
+          descrip: "PRIZEFUND",
           flow: "OUT",
-          amount: 85,
-          pot_id: null,
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          amount: 75,
+          pot_id: "pot_aa5268ed78ad4a1599675b6a85d193b3",
+          brkt_id: null,
           elim_id: null,
           sort_order: 15,
         },
@@ -11484,11 +11635,11 @@ async function moneysUpsert() {
           event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
-          descrip: "REFUNDS",
+          descrip: "EXPENSES",
           flow: "OUT",
-          amount: 20,
-          pot_id: null,
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          amount: 5,
+          pot_id: "pot_aa5268ed78ad4a1599675b6a85d193b3",
+          brkt_id: null,
           elim_id: null,
           sort_order: 16,
         },
@@ -11497,15 +11648,16 @@ async function moneysUpsert() {
           event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
-          descrip: "REFUNDS",
+          descrip: "EXPENSES",
           flow: "OUT",
-          amount: 20,
-          pot_id: null,
-          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+          amount: 5,
+          pot_id: "pot_aa5268ed78ad4a1599675b6a85d193b3",
+          brkt_id: null,
           elim_id: null,
           sort_order: 16,
         },
       });
+
       money = await prisma.money.upsert({
         where: {
           id: "mon_17b6e6fcaa8343d0b18b56a71e8c160a"
@@ -11518,7 +11670,7 @@ async function moneysUpsert() {
           flow: "OUT",
           amount: 565,
           pot_id: null,
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           elim_id: null,
           sort_order: 17,
         },
@@ -11531,11 +11683,11 @@ async function moneysUpsert() {
           flow: "OUT",
           amount: 565,
           pot_id: null,
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           elim_id: null,
           sort_order: 17,
         },
-      });      
+      });
       money = await prisma.money.upsert({
         where: {
           id: "mon_18b6e6fcaa8343d0b18b56a71e8c160a"
@@ -11548,7 +11700,7 @@ async function moneysUpsert() {
           flow: "OUT",
           amount: 85,
           pot_id: null,
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           elim_id: null,
           sort_order: 18,
         },
@@ -11561,7 +11713,7 @@ async function moneysUpsert() {
           flow: "OUT",
           amount: 85,
           pot_id: null,
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           elim_id: null,
           sort_order: 18,
         },
@@ -11578,7 +11730,7 @@ async function moneysUpsert() {
           flow: "OUT",
           amount: 20,
           pot_id: null,
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           elim_id: null,
           sort_order: 19,
         },
@@ -11591,14 +11743,14 @@ async function moneysUpsert() {
           flow: "OUT",
           amount: 20,
           pot_id: null,
-          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          brkt_id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
           elim_id: null,
           sort_order: 19,
         },
       });
       money = await prisma.money.upsert({
         where: {
-          id: "mon_20b6e6fcaa8343d0b18b56a71e8c160a",
+          id: "mon_20b6e6fcaa8343d0b18b56a71e8c160a"
         },
         update: {
           event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
@@ -11606,10 +11758,10 @@ async function moneysUpsert() {
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
           descrip: "PRIZEFUND",
           flow: "OUT",
-          amount: 75,
+          amount: 565,
           pot_id: null,
-          brkt_id: null,
-          elim_id: "elm_c47a4ec07f824b0e93169ae78e8b4b1e",
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          elim_id: null,
           sort_order: 20,
         },
         create: {
@@ -11619,16 +11771,16 @@ async function moneysUpsert() {
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
           descrip: "PRIZEFUND",
           flow: "OUT",
-          amount: 75,
+          amount: 565,
           pot_id: null,
-          brkt_id: null,
-          elim_id: "elm_c47a4ec07f824b0e93169ae78e8b4b1e",
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          elim_id: null,
           sort_order: 20,
         },
-      });
+      });      
       money = await prisma.money.upsert({
         where: {
-          id: "mon_21b6e6fcaa8343d0b18b56a71e8c160a",
+          id: "mon_21b6e6fcaa8343d0b18b56a71e8c160a"
         },
         update: {
           event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
@@ -11636,10 +11788,10 @@ async function moneysUpsert() {
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
           descrip: "EXPENSES",
           flow: "OUT",
-          amount: 5,
+          amount: 85,
           pot_id: null,
-          brkt_id: null,
-          elim_id: "elm_c47a4ec07f824b0e93169ae78e8b4b1e",
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          elim_id: null,
           sort_order: 21,
         },
         create: {
@@ -11649,27 +11801,27 @@ async function moneysUpsert() {
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
           descrip: "EXPENSES",
           flow: "OUT",
-          amount: 5,
+          amount: 85,
           pot_id: null,
-          brkt_id: null,
-          elim_id: "elm_c47a4ec07f824b0e93169ae78e8b4b1e",
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          elim_id: null,
           sort_order: 21,
         },
       });
       money = await prisma.money.upsert({
         where: {
-          id: "mon_22b6e6fcaa8343d0b18b56a71e8c160a",
+          id: "mon_22b6e6fcaa8343d0b18b56a71e8c160a"
         },
         update: {
           event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
-          descrip: "PRIZEFUND",
+          descrip: "REFUNDS",
           flow: "OUT",
-          amount: 75,
+          amount: 20,
           pot_id: null,
-          brkt_id: null,
-          elim_id: "elm_461eece3c50241e9925e9a520730ac7e",
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          elim_id: null,
           sort_order: 22,
         },
         create: {
@@ -11677,12 +11829,12 @@ async function moneysUpsert() {
           event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
-          descrip: "PRIZEFUND",
+          descrip: "REFUNDS",
           flow: "OUT",
-          amount: 75,
+          amount: 20,
           pot_id: null,
-          brkt_id: null,
-          elim_id: "elm_461eece3c50241e9925e9a520730ac7e",
+          brkt_id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+          elim_id: null,
           sort_order: 22,
         },
       });
@@ -11694,16 +11846,93 @@ async function moneysUpsert() {
           event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+          descrip: "PRIZEFUND",
+          flow: "OUT",
+          amount: 75,
+          pot_id: null,
+          brkt_id: null,
+          elim_id: "elm_c47a4ec07f824b0e93169ae78e8b4b1e",
+          sort_order: 23,
+        },
+        create: {
+          id: "mon_23b6e6fcaa8343d0b18b56a71e8c160a",
+          event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+          descrip: "PRIZEFUND",
+          flow: "OUT",
+          amount: 75,
+          pot_id: null,
+          brkt_id: null,
+          elim_id: "elm_c47a4ec07f824b0e93169ae78e8b4b1e",
+          sort_order: 23,
+        },
+      });
+      money = await prisma.money.upsert({
+        where: {
+          id: "mon_24b6e6fcaa8343d0b18b56a71e8c160a",
+        },
+        update: {
+          event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
           descrip: "EXPENSES",
           flow: "OUT",
           amount: 5,
           pot_id: null,
           brkt_id: null,
-          elim_id: "elm_461eece3c50241e9925e9a520730ac7e",
-          sort_order: 23,
+          elim_id: "elm_c47a4ec07f824b0e93169ae78e8b4b1e",
+          sort_order: 24,
         },
         create: {
-          id: "mon_23b6e6fcaa8343d0b18b56a71e8c160a",
+          id: "mon_24b6e6fcaa8343d0b18b56a71e8c160a",
+          event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+          descrip: "EXPENSES",
+          flow: "OUT",
+          amount: 5,
+          pot_id: null,
+          brkt_id: null,
+          elim_id: "elm_c47a4ec07f824b0e93169ae78e8b4b1e",
+          sort_order: 24,
+        },
+      });
+      money = await prisma.money.upsert({
+        where: {
+          id: "mon_25b6e6fcaa8343d0b18b56a71e8c160a",
+        },
+        update: {
+          event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+          descrip: "PRIZEFUND",
+          flow: "OUT",
+          amount: 75,
+          pot_id: null,
+          brkt_id: null,
+          elim_id: "elm_461eece3c50241e9925e9a520730ac7e",
+          sort_order: 25,
+        },
+        create: {
+          id: "mon_25b6e6fcaa8343d0b18b56a71e8c160a",
+          event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+          descrip: "PRIZEFUND",
+          flow: "OUT",
+          amount: 75,
+          pot_id: null,
+          brkt_id: null,
+          elim_id: "elm_461eece3c50241e9925e9a520730ac7e",
+          sort_order: 25,
+        },
+      });
+      money = await prisma.money.upsert({
+        where: {
+          id: "mon_26b6e6fcaa8343d0b18b56a71e8c160a",
+        },
+        update: {
           event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
           squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
           div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
@@ -11713,11 +11942,24 @@ async function moneysUpsert() {
           pot_id: null,
           brkt_id: null,
           elim_id: "elm_461eece3c50241e9925e9a520730ac7e",
-          sort_order: 23,
+          sort_order: 26,
+        },
+        create: {
+          id: "mon_26b6e6fcaa8343d0b18b56a71e8c160a",
+          event_id: "evt_4ff710c8493f4a218d2e2b045442974a",
+          squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+          div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+          descrip: "EXPENSES",
+          flow: "OUT",
+          amount: 5,
+          pot_id: null,
+          brkt_id: null,
+          elim_id: "elm_461eece3c50241e9925e9a520730ac7e",
+          sort_order: 26,
         },
       });
 
-      return 23;
+      return 26;
     } catch (error) {
       console.log(error);
       return -1;
@@ -11834,17 +12076,17 @@ async function moneysUpsert() {
 
   try {
     const gpCount = await moneyUpsert_GoldPin();
-    const wtCount = await moneysUpsert_WholeTmnt();
+    const ftCount = await moneysUpsert_FullTmnt();
     const nyCount = await moneyUpsert_NewYearsEve();
     const delCount = await moneyUpsert_ToDelete();
 
     console.log(
       "Upserted moneys: ",
-      gpCount + wtCount + nyCount + delCount
+      gpCount + ftCount + nyCount + delCount
     );
     // console.log("Upserted potEntries: ", delCount);
-    // 2 + 23 + 2 + 1 = 28
-    return gpCount + wtCount + nyCount + delCount;
+    // 2 + 26 + 2 + 1 = 31
+    return gpCount + ftCount + nyCount + delCount;
   } catch (error) {
     console.log(error);
     return -1;
@@ -11895,7 +12137,7 @@ async function divPfUpserts() {
     }    
   }
 
-  async function divPfUpsert_WholeTmnt() {
+  async function divPfUpsert_FullTmnt() {
 
     try { 
       let prizeFund = await prisma.div_PF.upsert({
@@ -12149,16 +12391,16 @@ async function divPfUpserts() {
 
   try {
     const gpCount = await divPfUpsert_GoldPin();
-    const wtCount = await divPfUpsert_WholeTmnt();
+    const ftCount = await divPfUpsert_FullTmnt();
     const nyCount = await divPfUpsert_NewYearsEve();
     const delCount = await divPfUpsert_ToDelete();
 
     console.log(
       "Upserted div_pf: ",
-      gpCount + wtCount + nyCount + delCount
+      gpCount + ftCount + nyCount + delCount
     );    
     // 2 + 9 + 4 + 1 = 16
-    return gpCount + wtCount + nyCount + delCount;
+    return gpCount + ftCount + nyCount + delCount;
   } catch (error) {
     console.log(error);
     return -1;
@@ -12209,7 +12451,7 @@ async function potPfUpserts() {
     }
   }
  
-  async function potPfUpsert_WholeTmnt() {
+  async function potPfUpsert_FullTmnt() {
     try {
       let prizeFund = await prisma.pot_PF.upsert({
         where: {
@@ -12243,7 +12485,40 @@ async function potPfUpserts() {
           amount: 25,
         }
       });
-      return 2;
+      prizeFund = await prisma.pot_PF.upsert({
+        where: {
+          id: "ppf_87415abe7ca444d898f14568961578bb",
+        },
+        update: {
+          pot_id: "pot_aa5268ed78ad4a1599675b6a85d193b3",
+          position: 1,
+          amount: 55,
+        },
+        create: {
+          id: "ppf_87415abe7ca444d898f14568961578bb",
+          pot_id: "pot_aa5268ed78ad4a1599675b6a85d193b3",
+          position: 1,
+          amount: 55,
+        }
+      });
+      prizeFund = await prisma.pot_PF.upsert({
+        where: {
+          id: "ppf_0d402ea969a448278c68f5fbfdc70cfe",
+        },
+        update: {
+          pot_id: "pot_aa5268ed78ad4a1599675b6a85d193b3",
+          position: 2,
+          amount: 20,
+        },
+        create: {
+          id: "ppf_0d402ea969a448278c68f5fbfdc70cfe",
+          pot_id: "pot_aa5268ed78ad4a1599675b6a85d193b3",
+          position: 2,
+          amount: 20,
+        }
+      });
+
+      return 4;
     } catch (error) {
       console.log(error);
       return -1;
@@ -12415,16 +12690,16 @@ async function potPfUpserts() {
 
   try {
     const gpCount = await potPfUpsert_GoldPin();
-    const wtCount = await potPfUpsert_WholeTmnt();
+    const ftCount = await potPfUpsert_FullTmnt();
     const nyCount = await potPfUpsert_NewYearsEve();
     const delCount = await potPfUpsert_ToDelete();
 
     console.log(
       "Upserted pot_pf: ",
-      gpCount + wtCount + nyCount + delCount
+      gpCount + ftCount + nyCount + delCount
     );    
-    // 2 + 2 + 8 + 1 = 13
-    return gpCount + wtCount + nyCount + delCount;
+    // 2 + 4 + 8 + 1 = 15
+    return gpCount + ftCount + nyCount + delCount;
   } catch (error) {
     console.log(error);
     return -1;

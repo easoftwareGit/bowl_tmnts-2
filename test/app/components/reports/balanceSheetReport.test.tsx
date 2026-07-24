@@ -13,6 +13,8 @@ import {
   brktId1,
   elimId1,
 } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
+import { localConfig } from "@/lib/currency/const";
+import { formatValueSymbSep2Dec } from "@/lib/currency/formatValue";
 
 jest.mock("@react-pdf/renderer", () => ({
   Document: ({
@@ -89,20 +91,33 @@ describe("BalanceSheetReport", () => {
     expect(onRender).toHaveBeenCalled();
   });
 
-  it("renders the report title, tournament name, date, and page number", () => {
+  it("renders the report title and page heading on every page", () => {
     render(<BalanceSheetReport tmntFullData={mockTmntFullData} />);
 
-    expect(screen.getByText(/Mock Tournament/i)).toBeInTheDocument();
-    expect(screen.getByText(/09\/01\/2025/i)).toBeInTheDocument();
-    expect(screen.getByText("Balance Sheet")).toBeInTheDocument();
-    expect(screen.getByText("Page 1 of 1")).toBeInTheDocument();
+    const pageCount = screen.getAllByTestId("pdf-page").length;
+
+    expect(
+      screen.getAllByText(/Mock Tournament\s+09\/01\/2025/i),
+    ).toHaveLength(pageCount);
+
+    expect(screen.getAllByText("Balance Sheet")).toHaveLength(
+      pageCount,
+    );
+
+    // The React-PDF Text mock always supplies pageNumber 1
+    // and totalPages 1 to the render callback.
+    expect(screen.getAllByText("Page 1 of 1")).toHaveLength(
+      pageCount,
+    );
   });
 
-  it("renders the column headings", () => {
+  it("renders the column headings on every page", () => {
     render(<BalanceSheetReport tmntFullData={mockTmntFullData} />);
 
-    expect(screen.getByText("Description")).toBeInTheDocument();
-    expect(screen.getByText("Amount")).toBeInTheDocument();
+    const pageCount = screen.getAllByTestId("pdf-page").length;
+
+    expect(screen.getAllByText("Description")).toHaveLength(pageCount);
+    expect(screen.getAllByText("Amount")).toHaveLength(pageCount);
   });
 
   it("renders the In Flows group", () => {
@@ -125,12 +140,14 @@ describe("BalanceSheetReport", () => {
     expect(screen.getAllByText("Division: Scratch")).toHaveLength(2);
   });  
 
-  it("renders a pot source for pot entry money", () => {
+  it("renders a pot source for pot money", () => {
     render(<BalanceSheetReport tmntFullData={mockTmntFullData} />);
 
-    expect(screen.getByText("Pot: Scratch: Game")).toBeInTheDocument();
-  });
+    const potSources = screen.getAllByText("Pot: Scratch: Game");
 
+    expect(potSources.length).toBeGreaterThan(0);
+  });  
+  
   it("renders bracket sources for bracket entry money", () => {
     render(<BalanceSheetReport tmntFullData={mockTmntFullData} />);
 
@@ -154,7 +171,8 @@ describe("BalanceSheetReport", () => {
   it("renders prize fund Out Flows rows", () => {
     render(<BalanceSheetReport tmntFullData={mockTmntFullData} />);
 
-    expect(screen.getByText("Prize Fund")).toBeInTheDocument();
+    const prizeFundSources = screen.getAllByText("Prize Fund");
+    expect(prizeFundSources.length).toBeGreaterThan(0);
   });
 
   it("renders the Expenses group when expense rows exist", () => {
@@ -178,16 +196,35 @@ describe("BalanceSheetReport", () => {
       screen.getByText("Expenses excluding Lineage and Other"),
     ).toBeInTheDocument();
 
-    expect(screen.getAllByText("Expenses")).toHaveLength(2);
+    const expenseSources = screen.getAllByText("Expenses");
+    expect(expenseSources.length).toBeGreaterThan(0);
   });  
 
   it("renders total amounts", () => {
+    const totalInFlows = mockTmntFullData.moneys
+      .filter((money) => money.flow === MoneyFlow.IN)
+      .reduce((total, money) => total + (money.amount ?? 0), 0);
+
+    const totalOutFlows = mockTmntFullData.moneys
+      .filter((money) => money.flow === MoneyFlow.OUT)
+      .reduce((total, money) => total + (money.amount ?? 0), 0);
+
+    const expectedInFlows = formatValueSymbSep2Dec(
+      totalInFlows.toString(),
+      localConfig,
+    );
+
+    const expectedOutFlows = formatValueSymbSep2Dec(
+      totalOutFlows.toString(),
+      localConfig,
+    );
+
     render(<BalanceSheetReport tmntFullData={mockTmntFullData} />);
 
-    expect(screen.getByText("$620.00")).toBeInTheDocument();
-    expect(screen.getAllByText("$1,575.00").length).toBeGreaterThan(0);
-  });
-
+    expect(screen.getByText(expectedInFlows)).toBeInTheDocument();
+    expect(screen.getAllByText(expectedOutFlows).length).toBeGreaterThan(0);
+  });  
+  
   it("sorts money rows by sort_order", () => {
     const reportData = cloneDeep(mockTmntFullData);
 
@@ -262,8 +299,10 @@ describe("BalanceSheetReport", () => {
         flow: MoneyFlow.OUT,
         amount: 10,
         sort_order: 100 + i,
-        brkt_id: i % 2 === 0 ? brktId1 : null,
-        elim_id: i % 2 === 1 ? elimId1 : null,
+        // brkt_id: i % 2 === 0 ? brktId1 : null,
+        // elim_id: i % 2 === 1 ? elimId1 : null,
+        brkt_id: i % 2 === 0 ? `${brktId1}_${i}` : null,
+        elim_id: i % 2 === 1 ? `${elimId1}_${i}` : null,
       });
     }
 
@@ -271,4 +310,37 @@ describe("BalanceSheetReport", () => {
 
     expect(screen.getAllByTestId("pdf-page").length).toBeGreaterThan(1);
   });
+
+  it('prints "Out Flows - continued" when an Out Flows group spans multiple pages', () => {
+    const reportData = cloneDeep(mockTmntFullData);
+
+    // Create enough Out Flow subgroups so the Out Flows main group
+    // spans multiple pages.
+    for (let i = 0; i < 50; i++) {
+      reportData.moneys.push({
+        ...blankTmntMoney,
+        id: `mon_continue_${i.toString().padStart(2, "0")}`,
+        event_id: eventId1,
+        squad_id: squadId1,
+        div_id: divId1,
+        descrip: MoneyDescrip.PRIZEFUND,
+        flow: MoneyFlow.OUT,
+        amount: 10,
+        sort_order: 100 + i,
+
+        // Alternate bracket/eliminator ids so each money row
+        // becomes its own subgroup.
+        brkt_id: i % 2 === 0 ? `${brktId1}_${i}` : null,
+        elim_id: i % 2 === 1 ? `${elimId1}_${i}` : null,
+      });
+    }
+
+    render(<BalanceSheetReport tmntFullData={reportData} />);
+
+    expect(screen.getAllByTestId("pdf-page").length).toBeGreaterThan(1);
+
+    const outFlowsContSources = screen.getAllByText("Out Flows - continued");
+    expect(outFlowsContSources.length).toBeGreaterThan(0);
+  });
+
 });

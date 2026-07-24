@@ -4,6 +4,7 @@ import { sanitizeBtDbId, sanitizeCurrency, sanitizeName } from "@/lib/validation
 import { validBtdbMoney, validMoney } from "@/lib/currency/validate";
 import type { potType, potCategoriesTypes, idTypes, validPotsType } from "@/lib/types/types";
 import { blankPot } from "@/lib/db/initVals";
+import { ptGame, ptLastGame, ptSeries } from "../constants";
 
 /**
  * checks if pot object has missing data - DOES NOT SANITIZE OR VALIDATE
@@ -39,7 +40,7 @@ const validPotType = (pot_type: potCategoriesTypes): boolean => {
   if (!pot_type) return false;
   const sanitized = sanitizeName(pot_type);
   // "" is inclided in PotCategories type, but is not a valid value
-  return (sanitized === 'Game' || sanitized === 'Last Game' || sanitized === 'Series');  
+  return (sanitized === ptGame || sanitized === ptLastGame || sanitized === ptSeries);  
 }
 
 /**

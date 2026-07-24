@@ -9,6 +9,7 @@ import {
   initTmnt,
 } from "@/lib/db/initVals";
 import type { dataOneTmntType } from "@/lib/types/types";
+import { ptGame, ptLastGame } from "@/lib/validation/constants";
 
 export const mockCurData: dataOneTmntType = {
   tmnt: {
@@ -127,7 +128,7 @@ export const mockCurData: dataOneTmntType = {
       div_id: "div_578834e04e5e4885bbae79229d8b96e8",
       sort_order: 1,
       fee: "20",
-      pot_type: "Game",
+      pot_type: ptGame,
     },
     {
       ...initPot,
@@ -136,7 +137,7 @@ export const mockCurData: dataOneTmntType = {
       div_id: "div_578834e04e5e4885bbae79229d8b96e8",
       sort_order: 2,
       fee: "10",
-      pot_type: "Last Game",
+      pot_type: ptLastGame,
     },
     {
       ...initPot,
@@ -145,7 +146,7 @@ export const mockCurData: dataOneTmntType = {
       div_id: "div_fe72ab97edf8407186c8e6df7f7fb741",
       sort_order: 3,
       fee: "20",
-      pot_type: "Game",
+      pot_type: ptGame,
     },
     {
       ...initPot,
@@ -154,7 +155,7 @@ export const mockCurData: dataOneTmntType = {
       div_id: "div_fe72ab97edf8407186c8e6df7f7fb741",
       sort_order: 4,
       fee: "10",
-      pot_type: "Last Game",
+      pot_type: ptLastGame,
     },
   ],
   brkts: [

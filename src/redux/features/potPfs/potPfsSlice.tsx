@@ -40,6 +40,9 @@ export const savePotPfs = createAsyncThunk(
   async (potPfs: potPfType[]) => {
     // Do not use try / catch blocks here. Need the promise to be fulfilled or
     // rejected which will have the appropriate response in the extraReducers.
+    if (!Array.isArray(potPfs) || potPfs.length === 0) {
+      throw new Error("Invalid potPfs array");
+    }
     const updated = await updateAllPotPfsForPot(potPfs[0].pot_id, potPfs);
     if (!updated) {
       throw new Error("Error updating potPfs");

@@ -21,7 +21,7 @@ import {
   getAcdnErrMsg,
   noAcdnErr,
 } from "./errors";
-import { maxMoney, minFee } from "@/lib/validation/constants";
+import { maxMoney, minFee, ptGame, ptLastGame, ptSeries } from "@/lib/validation/constants";
 import { getDivName, getPotName } from "@/lib/getName";
 import { btDbUuid } from "@/lib/uuid";
 import clsx from "clsx";
@@ -43,15 +43,15 @@ const createPotTitle = "Create Pot";
 const potCategories: PotCategoryObjType[] = [
   {
     id: 1,
-    name: "Game",
+    name: ptGame,
   },
   {
     id: 2,
-    name: "Last Game",
+    name: ptLastGame,
   },
   {
     id: 3,
-    name: "Series",
+    name: ptSeries,
   },
 ];
 

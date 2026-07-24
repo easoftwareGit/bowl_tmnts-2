@@ -2,7 +2,7 @@ import { validatePots } from "@/app/dataEntry/tmntForm/zeroToNPots";
 import type { potType, AcdnErrType } from "@/lib/types/types";
 import { mockTmntFullData } from "../../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { acdnErrClassName, noAcdnErr, objErrClassName } from "@/app/dataEntry/tmntForm/errors";
-import { maxMoney, minFee } from "@/lib/validation/constants";
+import { maxMoney, minFee, ptGame, ptSeries } from "@/lib/validation/constants";
 
 const baseMockPot: potType = {
   ...mockTmntFullData.pots[0],  // assumes you have at least 1 mock pot
@@ -141,11 +141,11 @@ describe("zeroToNPots - validate", () => {
       const pots = [
         makePot({
           fee: minFee.toString(),
-          pot_type: 'Game',
+          pot_type: ptGame,
         }),
         makePot({
           fee: (minFee - 0.01).toString(),
-          pot_type: 'Series',
+          pot_type: ptSeries,
         })
       ];
       const setPots = jest.fn() as jest.Mock<void, [potType[]]>;
@@ -165,11 +165,11 @@ describe("zeroToNPots - validate", () => {
       const pots = [
         makePot({
           fee: (minFee - 0.01).toString(), 
-          pot_type: 'Game',
+          pot_type: ptGame,
         }),
         makePot({
           fee: (minFee - 0.02).toString(),
-          pot_type: 'Series',
+          pot_type: ptSeries,
         })
       ];
       const setPots = jest.fn() as jest.Mock<void, [potType[]]>;
@@ -193,11 +193,11 @@ describe("zeroToNPots - validate", () => {
       const pots = [
         makePot({
           fee: (minFee).toString(), // no errors
-          pot_type: 'Game',
+          pot_type: ptGame,
         }),
         makePot({
           fee: (minFee - 0.02).toString(),
-          pot_type: 'Series',
+          pot_type: ptSeries,
         })
       ];
       const setPots = jest.fn() as jest.Mock<void, [potType[]]>;

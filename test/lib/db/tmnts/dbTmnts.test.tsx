@@ -48,6 +48,7 @@ import { getAllOneBrktsForTmnt } from "@/lib/db/oneBrkts/dbOneBrkts";
 import { getAllBrktSeedsForTmnt } from "@/lib/db/brktSeeds/dbBrktSeeds";
 import { getAllElimEntriesForTmnt } from "@/lib/db/elimEntries/dbElimEntries";
 import { getAllBrktEntriesForTmnt } from "@/lib/db/brktEntries/dbBrktEntries";
+import { ptGame, ptLastGame, ptSeries } from "@/lib/validation/constants";
 
 const { getTmntsForYear, getUpcomingTmnts } = exportedForTesting;
 
@@ -793,13 +794,13 @@ describe("dbTmnts", () => {
       expect(pots[0].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
       expect(pots[0].div_id).toBe("div_1f42042f9ef24029a0a2d48cc276a087");
       expect(pots[0].fee).toBe("10");
-      expect(pots[0].pot_type).toBe("Game");
+      expect(pots[0].pot_type).toBe(ptGame);
       expect(pots[0].sort_order).toBe(1);
       expect(pots[1].id).toBe("pot_ab80213899ea424b938f52a062deacfe");
       expect(pots[1].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
       expect(pots[1].div_id).toBe("div_1f42042f9ef24029a0a2d48cc276a087");
       expect(pots[1].fee).toBe("10");
-      expect(pots[1].pot_type).toBe("Last Game");
+      expect(pots[1].pot_type).toBe(ptLastGame);
       expect(pots[1].sort_order).toBe(2);
 
       const brkts = tmntFullData.brkts;
@@ -1602,7 +1603,7 @@ describe("dbTmnts", () => {
       tmntEntries.divs[0].div_name = "DoNotUpdate";
       tmntEntries.squads[0].squad_name = "DoNotUpdate";
       tmntEntries.lanes[0].lane_number = 100;
-      tmntEntries.pots[0].pot_type = "Series";
+      tmntEntries.pots[0].pot_type = ptSeries;
       tmntEntries.brkts[0].start = 2;
       tmntEntries.elims[0].start = 2;
       tmntEntries.players[0].first_name = "Updated";

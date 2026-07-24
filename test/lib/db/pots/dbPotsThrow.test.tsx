@@ -10,6 +10,7 @@ import {
   postPot,
   putPot,
 } from "@/lib/db/pots/dbPots";
+import { ptGame, ptLastGame } from "@/lib/validation/constants";
 
 // If running tests AND a test URL is defined, use it; otherwise use the app API path
 const url = process.env.NODE_ENV === "test" && testBasePotsApi
@@ -46,7 +47,7 @@ const manyPots: potType[] = [
     div_id: "div_621bfee84e774d5a9dc2e9b6bdc5d31c",
     sort_order: 1,
     fee: "20",
-    pot_type: "Game" as potCategoriesTypes,
+    pot_type: ptGame as potCategoriesTypes,
   },
   {
     ...blankPot,
@@ -55,7 +56,7 @@ const manyPots: potType[] = [
     div_id: "div_621bfee84e774d5a9dc2e9b6bdc5d31c",
     sort_order: 2,
     fee: "10",
-    pot_type: "Last Game" as potCategoriesTypes,
+    pot_type: ptLastGame as potCategoriesTypes,
   },
 ];
 

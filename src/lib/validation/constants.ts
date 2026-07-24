@@ -64,3 +64,7 @@ export const baseIdLength = idTypeLength + idTypeSeparatorLength + uuidLength; /
 
 export const TotalHdcpName = "total_hdcp";
 export const TotalPlusTotalHdcpName = "total_plus_total_hdcp";
+
+export const ptGame = "Game";
+export const ptLastGame = "Last Game";
+export const ptSeries = "Series";

@@ -1,5 +1,4 @@
-import { isValidBtDbId, validInteger, isNumber, validPfAmount, validPfPosition } from "@/lib/validation/validation";
-import { maxMoney, maxPosition } from "../constants";
+import { isValidBtDbId, isNumber, validPfAmount, validPfPosition } from "@/lib/validation/validation";
 import { ErrorCode } from "@/lib/enums/enums";
 import { sanitizeBtDbId, sanitizeMoneyAmount } from "../sanitize";
 import { potPfType, validPotPfsType } from "@/lib/types/types";

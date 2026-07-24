@@ -269,5 +269,50 @@ describe("divPfsSlice reducer + thunk", () => {
       expect(state.error).toBe("Save failed");
       expect(state.divPfs).toEqual([]);
     });
+
+    it("dispatches rejected when saveDivPfs is called with an empty array", async () => {
+      const store = configureStore({
+        reducer: {
+          divPfs: reducer,
+        },
+      });
+
+      const action = await store.dispatch(
+        saveDivPfs([]) as any
+      );
+
+      expect(saveDivPfs.rejected.match(action)).toBe(true);
+      expect(mockedUpdateAllDivPfsForDiv).not.toHaveBeenCalled();
+
+      const state = store.getState().divPfs;
+
+      expect(state.loadStatus).toBe("idle");
+      expect(state.saveStatus).toBe("failed");
+      expect(state.error).toBe("Invalid divPfs array");
+      expect(state.divPfs).toEqual([]);
+    });
+
+    it("dispatches rejected when saveDivPfs is called with a non-array", async () => {
+      const store = configureStore({
+        reducer: {
+          divPfs: reducer,
+        },
+      });
+
+      const action = await store.dispatch(
+        saveDivPfs(null as any)
+      );
+
+      expect(saveDivPfs.rejected.match(action)).toBe(true);
+      expect(mockedUpdateAllDivPfsForDiv).not.toHaveBeenCalled();
+
+      const state = store.getState().divPfs;
+
+      expect(state.loadStatus).toBe("idle");
+      expect(state.saveStatus).toBe("failed");
+      expect(state.error).toBe("Invalid divPfs array");
+      expect(state.divPfs).toEqual([]);
+    });
+
   });
 });

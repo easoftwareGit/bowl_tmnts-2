@@ -1,4 +1,5 @@
 import type { brktType, divType, elimType, potType } from "@/lib/types/types";
+import { ptGame, ptLastGame } from "./validation/constants";
 
 const findDiv = (id: string, divs: divType[]): divType | undefined => {
   return divs.find((div) => div.id === id);
@@ -21,9 +22,9 @@ export const getPotName = (pot: potType | undefined, divs: divType[]): string =>
 
 export const getPotShortName = (pot: potType, divs: divType[]): string => {
   const foundDiv: divType | undefined = findDiv(pot.div_id, divs)
-  const potShort = (pot.pot_type === 'Game')
+  const potShort = (pot.pot_type === ptGame)
     ? 'Gm'
-    : (pot.pot_type === 'Last Game') ? 'LG' : 'Sr';    
+    : (pot.pot_type === ptLastGame) ? 'LG' : 'Sr';    
   return (foundDiv)
     ? foundDiv.div_name + ': ' + potShort
     : '';

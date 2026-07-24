@@ -15,6 +15,7 @@ import {
 } from "@/lib/db/initVals";
 import { todayStr } from "@/lib/dateTools";
 import { Prisma, Div, Pot, Brkt, Elim } from "@prisma/client";
+import { ptGame, ptLastGame, ptSeries } from "@/lib/validation/constants";
 // import { Decimal } from "@prisma/client/runtime/library";
 
 const divId1 = "div_578834e04e5e4885bbae79229d8b96e8";
@@ -206,7 +207,7 @@ export const mockPots: potType[] = [
     id: "pot_f7935dec9e8b46148d6f1a6637daebf5",
     div_id: divId1,
     squad_id: "1",
-    pot_type: "Game",
+    pot_type: ptGame,
     pot_type_err: "",
     div_err: "",
     fee: "20",
@@ -218,7 +219,7 @@ export const mockPots: potType[] = [
     id: "pot_4fe4f6d6c5694db189543bb68c0a9ec1",
     div_id: divId1,
     squad_id: "1",
-    pot_type: "Last Game",
+    pot_type: ptLastGame,
     pot_type_err: "",
     div_err: "",
     fee: "10",
@@ -230,7 +231,7 @@ export const mockPots: potType[] = [
     id: "pot_ebc5be04fa194837b68792fc0b28adcc",
     div_id: divId2,
     squad_id: "1",
-    pot_type: "Game",
+    pot_type: ptSeries,
     pot_type_err: "",
     div_err: "",
     fee: "20",
@@ -242,7 +243,7 @@ export const mockPots: potType[] = [
     id: "pot_4a6faec83eb042ff866ae494b879dbe9",
     div_id: divId2,
     squad_id: "1",
-    pot_type: "Series",
+    pot_type: ptSeries,
     pot_type_err: "",
     div_err: "",
     fee: "10",
@@ -259,7 +260,7 @@ export const mockPrismaPots: Pot[] = [
     div_id: "div_f30aea2c534f4cfe87f4315531cef8ef",
     sort_order: 1,
     fee: new Prisma.Decimal(20),
-    pot_type: "Game",
+    pot_type: ptGame,
     createdAt: new Date(),
     updatedAt: new Date(),
   },
@@ -269,7 +270,7 @@ export const mockPrismaPots: Pot[] = [
     div_id: "div_1f42042f9ef24029a0a2d48cc276a087",
     sort_order: 1,
     fee: new Prisma.Decimal(10),
-    pot_type: "Game",
+    pot_type: ptGame,
     createdAt: new Date(),
     updatedAt: new Date(),
   },
@@ -279,7 +280,7 @@ export const mockPrismaPots: Pot[] = [
     div_id: "div_1f42042f9ef24029a0a2d48cc276a087",
     sort_order: 2,
     fee: new Prisma.Decimal(10),
-    pot_type: "Last Game",
+    pot_type: ptLastGame,
     createdAt: new Date(),
     updatedAt: new Date(),
   },
@@ -289,7 +290,7 @@ export const mockPrismaPots: Pot[] = [
     div_id: "div_29b9225d8dd44a4eae276f8bde855729",
     sort_order: 1,
     fee: new Prisma.Decimal(20),
-    pot_type: "Game",
+    pot_type: ptGame,
     createdAt: new Date(),
     updatedAt: new Date(),
   },

@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams, useRouter } from "next/navigation";
 import type {
+  potCategoriesTypes,
   potPfType,
   prizeFundEntryRow,
   prizeFundType,
@@ -24,11 +25,11 @@ import PotPrizeFundEntry from "@/app/dataEntry/prizeFunds/tmnt/[tmntId]/pot/[pot
 import {
   tmntId,
   potId1,
-  mockPotPfs,
-  mockPot1PrizeFund,
+  mockPotPfs,  
   mockPot1PerGamePrizeFund,
   mockTmntFullData,  
 } from "../../../../mocks/tmnts/tmntFullData/mockTmntFullData";
+import cloneDeep from "lodash/cloneDeep";
 
 type MockRootState = {
   potPfs: {
@@ -79,6 +80,7 @@ export type SetupOptions = {
   potId?: string;
 
   potName?: string;
+  potType?: potCategoriesTypes;
 
   potPfs?: potPfType[];
   tmntData?: tmntFullType;
@@ -494,35 +496,83 @@ export const makePrizeFunds = (
 };
 
 /**
+ * Converts the mocked pot prize funds to the generic potPf type
+ * expected by the page's conversion helper.
+ */
+export const makePotPfsForPot = (
+  potId: string,
+  potPfs: potPfType[] = mockPotPfs,
+): potPfType[] =>
+  potPfs.map((pf) => ({
+    ...pf,
+    pot_id: potId,
+  }));
+
+/**
+ * Converts the mocked pot prize funds to the generic potPf type
+ * expected by the page's conversion helper.
+ * Each potPf has a different pot_id than the current pot.
+ */
+export const makePotPfsForDifferentPot = (
+  currentPotId: string,
+  potPfs: potPfType[] = mockPotPfs,
+): potPfType[] =>
+  potPfs.map((pf) => ({
+    ...pf,
+    pot_id:
+      pf.pot_id === currentPotId
+        ? "different-pot-id"
+        : pf.pot_id,
+  }));
+
+/**
  * Creates the generic rows returned by the mocked populatePfRows().
  *
- * Pot prize-fund rows are distributed against the prize fund for one game,
- * not the prize fund for all games.
+ * For Game pots, the rows are based on the per-game prize fund.
+ * For Last Game and Series pots, the rows are based on the total prize fund.
+ *
+ * The default implementation assumes a Game pot because the mock tournament
+ * data uses that pot type.
  */
 export const makeRows = (
   potPfs: potPfType[] = mockPotPfs,
+  totalPrizeFund: number = mockPot1PerGamePrizeFund,
 ): prizeFundEntryRow[] => {
-
   return potPfs.map((potPf) => ({
     id: potPf.id,
     parent_id: potPf.pot_id,
     position: potPf.position!,
     amount: potPf.amount!,
-    percentage: 
-      mockPot1PerGamePrizeFund > 0
-        ? potPf.amount! / mockPot1PerGamePrizeFund
+    percentage:
+      totalPrizeFund > 0
+        ? potPf.amount! / totalPrizeFund
         : 0,
   }));
 };
+
+/****************
+ * page queries *
+ ****************/
+
+/**
+ * Queries the page for the Per Game element.
+ */
+export const queryPerGame = () =>
+  screen.queryByLabelText("Per Game");
 
 /***********
  * setup() *
  ***********/
 
 export const setup = ({
+  tmntId: setupTmntId = tmntId,
+  potId: setupPotId = potId1,
 
-  potPfs = mockPotPfs,
-  tmntData = mockTmntFullData,
+  // only get potPfs for the current pot
+  potPfs: suppliedPotPfs = mockPotPfs.filter(
+    (potPf) => potPf.pot_id === setupPotId,
+  ),
+  tmntData: suppliedTmntData = mockTmntFullData,
 
   potPfsLoadStatus = "succeeded",
   tmntLoadStatus = "succeeded",
@@ -530,9 +580,11 @@ export const setup = ({
   potPfsError = null,
   tmntError = null,
 
-  prizeFunds = makePrizeFunds(potPfs),
-  populatedRows = makeRows(potPfs),
+  prizeFunds: suppliedPrizeFunds,
+  populatedRows: suppliedPopulatedRows,
+
   potName = "Mock Pot",
+  potType,
 
   confirmLeavePage = true,
 }: SetupOptions = {}): {
@@ -558,8 +610,57 @@ export const setup = ({
 } => {
   const user = userEvent.setup();
 
+  /*
+   * Clone the supplied pot prize-fund data.
+   *
+   * Tests may alter the rows or their pot_id values. Cloning prevents one
+   * test from mutating the shared mock data used by another test.
+   */
+  const potPfs = cloneDeep(suppliedPotPfs);
+
+  /*
+   * Clone the supplied tournament data.
+   *
+   * Some setup options, such as potType, modify tournament data for the
+   * current test. Cloning prevents those changes from mutating shared mock
+   * data or affecting later tests.
+   */
+  const tmntData = cloneDeep(suppliedTmntData);
+
+  /*
+   * Override the selected pot's type when requested.
+   *
+   * This allows tests to render the same page as a Game, Last Game, or
+   * Series pot without creating separate tournament mock objects.
+   */
+  if (potType !== undefined) {
+    const selectedPot = tmntData.pots.find(
+      (pot) => pot.id === setupPotId,
+    );
+
+    if (selectedPot) {
+      selectedPot.pot_type = potType;
+    }
+  }
+
+  /*
+   * Build the generic prize-fund data from the final cloned potPfs unless
+   * the test explicitly supplied its own converted prize-fund data.
+   */
+  const prizeFunds =
+    suppliedPrizeFunds ??
+    makePrizeFunds(potPfs);
+
+  /*
+   * Build the rows returned by populatePfRows() from the final cloned
+   * potPfs unless the test explicitly supplied its own populated rows.
+   */
+  const populatedRows =
+    suppliedPopulatedRows ??
+    makeRows(potPfs);
+
   const runTmntUrl =
-    `/dataEntry/runTmnt/${tmntId}`;
+    `/dataEntry/runTmnt/${setupTmntId}`;
 
   const mockState: MockRootState = {
     potPfs: {
@@ -576,8 +677,8 @@ export const setup = ({
   };
 
   jest.mocked(useParams).mockReturnValue({
-    tmntId,
-    potId: potId1,
+    tmntId: setupTmntId,
+    potId: setupPotId,
   });
 
   jest.mocked(useRouter).mockReturnValue({
@@ -673,8 +774,8 @@ export const setup = ({
     user,
     view,
 
-    tmntId,
-    potId: potId1,
+    tmntId: setupTmntId,
+    potId: setupPotId,
     runTmntUrl,
 
     potPfs,

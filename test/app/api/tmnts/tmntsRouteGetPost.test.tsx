@@ -5,7 +5,7 @@ import type { bowlType, tmntType, YearObj } from "@/lib/types/types";
 import { initBowl, initTmnt } from "@/lib/db/initVals";
 import { removeTimeFromISODateStr, todayStr } from "@/lib/dateTools";
 import { isValidBtDbId } from "@/lib/validation/validation";
-import { maxYear, minYear } from "@/lib/validation/constants";
+import { maxYear, minYear, ptGame, ptLastGame } from "@/lib/validation/constants";
 
 // before running this test, run the following commands in the terminal:
 // 1) clear and re-seed the database
@@ -715,9 +715,9 @@ describe("Tmnts - API: /api/tmnts", () => {
             expect(tmntFullData.divs[i].pots[j].squad_id).toBe(yoSquadId);
             expect(tmntFullData.divs[i].pots[j].fee).toBe('10');
             if (tmntFullData.divs[i].pots[j].id === 'pot_98b3a008619b43e493abf17d9f462a65') {
-              expect(tmntFullData.divs[i].pots[j].pot_type).toBe('Game');
+              expect(tmntFullData.divs[i].pots[j].pot_type).toBe(ptGame);
             } else if (tmntFullData.divs[i].pots[j].id === 'pot_ab80213899ea424b938f52a062deacfe') {
-              expect(tmntFullData.divs[i].pots[j].pot_type).toBe('Last Game');
+              expect(tmntFullData.divs[i].pots[j].pot_type).toBe(ptLastGame);
             } else {
               expect(true).toBeFalsy();
             }

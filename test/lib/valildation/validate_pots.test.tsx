@@ -8,6 +8,7 @@ import { initPot } from "@/lib/db/initVals";
 import type { potCategoriesTypes, potType, validPotsType } from "@/lib/types/types";
 import { ErrorCode } from "@/lib/enums/enums";
 import { mockPotsToPost } from "../../mocks/tmnts/singlesAndDoubles/mockSquads";
+import { ptGame, ptLastGame, ptSeries } from "@/lib/validation/constants";
 
 const { gotPotData, validPotType, validPotMoney, validPotFkId, validPotData } = exportedForTesting;
 
@@ -73,9 +74,9 @@ describe("tests for pot validation", () => {
 
   describe('validPotType function', () => {
     it('should return true when pot_type is valid', () => {
-      expect(validPotType('Game')).toBe(true);
-      expect(validPotType('Last Game')).toBe(true);
-      expect(validPotType('Series')).toBe(true);
+      expect(validPotType(ptGame)).toBe(true);
+      expect(validPotType(ptLastGame)).toBe(true);
+      expect(validPotType(ptSeries)).toBe(true);
     })
     it('should return false when pot_type is invalid', () => {
       expect(validPotType('')).toBe(false);

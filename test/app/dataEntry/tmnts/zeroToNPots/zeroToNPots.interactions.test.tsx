@@ -3,7 +3,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ZeroToNPots from "@/app/dataEntry/tmntForm/zeroToNPots";
 import type { potType } from "@/lib/types/types";
-import { minFee, maxMoney } from "@/lib/validation/constants";
+import { minFee, maxMoney, ptSeries } from "@/lib/validation/constants";
 import { divId1, mockTmntFullData } from "../../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { noAcdnErr } from "@/app/dataEntry/tmntForm/errors";
 import { before, cloneDeep } from "lodash";
@@ -361,7 +361,7 @@ describe("zeroToNPots - interactions", () => {
       const testPots = cloneDeep(mockTmntFullData.pots);
       testPots[0].fee = "0";
       testPots[0].fee_err = "Fee cannot be less than $1.00";
-      testPots[1].pot_type = 'Series';
+      testPots[1].pot_type = ptSeries;
       testPots[1].fee = "10";
       renderCreatePot(testPots);
 
