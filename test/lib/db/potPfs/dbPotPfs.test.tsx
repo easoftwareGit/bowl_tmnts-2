@@ -68,13 +68,13 @@ describe("dbPotPfs", () => {
     it('should extract potPfs from a pot', () => {
       const rawPotPfs = [
         {
-          id: "dpf_01234567890123456789012345678901",
+          id: "ppf_01234567890123456789012345678901",
           pot_id: "pot_01234567890123456789012345678901",
           position: "1",
           amount: "1234.56",
         },
         {
-          id: "dpf_01234567890123456789012345678902",
+          id: "ppf_01234567890123456789012345678902",
           pot_id: "pot_01234567890123456789012345678901",
           position: "2",
           amount: "234.56",
@@ -82,11 +82,11 @@ describe("dbPotPfs", () => {
       ]
       const potPfs = extractPotPfs(rawPotPfs);
       expect(potPfs.length).toBe(rawPotPfs.length);
-      expect(potPfs[0].id).toBe("dpf_01234567890123456789012345678901");
+      expect(potPfs[0].id).toBe("ppf_01234567890123456789012345678901");
       expect(potPfs[0].pot_id).toBe("pot_01234567890123456789012345678901");
       expect(potPfs[0].position).toBe(1);
       expect(potPfs[0].amount).toBe(1234.56);
-      expect(potPfs[1].id).toBe("dpf_01234567890123456789012345678902");
+      expect(potPfs[1].id).toBe("ppf_01234567890123456789012345678902");
       expect(potPfs[1].pot_id).toBe("pot_01234567890123456789012345678901");
       expect(potPfs[1].position).toBe(2);
       expect(potPfs[1].amount).toBe(234.56);

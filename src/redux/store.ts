@@ -2,6 +2,7 @@ import { configureStore } from '@reduxjs/toolkit'
 import { TypedUseSelectorHook, useSelector } from 'react-redux';
 import bowlsReducer from './features/bowls/bowlsSlice';
 import divPfsReducer from './features/divPfs/divPfsSlice';
+import elimPfsReducer from './features/elimPfs/elimPfsSlice';
 import gamesForSquadReducer from './features/gamesForSquad/gamesForSquadSlice';
 import oneDivGameResultsReducer from './features/oneDivGameResults/oneDivGameResultsSlice';
 import oneTmntGameResultsReducer from './features/oneTmntGameResults/oneTmntGameResultsSlice';
@@ -17,6 +18,7 @@ export const store = configureStore({
   reducer: {
     bowls: bowlsReducer,
     divPfs: divPfsReducer,
+    elimPfs: elimPfsReducer,
     gamesForSquad: gamesForSquadReducer,
     oneDivGameResults: oneDivGameResultsReducer,
     oneTmntGameResults: oneTmntGameResultsReducer,

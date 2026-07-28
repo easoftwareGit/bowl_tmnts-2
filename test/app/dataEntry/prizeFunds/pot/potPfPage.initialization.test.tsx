@@ -9,40 +9,12 @@ import {
   setup,
   standardBeforeEach,
 } from "./potPfPage.testSetup.test";
-
 import {
-  mockPotPfs,
-  mockPot1PerGamePrizeFund,
-  mockPot1PrizeFund,
   mockTmntFullData,
   potId1,
   potId2,
 } from "../../../../mocks/tmnts/tmntFullData/mockTmntFullData";
-
-import {
-  ptGame,
-  ptLastGame,
-  ptSeries,
-} from "@/lib/validation/constants";
-
-const mockPot1EntryFees =
-  mockTmntFullData.moneys.find(
-    (money) =>
-      money.descrip === "ENTRIES" &&
-      money.flow === "IN" &&
-      money.pot_id === potId1 &&
-      money.brkt_id === null &&
-      money.elim_id === null,
-  )?.amount ?? 0;
-const mockPot1Expenses =
-  mockTmntFullData.moneys.find(
-    (money) =>
-      money.descrip === "EXPENSES" &&
-      money.flow === "OUT" &&
-      money.pot_id === potId1 &&
-      money.brkt_id === null &&
-      money.elim_id === null,
-  )?.amount ?? 0;
+import { ptGame, ptLastGame } from "@/lib/validation/constants";
 
 describe("Pot Prize Fund web page initialization", () => {
   beforeEach(standardBeforeEach);

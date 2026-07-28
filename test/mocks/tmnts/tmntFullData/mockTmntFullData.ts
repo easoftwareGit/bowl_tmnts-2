@@ -11,6 +11,7 @@ import {
   initDiv,
   initDivPf,
   initElim,
+  initElimPf,
   initEvent,
   initLane,
   initPlayer,
@@ -27,7 +28,8 @@ import type {
   tmntFullType,
   gameType,
   divPfType,
-  potPfType,    
+  potPfType,
+  elimPfType,    
 } from "@/lib/types/types";
 import { ptGame, ptLastGame } from "@/lib/validation/constants";
 import { MoneyDescrip, MoneyFlow, SquadStage } from "@prisma/client";
@@ -36,6 +38,16 @@ export const brktId1 = "brk_0123f51cc1ca4748ad5e8abab88277ea";
 export const brktId2 = "brk_0123f51cc1ca4748ad5e8abab88277eb";
 export const bowlId = "bwl_0123388a8fc4641a2e37233f1d6bebd1";
 export const byeId = "bye_0123388a8fc4641a2e37233f1d6beab1";
+
+export const divEntryId1 = "den_0123111c721147f7a2bf2702056947ca";
+export const divEntryId2 = "den_0123111c721147f7a2bf2702056947cb";
+export const divEntryId3 = "den_0123111c721147f7a2bf2702056947cc";
+export const divEntryId4 = "den_0123111c721147f7a2bf2702056947cd";
+export const divEntryId5 = "den_0123111c721147f7a2bf2702056947ce";
+export const divEntryId6 = "den_0123111c721147f7a2bf2702056947cf";
+export const divEntryId7 = "den_0123111c721147f7a2bf2702056947d0";
+export const divEntryId8 = "den_0123111c721147f7a2bf2702056947d1";
+
 export const divId1 = "div_0123cae28786485bb7a036935f0f6a0a";
 export const divId2 = "div_0123cae28786485bb7a036935f0f6a0b";
 export const divPfId1 = "dpf_0123cae28786485bb7a036935f0f6a0a";
@@ -44,8 +56,30 @@ export const divPfId3 = "dpf_0123cae28786485bb7a036935f0f6a0c";
 export const divPfId4 = "dpf_0123cae28786485bb7a036935f0f6a0d";
 export const divPfId5 = "dpf_0123cae28786485bb7a036935f0f6a0e";
 export const divPfId6 = "dpf_0123cae28786485bb7a036935f0f6a0f";
+
+export const elimEntryId1 = "ely_01234ec07f824b0e93169ae78e8b4b1a";
+export const elimEntryId2 = "ely_01234ec07f824b0e93169ae78e8b4b1b";
+export const elimEntryId3 = "ely_01234ec07f824b0e93169ae78e8b4b1c";
+export const elimEntryId4 = "ely_01234ec07f824b0e93169ae78e8b4b1d";
+export const elimEntryId5 = "ely_01234ec07f824b0e93169ae78e8b4b1e";
+export const elimEntryId6 = "ely_01234ec07f824b0e93169ae78e8b4b1f";
+export const elimEntryId7 = "ely_01234ec07f824b0e93169ae78e8b4b2a";
+export const elimEntryId8 = "ely_01234ec07f824b0e93169ae78e8b4b2b";
+export const elimEntryId9 = "ely_01234ec07f824b0e93169ae78e8b4b2c";
+export const elimEntryId10 = "ely_01234ec07f824b0e93169ae78e8b4b2d";
+export const elimEntryId11 = "ely_01234ec07f824b0e93169ae78e8b4b2e";
+export const elimEntryId12 = "ely_01234ec07f824b0e93169ae78e8b4b2f";
+export const elimEntryId13 = "ely_01234ec07f824b0e93169ae78e8b4b3a";
+export const elimEntryId14 = "ely_01234ec07f824b0e93169ae78e8b4b3b";
+export const elimEntryId15 = "ely_01234ec07f824b0e93169ae78e8b4b3c";
+export const elimEntryId16 = "ely_01234ec07f824b0e93169ae78e8b4b3d";
+
 export const elimId1 = "elm_01234ec07f824b0e93169ae78e8b4b1a";
 export const elimId2 = "elm_01234ec07f824b0e93169ae78e8b4b1b";
+export const elimPfId1 = "epf_0123cae28786485bb7a036935f0f6a0a";
+export const elimPfId2 = "epf_0123cae28786485bb7a036935f0f6a0b";
+export const elimPfId3 = "epf_0123cae28786485bb7a036935f0f6a0c";
+export const elimPfId4 = "ppf_0123cae28786485bb7a036935f0f6a0d";
 export const eventId1 = "evt_012310c8493f4a218d2e2b045442974a";
 export const eventId2 = "evt_012310c8493f4a218d2e2b045442974b";
 
@@ -182,10 +216,12 @@ export const timeStampNumber = 1742348718741;
 export const tmntId = "tmt_0123388a8fc4641a2e37233f1d6bebd1";
 export const userId = "usr_0123fb5d314fff1ff5da6521a2fa7bda";
 
-export const mockDivPrizeFund = 1575;
+export const mockDivPrizeFund = (57 * 8) + 0; // (events[0].prizefund * players.length) + events[0].added_money
 export const mockPot1PrizeFund = 660;
 export const mockPot1PerGamePrizeFund = 110;
 export const mockPot2PrizeFund = 275;
+export const mockElim1PrizeFund = 35;
+export const mockElim2PrizeFund = 35;
 
 export const mockUser: userFormType  = {
   id: userId,
@@ -370,7 +406,7 @@ export const mockTmntFullData: tmntFullType = {
   divEntries: [
     {
       ...blankDivEntry,
-      id: "den_0123111c721147f7a2bf2702056947ca",
+      id: divEntryId1,
       squad_id: squadId1,
       div_id: divId1,
       player_id: playerId1,
@@ -378,7 +414,7 @@ export const mockTmntFullData: tmntFullType = {
     },
     {
       ...blankDivEntry,
-      id: "den_0123111c721147f7a2bf2702056947cb",
+      id: divEntryId2,
       squad_id: squadId1,
       div_id: divId1,
       player_id: playerId2,
@@ -386,7 +422,7 @@ export const mockTmntFullData: tmntFullType = {
     },
     {
       ...blankDivEntry,
-      id: "den_0123111c721147f7a2bf2702056947cc",
+      id: divEntryId3,
       squad_id: squadId1,
       div_id: divId1,
       player_id: playerId3,
@@ -394,40 +430,156 @@ export const mockTmntFullData: tmntFullType = {
     },
     {
       ...blankDivEntry,
-      id: "den_0123111c721147f7a2bf2702056947cd",
+      id: divEntryId4,
       squad_id: squadId1,
       div_id: divId1,
       player_id: playerId4,
+      fee: "85",
+    },
+    {
+      ...blankDivEntry,
+      id: divEntryId5,
+      squad_id: squadId1,
+      div_id: divId1,
+      player_id: playerId5,
+      fee: "85",
+    },
+    {
+      ...blankDivEntry,
+      id: divEntryId6,
+      squad_id: squadId1,
+      div_id: divId1,
+      player_id: playerId6,
+      fee: "85",
+    },
+    {
+      ...blankDivEntry,
+      id: divEntryId7,
+      squad_id: squadId1,
+      div_id: divId1,
+      player_id: playerId7,
+      fee: "85",
+    },
+    {
+      ...blankDivEntry,
+      id: divEntryId8,
+      squad_id: squadId1,
+      div_id: divId1,
+      player_id: playerId8,
       fee: "85",
     },
   ],
   elimEntries: [
     {
       ...blankElimEntry,
-      id: "een_0123111c721147f7a2bf2702056947ca",
+      id: elimEntryId1,
       elim_id: elimId1,
       player_id: playerId1,
       fee: "5",
     },
     {
       ...blankElimEntry,
-      id: "een_0123111c721147f7a2bf2702056947cb",
+      id: elimEntryId2,
       elim_id: elimId1,
       player_id: playerId2,
       fee: "5",
     },
     {
       ...blankElimEntry,
-      id: "een_0123111c721147f7a2bf2702056947cc",
+      id: elimEntryId3,
+      elim_id: elimId1,
+      player_id: playerId3,
+      fee: "5",
+    },
+    {
+      ...blankElimEntry,
+      id: elimEntryId4,
+      elim_id: elimId1,
+      player_id: playerId4,
+      fee: "5",
+    },
+    {
+      ...blankElimEntry,
+      id: elimEntryId5,
+      elim_id: elimId1,
+      player_id: playerId5,
+      fee: "5",
+    },
+    {
+      ...blankElimEntry,
+      id: elimEntryId6,
+      elim_id: elimId1,
+      player_id: playerId6,
+      fee: "5",
+    },
+    {
+      ...blankElimEntry,
+      id: elimEntryId7,
+      elim_id: elimId1,
+      player_id: playerId7,
+      fee: "5",
+    },
+    {
+      ...blankElimEntry,
+      id: elimEntryId8,
+      elim_id: elimId1,
+      player_id: playerId8,
+      fee: "5",
+    },
+    {
+      ...blankElimEntry,
+      id: elimEntryId9,
       elim_id: elimId2,
       player_id: playerId1,
       fee: "5",
     },
     {
       ...blankElimEntry,
-      id: "een_0123111c721147f7a2bf2702056947cd",
+      id: elimEntryId10,
       elim_id: elimId2,
       player_id: playerId2,
+      fee: "5",
+    },
+    {
+      ...blankElimEntry,
+      id: elimEntryId11,
+      elim_id: elimId2,
+      player_id: playerId3,
+      fee: "5",
+    },
+    {
+      ...blankElimEntry,
+      id: elimEntryId12,
+      elim_id: elimId2,
+      player_id: playerId4,
+      fee: "5",
+    },
+    {
+      ...blankElimEntry,
+      id: elimEntryId13,
+      elim_id: elimId2,
+      player_id: playerId5,
+      fee: "5",
+    },
+    {
+      ...blankElimEntry,
+      id: elimEntryId14,
+      elim_id: elimId2,
+      player_id: playerId6,
+      fee: "5",
+    },
+    {
+      ...blankElimEntry,
+      id: elimEntryId15,
+      elim_id: elimId2,
+      player_id: playerId7,
+      fee: "5",
+    },
+    {
+      ...blankElimEntry,
+      id: elimEntryId16,
+      elim_id: elimId2,
+      player_id: playerId8,
       fee: "5",
     },
   ],
@@ -521,7 +673,7 @@ export const mockTmntFullData: tmntFullType = {
       div_id: divId1,      
       descrip: MoneyDescrip.ENTRIES,
       flow: MoneyFlow.IN,
-      amount: 340,
+      amount: 510,
       sort_order: 2,
     },
     {
@@ -580,7 +732,7 @@ export const mockTmntFullData: tmntFullType = {
       div_id: divId1,      
       descrip: MoneyDescrip.ENTRIES,
       flow: MoneyFlow.IN,
-      amount: 10,
+      amount: 40,
       sort_order: 7,
       elim_id: elimId1,
     },
@@ -592,7 +744,7 @@ export const mockTmntFullData: tmntFullType = {
       div_id: divId1,      
       descrip: MoneyDescrip.ENTRIES,
       flow: MoneyFlow.IN,
-      amount: 10,
+      amount: 40,
       sort_order: 8,
       elim_id: elimId2,
     },
@@ -766,10 +918,10 @@ export const mockTmntFullData: tmntFullType = {
       event_id: eventId1,
       squad_id: squadId1,
       div_id: divId1,      
-      brkt_id: elimId1,
+      elim_id: elimId1,
       descrip: MoneyDescrip.PRIZEFUND,
       flow: MoneyFlow.OUT,
-      amount: (2 * 5) - 3, // (elims[0].fee * # elim[0] entries) - expenses
+      amount: (5 * 8) - 5, // (elims[0].fee * # elim[0] entries) - expenses
       sort_order: 23,
     },
     {
@@ -778,10 +930,10 @@ export const mockTmntFullData: tmntFullType = {
       event_id: eventId1,
       squad_id: squadId1,
       div_id: divId1,      
-      brkt_id: elimId1,
+      elim_id: elimId1,
       descrip: MoneyDescrip.EXPENSES,
       flow: MoneyFlow.OUT,
-      amount: 3, // elims[0].expenses
+      amount: 5, // elims[0].expenses
       sort_order: 24,
     },
     {
@@ -790,10 +942,10 @@ export const mockTmntFullData: tmntFullType = {
       event_id: eventId1,
       squad_id: squadId1,
       div_id: divId1,      
-      brkt_id: elimId2,
+      elim_id: elimId2,
       descrip: MoneyDescrip.PRIZEFUND,
       flow: MoneyFlow.OUT,
-      amount: (2 * 5) - 3, // (elims[0].fee * # elim[0] entries) - expenses
+      amount: (5 * 8) - 5, // (elims[0].fee * # elim[0] entries) - expenses
       sort_order: 25,
     },
     {
@@ -802,10 +954,10 @@ export const mockTmntFullData: tmntFullType = {
       event_id: eventId1,
       squad_id: squadId1,
       div_id: divId1,      
-      brkt_id: elimId2,
+      elim_id: elimId2,
       descrip: MoneyDescrip.EXPENSES,
       flow: MoneyFlow.OUT,
-      amount: 3, // elims[0].expenses
+      amount: 5, // elims[0].expenses
       sort_order: 26,
     },
     {
@@ -876,7 +1028,7 @@ export const mockTmntFullData: tmntFullType = {
       elim_id: elimId1,
       descrip: MoneyDescrip.EXPENSES,
       flow: MoneyFlow.OUT,
-      amount: 3, // elims[0].expenses
+      amount: 5,
       sort_order: 32,
     },
     {
@@ -885,10 +1037,10 @@ export const mockTmntFullData: tmntFullType = {
       event_id: eventId1,
       squad_id: squadId1,
       div_id: divId1,
-      brkt_id: elimId2,
+      elim_id: elimId2,
       descrip: MoneyDescrip.EXPENSES,
       flow: MoneyFlow.OUT,
-      amount: 3, // elims[0].expenses
+      amount: 5,
       sort_order: 33,
     },
   ],
@@ -1458,37 +1610,13 @@ export const mockDivPfs: divPfType[] = [
     id: divPfId1,
     div_id: divId1,
     position: 1,
-    amount: 500,
+    amount: 212,
   },
   {
     id: divPfId2,
     div_id: divId1,
     position: 2,
-    amount: 350,
-  },
-  {
-    id: divPfId3,
-    div_id: divId1,
-    position: 3,
-    amount: 275,
-  },
-  {
-    id: divPfId4,
-    div_id: divId1,
-    position: 4,
-    amount: 200,
-  },
-  {
-    id: divPfId5,
-    div_id: divId1,
-    position: 5,
-    amount: 150,
-  },
-  {
-    id: divPfId6,
-    div_id: divId1,
-    position: 6,
-    amount: 100,
+    amount: 120,
   },
 ];
 
@@ -1501,21 +1629,55 @@ export const mockPotPfs: potPfType[] = [
     amount: 75,
   },
   {
+    ...initPotPf,
     id: potPfId2,
     pot_id: potId1,
     position: 2,
     amount: 35,
   },
   {
+    ...initPotPf,
     id: potPfId3,
     pot_id: potId2,
     position: 1,
     amount: 200,
   },
   {
+    ...initPotPf,
     id: potPfId4,
     pot_id: potId2,
     position: 2,
     amount: 75,
+  },
+];
+
+export const mockElimPfs: elimPfType[] = [
+  {
+    ...initElimPf,
+    id: elimPfId1,
+    elim_id: elimId1,
+    position: 1,
+    amount: 25,
+  },
+  {
+    ...initElimPf,
+    id: elimPfId2,
+    elim_id: elimId1,
+    position: 2,
+    amount: 10,
+  },
+  {
+    ...initElimPf,
+    id: elimPfId3,
+    elim_id: elimId2,
+    position: 1,
+    amount: 25,
+  },
+  {
+    ...initElimPf,
+    id: elimPfId4,
+    elim_id: elimId2,
+    position: 2,
+    amount: 10,
   },
 ];

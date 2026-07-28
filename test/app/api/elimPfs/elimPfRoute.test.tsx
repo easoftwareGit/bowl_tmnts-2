@@ -1,9 +1,9 @@
 import { privateApi } from "@/lib/api/axios";
 import { AxiosError } from "axios";
-import { basePotPfsApi } from "@/lib/api/apiPaths";
-import { testBasePotPfsApi } from "../../../testApi";
-import type { potPfType } from "@/lib/types/types";
-import { initPotPf } from "@/lib/db/initVals";
+import { baseElimPfsApi } from "@/lib/api/apiPaths";
+import { testBaseElimPfsApi } from "../../../testApi";
+import type { elimPfType } from "@/lib/types/types";
+import { initElimPf } from "@/lib/db/initVals";
 import { maxMoney, maxPosition } from "@/lib/validation/constants";
 
 // before running this test, run the following commands in the terminal:
@@ -22,82 +22,82 @@ import { maxMoney, maxPosition } from "@/lib/validation/constants";
 //         This will start the server in debug mode. 
 
 // If running tests AND a test URL is defined, use it; otherwise use the app API path
-const url = process.env.NODE_ENV === "test" && testBasePotPfsApi
-  ? testBasePotPfsApi
-  : basePotPfsApi;
+const url = process.env.NODE_ENV === "test" && testBaseElimPfsApi
+  ? testBaseElimPfsApi
+  : baseElimPfsApi;
 
-const onePotPfUrl = url + "/potPf/";
-const potUrl = url + "/pot/"; 
+const oneElimPfUrl = url + "/elimPf/";
+const elimUrl = url + "/elim/"; 
 
-const notFoundId = "ppf_01234567890123456789012345678901";
-const notFoundPotId = "pot_01234567890123456789012345678901";
+const notFoundId = "epf_01234567890123456789012345678901";
+const notFoundElimId = "elm_01234567890123456789012345678901";
 const userId = "usr_01234567890123456789012345678901";
 
-describe('PotPfs - GETs and POST API: /api/potPfs', () => {
+describe('ElimPfs - GETs and POST API: /api/elimPfs', () => {
 
-  const testPotPf: potPfType = {
-    ...initPotPf,
-    id: "ppf_59eac0c17bf74348b44041e97469ad76",
-    pot_id: "pot_b2a7b02d761b4f5ab5438be84f642c3b",
+  const testElimPf: elimPfType = {
+    ...initElimPf,
+    id: "epf_42c133340c174d05ba7098930e2f0f90",
+    elim_id: "elm_c47a4ec07f824b0e93169ae78e8b4b1e",
     position: 1,
-    amount: 50,
+    amount: 80,
   }
 
-  const potPfToPost: potPfType = {
-    ...initPotPf,
-    id: "ppf_4e048257e14a462a9b3f8aca6077a432",
-    pot_id: "pot_89fd8f787de942a1a92aaa2df3e7c185",
+  const elimPfToPost: elimPfType = {
+    ...initElimPf,
+    id: "epf_4e048257e14a462a9b3f8aca6077a432",
+    elim_id: "elm_c47a4ec07f824b0e93169ae78e8b4b1e",
     position: 100,
     amount: 500,
   }
 
-  const deletePostedPotPf = async (potPfId: string) => {
+  const deletePostedElimPf = async (elimPfId: string) => {
     try {
-      await privateApi.delete(onePotPfUrl + potPfId);
+      await privateApi.delete(oneElimPfUrl + elimPfId);
     } catch (err) {
       if (err instanceof AxiosError) console.log(err.message);
     }
   }  
 
-  describe('GET - API: API: /api/potPfs/potPf/:id', () => {
+  describe('GET - API: API: /api/elimPfs/elimPf/:id', () => {
 
     beforeAll(async () => {
-      await deletePostedPotPf(potPfToPost.id);
+      await deletePostedElimPf(elimPfToPost.id);
     });
 
-    it('should get all potPfs', async () => {
+    it('should get all elimPfs', async () => {
       const response = await privateApi.get(url);
       expect(response.status).toBe(200);
-      // 15 rows in prisma/seed.ts
-      expect(response.data.potPfs).toHaveLength(15);
-      const potPfs: potPfType[] = response.data.potPfs;
-      potPfs.forEach((potPf: potPfType) => {
-        expect(potPf.pot_id).not.toBeNull();
-        expect(potPf.position).not.toBeNull();
-        expect(potPf.amount).not.toBeNull();
+      // 19 rows in prisma/seed.ts
+      expect(response.data.elimPfs).toHaveLength(19);
+      const elimPfs: elimPfType[] = response.data.elimPfs;
+      elimPfs.forEach((elimPf: elimPfType) => {
+        expect(elimPf.elim_id).not.toBeNull();
+        expect(elimPf.position).not.toBeNull();
+        expect(elimPf.amount).not.toBeNull();
       })
     });
   })
 
-  describe('GET by ID - API: API: /api/potPfs/potPf/:id', () => {
+  describe('GET by ID - API: API: /api/elimPfs/elimPf/:id', () => {
 
     beforeAll(async () => {
-      await deletePostedPotPf(potPfToPost.id);
+      await deletePostedElimPf(elimPfToPost.id);
     });
 
-    it('should get one potPf', async () => {
-      const response = await privateApi.get(onePotPfUrl + testPotPf.id);
+    it('should get one elimPf', async () => {
+      const response = await privateApi.get(oneElimPfUrl + testElimPf.id);
       expect(response.status).toBe(200);
       // the "GET" returns json'ed data, so decimal values return as strings
-      const potPf: potPfType = response.data.potPf;
-      expect(potPf.id).toBe(testPotPf.id);
-      expect(potPf.pot_id).toBe(testPotPf.pot_id);
-      expect(potPf.position).toBe(testPotPf.position);
-      expect(Number(potPf.amount)).toBe(testPotPf.amount);
+      const elimPf: elimPfType = response.data.elimPf;
+      expect(elimPf.id).toBe(testElimPf.id);
+      expect(elimPf.elim_id).toBe(testElimPf.elim_id);
+      expect(elimPf.position).toBe(testElimPf.position);
+      expect(Number(elimPf.amount)).toBe(testElimPf.amount);
     });
-    it('should not get one potPf when ID is invalid', async () => {
+    it('should not get one elimPf when ID is invalid', async () => {
       try {
-        const response = await privateApi.get(onePotPfUrl + "/test");
+        const response = await privateApi.get(oneElimPfUrl + "/test");
         expect(true).toBeFalsy();
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -107,9 +107,9 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     });
-    it('should not get one potPf when ID is valid, but not a potPf ID', async () => {
+    it('should not get one elimPf when ID is valid, but not an elimPf ID', async () => {
       try {
-        const response = await privateApi.get(onePotPfUrl + userId);
+        const response = await privateApi.get(oneElimPfUrl + userId);
         expect(true).toBeFalsy();
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -119,9 +119,9 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should not get one potPf when ID is not found', async () => {
+    it('should not get one elimPf when ID is not found', async () => {
       try {
-        const response = await privateApi.get(onePotPfUrl + notFoundId);
+        const response = await privateApi.get(oneElimPfUrl + notFoundId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -133,40 +133,40 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
     });
   });
 
-  describe('GET all potPfs for a pot - API: /api/potPfs/pot/:potId', () => {
+  describe('GET all elimPfs for an elim - API: /api/elimPfs/elim/:elimId', () => {
 
     beforeAll(async () => {
-      await deletePostedPotPf(potPfToPost.id);
+      await deletePostedElimPf(elimPfToPost.id);
     });
 
-    it('should get all potPfs for a pot', async () => {
+    it('should get all elimPfs for an elim', async () => {
       // const values taken from prisma/seed.ts
-      const potId = "pot_89fd8f787de942a1a92aaa2df3e7c185";
+      const elimId = "elm_c01077494c2d4d9da166d697c08c28d2";
 
-      const response = await privateApi.get(potUrl + potId, {
+      const response = await privateApi.get(elimUrl + elimId, {
         withCredentials: true
       });
       expect(response.status).toBe(200);
-      // 2 potPf rows for tmnt in prisma/seed.ts
-      expect(response.data.potPfs).toHaveLength(2);
-      const potPfs: potPfType[] = response.data.potPfs;
-      // query in /api/potPfs/pot GET sorts by position
-      for (let i = 0; i < potPfs.length; i++) {
-        expect(potPfs[i].pot_id).toBe(potId);
-        expect(potPfs[i].position).toBe(i + 1);
-        expect(potPfs[i].amount).not.toBeNull();
+      // 2 elimPf rows for tmnt in prisma/seed.ts
+      expect(response.data.elimPfs).toHaveLength(2);
+      const elimPfs: elimPfType[] = response.data.elimPfs;
+      // query in /api/elimPfs/elim GET sorts by position
+      for (let i = 0; i < elimPfs.length; i++) {
+        expect(elimPfs[i].elim_id).toBe(elimId);
+        expect(elimPfs[i].position).toBe(i + 1);
+        expect(elimPfs[i].amount).not.toBeNull();
       }
     });
-    it('should return status 200 when pot id is not found', async () => {
-      const response = await privateApi.get(potUrl + notFoundPotId, {
+    it('should return status 200 when elim id is not found', async () => {
+      const response = await privateApi.get(elimUrl + notFoundElimId, {
         withCredentials: true
       });
       expect(response.status).toBe(200);
-      expect(response.data.potPfs).toHaveLength(0);
+      expect(response.data.elimPfs).toHaveLength(0);
     });
-    it('should return status 404 when potId is invalid', async () => {
+    it('should return status 404 when elimId is invalid', async () => {
       try {
-        const response = await privateApi.get(potUrl + 'invalid', {
+        const response = await privateApi.get(elimUrl + 'invalid', {
           withCredentials: true
         });
         expect(response.status).toBe(404);
@@ -178,9 +178,9 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should return starus 404 when potId is valid, but not a pot id', async () => {
+    it('should return starus 404 when elimId is valid, but not an elim id', async () => {
       try {
-        const response = await privateApi.get(potUrl + userId, {
+        const response = await privateApi.get(elimUrl + userId, {
           withCredentials: true
         })
         expect(response.status).toBe(404);
@@ -194,43 +194,43 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
     })
   });
 
-  describe('POST one potPf API: /api/potPfs', () => {
+  describe('POST one elimPf API: /api/elimPfs', () => {
 
-    let createdPotPf = false;
+    let createdElimPf = false;
 
     beforeAll(async () => {
-      await deletePostedPotPf(potPfToPost.id);
+      await deletePostedElimPf(elimPfToPost.id);
     })
 
     beforeEach(() => {
-      createdPotPf = false;
+      createdElimPf = false;
     })
 
     afterEach(async () => {
-      if (createdPotPf) {
-        await deletePostedPotPf(potPfToPost.id);
+      if (createdElimPf) {
+        await deletePostedElimPf(elimPfToPost.id);
       }
     })
 
-    it('should create a new potPf', async () => {
-      const potPfJSON = JSON.stringify(potPfToPost);
-      const response = await privateApi.post(url, potPfJSON);
+    it('should create a new elimPf', async () => {
+      const elimPfJSON = JSON.stringify(elimPfToPost);
+      const response = await privateApi.post(url, elimPfJSON);
       expect(response.status).toBe(201);
       // the "POST" returns json'ed data, so decimal values return as strings
-      const postedPotPf = response.data.potPf;
-      createdPotPf = true;
-      expect(postedPotPf.id).toEqual(potPfToPost.id);
-      expect(postedPotPf.pot_id).toEqual(potPfToPost.pot_id);
-      expect(Number(postedPotPf.position)).toEqual(potPfToPost.position);
-      expect(Number(postedPotPf.amount)).toEqual(potPfToPost.amount);
+      const postedElimPf = response.data.elimPf;
+      createdElimPf = true;
+      expect(postedElimPf.id).toEqual(elimPfToPost.id);
+      expect(postedElimPf.elim_id).toEqual(elimPfToPost.elim_id);
+      expect(Number(postedElimPf.position)).toEqual(elimPfToPost.position);
+      expect(Number(postedElimPf.amount)).toEqual(elimPfToPost.amount);
     })
     
-    it('should NOT create a new potPf when ID is blank', async () => {
-      const invalidPotPf = {
-        ...potPfToPost,
+    it('should NOT create a new elimPf when ID is blank', async () => {
+      const invalidElimPf = {
+        ...elimPfToPost,
         id: "",
       }
-      const invalidJSON = JSON.stringify(invalidPotPf);
+      const invalidJSON = JSON.stringify(invalidElimPf);
       try {
         const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
@@ -242,12 +242,12 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should NOT create a new potPf when ID is invalid', async () => {
-      const invalidPotPf = {
-        ...potPfToPost,
+    it('should NOT create a new elimPf when ID is invalid', async () => {
+      const invalidElimPf = {
+        ...elimPfToPost,
         id: "test",
       }
-      const invalidJSON = JSON.stringify(invalidPotPf);
+      const invalidJSON = JSON.stringify(invalidElimPf);
       try {
         const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
@@ -259,12 +259,12 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should NOT create a new potPf when ID is valid, but not a potPf ID', async () => {
-      const invalidPotPf = {
-        ...potPfToPost,
+    it('should NOT create a new elimPf when ID is valid, but not an elimPf ID', async () => {
+      const invalidElimPf = {
+        ...elimPfToPost,
         id: userId,
       }
-      const invalidJSON = JSON.stringify(invalidPotPf);
+      const invalidJSON = JSON.stringify(invalidElimPf);
       try {
         const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
@@ -276,12 +276,12 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should NOT create a new potPf when pot_id is blank', async () => {
-      const invalidPotPf = {
-        ...potPfToPost,
-        pot_id: "",
+    it('should NOT create a new elimPf when elim_id is blank', async () => {
+      const invalidElimPf = {
+        ...elimPfToPost,
+        elim_id: "",
       }
-      const invalidJSON = JSON.stringify(invalidPotPf);
+      const invalidJSON = JSON.stringify(invalidElimPf);
       try {
         const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
@@ -293,12 +293,12 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should NOT create a new potPf when pot_id is invalid', async () => {
-      const invalidPotPf = {
-        ...potPfToPost,
-        pot_id: "test",
+    it('should NOT create a new elimPf when elim_id is invalid', async () => {
+      const invalidElimPf = {
+        ...elimPfToPost,
+        elim_id: "test",
       }
-      const invalidJSON = JSON.stringify(invalidPotPf);
+      const invalidJSON = JSON.stringify(invalidElimPf);
       try {
         const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
@@ -310,12 +310,12 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should NOT create a new potPf when pot_id is valid, but not an pot ID', async () => {
-      const invalidPotPf = {
-        ...potPfToPost,
-        pot_id: userId,
+    it('should NOT create a new elimPf when elim_id is valid, but not an elim ID', async () => {
+      const invalidElimPf = {
+        ...elimPfToPost,
+        elim_id: userId,
       }
-      const invalidJSON = JSON.stringify(invalidPotPf);
+      const invalidJSON = JSON.stringify(invalidElimPf);
       try {
         const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
@@ -327,12 +327,12 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should NOT create a new potPf when position is null', async () => {
-      const invalidPotPf = {
-        ...potPfToPost,
+    it('should NOT create a new elimPf when position is null', async () => {
+      const invalidElimPf = {
+        ...elimPfToPost,
         position: null as any,
       }
-      const invalidJSON = JSON.stringify(invalidPotPf);
+      const invalidJSON = JSON.stringify(invalidElimPf);
       try {
         const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
@@ -344,12 +344,12 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should NOT create a new potPf when position is too low', async () => {
-      const invalidPotPf = {
-        ...potPfToPost,
+    it('should NOT create a new elimPf when position is too low', async () => {
+      const invalidElimPf = {
+        ...elimPfToPost,
         position: 0,
       }
-      const invalidJSON = JSON.stringify(invalidPotPf);
+      const invalidJSON = JSON.stringify(invalidElimPf);
       try {
         const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
@@ -361,12 +361,12 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should NOT create a new potPf when position is too high', async () => {
-      const invalidPotPf = {
-        ...potPfToPost,
+    it('should NOT create a new elimPf when position is too high', async () => {
+      const invalidElimPf = {
+        ...elimPfToPost,
         position: maxPosition + 1,
       }
-      const invalidJSON = JSON.stringify(invalidPotPf);
+      const invalidJSON = JSON.stringify(invalidElimPf);
       try {
         const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
@@ -378,12 +378,12 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should NOT create a new potPf when position is not a number', async () => {
-      const invalidPotPf = {
-        ...potPfToPost,
+    it('should NOT create a new elimPf when position is not a number', async () => {
+      const invalidElimPf = {
+        ...elimPfToPost,
         position: "test",
       }
-      const invalidJSON = JSON.stringify(invalidPotPf);
+      const invalidJSON = JSON.stringify(invalidElimPf);
       try {
         const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
@@ -395,12 +395,12 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should NOT create a new potPf when position is not an integer', async () => {
-      const invalidPotPf = {
-        ...potPfToPost,
+    it('should NOT create a new elimPf when position is not an integer', async () => {
+      const invalidElimPf = {
+        ...elimPfToPost,
         position: 1.5,
       }
-      const invalidJSON = JSON.stringify(invalidPotPf);
+      const invalidJSON = JSON.stringify(invalidElimPf);
       try {
         const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
@@ -412,12 +412,12 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should NOT create a new potPf when amount is null', async () => {
-      const invalidPotPf = {
-        ...potPfToPost,
+    it('should NOT create a new elimPf when amount is null', async () => {
+      const invalidElimPf = {
+        ...elimPfToPost,
         amount: null as any,
       }
-      const invalidJSON = JSON.stringify(invalidPotPf);
+      const invalidJSON = JSON.stringify(invalidElimPf);
       try {
         const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
@@ -429,12 +429,12 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should NOT create a new potPf when amount is too low', async () => {
-      const invalidPotPf = {
-        ...potPfToPost,
+    it('should NOT create a new elimPf when amount is too low', async () => {
+      const invalidElimPf = {
+        ...elimPfToPost,
         amount: -1,
       }
-      const invalidJSON = JSON.stringify(invalidPotPf);
+      const invalidJSON = JSON.stringify(invalidElimPf);
       try {
         const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
@@ -446,12 +446,12 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should NOT create a new potPf when amount is too high', async () => {
-      const invalidPotPf = {
-        ...potPfToPost,
+    it('should NOT create a new elimPf when amount is too high', async () => {
+      const invalidElimPf = {
+        ...elimPfToPost,
         amount: maxMoney + 1,
       }
-      const invalidJSON = JSON.stringify(invalidPotPf);
+      const invalidJSON = JSON.stringify(invalidElimPf);
       try {
         const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
@@ -463,12 +463,12 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should NOT create a new potPf when amount is not a number', async () => {
-      const invalidPotPf = {
-        ...potPfToPost,
+    it('should NOT create a new elimPf when amount is not a number', async () => {
+      const invalidElimPf = {
+        ...elimPfToPost,
         amount: "test",
       }
-      const invalidJSON = JSON.stringify(invalidPotPf);
+      const invalidJSON = JSON.stringify(invalidElimPf);
       try {
         const response = await privateApi.post(url, invalidJSON);
         expect(response.status).toBe(422);
@@ -482,22 +482,22 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
     })
   });
 
-  describe('PATCH by ID - API: /api/potPfs/potPf/:id', () => {
+  describe('PATCH by ID - API: /api/elimPfs/elimPf/:id', () => {
 
-    const toPatchId = 'ppf_af2a95c8c1e348acbaccf306f54a6087';
+    const toPatchId = 'epf_710eda589d3f4106abe78006195e328a';
     
     const toPatch = {
-      ...initPotPf,
+      ...initElimPf,
       id: toPatchId,
-      pot_id: "pot_ab80213899ea424b938f52a062deacfe",
-      position: 1,
-      amount: 100,
+      elim_id: "elm_c01077494c2d4d9da166d697c08c28d2",
+      position: 2,
+      amount: 60,
     }
 
     const resetPatched = async () => {
       // make sure toPatch is reset in database
-      const potPfJSON = JSON.stringify(toPatch);
-      await privateApi.put(onePotPfUrl + toPatch.id, potPfJSON);
+      const elimPfJSON = JSON.stringify(toPatch);
+      await privateApi.put(oneElimPfUrl + toPatch.id, elimPfJSON);
     }
 
     let didPatch = false;
@@ -516,38 +516,38 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
       }
     })
 
-    it('should patch position when patching a potPf by ID', async () => {
-      const patchPotPf = {
+    it('should patch position when patching an elimPf by ID', async () => {
+      const patchElimPf = {
         id: toPatchId,
         position: 321,
       }
-      const potPfJSON = JSON.stringify(patchPotPf);
-      const response = await privateApi.patch(onePotPfUrl + patchPotPf.id, potPfJSON);
-      const patchedPotPf = response.data.potPf;
+      const elimPfJSON = JSON.stringify(patchElimPf);
+      const response = await privateApi.patch(oneElimPfUrl + patchElimPf.id, elimPfJSON);
+      const patchedElimPf = response.data.elimPf;
       expect(response.status).toBe(200);
       didPatch = true;
-      expect(Number(patchedPotPf.position)).toEqual(patchPotPf.position);
+      expect(Number(patchedElimPf.position)).toEqual(patchElimPf.position);
     })
 
-    it('should patch amount when patching a potPf by ID', async () => {
-      const patchPotPf = {
+    it('should patch amount when patching an elimPf by ID', async () => {
+      const patchElimPf = {
         id: toPatchId,
         amount: 4321,
       }
-      const potPfJSON = JSON.stringify(patchPotPf);
-      const response = await privateApi.patch(onePotPfUrl + patchPotPf.id, potPfJSON);
-      const patchedPotPf = response.data.potPf;
+      const elimPfJSON = JSON.stringify(patchElimPf);
+      const response = await privateApi.patch(oneElimPfUrl + patchElimPf.id, elimPfJSON);
+      const patchedElimPf = response.data.elimPf;
       expect(response.status).toBe(200);
       didPatch = true;
-      expect(Number(patchedPotPf.amount)).toEqual(patchPotPf.amount);
+      expect(Number(patchedElimPf.amount)).toEqual(patchElimPf.amount);
     })
 
-    it('should not patch potPf by ID when just passing in ID', async () => {
+    it('should not patch elimPf by ID when just passing in ID', async () => {
       try {
         const invalidJSON = JSON.stringify({
           id: toPatchId,
         })
-        const response = await privateApi.patch(onePotPfUrl + toPatchId, invalidJSON)
+        const response = await privateApi.patch(oneElimPfUrl + toPatchId, invalidJSON)
         expect(response.status).toBe(400);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -557,12 +557,12 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should not patch potPf by ID when ID is invalid', async () => {
+    it('should not patch elimPf by ID when ID is invalid', async () => {
       try {
         const invalidJSON = JSON.stringify({
           position: 321,
         })
-        const response = await privateApi.patch(onePotPfUrl + 'test', invalidJSON)
+        const response = await privateApi.patch(oneElimPfUrl + 'test', invalidJSON)
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -572,12 +572,12 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should not patch potPf by ID when ID is valid, but not found', async () => {
+    it('should not patch elimPf by ID when ID is valid, but not found', async () => {
       try {
         const invalidJSON = JSON.stringify({
           position: 321,
         })
-        const response = await privateApi.patch(onePotPfUrl + notFoundId, invalidJSON)
+        const response = await privateApi.patch(oneElimPfUrl + notFoundId, invalidJSON)
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -587,12 +587,12 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should not patch potPf by ID when ID is valid, but not a potPf id', async () => {
+    it('should not patch elimPf by ID when ID is valid, but not an elimPf id', async () => {
       try {
         const invalidJSON = JSON.stringify({
           position: 321,
         })
-        const response = await privateApi.patch(onePotPfUrl + userId, invalidJSON)
+        const response = await privateApi.patch(oneElimPfUrl + userId, invalidJSON)
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -603,13 +603,13 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
       }
     })
 
-    it('should NOT patch pot_id when patching a potPf by ID', async () => {
+    it('should NOT patch elim_id when patching an elimPf by ID', async () => {
       try {
         const invalidJSON = JSON.stringify({
           id: toPatchId,
-          pot_id: testPotPf.pot_id,
+          elim_id: testElimPf.elim_id,
         })
-        const response = await privateApi.patch(onePotPfUrl + toPatchId, invalidJSON)
+        const response = await privateApi.patch(oneElimPfUrl + toPatchId, invalidJSON)
         expect(response.status).toBe(400);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -619,12 +619,12 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should not patch pot_id when patching a potPf by ID when pot_id is invalid', async () => {
+    it('should not patch elim_id when patching an elimPf by ID when elim_id is invalid', async () => {
       try {
         const invalidJSON = JSON.stringify({
-          pot_id: 'test',
+          elim_id: 'test',
         })
-        const response = await privateApi.patch(onePotPfUrl + toPatchId, invalidJSON)
+        const response = await privateApi.patch(oneElimPfUrl + toPatchId, invalidJSON)
         expect(response.status).toBe(400);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -634,12 +634,12 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should not patch pot_id when patching a potPf by ID when pot_id is valid, but not a pot id', async () => {
+    it('should not patch elim_id when patching an elimPf by ID when elim_id is valid, but not an elim id', async () => {
       try {
         const invalidJSON = JSON.stringify({
-          pot_id: userId,
+          elim_id: userId,
         })
-        const response = await privateApi.patch(onePotPfUrl + toPatchId, invalidJSON)
+        const response = await privateApi.patch(oneElimPfUrl + toPatchId, invalidJSON)
         expect(response.status).toBe(400);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -650,12 +650,12 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
       }
     })
 
-    it('should not patch position when patching a potPf by ID when position is too low', async () => {
+    it('should not patch position when patching an elimPf by ID when position is too low', async () => {
       try {
         const invalidJSON = JSON.stringify({
           position: 0,
         })
-        const response = await privateApi.patch(onePotPfUrl + toPatchId, invalidJSON)
+        const response = await privateApi.patch(oneElimPfUrl + toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -665,12 +665,12 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should not patch position when patching a potPf by ID when position is too high', async () => {
+    it('should not patch position when patching an elimPf by ID when position is too high', async () => {
       try {
         const invalidJSON = JSON.stringify({
           position: maxPosition + 1,
         })
-        const response = await privateApi.patch(onePotPfUrl + toPatchId, invalidJSON)
+        const response = await privateApi.patch(oneElimPfUrl + toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -680,12 +680,12 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should not patch position when patching a potPf by ID when position is not a number', async () => {
+    it('should not patch position when patching an elimPf by ID when position is not a number', async () => {
       try {
         const invalidJSON = JSON.stringify({
           position: 'test',
         })
-        const response = await privateApi.patch(onePotPfUrl + toPatchId, invalidJSON)
+        const response = await privateApi.patch(oneElimPfUrl + toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -695,12 +695,12 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should not patch position when patching a potPf by ID when position is not an integer', async () => {
+    it('should not patch position when patching an elimPf by ID when position is not an integer', async () => {
       try {
         const invalidJSON = JSON.stringify({
           position: 1.5,
         })
-        const response = await privateApi.patch(onePotPfUrl + toPatchId, invalidJSON)
+        const response = await privateApi.patch(oneElimPfUrl + toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -712,12 +712,12 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
     })
 
 
-    it('should not patch amount when patching a potPf by ID when amount is too low', async () => {
+    it('should not patch amount when patching an elimPf by ID when amount is too low', async () => {
       try {
         const invalidJSON = JSON.stringify({
           amount: -1,
         })
-        const response = await privateApi.patch(onePotPfUrl + toPatchId, invalidJSON)
+        const response = await privateApi.patch(oneElimPfUrl + toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -727,12 +727,12 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should not patch amount when patching a potPf by ID when amount is too high', async () => {
+    it('should not patch amount when patching an elimPf by ID when amount is too high', async () => {
       try {
         const invalidJSON = JSON.stringify({
           amount: maxMoney + 1,
         })
-        const response = await privateApi.patch(onePotPfUrl + toPatchId, invalidJSON)
+        const response = await privateApi.patch(oneElimPfUrl + toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -742,12 +742,12 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should not patch amount when patching a potPf by ID when amount is not a number', async () => {
+    it('should not patch amount when patching an elimPf by ID when amount is not a number', async () => {
       try {
         const invalidJSON = JSON.stringify({
           amount: 'test',
         })
-        const response = await privateApi.patch(onePotPfUrl + toPatchId, invalidJSON)
+        const response = await privateApi.patch(oneElimPfUrl + toPatchId, invalidJSON)
         expect(response.status).toBe(422);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -759,12 +759,12 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
     })
   })
 
-  describe('DELETE by ID - API: /api/potPfs/potPf/:id', () => { 
+  describe('DELETE by ID - API: /api/elimPfs/elimPf/:id', () => { 
 
-    const toDelPotPf = {
-      ...initPotPf,
-      id: "ppf_af2a95c8c1e348acbaccf306f54a6087",
-      pot_id: "pot_ab80213899ea424b938f52a062deacfe",
+    const toDelElimPf = {
+      ...initElimPf,
+      id: "epf_af2a95c8c1e348acbaccf306f54a6087",
+      elim_id: "elm_a47a4ec07f824b0e93169ae78e8b4b1e",
       position: 1,
       amount: 100,
     }
@@ -777,18 +777,18 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
 
     afterEach(async () => {
       if (!didDel) return;
-      // if deleted potPf, add potPf back
+      // if deleted elimPf, add elimPf back
       try {
-        const potPfJSON = JSON.stringify(toDelPotPf);
-        await privateApi.post(url, potPfJSON);
+        const elimPfJSON = JSON.stringify(toDelElimPf);
+        await privateApi.post(url, elimPfJSON);
       } catch (err) {
         if (err instanceof Error) console.log(err.message);
       }
     })
 
-    it('should delete a potPf by ID', async () => {
+    it('should delete an elimPf by ID', async () => {
       try {
-        const response = await privateApi.delete(onePotPfUrl + toDelPotPf.id)
+        const response = await privateApi.delete(oneElimPfUrl + toDelElimPf.id)
         expect(response.status).toBe(200);
         didDel = true;
       } catch (err) {
@@ -799,14 +799,14 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should NOT delete a potPf by ID when ID is valid, but not found', async () => {
-      const response = await privateApi.delete(onePotPfUrl + notFoundId);
+    it('should NOT delete an elimPf by ID when ID is valid, but not found', async () => {
+      const response = await privateApi.delete(oneElimPfUrl + notFoundId);
       expect(response.status).toBe(200);
       expect(response.data.count).toBe(0);
     })    
-    it('should NOT delete a potPf by ID when ID is invalid', async () => {
+    it('should NOT delete an elimPf by ID when ID is invalid', async () => {
       try {
-        const response = await privateApi.delete(onePotPfUrl + 'test');
+        const response = await privateApi.delete(oneElimPfUrl + 'test');
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -816,9 +816,9 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should NOT delete a potPf by ID when ID is valid, but not a potPf ID', async () => {
+    it('should NOT delete an elimPf by ID when ID is valid, but not an elimPf ID', async () => {
       try {
-        const response = await privateApi.delete(onePotPfUrl + userId);
+        const response = await privateApi.delete(oneElimPfUrl + userId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -830,36 +830,36 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
     })
   })
   
-  describe('DELETE by by pot_id, all potPfs for a pot - API: /api/potPfs/potPf/:id', () => { 
+  describe('DELETE by by elim_id, all elimPfs for an elim - API: /api/elimPfs/elimPf/:id', () => { 
 
     // values for prisma/seeds.ts
-    const delPotId = "pot_b2a7b02d761b4f5ab5438be84f642c3b";
-    const delPotPf1 = {
-      ...initPotPf,
-      id: "ppf_59eac0c17bf74348b44041e97469ad76",
-      pot_id: delPotId,
+    const delElimId = "elm_45d884582e7042bb95b4818ccdd9974c";
+    const delElimPf1 = {
+      ...initElimPf,
+      id: "epf_59eac0c17bf74348b44041e97469ad76",
+      elim_id: "elm_45d884582e7042bb95b4818ccdd9974c",
       position: 1,
       amount: 50,
     }
-    const delPotPf2 = {
-      ...initPotPf,
-      id: "ppf_0fed31aae5374e6690b6535ced1ebff5",
-      pot_id: delPotId,
+    const delElimPf2 = {
+      ...initElimPf,
+      id: "epf_0fed31aae5374e6690b6535ced1ebff5",
+      elim_id: "elm_45d884582e7042bb95b4818ccdd9974c",
       position: 2,
-      amount: 10,
+      amount: 20,
     }
-    const restorePotPfs = async () => {
-      await privateApi.delete(potUrl + delPotId);      
-      const del1JSON = JSON.stringify(delPotPf1);
+    const restoreElimPfs = async () => {
+      await privateApi.delete(elimUrl + delElimId);      
+      const del1JSON = JSON.stringify(delElimPf1);
       await privateApi.post(url, del1JSON);
-      const del2JSON = JSON.stringify(delPotPf2);
+      const del2JSON = JSON.stringify(delElimPf2);
       await privateApi.post(url, del2JSON);
     }
 
     let didDel = false
 
     beforeAll(async () => {
-      await restorePotPfs();
+      await restoreElimPfs();
     })
 
     beforeEach(() => {
@@ -868,24 +868,24 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
 
     afterEach(async () => {
       if (!didDel) return;
-      // if deleted potPfs, add them back
-      await restorePotPfs();
+      // if deleted elimPfs, add them back
+      await restoreElimPfs();
     })
 
-    it('should delete all potPfs for a pot by pot_id', async () => {
-      const response = await privateApi.delete(potUrl + delPotId);
+    it('should delete all elimPfs for an elim by elim_id', async () => {
+      const response = await privateApi.delete(elimUrl + delElimId);
       expect(response.status).toBe(200);
       expect(response.data.count).toBe(2);
       didDel = true;
     })
-    it('should NOT delete all potPfs for a pot by pot_id when pot_id is valid, but not found', async () => {
-      const response = await privateApi.delete(potUrl + notFoundPotId);
+    it('should NOT delete all elimPfs for an elim by elim_id when elim_id is valid, but not found', async () => {
+      const response = await privateApi.delete(elimUrl + notFoundElimId);
       expect(response.status).toBe(200);
       expect(response.data.count).toBe(0);
     })    
-    it('should NOT delete all potPfs for a pot by pot_id when pot_id is invalid', async () => {
+    it('should NOT delete all elimPfs for an elim by elim_id when elim_id is invalid', async () => {
       try {
-        const response = await privateApi.delete(potUrl + 'test');
+        const response = await privateApi.delete(elimUrl + 'test');
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {
@@ -895,9 +895,9 @@ describe('PotPfs - GETs and POST API: /api/potPfs', () => {
         }
       }
     })
-    it('should NOT delete all potPfs for a pot by pot_id when pot_id is valid, but not a pot ID', async () => {
+    it('should NOT delete all elimPfs for an elim by elim_id when elim_id is valid, but not an elim ID', async () => {
       try {        
-        const response = await privateApi.delete(potUrl + userId);
+        const response = await privateApi.delete(elimUrl + userId);
         expect(response.status).toBe(404);
       } catch (err) {
         if (err instanceof AxiosError) {

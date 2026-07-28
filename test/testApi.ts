@@ -51,6 +51,8 @@ export const testBaseDivPfsApi = testBaseApi + '/divPfs'
 
 export const testBasePotPfsApi = testBaseApi + '/potPfs'
 
+export const testBaseElimPfsApi = testBaseApi + '/elimPfs'
+
 export const testBaseBcryptApi = testBaseApi + '/bcrypt'
 
 export const testPostSecret = process.env.TEST_POST_SECRET!

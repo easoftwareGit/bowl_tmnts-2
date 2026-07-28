@@ -23,8 +23,8 @@ import { getPotName } from "@/lib/getName";
 import { btDbUuid } from "@/lib/uuid";
 import PotPrizeFundEntry from "@/app/dataEntry/prizeFunds/tmnt/[tmntId]/pot/[potId]/page";
 import {
-  tmntId,
-  potId1,
+  tmntId as defaultTmntId,
+  potId1 as defaultPotId,
   mockPotPfs,  
   mockPot1PerGamePrizeFund,
   mockTmntFullData,  
@@ -96,13 +96,6 @@ export type SetupOptions = {
 
   confirmLeavePage?: boolean;
 };
-
-/*************************
- * Navigation constants  *
- *************************/
-
-export const TEST_RUN_TMNT_URL =
-  `/dataEntry/runTmnt/${tmntId}`;
 
 /******************
  * Exported mocks *
@@ -565,12 +558,12 @@ export const queryPerGame = () =>
  ***********/
 
 export const setup = ({
-  tmntId: setupTmntId = tmntId,
-  potId: setupPotId = potId1,
+  tmntId = defaultTmntId,
+  potId = defaultPotId,
 
   // only get potPfs for the current pot
   potPfs: suppliedPotPfs = mockPotPfs.filter(
-    (potPf) => potPf.pot_id === setupPotId,
+    (potPf) => potPf.pot_id === potId,
   ),
   tmntData: suppliedTmntData = mockTmntFullData,
 
@@ -635,7 +628,7 @@ export const setup = ({
    */
   if (potType !== undefined) {
     const selectedPot = tmntData.pots.find(
-      (pot) => pot.id === setupPotId,
+      (pot) => pot.id === potId,
     );
 
     if (selectedPot) {
@@ -659,8 +652,7 @@ export const setup = ({
     suppliedPopulatedRows ??
     makeRows(potPfs);
 
-  const runTmntUrl =
-    `/dataEntry/runTmnt/${setupTmntId}`;
+  const runTmntUrl = `/dataEntry/runTmnt/${tmntId}`;
 
   const mockState: MockRootState = {
     potPfs: {
@@ -677,8 +669,8 @@ export const setup = ({
   };
 
   jest.mocked(useParams).mockReturnValue({
-    tmntId: setupTmntId,
-    potId: setupPotId,
+    tmntId,
+    potId,
   });
 
   jest.mocked(useRouter).mockReturnValue({
@@ -774,8 +766,8 @@ export const setup = ({
     user,
     view,
 
-    tmntId: setupTmntId,
-    potId: setupPotId,
+    tmntId,
+    potId,
     runTmntUrl,
 
     potPfs,

@@ -10,20 +10,20 @@ import {
   setCurrentGridRows,
   setup,
   standardBeforeEach,
-} from "./potPfPage.testSetup.test";
+} from "./elimPfPage.testSetup.test";
 import {  
   mockTmntFullData,
-  potId1,
+  elimId1,
 } from "../../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 
-describe("Pot Prize Fund web page cashers input", () => {
+describe("Elim Prize Fund web page cashers input", () => {
   beforeEach(standardBeforeEach);
 
   describe("when there are no existing prize fund rows", () => {
 
     const setupEmpty = () =>
       setup({
-        potPfs: [],
+        elimPfs: [],
       });
 
     it("shows 0 cashers when no prize fund rows exist", async () => {
@@ -59,8 +59,8 @@ describe("Pot Prize Fund web page cashers input", () => {
 
       expect(getLatestRows()[0]).toEqual(
         expect.objectContaining({
-          id: expect.stringMatching(/^ppf_/),
-          parent_id: potId1,
+          id: expect.stringMatching(/^epf_/),
+          parent_id: elimId1,
           position: 1,
           amount: 0,
           percentage: 0,
@@ -68,23 +68,22 @@ describe("Pot Prize Fund web page cashers input", () => {
       );
 
       expect(mockBtDbUuid).toHaveBeenCalledTimes(1);
-      expect(mockBtDbUuid).toHaveBeenCalledWith("ppf");
+      expect(mockBtDbUuid).toHaveBeenCalledWith("epf");
     });    
 
   });  
-  
+
   describe("when there are existing prize fund rows", () => {
 
-    const getPotPlayerCount = (): number =>
-      mockTmntFullData.potEntries.filter(
-        (entry) => entry.pot_id === potId1,
+    const getElimPlayerCount = (): number =>
+      mockTmntFullData.elimEntries.filter(
+        (entry) => entry.elim_id === elimId1,
       ).length;
 
     it("updates the cashers input when its value changes", async () => {
       const { user } = setup();
 
       const initialCashers = getLatestRows().length;
-
       const cashersInput = screen.getByLabelText("Cashers");
 
       await waitFor(() => {
@@ -104,7 +103,6 @@ describe("Pot Prize Fund web page cashers input", () => {
 
       const initialCashers = getLatestRows().length;
       const newCashers = initialCashers + 2;
-
       const cashersInput = screen.getByLabelText("Cashers");
 
       await waitFor(() => {
@@ -127,24 +125,22 @@ describe("Pot Prize Fund web page cashers input", () => {
       });
 
       expect(cashersInput).toHaveValue(newCashers);
-
       expect(mockBtDbUuid).toHaveBeenCalledTimes(newCashers - initialCashers);
-
-      expect(mockBtDbUuid).toHaveBeenCalledWith("ppf");
+      expect(mockBtDbUuid).toHaveBeenCalledWith("epf");
 
       const addedRows = getLatestRows().slice(initialCashers);
 
       expect(addedRows).toEqual([
         expect.objectContaining({
-          id: expect.stringMatching(/^ppf_/),
-          parent_id: potId1,
+          id: expect.stringMatching(/^epf_/),
+          parent_id: elimId1,
           position: initialCashers + 1,
           amount: 0,
           percentage: 0,
         }),
         expect.objectContaining({
-          id: expect.stringMatching(/^ppf_/),
-          parent_id: potId1,
+          id: expect.stringMatching(/^epf_/),
+          parent_id: elimId1,
           position: initialCashers + 2,
           amount: 0,
           percentage: 0,
@@ -173,9 +169,9 @@ describe("Pot Prize Fund web page cashers input", () => {
       setCurrentGridRows(editedRows);
 
       /*
-      * Prove the unsaved edit exists only in the
-      * mocked Syncfusion grid.
-      */
+       * Prove the unsaved edit exists only in the
+       * mocked Syncfusion grid.
+       */
       expect(getLatestRows()[0].amount).not.toBe(999);
       expect(getLatestRows()).toHaveLength(initialRows.length);
 
@@ -195,8 +191,8 @@ describe("Pot Prize Fund web page cashers input", () => {
       });
 
       /*
-      * The existing grid-only edit was preserved.
-      */
+       * The existing grid-only edit was preserved.
+       */
       expect(getLatestRows()[0]).toEqual(
         expect.objectContaining({
           position: 1,
@@ -205,11 +201,11 @@ describe("Pot Prize Fund web page cashers input", () => {
       );
 
       /*
-      * The newly added row has the expected defaults.
-      */
+       * The newly added row has the expected defaults.
+       */
       expect(getLatestRows().at(-1)).toEqual(
         expect.objectContaining({
-          parent_id: potId1,
+          parent_id: elimId1,
           position: editedRows.length + 1,
           amount: 0,
           percentage: 0,
@@ -222,7 +218,6 @@ describe("Pot Prize Fund web page cashers input", () => {
 
       const initialCashers = getLatestRows().length;
       const newCashers = initialCashers + 2;
-
       const cashersInput = screen.getByLabelText("Cashers");
 
       await waitFor(() => {
@@ -246,7 +241,7 @@ describe("Pot Prize Fund web page cashers input", () => {
 
       expect(cashersInput).toHaveValue(newCashers);
       expect(mockBtDbUuid).toHaveBeenCalledTimes(newCashers - initialCashers);
-      expect(mockBtDbUuid).toHaveBeenCalledWith("ppf");
+      expect(mockBtDbUuid).toHaveBeenCalledWith("epf");
     });
 
     it("opens a confirmation dialog on blur when the cashers value decreases", async () => {
@@ -277,22 +272,18 @@ describe("Pot Prize Fund web page cashers input", () => {
         }),
       ).toBeInTheDocument();
 
-      expect(
-        screen.getByText("Remove Cashers"),
-      ).toBeInTheDocument();
-
+      expect(screen.getByText("Remove Cashers")).toBeInTheDocument();
       expect(
         screen.getByText(
           `Do you want to remove ${removeCount} cashers? ` +
           `Going from ${initialCashers} cashers to ${newCashers} cashers.`,
         ),
       ).toBeInTheDocument();
-
       expect(cashersInput).toHaveValue(newCashers);
 
       /*
-      * Rows are not removed until the user confirms.
-      */
+       * Rows are not removed until the user confirms.
+       */
       expect(getLatestRows()).toHaveLength(initialCashers);
     });
 
@@ -301,9 +292,7 @@ describe("Pot Prize Fund web page cashers input", () => {
 
       const initialCashers = getLatestRows().length;
       const newCashers = 1;
-
-      const cashersInput =
-        screen.getByLabelText("Cashers");
+      const cashersInput = screen.getByLabelText("Cashers");
 
       await waitFor(() => {
         expect(cashersInput).toHaveValue(
@@ -333,20 +322,18 @@ describe("Pot Prize Fund web page cashers input", () => {
 
       const initialCashers = getLatestRows().length;
       const expectedCashers = 1;
-
-      const cashersInput =
-        screen.getByLabelText("Cashers");
+      const cashersInput = screen.getByLabelText("Cashers");
 
       await user.clear(cashersInput);
       await user.type(cashersInput, "0");
       await user.keyboard("{Enter}");
 
       /*
-      * Zero is clamped to the minimum of one casher.
-      *
-      * Because this decreases the current number of cashers,
-      * the rows are not removed until the user confirms.
-      */
+       * Zero is clamped to the minimum of one casher.
+       *
+       * Because this decreases the current number of cashers,
+       * the rows are not removed until the user confirms.
+       */
       expect(
         await screen.findByRole("dialog", {
           name: "confirm-modal",
@@ -362,9 +349,9 @@ describe("Pot Prize Fund web page cashers input", () => {
       ).toBeInTheDocument();
 
       /*
-      * The grid still contains the original rows
-      * before confirmation.
-      */
+       * The grid still contains the original rows
+       * before confirmation.
+       */
       expect(getLatestRows()).toHaveLength(initialCashers);
 
       await confirmRemoveCashers(user);
@@ -378,11 +365,11 @@ describe("Pot Prize Fund web page cashers input", () => {
       expect(cashersInput).toHaveValue(expectedCashers);
     });
 
-    it("changes values above the maximum to the number of pot players when Enter is pressed", async () => {
+    it("changes values above the maximum to the number of elim players when Enter is pressed", async () => {
       const { user } = setup();
 
       const initialCashers = getLatestRows().length;
-      const expectedCashers = getPotPlayerCount();
+      const expectedCashers = getElimPlayerCount();
       const cashersInput = screen.getByLabelText("Cashers");
 
       await user.clear(cashersInput);
@@ -390,12 +377,12 @@ describe("Pot Prize Fund web page cashers input", () => {
       await user.keyboard("{Enter}");
 
       /*
-      * The entered value is clamped to the number of
-      * entries belonging to this pot.
-      *
-      * Because this increases the number of cashers,
-      * rows are added immediately without confirmation.
-      */
+       * The entered value is clamped to the number of
+       * entries belonging to this elim.
+       *
+       * Because this increases the number of cashers,
+       * rows are added immediately without confirmation.
+       */
       await waitFor(() => {
         expect(getLatestRows()).toHaveLength(
           expectedCashers,
@@ -413,7 +400,7 @@ describe("Pot Prize Fund web page cashers input", () => {
       expect(mockBtDbUuid).toHaveBeenCalledTimes(
         expectedCashers - initialCashers,
       );
-      expect(mockBtDbUuid).toHaveBeenCalledWith("ppf");
+      expect(mockBtDbUuid).toHaveBeenCalledWith("epf");
     });
 
     it("removes rows when the confirmation Yes button is clicked", async () => {
@@ -457,7 +444,7 @@ describe("Pot Prize Fund web page cashers input", () => {
 
       expect(getLatestRows()).toEqual([
         expect.objectContaining({
-          parent_id: potId1,
+          parent_id: elimId1,
           position: 1,
         }),
       ]);
@@ -530,10 +517,10 @@ describe("Pot Prize Fund web page cashers input", () => {
       });
 
       /*
-      * confirmNo() only closes the modal. The controlled
-      * input keeps the typed value, but the rows remain
-      * unchanged.
-      */
+       * confirmNo() only closes the modal. The controlled
+       * input keeps the typed value, but the rows remain
+       * unchanged.
+       */
       expect(cashersInput).toHaveValue(newCashers);
       expect(getLatestRows()).toHaveLength(initialCashers);
     });
@@ -554,10 +541,10 @@ describe("Pot Prize Fund web page cashers input", () => {
       await user.type(cashersInput, "abc");
 
       /*
-      * Clearing the controlled input sets cashers to zero.
-      * The number input rejects the letters, so no valid
-      * replacement value is entered.
-      */
+       * Clearing the controlled input sets cashers to zero.
+       * The number input rejects the letters, so no valid
+       * replacement value is entered.
+       */
       expect(cashersInput).toHaveValue(0);
       expect(getLatestRows()).toHaveLength(initialCashers);
     });
@@ -566,7 +553,6 @@ describe("Pot Prize Fund web page cashers input", () => {
       const { user } = setup();
 
       const initialCashers = getLatestRows().length;
-
       const cashersInput = screen.getByLabelText("Cashers");
 
       await waitFor(() => {
@@ -580,11 +566,11 @@ describe("Pot Prize Fund web page cashers input", () => {
       await user.tab();
 
       /*
-      * handleCashersBlur() clamps zero to one.
-      * Since this decreases the number of cashers,
-      * the confirmation modal opens before rows
-      * are removed.
-      */
+       * handleCashersBlur() clamps zero to one.
+       * Since this decreases the number of cashers,
+       * the confirmation modal opens before rows
+       * are removed.
+       */
       expect(
         await screen.findByRole("dialog", {
           name: "confirm-modal",
@@ -612,11 +598,11 @@ describe("Pot Prize Fund web page cashers input", () => {
       expect(cashersInput).toHaveValue(1);
     });
 
-    it("changes values above the maximum to the number of pot players on blur", async () => {
+    it("changes values above the maximum to the number of elim players on blur", async () => {
       const { user } = setup();
 
       const initialCashers = getLatestRows().length;
-      const maxCashers = getPotPlayerCount();
+      const maxCashers = getElimPlayerCount();
       const cashersInput = screen.getByLabelText("Cashers");
 
       await waitFor(() => {
@@ -643,7 +629,7 @@ describe("Pot Prize Fund web page cashers input", () => {
       ).not.toBeInTheDocument();
 
       expect(mockBtDbUuid).toHaveBeenCalledTimes(maxCashers - initialCashers);
-      expect(mockBtDbUuid).toHaveBeenCalledWith("ppf");
+      expect(mockBtDbUuid).toHaveBeenCalledWith("epf");
     });
 
     it("arms the unsaved changes guard when the cashers input changes", async () => {
@@ -668,10 +654,10 @@ describe("Pot Prize Fund web page cashers input", () => {
       });
     });
 
-    it("does not add more cashers than the number of entries for the current pot", async () => {
+    it("does not add more cashers than the number of entries for the current elim", async () => {
       const { user } = setup();
 
-      const maxCashers = getPotPlayerCount();
+      const maxCashers = getElimPlayerCount();
       const cashersInput = screen.getByLabelText("Cashers");
 
       await user.clear(cashersInput);
@@ -690,24 +676,24 @@ describe("Pot Prize Fund web page cashers input", () => {
       expect(getLatestRows()).toHaveLength(maxCashers);
     });
 
-    it("uses only entries belonging to the current pot when determining the maximum cashers", async () => {
+    it("uses only entries belonging to the current elim when determining the maximum cashers", async () => {
       const { user } = setup();
 
-      const currentPotEntries =
-        mockTmntFullData.potEntries.filter(
-          (entry) => entry.pot_id === potId1,
+      const currentElimEntries =
+        mockTmntFullData.elimEntries.filter(
+          (entry) => entry.elim_id === elimId1,
         );
 
-      const otherPotEntries =
-        mockTmntFullData.potEntries.filter(
-          (entry) => entry.pot_id !== potId1,
+      const otherElimEntries =
+        mockTmntFullData.elimEntries.filter(
+          (entry) => entry.elim_id !== elimId1,
         );
 
       expect(
-        mockTmntFullData.potEntries.length,
+        mockTmntFullData.elimEntries.length,
       ).toBe(
-        currentPotEntries.length +
-        otherPotEntries.length,
+        currentElimEntries.length +
+        otherElimEntries.length,
       );
 
       const cashersInput = screen.getByLabelText("Cashers");
@@ -718,11 +704,12 @@ describe("Pot Prize Fund web page cashers input", () => {
 
       await waitFor(() => {
         expect(cashersInput).toHaveValue(
-          currentPotEntries.length,
+          currentElimEntries.length,
         );
       });
 
-      expect(getLatestRows()).toHaveLength(currentPotEntries.length);
+      expect(getLatestRows()).toHaveLength(currentElimEntries.length);
     });
-  });    
+
+  });  
 });

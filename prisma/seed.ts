@@ -9,7 +9,7 @@ import {
   startOfDayFromString,
 } from "../src/lib/dateTools";
 import { addDays, addMilliseconds, endOfDay, startOfDay } from "date-fns";
-import { ptGame, ptLastGame } from "@/lib/validation/constants";
+import { ptGame, ptLastGame } from "../src/lib/validation/constants";
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
@@ -3982,6 +3982,8 @@ async function brktUpsert() {
 
 async function elimUpsert() {
   try {
+
+    // gold pin
     let elim = await prisma.elim.upsert({
       where: {
         id: "elm_45d884582e7042bb95b4818ccdd9974c",
@@ -4070,6 +4072,7 @@ async function elimUpsert() {
         fee: 5,
       },
     });
+    
     // new years
     elim = await prisma.elim.upsert({
       where: {
@@ -4159,6 +4162,7 @@ async function elimUpsert() {
         fee: 5,
       },
     });
+
     // full tmnt elims
     elim = await prisma.elim.upsert({
       where: {
@@ -12706,6 +12710,368 @@ async function potPfUpserts() {
   }  
 }
 
+async function elimPfUpserts() { 
+
+  async function elimPfUpsert_GoldPin() {
+    try {
+      let prizeFund = await prisma.elim_PF.upsert({
+        where: {
+          id: "epf_59eac0c17bf74348b44041e97469ad76",
+        },
+        update: {
+          elim_id: "elm_45d884582e7042bb95b4818ccdd9974c",
+          position: 1,
+          amount: 50,
+        },
+        create: {
+          id: "epf_59eac0c17bf74348b44041e97469ad76",
+          elim_id: "elm_45d884582e7042bb95b4818ccdd9974c",
+          position: 1,
+          amount: 50,
+        }
+      });
+      prizeFund = await prisma.elim_PF.upsert({
+        where: {
+          id: "epf_0fed31aae5374e6690b6535ced1ebff5",
+        },
+        update: {
+          elim_id: "elm_45d884582e7042bb95b4818ccdd9974c",
+          position: 2,
+          amount: 20,
+        },
+        create: {
+          id: "epf_0fed31aae5374e6690b6535ced1ebff5",
+          elim_id: "elm_45d884582e7042bb95b4818ccdd9974c",
+          position: 2,
+          amount: 20,
+        }
+      });
+      return 2;
+    } catch (error) {
+      console.log(error);
+      return -1;
+    }
+  }
+ 
+  async function elimPfUpsert_FullTmnt() {
+    try {
+      let prizeFund = await prisma.elim_PF.upsert({
+        where: {
+          id: "epf_42c133340c174d05ba7098930e2f0f90",
+        },
+        update: {
+          elim_id: "elm_c47a4ec07f824b0e93169ae78e8b4b1e",
+          position: 1,
+          amount: 30,
+        },
+        create: {
+          id: "epf_42c133340c174d05ba7098930e2f0f90",
+          elim_id: "elm_c47a4ec07f824b0e93169ae78e8b4b1e",
+          position: 1,
+          amount: 30,
+        }
+      });
+      prizeFund = await prisma.elim_PF.upsert({
+        where: {
+          id: "epf_97594d1f0f7043c48dacec19091d1494",
+        },
+        update: {
+          elim_id: "elm_c47a4ec07f824b0e93169ae78e8b4b1e",
+          position: 2,
+          amount: 20,
+        },
+        create: {
+          id: "epf_97594d1f0f7043c48dacec19091d1494",
+          elim_id: "elm_c47a4ec07f824b0e93169ae78e8b4b1e",
+          position: 2,
+          amount: 20,
+        }
+      });
+      prizeFund = await prisma.elim_PF.upsert({
+        where: {
+          id: "epf_87415abe7ca444d898f14568961578bb",
+        },
+        update: {
+          elim_id: "elm_c47a4ec07f824b0e93169ae78e8b4b1e",
+          position: 3,
+          amount: 15,
+        },
+        create: {
+          id: "epf_87415abe7ca444d898f14568961578bb",
+          elim_id: "elm_c47a4ec07f824b0e93169ae78e8b4b1e",
+          position: 3,
+          amount: 15,
+        }
+      });
+      prizeFund = await prisma.elim_PF.upsert({
+        where: {
+          id: "epf_0d402ea969a448278c68f5fbfdc70cfe",
+        },
+        update: {
+          elim_id: "elm_c47a4ec07f824b0e93169ae78e8b4b1e",
+          position: 4,
+          amount: 10,
+        },
+        create: {
+          id: "epf_0d402ea969a448278c68f5fbfdc70cfe",
+          elim_id: "elm_c47a4ec07f824b0e93169ae78e8b4b1e",
+          position: 4,
+          amount: 10,
+        }
+      });
+      prizeFund = await prisma.elim_PF.upsert({
+        where: {
+          id: "epf_42c133340c174d05ba7098930e2f0f91",
+        },
+        update: {
+          elim_id: "elm_461eece3c50241e9925e9a520730ac7e",
+          position: 1,
+          amount: 30,
+        },
+        create: {
+          id: "epf_42c133340c174d05ba7098930e2f0f91",
+          elim_id: "elm_461eece3c50241e9925e9a520730ac7e",
+          position: 1,
+          amount: 30,
+        }
+      });
+      prizeFund = await prisma.elim_PF.upsert({
+        where: {
+          id: "epf_97594d1f0f7043c48dacec19091d1495",
+        },
+        update: {
+          elim_id: "elm_461eece3c50241e9925e9a520730ac7e",
+          position: 2,
+          amount: 20,
+        },
+        create: {
+          id: "epf_97594d1f0f7043c48dacec19091d1495",
+          elim_id: "elm_461eece3c50241e9925e9a520730ac7e",
+          position: 2,
+          amount: 20,
+        }
+      });
+      prizeFund = await prisma.elim_PF.upsert({
+        where: {
+          id: "epf_87415abe7ca444d898f14568961578bc",
+        },
+        update: {
+          elim_id: "elm_461eece3c50241e9925e9a520730ac7e",
+          position: 3,
+          amount: 15,
+        },
+        create: {
+          id: "epf_87415abe7ca444d898f14568961578bc",
+          elim_id: "elm_461eece3c50241e9925e9a520730ac7e",
+          position: 3,
+          amount: 15,
+        }
+      });
+      prizeFund = await prisma.elim_PF.upsert({
+        where: {
+          id: "epf_0d402ea969a448278c68f5fbfdc70cff",
+        },
+        update: {
+          elim_id: "elm_461eece3c50241e9925e9a520730ac7e",
+          position: 4,
+          amount: 10,
+        },
+        create: {
+          id: "epf_0d402ea969a448278c68f5fbfdc70cff",
+          elim_id: "elm_461eece3c50241e9925e9a520730ac7e",
+          position: 4,
+          amount: 10,
+        }
+      });      
+
+      return 8;
+    } catch (error) {
+      console.log(error);
+      return -1;
+    }
+  }
+
+  async function elimPfUpsert_NewYearsEve() {
+    try {
+      let prizeFund = await prisma.elim_PF.upsert({
+        where: {
+          id: "epf_094a1a974e034940b847bef5b67a4b63",
+        },
+        update: {
+          elim_id: "elm_c01077494c2d4d9da166d697c08c28d2",
+          position: 1,
+          amount: 60,
+        },
+        create: {
+          id: "epf_094a1a974e034940b847bef5b67a4b63",
+          elim_id: "elm_c01077494c2d4d9da166d697c08c28d2",
+          position: 1,
+          amount: 60,
+        }
+      });
+      prizeFund = await prisma.elim_PF.upsert({
+        where: {
+          id: "epf_710eda589d3f4106abe78006195e328a",
+        },
+        update: {
+          elim_id: "elm_c01077494c2d4d9da166d697c08c28d2",
+          position: 2,
+          amount: 30,
+        },
+        create: {
+          id: "epf_710eda589d3f4106abe78006195e328a",
+          elim_id: "elm_c01077494c2d4d9da166d697c08c28d2",
+          position: 2,
+          amount: 30,
+        }
+      });
+      prizeFund = await prisma.elim_PF.upsert({
+        where: {
+          id: "epf_7e44498e84034bc1a080bfff569680bb",
+        },
+        update: {
+          elim_id: "elm_c02077494c2d4d9da166d697c08c28d2",
+          position: 1,
+          amount: 60,
+        },
+        create: {
+          id: "epf_7e44498e84034bc1a080bfff569680bb",
+          elim_id: "elm_c02077494c2d4d9da166d697c08c28d2",
+          position: 1,
+          amount: 60,
+        }
+      });
+      prizeFund = await prisma.elim_PF.upsert({
+        where: {
+          id: "epf_9032c654c42240d78eeea91de320049f",
+        },
+        update: {
+          elim_id: "elm_c02077494c2d4d9da166d697c08c28d2",
+          position: 2,
+          amount: 30,
+        },
+        create: {
+          id: "epf_9032c654c42240d78eeea91de320049f",
+          elim_id: "elm_c02077494c2d4d9da166d697c08c28d2",
+          position: 2,
+          amount: 30,
+        }
+      });
+      prizeFund = await prisma.elim_PF.upsert({
+        where: {
+          id: "epf_7e7d7dca4de74085b609030192aa15a5",
+        },
+        update: {
+          elim_id: "elm_c03077494c2d4d9da166d697c08c28d2",
+          position: 1,
+          amount: 60,
+        },
+        create: {
+          id: "epf_7e7d7dca4de74085b609030192aa15a5",
+          elim_id: "elm_c03077494c2d4d9da166d697c08c28d2",
+          position: 1,
+          amount: 60,
+        }
+      });
+      prizeFund = await prisma.elim_PF.upsert({
+        where: {
+          id: "epf_b14d1847af30480aa4123594b0072cb1",
+        },
+        update: {
+          elim_id: "elm_c03077494c2d4d9da166d697c08c28d2",
+          position: 2,
+          amount: 30,
+        },
+        create: {
+          id: "epf_b14d1847af30480aa4123594b0072cb1",
+          elim_id: "elm_c03077494c2d4d9da166d697c08c28d2",
+          position: 2,
+          amount: 30,
+        }
+      });
+      prizeFund = await prisma.elim_PF.upsert({
+        where: {
+          id: "epf_560a2316645844bb9bdeb094911b9e9d",
+        },
+        update: {
+          elim_id: "elm_c04077494c2d4d9da166d697c08c28d2",
+          position: 1,
+          amount: 40,
+        },
+        create: {
+          id: "epf_560a2316645844bb9bdeb094911b9e9d",
+          elim_id: "elm_c04077494c2d4d9da166d697c08c28d2",
+          position: 1,
+          amount: 40,
+        }
+      });
+      prizeFund = await prisma.elim_PF.upsert({
+        where: {
+          id: "epf_840e009bd5bd4e4aa389ddd02df50f23",
+        },
+        update: {
+          elim_id: "elm_c04077494c2d4d9da166d697c08c28d2",
+          position: 2,
+          amount: 15,
+        },
+        create: {
+          id: "epf_840e009bd5bd4e4aa389ddd02df50f23",
+          elim_id: "elm_c04077494c2d4d9da166d697c08c28d2",
+          position: 2,
+          amount: 15,
+        }
+      });
+
+      return 8;
+    } catch (error) {
+      console.log(error);
+      return -1;
+    }
+  }
+  
+  async function elimPfUpsert_ToDelete() {
+    try {
+      let prizeFund = await prisma.elim_PF.upsert({
+        where: {
+          id: "epf_af2a95c8c1e348acbaccf306f54a6087",
+        },
+        update: {
+          elim_id: "elm_a47a4ec07f824b0e93169ae78e8b4b1e",
+          position: 1,
+          amount: 100,
+        },
+        create: {
+          id: "epf_af2a95c8c1e348acbaccf306f54a6087",
+          elim_id: "elm_a47a4ec07f824b0e93169ae78e8b4b1e",
+          position: 1,
+          amount: 100,
+        }
+      });
+      return 1;
+    } catch (error) {
+      console.log(error);
+      return -1;
+    }
+  }
+
+  try {
+    const gpCount = await elimPfUpsert_GoldPin();
+    const ftCount = await elimPfUpsert_FullTmnt();
+    const nyCount = await elimPfUpsert_NewYearsEve();
+    const delCount = await elimPfUpsert_ToDelete();
+
+    console.log(
+      "Upserted elim_pf: ",
+      gpCount + ftCount + nyCount + delCount
+    );    
+    // 2 + 8 + 8 + 1 = 19
+    return gpCount + ftCount + nyCount + delCount;
+  } catch (error) {
+    console.log(error);
+    return -1;
+  }  
+}
+
 async function testDateUpsert() {
   try {
     const nowTime = new Date();
@@ -13001,6 +13367,9 @@ async function main() {
   if (count < 0) return;
 
   count = await potPfUpserts();
+  if (count < 0) return;
+
+  count = await elimPfUpserts();
   if (count < 0) return;
 
   count = await testDateUpsert();

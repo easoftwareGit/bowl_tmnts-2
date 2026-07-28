@@ -21,8 +21,8 @@ import { divPfsToPrizeFunds } from "@/app/dataEntry/prizeFunds/prizeFundGrid/con
 import { btDbUuid } from "@/lib/uuid";
 import DivPrizeFundEntry from "@/app/dataEntry/prizeFunds/tmnt/[tmntId]/div/[divId]/page";
 import {
-  tmntId,
-  divId1,
+  tmntId as defaultTmntId,
+  divId1 as defaultDivId,
   mockDivPfs,
   mockDivPrizeFund,
   mockTmntFullData,  
@@ -90,13 +90,6 @@ export type SetupOptions = {
 
   confirmLeavePage?: boolean;
 };
-
-/*************************
- * Navigation constants  *
- *************************/
-
-export const TEST_RUN_TMNT_URL =
-  `/dataEntry/runTmnt/${tmntId}`;
 
 /******************
  * Exported mocks *
@@ -462,9 +455,9 @@ jest.mock(
  * Test data makers *
  ********************/
 
-export const makePrizeFunds = (): prizeFundType[] => {
+export const makePrizeFunds = (divPfs: divPfType[]): prizeFundType[] => {
   const mockPrizeFunds: prizeFundType[] = [];
-  for (const divPf of mockDivPfs) {
+  for (const divPf of divPfs) {
     mockPrizeFunds.push({
       id: divPf.id,
       parent_id: divPf.div_id,
@@ -475,9 +468,9 @@ export const makePrizeFunds = (): prizeFundType[] => {
   return mockPrizeFunds;
 }
 
-export const makeRows = (): prizeFundEntryRow[] => { 
+export const makeRows = (divPfs: divPfType[]): prizeFundEntryRow[] => { 
   const mockRows: prizeFundEntryRow[] = [];
-  for (const divPf of mockDivPfs) {
+  for (const divPf of divPfs) {
     mockRows.push({
       id: divPf.id,
       parent_id: divPf.div_id,
@@ -494,6 +487,9 @@ export const makeRows = (): prizeFundEntryRow[] => {
  ***********/
 
 export const setup = ({
+  tmntId = defaultTmntId,
+  divId = defaultDivId,
+
   divPfs = mockDivPfs,
   tmntData = mockTmntFullData,
 
@@ -503,8 +499,11 @@ export const setup = ({
   divPfsError = null,
   tmntError = null,
 
-  prizeFunds = makePrizeFunds(),
-  populatedRows = makeRows(),
+  prizeFunds: suppliedPrizeFunds,
+  populatedRows: suppliedPopulatedRows,
+
+  // prizeFunds = makePrizeFunds(),
+  // populatedRows = makeRows(),
 
   confirmLeavePage = true,
 }: SetupOptions = {}): {
@@ -530,8 +529,22 @@ export const setup = ({
 } => {
   const user = userEvent.setup();
 
-  const runTmntUrl =
-    `/dataEntry/runTmnt/${tmntId}`;
+  const runTmntUrl = `/dataEntry/runTmnt/${tmntId}`;
+
+  /*
+   * Derive the converted prize funds and populated rows from
+   * the divPfs supplied to this setup call.
+   *
+   * Tests may still override either result explicitly through
+   * suppliedPrizeFunds or suppliedPopulatedRows.
+   */
+  const prizeFunds =
+    suppliedPrizeFunds ??
+    makePrizeFunds(divPfs);
+
+  const populatedRows =
+    suppliedPopulatedRows ??
+    makeRows(divPfs);
 
   const mockState: MockRootState = {
     divPfs: {
@@ -549,7 +562,7 @@ export const setup = ({
 
   jest.mocked(useParams).mockReturnValue({
     tmntId,
-    divId: divId1,
+    divId,
   });
 
   jest.mocked(useRouter).mockReturnValue({
@@ -640,7 +653,7 @@ export const setup = ({
     view,
 
     tmntId,
-    divId: divId1,
+    divId,
     runTmntUrl,
 
     divPfs,

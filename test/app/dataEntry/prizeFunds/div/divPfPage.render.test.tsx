@@ -1,18 +1,12 @@
 import { screen } from "@testing-library/react";
 import {
-  getLatestGridProps,
-  mockDispatch,
-  mockFetchDivPfs,
-  mockFetchTmntFullData,
   setup,
   standardBeforeEach,
 } from "./divPfPage.testSetup.test";
 import {
-  divId1,
   mockTmntFullData,
   mockDivPrizeFund,
   mockDivPfs,
-  tmntId,
 } from "../../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 
 describe("Division Prize Fund web page render", () => {
@@ -50,33 +44,17 @@ describe("Division Prize Fund web page render", () => {
   it("renders all page inputs", () => {
     setup();
 
-    expect(
-      screen.getByLabelText("Players"),
-    ).toBeInTheDocument();
-
-    expect(
-      screen.getByLabelText("Cash Ratio. 1 in"),
-    ).toBeInTheDocument();
-
-    expect(
-      screen.getByLabelText("Calculated Cashers"),
-    ).toBeInTheDocument();
-
-    expect(
-      screen.getByLabelText("Cashers"),
-    ).toBeInTheDocument();
-
-    expect(
-      screen.getByLabelText("Prize Fund"),
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Players")).toBeInTheDocument();
+    expect(screen.getByLabelText("Cash Ratio. 1 in")).toBeInTheDocument();
+    expect(screen.getByLabelText("Calculated Cashers")).toBeInTheDocument();
+    expect(screen.getByLabelText("Cashers")).toBeInTheDocument();
+    expect(screen.getByLabelText("Prize Fund")).toBeInTheDocument();    
   });
 
   it("renders the prize fund grid", () => {
     setup();
 
-    expect(
-      screen.getByTestId("mock-div-prize-fund-grid"),
-    ).toBeInTheDocument();
+    expect(screen.getByTestId("mock-div-prize-fund-grid")).toBeInTheDocument();
   });
 
   it("renders the expected number of prize fund rows", () => {
@@ -102,25 +80,15 @@ describe("Division Prize Fund web page render", () => {
   it("renders the read-only fields as disabled", () => {
     setup();
 
-    expect(
-      screen.getByLabelText("Players"),
-    ).toBeDisabled();
-
-    expect(
-      screen.getByLabelText("Calculated Cashers"),
-    ).toBeDisabled();
-
-    expect(
-      screen.getByLabelText("Prize Fund"),
-    ).toBeDisabled();
+    expect(screen.getByLabelText("Players")).toBeDisabled();
+    expect(screen.getByLabelText("Calculated Cashers")).toBeDisabled();
+    expect(screen.getByLabelText("Prize Fund")).toBeDisabled();
   });  
 
   it("does not display the loading modal after loading completes", () => {
     setup();
 
-    expect(
-      screen.queryByRole("status"),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 
 });

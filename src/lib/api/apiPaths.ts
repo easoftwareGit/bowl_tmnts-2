@@ -44,4 +44,6 @@ export const baseDivPfsApi = '/divPfs'
 
 export const basePotPfsApi = '/potPfs'
 
+export const baseElimPfsApi = '/elimPfs'
+
 export const baseBcryptApi = '/bcrypt'
