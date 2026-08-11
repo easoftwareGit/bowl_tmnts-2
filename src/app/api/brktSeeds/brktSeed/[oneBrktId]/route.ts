@@ -19,6 +19,7 @@ export async function GET(
       where: {
         one_brkt_id: oneBrktId,
       },
+      // only need to order by seed because one_brkt_id is unique
       orderBy: [
         {
           seed: "asc",

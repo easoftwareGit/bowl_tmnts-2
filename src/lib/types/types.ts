@@ -452,6 +452,14 @@ export type playerType = {
   position_err: string,
 }
 
+export type bracketPlayerType = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  average: number;
+  hdcp: number;
+};
+
 export interface tmntEntryPlayerType extends playerType {
   eType: string,
 }

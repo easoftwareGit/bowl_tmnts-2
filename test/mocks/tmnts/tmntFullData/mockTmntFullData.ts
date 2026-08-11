@@ -29,10 +29,22 @@ import type {
   gameType,
   divPfType,
   potPfType,
-  elimPfType,    
+  elimPfType,
+  oneBrktType,    
 } from "@/lib/types/types";
 import { ptGame, ptLastGame } from "@/lib/validation/constants";
 import { MoneyDescrip, MoneyFlow, SquadStage } from "@prisma/client";
+
+export const brktEntryId1 = "ben_0123111c721147f7a2bf2702056947ca";
+export const brktEntryId2 = "ben_0123111c721147f7a2bf2702056947cb";
+export const brktEntryId3 = "ben_0123111c721147f7a2bf2702056947cc";
+export const brktEntryId4 = "ben_0123111c721147f7a2bf2702056947cd";
+export const brktEntryId5 = "ben_0123111c721147f7a2bf2702056947ce";
+export const brktEntryId6 = "ben_0123111c721147f7a2bf2702056947cf";
+export const brktEntryId7 = "ben_0123111c721147f7a2bf2702056947d0";
+export const brktEntryId8 = "ben_0123111c721147f7a2bf2702056947d1";
+export const brktEntryId9 = "ben_0123111c721147f7a2bf2702056947d2";
+export const brktEntryId10 = "ben_0123111c721147f7a2bf2702056947d3";
 
 export const brktId1 = "brk_0123f51cc1ca4748ad5e8abab88277ea";
 export const brktId2 = "brk_0123f51cc1ca4748ad5e8abab88277eb";
@@ -175,6 +187,10 @@ export const oneBrktId1 = "obk_01238f787de942a1a92aaa2df3e7c18a";
 export const oneBrktId2 = "obk_01238f787de942a1a92aaa2df3e7c18b";
 export const oneBrktId3 = "obk_01238f787de942a1a92aaa2df3e7c18c";
 export const oneBrktId4 = "obk_01238f787de942a1a92aaa2df3e7c18d";
+export const oneBrktId5 = "obk_01238f787de942a1a92aaa2df3e7c18e";
+export const oneBrktId6 = "obk_01238f787de942a1a92aaa2df3e7c18f";
+export const oneBrktId7 = "obk_01238f787de942a1a92aaa2df3e7c190";
+export const oneBrktId8 = "obk_01238f787de942a1a92aaa2df3e7c191";
 
 export const penId1 = "pen_0123111c721147f7a2bf2702056947ca";
 export const penId2 = "pen_0123111c721147f7a2bf2702056947cb";
@@ -260,7 +276,7 @@ export const mockTmntFullData: tmntFullType = {
   brktEntries: [
     {
       ...blankBrktEntry,
-      id: "ben_0123111c721147f7a2bf2702056947ca",
+      id: brktEntryId1,
       brkt_id: brktId1,
       player_id: playerId1,
       num_brackets: 10,
@@ -270,7 +286,7 @@ export const mockTmntFullData: tmntFullType = {
     },
     {
       ...blankBrktEntry,
-      id: "ben_0123111c721147f7a2bf2702056947cb",
+      id: brktEntryId2,
       brkt_id: brktId1,
       player_id: playerId2,
       num_brackets: 8,
@@ -279,7 +295,61 @@ export const mockTmntFullData: tmntFullType = {
     },
     {
       ...blankBrktEntry,
-      id: "ben_0123111c721147f7a2bf2702056947cc",
+      id: brktEntryId3,
+      brkt_id: brktId1,
+      player_id: playerId3,
+      num_brackets: 8,
+      fee: "40",
+      time_stamp: timeStampNumber,
+    },
+    {
+      ...blankBrktEntry,
+      id: brktEntryId4,
+      brkt_id: brktId1,
+      player_id: playerId4,
+      num_brackets: 8,
+      fee: "40",
+      time_stamp: timeStampNumber,
+    },
+    {
+      ...blankBrktEntry,
+      id: brktEntryId5,
+      brkt_id: brktId1,
+      player_id: playerId5,
+      num_brackets: 8,
+      fee: "40",
+      time_stamp: timeStampNumber,
+    },
+    {
+      ...blankBrktEntry,
+      id: brktEntryId6,
+      brkt_id: brktId1,
+      player_id: playerId6,
+      num_brackets: 8,
+      fee: "40",
+      time_stamp: timeStampNumber,
+    },
+    {
+      ...blankBrktEntry,
+      id: brktEntryId7,
+      brkt_id: brktId1,
+      player_id: playerId7,
+      num_brackets: 8,
+      fee: "40",
+      time_stamp: timeStampNumber,
+    },
+    {
+      ...blankBrktEntry,
+      id: brktEntryId8,
+      brkt_id: brktId1,
+      player_id: playerId8,
+      num_brackets: 8,
+      fee: "40",
+      time_stamp: timeStampNumber,
+    },
+    {
+      ...blankBrktEntry,
+      id: brktEntryId9,
       brkt_id: brktId2,
       player_id: playerId1,
       num_brackets: 10,
@@ -289,7 +359,7 @@ export const mockTmntFullData: tmntFullType = {
     },
     {
       ...blankBrktEntry,
-      id: "ben_0123111c721147f7a2bf2702056947cd",
+      id: brktEntryId10,
       brkt_id: brktId2,
       player_id: playerId2,
       num_brackets: 8,
@@ -324,6 +394,31 @@ export const mockTmntFullData: tmntFullType = {
     },
     {
       ...blankBrktSeed,
+      one_brkt_id: oneBrktId1,
+      seed: 4,
+      player_id: playerId5,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId1,
+      seed: 5,
+      player_id: playerId6,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId1,
+      seed: 6,
+      player_id: playerId7,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId1,
+      seed: 7,
+      player_id: playerId8,
+    },
+    // randmized other 7 brackets
+    {
+      ...blankBrktSeed,
       one_brkt_id: oneBrktId2,
       seed: 0,
       player_id: playerId4,
@@ -332,20 +427,338 @@ export const mockTmntFullData: tmntFullType = {
       ...blankBrktSeed,
       one_brkt_id: oneBrktId2,
       seed: 1,
-      player_id: playerId3,
+      player_id: playerId7,
     },
     {
       ...blankBrktSeed,
       one_brkt_id: oneBrktId2,
       seed: 2,
-      player_id: playerId2,
+      player_id: playerId1,
     },
     {
       ...blankBrktSeed,
       one_brkt_id: oneBrktId2,
       seed: 3,
+      player_id: playerId6,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId2,
+      seed: 4,
+      player_id: playerId3,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId2,
+      seed: 5,
+      player_id: playerId8,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId2,
+      seed: 6,
+      player_id: playerId2,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId2,
+      seed: 7,
+      player_id: playerId5,
+    },
+
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId3,
+      seed: 0,
+      player_id: playerId6,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId3,
+      seed: 1,
+      player_id: playerId2,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId3,
+      seed: 2,
+      player_id: playerId8,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId3,
+      seed: 3,
+      player_id: playerId3,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId3,
+      seed: 4,
+      player_id: playerId5,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId3,
+      seed: 5,
       player_id: playerId1,
     },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId3,
+      seed: 6,
+      player_id: playerId7,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId3,
+      seed: 7,
+      player_id: playerId4,
+    },
+
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId4,
+      seed: 0,
+      player_id: playerId2,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId4,
+      seed: 1,
+      player_id: playerId5,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId4,
+      seed: 2,
+      player_id: playerId7,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId4,
+      seed: 3,
+      player_id: playerId1,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId4,
+      seed: 4,
+      player_id: playerId8,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId4,
+      seed: 5,
+      player_id: playerId4,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId4,
+      seed: 6,
+      player_id: playerId6,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId4,
+      seed: 7,
+      player_id: playerId3,
+    },
+
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId5,
+      seed: 0,
+      player_id: playerId8,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId5,
+      seed: 1,
+      player_id: playerId3,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId5,
+      seed: 2,
+      player_id: playerId5,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId5,
+      seed: 3,
+      player_id: playerId7,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId5,
+      seed: 4,
+      player_id: playerId1,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId5,
+      seed: 5,
+      player_id: playerId2,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId5,
+      seed: 6,
+      player_id: playerId4,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId5,
+      seed: 7,
+      player_id: playerId6,
+    },
+
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId6,
+      seed: 0,
+      player_id: playerId3,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId6,
+      seed: 1,
+      player_id: playerId8,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId6,
+      seed: 2,
+      player_id: playerId4,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId6,
+      seed: 3,
+      player_id: playerId2,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId6,
+      seed: 4,
+      player_id: playerId6,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId6,
+      seed: 5,
+      player_id: playerId7,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId6,
+      seed: 6,
+      player_id: playerId5,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId6,
+      seed: 7,
+      player_id: playerId1,
+    },
+
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId7,
+      seed: 0,
+      player_id: playerId7,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId7,
+      seed: 1,
+      player_id: playerId4,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId7,
+      seed: 2,
+      player_id: playerId2,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId7,
+      seed: 3,
+      player_id: playerId8,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId7,
+      seed: 4,
+      player_id: playerId5,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId7,
+      seed: 5,
+      player_id: playerId3,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId7,
+      seed: 6,
+      player_id: playerId1,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId7,
+      seed: 7,
+      player_id: playerId6,
+    },
+
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId8,
+      seed: 0,
+      player_id: playerId5,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId8,
+      seed: 1,
+      player_id: playerId1,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId8,
+      seed: 2,
+      player_id: playerId6,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId8,
+      seed: 3,
+      player_id: playerId4,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId8,
+      seed: 4,
+      player_id: playerId2,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId8,
+      seed: 5,
+      player_id: playerId7,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId8,
+      seed: 6,
+      player_id: playerId8,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId8,
+      seed: 7,
+      player_id: playerId3,
+    },    
   ],
   brkts: [
     {
@@ -389,7 +802,7 @@ export const mockTmntFullData: tmntFullType = {
       hdcp_from: 230,
       int_hdcp: true,
       hdcp_for: "Game",
-      sort_order: 1,
+      sort_order: 1,      
     },
     {
       ...initDiv,
@@ -1057,6 +1470,42 @@ export const mockTmntFullData: tmntFullType = {
       brkt_id: brktId1,
       bindex: 1,
     },
+    {
+      ...blankOneBrkt,
+      id: oneBrktId3,
+      brkt_id: brktId1,
+      bindex: 2,
+    },
+    {
+      ...blankOneBrkt,
+      id: oneBrktId4,
+      brkt_id: brktId1,
+      bindex: 3,
+    },
+    {
+      ...blankOneBrkt,
+      id: oneBrktId5,
+      brkt_id: brktId1,
+      bindex: 4,
+    },
+    {
+      ...blankOneBrkt,
+      id: oneBrktId6,
+      brkt_id: brktId1,
+      bindex: 5,
+    },
+    {
+      ...blankOneBrkt,
+      id: oneBrktId7,
+      brkt_id: brktId1,
+      bindex: 6,
+    },
+    {
+      ...blankOneBrkt,
+      id: oneBrktId8,
+      brkt_id: brktId1,
+      bindex: 7,
+    },
   ],
   players: [
     {
@@ -1266,343 +1715,343 @@ export const mockFullTmntStage: fullStageType = {
 };
 
 export const mockGames: gameType[] = [
-  {    
+  {
     id: gameId1,
     squad_id: squadId1,
-    player_id: playerId1,    
-    game_num: 1,    
-    score: 201,   
+    player_id: playerId1,
+    game_num: 1,
+    score: 201,
   },
-  {    
+  {
     id: gameId2,
     squad_id: squadId1,
-    player_id: playerId1,    
-    game_num: 2,    
-    score: 202,   
+    player_id: playerId1,
+    game_num: 2,
+    score: 202,
   },
-  {    
+  {
     id: gameId3,
     squad_id: squadId1,
-    player_id: playerId1,    
-    game_num: 3,    
-    score: 203,   
+    player_id: playerId1,
+    game_num: 3,
+    score: 203,
   },
-  {    
+  {
     id: gameId4,
     squad_id: squadId1,
-    player_id: playerId1,    
-    game_num: 4,    
-    score: 204,   
+    player_id: playerId1,
+    game_num: 4,
+    score: 204,
   },
-  {    
+  {
     id: gameId5,
     squad_id: squadId1,
-    player_id: playerId1,    
-    game_num: 5,    
-    score: 205,   
+    player_id: playerId1,
+    game_num: 5,
+    score: 205,
   },
-  {    
+  {
     id: gameId6,
     squad_id: squadId1,
-    player_id: playerId1,    
-    game_num: 6,    
-    score: 206,   
+    player_id: playerId1,
+    game_num: 6,
+    score: 206,
   },
-  {    
+  {
     id: gameId7,
     squad_id: squadId1,
-    player_id: playerId2,    
-    game_num: 1,    
-    score: 210,   
+    player_id: playerId2,
+    game_num: 1,
+    score: 210,
   },
-  {    
+  {
     id: gameId8,
     squad_id: squadId1,
-    player_id: playerId2,    
-    game_num: 2,    
-    score: 211,   
+    player_id: playerId2,
+    game_num: 2,
+    score: 211,
   },
-  {    
+  {
     id: gameId9,
     squad_id: squadId1,
-    player_id: playerId2,    
-    game_num: 3,    
-    score: 212,   
+    player_id: playerId2,
+    game_num: 3,
+    score: 212,
   },
-  {    
+  {
     id: gameId10,
     squad_id: squadId1,
-    player_id: playerId2,    
-    game_num: 4,    
-    score: 213,   
+    player_id: playerId2,
+    game_num: 4,
+    score: 213,
   },
-  {    
+  {
     id: gameId11,
     squad_id: squadId1,
-    player_id: playerId2,    
-    game_num: 5,    
-    score: 214,   
+    player_id: playerId2,
+    game_num: 5,
+    score: 214,
   },
-  {    
+  {
     id: gameId12,
     squad_id: squadId1,
-    player_id: playerId2,    
-    game_num: 6,    
-    score: 215,   
+    player_id: playerId2,
+    game_num: 6,
+    score: 215,
   },
-  {    
+  {
     id: gameId13,
     squad_id: squadId1,
-    player_id: playerId3,    
-    game_num: 1,    
-    score: 195,   
+    player_id: playerId3,
+    game_num: 1,
+    score: 195,
   },
-  {    
+  {
     id: gameId14,
     squad_id: squadId1,
-    player_id: playerId3,    
-    game_num: 2,    
-    score: 196,   
+    player_id: playerId3,
+    game_num: 2,
+    score: 196,
   },
-  {    
+  {
     id: gameId15,
     squad_id: squadId1,
-    player_id: playerId3,    
-    game_num: 3,    
-    score: 197,   
+    player_id: playerId3,
+    game_num: 3,
+    score: 197,
   },
-  {    
+  {
     id: gameId16,
     squad_id: squadId1,
-    player_id: playerId3,    
-    game_num: 4,    
-    score: 198,   
+    player_id: playerId3,
+    game_num: 4,
+    score: 198,
   },
-  {    
+  {
     id: gameId17,
     squad_id: squadId1,
-    player_id: playerId3,    
-    game_num: 5,    
-    score: 199,   
+    player_id: playerId3,
+    game_num: 5,
+    score: 199,
   },
-  {    
+  {
     id: gameId18,
     squad_id: squadId1,
-    player_id: playerId3,    
-    game_num: 6,    
-    score: 200,   
+    player_id: playerId3,
+    game_num: 6,
+    score: 200,
   },
-  {    
+  {
     id: gameId19,
     squad_id: squadId1,
-    player_id: playerId4,    
-    game_num: 1,    
-    score: 205,   
+    player_id: playerId4,
+    game_num: 1,
+    score: 205,
   },
-  {    
+  {
     id: gameId20,
     squad_id: squadId1,
-    player_id: playerId4,    
-    game_num: 2,    
-    score: 206,   
+    player_id: playerId4,
+    game_num: 2,
+    score: 206,
   },
-  {    
+  {
     id: gameId21,
     squad_id: squadId1,
-    player_id: playerId4,    
-    game_num: 3,    
-    score: 207,   
+    player_id: playerId4,
+    game_num: 3,
+    score: 207,
   },
-  {    
+  {
     id: gameId22,
     squad_id: squadId1,
-    player_id: playerId4,    
-    game_num: 4,    
-    score: 208,   
+    player_id: playerId4,
+    game_num: 4,
+    score: 208,
   },
-  {    
+  {
     id: gameId23,
     squad_id: squadId1,
-    player_id: playerId4,    
-    game_num: 5,    
-    score: 209,   
+    player_id: playerId4,
+    game_num: 5,
+    score: 209,
   },
-  {    
+  {
     id: gameId24,
     squad_id: squadId1,
-    player_id: playerId4,    
-    game_num: 6,    
-    score: 210,   
+    player_id: playerId4,
+    game_num: 6,
+    score: 210,
   },
-  {    
+  {
     id: gameId25,
     squad_id: squadId1,
-    player_id: playerId5,    
-    game_num: 1,    
-    score: 225,   
+    player_id: playerId5,
+    game_num: 1,
+    score: 225,
   },
-  {    
+  {
     id: gameId26,
     squad_id: squadId1,
-    player_id: playerId5,    
-    game_num: 2,    
-    score: 226,   
+    player_id: playerId5,
+    game_num: 2,
+    score: 226,
   },
-  {    
+  {
     id: gameId27,
     squad_id: squadId1,
-    player_id: playerId5,    
-    game_num: 3,    
-    score: 227,   
+    player_id: playerId5,
+    game_num: 3,
+    score: 227,
   },
-  {    
+  {
     id: gameId28,
     squad_id: squadId1,
-    player_id: playerId5,    
-    game_num: 4,    
-    score: 228,   
+    player_id: playerId5,
+    game_num: 4,
+    score: 228,
   },
-  {    
+  {
     id: gameId29,
     squad_id: squadId1,
-    player_id: playerId5,    
-    game_num: 5,    
-    score: 229,   
+    player_id: playerId5,
+    game_num: 5,
+    score: 229,
   },
-  {    
+  {
     id: gameId30,
     squad_id: squadId1,
-    player_id: playerId5,    
-    game_num: 6,    
-    score: 230,   
+    player_id: playerId5,
+    game_num: 6,
+    score: 230,
   },
-  {    
+  {
     id: gameId31,
     squad_id: squadId1,
-    player_id: playerId6,    
-    game_num: 1,    
-    score: 215,   
+    player_id: playerId6,
+    game_num: 1,
+    score: 215,
   },
-  {    
+  {
     id: gameId32,
     squad_id: squadId1,
-    player_id: playerId6,    
-    game_num: 2,    
-    score: 216,   
+    player_id: playerId6,
+    game_num: 2,
+    score: 216,
   },
-  {    
+  {
     id: gameId33,
     squad_id: squadId1,
-    player_id: playerId6,    
-    game_num: 3,    
-    score: 217,   
+    player_id: playerId6,
+    game_num: 3,
+    score: 217,
   },
-  {    
+  {
     id: gameId34,
     squad_id: squadId1,
-    player_id: playerId6,    
-    game_num: 4,    
-    score: 218,   
+    player_id: playerId6,
+    game_num: 4,
+    score: 218,
   },
-  {    
+  {
     id: gameId35,
     squad_id: squadId1,
-    player_id: playerId6,    
-    game_num: 5,    
-    score: 219,   
+    player_id: playerId6,
+    game_num: 5,
+    score: 219,
   },
-  {    
+  {
     id: gameId36,
     squad_id: squadId1,
-    player_id: playerId6,    
-    game_num: 6,    
-    score: 220,   
+    player_id: playerId6,
+    game_num: 6,
+    score: 220,
   },
-  {    
+  {
     id: gameId37,
     squad_id: squadId1,
-    player_id: playerId7,    
-    game_num: 1,    
-    score: 190,   
+    player_id: playerId7,
+    game_num: 1,
+    score: 190,
   },
-  {    
+  {
     id: gameId38,
     squad_id: squadId1,
-    player_id: playerId7,    
-    game_num: 2,    
-    score: 191,   
+    player_id: playerId7,
+    game_num: 2,
+    score: 191,
   },
-  {    
+  {
     id: gameId39,
     squad_id: squadId1,
-    player_id: playerId7,    
-    game_num: 3,    
-    score: 192,   
+    player_id: playerId7,
+    game_num: 3,
+    score: 192,
   },
-  {    
+  {
     id: gameId40,
     squad_id: squadId1,
-    player_id: playerId7,    
-    game_num: 4,    
-    score: 193,   
+    player_id: playerId7,
+    game_num: 4,
+    score: 193,
   },
-  {    
+  {
     id: gameId41,
     squad_id: squadId1,
-    player_id: playerId7,    
-    game_num: 5,    
-    score: 194,   
+    player_id: playerId7,
+    game_num: 5,
+    score: 194,
   },
-  {    
+  {
     id: gameId42,
     squad_id: squadId1,
-    player_id: playerId7,    
-    game_num: 6,    
-    score: 195,   
+    player_id: playerId7,
+    game_num: 6,
+    score: 195,
   },
-  {    
+  {
     id: gameId43,
     squad_id: squadId1,
-    player_id: playerId8,    
-    game_num: 1,    
-    score: 230,   
+    player_id: playerId8,
+    game_num: 1,
+    score: 230,
   },
-  {    
+  {
     id: gameId44,
     squad_id: squadId1,
-    player_id: playerId8,    
-    game_num: 2,    
-    score: 231,   
+    player_id: playerId8,
+    game_num: 2,
+    score: 231,
   },
-  {    
+  {
     id: gameId45,
     squad_id: squadId1,
-    player_id: playerId8,    
-    game_num: 3,    
-    score: 232,   
+    player_id: playerId8,
+    game_num: 3,
+    score: 232,
   },
-  {    
+  {
     id: gameId46,
     squad_id: squadId1,
-    player_id: playerId8,    
-    game_num: 4,    
-    score: 233,   
+    player_id: playerId8,
+    game_num: 4,
+    score: 233,
   },
-  {    
+  {
     id: gameId47,
     squad_id: squadId1,
-    player_id: playerId8,    
-    game_num: 5,    
-    score: 234,   
+    player_id: playerId8,
+    game_num: 5,
+    score: 234,
   },
-  {    
+  {
     id: gameId48,
     squad_id: squadId1,
-    player_id: playerId8,    
-    game_num: 6,    
-    score: 235,   
+    player_id: playerId8,
+    game_num: 6,
+    score: 235,
   },
-]
+];
 
 export const mockDivPfs: divPfType[] = [
   {

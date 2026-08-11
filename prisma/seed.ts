@@ -3201,8 +3201,8 @@ async function stageUpsert() {
       },
       update: {
         squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-        // stage: "ENTRIES",
-        stage: "SCORES",
+        stage: "ENTRIES",
+        // stage: "SCORES",
         stage_set_at: new Date("2024-07-01"),
         scores_started_at: null,
         stage_override_enabled: false,
@@ -3212,8 +3212,8 @@ async function stageUpsert() {
       create: {
         id: "stg_124dd9efc30f4352b691dfd93d1e284e",
         squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-        // stage: "ENTRIES",
-        stage: "SCORES",
+        stage: "ENTRIES",
+        // stage: "SCORES",
         stage_set_at: new Date("2024-07-01"),
         scores_started_at: null,
         stage_override_enabled: false,

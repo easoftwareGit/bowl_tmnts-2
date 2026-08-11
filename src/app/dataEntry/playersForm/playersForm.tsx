@@ -974,11 +974,8 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
         }
       }
 
-      // alert('dispatching saveTmntEntriesData...');
-      // return; // just for testing calculations, remove when ready to test save
-      
+      // save the data
       await dispatch(saveTmntEntriesData(tmntToSave)).unwrap();
-      // router.push(`/dataEntry/runTmnt/${tmntData.tmnt.id}`);      
     } catch (error) {
       navigatingAfterSaveRef.current = false;
       setSaving(false);

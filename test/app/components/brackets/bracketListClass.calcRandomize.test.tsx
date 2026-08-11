@@ -10,7 +10,11 @@ import { playerType } from "@/lib/types/types";
 import { initPlayer } from "@/lib/db/initVals";
 import { btDbUuid } from "@/lib/uuid";
 import { createByePlayer } from "../../../../src/components/brackets/byePlayer";
-import { squadId1 } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
+import {
+  squadId1,
+  playerId8,
+  mockTmntFullData,
+} from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 
 describe('BracketList', () => { 
 
@@ -45,38 +49,6 @@ describe('BracketList', () => {
     clearBracketList();
     mockBracketList.calcTotalBrkts(playerData);  
   }
-
-  describe('constructor', () => {    
-           
-    const testBracketList = new BracketList("test", 2, 3);
-
-    it('should initialize with an empty brackets array when constructed', () => {
-      expect(testBracketList.brackets).toHaveLength(0);
-    });
-    it('brktCounts should return empty values when constructed', () => {
-      const result: initBrktCountsType = testBracketList.brktCounts;
-      expect(result.forFullValues).toHaveLength(0);
-      expect(result.forOneByeValues).toHaveLength(0);
-    })
-    it('should return the correct # of games', () => {
-      const result = testBracketList.games;
-      expect(result).toBe(3);
-    });
-    it('should return the correct # of players per match', () => {
-      const result = testBracketList.playersPerMatch;
-      expect(result).toBe(2);
-    })
-    it('should return the correct # of players per bracket', () => {
-      const result = testBracketList.playersPerBrkt;
-      expect(result).toBe(8);
-    })
-    it('should return the passed in byePlayer', () => { 
-      const byePlayer = createByePlayer(squadId1);
-      const byePlayerBrkt = new BracketList("test", 2, 3, byePlayer);
-      expect(byePlayerBrkt.byePlayer.id).toBe(byePlayer.id);
-      expect(byePlayerBrkt.byePlayer.squad_id).toBe(squadId1);
-    })
-  })
 
   // moved from class function to function inside of rePopulateBrkts
   // start as class functions for testing
@@ -2170,6 +2142,7 @@ describe('BracketList', () => {
 
     describe('randomize - functions to swap matches', () => {
       
+      // const testBracketList = new BracketList('test', 2, 3);
       const testBracketList = new BracketList('test', 2, 3);
       // use pre-sorted data for test
       const playerData = [
@@ -2189,45 +2162,45 @@ describe('BracketList', () => {
         testBracketList.calcTotalBrkts(playerData);
 
         // bracket index 0
-        let brkt = new Bracket(testBracketList);
+        let brkt = new Bracket("brk_00", testBracketList.playersPerMatch, testBracketList.games);
         brkt.addMatch(['Al', 'Chad']);
         brkt.addMatch(['Bob', 'Don']);
         testBracketList.brackets.push(brkt);
 
         // bracket index 1
-        brkt = new Bracket(testBracketList);
+        brkt = new Bracket("brk_01", testBracketList.playersPerMatch, testBracketList.games);
         brkt.addMatch(['Al', 'Bob']);
         brkt.addMatch(['Chad', 'Fred']);
         testBracketList.brackets.push(brkt);
 
         // bracket index 2
-        brkt = new Bracket(testBracketList);
+        brkt = new Bracket("brk_02", testBracketList.playersPerMatch, testBracketList.games);
         brkt.addMatch(['Al', 'Fred']);
         brkt.addMatch(['Bob', 'Hal']);
         brkt.addMatch(['Chad', 'Don']);
         testBracketList.brackets.push(brkt);
 
         // bracket index 3
-        brkt = new Bracket(testBracketList);
+        brkt = new Bracket("brk_03", testBracketList.playersPerMatch, testBracketList.games);
         brkt.addMatch(['Al', 'Greg']);
         brkt.addMatch(['Bob', 'Ed']);
         testBracketList.brackets.push(brkt);
 
         // bracket index 4
-        brkt = new Bracket(testBracketList);
+        brkt = new Bracket("brk_04", testBracketList.playersPerMatch, testBracketList.games);
         brkt.addMatch(['Al', 'Hal']);
         brkt.addMatch(['Bob', 'Fred']);
         brkt.addMatch(['Chad', 'Ed']);
         testBracketList.brackets.push(brkt);
 
         // bracket index 5
-        brkt = new Bracket(testBracketList);
+        brkt = new Bracket("brk_05", testBracketList.playersPerMatch, testBracketList.games);
         brkt.addMatch(['Al', 'Don']);
         brkt.addMatch(['Bob', 'Chad']);
         testBracketList.brackets.push(brkt);
 
         // bracket index 6
-        brkt = new Bracket(testBracketList);
+        brkt = new Bracket("brk_06", testBracketList.playersPerMatch, testBracketList.games);
         brkt.addMatch(['Al', 'Ed']);
         brkt.addMatch(['Bob', 'Greg']);
         brkt.addMatch(['Chad', 'Hal']);
@@ -2298,7 +2271,7 @@ describe('BracketList', () => {
         testBracketList.calcTotalBrkts(playerData);
 
         // bracket index 0
-        let brkt = new Bracket(testBracketList);
+        let brkt = new Bracket("brk_00", testBracketList.playersPerMatch, testBracketList.games);
         brkt.addMatch(['Al', 'Ed']);
         brkt.addMatch(['Bob', 'Greg']);
         brkt.addMatch(['Chad', 'Hal']);
@@ -2306,14 +2279,14 @@ describe('BracketList', () => {
         testBracketList.brackets.push(brkt);
 
         // bracket index 1
-        brkt = new Bracket(testBracketList);
+        brkt = new Bracket("brk_01", testBracketList.playersPerMatch, testBracketList.games);
         brkt.addMatch(['Al', 'Don']);
         brkt.addMatch(['Bob', 'Chad']);
         brkt.addMatch(['Ed', 'Greg']);
         testBracketList.brackets.push(brkt);
 
         // bracket index 2
-        brkt = new Bracket(testBracketList);
+        brkt = new Bracket("brk_02", testBracketList.playersPerMatch, testBracketList.games);
         brkt.addMatch(['Al', 'Hal']);
         brkt.addMatch(['Bob', 'Fred']);
         brkt.addMatch(['Chad', 'Ed']);
@@ -2321,28 +2294,28 @@ describe('BracketList', () => {
         testBracketList.brackets.push(brkt);
 
         // bracket index 3
-        brkt = new Bracket(testBracketList);
+        brkt = new Bracket("brk_03", testBracketList.playersPerMatch, testBracketList.games);
         brkt.addMatch(['Al', 'Chad']);
         brkt.addMatch(['Bob', 'Hal']);
         brkt.addMatch(['Don', 'Ed']);
         testBracketList.brackets.push(brkt);
 
         // bracket index 4
-        brkt = new Bracket(testBracketList);
+        brkt = new Bracket("brk_04", testBracketList.playersPerMatch, testBracketList.games);
         brkt.addMatch(['Al', 'Bob']);
         brkt.addMatch(['Chad', 'Don']);
         brkt.addMatch(['Ed', 'Hal']);
         testBracketList.brackets.push(brkt);
 
         // bracket index 5
-        brkt = new Bracket(testBracketList);
+        brkt = new Bracket("brk_05", testBracketList.playersPerMatch, testBracketList.games);
         brkt.addMatch(['Al', 'Greg']);
         brkt.addMatch(['Bob', 'Don']);
         brkt.addMatch(['Chad', 'Fred']);
         testBracketList.brackets.push(brkt);
 
         // bracket index 6
-        brkt = new Bracket(testBracketList);
+        brkt = new Bracket("brk_06", testBracketList.playersPerMatch, testBracketList.games);
         brkt.addMatch(['Al', 'Fred']);
         brkt.addMatch(['Bob', 'Ed']);
         brkt.addMatch(['Chad', 'Greg']);
@@ -2428,21 +2401,21 @@ describe('BracketList', () => {
         testBracketList.calcTotalBrkts(playerData);
 
         // bracket index 0
-        let brkt = new Bracket(testBracketList);
+        let brkt = new Bracket("brk_00", testBracketList.playersPerMatch, testBracketList.games);
         brkt.addMatch(['Al', 'Greg']);
         brkt.addMatch(['Bob', 'Ed']);
         brkt.addMatch(['Chad', 'Don']);        
         testBracketList.brackets.push(brkt);
 
         // bracket index 1
-        brkt = new Bracket(testBracketList);
+        brkt = new Bracket("brk_01", testBracketList.playersPerMatch, testBracketList.games);
         brkt.addMatch(['Al', 'Ed']);
         brkt.addMatch(['Bob', 'Don']);
         brkt.addMatch(['Chad', 'Greg']);
         testBracketList.brackets.push(brkt);
 
         // bracket index 2
-        brkt = new Bracket(testBracketList);
+        brkt = new Bracket("brk_02", testBracketList.playersPerMatch, testBracketList.games);
         brkt.addMatch(['Al', 'Hal']);
         brkt.addMatch(['Bob', 'Fred']);
         brkt.addMatch(['Chad', 'Ed']);
@@ -2450,14 +2423,14 @@ describe('BracketList', () => {
         testBracketList.brackets.push(brkt);
 
         // bracket index 3
-        brkt = new Bracket(testBracketList);
+        brkt = new Bracket("brk_03", testBracketList.playersPerMatch, testBracketList.games);
         brkt.addMatch(['Al', 'Bob']);
         brkt.addMatch(['Chad', 'Hal']);        
         brkt.addMatch(['Don', 'Hal']);
         testBracketList.brackets.push(brkt);
 
         // bracket index 4
-        brkt = new Bracket(testBracketList);
+        brkt = new Bracket("brk_04", testBracketList.playersPerMatch, testBracketList.games);
         brkt.addMatch(['Al', 'Chad']);
         brkt.addMatch(['Bob', 'Hal']);      
         brkt.addMatch(['Don', 'Fred']);
@@ -2465,7 +2438,7 @@ describe('BracketList', () => {
         testBracketList.brackets.push(brkt);
 
         // bracket index 5
-        brkt = new Bracket(testBracketList);
+        brkt = new Bracket("brk_05", testBracketList.playersPerMatch, testBracketList.games);
         brkt.addMatch(['Al', 'Fred']);
         brkt.addMatch(['Bob', 'Greg']);
         brkt.addMatch(['Chad', 'Hal']);
@@ -2473,7 +2446,7 @@ describe('BracketList', () => {
         testBracketList.brackets.push(brkt);
 
         // bracket index 6
-        brkt = new Bracket(testBracketList);
+        brkt = new Bracket("brk_06", testBracketList.playersPerMatch, testBracketList.games);
         brkt.addMatch(['Al', 'Don']);
         brkt.addMatch(['Bob', 'Chad']);
         brkt.addMatch(['Ed', 'Hal']);

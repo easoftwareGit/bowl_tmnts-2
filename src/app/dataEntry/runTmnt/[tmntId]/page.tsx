@@ -20,7 +20,6 @@ import { SquadStage } from "@prisma/client";
 import PrizeFundOptions from "@/components/prizeFunds/prizeFundOptions";
 import ReportOptions from "@/components/reports/reportOptions";
 
-
 // http://localhost:3000/dataEntry/runTmnt/tmt_d237a388a8fc4641a2e37233f1d6bebd
 
 const RunTmntPage = () => { 

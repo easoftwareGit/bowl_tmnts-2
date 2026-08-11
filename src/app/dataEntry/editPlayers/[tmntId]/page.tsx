@@ -52,11 +52,13 @@ const buildBrktList = (
 ): Record<string, BracketList> => {
   const bList: Record<string, BracketList> = {};
   brkts.forEach((brkt) => {
+    const gameNumbers: number[] = [brkt.start, brkt.start + 1, brkt.start + 2];
     const prev = prevAllBrktsList?.[brkt.id]; // get prev brkt list for brkt if have it
     const brktList = new BracketList(
       brkt.id,
       defaultPlayersPerMatch,
       defaultBrktGames,
+      gameNumbers,
       initByePlayer,
       prev?.brackets
     );
@@ -202,8 +204,7 @@ export default function EditPlayersPage() {
     const firstSquadId = stateTmntFullData.squads[0]?.id;
 
     if (!firstSquadId) {
-      setStage(SquadStage.ERROR);
-      // setStageError("Tournament has no squad");
+      setStage(SquadStage.ERROR);      
       setGotStage(true);
       return;
     }

@@ -3,7 +3,7 @@ import {
   entryNumBrktsColName,
   timeStampColName,
 } from "@/app/dataEntry/playersForm/sfCreatePlayerColumns";
-import { isOdd } from "@/lib/validation/validation";
+import { isOdd, isValidBtDbId } from "@/lib/validation/validation";
 import { maxBrackets } from "@/lib/validation/constants";
 import {
   blankPlayer,
@@ -11,8 +11,10 @@ import {
   defaultPlayersPerMatch,  
 } from "@/lib/db/initVals";
 import { shuffleArray } from "@/lib/tools";
-import type { playerType } from "@/lib/types/types";
+import type { divEntryType, divType, gameType, playerType } from "@/lib/types/types";
 import type { playerEntryRow } from "@/app/dataEntry/playersForm/populatePlayerRows";
+import { createGameScoreMap, createPlayerMap, } from "./bracketMaps";
+import type { GameScoreMap, PlayerBracketMap } from "./bracketMaps";
 import { cloneDeep } from "lodash";
 
 export type findPlayerResult = {
@@ -71,6 +73,7 @@ export enum matchTestCodes {
 }
 
 const maxTries = 250;
+const defaultGameNumbers: number[] = [1, 2, 3];
 
 export class BracketList {
   static noError = 0;  
@@ -90,7 +93,7 @@ export class BracketList {
   static errInvalidNeededCount = -119;
   static errCantCreateOppoMap = -120;
   static errNoValuesInOppoMap = -121;
-  static errNotEnoughOppoEntries = -122;
+  static errNotEnoughOppoEntries = -122;  
 
   private _addedBye = false;
   private _brackets: Bracket[] = [];
@@ -101,14 +104,17 @@ export class BracketList {
   private _brktId: string;
   private _byeEntry: playerEntryRow = {};
   private _byePlayer: playerType = blankPlayer;
-  private _copyFrom: Bracket[] = [];
   private _dupThreshold = 12; // can have a duplicate match 1 in 12 times
   private _errorCode: number = BracketList.noError;
   private _errorMessage: string = "";
   private _fullCount: number = 0;
   private _games: number = defaultBrktGames;  
+  private _gameNumbers: number[] = defaultGameNumbers;
+  private _gameScoreMap: GameScoreMap | null = null;
+  private _initialBrackets: Bracket[] = [];
   private _numBrktsName: string = "";
   private _oneByeCount: number = 0;
+  private _playerMap: PlayerBracketMap | null = null;
   private _playersPerMatch: number = defaultPlayersPerMatch;
   private _playersWithRefunds: boolean = false;
   private _randomizeErrors: randmoizeErrorType[] = [];
@@ -120,19 +126,28 @@ export class BracketList {
     brktId: string,
     playersPerMatch: number,
     games: number,
+    gameNumbers: number[] = defaultGameNumbers,    
     byePlayer: playerType = blankPlayer,
-    copyFrom: Bracket[] = [],
+    initialBrackets: Bracket[] = [],
   ) {
     this._shuffled = [];
     this._brktId = brktId;
-    this._games = games;
+    this._games = games;    
+    if (gameNumbers.length === this._games)
+      this._gameNumbers = gameNumbers;    
     this._numBrktsName = entryNumBrktsColName(this._brktId);
     this._timeStampName = timeStampColName(this._brktId);
     this._playersPerMatch = playersPerMatch;
-    this._byePlayer = byePlayer;
-    this._copyFrom = copyFrom;
-    if (this._copyFrom.length > 0) {
-      this._brackets.push(...this._copyFrom);
+    this._byePlayer = (isValidBtDbId(byePlayer.id, 'bye')) ? byePlayer : blankPlayer;
+    this._initialBrackets = initialBrackets;
+    if (this._initialBrackets.length > 0) {      
+      this._initialBrackets.forEach((brkt) => {
+        brkt.parent = this;
+        if (brkt.hasByePlayer()) this._oneByeCount++;
+      });
+      this._brackets.push(...this._initialBrackets);
+      this._fullCount = this._initialBrackets.length - this._oneByeCount;
+      this._totalEntries = (this._initialBrackets.length * this.playersPerBrkt) - this._oneByeCount;
     }
   }
 
@@ -166,6 +181,12 @@ export class BracketList {
   get games() {
     return this._games;
   }
+  get gameNumbers() {
+    return this._gameNumbers;
+  }
+  get gameScoreMap(): GameScoreMap | null {
+    return this._gameScoreMap;
+  }  
   get numBrktsName() {
     return this._numBrktsName;
   }
@@ -175,6 +196,9 @@ export class BracketList {
   get playersPerBrkt(): number {
     // 2 bolwers per match ** 3 games = 2**3 = 8
     return this._playersPerMatch ** this._games;
+  }
+  get playerMap(): PlayerBracketMap | null {
+    return this._playerMap;
   }
   get playersPerMatch() {
     return this._playersPerMatch;
@@ -199,6 +223,23 @@ export class BracketList {
       debugStr += entryObj.playerId + "\t";
     }
     return debugStr;
+  }
+
+  /**
+   * creates a new bracket, make sure each braket has same # players and games
+   *
+   * @param {string} id
+   * @returns {Bracket}
+   */
+  private createBracket(id: string = ""): Bracket {
+    const bracket = new Bracket(
+      id,
+      this._playersPerMatch,
+      this._games,
+    );
+    bracket.parent = this;
+
+    return bracket;
   }
 
   /**
@@ -671,6 +712,33 @@ export class BracketList {
     }
 
     return oppoMap;
+  }
+
+  /**
+   * creates the gameScoreMap
+   *
+   * @param {gameType[]} games   
+   */
+  createGameScoresMap(games: gameType[]): void { 
+    if (games == null || !Array.isArray(games) || games.length === 0) return;    
+    this._gameScoreMap = createGameScoreMap(games);
+  }
+
+  /**
+   * creates the playerHdcpMap
+   *
+   * @param {divEntryType[]} divEntries
+   * @param {divType} div   
+   */
+  createPlayersMap(    
+    divEntries: divEntryType[],
+    div: divType
+  ): void {
+    if (this._brktEntries.length === 0) return;
+    // if (players == null || !Array.isArray(players) || players.length === 0) return;    
+    if (divEntries == null || !Array.isArray(divEntries) || divEntries.length === 0) return;
+    if (div == null) return;    
+    this._playerMap = createPlayerMap(this._brktEntries, divEntries, div);
   }
 
   // /**
@@ -2094,7 +2162,11 @@ export class BracketList {
       // 2) create needed # of brackets
       this._brackets.length = 0;
       this._brackets.push(
-        ...Array.from({ length: numBrkts }, () => new Bracket(this)),
+        // ...Array.from({ length: numBrkts }, () => new Bracket(this)),
+        ...Array.from(
+          { length: numBrkts },
+          () => this.createBracket(),
+        ),
       );
       if (forTesting.length === 0) {
         // 3) create the shuffled array of all entries including byes

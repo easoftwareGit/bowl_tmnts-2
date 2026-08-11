@@ -33,11 +33,13 @@ export const randomizeAllBrkts = ({
 
   for (let b = 0; b < tmntData.brkts.length; b++) {
     const bnrktId = tmntData.brkts[b].id;
+    const gameNumbers = [tmntData.brkts[b].start, tmntData.brkts[b].start + 1, tmntData.brkts[b].start + 2];
     // right now only 2 players per match, 3 games in bracket
     const brktList = new BracketList(
       bnrktId,
       defaultPlayersPerMatch,
       defaultBrktGames,
+      gameNumbers,
       byePlayer
     );
     brktList.calcTotalBrkts(rows); // calc total brkts - simple math calc
