@@ -1,7 +1,11 @@
 import { privateApi } from "@/lib/api/axios";
 import { baseDivPfsApi } from "@/lib/api/apiPaths";
 import { testBaseDivPfsApi } from "../../../../test/testApi";
-import type { divPfType } from "@/lib/types/types";
+import type {
+  divPfSaveDataType,
+  divPfType,
+  tmntDivPfSaveDataType,
+} from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { blankDivPf } from "../initVals";
 
@@ -10,8 +14,7 @@ const url = process.env.NODE_ENV === "test" && testBaseDivPfsApi
   ? testBaseDivPfsApi
   : baseDivPfsApi;
 
-const divUrl = url + "/div/";
-const oneDivPfUrl = url + "/divPf/";
+const tmntUrl = url + "/tmnt/";
 
 /**
  * maps API value to app divPf
@@ -42,19 +45,19 @@ export const extractDivPfs = (divPfs: any): divPfType[] => {
 };
 
 /**
- * get all divPfs for a div
+ * get all divPfs for a tmnt
  *
- * @param {string} divId - id of div with divPfs to get
+ * @param {string} tmntId - id of tmnt with divPfs to get
  * @returns {divPfType[]} - array of divPfs
- * @throws {Error} - if divId is invalid or API call fails
+ * @throws {Error} - if tmntId is invalid or API call fails
  */
-export const getAllDivPfsForDiv = async (divId: string): Promise<divPfType[]> => {
-  if (!isValidBtDbId(divId, "div")) {
-    throw new Error("Invalid div id");
+export const getAllDivPfsForTmnt = async (tmntId: string): Promise<divPfType[]> => {
+  if (!isValidBtDbId(tmntId, "tmt")) {
+    throw new Error("Invalid tmnt id");
   }
 
   try {
-    const response = await privateApi.get(divUrl + divId);
+    const response = await privateApi.get(tmntUrl + tmntId);
 
     if (!response.data?.divPfs) {
       throw new Error("Error fetching divPfs");
@@ -63,42 +66,52 @@ export const getAllDivPfsForDiv = async (divId: string): Promise<divPfType[]> =>
     return extractDivPfs(response.data.divPfs);
   } catch (err) {
     throw new Error(
-      `getAllDivPfsForDiv failed: ${err instanceof Error ? err.message : err}`
+      `getAllDivPfsForTmnt failed: ${err instanceof Error ? err.message : err}`
     );
   }
 };
 
 /**
- * update all divPfs for a div
- *
- * @param {string} divId - id of div to update divPfs for
- * @param {divPfType[]} divPfs - array of divPfs to update
+ * update all divPfs for a tmnt
+ * 
+ * @param {tmntDivPfSaveDataType} dataToUpdate - data to update
+ * - tmntId: id of tmnt to update divPfs for
+ * - divIds: array of valid divIds in divPfs
+ * - divPfData: array of divPfs to update
  * @returns {divPfType[]} - array of updated divPfs
- * @throws {Error} - if divId is invalid or API call fails
+ * @throws {Error} - if tmntId is invalid or API call fails
  */
-export const updateAllDivPfsForDiv = async (divId: string, divPfs: divPfType[]): Promise<divPfType[]> => {
-  if (!isValidBtDbId(divId, "div")) {
-    throw new Error("Invalid div id");
+
+export const updateAllDivPfsForTmnt = async (
+  dataToUpdate: tmntDivPfSaveDataType
+): Promise<divPfType[]> => {
+
+  if (!isValidBtDbId(dataToUpdate.tmntId, "tmt")) {
+    throw new Error("Invalid tmnt id");
   }
-  if (!Array.isArray(divPfs)) {
+  if (!Array.isArray(dataToUpdate.divIds)) {
+    throw new Error("Invalid divIds array");
+  }
+  if (!Array.isArray(dataToUpdate.divPfData)) {
     throw new Error("Invalid divPfs array");
   }
-
-  // divPfs.length = 0 is OK - clears all divPfs for a div
-
   try {
-    const divPfsJSON = JSON.stringify(divPfs);
-    const response = await privateApi.put(divUrl + divId, divPfsJSON);
+    const tmntDivPfData: divPfSaveDataType = {
+      divPfData: dataToUpdate.divPfData,
+      divIds: dataToUpdate.divIds
+    }
+    const divPfJSON = JSON.stringify(tmntDivPfData);
+    const response = await privateApi.put(tmntUrl + dataToUpdate.tmntId, divPfJSON);    
 
     // only check if passed divPfs to update
-    if (divPfs.length > 0 && !response.data?.divPfs) {
-      throw new Error("Error updating divPfs for div");      
+    if (dataToUpdate.divPfData.length > 0 && !response.data?.divPfs) {
+      throw new Error("Error updating divPfs for tmnt");
     }
 
     return response.data.divPfs;
   } catch (err) {
     throw new Error(
-      `updateAllDivPfsForDiv failed: ${
+      `updateAllDivPfsForTmnt failed: ${
         err instanceof Error ? err.message : err
       }`
     );

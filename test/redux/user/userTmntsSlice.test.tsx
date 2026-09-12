@@ -35,7 +35,6 @@ const tmntData: tmntsListType[] = [
   }
 ]
 
-
 describe("userTmntsSlice", () => {
   let store: Store;
 

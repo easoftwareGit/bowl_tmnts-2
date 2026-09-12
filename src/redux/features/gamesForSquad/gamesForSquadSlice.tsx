@@ -6,6 +6,7 @@ import type { gameType } from "@/lib/types/types";
 
 export interface gamesForSquadState {
   games: gameType[];
+  requestedSquadId: string;
   loadStatus: ioStatusType;
   saveStatus: ioStatusType;
   error: string;
@@ -13,6 +14,7 @@ export interface gamesForSquadState {
 
 const initialState: gamesForSquadState = {
   games: [],
+  requestedSquadId: "",
   loadStatus: "idle",
   saveStatus: "idle",
   error: "",
@@ -26,9 +28,12 @@ export type upsertSquadGamesType = {
 export const fetchGamesForSquad = createAsyncThunk(
   "gamesForSquad/fetchGamesForSquad",
   async (squadId: string) => {
-    const games = await getAllGamesForSquad(squadId);
-    if (!games) throw new Error("Failed to fetch games for squad");
-    return games;
+
+    return getAllGamesForSquad(squadId);
+
+    // const games = await getAllGamesForSquad(squadId);
+    // if (!games) throw new Error("Failed to fetch games for squad");
+    // return games;
   }
 )
 
@@ -47,12 +52,14 @@ export const gamesForSquadSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(fetchGamesForSquad.pending, (state: gamesForSquadState) => {
+      .addCase(fetchGamesForSquad.pending, (state: gamesForSquadState, action) => {
         state.loadStatus = "loading";
+        state.requestedSquadId = action.meta.arg;
+        state.error = "";
       })
       .addCase(fetchGamesForSquad.fulfilled, (state: gamesForSquadState, action: PayloadAction<gameType[]>) => {
         state.loadStatus = "succeeded";
-        state.games = action.payload;
+        state.games = action.payload;        
       })
       .addCase(fetchGamesForSquad.rejected, (state: gamesForSquadState, action) => {
         state.loadStatus = "failed";        
@@ -96,6 +103,8 @@ export const gamesForSquadSlice = createSlice({
 
 export const selectGamesForSquad = (state: RootState) => state.gamesForSquad;
 
+export const getGamesForSquadRequestedId = (state: RootState) =>
+  state.gamesForSquad.requestedSquadId;
 export const getGamesForSquadLoadStatus = (state: RootState) =>
   state.gamesForSquad.loadStatus;
 export const getGamesForSquadSaveStatus = (state: RootState) =>

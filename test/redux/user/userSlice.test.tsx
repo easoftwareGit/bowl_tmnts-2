@@ -1,97 +1,234 @@
-import { configureStore, Store } from "@reduxjs/toolkit";
-import { userSlice, fetchUser } from "@/redux/features/user/userSlice";
+import reducer, {
+  fetchUser,
+  getUserError,
+  getUserLoadStatus,
+  getUserRequestId,
+  selectUser,
+  type userSliceState,
+} from "@/redux/features/user/userSlice";
 import { blankUserData } from "@/lib/db/initVals";
 import { cloneDeep } from "lodash";
 import type { userDataType } from "@/lib/types/types";
+import { getUserById } from "@/lib/db/users/dbUsers";
+import type { RootState } from "@/redux/store";
 
-const initialState = {
-  user: cloneDeep(blankUserData),
-  loadStatus: "idle",
-  saveStatus: "idle",
-  error: "",
-};
+jest.mock("@/lib/db/users/dbUsers", () => ({
+  getUserById: jest.fn(),
+}));
+
+const mockGetUserById = getUserById as jest.MockedFunction<
+  typeof getUserById
+>;
 
 describe("userSlice", () => {
-  let store: Store;
+  const userId = "usr_123";
+
+  const mockUser: userDataType = {
+    ...cloneDeep(blankUserData),
+    id: userId,
+    first_name: "John",
+    last_name: "Smith",
+    email: "john.smith@test.com",
+    phone: "555-123-4567",
+    role: "USER",
+  };
+
+  const initialState: userSliceState = {
+    user: cloneDeep(blankUserData),
+    requestedUserId: "",
+    loadStatus: "idle",
+    saveStatus: "idle",
+    error: "",
+  };
 
   beforeEach(() => {
-    store = configureStore({
-      reducer: {
-        user: userSlice.reducer,
-      },
+    jest.clearAllMocks();
+  });
+
+  describe("reducer", () => {
+    it("returns the initial state", () => {
+      const state = reducer(undefined, {
+        type: "unknown",
+      });
+
+      expect(state).toEqual(initialState);
+    });
+
+    it("sets loadStatus, requestedUserId, and clears error when fetchUser is pending", () => {
+      const previousState: userSliceState = {
+        ...initialState,
+        loadStatus: "idle",
+        error: "Previous error",
+      };
+
+      const state = reducer(
+        previousState,
+        fetchUser.pending("requestId", userId),
+      );
+
+      expect(state.loadStatus).toBe("loading");
+      expect(state.requestedUserId).toBe(userId);
+      expect(state.error).toBe("");
+      expect(state.user).toEqual(previousState.user);
+      expect(state.saveStatus).toBe(previousState.saveStatus);
+    });
+
+    it("sets user and loadStatus when fetchUser is fulfilled", () => {
+      const previousState: userSliceState = {
+        ...initialState,
+        requestedUserId: userId,
+        loadStatus: "loading",
+      };
+
+      const state = reducer(
+        previousState,
+        fetchUser.fulfilled(
+          mockUser,
+          "requestId",
+          userId,
+        ),
+      );
+
+      expect(state.loadStatus).toBe("succeeded");
+      expect(state.requestedUserId).toBe(userId);
+      expect(state.error).toBe("");
+
+      expect(state.user).toEqual({
+        ...previousState.user,
+        id: mockUser.id,
+        first_name: mockUser.first_name,
+        last_name: mockUser.last_name,
+        email: mockUser.email,
+        phone: mockUser.phone,
+        role: mockUser.role,
+      });
+    });
+
+    it("sets loadStatus and error when fetchUser is rejected", () => {
+      const previousState: userSliceState = {
+        ...initialState,
+        requestedUserId: userId,
+        loadStatus: "loading",
+      };
+
+      const error = new Error("Unable to load user");
+
+      const state = reducer(
+        previousState,
+        fetchUser.rejected(
+          error,
+          "requestId",
+          userId,
+        ),
+      );
+
+      expect(state.loadStatus).toBe("failed");
+      expect(state.requestedUserId).toBe(userId);
+      expect(state.error).toBe("Unable to load user");
+      expect(state.user).toEqual(previousState.user);
     });
   });
 
-  it("should handle initial state", async () => {
-    expect(store.getState().user).toEqual(initialState);
+  describe("fetchUser", () => {
+    it("calls getUserById with the user id", async () => {
+      mockGetUserById.mockResolvedValue(mockUser);
+
+      const dispatch = jest.fn();
+      const getState = jest.fn();
+
+      await fetchUser(userId)(
+        dispatch,
+        getState,
+        undefined,
+      );
+
+      expect(mockGetUserById).toHaveBeenCalledTimes(1);
+      expect(mockGetUserById).toHaveBeenCalledWith(userId);
+    });
+
+    it("returns the user when getUserById succeeds", async () => {
+      mockGetUserById.mockResolvedValue(mockUser);
+
+      const dispatch = jest.fn();
+      const getState = jest.fn();
+
+      const result = await fetchUser(userId)(
+        dispatch,
+        getState,
+        undefined,
+      );
+
+      expect(result.type).toBe("user/fetchUser/fulfilled");
+
+      if (fetchUser.fulfilled.match(result)) {
+        expect(result.payload).toEqual(mockUser);
+      }
+    });
+
+    it("returns a rejected action when getUserById throws an error", async () => {
+      mockGetUserById.mockRejectedValue(
+        new Error("Database error"),
+      );
+
+      const dispatch = jest.fn();
+      const getState = jest.fn();
+
+      const result = await fetchUser(userId)(
+        dispatch,
+        getState,
+        undefined,
+      );
+
+      expect(result.type).toBe("user/fetchUser/rejected");
+
+      if (fetchUser.rejected.match(result)) {
+        expect(result.error.message).toBe(
+          "Database error",
+        );
+      }
+    });
   });
 
-  it("should handle fetchUser.pending", () => {
-    // Arrange
-    const userId = "usr_5bcefb5d314fff1ff5da6521a2fa7bde";
-    const action = fetchUser.pending(userId, "pending");
-
-    // Act
-    store.dispatch(action);
-
-    // Assert
-    const state = store.getState().user;
-    expect(state.loadStatus).toBe("loading");
-    expect(state.error).toBe("");
-  });
-
-  it("should handle fetchUser.fulfilled", () => {
-    // Arrange
-    const userId = "usr_5bcefb5d314fff1ff5da6521a2fa7bde";
-    const userData: userDataType = {
-      ...cloneDeep(blankUserData),
-      id: userId,
-      first_name: "Eric",
-      last_name: "Adolphson",
-      email: "eric@example.com",
-      phone: "925-555-1212",
-      role: "USER",
+  describe("selectors", () => {
+    const userState: userSliceState = {
+      user: cloneDeep(mockUser),
+      requestedUserId: mockUser.id,
+      loadStatus: "succeeded",
+      saveStatus: "idle",
+      error: "",
     };
-    const action = fetchUser.fulfilled(userData, userId, "succeeded");
 
-    // Act
-    store.dispatch(action);
+    const rootState = {
+      user: userState,
+    } as RootState;
 
-    // Assert
-    const state = store.getState().user;
-    expect(state.loadStatus).toBe("succeeded");
-    expect(state.user).toEqual(userData);
-    expect(state.error).toBe("");
-  });
+    it("selectUser returns the user slice", () => {
+      expect(selectUser(rootState)).toEqual(userState);
+    });
 
-  it("should handle fetchUser.fulfilled with null payload", () => {
-    // Arrange
-    const userId = "usr_5bcefb5d314fff1ff5da6521a2fa7bde";
-    const action = fetchUser.fulfilled(null, userId, "succeeded");
+    it("getUserRequestId returns the requested user id", () => {
+      expect(getUserRequestId(rootState)).toBe(
+        mockUser.id,
+      );
+    });
 
-    // Act
-    store.dispatch(action);
+    it("getUserLoadStatus returns the load status", () => {
+      expect(getUserLoadStatus(rootState)).toBe(
+        "succeeded",
+      );
+    });
 
-    // Assert
-    const state = store.getState().user;
-    expect(state.loadStatus).toBe("succeeded");
-    expect(state.user).toEqual(initialState.user);
-    expect(state.error).toBe("");
-  });
+    it("getUserError returns the error", () => {
+      const stateWithError = {
+        user: {
+          ...userState,
+          error: "Test error",
+        },
+      } as RootState;
 
-  it("should handle fetchUser.rejected", () => {
-    // Arrange
-    const userId = "usr_5bcefb5d314fff1ff5da6521a2fa7bde";
-    const error = new Error("Something went wrong");
-    const reason = "Failed to fetch user data";
-    const action = fetchUser.rejected(error, reason, userId);
-
-    // Act
-    store.dispatch(action);
-
-    // Assert
-    const state = store.getState().user;
-    expect(state.loadStatus).toBe("failed");
-    expect(state.error).toBe(error.message);
+      expect(getUserError(stateWithError)).toBe(
+        "Test error",
+      );
+    });
   });
 });

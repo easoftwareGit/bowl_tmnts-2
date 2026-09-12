@@ -55,6 +55,7 @@ export type MockPotPrizeFundGridProps = {
   setRows: React.Dispatch<
     React.SetStateAction<prizeFundEntryRow[]>
   >;
+  potId: string;
   totalPrizeFund: number;
   enableEditing?: boolean;
   gridDataWasChanged: boolean;
@@ -189,9 +190,9 @@ jest.mock(
   () => ({
     __esModule: true,
 
-    fetchPotPfs: jest.fn((potId: string) => ({
+    fetchPotPfs: jest.fn((tmntId: string) => ({
       type: "potPfs/fetchPotPfs",
-      payload: potId,
+      payload: tmntId,
     })),
 
     getPotPfsLoadStatus: (
@@ -561,10 +562,7 @@ export const setup = ({
   tmntId = defaultTmntId,
   potId = defaultPotId,
 
-  // only get potPfs for the current pot
-  potPfs: suppliedPotPfs = mockPotPfs.filter(
-    (potPf) => potPf.pot_id === potId,
-  ),
+  potPfs: suppliedPotPfs = mockPotPfs,
   tmntData: suppliedTmntData = mockTmntFullData,
 
   potPfsLoadStatus = "succeeded",
@@ -589,6 +587,7 @@ export const setup = ({
   runTmntUrl: string;
 
   potPfs: potPfType[];
+  currentPotPfs: potPfType[];
   tmntData: tmntFullType;
   prizeFunds: prizeFundType[];
   populatedRows: prizeFundEntryRow[];
@@ -604,28 +603,21 @@ export const setup = ({
   const user = userEvent.setup();
 
   /*
-   * Clone the supplied pot prize-fund data.
-   *
-   * Tests may alter the rows or their pot_id values. Cloning prevents one
-   * test from mutating the shared mock data used by another test.
+   * Redux contains all pot prize-fund rows for the tournament.
+   * Clone them so individual tests cannot mutate shared mock data.
    */
   const potPfs = cloneDeep(suppliedPotPfs);
 
   /*
-   * Clone the supplied tournament data.
-   *
-   * Some setup options, such as potType, modify tournament data for the
-   * current test. Cloning prevents those changes from mutating shared mock
-   * data or affecting later tests.
+   * The page filters the tournament-level Redux data to the currently
+   * selected pot before initializing its editable prize-fund rows.
    */
+  const currentPotPfs = potPfs.filter(
+    (potPf) => potPf.pot_id === potId,
+  );
+
   const tmntData = cloneDeep(suppliedTmntData);
 
-  /*
-   * Override the selected pot's type when requested.
-   *
-   * This allows tests to render the same page as a Game, Last Game, or
-   * Series pot without creating separate tournament mock objects.
-   */
   if (potType !== undefined) {
     const selectedPot = tmntData.pots.find(
       (pot) => pot.id === potId,
@@ -636,21 +628,13 @@ export const setup = ({
     }
   }
 
-  /*
-   * Build the generic prize-fund data from the final cloned potPfs unless
-   * the test explicitly supplied its own converted prize-fund data.
-   */
   const prizeFunds =
     suppliedPrizeFunds ??
-    makePrizeFunds(potPfs);
+    makePrizeFunds(currentPotPfs);
 
-  /*
-   * Build the rows returned by populatePfRows() from the final cloned
-   * potPfs unless the test explicitly supplied its own populated rows.
-   */
   const populatedRows =
     suppliedPopulatedRows ??
-    makeRows(potPfs);
+    makeRows(currentPotPfs);
 
   const runTmntUrl = `/dataEntry/runTmnt/${tmntId}`;
 
@@ -666,7 +650,116 @@ export const setup = ({
       loadStatus: tmntLoadStatus,
       error: tmntError,
     },
-  };
+  };  
+
+//   tmntId = defaultTmntId,
+//   potId = defaultPotId,
+
+//   // Redux contains all pot prize funds for the tournament.
+//   // The page filters these rows for the current pot.
+//   potPfs: suppliedPotPfs = mockPotPfs,
+//   tmntData: suppliedTmntData = mockTmntFullData,
+
+//   potPfsLoadStatus = "succeeded",
+//   tmntLoadStatus = "succeeded",
+
+//   potPfsError = null,
+//   tmntError = null,
+
+//   prizeFunds: suppliedPrizeFunds,
+//   populatedRows: suppliedPopulatedRows,
+
+//   potName = "Mock Pot",
+//   potType,
+
+//   confirmLeavePage = true,
+// }: SetupOptions = {}): {
+//   user: ReturnType<typeof userEvent.setup>;
+//   view: RenderResult;
+
+//   tmntId: string;
+//   potId: string;
+//   runTmntUrl: string;
+
+//   potPfs: potPfType[];
+//   tmntData: tmntFullType;
+//   prizeFunds: prizeFundType[];
+//   populatedRows: prizeFundEntryRow[];
+
+//   triggerGridDataChanged: () => void;
+//   triggerGridDataReset: () => void;
+//   triggerSaveComplete: (
+//     savedRows?: prizeFundEntryRow[],
+//   ) => void;
+//   triggerNavigateAfterSave: () => void;
+//   triggerBack: () => void;
+// } => {
+//   const user = userEvent.setup();
+
+//   /*
+//    * Clone the supplied pot prize-fund data.
+//    *
+//    * Tests may alter the rows or their pot_id values. Cloning prevents one
+//    * test from mutating the shared mock data used by another test.
+//    */
+//   const potPfs = cloneDeep(suppliedPotPfs);
+
+//   /*
+//    * Clone the supplied tournament data.
+//    *
+//    * Some setup options, such as potType, modify tournament data for the
+//    * current test. Cloning prevents those changes from mutating shared mock
+//    * data or affecting later tests.
+//    */
+//   const tmntData = cloneDeep(suppliedTmntData);
+
+//   /*
+//    * Override the selected pot's type when requested.
+//    *
+//    * This allows tests to render the same page as a Game, Last Game, or
+//    * Series pot without creating separate tournament mock objects.
+//    */
+//   if (potType !== undefined) {
+//     const selectedPot = tmntData.pots.find(
+//       (pot) => pot.id === potId,
+//     );
+
+//     if (selectedPot) {
+//       selectedPot.pot_type = potType;
+//     }
+//   }
+
+//   /*
+//    * Build the generic prize-fund data from the final cloned potPfs unless
+//    * the test explicitly supplied its own converted prize-fund data.
+//    */
+//   const prizeFunds =
+//     suppliedPrizeFunds ??
+//     makePrizeFunds(currentPotPfs);
+
+//   /*
+//    * Build the rows returned by populatePfRows() from the final cloned
+//    * potPfs unless the test explicitly supplied its own populated rows.
+//    */
+//   const populatedRows =
+//     suppliedPopulatedRows ??
+//     makeRows(currentPotPfs);
+
+//   const runTmntUrl = `/dataEntry/runTmnt/${tmntId}`;
+
+//   const mockState: MockRootState = {
+//     potPfs: {
+//       potPfs,
+//       loadStatus: potPfsLoadStatus,
+//       error: potPfsError,
+//     },
+
+//     tmntFullData: {
+//       tmntFullData: tmntData,
+//       loadStatus: tmntLoadStatus,
+//       error: tmntError,
+//     },
+//   };
 
   jest.mocked(useParams).mockReturnValue({
     tmntId,
@@ -771,6 +864,7 @@ export const setup = ({
     runTmntUrl,
 
     potPfs,
+    currentPotPfs,
     tmntData,
     prizeFunds,
     populatedRows,
@@ -781,6 +875,26 @@ export const setup = ({
     triggerNavigateAfterSave,
     triggerBack,
   };
+
+  // return {
+  //   user,
+  //   view,
+
+  //   tmntId,
+  //   potId,
+  //   runTmntUrl,
+
+  //   potPfs,
+  //   tmntData,
+  //   prizeFunds,
+  //   populatedRows,
+
+  //   triggerGridDataChanged,
+  //   triggerGridDataReset,
+  //   triggerSaveComplete,
+  //   triggerNavigateAfterSave,
+  //   triggerBack,
+  // };
 };
 
 /************************

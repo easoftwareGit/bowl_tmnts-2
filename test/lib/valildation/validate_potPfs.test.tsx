@@ -1,12 +1,13 @@
 import {
   exportedForTesting,
+  isPotPfSaveDataType,
   sanitizePotPf,
   validatePotPf,
   validatePotPfs,
 } from "@/lib/validation/potPfs/validate";
 import { blankPotPf, initPotPf } from "@/lib/db/initVals";
 import { ErrorCode } from "@/lib/enums/enums";
-import type { potPfType, validPotPfsType } from "@/lib/types/types";
+import type { potPfDataType, potPfSaveDataType, potPfType, validPotPfsType } from "@/lib/types/types";
 import { maxMoney, maxPosition } from "@/lib/validation/constants";
 
 const {
@@ -331,151 +332,798 @@ describe("validate potPfs", () => {
 
   });
 
+  describe("isPotPfSaveDataType()", () => {
+    const potId1 = "pot_b2a7b02d761b4f5ab5438be84f642c3b";
+    const PotId2 = "pot_00000000000000000000000000000000";
+
+    const validPotPfData: potPfDataType[] = [
+      {
+        id: "ppf_11111111111111111111111111111111",
+        pot_id: potId1,
+        position: 1,
+        amount: 100,
+      },
+      {
+        id: "ppf_22222222222222222222222222222222",
+        pot_id: potId1,
+        position: 2,
+        amount: 50,
+      },
+      {
+        id: "ppf_33333333333333333333333333333333",
+        pot_id: PotId2,
+        position: 1,
+        amount: 200,
+      },
+      {
+        id: "ppf_44444444444444444444444444444444",
+        pot_id: PotId2,
+        position: 2,
+        amount: 100,
+      },
+    ];
+
+    const validSaveData: potPfSaveDataType = {
+      potPfData: validPotPfData,
+      potIds: [potId1, PotId2],
+    };
+
+    it("should return true when value is a valid potPfSaveDataType", () => {
+      expect(isPotPfSaveDataType(validSaveData)).toBe(true);
+    });
+
+    it("should return true when potPfData is an empty array", () => {
+      const data = {
+        ...validSaveData,
+        potPfData: [],
+      };
+
+      expect(isPotPfSaveDataType(data)).toBe(true);
+    });
+
+    it("should return true when potPfData is an empty array", () => {
+      const data: potPfSaveDataType = {
+        potPfData: [],
+        potIds: [potId1],
+      };
+
+      expect(isPotPfSaveDataType(data)).toBe(true);
+    });
+
+    it("should return true when potIds is an empty array", () => {
+      const data = {
+        ...validSaveData,
+        potIds: [],
+      };
+
+      expect(isPotPfSaveDataType(data)).toBe(true);
+    });
+
+    it("should return false when value is null", () => {
+      expect(isPotPfSaveDataType(null)).toBe(false);
+    });
+
+    it("should return false when value is not an object", () => {
+      expect(isPotPfSaveDataType("invalid")).toBe(false);
+      expect(isPotPfSaveDataType(123)).toBe(false);
+      expect(isPotPfSaveDataType(true)).toBe(false);
+    });
+
+    it("should return false when potPfData is missing", () => {
+      const data = {
+        potIds: validSaveData.potIds,
+      };
+
+      expect(isPotPfSaveDataType(data)).toBe(false);
+    });
+
+    it("should return false when potPfData is not an array", () => {
+      const data = {
+        ...validSaveData,
+        potPfData: "invalid",
+      };
+
+      expect(isPotPfSaveDataType(data)).toBe(false);
+    });
+
+    it("should return false when an item in potPfData is null", () => {
+      const data = {
+        ...validSaveData,
+        potPfData: [
+          ...validPotPfData,
+          null,
+        ],
+      };
+
+      expect(isPotPfSaveDataType(data)).toBe(false);
+    });
+
+    it("should return false when an item in potPfData is not an object", () => {
+      const data = {
+        ...validSaveData,
+        potPfData: [
+          ...validPotPfData,
+          "invalid",
+        ],
+      };
+
+      expect(isPotPfSaveDataType(data)).toBe(false);
+    });
+
+    it("should return false when a potPfData item is missing id", () => {
+      const data = {
+        ...validSaveData,
+        potPfData: [
+          {
+            pot_id: potId1,
+            position: 1,
+            amount: 100,
+          },
+        ],
+      };
+
+      expect(isPotPfSaveDataType(data)).toBe(false);
+    });
+
+    it("should return false when a potPfData id is not a string", () => {
+      const data = {
+        ...validSaveData,
+        potPfData: [
+          {
+            ...validPotPfData[0],
+            id: 123,
+          },
+        ],
+      };
+
+      expect(isPotPfSaveDataType(data)).toBe(false);
+    });
+
+    it("should return false when a potPfData item is missing pot_id", () => {
+      const data = {
+        ...validSaveData,
+        potPfData: [
+          {
+            id: validPotPfData[0].id,
+            position: 1,
+            amount: 100,
+          },
+        ],
+      };
+
+      expect(isPotPfSaveDataType(data)).toBe(false);
+    });
+
+    it("should return false when a potPfData pot_id is not a string", () => {
+      const data = {
+        ...validSaveData,
+        potPfData: [
+          {
+            ...validPotPfData[0],
+            pot_id: 123,
+          },
+        ],
+      };
+
+      expect(isPotPfSaveDataType(data)).toBe(false);
+    });
+
+    it("should return false when a potPfData item is missing position", () => {
+      const data = {
+        ...validSaveData,
+        potPfData: [
+          {
+            id: validPotPfData[0].id,
+            pot_id: potId1,
+            amount: 100,
+          },
+        ],
+      };
+
+      expect(isPotPfSaveDataType(data)).toBe(false);
+    });
+
+    it("should return false when a potPfData position is not a number", () => {
+      const data = {
+        ...validSaveData,
+        potPfData: [
+          {
+            ...validPotPfData[0],
+            position: "1",
+          },
+        ],
+      };
+
+      expect(isPotPfSaveDataType(data)).toBe(false);
+    });
+
+    it("should return false when a potPfData item is missing amount", () => {
+      const data = {
+        ...validSaveData,
+        potPfData: [
+          {
+            id: validPotPfData[0].id,
+            pot_id: potId1,
+            position: 1,
+          },
+        ],
+      };
+
+      expect(isPotPfSaveDataType(data)).toBe(false);
+    });
+
+    it("should return false when a potPfData amount is not a number", () => {
+      const data = {
+        ...validSaveData,
+        potPfData: [
+          {
+            ...validPotPfData[0],
+            amount: "100.00",
+          },
+        ],
+      };
+
+      expect(isPotPfSaveDataType(data)).toBe(false);
+    });
+
+    it("should return false when potIds is missing", () => {
+      const data = {
+        potPfData: validPotPfData,
+      };
+
+      expect(isPotPfSaveDataType(data)).toBe(false);
+    });
+
+    it("should return false when potIds is not an array", () => {
+      const data = {
+        ...validSaveData,
+        potIds: potId1,
+      };
+
+      expect(isPotPfSaveDataType(data)).toBe(false);
+    });
+
+    it("should return false when an item in potIds is not a string", () => {
+      const data = {
+        ...validSaveData,
+        potIds: [
+          potId1,
+          123,
+        ],
+      };
+
+      expect(isPotPfSaveDataType(data)).toBe(false);
+    });
+  });  
+
   describe("validatePotPfs()", () => {
+    const potId1 = "pot_b2a7b02d761b4f5ab5438be84f642c3b";
+    const potId2 = "pot_00000000000000000000000000000000";
 
-    it("should return ErrorCode.NONE when all data is valid", () => {
-      const result =
-        validatePotPfs(mockPotPfs);
+    const potIds = [potId1, potId2];
 
-      expect(result.errorCode).toBe(
-        ErrorCode.NONE,
+    const mockPotPfsOneDiv: potPfType[] = [
+      {
+        ...validPotPf,
+        id: "ppf_11111111111111111111111111111111",
+        pot_id: potId1,
+        position: 1,
+        amount: 100,
+      },
+      {
+        ...validPotPf,
+        id: "ppf_22222222222222222222222222222222",
+        pot_id: potId1,
+        position: 2,
+        amount: 75,
+      },
+      {
+        ...validPotPf,
+        id: "ppf_33333333333333333333333333333333",
+        pot_id: potId1,
+        position: 3,
+        amount: 50,
+      },
+    ];
+
+    const mockPotPfsTwoDivs: potPfType[] = [
+      {
+        ...validPotPf,
+        id: "ppf_11111111111111111111111111111111",
+        pot_id: potId1,
+        position: 1,
+        amount: 100,
+      },
+      {
+        ...validPotPf,
+        id: "ppf_22222222222222222222222222222222",
+        pot_id: potId1,
+        position: 2,
+        amount: 75,
+      },
+      {
+        ...validPotPf,
+        id: "ppf_33333333333333333333333333333333",
+        pot_id: potId1,
+        position: 3,
+        amount: 50,
+      },
+      {
+        ...validPotPf,
+        id: "ppf_44444444444444444444444444444444",
+        pot_id: potId2,
+        position: 1,
+        amount: 200,
+      },
+      {
+        ...validPotPf,
+        id: "ppf_55555555555555555555555555555555",
+        pot_id: potId2,
+        position: 2,
+        amount: 150,
+      },
+      {
+        ...validPotPf,
+        id: "ppf_66666666666666666666666666666666",
+        pot_id: potId2,
+        position: 3,
+        amount: 100,
+      },
+    ];
+
+    it("should return ErrorCode.NONE when all data is valid for one pot", () => {
+      const result = validatePotPfs(
+        mockPotPfsOneDiv,
+        [potId1],
       );
-      expect(result.potPfs).toHaveLength(2);
+
+      expect(result.errorCode).toBe(ErrorCode.NONE);
+      expect(result.potPfs).toHaveLength(3);
+    });
+
+    it("should return ErrorCode.NONE when all data is valid for two pots", () => {
+      const result = validatePotPfs(
+        mockPotPfsTwoDivs,
+        potIds,
+      );
+
+      expect(result.errorCode).toBe(ErrorCode.NONE);
+      expect(result.potPfs).toHaveLength(6);
+    });
+
+    it("should return sorted potPfs by pot_id, then position", () => {
+      const unsortedPotPfs: potPfType[] = [
+        mockPotPfsTwoDivs[5],
+        mockPotPfsTwoDivs[2],
+        mockPotPfsTwoDivs[3],
+        mockPotPfsTwoDivs[0],
+        mockPotPfsTwoDivs[4],
+        mockPotPfsTwoDivs[1],
+      ];
+
+      const result = validatePotPfs(
+        unsortedPotPfs,
+        potIds,
+      );
+
+      expect(result.errorCode).toBe(ErrorCode.NONE);
+
+      expect(result.potPfs.map((potPf) => ({
+        pot_id: potPf.pot_id,
+        position: potPf.position,
+      }))).toEqual([
+        { pot_id: potId2, position: 1 },
+        { pot_id: potId2, position: 2 },
+        { pot_id: potId2, position: 3 },
+        { pot_id: potId1, position: 1 },
+        { pot_id: potId1, position: 2 },
+        { pot_id: potId1, position: 3 },
+      ].toSorted((a, b) => {
+        const potCompare = a.pot_id.localeCompare(b.pot_id);
+
+        if (potCompare !== 0) {
+          return potCompare;
+        }
+
+        return a.position! - b.position!;
+      }));
+    });
+
+    it("should have sequential positions starting at 1 for one pot", () => {
+      const result = validatePotPfs(
+        mockPotPfsOneDiv,
+        [potId1],
+      );
+
+      expect(result.errorCode).toBe(ErrorCode.NONE);
+
+      expect(
+        result.potPfs.map((potPf) => potPf.position)
+      ).toEqual([1, 2, 3]);
+    });
+
+    it("should have sequential positions starting at 1 for each pot", () => {
+      const result = validatePotPfs(
+        mockPotPfsTwoDivs,
+        potIds,
+      );
+
+      expect(result.errorCode).toBe(ErrorCode.NONE);
+
+      const pot1Pfs = result.potPfs.filter(
+        (potPf) => potPf.pot_id === potId1,
+      );
+
+      const pot2Pfs = result.potPfs.filter(
+        (potPf) => potPf.pot_id === potId2,
+      );
+
+      expect(
+        pot1Pfs.map((potPf) => potPf.position)
+      ).toEqual([1, 2, 3]);
+
+      expect(
+        pot2Pfs.map((potPf) => potPf.position)
+      ).toEqual([1, 2, 3]);
     });
 
     it("should sanitize amount values", () => {
-      const potPfsToValidate = [
-        ...mockPotPfs,
-      ];
+      const potPfsToValidate = mockPotPfsOneDiv.map(
+        (potPf) => ({ ...potPf }),
+      );
 
       potPfsToValidate[1] = {
         ...potPfsToValidate[1],
         amount: "55.000" as any,
       };
 
-      const result: validPotPfsType =
-        validatePotPfs(potPfsToValidate);
-
-      expect(result.errorCode).toBe(
-        ErrorCode.NONE,
+      const result: validPotPfsType = validatePotPfs(
+        potPfsToValidate,
+        [potId1],
       );
 
-      expect(result.potPfs[1].amount)
-        .toBe(55);
+      expect(result.errorCode).toBe(ErrorCode.NONE);
+      expect(result.potPfs[1].amount).toBe(55);
+    });
+
+    it("should return ErrorCode.MISSING_DATA when potPfs is empty", () => {
+      const result = validatePotPfs(
+        [],
+        potIds,
+      );
+
+      expect(result.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(result.potPfs).toEqual([]);
+    });
+
+    it("should return ErrorCode.MISSING_DATA when potIds is empty", () => {
+      const result = validatePotPfs(
+        mockPotPfsOneDiv,
+        [],
+      );
+
+      expect(result.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(result.potPfs).toEqual([]);
     });
 
     it("should return ErrorCode.INVALID_DATA when id is invalid", () => {
-      const potPfsToValidate = [
-        ...mockPotPfs,
-      ];
+      const potPfsToValidate = mockPotPfsOneDiv.map(
+        (potPf) => ({ ...potPf }),
+      );
 
       potPfsToValidate[1] = {
         ...potPfsToValidate[1],
         id: '<script>alert("xss")</script>',
       };
 
-      const result = validatePotPfs(potPfsToValidate);
+      const result = validatePotPfs(
+        potPfsToValidate,
+        [potId1],
+      );
+
       expect(result.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
 
-    it("should return ErrorCode.INVALID_DATA when pot_id is invalid", () => {
-      const potPfsToValidate = [
-        ...mockPotPfs,
-      ];
+    it("should return ErrorCode.INVALID_DATA when pot_id format is invalid", () => {
+      const potPfsToValidate = mockPotPfsOneDiv.map(
+        (potPf) => ({ ...potPf }),
+      );
 
       potPfsToValidate[1] = {
         ...potPfsToValidate[1],
         pot_id: "abc",
       };
 
-      const result = validatePotPfs(potPfsToValidate);
+      const result = validatePotPfs(
+        potPfsToValidate,
+        [potId1],
+      );
+
       expect(result.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
 
-    it("should return ErrorCode.INVALID_DATA when all pot_id are not the same", () => {
-      const potPfsToValidate = [
-        ...mockPotPfs,
-      ];
+    it("should return ErrorCode.INVALID_DATA when pot_id is valid but not in potIds", () => {
+      const otherPotId = "pot_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+
+      const potPfsToValidate = mockPotPfsOneDiv.map(
+        (potPf) => ({ ...potPf }),
+      );
 
       potPfsToValidate[1] = {
         ...potPfsToValidate[1],
-        pot_id: "pot_00000000000000000000000000000000",
+        pot_id: otherPotId,
+        position: 1,
       };
 
-      const result = validatePotPfs(potPfsToValidate);
+      const result = validatePotPfs(
+        potPfsToValidate,
+        [potId1],
+      );
+
       expect(result.errorCode).toBe(ErrorCode.INVALID_DATA);
+    });
+
+    it("should allow potPfs for multiple pot_id values when all are in potIds", () => {
+      const result = validatePotPfs(
+        mockPotPfsTwoDivs,
+        potIds,
+      );
+
+      expect(result.errorCode).toBe(ErrorCode.NONE);
+
+      expect(
+        new Set(result.potPfs.map((potPf) => potPf.pot_id)),
+      ).toEqual(new Set([potId1, potId2]));
     });
 
     it("should return ErrorCode.MISSING_DATA when position is null", () => {
-      const potPfsToValidate = [
-        ...mockPotPfs,
-      ];
+      const potPfsToValidate = mockPotPfsOneDiv.map(
+        (potPf) => ({ ...potPf }),
+      );
 
       potPfsToValidate[1] = {
         ...potPfsToValidate[1],
-        position: null as any,
+        position: null,
       };
 
-      const result = validatePotPfs(potPfsToValidate);
+      const result = validatePotPfs(
+        potPfsToValidate,
+        [potId1],
+      );
+
       expect(result.errorCode).toBe(ErrorCode.MISSING_DATA);
     });
 
     it("should return ErrorCode.INVALID_DATA when position is invalid", () => {
-      const potPfsToValidate = [
-        ...mockPotPfs,
-      ];
+      const potPfsToValidate = mockPotPfsOneDiv.map(
+        (potPf) => ({ ...potPf }),
+      );
 
       potPfsToValidate[1] = {
         ...potPfsToValidate[1],
         position: -1,
       };
 
-      const result = validatePotPfs(potPfsToValidate);
+      const result = validatePotPfs(
+        potPfsToValidate,
+        [potId1],
+      );
+
+      expect(result.errorCode).toBe(ErrorCode.INVALID_DATA);
+    });
+
+    it("should return ErrorCode.INVALID_DATA when first position for a pot is not 1", () => {
+      const potPfsToValidate = mockPotPfsOneDiv.map(
+        (potPf) => ({ ...potPf }),
+      );
+
+      potPfsToValidate[0] = {
+        ...potPfsToValidate[0],
+        position: 2,
+      };
+
+      const result = validatePotPfs(
+        potPfsToValidate,
+        [potId1],
+      );
+
       expect(result.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
 
     it("should return ErrorCode.INVALID_DATA when position is not sequential", () => {
-      const potPfsToValidate = [
-        ...mockPotPfs,
-      ];
+      const potPfsToValidate = mockPotPfsOneDiv.map(
+        (potPf) => ({ ...potPf }),
+      );
 
       potPfsToValidate[1] = {
         ...potPfsToValidate[1],
-        position: 3,
+        position: 4,
       };
 
-      const result = validatePotPfs(potPfsToValidate);
+      const result = validatePotPfs(
+        potPfsToValidate,
+        [potId1],
+      );
+
+      expect(result.errorCode).toBe(ErrorCode.INVALID_DATA);
+    });
+
+    it("should return ErrorCode.INVALID_DATA when positions are not sequential in the second pot", () => {
+      const potPfsToValidate = mockPotPfsTwoDivs.map(
+        (potPf) => ({ ...potPf }),
+      );
+
+      const secondDivPosition2Index =
+        potPfsToValidate.findIndex(
+          (potPf) =>
+            potPf.pot_id === potId2 &&
+            potPf.position === 2,
+        );
+
+      potPfsToValidate[secondDivPosition2Index] = {
+        ...potPfsToValidate[secondDivPosition2Index],
+        position: 4,
+      };
+
+      const result = validatePotPfs(
+        potPfsToValidate,
+        potIds,
+      );
+
       expect(result.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
 
     it("should return ErrorCode.MISSING_DATA when amount is null", () => {
-      const potPfsToValidate = [
-        ...mockPotPfs,
-      ];
+      const potPfsToValidate = mockPotPfsOneDiv.map(
+        (potPf) => ({ ...potPf }),
+      );
 
       potPfsToValidate[1] = {
         ...potPfsToValidate[1],
-        amount: null as any,
+        amount: null,
       };
 
-      const result = validatePotPfs(potPfsToValidate);
+      const result = validatePotPfs(
+        potPfsToValidate,
+        [potId1],
+      );
+
       expect(result.errorCode).toBe(ErrorCode.MISSING_DATA);
     });
 
     it("should return ErrorCode.INVALID_DATA when amount is invalid", () => {
-      const potPfsToValidate = [
-        ...mockPotPfs,
-      ];
+      const potPfsToValidate = mockPotPfsOneDiv.map(
+        (potPf) => ({ ...potPf }),
+      );
 
       potPfsToValidate[1] = {
         ...potPfsToValidate[1],
         amount: maxMoney + 1,
       };
 
-      const result = validatePotPfs(potPfsToValidate);
+      const result = validatePotPfs(
+        potPfsToValidate,
+        [potId1],
+      );
+
       expect(result.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
 
-  });
+    it("should return ErrorCode.INVALID_DATA when amount increases as position increases", () => {
+      const potPfsToValidate = mockPotPfsOneDiv.map(
+        (potPf) => ({ ...potPf }),
+      );
+
+      // amounts become 100, 125, 50
+      potPfsToValidate[1] = {
+        ...potPfsToValidate[1],
+        amount: 125,
+      };
+
+      const result = validatePotPfs(
+        potPfsToValidate,
+        [potId1],
+      );
+
+      expect(result.errorCode).toBe(ErrorCode.INVALID_DATA);
+    });
+
+    it("should return ErrorCode.NONE when consecutive positions have the same amount", () => {
+      const potPfsToValidate = mockPotPfsOneDiv.map(
+        (potPf) => ({ ...potPf }),
+      );
+
+      // amounts become 100, 100, 50
+      potPfsToValidate[1] = {
+        ...potPfsToValidate[1],
+        amount: 100,
+      };
+
+      const result = validatePotPfs(
+        potPfsToValidate,
+        [potId1],
+      );
+
+      expect(result.errorCode).toBe(ErrorCode.NONE);
+    });
+
+    it("should return ErrorCode.INVALID_DATA when amount increases in the second pot", () => {
+      const potPfsToValidate = mockPotPfsTwoDivs.map(
+        (potPf) => ({ ...potPf }),
+      );
+
+      const secondDivPosition2Index =
+        potPfsToValidate.findIndex(
+          (potPf) =>
+            potPf.pot_id === potId2 &&
+            potPf.position === 2,
+        );
+
+      // potId2 amounts become 200, 250, 100
+      potPfsToValidate[secondDivPosition2Index] = {
+        ...potPfsToValidate[secondDivPosition2Index],
+        amount: 250,
+      };
+
+      const result = validatePotPfs(
+        potPfsToValidate,
+        potIds,
+      );
+
+      expect(result.errorCode).toBe(ErrorCode.INVALID_DATA);
+    });
+
+    it("should reset amount validation when starting a new pot", () => {
+      const potPfsToValidate = mockPotPfsTwoDivs.map(
+        (potPf) => ({ ...potPf }),
+      );
+
+      const result = validatePotPfs(
+        potPfsToValidate,
+        potIds,
+      );
+
+      expect(result.errorCode).toBe(ErrorCode.NONE);
+
+      const pot1Position3 = result.potPfs.find(
+        (potPf) =>
+          potPf.pot_id === potId1 &&
+          potPf.position === 3,
+      );
+
+      const pot2Position1 = result.potPfs.find(
+        (potPf) =>
+          potPf.pot_id === potId2 &&
+          potPf.position === 1,
+      );
+
+      expect(pot1Position3?.amount).toBe(50);
+      expect(pot2Position1?.amount).toBe(200);
+    });   
+    
+    it("should validate amounts after sorting by pot_id and position", () => {
+      const unsortedPotPfs: potPfType[] = [
+        { ...mockPotPfsOneDiv[2] }, // position 3, amount 50
+        { ...mockPotPfsOneDiv[0] }, // position 1, amount 100
+        { ...mockPotPfsOneDiv[1] }, // position 2, amount 75
+      ];
+
+      const result = validatePotPfs(
+        unsortedPotPfs,
+        [potId1],
+      );
+
+      expect(result.errorCode).toBe(ErrorCode.NONE);
+
+      expect(
+        result.potPfs.map((potPf) => potPf.position),
+      ).toEqual([1, 2, 3]);
+
+      expect(
+        result.potPfs.map((potPf) => potPf.amount),
+      ).toEqual([100, 75, 50]);
+    });
+
+  });  
 
 });

@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { ioStatusType } from "@/redux/statusTypes";
+import { RootState } from "@/redux/store";
 import { getUserById } from "@/lib/db/users/dbUsers";
 import type { userDataType } from "@/lib/types/types";
 import { blankUserData } from "@/lib/db/initVals";
@@ -7,6 +8,7 @@ import { cloneDeep } from "lodash";
 
 export interface userSliceState {
   user: userDataType;
+  requestedUserId: string;
   loadStatus: ioStatusType;
   saveStatus: ioStatusType;
   error: string | undefined;
@@ -15,6 +17,7 @@ export interface userSliceState {
 // initial state constant
 const initialState: userSliceState = {
   user: cloneDeep(blankUserData),
+  requestedUserId: "",
   loadStatus: "idle",
   saveStatus: "idle",
   error: "",
@@ -26,7 +29,7 @@ const initialState: userSliceState = {
  * @param {string} userId - id of user to get
  * @returns {userDataType | null} - user from database
  */
-export const fetchUser = createAsyncThunk<userDataType | null, string>(
+export const fetchUser = createAsyncThunk(
   "user/fetchUser",
   async (userId: string) => {
     // Do not use try / catch blocks here. Need the promise to be fulfilled or
@@ -42,8 +45,9 @@ export const userSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(fetchUser.pending, (state) => {
+      .addCase(fetchUser.pending, (state, action) => {
         state.loadStatus = "loading";
+        state.requestedUserId = action.meta.arg;
         state.error = "";
       })
       .addCase(fetchUser.fulfilled, (state, action) => {
@@ -68,3 +72,10 @@ export const userSlice = createSlice({
       });
   },
 });
+
+export const getUserRequestId = (state: RootState) => state.user.requestedUserId;
+export const selectUser = (state: RootState) => state.user;
+export const getUserLoadStatus = (state: RootState) => state.user.loadStatus;
+export const getUserError = (state: RootState) => state.user.error;
+
+export default userSlice.reducer;

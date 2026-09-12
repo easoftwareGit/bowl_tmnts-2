@@ -5,10 +5,10 @@ import { defaultPlayersPerMatch } from "@/lib/db/initVals";
 /**
  * populates an array of brackets with data from the database
  * 
- * @param brkt - current bracket
- * @param one_brkts - array of one brkts for current bracket
- * @param seeds - array of seeds for current bracket
- * @returns - array of all brackets for current bracket
+ * @param {brktType} brkt - current bracket
+ * @param {oneBrktType[]} one_brkts - array of one brkts for current bracket
+ * @param {brktSeedType[]} seeds - array of seeds for current bracket
+ * @returns {Bracket[]} - array of all brackets for current bracket
  */
 export const populateBrackets = (
   brkt: brktType,
@@ -56,7 +56,6 @@ export const populateBrackets = (
     
     brackets.push(bracket);
   });
-
 
   return brackets;
 };

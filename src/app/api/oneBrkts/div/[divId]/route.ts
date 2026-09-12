@@ -22,20 +22,10 @@ export async function GET(
             id: divId,
           },
         }
-        // brkt_id: {
-        //   in: await prisma.brkt.findMany({
-        //     where: { div_id: divId },
-        //     select: { id: true },
-        //   }).then((brkts) => brkts.map((brkt) => brkt.id)),
-        // }
       },
       orderBy: [
-        {
-          brkt_id: "asc",
-        },
-        {
-          bindex: "asc",
-        },
+        { brkt_id: "asc" },
+        { bindex: "asc"},
       ],
     });
     if (!oneBrkts) {

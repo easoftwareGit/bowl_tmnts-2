@@ -9,7 +9,19 @@
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch",
-    "brktseed": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/brktseed.ts"
+    "brktseed": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/brktseed.ts",
+    "game1aseed": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/game1aseed.ts",
+    "game1bseed": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/game1bseed.ts",
+    "game2aseed": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/game2aseed.ts",
+    "game2bseed": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/game2bseed.ts",
+    "game3aseed": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/game3aseed.ts",
+    "game3bseed": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/game3bseed.ts",
+    "game4aseed": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/game4aseed.ts",
+    "game4bseed": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/game4bseed.ts",
+    "game5aseed": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/game5aseed.ts",
+    "game5bseed": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/game5bseed.ts",
+    "game6aseed": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/game6aseed.ts",
+    "game6bseed": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/game6bseed.ts"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

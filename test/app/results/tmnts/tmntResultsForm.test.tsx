@@ -1,6 +1,6 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import TmntResultsForm from "@/app/results/tmnt/[tmntId]/tmntResultsForm";
+import TmntResultsForm from "@/app/results/tmnt/[tmntId]/standings/tmntResultsForm";
 import type { TmntGameResult } from "@/lib/types/resultsTypes";
 
 const mockGridComponent = jest.fn();
@@ -52,8 +52,8 @@ jest.mock("@syncfusion/ej2-react-grids", () => ({
 
 import {
   calcNumGames,
-  createResultsColumns2,
-} from "@/app/results/tmnt/[tmntId]/createResultsColumns";
+  createResultsColumns,
+} from "@/app/results/tmnt/[tmntId]/standings/createResultsColumns";
 import { TotalHdcpName } from "@/lib/validation/constants";
 
 const mockCalcNumGames =
@@ -62,8 +62,8 @@ const mockCalcNumGames =
   >;
 
 const mockCreateResultsColumns2 =
-  createResultsColumns2 as jest.MockedFunction<
-    typeof createResultsColumns2
+  createResultsColumns as jest.MockedFunction<
+    typeof createResultsColumns
   >;
 
 describe("TmntResultsForm", () => {

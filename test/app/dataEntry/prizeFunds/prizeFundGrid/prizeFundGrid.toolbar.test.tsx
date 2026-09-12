@@ -51,6 +51,33 @@ describe("PrizeFundGrid toolbar", () => {
         "amount",
       );
     });
+
+    it("does not start editing when there are no rows", async () => {
+      const {
+        user,
+      } = setup({
+        rows: [],
+      });
+
+      await clickToolbarButton(user, "Edit");
+
+      expect(mockSelectCell).not.toHaveBeenCalled();
+      expect(mockEditCell).not.toHaveBeenCalled();
+    });
+
+    it("does not start editing when enableEditing is false", async () => {
+      const {
+        user,
+      } = setup({
+        enableEditing: false,
+      });
+
+      await clickToolbarButton(user, "Edit");
+
+      expect(mockSelectCell).not.toHaveBeenCalled();
+      expect(mockEditCell).not.toHaveBeenCalled();
+    });
+
   });
 
   describe("Back", () => {

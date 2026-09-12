@@ -29,6 +29,8 @@ import { SquadStage } from "@prisma/client";
 import { validateFullTmnt } from "@/lib/validation/tmnts/full/validate";
 import { ErrorCode } from "@/lib/enums/enums";
 import { extractTmntMoneys } from "../moneys/dbMoneys";
+import { dummyUserId } from "@/lib/validation/constants";
+import { cloneDeep } from "lodash";
 
 // If running tests AND a test URL is defined, use it; otherwise use the app API path
 const url = process.env.NODE_ENV === "test" && testBaseTmntsApi
@@ -293,10 +295,8 @@ export const getTmntFullData = async (
   }
 
   const dbTmntFullData = response.data.tmntFullData;
-
-  const tmntFullData: tmntFullType = {
-    ...linkedInitTmntFullData(tmntId),
-  };
+  
+  const tmntFullData: tmntFullType = cloneDeep(linkedInitTmntFullData);
 
   tmntFullData.divs = [];
   tmntFullData.events = [];

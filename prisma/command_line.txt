@@ -23,6 +23,20 @@ npx prisma db push --force-reset
 npx prisma db seed
 npm run brktseed
 
+// game seed - pick the game and half to seed. a = first half, b = second half
+npm run game1aseed
+npm run game1bseed
+npm run game2aseed
+npm run game2bseed
+npm run game3aseed
+npm run game3bseed
+npm run game4aseed
+npm run game4bseed
+npm run game5aseed
+npm run game5bseed
+npm run game6aseed
+npm run game6bseed
+
 // build
 npm run build
  - or -

@@ -48,6 +48,7 @@ import ModalErrorMsg from "@/components/modal/errorModal";
 import { maxMoney } from "@/lib/validation/constants";
 import { localConfig } from "@/lib/currency/const";
 import { formatValueSymbSep2Dec } from "@/lib/currency/formatValue";
+import { sfRowHeight } from "@/lib/syncfusionTools";
 
 
 /*********************
@@ -527,6 +528,8 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
     /********************
      * Toolbar Handlers *
      ********************/
+    
+    const canEdit = enableEditing && rows.length > 0;
 
     /**
      * Starts editing the first editable field in the grid
@@ -535,7 +538,7 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
      */
     const beginToolbarEdit = useCallback((): void => {
       const grid = gridRef.current;
-      if (!grid) return;
+      if (!grid || !canEdit) return; // !canEdit is a guard for editing 0 rows
 
       let rowIndex = lastFocusedRowIndexRef.current ?? 0;
 
@@ -552,8 +555,8 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
       setTimeout(() => {
         grid.editCell(rowIndex, pfEntryAmountColName);
       }, 0);
-    }, [gridData.length]);
-
+    }, [gridData.length, canEdit]);
+    
     /**
      * Updates the toolbar state based on whether data has changed
      *
@@ -563,11 +566,18 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
       const grid = gridRef.current;
       if (!grid) return;
 
+      // Edit is enabled only when editing is allowed and rows exist.
+      grid.toolbarModule.enableItems(
+        [TOOLBAR_IDS.EDIT],
+        canEdit,
+      );
+
+      // Save, Save and Close, & Cancel enabled only when grid data has changed
       grid.toolbarModule.enableItems(
         [TOOLBAR_IDS.SAVE, TOOLBAR_IDS.SAVE_CLOSE, TOOLBAR_IDS.CANCEL],
         gridDataWasChanged,
       );
-    }, [gridDataWasChanged]);
+    }, [canEdit,gridDataWasChanged]);
 
     const toolbarClick = useCallback(
       (args: ClickEventArgs): void => {
@@ -769,11 +779,12 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
           allowSorting={false}
           editSettings={editSettings}
           enableStickyHeader={true}
-          gridLines="Both"
-          width="450"
+          gridLines="Both"          
           height={gridHeight}
+          rowHeight={sfRowHeight}
           selectionSettings={{ mode: "Cell" }}
           toolbar={toolbarOptions}
+          width="450"
           actionComplete={handleActionComplete}
           cellSaved={handleCellSaved}
           recordClick={handleRecordClick}

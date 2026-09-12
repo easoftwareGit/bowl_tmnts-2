@@ -1,8 +1,9 @@
 "use client";
 
 import { screen, waitFor } from "@testing-library/react";
+import type { divPfType } from "@/lib/types/types";
 import {
-  getLatestGridProps,  
+  getLatestGridProps,
   mockDivPfsToPrizeFunds,
   mockPopulatePfRows,
   setup,
@@ -18,21 +19,24 @@ import {
 describe("Division Prize Fund web page initialization", () => {
   beforeEach(standardBeforeEach);
 
-  it("converts the division prize funds and initializes the grid rows", async () => {
+  it("converts the current division prize funds and initializes the grid rows", async () => {
     const {
+      currentDivPfs,
       prizeFunds,
       populatedRows,
     } = setup();
 
     expect(
       mockDivPfsToPrizeFunds,
-    ).toHaveBeenCalledWith(mockDivPfs);
+    ).toHaveBeenCalledWith(currentDivPfs);
 
-    expect(mockPopulatePfRows).toHaveBeenCalledWith(
+    expect(
+      mockPopulatePfRows,
+    ).toHaveBeenCalledWith(
       prizeFunds,
       divId1,
       mockDivPrizeFund,
-      mockDivPfs.length,
+      currentDivPfs.length,
     );
 
     await waitFor(() => {
@@ -42,38 +46,112 @@ describe("Division Prize Fund web page initialization", () => {
     });
   });
 
-  it("initializes the cashers input from the number of division prize funds", async () => {
-    setup();
+  it("filters tournament division prize funds to the current division before initializing", async () => {
+    const otherDivId =
+      "div_00000000000000000000000000000099";
+
+    const otherDivPfs: divPfType[] = [
+      {
+        id: "dpf_00000000000000000000000000000091",
+        div_id: otherDivId,
+        position: 1,
+        amount: 500,
+      },
+      {
+        id: "dpf_00000000000000000000000000000092",
+        div_id: otherDivId,
+        position: 2,
+        amount: 250,
+      },
+    ];
+
+    const allDivPfs = [
+      ...mockDivPfs,
+      ...otherDivPfs,
+    ];
+
+    const {
+      currentDivPfs,
+      prizeFunds,
+      populatedRows,
+    } = setup({
+      divPfs: allDivPfs,
+    });
+
+    expect(currentDivPfs).toEqual(
+      mockDivPfs.filter(
+        (divPf) => divPf.div_id === divId1,
+      ),
+    );
+
+    expect(
+      mockDivPfsToPrizeFunds,
+    ).toHaveBeenCalledWith(currentDivPfs);
+
+    expect(
+      mockDivPfsToPrizeFunds,
+    ).not.toHaveBeenCalledWith(allDivPfs);
+
+    expect(
+      mockPopulatePfRows,
+    ).toHaveBeenCalledWith(
+      prizeFunds,
+      divId1,
+      mockDivPrizeFund,
+      currentDivPfs.length,
+    );
+
+    await waitFor(() => {
+      expect(
+        getLatestGridProps()?.rows,
+      ).toEqual(populatedRows);
+    });
+
+    expect(
+      getLatestGridProps()?.rows,
+    ).toHaveLength(currentDivPfs.length);
+
+    expect(
+      getLatestGridProps()?.rows.every(
+        (row) => row.parent_id === divId1,
+      ),
+    ).toBe(true);
+  });
+
+  it("initializes the cashers input from the number of current division prize funds", async () => {
+    const { currentDivPfs } = setup();
 
     await waitFor(() => {
       expect(
         screen.getByLabelText("Cashers"),
-      ).toHaveValue(mockDivPfs.length);
+      ).toHaveValue(currentDivPfs.length);
     });
   });
 
-  it("initializes the calculated cashers input from the number of division prize funds", async () => {
-    setup();
+  it("initializes the calculated cashers input from the number of current division prize funds", async () => {
+    const { currentDivPfs } = setup();
 
     await waitFor(() => {
       expect(
         screen.getByLabelText(
           "Calculated Cashers",
         ),
-      ).toHaveValue(mockDivPfs.length);
+      ).toHaveValue(currentDivPfs.length);
     });
   });
 
-  it("initializes the ratio from the number of players divided by the number of cashers", async () => {
-    setup();
+  it("initializes the ratio from the number of players divided by the number of current division cashers", async () => {
+    const { currentDivPfs } = setup();
 
     const expectedRatio =
       mockTmntFullData.players.length /
-      mockDivPfs.length;
+      currentDivPfs.length;
 
     await waitFor(() => {
       expect(
-        screen.getByLabelText("Cash Ratio. 1 in")
+        screen.getByLabelText(
+          "Cash Ratio. 1 in",
+        ),
       ).toHaveValue(
         Number(expectedRatio.toFixed(2)),
       );
@@ -84,7 +162,7 @@ describe("Division Prize Fund web page initialization", () => {
     setup();
 
     expect(
-      screen.getByLabelText("Players")
+      screen.getByLabelText("Players"),
     ).toHaveValue(
       mockTmntFullData.players.length,
     );
@@ -94,17 +172,31 @@ describe("Division Prize Fund web page initialization", () => {
     setup();
 
     expect(
-      screen.getByLabelText("Prize Fund")
+      screen.getByLabelText("Prize Fund"),
     ).toHaveValue(
       mockDivPrizeFund.toString(),
     );
 
-    expect(getLatestGridProps()?.totalPrizeFund).toBe(mockDivPrizeFund);
+    expect(
+      getLatestGridProps()?.totalPrizeFund,
+    ).toBe(mockDivPrizeFund);
   });
 
-  it("initializes the ratio, cashers, and grid rows to zero when no division prize funds exist", async () => {
+  it("initializes the ratio, cashers, and grid rows to zero when the current division has no prize funds", async () => {
+    const otherDivId =
+      "div_00000000000000000000000000000099";
+
+    const otherDivPfs: divPfType[] = [
+      {
+        id: "dpf_00000000000000000000000000000091",
+        div_id: otherDivId,
+        position: 1,
+        amount: 500,
+      },
+    ];
+
     setup({
-      divPfs: [],
+      divPfs: otherDivPfs,
       prizeFunds: [],
       populatedRows: [],
     });
@@ -113,7 +205,9 @@ describe("Division Prize Fund web page initialization", () => {
       mockDivPfsToPrizeFunds,
     ).toHaveBeenCalledWith([]);
 
-    expect(mockPopulatePfRows).toHaveBeenCalledWith(
+    expect(
+      mockPopulatePfRows,
+    ).toHaveBeenCalledWith(
       [],
       divId1,
       mockDivPrizeFund,
@@ -126,9 +220,21 @@ describe("Division Prize Fund web page initialization", () => {
       ).toHaveValue(0);
     });
 
-    expect(screen.getByLabelText("Cash Ratio. 1 in")).toHaveValue(0);
-    expect(screen.getByLabelText("Calculated Cashers")).toHaveValue(0);
-    expect(getLatestGridProps()?.rows).toEqual([]);
+    expect(
+      screen.getByLabelText(
+        "Cash Ratio. 1 in",
+      ),
+    ).toHaveValue(0);
+
+    expect(
+      screen.getByLabelText(
+        "Calculated Cashers",
+      ),
+    ).toHaveValue(0);
+
+    expect(
+      getLatestGridProps()?.rows,
+    ).toEqual([]);
   });
 
   it("initializes DivPrizeFundGrid with the populated prize fund rows", async () => {
@@ -145,6 +251,5 @@ describe("Division Prize Fund web page initialization", () => {
     ).toHaveLength(
       populatedRows.length,
     );
-  });  
-
+  });
 });

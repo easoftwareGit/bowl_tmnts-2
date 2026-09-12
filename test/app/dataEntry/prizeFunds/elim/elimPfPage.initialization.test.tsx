@@ -8,18 +8,26 @@ import {
   standardBeforeEach,
 } from "./elimPfPage.testSetup.test";
 import ElimPrizeFundEntry from "@/app/dataEntry/prizeFunds/tmnt/[tmntId]/elim/[elimId]/page";
+import { elimId1 } from "../../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 
 describe("Elim Prize Fund initialization", () => {
   beforeEach(standardBeforeEach);
 
-  it("converts elim prize funds into generic prize funds", () => {
+  it("converts only the current eliminator prize funds into generic prize funds", () => {
     const {
-      elimPfs,
+      currentElimPfs,
       prizeFunds,
     } = setup();
 
-    expect(mockElimPfsToPrizeFunds).toHaveBeenCalledWith(elimPfs);
-    expect(prizeFunds).toEqual(mockElimPfsToPrizeFunds.mock.results[0].value);
+    expect(
+      mockElimPfsToPrizeFunds,
+    ).toHaveBeenCalledWith(
+      currentElimPfs,
+    );
+
+    expect(prizeFunds).toEqual(
+      mockElimPfsToPrizeFunds.mock.results[0].value,
+    );
   });
 
   it("populates the editable prize fund rows", () => {
@@ -44,10 +52,14 @@ describe("Elim Prize Fund initialization", () => {
     );
   });
 
-  it("initializes the number of cashers from the elim prize funds", () => {
-    const { elimPfs } = setup();
+  it("initializes the number of cashers from the current eliminator prize funds", () => {
+    const { currentElimPfs } = setup();
 
-    expect(screen.getByLabelText("Cashers")).toHaveValue(elimPfs.length);
+    expect(
+      screen.getByLabelText("Cashers"),
+    ).toHaveValue(
+      currentElimPfs.length,
+    );
   });
 
   it("initializes the expenses field from tournament data", () => {
@@ -95,6 +107,28 @@ describe("Elim Prize Fund initialization", () => {
 
     expect(mockElimPfsToPrizeFunds).toHaveBeenCalledTimes(1);
     expect(mockPopulatePfRows).toHaveBeenCalledTimes(1);
+  });
+
+  it("filters tournament prize funds to the current eliminator", () => {
+    const {
+      elimPfs,
+      currentElimPfs,
+    } = setup();
+
+    expect(elimPfs.length).toBeGreaterThan(currentElimPfs.length);
+
+    expect(
+      currentElimPfs.every(
+        (elimPf) =>
+          elimPf.elim_id === elimId1,
+      ),
+    ).toBe(true);
+
+    expect(
+      mockElimPfsToPrizeFunds,
+    ).toHaveBeenCalledWith(
+      currentElimPfs,
+    );
   });
 
 });

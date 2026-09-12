@@ -45,6 +45,12 @@ export const brktEntryId7 = "ben_0123111c721147f7a2bf2702056947d0";
 export const brktEntryId8 = "ben_0123111c721147f7a2bf2702056947d1";
 export const brktEntryId9 = "ben_0123111c721147f7a2bf2702056947d2";
 export const brktEntryId10 = "ben_0123111c721147f7a2bf2702056947d3";
+export const brktEntryId11 = "ben_0123111c721147f7a2bf2702056947d4";
+export const brktEntryId12 = "ben_0123111c721147f7a2bf2702056947d5";
+export const brktEntryId13 = "ben_0123111c721147f7a2bf2702056947d6";
+export const brktEntryId14 = "ben_0123111c721147f7a2bf2702056947d7";
+export const brktEntryId15 = "ben_0123111c721147f7a2bf2702056947d8";
+export const brktEntryId16 = "ben_0123111c721147f7a2bf2702056947d9";
 
 export const brktId1 = "brk_0123f51cc1ca4748ad5e8abab88277ea";
 export const brktId2 = "brk_0123f51cc1ca4748ad5e8abab88277eb";
@@ -69,22 +75,22 @@ export const divPfId4 = "dpf_0123cae28786485bb7a036935f0f6a0d";
 export const divPfId5 = "dpf_0123cae28786485bb7a036935f0f6a0e";
 export const divPfId6 = "dpf_0123cae28786485bb7a036935f0f6a0f";
 
-export const elimEntryId1 = "ely_01234ec07f824b0e93169ae78e8b4b1a";
-export const elimEntryId2 = "ely_01234ec07f824b0e93169ae78e8b4b1b";
-export const elimEntryId3 = "ely_01234ec07f824b0e93169ae78e8b4b1c";
-export const elimEntryId4 = "ely_01234ec07f824b0e93169ae78e8b4b1d";
-export const elimEntryId5 = "ely_01234ec07f824b0e93169ae78e8b4b1e";
-export const elimEntryId6 = "ely_01234ec07f824b0e93169ae78e8b4b1f";
-export const elimEntryId7 = "ely_01234ec07f824b0e93169ae78e8b4b2a";
-export const elimEntryId8 = "ely_01234ec07f824b0e93169ae78e8b4b2b";
-export const elimEntryId9 = "ely_01234ec07f824b0e93169ae78e8b4b2c";
-export const elimEntryId10 = "ely_01234ec07f824b0e93169ae78e8b4b2d";
-export const elimEntryId11 = "ely_01234ec07f824b0e93169ae78e8b4b2e";
-export const elimEntryId12 = "ely_01234ec07f824b0e93169ae78e8b4b2f";
-export const elimEntryId13 = "ely_01234ec07f824b0e93169ae78e8b4b3a";
-export const elimEntryId14 = "ely_01234ec07f824b0e93169ae78e8b4b3b";
-export const elimEntryId15 = "ely_01234ec07f824b0e93169ae78e8b4b3c";
-export const elimEntryId16 = "ely_01234ec07f824b0e93169ae78e8b4b3d";
+export const elimEntryId1 = "een_01234ec07f824b0e93169ae78e8b4b1a";
+export const elimEntryId2 = "een_01234ec07f824b0e93169ae78e8b4b1b";
+export const elimEntryId3 = "een_01234ec07f824b0e93169ae78e8b4b1c";
+export const elimEntryId4 = "een_01234ec07f824b0e93169ae78e8b4b1d";
+export const elimEntryId5 = "een_01234ec07f824b0e93169ae78e8b4b1e";
+export const elimEntryId6 = "een_01234ec07f824b0e93169ae78e8b4b1f";
+export const elimEntryId7 = "een_01234ec07f824b0e93169ae78e8b4b2a";
+export const elimEntryId8 = "een_01234ec07f824b0e93169ae78e8b4b2b";
+export const elimEntryId9 = "een_01234ec07f824b0e93169ae78e8b4b2c";
+export const elimEntryId10 = "een_01234ec07f824b0e93169ae78e8b4b2d";
+export const elimEntryId11 = "een_01234ec07f824b0e93169ae78e8b4b2e";
+export const elimEntryId12 = "een_01234ec07f824b0e93169ae78e8b4b2f";
+export const elimEntryId13 = "een_01234ec07f824b0e93169ae78e8b4b3a";
+export const elimEntryId14 = "een_01234ec07f824b0e93169ae78e8b4b3b";
+export const elimEntryId15 = "een_01234ec07f824b0e93169ae78e8b4b3c";
+export const elimEntryId16 = "een_01234ec07f824b0e93169ae78e8b4b3d";
 
 export const elimId1 = "elm_01234ec07f824b0e93169ae78e8b4b1a";
 export const elimId2 = "elm_01234ec07f824b0e93169ae78e8b4b1b";
@@ -191,6 +197,14 @@ export const oneBrktId5 = "obk_01238f787de942a1a92aaa2df3e7c18e";
 export const oneBrktId6 = "obk_01238f787de942a1a92aaa2df3e7c18f";
 export const oneBrktId7 = "obk_01238f787de942a1a92aaa2df3e7c190";
 export const oneBrktId8 = "obk_01238f787de942a1a92aaa2df3e7c191";
+export const oneBrktId9 = "obk_01238f787de942a1a92aaa2df3e7c192";
+export const oneBrktId10 = "obk_01238f787de942a1a92aaa2df3e7c193";
+export const oneBrktId11 = "obk_01238f787de942a1a92aaa2df3e7c194";
+export const oneBrktId12 = "obk_01238f787de942a1a92aaa2df3e7c195";
+export const oneBrktId13 = "obk_01238f787de942a1a92aaa2df3e7c196";
+export const oneBrktId14 = "obk_01238f787de942a1a92aaa2df3e7c197";
+export const oneBrktId15 = "obk_01238f787de942a1a92aaa2df3e7c198";
+export const oneBrktId16 = "obk_01238f787de942a1a92aaa2df3e7c199";
 
 export const penId1 = "pen_0123111c721147f7a2bf2702056947ca";
 export const penId2 = "pen_0123111c721147f7a2bf2702056947cb";
@@ -362,6 +376,60 @@ export const mockTmntFullData: tmntFullType = {
       id: brktEntryId10,
       brkt_id: brktId2,
       player_id: playerId2,
+      num_brackets: 8,
+      fee: "40",
+      time_stamp: timeStampNumber,
+    },
+    {
+      ...blankBrktEntry,
+      id: brktEntryId11,
+      brkt_id: brktId2,
+      player_id: playerId3,
+      num_brackets: 8,
+      fee: "40",
+      time_stamp: timeStampNumber,
+    },
+    {
+      ...blankBrktEntry,
+      id: brktEntryId12,
+      brkt_id: brktId2,
+      player_id: playerId4,
+      num_brackets: 8,
+      fee: "40",
+      time_stamp: timeStampNumber,
+    },
+    {
+      ...blankBrktEntry,
+      id: brktEntryId13,
+      brkt_id: brktId2,
+      player_id: playerId5,
+      num_brackets: 8,
+      fee: "40",
+      time_stamp: timeStampNumber,
+    },
+    {
+      ...blankBrktEntry,
+      id: brktEntryId14,
+      brkt_id: brktId2,
+      player_id: playerId6,
+      num_brackets: 8,
+      fee: "40",
+      time_stamp: timeStampNumber,
+    },
+    {
+      ...blankBrktEntry,
+      id: brktEntryId15,
+      brkt_id: brktId2,
+      player_id: playerId7,
+      num_brackets: 8,
+      fee: "40",
+      time_stamp: timeStampNumber,
+    },
+    {
+      ...blankBrktEntry,
+      id: brktEntryId16,
+      brkt_id: brktId2,
+      player_id: playerId8,
       num_brackets: 8,
       fee: "40",
       time_stamp: timeStampNumber,
@@ -756,6 +824,401 @@ export const mockTmntFullData: tmntFullType = {
     {
       ...blankBrktSeed,
       one_brkt_id: oneBrktId8,
+      seed: 7,
+      player_id: playerId3,
+    },    
+
+    // seeds for brckId2
+
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId9,
+      seed: 0,
+      player_id: playerId1,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId9,
+      seed: 1,
+      player_id: playerId2,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId9,
+      seed: 2,
+      player_id: playerId3,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId9,
+      seed: 3,
+      player_id: playerId4,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId9,
+      seed: 4,
+      player_id: playerId5,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId9,
+      seed: 5,
+      player_id: playerId6,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId9,
+      seed: 6,
+      player_id: playerId7,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId9,
+      seed: 7,
+      player_id: playerId8,
+    },
+    // randmized other 7 brackets
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId10,
+      seed: 0,
+      player_id: playerId4,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId10,
+      seed: 1,
+      player_id: playerId7,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId10,
+      seed: 2,
+      player_id: playerId1,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId10,
+      seed: 3,
+      player_id: playerId6,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId10,
+      seed: 4,
+      player_id: playerId3,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId10,
+      seed: 5,
+      player_id: playerId8,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId10,
+      seed: 6,
+      player_id: playerId2,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId10,
+      seed: 7,
+      player_id: playerId5,
+    },
+
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId11,
+      seed: 0,
+      player_id: playerId6,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId11,
+      seed: 1,
+      player_id: playerId2,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId11,
+      seed: 2,
+      player_id: playerId8,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId11,
+      seed: 3,
+      player_id: playerId3,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId11,
+      seed: 4,
+      player_id: playerId5,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId11,
+      seed: 5,
+      player_id: playerId1,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId11,
+      seed: 6,
+      player_id: playerId7,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId11,
+      seed: 7,
+      player_id: playerId4,
+    },
+
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId12,
+      seed: 0,
+      player_id: playerId2,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId12,
+      seed: 1,
+      player_id: playerId5,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId12,
+      seed: 2,
+      player_id: playerId7,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId12,
+      seed: 3,
+      player_id: playerId1,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId12,
+      seed: 4,
+      player_id: playerId8,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId12,
+      seed: 5,
+      player_id: playerId4,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId12,
+      seed: 6,
+      player_id: playerId6,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId12,
+      seed: 7,
+      player_id: playerId3,
+    },
+
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId13,
+      seed: 0,
+      player_id: playerId8,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId13,
+      seed: 1,
+      player_id: playerId3,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId13,
+      seed: 2,
+      player_id: playerId5,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId13,
+      seed: 3,
+      player_id: playerId7,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId13,
+      seed: 4,
+      player_id: playerId1,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId13,
+      seed: 5,
+      player_id: playerId2,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId13,
+      seed: 6,
+      player_id: playerId4,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId13,
+      seed: 7,
+      player_id: playerId6,
+    },
+
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId14,
+      seed: 0,
+      player_id: playerId3,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId14,
+      seed: 1,
+      player_id: playerId8,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId14,
+      seed: 2,
+      player_id: playerId4,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId14,
+      seed: 3,
+      player_id: playerId2,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId14,
+      seed: 4,
+      player_id: playerId6,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId14,
+      seed: 5,
+      player_id: playerId7,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId14,
+      seed: 6,
+      player_id: playerId5,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId14,
+      seed: 7,
+      player_id: playerId1,
+    },
+
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId15,
+      seed: 0,
+      player_id: playerId7,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId15,
+      seed: 1,
+      player_id: playerId4,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId15,
+      seed: 2,
+      player_id: playerId2,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId15,
+      seed: 3,
+      player_id: playerId8,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId15,
+      seed: 4,
+      player_id: playerId5,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId15,
+      seed: 5,
+      player_id: playerId3,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId15,
+      seed: 6,
+      player_id: playerId1,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId15,
+      seed: 7,
+      player_id: playerId6,
+    },
+
+
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId16,
+      seed: 0,
+      player_id: playerId5,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId16,
+      seed: 1,
+      player_id: playerId1,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId16,
+      seed: 2,
+      player_id: playerId6,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId16,
+      seed: 3,
+      player_id: playerId4,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId16,
+      seed: 4,
+      player_id: playerId2,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId16,
+      seed: 5,
+      player_id: playerId7,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId16,
+      seed: 6,
+      player_id: playerId8,
+    },
+    {
+      ...blankBrktSeed,
+      one_brkt_id: oneBrktId16,
       seed: 7,
       player_id: playerId3,
     },    
@@ -1506,6 +1969,57 @@ export const mockTmntFullData: tmntFullType = {
       brkt_id: brktId1,
       bindex: 7,
     },
+
+    // brkt 2 one brkts
+
+    {
+      ...blankOneBrkt,
+      id: oneBrktId9,
+      brkt_id: brktId2,
+      bindex: 0,
+    },
+    {
+      ...blankOneBrkt,
+      id: oneBrktId10,
+      brkt_id: brktId2,
+      bindex: 1,
+    },
+    {
+      ...blankOneBrkt,
+      id: oneBrktId11,
+      brkt_id: brktId2,
+      bindex: 2,
+    },
+    {
+      ...blankOneBrkt,
+      id: oneBrktId12,
+      brkt_id: brktId2,
+      bindex: 3,
+    },
+    {
+      ...blankOneBrkt,
+      id: oneBrktId13,
+      brkt_id: brktId2,
+      bindex: 4,
+    },
+    {
+      ...blankOneBrkt,
+      id: oneBrktId14,
+      brkt_id: brktId2,
+      bindex: 5,
+    },
+    {
+      ...blankOneBrkt,
+      id: oneBrktId15,
+      brkt_id: brktId2,
+      bindex: 6,
+    },
+    {
+      ...blankOneBrkt,
+      id: oneBrktId16,
+      brkt_id: brktId2,
+      bindex: 7,
+    },
   ],
   players: [
     {
@@ -1741,21 +2255,21 @@ export const mockGames: gameType[] = [
     squad_id: squadId1,
     player_id: playerId1,
     game_num: 4,
-    score: 204,
+    score: 252,
   },
   {
     id: gameId5,
     squad_id: squadId1,
     player_id: playerId1,
     game_num: 5,
-    score: 205,
+    score: 182,
   },
   {
     id: gameId6,
     squad_id: squadId1,
     player_id: playerId1,
     game_num: 6,
-    score: 206,
+    score: 185,
   },
   {
     id: gameId7,
@@ -1783,21 +2297,21 @@ export const mockGames: gameType[] = [
     squad_id: squadId1,
     player_id: playerId2,
     game_num: 4,
-    score: 213,
+    score: 265,
   },
   {
     id: gameId11,
     squad_id: squadId1,
     player_id: playerId2,
     game_num: 5,
-    score: 214,
+    score: 202,
   },
   {
     id: gameId12,
     squad_id: squadId1,
     player_id: playerId2,
     game_num: 6,
-    score: 215,
+    score: 186,
   },
   {
     id: gameId13,
@@ -1825,21 +2339,21 @@ export const mockGames: gameType[] = [
     squad_id: squadId1,
     player_id: playerId3,
     game_num: 4,
-    score: 198,
+    score: 263,
   },
   {
     id: gameId17,
     squad_id: squadId1,
     player_id: playerId3,
     game_num: 5,
-    score: 199,
+    score: 242,
   },
   {
     id: gameId18,
     squad_id: squadId1,
     player_id: playerId3,
     game_num: 6,
-    score: 200,
+    score: 207,
   },
   {
     id: gameId19,
@@ -1867,21 +2381,21 @@ export const mockGames: gameType[] = [
     squad_id: squadId1,
     player_id: playerId4,
     game_num: 4,
-    score: 208,
+    score: 181,
   },
   {
     id: gameId23,
     squad_id: squadId1,
     player_id: playerId4,
     game_num: 5,
-    score: 209,
+    score: 188,
   },
   {
     id: gameId24,
     squad_id: squadId1,
     player_id: playerId4,
     game_num: 6,
-    score: 210,
+    score: 195,
   },
   {
     id: gameId25,
@@ -1916,21 +2430,21 @@ export const mockGames: gameType[] = [
     squad_id: squadId1,
     player_id: playerId5,
     game_num: 5,
-    score: 229,
+    score: 182,
   },
   {
     id: gameId30,
     squad_id: squadId1,
     player_id: playerId5,
     game_num: 6,
-    score: 230,
+    score: 224,
   },
   {
     id: gameId31,
     squad_id: squadId1,
     player_id: playerId6,
     game_num: 1,
-    score: 215,
+    score: 229,
   },
   {
     id: gameId32,
@@ -1951,21 +2465,21 @@ export const mockGames: gameType[] = [
     squad_id: squadId1,
     player_id: playerId6,
     game_num: 4,
-    score: 218,
+    score: 222,
   },
   {
     id: gameId35,
     squad_id: squadId1,
     player_id: playerId6,
     game_num: 5,
-    score: 219,
+    score: 183,
   },
   {
     id: gameId36,
     squad_id: squadId1,
     player_id: playerId6,
     game_num: 6,
-    score: 220,
+    score: 213,
   },
   {
     id: gameId37,
@@ -2000,14 +2514,14 @@ export const mockGames: gameType[] = [
     squad_id: squadId1,
     player_id: playerId7,
     game_num: 5,
-    score: 194,
+    score: 228,
   },
   {
     id: gameId42,
     squad_id: squadId1,
     player_id: playerId7,
     game_num: 6,
-    score: 195,
+    score: 199,
   },
   {
     id: gameId43,
@@ -2035,21 +2549,21 @@ export const mockGames: gameType[] = [
     squad_id: squadId1,
     player_id: playerId8,
     game_num: 4,
-    score: 233,
+    score: 263,
   },
   {
     id: gameId47,
     squad_id: squadId1,
     player_id: playerId8,
     game_num: 5,
-    score: 234,
+    score: 261,
   },
   {
     id: gameId48,
     squad_id: squadId1,
     player_id: playerId8,
     game_num: 6,
-    score: 235,
+    score: 239,
   },
 ];
 

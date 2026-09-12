@@ -1,6 +1,6 @@
-import { bracketPlayerType } from "@/lib/types/types";
+import { PlayerInfoType } from "@/lib/types/types";
 import { Bracket } from "./bracketClass";
-import type { GameScoreMap, PlayerBracketMap } from "./bracketMaps";
+import type { GameScoreMapType, PlayerMapType } from "./bracketMaps";
 import { getGameScoreKey } from "./bracketMaps";
 
 type brktPosInMatchType = 0 | 1; // top or bottom position
@@ -33,36 +33,28 @@ export type matchSeedInfoType = {
   result: matchResultType;
 };
 
-const byePlayerInfo: bracketPlayerType = {
-  id: "bye_00000000000000000000000000000000",
+const byePlayerInfo: PlayerInfoType = {  
   first_name: "Bye",
   last_name: "",
   average: 0,
   hdcp: 0,
+  bracketIds: [],
+  lane: 0
 };
 
 export class BracketMatch {
-  private _gameScoreMap: GameScoreMap;
-  private _playerMap: PlayerBracketMap;
   private _parent: Bracket;
 
   constructor(parent: Bracket) {
     this._parent = parent;
     if (!parent) throw new Error("parent is null");
-    if (!parent.parent) throw new Error("parent.parent is null");
-    if (!parent.parent.gameScoreMap)
-      throw new Error("parent.parent.gameScoreMap is null");
-    this._gameScoreMap = parent.parent.gameScoreMap;
-    if (!parent.parent.playerMap)
-      throw new Error("parent.parent.playerMap is null");
-    this._playerMap = parent.parent.playerMap;
   }
 
-  get gameScoreMap(): GameScoreMap {
-    return this._gameScoreMap;
+  get gameScoreMap(): GameScoreMapType | null {
+    return this._parent.parent?.gameScoreMap ?? null;
   }
-  get playerMap(): PlayerBracketMap {
-    return this._playerMap;
+  get playerMap(): PlayerMapType | null {
+    return this._parent.parent?.playersMap ?? null;
   }
   get parent(): Bracket {
     return this._parent;
@@ -72,13 +64,16 @@ export class BracketMatch {
    * Get the game score for a player in a match
    *
    * @param {string} playerId - player id
-   * @param {number} gameNum - game number
+   * @param {number} squadGameNum - squad game number
    * @return {(number | undefined)} - game score for player in match or undefined
+   * @throws {Error} - if gameScoreMap is null
    */
-  private gameScore(playerId: string, gameNum: number): number | undefined {
-    if (!playerId || !gameNum) return undefined;
+  private gameScore(playerId: string, squadGameNum: number): number | undefined {
+    if (!this.gameScoreMap)
+      throw new Error("gameScoreMap is null");
+    if (!playerId || !squadGameNum) return undefined;
     if (playerId.startsWith("bye")) return 0; // bye player will have no score, return 0
-    return this._gameScoreMap.get(getGameScoreKey(playerId, gameNum));
+    return this.gameScoreMap.get(getGameScoreKey(playerId, squadGameNum));
   }
 
   /**
@@ -88,7 +83,7 @@ export class BracketMatch {
    * @param {brktPosInMatchType} position - position in current match
    * @return {matchNumberType}  - match number of prior match
    */
-  private getPriorMatch(
+  private getPriorMatchNumber(
     matchNumber: matchNumberType,
     position: brktPosInMatchType,
   ): matchNumberType {
@@ -106,12 +101,16 @@ export class BracketMatch {
   }
 
   /**
-   * Get the game number for a match
+   * Gets the bracket game number for a match.
+   *
+   * Matches 0-3 are bracket game 1.
+   * Matches 4-5 are bracket game 2.
+   * Match 6 is bracket game 3.
    *
    * @param {matchNumberType} matchNumber - match number
    * @return {number} - game number
    */
-  private getMatchGameNum(matchNumber: matchNumberType): number {
+  private getBracketMatchGameNum(matchNumber: matchNumberType): number {
     if (matchNumber <= 3) {
       return 1;
     }
@@ -136,16 +135,117 @@ export class BracketMatch {
    *
    * @param {string} playerId - player id
    * @return {number} - player's handicap
+   * @throws {Error} - if playerMap is null
    */
   private playerHdcp(playerId: string): number {
+    if (!this.playerMap)
+      throw new Error("playerMap is null");
     if (!playerId || playerId.startsWith("bye")) return 0;
-    return this._playerMap.get(playerId)?.hdcp || 0;
+    return this.playerMap.get(playerId)?.hdcp || 0;
   }
 
   /**
-   * Get the players for a position in a match
-   * even though matches 0-3 will only return 1 player per position,
-   * matches 4-6 can return multiple players per position beacuse of ties
+   * Get the winner(s) of a match
+   * can return more than one player if there is a tie
+   *
+   * @param {stmatchSeedInfoTypering[]} matchInfo - player's info in match   
+   * @return {string[]} - player id(s) of winner of match
+   */
+  private matchWinner(matchInfo: matchSeedInfoType[]): string[] {
+    if (matchInfo.length === 0) {
+      return [];
+    }
+    if (!matchInfo.every(this.isCompletedMatchScore)) {
+      return [];
+    }
+
+    // confirms that every player has a score and total
+    const highestScore = Math.max(
+      ...matchInfo.map((onePlayerInfo) => onePlayerInfo.total!),
+    );
+    return matchInfo
+      .filter((onePlayerInfo) => onePlayerInfo.total === highestScore)
+      .map((onePlayerInfo) => onePlayerInfo.playerId);
+  }
+
+  /**
+   * Get the player info and match scores for a match
+   *
+   * @param {string[]} matchPlayers - players in match
+   * @param {number} squadGameNum - squad game number
+   * @return {matchSeedInfoType[]} - match scores for players in match
+   * @throws {Error} - if playerMap is null
+   */
+  getMatchInfo(matchPlayers: string[], squadGameNum: number): matchSeedInfoType[] {
+    if (!this.playerMap)
+      throw new Error("playerMap is null");
+    const matchSeedsInfo: matchSeedInfoType[] = [];
+    matchPlayers.forEach((playerId) => {
+      const gScore = playerId.startsWith("bye")
+        ? 0
+        : this.gameScore(playerId, squadGameNum);
+      const playerInfo = playerId.startsWith("bye")
+        ? {
+            ...byePlayerInfo,
+            id: playerId,
+          }
+        : this.playerMap!.get(playerId);
+      const oneMatchSeedInfo: matchSeedInfoType = {
+        playerId: playerId,
+        first_name: "",
+        last_name: "",
+        average: undefined,
+        score: undefined,
+        hdcp: undefined,
+        total: undefined,
+        result: undefined,        
+      }
+      if (!(gScore == null)) { 
+        oneMatchSeedInfo.score = gScore;
+      }
+      if (!(playerInfo == null)) {
+        oneMatchSeedInfo.first_name = playerInfo.first_name || "";
+        oneMatchSeedInfo.last_name = playerInfo.last_name || "";
+        oneMatchSeedInfo.average = playerInfo.average;
+        oneMatchSeedInfo.hdcp = this.playerHdcp(playerId);
+      }
+      if (!(gScore == null) && !(playerInfo == null)) {
+        oneMatchSeedInfo.total = gScore + this.playerHdcp(playerId)
+      }
+      matchSeedsInfo.push(oneMatchSeedInfo);
+    });
+
+    // get the match winner(s)
+    const winnerIds = this.matchWinner(matchSeedsInfo);
+    // set the match result if got winner(s)
+    if (winnerIds.length > 0) { 
+      matchSeedsInfo.forEach((matchInfo) => {
+        matchInfo.result = winnerIds.includes(matchInfo.playerId)
+          ? (winnerIds.length === 1) ? "W" : "T"
+          : "L";
+      });
+    };
+    return matchSeedsInfo;
+  }
+
+  /**
+   * Get the players in a match
+   *
+   * @param {matchNumberType} matchNumber - match number
+   * @return {string[]} - player ids in match   
+   */
+  getMatchPlayers(matchNumber: matchNumberType): string[] {
+    return [
+      ...this.getPlayersForPosition(matchNumber, 0),
+      ...this.getPlayersForPosition(matchNumber, 1),
+    ];
+  }
+
+  /**
+   * Get the players for a position in a match.
+   *
+   * Even though matches 0-3 will only return one player per position,
+   * matches 4-6 can return multiple players per position because of ties.
    *
    * @param {matchNumberType} matchNumber - match number
    * @param {brktPosInMatchType} position - position in match
@@ -158,134 +258,56 @@ export class BracketMatch {
     // Matches 0-3 contain the original seeded players.
     if (matchNumber <= 3) {
       const playerIndex = matchNumber * 2 + position;
-
       const playerId = this._parent.players[playerIndex];
 
-      return playerId === undefined ? [] : [playerId];
+      return playerId === undefined
+        ? []
+        : [playerId];
     }
 
     // Matches 4-6 receive players from one prior match.
-    const priorMatch = this.getPriorMatch(matchNumber, position);
+    const priorMatchNumber =
+      this.getPriorMatchNumber(
+        matchNumber,
+        position,
+      );
 
     const priorMatchPlayers = [
-      ...this.getPlayersForPosition(priorMatch, 0),
-      ...this.getPlayersForPosition(priorMatch, 1),
+      ...this.getPlayersForPosition(priorMatchNumber, 0),
+      ...this.getPlayersForPosition(priorMatchNumber, 1),
     ];
 
-    return this.matchWinner(
-      priorMatchPlayers,
-      this.getMatchGameNum(priorMatch),
-    );
-  }
+    /*
+    * getBracketMatchGameNum() returns the game
+    * number within the bracket: 1, 2, or 3.
+    *
+    * getMatchInfo() requires the actual squad
+    * game number, so convert the bracket game
+    * number through the parent BracketList.
+    */
+    const priorMatchBrktGameNum =
+      this.getBracketMatchGameNum(
+        priorMatchNumber,
+      );
 
-  getMatchPlayers(matchNumber: matchNumberType): string[] {
-    return [
-      ...this.getPlayersForPosition(matchNumber, 0),
-      ...this.getPlayersForPosition(matchNumber, 1),
-    ];
-  }
+    const bracketList = this._parent.parent;
 
-  /**
-   * Get the player info and match scores for a match
-   *
-   * @param {string[]} matchPlayers - players in match
-   * @param {number} gameNum - game number
-   * @return {matchSeedInfoType[]} - match scores for players in match
-   */
-  getMatchInfo(matchPlayers: string[], gameNum: number): matchSeedInfoType[] {
-    const matchScores: matchSeedInfoType[] = [];
-    matchPlayers.forEach((playerId) => {
-      const gScore = playerId.startsWith("bye")
-        ? 0
-        : this.gameScore(playerId, gameNum);
-      const playerInfo = playerId.startsWith("bye")
-        ? {
-            ...byePlayerInfo,
-            id: playerId,
-          }
-        : this._playerMap.get(playerId);
-      const matchScore: matchSeedInfoType = {
-        playerId: playerId,
-        first_name: "",
-        last_name: "",
-        average: undefined,
-        score: undefined,
-        hdcp: undefined,
-        total: undefined,
-        result: undefined,        
-      }
-      if (!(gScore == null)) { 
-        matchScore.score = gScore;
-      }
-      if (!(playerInfo == null)) {
-        matchScore.first_name = playerInfo.first_name || "";
-        matchScore.last_name = playerInfo.last_name || "";
-        matchScore.average = playerInfo.average;
-        matchScore.hdcp = this.playerHdcp(playerId);
-      }
-      if (!(gScore == null) && !(playerInfo == null)) {
-        matchScore.total = gScore + this.playerHdcp(playerId)
-      }
-      matchScores.push(matchScore);
-    });
-    return matchScores;
-  }
-
-  setMatchResult(matchScores: matchSeedInfoType[]) {
-    if (matchScores.length === 0) {
-      return [];
-    }
-    if (!matchScores.every(this.isCompletedMatchScore)) {
-      return [];
-    }
-    // !matchScores.every(this.isCompletedMatchScore)
-    // confirms that every player has a score and total
-    const highestScore = Math.max(
-      ...matchScores.map((matchScore) => matchScore.total!),
-    );
-    const winner = matchScores.filter(
-      (matchScore) => matchScore.total === highestScore,
-    );
-
-    if (winner.length > 1) {
-      winner.forEach((matchScore) => {
-        matchScore.result = "T";
-      });
-    } else {
-      winner[0].result = "W";
-    }
-    matchScores.forEach((matchScore) => {
-      if (matchScore.total !== highestScore) {
-        matchScore.result = "L";
-      }
-    });
-  }
-
-  /**
-   * Get the winner(s) of a match
-   * can return more than one player if there is a tie
-   *
-   * @param {string[]} matchPlayers - players in match
-   * @param {number} gameNum - game number
-   * @return {string[]} - player id(s) of winner of match
-   */
-  matchWinner(matchPlayers: string[], gameNum: number): string[] {
-    const matchScores = this.getMatchInfo(matchPlayers, gameNum);
-
-    if (matchScores.length === 0) {
-      return [];
-    }
-    if (!matchScores.every(this.isCompletedMatchScore)) {
+    if (bracketList == null) {
       return [];
     }
 
-    // !matchScores.every(this.isCompletedMatchScore)
-    // confirms that every player has a score and total
-    const highestScore = Math.max(
-      ...matchScores.map((matchScore) => matchScore.total!),
-    );
-    return matchScores
-      .filter((matchScore) => matchScore.total === highestScore)
-      .map((matchScore) => matchScore.playerId);
+    const priorMatchSquadGameNum =
+      bracketList.squadGameNumber(
+        priorMatchBrktGameNum,
+      );
+
+    const matchInfo =
+      this.getMatchInfo(
+        priorMatchPlayers,
+        priorMatchSquadGameNum,
+      );
+
+    return this.matchWinner(matchInfo);
   }
+
 }

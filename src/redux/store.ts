@@ -4,12 +4,12 @@ import bowlsReducer from './features/bowls/bowlsSlice';
 import divPfsReducer from './features/divPfs/divPfsSlice';
 import elimPfsReducer from './features/elimPfs/elimPfsSlice';
 import gamesForSquadReducer from './features/gamesForSquad/gamesForSquadSlice';
-import oneDivGameResultsReducer from './features/oneDivGameResults/oneDivGameResultsSlice';
 import oneTmntGameResultsReducer from './features/oneTmntGameResults/oneTmntGameResultsSlice';
 import potPfsReducer from './features/potPfs/potPfsSlice';
 import tmntFullDataReducer from './features/tmntFullData/tmntFullDataSlice';
 import tmntsReducer from './features/tmnts/tmntsSlice';
 import tmntYearsReducer from './features/tmnts/yearsSlice';
+import userReducer from './features/user/userSlice';
 import userTmntsReducer from './features/userTmnts/userTmntsSlice';
 import testdatesReducer from './features/testdates/testdatesSlice';
 
@@ -19,13 +19,13 @@ export const store = configureStore({
     bowls: bowlsReducer,
     divPfs: divPfsReducer,
     elimPfs: elimPfsReducer,
-    gamesForSquad: gamesForSquadReducer,
-    oneDivGameResults: oneDivGameResultsReducer,
+    gamesForSquad: gamesForSquadReducer,    
     oneTmntGameResults: oneTmntGameResultsReducer,
     potPfs: potPfsReducer,
     tmntFullData: tmntFullDataReducer,
     tmnts: tmntsReducer,
     tmntYears: tmntYearsReducer,
+    user: userReducer,
     userTmnts: userTmntsReducer,
     testdates: testdatesReducer,
   }

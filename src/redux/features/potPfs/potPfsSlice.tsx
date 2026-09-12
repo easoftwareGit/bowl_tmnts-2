@@ -1,12 +1,13 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ioStatusType } from "@/redux/statusTypes";
 import { RootState } from "@/redux/store";
-import type { potPfType } from "@/lib/types/types";
+import type { potPfType, tmntPotPfSaveDataType } from "@/lib/types/types";
 import { ioDataError } from "@/lib/enums/enums";
-import { getAllPotPfsForPot, updateAllPotPfsForPot } from "@/lib/db/potPfs/dbPotPfs";
+import { getAllPotPfsForTmnt, updateAllPotPfsForTmnt } from "@/lib/db/potPfs/dbPotPfs";
 
 export interface potPfsState {
   potPfs: potPfType[];
+  requestedTmntId: string;
   loadStatus: ioStatusType;
   saveStatus: ioStatusType;
   error: string | undefined;
@@ -16,6 +17,7 @@ export interface potPfsState {
 // initial state constant
 const initialState: potPfsState = {
   potPfs: [],
+  requestedTmntId: "",
   loadStatus: "idle" as ioStatusType,
   saveStatus: "idle" as ioStatusType,
   error: "",
@@ -24,26 +26,20 @@ const initialState: potPfsState = {
 
 export const fetchPotPfs = createAsyncThunk(
   "potPfs/fetchPotPfs",
-  async (potId: string) => {
+  async (tmntId: string) => {
     // Do not use try / catch blocks here. Need the promise to be fulfilled or
     // rejected which will have the appropriate response in the extraReducers.
-    const potPfs = await getAllPotPfsForPot(potId);
-    if (!potPfs) {
-      throw new Error("Error fetching potPfs for pot");
-    }
-    return potPfs;
+
+    return getAllPotPfsForTmnt(tmntId);
   },
 );
 
 export const savePotPfs = createAsyncThunk(
   "potPfs/savePotPfs",
-  async (potPfs: potPfType[]) => {
+  async (toSave: tmntPotPfSaveDataType) => {
     // Do not use try / catch blocks here. Need the promise to be fulfilled or
     // rejected which will have the appropriate response in the extraReducers.
-    if (!Array.isArray(potPfs) || potPfs.length === 0) {
-      throw new Error("Invalid potPfs array");
-    }
-    const updated = await updateAllPotPfsForPot(potPfs[0].pot_id, potPfs);
+    const updated = await updateAllPotPfsForTmnt(toSave);
     if (!updated) {
       throw new Error("Error updating potPfs");
     }
@@ -57,8 +53,10 @@ export const potPfsSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(fetchPotPfs.pending, (state) => {
+      .addCase(fetchPotPfs.pending, (state, action) => {
         state.loadStatus = "loading";
+        state.requestedTmntId = action.meta.arg;
+        state.error = "";
       })
       .addCase(
         fetchPotPfs.fulfilled,
@@ -91,6 +89,7 @@ export const potPfsSlice = createSlice({
 
 export const selectPotPfs = (state: RootState) => state.potPfs;
 
+export const getDivRequestedId = (state: RootState) => state.potPfs.requestedTmntId;
 export const getPotPfsLoadStatus = (state: RootState) => state.potPfs.loadStatus;
 export const getPotPfsSaveStatus = (state: RootState) => state.potPfs.saveStatus;
 export const getPotPfsError = (state: RootState) => state.potPfs.error;

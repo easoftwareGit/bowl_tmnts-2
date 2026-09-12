@@ -1,5 +1,3 @@
-// test/app/components/prizeFunds/prizeFundOptions.test.tsx
-
 import React from "react";
 import {
   fireEvent,
@@ -66,11 +64,10 @@ describe("rendering", () => {
 });
 
 describe("prize fund list", () => {
-  it("shows all divisions, pots and elims", () => {
+  it("shows all divisions, pots and elims when prize funds are enabled", () => {
     renderComponent(SquadStage.SCORES);
 
-    const options =
-      screen.getAllByRole("option");
+    const options = screen.getAllByRole("option");
 
     expect(options).toHaveLength(6);
 
@@ -83,53 +80,98 @@ describe("prize fund list", () => {
     expect(options[4]).toHaveTextContent("Elim");
     expect(options[5]).toHaveTextContent("Elim");
   });
+
+  it("does not show prize fund list when prize funds are disabled", () => {
+    renderComponent(SquadStage.DEFINE);
+
+    expect(
+      screen.queryByRole("combobox"),
+    ).not.toBeInTheDocument();
+
+    expect(
+      screen.queryAllByRole("option"),
+    ).toHaveLength(0);
+  });
 });
 
 describe("closing", () => {
   it("calls onClose when close button clicked", () => {
-    const { onClose } =
-      renderComponent(SquadStage.DEFINE);
+    const { onClose } = renderComponent(SquadStage.DEFINE);
 
-    fireEvent.click(
-      screen.getByLabelText("Close"),
-    );
+    fireEvent.click(screen.getByLabelText("Close"));
 
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
   it("calls onClose on outside click", () => {
-    const { onClose } =
-      renderComponent(SquadStage.DEFINE);
+    const { onClose } = renderComponent(SquadStage.DEFINE);
 
     fireEvent.mouseDown(document.body);
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("calls onClose when Continue button clicked", () => {
+    const { onClose } = renderComponent(SquadStage.DEFINE);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Continue" }),
+    );
 
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 });
 
 describe("stage logic", () => {
-  it("disables Edit button during DEFINE", () => {
+  it("does not enable prize funds during DEFINE", () => {
     renderComponent(SquadStage.DEFINE);
 
     expect(
-      screen.getByRole("button", { name: "Edit" }),
-    ).toBeDisabled();
+      screen.getByText("Prize Funds not enabled yet."),
+    ).toBeInTheDocument();
+
+    expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+
+    expect(
+      screen.queryByRole("button", { name: "Edit" }),
+    ).not.toBeInTheDocument();
   });
 
-  it("enables Edit button during ENTRIES", () => {
+  it("does not enable prize funds during ENTRIES", () => {
     renderComponent(SquadStage.ENTRIES);
 
     expect(
-      screen.getByRole("button", { name: "Edit" }),
-    ).toBeEnabled();
-  });
+      screen.getByText("Prize Funds not enabled yet."),
+    ).toBeInTheDocument();
 
-  it("enables Edit button during SCORES", () => {
-    renderComponent(SquadStage.SCORES);
+    expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
 
     expect(
-      screen.getByRole("button", { name: "Edit" }),
-    ).toBeEnabled();
+      screen.queryByRole("button", { name: "Edit" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("enables prize funds during SCORES", () => {
+    renderComponent(SquadStage.SCORES);
+
+    expect(screen.getByRole("combobox")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Edit" })).toBeEnabled();
+
+    expect(
+      screen.queryByText("Prize Funds not enabled yet."),
+    ).not.toBeInTheDocument();
+  });
+
+  it("enables prize funds during FINISHED", () => {
+    renderComponent(SquadStage.FINISHED);
+
+    expect(screen.getByRole("combobox")).toBeInTheDocument();
+
+    expect(screen.getByRole("button", { name: "Edit" })).toBeEnabled();
+
+    expect(
+      screen.queryByText("Prize Funds not enabled yet."),
+    ).not.toBeInTheDocument();
   });
 });
 
@@ -139,11 +181,9 @@ describe("navigation", () => {
   });
 
   it("navigates to division prize fund", () => {
-    renderComponent(SquadStage.ENTRIES);
+    renderComponent(SquadStage.SCORES);
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Edit" }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
 
     expect(push).toHaveBeenCalledWith(
       `/dataEntry/prizeFunds/tmnt/${tmntId}/div/${divId1}`,
@@ -162,9 +202,7 @@ describe("navigation", () => {
       },
     );
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Edit" }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
 
     expect(push).toHaveBeenCalledWith(
       `/dataEntry/prizeFunds/tmnt/${tmntId}/pot/${potId1}`,
@@ -183,9 +221,7 @@ describe("navigation", () => {
       },
     );
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Edit" }),
-    );
+    fireEvent.click(screen.getByRole("button", { name: "Edit" }));
 
     expect(push).toHaveBeenCalledWith(
       `/dataEntry/prizeFunds/tmnt/${tmntId}/elim/${elimId1}`,
@@ -198,12 +234,22 @@ describe("disabled navigation", () => {
     push.mockClear();
   });
 
-  it("does not navigate when Edit button is disabled", () => {
+  it("does not allow navigation during DEFINE", () => {
     renderComponent(SquadStage.DEFINE);
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Edit" }),
-    );
+    expect(
+      screen.queryByRole("button", { name: "Edit" }),
+    ).not.toBeInTheDocument();
+
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it("does not allow navigation during ENTRIES", () => {
+    renderComponent(SquadStage.ENTRIES);
+
+    expect(
+      screen.queryByRole("button", { name: "Edit" }),
+    ).not.toBeInTheDocument();
 
     expect(push).not.toHaveBeenCalled();
   });

@@ -9,8 +9,7 @@ import {
   setup,
   standardBeforeEach,
 } from "./elimPfPage.testSetup.test";
-import {
-  elimId1,
+import {  
   mockElim1PrizeFund,
   mockTmntFullData,
   tmntId,
@@ -68,14 +67,14 @@ describe("Eliminator Prize Fund web page infrastructure", () => {
     expect(props?.rows).toEqual(populatedRows);
   });
 
-  it("dispatches fetchElimPfs with the eliminator id", () => {
+  it("dispatches fetchElimPfs with the tournament id", () => {
     setup();
 
-    expect(mockFetchElimPfs).toHaveBeenCalledWith(elimId1);
+    expect(mockFetchElimPfs).toHaveBeenCalledWith(tmntId);
 
     expect(mockDispatch).toHaveBeenCalledWith({
       type: "elimPfs/fetchElimPfs",
-      payload: elimId1,
+      payload: tmntId,
     });
   });
 

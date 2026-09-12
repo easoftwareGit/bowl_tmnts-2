@@ -119,11 +119,10 @@ const TmntsList: FC<TmntListProps> = (props) => {
 
   return (
     <>
-      <div className="d-flex">
-        <div className="flex-grow-1"></div>
+      <div className="d-flex justify-content-center">        
         {/* style width is in pixels */}
         <div
-          className="d-flex justify-content-center tmnt_table"
+          className="tmnt_table"
           style={{ width: 720 }}
         >
           <table className="table table-striped table-hover w-100">
@@ -178,7 +177,7 @@ const TmntsList: FC<TmntListProps> = (props) => {
                   <td colSpan={2}>
                     {showResults
                       ?
-                      <Link href={`/results/tmnt/${tmnt.id}`}>
+                      <Link href={`/results/tmnt/${tmnt.id}/home`}>
                         {tmnt.tmnt_name} - {TmntMonthDay(tmnt)}
                       </Link>
                       : <>{tmnt.tmnt_name} - {TmntMonthDay(tmnt)}</>
@@ -201,7 +200,6 @@ const TmntsList: FC<TmntListProps> = (props) => {
             </tbody>
           </table>
         </div>        
-        <div className="flex-grow-1"></div>
       </div>
     </>
   );

@@ -1,12 +1,13 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ioStatusType } from "@/redux/statusTypes";
 import { RootState } from "@/redux/store";
-import type { divPfType } from "@/lib/types/types";
+import type { divPfType, tmntDivPfSaveDataType } from "@/lib/types/types";
 import { ioDataError } from "@/lib/enums/enums";
-import { getAllDivPfsForDiv, updateAllDivPfsForDiv } from "@/lib/db/divPfs/dbDivPfs";
+import { getAllDivPfsForTmnt, updateAllDivPfsForTmnt } from "@/lib/db/divPfs/dbDivPfs";
 
 export interface divPfsState {
   divPfs: divPfType[];
+  requestedTmntId: string;
   loadStatus: ioStatusType;
   saveStatus: ioStatusType;
   error: string | undefined;
@@ -16,6 +17,7 @@ export interface divPfsState {
 // initial state constant
 const initialState: divPfsState = {
   divPfs: [],
+  requestedTmntId: "",
   loadStatus: "idle" as ioStatusType,
   saveStatus: "idle" as ioStatusType,
   error: "",
@@ -24,26 +26,20 @@ const initialState: divPfsState = {
 
 export const fetchDivPfs = createAsyncThunk(
   "divPfs/fetchDivPfs",
-  async (divId: string) => {
+  async (tmntId: string) => {
     // Do not use try / catch blocks here. Need the promise to be fulfilled or
     // rejected which will have the appropriate response in the extraReducers.
-    const divPfs = await getAllDivPfsForDiv(divId);
-    if (!divPfs) {
-      throw new Error("Error fetching divPfs for div");
-    }
-    return divPfs;
+
+    return getAllDivPfsForTmnt(tmntId);
   },
 );
 
 export const saveDivPfs = createAsyncThunk(
   "divPfs/saveDivPfs",
-  async (divPfs: divPfType[]) => {
+  async (toSave: tmntDivPfSaveDataType) => {
     // Do not use try / catch blocks here. Need the promise to be fulfilled or
     // rejected which will have the appropriate response in the extraReducers.
-    if (!Array.isArray(divPfs) || divPfs.length === 0) {
-      throw new Error("Invalid divPfs array");
-    }
-    const updated = await updateAllDivPfsForDiv(divPfs[0].div_id, divPfs);
+    const updated = await updateAllDivPfsForTmnt(toSave);
     if (!updated) {
       throw new Error("Error updating divPfs");
     }
@@ -57,8 +53,10 @@ export const divPfsSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(fetchDivPfs.pending, (state) => {
+      .addCase(fetchDivPfs.pending, (state, action) => {
         state.loadStatus = "loading";
+        state.requestedTmntId = action.meta.arg;
+        state.error = "";
       })
       .addCase(
         fetchDivPfs.fulfilled,
@@ -91,6 +89,7 @@ export const divPfsSlice = createSlice({
   
 export const selectDivPfs = (state: RootState) => state.divPfs;
 
+export const getDivRequestedId = (state: RootState) => state.divPfs.requestedTmntId;
 export const getDivPfsLoadStatus = (state: RootState) => state.divPfs.loadStatus;
 export const getDivPfsSaveStatus = (state: RootState) => state.divPfs.saveStatus;
 export const getDivPfsError = (state: RootState) => state.divPfs.error;

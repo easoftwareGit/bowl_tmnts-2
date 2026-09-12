@@ -4,27 +4,31 @@ import reducer, {
   saveElimPfs,
 } from "@/redux/features/elimPfs/elimPfsSlice";
 import {
-  getAllElimPfsForElim,
-  updateAllElimPfsForElim,
+  getAllElimPfsForTmnt,
+  updateAllElimPfsForTmnt,
 } from "@/lib/db/elimPfs/dbElimPfs";
-import { mockElimPfs } from "../../mocks/tmnts/tmntFullData/mockTmntFullData";
+import { tmntId, mockElimPfs } from "../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { configureStore } from "@reduxjs/toolkit";
 import { ioDataError } from "@/lib/enums/enums";
 import { cloneDeep } from "lodash";
+import { tmntElimPfSaveDataType } from "@/lib/types/types";
 
 jest.mock("@/lib/db/elimPfs/dbElimPfs");
 
-const mockedGetAllElimPfsForElim = jest.mocked(getAllElimPfsForElim);
-const mockedUpdateAllElimPfsForElim = jest.mocked(updateAllElimPfsForElim);
+const mockedGetAllElimPfsForTmnt = jest.mocked(getAllElimPfsForTmnt);
+const mockedUpdateAllElimPfsForTmnt = jest.mocked(updateAllElimPfsForTmnt);
 
 describe("elimPfsSlice reducer + thunk", () => {
   const initialState: elimPfsState = {
     elimPfs: [],
+    requestedTmntId: "",
     loadStatus: "idle",
     saveStatus: "idle",
     error: "",
     ioError: ioDataError.NONE,
   };
+
+  // const testElimId = "elm_00000000000000000000000000000001"
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -36,17 +40,22 @@ describe("elimPfsSlice reducer + thunk", () => {
     });
 
     it("should handle fetchElimPfs.pending", () => {
+
       const state = reducer(initialState, {
         type: fetchElimPfs.pending.type,
+        meta: {
+          arg: tmntId,
+        },
       });
 
       expect(state.loadStatus).toBe("loading");
       expect(state.saveStatus).toBe("idle");
+      expect(state.requestedTmntId).toBe(tmntId);
       expect(state.error).toBe("");
       expect(state.elimPfs).toEqual([]);
     });
 
-    it("should handle fetchElimPfs.fulfilled", () => {      
+    it("should handle fetchElimPfs.fulfilled", () => {
 
       const state = reducer(initialState, {
         type: fetchElimPfs.fulfilled.type,
@@ -111,10 +120,11 @@ describe("elimPfsSlice reducer + thunk", () => {
     });
   });
 
-  describe("Thunk tests fetchElimPfs", () => {
-    it("dispatches fulfilled when getAllElimPfsForElim resolves", async () => {      
+  describe("Thunk tests fetchElimPfs", () => {    
 
-      mockedGetAllElimPfsForElim.mockResolvedValueOnce(mockElimPfs);
+    it("dispatches fulfilled when getAllElimPfsForTmnt resolves", async () => {      
+     
+      mockedGetAllElimPfsForTmnt.mockResolvedValueOnce(mockElimPfs);
 
       const store = configureStore({
         reducer: {
@@ -122,21 +132,20 @@ describe("elimPfsSlice reducer + thunk", () => {
         },
       });
 
-      await store.dispatch(fetchElimPfs("div_00000000000000000000000000000001") as any);
+      await store.dispatch(fetchElimPfs(tmntId) as any);
 
       const state = store.getState().elimPfs;
 
-      expect(mockedGetAllElimPfsForElim).toHaveBeenCalledWith(
-        "div_00000000000000000000000000000001",
-      );
+      expect(mockedGetAllElimPfsForTmnt).toHaveBeenCalledWith(tmntId);
+      expect(state.requestedTmntId).toBe(tmntId);
       expect(state.loadStatus).toBe("succeeded");
       expect(state.saveStatus).toBe("idle");
       expect(state.error).toBe("");
       expect(state.elimPfs).toEqual(mockElimPfs);
     });
 
-    it("dispatches rejected when getAllElimPfsForElim rejects", async () => {
-      mockedGetAllElimPfsForElim.mockRejectedValueOnce(new Error("DB failed"));
+    it("dispatches rejected when getAllElimPfsForTmnt rejects", async () => {
+      mockedGetAllElimPfsForTmnt.mockRejectedValueOnce(new Error("DB failed"));
 
       const store = configureStore({
         reducer: {
@@ -144,18 +153,19 @@ describe("elimPfsSlice reducer + thunk", () => {
         },
       });
 
-      await store.dispatch(fetchElimPfs("div_00000000000000000000000000000001") as any);
+      await store.dispatch(fetchElimPfs(tmntId) as any);
 
       const state = store.getState().elimPfs;
 
+      expect(state.requestedTmntId).toBe(tmntId);
       expect(state.loadStatus).toBe("failed");
       expect(state.saveStatus).toBe("idle");
       expect(state.error).toBe("DB failed");
       expect(state.elimPfs).toEqual([]);
     });
 
-    it("dispatches rejected when getAllElimPfsForElim resolves undefined", async () => {
-      mockedGetAllElimPfsForElim.mockResolvedValueOnce(undefined as any);
+    it("dispatches fulfilled when getAllElimPfsForTmnt resolves an empty array", async () => {
+      mockedGetAllElimPfsForTmnt.mockResolvedValueOnce([]);
 
       const store = configureStore({
         reducer: {
@@ -163,49 +173,33 @@ describe("elimPfsSlice reducer + thunk", () => {
         },
       });
 
-      const action = await store.dispatch(
-        fetchElimPfs("div_00000000000000000000000000000404") as any,
-      );
-
-      expect(fetchElimPfs.rejected.match(action)).toBe(true);
-
-      const state = store.getState().elimPfs;
-
-      expect(state.loadStatus).toBe("failed");
-      expect(state.saveStatus).toBe("idle");
-      expect(state.error).toBe("Error fetching elimPfs for elim");
-      expect(state.elimPfs).toEqual([]);
-    });
-
-    it("dispatches fulfilled when getAllElimPfsForElim resolves an empty array", async () => {
-      mockedGetAllElimPfsForElim.mockResolvedValueOnce([]);
-
-      const store = configureStore({
-        reducer: {
-          elimPfs: reducer,
-        },
-      });
-
-      const action = await store.dispatch(
-        fetchElimPfs("div_00000000000000000000000000000001") as any,
-      );
+      const action = await store.dispatch(fetchElimPfs(tmntId) as any);
 
       expect(fetchElimPfs.fulfilled.match(action)).toBe(true);
 
       const state = store.getState().elimPfs;
 
+      expect(state.requestedTmntId).toBe(tmntId);      
       expect(state.loadStatus).toBe("succeeded");
       expect(state.elimPfs).toEqual([]);
     });
   });
 
   describe("Thunk tests saveElimPfs", () => {
-    it("dispatches fulfilled when updateAllElimPfsForElim resolves", async () => {
+
+    const validDivIds = [mockElimPfs[0].elim_id, mockElimPfs[2].elim_id]; // yes, 0 and 2
+    const toSave: tmntElimPfSaveDataType = {
+      elimPfData: mockElimPfs,
+      elimIds: validDivIds,
+      tmntId: tmntId
+    }  
+
+    it("dispatches fulfilled when updateAllElimPfsForTmnt resolves", async () => {
 
       const updatedElimPfs = cloneDeep(mockElimPfs);
       updatedElimPfs[0].amount = 450;
 
-      mockedUpdateAllElimPfsForElim.mockResolvedValueOnce(updatedElimPfs);
+      mockedUpdateAllElimPfsForTmnt.mockResolvedValueOnce(updatedElimPfs);
 
       const store = configureStore({
         reducer: {
@@ -213,13 +207,12 @@ describe("elimPfsSlice reducer + thunk", () => {
         },
       });
 
-      await store.dispatch(saveElimPfs(mockElimPfs) as any);
+      await store.dispatch(saveElimPfs(toSave) as any);
 
       const state = store.getState().elimPfs;
 
-      expect(mockedUpdateAllElimPfsForElim).toHaveBeenCalledWith(
-        mockElimPfs[0].elim_id,
-        mockElimPfs,
+      expect(mockedUpdateAllElimPfsForTmnt).toHaveBeenCalledWith(
+        toSave,
       );
       expect(state.loadStatus).toBe("idle");
       expect(state.saveStatus).toBe("succeeded");
@@ -227,9 +220,9 @@ describe("elimPfsSlice reducer + thunk", () => {
       expect(state.elimPfs).toEqual(updatedElimPfs);
     });
 
-    it("dispatches rejected when updateAllElimPfsForElim resolves undefined", async () => {
+    it("dispatches rejected when updateAllElimPfsForTmnt resolves undefined", async () => {
       
-      mockedUpdateAllElimPfsForElim.mockResolvedValueOnce(undefined as any);
+      mockedUpdateAllElimPfsForTmnt.mockResolvedValueOnce(undefined as any);
 
       const store = configureStore({
         reducer: {
@@ -237,7 +230,7 @@ describe("elimPfsSlice reducer + thunk", () => {
         },
       });
 
-      const action = await store.dispatch(saveElimPfs(mockElimPfs) as any);
+      const action = await store.dispatch(saveElimPfs(toSave) as any);
 
       expect(saveElimPfs.rejected.match(action)).toBe(true);
 
@@ -249,9 +242,9 @@ describe("elimPfsSlice reducer + thunk", () => {
       expect(state.elimPfs).toEqual([]);
     });
 
-    it("dispatches rejected when updateAllElimPfsForElim rejects", async () => {      
+    it("dispatches rejected when updateAllElimPfsForTmnt rejects", async () => {      
 
-      mockedUpdateAllElimPfsForElim.mockRejectedValueOnce(new Error("Save failed"));
+      mockedUpdateAllElimPfsForTmnt.mockRejectedValueOnce(new Error("Save failed"));
 
       const store = configureStore({
         reducer: {
@@ -259,7 +252,7 @@ describe("elimPfsSlice reducer + thunk", () => {
         },
       });
 
-      await store.dispatch(saveElimPfs(mockElimPfs) as any);
+      await store.dispatch(saveElimPfs(toSave) as any);
 
       const state = store.getState().elimPfs;
 
@@ -269,50 +262,5 @@ describe("elimPfsSlice reducer + thunk", () => {
       expect(state.elimPfs).toEqual([]);
     });
 
-    it("dispatches rejected when saveElimPfs is called with an empty array", async () => {
-      const store = configureStore({
-        reducer: {
-          elimPfs: reducer,
-        },
-      });
-
-      const action = await store.dispatch(
-        saveElimPfs([]) as any,
-      );
-
-      expect(saveElimPfs.rejected.match(action)).toBe(true);
-      expect(mockedUpdateAllElimPfsForElim).not.toHaveBeenCalled();
-
-      const state = store.getState().elimPfs;
-
-      expect(state.loadStatus).toBe("idle");
-      expect(state.saveStatus).toBe("failed");
-      expect(state.error).toBe("Invalid elimPfs array");
-      expect(state.elimPfs).toEqual([]);
-    });
-
-    it("dispatches rejected when saveElimPfs is called with a non-array value", async () => {
-      const store = configureStore({
-        reducer: {
-          elimPfs: reducer,
-        },
-      });
-
-      const action = await store.dispatch(
-        saveElimPfs(undefined as any),
-      );
-
-      expect(saveElimPfs.rejected.match(action)).toBe(true);
-      expect(mockedUpdateAllElimPfsForElim).not.toHaveBeenCalled();
-
-      const state = store.getState().elimPfs;
-
-      expect(state.loadStatus).toBe("idle");
-      expect(state.saveStatus).toBe("failed");
-      expect(state.error).toBe("Invalid elimPfs array");
-      expect(state.elimPfs).toEqual([]);
-    });    
-    
   });
-
 });

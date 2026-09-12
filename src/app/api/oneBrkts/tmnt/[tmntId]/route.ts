@@ -24,20 +24,11 @@ export async function GET(
             },
           },
         },
-
-        // brkt_id: {
-        //   in: await prisma.brkt.findMany({
-        //     where: {
-        //       div_id: {
-        //         in: await prisma.div.findMany({
-        //           where: { tmnt_id: tmntId },
-        //           select: { id: true },
-        //         }).then((divs) => divs.map((div) => div.id))
-        //       }
-        //     }
-        //   }).then((brkts) => brkts.map((brkt) => brkt.id))
-        // }
       },
+      orderBy: [
+        { brkt_id: "asc" },
+        { bindex: "asc" },
+      ],
     });
     return NextResponse.json({ oneBrkts }, { status: 200 });
   } catch (error) {

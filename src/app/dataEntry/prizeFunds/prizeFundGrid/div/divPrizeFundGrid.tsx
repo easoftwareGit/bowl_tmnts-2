@@ -2,8 +2,8 @@
 
 import React, { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import type { prizeFundEntryRow } from "@/lib/types/types";
-import type { AppDispatch } from "@/redux/store";
+import type { prizeFundEntryRow, tmntDivPfSaveDataType } from "@/lib/types/types";
+import type { AppDispatch, RootState } from "@/redux/store";
 import {
   getDivPfsSaveStatus,
   saveDivPfs,
@@ -15,6 +15,7 @@ import PrizeFundGrid, { type PrizeFundGridHandle } from "../prizeFundGrid";
 interface DivPrizeFundGridProps {
   rows: prizeFundEntryRow[];
   setRows: React.Dispatch<React.SetStateAction<prizeFundEntryRow[]>>;
+  divId: string;
   totalPrizeFund: number;
   enableEditing?: boolean;
   gridDataWasChanged: boolean;
@@ -47,6 +48,7 @@ interface DivPrizeFundGridProps {
 const DivPrizeFundGrid = React.forwardRef<PrizeFundGridHandle, DivPrizeFundGridProps>(({
   rows,
   setRows,
+  divId,
   totalPrizeFund,
   enableEditing = true,
   gridDataWasChanged,
@@ -58,6 +60,13 @@ const DivPrizeFundGrid = React.forwardRef<PrizeFundGridHandle, DivPrizeFundGridP
 }, ref) => {
   const dispatch = useDispatch<AppDispatch>();
   const saveStatus = useSelector(getDivPfsSaveStatus);
+
+  const allDivPfs = useSelector(
+    (state: RootState) => state.divPfs.divPfs,
+  );
+  const tmntData = useSelector(
+    (state: RootState) => state.tmntFullData.tmntFullData,
+  );
 
   /**
    * Saves generic prize-fund rows as division prize-fund records.
@@ -79,20 +88,32 @@ const DivPrizeFundGrid = React.forwardRef<PrizeFundGridHandle, DivPrizeFundGridP
       currentRows: prizeFundEntryRow[],
     ): Promise<void> => {
       // 1. Convert generic rows to division entry rows.
-      const divPfEntryRows =
+      const divPfEntryRows = 
         pfEntryRowsToDivPfEntryRows(currentRows);
 
       // 2. Extract the database division prize-fund records.
       const divPfsToSave = extractDivPfs(divPfEntryRows);
 
-      if (divPfsToSave.length === 0) {
+      // 3. Replace this division's existing rows with the
+      // current rows from the grid.
+      const toSaveDivPfs = [
+        ...allDivPfs.filter((divPf) => divPf.div_id !== divId),
+        ...divPfsToSave,
+      ];
+
+      // 4. Save through the division prize-fund Redux slice.
+      if (toSaveDivPfs.length === 0) {
         return;
       }
 
-      // 3. Save through the division prize-fund Redux slice.
-      await dispatch(saveDivPfs(divPfsToSave)).unwrap();
+      const toSave: tmntDivPfSaveDataType = {
+        divPfData: toSaveDivPfs,
+        divIds: toSaveDivPfs.map((divPf) => divPf.div_id),
+        tmntId: tmntData.tmnt.id,
+      }
+      await dispatch(saveDivPfs(toSave)).unwrap();
     },
-    [dispatch],
+    [dispatch, allDivPfs, divId, tmntData],
   );
 
   return (

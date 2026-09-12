@@ -1,10 +1,51 @@
 import { BracketList } from "./bracketListClass";
 import { btDbUuid } from "@/lib/uuid";
-import { shuffleArray } from "@/lib/tools";
+import { hasUniqueValues, shuffleArray } from "@/lib/tools";
 import { defaultBrktGames, defaultPlayersPerMatch } from "@/lib/db/initVals";
 import { BracketMatch } from "./bracketMatchClass";
 import type { matchNumberType, matchSeedInfoType } from "./bracketMatchClass";
 import { brktSeedType } from "@/lib/types/types";
+
+export enum playerStatusValues {
+  NOT_IN_BRACKET = 0,
+  IN_BRACKET = 1,
+  LOSER = 2,
+  RUNNER_UP = 3,
+  WINNER = 4,
+}
+
+type PlayerMatchInfoType = {
+  brktGameNum: number;
+  playerId: string;
+  playerInfo: matchSeedInfoType;
+  matchInfo: matchSeedInfoType[];
+  matchNumber: matchNumberType;
+  matchPlayers: string[];
+};
+
+const validSeedSet = new Set<number>([0, 1, 2, 3, 4, 5, 6, 7]);
+
+// 2 players per match ** 3 games = 2 ** 3 = 8
+// 8 player bracket, 7 matches
+const defaultMatchesPerBracket = 7;
+
+// match numbers:
+// 0\
+//   4
+// 1/ \
+//     6
+// 2\ /
+//   5
+// 3/
+//
+// 0-3 - game 1
+// 4-5 - game 2
+// 6   - game 3
+
+export type OneMatchInfoType = {
+  top: matchSeedInfoType[];
+  bottom: matchSeedInfoType[];
+};
 
 export class Bracket {
   static errInvalidPlayerId = -1;
@@ -14,33 +55,43 @@ export class Bracket {
   static errDuplicatePlayerId = -5;
   static errMultipleByePlayers = -6;
   static byePlayerId = "bye_00000000000000000000000000000000";
-
-  private _games: number;
+  
+  // private _games: number;
   private _id: string = "";
-  private _match: BracketMatch | undefined;
+  private _loserIds = new Set<string>();
+  private _match: BracketMatch;
   private _parent: BracketList | undefined;
   private _playersPerMatch: number;
   private _players: string[];
+  private _semiFinalTies = new Set<string>();
+  private _runnerUpIds = new Set<string>();
+  private _winnerIds = new Set<string>();
 
   constructor(
     id: string = "",
     playersPerMatch: number = defaultPlayersPerMatch,
-    games: number = defaultBrktGames,
+    // games: number = defaultBrktGames,
   ) {
-    this._games = games;
+    // this._games = games;
     this._id = id !== "" ? id : btDbUuid("obk");
+    this._match = new BracketMatch(this);
     this._players = [];
     this._playersPerMatch = playersPerMatch;
   }
 
   get games(): number {
-    return this._games;
+    // return this._games;
+    return (this._parent == null) ? 0 : this._parent.games;    
   }
   get id(): string {
     return this._id;
   }
   get isFull(): boolean {
     return this._players.length >= this.playersPerBracket;
+  }
+  // only used in testing
+  get loserIds(): Set<string> {
+    return this._loserIds;
   }
   get match(): BracketMatch | undefined {
     return this._match;
@@ -52,22 +103,226 @@ export class Bracket {
     return this._players;
   }
   get playersPerBracket(): number {
-    // 2 bolwers per match ** 3 games = 2 ** 3 = 8
-    return this._playersPerMatch ** this._games;
+    // 2 players per match ** 3 games = 2 ** 3 = 8
+    // return this._playersPerMatch ** this._games;
+    return this._playersPerMatch ** this.games;
   }
   get playersPerMatch(): number {
     return this._playersPerMatch;
   }
+  // only used in testing
+  get runnerUpIds(): Set<string> {
+    return this._runnerUpIds;
+  }
+  // only used in testing
+  get semiFinalTies(): Set<string> {
+    return this._semiFinalTies;
+  }
+  // only used in testing
+  get winnerIds(): Set<string> {
+    return this._winnerIds;
+  }
 
   set parent(parent: BracketList | undefined) {
     this._parent = parent;
-    if (parent && parent.gameScoreMap && parent.playerMap) {
+    if (parent && parent.gameScoreMap && parent.playersMap) {
       this._match = new BracketMatch(this);
     }
   }
 
+  /*********************
+   * private functions *
+   ********************/
+
+  /**
+   * - Get player match info
+   *
+   * @param {string} playerId - player's id
+   * @param {number} brktGameNum - game number in bracket
+   * @return {(PlayerMatchInfoType | undefined)}
+   */
+  private getPlayerMatchInfo(
+    playerId: string,
+    brktGameNum: number,
+  ): PlayerMatchInfoType | undefined {
+    // get match number
+    const matchNumber = this.getPlayerMatchNumber(playerId, brktGameNum);
+    if (matchNumber === undefined) return undefined;
+
+    // get match players
+    let matchPlayers = this._match.getMatchPlayers(matchNumber);
+    if (matchPlayers.length === 0) return undefined;
+
+    // get match info
+    if (!this._parent) return undefined;
+    const squadGameNum = this._parent.squadGameNumber(brktGameNum);    
+    const matchInfo = this._match.getMatchInfo(matchPlayers, squadGameNum);
+
+    // get player info in match
+    const playerInfo = matchInfo.find((info) => info.playerId === playerId);
+    if (!playerInfo) return undefined;
+
+    return {
+      brktGameNum: brktGameNum,
+      playerId: playerId,
+      playerInfo: playerInfo,
+      matchInfo: matchInfo,
+      matchNumber: matchNumber,
+      matchPlayers: matchPlayers,
+    };
+  }
+
+  /**
+   * get player match number for a game
+   *
+   * note: this does not confirm player has reached a match
+   *       just if the payer HAD won every match upto the desired game
+   *       return the corresponing match number
+   *       see the match numbers at the top of the code
+   *
+   * @param {string} playerId - player id
+   * @param {number} brktGameNum - bracket game number
+   * @returns {matchNumberType | undefined} - match number
+   */
+  private getPlayerMatchNumber(
+    playerId: string,
+    brktGameNum: number,
+  ): matchNumberType | undefined {
+    const playerIndex = this._players.indexOf(playerId);
+    if (playerIndex === -1 || playerIndex >= this.playersPerBracket)
+      return undefined;
+    // if (brktGameNum < 1 || brktGameNum > this._games) return undefined;
+    if (brktGameNum < 1 || brktGameNum > this.games) return undefined;
+    if (brktGameNum === 1) {
+      return Math.floor(playerIndex / 2) as matchNumberType; // 0-3
+    }
+    if (brktGameNum === 2) {
+      return (Math.floor(playerIndex / 4) + 4) as matchNumberType; // 4 or 5
+    }
+    return 6 as matchNumberType; // 6
+  }
+
+  /**
+   * Get player status
+   *
+   * @param {string} playerId - player id
+   * @return {playerStatusValues} - player status
+   */
+  private playerStatus(playerId: string): playerStatusValues {
+    if (!this._players.includes(playerId)) return playerStatusValues.NOT_IN_BRACKET;
+    if (this._loserIds.has(playerId)) return playerStatusValues.LOSER;
+    if (this._runnerUpIds.has(playerId)) return playerStatusValues.RUNNER_UP;
+    if (this._winnerIds.has(playerId)) return playerStatusValues.WINNER;
+    return playerStatusValues.IN_BRACKET;
+  }
+
+  /**
+   * Update player sets with player match info
+   *
+   * @param {PlayerMatchInfoType} pmi - player match info
+   * @return {void}
+   */
+  private updatePlayerSets(pmi: PlayerMatchInfoType): void {
+    // if no data or no score yet, return
+    // have a result means all players in match have scores entered
+    if (!pmi || pmi.playerInfo.result === undefined) return;
+
+    // if player has already lost, return
+    if (this._loserIds.has(pmi.playerId)) return;
+
+    // bracket game 1 or 2
+    // if (pmi.brktGameNum < this._games) {
+    if (pmi.brktGameNum < this.games) {      
+      // bracket game brktGameNum scores in entered, player has lost
+      if (pmi.playerInfo.result === "L") {
+        this._loserIds.add(pmi.playerId);
+      }
+      // bracket game brktGameNum scores in entered, player has won, other players have lost
+      if (pmi.playerInfo.result === "W") {
+        // get other players
+        const otherPlayersInfo = pmi.matchInfo.filter(
+          (info) => info.playerId !== pmi.playerId,
+        );
+        // add other players to losers
+        otherPlayersInfo.forEach((info) => {
+          this._loserIds.add(info.playerId);
+        });
+      }
+      // if a tie in the semi final
+      // if (pmi.brktGameNum === this._games - 1 && pmi.playerInfo.result === "T") {
+      if (pmi.brktGameNum === this.games - 1 && pmi.playerInfo.result === "T") {
+        // add all tie players to semi final ties
+        pmi.matchInfo.forEach((info) => {
+          this._semiFinalTies.add(info.playerId);
+        });
+      }
+    } else {
+      // bracket game 3 scores in entered, player has lost
+      if (pmi.playerInfo.result === "L") {
+        this._runnerUpIds.add(pmi.playerId);
+
+        // bracket game 3 scores in entered, player has won, other players have lost
+      } else if (pmi.playerInfo.result === "W") {
+        this._winnerIds.add(pmi.playerId);
+        const winnerWasInTie = this._semiFinalTies.has(pmi.playerId);
+        // get other players
+        const otherPlayersInfo = pmi.matchInfo.filter(
+          (info) => info.playerId !== pmi.playerId,
+        );
+        // add other players to losers or runnersUp
+        otherPlayersInfo.forEach((info) => {
+          // if was NOT in semi final tie, and lost final, then a runner up
+          if (!this._semiFinalTies.has(info.playerId)) {
+            this._runnerUpIds.add(info.playerId);
+
+            // else other player was in a semi final tie
+          } else {
+            // if winner was in a tie, and loser was in a tie
+            if (winnerWasInTie) {
+              // add other player to losers, lost tie breaker
+              this._loserIds.add(info.playerId);
+
+              // else high score in final for those in semi final tie
+            } else {
+              // get highest score for tie losers
+              const highestScore = Math.max(
+                ...otherPlayersInfo.map(
+                  (onePlayerInfo) => onePlayerInfo.total!,
+                ),
+              );
+              const highTieLoser = otherPlayersInfo
+                .filter((onePlayerInfo) => onePlayerInfo.total === highestScore)
+                .map((onePlayerInfo) => onePlayerInfo.playerId);
+              // high tie loser in final is runner up
+              highTieLoser.forEach((highTieId) => {
+                this._runnerUpIds.add(highTieId);
+              });
+              // non high tie losers in final are losers
+              const otherTieLosers = otherPlayersInfo
+                .filter((onePlayerInfo) => onePlayerInfo.total !== highestScore)
+                .map((onePlayerInfo) => onePlayerInfo.playerId);
+              otherTieLosers.forEach((otherTieId) => {
+                this._loserIds.add(otherTieId);
+              });
+            }
+          }
+        });
+        // bracket game 3 scores in entered, tie
+      } else {
+        this._winnerIds.add(pmi.playerId);
+      }
+    }
+  }
+
+  /**************************************************
+   * methods below are used in randonizing brackets *
+   **************************************************/
+
   /**
    * Add players in a match to bracket
+   *
+   * note: only used when randonizing brackets
+   *       use populateBracket to add players from database
    *
    * @param {string[]} playerIds - array of players in match to add to bracket
    * @returns {number} - number of players in bracket
@@ -108,23 +363,6 @@ export class Bracket {
   }
 
   /**
-   * get the game scores for a match
-   *
-   * @param {matchNumberType} matchNumber
-   * @param {number} gameNum
-   * @return {*}  {matchSeedInfoType[]}
-   * @memberof Bracket
-   */
-  getMatchScores(
-    matchNumber: matchNumberType,
-    gameNum: number,
-  ): matchSeedInfoType[] {
-    if (!this._match) return [];
-    const matchPlayers = this._match.getMatchPlayers(matchNumber);
-    return this._match.getMatchInfo(matchPlayers, gameNum);
-  }
-
-  /**
    * checks if bracket has a bye player
    *
    * @returns {boolean} - true if bracket has a bye player, false otherwise
@@ -141,42 +379,6 @@ export class Bracket {
   numEmptySpots(): number {
     // return this._emptyIndexes.size;
     return this.playersPerBracket - this._players.length;
-  }
-
-  /**
-   * finds the index of a player
-   *
-   * @param {string} playerId - player id to find
-   * @returns {number} - index of player
-   */
-  playerIndex(playerId: string): number {
-    return this._players.indexOf(playerId);
-  }
-
-  /**
-   * populates the bracket with players
-   * 
-   * NOTE: this is used for creating a bracket from a list bracket seeds
-   * when the data has been fetched from the database. data in database has 
-   * already been randomized. 
-   *
-   * @param {brktSeedType[]} brktSeeds
-   */
-  populateBracket(brktSeeds: brktSeedType[]): void {
-    if (
-      !brktSeeds ||
-      !Array.isArray(brktSeeds) ||
-      brktSeeds.length !== this.playersPerBracket
-    )
-      return;
-    const sorted =brktSeeds.sort((a, b) => a.seed - b.seed);
-    // use for loop instead of forEach because i+=2, not i++    
-    for (let i = 0; i < this.playersPerBracket; i+=2) {
-      this.addMatch([
-        sorted[i].player_id,
-        sorted[i + 1].player_id
-      ]);
-    }
   }
 
   /**
@@ -205,5 +407,163 @@ export class Bracket {
 
     // 4) flatten the matches back into a single array and save it to _players
     this._players = matches.flat();
+  }
+
+  /**********************************************************
+   * methods below are used in calculating brackets results *
+   **********************************************************/
+
+  /**
+   * get player status in this bracket
+   *
+   * @param {string} playerId - player id
+   * @return {playerStatusValues} - player status
+   */
+  getPlayerStatus(playerId: string): playerStatusValues {
+    let status = this.playerStatus(playerId);
+    if (status !== playerStatusValues.IN_BRACKET) {
+      return status;
+    }
+
+    // game 1 of bracket
+    let pmi = this.getPlayerMatchInfo(playerId, 1);
+    if (!pmi) return status;
+    this.updatePlayerSets(pmi);
+    status = this.playerStatus(playerId);
+    if (status !== playerStatusValues.IN_BRACKET) {
+      return status;
+    }
+
+    // game 2 of bracket - semi final
+    pmi = this.getPlayerMatchInfo(playerId, 2);
+    if (!pmi) return status;
+    this.updatePlayerSets(pmi);
+    status = this.playerStatus(playerId);
+    if (status !== playerStatusValues.IN_BRACKET) {
+      return status;
+    }
+
+    // game 3 of bracket - final
+    pmi = this.getPlayerMatchInfo(playerId, 3);
+    if (!pmi) return status;
+    this.updatePlayerSets(pmi);
+    return this.playerStatus(playerId);
+  }
+
+  /**
+   * checks if player is in bracket
+   *
+   * NOTE: this is used for checking if a player is in a bracket
+   *       DOES NOT return index of player
+   *
+   * @param {string} playerId - id of player to check
+   * @return {boolean} - true if player is in bracket, false otherwise
+   */
+  hasPlayer(playerId: string): boolean {
+    return this._players.includes(playerId);
+  }
+
+  /**
+   * checks if player is alive in bracket, 1st or 2nd place
+   *
+   * @param {string} playerId - id of player to check
+   * @return {boolean} - false if player in losers or not found   
+   */
+  isPlayerAlive(playerId: string): boolean {
+    const status = this.playerStatus(playerId);
+    return (
+      status === playerStatusValues.IN_BRACKET ||
+      status === playerStatusValues.WINNER ||
+      status === playerStatusValues.RUNNER_UP
+    );
+  }
+
+  /**
+   * checks if player is in 1st or 2nd place
+   *
+   * @param {string} playerId - id of player to check
+   * @return {boolean} - true if player is in 1st or 2nd place   
+   */
+  isPlayerFirstOrSecond(playerId: string): boolean {
+    const status = this.playerStatus(playerId);
+    return status === playerStatusValues.WINNER || status === playerStatusValues.RUNNER_UP;
+  }
+
+  /**
+   * populates the bracket with players
+   *
+   * NOTE: this is used for creating a bracket from a list bracket seeds
+   * when the data has been fetched from the database. data in database has
+   * already been randomized.
+   *
+   * @param {brktSeedType[]} brktSeeds
+   */
+  populateBracket(brktSeeds: brktSeedType[]): void {
+    if (
+      !brktSeeds ||
+      !Array.isArray(brktSeeds) ||
+      brktSeeds.length !== this.playersPerBracket
+    ) {
+      return;
+    }
+
+    // Verify every required seed exists exactly once.
+    const brktSeedsSet = new Set(brktSeeds.map((brktSeed) => brktSeed.seed));
+    if (
+      brktSeedsSet.size !== this.playersPerBracket ||
+      ![...brktSeedsSet].every((seed) =>
+        validSeedSet.has(seed)
+      )
+    ) {
+      return;
+    }
+
+    // A player can appear only once in a bracket.
+    const justPlayerIds = brktSeeds.map((brktSeed) => brktSeed.player_id);
+    if (!hasUniqueValues(justPlayerIds)) return;
+
+    
+    const sorted = brktSeeds.sort((a, b) => a.seed - b.seed);
+    // use for loop instead of forEach because i+=2, not i++
+    for (let i = 0; i < this.playersPerBracket; i += 2) {
+      this.addMatch([sorted[i].player_id, sorted[i + 1].player_id]);
+    }
+  }
+
+  /**
+   * updates all matches in the bracket
+   */
+  updateMatches(): void {
+    this._loserIds.clear();
+    this._runnerUpIds.clear();
+    this._semiFinalTies.clear();
+    this._winnerIds.clear();
+
+    // if no game scores yet, return
+    if (this._parent == null) return;
+    if (this._parent.gameScoreMap == null) return;
+
+    for (let m = 0; m <= 6; m++) {
+      const players = this._match.getMatchPlayers(m as matchNumberType);
+      // const brktGameNumIndex = m <= 3 ? 0 : m <= 5 ? 1 : 2;
+      const brktGameNum = m <= 3 ? 1 : m <= 5 ? 2 : 3;
+      // const squadGameNum = this.parent.squadGameNums[brktGameNumIndex];
+      const squadGameNum = this._parent.squadGameNumber(brktGameNum);
+      const matchSeedInfo = this._match.getMatchInfo(players, squadGameNum);
+      for (let p = 0; p < players.length; p++) {
+        let pmi: PlayerMatchInfoType = {
+          playerId: players[p],
+          brktGameNum: brktGameNum,
+          playerInfo: matchSeedInfo[p],
+          matchInfo: matchSeedInfo,
+          matchPlayers: players,
+          matchNumber: m as matchNumberType,
+        };
+        this.updatePlayerSets(pmi);        
+      }
+      for (let p = 0; p < players.length; p++) {
+        this.getPlayerStatus(players[p]);
+      }
+    }
   }
 }

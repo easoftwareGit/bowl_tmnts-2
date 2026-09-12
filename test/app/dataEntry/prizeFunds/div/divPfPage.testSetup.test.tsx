@@ -7,7 +7,7 @@ import type {
   divPfType,
   prizeFundEntryRow,
   prizeFundType,
-  tmntFullType
+  tmntFullType,
 } from "@/lib/types/types";
 import type {
   PrizeFundGridHandle,
@@ -25,7 +25,7 @@ import {
   divId1 as defaultDivId,
   mockDivPfs,
   mockDivPrizeFund,
-  mockTmntFullData,  
+  mockTmntFullData,
 } from "../../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 
 type MockRootState = {
@@ -52,6 +52,7 @@ export type MockDivPrizeFundGridProps = {
   setRows: React.Dispatch<
     React.SetStateAction<prizeFundEntryRow[]>
   >;
+  divId: string;
   totalPrizeFund: number;
   enableEditing?: boolean;
   gridDataWasChanged: boolean;
@@ -76,7 +77,11 @@ export type SetupOptions = {
   tmntId?: string;
   divId?: string;
 
+  /**
+   * All division prize-fund rows stored in Redux for the tournament.
+   */
   divPfs?: divPfType[];
+
   tmntData?: tmntFullType;
 
   divPfsLoadStatus?: string;
@@ -177,9 +182,9 @@ jest.mock(
   () => ({
     __esModule: true,
 
-    fetchDivPfs: jest.fn((divId: string) => ({
+    fetchDivPfs: jest.fn((tmntId: string) => ({
       type: "divPfs/fetchDivPfs",
-      payload: divId,
+      payload: tmntId,
     })),
 
     getDivPfsLoadStatus: (
@@ -455,8 +460,11 @@ jest.mock(
  * Test data makers *
  ********************/
 
-export const makePrizeFunds = (divPfs: divPfType[]): prizeFundType[] => {
+export const makePrizeFunds = (
+  divPfs: divPfType[],
+): prizeFundType[] => {
   const mockPrizeFunds: prizeFundType[] = [];
+
   for (const divPf of divPfs) {
     mockPrizeFunds.push({
       id: divPf.id,
@@ -465,22 +473,28 @@ export const makePrizeFunds = (divPfs: divPfType[]): prizeFundType[] => {
       amount: divPf.amount,
     });
   }
-  return mockPrizeFunds;
-}
 
-export const makeRows = (divPfs: divPfType[]): prizeFundEntryRow[] => { 
+  return mockPrizeFunds;
+};
+
+export const makeRows = (
+  divPfs: divPfType[],
+): prizeFundEntryRow[] => {
   const mockRows: prizeFundEntryRow[] = [];
+
   for (const divPf of divPfs) {
     mockRows.push({
       id: divPf.id,
       parent_id: divPf.div_id,
       position: divPf.position!,
       amount: divPf.amount!,
-      percentage: divPf.amount! / mockDivPrizeFund,
+      percentage:
+        divPf.amount! / mockDivPrizeFund,
     });
   }
+
   return mockRows;
-}
+};
 
 /***********
  * setup() *
@@ -502,9 +516,6 @@ export const setup = ({
   prizeFunds: suppliedPrizeFunds,
   populatedRows: suppliedPopulatedRows,
 
-  // prizeFunds = makePrizeFunds(),
-  // populatedRows = makeRows(),
-
   confirmLeavePage = true,
 }: SetupOptions = {}): {
   user: ReturnType<typeof userEvent.setup>;
@@ -515,6 +526,7 @@ export const setup = ({
   runTmntUrl: string;
 
   divPfs: divPfType[];
+  currentDivPfs: divPfType[];
   tmntData: tmntFullType;
   prizeFunds: prizeFundType[];
   populatedRows: prizeFundEntryRow[];
@@ -529,22 +541,33 @@ export const setup = ({
 } => {
   const user = userEvent.setup();
 
-  const runTmntUrl = `/dataEntry/runTmnt/${tmntId}`;
+  const runTmntUrl =
+    `/dataEntry/runTmnt/${tmntId}`;
 
   /*
-   * Derive the converted prize funds and populated rows from
-   * the divPfs supplied to this setup call.
+   * divPfs represents all division prize-fund rows loaded
+   * into Redux for the tournament.
    *
-   * Tests may still override either result explicitly through
-   * suppliedPrizeFunds or suppliedPopulatedRows.
+   * The page filters those rows by the route division id
+   * before initializing the editable prize-fund grid.
+   */
+  const currentDivPfs = divPfs.filter(
+    (divPf) => divPf.div_id === divId,
+  );
+
+  /*
+   * Derive the converted prize funds and populated rows
+   * from only the current division's prize-fund rows.
+   *
+   * Tests may still override either result explicitly.
    */
   const prizeFunds =
     suppliedPrizeFunds ??
-    makePrizeFunds(divPfs);
+    makePrizeFunds(currentDivPfs);
 
   const populatedRows =
     suppliedPopulatedRows ??
-    makeRows(divPfs);
+    makeRows(currentDivPfs);
 
   const mockState: MockRootState = {
     divPfs: {
@@ -657,6 +680,7 @@ export const setup = ({
     runTmntUrl,
 
     divPfs,
+    currentDivPfs,
     tmntData,
     prizeFunds,
     populatedRows,

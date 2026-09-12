@@ -1,11 +1,11 @@
 import { privateApi } from "@/lib/api/axios";
 import { baseElimPfsApi } from "@/lib/api/apiPaths";
 import { testBaseElimPfsApi } from "../../../testApi";
-import type { elimPfType } from "@/lib/types/types";
+import type { elimPfSaveDataType, elimPfType, tmntElimPfSaveDataType } from "@/lib/types/types";
 import { initElimPf } from "@/lib/db/initVals";
 import {
-  getAllElimPfsForElim,
-  updateAllElimPfsForElim,
+  getAllElimPfsForTmnt,
+  updateAllElimPfsForTmnt,
 } from "@/lib/db/elimPfs/dbElimPfs";
 
 jest.mock("@/lib/api/axios", () => ({
@@ -21,12 +21,12 @@ const url =
     ? testBaseElimPfsApi
     : baseElimPfsApi;
 
-const elimUrl = url + "/elim/";
+const tmntUrl = url + "/tmnt/";
 
 const mockedPrivateApi = privateApi as jest.Mocked<typeof privateApi>;
 
+const tmntId = "tmt_fd99387c33d9c78aba290286576ddce5";
 const elimId = "elm_45d884582e7042bb95b4818ccdd9974c";
-
 const manyElimPfs: elimPfType[] = [
   {
     ...initElimPf,
@@ -40,38 +40,41 @@ const manyElimPfs: elimPfType[] = [
     id: "epf_0fed31aae5374e6690b6535ced1ebff5",
     elim_id: elimId,
     position: 2,
-    amount: 10,
-  },
+    amount: 20,
+  }
 ];
 
-const validElimPf: elimPfType = {
-  ...manyElimPfs[0],
-};
+const validElimIds = [elimId];
+
+const elimSaveData: elimPfSaveDataType = {
+  elimPfData: manyElimPfs,
+  elimIds: validElimIds,
+} 
 
 describe("non standard throw cases", () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  describe("getAllElimPfsForElim - non standard throw cases", () => { 
-    it("should throw an error when response.data.divs is missing", async () => {
+  describe("getAllElimPfsForTmnt - non standard throw cases", () => { 
+    it("should throw an error when response.data.elims is missing", async () => {
       mockedPrivateApi.get.mockResolvedValue({
         data: {},
       });
 
-      await expect(getAllElimPfsForElim(elimId)).rejects.toThrow(
-        "getAllElimPfsForElim failed: Error fetching elimPfs",
+      await expect(getAllElimPfsForTmnt(tmntId)).rejects.toThrow(
+        "getAllElimPfsForTmnt failed: Error fetching elimPfs",
       );
 
       expect(mockedPrivateApi.get).toHaveBeenCalledTimes(1);
-      expect(mockedPrivateApi.get).toHaveBeenCalledWith(elimUrl + elimId);
+      expect(mockedPrivateApi.get).toHaveBeenCalledWith(tmntUrl + tmntId);
     });
 
     it("should throw with custom message if publicApi.get rejects", async () => {
       mockedPrivateApi.get.mockRejectedValueOnce(new Error("Network Error"));
 
-      await expect(getAllElimPfsForElim(elimId)).rejects.toThrow(
-        "getAllElimPfsForElim failed: Network Error",
+      await expect(getAllElimPfsForTmnt(tmntId)).rejects.toThrow(
+        "getAllElimPfsForTmnt failed: Network Error",
       );
 
       expect(mockedPrivateApi.get).toHaveBeenCalledTimes(1);
@@ -80,36 +83,42 @@ describe("non standard throw cases", () => {
     it("should throw an error when publicApi.get rejects with non-error", async () => {
       mockedPrivateApi.get.mockRejectedValueOnce("testing 123");
 
-      await expect(getAllElimPfsForElim(elimId)).rejects.toThrow(
-        "getAllElimPfsForElim failed: testing 123",
+      await expect(getAllElimPfsForTmnt(tmntId)).rejects.toThrow(
+        "getAllElimPfsForTmnt failed: testing 123",
       );
 
       expect(mockedPrivateApi.get).toHaveBeenCalledTimes(1);
     });
   })
 
-  describe("updateAllElimPfsForElim - non standard throw cases", () => {
+  describe("updateAllElimPfsForTmnt - non standard throw cases", () => {
+    const toSave: tmntElimPfSaveDataType = {
+      elimPfData: manyElimPfs,
+      elimIds: validElimIds,
+      tmntId: tmntId
+    }
+
     it("should throw an error when response.data.count is missing", async () => {
       mockedPrivateApi.put.mockResolvedValue({
         data: {},
       });
 
-      await expect(updateAllElimPfsForElim(elimId, manyElimPfs)).rejects.toThrow(
-        "updateAllElimPfsForElim failed: Error updating elimPfs for elim",
+      await expect(updateAllElimPfsForTmnt(toSave)).rejects.toThrow(
+        "updateAllElimPfsForTmnt failed: Error updating elimPfs for tmnt",
       );
 
       expect(mockedPrivateApi.put).toHaveBeenCalledTimes(1);
       expect(mockedPrivateApi.put).toHaveBeenCalledWith(
-        elimUrl + elimId,
-        JSON.stringify(manyElimPfs),
+        tmntUrl + tmntId,
+        JSON.stringify(elimSaveData),
       );
     });
 
     it("should throw with custom message if privateApi.put rejects", async () => {
       mockedPrivateApi.put.mockRejectedValueOnce(new Error("Network Error"));
 
-      await expect(updateAllElimPfsForElim(elimId, manyElimPfs)).rejects.toThrow(
-        "updateAllElimPfsForElim failed: Network Error",
+      await expect(updateAllElimPfsForTmnt(toSave)).rejects.toThrow(
+        "updateAllElimPfsForTmnt failed: Network Error",
       );
 
       expect(mockedPrivateApi.put).toHaveBeenCalledTimes(1);
@@ -118,8 +127,8 @@ describe("non standard throw cases", () => {
     it("should throw an error when privateApi.put rejects with non-error", async () => {
       mockedPrivateApi.put.mockRejectedValueOnce("testing 123");
 
-      await expect(updateAllElimPfsForElim(elimId, manyElimPfs)).rejects.toThrow(
-        "updateAllElimPfsForElim failed: testing 123",
+      await expect(updateAllElimPfsForTmnt(toSave)).rejects.toThrow(
+        "updateAllElimPfsForTmnt failed: testing 123",
       );
 
       expect(mockedPrivateApi.put).toHaveBeenCalledTimes(1);

@@ -19,10 +19,10 @@ const emailUrl = url + "/email/";
  * Retrieves a user by ID
  * 
  * @param {string} id - The ID of the user to retrieve
- * @returns {userDataType | null} - The user data, or null if not found
+ * @returns {userDataType} - The user data
  * @throws {Error} - If the user ID is invalid
  */
-export const getUserById = async (id: string): Promise<userDataType | null> => {
+export const getUserById = async (id: string): Promise<userDataType> => {
   if (!isValidBtDbId(id, "usr")) {
     throw new Error("getUserById failed: Invalid user id");
   }

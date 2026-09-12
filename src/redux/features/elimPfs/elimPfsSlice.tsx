@@ -1,12 +1,13 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ioStatusType } from "@/redux/statusTypes";
 import { RootState } from "@/redux/store";
-import type { elimPfType } from "@/lib/types/types";
+import type { elimPfType, tmntElimPfSaveDataType } from "@/lib/types/types";
 import { ioDataError } from "@/lib/enums/enums";
-import { getAllElimPfsForElim, updateAllElimPfsForElim } from "@/lib/db/elimPfs/dbElimPfs";
+import { getAllElimPfsForTmnt, updateAllElimPfsForTmnt } from "@/lib/db/elimPfs/dbElimPfs";
 
 export interface elimPfsState {
   elimPfs: elimPfType[];
+  requestedTmntId: string;
   loadStatus: ioStatusType;
   saveStatus: ioStatusType;
   error: string | undefined;
@@ -16,6 +17,7 @@ export interface elimPfsState {
 // initial state constant
 const initialState: elimPfsState = {
   elimPfs: [],
+  requestedTmntId: "",
   loadStatus: "idle" as ioStatusType,
   saveStatus: "idle" as ioStatusType,
   error: "",
@@ -24,26 +26,20 @@ const initialState: elimPfsState = {
 
 export const fetchElimPfs = createAsyncThunk(
   "elimPfs/fetchElimPfs",
-  async (elimId: string) => {
+  async (tmntId: string) => {
     // Do not use try / catch blocks here. Need the promise to be fulfilled or
     // rejected which will have the appropriate response in the extraReducers.
-    const elimPfs = await getAllElimPfsForElim(elimId);
-    if (!elimPfs) {
-      throw new Error("Error fetching elimPfs for elim");
-    }
-    return elimPfs;
+
+    return getAllElimPfsForTmnt(tmntId);
   },
 );
 
 export const saveElimPfs = createAsyncThunk(
   "elimPfs/saveElimPfs",
-  async (elimPfs: elimPfType[]) => {
+  async (toSave: tmntElimPfSaveDataType) => {
     // Do not use try / catch blocks here. Need the promise to be fulfilled or
     // rejected which will have the appropriate response in the extraReducers.
-    if (!Array.isArray(elimPfs) || elimPfs.length === 0) {
-      throw new Error("Invalid elimPfs array");
-    }
-    const updated = await updateAllElimPfsForElim(elimPfs[0].elim_id, elimPfs);
+    const updated = await updateAllElimPfsForTmnt(toSave);
     if (!updated) {
       throw new Error("Error updating elimPfs");
     }
@@ -57,8 +53,10 @@ export const elimPfsSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(fetchElimPfs.pending, (state) => {
+      .addCase(fetchElimPfs.pending, (state, action) => {
         state.loadStatus = "loading";
+        state.requestedTmntId = action.meta.arg;
+        state.error = "";
       })
       .addCase(
         fetchElimPfs.fulfilled,
@@ -91,6 +89,7 @@ export const elimPfsSlice = createSlice({
 
 export const selectElimPfs = (state: RootState) => state.elimPfs;
 
+export const getElimRequestedId = (state: RootState) => state.elimPfs.requestedTmntId;
 export const getElimPfsLoadStatus = (state: RootState) => state.elimPfs.loadStatus;
 export const getElimPfsSaveStatus = (state: RootState) => state.elimPfs.saveStatus;
 export const getElimPfsError = (state: RootState) => state.elimPfs.error;

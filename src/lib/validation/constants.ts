@@ -68,3 +68,10 @@ export const TotalPlusTotalHdcpName = "total_plus_total_hdcp";
 export const ptGame = "Game";
 export const ptLastGame = "Last Game";
 export const ptSeries = "Series";
+
+export const dummyUserId = "usr_00000000000000000000000000000000";
+export const dummyBowlId = "bwl_00000000000000000000000000000000";
+export const dummyTmntId = "tmnt_00000000000000000000000000000000";
+export const dummyEventId = "evt_00000000000000000000000000000000";
+export const dummyDivId = "div_00000000000000000000000000000000";
+export const dummySquadId = "sqd_00000000000000000000000000000000";

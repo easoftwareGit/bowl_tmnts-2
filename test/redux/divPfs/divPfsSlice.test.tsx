@@ -4,27 +4,29 @@ import reducer, {
   saveDivPfs,
 } from "@/redux/features/divPfs/divPfsSlice";
 import {
-  getAllDivPfsForDiv,
-  updateAllDivPfsForDiv,
+  getAllDivPfsForTmnt,
+  updateAllDivPfsForTmnt,
 } from "@/lib/db/divPfs/dbDivPfs";
-import { mockDivPfs } from "../../mocks/tmnts/tmntFullData/mockTmntFullData";
+import { tmntId, mockDivPfs } from "../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { configureStore } from "@reduxjs/toolkit";
 import { ioDataError } from "@/lib/enums/enums";
 import { cloneDeep } from "lodash";
+import { tmntDivPfSaveDataType } from "@/lib/types/types";
 
 jest.mock("@/lib/db/divPfs/dbDivPfs");
 
-const mockedGetAllDivPfsForDiv = jest.mocked(getAllDivPfsForDiv);
-const mockedUpdateAllDivPfsForDiv = jest.mocked(updateAllDivPfsForDiv);
+const mockedGetAllDivPfsForTmnt = jest.mocked(getAllDivPfsForTmnt);
+const mockedUpdateAllDivPfsForTmnt = jest.mocked(updateAllDivPfsForTmnt);
 
 describe("divPfsSlice reducer + thunk", () => {
   const initialState: divPfsState = {
     divPfs: [],
+    requestedTmntId: "",
     loadStatus: "idle",
     saveStatus: "idle",
     error: "",
     ioError: ioDataError.NONE,
-  };
+  };  
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -36,18 +38,22 @@ describe("divPfsSlice reducer + thunk", () => {
     });
 
     it("should handle fetchDivPfs.pending", () => {
+
       const state = reducer(initialState, {
         type: fetchDivPfs.pending.type,
+        meta: {
+          arg: tmntId,
+        },
       });
 
       expect(state.loadStatus).toBe("loading");
       expect(state.saveStatus).toBe("idle");
+      expect(state.requestedTmntId).toBe(tmntId);
       expect(state.error).toBe("");
       expect(state.divPfs).toEqual([]);
     });
 
-    it("should handle fetchDivPfs.fulfilled", () => {
-      // const mockDivPfs = cloneDeep(mockDivPfs);
+    it("should handle fetchDivPfs.fulfilled", () => {      
 
       const state = reducer(initialState, {
         type: fetchDivPfs.fulfilled.type,
@@ -112,10 +118,11 @@ describe("divPfsSlice reducer + thunk", () => {
     });
   });
 
-  describe("Thunk tests fetchDivPfs", () => {
-    it("dispatches fulfilled when getAllDivPfsForDiv resolves", async () => {      
+  describe("Thunk tests fetchDivPfs", () => {    
 
-      mockedGetAllDivPfsForDiv.mockResolvedValueOnce(mockDivPfs);
+    it("dispatches fulfilled when getAllDivPfsForTmnt resolves", async () => {      
+     
+      mockedGetAllDivPfsForTmnt.mockResolvedValueOnce(mockDivPfs);
 
       const store = configureStore({
         reducer: {
@@ -123,21 +130,20 @@ describe("divPfsSlice reducer + thunk", () => {
         },
       });
 
-      await store.dispatch(fetchDivPfs("div_00000000000000000000000000000001") as any);
+      await store.dispatch(fetchDivPfs(tmntId) as any);
 
       const state = store.getState().divPfs;
 
-      expect(mockedGetAllDivPfsForDiv).toHaveBeenCalledWith(
-        "div_00000000000000000000000000000001",
-      );
+      expect(mockedGetAllDivPfsForTmnt).toHaveBeenCalledWith(tmntId);
+      expect(state.requestedTmntId).toBe(tmntId);
       expect(state.loadStatus).toBe("succeeded");
       expect(state.saveStatus).toBe("idle");
       expect(state.error).toBe("");
       expect(state.divPfs).toEqual(mockDivPfs);
     });
 
-    it("dispatches rejected when getAllDivPfsForDiv rejects", async () => {
-      mockedGetAllDivPfsForDiv.mockRejectedValueOnce(new Error("DB failed"));
+    it("dispatches rejected when getAllDivPfsForTmnt rejects", async () => {
+      mockedGetAllDivPfsForTmnt.mockRejectedValueOnce(new Error("DB failed"));
 
       const store = configureStore({
         reducer: {
@@ -145,18 +151,19 @@ describe("divPfsSlice reducer + thunk", () => {
         },
       });
 
-      await store.dispatch(fetchDivPfs("div_00000000000000000000000000000001") as any);
+      await store.dispatch(fetchDivPfs(tmntId) as any);
 
       const state = store.getState().divPfs;
 
+      expect(state.requestedTmntId).toBe(tmntId);
       expect(state.loadStatus).toBe("failed");
       expect(state.saveStatus).toBe("idle");
       expect(state.error).toBe("DB failed");
       expect(state.divPfs).toEqual([]);
     });
 
-    it("dispatches rejected when getAllDivPfsForDiv resolves undefined", async () => {
-      mockedGetAllDivPfsForDiv.mockResolvedValueOnce(undefined as any);
+    it("dispatches fulfilled when getAllDivPfsForTmnt resolves an empty array", async () => {
+      mockedGetAllDivPfsForTmnt.mockResolvedValueOnce([]);
 
       const store = configureStore({
         reducer: {
@@ -164,49 +171,33 @@ describe("divPfsSlice reducer + thunk", () => {
         },
       });
 
-      const action = await store.dispatch(
-        fetchDivPfs("div_00000000000000000000000000000404") as any,
-      );
-
-      expect(fetchDivPfs.rejected.match(action)).toBe(true);
-
-      const state = store.getState().divPfs;
-
-      expect(state.loadStatus).toBe("failed");
-      expect(state.saveStatus).toBe("idle");
-      expect(state.error).toBe("Error fetching divPfs for div");
-      expect(state.divPfs).toEqual([]);
-    });
-
-    it("dispatches fulfilled when getAllDivPfsForDiv resolves an empty array", async () => {
-      mockedGetAllDivPfsForDiv.mockResolvedValueOnce([]);
-
-      const store = configureStore({
-        reducer: {
-          divPfs: reducer,
-        },
-      });
-
-      const action = await store.dispatch(
-        fetchDivPfs("div_00000000000000000000000000000001") as any,
-      );
+      const action = await store.dispatch(fetchDivPfs(tmntId) as any);
 
       expect(fetchDivPfs.fulfilled.match(action)).toBe(true);
 
       const state = store.getState().divPfs;
 
+      expect(state.requestedTmntId).toBe(tmntId);      
       expect(state.loadStatus).toBe("succeeded");
       expect(state.divPfs).toEqual([]);
     });
   });
 
   describe("Thunk tests saveDivPfs", () => {
-    it("dispatches fulfilled when updateAllDivPfsForDiv resolves", async () => {
+
+    const validDivIds = [mockDivPfs[0].div_id];
+    const toSave: tmntDivPfSaveDataType = {
+      divPfData: mockDivPfs,
+      divIds: validDivIds,
+      tmntId: tmntId
+    }       
+
+    it("dispatches fulfilled when updateAllDivPfsForTmnt resolves", async () => {
 
       const updatedDivPfs = cloneDeep(mockDivPfs);
       updatedDivPfs[0].amount = 450;
 
-      mockedUpdateAllDivPfsForDiv.mockResolvedValueOnce(updatedDivPfs);
+      mockedUpdateAllDivPfsForTmnt.mockResolvedValueOnce(updatedDivPfs);
 
       const store = configureStore({
         reducer: {
@@ -214,23 +205,20 @@ describe("divPfsSlice reducer + thunk", () => {
         },
       });
 
-      await store.dispatch(saveDivPfs(mockDivPfs) as any);
+      await store.dispatch(saveDivPfs(toSave) as any);
 
       const state = store.getState().divPfs;
 
-      expect(mockedUpdateAllDivPfsForDiv).toHaveBeenCalledWith(
-        mockDivPfs[0].div_id,
-        mockDivPfs,
-      );
+      expect(mockedUpdateAllDivPfsForTmnt).toHaveBeenCalledWith(toSave);
       expect(state.loadStatus).toBe("idle");
       expect(state.saveStatus).toBe("succeeded");
       expect(state.error).toBe("");
       expect(state.divPfs).toEqual(updatedDivPfs);
     });
 
-    it("dispatches rejected when updateAllDivPfsForDiv resolves undefined", async () => {
+    it("dispatches rejected when updateAllDivPfsForTmnt resolves undefined", async () => {
       
-      mockedUpdateAllDivPfsForDiv.mockResolvedValueOnce(undefined as any);
+      mockedUpdateAllDivPfsForTmnt.mockResolvedValueOnce(undefined as any);
 
       const store = configureStore({
         reducer: {
@@ -238,7 +226,7 @@ describe("divPfsSlice reducer + thunk", () => {
         },
       });
 
-      const action = await store.dispatch(saveDivPfs(mockDivPfs) as any);
+      const action = await store.dispatch(saveDivPfs(toSave) as any);
 
       expect(saveDivPfs.rejected.match(action)).toBe(true);
 
@@ -250,9 +238,9 @@ describe("divPfsSlice reducer + thunk", () => {
       expect(state.divPfs).toEqual([]);
     });
 
-    it("dispatches rejected when updateAllDivPfsForDiv rejects", async () => {      
+    it("dispatches rejected when updateAllDivPfsForTmnt rejects", async () => {      
 
-      mockedUpdateAllDivPfsForDiv.mockRejectedValueOnce(new Error("Save failed"));
+      mockedUpdateAllDivPfsForTmnt.mockRejectedValueOnce(new Error("Save failed"));
 
       const store = configureStore({
         reducer: {
@@ -260,57 +248,13 @@ describe("divPfsSlice reducer + thunk", () => {
         },
       });
 
-      await store.dispatch(saveDivPfs(mockDivPfs) as any);
+      await store.dispatch(saveDivPfs(toSave) as any);
 
       const state = store.getState().divPfs;
 
       expect(state.loadStatus).toBe("idle");
       expect(state.saveStatus).toBe("failed");
       expect(state.error).toBe("Save failed");
-      expect(state.divPfs).toEqual([]);
-    });
-
-    it("dispatches rejected when saveDivPfs is called with an empty array", async () => {
-      const store = configureStore({
-        reducer: {
-          divPfs: reducer,
-        },
-      });
-
-      const action = await store.dispatch(
-        saveDivPfs([]) as any
-      );
-
-      expect(saveDivPfs.rejected.match(action)).toBe(true);
-      expect(mockedUpdateAllDivPfsForDiv).not.toHaveBeenCalled();
-
-      const state = store.getState().divPfs;
-
-      expect(state.loadStatus).toBe("idle");
-      expect(state.saveStatus).toBe("failed");
-      expect(state.error).toBe("Invalid divPfs array");
-      expect(state.divPfs).toEqual([]);
-    });
-
-    it("dispatches rejected when saveDivPfs is called with a non-array", async () => {
-      const store = configureStore({
-        reducer: {
-          divPfs: reducer,
-        },
-      });
-
-      const action = await store.dispatch(
-        saveDivPfs(null as any)
-      );
-
-      expect(saveDivPfs.rejected.match(action)).toBe(true);
-      expect(mockedUpdateAllDivPfsForDiv).not.toHaveBeenCalled();
-
-      const state = store.getState().divPfs;
-
-      expect(state.loadStatus).toBe("idle");
-      expect(state.saveStatus).toBe("failed");
-      expect(state.error).toBe("Invalid divPfs array");
       expect(state.divPfs).toEqual([]);
     });
 

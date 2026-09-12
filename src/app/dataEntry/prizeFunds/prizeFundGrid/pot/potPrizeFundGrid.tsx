@@ -2,8 +2,8 @@
 
 import React, { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import type { prizeFundEntryRow } from "@/lib/types/types";
-import type { AppDispatch } from "@/redux/store";
+import type { prizeFundEntryRow, tmntPotPfSaveDataType } from "@/lib/types/types";
+import type { AppDispatch, RootState } from "@/redux/store";
 import {
   getPotPfsSaveStatus,
   savePotPfs,
@@ -15,6 +15,7 @@ import PrizeFundGrid, { type PrizeFundGridHandle } from "../prizeFundGrid";
 interface PotPrizeFundGridProps {
   rows: prizeFundEntryRow[];
   setRows: React.Dispatch<React.SetStateAction<prizeFundEntryRow[]>>;
+  potId: string;
   totalPrizeFund: number;
   enableEditing?: boolean;
   gridDataWasChanged: boolean;
@@ -47,6 +48,7 @@ interface PotPrizeFundGridProps {
 const PotPrizeFundGrid = React.forwardRef<PrizeFundGridHandle, PotPrizeFundGridProps>(({
   rows,
   setRows,
+  potId,
   totalPrizeFund,
   enableEditing = true,
   gridDataWasChanged,
@@ -58,6 +60,13 @@ const PotPrizeFundGrid = React.forwardRef<PrizeFundGridHandle, PotPrizeFundGridP
 }, ref) => {
   const dispatch = useDispatch<AppDispatch>();
   const saveStatus = useSelector(getPotPfsSaveStatus);
+
+  const allPotPfs = useSelector(
+    (state: RootState) => state.potPfs.potPfs,
+  );
+  const tmntData = useSelector(
+    (state: RootState) => state.tmntFullData.tmntFullData,
+  );
 
   /**
    * Saves generic prize-fund rows as pot prize-fund records.
@@ -79,20 +88,31 @@ const PotPrizeFundGrid = React.forwardRef<PrizeFundGridHandle, PotPrizeFundGridP
       currentRows: prizeFundEntryRow[],
     ): Promise<void> => {
       // 1. Convert generic rows to pot entry rows.
-      const potPfEntryRows =
-        pfEntryRowsToPotPfEntryRows(currentRows);
+      const potPfEntryRows = pfEntryRowsToPotPfEntryRows(currentRows);
 
       // 2. Extract the database pot prize-fund records.
       const potPfsToSave = extractPotPfs(potPfEntryRows);
 
+      // 3. Replace this pot's existing rows with the
+      // current rows from the grid.
+      const toSavePotPfs = [
+        ...allPotPfs.filter((potPf) => potPf.pot_id !== potId),
+        ...potPfsToSave,
+      ];
+
+      // 4. Save through the division prize-fund Redux slice.
       if (potPfsToSave.length === 0) {
         return;
       }
 
-      // 3. Save through the pot prize-fund Redux slice.
-      await dispatch(savePotPfs(potPfsToSave)).unwrap();
+      const toSave: tmntPotPfSaveDataType = {
+        potPfData: toSavePotPfs,
+        potIds: toSavePotPfs.map((potPf) => potPf.pot_id),
+        tmntId: tmntData.tmnt.id,
+      }
+      await dispatch(savePotPfs(toSave)).unwrap();
     },
-    [dispatch],
+    [dispatch, allPotPfs, potId, tmntData],
   );
 
   return (

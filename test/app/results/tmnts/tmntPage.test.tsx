@@ -6,7 +6,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 
-import DivResultsPage from "@/app/results/tmnt/[tmntId]/page";
+import TmntResultsPage from "@/app/results/tmnt/[tmntId]/standings/page";
 
 import type { TmntGameResult } from "@/lib/types/resultsTypes";
 
@@ -211,7 +211,7 @@ describe("DivResultsPage", () => {
         .mockReturnValueOnce(null)
         .mockReturnValueOnce([]);
 
-      render(<DivResultsPage />);
+      render(<TmntResultsPage />);
 
       expect(
         mockFetchOneTmntGameResults
@@ -234,7 +234,7 @@ describe("DivResultsPage", () => {
         .mockReturnValueOnce(null)
         .mockReturnValueOnce([]);
 
-      render(<DivResultsPage />);
+      render(<TmntResultsPage />);
 
       expect(
         screen.getByTestId("WaitModalMock")
@@ -254,7 +254,7 @@ describe("DivResultsPage", () => {
         .mockReturnValueOnce(null)
         .mockReturnValueOnce([]);
 
-      render(<DivResultsPage />);
+      render(<TmntResultsPage />);
 
       expect(
         screen.queryByTestId("TabsMock")
@@ -269,7 +269,7 @@ describe("DivResultsPage", () => {
         .mockReturnValueOnce("DB down")
         .mockReturnValueOnce([]);
 
-      render(<DivResultsPage />);
+      render(<TmntResultsPage />);
 
       expect(
         screen.getByText(
@@ -284,7 +284,7 @@ describe("DivResultsPage", () => {
         .mockReturnValueOnce("DB down")
         .mockReturnValueOnce([]);
 
-      render(<DivResultsPage />);
+      render(<TmntResultsPage />);
 
       expect(
         screen.queryByTestId("TabsMock")
@@ -312,7 +312,7 @@ describe("DivResultsPage", () => {
     });
 
     it("renders the tournament name", async () => {
-      render(<DivResultsPage />);
+      render(<TmntResultsPage />);
 
       await waitFor(() => {
         expect(
@@ -324,7 +324,7 @@ describe("DivResultsPage", () => {
     });
 
     it("renders the formatted tournament date", async () => {
-      render(<DivResultsPage />);
+      render(<TmntResultsPage />);
 
       await waitFor(() => {
         expect(
@@ -336,7 +336,7 @@ describe("DivResultsPage", () => {
     });
 
     it("renders the Tabs component", async () => {
-      render(<DivResultsPage />);
+      render(<TmntResultsPage />);
 
       await waitFor(() => {
         expect(
@@ -348,7 +348,7 @@ describe("DivResultsPage", () => {
     });
 
     it("renders one tab per division", async () => {
-      render(<DivResultsPage />);
+      render(<TmntResultsPage />);
 
       await waitFor(() => {
         const tabs =
@@ -361,7 +361,7 @@ describe("DivResultsPage", () => {
     });
 
     it("renders tabs sorted by sort_order", async () => {
-      render(<DivResultsPage />);
+      render(<TmntResultsPage />);
 
       await waitFor(() => {
         expect(screen.getAllByTestId("TabMock")).toHaveLength(2);
@@ -374,7 +374,7 @@ describe("DivResultsPage", () => {
     });    
 
     it("renders TmntResultsForm for each division", async () => {
-      render(<DivResultsPage />);
+      render(<TmntResultsPage />);
 
       await waitFor(() => {
         const forms =
@@ -387,7 +387,7 @@ describe("DivResultsPage", () => {
     });
 
     it("passes the correct divid props to TmntResultsForm", async () => {
-      render(<DivResultsPage />);
+      render(<TmntResultsPage />);
 
       await waitFor(() => {
         expect(screen.getAllByTestId("TmntResultsFormMock")).toHaveLength(2);
@@ -400,7 +400,7 @@ describe("DivResultsPage", () => {
     });
 
     it("passes tmntResults to TmntResultsForm", async () => {
-      render(<DivResultsPage />);
+      render(<TmntResultsPage />);
 
       await waitFor(() => {
         const forms =
@@ -419,7 +419,7 @@ describe("DivResultsPage", () => {
     });
 
     it("sets the default active tab to the first sorted division", async () => {
-      render(<DivResultsPage />);
+      render(<TmntResultsPage />);
 
       await waitFor(() => {
         expect(
@@ -434,7 +434,7 @@ describe("DivResultsPage", () => {
     });
 
     it("changes the active tab when onSelect is called", async () => {
-      render(<DivResultsPage />);
+      render(<TmntResultsPage />);
 
       await waitFor(() => {
         expect(
@@ -487,7 +487,7 @@ describe("DivResultsPage", () => {
       
     });
     it("does not render tabs when results are empty", () => {
-      render(<DivResultsPage />);
+      render(<TmntResultsPage />);
 
       expect(
         screen.queryByTestId(
@@ -497,7 +497,7 @@ describe("DivResultsPage", () => {
     });
 
     it("does not render a tournament name when results are empty", () => {
-      render(<DivResultsPage />);
+      render(<TmntResultsPage />);
 
       expect(
         screen.queryByText(
@@ -525,7 +525,7 @@ describe("DivResultsPage", () => {
         return undefined;
       });
 
-      render(<DivResultsPage />);
+      render(<TmntResultsPage />);
 
       const tabs = await screen.findByTestId("TabsMock");
 

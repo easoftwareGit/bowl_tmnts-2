@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/redux/store";
 import { useParams, useRouter } from "next/navigation";
@@ -45,12 +45,21 @@ export default function ElimPrizeFundEntry() {
 
   const runTmntUrl = `/dataEntry/runTmnt/${tmntId}`;
 
-  // so only initialize state once when data first becomes available
-  // prevents the page from reinitializing state multiple times.
-  // redux updates, rerenders, async fetches could overwrite user edits
+  /**
+   * Prevents Redux updates and rerenders from reinitializing the page
+   * after the user has started editing.
+   */
   const initializedRef = useRef(false);
 
-  const elimPfs = useSelector((state: RootState) => state.elimPfs.elimPfs);
+  // const elimPfs = useSelector((state: RootState) => state.elimPfs.elimPfs);
+  const allElimPfs = useSelector(
+    (state: RootState) => state.elimPfs.elimPfs,
+  );
+  const elimPfs = useMemo(
+    () => allElimPfs.filter((elimPf) => elimPf.elim_id === elimId),
+    [allElimPfs, elimId],
+  );
+
   const tmntData = useSelector(
     (state: RootState) => state.tmntFullData.tmntFullData,
   );
@@ -88,11 +97,6 @@ export default function ElimPrizeFundEntry() {
 
   const elimEntries = tmntData?.elimEntries?.filter((entry) => entry.elim_id === elimId);
   const numPlayers = elimEntries?.length || 0;
-
-  // if elimPfs is empty, or all elimPfs belong to the current elim
-  const elimPfsBelongToCurrentElim =
-    elimPfs.length === 0 ||
-    elimPfs.every((elimPf) => elimPf.elim_id === elimId);
 
   const [rows, setRows] = useState<prizeFundEntryRow[]>([]);
 
@@ -136,9 +140,9 @@ export default function ElimPrizeFundEntry() {
 
   // Fetch elimPfs
   useEffect(() => {
-    if (!elimId) return;
-    dispatch(fetchElimPfs(elimId));
-  }, [elimId, dispatch]);
+    if (!tmntId) return;
+    dispatch(fetchElimPfs(tmntId));
+  }, [tmntId, dispatch]);
 
   // Fetch tournament if missing
   useEffect(() => {
@@ -165,7 +169,6 @@ export default function ElimPrizeFundEntry() {
   useEffect(() => {
     if (
       elimPfsLoadStatus !== "succeeded" ||
-      !elimPfsBelongToCurrentElim ||
       !tmntData ||
       tmntData.tmnt?.id !== tmntId
     ) {
@@ -199,7 +202,6 @@ export default function ElimPrizeFundEntry() {
     initializedRef.current = true;
   }, [
     elimPfsLoadStatus,
-    elimPfsBelongToCurrentElim,
     tmntData,
     tmntId,
     elimPfs,
@@ -553,8 +555,7 @@ export default function ElimPrizeFundEntry() {
     (!tmntData && tmntLoadStatus === "loading");
 
   const canRender =
-    elimPfsLoadStatus === "succeeded" &&
-    elimPfsBelongToCurrentElim &&
+    elimPfsLoadStatus === "succeeded" &&    
     tmntLoadStatus === "succeeded" &&
     gotTmntData;
   
@@ -695,9 +696,10 @@ export default function ElimPrizeFundEntry() {
             <ElimPrizeFundGrid
               ref={prizeFundGridRef}
               rows={rows}
-              setRows={setRows}              
+              setRows={setRows}
+              elimId={elimId}
               totalPrizeFund={totalElimPrizeFund}
-              enableEditing={true}              
+              enableEditing={true}
               gridDataWasChanged={gridDataWasChanged}
               onGridDataChanged={() => setGridDataWasChanged(true)}
               onGridDataReset={() => setGridDataWasChanged(false)}

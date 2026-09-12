@@ -13,3 +13,13 @@ export const shuffleArray = <T>(arr: T[]): void => {
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
 };
+
+/**
+ * check if an array has unique values
+ * 
+ * @param {any} arr - array to check
+ * @returns {boolean} - true if array has unique values
+ */
+export const hasUniqueValues = <T>(arr: T[]): boolean => {
+  return new Set(arr).size === arr.length;
+}

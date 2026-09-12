@@ -1,4 +1,4 @@
-import { getPotName, getBrktOrElimName, exportedForTesting, getDivName, fullName, getPotShortName } from "@/lib/getName";
+import { getPotName, getBrktOrElimName, exportedForTesting, getDivName, fullName, getPotShortName, lastFirst } from "@/lib/getName";
 import {
   mockDivs,
   mockPots,
@@ -145,6 +145,43 @@ describe("getName functions", () => {
     });
   });
 
+  describe('lastFirst', () => {
+    it('should concatenate last and first name with a comma and space between when both names provided', () => {
+      const result = lastFirst('John', 'Smith');
+      expect(result).toBe('Smith, John');
+    });
+    it('should return only last name when first name is whitespace', () => {
+      const result = lastFirst('   ', 'Smith');
+      expect(result).toBe('Smith');
+    });
+    it('should return only first name when last name is empty', () => {
+      const result = lastFirst('John', '');
+      expect(result).toBe('John');
+    });
+    it('should return empty string when both first and last names are empty', () => {
+      const result = lastFirst('', '');
+      expect(result).toBe('');
+    });
+    it('should return only last name when first name is empty', () => {
+      const result = lastFirst('', 'Doe');
+      expect(result).toBe('Doe');
+    });
+    it('should preserve case sensitivity when both first and last names are provided', () => {
+      const result = lastFirst('John', 'DOE');
+      expect(result).toBe('DOE, John');
+    });
+    it('should trim extra spaces between first and last name', () => {
+      const result = lastFirst('  John  ', '  Smith  ');
+      expect(result).toBe('Smith, John');
+    });
+    it('should return an empty string when both first and last names are null or undefined', () => {
+      const result = lastFirst(null as any, undefined as any);
+      expect(result).toBe('');
+      const result2 = lastFirst(undefined as any, null as any);
+      expect(result2).toBe('');
+    });
+  });
+
   describe('fullName', () => {
     it('should concatenate first and last name with space between when both names provided', () => {
       const result = fullName('John', 'Smith');
@@ -169,10 +206,6 @@ describe("getName functions", () => {
     it('should preserve case sensitivity when both first and last names are provided', () => {
       const result = fullName('John', 'DOE');
       expect(result).toBe('John DOE');
-    });
-    it('should return first and last name with a single space when both are provided', () => {
-      const result = fullName('Jane', 'Doe');
-      expect(result).toBe('Jane Doe');
     });
     it('should trim extra spaces between first and last name', () => {
       const result = fullName('  John  ', '  Smith  ');

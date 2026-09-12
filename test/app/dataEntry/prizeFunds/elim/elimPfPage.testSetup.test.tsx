@@ -229,9 +229,9 @@ jest.mock(
     __esModule: true,
 
     fetchElimPfs: jest.fn(
-      (elimId: string) => ({
+      (tmntId: string) => ({
         type: "elimPfs/fetchElimPfs",
-        payload: elimId,
+        payload: tmntId,
       }),
     ),
 
@@ -630,10 +630,8 @@ export const setup = ({
   tmntId = defaultTmntId,
   elimId = defaultElimId,
 
-  // Optional prize funds supplied by a test.
-  elimPfs: suppliedElimPfs = mockElimPfs.filter(
-    (elimPf) => elimPf.elim_id === elimId,
-  ),  
+  // Optional tournament-level eliminator prize funds supplied by a test.
+  elimPfs: suppliedElimPfs = mockElimPfs,
   tmntData: suppliedTmntData = mockTmntFullData,
 
   elimPfsLoadStatus = "succeeded",
@@ -655,6 +653,7 @@ export const setup = ({
   runTmntUrl: string;
 
   elimPfs: elimPfType[];
+  currentElimPfs: elimPfType[];
   tmntData: tmntFullType;
   prizeFunds: prizeFundType[];
   populatedRows: prizeFundEntryRow[];
@@ -672,52 +671,47 @@ export const setup = ({
   const user = userEvent.setup();
 
   /*
-   * Clone the supplied elim prize-fund data.
+   * Clone all tournament eliminator prize-fund data.
    *
-   * Tests may alter the rows or their elim_id values. Cloning prevents one
-   * test from mutating the shared mock data used by another test.
+   * fetchElimPfs() now loads prize funds for the tournament. The page is
+   * responsible for filtering these rows to the current elimId.
    */
   const elimPfs = cloneDeep(suppliedElimPfs);
 
   /*
+   * Prize funds belonging to the eliminator currently selected by the route.
+   *
+   * This mirrors the page's useMemo() filtering logic and is used only to
+   * create the expected mock conversion and populated-row results.
+   */
+  const currentElimPfs = elimPfs.filter(
+    (elimPf) => elimPf.elim_id === elimId,
+  );
+
+  /*
    * Clone the supplied tournament data.
    *
-   * Some setup options modify tournament data for the
-   * current test. Cloning prevents those changes from mutating shared mock
-   * data or affecting later tests.
+   * Some setup options modify tournament data for the current test.
+   * Cloning prevents those changes from mutating shared mock data or
+   * affecting later tests.
    */
   const tmntData = cloneDeep(suppliedTmntData);
 
   /*
-   * Build the generic prize-fund data from the final cloned elimPfs unless
-   * the test explicitly supplied its own converted prize-fund data.
+   * Build the generic prize-fund data from the current eliminator's
+   * prize funds unless the test explicitly supplied converted data.
    */
   const prizeFunds =
     suppliedPrizeFunds ??
-    makePrizeFunds(elimPfs);
+    makePrizeFunds(currentElimPfs);
 
   /*
-   * Build the rows returned by populatePfRows() from the final cloned
-   * elimPfs unless the test explicitly supplied its own populated rows.
+   * Build the rows returned by populatePfRows() from the current
+   * eliminator's prize funds unless explicitly supplied by the test.
    */
   const populatedRows =
     suppliedPopulatedRows ??
-    makeRows(elimPfs);
-
-
-  // const elimPfs =
-  //   suppliedElimPfs ??
-  //   mockElimPfs.filter(
-  //     (elimPf) => elimPf.elim_id === elimId,
-  //   );
-
-  // const prizeFunds =
-  //   suppliedPrizeFunds ??
-  //   makePrizeFunds(elimPfs);
-
-  // const populatedRows =
-  //   suppliedPopulatedRows ??
-  //   makeRows(elimPfs);
+    makeRows(currentElimPfs);
 
   const runTmntUrl = `/dataEntry/runTmnt/${tmntId}`;
 
@@ -835,6 +829,7 @@ export const setup = ({
     runTmntUrl,
 
     elimPfs,
+    currentElimPfs,
     tmntData,
     prizeFunds,
     populatedRows,
@@ -846,6 +841,227 @@ export const setup = ({
     triggerBack,
   };
 };
+
+// export const setup = ({
+//   tmntId = defaultTmntId,
+//   elimId = defaultElimId,
+
+//   // Optional prize funds supplied by a test.
+//   elimPfs: suppliedElimPfs = mockElimPfs.filter(
+//     (elimPf) => elimPf.elim_id === elimId,
+//   ),  
+//   tmntData: suppliedTmntData = mockTmntFullData,
+
+//   elimPfsLoadStatus = "succeeded",
+//   tmntLoadStatus = "succeeded",
+
+//   elimPfsError = null,
+//   tmntError = null,
+
+//   prizeFunds: suppliedPrizeFunds,
+//   populatedRows: suppliedPopulatedRows,
+
+//   confirmLeavePage = true,
+// }: SetupOptions = {}): {
+//   user: ReturnType<typeof userEvent.setup>;
+//   view: RenderResult;
+
+//   tmntId: string;
+//   elimId: string;
+//   runTmntUrl: string;
+
+//   elimPfs: elimPfType[];
+//   tmntData: tmntFullType;
+//   prizeFunds: prizeFundType[];
+//   populatedRows: prizeFundEntryRow[];
+
+//   triggerGridDataChanged: () => void;
+//   triggerGridDataReset: () => void;
+
+//   triggerSaveComplete: (
+//     savedRows?: prizeFundEntryRow[],
+//   ) => void;
+
+//   triggerNavigateAfterSave: () => void;
+//   triggerBack: () => void;
+// } => {
+//   const user = userEvent.setup();
+
+//   /*
+//    * Clone the supplied elim prize-fund data.
+//    *
+//    * Tests may alter the rows or their elim_id values. Cloning prevents one
+//    * test from mutating the shared mock data used by another test.
+//    */
+//   const elimPfs = cloneDeep(suppliedElimPfs);
+
+//   /*
+//    * Clone the supplied tournament data.
+//    *
+//    * Some setup options modify tournament data for the
+//    * current test. Cloning prevents those changes from mutating shared mock
+//    * data or affecting later tests.
+//    */
+//   const tmntData = cloneDeep(suppliedTmntData);
+
+//   /*
+//    * Build the generic prize-fund data from the final cloned elimPfs unless
+//    * the test explicitly supplied its own converted prize-fund data.
+//    */
+//   const prizeFunds =
+//     suppliedPrizeFunds ??
+//     makePrizeFunds(elimPfs);
+
+//   /*
+//    * Build the rows returned by populatePfRows() from the final cloned
+//    * elimPfs unless the test explicitly supplied its own populated rows.
+//    */
+//   const populatedRows =
+//     suppliedPopulatedRows ??
+//     makeRows(elimPfs);
+
+
+//   // const elimPfs =
+//   //   suppliedElimPfs ??
+//   //   mockElimPfs.filter(
+//   //     (elimPf) => elimPf.elim_id === elimId,
+//   //   );
+
+//   // const prizeFunds =
+//   //   suppliedPrizeFunds ??
+//   //   makePrizeFunds(elimPfs);
+
+//   // const populatedRows =
+//   //   suppliedPopulatedRows ??
+//   //   makeRows(elimPfs);
+
+//   const runTmntUrl = `/dataEntry/runTmnt/${tmntId}`;
+
+//   const mockState: MockRootState = {
+//     elimPfs: {
+//       elimPfs,
+//       loadStatus: elimPfsLoadStatus,
+//       error: elimPfsError,
+//     },
+
+//     tmntFullData: {
+//       tmntFullData: tmntData,
+//       loadStatus: tmntLoadStatus,
+//       error: tmntError,
+//     },
+//   };
+
+//   jest.mocked(useParams).mockReturnValue({
+//     tmntId,
+//     elimId,
+//   });
+
+//   jest.mocked(useRouter).mockReturnValue({
+//     push: mockPush,
+//     back: jest.fn(),
+//     forward: jest.fn(),
+//     refresh: jest.fn(),
+//     replace: jest.fn(),
+//     prefetch: jest.fn(),
+//   });
+
+//   jest.mocked(useDispatch).mockReturnValue(
+//     mockDispatch as AppDispatch,
+//   );
+
+//   jest.mocked(useSelector).mockImplementation(
+//     (
+//       selector: (
+//         state: RootState,
+//       ) => unknown,
+//     ) =>
+//       selector(
+//         mockState as unknown as RootState,
+//       ),
+//   );
+
+//   mockElimPfsToPrizeFunds.mockReturnValue(
+//     prizeFunds,
+//   );
+
+//   mockPopulatePfRows.mockReturnValue(
+//     populatedRows,
+//   );
+
+//   setCurrentGridRows(populatedRows);
+
+//   mockWindowConfirm.mockReturnValue(
+//     confirmLeavePage,
+//   );
+
+//   const view = render(
+//     <ElimPrizeFundEntry />,
+//   );
+
+//   const triggerGridDataChanged =
+//     (): void => {
+//       act(() => {
+//         latestGridProps
+//           ?.onGridDataChanged();
+//       });
+//     };
+
+//   const triggerGridDataReset =
+//     (): void => {
+//       act(() => {
+//         latestGridProps
+//           ?.onGridDataReset();
+//       });
+//     };
+
+//   const triggerSaveComplete = (
+//     savedRows:
+//       prizeFundEntryRow[] =
+//         populatedRows,
+//   ): void => {
+//     act(() => {
+//       latestGridProps?.onSaveComplete(
+//         savedRows.map((row) => ({
+//           ...row,
+//         })),
+//       );
+//     });
+//   };
+
+//   const triggerNavigateAfterSave =
+//     (): void => {
+//       act(() => {
+//         latestGridProps
+//           ?.onNavigateAfterSave();
+//       });
+//     };
+
+//   const triggerBack = (): void => {
+//     act(() => {
+//       latestGridProps?.onBack();
+//     });
+//   };
+
+//   return {
+//     user,
+//     view,
+
+//     tmntId,
+//     elimId,
+//     runTmntUrl,
+
+//     elimPfs,
+//     tmntData,
+//     prizeFunds,
+//     populatedRows,
+
+//     triggerGridDataChanged,
+//     triggerGridDataReset,
+//     triggerSaveComplete,
+//     triggerNavigateAfterSave,
+//     triggerBack,
+//   };
+// };
 
 /************************
  * Common test helpers  *

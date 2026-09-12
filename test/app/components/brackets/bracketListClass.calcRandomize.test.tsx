@@ -15,6 +15,7 @@ import {
   playerId8,
   mockTmntFullData,
 } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
+import { isOdd } from "@/lib/validation/validation";
 
 describe('BracketList', () => { 
 
@@ -2162,45 +2163,45 @@ describe('BracketList', () => {
         testBracketList.calcTotalBrkts(playerData);
 
         // bracket index 0
-        let brkt = new Bracket("brk_00", testBracketList.playersPerMatch, testBracketList.games);
+        let brkt = new Bracket("brk_00", testBracketList.playersPerMatch);
         brkt.addMatch(['Al', 'Chad']);
         brkt.addMatch(['Bob', 'Don']);
         testBracketList.brackets.push(brkt);
 
         // bracket index 1
-        brkt = new Bracket("brk_01", testBracketList.playersPerMatch, testBracketList.games);
+        brkt = new Bracket("brk_01", testBracketList.playersPerMatch);
         brkt.addMatch(['Al', 'Bob']);
         brkt.addMatch(['Chad', 'Fred']);
         testBracketList.brackets.push(brkt);
 
         // bracket index 2
-        brkt = new Bracket("brk_02", testBracketList.playersPerMatch, testBracketList.games);
+        brkt = new Bracket("brk_02", testBracketList.playersPerMatch);
         brkt.addMatch(['Al', 'Fred']);
         brkt.addMatch(['Bob', 'Hal']);
         brkt.addMatch(['Chad', 'Don']);
         testBracketList.brackets.push(brkt);
 
         // bracket index 3
-        brkt = new Bracket("brk_03", testBracketList.playersPerMatch, testBracketList.games);
+        brkt = new Bracket("brk_03", testBracketList.playersPerMatch);
         brkt.addMatch(['Al', 'Greg']);
         brkt.addMatch(['Bob', 'Ed']);
         testBracketList.brackets.push(brkt);
 
         // bracket index 4
-        brkt = new Bracket("brk_04", testBracketList.playersPerMatch, testBracketList.games);
+        brkt = new Bracket("brk_04", testBracketList.playersPerMatch);
         brkt.addMatch(['Al', 'Hal']);
         brkt.addMatch(['Bob', 'Fred']);
         brkt.addMatch(['Chad', 'Ed']);
         testBracketList.brackets.push(brkt);
 
         // bracket index 5
-        brkt = new Bracket("brk_05", testBracketList.playersPerMatch, testBracketList.games);
+        brkt = new Bracket("brk_05", testBracketList.playersPerMatch);
         brkt.addMatch(['Al', 'Don']);
         brkt.addMatch(['Bob', 'Chad']);
         testBracketList.brackets.push(brkt);
 
         // bracket index 6
-        brkt = new Bracket("brk_06", testBracketList.playersPerMatch, testBracketList.games);
+        brkt = new Bracket("brk_06", testBracketList.playersPerMatch);
         brkt.addMatch(['Al', 'Ed']);
         brkt.addMatch(['Bob', 'Greg']);
         brkt.addMatch(['Chad', 'Hal']);
@@ -2271,7 +2272,7 @@ describe('BracketList', () => {
         testBracketList.calcTotalBrkts(playerData);
 
         // bracket index 0
-        let brkt = new Bracket("brk_00", testBracketList.playersPerMatch, testBracketList.games);
+        let brkt = new Bracket("brk_00", testBracketList.playersPerMatch);
         brkt.addMatch(['Al', 'Ed']);
         brkt.addMatch(['Bob', 'Greg']);
         brkt.addMatch(['Chad', 'Hal']);
@@ -2279,14 +2280,14 @@ describe('BracketList', () => {
         testBracketList.brackets.push(brkt);
 
         // bracket index 1
-        brkt = new Bracket("brk_01", testBracketList.playersPerMatch, testBracketList.games);
+        brkt = new Bracket("brk_01", testBracketList.playersPerMatch);
         brkt.addMatch(['Al', 'Don']);
         brkt.addMatch(['Bob', 'Chad']);
         brkt.addMatch(['Ed', 'Greg']);
         testBracketList.brackets.push(brkt);
 
         // bracket index 2
-        brkt = new Bracket("brk_02", testBracketList.playersPerMatch, testBracketList.games);
+        brkt = new Bracket("brk_02", testBracketList.playersPerMatch);
         brkt.addMatch(['Al', 'Hal']);
         brkt.addMatch(['Bob', 'Fred']);
         brkt.addMatch(['Chad', 'Ed']);
@@ -2294,28 +2295,28 @@ describe('BracketList', () => {
         testBracketList.brackets.push(brkt);
 
         // bracket index 3
-        brkt = new Bracket("brk_03", testBracketList.playersPerMatch, testBracketList.games);
+        brkt = new Bracket("brk_03", testBracketList.playersPerMatch);
         brkt.addMatch(['Al', 'Chad']);
         brkt.addMatch(['Bob', 'Hal']);
         brkt.addMatch(['Don', 'Ed']);
         testBracketList.brackets.push(brkt);
 
         // bracket index 4
-        brkt = new Bracket("brk_04", testBracketList.playersPerMatch, testBracketList.games);
+        brkt = new Bracket("brk_04", testBracketList.playersPerMatch);
         brkt.addMatch(['Al', 'Bob']);
         brkt.addMatch(['Chad', 'Don']);
         brkt.addMatch(['Ed', 'Hal']);
         testBracketList.brackets.push(brkt);
 
         // bracket index 5
-        brkt = new Bracket("brk_05", testBracketList.playersPerMatch, testBracketList.games);
+        brkt = new Bracket("brk_05", testBracketList.playersPerMatch);
         brkt.addMatch(['Al', 'Greg']);
         brkt.addMatch(['Bob', 'Don']);
         brkt.addMatch(['Chad', 'Fred']);
         testBracketList.brackets.push(brkt);
 
         // bracket index 6
-        brkt = new Bracket("brk_06", testBracketList.playersPerMatch, testBracketList.games);
+        brkt = new Bracket("brk_06", testBracketList.playersPerMatch);
         brkt.addMatch(['Al', 'Fred']);
         brkt.addMatch(['Bob', 'Ed']);
         brkt.addMatch(['Chad', 'Greg']);
@@ -2401,21 +2402,21 @@ describe('BracketList', () => {
         testBracketList.calcTotalBrkts(playerData);
 
         // bracket index 0
-        let brkt = new Bracket("brk_00", testBracketList.playersPerMatch, testBracketList.games);
+        let brkt = new Bracket("brk_00", testBracketList.playersPerMatch);
         brkt.addMatch(['Al', 'Greg']);
         brkt.addMatch(['Bob', 'Ed']);
         brkt.addMatch(['Chad', 'Don']);        
         testBracketList.brackets.push(brkt);
 
         // bracket index 1
-        brkt = new Bracket("brk_01", testBracketList.playersPerMatch, testBracketList.games);
+        brkt = new Bracket("brk_01", testBracketList.playersPerMatch);
         brkt.addMatch(['Al', 'Ed']);
         brkt.addMatch(['Bob', 'Don']);
         brkt.addMatch(['Chad', 'Greg']);
         testBracketList.brackets.push(brkt);
 
         // bracket index 2
-        brkt = new Bracket("brk_02", testBracketList.playersPerMatch, testBracketList.games);
+        brkt = new Bracket("brk_02", testBracketList.playersPerMatch);
         brkt.addMatch(['Al', 'Hal']);
         brkt.addMatch(['Bob', 'Fred']);
         brkt.addMatch(['Chad', 'Ed']);
@@ -2423,14 +2424,14 @@ describe('BracketList', () => {
         testBracketList.brackets.push(brkt);
 
         // bracket index 3
-        brkt = new Bracket("brk_03", testBracketList.playersPerMatch, testBracketList.games);
+        brkt = new Bracket("brk_03", testBracketList.playersPerMatch);
         brkt.addMatch(['Al', 'Bob']);
         brkt.addMatch(['Chad', 'Hal']);        
         brkt.addMatch(['Don', 'Hal']);
         testBracketList.brackets.push(brkt);
 
         // bracket index 4
-        brkt = new Bracket("brk_04", testBracketList.playersPerMatch, testBracketList.games);
+        brkt = new Bracket("brk_04", testBracketList.playersPerMatch);
         brkt.addMatch(['Al', 'Chad']);
         brkt.addMatch(['Bob', 'Hal']);      
         brkt.addMatch(['Don', 'Fred']);
@@ -2438,7 +2439,7 @@ describe('BracketList', () => {
         testBracketList.brackets.push(brkt);
 
         // bracket index 5
-        brkt = new Bracket("brk_05", testBracketList.playersPerMatch, testBracketList.games);
+        brkt = new Bracket("brk_05", testBracketList.playersPerMatch);
         brkt.addMatch(['Al', 'Fred']);
         brkt.addMatch(['Bob', 'Greg']);
         brkt.addMatch(['Chad', 'Hal']);
@@ -2446,7 +2447,7 @@ describe('BracketList', () => {
         testBracketList.brackets.push(brkt);
 
         // bracket index 6
-        brkt = new Bracket("brk_06", testBracketList.playersPerMatch, testBracketList.games);
+        brkt = new Bracket("brk_06", testBracketList.playersPerMatch);
         brkt.addMatch(['Al', 'Don']);
         brkt.addMatch(['Bob', 'Chad']);
         brkt.addMatch(['Ed', 'Hal']);
@@ -4266,8 +4267,10 @@ describe('BracketList', () => {
         if (filtered.length === 1) {
           errorInfo.bracketCount++;
           const playerIndex = brktList.brackets[b].players.findIndex(p => p === playerId);
-          const match = brktList.brackets[b].getMatch(playerIndex);
-          const oppoId = match[0] === playerId ? match[1] : match[0];
+          const oppoIndex = (isOdd(playerIndex)) ? playerIndex + 1 : playerIndex - 1;
+          const oppoId = brktList.brackets[b].players[oppoIndex];
+          // const match = brktList.brackets[b].getMatch(playerIndex);
+          // const oppoId = match[0] === playerId ? match[1] : match[0];
           if (!oppoMap.has(oppoId)) {
             oppoMap.set(oppoId, 1);
           } else {

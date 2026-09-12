@@ -12,7 +12,7 @@ export type TmntGameResult = {
   full_name: string;
   average: number;
   hdcp: number;
-  total: number;
+  total: number;    
 
   // API/raw SQL name
   "total + Hdcp"?: number;
@@ -29,6 +29,7 @@ export type TmntResultsGridRow = {
   average: number;
   hdcp: number;
   total: number;
+  plus_minus: string;
   total_hdcp: number;
   total_plus_total_hdcp: number;
 

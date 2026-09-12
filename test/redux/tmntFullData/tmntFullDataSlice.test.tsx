@@ -45,6 +45,7 @@ describe("tmntFullDataSlice reducer + thunk", () => {
       stage: blankFullStage,
       moneys: [],
     },
+    requestedTmntId: "",
     loadStatus: "idle",
     saveStatus: "idle",
     error: "",
@@ -90,9 +91,15 @@ describe("tmntFullDataSlice reducer + thunk", () => {
     });
 
     it("should handle fetchTmntFullData.pending", () => {
-      const state = reducer(initialState, { type: fetchTmntFullData.pending.type });
+      const state = reducer(initialState, {
+        type: fetchTmntFullData.pending.type,
+        meta: {
+          arg: "tmt_2",
+        },
+      });
 
       expect(state.loadStatus).toBe("loading");
+      expect(state.requestedTmntId).toBe("tmt_2");
       expect(state.saveStatus).toBe("idle");
       expect(state.error).toBe("");
       expect(state.tmntFullData).toEqual(initialState.tmntFullData);
@@ -198,50 +205,54 @@ describe("tmntFullDataSlice reducer + thunk", () => {
   });
 
   describe("Thunk tests (fetch)", () => {
+
     it("dispatches fulfilled when getTmntFullData resolves", async () => {
       const mockData = makeMockTmntFull({
-        tmnt: { ...cloneDeep(blankTmnt), id: "tmt_2", tmnt_name: "Another Tournament" },
+        tmnt: {
+          ...cloneDeep(blankTmnt),
+          id: "tmt_2",
+          tmnt_name: "Another Tournament",
+        },
       });
 
       mockedGetTmntFullData.mockResolvedValueOnce(mockData);
 
-      const store = configureStore({ reducer: { tmntFullData: reducer } });
+      const store = configureStore({
+        reducer: { tmntFullData: reducer },
+      });
 
       await store.dispatch(fetchTmntFullData("tmt_2") as any);
 
       const state = store.getState().tmntFullData;
+
+      expect(mockedGetTmntFullData).toHaveBeenCalledWith("tmt_2");
       expect(state.loadStatus).toBe("succeeded");
+      expect(state.requestedTmntId).toBe("tmt_2");
       expect(state.saveStatus).toBe("idle");
       expect(state.error).toBe("");
       expect(state.tmntFullData).toEqual(mockData);
     });
 
     it("dispatches rejected when getTmntFullData rejects", async () => {
-      mockedGetTmntFullData.mockRejectedValueOnce(new Error("DB failed"));
+      mockedGetTmntFullData.mockRejectedValueOnce(
+        new Error("DB failed"),
+      );
 
-      const store = configureStore({ reducer: { tmntFullData: reducer } });
+      const store = configureStore({
+        reducer: { tmntFullData: reducer },
+      });
 
       await store.dispatch(fetchTmntFullData("tmt_3") as any);
 
       const state = store.getState().tmntFullData;
+
+      expect(mockedGetTmntFullData).toHaveBeenCalledWith("tmt_3");
       expect(state.loadStatus).toBe("failed");
+      expect(state.requestedTmntId).toBe("tmt_3");
       expect(state.saveStatus).toBe("idle");
       expect(state.error).toBe("DB failed");
     });
 
-    it("dispatches rejected when getTmntFullData resolves undefined (not found)", async () => {
-      mockedGetTmntFullData.mockResolvedValueOnce(undefined as any);
-
-      const store = configureStore({ reducer: { tmntFullData: reducer } });
-
-      const action = await store.dispatch(fetchTmntFullData("tmt_404") as any);
-
-      expect(fetchTmntFullData.rejected.match(action)).toBe(true);
-
-      const state = store.getState().tmntFullData;
-      expect(state.loadStatus).toBe("failed");
-      expect(state.error).toBe("Error fetching tournament full data");
-    });
   });
 
   describe("Thunk tests (save/replace full tmnt)", () => {

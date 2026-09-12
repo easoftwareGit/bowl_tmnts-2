@@ -1,27 +1,3 @@
-/* .tmnt-results-container {
-  max-width: 100%;
-  width: auto;
-  margin: 0 auto;
-  padding: 20px;
-} */
-
-/* @media (min-width: 1400px) {
-  .tmnt-results-container {    
-    max-width: 1400px;
-  }
-} */
-
-/* .nav-pills .nav-link.active {
-  background-color: #cfe2ff;
-  color: #000000;
-  font-weight: bold;
-} */
-
-/* .resultsHeader {
-  background-color: rgb(164, 219, 244);
-  font-weight: bold;
-} */
- 
 /* grid size and justification */
 .tmnt-results-grid-outer {
   width: 100%;
@@ -44,4 +20,9 @@
 /* cell text */
 .tmnt-results-grid-outer .e-grid .e-rowcell {
   color: rgb(0, 0, 0);
+}
+
+/* separator line - last casher's row */
+.e-grid .separator-row .e-rowcell {
+  border-bottom: 3px solid red   
 }

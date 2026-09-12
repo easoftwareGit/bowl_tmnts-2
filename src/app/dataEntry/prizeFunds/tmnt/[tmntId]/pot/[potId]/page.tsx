@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/redux/store";
 import { useParams, useRouter } from "next/navigation";
@@ -46,12 +46,21 @@ export default function PotPrizeFundEntry() {
 
   const runTmntUrl = `/dataEntry/runTmnt/${tmntId}`;
 
-  // so only initialize state once when data first becomes available
-  // prevents the page from reinitializing state multiple times.
-  // redux updates, rerenders, async fetches could overwrite user edits
+  /**
+   * Prevents Redux updates and rerenders from reinitializing the page
+   * after the user has started editing.
+   */
   const initializedRef = useRef(false);
 
-  const potPfs = useSelector((state: RootState) => state.potPfs.potPfs);
+  // const potPfs = useSelector((state: RootState) => state.potPfs.potPfs);
+  const allPotPfs = useSelector(
+    (state: RootState) => state.potPfs.potPfs,
+  );
+  const potPfs = useMemo(
+    () => allPotPfs.filter((potPf) => potPf.pot_id === potId),
+    [allPotPfs, potId],
+  );
+
   const tmntData = useSelector(
     (state: RootState) => state.tmntFullData.tmntFullData,
   );
@@ -139,11 +148,11 @@ export default function PotPrizeFundEntry() {
    */
   const prizeFundGridRef = useRef<PrizeFundGridHandle | null>(null);
 
-  // Fetch potPfs
+  // Fetch fetchPotPfs
   useEffect(() => {
-    if (!potId) return;
-    dispatch(fetchPotPfs(potId));
-  }, [potId, dispatch]);
+    if (!tmntId) return;
+    dispatch(fetchPotPfs(tmntId));
+  }, [tmntId, dispatch]);
 
   // Fetch tournament if missing
   useEffect(() => {
@@ -729,8 +738,9 @@ export default function PotPrizeFundEntry() {
             )}
             <PotPrizeFundGrid
               ref={prizeFundGridRef}
-              rows={rows}
+              rows={rows}              
               setRows={setRows}              
+              potId={potId}
               totalPrizeFund={potType === ptGame ? perGame : totalPotPrizeFund}
               enableEditing={true}              
               gridDataWasChanged={gridDataWasChanged}

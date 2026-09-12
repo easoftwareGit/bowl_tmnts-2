@@ -1,7 +1,7 @@
 import { privateApi } from "@/lib/api/axios";
 import { basePotPfsApi } from "@/lib/api/apiPaths";
 import { testBasePotPfsApi } from "../../../../test/testApi";
-import type { potPfType } from "@/lib/types/types";
+import type { potPfSaveDataType, potPfType, tmntPotPfSaveDataType } from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { blankPotPf } from "../initVals";
 
@@ -10,8 +10,9 @@ const url = process.env.NODE_ENV === "test" && testBasePotPfsApi
   ? testBasePotPfsApi
   : basePotPfsApi;
 
-const potUrl = url + "/pot/";
-const onePotPfUrl = url + "/potPf/";
+const tmntUrl = url + "/tmnt/";  
+// const potUrl = url + "/pot/";
+// const onePotPfUrl = url + "/potPf/";
 
 /**
  * maps API value to app potPf
@@ -42,19 +43,19 @@ export const extractPotPfs = (potPfs: any): potPfType[] => {
 };
 
 /**
- * get all potPfs for a pot
+ * get all potPfs for a tmnt
  *
- * @param {string} potId - id of pot with potPfs to get
+ * @param {string} tmntId - id of tmnt with potPfs to get
  * @returns {potPfType[]} - array of potPfs
- * @throws {Error} - if potId is invalid or API call fails
+ * @throws {Error} - if tmntId is invalid or API call fails
  */
-export const getAllPotPfsForPot = async (potId: string): Promise<potPfType[]> => {
-  if (!isValidBtDbId(potId, "pot")) {
-    throw new Error("Invalid pot id");
+export const getAllPotPfsForTmnt = async (tmntId: string): Promise<potPfType[]> => {
+  if (!isValidBtDbId(tmntId, "tmt")) {
+    throw new Error("Invalid tmnt id");
   }
 
   try {
-    const response = await privateApi.get(potUrl + potId);
+    const response = await privateApi.get(tmntUrl + tmntId);
 
     if (!response.data?.potPfs) {
       throw new Error("Error fetching potPfs");
@@ -63,42 +64,56 @@ export const getAllPotPfsForPot = async (potId: string): Promise<potPfType[]> =>
     return extractPotPfs(response.data.potPfs);
   } catch (err) {
     throw new Error(
-      `getAllPotPfsForPot failed: ${err instanceof Error ? err.message : err}`
+      `getAllPotPfsForTmnt failed: ${err instanceof Error ? err.message : err}`
     );
   }
 };
 
 /**
- * update all potPfs for a pot
- *
- * @param {string} potId - id of pot to update potPfs for
- * @param {potPfType[]} potPfs - array of potPfs to update
+ * update all potPfs for a tmnt
+ * 
+ * @param {tmntPotPfSaveDataType} dataToUpdate - data to update
+ * - tmntId: id of tmnt to update potPfs for
+ * - potIds: array of valid potIds in potPfs
+ * - potPfs: array of potPfs to update
  * @returns {potPfType[]} - array of updated potPfs
- * @throws {Error} - if potId is invalid or API call fails
+ * @throws {Error} - if tmntId is invalid or API call fails
  */
-export const updateAllPotPfsForPot = async (potId: string, potPfs: potPfType[]): Promise<potPfType[]> => {
-  if (!isValidBtDbId(potId, "pot")) {
-    throw new Error("Invalid pot id");
+export const updateAllPotPfsForTmnt = async (
+  dataToUpdate: tmntPotPfSaveDataType
+  // tmntId: string,
+  // potIds: string[],
+  // potPfs: potPfType[]
+): Promise<potPfType[]> => {
+  if (!isValidBtDbId(dataToUpdate.tmntId, "tmt")) {
+    throw new Error("Invalid tmnt id");
+  }  
+  if (!Array.isArray(dataToUpdate.potIds)) {
+    throw new Error("Invalid potIds array");
   }
-  if (!Array.isArray(potPfs)) {
+  if (!Array.isArray(dataToUpdate.potPfData)) {
     throw new Error("Invalid potPfs array");
   }
 
-  // potPfs.length = 0 is OK - clears all potPfs for a pot
+  // potPfs.length = 0 is OK - clears all potPfs for a tmnt
 
   try {
-    const potPfsJSON = JSON.stringify(potPfs);
-    const response = await privateApi.put(potUrl + potId, potPfsJSON);
+    const tmntPotPfData: potPfSaveDataType = {
+      potPfData: dataToUpdate.potPfData,
+      potIds: dataToUpdate.potIds
+    }
+    const potPgJSON = JSON.stringify(tmntPotPfData);
+    const response = await privateApi.put(tmntUrl + dataToUpdate.tmntId, potPgJSON);    
 
     // only check if passed potPfs to update
-    if (potPfs.length > 0 && !response.data?.potPfs) {
-      throw new Error("Error updating potPfs for pot");      
+    if (dataToUpdate.potPfData.length > 0 && !response.data?.potPfs) {
+      throw new Error("Error updating potPfs for tmnt");
     }
 
     return response.data.potPfs;
   } catch (err) {
     throw new Error(
-      `updateAllPotPfsForPot failed: ${
+      `updateAllPotPfsForTmnt failed: ${
         err instanceof Error ? err.message : err
       }`
     );

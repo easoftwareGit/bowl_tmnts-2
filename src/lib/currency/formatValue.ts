@@ -5,16 +5,16 @@ import { LocaleConfig } from "@/lib/currency/components/utils";
  * formats a string value into a local formatted money string 
  * 
  * @param {string} value - value to format
- * @param {LocaleConfig} localConfig - locale config object 
+ * @param {LocaleConfig} localeConfig - locale config object 
  * @returns a formatted money string with decimal separator, group separator and prefix/suffix
  */
-export const formatValueSymbSep2Dec = (value: string, localConfig: LocaleConfig): string => {
+export const formatValueSymbSep2Dec = (value: string, localeConfig: LocaleConfig): string => {
   return formatValue({
     value,
-    groupSeparator: localConfig.groupSeparator,
-    decimalSeparator: localConfig.decimalSeparator,
-    prefix: localConfig.prefix,
-    suffix: localConfig.suffix,
+    groupSeparator: localeConfig.groupSeparator,
+    decimalSeparator: localeConfig.decimalSeparator,
+    prefix: localeConfig.prefix,
+    suffix: localeConfig.suffix,
     decimalScale: 2,
     disableGroupSeparators: false,
   });
@@ -24,13 +24,13 @@ export const formatValueSymbSep2Dec = (value: string, localConfig: LocaleConfig)
  * * formats a string value into a local formatted money string - NO prefix/suffix
  * 
  * @param {string} value - value to format
- * @param {LocaleConfig} localConfig - locale config object 
+ * @param {LocaleConfig} localeConfig - locale config object 
  * @returns a formatted money string with decimal separator, group separator NO prefix/suffix
  */
-export const formatValue2Dec = (value: string, localConfig: LocaleConfig): string => {  
+export const formatValue2Dec = (value: string, localeConfig: LocaleConfig): string => {  
   return formatValue({
     value,
-    decimalSeparator: localConfig.decimalSeparator,
+    decimalSeparator: localeConfig.decimalSeparator,
     decimalScale: 2,
     disableGroupSeparators: true,
   });

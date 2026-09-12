@@ -271,6 +271,7 @@ const makeStore = (bowls: bowlType[] = []) =>
       },
       tmntFullData: {
         tmntFullData: mockTmntFullData,
+        requestedTmntId: "",
         loadStatus: "idle" as ioStatusType,
         saveStatus: "idle" as ioStatusType,
         error: "",

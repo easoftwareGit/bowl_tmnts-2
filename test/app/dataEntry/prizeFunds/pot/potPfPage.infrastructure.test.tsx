@@ -43,6 +43,7 @@ describe("Pot Prize Fund web page infrastructure", () => {
 
     expect(props).not.toBeNull();
     expect(props?.enableEditing).toBe(true);
+    expect(props?.potId).toBe(potId1);
 
     const games = tmntData.events[0].games;
 
@@ -61,9 +62,7 @@ describe("Pot Prize Fund web page infrastructure", () => {
         ? potPrizeFund / games
         : 0;
 
-    expect(props?.totalPrizeFund).toBe(
-      expectedPerGamePrizeFund,
-    );
+    expect(props?.totalPrizeFund).toBe(expectedPerGamePrizeFund);
     expect(props?.gridDataWasChanged).toBe(false);
   });
 
@@ -80,12 +79,14 @@ describe("Pot Prize Fund web page infrastructure", () => {
     expect(props?.onSaveComplete).toEqual(expect.any(Function));
   });
 
-  it("fetches the pot prize funds when mounted", () => {
+  it("fetches the tournament pot prize funds when mounted", () => {
     setup();
 
     expect(mockFetchPotPfs).toHaveBeenCalledTimes(1);
-    expect(mockFetchPotPfs).toHaveBeenCalledWith(potId1);
-    expect(mockDispatch).toHaveBeenCalledWith(mockFetchPotPfs.mock.results[0].value);
+    expect(mockFetchPotPfs).toHaveBeenCalledWith(tmntId);
+    expect(mockDispatch).toHaveBeenCalledWith(
+      mockFetchPotPfs.mock.results[0].value,
+    );
   });
 
   it("does not fetch tournament data when the correct tournament is already loaded", () => {
@@ -121,7 +122,7 @@ describe("Pot Prize Fund web page infrastructure", () => {
     expect(mockFetchTmntFullData).toHaveBeenCalledWith(tmntId);
   });
 
-  it("does not render the page when the loaded prize funds belong to a different pot", () => {
+  it("renders the page when Redux contains prize fund rows only for other pots", () => {
     const potPfs = makePotPfsForDifferentPot(
       potId1,
     );
@@ -129,26 +130,6 @@ describe("Pot Prize Fund web page infrastructure", () => {
     setup({
       potId: potId1,
       potPfs,
-    });
-
-    expect(
-      screen.queryByRole("heading", {
-        name: "Prize Fund",
-      }),
-    ).not.toBeInTheDocument();
-
-    expect(
-      screen.queryByTestId(
-        "mock-pot-prize-fund-grid",
-      ),
-    ).not.toBeInTheDocument();
-
-    expect(getLatestGridProps()).toBeNull();
-  });
-
-  it("renders the page when the current pot has no prize fund rows", () => {
-    setup({
-      potPfs: [],
     });
 
     expect(
@@ -204,4 +185,25 @@ describe("Pot Prize Fund web page infrastructure", () => {
     const expectedTotalPrizeFund = potEntryFees - potExpenses;
     expect(props?.totalPrizeFund).toBe(expectedTotalPrizeFund);
   });
+
+  it("renders the page when there are no pot prize fund rows", () => {
+    setup({
+      potPfs: [],
+    });
+
+    expect(
+      screen.getByRole("heading", {
+        name: "Prize Fund",
+      }),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByTestId(
+        "mock-pot-prize-fund-grid",
+      ),
+    ).toBeInTheDocument();
+
+    expect(getLatestGridProps()?.rows).toEqual([]);
+  });  
+
 });

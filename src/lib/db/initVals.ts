@@ -39,6 +39,7 @@ import { todayStr } from "@/lib/dateTools";
 import { btDbUuid } from "../uuid";
 import { startOfToday } from "date-fns";
 import { cloneDeep } from "lodash";
+import { dummyDivId, dummyEventId, dummySquadId, dummyTmntId, dummyUserId } from "../validation/constants";
 
 export const initUserData: userDataType = {
   id: btDbUuid('usr'),
@@ -732,53 +733,96 @@ export const errorUpdate: putManyReturnType = {
   deletes: -1,
 }
 
-export const linkedInitTmntFullData = (userId: string): tmntFullType => {
-  const tmntId = btDbUuid('tmt');
-  const eventId = btDbUuid('evt');
-  const squadId = btDbUuid('sqd');
-  const divId = btDbUuid('div');
-  const initData: tmntFullType = {       
-    tmnt: {...cloneDeep(initTmnt), id: tmntId, user_id: userId},
-    brktEntries: [],    
-    brktSeeds: [],
-    brkts: [],
-    divs: [{
-      ...initDiv,
-      id: divId,
-      tmnt_id: tmntId,
-    }],
-    divEntries: [],
-    elimEntries: [],
-    elims: [],
-    events: [{
-      ...initEvent,    
-      id: eventId,
-      tmnt_id: tmntId,
-    }],
-    lanes: [
-      {
-        ...initLane,
-        squad_id: squadId,
-        lane_number: 1
-      },
-      {
-        ...initLane,
-        squad_id: squadId,
-        lane_number: 2
-      },
-    ],
-    moneys: [],
-    oneBrkts: [],
-    players: [],
-    potEntries: [],
-    pots: [],
-    squads: [{
-      ...initSquad,
-      id: squadId,
-      event_id: eventId,
-    }],
-    stage: initFullStage,
-  }    
+export const linkedInitTmntFullData: tmntFullType = {
+  tmnt: {...cloneDeep(initTmnt), id: dummyTmntId, user_id: dummyUserId},
+  brktEntries: [],    
+  brktSeeds: [],
+  brkts: [],
+  divs: [{
+    ...initDiv,
+    id: dummyDivId,
+    tmnt_id: dummyTmntId,
+  }],
+  divEntries: [],
+  elimEntries: [],
+  elims: [],
+  events: [{
+    ...initEvent,    
+    id: dummyEventId,
+    tmnt_id: dummyTmntId,
+  }],
+  lanes: [
+    {
+      ...initLane,
+      squad_id: dummySquadId,
+      lane_number: 1
+    },
+    {
+      ...initLane,
+      squad_id: dummySquadId,
+      lane_number: 2
+    },
+  ],
+  moneys: [],
+  oneBrkts: [],
+  players: [],
+  potEntries: [],
+  pots: [],
+  squads: [{
+    ...initSquad,
+    id: dummySquadId,
+    event_id: dummyEventId,
+  }],
+  stage: initFullStage,
+}    
 
-  return initData;
-};
+// export const linkedInitTmntFullData = (userId: string): tmntFullType => {
+//   const tmntId = btDbUuid('tmt');
+//   const eventId = btDbUuid('evt');
+//   const squadId = btDbUuid('sqd');
+//   const divId = btDbUuid('div');
+//   const initData: tmntFullType = {       
+//     tmnt: {...cloneDeep(initTmnt), id: tmntId, user_id: userId},
+//     brktEntries: [],    
+//     brktSeeds: [],
+//     brkts: [],
+//     divs: [{
+//       ...initDiv,
+//       id: divId,
+//       tmnt_id: tmntId,
+//     }],
+//     divEntries: [],
+//     elimEntries: [],
+//     elims: [],
+//     events: [{
+//       ...initEvent,    
+//       id: eventId,
+//       tmnt_id: tmntId,
+//     }],
+//     lanes: [
+//       {
+//         ...initLane,
+//         squad_id: squadId,
+//         lane_number: 1
+//       },
+//       {
+//         ...initLane,
+//         squad_id: squadId,
+//         lane_number: 2
+//       },
+//     ],
+//     moneys: [],
+//     oneBrkts: [],
+//     players: [],
+//     potEntries: [],
+//     pots: [],
+//     squads: [{
+//       ...initSquad,
+//       id: squadId,
+//       event_id: eventId,
+//     }],
+//     stage: initFullStage,
+//   }    
+
+//   return initData;
+// };

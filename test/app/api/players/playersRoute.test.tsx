@@ -4,7 +4,6 @@ import { basePlayersApi } from "@/lib/api/apiPaths";
 import { testBasePlayersApi } from "../../../testApi";
 import { initPlayer } from "@/lib/db/initVals";
 import type { playerType } from "@/lib/types/types";
-import { cloneDeep } from "lodash";
 import { maxLaneCount, maxScore } from "@/lib/validation/constants";
 
 // before running this test, run the following commands in the terminal:
@@ -92,8 +91,8 @@ describe("Players - API's: /api/players", () => {
     it('should get all players', async () => {
       const response = await privateApi.get(url);
       expect(response.status).toBe(200);
-      // 52 rows in prisma/seed.ts
-      expect(response.data.players).toHaveLength(52);
+      // 53 rows in prisma/seed.ts
+      expect(response.data.players).toHaveLength(53);
     })
 
   })

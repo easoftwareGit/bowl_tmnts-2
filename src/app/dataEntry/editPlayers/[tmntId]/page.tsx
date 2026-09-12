@@ -27,6 +27,7 @@ import { SquadStage } from "@prisma/client";
 import { createByePlayer } from "@/components/brackets/byePlayer";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 import { getSquadStage } from "../../tmntForm/tmntTools";
+import { dummySquadId } from "@/lib/validation/constants";
 
 // run tmnt:
 // http://localhost:3000/dataEntry/runTmnt/tmt_d237a388a8fc4641a2e37233f1d6bebd
@@ -34,7 +35,6 @@ import { getSquadStage } from "../../tmntForm/tmntTools";
 // edit bowlers:
 // http://localhost:3000/dataEntry/editPlayers/tmt_d237a388a8fc4641a2e37233f1d6bebd
 
-const dummySquadId = "sqd_00000000000000000000000000000000";
 const initByePlayer = createByePlayer(dummySquadId); // ok to use dummy data, not saved
 
 /**

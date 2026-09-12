@@ -1,12 +1,13 @@
 import {
   exportedForTesting,
+  isElimPfSaveDataType,
   sanitizeElimPf,
   validateElimPf,
   validateElimPfs,
 } from "@/lib/validation/elimPfs/validate";
 import { blankElimPf, initElimPf } from "@/lib/db/initVals";
 import { ErrorCode } from "@/lib/enums/enums";
-import type { elimPfType, validElimPfsType } from "@/lib/types/types";
+import type { elimPfDataType, elimPfSaveDataType, elimPfType, validElimPfsType } from "@/lib/types/types";
 import { maxMoney, maxPosition } from "@/lib/validation/constants";
 
 const {
@@ -21,16 +22,6 @@ const validElimPf: elimPfType = {
   position: 1,
   amount: 100,
 };
-
-const mockElimPfs: elimPfType[] = [
-  { ...validElimPf },
-  {
-    ...validElimPf,
-    id: "epf_22222222222222222222222222222222",
-    position: 2,
-    amount: 50,
-  },
-];
 
 describe("validate elimPfs", () => {
 
@@ -331,151 +322,798 @@ describe("validate elimPfs", () => {
 
   });
 
+  describe("isElimPfSaveDataType()", () => {
+    const elimId1 = "elm_45d884582e7042bb95b4818ccdd9974c";
+    const elimId2 = "elm_00000000000000000000000000000000";
+
+    const validElimPfData: elimPfDataType[] = [
+      {
+        id: "epf_11111111111111111111111111111111",
+        elim_id: elimId1,
+        position: 1,
+        amount: 100,
+      },
+      {
+        id: "epf_22222222222222222222222222222222",
+        elim_id: elimId1,
+        position: 2,
+        amount: 50,
+      },
+      {
+        id: "epf_33333333333333333333333333333333",
+        elim_id: elimId2,
+        position: 1,
+        amount: 200,
+      },
+      {
+        id: "epf_44444444444444444444444444444444",
+        elim_id: elimId2,
+        position: 2,
+        amount: 100,
+      },
+    ];
+
+    const validSaveData: elimPfSaveDataType = {
+      elimPfData: validElimPfData,
+      elimIds: [elimId1, elimId2],
+    };
+
+    it("should return true when value is a valid elimPfSaveDataType", () => {
+      expect(isElimPfSaveDataType(validSaveData)).toBe(true);
+    });
+
+    it("should return true when elimPfData is an empty array", () => {
+      const data = {
+        ...validSaveData,
+        elimPfData: [],
+      };
+
+      expect(isElimPfSaveDataType(data)).toBe(true);
+    });
+
+    it("should return true when elimPfData is an empty array", () => {
+      const data: elimPfSaveDataType = {
+        elimPfData: [],
+        elimIds: [elimId1],
+      };
+
+      expect(isElimPfSaveDataType(data)).toBe(true);
+    });
+
+    it("should return true when elimIds is an empty array", () => {
+      const data = {
+        ...validSaveData,
+        elimIds: [],
+      };
+
+      expect(isElimPfSaveDataType(data)).toBe(true);
+    });
+
+    it("should return false when value is null", () => {
+      expect(isElimPfSaveDataType(null)).toBe(false);
+    });
+
+    it("should return false when value is not an object", () => {
+      expect(isElimPfSaveDataType("invalid")).toBe(false);
+      expect(isElimPfSaveDataType(123)).toBe(false);
+      expect(isElimPfSaveDataType(true)).toBe(false);
+    });
+
+    it("should return false when elimPfData is missing", () => {
+      const data = {
+        elimIds: validSaveData.elimIds,
+      };
+
+      expect(isElimPfSaveDataType(data)).toBe(false);
+    });
+
+    it("should return false when elimPfData is not an array", () => {
+      const data = {
+        ...validSaveData,
+        elimPfData: "invalid",
+      };
+
+      expect(isElimPfSaveDataType(data)).toBe(false);
+    });
+
+    it("should return false when an item in elimPfData is null", () => {
+      const data = {
+        ...validSaveData,
+        elimPfData: [
+          ...validElimPfData,
+          null,
+        ],
+      };
+
+      expect(isElimPfSaveDataType(data)).toBe(false);
+    });
+
+    it("should return false when an item in elimPfData is not an object", () => {
+      const data = {
+        ...validSaveData,
+        elimPfData: [
+          ...validElimPfData,
+          "invalid",
+        ],
+      };
+
+      expect(isElimPfSaveDataType(data)).toBe(false);
+    });
+
+    it("should return false when a elimPfData item is missing id", () => {
+      const data = {
+        ...validSaveData,
+        elimPfData: [
+          {
+            elim_id: elimId1,
+            position: 1,
+            amount: 100,
+          },
+        ],
+      };
+
+      expect(isElimPfSaveDataType(data)).toBe(false);
+    });
+
+    it("should return false when a elimPfData id is not a string", () => {
+      const data = {
+        ...validSaveData,
+        elimPfData: [
+          {
+            ...validElimPfData[0],
+            id: 123,
+          },
+        ],
+      };
+
+      expect(isElimPfSaveDataType(data)).toBe(false);
+    });
+
+    it("should return false when a elimPfData item is missing elim_id", () => {
+      const data = {
+        ...validSaveData,
+        elimPfData: [
+          {
+            id: validElimPfData[0].id,
+            position: 1,
+            amount: 100,
+          },
+        ],
+      };
+
+      expect(isElimPfSaveDataType(data)).toBe(false);
+    });
+
+    it("should return false when a elimPfData elim_id is not a string", () => {
+      const data = {
+        ...validSaveData,
+        elimPfData: [
+          {
+            ...validElimPfData[0],
+            elim_id: 123,
+          },
+        ],
+      };
+
+      expect(isElimPfSaveDataType(data)).toBe(false);
+    });
+
+    it("should return false when a elimPfData item is missing position", () => {
+      const data = {
+        ...validSaveData,
+        elimPfData: [
+          {
+            id: validElimPfData[0].id,
+            elim_id: elimId1,
+            amount: 100,
+          },
+        ],
+      };
+
+      expect(isElimPfSaveDataType(data)).toBe(false);
+    });
+
+    it("should return false when a elimPfData position is not a number", () => {
+      const data = {
+        ...validSaveData,
+        elimPfData: [
+          {
+            ...validElimPfData[0],
+            position: "1",
+          },
+        ],
+      };
+
+      expect(isElimPfSaveDataType(data)).toBe(false);
+    });
+
+    it("should return false when a elimPfData item is missing amount", () => {
+      const data = {
+        ...validSaveData,
+        elimPfData: [
+          {
+            id: validElimPfData[0].id,
+            elim_id: elimId1,
+            position: 1,
+          },
+        ],
+      };
+
+      expect(isElimPfSaveDataType(data)).toBe(false);
+    });
+
+    it("should return false when a elimPfData amount is not a number", () => {
+      const data = {
+        ...validSaveData,
+        elimPfData: [
+          {
+            ...validElimPfData[0],
+            amount: "100.00",
+          },
+        ],
+      };
+
+      expect(isElimPfSaveDataType(data)).toBe(false);
+    });
+
+    it("should return false when elimIds is missing", () => {
+      const data = {
+        elimPfData: validElimPfData,
+      };
+
+      expect(isElimPfSaveDataType(data)).toBe(false);
+    });
+
+    it("should return false when elimIds is not an array", () => {
+      const data = {
+        ...validSaveData,
+        elimIds: elimId1,
+      };
+
+      expect(isElimPfSaveDataType(data)).toBe(false);
+    });
+
+    it("should return false when an item in elimIds is not a string", () => {
+      const data = {
+        ...validSaveData,
+        elimIds: [
+          elimId1,
+          123,
+        ],
+      };
+
+      expect(isElimPfSaveDataType(data)).toBe(false);
+    });
+  });  
+
   describe("validateElimPfs()", () => {
+    const elimId1 = "elm_45d884582e7042bb95b4818ccdd9974c";
+    const elimId2 = "elm_00000000000000000000000000000000";
 
-    it("should return ErrorCode.NONE when all data is valid", () => {
-      const result =
-        validateElimPfs(mockElimPfs);
+    const elimIds = [elimId1, elimId2];
 
-      expect(result.errorCode).toBe(
-        ErrorCode.NONE,
+    const mockElimPfsOneElim: elimPfType[] = [
+      {
+        ...validElimPf,
+        id: "epf_11111111111111111111111111111111",
+        elim_id: elimId1,
+        position: 1,
+        amount: 100,
+      },
+      {
+        ...validElimPf,
+        id: "epf_22222222222222222222222222222222",
+        elim_id: elimId1,
+        position: 2,
+        amount: 75,
+      },
+      {
+        ...validElimPf,
+        id: "epf_33333333333333333333333333333333",
+        elim_id: elimId1,
+        position: 3,
+        amount: 50,
+      },
+    ];
+
+    const mockElimPfsTwoElims: elimPfType[] = [
+      {
+        ...validElimPf,
+        id: "epf_11111111111111111111111111111111",
+        elim_id: elimId1,
+        position: 1,
+        amount: 100,
+      },
+      {
+        ...validElimPf,
+        id: "epf_22222222222222222222222222222222",
+        elim_id: elimId1,
+        position: 2,
+        amount: 75,
+      },
+      {
+        ...validElimPf,
+        id: "epf_33333333333333333333333333333333",
+        elim_id: elimId1,
+        position: 3,
+        amount: 50,
+      },
+      {
+        ...validElimPf,
+        id: "epf_44444444444444444444444444444444",
+        elim_id: elimId2,
+        position: 1,
+        amount: 200,
+      },
+      {
+        ...validElimPf,
+        id: "epf_55555555555555555555555555555555",
+        elim_id: elimId2,
+        position: 2,
+        amount: 150,
+      },
+      {
+        ...validElimPf,
+        id: "epf_66666666666666666666666666666666",
+        elim_id: elimId2,
+        position: 3,
+        amount: 100,
+      },
+    ];
+
+    it("should return ErrorCode.NONE when all data is valid for one elim", () => {
+      const result = validateElimPfs(
+        mockElimPfsOneElim,
+        [elimId1],
       );
-      expect(result.elimPfs).toHaveLength(2);
+
+      expect(result.errorCode).toBe(ErrorCode.NONE);
+      expect(result.elimPfs).toHaveLength(3);
+    });
+
+    it("should return ErrorCode.NONE when all data is valid for two elims", () => {
+      const result = validateElimPfs(
+        mockElimPfsTwoElims,
+        elimIds,
+      );
+
+      expect(result.errorCode).toBe(ErrorCode.NONE);
+      expect(result.elimPfs).toHaveLength(6);
+    });
+
+    it("should return sorted elimPfs by elim_id, then position", () => {
+      const unsortedElimPfs: elimPfType[] = [
+        mockElimPfsTwoElims[5],
+        mockElimPfsTwoElims[2],
+        mockElimPfsTwoElims[3],
+        mockElimPfsTwoElims[0],
+        mockElimPfsTwoElims[4],
+        mockElimPfsTwoElims[1],
+      ];
+
+      const result = validateElimPfs(
+        unsortedElimPfs,
+        elimIds,
+      );
+
+      expect(result.errorCode).toBe(ErrorCode.NONE);
+
+      expect(result.elimPfs.map((elimPf) => ({
+        elim_id: elimPf.elim_id,
+        position: elimPf.position,
+      }))).toEqual([
+        { elim_id: elimId2, position: 1 },
+        { elim_id: elimId2, position: 2 },
+        { elim_id: elimId2, position: 3 },
+        { elim_id: elimId1, position: 1 },
+        { elim_id: elimId1, position: 2 },
+        { elim_id: elimId1, position: 3 },
+      ].toSorted((a, b) => {
+        const elimCompare = a.elim_id.localeCompare(b.elim_id);
+
+        if (elimCompare !== 0) {
+          return elimCompare;
+        }
+
+        return a.position! - b.position!;
+      }));
+    });
+
+    it("should have sequential positions starting at 1 for one elim", () => {
+      const result = validateElimPfs(
+        mockElimPfsOneElim,
+        [elimId1],
+      );
+
+      expect(result.errorCode).toBe(ErrorCode.NONE);
+
+      expect(
+        result.elimPfs.map((elimPf) => elimPf.position)
+      ).toEqual([1, 2, 3]);
+    });
+
+    it("should have sequential positions starting at 1 for each elim", () => {
+      const result = validateElimPfs(
+        mockElimPfsTwoElims,
+        elimIds,
+      );
+
+      expect(result.errorCode).toBe(ErrorCode.NONE);
+
+      const elim1Pfs = result.elimPfs.filter(
+        (elimPf) => elimPf.elim_id === elimId1,
+      );
+
+      const elim2Pfs = result.elimPfs.filter(
+        (elimPf) => elimPf.elim_id === elimId2,
+      );
+
+      expect(
+        elim1Pfs.map((elimPf) => elimPf.position)
+      ).toEqual([1, 2, 3]);
+
+      expect(
+        elim2Pfs.map((elimPf) => elimPf.position)
+      ).toEqual([1, 2, 3]);
     });
 
     it("should sanitize amount values", () => {
-      const elimPfsToValidate = [
-        ...mockElimPfs,
-      ];
+      const elimPfsToValidate = mockElimPfsOneElim.map(
+        (elimPf) => ({ ...elimPf }),
+      );
 
       elimPfsToValidate[1] = {
         ...elimPfsToValidate[1],
         amount: "55.000" as any,
       };
 
-      const result: validElimPfsType =
-        validateElimPfs(elimPfsToValidate);
-
-      expect(result.errorCode).toBe(
-        ErrorCode.NONE,
+      const result: validElimPfsType = validateElimPfs(
+        elimPfsToValidate,
+        [elimId1],
       );
 
-      expect(result.elimPfs[1].amount)
-        .toBe(55);
+      expect(result.errorCode).toBe(ErrorCode.NONE);
+      expect(result.elimPfs[1].amount).toBe(55);
+    });
+
+    it("should return ErrorCode.MISSING_DATA when elimPfs is empty", () => {
+      const result = validateElimPfs(
+        [],
+        elimIds,
+      );
+
+      expect(result.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(result.elimPfs).toEqual([]);
+    });
+
+    it("should return ErrorCode.MISSING_DATA when elimIds is empty", () => {
+      const result = validateElimPfs(
+        mockElimPfsOneElim,
+        [],
+      );
+
+      expect(result.errorCode).toBe(ErrorCode.MISSING_DATA);
+      expect(result.elimPfs).toEqual([]);
     });
 
     it("should return ErrorCode.INVALID_DATA when id is invalid", () => {
-      const elimPfsToValidate = [
-        ...mockElimPfs,
-      ];
+      const elimPfsToValidate = mockElimPfsOneElim.map(
+        (elimPf) => ({ ...elimPf }),
+      );
 
       elimPfsToValidate[1] = {
         ...elimPfsToValidate[1],
         id: '<script>alert("xss")</script>',
       };
 
-      const result = validateElimPfs(elimPfsToValidate);
+      const result = validateElimPfs(
+        elimPfsToValidate,
+        [elimId1],
+      );
+
       expect(result.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
 
-    it("should return ErrorCode.INVALID_DATA when elim_id is invalid", () => {
-      const elimPfsToValidate = [
-        ...mockElimPfs,
-      ];
+    it("should return ErrorCode.INVALID_DATA when elim_id format is invalid", () => {
+      const elimPfsToValidate = mockElimPfsOneElim.map(
+        (elimPf) => ({ ...elimPf }),
+      );
 
       elimPfsToValidate[1] = {
         ...elimPfsToValidate[1],
         elim_id: "abc",
       };
 
-      const result = validateElimPfs(elimPfsToValidate);
+      const result = validateElimPfs(
+        elimPfsToValidate,
+        [elimId1],
+      );
+
       expect(result.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
 
-    it("should return ErrorCode.INVALID_DATA when all elim_id are not the same", () => {
-      const elimPfsToValidate = [
-        ...mockElimPfs,
-      ];
+    it("should return ErrorCode.INVALID_DATA when elim_id is valid but not in elimIds", () => {
+      const otherElimId = "elm_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+
+      const elimPfsToValidate = mockElimPfsOneElim.map(
+        (elimPf) => ({ ...elimPf }),
+      );
 
       elimPfsToValidate[1] = {
         ...elimPfsToValidate[1],
-        elim_id: "elm_00000000000000000000000000000000",
+        elim_id: otherElimId,
+        position: 1,
       };
 
-      const result = validateElimPfs(elimPfsToValidate);
+      const result = validateElimPfs(
+        elimPfsToValidate,
+        [elimId1],
+      );
+
       expect(result.errorCode).toBe(ErrorCode.INVALID_DATA);
+    });
+
+    it("should allow elimPfs for multiple elim_id values when all are in elimIds", () => {
+      const result = validateElimPfs(
+        mockElimPfsTwoElims,
+        elimIds,
+      );
+
+      expect(result.errorCode).toBe(ErrorCode.NONE);
+
+      expect(
+        new Set(result.elimPfs.map((elimPf) => elimPf.elim_id)),
+      ).toEqual(new Set([elimId1, elimId2]));
     });
 
     it("should return ErrorCode.MISSING_DATA when position is null", () => {
-      const elimPfsToValidate = [
-        ...mockElimPfs,
-      ];
+      const elimPfsToValidate = mockElimPfsOneElim.map(
+        (elimPf) => ({ ...elimPf }),
+      );
 
       elimPfsToValidate[1] = {
         ...elimPfsToValidate[1],
-        position: null as any,
+        position: null,
       };
 
-      const result = validateElimPfs(elimPfsToValidate);
+      const result = validateElimPfs(
+        elimPfsToValidate,
+        [elimId1],
+      );
+
       expect(result.errorCode).toBe(ErrorCode.MISSING_DATA);
     });
 
     it("should return ErrorCode.INVALID_DATA when position is invalid", () => {
-      const elimPfsToValidate = [
-        ...mockElimPfs,
-      ];
+      const elimPfsToValidate = mockElimPfsOneElim.map(
+        (elimPf) => ({ ...elimPf }),
+      );
 
       elimPfsToValidate[1] = {
         ...elimPfsToValidate[1],
         position: -1,
       };
 
-      const result = validateElimPfs(elimPfsToValidate);
+      const result = validateElimPfs(
+        elimPfsToValidate,
+        [elimId1],
+      );
+
+      expect(result.errorCode).toBe(ErrorCode.INVALID_DATA);
+    });
+
+    it("should return ErrorCode.INVALID_DATA when first position for a elim is not 1", () => {
+      const elimPfsToValidate = mockElimPfsOneElim.map(
+        (elimPf) => ({ ...elimPf }),
+      );
+
+      elimPfsToValidate[0] = {
+        ...elimPfsToValidate[0],
+        position: 2,
+      };
+
+      const result = validateElimPfs(
+        elimPfsToValidate,
+        [elimId1],
+      );
+
       expect(result.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
 
     it("should return ErrorCode.INVALID_DATA when position is not sequential", () => {
-      const elimPfsToValidate = [
-        ...mockElimPfs,
-      ];
+      const elimPfsToValidate = mockElimPfsOneElim.map(
+        (elimPf) => ({ ...elimPf }),
+      );
 
       elimPfsToValidate[1] = {
         ...elimPfsToValidate[1],
-        position: 3,
+        position: 4,
       };
 
-      const result = validateElimPfs(elimPfsToValidate);
+      const result = validateElimPfs(
+        elimPfsToValidate,
+        [elimId1],
+      );
+
+      expect(result.errorCode).toBe(ErrorCode.INVALID_DATA);
+    });
+
+    it("should return ErrorCode.INVALID_DATA when positions are not sequential in the second elim", () => {
+      const elimPfsToValidate = mockElimPfsTwoElims.map(
+        (elimPf) => ({ ...elimPf }),
+      );
+
+      const secondElimPosition2Index =
+        elimPfsToValidate.findIndex(
+          (elimPf) =>
+            elimPf.elim_id === elimId2 &&
+            elimPf.position === 2,
+        );
+
+      elimPfsToValidate[secondElimPosition2Index] = {
+        ...elimPfsToValidate[secondElimPosition2Index],
+        position: 4,
+      };
+
+      const result = validateElimPfs(
+        elimPfsToValidate,
+        elimIds,
+      );
+
       expect(result.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
 
     it("should return ErrorCode.MISSING_DATA when amount is null", () => {
-      const elimPfsToValidate = [
-        ...mockElimPfs,
-      ];
+      const elimPfsToValidate = mockElimPfsOneElim.map(
+        (elimPf) => ({ ...elimPf }),
+      );
 
       elimPfsToValidate[1] = {
         ...elimPfsToValidate[1],
-        amount: null as any,
+        amount: null,
       };
 
-      const result = validateElimPfs(elimPfsToValidate);
+      const result = validateElimPfs(
+        elimPfsToValidate,
+        [elimId1],
+      );
+
       expect(result.errorCode).toBe(ErrorCode.MISSING_DATA);
     });
 
     it("should return ErrorCode.INVALID_DATA when amount is invalid", () => {
-      const elimPfsToValidate = [
-        ...mockElimPfs,
-      ];
+      const elimPfsToValidate = mockElimPfsOneElim.map(
+        (elimPf) => ({ ...elimPf }),
+      );
 
       elimPfsToValidate[1] = {
         ...elimPfsToValidate[1],
         amount: maxMoney + 1,
       };
 
-      const result = validateElimPfs(elimPfsToValidate);
+      const result = validateElimPfs(
+        elimPfsToValidate,
+        [elimId1],
+      );
+
       expect(result.errorCode).toBe(ErrorCode.INVALID_DATA);
     });
 
-  });
+    it("should return ErrorCode.INVALID_DATA when amount increases as position increases", () => {
+      const elimPfsToValidate = mockElimPfsOneElim.map(
+        (elimPf) => ({ ...elimPf }),
+      );
+
+      // amounts become 100, 125, 50
+      elimPfsToValidate[1] = {
+        ...elimPfsToValidate[1],
+        amount: 125,
+      };
+
+      const result = validateElimPfs(
+        elimPfsToValidate,
+        [elimId1],
+      );
+
+      expect(result.errorCode).toBe(ErrorCode.INVALID_DATA);
+    });
+
+    it("should return ErrorCode.NONE when consecutive positions have the same amount", () => {
+      const elimPfsToValidate = mockElimPfsOneElim.map(
+        (elimPf) => ({ ...elimPf }),
+      );
+
+      // amounts become 100, 100, 50
+      elimPfsToValidate[1] = {
+        ...elimPfsToValidate[1],
+        amount: 100,
+      };
+
+      const result = validateElimPfs(
+        elimPfsToValidate,
+        [elimId1],
+      );
+
+      expect(result.errorCode).toBe(ErrorCode.NONE);
+    });
+
+    it("should return ErrorCode.INVALID_DATA when amount increases in the second elim", () => {
+      const elimPfsToValidate = mockElimPfsTwoElims.map(
+        (elimPf) => ({ ...elimPf }),
+      );
+
+      const secondElimPosition2Index =
+        elimPfsToValidate.findIndex(
+          (elimPf) =>
+            elimPf.elim_id === elimId2 &&
+            elimPf.position === 2,
+        );
+
+      // elimId2 amounts become 200, 250, 100
+      elimPfsToValidate[secondElimPosition2Index] = {
+        ...elimPfsToValidate[secondElimPosition2Index],
+        amount: 250,
+      };
+
+      const result = validateElimPfs(
+        elimPfsToValidate,
+        elimIds,
+      );
+
+      expect(result.errorCode).toBe(ErrorCode.INVALID_DATA);
+    });
+
+    it("should reset amount validation when starting a new elim", () => {
+      const elimPfsToValidate = mockElimPfsTwoElims.map(
+        (elimPf) => ({ ...elimPf }),
+      );
+
+      const result = validateElimPfs(
+        elimPfsToValidate,
+        elimIds,
+      );
+
+      expect(result.errorCode).toBe(ErrorCode.NONE);
+
+      const elim1Position3 = result.elimPfs.find(
+        (elimPf) =>
+          elimPf.elim_id === elimId1 &&
+          elimPf.position === 3,
+      );
+
+      const elim2Position1 = result.elimPfs.find(
+        (elimPf) =>
+          elimPf.elim_id === elimId2 &&
+          elimPf.position === 1,
+      );
+
+      expect(elim1Position3?.amount).toBe(50);
+      expect(elim2Position1?.amount).toBe(200);
+    });   
+    
+    it("should validate amounts after sorting by elim_id and position", () => {
+      const unsortedElimPfs: elimPfType[] = [
+        { ...mockElimPfsOneElim[2] }, // position 3, amount 50
+        { ...mockElimPfsOneElim[0] }, // position 1, amount 100
+        { ...mockElimPfsOneElim[1] }, // position 2, amount 75
+      ];
+
+      const result = validateElimPfs(
+        unsortedElimPfs,
+        [elimId1],
+      );
+
+      expect(result.errorCode).toBe(ErrorCode.NONE);
+
+      expect(
+        result.elimPfs.map((elimPf) => elimPf.position),
+      ).toEqual([1, 2, 3]);
+
+      expect(
+        result.elimPfs.map((elimPf) => elimPf.amount),
+      ).toEqual([100, 75, 50]);
+    });
+
+  });  
 
 });

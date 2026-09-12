@@ -19,17 +19,35 @@ import { ptGame, ptLastGame } from "@/lib/validation/constants";
 describe("Pot Prize Fund web page initialization", () => {
   beforeEach(standardBeforeEach);
 
-  it("converts the pot prize funds and initializes the grid rows", async () => {
+  it("filters the tournament pot prize funds and initializes the grid with the current pot", async () => {
     const {
       potPfs,
+      currentPotPfs,
       tmntData,
       prizeFunds,
       populatedRows,
     } = setup();
 
+    /*
+    * Sanity check that this test really contains tournament-level
+    * prize-fund data rather than only the current pot.
+    */
+    expect(potPfs.length).toBeGreaterThan(
+      currentPotPfs.length,
+    );
+
+    expect(
+      currentPotPfs.every(
+        (potPf) => potPf.pot_id === potId1,
+      ),
+    ).toBe(true);
+
+    /*
+    * Only the current pot's prize funds should be converted.
+    */
     expect(
       mockPotPfsToPrizeFunds,
-    ).toHaveBeenCalledWith(potPfs);
+    ).toHaveBeenCalledWith(currentPotPfs);
 
     const games =
       tmntData.events[0].games;
@@ -55,7 +73,51 @@ describe("Pot Prize Fund web page initialization", () => {
       prizeFunds,
       potId1,
       expectedPerGamePrizeFund,
-      potPfs.length,
+      currentPotPfs.length,
+    );
+
+    await waitFor(() => {
+      expect(
+        getLatestGridProps()?.rows,
+      ).toEqual(populatedRows);
+    });
+  });
+
+  it("converts the pot prize funds and initializes the grid rows", async () => {
+    const {
+      currentPotPfs,
+      tmntData,
+      prizeFunds,
+      populatedRows,
+    } = setup();
+
+    expect(mockPotPfsToPrizeFunds).toHaveBeenCalledWith(currentPotPfs);
+
+    const games =
+      tmntData.events[0].games;
+
+    const potPrizeFund =
+      tmntData.moneys.find(
+        (money) =>
+          money.descrip === "PRIZEFUND" &&
+          money.flow === "OUT" &&
+          money.pot_id === potId1 &&
+          money.brkt_id === null &&
+          money.elim_id === null,
+      )?.amount ?? 0;
+
+    const expectedPerGamePrizeFund =
+      games > 0
+        ? potPrizeFund / games
+        : 0;
+
+    expect(
+      mockPopulatePfRows,
+    ).toHaveBeenCalledWith(
+      prizeFunds,
+      potId1,
+      expectedPerGamePrizeFund,
+      currentPotPfs.length,
     );
 
     await waitFor(() => {
@@ -67,16 +129,16 @@ describe("Pot Prize Fund web page initialization", () => {
 
   it("initializes the editable controls", async () => {
     const {
-      potPfs,
+      currentPotPfs,
       tmntData,
     } = setup();
 
     await waitFor(() => {
       expect(
         screen.getByLabelText("Cashers"),
-      ).toHaveValue(potPfs.length);
+      ).toHaveValue(currentPotPfs.length);
     });
-
+    
     const games = tmntData.events[0]?.games ?? 0;
     const potEntryFees =
       tmntData.moneys.find(

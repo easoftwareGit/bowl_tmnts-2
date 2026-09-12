@@ -1,11 +1,15 @@
 import { privateApi } from "@/lib/api/axios";
 import { baseDivPfsApi } from "@/lib/api/apiPaths";
 import { testBaseDivPfsApi } from "../../../testApi";
-import type { divPfType } from "@/lib/types/types";
+import type {
+  divPfSaveDataType,
+  divPfType,
+  tmntDivPfSaveDataType
+} from "@/lib/types/types";
 import { initDivPf } from "@/lib/db/initVals";
 import {
-  getAllDivPfsForDiv,
-  updateAllDivPfsForDiv,
+  getAllDivPfsForTmnt,
+  updateAllDivPfsForTmnt,
 } from "@/lib/db/divPfs/dbDivPfs";
 
 jest.mock("@/lib/api/axios", () => ({
@@ -21,11 +25,12 @@ const url =
     ? testBaseDivPfsApi
     : baseDivPfsApi;
 
-const divUrl = url + "/div/";
+const tmntUrl = url + "/tmnt/";
 
 const mockedPrivateApi = privateApi as jest.Mocked<typeof privateApi>;
 
-const divId = "div_f30aea2c534f4cfe87f4315531cef8ef";
+const tmntId = "tmt_fd99387c33d9c78aba290286576ddce5";
+const divId = "div_f30aea2c534f4cfe87f4315531cef8ef"
 
 const manyDivPfs: divPfType[] = [
   {
@@ -44,34 +49,37 @@ const manyDivPfs: divPfType[] = [
   },
 ];
 
-const validDivPf: divPfType = {
-  ...manyDivPfs[0],
-};
+const validDivIds = [divId];
+
+const divSaveData: divPfSaveDataType = {
+  divPfData: manyDivPfs,
+  divIds: validDivIds,
+} 
 
 describe("non standard throw cases", () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  describe("getAllDivPfsForDiv - non standard throw cases", () => {
+  describe("getAllDivPfsForTmnt - non standard throw cases", () => {
     it("should throw an error when response.data.divs is missing", async () => {
       mockedPrivateApi.get.mockResolvedValue({
         data: {},
       });
 
-      await expect(getAllDivPfsForDiv(divId)).rejects.toThrow(
-        "getAllDivPfsForDiv failed: Error fetching divPfs",
+      await expect(getAllDivPfsForTmnt(tmntId)).rejects.toThrow(
+        "getAllDivPfsForTmnt failed: Error fetching divPfs",
       );
 
       expect(mockedPrivateApi.get).toHaveBeenCalledTimes(1);
-      expect(mockedPrivateApi.get).toHaveBeenCalledWith(divUrl + divId);
+      expect(mockedPrivateApi.get).toHaveBeenCalledWith(tmntUrl + tmntId);
     });
 
     it("should throw with custom message if publicApi.get rejects", async () => {
       mockedPrivateApi.get.mockRejectedValueOnce(new Error("Network Error"));
 
-      await expect(getAllDivPfsForDiv(divId)).rejects.toThrow(
-        "getAllDivPfsForDiv failed: Network Error",
+      await expect(getAllDivPfsForTmnt(tmntId)).rejects.toThrow(
+        "getAllDivPfsForTmnt failed: Network Error",
       );
 
       expect(mockedPrivateApi.get).toHaveBeenCalledTimes(1);
@@ -80,36 +88,40 @@ describe("non standard throw cases", () => {
     it("should throw an error when publicApi.get rejects with non-error", async () => {
       mockedPrivateApi.get.mockRejectedValueOnce("testing 123");
 
-      await expect(getAllDivPfsForDiv(divId)).rejects.toThrow(
-        "getAllDivPfsForDiv failed: testing 123",
+      await expect(getAllDivPfsForTmnt(tmntId)).rejects.toThrow(
+        "getAllDivPfsForTmnt failed: testing 123",
       );
 
       expect(mockedPrivateApi.get).toHaveBeenCalledTimes(1);
     });
   });
 
-  describe("updateAllDivPfsForDiv - non standard throw cases", () => {
+  describe("updateAllDivPfsForTmnt - non standard throw cases", () => {
+    const toSave: tmntDivPfSaveDataType = {
+      divPfData: manyDivPfs,
+      divIds: validDivIds,
+      tmntId: tmntId
+    }
+
     it("should throw an error when response.data.count is missing", async () => {
       mockedPrivateApi.put.mockResolvedValue({
         data: {},
       });
-
-      await expect(updateAllDivPfsForDiv(divId, manyDivPfs)).rejects.toThrow(
-        "updateAllDivPfsForDiv failed: Error updating divPfs for div",
+      await expect(updateAllDivPfsForTmnt(toSave)).rejects.toThrow(
+        "updateAllDivPfsForTmnt failed: Error updating divPfs for tmnt",
       );
 
       expect(mockedPrivateApi.put).toHaveBeenCalledTimes(1);
       expect(mockedPrivateApi.put).toHaveBeenCalledWith(
-        divUrl + divId,
-        JSON.stringify(manyDivPfs),
+        tmntUrl + tmntId,
+        JSON.stringify(divSaveData),
       );
     });
 
     it("should throw with custom message if privateApi.put rejects", async () => {
       mockedPrivateApi.put.mockRejectedValueOnce(new Error("Network Error"));
-
-      await expect(updateAllDivPfsForDiv(divId, manyDivPfs)).rejects.toThrow(
-        "updateAllDivPfsForDiv failed: Network Error",
+      await expect(updateAllDivPfsForTmnt(toSave)).rejects.toThrow(
+        "updateAllDivPfsForTmnt failed: Network Error",
       );
 
       expect(mockedPrivateApi.put).toHaveBeenCalledTimes(1);
@@ -118,8 +130,8 @@ describe("non standard throw cases", () => {
     it("should throw an error when privateApi.put rejects with non-error", async () => {
       mockedPrivateApi.put.mockRejectedValueOnce("testing 123");
 
-      await expect(updateAllDivPfsForDiv(divId, manyDivPfs)).rejects.toThrow(
-        "updateAllDivPfsForDiv failed: testing 123",
+      await expect(updateAllDivPfsForTmnt(toSave)).rejects.toThrow(
+        "updateAllDivPfsForTmnt failed: testing 123",
       );
 
       expect(mockedPrivateApi.put).toHaveBeenCalledTimes(1);

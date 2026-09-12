@@ -21,9 +21,7 @@ export async function GET(
       },
       // only need to order by seed because one_brkt_id is unique
       orderBy: [
-        {
-          seed: "asc",
-        },
+        { seed: "asc" },
       ]
     });
     if (!brktSeeds) {

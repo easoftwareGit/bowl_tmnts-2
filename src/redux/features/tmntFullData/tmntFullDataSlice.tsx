@@ -10,6 +10,7 @@ import { replaceTmntFullData, replaceTmntEntriesData } from "@/lib/db/tmnts/dbTm
 
 export interface tmntFullDataState {
   tmntFullData: tmntFullType;
+  requestedTmntId: string;
   loadStatus: ioStatusType;
   saveStatus: ioStatusType;
   error: string | undefined;
@@ -37,6 +38,7 @@ const initialState: tmntFullDataState = {
     stage: blankFullStage,
     moneys: [],
   },
+  requestedTmntId: "",
   loadStatus: "idle",
   saveStatus: "idle",
   error: "",
@@ -57,11 +59,8 @@ export const fetchTmntFullData = createAsyncThunk(
 
     // Do not use try / catch blocks here. Need the promise to be fulfilled or
     // rejected which will have the appropriate response in the extraReducers.
-    const tmntFullData = await getTmntFullData(tmntId);
-    if (!tmntFullData) {
-      throw new Error("Error fetching tournament full data");
-    }
-    return tmntFullData;
+
+    return getTmntFullData(tmntId);
   }
 );
 
@@ -96,8 +95,10 @@ export const tmntFullDataSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(fetchTmntFullData.pending, (state) => {
+      .addCase(fetchTmntFullData.pending, (state, action) => {
         state.loadStatus = "loading";
+        state.requestedTmntId = action.meta.arg;
+        state.error = "";
       })
       .addCase(
         fetchTmntFullData.fulfilled,
@@ -143,8 +144,10 @@ export const tmntFullDataSlice = createSlice({
   },
 });
 
-export const selectTmntFullData = (state: RootState) => state.tmntFullData;
+export const selectTmntFullData = (state: RootState) => state.tmntFullData.tmntFullData;
 
+export const getTmntFullDataRequestedTmntId = (state: RootState) =>
+  state.tmntFullData.requestedTmntId;
 export const getTmntFullDataLoadStatus = (state: RootState) =>
   state.tmntFullData.loadStatus;
 export const getTmntDataSaveStatus = (state: RootState) =>

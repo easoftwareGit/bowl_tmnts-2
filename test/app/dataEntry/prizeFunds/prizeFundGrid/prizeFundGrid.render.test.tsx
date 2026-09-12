@@ -230,14 +230,14 @@ describe("PrizeFundGrid render", () => {
       },
       {
         text: "Save",
-        tooltipText: "Save the scores",
+        tooltipText: "Save the amounts",
         id: "save",
         prefixIcon: "e-icons e-check",
       },
       {
         text: "Save and Close",
         tooltipText:
-          "Save the scores and return to the Run Tournament page",
+          "Save the amounts and return to the Run Tournament page",
         id: "done",
         prefixIcon: "e-icons e-update",
       },
@@ -328,6 +328,54 @@ describe("PrizeFundGrid render", () => {
     expect(
       screen.getByRole("status"),
     ).toHaveTextContent("Saving...");
+  });
+
+  it("enables Edit when editing is enabled and rows exist", async () => {
+    setup({
+      rows: makeRows(),
+      enableEditing: true,
+    });
+
+    await waitFor(() => {
+      expect(
+        mockEnableItems,
+      ).toHaveBeenCalledWith(
+        ["edit"],
+        true,
+      );
+    });
+  });
+
+  it("disables Edit when there are no rows", async () => {
+    setup({
+      rows: [],
+      enableEditing: true,
+    });
+
+    await waitFor(() => {
+      expect(
+        mockEnableItems,
+      ).toHaveBeenCalledWith(
+        ["edit"],
+        false,
+      );
+    });
+  });
+
+  it("disables Edit when enableEditing is false", async () => {
+    setup({
+      rows: makeRows(),
+      enableEditing: false,
+    });
+
+    await waitFor(() => {
+      expect(
+        mockEnableItems,
+      ).toHaveBeenCalledWith(
+        ["edit"],
+        false,
+      );
+    });
   });
 
   it("disables Save, Save and Close, and Cancel when data has not changed", async () => {

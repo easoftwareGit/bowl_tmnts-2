@@ -194,6 +194,18 @@ export const getMonthDay = (dateStr: string): string => {
 }
 
 /**
+ * converts YYYY-MM-dd to MMM dd, YYYY
+ * 
+ * @param {string} dateStr - date in YYYY-MM-dd format
+ * @returns {string} - date in MMM dd, YYYY
+ */
+export const getMonthDayYear = (dateStr: string): string => { 
+  const monthDay = getMonthDay(dateStr)
+  if (!monthDay || monthDay.length === 0) return '';
+  return monthDay + ', ' + dateStr.substring(0, 4)
+}
+
+/**
  * returns true if dateStr is a valid date string NO TIME IN FORMAT
  * 
  * @param {string} dateStr - string in MM/dd/yyyy or YYYY-MM-DD format 

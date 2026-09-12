@@ -29,12 +29,8 @@ export async function GET(
         }
       },
       orderBy: [
-        {
-          one_brkt_id: "asc",
-        },
-        {
-          seed: "asc",
-        },
+        { one_brkt_id: "asc" },        
+        { seed: "asc" },
       ],
     });
 

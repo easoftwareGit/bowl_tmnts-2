@@ -2,6 +2,10 @@ import { MoneyEditArgs } from "./types/types";
 import { maxBrackets, maxMoney } from "./validation/constants";
 import { NumericTextBox } from "@syncfusion/ej2-inputs";
 
+export const sfGridBorderWidth = 2;
+export const sfGridScrollbarWidth = 17
+export const sfRowHeight = 22;
+
 export type OptionalIntegerEditArgs = {
   placeholder?: string;
   min?: number;

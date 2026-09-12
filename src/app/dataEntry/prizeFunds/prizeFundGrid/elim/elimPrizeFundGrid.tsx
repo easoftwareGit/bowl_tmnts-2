@@ -2,8 +2,8 @@
 
 import React, { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import type { prizeFundEntryRow } from "@/lib/types/types";
-import type { AppDispatch } from "@/redux/store";
+import type { prizeFundEntryRow, tmntElimPfSaveDataType } from "@/lib/types/types";
+import type { AppDispatch, RootState } from "@/redux/store";
 import {
   getElimPfsSaveStatus,
   saveElimPfs,
@@ -15,6 +15,7 @@ import PrizeFundGrid, { type PrizeFundGridHandle } from "../prizeFundGrid";
 interface ElimPrizeFundGridProps {
   rows: prizeFundEntryRow[];
   setRows: React.Dispatch<React.SetStateAction<prizeFundEntryRow[]>>;
+  elimId: string;
   totalPrizeFund: number;
   enableEditing?: boolean;
   gridDataWasChanged: boolean;
@@ -47,6 +48,7 @@ interface ElimPrizeFundGridProps {
 const ElimPrizeFundGrid = React.forwardRef<PrizeFundGridHandle, ElimPrizeFundGridProps>(({
   rows,
   setRows,
+  elimId,
   totalPrizeFund,
   enableEditing = true,
   gridDataWasChanged,
@@ -58,6 +60,13 @@ const ElimPrizeFundGrid = React.forwardRef<PrizeFundGridHandle, ElimPrizeFundGri
 }, ref) => {
   const dispatch = useDispatch<AppDispatch>();
   const saveStatus = useSelector(getElimPfsSaveStatus);
+
+  const allElimPfs = useSelector(
+    (state: RootState) => state.elimPfs.elimPfs,
+  );
+  const tmntData = useSelector(
+    (state: RootState) => state.tmntFullData.tmntFullData,
+  );
 
   /**
    * Saves generic prize-fund rows as elim prize-fund records.
@@ -85,14 +94,27 @@ const ElimPrizeFundGrid = React.forwardRef<PrizeFundGridHandle, ElimPrizeFundGri
       // 2. Extract the database elim prize-fund records.
       const elimPfsToSave = extractElimPfs(elimPfEntryRows);
 
+      // 3. Replace this elim's existing rows with the
+      // current rows from the grid.
+      const toSaveElimPfs = [
+        ...allElimPfs.filter((elimPf) => elimPf.elim_id !== elimId),
+        ...elimPfsToSave,
+      ];
+
+      // 4. Save through the elim prize-fund Redux slice.
       if (elimPfsToSave.length === 0) {
         return;
       }
 
-      // 3. Save through the elim prize-fund Redux slice.
-      await dispatch(saveElimPfs(elimPfsToSave)).unwrap();
+      const toSave: tmntElimPfSaveDataType = {
+        elimPfData: toSaveElimPfs,
+        elimIds: toSaveElimPfs.map((elimPf) => elimPf.elim_id),
+        tmntId: tmntData.tmnt.id,
+      }
+      await dispatch(saveElimPfs(toSave)).unwrap();
+
     },
-    [dispatch],
+    [dispatch, allElimPfs, elimId, tmntData],
   );
 
   return (

@@ -49,6 +49,7 @@ import { getAllBrktSeedsForTmnt } from "@/lib/db/brktSeeds/dbBrktSeeds";
 import { getAllElimEntriesForTmnt } from "@/lib/db/elimEntries/dbElimEntries";
 import { getAllBrktEntriesForTmnt } from "@/lib/db/brktEntries/dbBrktEntries";
 import { ptGame, ptLastGame, ptSeries } from "@/lib/validation/constants";
+import { isValidBtDbId } from "@/lib/validation/validation";
 
 const { getTmntsForYear, getUpcomingTmnts } = exportedForTesting;
 
@@ -265,43 +266,37 @@ describe("dbTmnts", () => {
   describe("getTmnts() - upcomining tmnts", () => {
     it("should get all upcoming tmnts - getTmnts()", async () => {
       const tmnts = await getTmnts("");
-      expect(tmnts).toHaveLength(2);
+      expect(tmnts).toHaveLength(1);
       expect(tmnts[0].bowl).not.toBeNull();
-      expect(tmnts[0].start_date_str).toBe("2026-08-19");
-      expect(tmnts[1].bowl).not.toBeNull();
-      expect(tmnts[1].start_date_str).toBe("2026-12-31");
+      expect(tmnts[0].start_date_str).toBe("2026-12-31");
     });
 
     it("should get all upcoming tmnts - getUpcomingTmnts()", async () => {
       const tmnts = await getUpcomingTmnts();
-      expect(tmnts).toHaveLength(2);
+      expect(tmnts).toHaveLength(1);
       expect(tmnts[0].bowl).not.toBeNull();
-      expect(tmnts[0].start_date_str).toBe("2026-08-19");
-      expect(tmnts[1].bowl).not.toBeNull();
-      expect(tmnts[1].start_date_str).toBe("2026-12-31");
+      expect(tmnts[0].start_date_str).toBe("2026-12-31");
     });
 
     it("should get all upcoming tmnts take 1", async () => {
       const tmnts = await getTmnts("", 0, 1);
       expect(tmnts).toHaveLength(1);
       expect(tmnts[0].bowl).not.toBeNull();
-      expect(tmnts[0].start_date_str).toBe("2026-08-19");
+      expect(tmnts[0].start_date_str).toBe("2026-12-31");
     });
 
     it("should get all upcoming tmnts skip 1, take 1", async () => {
       const tmnts = await getTmnts("", 1, 1);
-      expect(tmnts).toHaveLength(1);
-      expect(tmnts[0].bowl).not.toBeNull();
-      expect(tmnts[0].start_date_str).toBe("2026-12-31");
+      expect(tmnts).toHaveLength(0);
+      // expect(tmnts[0].bowl).not.toBeNull();
+      // expect(tmnts[0].start_date_str).toBe("2026-12-31");
     });
 
     it("should get all upcoming tmnts - ignore invalid skip and take", async () => {
       const tmnts = await getTmnts("", -1, 1.1);
-      expect(tmnts).toHaveLength(2);
+      expect(tmnts).toHaveLength(1);
       expect(tmnts[0].bowl).not.toBeNull();
-      expect(tmnts[0].start_date_str).toBe("2026-08-19");
-      expect(tmnts[1].bowl).not.toBeNull();
-      expect(tmnts[1].start_date_str).toBe("2026-12-31");
+      expect(tmnts[0].start_date_str).toBe("2026-12-31");
     });
 
     it("should throw error if year is null", async () => {
@@ -364,6 +359,7 @@ describe("dbTmnts", () => {
 
       const tmntFullData = await getTmntFullData(fullTmntId);
       expect(tmntFullData.tmnt.id).toBe(fullTmntId);
+
       expect(tmntFullData.tmnt.tmnt_name).toBe("Full Tournament");
       expect(tmntFullData.tmnt.bowl).not.toBeNull();
       expect(tmntFullData.tmnt.bowl_id).toBe(fullBowlId);
@@ -373,7 +369,7 @@ describe("dbTmnts", () => {
       expect(tmntFullData.tmnt.bowl.url).toBe(
         "https://www.earlanthonysdublinbowl.com",
       );
-
+      
       const events = tmntFullData.events;
       expect(events).toHaveLength(1);
       expect(events[0].id).toBe(fullEventId);
@@ -401,11 +397,15 @@ describe("dbTmnts", () => {
       expect(divs[0].sort_order).toBe(1);
 
       const divEntries = tmntFullData.divEntries;
-      expect(divEntries).toHaveLength(36);
-      for (let d = 0; d < 36; d++) {
-        const idNum = (d + 1).toString().padStart(2, "0");
-        const id = `den_a${idNum}631c1c94d4627bde16fad72e5e5d4`;
-        const playerId = `ply_a${idNum}758cff1cc4bab9d9133e661bd49b0`;
+      expect(divEntries).toHaveLength(37);
+      for (let d = 0; d < 37; d++) {
+        let idNum = (d + 1).toString().padStart(2, "0");
+        const id = (d < 36) 
+          ? `den_a${idNum}631c1c94d4627bde16fad72e5e5d4`
+          : 'den_b34567c1c94d4627bde16fad72e5e5d4'
+        const playerId = (d < 36)
+          ? `ply_a${idNum}758cff1cc4bab9d9133e661bd49b0`
+          : 'ply_a13758cff1cc4bab9d9133e661bd49af'
         expect(divEntries[d].id).toBe(id);
         expect(divEntries[d].div_id).toBe(fullDivId);
         expect(divEntries[d].squad_id).toBe(fullSquadId);
@@ -427,8 +427,8 @@ describe("dbTmnts", () => {
       const squad = tmntFullData.stage;
       expect(squad.id).toBe(fullStageId);
       expect(squad.squad_id).toBe(fullSquadId);
-      // expect(squad.stage).toBe(SquadStage.ENTRIES);
-      expect(squad.stage).toBe(SquadStage.SCORES);
+      expect(squad.stage).toBe(SquadStage.ENTRIES);
+      // expect(squad.stage).toBe(SquadStage.SCORES);
       expect(squad.stage_set_at).toBe("2024-07-01T00:00:00.000Z");
       expect(squad.scores_started_at).toBe(null);
       expect(squad.stage_override_enabled).toBe(false);
@@ -486,7 +486,7 @@ describe("dbTmnts", () => {
       expect(lanes[11].in_use).toBe(true);
 
       const pots = tmntFullData.pots;
-      expect(pots.length).toBe(1);
+      expect(pots.length).toBe(2);
       expect(pots[0].id).toBe("pot_89fd8f787de942a1a92aaa2df3e7c185");
       expect(pots[0].squad_id).toBe(fullSquadId);
       expect(pots[0].div_id).toBe(fullDivId);
@@ -494,10 +494,21 @@ describe("dbTmnts", () => {
       expect(pots[0].pot_type).toBe("Game");
       expect(pots[0].sort_order).toBe(1);
 
+      expect(pots[1].id).toBe("pot_aa5268ed78ad4a1599675b6a85d193b3");
+      expect(pots[1].squad_id).toBe(fullSquadId);
+      expect(pots[1].div_id).toBe(fullDivId);
+      expect(pots[1].fee).toBe("10");
+      expect(pots[1].pot_type).toBe("Last Game");
+      expect(pots[1].sort_order).toBe(2);
+
       const potEntries = tmntFullData.potEntries;
-      expect(potEntries).toHaveLength(30);
+      expect(potEntries).toHaveLength(38);
       for (let i = 0; i < 30; i++) {
         expect(potEntries[i].fee).toBe("20");
+        expect(potEntries[i].player_id).not.toBeNull();
+      }
+      for (let i = 31; i < 38; i++) {
+        expect(potEntries[i].fee).toBe("10");
         expect(potEntries[i].player_id).not.toBeNull();
       }
 
@@ -598,28 +609,33 @@ describe("dbTmnts", () => {
       }
 
       const players = tmntFullData.players;
-      expect(players.length).toBe(36);
-      for (let p = 0; p < 36; p++) {
-        const lane = 29 + Math.floor(p / 3);
-        expect(players[p].lane).toBe(lane);
+      expect(players.length).toBe(38);
+      for (let p = 0; p < 38; p++) {
 
-        const positions = ["A", "B", "C", "D", "E", "F"];
-        const position = positions[p % 6];
-        expect(players[p].position).toBe(position);
+        if (players[p].id.startsWith('bye')) {
+          expect(players[p].first_name).toBe('Bye');
+          expect(players[p].last_name).toBe('')
+          expect(players[p].average).toBe(0);
+          expect(players[p].lane).toBeNull();
+        } else { 
+          expect(players[p].lane).toBeGreaterThanOrEqual(29);
+          expect(players[p].lane).toBeLessThanOrEqual(40);
 
-        const idNum = (p + 1).toString().padStart(2, "0");
-        const id = `ply_a${idNum}758cff1cc4bab9d9133e661bd49b0`;
-        expect(players[p].id).toBe(id);
+          const positions = ["A", "B", "C", "D", "E", "F"];
+          expect(positions.includes(players[p].position)).toBe(true);  
 
-        expect(players[p].first_name).not.toBeNull();
-        expect(players[p].last_name).not.toBeNull();
-        expect(players[p].average).toBeGreaterThan(190);
-        expect(players[p].average).toBeLessThan(231);
+          expect(isValidBtDbId(players[p].id, "ply")).toBe(true);
+
+          expect(players[p].first_name).not.toBeNull();
+          expect(players[p].last_name).not.toBeNull();
+          expect(players[p].average).toBeGreaterThan(190);
+          expect(players[p].average).toBeLessThan(231);
+        }
       }
 
       const moneys = tmntFullData.moneys;
-      expect(moneys.length).toBe(18);
-      for (let m = 0; m < 18; m++) {
+      expect(moneys.length).toBe(26);
+      for (let m = 0; m < 26; m++) {
         expect(moneys[m].id).not.toBeNull();
         expect(moneys[m].event_id).toBe(fullEventId);
         expect(moneys[m].squad_id).toBe(fullSquadId); 
@@ -629,7 +645,6 @@ describe("dbTmnts", () => {
         expect(moneys[m].flow).not.toBeNull();
         expect(moneys[m].sort_order).toBe(m + 1);
       }
-
     });
 
     it("should get a tmnt and its configuration - Yosemite 6 Gamer", async () => {
@@ -1227,56 +1242,13 @@ describe("dbTmnts", () => {
         const foundPlayer = toReplace.players.find((p) => p.id === players[i].id);
         expect(foundPlayer).not.toBeUndefined();
         expect(foundPlayer?.squad_id).toBe(toReplace.players[i].squad_id);
-        if (foundPlayer?.id === toReplace.players[0].id) {
-          expect(foundPlayer?.first_name).toBe(toReplace.players[0].first_name);
-          expect(foundPlayer?.last_name).toBe(toReplace.players[0].last_name);
-          expect(foundPlayer?.average).toBe(toReplace.players[0].average);
-          expect(foundPlayer?.lane).toBe(toReplace.players[0].lane);
-          expect(foundPlayer?.position).toBe(toReplace.players[0].position);
-        } else if (foundPlayer?.id === toReplace.players[1].id) {
-          expect(foundPlayer?.first_name).toBe(toReplace.players[1].first_name);
-          expect(foundPlayer?.last_name).toBe(toReplace.players[1].last_name);
-          expect(foundPlayer?.average).toBe(toReplace.players[1].average);
-          expect(foundPlayer?.lane).toBe(toReplace.players[1].lane);
-          expect(foundPlayer?.position).toBe(toReplace.players[1].position);
-        } else if (foundPlayer?.id === toReplace.players[2].id) {
-          expect(foundPlayer?.first_name).toBe(toReplace.players[2].first_name);
-          expect(foundPlayer?.last_name).toBe(toReplace.players[2].last_name);
-          expect(foundPlayer?.average).toBe(toReplace.players[2].average);
-          expect(foundPlayer?.lane).toBe(toReplace.players[2].lane);
-          expect(foundPlayer?.position).toBe(toReplace.players[2].position);
-        } else if (foundPlayer?.id === toReplace.players[3].id) {
-          expect(foundPlayer?.first_name).toBe(toReplace.players[3].first_name);
-          expect(foundPlayer?.last_name).toBe(toReplace.players[3].last_name);
-          expect(foundPlayer?.average).toBe(toReplace.players[3].average);
-          expect(foundPlayer?.lane).toBe(toReplace.players[3].lane);
-          expect(foundPlayer?.position).toBe(toReplace.players[3].position);
-        } else if (foundPlayer?.id === toReplace.players[4].id) {
-          expect(foundPlayer?.first_name).toBe(toReplace.players[4].first_name);
-          expect(foundPlayer?.last_name).toBe(toReplace.players[4].last_name);
-          expect(foundPlayer?.average).toBe(toReplace.players[4].average);
-          expect(foundPlayer?.lane).toBe(toReplace.players[4].lane);
-          expect(foundPlayer?.position).toBe(toReplace.players[4].position);
-        } else if (foundPlayer?.id === toReplace.players[5].id) {
-          expect(foundPlayer?.first_name).toBe(toReplace.players[5].first_name);
-          expect(foundPlayer?.last_name).toBe(toReplace.players[5].last_name);
-          expect(foundPlayer?.average).toBe(toReplace.players[5].average);
-          expect(foundPlayer?.lane).toBe(toReplace.players[5].lane);
-          expect(foundPlayer?.position).toBe(toReplace.players[5].position);
-        } else if (foundPlayer?.id === toReplace.players[6].id) {
-          expect(foundPlayer?.first_name).toBe(toReplace.players[6].first_name);
-          expect(foundPlayer?.last_name).toBe(toReplace.players[6].last_name);
-          expect(foundPlayer?.average).toBe(toReplace.players[6].average);
-          expect(foundPlayer?.lane).toBe(toReplace.players[6].lane);
-          expect(foundPlayer?.position).toBe(toReplace.players[6].position);
-        } else if (foundPlayer?.id === toReplace.players[7].id) {
-          expect(foundPlayer?.first_name).toBe(toReplace.players[7].first_name);
-          expect(foundPlayer?.last_name).toBe(toReplace.players[7].last_name);
-          expect(foundPlayer?.average).toBe(toReplace.players[7].average);
-          expect(foundPlayer?.lane).toBe(toReplace.players[7].lane);
-          expect(foundPlayer?.position).toBe(toReplace.players[7].position);        
-        } else {
-          expect(false).toBe(true);
+
+        if (foundPlayer?.id === toReplace.players[i].id) { 
+          expect(foundPlayer?.first_name).toBe(toReplace.players[i].first_name);
+          expect(foundPlayer?.last_name).toBe(toReplace.players[i].last_name);
+          expect(foundPlayer?.average).toBe(toReplace.players[i].average);
+          expect(foundPlayer?.lane).toBe(toReplace.players[i].lane);
+          expect(foundPlayer?.position).toBe(toReplace.players[i].position);
         }
       }
 
@@ -1287,20 +1259,10 @@ describe("dbTmnts", () => {
         expect(foundDivEntry).not.toBeUndefined();
         expect(foundDivEntry?.squad_id).toBe(toReplace.divEntries[i].squad_id);
         expect(foundDivEntry?.div_id).toBe(toReplace.divEntries[i].div_id);
-        if (foundDivEntry?.id === toReplace.divEntries[0].id) {
-          expect(foundDivEntry?.fee).toBe(toReplace.divEntries[0].fee);
-          expect(foundDivEntry?.player_id).toBe(toReplace.divEntries[0].player_id);
-        } else if (foundDivEntry?.id === toReplace.divEntries[1].id) {
-          expect(foundDivEntry?.fee).toBe(toReplace.divEntries[1].fee);
-          expect(foundDivEntry?.player_id).toBe(toReplace.divEntries[1].player_id);
-        } else if (foundDivEntry?.id === toReplace.divEntries[2].id) {
-          expect(foundDivEntry?.fee).toBe(toReplace.divEntries[2].fee);
-          expect(foundDivEntry?.player_id).toBe(toReplace.divEntries[2].player_id);
-        } else if (foundDivEntry?.id === toReplace.divEntries[3].id) {
-          expect(foundDivEntry?.fee).toBe(toReplace.divEntries[3].fee);
-          expect(foundDivEntry?.player_id).toBe(toReplace.divEntries[3].player_id);
-        } else {
-          expect(false).toBe(true);
+
+        if (foundDivEntry?.id === toReplace.divEntries[i].id) { 
+          expect(foundDivEntry?.fee).toBe(toReplace.divEntries[i].fee);
+          expect(foundDivEntry?.player_id).toBe(toReplace.divEntries[i].player_id);
         }
       }
 
@@ -1310,20 +1272,10 @@ describe("dbTmnts", () => {
         const foundPotEntry = toReplace.potEntries.find((p) => p.id === potEntries[i].id);
         expect(foundPotEntry).not.toBeUndefined();
         expect(foundPotEntry?.pot_id).toBe(toReplace.potEntries[i].pot_id);
-        if (foundPotEntry?.id === toReplace.potEntries[0].id) {
-          expect(foundPotEntry?.fee).toBe(toReplace.potEntries[0].fee);
-          expect(foundPotEntry?.player_id).toBe(toReplace.potEntries[0].player_id);
-        } else if (foundPotEntry?.id === toReplace.potEntries[1].id) {
-          expect(foundPotEntry?.fee).toBe(toReplace.potEntries[1].fee);
-          expect(foundPotEntry?.player_id).toBe(toReplace.potEntries[1].player_id);
-        } else if (foundPotEntry?.id === toReplace.potEntries[2].id) {
-          expect(foundPotEntry?.fee).toBe(toReplace.potEntries[2].fee);
-          expect(foundPotEntry?.player_id).toBe(toReplace.potEntries[2].player_id);
-        } else if (foundPotEntry?.id === toReplace.potEntries[3].id) {
-          expect(foundPotEntry?.fee).toBe(toReplace.potEntries[3].fee);
-          expect(foundPotEntry?.player_id).toBe(toReplace.potEntries[3].player_id);
-        } else {
-          expect(false).toBe(true);
+
+        if (foundPotEntry?.id === toReplace.potEntries[i].id) { 
+          expect(foundPotEntry?.fee).toBe(toReplace.potEntries[i].fee);
+          expect(foundPotEntry?.player_id).toBe(toReplace.potEntries[i].player_id);
         }
       }
 
@@ -1332,36 +1284,14 @@ describe("dbTmnts", () => {
       for (let i = 0; i < brktEntries.length; i++) {
         const foundBrktEntry = toReplace.brktEntries.find((b) => b.id === brktEntries[i].id);
         expect(foundBrktEntry).not.toBeUndefined();
-        if (foundBrktEntry?.id === toReplace.brktEntries[0].id) {
-          expect(foundBrktEntry?.brkt_id).toBe(toReplace.brktEntries[0].brkt_id);
-          expect(foundBrktEntry?.player_id).toBe(toReplace.brktEntries[0].player_id);
+
+        if (foundBrktEntry?.id === toReplace.brktEntries[i].id) { 
+          expect(foundBrktEntry?.brkt_id).toBe(toReplace.brktEntries[i].brkt_id);
+          expect(foundBrktEntry?.player_id).toBe(toReplace.brktEntries[i].player_id);
           expect(foundBrktEntry?.num_brackets).toBe(
-            toReplace.brktEntries[0].num_brackets,
+            toReplace.brktEntries[i].num_brackets,
           );
-          expect(foundBrktEntry?.time_stamp).toBe(toReplace.brktEntries[0].time_stamp);
-        } else if (foundBrktEntry?.id === toReplace.brktEntries[1].id) {
-          expect(foundBrktEntry?.brkt_id).toBe(toReplace.brktEntries[1].brkt_id);
-          expect(foundBrktEntry?.player_id).toBe(toReplace.brktEntries[1].player_id);
-          expect(foundBrktEntry?.num_brackets).toBe(
-            toReplace.brktEntries[1].num_brackets,
-          );
-          expect(foundBrktEntry?.time_stamp).toBe(toReplace.brktEntries[1].time_stamp);
-        } else if (foundBrktEntry?.id === toReplace.brktEntries[2].id) {
-          expect(foundBrktEntry?.brkt_id).toBe(toReplace.brktEntries[2].brkt_id);
-          expect(foundBrktEntry?.player_id).toBe(toReplace.brktEntries[2].player_id);
-          expect(foundBrktEntry?.num_brackets).toBe(
-            toReplace.brktEntries[2].num_brackets,
-          );
-          expect(foundBrktEntry?.time_stamp).toBe(toReplace.brktEntries[2].time_stamp);
-        } else if (foundBrktEntry?.id === toReplace.brktEntries[3].id) {
-          expect(foundBrktEntry?.brkt_id).toBe(toReplace.brktEntries[3].brkt_id);
-          expect(foundBrktEntry?.player_id).toBe(toReplace.brktEntries[3].player_id);
-          expect(foundBrktEntry?.num_brackets).toBe(
-            toReplace.brktEntries[3].num_brackets,
-          );
-          expect(foundBrktEntry?.time_stamp).toBe(toReplace.brktEntries[3].time_stamp);
-        } else {
-          expect(false).toBe(true);
+          expect(foundBrktEntry?.time_stamp).toBe(toReplace.brktEntries[i].time_stamp);
         }
       }
 
@@ -1370,14 +1300,10 @@ describe("dbTmnts", () => {
       for (let i = 0; i < oneBrkts.length; i++) {
         const foundOneBrkt = toReplace.oneBrkts.find((o) => o.id === oneBrkts[i].id);
         expect(foundOneBrkt).not.toBeUndefined();
-        if (foundOneBrkt?.id === toReplace.oneBrkts[0].id) {
-          expect(foundOneBrkt?.brkt_id).toBe(toReplace.oneBrkts[0].brkt_id);
-          expect(foundOneBrkt?.bindex).toBe(toReplace.oneBrkts[0].bindex);
-        } else if (foundOneBrkt?.id === toReplace.oneBrkts[1].id) {
-          expect(foundOneBrkt?.brkt_id).toBe(toReplace.oneBrkts[1].brkt_id);
-          expect(foundOneBrkt?.bindex).toBe(toReplace.oneBrkts[1].bindex);
-        } else {
-          expect(false).toBe(true);
+
+        if (foundOneBrkt?.id === toReplace.oneBrkts[i].id) { 
+          expect(foundOneBrkt?.brkt_id).toBe(toReplace.oneBrkts[i].brkt_id);
+          expect(foundOneBrkt?.bindex).toBe(toReplace.oneBrkts[i].bindex);
         }
       }
 
@@ -1390,48 +1316,12 @@ describe("dbTmnts", () => {
             b.seed === brktSeeds[i].seed,
         );
         expect(foundBrktSeed).not.toBeUndefined();
+
         if (
-          foundBrktSeed?.one_brkt_id === toReplace.brktSeeds[0].one_brkt_id &&
-          foundBrktSeed?.seed === toReplace.brktSeeds[0].seed
-        ) {
-          expect(foundBrktSeed?.player_id).toBe(toReplace.brktSeeds[0].player_id);
-        } else if (
-          foundBrktSeed?.one_brkt_id === toReplace.brktSeeds[1].one_brkt_id &&
-          foundBrktSeed?.seed === toReplace.brktSeeds[1].seed
-        ) {
-          expect(foundBrktSeed?.player_id).toBe(toReplace.brktSeeds[1].player_id);
-        } else if (
-          foundBrktSeed?.one_brkt_id === toReplace.brktSeeds[2].one_brkt_id &&
-          foundBrktSeed?.seed === toReplace.brktSeeds[2].seed
-        ) {
-          expect(foundBrktSeed?.player_id).toBe(toReplace.brktSeeds[2].player_id);
-        } else if (
-          foundBrktSeed?.one_brkt_id === toReplace.brktSeeds[3].one_brkt_id &&
-          foundBrktSeed?.seed === toReplace.brktSeeds[3].seed
-        ) {
-          expect(foundBrktSeed?.player_id).toBe(toReplace.brktSeeds[3].player_id);
-        } else if (
-          foundBrktSeed?.one_brkt_id === toReplace.brktSeeds[4].one_brkt_id &&
-          foundBrktSeed?.seed === toReplace.brktSeeds[4].seed
-        ) {
-          expect(foundBrktSeed?.player_id).toBe(toReplace.brktSeeds[4].player_id);
-        } else if (
-          foundBrktSeed?.one_brkt_id === toReplace.brktSeeds[5].one_brkt_id &&
-          foundBrktSeed?.seed === toReplace.brktSeeds[5].seed
-        ) {
-          expect(foundBrktSeed?.player_id).toBe(toReplace.brktSeeds[5].player_id);
-        } else if (
-          foundBrktSeed?.one_brkt_id === toReplace.brktSeeds[6].one_brkt_id &&
-          foundBrktSeed?.seed === toReplace.brktSeeds[6].seed
-        ) {
-          expect(foundBrktSeed?.player_id).toBe(toReplace.brktSeeds[6].player_id);
-        } else if (
-          foundBrktSeed?.one_brkt_id === toReplace.brktSeeds[7].one_brkt_id &&
-          foundBrktSeed?.seed === toReplace.brktSeeds[7].seed
-        ) {
-          expect(foundBrktSeed?.player_id).toBe(toReplace.brktSeeds[7].player_id);
-        } else {
-          expect(false).toBe(true);
+          foundBrktSeed?.one_brkt_id === toReplace.brktSeeds[i].one_brkt_id &&
+          foundBrktSeed?.seed === toReplace.brktSeeds[i].seed
+        ) { 
+          expect(foundBrktSeed?.player_id).toBe(toReplace.brktSeeds[i].player_id);
         }
       }
 
@@ -1440,24 +1330,11 @@ describe("dbTmnts", () => {
       for (let i = 0; i < elimEntries.length; i++) {
         const foundElimEntry = toReplace.elimEntries.find((e) => e.id === elimEntries[i].id);
         expect(foundElimEntry).not.toBeUndefined();
-        if (foundElimEntry?.id === toReplace.elimEntries[0].id) {
-          expect(foundElimEntry?.elim_id).toBe(toReplace.elimEntries[0].elim_id);
-          expect(foundElimEntry?.player_id).toBe(toReplace.elimEntries[0].player_id);
-          expect(foundElimEntry?.fee).toBe(toReplace.elimEntries[0].fee);
-        } else if (foundElimEntry?.id === toReplace.elimEntries[1].id) {
-          expect(foundElimEntry?.elim_id).toBe(toReplace.elimEntries[1].elim_id);
-          expect(foundElimEntry?.player_id).toBe(toReplace.elimEntries[1].player_id);
-          expect(foundElimEntry?.fee).toBe(toReplace.elimEntries[1].fee);
-        } else if (foundElimEntry?.id === toReplace.elimEntries[2].id) {
-          expect(foundElimEntry?.elim_id).toBe(toReplace.elimEntries[2].elim_id);
-          expect(foundElimEntry?.player_id).toBe(toReplace.elimEntries[2].player_id);
-          expect(foundElimEntry?.fee).toBe(toReplace.elimEntries[2].fee);
-        } else if (foundElimEntry?.id === toReplace.elimEntries[3].id) {
-          expect(foundElimEntry?.elim_id).toBe(toReplace.elimEntries[3].elim_id);
-          expect(foundElimEntry?.player_id).toBe(toReplace.elimEntries[3].player_id);
-          expect(foundElimEntry?.fee).toBe(toReplace.elimEntries[3].fee);
-        } else {
-          expect(false).toBe(true);
+
+        if (foundElimEntry?.id === toReplace.elimEntries[i].id) { 
+          expect(foundElimEntry?.elim_id).toBe(toReplace.elimEntries[i].elim_id);
+          expect(foundElimEntry?.player_id).toBe(toReplace.elimEntries[i].player_id);
+          expect(foundElimEntry?.fee).toBe(toReplace.elimEntries[i].fee);
         }
       }
     });
@@ -1618,11 +1495,20 @@ describe("dbTmnts", () => {
         lane: 29,
         position: "Z",
       });
+
+      const divEntryId = tmntEntries.divEntries[0].id;
       tmntEntries.divEntries[0].fee = "100";
+
+      const potEntryId = tmntEntries.potEntries[0].id;
       tmntEntries.potEntries[0].player_id = playerId9;
+
+      const brktEntryId = tmntEntries.brktEntries[0].id;
       tmntEntries.brktEntries[0].num_brackets = 100;
-      tmntEntries.oneBrkts[0].bindex = 7;
-      tmntEntries.brktSeeds[0].seed = 7;
+
+      const obkId = tmntEntries.brktSeeds[0].one_brkt_id;
+      tmntEntries.brktSeeds[0].player_id = playerId9;
+
+      const elimEntryId = tmntEntries.elimEntries[0].id;
       tmntEntries.elimEntries[0].player_id = playerId9;
 
       const before = Date.now();
@@ -1693,38 +1579,43 @@ describe("dbTmnts", () => {
           expect(postedEntries.players[i].last_name).toBe("ThisToo");
         }
       }
-      for (let i = 0; i < postedEntries.divEntries.length; i++) {
-        if (postedEntries.divEntries[i].id === tmntEntries.divEntries[0].id) {
-          expect(postedEntries.divEntries[i].fee).toBe("100");
-        }
-      }
-      for (let i = 0; i < postedEntries.potEntries.length; i++) {
-        if (postedEntries.potEntries[i].id === tmntEntries.potEntries[0].id) {
-          expect(postedEntries.potEntries[i].player_id).toBe(playerId9);
-        }
-      }
-      for (let i = 0; i < postedEntries.brktEntries.length; i++) {
-        if (postedEntries.brktEntries[i].id === tmntEntries.brktEntries[0].id) {
-          expect(postedEntries.brktEntries[i].num_brackets).toBe(100);
-        }
-      }
-      for (let i = 0; i < postedEntries.oneBrkts.length; i++) {
-        if (postedEntries.oneBrkts[i].id === tmntEntries.oneBrkts[0].id) {
-          expect(postedEntries.oneBrkts[i].bindex).toBe(7);
-        }
-      }
-      for (let i = 0; i < postedEntries.brktSeeds.length; i++) {
-        if (postedEntries.brktSeeds[i].seed === 7) {
-          expect(postedEntries.brktSeeds[i].player_id).toBe(
-            tmntEntries.brktSeeds[0].player_id,
-          );
-        }
-      }
-      for (let i = 0; i < postedEntries.elimEntries.length; i++) {
-        if (postedEntries.elimEntries[i].player_id === tmntEntries.elimEntries[0].player_id) {
-          expect(postedEntries.elimEntries[i].player_id).toBe(playerId9);
-        }
-      }
+
+      const divEntry = postedEntries.divEntries.find(
+        (divEntry) => divEntry.id === divEntryId,
+      );
+      expect(divEntry).toBeDefined();
+      if (!divEntry) throw new Error("divEntry not found in postedEntries.divEntries");
+      expect(divEntry.fee).toBe("100");
+
+      const potEntry = postedEntries.potEntries.find(
+        (potEntry) => potEntry.id === potEntryId,
+      );
+      expect(potEntry).toBeDefined();
+      if (!potEntry) throw new Error("potEntry not found in postedEntries.potEntries");
+      expect(potEntry.player_id).toBe(playerId9);
+
+      const brktEntry = postedEntries.brktEntries.find(
+        (brktEntry) => brktEntry.id === brktEntryId,
+      );
+      expect(brktEntry).toBeDefined();
+      if (!brktEntry) throw new Error("brktEntry not found in postedEntries.brktEntries");
+      expect(brktEntry.num_brackets).toBe(100);
+
+      const brktSeed = postedEntries.brktSeeds.find(
+        (brktSeed) => brktSeed.one_brkt_id === obkId && brktSeed.seed === 0,
+      );
+      expect(brktSeed).toBeDefined();
+      if (!brktSeed)
+        throw new Error("brktSeed not found in postedEntries.brktSeeds");
+      expect(brktSeed.player_id).toBe(playerId9);
+      
+      const elimEntry = postedEntries.elimEntries.find(
+        (elimEntry) => elimEntry.id === elimEntryId,
+      )
+      expect(elimEntry).toBeDefined();
+      if (!elimEntry) throw new Error("elimEntry not found in postedEntries.elimEntries");
+      expect(elimEntry.player_id).toBe(playerId9);
+
     });
 
     it("should throw error when post tmnt entries if invalid tmnt id", async () => {

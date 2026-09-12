@@ -66,27 +66,37 @@ const PrizeFundOptions: React.FC<prizeFundOptionsProps> = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [show, onClose]);
-    
-  const isPrizeFundEnabled = (prizeFundId: string): boolean => {
-    if (prizeFundId.startsWith("div")) {
-      return stage === SquadStage.ENTRIES || stage === SquadStage.SCORES;
-    } else if (prizeFundId.startsWith("pot")) {
-      return stage === SquadStage.SCORES;
-    } else if (prizeFundId.startsWith("elm")) {
-      return stage === SquadStage.SCORES;
-    } else {
-      return false;
-    }
+
+  const isPrizeFundEnabled = (): boolean => {
+
+    return stage === SquadStage.SCORES || stage === SquadStage.FINISHED;
   };
 
-  const numPrizeFundsEnabled = (): number => {
-    return prizeFunds.filter((report) => isPrizeFundEnabled(report.id)).length;
-  };
+  // const isPrizeFundEnabled = (prizeFundId: string): boolean => {
+
+  //   if (prizeFundId.startsWith("div")) {
+  //     // return stage === SquadStage.ENTRIES || stage === SquadStage.SCORES;
+  //     return stage === SquadStage.SCORES;
+  //   } else if (prizeFundId.startsWith("pot")) {
+  //     return stage === SquadStage.SCORES;
+  //   } else if (prizeFundId.startsWith("elm")) {
+  //     return stage === SquadStage.SCORES;
+  //   } else {
+  //     return false;
+  //   }
+  // };
+
+  // const numPrizeFundsEnabled = (): number => {
+  //   return prizeFunds.filter((report) => isPrizeFundEnabled(report.id)).length;
+  // };
   
   const handleEditClick = (): void => {
-    if (!isPrizeFundEnabled(selectedPrizeFundId)) {
+    if (!isPrizeFundEnabled()) {
       return;
     }
+    // if (!isPrizeFundEnabled(selectedPrizeFundId)) {
+    //   return;
+    // }
     let url = `/dataEntry/prizeFunds/tmnt/${fullTmntData.tmnt.id}/`;
     if (selectedPrizeFundId.startsWith("div")) {
       url += `div/${selectedPrizeFundId}`;
@@ -100,7 +110,8 @@ const PrizeFundOptions: React.FC<prizeFundOptionsProps> = ({
     router.push(url);
   }
 
-  const prizeFundsEnabled = numPrizeFundsEnabled() > 0;
+  const prizeFundsEnabled = isPrizeFundEnabled();
+  // const prizeFundsEnabled = numPrizeFundsEnabled() > 0;
 
   return (
     <div className="position-relative">
@@ -119,42 +130,60 @@ const PrizeFundOptions: React.FC<prizeFundOptionsProps> = ({
             />
           </div>
 
-          <div className="mb-3">
-            <label className="form-label">
-              Select Prize Fund
-            </label>
-            <select
-              className="form-select"
-              value={selectedPrizeFundId}
-              onChange={(e) => setSelectedPrizeFundId(e.target.value)}              
-            >
-              {prizeFunds.map((report) => (
-                <option
-                  key={report.id}
-                  value={report.id}
-                  disabled={!isPrizeFundEnabled(report.id)}
+          {prizeFundsEnabled ? (
+            <div>
+              <div className="mb-3">
+                <label className="form-label">
+                  Select Prize Fund
+                </label>
+                <select
+                  className="form-select"
+                  value={selectedPrizeFundId}
+                  onChange={(e) => setSelectedPrizeFundId(e.target.value)}              
                 >
-                  {report.label}
-                </option>
-              ))}
-            </select>            
-          </div>
-          <div
-            title={ 
-              prizeFundsEnabled
-                ? undefined
-                : "No prize funds enabled yet. Edit bowlers, then Valiadte & Save."
-            }
-          >
-            <button
-              type="button"
-              className="btn btn-success w-100"
-              onClick={handleEditClick}
-              disabled={!prizeFundsEnabled}            
-            >
-              Edit
-            </button>
-          </div>
+                  {prizeFunds.map((prizeFund) => (
+                    <option
+                      key={prizeFund.id}
+                      value={prizeFund.id}
+                      // disabled={!isPrizeFundEnabled(prizeFund.id)}
+                    >
+                      {prizeFund.label}
+                    </option>
+                  ))}
+                </select>                           
+              </div>
+              <div>
+                <button
+                  type="button"
+                  className="btn btn-success w-100"
+                  onClick={handleEditClick}
+                  disabled={!prizeFundsEnabled}            
+                >
+                  Edit
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <div>
+                <label className="form-label">                  
+                    Prize Funds not enabled yet.
+                  </label>
+              </div>
+              <div>
+                <label className="form-label">                  
+                  Edit bowlers, then Valiadte & Save.
+                </label>
+              </div>
+              <button
+                type="button"
+                className="btn btn-success w-100"
+                onClick={onClose}
+              >
+                Continue
+              </button>
+            </div>
+          )}          
         </div>
       )}
     </div>    

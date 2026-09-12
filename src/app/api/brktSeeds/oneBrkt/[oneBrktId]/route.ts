@@ -23,13 +23,8 @@ export async function GET(
         player_id: true,
       },
       where: { one_brkt_id: oneBrktId },
-      orderBy: [
-        {
-          one_brkt_id: 'asc',
-        }, 
-        {
-          seed: 'asc',
-        }, 
+      orderBy: [        
+        { seed: 'asc'}, 
       ]
     });
 

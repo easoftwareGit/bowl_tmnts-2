@@ -32,6 +32,7 @@ import ModalConfirm, { cancelConfTitle } from "@/components/modal/confirmModal";
 import { initModalObj, modalObjectType } from "@/components/modal/modalObjType";
 import WaitModal from "@/components/modal/waitModal";
 import "./scoresForm.css";
+import { sfRowHeight } from "@/lib/syncfusionTools";
 
 /*********
  * Types *
@@ -607,6 +608,7 @@ const ScoresEntryForm: React.FC<ChildProps> = ({
         enableStickyHeader={true}
         gridLines="Both"
         height="450"
+        rowHeight={sfRowHeight}
         selectionSettings={{ mode: "Cell" }}
         toolbar={toolbarOptions}
 

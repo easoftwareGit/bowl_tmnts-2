@@ -1,9 +1,9 @@
 import {
   calcNumGames,
-  createResultsColumns2,
+  createResultsColumns,
   nonGameColCount,
   tmntResultsData,
-} from "@/app/results/tmnt/[tmntId]/createResultsColumns";
+} from "@/app/results/tmnt/[tmntId]/standings/createResultsColumns";
 import { TotalHdcpName, TotalPlusTotalHdcpName } from "@/lib/validation/constants";
 
 describe("createResultsColumns2", () => {
@@ -114,19 +114,19 @@ describe("createResultsColumns2", () => {
     ];
 
     it("returns an empty array when tmntResults is empty", () => {
-      const result = createResultsColumns2([], 0);
+      const result = createResultsColumns([], 0);
 
       expect(result).toEqual([]);
     });
 
     it("returns an empty array when tmntResults is null", () => {
-      const result = createResultsColumns2(null as never, 0);
+      const result = createResultsColumns(null as never, 0);
 
       expect(result).toEqual([]);
     });
 
     it("creates the correct columns when maxHdcp is 0", () => {
-      const result = createResultsColumns2(mockResults, 0);
+      const result = createResultsColumns(mockResults, 0);
 
       expect(result.map((col) => col.field)).toEqual([
         "full_name",
@@ -141,7 +141,7 @@ describe("createResultsColumns2", () => {
     });
 
     it("creates the correct columns when maxHdcp is greater than 0", () => {
-      const result = createResultsColumns2(mockResults, 1);
+      const result = createResultsColumns(mockResults, 1);
 
       expect(result.map((col) => col.field)).toEqual([
         "full_name",
@@ -160,7 +160,7 @@ describe("createResultsColumns2", () => {
     });
 
     it("creates the player column correctly", () => {
-      const result = createResultsColumns2(mockResults, 0);
+      const result = createResultsColumns(mockResults, 0);
 
       expect(result[0]).toEqual({
         field: "full_name",
@@ -174,7 +174,7 @@ describe("createResultsColumns2", () => {
     });
 
     it("creates the average column correctly", () => {
-      const result = createResultsColumns2(mockResults, 10);
+      const result = createResultsColumns(mockResults, 10);
 
       const averageColumn = result.find(
         (col) => col.field === "average"
@@ -192,7 +192,7 @@ describe("createResultsColumns2", () => {
     });
 
     it("creates the hdcp column correctly", () => {
-      const result = createResultsColumns2(mockResults, 10);
+      const result = createResultsColumns(mockResults, 10);
 
       const hdcpColumn = result.find(
         (col) => col.field === "hdcp"
@@ -210,7 +210,7 @@ describe("createResultsColumns2", () => {
     });
 
     it("creates the total column correctly", () => {
-      const result = createResultsColumns2(mockResults, 0);
+      const result = createResultsColumns(mockResults, 0);
 
       const totalColumn = result.find(
         (col) => col.field === "total"
@@ -228,7 +228,7 @@ describe("createResultsColumns2", () => {
     });
 
     it("creates the total hdcp column correctly", () => {
-      const result = createResultsColumns2(mockResults, 10);
+      const result = createResultsColumns(mockResults, 10);
 
       const totalHdcpColumn = result.find(
         (col) => col.field === TotalHdcpName
@@ -246,7 +246,7 @@ describe("createResultsColumns2", () => {
     });
 
     it("creates the total plus total hdcp column correctly", () => {
-      const result = createResultsColumns2(mockResults, 10);
+      const result = createResultsColumns(mockResults, 10);
 
       const totalPlusTotalHdcpColumn = result.find(
         (col) => col.field === TotalPlusTotalHdcpName
@@ -264,7 +264,7 @@ describe("createResultsColumns2", () => {
     });
 
     it("creates all game columns correctly", () => {
-      const result = createResultsColumns2(mockResults, 0);
+      const result = createResultsColumns(mockResults, 0);
 
       const gameColumns = result.filter((col) =>
         col.field?.startsWith("Game ")
@@ -288,14 +288,14 @@ describe("createResultsColumns2", () => {
     });
 
     it("creates the correct number of columns when maxHdcp is 0", () => {
-      const result = createResultsColumns2(mockResults, 0);
+      const result = createResultsColumns(mockResults, 0);
 
       // player + 6 games + total
       expect(result).toHaveLength(8);
     });
 
     it("creates the correct number of columns when maxHdcp is greater than 0", () => {
-      const result = createResultsColumns2(mockResults, 10);
+      const result = createResultsColumns(mockResults, 10);
 
       // player + avg + hdcp + 6 games + total + total_hdcp + total_plus_total_hdcp
       expect(result).toHaveLength(12);
@@ -311,7 +311,7 @@ describe("createResultsColumns2", () => {
         },
       ];
 
-      const result = createResultsColumns2(oneGameResults, 0);
+      const result = createResultsColumns(oneGameResults, 0);
 
       expect(result.map((col) => col.field)).toEqual([
         "full_name",
@@ -339,7 +339,7 @@ describe("createResultsColumns2", () => {
         },
       ];
 
-      const result = createResultsColumns2(manyGamesResults, 0);
+      const result = createResultsColumns(manyGamesResults, 0);
 
       const gameColumns = result.filter((col) =>
         col.field?.startsWith("Game ")

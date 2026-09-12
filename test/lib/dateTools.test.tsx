@@ -20,7 +20,8 @@ import {
   yyyyMMdd_To_ddMMyyyy,
   ymdType,
   dateStringToTimeStamp,
-  toIso,  
+  toIso,
+  getMonthDayYear,  
 } from "@/lib/dateTools";
 import { addDays, addMinutes, compareAsc, startOfToday } from "date-fns";
 
@@ -663,6 +664,32 @@ describe("tests for dateTools", () => {
       expect(result1).toBe('Dec 25');
       expect(result2).toBe('Dec 25');
       expect(result3).toBe('Dec 25');
+    });
+  });
+
+  describe("getMonthDayYear", () => {
+    it("converts YYYY-MM-dd to MMM dd, YYYY", () => {
+      expect(getMonthDayYear("2026-08-12")).toBe("Aug 12, 2026");
+    });
+
+    it("converts January date correctly", () => {
+      expect(getMonthDayYear("2026-01-01")).toBe("Jan 01, 2026");
+    });
+
+    it("converts December date correctly", () => {
+      expect(getMonthDayYear("2026-12-31")).toBe("Dec 31, 2026");
+    });
+
+    it("returns an empty string for an invalid date", () => {
+      expect(getMonthDayYear("2026-13-01")).toBe("");
+    });
+
+    it("returns an empty string for an invalid date format", () => {
+      expect(getMonthDayYear("08/12/2026")).toBe("");
+    });
+
+    it("returns an empty string for an empty string", () => {
+      expect(getMonthDayYear("")).toBe("");
     });
   });
 

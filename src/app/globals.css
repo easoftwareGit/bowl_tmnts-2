@@ -72,3 +72,12 @@
 .e-grid .e-toolbar .e-tbar-btn .e-icons.e-back {
   color: rgb(220, 53, 69);
 }
+
+/* odd rows */
+.e-grid .e-altrow {
+  background-color: #f5f5f5;
+}
+/* hovered row */
+.e-grid .e-row:hover .e-rowcell {
+  background-color: #dbeafe !important;
+}

@@ -21,14 +21,11 @@ export async function GET(
             id: squadId,
           },
         },
-
-        // brkt_id: {
-        //   in: await prisma.brkt.findMany({
-        //     where: { squad_id: squadId },
-        //     select: { id: true },
-        //   }).then((brkts) => brkts.map((brkt) => brkt.id)),
-        // }
       },
+      orderBy: [
+        { brkt_id: "asc" },
+        { bindex: "asc" },
+      ],      
     })
     return NextResponse.json({ oneBrkts }, { status: 200 });
   } catch (error) {

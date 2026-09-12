@@ -1,7 +1,6 @@
 import { Bracket } from "@/components/brackets/bracketClass";
 import { BracketMatch } from "@/components/brackets/bracketMatchClass";
-import {
-  byeId,
+import {  
   mockGames,
   mockTmntFullData,
   playerId1,
@@ -12,22 +11,28 @@ import {
   playerId6,
   playerId7,
   playerId8,
+  divId1,
 } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { cloneDeep } from "lodash";
-import { BracketList } from "@/components/brackets/bracketListClass";
+import { BracketList, brktListInitialDataType } from "@/components/brackets/bracketListClass";
 import { playerEntryRow, populatePlayerRows } from "@/app/dataEntry/playersForm/populatePlayerRows";
 import { gameType } from "@/lib/types/types";
 
-describe("BracketMatch - players funnctions", () => {
+describe("BracketMatch - players functions", () => {
   let brktList: BracketList;
   let bracket: Bracket;
-  let bracketMatch: BracketMatch;
-  let testGames: gameType[] = cloneDeep(mockGames); 
+  let bracketMatch: BracketMatch | undefined;
+  let testGames: gameType[];
 
   const oneBrkt = mockTmntFullData.oneBrkts[0];
   const div1Entries = mockTmntFullData.divEntries.filter(
     (divEntry) => divEntry.div_id === mockTmntFullData.divs[0].id,
   );
+
+  const initData: brktListInitialDataType = {        
+    tmntFullData: mockTmntFullData,
+    divId: divId1,
+  };
 
   const brktSeeds = mockTmntFullData.brktSeeds
     .filter((brktSeed) => brktSeed.one_brkt_id === oneBrkt.id)
@@ -47,38 +52,47 @@ describe("BracketMatch - players funnctions", () => {
   };  
   
   beforeEach(() => {
+    testGames = cloneDeep(mockGames);
 
     brktList = new BracketList(
       brktId,
       2,
       3,
-      [1, 2, 3],
+      [1, 2, 3], // game numbers
+      undefined, // no bye player
+      initData,
     );
-    brktList.addBrktEntries(mockPlayerRows);
+
     brktList.createGameScoresMap(testGames);
-    brktList.createPlayersMap(div1Entries, mockTmntFullData.divs[0]);
 
-    bracket = new Bracket(mockTmntFullData.brkts[0].id);
-    bracket.parent = brktList;
-
-    addPlayersToBracket(bracket, playerIds);    
-    expect(bracket.players.length).toBe(8);
-
-    bracketMatch = new BracketMatch(bracket);
+    bracket = brktList.brackets[0];
+    bracketMatch = bracket.match;
   });
 
-  describe('constrctor', () => {
+  describe('constructor', () => {
     it('sets the parent', () => {
+      expect(bracketMatch).not.toBeUndefined();
+      if (bracketMatch == null) return;
       expect(bracketMatch.parent).toEqual(bracket);
     });
 
     it('sets the gameScoreMap', () => {
+      expect(bracketMatch).not.toBeUndefined();
+      if (bracketMatch == null) return;
       expect(bracketMatch.gameScoreMap).toEqual(bracket.parent?.gameScoreMap);
     });
 
     it('sets the playerMap', () => {
-      expect(bracketMatch.playerMap).toEqual(bracket.parent?.playerMap);
+      expect(bracketMatch).not.toBeUndefined();
+      if (bracketMatch == null) return;
+      expect(bracketMatch.playerMap).toEqual(bracket.parent?.playersMap);
     });
+
+    it("throws when parent is null", () => {
+      expect(() => {
+        new BracketMatch(null as unknown as Bracket);
+      }).toThrow("parent is null");
+    });    
   });
 
   describe("getPlayersForPosition()", () => {
@@ -95,13 +109,16 @@ describe("BracketMatch - players funnctions", () => {
     ] as const)(
       "returns player in match %i position %i, seed %i",
       (matchNumber, position, seed) => {
-        expect(bracketMatch.getPlayersForPosition(matchNumber, position)).toEqual([
+        expect(bracketMatch?.getPlayersForPosition(matchNumber, position)).toEqual([
           playerIds[seed],
         ]);
       },
     );
 
     it('gets the players for the second round matches', () => { 
+      expect(bracketMatch).not.toBeUndefined();
+      if (bracketMatch == null) return;
+
       // 1st round matches:
       // match 0 playerId1 vs playerId2: playerId2 wins
       // match 1 playerId3 vs playerId4: playerId4 wins
@@ -113,7 +130,10 @@ describe("BracketMatch - players funnctions", () => {
       expect(bracketMatch.getPlayersForPosition(5, 1)).toEqual([playerId8]);
     })
 
-    it('gets the players for the third round matche', () => { 
+    it('gets the players for the third round match', () => { 
+      expect(bracketMatch).not.toBeUndefined();
+      if (bracketMatch == null) return;
+
       // 1st round matches:
       // match 0 playerId1 vs playerId2: playerId2 wins
       // match 1 playerId3 vs playerId4: playerId4 wins
@@ -131,6 +151,9 @@ describe("BracketMatch - players funnctions", () => {
   describe("getMatchPlayers()", () => {
 
     it("returns the players for all first round matches", () => {
+      expect(bracketMatch).not.toBeUndefined();
+      if (bracketMatch == null) return;
+
       expect(bracketMatch.getMatchPlayers(0)).toEqual([
         playerId1,
         playerId2,
@@ -153,6 +176,9 @@ describe("BracketMatch - players funnctions", () => {
     });
 
     it("returns the players for the second round matches", () => {
+      expect(bracketMatch).not.toBeUndefined();
+      if (bracketMatch == null) return;
+
       expect(bracketMatch.getMatchPlayers(4)).toEqual([
         playerId2,
         playerId4,
@@ -165,6 +191,9 @@ describe("BracketMatch - players funnctions", () => {
     });
 
     it("returns the players for the championship match", () => {
+      expect(bracketMatch).not.toBeUndefined();
+      if (bracketMatch == null) return;
+
       expect(bracketMatch.getMatchPlayers(6)).toEqual([
         playerId2,
         playerId8,
@@ -199,16 +228,21 @@ describe("BracketMatch - players funnctions", () => {
       game.score = score;
     };
 
+    const tiesInitData: brktListInitialDataType = {        
+      tmntFullData: cloneDeep(mockTmntFullData),
+      divId: divId1,
+    };
+
     const createTiesBrktList = (testGames: typeof mockGames) => {
       tiesBrktList = new BracketList(
         brktId,
-        2,          // two players per match
-        3,          // three games
-        [1, 2, 3],  // use games 1, 2, 3
+        2,            // two players per match
+        3,            // three games
+        [1, 2, 3],    // use games 1, 2, 3
+        undefined,    // no bye player
+        tiesInitData,
       );
-      tiesBrktList.addBrktEntries(mockPlayerRows);
       tiesBrktList.createGameScoresMap(testGames);
-      tiesBrktList.createPlayersMap(div1Entries, mockTmntFullData.divs[0]);      
     };
 
     const createBracketWithTies = () => {
@@ -228,6 +262,7 @@ describe("BracketMatch - players funnctions", () => {
 
       // Tie match 0.
       setGameScore(tieGames, playerId1, 1, 210);
+      setGameScore(tieGames, playerId1, 2, 210);
 
       createTiesBrktList(tieGames);
       createBracketWithTies();
@@ -244,6 +279,7 @@ describe("BracketMatch - players funnctions", () => {
       const tieGames = cloneDeep(mockGames);
 
       // Tie match 4.
+      setGameScore(tieGames, playerId2, 2, 211);
       setGameScore(tieGames, playerId4, 2, 211);
 
       createTiesBrktList(tieGames);
@@ -261,9 +297,11 @@ describe("BracketMatch - players funnctions", () => {
       const tieGames = cloneDeep(mockGames);
 
       // Tie match 4.
+      setGameScore(tieGames, playerId2, 2, 211);
       setGameScore(tieGames, playerId4, 2, 211);
       // Tie match 5.
       setGameScore(tieGames, playerId5, 2, 231);
+      setGameScore(tieGames, playerId8, 2, 231);
 
       createTiesBrktList(tieGames);
       createBracketWithTies();
@@ -283,15 +321,18 @@ describe("BracketMatch - players funnctions", () => {
       // Tie match 1:
       // playerId3 and playerId4 advance to match 4.
       setGameScore(tieGames, playerId3, 1, 205);
+      setGameScore(tieGames, playerId4, 1, 205);
 
       // Tie all three players in match 4:
       // playerId2, playerId3, and playerId4.
+      setGameScore(tieGames, playerId2, 2, 211);
       setGameScore(tieGames, playerId3, 2, 211);
       setGameScore(tieGames, playerId4, 2, 211);
 
       // Tie match 5:
       // playerId5 and playerId8.
       setGameScore(tieGames, playerId5, 2, 231);
+      setGameScore(tieGames, playerId8, 2, 231);
 
       createTiesBrktList(tieGames);
       createBracketWithTies();
@@ -305,6 +346,95 @@ describe("BracketMatch - players funnctions", () => {
         playerId8,
       ]);
     }); 
+
+    it("returns only players from completed prior matches", () => {
+      const partialGames = testGames.filter(
+        (game) =>
+          !(
+            game.player_id === playerId2 &&
+            game.game_num === 1
+          ),
+      );
+
+      const partialBrktList = new BracketList(
+        brktId,
+        2,
+        3,
+        [1, 2, 3],
+        undefined,
+        tiesInitData,
+      );
+      
+      partialBrktList.createGameScoresMap(partialGames);
+
+      const partialBracket = partialBrktList.brackets[0];      
+      const partialBracketMatch = partialBracket.match;
+
+      expect(partialBracketMatch).not.toBeUndefined();
+      if (partialBracketMatch == null) return;
+      expect(partialBracketMatch.getMatchPlayers(4)).toEqual([playerId4]);
+    });
+
   })
+
+  describe('getMatchPlayers() - missing data', () => { 
+
+    const missingPlayerInitData: brktListInitialDataType = {        
+      tmntFullData: cloneDeep(mockTmntFullData),
+      divId: divId1,
+    };
+    const missingPlayerId = "ply_00000000000000000000000000000000";
+
+    it("returns an empty array when the seeded player does not exist", () => {
+      const missingPlayerBrktList = new BracketList(
+        brktId,
+        2,
+        3,
+        [1, 2, 3],
+        undefined,
+        missingPlayerInitData,
+      );
+
+      const missingPlayerBracket = missingPlayerBrktList.brackets[0];
+      missingPlayerBracket.players.pop();
+
+      const missingPlayerBracketMatch = missingPlayerBracket.match;
+      expect(missingPlayerBracketMatch).not.toBeUndefined();
+      if (missingPlayerBracketMatch == null) return;
+
+      const mpPlayer = missingPlayerBracketMatch.getPlayersForPosition(3, 1);
+      expect(mpPlayer).toEqual([]);      
+    });
+
+    it("returns an empty array when the prior match has a missing score", () => {
+      const partialGames = testGames.filter(
+        (game) =>
+          !(
+            game.player_id === playerId2 &&
+            game.game_num === 1
+          ),
+      );
+
+      const missingPlayerBrktList = new BracketList(
+        brktId,
+        2,
+        3,
+        [1, 2, 3],
+        undefined,
+        missingPlayerInitData,
+      );
+
+      missingPlayerBrktList.createGameScoresMap(partialGames);
+
+      const partialBracket = missingPlayerBrktList.brackets[0];      
+      const partialBracketMatch = partialBracket.match;
+      expect(partialBracketMatch).not.toBeUndefined();
+      if (partialBracketMatch == null) return;
+
+      const mpPlayer = partialBracketMatch.getPlayersForPosition(4, 0);
+      expect(mpPlayer).toEqual([]);
+    });    
+
+  })  
 
 });

@@ -1,4 +1,4 @@
-import { shuffleArray } from "@/lib/tools";
+import { shuffleArray, hasUniqueValues } from "@/lib/tools";
 
 describe('shuffleArray function', () => {
     
@@ -40,5 +40,27 @@ describe('shuffleArray function', () => {
 
     expect(arr).toEqual(expect.arrayContaining(originalArray));
     expect(arr).not.toEqual(originalArray);
+  });
+});
+
+describe('hasUniqueValues', () => {
+  it('should return true for an array with unique values', () => {
+    const arr = [1, 2, 3, 4, 5];
+    expect(hasUniqueValues(arr)).toBe(true);
+  });
+
+  it('should return false for an array with duplicate values', () => {
+    const arr = [1, 2, 3, 4, 5, 1];
+    expect(hasUniqueValues(arr)).toBe(false);
+  });
+
+  it('should return true for unique string array', () => {
+    const arr = ['a', 'b', 'c', 'd'];
+    expect(hasUniqueValues(arr)).toBe(true);
+  });
+
+  it('should return false for duplicate string array', () => {
+    const arr = ['a', 'b', 'c', 'd', 'a'];
+    expect(hasUniqueValues(arr)).toBe(false);
   });
 });

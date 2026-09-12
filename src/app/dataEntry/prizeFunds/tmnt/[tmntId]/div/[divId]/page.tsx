@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/redux/store";
 import { useParams, useRouter } from "next/navigation";
@@ -52,8 +52,15 @@ export default function DivPrizeFundEntry() {
    * after the user has started editing.
    */
   const initializedRef = useRef(false);
+  
+  const allDivPfs = useSelector(
+    (state: RootState) => state.divPfs.divPfs,
+  );
+  const divPfs = useMemo(
+    () => allDivPfs.filter((divPf) => divPf.div_id === divId),
+    [allDivPfs, divId],
+  );
 
-  const divPfs = useSelector((state: RootState) => state.divPfs.divPfs);
   const tmntData = useSelector(
     (state: RootState) => state.tmntFullData.tmntFullData,
   );
@@ -107,9 +114,9 @@ export default function DivPrizeFundEntry() {
 
   // Fetch divPfs
   useEffect(() => {
-    if (!divId) return;
-    dispatch(fetchDivPfs(divId));
-  }, [divId, dispatch]);
+    if (!tmntId) return;
+    dispatch(fetchDivPfs(tmntId));
+  }, [tmntId, dispatch]);
 
   // Fetch tournament if missing
   useEffect(() => {
@@ -734,7 +741,8 @@ export default function DivPrizeFundEntry() {
             <DivPrizeFundGrid
               ref={prizeFundGridRef}
               rows={rows}
-              setRows={setRows}              
+              setRows={setRows}
+              divId={divId}
               totalPrizeFund={divPrizeFund}
               enableEditing={true}
               gridDataWasChanged={gridDataWasChanged}
@@ -746,7 +754,7 @@ export default function DivPrizeFundEntry() {
                 setRows(savedRows);
                 setDataWasChanged(false);
                 setGridDataWasChanged(false);
-              }}              
+              }}
             />
           </div>
         </div>

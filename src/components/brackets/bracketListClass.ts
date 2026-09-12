@@ -8,14 +8,33 @@ import { maxBrackets } from "@/lib/validation/constants";
 import {
   blankPlayer,
   defaultBrktGames,
-  defaultPlayersPerMatch,  
+  defaultPlayersPerMatch,
 } from "@/lib/db/initVals";
-import { shuffleArray } from "@/lib/tools";
-import type { divEntryType, divType, gameType, playerType } from "@/lib/types/types";
-import type { playerEntryRow } from "@/app/dataEntry/playersForm/populatePlayerRows";
-import { createGameScoreMap, createPlayerMap, } from "./bracketMaps";
-import type { GameScoreMap, PlayerBracketMap } from "./bracketMaps";
+import { hasUniqueValues, shuffleArray } from "@/lib/tools";
+import type {
+  divEntryType,
+  divType,
+  gameType,
+  playerType,
+  tmntFullType,
+} from "@/lib/types/types";
+import {
+  populatePlayerRows,
+  type playerEntryRow,
+} from "@/app/dataEntry/playersForm/populatePlayerRows";
+import {
+  createBracketIndexMap,
+  createGameScoreMap,
+  createPlayersMap,
+} from "./bracketMaps";
+import type {
+  GameScoreMapType,
+  PlayerMapType,
+  BracketIndexMapType,
+} from "./bracketMaps";
 import { cloneDeep } from "lodash";
+import { TmntGameResult } from "@/lib/types/resultsTypes";
+import { tmntResultsToGameTypes } from "@/lib/tmntResultsToGameTypes";
 
 export type findPlayerResult = {
   playerIndex: number;
@@ -23,7 +42,6 @@ export type findPlayerResult = {
 };
 
 export type brktEntryType = {
-  // player_id: string, // player_id is key in map, so no need to add it here
   num_brackets: number;
   createdAt: number;
   orig_num_brackets: number;
@@ -47,6 +65,11 @@ export type playerUsedType = {
   used: boolean;
 };
 
+export type playerBracketsType = {
+  playerId: string;
+  bracketIds: string[];
+};
+
 const initBrktCounts: initBrktCountsType = {
   forFullValues: [],
   forOneByeValues: [],
@@ -64,6 +87,11 @@ export type randmoizeErrorType = {
   totalMatches: number;
 };
 
+export type brktListInitialDataType = {
+  tmntFullData: tmntFullType;
+  divId: string;
+};
+
 export enum matchTestCodes {
   VALID,
   USED,
@@ -73,10 +101,10 @@ export enum matchTestCodes {
 }
 
 const maxTries = 250;
-const defaultGameNumbers: number[] = [1, 2, 3];
+export const defaultSquadGameNums: number[] = [1, 2, 3];
 
 export class BracketList {
-  static noError = 0;  
+  static noError = 0;
   static reRandomize = -97;
   static reShuffle = -98;
   static resetMatches = -99;
@@ -93,10 +121,11 @@ export class BracketList {
   static errInvalidNeededCount = -119;
   static errCantCreateOppoMap = -120;
   static errNoValuesInOppoMap = -121;
-  static errNotEnoughOppoEntries = -122;  
+  static errNotEnoughOppoEntries = -122;
 
   private _addedBye = false;
   private _brackets: Bracket[] = [];
+  private _bracketIndexMap: BracketIndexMapType | null = null;
   private _brktCounts: initBrktCountsType = cloneDeep(
     initBrktCounts,
   ) as initBrktCountsType;
@@ -108,51 +137,81 @@ export class BracketList {
   private _errorCode: number = BracketList.noError;
   private _errorMessage: string = "";
   private _fullCount: number = 0;
-  private _games: number = defaultBrktGames;  
-  private _gameNumbers: number[] = defaultGameNumbers;
-  private _gameScoreMap: GameScoreMap | null = null;
-  private _initialBrackets: Bracket[] = [];
+  private _games: number = defaultBrktGames;
+  private _gameScoreMap: GameScoreMapType = new Map();
   private _numBrktsName: string = "";
   private _oneByeCount: number = 0;
-  private _playerMap: PlayerBracketMap | null = null;
+  private _playersMap: PlayerMapType | null = null;
   private _playersPerMatch: number = defaultPlayersPerMatch;
   private _playersWithRefunds: boolean = false;
   private _randomizeErrors: randmoizeErrorType[] = [];
   private _shuffled: playerUsedType[] = [];
+  private _squadGameNums: number[] = defaultSquadGameNums;
   private _timeStampName: string = "";
   private _totalEntries: number = 0;
 
   constructor(
     brktId: string,
     playersPerMatch: number,
-    games: number,
-    gameNumbers: number[] = defaultGameNumbers,    
+    games: number = defaultBrktGames,
+    squadGameNumbers: number[] = defaultSquadGameNums,
     byePlayer: playerType = blankPlayer,
-    initialBrackets: Bracket[] = [],
+    initialData: brktListInitialDataType | null = null,
   ) {
+    if (squadGameNumbers.length !== games) {
+      throw new Error("BracketList - squadGameNums.length !== games.");
+    }
+    if (!hasUniqueValues(squadGameNumbers)) {
+      throw new Error("BracketList - squadGameNums not unique.");
+    }    
+
     this._shuffled = [];
     this._brktId = brktId;
-    this._games = games;    
-    if (gameNumbers.length === this._games)
-      this._gameNumbers = gameNumbers;    
+    this._games = games;
+    if (squadGameNumbers.length === this._games) this._squadGameNums = squadGameNumbers;
     this._numBrktsName = entryNumBrktsColName(this._brktId);
     this._timeStampName = timeStampColName(this._brktId);
     this._playersPerMatch = playersPerMatch;
-    this._byePlayer = (isValidBtDbId(byePlayer.id, 'bye')) ? byePlayer : blankPlayer;
-    this._initialBrackets = initialBrackets;
-    if (this._initialBrackets.length > 0) {      
-      this._initialBrackets.forEach((brkt) => {
-        brkt.parent = this;
-        if (brkt.hasByePlayer()) this._oneByeCount++;
-      });
-      this._brackets.push(...this._initialBrackets);
-      this._fullCount = this._initialBrackets.length - this._oneByeCount;
-      this._totalEntries = (this._initialBrackets.length * this.playersPerBrkt) - this._oneByeCount;
+    this._byePlayer = isValidBtDbId(byePlayer.id, "bye")
+      ? byePlayer
+      : blankPlayer;
+
+    if (initialData != null) {
+      const div = initialData.tmntFullData.divs.find(
+        (oneDiv) => oneDiv.id === initialData.divId,
+      );
+      if (!div) {
+        throw new Error("Initial data - division not found.");
+      }
+
+      // if got initial data, use it
+      if (initialData.tmntFullData.oneBrkts.length > 0) {
+        // create the bracket classes
+        this.initializeBrackets(initialData.tmntFullData, brktId);
+
+        // update the counts
+        this._fullCount = this._brackets.length - this._oneByeCount;
+        this._totalEntries =
+          this._brackets.length * this.playersPerBrkt - this._oneByeCount;
+
+        // create the index map
+        this._bracketIndexMap = createBracketIndexMap(this._brackets);
+
+        // create the brkt entries
+        const playerEntryRows = populatePlayerRows(initialData.tmntFullData);
+        this.addBrktEntries(playerEntryRows);
+
+        // create the players map
+        this.createPlayersMap(initialData.tmntFullData.divEntries, div);
+      }
     }
   }
 
   get brackets() {
     return this._brackets;
+  }
+  get bracketIndexMap() {
+    return this._bracketIndexMap;
   }
   get brktCounts() {
     return this._brktCounts;
@@ -181,12 +240,9 @@ export class BracketList {
   get games() {
     return this._games;
   }
-  get gameNumbers() {
-    return this._gameNumbers;
-  }
-  get gameScoreMap(): GameScoreMap | null {
+  get gameScoreMap(): GameScoreMapType | null {
     return this._gameScoreMap;
-  }  
+  }
   get numBrktsName() {
     return this._numBrktsName;
   }
@@ -197,8 +253,8 @@ export class BracketList {
     // 2 bolwers per match ** 3 games = 2**3 = 8
     return this._playersPerMatch ** this._games;
   }
-  get playerMap(): PlayerBracketMap | null {
-    return this._playerMap;
+  get playersMap(): PlayerMapType | null {
+    return this._playersMap;
   }
   get playersPerMatch() {
     return this._playersPerMatch;
@@ -208,6 +264,9 @@ export class BracketList {
   }
   get randomizeErrors() {
     return this._randomizeErrors;
+  }
+  get squadGameNums() {
+    return this._squadGameNums;
   }
   get totalBrackets() {
     return this._fullCount + this._oneByeCount;
@@ -232,14 +291,87 @@ export class BracketList {
    * @returns {Bracket}
    */
   private createBracket(id: string = ""): Bracket {
-    const bracket = new Bracket(
-      id,
-      this._playersPerMatch,
-      this._games,
-    );
+    // const bracket = new Bracket(id, this._playersPerMatch, this._games);
+    const bracket = new Bracket(id, this._playersPerMatch);
     bracket.parent = this;
 
     return bracket;
+  }
+
+  /**
+   * creates the player Map
+   *
+   * @param {divEntryType[]} divEntries
+   * @param {divType} div
+   */
+  createPlayersMap(divEntries: divEntryType[], div: divType): void {
+    if (this._brktEntries.length === 0) return;
+    if (
+      divEntries == null ||
+      !Array.isArray(divEntries) ||
+      divEntries.length === 0
+    )
+      return;
+    if (div == null) return;
+    const playerBrackets: playerBracketsType[] = [];
+    for (let b = 0; b < this._brktEntries.length; b++) {
+      const ids = this.getPlayerBracketIds(this._brktEntries[b].player_id);
+      playerBrackets.push({
+        playerId: this._brktEntries[b].player_id,
+        bracketIds: ids,
+      });
+    }
+    this._playersMap = createPlayersMap(
+      this._brktEntries,
+      divEntries,
+      div,
+      playerBrackets,
+    );
+  }
+
+  /**
+   * Gets the ids of all brackets containing the player.
+   * brkackClass id's are oneBrktType id's "obk_xxxxxxxx"
+   *
+   * @param {string} playerId - Id of player to find.
+   * @return {string[]} - Ids of brackets containing the player.
+   */
+  private getPlayerBracketIds(playerId: string): string[] {
+    return this._brackets
+      .filter((brkt) => brkt.hasPlayer(playerId))
+      .map((brkt) => brkt.id);
+  }
+
+  /**
+   * initializes the brackets from the tmntFullData
+   *
+   * @param {tmntFullType} tmntFullData
+   * @param {string} brktId
+   */
+  private initializeBrackets(tmntFullData: tmntFullType, brktId: string): void {
+    // get all oneBrkts for this brkt, sort by bindex
+    const oneBrktsForBrkt = tmntFullData.oneBrkts
+      .filter((oneBrkt) => oneBrkt.brkt_id === brktId)
+      .sort((a, b) => a.bindex - b.bindex);
+
+    oneBrktsForBrkt.forEach((oneBrkt) => {
+      const seedsForBrkt = tmntFullData.brktSeeds.filter(
+        (seed) => seed.one_brkt_id === oneBrkt.id,
+      );
+      // const bracket = new Bracket(
+      //   oneBrkt.id,
+      //   this._playersPerMatch,
+      //   this._games,
+      // );
+      const bracket = new Bracket(
+        oneBrkt.id,
+        this._playersPerMatch,
+      );
+      bracket.parent = this;
+      bracket.populateBracket(seedsForBrkt);
+      if (bracket.hasByePlayer()) this._oneByeCount++;
+      this._brackets.push(bracket);
+    });
   }
 
   /**
@@ -259,6 +391,10 @@ export class BracketList {
     });
   }
 
+  /***********************************************************
+   * methods below are used in creating/ramdonizing brackets *
+   ************************************************************/
+
   /**
    * adds bracket entries
    *
@@ -275,6 +411,8 @@ export class BracketList {
       return;
     }
     // filter out player entries with no brackets
+    // this._numBrktsName is entries column for THIS bracket,
+    // bracket id = this._brktId
     this._brktEntries = cloneDeep(
       playerEntries.filter((entry) => entry[this._numBrktsName] > 0),
     );
@@ -312,16 +450,16 @@ export class BracketList {
       // // if no full brackets, no need to adjust, exit now
       // if (this._brktEntries.length < this.playersPerBrkt) return;
 
-      // if less than 0 oneBye, calc correct full and reset one bye 
+      // if less than 0 oneBye, calc correct full and reset one bye
       if (totalBrkts.oneBye < 0) {
         totalBrkts.full = totalBrkts.full + totalBrkts.oneBye;
         // if got exactly (this.playersPerBrkt - 1) entries left
         // set oneBye to 1 else set oneByeto 0
         totalBrkts.oneBye =
-          ((totalEntries - (totalBrkts.full * this.playersPerBrkt))
-            === (this.playersPerBrkt - 1))
+          totalEntries - totalBrkts.full * this.playersPerBrkt ===
+          this.playersPerBrkt - 1
             ? 1
-            : 0;        
+            : 0;
         totalBrkts.total = totalBrkts.full + totalBrkts.oneBye;
       } else {
         // check if each player's numBrkts <= total brackets
@@ -426,7 +564,7 @@ export class BracketList {
           (min, brktEntry) => Math.min(min, brktEntry[this._numBrktsName]),
           Infinity,
         );
-      // else # players >= # playersPerBrkt
+        // else # players >= # playersPerBrkt
       } else {
         let gotAnswer = false;
         let addToFull = 1;
@@ -492,7 +630,7 @@ export class BracketList {
     };
 
     // 1) clear and initialize brackets
-    this.clear();            
+    this.clear();
 
     // 2) remove all rows with no bracket entries
     this.addBrktEntries(playerEntries);
@@ -531,14 +669,14 @@ export class BracketList {
    * @returns {boolean} - true if brackets can be randomized, false otherwise
    */
   canRandomize(): boolean {
-    if (this._errorCode !== BracketList.noError) { 
+    if (this._errorCode !== BracketList.noError) {
       if (this._errorCode === BracketList.errInvalidBrktEntries) {
         this._errorMessage = "Invalid bracket entries";
-      } else { 
+      } else {
         this._errorMessage = "Unknown error";
       }
       return false;
-    } 
+    }
     if (this._brktEntries.length < this.playersPerBrkt - 1) {
       this._errorCode = BracketList.errCantRandomize;
       this._errorMessage = "Not enough players for brackets";
@@ -712,33 +850,6 @@ export class BracketList {
     }
 
     return oppoMap;
-  }
-
-  /**
-   * creates the gameScoreMap
-   *
-   * @param {gameType[]} games   
-   */
-  createGameScoresMap(games: gameType[]): void { 
-    if (games == null || !Array.isArray(games) || games.length === 0) return;    
-    this._gameScoreMap = createGameScoreMap(games);
-  }
-
-  /**
-   * creates the playerHdcpMap
-   *
-   * @param {divEntryType[]} divEntries
-   * @param {divType} div   
-   */
-  createPlayersMap(    
-    divEntries: divEntryType[],
-    div: divType
-  ): void {
-    if (this._brktEntries.length === 0) return;
-    // if (players == null || !Array.isArray(players) || players.length === 0) return;    
-    if (divEntries == null || !Array.isArray(divEntries) || divEntries.length === 0) return;
-    if (div == null) return;    
-    this._playerMap = createPlayerMap(this._brktEntries, divEntries, div);
   }
 
   // /**
@@ -2163,10 +2274,7 @@ export class BracketList {
       this._brackets.length = 0;
       this._brackets.push(
         // ...Array.from({ length: numBrkts }, () => new Bracket(this)),
-        ...Array.from(
-          { length: numBrkts },
-          () => this.createBracket(),
-        ),
+        ...Array.from({ length: numBrkts }, () => this.createBracket()),
       );
       if (forTesting.length === 0) {
         // 3) create the shuffled array of all entries including byes
@@ -2468,5 +2576,52 @@ export class BracketList {
       return;
     }
     const lastErrorIndex = this._randomizeErrors.length - 1;
+  }
+
+  /**********************************************************
+   * methods below are used in calculating brackets results *
+   **********************************************************/
+
+  /**
+   * creates the gameScoreMap
+   *
+   * @param {gameType[]} games
+   */
+  createGameScoresMap(games: gameType[]): void {
+    if (games == null || !Array.isArray(games) || games.length === 0) {
+      this._gameScoreMap = new Map();
+      return;
+    }
+    this._gameScoreMap = createGameScoreMap(games);
+  }
+
+  /**
+   * returns the squad game number for a bracket based on bracket game number
+   *
+   * @param {number} brktGameNum - bracket game number
+   * @return {number} - squad game number or -1   
+   */
+  squadGameNumber(brktGameNum: number): number {
+    if (
+      brktGameNum < 1 ||
+      this._squadGameNums == null ||
+      brktGameNum > this._squadGameNums.length
+    )
+      return -1;
+    return this._squadGameNums[brktGameNum - 1];
+  }
+
+  /**
+   * updates the bracket matches
+   *
+   * @return {*}  {void}
+   */
+  updateBracketMatches(tmntResults: TmntGameResult[]): void {
+    if (!tmntResults || !Array.isArray(tmntResults)) return;
+    if (this._brackets == null || this._brackets.length === 0) return;
+    if (this._playersMap == null || this._playersMap.size === 0) return;
+
+    this.createGameScoresMap(tmntResultsToGameTypes(tmntResults));
+    this._brackets.forEach((bracket) => bracket.updateMatches());
   }
 }

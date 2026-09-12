@@ -452,12 +452,13 @@ export type playerType = {
   position_err: string,
 }
 
-export type bracketPlayerType = {
-  id: string;
+export type PlayerInfoType = {  
   first_name: string;
   last_name: string;
   average: number;
   hdcp: number;
+  lane: number;
+  bracketIds: string[];  
 };
 
 export interface tmntEntryPlayerType extends playerType {
@@ -733,6 +734,15 @@ export type divPfDataType = {
   amount: number,  
 }
 
+export type divPfSaveDataType = {
+  divPfData: divPfType[],
+  divIds: string[],
+}
+
+export interface tmntDivPfSaveDataType extends divPfSaveDataType {
+  tmntId: string;
+}
+
 export type divPfEntryRow = {
   id: string,
   div_id: string,
@@ -760,6 +770,15 @@ export type potPfDataType = {
   amount: number,  
 }
 
+export type potPfSaveDataType = {
+  potPfData: potPfType[],
+  potIds: string[],
+}
+
+export interface tmntPotPfSaveDataType extends potPfSaveDataType {
+  tmntId: string;
+}
+
 export type potPfEntryRow = {
   id: string,
   pot_id: string,
@@ -785,6 +804,15 @@ export type elimPfDataType = {
   elim_id: string,
   position: number,
   amount: number,  
+}
+
+export type elimPfSaveDataType = {
+  elimPfData: elimPfType[],
+  elimIds: string[],
+}
+
+export interface tmntElimPfSaveDataType extends elimPfSaveDataType {
+  tmntId: string;
 }
 
 export type elimPfEntryRow = {
@@ -869,11 +897,6 @@ export type putManyReturnType = {
   deletes: number,
 }
 
-export type putManyReturnType2 = {
-  count: number,
-  error: string,
-}
-
 export interface putManyBrktEntriesReturnType extends putManyReturnType {
   rfUpdates: number,
   rfInserts: number,
@@ -954,11 +977,13 @@ export type MoneyEditArgs = {
 export type syncfusionColumnDef = {
   field: string;
   headerText: string;
+  headerTextAlign?: "Left" | "Right" | "Center" | "Justify";
   width?: string;
   textAlign?: "Right" | "Left" | "Center";
   visible?: boolean;
   isPrimaryKey?: boolean;
   allowEditing?: boolean;
+  allowSorting?: boolean;
   displayAsCheckBox?: boolean;
   editType?: string;
   format?: string;

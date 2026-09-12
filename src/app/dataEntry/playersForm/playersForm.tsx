@@ -65,6 +65,7 @@ import { type modalObjectType, initModalObj } from "@/components/modal/modalObjT
 import { validateFinalizeRows } from "./finalizeValidation";
 import { randomizeAllBrkts } from "./buildBrktList";
 import "./playersForm.css";
+import { sfRowHeight } from "@/lib/syncfusionTools";
 
 interface ChildProps {
   rows: playerEntryRow[];
@@ -1343,9 +1344,10 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
         allowSorting={true}
         disabled={!enableEditing}
         editSettings={editSettings}
-        gridLines="Both"
+        gridLines="Both"        
         height="450"
         readOnly={!enableEditing}
+        rowHeight={sfRowHeight}
         toolbar={toolbarOptions}
         actionBegin={handleActionBegin}
         actionComplete={handleActionComplete}

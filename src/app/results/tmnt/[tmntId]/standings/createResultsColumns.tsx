@@ -1,12 +1,15 @@
 import type { syncfusionColumnDef } from "@/lib/types/types";
 import type { TmntGameResult } from "@/lib/types/resultsTypes";
-import { TotalHdcpName, TotalPlusTotalHdcpName } from "@/lib/validation/constants";
+import { TotalPlusTotalHdcpName } from "@/lib/validation/constants";
 
 const playerNameWidth = "150";
-const aveHdcpWidth = "80"
-const gameWidth = "90"
-const totalWidth = "90"
-const totalHdcpWidth = "120"
+const aveWidth = "70"
+const hdcpWidth = "85"
+const gameWidth = "65"
+const plusMinusWidth = "75"
+const totalWidth = "80"
+const totalHdcpWidth = "110"
+const totalPlusTotalHdcpWidth = "120"
 
 export const tmntResultsData: { [key: string]: any } = {  
   id: "",
@@ -30,7 +33,7 @@ export const calcNumGames = (tmntResults: TmntGameResult[]): number => {
   ).length;
 };
 
-export const createResultsColumns2 = (tmntResults: any[], maxHdcp: number): syncfusionColumnDef[] => {
+export const createResultsColumns = (tmntResults: any[], maxHdcp: number): syncfusionColumnDef[] => {
  
   const playerColumns: syncfusionColumnDef[] = [
     {
@@ -47,8 +50,9 @@ export const createResultsColumns2 = (tmntResults: any[], maxHdcp: number): sync
   const aveAndHdcpColumns: syncfusionColumnDef[] = [
     {
       field: "average",
+      // field: TotalHdcpName,
       headerText: "Avg",
-      width: aveHdcpWidth,
+      width: aveWidth,
       textAlign: "Right",
       allowEditing: false,
       type: "number",
@@ -57,7 +61,7 @@ export const createResultsColumns2 = (tmntResults: any[], maxHdcp: number): sync
     {
       field: "hdcp",
       headerText: "HDCP",
-      width: aveHdcpWidth,
+      width: hdcpWidth,
       textAlign: "Right",
       allowEditing: false,
       type: "number",
@@ -79,9 +83,22 @@ export const createResultsColumns2 = (tmntResults: any[], maxHdcp: number): sync
 
   const totalHdcpColumn: syncfusionColumnDef[] = [
     {
-      field: TotalHdcpName,
-      headerText: "Total + HDCP",
+      field: 'total_hdcp',
+      headerText: "Total HDCP",
       width: totalHdcpWidth,
+      textAlign: "Right",
+      allowEditing: false,
+      type: "number",
+      customAttributes: { class: "column-header" },
+    }  
+  ];
+  
+  const totalPlusTotalHdcpColumn: syncfusionColumnDef[] = [
+    {
+      field: TotalPlusTotalHdcpName,
+      // field: TotalHdcpName,
+      headerText: "Total + HDCP",
+      width: totalPlusTotalHdcpWidth,
       textAlign: "Right",
       allowEditing: false,
       type: "number",
@@ -89,27 +106,27 @@ export const createResultsColumns2 = (tmntResults: any[], maxHdcp: number): sync
     }
   ];
 
-  const totalPlusTotalHdcpColumn: syncfusionColumnDef[] = [
+  const plusMinusColumn: syncfusionColumnDef[] = [
     {
-      field: TotalPlusTotalHdcpName,
-      headerText: "Total + HDCP",
-      width: totalHdcpWidth,
+      field: "plus_minus",
+      headerText: "+/-",
+      width: plusMinusWidth,
       textAlign: "Right",
       allowEditing: false,
-      type: "number",
+      type: "string",
       customAttributes: { class: "column-header" },
     }
-  ];
+  ]
 
   const gameColumns: syncfusionColumnDef[] = []
   if (!tmntResults || tmntResults.length === 0) return gameColumns
     
   const numGames = calcNumGames(tmntResults); 
   for (let game = 1; game <= numGames; game++) {
-    const gameNum = "Game " + (game)
+    // const gameNum = "Gm " + (game)
     const gameCol: syncfusionColumnDef = {
-      field: gameNum,
-      headerText: gameNum,                  
+      field: "Game " + (game),
+      headerText: "G " + (game),                  
       width: gameWidth,
       textAlign: "Right",
       type: "number",
@@ -121,5 +138,5 @@ export const createResultsColumns2 = (tmntResults: any[], maxHdcp: number): sync
 
   return (maxHdcp > 0)
     ? [...playerColumns, ...aveAndHdcpColumns, ...gameColumns, ...totalColumn, ...totalHdcpColumn, ...totalPlusTotalHdcpColumn]
-    : [...playerColumns, ...gameColumns, ...totalColumn];
+    : [...playerColumns, ...gameColumns, ...totalColumn, ...plusMinusColumn];
 }
