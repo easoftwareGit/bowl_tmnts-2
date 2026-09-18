@@ -9,8 +9,9 @@ import {
   fetchTmntFullData,
   getTmntFullDataLoadStatus,
   getTmntFullDataError,
+  selectTmntFullData,
 } from "@/redux/features/tmntFullData/tmntFullDataSlice";
-import { AppDispatch, RootState } from "@/redux/store";
+import { AppDispatch } from "@/redux/store";
 import WaitModal from "@/components/modal/waitModal";
 import { getBlankTmntFullData, getSquadStage } from "../../tmntForm/tmntTools";
 import { SquadStage } from "@prisma/client";
@@ -26,9 +27,7 @@ export default function EditTmntPage() {
 
   const tmntLoadStatus = useSelector(getTmntFullDataLoadStatus);
   const tmntError = useSelector(getTmntFullDataError);
-  const stateTmntFullData = useSelector(
-    (state: RootState) => state.tmntFullData.tmntFullData
-  );
+  const stateTmntFullData = useSelector(selectTmntFullData);
 
   const [stage, setStage] = useState<SquadStage | null>(null);
   const [stageError, setStageError] = useState<string | null>(null);

@@ -2,12 +2,14 @@
 
 import React, { useEffect, useRef, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import type { AppDispatch, RootState } from "@/redux/store";
+import type { AppDispatch } from "@/redux/store";
 import { useParams, useRouter } from "next/navigation";
 import {
   fetchPotPfs,
   getPotPfsError,
-  getPotPfsLoadStatus,  
+  getPotPfsLoadStatus,
+  getPotPfsRequestedTmntId,
+  selectPotPfs,
 } from "@/redux/features/potPfs/potPfsSlice";
 import type { prizeFundEntryRow } from "@/lib/types/types";
 import WaitModal from "@/components/modal/waitModal";
@@ -15,6 +17,7 @@ import {
   fetchTmntFullData,
   getTmntFullDataError,
   getTmntFullDataLoadStatus,
+  selectTmntFullData,
 } from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 import EaCurrencyInput from "@/components/currency/eaCurrencyInput";
@@ -41,8 +44,10 @@ export default function PotPrizeFundEntry() {
 
   const potPfsLoadStatus = useSelector(getPotPfsLoadStatus);
   const potPfsError = useSelector(getPotPfsError);
+  const potPfsRequestedTmntId = useSelector(getPotPfsRequestedTmntId);
   const tmntLoadStatus = useSelector(getTmntFullDataLoadStatus);
   const tmntError = useSelector(getTmntFullDataError);
+  const allPotPfs = useSelector(selectPotPfs);
 
   const runTmntUrl = `/dataEntry/runTmnt/${tmntId}`;
 
@@ -52,18 +57,14 @@ export default function PotPrizeFundEntry() {
    */
   const initializedRef = useRef(false);
 
-  // const potPfs = useSelector((state: RootState) => state.potPfs.potPfs);
-  const allPotPfs = useSelector(
-    (state: RootState) => state.potPfs.potPfs,
-  );
+  // const potPfs = useSelector((state: RootState) => state.potPfs.potPfs);  
   const potPfs = useMemo(
     () => allPotPfs.filter((potPf) => potPf.pot_id === potId),
     [allPotPfs, potId],
   );
 
-  const tmntData = useSelector(
-    (state: RootState) => state.tmntFullData.tmntFullData,
-  );
+  const tmntData = useSelector(selectTmntFullData);
+  
   const pot = tmntData?.pots?.find((pot) => pot.id === potId);
   const potType = pot?.pot_type;   
   
@@ -102,11 +103,6 @@ export default function PotPrizeFundEntry() {
 
   const potEntries = tmntData?.potEntries?.filter((entry) => entry.pot_id === potId);
   const numPlayers = potEntries?.length || 0;
-
-  // if potPfs is empty, or all potPfs belong to the current pot
-  const potPfsBelongToCurrentPot =
-    potPfs.length === 0 ||
-    potPfs.every((potPf) => potPf.pot_id === potId);
 
   const [rows, setRows] = useState<prizeFundEntryRow[]>([]);
 
@@ -179,7 +175,7 @@ export default function PotPrizeFundEntry() {
   useEffect(() => {
     if (
       potPfsLoadStatus !== "succeeded" ||
-      !potPfsBelongToCurrentPot ||
+      potPfsRequestedTmntId !== tmntId ||      
       !tmntData ||
       tmntData.tmnt?.id !== tmntId
     ) {
@@ -223,7 +219,7 @@ export default function PotPrizeFundEntry() {
     initializedRef.current = true;
   }, [
     potPfsLoadStatus,
-    potPfsBelongToCurrentPot,
+    potPfsRequestedTmntId,
     tmntData,
     tmntId,
     potPfs,
@@ -576,11 +572,13 @@ export default function PotPrizeFundEntry() {
 
   const isLoading =
     potPfsLoadStatus === "loading" ||
-    (!tmntData && tmntLoadStatus === "loading");
+    tmntLoadStatus === "loading";
+
+  const gotPotPfsData = potPfsRequestedTmntId === tmntId;
 
   const canRender =
     potPfsLoadStatus === "succeeded" &&
-    potPfsBelongToCurrentPot &&
+    gotPotPfsData &&
     tmntLoadStatus === "succeeded" &&
     gotTmntData;
   
@@ -601,7 +599,7 @@ export default function PotPrizeFundEntry() {
         potPfsError && <>Error: {potPfsError}</>}
       {tmntLoadStatus !== "loading" &&
         tmntLoadStatus !== "succeeded" &&
-        tmntError && <>Error: {tmntLoadStatus}</>}      
+        tmntError && <>Error: {tmntError}</>}      
 
       {canRender && (
         <div className="container">

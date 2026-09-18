@@ -13,7 +13,8 @@ import { initModalObj } from "@/components/modal/modalObjType";
 import {
   fetchTmntFullData,
   getTmntFullDataError,
-  getTmntFullDataLoadStatus
+  getTmntFullDataLoadStatus,
+  selectTmntFullData
 } from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import { getBlankTmntFullData, getSquadStage } from "../../tmntForm/tmntTools";
 import { SquadStage } from "@prisma/client";
@@ -32,9 +33,7 @@ const RunTmntPage = () => {
 
   const tmntLoadStatus = useSelector(getTmntFullDataLoadStatus);
   const tmntError = useSelector(getTmntFullDataError);    
-  const stateTmntFullData = useSelector(
-    (state: RootState) => state.tmntFullData.tmntFullData
-  )
+  const stateTmntFullData = useSelector(selectTmntFullData);
   const [stage, setStage] = useState<SquadStage | null>(null);  
   const [stageError, setStageError] = useState<string | null>(null);
   const [gotStage, setGotStage] = useState(false);

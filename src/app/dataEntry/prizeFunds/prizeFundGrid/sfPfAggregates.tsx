@@ -8,7 +8,6 @@ import {
   pfEntryPercentColName,
   pfEntryPositionColName,
 } from "./sfCreatePfColumns";
-import "../prizeFundGrid/prizeFundGrid.css";
 
 const emptyCustomAggregate = () => "";
 

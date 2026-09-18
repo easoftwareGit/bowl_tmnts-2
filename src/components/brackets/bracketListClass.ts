@@ -35,6 +35,7 @@ import type {
 import { cloneDeep } from "lodash";
 import { TmntGameResult } from "@/lib/types/resultsTypes";
 import { tmntResultsToGameTypes } from "@/lib/tmntResultsToGameTypes";
+import { SquadStage } from "@prisma/client";
 
 export type findPlayerResult = {
   playerIndex: number;
@@ -175,7 +176,8 @@ export class BracketList {
     this._byePlayer = isValidBtDbId(byePlayer.id, "bye")
       ? byePlayer
       : blankPlayer;
-
+ 
+    // if got initial data AND entering scores 
     if (initialData != null) {
       const div = initialData.tmntFullData.divs.find(
         (oneDiv) => oneDiv.id === initialData.divId,

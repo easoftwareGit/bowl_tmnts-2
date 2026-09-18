@@ -34,6 +34,7 @@ import cloneDeep from "lodash/cloneDeep";
 type MockRootState = {
   potPfs: {
     potPfs: potPfType[];
+    requestedTmntId: string;
     loadStatus: string;
     error: string | null;
   };
@@ -86,6 +87,7 @@ export type SetupOptions = {
   potPfs?: potPfType[];
   tmntData?: tmntFullType;
 
+  potPfsRequestedTmntId?: string;
   potPfsLoadStatus?: string;
   tmntLoadStatus?: string;
 
@@ -190,18 +192,32 @@ jest.mock(
   () => ({
     __esModule: true,
 
-    fetchPotPfs: jest.fn((tmntId: string) => ({
-      type: "potPfs/fetchPotPfs",
-      payload: tmntId,
-    })),
+    fetchPotPfs: jest.fn(
+      (tmntId: string) => ({
+        type: "potPfs/fetchPotPfs",
+        payload: tmntId,
+      }),
+    ),
+
+    selectPotPfs: (
+      state: MockRootState,
+    ): potPfType[] =>
+      state.potPfs.potPfs,
+
+    getPotPfsRequestedTmntId: (
+      state: MockRootState,
+    ): string =>
+      state.potPfs.requestedTmntId,
 
     getPotPfsLoadStatus: (
       state: MockRootState,
-    ): string => state.potPfs.loadStatus,
+    ): string =>
+      state.potPfs.loadStatus,
 
     getPotPfsError: (
       state: MockRootState,
-    ): string | null => state.potPfs.error,
+    ): string | null =>
+      state.potPfs.error,
   }),
 );
 
@@ -216,6 +232,11 @@ jest.mock(
         payload: tmntId,
       }),
     ),
+
+    selectTmntFullData: (
+      state: MockRootState,
+    ): tmntFullType =>
+      state.tmntFullData.tmntFullData,
 
     getTmntFullDataLoadStatus: (
       state: MockRootState,
@@ -565,6 +586,8 @@ export const setup = ({
   potPfs: suppliedPotPfs = mockPotPfs,
   tmntData: suppliedTmntData = mockTmntFullData,
 
+  potPfsRequestedTmntId: suppliedPotPfsRequestedTmntId,
+
   potPfsLoadStatus = "succeeded",
   tmntLoadStatus = "succeeded",
 
@@ -584,6 +607,7 @@ export const setup = ({
 
   tmntId: string;
   potId: string;
+  potPfsRequestedTmntId: string;
   runTmntUrl: string;
 
   potPfs: potPfType[];
@@ -601,6 +625,8 @@ export const setup = ({
   triggerBack: () => void;
 } => {
   const user = userEvent.setup();
+
+  const potPfsRequestedTmntId = suppliedPotPfsRequestedTmntId ?? tmntId;
 
   /*
    * Redux contains all pot prize-fund rows for the tournament.
@@ -641,6 +667,7 @@ export const setup = ({
   const mockState: MockRootState = {
     potPfs: {
       potPfs,
+      requestedTmntId: potPfsRequestedTmntId,
       loadStatus: potPfsLoadStatus,
       error: potPfsError,
     },
@@ -651,115 +678,6 @@ export const setup = ({
       error: tmntError,
     },
   };  
-
-//   tmntId = defaultTmntId,
-//   potId = defaultPotId,
-
-//   // Redux contains all pot prize funds for the tournament.
-//   // The page filters these rows for the current pot.
-//   potPfs: suppliedPotPfs = mockPotPfs,
-//   tmntData: suppliedTmntData = mockTmntFullData,
-
-//   potPfsLoadStatus = "succeeded",
-//   tmntLoadStatus = "succeeded",
-
-//   potPfsError = null,
-//   tmntError = null,
-
-//   prizeFunds: suppliedPrizeFunds,
-//   populatedRows: suppliedPopulatedRows,
-
-//   potName = "Mock Pot",
-//   potType,
-
-//   confirmLeavePage = true,
-// }: SetupOptions = {}): {
-//   user: ReturnType<typeof userEvent.setup>;
-//   view: RenderResult;
-
-//   tmntId: string;
-//   potId: string;
-//   runTmntUrl: string;
-
-//   potPfs: potPfType[];
-//   tmntData: tmntFullType;
-//   prizeFunds: prizeFundType[];
-//   populatedRows: prizeFundEntryRow[];
-
-//   triggerGridDataChanged: () => void;
-//   triggerGridDataReset: () => void;
-//   triggerSaveComplete: (
-//     savedRows?: prizeFundEntryRow[],
-//   ) => void;
-//   triggerNavigateAfterSave: () => void;
-//   triggerBack: () => void;
-// } => {
-//   const user = userEvent.setup();
-
-//   /*
-//    * Clone the supplied pot prize-fund data.
-//    *
-//    * Tests may alter the rows or their pot_id values. Cloning prevents one
-//    * test from mutating the shared mock data used by another test.
-//    */
-//   const potPfs = cloneDeep(suppliedPotPfs);
-
-//   /*
-//    * Clone the supplied tournament data.
-//    *
-//    * Some setup options, such as potType, modify tournament data for the
-//    * current test. Cloning prevents those changes from mutating shared mock
-//    * data or affecting later tests.
-//    */
-//   const tmntData = cloneDeep(suppliedTmntData);
-
-//   /*
-//    * Override the selected pot's type when requested.
-//    *
-//    * This allows tests to render the same page as a Game, Last Game, or
-//    * Series pot without creating separate tournament mock objects.
-//    */
-//   if (potType !== undefined) {
-//     const selectedPot = tmntData.pots.find(
-//       (pot) => pot.id === potId,
-//     );
-
-//     if (selectedPot) {
-//       selectedPot.pot_type = potType;
-//     }
-//   }
-
-//   /*
-//    * Build the generic prize-fund data from the final cloned potPfs unless
-//    * the test explicitly supplied its own converted prize-fund data.
-//    */
-//   const prizeFunds =
-//     suppliedPrizeFunds ??
-//     makePrizeFunds(currentPotPfs);
-
-//   /*
-//    * Build the rows returned by populatePfRows() from the final cloned
-//    * potPfs unless the test explicitly supplied its own populated rows.
-//    */
-//   const populatedRows =
-//     suppliedPopulatedRows ??
-//     makeRows(currentPotPfs);
-
-//   const runTmntUrl = `/dataEntry/runTmnt/${tmntId}`;
-
-//   const mockState: MockRootState = {
-//     potPfs: {
-//       potPfs,
-//       loadStatus: potPfsLoadStatus,
-//       error: potPfsError,
-//     },
-
-//     tmntFullData: {
-//       tmntFullData: tmntData,
-//       loadStatus: tmntLoadStatus,
-//       error: tmntError,
-//     },
-//   };
 
   jest.mocked(useParams).mockReturnValue({
     tmntId,
@@ -861,6 +779,7 @@ export const setup = ({
 
     tmntId,
     potId,
+    potPfsRequestedTmntId,
     runTmntUrl,
 
     potPfs,

@@ -31,6 +31,7 @@ import {
 type MockRootState = {
   divPfs: {
     divPfs: divPfType[];
+    requestedTmntId: string;
     loadStatus: string;
     error: string | null;
   };
@@ -83,6 +84,15 @@ export type SetupOptions = {
   divPfs?: divPfType[];
 
   tmntData?: tmntFullType;
+
+  /**
+   * Tournament id associated with the loaded division prize funds.
+   *
+   * Defaults to the route tournament id. Tests can override this
+   * to verify that prize funds from another tournament do not
+   * initialize the page.
+   */
+  divPfsRequestedTmntId?: string;
 
   divPfsLoadStatus?: string;
   tmntLoadStatus?: string;
@@ -187,6 +197,14 @@ jest.mock(
       payload: tmntId,
     })),
 
+    selectDivPfs: (
+      state: MockRootState,
+    ): divPfType[] => state.divPfs.divPfs,
+
+    getDivPfRequestedTmntId: (
+      state: MockRootState,
+    ): string => state.divPfs.requestedTmntId,
+
     getDivPfsLoadStatus: (
       state: MockRootState,
     ): string => state.divPfs.loadStatus,
@@ -208,6 +226,11 @@ jest.mock(
         payload: tmntId,
       }),
     ),
+
+    selectTmntFullData: (
+      state: MockRootState,
+    ): tmntFullType =>
+      state.tmntFullData.tmntFullData,
 
     getTmntFullDataLoadStatus: (
       state: MockRootState,
@@ -507,6 +530,8 @@ export const setup = ({
   divPfs = mockDivPfs,
   tmntData = mockTmntFullData,
 
+  divPfsRequestedTmntId: suppliedDivPfsRequestedTmntId,
+
   divPfsLoadStatus = "succeeded",
   tmntLoadStatus = "succeeded",
 
@@ -525,6 +550,7 @@ export const setup = ({
   divId: string;
   runTmntUrl: string;
 
+  divPfsRequestedTmntId: string;
   divPfs: divPfType[];
   currentDivPfs: divPfType[];
   tmntData: tmntFullType;
@@ -541,8 +567,7 @@ export const setup = ({
 } => {
   const user = userEvent.setup();
 
-  const runTmntUrl =
-    `/dataEntry/runTmnt/${tmntId}`;
+  const runTmntUrl = `/dataEntry/runTmnt/${tmntId}`;
 
   /*
    * divPfs represents all division prize-fund rows loaded
@@ -554,6 +579,8 @@ export const setup = ({
   const currentDivPfs = divPfs.filter(
     (divPf) => divPf.div_id === divId,
   );
+
+  const divPfsRequestedTmntId = suppliedDivPfsRequestedTmntId ?? tmntId;
 
   /*
    * Derive the converted prize funds and populated rows
@@ -572,6 +599,7 @@ export const setup = ({
   const mockState: MockRootState = {
     divPfs: {
       divPfs,
+      requestedTmntId: divPfsRequestedTmntId,
       loadStatus: divPfsLoadStatus,
       error: divPfsError,
     },
@@ -679,6 +707,7 @@ export const setup = ({
     divId,
     runTmntUrl,
 
+    divPfsRequestedTmntId,
     divPfs,
     currentDivPfs,
     tmntData,

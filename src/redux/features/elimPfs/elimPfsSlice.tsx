@@ -87,7 +87,7 @@ export const elimPfsSlice = createSlice({
   },
 });
 
-export const selectElimPfs = (state: RootState) => state.elimPfs;
+export const selectElimPfs = (state: RootState) => state.elimPfs.elimPfs;
 
 export const getElimRequestedId = (state: RootState) => state.elimPfs.requestedTmntId;
 export const getElimPfsLoadStatus = (state: RootState) => state.elimPfs.loadStatus;

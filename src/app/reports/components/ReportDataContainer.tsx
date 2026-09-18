@@ -2,11 +2,12 @@
 
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "@/redux/store";
+import { AppDispatch } from "@/redux/store";
 import {
   fetchTmntFullData,
   getTmntFullDataLoadStatus,
   getTmntFullDataError,
+  selectTmntFullData,
 } from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import ReportViewer from "./ReportViewer";
 import { getReportDocument } from "./getReportDocument";
@@ -19,9 +20,7 @@ type Props = {
 export default function ReportDataContainer({ tmntId, reportId }: Props) {
   const dispatch = useDispatch<AppDispatch>();
 
-  const tmntFullData = useSelector(
-    (state: RootState) => state.tmntFullData.tmntFullData,
-  );
+  const tmntFullData = useSelector(selectTmntFullData);
 
   const tmntLoadStatus = useSelector(getTmntFullDataLoadStatus);
   const tmntError = useSelector(getTmntFullDataError);

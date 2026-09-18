@@ -2,7 +2,15 @@ import reducer, {
   elimPfsState,
   fetchElimPfs,
   saveElimPfs,
+  selectElimPfs,
+  getElimRequestedId,
+  getElimPfsLoadStatus,
+  getElimPfsSaveStatus,
+  getElimPfsError,
+  getElimPfsIoError,
 } from "@/redux/features/elimPfs/elimPfsSlice";
+import { RootState } from "@/redux/store";
+import { ioStatusType } from "@/redux/statusTypes";
 import {
   getAllElimPfsForTmnt,
   updateAllElimPfsForTmnt,
@@ -117,6 +125,43 @@ describe("elimPfsSlice reducer + thunk", () => {
       expect(state.loadStatus).toBe("idle");
       expect(state.error).toBe(errorMessage);
       expect(state.elimPfs).toEqual([]);
+    });
+  });
+
+  describe("selectors", () => {
+    const selectorState = {
+      elimPfs: {
+        elimPfs: mockElimPfs,
+        requestedTmntId: tmntId,
+        loadStatus: "succeeded" as ioStatusType,
+        saveStatus: "succeeded" as ioStatusType,
+        error: "test error",
+        ioError: ioDataError.NONE,
+      },
+    } as RootState;
+
+    it("selectElimPfs returns the elimPfs array", () => {
+      expect(selectElimPfs(selectorState)).toBe(mockElimPfs);
+    });
+
+    it("getElimRequestedId returns the requested tournament id", () => {
+      expect(getElimRequestedId(selectorState)).toBe(tmntId);
+    });
+
+    it("getElimPfsLoadStatus returns the load status", () => {
+      expect(getElimPfsLoadStatus(selectorState)).toBe("succeeded");
+    });
+
+    it("getElimPfsSaveStatus returns the save status", () => {
+      expect(getElimPfsSaveStatus(selectorState)).toBe("succeeded");
+    });
+
+    it("getElimPfsError returns the error", () => {
+      expect(getElimPfsError(selectorState)).toBe("test error");
+    });
+
+    it("getElimPfsIoError returns the io error", () => {
+      expect(getElimPfsIoError(selectorState)).toBe(ioDataError.NONE);
     });
   });
 

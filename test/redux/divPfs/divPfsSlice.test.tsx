@@ -2,7 +2,16 @@ import reducer, {
   divPfsState,
   fetchDivPfs,
   saveDivPfs,
+  selectDivPfs,
+  getDivPfRequestedTmntId,
+  getDivPfsTmntId,
+  getDivPfsLoadStatus,
+  getDivPfsSaveStatus,
+  getDivPfsError,
+  getDivPfsIoError,
 } from "@/redux/features/divPfs/divPfsSlice";
+import { RootState } from "@/redux/store";
+import { ioStatusType } from "@/redux/statusTypes";
 import {
   getAllDivPfsForTmnt,
   updateAllDivPfsForTmnt,
@@ -22,6 +31,7 @@ describe("divPfsSlice reducer + thunk", () => {
   const initialState: divPfsState = {
     divPfs: [],
     requestedTmntId: "",
+    tmntId: "",
     loadStatus: "idle",
     saveStatus: "idle",
     error: "",
@@ -49,19 +59,27 @@ describe("divPfsSlice reducer + thunk", () => {
       expect(state.loadStatus).toBe("loading");
       expect(state.saveStatus).toBe("idle");
       expect(state.requestedTmntId).toBe(tmntId);
+      expect(state.tmntId).toBe("");
       expect(state.error).toBe("");
       expect(state.divPfs).toEqual([]);
     });
 
-    it("should handle fetchDivPfs.fulfilled", () => {      
+    it("should handle fetchDivPfs.fulfilled", () => { 
+      const loadingState: divPfsState = {
+        ...initialState,
+        requestedTmntId: tmntId,
+        loadStatus: "loading",
+      };
 
-      const state = reducer(initialState, {
+      const state = reducer(loadingState, {
         type: fetchDivPfs.fulfilled.type,
         payload: mockDivPfs,
       });
 
       expect(state.loadStatus).toBe("succeeded");
       expect(state.saveStatus).toBe("idle");
+      expect(state.requestedTmntId).toBe(tmntId);
+      expect(state.tmntId).toBe(tmntId);
       expect(state.error).toBe("");
       expect(state.divPfs).toEqual(mockDivPfs);
     });
@@ -69,13 +87,21 @@ describe("divPfsSlice reducer + thunk", () => {
     it("should handle fetchDivPfs.rejected", () => {
       const errorMessage = "DB error";
 
-      const state = reducer(initialState, {
+      const loadingState: divPfsState = {
+        ...initialState,
+        requestedTmntId: tmntId,
+        loadStatus: "loading",
+      };
+
+      const state = reducer(loadingState, {
         type: fetchDivPfs.rejected.type,
         error: { message: errorMessage },
       });
 
       expect(state.loadStatus).toBe("failed");
       expect(state.saveStatus).toBe("idle");
+      expect(state.requestedTmntId).toBe(tmntId);
+      expect(state.tmntId).toBe("");
       expect(state.error).toBe(errorMessage);
       expect(state.divPfs).toEqual([]);
     });
@@ -118,6 +144,44 @@ describe("divPfsSlice reducer + thunk", () => {
     });
   });
 
+  describe("selectors", () => {
+    const selectorState = {
+      divPfs: {
+        divPfs: mockDivPfs,
+        requestedTmntId: tmntId,
+        tmntId: tmntId,
+        loadStatus: "succeeded" as ioStatusType,
+        saveStatus: "succeeded" as ioStatusType,
+        error: "test error",
+        ioError: ioDataError.NONE,
+      },
+    } as RootState;
+
+    it("selectDivPfs returns the divPfs array", () => {
+      expect(selectDivPfs(selectorState)).toBe(mockDivPfs);
+    });
+
+    it("getDivPfRequestedTmntId returns the requested tournament id", () => {
+      expect(getDivPfRequestedTmntId(selectorState)).toBe(tmntId);
+    });
+
+    it("getDivPfsLoadStatus returns the load status", () => {
+      expect(getDivPfsLoadStatus(selectorState)).toBe("succeeded");
+    });
+
+    it("getDivPfsSaveStatus returns the save status", () => {
+      expect(getDivPfsSaveStatus(selectorState)).toBe("succeeded");
+    });
+
+    it("getDivPfsError returns the error", () => {
+      expect(getDivPfsError(selectorState)).toBe("test error");
+    });
+
+    it("getDivPfsIoError returns the io error", () => {
+      expect(getDivPfsIoError(selectorState)).toBe(ioDataError.NONE);
+    });
+  });
+
   describe("Thunk tests fetchDivPfs", () => {    
 
     it("dispatches fulfilled when getAllDivPfsForTmnt resolves", async () => {      
@@ -136,6 +200,7 @@ describe("divPfsSlice reducer + thunk", () => {
 
       expect(mockedGetAllDivPfsForTmnt).toHaveBeenCalledWith(tmntId);
       expect(state.requestedTmntId).toBe(tmntId);
+      expect(state.tmntId).toBe(tmntId);
       expect(state.loadStatus).toBe("succeeded");
       expect(state.saveStatus).toBe("idle");
       expect(state.error).toBe("");
@@ -156,6 +221,7 @@ describe("divPfsSlice reducer + thunk", () => {
       const state = store.getState().divPfs;
 
       expect(state.requestedTmntId).toBe(tmntId);
+      expect(state.tmntId).toBe("");
       expect(state.loadStatus).toBe("failed");
       expect(state.saveStatus).toBe("idle");
       expect(state.error).toBe("DB failed");
@@ -177,7 +243,8 @@ describe("divPfsSlice reducer + thunk", () => {
 
       const state = store.getState().divPfs;
 
-      expect(state.requestedTmntId).toBe(tmntId);      
+      expect(state.requestedTmntId).toBe(tmntId);  
+      expect(state.tmntId).toBe(tmntId);
       expect(state.loadStatus).toBe("succeeded");
       expect(state.divPfs).toEqual([]);
     });

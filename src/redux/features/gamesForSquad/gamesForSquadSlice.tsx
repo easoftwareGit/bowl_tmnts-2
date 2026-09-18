@@ -101,7 +101,7 @@ export const gamesForSquadSlice = createSlice({
   },
 });
 
-export const selectGamesForSquad = (state: RootState) => state.gamesForSquad;
+export const selectGamesForSquad = (state: RootState) => state.gamesForSquad.games;
 
 export const getGamesForSquadRequestedId = (state: RootState) =>
   state.gamesForSquad.requestedSquadId;

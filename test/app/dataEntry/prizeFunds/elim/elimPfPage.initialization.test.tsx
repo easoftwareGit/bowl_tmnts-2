@@ -131,4 +131,19 @@ describe("Elim Prize Fund initialization", () => {
     );
   });
 
+  it("does not initialize when eliminator prize funds were loaded for a different tournament", () => {
+    setup({
+      elimPfsRequestedTmntId:
+        "tmt_00000000000000000000000000000099",
+    });
+
+    expect(mockElimPfsToPrizeFunds).not.toHaveBeenCalled();
+    expect(mockPopulatePfRows).not.toHaveBeenCalled();
+    expect(
+      screen.queryByTestId(
+        "mock-elim-prize-fund-grid",
+      ),
+    ).not.toBeInTheDocument();
+  });
+
 });

@@ -33,6 +33,7 @@ import { initModalObj, modalObjectType } from "@/components/modal/modalObjType";
 import WaitModal from "@/components/modal/waitModal";
 import "./scoresForm.css";
 import { sfRowHeight } from "@/lib/syncfusionTools";
+import { selectTmntFullData } from "@/redux/features/tmntFullData/tmntFullDataSlice";
 
 /*********
  * Types *
@@ -137,9 +138,7 @@ const ScoresEntryForm: React.FC<ChildProps> = ({
    * Redux State  *
    ****************/
 
-  const tmntFullData = useSelector(
-    (state: RootState) => state.tmntFullData.tmntFullData,
-  );
+  const tmntFullData = useSelector(selectTmntFullData);
   const games = useSelector(
     (state: RootState) => state.gamesForSquad.games,
   );

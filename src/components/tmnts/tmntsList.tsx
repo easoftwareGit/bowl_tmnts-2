@@ -7,6 +7,7 @@ import { getMonthDay } from "@/lib/dateTools";
 interface TmntListProps {
   years: YearObj[];
   tmnts: tmntsListType[];
+  tmntYear: string;
   showResults: boolean;
   onYearChange: (val: string) => void | undefined;
 }
@@ -75,15 +76,13 @@ export function getSortedStateOptions(tmnts: tmntsListType[]): SelectOption[] {
 }
 
 const TmntsList: FC<TmntListProps> = (props) => {
-  const { years, tmnts, showResults } = props;
+  const { years, tmnts, tmntYear, showResults } = props;
 
   let stateFilter: string = "all";
   const [filteredTmnts, setFilteredTmnts] = useState(tmnts);
-  const [tmntYear, setTmntYear] = useState(years[0]?.year);  
 
   useEffect(() => {
     setFilteredTmnts(tmnts)
-    setTmntYear(years[0]?.year)    
   }, [tmnts, years])
 
   const TmntMonthDay = (tmnt: tmntsListType): string => {
@@ -100,15 +99,20 @@ const TmntsList: FC<TmntListProps> = (props) => {
   // add "all" at top
   sortedStates.splice(0, 0, { value: "all", text: "all" });
 
-  function handleYearChange(e: any): void {    
-    const { value } = e.target;     // get new selected year value    
-    props.onYearChange(value);      // send value to parent, so parent can re-load tmnts for selected year        
-    stateFilter = 'all';            // reset state filter
-    setFilteredTmnts([]);           // reset filtered tmnts to all tmnts for year
-    let selFilter: any = document?.getElementById("stateFilter")  // get state filter element
-    if (selFilter) {                
+  function handleYearChange(e: React.ChangeEvent<HTMLSelectElement>): void {
+    const { value } = e.target;
+
+    props.onYearChange(value);    // send value to parent, so parent can re-load tmnts for selected year
+    stateFilter = "all";          // reset state filter
+    setFilteredTmnts([]);         // reset filtered tmnts to all tmnts for year
+
+    // get state filter element
+    const selFilter = document.getElementById(
+      "stateFilter",
+    ) as HTMLSelectElement | null;
+    if (selFilter) {
       selFilter.selectedIndex = 0;  // reset selcted state filter to top value, 'all'
-    }    
+    }
   }
 
   function handleStateFilterChange(e: any): void {
@@ -125,7 +129,7 @@ const TmntsList: FC<TmntListProps> = (props) => {
           className="tmnt_table"
           style={{ width: 720 }}
         >
-          <table className="table table-striped table-hover w-100">
+          <table className="table table-sm table-striped table-hover w-100">
             <thead>
               <tr>
                 <th className="align-middle" style={{ width: 100 }}>
@@ -136,6 +140,7 @@ const TmntsList: FC<TmntListProps> = (props) => {
                     <select
                       className="form-select w-auto"
                       id="yearSelect"
+                      value={tmntYear}
                       onChange={handleYearChange}
                       data-testid="yearSelect"
                     >
@@ -148,7 +153,7 @@ const TmntsList: FC<TmntListProps> = (props) => {
                           {yearObj.year}
                         </option>
                       ))}
-                    </select>
+                    </select>                  
                   ) : null }  
                 </th>
                 <th className="align-middle" style={{ width: 300 }}>

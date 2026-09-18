@@ -1,6 +1,8 @@
 export type GameNum = `Game ${number}`;
 export type GameHdcp = `Game ${number} + Hdcp`;
 
+export const totalPlusHdcpSqlName = 'total + Hdcp';
+// API/raw SQL name
 export type TmntGameResult = {
   player_id: string;
   div_id: string;
@@ -32,6 +34,23 @@ export type TmntResultsGridRow = {
   plus_minus: string;
   total_hdcp: number;
   total_plus_total_hdcp: number;
+
+  [key: GameNum]: number;
+  [key: GameHdcp]: number;
+};
+
+export type TmntStandingsTableRow = {
+  id: string;
+  position: number;
+  player_id: string;
+  full_name: string;
+  average: number;
+  hdcp: number;
+  total: number;
+  plus_minus: string;
+  total_hdcp: number;
+  total_plus_total_hdcp: number;
+  prize: string;
 
   [key: GameNum]: number;
   [key: GameHdcp]: number;

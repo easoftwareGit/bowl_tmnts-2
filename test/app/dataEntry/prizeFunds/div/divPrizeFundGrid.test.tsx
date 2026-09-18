@@ -1,6 +1,7 @@
 import React from "react";
 import { render } from "@testing-library/react";
 import { useDispatch, useSelector } from "react-redux";
+import type { RootState } from "@/redux/store";
 import type {
   divPfEntryRow,
   divPfType,
@@ -13,6 +14,7 @@ import PrizeFundGrid, {
 import {
   getDivPfsSaveStatus,
   saveDivPfs,
+  selectDivPfs,
 } from "@/redux/features/divPfs/divPfsSlice";
 import { extractDivPfs } from "@/lib/db/divPfs/dbDivPfs";
 import {
@@ -30,7 +32,15 @@ jest.mock("react-redux", () => ({
 
 jest.mock("@/redux/features/divPfs/divPfsSlice", () => ({
   __esModule: true,
-  getDivPfsSaveStatus: jest.fn(),
+
+  selectDivPfs: jest.fn(
+    (state) => state.divPfs.divPfs,
+  ),
+
+  getDivPfsSaveStatus: jest.fn(
+    (state) => state.divPfs.saveStatus,
+  ),
+
   saveDivPfs: jest.fn(),
 }));
 
@@ -137,14 +147,11 @@ describe("DivPrizeFundGrid", () => {
 
     mockedUseDispatch.mockReturnValue(mockDispatch);
 
-    mockedUseSelector.mockImplementation((selector) => {
-      if (selector === getDivPfsSaveStatus) {
-        return mockSaveStatus;
-      }
-
-      return selector({
+    mockedUseSelector.mockImplementation((selector) =>
+      selector({
         divPfs: {
           divPfs: mockAllDivPfs,
+          saveStatus: mockSaveStatus,
         },
         tmntFullData: {
           tmntFullData: {
@@ -153,8 +160,8 @@ describe("DivPrizeFundGrid", () => {
             },
           },
         },
-      } as any);
-    });
+      } as unknown as RootState),
+    );
   });
 
   it("passes the correct props to PrizeFundGrid", () => {
@@ -411,7 +418,9 @@ describe("DivPrizeFundGrid", () => {
 
     await props.onSave(rows);
 
-    expect(mockedSaveDivPfs).not.toHaveBeenCalled();
+    expect(mockedPfEntryRowsToDivPfEntryRows).toHaveBeenCalledWith(rows);
+    expect(mockedExtractDivPfs).toHaveBeenCalledWith([]);
+    expect(mockedSaveDivPfs).not.toHaveBeenCalled();    
     expect(mockDispatch).not.toHaveBeenCalled();
     expect(mockUnwrap).not.toHaveBeenCalled();
   });
@@ -520,4 +529,70 @@ describe("DivPrizeFundGrid", () => {
     expect(ref.current?.getCurrentRows()).toEqual(currentRows);
     expect(mockGetCurrentRows).toHaveBeenCalledTimes(1);
   });
+
+  it("passes each division id only once when saving", async () => {
+    const divRows: divPfEntryRow[] = [
+      {
+        id: "dpf_00000000000000000000000000000003",
+        div_id: divId,
+        position: 1,
+        amount: 100,
+        percentage: 0.4,
+      },
+      {
+        id: "dpf_00000000000000000000000000000004",
+        div_id: divId,
+        position: 2,
+        amount: 75,
+        percentage: 0.3,
+      },
+    ];
+
+    const divPfs: divPfType[] = [
+      {
+        id: "dpf_00000000000000000000000000000003",
+        div_id: divId,
+        position: 1,
+        amount: 100,
+      },
+      {
+        id: "dpf_00000000000000000000000000000004",
+        div_id: divId,
+        position: 2,
+        amount: 75,
+      },
+    ];
+
+    const saveAction = jest.fn() as ReturnType<typeof saveDivPfs>;
+
+    mockedPfEntryRowsToDivPfEntryRows.mockReturnValue(divRows);
+    mockedExtractDivPfs.mockReturnValue(divPfs);
+    mockedSaveDivPfs.mockReturnValue(
+      saveAction as ReturnType<typeof saveDivPfs>,
+    );
+
+    render(
+      <DivPrizeFundGrid
+        rows={rows}
+        setRows={jest.fn()}
+        divId={divId}
+        totalPrizeFund={250}
+        gridDataWasChanged={false}
+        onGridDataChanged={jest.fn()}
+        onGridDataReset={jest.fn()}
+        onBack={jest.fn()}
+      />,
+    );
+
+    const props = mockPrizeFundGridRender.mock.calls[0][0];
+
+    await props.onSave(rows);
+
+    const savePayload = mockedSaveDivPfs.mock.calls[0][0];
+
+    expect(savePayload.divIds).toEqual([
+      otherDivId,
+      divId,
+    ]);
+  });  
 });

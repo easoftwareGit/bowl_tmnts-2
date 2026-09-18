@@ -15,7 +15,9 @@ import type {
 import {
   getElimPfsSaveStatus,
   saveElimPfs,
+  selectElimPfs,
 } from "@/redux/features/elimPfs/elimPfsSlice";
+import { selectTmntFullData } from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import { extractElimPfs } from "@/lib/db/elimPfs/dbElimPfs";
 import {
   pfEntryRowsToElimPfEntryRows,
@@ -33,9 +35,22 @@ jest.mock("react-redux", () => ({
 
 jest.mock("@/redux/features/elimPfs/elimPfsSlice", () => ({
   __esModule: true,
-  getElimPfsSaveStatus: jest.fn(),
+
+  selectElimPfs: jest.fn((state) => state.elimPfs.elimPfs),
+
+  getElimPfsSaveStatus: jest.fn((state) => state.elimPfs.saveStatus),
+
   saveElimPfs: jest.fn(),
 }));
+
+jest.mock(
+  "@/redux/features/tmntFullData/tmntFullDataSlice",
+  () => ({
+    __esModule: true,
+
+    selectTmntFullData: jest.fn((state) => state.tmntFullData.tmntFullData),
+  }),
+);
 
 jest.mock("@/lib/db/elimPfs/dbElimPfs");
 
@@ -118,6 +133,8 @@ const existingElimPfs: elimPfType[] = [
   },
 ];
 
+let mockAllElimPfs: elimPfType[];
+
 describe("ElimPrizeFundGrid", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -133,36 +150,36 @@ describe("ElimPrizeFundGrid", () => {
     mockedUseDispatch.mockReturnValue(mockDispatch);
 
     /*
-     * ElimPrizeFundGrid now uses three selectors:
-     *
-     * 1. getElimPfsSaveStatus
-     * 2. state.elimPfs.elimPfs
-     * 3. state.tmntFullData.tmntFullData
-     *
-     * Calling each selector with a mock RootState lets both the named
-     * selector and inline selectors behave like the real Redux store.
-     */
-    mockedUseSelector.mockImplementation((selector) => {
-      const state = {
-        elimPfs: {
-          elimPfs: existingElimPfs,
-          saveStatus: "idle",
-        },
-        tmntFullData: {
+    * ElimPrizeFundGrid uses three Redux selectors:
+    *
+    * 1. getElimPfsSaveStatus
+    * 2. selectElimPfs
+    * 3. selectTmntFullData
+    *
+    * Calling each selector with a mock RootState keeps this
+    * test consistent with the real Redux state shape.
+    */
+    mockedUseSelector.mockImplementation(
+      (selector) => {
+        const state = {
+          elimPfs: {
+            elimPfs: mockAllElimPfs,
+            saveStatus: "idle",
+          },
           tmntFullData: {
-            tmnt: {
-              id: tmntId,
+            tmntFullData: {
+              tmnt: {
+                id: tmntId,
+              },
             },
           },
-        },
-      } as unknown as RootState;
+        } as unknown as RootState;
 
-      if (selector === getElimPfsSaveStatus) {
-        return "idle";
-      }
+        return selector(state);
+      },
+    );
 
-      return selector(state);
-    });
+    mockAllElimPfs = existingElimPfs;
   });
 
   it("passes the correct props to PrizeFundGrid", () => {
@@ -268,11 +285,17 @@ describe("ElimPrizeFundGrid", () => {
       ...elimPfsToSave,
     ];
 
+    const elemIdsForSave: string[] = [
+      ...new Set(
+        expectedElimPfs.map(
+          (elimPf) => elimPf.elim_id,
+        ),
+      ),
+    ];
+    
     const expectedSaveData: tmntElimPfSaveDataType = {
       elimPfData: expectedElimPfs,
-      elimIds: expectedElimPfs.map(
-        (elimPf) => elimPf.elim_id,
-      ),
+      elimIds: elemIdsForSave,
       tmntId,
     };
 
@@ -285,6 +308,81 @@ describe("ElimPrizeFundGrid", () => {
     );
 
     expect(mockUnwrap).toHaveBeenCalledTimes(1);
+  });
+
+  it("includes each eliminator id only once in the save data", async () => {
+    const elimRows: elimPfEntryRow[] = [
+      {
+        id: "epf_00000000000000000000000000000004",
+        elim_id: elimId1,
+        position: 1,
+        amount: 100,
+        percentage: 0.4,
+      },
+      {
+        id: "epf_00000000000000000000000000000005",
+        elim_id: elimId1,
+        position: 2,
+        amount: 75,
+        percentage: 0.3,
+      },
+    ];
+
+    const elimPfsToSave: elimPfType[] = [
+      {
+        id: "epf_00000000000000000000000000000004",
+        elim_id: elimId1,
+        position: 1,
+        amount: 100,
+      },
+      {
+        id: "epf_00000000000000000000000000000005",
+        elim_id: elimId1,
+        position: 2,
+        amount: 75,
+      },
+    ];
+
+    mockedPfEntryRowsToElimPfEntryRows.mockReturnValue(
+      elimRows,
+    );
+
+    mockedExtractElimPfs.mockReturnValue(
+      elimPfsToSave,
+    );
+
+    const saveAction =
+      jest.fn() as ReturnType<typeof saveElimPfs>;
+
+    mockedSaveElimPfs.mockReturnValue(
+      saveAction,
+    );
+
+    render(
+      <ElimPrizeFundGrid
+        rows={rows}
+        setRows={jest.fn()}
+        elimId={elimId1}
+        totalPrizeFund={250}
+        gridDataWasChanged={false}
+        onGridDataChanged={jest.fn()}
+        onGridDataReset={jest.fn()}
+        onBack={jest.fn()}
+      />,
+    );
+
+    const props =
+      mockPrizeFundGridRender.mock.calls[0][0];
+
+    await props.onSave(rows);
+
+    const saveData =
+      mockedSaveElimPfs.mock.calls[0][0];
+
+    expect(saveData.elimIds).toEqual([
+      elimId2,
+      elimId1,
+    ]);
   });
 
   it("preserves prize funds belonging to other eliminators when saving", async () => {
@@ -468,6 +566,8 @@ describe("ElimPrizeFundGrid", () => {
   });
 
   it("does not dispatch when there is nothing to save", async () => {
+    mockAllElimPfs = [];
+
     mockedPfEntryRowsToElimPfEntryRows.mockReturnValue([]);
     mockedExtractElimPfs.mockReturnValue([]);
 
@@ -485,7 +585,8 @@ describe("ElimPrizeFundGrid", () => {
       />,
     );
 
-    const props = mockPrizeFundGridRender.mock.calls[0][0];
+    const props =
+      mockPrizeFundGridRender.mock.calls[0][0];
 
     await props.onSave(rows);
 
@@ -494,28 +595,53 @@ describe("ElimPrizeFundGrid", () => {
     expect(mockUnwrap).not.toHaveBeenCalled();
   });
 
+  // it("does not dispatch when there is nothing to save", async () => {
+  //   mockedPfEntryRowsToElimPfEntryRows.mockReturnValue([]);
+  //   mockedExtractElimPfs.mockReturnValue([]);
+
+  //   render(
+  //     <ElimPrizeFundGrid
+  //       rows={rows}
+  //       setRows={jest.fn()}
+  //       elimId={elimId1}
+  //       totalPrizeFund={250}
+  //       gridDataWasChanged={false}
+  //       onGridDataChanged={jest.fn()}
+  //       onGridDataReset={jest.fn()}
+  //       onNavigateAfterSave={jest.fn()}
+  //       onBack={jest.fn()}
+  //     />,
+  //   );
+
+  //   const props = mockPrizeFundGridRender.mock.calls[0][0];
+
+  //   await props.onSave(rows);
+
+  //   expect(mockedSaveElimPfs).not.toHaveBeenCalled();
+  //   expect(mockDispatch).not.toHaveBeenCalled();
+  //   expect(mockUnwrap).not.toHaveBeenCalled();
+  // });
+
   it("passes the Redux save status to PrizeFundGrid", () => {
-    mockedUseSelector.mockImplementation((selector) => {
-      const state = {
-        elimPfs: {
-          elimPfs: existingElimPfs,
-          saveStatus: "saving",
-        },
-        tmntFullData: {
+    mockedUseSelector.mockImplementation(
+      (selector) => {
+        const state = {
+          elimPfs: {
+            elimPfs: mockAllElimPfs,
+            saveStatus: "saving",
+          },
           tmntFullData: {
-            tmnt: {
-              id: tmntId,
+            tmntFullData: {
+              tmnt: {
+                id: tmntId,
+              },
             },
           },
-        },
-      } as unknown as RootState;
+        } as unknown as RootState;
 
-      if (selector === getElimPfsSaveStatus) {
-        return "saving";
-      }
-
-      return selector(state);
-    });
+        return selector(state);
+      },
+    );
 
     render(
       <ElimPrizeFundGrid
@@ -626,4 +752,40 @@ describe("ElimPrizeFundGrid", () => {
 
     expect(mockGetCurrentRows).toHaveBeenCalledTimes(1);
   });
+
+  it("preserves and saves other eliminator prize funds when the current eliminator has no rows", async () => {
+    mockedPfEntryRowsToElimPfEntryRows.mockReturnValue([]);
+    mockedExtractElimPfs.mockReturnValue([]);
+
+    const saveAction = jest.fn() as ReturnType<typeof saveElimPfs>;
+
+    mockedSaveElimPfs.mockReturnValue(saveAction);
+
+    render(
+      <ElimPrizeFundGrid
+        rows={rows}
+        setRows={jest.fn()}
+        elimId={elimId1}
+        totalPrizeFund={250}
+        gridDataWasChanged={false}
+        onGridDataChanged={jest.fn()}
+        onGridDataReset={jest.fn()}
+        onBack={jest.fn()}
+      />,
+    );
+
+    const props = mockPrizeFundGridRender.mock.calls[0][0];
+
+    await props.onSave([]);
+
+    expect(mockedSaveElimPfs).toHaveBeenCalledWith({
+      elimPfData: [existingElimPfs[2]],
+      elimIds: [elimId2],      
+      tmntId,
+    });
+
+    expect(mockDispatch).toHaveBeenCalledWith(saveAction);
+    expect(mockUnwrap).toHaveBeenCalledTimes(1);
+  });
+    
 });

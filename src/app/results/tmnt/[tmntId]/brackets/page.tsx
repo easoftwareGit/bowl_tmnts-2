@@ -34,8 +34,8 @@ import {
 } from "@syncfusion/ej2-react-grids";
 import { sfGridBorderWidth, sfRowHeight } from "@/lib/syncfusionTools";
 import { createBracketColumns } from "./createBrktsColumns";
-import "./bracketGames.css";
 import { populatePlayerBrktRows } from "./populateBrktPlayerRows";
+import "./bracketGames.css";
 
 export type BrktGamesGridRow = {
   id: string;
@@ -71,7 +71,7 @@ const PlayerBrktsPage = () => {
   const tmntFullData = useSelector(selectTmntFullData);
 
   const requestedResultsTmntId = useSelector(getOneTmntGameResultsRequestedTmntId);
-  const resultsLoadStatsus = useSelector(getOneTmntGameResultsLoadStatus);
+  const resultsLoadStatus = useSelector(getOneTmntGameResultsLoadStatus);
   const resultsError = useSelector(getOneTmntGameResultsError);
   const resultsTmntId = useSelector(getOneTmntGameResultsTmntId);
   const tmntResults = useSelector(selectOneTmntGameResults);  
@@ -121,11 +121,11 @@ const PlayerBrktsPage = () => {
     const needTmntGames = resultsTmntId !== tmntId;
 
     const failedForThisTmntGames =
-      resultsLoadStatsus === "failed" && requestedResultsTmntId === tmntId;
+      resultsLoadStatus === "failed" && requestedResultsTmntId === tmntId;
 
     if (
       needTmntGames &&
-      resultsLoadStatsus !== "loading" &&
+      resultsLoadStatus !== "loading" &&
       !failedForThisTmntGames
     ) {
       dispatch(fetchOneTmntGameResults(tmntId));
@@ -133,7 +133,7 @@ const PlayerBrktsPage = () => {
   }, [
     tmntId,
     resultsTmntId,
-    resultsLoadStatsus,    
+    resultsLoadStatus,    
     requestedResultsTmntId,
     dispatch
   ]);
@@ -159,7 +159,7 @@ const PlayerBrktsPage = () => {
     requestedTmntId === tmntId;
   
   const failedForThisTmntGames =
-    resultsLoadStatsus === "failed" &&
+    resultsLoadStatus === "failed" &&
     requestedResultsTmntId === tmntId;
     
   if (!hasTmntData && failedForThisTmnt) {
@@ -209,12 +209,12 @@ const PlayerBrktsPage = () => {
 
   return (
     <>
-      <WaitModal show={resultsLoadStatsus === "loading"} message="Loading..." />
-      {resultsLoadStatsus !== "loading" &&
-        resultsLoadStatsus !== "succeeded" &&
+      <WaitModal show={resultsLoadStatus === "loading"} message="Loading..." />
+      {resultsLoadStatus !== "loading" &&
+        resultsLoadStatus !== "succeeded" &&
         resultsError && (
           <div>
-            Error: {resultsError} tmntLoadStatus: {resultsLoadStatsus}
+            Error: {resultsError} tmntLoadStatus: {resultsLoadStatus}
           </div>
         )}
       
@@ -222,7 +222,7 @@ const PlayerBrktsPage = () => {
         tmntFullData={tmntFullData}
       />      
 
-      {resultsLoadStatsus === "succeeded" && (
+      {resultsLoadStatus === "succeeded" && (
         <div className="text-center mb-2">
           <h4>Player Brackets</h4>
           <div

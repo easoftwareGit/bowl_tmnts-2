@@ -83,6 +83,19 @@ describe("Pot Prize Fund web page initialization", () => {
     });
   });
 
+  it("does not initialize when pot prize funds were loaded for a different tournament", () => {
+    setup({ potPfsRequestedTmntId: "tmt_00000000000000000000000000000099" });    
+
+    expect(mockPotPfsToPrizeFunds).not.toHaveBeenCalled();
+    expect(mockPopulatePfRows).not.toHaveBeenCalled();
+
+    expect(
+      screen.queryByTestId(
+        "mock-pot-prize-fund-grid",
+      ),
+    ).not.toBeInTheDocument();
+  }); 
+
   it("converts the pot prize funds and initializes the grid rows", async () => {
     const {
       currentPotPfs,
@@ -286,4 +299,18 @@ describe("Pot Prize Fund web page initialization", () => {
       );
     });
   });
+ 
+  it("initializes when pot prize funds were loaded for the route tournament", () => {
+    const {
+      tmntId,
+      currentPotPfs,
+    } = setup({
+      potPfsRequestedTmntId: undefined,
+    });
+
+    expect(tmntId).toBeDefined();
+    expect(mockPotPfsToPrizeFunds).toHaveBeenCalledWith(currentPotPfs);
+    expect(mockPopulatePfRows).toHaveBeenCalled();
+  });
+
 });

@@ -187,9 +187,7 @@ describe("Pot Prize Fund web page infrastructure", () => {
   });
 
   it("renders the page when there are no pot prize fund rows", () => {
-    setup({
-      potPfs: [],
-    });
+    setup({ potPfs: [] });
 
     expect(
       screen.getByRole("heading", {
@@ -205,5 +203,31 @@ describe("Pot Prize Fund web page infrastructure", () => {
 
     expect(getLatestGridProps()?.rows).toEqual([]);
   });  
+
+  it("does not render the page when the loaded pot prize funds belong to a different tournament", () => {
+    setup({ potPfsRequestedTmntId: "tmt_00000000000000000000000000000099" });
+
+    expect(
+      screen.queryByRole("heading", {
+        name: "Prize Fund",
+      }),
+    ).not.toBeInTheDocument();
+
+    expect(
+      screen.queryByTestId(
+        "mock-pot-prize-fund-grid",
+      ),
+    ).not.toBeInTheDocument();
+  });
+
+  it("still fetches pot prize funds when stale pot prize fund data is in Redux", () => {
+    setup({ potPfsRequestedTmntId: "tmt_00000000000000000000000000000099" });
+
+    expect(mockFetchPotPfs).toHaveBeenCalledTimes(1);
+    expect(mockFetchPotPfs).toHaveBeenCalledWith(tmntId);
+    expect(mockDispatch).toHaveBeenCalledWith(
+      mockFetchPotPfs.mock.results[0].value,
+    );
+  });
 
 });

@@ -25,6 +25,14 @@
   border-radius: 10px;
 }
 
+/*****************************
+* keep digits all same width *
+*****************************/
+
+body {
+  font-variant-numeric: tabular-nums;
+}
+
 /******************
 * Syncfusion Grid *
 ******************/
@@ -80,4 +88,24 @@
 /* hovered row */
 .e-grid .e-row:hover .e-rowcell {
   background-color: #dbeafe !important;
+}
+
+/*
+ * Syncfusion aggregate cells use less horizontal padding than normal
+ * grid cells. Match the aggregate padding to the normal row cells so
+ * right-aligned values line up vertically.
+ */
+.e-grid .e-summarycell {
+  padding-left: 21px;
+  padding-right: 21px;
+}
+
+/* Syncfusion Grid - stacked header row */
+.e-grid .e-gridheader .e-stackedheadercell {
+  height: 30px;
+}
+
+/* Syncfusion Grid - summary row */
+.e-grid .e-summaryrow .e-summarycell {
+  height: 30px;
 }

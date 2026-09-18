@@ -8,6 +8,7 @@ import { getAllDivPfsForTmnt, updateAllDivPfsForTmnt } from "@/lib/db/divPfs/dbD
 export interface divPfsState {
   divPfs: divPfType[];
   requestedTmntId: string;
+  tmntId: string;
   loadStatus: ioStatusType;
   saveStatus: ioStatusType;
   error: string | undefined;
@@ -18,6 +19,7 @@ export interface divPfsState {
 const initialState: divPfsState = {
   divPfs: [],
   requestedTmntId: "",
+  tmntId: "",
   loadStatus: "idle" as ioStatusType,
   saveStatus: "idle" as ioStatusType,
   error: "",
@@ -62,6 +64,7 @@ export const divPfsSlice = createSlice({
         fetchDivPfs.fulfilled,
         (state, action: PayloadAction<divPfType[]>) => {
           state.loadStatus = "succeeded";
+          state.tmntId = state.requestedTmntId;
           state.divPfs = action.payload;
         }
       )
@@ -87,9 +90,10 @@ export const divPfsSlice = createSlice({
   },
 });
   
-export const selectDivPfs = (state: RootState) => state.divPfs;
+export const selectDivPfs = (state: RootState) => state.divPfs.divPfs;
 
-export const getDivRequestedId = (state: RootState) => state.divPfs.requestedTmntId;
+export const getDivPfRequestedTmntId = (state: RootState) => state.divPfs.requestedTmntId;
+export const getDivPfsTmntId = (state: RootState) => state.divPfs.tmntId;
 export const getDivPfsLoadStatus = (state: RootState) => state.divPfs.loadStatus;
 export const getDivPfsSaveStatus = (state: RootState) => state.divPfs.saveStatus;
 export const getDivPfsError = (state: RootState) => state.divPfs.error;

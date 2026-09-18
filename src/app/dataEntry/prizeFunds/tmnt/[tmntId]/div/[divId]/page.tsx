@@ -2,12 +2,14 @@
 
 import React, { useEffect, useRef, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import type { AppDispatch, RootState } from "@/redux/store";
+import type { AppDispatch } from "@/redux/store";
 import { useParams, useRouter } from "next/navigation";
 import {
   fetchDivPfs,
   getDivPfsError,
-  getDivPfsLoadStatus,  
+  getDivPfsLoadStatus,
+  selectDivPfs,
+  getDivPfRequestedTmntId,
 } from "@/redux/features/divPfs/divPfsSlice";
 import type { prizeFundEntryRow } from "@/lib/types/types";
 import WaitModal from "@/components/modal/waitModal";
@@ -15,6 +17,7 @@ import {
   fetchTmntFullData,
   getTmntFullDataError,
   getTmntFullDataLoadStatus,
+  selectTmntFullData,
 } from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 import EaCurrencyInput from "@/components/currency/eaCurrencyInput";
@@ -53,17 +56,14 @@ export default function DivPrizeFundEntry() {
    */
   const initializedRef = useRef(false);
   
-  const allDivPfs = useSelector(
-    (state: RootState) => state.divPfs.divPfs,
-  );
+  const allDivPfs = useSelector(selectDivPfs);
+  const divPfsRequestedTmntId = useSelector(getDivPfRequestedTmntId);
   const divPfs = useMemo(
     () => allDivPfs.filter((divPf) => divPf.div_id === divId),
     [allDivPfs, divId],
   );
 
-  const tmntData = useSelector(
-    (state: RootState) => state.tmntFullData.tmntFullData,
-  );
+  const tmntData = useSelector(selectTmntFullData);
   const divName = tmntData?.divs.find((div) => div.id === divId)?.div_name;
   const divPrizeFund =
     tmntData.moneys.find(
@@ -143,6 +143,7 @@ export default function DivPrizeFundEntry() {
   useEffect(() => {
     if (
       divPfsLoadStatus !== "succeeded" ||
+      divPfsRequestedTmntId !== tmntId ||
       !tmntData ||
       tmntData.tmnt.id !== tmntId
     )
@@ -174,6 +175,7 @@ export default function DivPrizeFundEntry() {
     initializedRef.current = true;
   }, [
     divPfsLoadStatus,
+    divPfsRequestedTmntId,
     tmntData,
     tmntId,
     divPfs,
@@ -615,7 +617,7 @@ export default function DivPrizeFundEntry() {
         divPfsError && <>Error: {divPfsError}</>}
       {tmntLoadStatus !== "loading" &&
         tmntLoadStatus !== "succeeded" &&
-        tmntError && <>Error: {tmntLoadStatus}</>}
+        tmntError && <>Error: {tmntError}</>}
       {canRender && (
         <div className="container">
           <div className="prizeFundForm">

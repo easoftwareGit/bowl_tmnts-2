@@ -1,5 +1,5 @@
 import type { syncfusionColumnDef } from "@/lib/types/types";
-import { calcNumGames } from "@/app/results/tmnt/[tmntId]/standings/createResultsColumns";
+import { calcNumGames } from "@/components/tmnts/games";
 
 const laneWidth = "75"
 const gameWidth = "65"

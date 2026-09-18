@@ -1,8 +1,7 @@
 import { BrktListRecord } from "@/components/brackets/buildBrktLists";
 import { TmntGameResult } from "@/lib/types/resultsTypes";
 import { BrktGamesGridRow } from "./page";
-import { calcNumGames } from "../standings/createResultsColumns";
-import { oneBrktId1, oneBrktId9, playerId1 } from "../../../../../../test/mocks/tmnts/tmntFullData/mockTmntFullData";
+import { calcNumGames } from "@/components/tmnts/games";
 
 /**
  * Sorts the bracket results grid rows in place.

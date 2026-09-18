@@ -917,7 +917,7 @@ export const createStackedPlayerColumns = (
       field: "feeTotal",
       headerText: "Total Fee",
       width: totalColWidth,
-      textAlign: "Center",
+      textAlign: "Right",
       type: "number",
       format: "C2",
       allowEditing: false,

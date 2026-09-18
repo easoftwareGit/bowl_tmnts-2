@@ -2,12 +2,14 @@
 
 import React, { useEffect, useRef, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import type { AppDispatch, RootState } from "@/redux/store";
+import type { AppDispatch } from "@/redux/store";
 import { useParams, useRouter } from "next/navigation";
 import {
   fetchElimPfs,
   getElimPfsError,
-  getElimPfsLoadStatus,  
+  getElimPfsLoadStatus,
+  getElimRequestedId,
+  selectElimPfs,
 } from "@/redux/features/elimPfs/elimPfsSlice";
 import type { elimType, prizeFundEntryRow } from "@/lib/types/types";
 import WaitModal from "@/components/modal/waitModal";
@@ -15,6 +17,7 @@ import {
   fetchTmntFullData,
   getTmntFullDataError,
   getTmntFullDataLoadStatus,
+  selectTmntFullData,
 } from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 import EaCurrencyInput from "@/components/currency/eaCurrencyInput";
@@ -40,6 +43,8 @@ export default function ElimPrizeFundEntry() {
 
   const elimPfsLoadStatus = useSelector(getElimPfsLoadStatus);
   const elimPfsError = useSelector(getElimPfsError);
+  const elimPfsRequestedTmntId = useSelector(getElimRequestedId);
+
   const tmntLoadStatus = useSelector(getTmntFullDataLoadStatus);
   const tmntError = useSelector(getTmntFullDataError);
 
@@ -50,19 +55,14 @@ export default function ElimPrizeFundEntry() {
    * after the user has started editing.
    */
   const initializedRef = useRef(false);
-
-  // const elimPfs = useSelector((state: RootState) => state.elimPfs.elimPfs);
-  const allElimPfs = useSelector(
-    (state: RootState) => state.elimPfs.elimPfs,
-  );
+  
+  const allElimPfs = useSelector(selectElimPfs);  
   const elimPfs = useMemo(
     () => allElimPfs.filter((elimPf) => elimPf.elim_id === elimId),
     [allElimPfs, elimId],
   );
 
-  const tmntData = useSelector(
-    (state: RootState) => state.tmntFullData.tmntFullData,
-  );
+  const tmntData = useSelector(selectTmntFullData);
   const elim = tmntData?.elims?.find((elim) => elim.id === elimId);  
   
   const elimName = getBrktOrElimName(elim as elimType, tmntData?.divs || []);
@@ -169,6 +169,7 @@ export default function ElimPrizeFundEntry() {
   useEffect(() => {
     if (
       elimPfsLoadStatus !== "succeeded" ||
+      elimPfsRequestedTmntId !== tmntId ||
       !tmntData ||
       tmntData.tmnt?.id !== tmntId
     ) {
@@ -202,6 +203,7 @@ export default function ElimPrizeFundEntry() {
     initializedRef.current = true;
   }, [
     elimPfsLoadStatus,
+    elimPfsRequestedTmntId,
     tmntData,
     tmntId,
     elimPfs,
@@ -266,6 +268,7 @@ export default function ElimPrizeFundEntry() {
     setConfModalObj(initModalObj); // reset modal object (hides modal)
   };
 
+  const gotElimPfsData = elimPfsRequestedTmntId === tmntId;
   const gotTmntData = tmntData?.tmnt?.id === tmntId;
 
   /**
@@ -556,6 +559,7 @@ export default function ElimPrizeFundEntry() {
 
   const canRender =
     elimPfsLoadStatus === "succeeded" &&    
+    gotElimPfsData &&
     tmntLoadStatus === "succeeded" &&
     gotTmntData;
   
@@ -576,7 +580,7 @@ export default function ElimPrizeFundEntry() {
         elimPfsError && <>Error: {elimPfsError}</>}
       {tmntLoadStatus !== "loading" &&
         tmntLoadStatus !== "succeeded" &&
-        tmntError && <>Error: {tmntLoadStatus}</>}      
+        tmntError && <>Error: {tmntError}</>}      
 
       {canRender && (
         <div className="container">

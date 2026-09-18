@@ -3,11 +3,13 @@
 import React, { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { prizeFundEntryRow, tmntElimPfSaveDataType } from "@/lib/types/types";
-import type { AppDispatch, RootState } from "@/redux/store";
+import type { AppDispatch } from "@/redux/store";
 import {
   getElimPfsSaveStatus,
   saveElimPfs,
+  selectElimPfs,
 } from "@/redux/features/elimPfs/elimPfsSlice";
+import { selectTmntFullData } from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import { extractElimPfs } from "@/lib/db/elimPfs/dbElimPfs";
 import { pfEntryRowsToElimPfEntryRows } from "../convertPfTypes";
 import PrizeFundGrid, { type PrizeFundGridHandle } from "../prizeFundGrid";
@@ -61,12 +63,8 @@ const ElimPrizeFundGrid = React.forwardRef<PrizeFundGridHandle, ElimPrizeFundGri
   const dispatch = useDispatch<AppDispatch>();
   const saveStatus = useSelector(getElimPfsSaveStatus);
 
-  const allElimPfs = useSelector(
-    (state: RootState) => state.elimPfs.elimPfs,
-  );
-  const tmntData = useSelector(
-    (state: RootState) => state.tmntFullData.tmntFullData,
-  );
+  const allElimPfs = useSelector(selectElimPfs);
+  const tmntData = useSelector(selectTmntFullData);
 
   /**
    * Saves generic prize-fund rows as elim prize-fund records.
@@ -102,13 +100,19 @@ const ElimPrizeFundGrid = React.forwardRef<PrizeFundGridHandle, ElimPrizeFundGri
       ];
 
       // 4. Save through the elim prize-fund Redux slice.
-      if (elimPfsToSave.length === 0) {
+      if (toSaveElimPfs.length === 0) {
         return;
       }
-
+      const elimIdsForElimPfs: string[] = [
+        ...new Set(
+          toSaveElimPfs.map(
+            (elimPf) => elimPf.elim_id,
+          ),
+        ),
+      ];
       const toSave: tmntElimPfSaveDataType = {
         elimPfData: toSaveElimPfs,
-        elimIds: toSaveElimPfs.map((elimPf) => elimPf.elim_id),
+        elimIds: elimIdsForElimPfs,
         tmntId: tmntData.tmnt.id,
       }
       await dispatch(saveElimPfs(toSave)).unwrap();

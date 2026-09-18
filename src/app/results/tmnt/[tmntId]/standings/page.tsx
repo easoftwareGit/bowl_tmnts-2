@@ -1,24 +1,38 @@
 "use client";
+
 import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { useParams } from "next/navigation";
 import { Tabs, Tab } from "react-bootstrap";
 import {
-  fetchOneTmntGameResults,
-  getOneTmntGameResultsError,
+  fetchOneTmntGameResults,  
   getOneTmntGameResultsLoadStatus,
   getOneTmntGameResultsRequestedTmntId,
   getOneTmntGameResultsTmntId,
   selectOneTmntGameResults,
 } from "@/redux/features/oneTmntGameResults/oneTmntGameResultsSlice";
+import { 
+  fetchDivPfs,
+  getDivPfRequestedTmntId,
+  getDivPfsTmntId,
+  getDivPfsError,
+  getDivPfsLoadStatus,
+  selectDivPfs,
+} from "@/redux/features/divPfs/divPfsSlice";
 import type { divDataType } from "@/lib/types/types";
 import WaitModal from "@/components/modal/waitModal";
 import { blankDivData } from "@/lib/db/initVals";
-import TmntResultsForm from "./tmntResultsForm";
-import { fetchTmntFullData, getTmntFullDataError, getTmntFullDataLoadStatus, getTmntFullDataRequestedTmntId, selectTmntFullData } from "@/redux/features/tmntFullData/tmntFullDataSlice";
+import {
+  fetchTmntFullData,
+  getTmntFullDataError,
+  getTmntFullDataLoadStatus,
+  getTmntFullDataRequestedTmntId,
+  selectTmntFullData
+} from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import TmntHomeHeader from "@/app/results/tmntHeader/tmntHomeHeader";
-import "./tmntResults.css";
+import TmntStandingsForm from "./tmntStandingsForm";
+import "./tmntStandings.css";
 
 const TmntResultsPage = () => {
   const params = useParams();
@@ -32,10 +46,15 @@ const TmntResultsPage = () => {
   const stateTmntFullData = useSelector(selectTmntFullData);
 
   const requestedResultsTmntId = useSelector(getOneTmntGameResultsRequestedTmntId);
-  const resultsLoadStatsus = useSelector(getOneTmntGameResultsLoadStatus);
-  const resultsError = useSelector(getOneTmntGameResultsError);
+  const resultsLoadStatsus = useSelector(getOneTmntGameResultsLoadStatus);  
   const resultsTmntId = useSelector(getOneTmntGameResultsTmntId);
   const tmntResults = useSelector(selectOneTmntGameResults);
+    
+  const requestedPrizesTmntId = useSelector(getDivPfRequestedTmntId);
+  const prizesTmntId = useSelector(getDivPfsTmntId);
+  const prizesLoadStatsus = useSelector(getDivPfsLoadStatus);
+  const prizesError = useSelector(getDivPfsError);    
+  const divPfs = useSelector(selectDivPfs);
   
   const [tabKey, setTabKey] = useState("");
 
@@ -83,6 +102,28 @@ const TmntResultsPage = () => {
     dispatch
   ]);
 
+  // get division prizes
+  useEffect(() => {
+    const needsDivPrizes = prizesTmntId !== tmntId;
+
+    const failedForThisTmntPrizes =
+      prizesLoadStatsus === "failed" && requestedPrizesTmntId === tmntId;
+
+    if (
+      needsDivPrizes &&
+      prizesLoadStatsus !== "loading" &&
+      !failedForThisTmntPrizes
+    ) {
+      dispatch(fetchDivPfs(tmntId));
+    }
+  }, [
+    prizesTmntId,
+    tmntId,
+    requestedPrizesTmntId,
+    prizesLoadStatsus,    
+    dispatch
+  ]);
+
   const tmntDivs = useMemo<divDataType[]>(() => {
     if (!tmntResults || tmntResults.length === 0) {
       return [];
@@ -100,20 +141,29 @@ const TmntResultsPage = () => {
       );
 
       if (result) {
-        tDivs.push({
-          ...blankDivData,
-          id: divId,
-          tmnt_id: tmntId,
-          div_name: result.div_name,
-          sort_order: result.sort_order,
-        });
+        const div = stateTmntFullData.divs.find(
+          (div) => div.id === divId
+        )
+        if (div) {
+          tDivs.push({
+            ...blankDivData,
+            id: divId,
+            tmnt_id: tmntId,
+            div_name: result.div_name,
+            hdcp_per: div?.hdcp_per,
+            hdcp_from: div?.hdcp_from,
+            int_hdcp: div?.int_hdcp,
+            hdcp_for: div?.hdcp_for,
+            sort_order: result.sort_order,
+          });
+        }
       }
     });
 
     return tDivs.sort(
       (a, b) => a.sort_order - b.sort_order
     );
-  }, [tmntResults, tmntId]);
+  }, [tmntResults, tmntId, stateTmntFullData]);
 
   const defaultTabKey = tmntDivs[0]?.id ?? "";
 
@@ -134,6 +184,10 @@ const TmntResultsPage = () => {
 
   const hasTmntGamesData =
     resultsTmntId !== "" && resultsTmntId === tmntId;
+
+  const hasPrizesData =
+    prizesTmntId !== "" &&
+    prizesTmntId === tmntId;
   
   const failedForThisTmnt =
     tmntLoadStatus === "failed" &&
@@ -142,6 +196,10 @@ const TmntResultsPage = () => {
   const failedForThisTmntGames =
     resultsLoadStatsus === "failed" &&
     requestedResultsTmntId === tmntId;
+  
+  const failedForThisTmntPrizes =
+    prizesLoadStatsus === "failed" &&
+    requestedPrizesTmntId === tmntId;
     
   if (!hasTmntData && failedForThisTmnt) {
     const errmsg = tmntError
@@ -152,14 +210,12 @@ const TmntResultsPage = () => {
     return (
       <div className="text-center mt-5">
         <h4>Unable to load tournament</h4>
-
         <p>{errmsg}</p>
-
         <button
           type="button"
           className="btn btn-primary"
-          onClick={() => dispatch(fetchOneTmntGameResults(tmntId))}
-        >
+          onClick={() => dispatch(fetchTmntFullData(tmntId))} 
+         >
           Retry
         </button>
       </div>
@@ -171,19 +227,37 @@ const TmntResultsPage = () => {
     return (
       <div className="text-center mt-5">
         <h4>Unable to load tournament</h4>
-
         <p>{errmsg}</p>
-
         <button
           type="button"
           className="btn btn-primary"
-          onClick={() => dispatch(fetchTmntFullData(tmntId))}
+          onClick={() => dispatch(fetchOneTmntGameResults(tmntId))}
         >
           Retry
         </button>
       </div>
     );
   }
+
+  if (!hasPrizesData && failedForThisTmntPrizes) {
+    const errmsg =
+      prizesError ??
+      `An error occurred while loading prizes for tournament with id: ${tmntId}.`;
+
+    return (
+      <div className="text-center mt-5">
+        <h4>Unable to load tournament prizes</h4>
+        <p>{errmsg}</p>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={() => dispatch(fetchDivPfs(tmntId))}
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }  
 
   const handleTabSelect = (key: string | null) => {
     if (key) {
@@ -193,20 +267,20 @@ const TmntResultsPage = () => {
 
   return (
     <>
-      <WaitModal show={resultsLoadStatsus === "loading"} message="Loading..." />
-      {resultsLoadStatsus !== "loading" &&
-        resultsLoadStatsus !== "succeeded" &&
-        resultsError && (
-          <div>
-            Error: {resultsError} tmntLoadStatus: {resultsLoadStatsus}
-          </div>
-        )}
-      
+      <WaitModal
+        show={
+          tmntLoadStatus === "loading" ||
+          resultsLoadStatsus === "loading" ||
+          prizesLoadStatsus === "loading"
+        }
+        message="Loading..."
+      />
+
       <TmntHomeHeader
         tmntFullData={stateTmntFullData}
       />      
 
-      {resultsLoadStatsus === "succeeded" && (
+      {hasTmntData && hasTmntGamesData && hasPrizesData && (
         <div className="d-flex flex-column justify-content-center align-items-center">
           <Tabs
             defaultActiveKey={defaultTabKey}
@@ -218,10 +292,11 @@ const TmntResultsPage = () => {
           >
             {tmntDivs.map((div) => (
               <Tab key={div.id} eventKey={`${div.id}`} title={div.div_name}>
-                <TmntResultsForm
-                  divid={div.id}
+                <TmntStandingsForm
+                  tmntId={tmntId}
+                  div={div}
                   tmntResults={tmntResults}
-                  cashers={9}
+                  divPfs={divPfs}
                 />
               </Tab>
             ))}

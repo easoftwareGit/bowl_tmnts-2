@@ -7,10 +7,12 @@ import type { AppDispatch, RootState } from "@/redux/store";
 import {
   getDivPfsSaveStatus,
   saveDivPfs,
+  selectDivPfs,
 } from "@/redux/features/divPfs/divPfsSlice";
 import { extractDivPfs } from "@/lib/db/divPfs/dbDivPfs";
 import { pfEntryRowsToDivPfEntryRows } from "../convertPfTypes";
 import PrizeFundGrid, { type PrizeFundGridHandle } from "../prizeFundGrid";
+import { selectTmntFullData } from "@/redux/features/tmntFullData/tmntFullDataSlice";
 
 interface DivPrizeFundGridProps {
   rows: prizeFundEntryRow[];
@@ -61,12 +63,8 @@ const DivPrizeFundGrid = React.forwardRef<PrizeFundGridHandle, DivPrizeFundGridP
   const dispatch = useDispatch<AppDispatch>();
   const saveStatus = useSelector(getDivPfsSaveStatus);
 
-  const allDivPfs = useSelector(
-    (state: RootState) => state.divPfs.divPfs,
-  );
-  const tmntData = useSelector(
-    (state: RootState) => state.tmntFullData.tmntFullData,
-  );
+  const allDivPfs = useSelector(selectDivPfs);
+  const tmntData = useSelector(selectTmntFullData);
 
   /**
    * Saves generic prize-fund rows as division prize-fund records.
@@ -105,10 +103,12 @@ const DivPrizeFundGrid = React.forwardRef<PrizeFundGridHandle, DivPrizeFundGridP
       if (toSaveDivPfs.length === 0) {
         return;
       }
-
+      const divIdsForDivPfs: string[] = [
+        ...new Set(toSaveDivPfs.map((divPf) => divPf.div_id)),
+      ]
       const toSave: tmntDivPfSaveDataType = {
         divPfData: toSaveDivPfs,
-        divIds: toSaveDivPfs.map((divPf) => divPf.div_id),
+        divIds: divIdsForDivPfs,
         tmntId: tmntData.tmnt.id,
       }
       await dispatch(saveDivPfs(toSave)).unwrap();

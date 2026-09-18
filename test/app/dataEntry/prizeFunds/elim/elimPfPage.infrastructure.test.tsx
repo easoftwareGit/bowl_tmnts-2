@@ -101,4 +101,39 @@ describe("Eliminator Prize Fund web page infrastructure", () => {
       payload: tmntId,
     });
   });
+
+  it("does not render the page when the loaded elim prize funds belong to a different tournament", () => {
+    setup({
+      elimPfsRequestedTmntId:
+        "tmt_00000000000000000000000000000099",
+    });
+
+    expect(
+      screen.queryByRole("heading", {
+        name: "Prize Fund",
+      }),
+    ).not.toBeInTheDocument();
+
+    expect(
+      screen.queryByTestId(
+        "mock-elim-prize-fund-grid",
+      ),
+    ).not.toBeInTheDocument();
+  });  
+
+  it("renders the page when the loaded elim prize funds belong to the route tournament", () => {
+    setup({ elimPfsRequestedTmntId: tmntId });
+
+    expect(
+      screen.getByRole("heading", {
+        name: "Prize Fund",
+      }),
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByTestId(
+        "mock-elim-prize-fund-grid",
+      ),
+    ).toBeInTheDocument();
+  });  
 });

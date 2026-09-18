@@ -3,11 +3,15 @@
 import React, { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { prizeFundEntryRow, tmntPotPfSaveDataType } from "@/lib/types/types";
-import type { AppDispatch, RootState } from "@/redux/store";
+import type { AppDispatch } from "@/redux/store";
 import {
   getPotPfsSaveStatus,
   savePotPfs,
+  selectPotPfs,
 } from "@/redux/features/potPfs/potPfsSlice";
+import {
+  selectTmntFullData,
+} from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import { extractPotPfs } from "@/lib/db/potPfs/dbPotPfs";
 import { pfEntryRowsToPotPfEntryRows } from "../convertPfTypes";
 import PrizeFundGrid, { type PrizeFundGridHandle } from "../prizeFundGrid";
@@ -61,12 +65,8 @@ const PotPrizeFundGrid = React.forwardRef<PrizeFundGridHandle, PotPrizeFundGridP
   const dispatch = useDispatch<AppDispatch>();
   const saveStatus = useSelector(getPotPfsSaveStatus);
 
-  const allPotPfs = useSelector(
-    (state: RootState) => state.potPfs.potPfs,
-  );
-  const tmntData = useSelector(
-    (state: RootState) => state.tmntFullData.tmntFullData,
-  );
+  const allPotPfs = useSelector(selectPotPfs);
+  const tmntData = useSelector(selectTmntFullData);
 
   /**
    * Saves generic prize-fund rows as pot prize-fund records.
@@ -101,13 +101,19 @@ const PotPrizeFundGrid = React.forwardRef<PrizeFundGridHandle, PotPrizeFundGridP
       ];
 
       // 4. Save through the division prize-fund Redux slice.
-      if (potPfsToSave.length === 0) {
+      if (toSavePotPfs.length === 0) {
         return;
       }
-
+      const potIdsForPotPfs: string[] = [
+        ...new Set(
+          toSavePotPfs.map(
+            (potPf) => potPf.pot_id,
+          ),
+        ),
+      ];
       const toSave: tmntPotPfSaveDataType = {
         potPfData: toSavePotPfs,
-        potIds: toSavePotPfs.map((potPf) => potPf.pot_id),
+        potIds: potIdsForPotPfs,
         tmntId: tmntData.tmnt.id,
       }
       await dispatch(savePotPfs(toSave)).unwrap();

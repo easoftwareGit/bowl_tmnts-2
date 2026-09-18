@@ -87,9 +87,9 @@ export const potPfsSlice = createSlice({
   },
 });
 
-export const selectPotPfs = (state: RootState) => state.potPfs;
+export const selectPotPfs = (state: RootState) => state.potPfs.potPfs;
 
-export const getDivRequestedId = (state: RootState) => state.potPfs.requestedTmntId;
+export const getPotPfsRequestedTmntId = (state: RootState) => state.potPfs.requestedTmntId;
 export const getPotPfsLoadStatus = (state: RootState) => state.potPfs.loadStatus;
 export const getPotPfsSaveStatus = (state: RootState) => state.potPfs.saveStatus;
 export const getPotPfsError = (state: RootState) => state.potPfs.error;

@@ -1,7 +1,7 @@
 import type { TmntGameResult } from "@/lib/types/resultsTypes";
 import type { gameType } from "@/lib/types/types";
 import { dummySquadId } from "@/lib/validation/constants";
-import { calcNumGames } from "../app/results/tmnt/[tmntId]/standings/createResultsColumns";
+import { calcNumGames } from "@/components/tmnts/games";
 import { btDbUuid } from "@/lib/uuid";
 
 /**

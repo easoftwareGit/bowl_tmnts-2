@@ -46,6 +46,16 @@ describe("Division Prize Fund web page initialization", () => {
     });
   });
 
+  it("does not initialize when the division prize funds were loaded for a different tournament", () => {
+    const differentTmntId = "tmt_00000000000000000000000000000099";
+
+    setup({ divPfsRequestedTmntId: differentTmntId });    
+
+    expect(mockDivPfsToPrizeFunds).not.toHaveBeenCalled();
+    expect(mockPopulatePfRows).not.toHaveBeenCalled();
+    expect(getLatestGridProps()?.rows).toEqual([]);
+  });
+
   it("filters tournament division prize funds to the current division before initializing", async () => {
     const otherDivId =
       "div_00000000000000000000000000000099";
@@ -183,8 +193,7 @@ describe("Division Prize Fund web page initialization", () => {
   });
 
   it("initializes the ratio, cashers, and grid rows to zero when the current division has no prize funds", async () => {
-    const otherDivId =
-      "div_00000000000000000000000000000099";
+    const otherDivId = "div_00000000000000000000000000000099";
 
     const otherDivPfs: divPfType[] = [
       {
@@ -201,13 +210,8 @@ describe("Division Prize Fund web page initialization", () => {
       populatedRows: [],
     });
 
-    expect(
-      mockDivPfsToPrizeFunds,
-    ).toHaveBeenCalledWith([]);
-
-    expect(
-      mockPopulatePfRows,
-    ).toHaveBeenCalledWith(
+    expect(mockDivPfsToPrizeFunds).toHaveBeenCalledWith([]);
+    expect(mockPopulatePfRows).toHaveBeenCalledWith(
       [],
       divId1,
       mockDivPrizeFund,
@@ -232,9 +236,7 @@ describe("Division Prize Fund web page initialization", () => {
       ),
     ).toHaveValue(0);
 
-    expect(
-      getLatestGridProps()?.rows,
-    ).toEqual([]);
+    expect(getLatestGridProps()?.rows).toEqual([]);
   });
 
   it("initializes DivPrizeFundGrid with the populated prize fund rows", async () => {

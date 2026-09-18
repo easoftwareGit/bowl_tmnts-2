@@ -21,6 +21,7 @@ import { defaultBrktGames, defaultPlayersPerMatch } from "@/lib/db/initVals";
 import {
   getTmntFullDataError,
   getTmntFullDataLoadStatus,
+  selectTmntFullData,
 } from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import { playerEntryRow, populatePlayerRows } from "../../playersForm/populatePlayerRows";
 import { SquadStage } from "@prisma/client";
@@ -60,7 +61,8 @@ const buildBrktList = (
       defaultBrktGames,
       gameNumbers,
       initByePlayer,
-      prev?.brackets
+      null, // no saved brackets 
+      // prev?.brackets
     );
     brktList.calcTotalBrkts(rows);
     bList[brkt.id] = brktList;
@@ -95,9 +97,8 @@ export default function EditPlayersPage() {
   // redux selectors
   const tmntLoadStatus = useSelector(getTmntFullDataLoadStatus);
   const tmntError = useSelector(getTmntFullDataError);
-  const stateTmntFullData = useSelector(
-    (state: RootState) => state.tmntFullData.tmntFullData
-  );
+  const stateTmntFullData = useSelector(selectTmntFullData);
+
   const tmntFormData: tmntFormDataType = {
     tmntFullData: stateTmntFullData,
     stage: SquadStage.DEFINE,
@@ -312,7 +313,7 @@ export default function EditPlayersPage() {
           id="divCounts"
           style={{ float: "left", width: 400 }}
         >
-          <div className="row g-2">
+          <div className="row gx-2 gy-0">
             <div className="col-10">
               <label htmlFor="inputDivNameCount" className="form-label">
                 Name
@@ -325,11 +326,11 @@ export default function EditPlayersPage() {
             </div>
           </div>          
           {tmntFormData?.tmntFullData?.divs.map((div) => (
-            <div className="row g-2" key={div.id}>
+            <div className="row gx-2 gy-1" key={div.id}>
               <div className="col-10">
                 <input
                   type="text"
-                  className="form-control"
+                  className="form-control form-control-sm"
                   id={`inputDivNameCount${div.id}`}
                   value={div.div_name}
                   disabled
@@ -338,7 +339,7 @@ export default function EditPlayersPage() {
               <div className="col-2">
                 <input
                   type="text"
-                  className="form-control"
+                  className="form-control form-control-sm text-center"
                   id={`inputDivEntryCount${div.id}`}
                   data-testid={`inputDivEntryCount${div.id}`}
                   value={entriesCount[entryFeeColName(div.id)]}
@@ -361,7 +362,7 @@ export default function EditPlayersPage() {
           id="potCounts"
           style={{ float: "left", width: 400 }}
         >
-          <div className="row g-2">
+          <div className="row gx-2 gy-1">
             <div className="col-10">
               <label htmlFor="inputPotNameCount" className="form-label">
                 Name
@@ -375,11 +376,11 @@ export default function EditPlayersPage() {
           </div>
           {/* {playerFormTmnt?.curData?.pots.map((pot) => ( */}
           {tmntFormData?.tmntFullData?.pots.map((pot) => (
-            <div className="row g-2" key={pot.id}>
+            <div className="row gx-2 gy-1" key={pot.id}>
               <div className="col-10">
                 <input
                   type="text"
-                  className="form-control"
+                  className="form-control form-control-sm"
                   id={`inputPotNameCount${pot.id}`}                  
                   // value={pot.pot_type}
                   value={getPotName(pot, tmntFormData?.tmntFullData?.divs)}
@@ -389,7 +390,7 @@ export default function EditPlayersPage() {
               <div className="col-2">
                 <input
                   type="text"
-                  className="form-control"
+                  className="form-control form-control-sm text-center"
                   id={`inputPotEntryCount${pot.id}`}
                   data-testid={`inputPotEntryCount${pot.id}`}
                   value={entriesCount[entryFeeColName(pot.id)]}
@@ -419,7 +420,7 @@ export default function EditPlayersPage() {
           id="brktCounts"
           style={{ float: "left", width: 900 }}
         >
-          <div className="row g-2">
+          <div className="row gx-2 gy-0">
             <div className="col-4">
               <label className="form-label">Name</label>
             </div>
@@ -438,12 +439,12 @@ export default function EditPlayersPage() {
           </div>
           {tmntFormData?.tmntFullData?.brkts.map((brkt) => (
             <div key={brkt.id}>
-              <div className="row g-2">
+              <div className="row gx-2 gy-1">
                 <div className="col-4">
                   <div className="d-flex align-items-center">
                     <input
                       type="text"
-                      className="form-control"
+                      className="form-control form-control-sm"
                       id={`inputBrktNameCount${brkt.id}`}
                       value={getBrktOrElimName(
                         brkt,
@@ -467,7 +468,7 @@ export default function EditPlayersPage() {
                 <div className="col-1">
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control form-control-sm text-center"
                     id={`inputPlayersCount${brkt.id}`}
                     data-testid={`inputPlayersCount${brkt.id}`}
                     value={allBrktsList[brkt.id]?.brktEntries.length ?? 0}
@@ -478,7 +479,7 @@ export default function EditPlayersPage() {
                 <div className="col-1">
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control form-control-sm text-center"
                     id={`inputFullCount${brkt.id}`}
                     data-testid={`inputFullCount${brkt.id}`}
                     value={allBrktsList[brkt.id]?.fullCount ?? 0}
@@ -489,7 +490,7 @@ export default function EditPlayersPage() {
                 <div className="col-1">
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control form-control-sm text-center"
                     id={`inputOneByeCount${brkt.id}`}
                     data-testid={`inputOneByeCount${brkt.id}`}
                     value={allBrktsList[brkt.id]?.oneByeCount ?? 0}
@@ -500,7 +501,7 @@ export default function EditPlayersPage() {
                 <div className="col-1">
                   <input
                     type="text"
-                    className="form-control"
+                    className="form-control form-control-sm text-center"
                     id={`inputTotalCount${brkt.id}`}
                     data-testid={`inputTotalCount${brkt.id}`}
                     value={
@@ -527,7 +528,7 @@ export default function EditPlayersPage() {
           id="elimCounts"
           style={{ float: "left", width: 400 }}
         >
-          <div className="row g-2">
+          <div className="row gx-2 gy-0">
             <div className="col-10">
               <label htmlFor="inputElimNameCount" className="form-label">
                 Name
@@ -541,11 +542,11 @@ export default function EditPlayersPage() {
           </div>
           {/* {playerFormTmnt?.curData?.elims.map((elim) => ( */}
           {tmntFormData?.tmntFullData?.elims.map((elim) => (
-            <div className="row g-2" key={elim.id}>
+            <div className="row gx-2 gy-1" key={elim.id}>
               <div className="col-10">
                 <input
                   type="text"
-                  className="form-control"
+                  className="form-control form-control-sm"
                   id={`inputElimNameCount${elim.id}`}
                   value={getBrktOrElimName(
                     elim,
@@ -557,7 +558,7 @@ export default function EditPlayersPage() {
               <div className="col-2">
                 <input
                   type="text"
-                  className="form-control"
+                  className="form-control form-control-sm text-center"
                   id={`inputElimEntryCount${elim.id}`}
                   data-testid={`inputElimEntryCount${elim.id}`}
                   value={entriesCount[entryFeeColName(elim.id)]}

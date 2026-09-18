@@ -10,10 +10,15 @@ import PotPrizeFundGrid from "@/app/dataEntry/prizeFunds/prizeFundGrid/pot/potPr
 import type {
   PrizeFundGridHandle
 } from "@/app/dataEntry/prizeFunds/prizeFundGrid/prizeFundGrid";
+import type { RootState } from "@/redux/store";
 import {
   getPotPfsSaveStatus,
   savePotPfs,
+  selectPotPfs,
 } from "@/redux/features/potPfs/potPfsSlice";
+import {
+  selectTmntFullData,
+} from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import { extractPotPfs } from "@/lib/db/potPfs/dbPotPfs";
 import {
   pfEntryRowsToPotPfEntryRows,
@@ -28,11 +33,36 @@ jest.mock("react-redux", () => ({
   useSelector: jest.fn(),
 }));
 
-jest.mock("@/redux/features/potPfs/potPfsSlice", () => ({
-  __esModule: true,
-  getPotPfsSaveStatus: jest.fn(),
-  savePotPfs: jest.fn(),
-}));
+jest.mock(
+  "@/redux/features/potPfs/potPfsSlice",
+  () => ({
+    __esModule: true,
+
+    selectPotPfs: jest.fn(
+      (state: RootState) =>
+        state.potPfs.potPfs,
+    ),
+
+    getPotPfsSaveStatus: jest.fn(
+      (state: RootState) =>
+        state.potPfs.saveStatus,
+    ),
+
+    savePotPfs: jest.fn(),
+  }),
+);
+
+jest.mock(
+  "@/redux/features/tmntFullData/tmntFullDataSlice",
+  () => ({
+    __esModule: true,
+
+    selectTmntFullData: jest.fn(
+      (state: RootState) =>
+        state.tmntFullData.tmntFullData,
+    ),
+  }),
+);
 
 jest.mock("@/lib/db/potPfs/dbPotPfs");
 
@@ -118,9 +148,13 @@ const existingPotPfs: potPfType[] = [
   },
 ];
 
+let mockAllPotPfs: potPfType[];
+
 describe("PotPrizeFundGrid", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+
+    mockAllPotPfs = [...existingPotPfs];
 
     mockGetCurrentRows.mockReturnValue([]);
 
@@ -131,21 +165,10 @@ describe("PotPrizeFundGrid", () => {
     mockedUseDispatch.mockReturnValue(mockDispatch);
 
     mockedUseSelector.mockImplementation((selector) => {
-      if (selector === getPotPfsSaveStatus) {
-        return "idle";
-      }
-
-      /*
-       * PotPrizeFundGrid also uses two inline selectors:
-       *
-       * state => state.potPfs.potPfs
-       * state => state.tmntFullData.tmntFullData
-       *
-       * Supply enough mock Redux state for both selectors.
-       */
-      return selector({
+      const state = {
         potPfs: {
-          potPfs: existingPotPfs,
+          potPfs: mockAllPotPfs,
+          saveStatus: "idle",
         },
         tmntFullData: {
           tmntFullData: {
@@ -154,7 +177,9 @@ describe("PotPrizeFundGrid", () => {
             },
           },
         },
-      } as never);
+      } as unknown as RootState;
+
+      return selector(state);
     });
   });
 
@@ -279,8 +304,7 @@ describe("PotPrizeFundGrid", () => {
       ],
       potIds: [
         "pot2",
-        potId,
-        potId,
+        potId,        
       ],
       tmntId,
     });
@@ -289,8 +313,11 @@ describe("PotPrizeFundGrid", () => {
     expect(mockUnwrap).toHaveBeenCalledTimes(1);
   });
 
-  it("does not dispatch when there is nothing to save", async () => {
+  it("does not dispatch when there are no pot prize funds to save", async () => {
+    mockAllPotPfs = [];
+
     mockedPfEntryRowsToPotPfEntryRows.mockReturnValue([]);
+
     mockedExtractPotPfs.mockReturnValue([]);
 
     render(
@@ -318,15 +345,82 @@ describe("PotPrizeFundGrid", () => {
     expect(mockUnwrap).not.toHaveBeenCalled();
   });
 
+  it("preserves and saves other pot prize funds when the current pot has no rows", async () => {
+    mockedPfEntryRowsToPotPfEntryRows.mockReturnValue([]);
+    mockedExtractPotPfs.mockReturnValue([]);
+
+    const saveAction =
+      jest.fn() as ReturnType<
+        typeof savePotPfs
+      >;
+
+    mockedSavePotPfs.mockReturnValue(saveAction);
+
+    render(
+      <PotPrizeFundGrid
+        rows={rows}
+        setRows={jest.fn()}
+        potId={potId}
+        totalPrizeFund={250}
+        gridDataWasChanged={false}
+        onGridDataChanged={jest.fn()}
+        onGridDataReset={jest.fn()}
+        onNavigateAfterSave={jest.fn()}
+        onBack={jest.fn()}
+      />,
+    );
+
+    const props = mockPrizeFundGridRender.mock.calls[0][0];
+
+    await props.onSave([]);
+
+    expect(
+      mockedSavePotPfs,
+    ).toHaveBeenCalledWith({
+      potPfData: [existingPotPfs[2]],
+      potIds: ["pot2"],
+      tmntId,
+    });
+
+    expect(mockDispatch).toHaveBeenCalledWith(saveAction);
+    expect(mockUnwrap).toHaveBeenCalledTimes(1);
+  });
+
+  // it("does not dispatch when there is nothing to save", async () => {
+  //   mockedPfEntryRowsToPotPfEntryRows.mockReturnValue([]);
+  //   mockedExtractPotPfs.mockReturnValue([]);
+
+  //   render(
+  //     <PotPrizeFundGrid
+  //       rows={rows}
+  //       setRows={jest.fn()}
+  //       potId={potId}
+  //       totalPrizeFund={250}
+  //       gridDataWasChanged={false}
+  //       onGridDataChanged={jest.fn()}
+  //       onGridDataReset={jest.fn()}
+  //       onNavigateAfterSave={jest.fn()}
+  //       onBack={jest.fn()}
+  //     />,
+  //   );
+
+  //   const props = mockPrizeFundGridRender.mock.calls[0][0];
+
+  //   await props.onSave(rows);
+
+  //   expect(mockedPfEntryRowsToPotPfEntryRows).toHaveBeenCalledWith(rows);
+  //   expect(mockedExtractPotPfs).toHaveBeenCalledWith([]);
+  //   expect(mockedSavePotPfs).not.toHaveBeenCalled();
+  //   expect(mockDispatch).not.toHaveBeenCalled();
+  //   expect(mockUnwrap).not.toHaveBeenCalled();
+  // });
+
   it("passes the Redux save status to PrizeFundGrid", () => {
     mockedUseSelector.mockImplementation((selector) => {
-      if (selector === getPotPfsSaveStatus) {
-        return "saving";
-      }
-
-      return selector({
+      const state = {
         potPfs: {
-          potPfs: existingPotPfs,
+          potPfs: mockAllPotPfs,
+          saveStatus: "saving",
         },
         tmntFullData: {
           tmntFullData: {
@@ -335,7 +429,9 @@ describe("PotPrizeFundGrid", () => {
             },
           },
         },
-      } as never);
+      } as unknown as RootState;
+
+      return selector(state);
     });
 
     render(
@@ -435,5 +531,73 @@ describe("PotPrizeFundGrid", () => {
     expect(ref.current?.getCurrentRows()).toEqual(currentRows);
     expect(mockGetCurrentRows).toHaveBeenCalledTimes(1);
   });
+
+  it("includes each pot id only once in the save data", async () => {
+    const potRows: potPfEntryRow[] = [
+      {
+        id: "ppf_1",
+        pot_id: potId,
+        position: 1,
+        amount: 150,
+        percentage: 0.6,
+      },
+      {
+        id: "ppf_2",
+        pot_id: potId,
+        position: 2,
+        amount: 100,
+        percentage: 0.4,
+      },
+    ];
+
+    const potPfs: potPfType[] = [
+      {
+        id: "ppf_1",
+        pot_id: potId,
+        position: 1,
+        amount: 150,
+      },
+      {
+        id: "ppf_2",
+        pot_id: potId,
+        position: 2,
+        amount: 100,
+      },
+    ];
+
+    mockedPfEntryRowsToPotPfEntryRows.mockReturnValue(potRows);
+    mockedExtractPotPfs.mockReturnValue(potPfs);
+
+    const saveAction =
+      jest.fn() as ReturnType<
+        typeof savePotPfs
+      >;
+
+    mockedSavePotPfs.mockReturnValue(saveAction);
+
+    render(
+      <PotPrizeFundGrid
+        rows={rows}
+        setRows={jest.fn()}
+        potId={potId}
+        totalPrizeFund={250}
+        gridDataWasChanged={false}
+        onGridDataChanged={jest.fn()}
+        onGridDataReset={jest.fn()}
+        onBack={jest.fn()}
+      />,
+    );
+
+    const props = mockPrizeFundGridRender.mock.calls[0][0];
+
+    await props.onSave(rows);
+
+    const saveData = mockedSavePotPfs.mock.calls[0][0];
+
+    expect(saveData.potIds).toEqual([
+      "pot2",
+      potId,
+    ]);
+  });  
 });
 

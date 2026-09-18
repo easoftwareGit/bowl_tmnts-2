@@ -4,10 +4,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { useParams, useRouter } from "next/navigation";
-import { fetchGamesForSquad, getGamesForSquadLoadStatus } from "@/redux/features/gamesForSquad/gamesForSquadSlice";
+import { fetchGamesForSquad, getGamesForSquadLoadStatus, selectGamesForSquad } from "@/redux/features/gamesForSquad/gamesForSquadSlice";
 import { populateScoreRows, scoreEntryRow } from "../../scoresForm/scoreRows";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
-import { getTmntFullDataLoadStatus } from "@/redux/features/tmntFullData/tmntFullDataSlice";
+import { getTmntFullDataLoadStatus, selectTmntFullData } from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import ScoresEntryForm from "../../scoresForm/scoresForm";
 import WaitModal from "@/components/modal/waitModal";
 
@@ -29,12 +29,8 @@ export default function EditScoresPage() {
   const initializedRef = useRef(false);
 
   // redux selectors
-  const tmntFullData = useSelector(
-    (state: RootState) => state.tmntFullData.tmntFullData
-  );  
-  const games = useSelector(
-    (state: RootState) => state.gamesForSquad.games
-  );  
+  const tmntFullData = useSelector(selectTmntFullData);
+  const games = useSelector(selectGamesForSquad);
 
   const tmntLoadStatus = useSelector(getTmntFullDataLoadStatus);
   const gamesLoadStatus = useSelector(getGamesForSquadLoadStatus);
