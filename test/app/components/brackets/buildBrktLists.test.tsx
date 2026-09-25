@@ -1,6 +1,6 @@
 import {
   buildBrktListRecords,
-  type BrktListRecord,
+  type brktListRecord,
 } from "@/components/brackets/buildBrktLists";
 import { BracketList } from "@/components/brackets/bracketListClass";
 import {
@@ -319,7 +319,7 @@ describe("buildBrktListRecords", () => {
 
       testData.brkts = [];
 
-      const result: BrktListRecord =
+      const result: brktListRecord =
         buildBrktListRecords(testData);
 
       expect(result).toEqual({});

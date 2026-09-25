@@ -3,8 +3,8 @@ import TmntStandingsForm from "@/app/results/tmnt/[tmntId]/standings/tmntStandin
 import { populateStandingsRows } from "@/app/results/tmnt/[tmntId]/standings/populateStandingsRows";
 import { getGameNums } from "@/components/tmnts/games";
 import type {
-  TmntGameResult,
-  TmntStandingsTableRow,
+  tmntGameResult,
+  tmntStandingsTableRow,
 } from "@/lib/types/resultsTypes";
 import type { divPfType } from "@/lib/types/types";
 import {
@@ -54,20 +54,20 @@ const makeTmntResult = (
   playerId: string,
   divId: string,
   fullName: string,
-): TmntGameResult =>
+): tmntGameResult =>
   ({
     player_id: playerId,
     div_id: divId,
     full_name: fullName,
-  }) as TmntGameResult;
+  }) as tmntGameResult;
 
-const mockTmntResults: TmntGameResult[] = [
+const mockTmntResults: tmntGameResult[] = [
   makeTmntResult(playerId1, divId1, "John Doe"),
   makeTmntResult(playerId2, divId1, "Jane Doe"),
   makeTmntResult(playerId3, divId2, "Joe Doe"),
 ];
 
-const standingsRows: TmntStandingsTableRow[] = [
+const standingsRows: tmntStandingsTableRow[] = [
   {
     id: playerId1,
     player_id: playerId1,
@@ -102,7 +102,7 @@ const standingsRows: TmntStandingsTableRow[] = [
   },
 ];
 
-const hdcpStandingsRows: TmntStandingsTableRow[] = [
+const hdcpStandingsRows: tmntStandingsTableRow[] = [
   {
     id: playerId1,
     player_id: playerId1,
@@ -155,7 +155,7 @@ const getPlayerNames = (): string[] => {
 };
 
 const setupScratch = (
-  rows: TmntStandingsTableRow[] = standingsRows,
+  rows: tmntStandingsTableRow[] = standingsRows,
   divPfs: divPfType[] = mockDivPfs,
 ) => {
   mockGetGameNums.mockReturnValue([1, 2, 3]);
@@ -172,7 +172,7 @@ const setupScratch = (
 };
 
 const setupHdcp = (
-  rows: TmntStandingsTableRow[] = hdcpStandingsRows,
+  rows: tmntStandingsTableRow[] = hdcpStandingsRows,
 ) => {
   mockGetGameNums.mockReturnValue([1, 2, 3]);
   mockPopulateStandingsRows.mockReturnValue(rows);

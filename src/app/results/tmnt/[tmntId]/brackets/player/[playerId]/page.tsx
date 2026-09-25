@@ -23,6 +23,9 @@ import {
 import WaitModal from "@/components/modal/waitModal";
 import TmntHomeHeader from "@/app/results/tmntHeader/tmntHomeHeader";
 import { fullName } from "@/lib/getName";
+import PlayerDivBrkts from "./playerDivBrackets";
+import { getBrktListRecords } from "@/redux/features/tmntFullData/brktListRecordsSelector";
+import "./playerBrackets.css";
 
 const PlayerBrktPrgressPage = () => {
   const params = useParams();
@@ -39,6 +42,8 @@ const PlayerBrktPrgressPage = () => {
   const resultsError = useSelector(getOneTmntGameResultsError);
   const resultsTmntId = useSelector(getOneTmntGameResultsTmntId);
   const tmntFullData = useSelector(selectTmntFullData);
+
+  const brktListRecords = useSelector(getBrktListRecords);
 
   // get tmnt data 
   useEffect(() => {
@@ -109,15 +114,20 @@ const PlayerBrktPrgressPage = () => {
           <h4>Bracket Progress for {playerName}</h4>
           <div
             data-testid="GamesOuterWrapper"
-            className="brkt-games-grid-outer"
+            className="player-brkt-progress-outer"
           >      
             <div
               data-testid="GamesInnerWrapper"
-              className="brkt-games-grid-inner"
+              className="player-brkt-progress-inner"
             >
-
-
-
+              {tmntFullData.brkts.map((brkt) => (
+                <PlayerDivBrkts
+                  key={brkt.id}
+                  playerId={playerId}
+                  tmntFullData={tmntFullData}
+                  brktList={brktListRecords[brkt.id]}
+                />
+              ))}
             </div>
           </div>
         </div>

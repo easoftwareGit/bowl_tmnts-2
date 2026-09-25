@@ -1,6 +1,6 @@
-import { BrktListRecord } from "@/components/brackets/buildBrktLists";
-import { TmntGameResult } from "@/lib/types/resultsTypes";
-import { BrktGamesGridRow } from "./page";
+import { brktListRecord } from "@/components/brackets/buildBrktLists";
+import { tmntGameResult } from "@/lib/types/resultsTypes";
+import { brktGamesTableRow } from "./page";
 import { calcNumGames } from "@/components/tmnts/games";
 
 /**
@@ -11,9 +11,9 @@ import { calcNumGames } from "@/components/tmnts/games";
  * 2. First name
  * 3. Lane
  *
- * @param {BrktGamesGridRow[]} playerRows - bracket results grid rows to sort
+ * @param {brktGamesTableRow[]} playerRows - bracket results grid rows to sort
  */
-const sortPlayerRows = (playerRows: BrktGamesGridRow[]): void => {
+const sortPlayerRows = (playerRows: brktGamesTableRow[]): void => {
   // sort by last name, then first name, then lane
   playerRows.sort((a, b) => {
     const lastNameCompare = a.last_name.localeCompare(
@@ -41,17 +41,17 @@ const sortPlayerRows = (playerRows: BrktGamesGridRow[]): void => {
 }
 
 /**
- * Populates the bracket results grid rows
+ * Populates the bracket results table rows
  *
- * @param {TmntGameResult[]} tmntResults - array of game results
- * @param {(BrktListRecord)} brktListRecords - bracket list record
- * @return {BrktGamesGridRow[]} - array of bracket results grid rows
+ * @param {tmntGameResult[]} tmntResults - array of game results
+ * @param {(brktListRecord)} brktListRecords - bracket list record
+ * @return {brktGamesTableRow[]} - array of bracket results table rows
  */
-export const populatePlayerBrktRows = (
-  tmntResults: TmntGameResult[],
-  brktListRecords: BrktListRecord,
-): BrktGamesGridRow[] => {
-  const playerRows: BrktGamesGridRow[] = [];
+export const populatePlayerBrktRows2 = (
+  tmntResults: tmntGameResult[],
+  brktListRecords: brktListRecord,
+): brktGamesTableRow[] => {
+  const playerRows: brktGamesTableRow[] = [];
 
   Object.values(brktListRecords).forEach((brktList) => {    
     const playersMap = brktList.playersMap;
@@ -82,11 +82,11 @@ export const populatePlayerBrktRows = (
         };
         playerRows.push(playerRow);
       }
-      let bgPlayerRow = bracketGames.find((bGames) => bGames.player_id === player_id);
-      if (bgPlayerRow) {
+      let btPlayerRow = bracketGames.find((bGames) => bGames.player_id === player_id);
+      if (btPlayerRow) {
         for (let game = 1; game <= numGames; game++) {
           const gameCol = `Game ${game}` as const;
-          playerRow[gameCol] = bgPlayerRow[gameCol];
+          playerRow[gameCol] = btPlayerRow[gameCol];
         }
       }
       player.bracketIds.forEach(brktId => {
@@ -110,4 +110,3 @@ export const populatePlayerBrktRows = (
 
   return playerRows;
 };
-

@@ -18,7 +18,7 @@ import type {
   gameType,
   playerType,
 } from "@/lib/types/types";
-import type { TmntGameResult } from "@/lib/types/resultsTypes";
+import type { tmntGameResult } from "@/lib/types/resultsTypes";
 import { initPlayer } from "@/lib/db/initVals";
 
 describe("BracketList.updateBracketMatches", () => {
@@ -42,7 +42,7 @@ describe("BracketList.updateBracketMatches", () => {
    * updateBracketMatches(), but complete TmntGameResult objects
    * are created to satisfy the type.
    */
-  const mockTmntResults: TmntGameResult[] = [
+  const mockTmntResults: tmntGameResult[] = [
     {
       player_id: playerId1,
       div_id: divId1,
@@ -103,7 +103,7 @@ describe("BracketList.updateBracketMatches", () => {
     return mockGames.filter((game) => game.game_num <= lastGame);
   };
 
-  const mockSixGameTmntResults: TmntGameResult[] =
+  const mockSixGameTmntResults: tmntGameResult[] =
     mockTmntResults.map((result) => ({
       ...result,
       "Game 4": result.player_id === playerId1
@@ -382,7 +382,7 @@ describe("BracketList.updateBracketMatches", () => {
         );
 
         brktList.updateBracketMatches(
-          invalidInput as unknown as TmntGameResult[],
+          invalidInput as unknown as tmntGameResult[],
         );
 
         expect(updateMatchesSpy).not.toHaveBeenCalled();

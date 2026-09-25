@@ -1,10 +1,11 @@
 import { BracketList } from "./bracketListClass";
 import { btDbUuid } from "@/lib/uuid";
 import { hasUniqueValues, shuffleArray } from "@/lib/tools";
-import { defaultBrktGames, defaultPlayersPerMatch } from "@/lib/db/initVals";
+import { defaultPlayersPerMatch } from "@/lib/db/initVals";
 import { BracketMatch } from "./bracketMatchClass";
 import type { matchNumberType, matchSeedInfoType } from "./bracketMatchClass";
 import { brktSeedType } from "@/lib/types/types";
+import { isNumber } from "@/lib/validation/validation";
 
 export enum playerStatusValues {
   NOT_IN_BRACKET = 0,
@@ -14,10 +15,9 @@ export enum playerStatusValues {
   WINNER = 4,
 }
 
-type PlayerMatchInfoType = {
+type playerMatchInfoType = {
   brktGameNum: number;
-  playerId: string;
-  playerInfo: matchSeedInfoType;
+  playerId: string;  
   matchInfo: matchSeedInfoType[];
   matchNumber: matchNumberType;
   matchPlayers: string[];
@@ -55,43 +55,45 @@ export class Bracket {
   static errDuplicatePlayerId = -5;
   static errMultipleByePlayers = -6;
   static byePlayerId = "bye_00000000000000000000000000000000";
-  
-  // private _games: number;
+
   private _id: string = "";
-  private _loserIds = new Set<string>();
+  private _loserBrktGame1Ids = new Set<string>();
+  private _loserBrktGame2Ids = new Set<string>();
   private _match: BracketMatch;
   private _parent: BracketList | undefined;
   private _playersPerMatch: number;
   private _players: string[];
   private _semiFinalTies = new Set<string>();
+  private _runnerUpAmount: number = 0;
   private _runnerUpIds = new Set<string>();
+  private _winnerAmount: number = 0;
   private _winnerIds = new Set<string>();
 
   constructor(
     id: string = "",
     playersPerMatch: number = defaultPlayersPerMatch,
-    // games: number = defaultBrktGames,
   ) {
-    // this._games = games;
     this._id = id !== "" ? id : btDbUuid("obk");
     this._match = new BracketMatch(this);
     this._players = [];
     this._playersPerMatch = playersPerMatch;
   }
 
-  get games(): number {
-    // return this._games;
-    return (this._parent == null) ? 0 : this._parent.games;    
-  }
   get id(): string {
     return this._id;
   }
   get isFull(): boolean {
     return this._players.length >= this.playersPerBracket;
   }
-  // only used in testing
-  get loserIds(): Set<string> {
-    return this._loserIds;
+  get games(): number {
+    // return this._games;
+    return this._parent == null ? 0 : this._parent.games;
+  }
+  get loserBrktGame1Ids(): Set<string> {
+    return this._loserBrktGame1Ids;
+  }
+  get loserBrktGame2Ids(): Set<string> {
+    return this._loserBrktGame2Ids;
   }
   get match(): BracketMatch | undefined {
     return this._match;
@@ -110,6 +112,9 @@ export class Bracket {
   get playersPerMatch(): number {
     return this._playersPerMatch;
   }
+  get runnerUpAmount(): number {
+    return this._runnerUpAmount;
+  }
   // only used in testing
   get runnerUpIds(): Set<string> {
     return this._runnerUpIds;
@@ -118,6 +123,9 @@ export class Bracket {
   get semiFinalTies(): Set<string> {
     return this._semiFinalTies;
   }
+  get winnerAmount(): number {    
+    return this._winnerAmount;
+  }  
   // only used in testing
   get winnerIds(): Set<string> {
     return this._winnerIds;
@@ -128,49 +136,23 @@ export class Bracket {
     if (parent && parent.gameScoreMap && parent.playersMap) {
       this._match = new BracketMatch(this);
     }
+    if (parent && parent.brkt && isNumber(parent.brkt.fee)) {            
+      const brktFeeAmount = Number(parent.brkt.fee);
+      // 8 players in bracket,
+      // 1 fee -> admin
+      // 2 fee -> runner up
+      // 4 or 5 fee -> winner (4 if there is a bye player)
+      // for bye = 7 players = 4 + 2 + 1
+      // for no bye = 8 players = 5 + 2 + 1
+      const feeToWinnerMultiplier = this.hasByePlayer() ? 4 : 5;
+      this._winnerAmount = brktFeeAmount * feeToWinnerMultiplier;
+      this._runnerUpAmount = brktFeeAmount * 2;
+    }
   }
 
   /*********************
    * private functions *
    ********************/
-
-  /**
-   * - Get player match info
-   *
-   * @param {string} playerId - player's id
-   * @param {number} brktGameNum - game number in bracket
-   * @return {(PlayerMatchInfoType | undefined)}
-   */
-  private getPlayerMatchInfo(
-    playerId: string,
-    brktGameNum: number,
-  ): PlayerMatchInfoType | undefined {
-    // get match number
-    const matchNumber = this.getPlayerMatchNumber(playerId, brktGameNum);
-    if (matchNumber === undefined) return undefined;
-
-    // get match players
-    let matchPlayers = this._match.getMatchPlayers(matchNumber);
-    if (matchPlayers.length === 0) return undefined;
-
-    // get match info
-    if (!this._parent) return undefined;
-    const squadGameNum = this._parent.squadGameNumber(brktGameNum);    
-    const matchInfo = this._match.getMatchInfo(matchPlayers, squadGameNum);
-
-    // get player info in match
-    const playerInfo = matchInfo.find((info) => info.playerId === playerId);
-    if (!playerInfo) return undefined;
-
-    return {
-      brktGameNum: brktGameNum,
-      playerId: playerId,
-      playerInfo: playerInfo,
-      matchInfo: matchInfo,
-      matchNumber: matchNumber,
-      matchPlayers: matchPlayers,
-    };
-  }
 
   /**
    * get player match number for a game
@@ -209,48 +191,139 @@ export class Bracket {
    * @return {playerStatusValues} - player status
    */
   private playerStatus(playerId: string): playerStatusValues {
-    if (!this._players.includes(playerId)) return playerStatusValues.NOT_IN_BRACKET;
-    if (this._loserIds.has(playerId)) return playerStatusValues.LOSER;
+    if (!this._players.includes(playerId))
+      return playerStatusValues.NOT_IN_BRACKET;
+    if (
+      this._loserBrktGame1Ids.has(playerId) ||
+      this._loserBrktGame2Ids.has(playerId)
+    )
+      return playerStatusValues.LOSER;
     if (this._runnerUpIds.has(playerId)) return playerStatusValues.RUNNER_UP;
     if (this._winnerIds.has(playerId)) return playerStatusValues.WINNER;
     return playerStatusValues.IN_BRACKET;
   }
 
   /**
-   * Update player sets with player match info
-   *
-   * @param {PlayerMatchInfoType} pmi - player match info
+   * Update final placements - game 3, final match
+   *   
+   * @param {matchSeedInfoType[]} finalInfo - final match info
    * @return {void}
    */
-  private updatePlayerSets(pmi: PlayerMatchInfoType): void {
+  private updateFinalPlacements(finalInfo: matchSeedInfoType[]): void {
+    // Wait until every finalist has a score.
+    if (
+      finalInfo.length === 0 ||
+      finalInfo.some((info) => info.total === undefined)
+    ) {
+      return;
+    }
+
+    // Group finalists by the semifinal match they came from.
+    // finalInfo still contains their game 3 scores.
+    const fromMatch4 = finalInfo.filter(
+      (info) => this.getPlayerMatchNumber(info.playerId, 2) === 4,
+    );
+    const fromMatch5 = finalInfo.filter(
+      (info) => this.getPlayerMatchNumber(info.playerId, 2) === 5,
+    );
+
+    // if did not get data for game 2, both semiFinals, return now
+    if (fromMatch4.length === 0 || fromMatch5.length === 0) return;
+    
+    // Resolve ties left over from a semifinal
+    // If several players advanced from one semifinal, their game 3
+    // scores break that semifinal tie. If only one advanced,
+    // return that player.
+    const resolveSemifinalTie = (matchSeedsInfo: matchSeedInfoType[]): matchSeedInfoType[] => {
+      // These are game 3 scores, even though the players are
+      // grouped by their game 2 match.
+      const highScore = Math.max(...matchSeedsInfo.map((msInfo) => msInfo.total!));
+      
+      // A lower game 3 score loses the semifinal tie breaker.
+      for (const msInfo of matchSeedsInfo) {
+        if (msInfo.total! < highScore) {
+          this._loserBrktGame2Ids.add(msInfo.playerId);
+        }
+      }
+
+      // A tie for the high score can leave multiple players.
+      return matchSeedsInfo.filter((msInfo) => msInfo.total === highScore);
+    };
+
+    // get game 2, semi final winners
+    const winnersMatch4 = resolveSemifinalTie(fromMatch4);
+    const winnersMatch5 = resolveSemifinalTie(fromMatch5);
+
+    // Compare the highest game 3 score from each semifinal group.
+    // Every player remaining in a group has that group's high score.    
+    // ok to use index[0] because all winnersMatch4 
+    // and winnersMatch5 have the same high score    
+    const highScoreMatch4 = winnersMatch4[0].total!; 
+    const highScoreMatch5 = winnersMatch5[0].total!;
+
+    // if high score for match 4 is higher than high score for match 5
+    if (highScoreMatch4 >= highScoreMatch5) {
+      winnersMatch4.forEach((info) => this._winnerIds.add(info.playerId));
+    } else {
+      winnersMatch4.forEach((info) => this._runnerUpIds.add(info.playerId));
+    }
+
+    if (highScoreMatch5 >= highScoreMatch4) {
+      winnersMatch5.forEach((info) => this._winnerIds.add(info.playerId));
+    } else {
+      winnersMatch5.forEach((info) => this._runnerUpIds.add(info.playerId));
+    }
+  }
+
+  /**
+   * Update player sets with player match info
+   *
+   * @param {playerMatchInfoType} pmi - player match info
+   * @return {void}
+   */
+  private updatePlayerSets(pmi: playerMatchInfoType): void {
     // if no data or no score yet, return
     // have a result means all players in match have scores entered
-    if (!pmi || pmi.playerInfo.result === undefined) return;
-
+    if (pmi == null) return;
+    const playerInfo = pmi.matchInfo.find((info) => info.playerId === pmi.playerId);
+    if (!playerInfo || playerInfo.result === undefined) return;
+    
     // if player has already lost, return
-    if (this._loserIds.has(pmi.playerId)) return;
+    if (
+      this._loserBrktGame1Ids.has(pmi.playerId) ||
+      this._loserBrktGame2Ids.has(pmi.playerId)
+    )
+      return;
 
     // bracket game 1 or 2
     // if (pmi.brktGameNum < this._games) {
-    if (pmi.brktGameNum < this.games) {      
+    if (pmi.brktGameNum < this.games) {
       // bracket game brktGameNum scores in entered, player has lost
-      if (pmi.playerInfo.result === "L") {
-        this._loserIds.add(pmi.playerId);
+      if (playerInfo.result === "L") {
+        if (pmi.brktGameNum === 1) {
+          this._loserBrktGame1Ids.add(pmi.playerId);
+        } else {
+          this._loserBrktGame2Ids.add(pmi.playerId);
+        }
       }
       // bracket game brktGameNum scores in entered, player has won, other players have lost
-      if (pmi.playerInfo.result === "W") {
+      if (playerInfo.result === "W") {
         // get other players
         const otherPlayersInfo = pmi.matchInfo.filter(
           (info) => info.playerId !== pmi.playerId,
         );
         // add other players to losers
         otherPlayersInfo.forEach((info) => {
-          this._loserIds.add(info.playerId);
+          if (pmi.brktGameNum === 1) {
+            this._loserBrktGame1Ids.add(info.playerId);
+          } else {
+            this._loserBrktGame2Ids.add(info.playerId);
+          }
         });
       }
       // if a tie in the semi final
       // if (pmi.brktGameNum === this._games - 1 && pmi.playerInfo.result === "T") {
-      if (pmi.brktGameNum === this.games - 1 && pmi.playerInfo.result === "T") {
+      if (pmi.brktGameNum === this.games - 1 && playerInfo.result === "T") {
         // add all tie players to semi final ties
         pmi.matchInfo.forEach((info) => {
           this._semiFinalTies.add(info.playerId);
@@ -258,11 +331,15 @@ export class Bracket {
       }
     } else {
       // bracket game 3 scores in entered, player has lost
-      if (pmi.playerInfo.result === "L") {
-        this._runnerUpIds.add(pmi.playerId);
+      if (playerInfo.result === "L") {       
+        // A player from a tied semifinal still needs their game-3
+        // score compared with the other players from that tie.
+        if (!this._semiFinalTies.has(pmi.playerId)) {
+          this._runnerUpIds.add(pmi.playerId);
+        }        
 
         // bracket game 3 scores in entered, player has won, other players have lost
-      } else if (pmi.playerInfo.result === "W") {
+      } else if (playerInfo.result === "W") {
         this._winnerIds.add(pmi.playerId);
         const winnerWasInTie = this._semiFinalTies.has(pmi.playerId);
         // get other players
@@ -279,9 +356,8 @@ export class Bracket {
           } else {
             // if winner was in a tie, and loser was in a tie
             if (winnerWasInTie) {
-              // add other player to losers, lost tie breaker
-              this._loserIds.add(info.playerId);
-
+              // add other player to losersGame2, lost semi-final tie breaker
+              this._loserBrktGame2Ids.add(info.playerId);
               // else high score in final for those in semi final tie
             } else {
               // get highest score for tie losers
@@ -302,7 +378,8 @@ export class Bracket {
                 .filter((onePlayerInfo) => onePlayerInfo.total !== highestScore)
                 .map((onePlayerInfo) => onePlayerInfo.playerId);
               otherTieLosers.forEach((otherTieId) => {
-                this._loserIds.add(otherTieId);
+                // tie losers in final go into loserGame2
+                this._loserBrktGame2Ids.add(otherTieId);
               });
             }
           }
@@ -414,6 +491,43 @@ export class Bracket {
    **********************************************************/
 
   /**
+   * - Get player match info
+   *
+   * @param {string} playerId - player's id
+   * @param {number} brktGameNum - game number in bracket
+   * @return {(playerMatchInfoType | undefined)}
+   */
+  getPlayerMatchInfo(
+    playerId: string,
+    brktGameNum: number,
+  ): playerMatchInfoType | undefined {
+    // get match number
+    const matchNumber = this.getPlayerMatchNumber(playerId, brktGameNum);
+    if (matchNumber === undefined) return undefined;
+
+    // get match players
+    let matchPlayers = this._match.getMatchPlayers(matchNumber);
+    if (matchPlayers.length === 0) return undefined;
+
+    // get match info
+    if (!this._parent) return undefined;
+    const squadGameNum = this._parent.squadGameNumber(brktGameNum);
+    const matchInfo = this._match.getMatchInfo(matchPlayers, squadGameNum);
+
+    // get player info in match
+    const playerInfo = matchInfo.find((info) => info.playerId === playerId);
+    if (!playerInfo) return undefined;
+
+    return {
+      brktGameNum: brktGameNum,
+      playerId: playerId,      
+      matchInfo: matchInfo,
+      matchNumber: matchNumber,
+      matchPlayers: matchPlayers,
+    };
+  }
+
+  /**
    * get player status in this bracket
    *
    * @param {string} playerId - player id
@@ -428,6 +542,9 @@ export class Bracket {
     // game 1 of bracket
     let pmi = this.getPlayerMatchInfo(playerId, 1);
     if (!pmi) return status;
+    const playerMatchSeed = pmi.matchInfo.find((info) => info.playerId === playerId);
+    if (!playerMatchSeed) return status;
+
     this.updatePlayerSets(pmi);
     status = this.playerStatus(playerId);
     if (status !== playerStatusValues.IN_BRACKET) {
@@ -467,7 +584,7 @@ export class Bracket {
    * checks if player is alive in bracket, 1st or 2nd place
    *
    * @param {string} playerId - id of player to check
-   * @return {boolean} - false if player in losers or not found   
+   * @return {boolean} - false if player in losers or not found
    */
   isPlayerAlive(playerId: string): boolean {
     const status = this.playerStatus(playerId);
@@ -482,11 +599,37 @@ export class Bracket {
    * checks if player is in 1st or 2nd place
    *
    * @param {string} playerId - id of player to check
-   * @return {boolean} - true if player is in 1st or 2nd place   
+   * @return {boolean} - true if player is in 1st or 2nd place
    */
   isPlayerFirstOrSecond(playerId: string): boolean {
     const status = this.playerStatus(playerId);
-    return status === playerStatusValues.WINNER || status === playerStatusValues.RUNNER_UP;
+    return (
+      status === playerStatusValues.WINNER ||
+      status === playerStatusValues.RUNNER_UP
+    );
+  }
+
+  /**
+   * checks if player is in bracket game 2
+   *
+   * @param {string} playerId - id of player to check
+   * @return {boolean} - true if player is in brkt game 2 (didn't loose in brkt game 1)
+   */
+  isPlayerInBracketGame2(playerId: string): boolean {
+    return !this._loserBrktGame1Ids.has(playerId);
+  }
+
+  /**
+   * checks if player is in bracket game 3
+   *
+   * @param {string} playerId - id of player to check
+   * @return {boolean} - true if player is in brkt game 3 (did not loose in brkt game 2)
+   */
+  isPlayerInBrktGame3(playerId: string): boolean {
+    return (
+      !this._loserBrktGame2Ids.has(playerId) &&
+      this.isPlayerInBracketGame2(playerId)
+    );
   }
 
   /**
@@ -511,9 +654,7 @@ export class Bracket {
     const brktSeedsSet = new Set(brktSeeds.map((brktSeed) => brktSeed.seed));
     if (
       brktSeedsSet.size !== this.playersPerBracket ||
-      ![...brktSeedsSet].every((seed) =>
-        validSeedSet.has(seed)
-      )
+      ![...brktSeedsSet].every((seed) => validSeedSet.has(seed))
     ) {
       return;
     }
@@ -522,7 +663,6 @@ export class Bracket {
     const justPlayerIds = brktSeeds.map((brktSeed) => brktSeed.player_id);
     if (!hasUniqueValues(justPlayerIds)) return;
 
-    
     const sorted = brktSeeds.sort((a, b) => a.seed - b.seed);
     // use for loop instead of forEach because i+=2, not i++
     for (let i = 0; i < this.playersPerBracket; i += 2) {
@@ -534,7 +674,8 @@ export class Bracket {
    * updates all matches in the bracket
    */
   updateMatches(): void {
-    this._loserIds.clear();
+    this._loserBrktGame1Ids.clear();
+    this._loserBrktGame2Ids.clear();
     this._runnerUpIds.clear();
     this._semiFinalTies.clear();
     this._winnerIds.clear();
@@ -544,25 +685,25 @@ export class Bracket {
     if (this._parent.gameScoreMap == null) return;
 
     for (let m = 0; m <= 6; m++) {
-      const players = this._match.getMatchPlayers(m as matchNumberType);
-      // const brktGameNumIndex = m <= 3 ? 0 : m <= 5 ? 1 : 2;
-      const brktGameNum = m <= 3 ? 1 : m <= 5 ? 2 : 3;
-      // const squadGameNum = this.parent.squadGameNums[brktGameNumIndex];
+      const players = this._match.getMatchPlayers(m as matchNumberType);      
+      const brktGameNum = m <= 3 ? 1 : m <= 5 ? 2 : 3;      
       const squadGameNum = this._parent.squadGameNumber(brktGameNum);
       const matchSeedInfo = this._match.getMatchInfo(players, squadGameNum);
-      for (let p = 0; p < players.length; p++) {
-        let pmi: PlayerMatchInfoType = {
-          playerId: players[p],
-          brktGameNum: brktGameNum,
-          playerInfo: matchSeedInfo[p],
-          matchInfo: matchSeedInfo,
-          matchPlayers: players,
-          matchNumber: m as matchNumberType,
-        };
-        this.updatePlayerSets(pmi);        
-      }
-      for (let p = 0; p < players.length; p++) {
-        this.getPlayerStatus(players[p]);
+      // if the final match (game 3), update final placements
+      if (m === 6) {
+        this.updateFinalPlacements(matchSeedInfo);
+        // else quarter final (game 1, matches 0-3) or semifinal (game 2, matches 4, 5)
+      } else {         
+        for (let p = 0; p < players.length; p++) {
+          let pmi: playerMatchInfoType = {
+            playerId: players[p],
+            brktGameNum: brktGameNum,          
+            matchInfo: matchSeedInfo,
+            matchPlayers: players,
+            matchNumber: m as matchNumberType,
+          };
+          this.updatePlayerSets(pmi);
+        }
       }
     }
   }

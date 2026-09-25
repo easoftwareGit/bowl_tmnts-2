@@ -4,7 +4,7 @@ import {
 } from "@/redux/features/tmntFullData/brktListRecordsSelector";
 import {
   buildBrktListRecords,
-  type BrktListRecord,
+  type brktListRecord,
 } from "@/components/brackets/buildBrktLists";
 import { BracketList } from "@/components/brackets/bracketListClass";
 import { store } from "@/redux/store";
@@ -34,7 +34,7 @@ describe("brktListRecordsSelector", () => {
   let state: RootState;
   let bracketList1: BracketList;
   let bracketList2: BracketList;
-  let brktListRecords: BrktListRecord;
+  let brktListRecords: brktListRecord;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -103,7 +103,7 @@ describe("brktListRecordsSelector", () => {
           3,
         );
 
-      const updatedRecords: BrktListRecord = {
+      const updatedRecords: brktListRecord = {
         [brktId1]: updatedBracketList1,
       };
 

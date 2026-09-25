@@ -452,7 +452,7 @@ export type playerType = {
   position_err: string,
 }
 
-export type PlayerInfoType = {  
+export type playerInfoType = {  
   first_name: string;
   last_name: string;
   average: number;

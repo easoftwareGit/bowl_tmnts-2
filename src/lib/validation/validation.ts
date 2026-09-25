@@ -243,11 +243,14 @@ export const isEven = (num: number): boolean => {
 /**
  * checks to see if value is a number
  *
- * @param value - value to test
+ * @param value - value to test 
  * @returns {boolean} - true if value is a number
  */
-export const isNumber = (value: any): boolean => {
-  return typeof value === "number" && isFinite(value);
+export const isNumber = (value: any): boolean => {  
+  if (!(typeof value === "number" || typeof value === "string")) return false;
+  if (typeof value === "string" && value.trim() === "") return false;
+  const n = Number(value);
+  return Number.isFinite(n);  
 };
 
 /**

@@ -2339,7 +2339,7 @@ export const mockGames: gameType[] = [
     squad_id: squadId1,
     player_id: playerId3,
     game_num: 4,
-    score: 263,
+    score: 264,
   },
   {
     id: gameId17,

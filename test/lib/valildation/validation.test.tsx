@@ -656,17 +656,29 @@ describe("tests for validation functions", () => {
       const result = isNumber(-Infinity);
       expect(result).toBe(false);
     });
-    it("should return false when the value is a string", () => {
-      const result = isNumber("42");
-      expect(result).toBe(false);
+    it("should return true when the value is a string representing an number", () => {      
+      expect(isNumber("42")).toBe(true);
+      expect(isNumber("4.2")).toBe(true);
+      expect(isNumber("-42")).toBe(true);
+      expect(isNumber("0")).toBe(true);
+      expect(isNumber("-0")).toBe(true);
+      expect(isNumber("4.2e3")).toBe(true);
+      expect(isNumber("4.2e+3")).toBe(true);
+      expect(isNumber("4.2e-3")).toBe(true);
+      expect(isNumber(" 42 ")).toBe(true);
+      expect(isNumber("NaN")).toBe(false);
+      expect(isNumber("Infinity")).toBe(false);
+      expect(isNumber("-Infinity")).toBe(false);
+      expect(isNumber("")).toBe(false);
+      expect(isNumber("abc")).toBe(false);
     });
     it("should return true for floating-point values", () => {
       const result = isNumber(3.14);
       expect(result).toBe(true);
     });
-    it("should return false for boolean values", () => {
-      const result = isNumber(true);
-      expect(result).toBe(false);
+    it("should return true for boolean values", () => {      
+      expect(isNumber(true)).toBe(false);
+      expect(isNumber(false)).toBe(false);
     });
     it("should return false for null values", () => {
       const result = isNumber(null);

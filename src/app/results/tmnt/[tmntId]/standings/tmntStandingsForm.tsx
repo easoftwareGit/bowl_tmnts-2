@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { TmntGameResult, TmntStandingsTableRow } from "@/lib/types/resultsTypes";
+import { tmntGameResult, tmntStandingsTableRow } from "@/lib/types/resultsTypes";
 import { divDataType, divPfType } from "@/lib/types/types";
 import { populateStandingsRows } from "./populateStandingsRows";
 import { getGameNums } from "@/components/tmnts/games";
@@ -36,7 +36,7 @@ const calcPrizeColWidth = (justDivPfs: divPfType[]): number => {
 interface ChildProps {
   tmntId: string;
   div: divDataType;
-  tmntResults: TmntGameResult[];
+  tmntResults: tmntGameResult[];
   divPfs: divPfType[];
 }
 
@@ -63,12 +63,12 @@ const TmntStandingsForm: React.FC<ChildProps> = ({
    * 1. total_plus_total_hdcp
    * 2. full_name
    * 
-   * @param {TmntStandingsTableRow[]} standingsRows - standings rows to sort.
-   * @returns {TmntStandingsTableRow[]} - sorted standings rows.
+   * @param {tmntStandingsTableRow[]} standingsRows - standings rows to sort.
+   * @returns {tmntStandingsTableRow[]} - sorted standings rows.
    */
   const sortStandingsByTotal = (
-    standingsRows: TmntStandingsTableRow[],
-  ): TmntStandingsTableRow[] => {
+    standingsRows: tmntStandingsTableRow[],
+  ): tmntStandingsTableRow[] => {
     // sort by total_plus_total_hdcp, then full name
     return standingsRows.sort(
       (a, b) =>
@@ -87,12 +87,12 @@ const TmntStandingsForm: React.FC<ChildProps> = ({
    * 2. total_plus_total_hdcp
    * 3. full_name
    * 
-   * @param {TmntStandingsTableRow[]} standingsRows - standings rows to sort.
-   * @returns {TmntStandingsTableRow[]} - sorted standings rows.
+   * @param {tmntStandingsTableRow[]} standingsRows - standings rows to sort.
+   * @returns {tmntStandingsTableRow[]} - sorted standings rows.
    */
   const sortStandingByScratch = (
-    standingsRows: TmntStandingsTableRow[],
-  ): TmntStandingsTableRow[] => {
+    standingsRows: tmntStandingsTableRow[],
+  ): tmntStandingsTableRow[] => {
     // sort by last name, then first name, then lane, then average
     return standingsRows.sort(
       (a, b) =>
@@ -111,12 +111,12 @@ const TmntStandingsForm: React.FC<ChildProps> = ({
    * 1. full_name
    * 2. total_plus_total_hdcp
    * 
-   * @param {TmntStandingsTableRow[]} standingsRows - The tournament result data rows to sort.
-   * @returns {TmntStandingsTableRow[]} The sorted tournament result data rows.
+   * @param {tmntStandingsTableRow[]} standingsRows - The tournament result data rows to sort.
+   * @returns {tmntStandingsTableRow[]} The sorted tournament result data rows.
    */
   const sortStandingsByPlayer = (
-    standingsRows: TmntStandingsTableRow[],
-  ): TmntStandingsTableRow[] => {
+    standingsRows: tmntStandingsTableRow[],
+  ): tmntStandingsTableRow[] => {
     // sort by last name, then first name, then lane, then average
     return standingsRows.sort(
       (a, b) =>

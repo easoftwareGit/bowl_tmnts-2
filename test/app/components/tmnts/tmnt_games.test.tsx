@@ -3,7 +3,7 @@ import {
   getGameNums,
   getLastGameWithScores,
 } from "@/components/tmnts/games";
-import { TmntGameResult } from "@/lib/types/resultsTypes";
+import { tmntGameResult } from "@/lib/types/resultsTypes";
 import {
   mockGames,
   mockTmntFullData,
@@ -15,7 +15,7 @@ import { cloneDeep } from "lodash";
  *
  * Each player gets one TmntGameResult containing Game 1 through Game 6.
  */
-const createTmntResults = (): TmntGameResult[] => {
+const createTmntResults = (): tmntGameResult[] => {
   const div = mockTmntFullData.divs[0];
 
   return mockTmntFullData.players.map((player) => {
@@ -55,7 +55,7 @@ const createTmntResults = (): TmntGameResult[] => {
       hdcp: 0,
       total,
       ...gameScores,
-    } as TmntGameResult;
+    } as tmntGameResult;
   });
 };
 

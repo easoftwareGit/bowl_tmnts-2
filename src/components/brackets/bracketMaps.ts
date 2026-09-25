@@ -1,7 +1,7 @@
 import { playerEntryRow } from "@/app/dataEntry/playersForm/populatePlayerRows";
 import { calcHandicap } from "@/lib/db/divEntries/calcHdcp";
 import type {
-  PlayerInfoType,  
+  playerInfoType,  
   divEntryType,
   divType,
   gameType,  
@@ -9,15 +9,15 @@ import type {
 import type { playerBracketsType } from "./bracketListClass";
 import { Bracket } from "./bracketClass";
 
-type GameScoreKey = string;
+type gameScoreKey = string;
 
-export type BracketPlayersMapType = Map<string, string[]>;
+export type bracketPlayersMapType = Map<string, string[]>;
 
-export type BracketIndexMapType = Map<string, number>;
+export type bracketIndexMapType = Map<string, number>;
 
-export type GameScoreMapType = Map<GameScoreKey, number>;
+export type gameScoreMapType = Map<gameScoreKey, number>;
 
-export type PlayerMapType = Map<string, PlayerInfoType>;
+export type playerMapType = Map<string, playerInfoType>;
 
 /**
  * Creates a game score lookup key.
@@ -38,9 +38,9 @@ export const getGameScoreKey = (
  * Creates a bracket players lookup map.
  * 
  * @param {Bracket[]} brackets - array of bracket classes
- * @returns {BracketPlayersMapType} - bracket player lookup map 
+ * @returns {bracketPlayersMapType} - bracket player lookup map 
  */
-export const createBracketPlayersMap = (brackets: Bracket[]): BracketPlayersMapType => { 
+export const createBracketPlayersMap = (brackets: Bracket[]): bracketPlayersMapType => { 
   return new Map(brackets.map((bracket) => [bracket.id, bracket.players]));
 }
 
@@ -49,11 +49,11 @@ export const createBracketPlayersMap = (brackets: Bracket[]): BracketPlayersMapT
  *
  * @param {gameType[]} games - array of game objects
  * 
- * @returns {GameScoreMapType}
+ * @returns {gameScoreMapType}
  */
 export const createGameScoreMap = (
   games: gameType[],
-): GameScoreMapType => {
+): gameScoreMapType => {
   return new Map(
     games.map((game) => [
       getGameScoreKey(
@@ -85,7 +85,7 @@ export const createGameScoreMap = (
  * @param {divType} div - division object
  * @param {playerBracketsType[]} playerBrackets - array of player bracket objects
  * 
- * @returns {PlayerMapType} - player bracket lookup map
+ * @returns {playerMapType} - player bracket lookup map
  * @throws {Error} If a player is missing from divEntries.
  */
 export const createPlayersMap = (    
@@ -93,7 +93,7 @@ export const createPlayersMap = (
   divEntries: divEntryType[],
   div: divType,
   playerBrackets: playerBracketsType[],
-): PlayerMapType => {
+): playerMapType => {
 
   // const justBracketPlayers = playerBrackets.filter((bracket) => bracket.bracketIds.length > 0)  
 
@@ -142,10 +142,10 @@ export const createPlayersMap = (
  * Creates a bracket index lookup map
  * 
  * @param {Bracket[]} brackets - array of bracket classes
- * @returns {BracketIndexMapType} - bracket index lookup map
+ * @returns {bracketIndexMapType} - bracket index lookup map
  */
 export const createBracketIndexMap = (
   brackets: Bracket[],
-): BracketIndexMapType => {
+): bracketIndexMapType => {
   return new Map(brackets.map((bracket, index) => [bracket.id, index]));
 };

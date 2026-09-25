@@ -12,7 +12,6 @@ import {
   getOneTmntGameResultsTmntId,
   selectOneTmntGameResults,
 } from "@/redux/features/oneTmntGameResults/oneTmntGameResultsSlice";
-import type { divDataType, divType } from "@/lib/types/types";
 import WaitModal from "@/components/modal/waitModal";
 import {
   fetchTmntFullData,
@@ -23,8 +22,7 @@ import {
 } from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import TmntHomeHeader from "@/app/results/tmntHeader/tmntHomeHeader";
 import { getGameNums } from "@/components/tmnts/games";
-import { TmntGameResult } from "@/lib/types/resultsTypes";
-import { maxSortOrder } from "@/lib/validation/constants";
+import { tmntGameResult } from "@/lib/types/resultsTypes";
 
 const TmntPlayerScoresPage = () => { 
   const params = useParams();
@@ -104,13 +102,13 @@ const TmntPlayerScoresPage = () => {
     return foundDiv.hdcp_per > 0; 
   }, [stateTmntFullData, divId]);
 
-  const playerResult = useMemo<TmntGameResult>(() => {
+  const playerResult = useMemo<tmntGameResult>(() => {
     if (!tmntResults || tmntResults.length === 0) {
-      return {} as TmntGameResult;
+      return {} as tmntGameResult;
     };    
     const result = tmntResults.find((result) => result.player_id === playerId);
     if (!result) {
-      return {} as TmntGameResult;
+      return {} as tmntGameResult;
     }
     return result;    
   }, [
@@ -204,19 +202,21 @@ const TmntPlayerScoresPage = () => {
             <table className="table table-sm table-striped table-hover w-auto">
               <thead>
                 <tr>
-                  <th
-                    className="text-center align-middle"
-                    style={{ width: averageWidth }}
-                  >
-                    Ave
-                  </th>
                   {gotHdcp && (
-                    <th
-                      className="text-center align-middle"
-                      style={{ width: hdcpWidth }}
-                    >
-                      Hdcp
-                    </th>                    
+                    <>
+                      <th
+                        className="text-center align-middle"
+                        style={{ width: averageWidth }}
+                      >
+                        Ave
+                      </th>
+                      <th
+                        className="text-center align-middle"
+                        style={{ width: hdcpWidth }}
+                      >
+                        Hdcp
+                      </th>                    
+                    </>
                   )}
                   <th
                     className="text-start align-middle"
@@ -262,13 +262,15 @@ const TmntPlayerScoresPage = () => {
                     scratch*, total hdcp*, scratch + total hdcp 
                     *columns only exist if got hdcp = true */}
                 <tr>
-                  <td className="text-center align-middle">
-                    {playerResult.average}
-                  </td>
                   {gotHdcp && (
-                    <td className="text-center align-middle">
-                      {playerResult.hdcp}
-                    </td>
+                    <>
+                      <td className="text-center align-middle">
+                        {playerResult.average}
+                      </td>
+                      <td className="text-center align-middle">
+                        {playerResult.hdcp}
+                      </td>
+                    </>
                   )}
                   <td>
                     {playerResult.full_name}

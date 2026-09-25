@@ -21,3 +21,7 @@
 .brkt-games-grid-outer .e-grid .e-rowcell {
   color: rgb(0, 0, 0);
 }
+
+.brkt_table .game-header-align {  
+  padding-right: 0.9rem;
+}

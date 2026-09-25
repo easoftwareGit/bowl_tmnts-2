@@ -1,5 +1,5 @@
 import { calcPositions, calcPrizesForDiv } from "@/components/tmnts/prizes";
-import type { TmntGameResult } from "@/lib/types/resultsTypes";
+import type { tmntGameResult } from "@/lib/types/resultsTypes";
 import type { gameType } from "@/lib/types/types";
 import {
   divId1,
@@ -21,8 +21,8 @@ describe("calcPositions", () => {
    */
   const createTmntResults = (
     games: gameType[] = mockGames,
-  ): TmntGameResult[] => {
-    const tmntResults: TmntGameResult[] =
+  ): tmntGameResult[] => {
+    const tmntResults: tmntGameResult[] =
       mockTmntFullData.players.map((player) => {
         const playerGames = games
           .filter((game) => game.player_id === player.id)
@@ -31,7 +31,7 @@ describe("calcPositions", () => {
         const total = playerGames.reduce(
           (sum, game) => sum + game.score, 0);
 
-        const result: TmntGameResult = {
+        const result: tmntGameResult = {
           player_id: player.id,
           div_id: divId1,
           div_name: "Division 1",
@@ -306,7 +306,7 @@ describe("calcPositions", () => {
     });
 
     it("returns an empty positions array for an empty results array", () => {
-      const tmntResults: TmntGameResult[] = [];
+      const tmntResults: tmntGameResult[] = [];
 
       const positions = calcPositions(tmntResults);
 
@@ -328,9 +328,9 @@ describe("calcPrizesForDiv", () => {
    */
   const createTmntResults = (
     games: gameType[] = mockGames,
-  ): TmntGameResult[] => {
+  ): tmntGameResult[] => {
     return mockTmntFullData.players
-      .map((player): TmntGameResult => {
+      .map((player): tmntGameResult => {
         const playerGames = games
           .filter(
             (game) =>
@@ -346,7 +346,7 @@ describe("calcPrizesForDiv", () => {
           0,
         );
 
-        const result: TmntGameResult = {
+        const result: tmntGameResult = {
           player_id: player.id,
           div_id: divId1,
           div_name: "Scratch",

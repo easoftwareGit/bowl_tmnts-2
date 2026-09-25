@@ -1,4 +1,4 @@
-import { TmntGameResult, TmntStandingsTableRow } from "@/lib/types/resultsTypes";
+import { tmntGameResult, tmntStandingsTableRow } from "@/lib/types/resultsTypes";
 import { divPfType } from "@/lib/types/types";
 import { calcPositions, calcPrizesForDiv } from "@/components/tmnts/prizes";
 import { calcNumGames } from "@/components/tmnts/games";
@@ -6,21 +6,21 @@ import { calcNumGames } from "@/components/tmnts/games";
 /**
  * Populate the standings rows from tnmtResults
  * 
- * @param {TmntGameResult[]} tmntResults - tournament game results from the database
+ * @param {tmntGameResult[]} tmntResults - tournament game results from the database
  * @param {divPfType[]} justDivPfs - division prize funds - just one division
- * @returns {TmntStandingsTableRow[]} array of TmntStandingsTableRow for data table 
+ * @returns {tmntStandingsTableRow[]} array of TmntStandingsTableRow for data table 
  */
 export const populateStandingsRows = (
-  tmntResults: TmntGameResult[],
+  tmntResults: tmntGameResult[],
   justDivPfs: divPfType[]
-): TmntStandingsTableRow[] => {
-  const pRows: TmntStandingsTableRow[] = [];
+): tmntStandingsTableRow[] => {
+  const pRows: tmntStandingsTableRow[] = [];
   const numGames = calcNumGames(tmntResults);
 
   // tmntResults is sorted by total + Hdcp, 
   let position = 1;
   tmntResults.forEach((result) => {
-    const pRow: TmntStandingsTableRow = {
+    const pRow: tmntStandingsTableRow = {
       id: result.player_id,
       position: position++,
       player_id: result.player_id,

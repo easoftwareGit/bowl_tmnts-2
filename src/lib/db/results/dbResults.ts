@@ -2,7 +2,7 @@ import { publicApi } from "@/lib/api/axios";
 import { baseResultsApi } from "@/lib/api/apiPaths";
 import { testBaseResultsApi } from "../../../../test/testApi";
 import { isValidBtDbId } from "@/lib/validation/validation";
-import { TmntGameResult } from "@/lib/types/resultsTypes";
+import { tmntGameResult } from "@/lib/types/resultsTypes";
 
 // If running tests AND a test URL is defined, use it; otherwise use the app API path
 const url = process.env.NODE_ENV === "test" && testBaseResultsApi
@@ -16,10 +16,10 @@ const gameTmntUrl = url + "/games/tmnt/";
  * gets all game results for a div
  *
  * @param {string} divId - id of div to get game results for
- * @returns {TmntGameResult[]} - array of game results
+ * @returns {tmntGameResult[]} - array of game results
  * @throws {Error} - if divId is invalid or API call fails
  */
-export const getGameResultsForDiv = async (divId: string): Promise<TmntGameResult[]> => {
+export const getGameResultsForDiv = async (divId: string): Promise<tmntGameResult[]> => {
   if (!isValidBtDbId(divId, "div")) {
     throw new Error("Invalid div id");
   }
@@ -45,12 +45,12 @@ export const getGameResultsForDiv = async (divId: string): Promise<TmntGameResul
  * gets all game results for a tmnt
  *
  * @param {string} tmntId - id of tmnt to get game results for
- * @returns {TmntGameResult[] | null} - array of game results or null
+ * @returns {tmntGameResult[] | null} - array of game results or null
  * @throws {Error} - if tmntId is invalid or API call fails
  */
 export const getGameResultsForTmnt = async (
   tmntId: string
-): Promise<TmntGameResult[] | null> => {
+): Promise<tmntGameResult[] | null> => {
   if (!isValidBtDbId(tmntId, "tmt")) {
     throw new Error("Invalid tmnt id");
   }
@@ -62,7 +62,7 @@ export const getGameResultsForTmnt = async (
       throw new Error("Invalid API response: missing games");
     }
 
-    return response.data.games as TmntGameResult[];
+    return response.data.games as tmntGameResult[];
   } catch (err) {
     throw new Error(
       `getGameResultsForTmnt failed: ${

@@ -1,10 +1,11 @@
 "use client";
 
+import "@/lib/syncfusion-license";
+
 import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { useParams } from "next/navigation";
-import Link from "next/link";
 import {
   fetchOneTmntGameResults,
   getOneTmntGameResultsError,
@@ -24,9 +25,29 @@ import {
 import TmntHomeHeader from "@/app/results/tmntHeader/tmntHomeHeader";
 import { GameNum } from "@/lib/types/resultsTypes";
 import { getBrktListRecords } from "@/redux/features/tmntFullData/brktListRecordsSelector";
+import {
+  ColumnDirective,
+  ColumnsDirective,
+  GridComponent,
+  Inject,
+  Sort,
+} from "@syncfusion/ej2-react-grids";
+import { sfGridBorderWidth, sfRowHeight } from "@/lib/syncfusionTools";
+import { createBracketColumns } from "./createBrktsColumns";
 import { populatePlayerBrktRows2 } from "./populateBrktPlayerRows";
-import { getGameNums } from "@/components/tmnts/games";
 import "./bracketGames.css";
+
+export type BrktGamesGridRow = {
+  id: string;
+  player_id: string;
+  last_name: string;
+  first_name: string;
+  lane: number;
+  in: number;
+  cash: string;
+
+  [key: GameNum]: number;  
+};
 
 export type brktGamesTableRow = {
   id: string;
@@ -39,6 +60,14 @@ export type brktGamesTableRow = {
 
   [key: GameNum]: number;  
 }
+
+const calcGridWidth = (columns: { width?: string }[]): number => {
+  return columns.reduce((total, col) => {
+    const width = Number.parseInt(col.width ?? "0", 10);
+    return total + (Number.isNaN(width) ? 0 : width);
+  }, 0) + sfGridBorderWidth; // + gridBorderWidth, removes bottom scrollbar
+  // + sfGridScrollbarWidth if needed
+};
 
 const PlayerBrktsPage = () => {
   const params = useParams();
@@ -60,8 +89,6 @@ const PlayerBrktsPage = () => {
   const tmntResults = useSelector(selectOneTmntGameResults);  
   
   const brktListRecords = useSelector(getBrktListRecords);
-
-  const gameNums = getGameNums(tmntResults);
 
   // get tmnt data 
   useEffect(() => {
@@ -123,7 +150,7 @@ const PlayerBrktsPage = () => {
     dispatch
   ]);
 
-  const playerBrktRows = useMemo<brktGamesTableRow[]>(
+  const rows = useMemo<BrktGamesGridRow[]>(
     () => populatePlayerBrktRows2(tmntResults, brktListRecords),
     [tmntResults, brktListRecords]
   );
@@ -189,12 +216,8 @@ const PlayerBrktsPage = () => {
     );
   }
 
-  const cashWidth = 35;
-  const firstNameWidth = 100;    
-  const gameWidth = 45;
-  const inWidth = 45;
-  const laneWidth = 50;
-  const lastNameWidth = 120;
+  const columns = createBracketColumns(tmntResults);
+  const gridWidth = calcGridWidth(columns);
 
   return (
     <>
@@ -211,92 +234,35 @@ const PlayerBrktsPage = () => {
         tmntFullData={tmntFullData}
       />      
 
-      {hasTmntData && hasTmntGamesData && (
+      {resultsLoadStatus === "succeeded" && (
         <div className="text-center mb-2">
           <h4>Player Brackets</h4>
-          <div className="d-flex justify-content-center">
-            <div className="brkt_table overflow-x-auto">
-              <table className="table table-sm table-striped table-hover w-auto">
-                <thead>
-                  <tr>
-                    <th
-                      className="text-end align-middle"
-                      style={{ width: laneWidth }}
-                    >
-                      Lane
-                    </th>
-                    <th
-                      className="text-start align-middle"
-                      style={{ width: lastNameWidth }}
-                    >
-                      Last Name
-                    </th>
-                    <th
-                      className="text-start align-middle"
-                      style={{ width: firstNameWidth }}
-                    >
-                      First Name
-                    </th>
-                    <th
-                      className="text-center align-middle"
-                      style={{ width: cashWidth }}
-                    >
-                      $
-                    </th>
-                    {gameNums.map((gameNum) => (
-                      <th
-                        key={gameNum}
-                        className="text-end align-middle game-header-align"
-                        style={{ width: gameWidth }}                    
-                      >
-                        {gameNum}
-                      </th>
-                    ))}
-                    <th
-                      className="text-end align-middle"
-                      style={{ width: inWidth }}
-                    >
-                      In
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="table-group-divider">
-                  {playerBrktRows.map((playerBrktRow) => (
-                    <tr key={playerBrktRow.id}>
-                      <td className="text-end align-middle">
-                        {playerBrktRow.lane}
-                      </td>
-                      <td className="text-start align-middle">
-                        <Link
-                          href={`/results/tmnt/${tmntId}/brackets/player/${playerBrktRow.id}`}
-                          className="p-0"
-                        >
-                          {playerBrktRow.last_name}
-                        </Link>
-                      </td>
-                      <td className="text-start align-middle">
-                        <Link
-                          href={`/results/tmnt/${tmntId}/brackets/player/${playerBrktRow.id}`}
-                          className="p-0"
-                        >
-                          {playerBrktRow.first_name}
-                        </Link>
-                      </td>
-                      <td className="text-center align-middle text-success">
-                        {playerBrktRow.cash}
-                      </td>
-                      {gameNums.map((gameNum) => (
-                        <td key={gameNum} className="text-end align-middle">
-                          {playerBrktRow[`Game ${gameNum}`]}
-                        </td>
-                      ))}
-                      <td className="text-end align-middle">
-                        {playerBrktRow.in}
-                      </td>
-                    </tr>
+          <div
+            data-testid="GamesOuterWrapper"
+            className="brkt-games-grid-outer"
+          >      
+            <div
+              data-testid="GamesInnerWrapper"
+              className="brkt-games-grid-inner"
+            >
+              <GridComponent
+                id="tmntPlayerBracketsGrid"
+                dataSource={rows}
+                allowPaging={false}
+                allowSorting={true}
+                gridLines="None"
+                readOnly={true}
+                rowHeight={sfRowHeight}
+                width={gridWidth}
+              >
+                <ColumnsDirective>
+                  {columns.map((col) => (
+                    <ColumnDirective key={col.field} {...col} />
                   ))}
-                </tbody>
-              </table>
+                </ColumnsDirective>
+                
+                <Inject services={[Sort]} />
+              </GridComponent>
             </div>
           </div>
         </div>

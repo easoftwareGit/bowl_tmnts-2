@@ -5,8 +5,8 @@ import {
   BracketList,
   brktListInitialDataType,
 } from "@/components/brackets/bracketListClass";
-import type { BrktListRecord } from "@/components/brackets/buildBrktLists";
-import type { TmntGameResult } from "@/lib/types/resultsTypes";
+import type { brktListRecord } from "@/components/brackets/buildBrktLists";
+import type { tmntGameResult } from "@/lib/types/resultsTypes";
 import {
   brktId1,
   brktId2,
@@ -25,7 +25,7 @@ import {
 } from "../../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 
 describe("populatePlayerBrktRows", () => {
-  let brktListRecords: BrktListRecord;
+  let brktListRecords: brktListRecord;
 
   const initData: brktListInitialDataType = {
     tmntFullData: mockTmntFullData,
@@ -72,7 +72,7 @@ describe("populatePlayerBrktRows", () => {
    */
   const resultsThrough = (
     lastGame: number,
-  ): TmntGameResult[] => {
+  ): tmntGameResult[] => {
     const playerIds = [
       playerId1,
       playerId2,
@@ -87,7 +87,7 @@ describe("populatePlayerBrktRows", () => {
     return playerIds.map((playerId) => {
       const result = {
         player_id: playerId,
-      } as TmntGameResult;
+      } as tmntGameResult;
 
       mockGames
         .filter(
@@ -97,7 +97,7 @@ describe("populatePlayerBrktRows", () => {
         )
         .forEach((game) => {
           const gameCol =
-            `Game ${game.game_num}` as keyof TmntGameResult;
+            `Game ${game.game_num}` as keyof tmntGameResult;
 
           (
             result as unknown as Record<string, unknown>

@@ -2,10 +2,10 @@ import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ioStatusType } from "@/redux/statusTypes";
 import { RootState } from "@/redux/store";
 import { getGameResultsForTmnt } from "@/lib/db/results/dbResults";
-import { TmntGameResult } from "@/lib/types/resultsTypes";
+import { tmntGameResult } from "@/lib/types/resultsTypes";
 
 export interface oneTmntGameResultsState {
-  games: TmntGameResult[];
+  games: tmntGameResult[];
   requestedTmntId: string;
   tmntId: string;
   loadStatus: ioStatusType;
@@ -22,7 +22,7 @@ const initialState: oneTmntGameResultsState = {
 
 export const fetchOneTmntGameResults = createAsyncThunk(
   "oneTmntGameResults/fetchOneTmntGameResults",
-  async (tmntId: string): Promise<TmntGameResult[] | null> => {
+  async (tmntId: string): Promise<tmntGameResult[] | null> => {
     // Do not use try / catch blocks here. Need the promise to be fulfilled or
     // rejected which will have the appropriate response in the extraReducers.
 

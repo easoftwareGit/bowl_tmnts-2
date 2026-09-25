@@ -1,5 +1,5 @@
 import { tmntResultsToGameTypes } from "@/lib/tmntResultsToGameTypes";
-import type { TmntGameResult } from "@/lib/types/resultsTypes";
+import type { tmntGameResult } from "@/lib/types/resultsTypes";
 import type { gameType } from "@/lib/types/types";
 import {
   divId1,
@@ -9,7 +9,7 @@ import {
 } from "../mocks/tmnts/tmntFullData/mockTmntFullData";
 
 describe("tmntResultsToGameTypes", () => {
-  const mockTmntResults: TmntGameResult[] = [
+  const mockTmntResults: tmntGameResult[] = [
     {
       player_id: playerId1,
       div_id: divId1,
@@ -141,7 +141,7 @@ describe("tmntResultsToGameTypes", () => {
 describe("data guard", () => {
   it("returns an empty array when tmntResults is undefined", () => {
     const result = tmntResultsToGameTypes(
-      undefined as unknown as TmntGameResult[],
+      undefined as unknown as tmntGameResult[],
     );
 
     expect(result).toEqual([]);
@@ -149,7 +149,7 @@ describe("data guard", () => {
 
   it("returns an empty array when tmntResults is null", () => {
     const result = tmntResultsToGameTypes(
-      null as unknown as TmntGameResult[],
+      null as unknown as tmntGameResult[],
     );
 
     expect(result).toEqual([]);
@@ -157,7 +157,7 @@ describe("data guard", () => {
 
   it("returns an empty array when tmntResults is not an array", () => {
     const result = tmntResultsToGameTypes(
-      {} as unknown as TmntGameResult[],
+      {} as unknown as tmntGameResult[],
     );
 
     expect(result).toEqual([]);

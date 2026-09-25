@@ -7,18 +7,18 @@ import {
 } from "@/lib/db/initVals";
 import { dummySquadId } from "@/lib/validation/constants";
 
-export type BrktListRecord = Record<string, BracketList>;
+export type brktListRecord = Record<string, BracketList>;
 
 /**
  * builds bracket list records
  * 
  * @param {tmntFullType} tmntFullData - full tournament data
- * @returns {BrktListRecord} bracket list records 
+ * @returns {brktListRecord} bracket list records 
  */
 export const buildBrktListRecords = (
   tmntFullData: tmntFullType,
-): BrktListRecord => {
-  const blRecord: BrktListRecord = {};
+): brktListRecord => {
+  const blRecord: brktListRecord = {};
 
   // one bye player for all brackets
   const initByePlayer = createByePlayer(dummySquadId); // ok to use dummy data, not saved

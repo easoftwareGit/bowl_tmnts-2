@@ -1,5 +1,5 @@
 import { populateStandingsRows } from "@/app/results/tmnt/[tmntId]/standings/populateStandingsRows";
-import type { TmntGameResult } from "@/lib/types/resultsTypes";
+import type { tmntGameResult } from "@/lib/types/resultsTypes";
 import type { gameType } from "@/lib/types/types";
 import {
   divId1,
@@ -24,8 +24,8 @@ describe("populateResultRows", () => {
    */
   const createTmntResults = (
     games: gameType[] = mockGames,
-  ): TmntGameResult[] => {
-    const tmntResults: TmntGameResult[] =
+  ): tmntGameResult[] => {
+    const tmntResults: tmntGameResult[] =
       mockTmntFullData.players.map((player) => {
         const playerGames = games
           .filter(
@@ -43,7 +43,7 @@ describe("populateResultRows", () => {
           0,
         );
 
-        const result: TmntGameResult = {
+        const result: tmntGameResult = {
           player_id: player.id,
           div_id: divId1,
           div_name: "Division 1",

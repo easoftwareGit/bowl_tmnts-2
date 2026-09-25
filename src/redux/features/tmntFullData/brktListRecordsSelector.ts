@@ -2,7 +2,7 @@ import { createSelector } from "@reduxjs/toolkit";
 import { selectTmntFullData } from "./tmntFullDataSlice";
 import {
   buildBrktListRecords,
-  type BrktListRecord,
+  type brktListRecord,
 } from "@/components/brackets/buildBrktLists";
 import type { RootState } from "@/redux/store";
 import type { BracketList } from "@/components/brackets/bracketListClass";
@@ -74,11 +74,11 @@ const getBrktId = (
  *     [brktId]: BracketList
  *   }
  *
- * @returns {BrktListRecord} all bracket lists keyed by bracket id
+ * @returns {brktListRecord} all bracket lists keyed by bracket id
  */
 export const getBrktListRecords = createSelector(
   [selectTmntFullData],
-  (tmntFullData): BrktListRecord => {
+  (tmntFullData): brktListRecord => {
     return buildBrktListRecords(
       tmntFullData,
     );

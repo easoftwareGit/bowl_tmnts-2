@@ -1,6 +1,6 @@
-import { PlayerInfoType } from "@/lib/types/types";
+import { playerInfoType } from "@/lib/types/types";
 import { Bracket } from "./bracketClass";
-import type { GameScoreMapType, PlayerMapType } from "./bracketMaps";
+import type { gameScoreMapType, playerMapType } from "./bracketMaps";
 import { getGameScoreKey } from "./bracketMaps";
 
 type brktPosInMatchType = 0 | 1; // top or bottom position
@@ -33,7 +33,7 @@ export type matchSeedInfoType = {
   result: matchResultType;
 };
 
-const byePlayerInfo: PlayerInfoType = {  
+const byePlayerInfo: playerInfoType = {  
   first_name: "Bye",
   last_name: "",
   average: 0,
@@ -50,10 +50,10 @@ export class BracketMatch {
     if (!parent) throw new Error("parent is null");
   }
 
-  get gameScoreMap(): GameScoreMapType | null {
+  get gameScoreMap(): gameScoreMapType | null {
     return this._parent.parent?.gameScoreMap ?? null;
   }
-  get playerMap(): PlayerMapType | null {
+  get playerMap(): playerMapType | null {
     return this._parent.parent?.playersMap ?? null;
   }
   get parent(): Bracket {

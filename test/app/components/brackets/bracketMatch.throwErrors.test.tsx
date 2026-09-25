@@ -19,6 +19,12 @@ import { gameType, playerType } from "@/lib/types/types";
 import { initPlayer } from "@/lib/db/initVals";
 import { cloneDeep } from "lodash";
 
+/***************************************
+* createPlayersMap is private.         *
+* change to public before testing      *
+* change to private back after testing *
+***************************************/
+
 describe("BracketMatch - throw errors", () => {
   let brktList: BracketList;
   let bracket: Bracket;

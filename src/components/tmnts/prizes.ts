@@ -1,4 +1,4 @@
-import { TmntGameResult } from "@/lib/types/resultsTypes";
+import { tmntGameResult } from "@/lib/types/resultsTypes";
 import { divPfType } from "@/lib/types/types";
 import { formatValueSymbSep2Dec } from "@/lib/currency/formatValue";
 import { localConfig } from "@/lib/currency/const";
@@ -16,10 +16,10 @@ import { calcNumGames, getLastGameWithScores } from "./games";
  *
  * Note: tmntResults is sorted by "total + Hdcp".
  *
- * @param {TmntGameResult[]} tmntResults - array of tournament results
+ * @param {tmntGameResult[]} tmntResults - array of tournament results
  * @return {number[]} array of positions
  */
-export const calcPositions = (tmntResults: TmntGameResult[]): number[] => {
+export const calcPositions = (tmntResults: tmntGameResult[]): number[] => {
   if (!tmntResults || !Array.isArray(tmntResults) || tmntResults.length === 0) return [];
 
   const positions: number[] = [];
@@ -49,12 +49,12 @@ export const calcPositions = (tmntResults: TmntGameResult[]): number[] => {
  *         divPfs is sorted by position
  * note 2: if not at last game, ties are not calculated
  * 
- * @param {TmntGameResult[]} tmntResults - array of TmntGameResult for division
+ * @param {tmntGameResult[]} tmntResults - array of TmntGameResult for division
  * @param {divPfType[]} divPfs - array of division prize fund
  * @returns {string[]} array of prizes, sorted by position
  */
 export const calcPrizesForDiv = (
-  tmntResults: TmntGameResult[],
+  tmntResults: tmntGameResult[],
   divPfs: divPfType[],  
 ): string[] => {
   if (!tmntResults || !Array.isArray(tmntResults) || tmntResults.length === 0) return [];

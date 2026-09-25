@@ -231,19 +231,13 @@ describe("Bracket Class - getPlayerStatus", () => {
       const bracket = createBracket();
 
       const getPlayerMatchInfoSpy =
-        spyOnGetPlayerMatchInfo(
-          bracket,
-        );
+        spyOnGetPlayerMatchInfo(bracket);
 
       const getPlayerMatchNumberSpy =
-        spyOnGetPlayerMatchNumber(
-          bracket,
-        );
+        spyOnGetPlayerMatchNumber(bracket);
 
       const updatePlayerSetsSpy =
-        spyOnUpdatePlayerSets(
-          bracket,
-        );
+        spyOnUpdatePlayerSets(bracket);
 
       expect(
         bracket.getPlayerStatus(
@@ -253,25 +247,15 @@ describe("Bracket Class - getPlayerStatus", () => {
         playerStatusValues.NOT_IN_BRACKET,
       );
 
-      expect(
-        getPlayerMatchInfoSpy,
-      ).not.toHaveBeenCalled();
-
-      expect(
-        getPlayerMatchNumberSpy,
-      ).not.toHaveBeenCalled();
-
-      expect(
-        updatePlayerSetsSpy,
-      ).not.toHaveBeenCalled();
+      expect(getPlayerMatchInfoSpy).not.toHaveBeenCalled();
+      expect(getPlayerMatchNumberSpy).not.toHaveBeenCalled();
+      expect(updatePlayerSetsSpy).not.toHaveBeenCalled();
     });
 
     it("returns IN_BRACKET when game 1 match info is not available", () => {
       const bracket = createBracket();
 
-      spyOnGetPlayerMatchInfo(
-        bracket,
-      ).mockReturnValue(undefined);
+      spyOnGetPlayerMatchInfo(bracket).mockReturnValue(undefined);
 
       expect(
         bracket.getPlayerStatus(
@@ -357,10 +341,7 @@ describe("Bracket Class - getPlayerStatus", () => {
         ],
       );
 
-      const updatePlayerSetsSpy =
-        spyOnUpdatePlayerSets(
-          bracket,
-        );
+      const updatePlayerSetsSpy = spyOnUpdatePlayerSets(bracket);
 
       expect(
         bracket.getPlayerStatus(
@@ -370,9 +351,9 @@ describe("Bracket Class - getPlayerStatus", () => {
         playerStatusValues.LOSER,
       );
 
-      expect(
-        updatePlayerSetsSpy,
-      ).toHaveBeenCalledTimes(1);
+      expect(updatePlayerSetsSpy).toHaveBeenCalledTimes(1);
+      expect(bracket.loserBrktGame1Ids).toEqual(new Set([playerId1]));
+      expect(bracket.loserBrktGame2Ids).toEqual(new Set());      
     });
 
     it("returns IN_BRACKET when player wins game 1 and game 2 is not available", () => {
@@ -521,6 +502,8 @@ describe("Bracket Class - getPlayerStatus", () => {
       ).toBe(
         playerStatusValues.LOSER,
       );
+      expect(bracket.loserBrktGame1Ids).toEqual(new Set([playerId2]));
+      expect(bracket.loserBrktGame2Ids).toEqual(new Set([playerId1]));      
     });
 
     it("returns IN_BRACKET when player wins semifinal and final is not available", () => {
@@ -1317,8 +1300,10 @@ describe("Bracket Class - getPlayerStatus", () => {
       ).toBe(
         playerStatusValues.LOSER,
       );
-    });
 
+      expect(bracket.loserBrktGame1Ids.has(playerId7)).toBe(false);
+      expect(bracket.loserBrktGame2Ids.has(playerId7)).toBe(true);      
+    });
     it("returns RUNNER_UP for match 4 player when match 5 player wins", () => {
       const bracket = createBracket();
 
@@ -1430,6 +1415,9 @@ describe("Bracket Class - getPlayerStatus", () => {
       ).toBe(
         playerStatusValues.LOSER,
       );
+
+      expect(bracket.loserBrktGame1Ids.has(playerId7)).toBe(false);
+      expect(bracket.loserBrktGame2Ids.has(playerId7)).toBe(true);
     });
 
     it("returns WINNER for both tied match 5 players and LOSER for match 4 player", () => {

@@ -102,8 +102,7 @@ describe("BracketClass - randomize", () => {
 
       const bracket = new Bracket(
         brktId1,
-        playersPerMatch,
-        games,
+        playersPerMatch,        
       );
 
       expect(bracket.playersPerMatch).toBe(playersPerMatch);

@@ -10,7 +10,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "next/navigation";
 import TmntResultsPage from "@/app/results/tmnt/[tmntId]/standings/page";
-import type { TmntGameResult } from "@/lib/types/resultsTypes";
+import type { tmntGameResult } from "@/lib/types/resultsTypes";
 import {
   fetchTmntFullData,
   getTmntFullDataError,
@@ -158,7 +158,7 @@ jest.mock(
         hdcp_for: string;
         sort_order: number;
       };
-      tmntResults: TmntGameResult[];
+      tmntResults: tmntGameResult[];
       divPfs: unknown[];
     }) {
       return (
@@ -228,7 +228,7 @@ const createTmntResult = (
   divId: string,
   divName: string,
   sortOrder: number,
-): TmntGameResult => {
+): tmntGameResult => {
   const player = mockTmntFullData.players.find(
     (player) => player.id === playerId,
   );
@@ -268,7 +268,7 @@ const createTmntResult = (
  * Deliberately put HDCP first in the results array. The page should still
  * display Scratch first because sort_order controls the division order.
  */
-const mockTmntResults: TmntGameResult[] = [
+const mockTmntResults: tmntGameResult[] = [
   createTmntResult(
     playerId2,
     divId2,
@@ -291,7 +291,7 @@ type SelectorState = {
   requestedResultsTmntId: string;
   resultsLoadStatus: string;
   resultsTmntId: string;
-  tmntResults: TmntGameResult[];
+  tmntResults: tmntGameResult[];
 
   requestedPrizesTmntId: string;
   prizesTmntId: string;

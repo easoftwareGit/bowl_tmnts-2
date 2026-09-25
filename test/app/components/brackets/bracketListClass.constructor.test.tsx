@@ -49,6 +49,9 @@ describe("BracketList constructor", () => {
     it("should initialize with a null bracket index map when constructed", () => {
       expect(testBracketList.bracketIndexMap).toBeNull();
     });
+    it("should leave brkt undefined when no initial data is provided", () => {
+      expect(testBracketList.brkt).toBeUndefined();
+    });    
   });
 
   describe("passed different gameNumbers, no byePlayer, no initialData", () => {
@@ -302,6 +305,61 @@ describe("BracketList constructor", () => {
       }).toThrow(
         "BracketList - squadGameNums not unique.",
       );
+    });
+  });
+  
+  describe("brkt from initial data", () => {
+    it("sets brkt to the requested bracket", () => {
+      const brktList = new BracketList(
+        brktId1,
+        2,
+        3,
+        undefined,
+        undefined,
+        {
+          tmntFullData: mockTmntFullData,
+          divId: divId1,
+        },
+      );
+
+      expect(brktList.brkt).toBe(
+        mockTmntFullData.brkts.find((brkt) => brkt.id === brktId1),
+      );
+      expect(brktList.brkt?.id).toBe(brktId1);
+    });
+
+    it("sets brkt even when there are no individual brackets", () => {
+      const tmntFullData = cloneDeep(mockTmntFullData);
+      tmntFullData.oneBrkts = [];
+
+      const brktList = new BracketList(
+        brktId1,
+        2,
+        3,
+        undefined,
+        undefined,
+        { tmntFullData, divId: divId1 },
+      );
+
+      expect(brktList.brkt).toBe(
+        tmntFullData.brkts.find((brkt) => brkt.id === brktId1),
+      );
+      expect(brktList.brackets).toHaveLength(0);
+    });
+
+    it("throws when the requested bracket is absent from initial data", () => {
+      const tmntFullData = cloneDeep(mockTmntFullData);
+      tmntFullData.brkts = tmntFullData.brkts.filter(
+        (brkt) => brkt.id !== brktId1,
+      );
+
+      expect(
+        () =>
+          new BracketList(brktId1, 2, 3, undefined, undefined, {
+            tmntFullData,
+            divId: divId1,
+          }),
+      ).toThrow("Initial data - bracket not found.");
     });
   });  
 });
