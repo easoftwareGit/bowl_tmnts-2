@@ -136,8 +136,31 @@ export class Bracket {
     if (parent && parent.gameScoreMap && parent.playersMap) {
       this._match = new BracketMatch(this);
     }
-    if (parent && parent.brkt && isNumber(parent.brkt.fee)) {            
-      const brktFeeAmount = Number(parent.brkt.fee);
+    this.calcPrizeAmounts();
+    // if (parent && parent.brkt && isNumber(parent.brkt.fee)) {            
+    //   const brktFeeAmount = Number(parent.brkt.fee);
+    //   // 8 players in bracket,
+    //   // 1 fee -> admin
+    //   // 2 fee -> runner up
+    //   // 4 or 5 fee -> winner (4 if there is a bye player)
+    //   // for bye = 7 players = 4 + 2 + 1
+    //   // for no bye = 8 players = 5 + 2 + 1
+    //   const feeToWinnerMultiplier = this.hasByePlayer() ? 4 : 5;
+    //   this._winnerAmount = brktFeeAmount * feeToWinnerMultiplier;
+    //   this._runnerUpAmount = brktFeeAmount * 2;
+    // }
+  }
+
+  /*********************
+   * private functions *
+   ********************/
+
+  /**
+   * calculate winner and runner up amounts
+   */
+  private calcPrizeAmounts(): void {  
+    if (this._parent && this._parent.brkt && isNumber(this._parent.brkt.fee)) {            
+      const brktFeeAmount = Number(this._parent.brkt.fee);
       // 8 players in bracket,
       // 1 fee -> admin
       // 2 fee -> runner up
@@ -147,12 +170,8 @@ export class Bracket {
       const feeToWinnerMultiplier = this.hasByePlayer() ? 4 : 5;
       this._winnerAmount = brktFeeAmount * feeToWinnerMultiplier;
       this._runnerUpAmount = brktFeeAmount * 2;
-    }
+    }   
   }
-
-  /*********************
-   * private functions *
-   ********************/
 
   /**
    * get player match number for a game
@@ -668,6 +687,7 @@ export class Bracket {
     for (let i = 0; i < this.playersPerBracket; i += 2) {
       this.addMatch([sorted[i].player_id, sorted[i + 1].player_id]);
     }
+    this.calcPrizeAmounts();
   }
 
   /**

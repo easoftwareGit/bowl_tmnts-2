@@ -77,20 +77,21 @@ const PlayerDivBrkts = ({
   const fmtdEntryPerBrkt = formatValueSymbSep2Dec(brkt.fee.toString(), localConfig);
   const playerEntryAmt = Number(brkt.fee) * playerOneBrktIds.length;
   const fmtdPlayerEntryAmt = formatValueSymbSep2Dec(playerEntryAmt.toString(), localConfig);
-  let totalAmt = 0;  
-  
-  const showSummary = (brktGame: number): boolean => {
-    if (brktGame !== 3) return false;
-    const squadGameNum = brktList.squadGameNumber(brktGame);
-    const gameMapKey = getGameScoreKey(playerId, squadGameNum);
-    const gameScore = brktList.gameScoreMap?.get(gameMapKey)?.toString() ?? "";
-    return (gameScore !== "");
-  }
+  let totalAmt = 0;
 
-  const playerColumnHeaderElement = (brktGame: number): JSX.Element => {  
+  const getPlayerGameScore = (brktGameNum: number): string => {
+    const squadGameNum = brktList.squadGameNumber(brktGameNum);
+    const gameMapKey = getGameScoreKey(playerId, squadGameNum);
+
+    return brktList.gameScoreMap?.get(gameMapKey)?.toString() ?? "";
+  };
+
+  const playerColumnHeaderElement = (
+    brktGame: number, 
+    playerGameScore: string
+  ): JSX.Element => {  
     const squadGameNum = brktList.squadGameNumber(brktGame);
     const gameMapKey = getGameScoreKey(playerId, squadGameNum);
-    const gameScore = brktList.gameScoreMap?.get(gameMapKey)?.toString() ?? "";
     
     const playerHdcp = (div.hdcp_per > 0)
       ? calcHandicap(
@@ -100,13 +101,13 @@ const PlayerDivBrkts = ({
         div.int_hdcp
       )
       : 0;    
-    const plusHdcp = (div.hdcp_per > 0) ? `+${playerHdcp}=${gameScore+playerHdcp}` : "";
+    const plusHdcp = (div.hdcp_per > 0) ? `+${playerHdcp}=${playerGameScore+playerHdcp}` : "";
     const aliveCount = brktList.aliveCount(playerId, brktGame);
     
     return (
       <div className="fw-semibold">
-        {gameScore}{plusHdcp} {playerName} Game {squadGameNum}&nbsp;
-        {(brktGame === 1 || (brktGame > 1 && gameScore !== "")) &&
+        {playerGameScore}{plusHdcp} {playerName} Game {squadGameNum}&nbsp;
+        {(brktGame === 1 || (brktGame > 1 && playerGameScore !== "")) &&
           <span className="small-table-font">
             ({aliveCount} brackets)
           </span>
@@ -132,9 +133,9 @@ const PlayerDivBrkts = ({
         >
           &nbsp;
           <div
-            className="border border-dark"
+            className="border border-dark rounded-top rounded-bottom"
           >
-            <div className="text-center bracket-title_backgroud text-white">
+            <div className="text-center bracket-title_backgroud text-white rounded-top">
               {playerName} 
             </div>
             <div className="text-center bracket-title_backgroud text-white">
@@ -143,7 +144,7 @@ const PlayerDivBrkts = ({
             <div className="border-top border-bottom border-dark text-end pe-1">
               {playerOneBrktIds.length} entries @ {fmtdEntryPerBrkt} = {fmtdPlayerEntryAmt}
             </div>
-            <div className="text-end text-success pe-1">
+            <div className="text-end text-success pe-1 rounded-bottom">
               Earnings: {fmtdPlayerEarnings}
             </div>
           </div>
@@ -202,7 +203,7 @@ const PlayerDivBrkts = ({
   return (
     <>
       <div className="row gx-0 text-center align-middle fw-bold">        
-        <div className="text-center align-middle fw-bold col-12 bracket-title_backgroud text-white border-bottom border-dark">
+        <div className="text-center align-middle fw-bold col-12 bracket-title_backgroud text-white border-bottom border-dark rounded">
           {brktName}
         </div>        
       </div>
@@ -210,6 +211,7 @@ const PlayerDivBrkts = ({
       <div className="row gx-0 pb-2">        
         {[1, 2, 3].map((brktGameNum) => {
           const infoWidth = brktGameNum === 3 ? "36%" : "32%";
+          const playerGameScore = getPlayerGameScore(brktGameNum);
 
           return (
             <React.Fragment key={brktGameNum}>
@@ -217,7 +219,7 @@ const PlayerDivBrkts = ({
                 className="text-start align-middle"
                 style={{ width: infoWidth }}
               >
-                {playerColumnHeaderElement(brktGameNum)}
+                {playerColumnHeaderElement(brktGameNum, playerGameScore)}
 
                 {playerOneBrktIds.map((oneBrktId) => {
                   const brktInfo = getBrktInfo(oneBrktId, brktGameNum);
@@ -246,7 +248,10 @@ const PlayerDivBrkts = ({
                           key={oneBrktId + oppoPlayerId + brktGameNum}
                           className="d-flex align-middle"
                         >
-                          <Link href={``} className="p-0">
+                          <Link 
+                            href={``} 
+                            className="p-0"
+                          >
                             {brktInfo.oppoGameScores[index] !== "" && (
                               <>
                                 {index === 0 ? (
@@ -269,19 +274,18 @@ const PlayerDivBrkts = ({
                               </>
                             )}
                           </Link>
-
                           {brktInfo.oppoFullNames[index]}
                           {brktInfo.playerAmount > 0 && (
-                            <span className="ms-auto text-end text-success">                              
+                            <span className="ms-auto text-end text-success">
                               {brktInfo.fmtdPlayerAmount}
-                            </span>                            
+                            </span>
                           )}
                         </div>
                       ))}
                     </React.Fragment>
                   );                
                 })}
-                {brktGameNum === 3 && showSummary(brktGameNum) && (
+                {brktGameNum === 3 && playerGameScore !== "" && (
                   <div>  
                     {bracketSummaryElement()}
                   </div> 

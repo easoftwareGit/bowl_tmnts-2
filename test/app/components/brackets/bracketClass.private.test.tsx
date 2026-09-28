@@ -84,344 +84,430 @@ describe("Bracket Class - private functions", () => {
     }
   };
 
-  // describe("getPlayerMatchNumber", () => {
-  //   it("returns undefined when player is not in bracket", () => {
-  //     const bracket = createBracket();
+  describe("calcPrizeAmounts", () => {
+    it("calculates winner and runner-up amounts for a full bracket", () => {
+      const bracket = createBracket();
 
-  //     addPlayersToBracket(bracket, fullPlayers);
+      addPlayersToBracket(bracket, fullPlayers);
 
-  //     expect(
-  //       bracket.getPlayerMatchNumber(
-  //         "player-9",
-  //         1,
-  //       ),
-  //     ).toBeUndefined();
-  //   });
+      bracket.parent = {
+        games: defaultBrktGames,
+        gameScoreMap: null,
+        playersMap: null,
+        brkt: {
+          fee: 5,
+        },
+      } as unknown as BracketList;
 
-  //   it("returns undefined when bracket is empty", () => {
-  //     const bracket = createBracket();
+      bracket.calcPrizeAmounts();
 
-  //     expect(
-  //       bracket.getPlayerMatchNumber(
-  //         "player-1",
-  //         1,
-  //       ),
-  //     ).toBeUndefined();
-  //   });
+      expect(bracket.winnerAmount).toBe(25);
+      expect(bracket.runnerUpAmount).toBe(10);
+    });
 
-  //   it("returns undefined when game number is less than 1", () => {
-  //     const bracket = createBracket();
+    it("calculates winner and runner-up amounts for a bracket with a bye", () => {
+      const bracket = createBracket();
 
-  //     addPlayersToBracket(bracket, fullPlayers);
+      const playersWithBye = [
+        ...fullPlayers.slice(0, 7),
+        Bracket.byePlayerId,
+      ];
 
-  //     expect(
-  //       bracket.getPlayerMatchNumber(
-  //         "player-1",
-  //         0,
-  //       ),
-  //     ).toBeUndefined();
-  //   });
+      addPlayersToBracket(
+        bracket,
+        playersWithBye,
+      );
 
-  //   it("returns undefined when game number is greater than number of games", () => {
-  //     const bracket = createBracket();
+      bracket.parent = {
+        games: defaultBrktGames,
+        gameScoreMap: null,
+        playersMap: null,
+        brkt: {
+          fee: 5,
+        },
+      } as unknown as BracketList;
 
-  //     addPlayersToBracket(bracket, fullPlayers);
+      bracket.calcPrizeAmounts();
 
-  //     expect(
-  //       bracket.getPlayerMatchNumber(
-  //         "player-1",
-  //         defaultBrktGames + 1,
-  //       ),
-  //     ).toBeUndefined();
-  //   });
+      expect(bracket.winnerAmount).toBe(20);
+      expect(bracket.runnerUpAmount).toBe(10);
+    });
 
-  //   describe("game 1", () => {
-  //     it.each([
-  //       ["player-1", 0],
-  //       ["player-2", 0],
-  //       ["player-3", 1],
-  //       ["player-4", 1],
-  //       ["player-5", 2],
-  //       ["player-6", 2],
-  //       ["player-7", 3],
-  //       ["player-8", 3],
-  //     ])(
-  //       "returns match %i for %s",
-  //       (playerId, expectedMatch) => {
-  //         const bracket = createBracket();
+    it("does not calculate prize amounts when parent is undefined", () => {
+      const bracket = new Bracket(oneBrktId1);
 
-  //         addPlayersToBracket(bracket, fullPlayers);
+      bracket.calcPrizeAmounts();
 
-  //         expect(
-  //           bracket.getPlayerMatchNumber(
-  //             playerId,
-  //             1,
-  //           ),
-  //         ).toBe(expectedMatch);
-  //       },
-  //     );
-  //   });
+      expect(bracket.winnerAmount).toBe(0);
+      expect(bracket.runnerUpAmount).toBe(0);
+    });
 
-  //   describe("game 2", () => {
-  //     it.each([
-  //       ["player-1", 4],
-  //       ["player-2", 4],
-  //       ["player-3", 4],
-  //       ["player-4", 4],
-  //       ["player-5", 5],
-  //       ["player-6", 5],
-  //       ["player-7", 5],
-  //       ["player-8", 5],
-  //     ])(
-  //       "returns match %i for %s",
-  //       (playerId, expectedMatch) => {
-  //         const bracket = createBracket();
+    it("does not calculate prize amounts when parent bracket is undefined", () => {
+      const bracket = createBracket();
 
-  //         addPlayersToBracket(bracket, fullPlayers);
+      bracket.calcPrizeAmounts();
 
-  //         expect(
-  //           bracket.getPlayerMatchNumber(
-  //             playerId,
-  //             2,
-  //           ),
-  //         ).toBe(expectedMatch);
-  //       },
-  //     );
-  //   });
+      expect(bracket.winnerAmount).toBe(0);
+      expect(bracket.runnerUpAmount).toBe(0);
+    });
 
-  //   describe("game 3", () => {
-  //     it.each(fullPlayers)(
-  //       "returns match 6 for %s",
-  //       (playerId) => {
-  //         const bracket = createBracket();
+    it("does not calculate prize amounts when bracket fee is not a number", () => {
+      const bracket = createBracket();
 
-  //         addPlayersToBracket(bracket, fullPlayers);
+      bracket.parent = {
+        games: defaultBrktGames,
+        gameScoreMap: null,
+        playersMap: null,
+        brkt: {
+          fee: "invalid",
+        },
+      } as unknown as BracketList;
 
-  //         expect(bracket.getPlayerMatchNumber(playerId, 3)).toBe(6);
-  //       },
-  //     );
-  //   });
-  // });
+      bracket.calcPrizeAmounts();
 
-  // describe("playerStatus", () => {
-  //   it("returns NOT_IN_BRACKET when player is not in bracket", () => {
-  //     const bracket = createBracket();
+      expect(bracket.winnerAmount).toBe(0);
+      expect(bracket.runnerUpAmount).toBe(0);
+    });
+  });
 
-  //     addPlayersToBracket(bracket, fullPlayers);
+  describe("getPlayerMatchNumber", () => {
+    it("returns undefined when player is not in bracket", () => {
+      const bracket = createBracket();
 
-  //     expect(
-  //       bracket.playerStatus("not-in-bracket"),
-  //     ).toBe(playerStatusValues.NOT_IN_BRACKET);
-  //   });
+      addPlayersToBracket(bracket, fullPlayers);
 
-  //   it("returns IN_BRACKET when player is in bracket and has no result", () => {
-  //     const bracket = createBracket();
+      expect(
+        bracket.getPlayerMatchNumber(
+          "player-9",
+          1,
+        ),
+      ).toBeUndefined();
+    });
 
-  //     addPlayersToBracket(bracket, fullPlayers);
+    it("returns undefined when bracket is empty", () => {
+      const bracket = createBracket();
 
-  //     expect(
-  //       bracket.playerStatus("player-1"),
-  //     ).toBe(playerStatusValues.IN_BRACKET);
-  //   });
+      expect(
+        bracket.getPlayerMatchNumber(
+          "player-1",
+          1,
+        ),
+      ).toBeUndefined();
+    });
 
-  //   it("returns LOSER after player loses game 1", () => {
-  //     const bracket = createBracket();
+    it("returns undefined when game number is less than 1", () => {
+      const bracket = createBracket();
 
-  //     addPlayersToBracket(bracket, fullPlayers);
+      addPlayersToBracket(bracket, fullPlayers);
 
-  //     const matchInfo: matchSeedInfoType[] = [
-  //       {
-  //         playerId: "player-1",
-  //         result: "W",
-  //       } as matchSeedInfoType,
-  //       {
-  //         playerId: "player-2",
-  //         result: "L",
-  //       } as matchSeedInfoType,
-  //     ];
+      expect(
+        bracket.getPlayerMatchNumber(
+          "player-1",
+          0,
+        ),
+      ).toBeUndefined();
+    });
 
-  //     bracket.updatePlayerSets({
-  //       brktGameNum: 1,
-  //       playerId: "player-2",        
-  //       matchInfo,
-  //       matchNumber: 0,
-  //       matchPlayers: [
-  //         "player-1",
-  //         "player-2",
-  //       ],
-  //     });
+    it("returns undefined when game number is greater than number of games", () => {
+      const bracket = createBracket();
 
-  //     expect(
-  //       bracket.playerStatus("player-2"),
-  //     ).toBe(playerStatusValues.LOSER);
+      addPlayersToBracket(bracket, fullPlayers);
 
-  //     expect(
-  //       bracket.loserBrktGame1Ids,
-  //     ).toEqual(new Set(["player-2"]));
+      expect(
+        bracket.getPlayerMatchNumber(
+          "player-1",
+          defaultBrktGames + 1,
+        ),
+      ).toBeUndefined();
+    });
 
-  //     expect(
-  //       bracket.loserBrktGame2Ids,
-  //     ).toEqual(new Set());
-  //   });
+    describe("game 1", () => {
+      it.each([
+        ["player-1", 0],
+        ["player-2", 0],
+        ["player-3", 1],
+        ["player-4", 1],
+        ["player-5", 2],
+        ["player-6", 2],
+        ["player-7", 3],
+        ["player-8", 3],
+      ])(
+        "returns match %i for %s",
+        (playerId, expectedMatch) => {
+          const bracket = createBracket();
+
+          addPlayersToBracket(bracket, fullPlayers);
+
+          expect(
+            bracket.getPlayerMatchNumber(
+              playerId,
+              1,
+            ),
+          ).toBe(expectedMatch);
+        },
+      );
+    });
+
+    describe("game 2", () => {
+      it.each([
+        ["player-1", 4],
+        ["player-2", 4],
+        ["player-3", 4],
+        ["player-4", 4],
+        ["player-5", 5],
+        ["player-6", 5],
+        ["player-7", 5],
+        ["player-8", 5],
+      ])(
+        "returns match %i for %s",
+        (playerId, expectedMatch) => {
+          const bracket = createBracket();
+
+          addPlayersToBracket(bracket, fullPlayers);
+
+          expect(
+            bracket.getPlayerMatchNumber(
+              playerId,
+              2,
+            ),
+          ).toBe(expectedMatch);
+        },
+      );
+    });
+
+    describe("game 3", () => {
+      it.each(fullPlayers)(
+        "returns match 6 for %s",
+        (playerId) => {
+          const bracket = createBracket();
+
+          addPlayersToBracket(bracket, fullPlayers);
+
+          expect(bracket.getPlayerMatchNumber(playerId, 3)).toBe(6);
+        },
+      );
+    });
+  });
+
+  describe("playerStatus", () => {
+    it("returns NOT_IN_BRACKET when player is not in bracket", () => {
+      const bracket = createBracket();
+
+      addPlayersToBracket(bracket, fullPlayers);
+
+      expect(
+        bracket.playerStatus("not-in-bracket"),
+      ).toBe(playerStatusValues.NOT_IN_BRACKET);
+    });
+
+    it("returns IN_BRACKET when player is in bracket and has no result", () => {
+      const bracket = createBracket();
+
+      addPlayersToBracket(bracket, fullPlayers);
+
+      expect(
+        bracket.playerStatus("player-1"),
+      ).toBe(playerStatusValues.IN_BRACKET);
+    });
+
+    it("returns LOSER after player loses game 1", () => {
+      const bracket = createBracket();
+
+      addPlayersToBracket(bracket, fullPlayers);
+
+      const matchInfo: matchSeedInfoType[] = [
+        {
+          playerId: "player-1",
+          result: "W",
+        } as matchSeedInfoType,
+        {
+          playerId: "player-2",
+          result: "L",
+        } as matchSeedInfoType,
+      ];
+
+      bracket.updatePlayerSets({
+        brktGameNum: 1,
+        playerId: "player-2",        
+        matchInfo,
+        matchNumber: 0,
+        matchPlayers: [
+          "player-1",
+          "player-2",
+        ],
+      });
+
+      expect(
+        bracket.playerStatus("player-2"),
+      ).toBe(playerStatusValues.LOSER);
+
+      expect(
+        bracket.loserBrktGame1Ids,
+      ).toEqual(new Set(["player-2"]));
+
+      expect(
+        bracket.loserBrktGame2Ids,
+      ).toEqual(new Set());
+    });
         
-  //   it("returns LOSER after player loses game 2", () => {
-  //     const bracket = createBracket();
+    it("returns LOSER after player loses game 2", () => {
+      const bracket = createBracket();
 
-  //     addPlayersToBracket(bracket, fullPlayers);
+      addPlayersToBracket(bracket, fullPlayers);
 
-  //     const matchInfo: matchSeedInfoType[] = [
-  //       {
-  //         playerId: "player-1",
-  //         result: "W",
-  //       } as matchSeedInfoType,
-  //       {
-  //         playerId: "player-2",
-  //         result: "L",
-  //       } as matchSeedInfoType,
-  //     ];
+      const matchInfo: matchSeedInfoType[] = [
+        {
+          playerId: "player-1",
+          result: "W",
+        } as matchSeedInfoType,
+        {
+          playerId: "player-2",
+          result: "L",
+        } as matchSeedInfoType,
+      ];
 
-  //     bracket.updatePlayerSets({
-  //       brktGameNum: 2,
-  //       playerId: "player-2",        
-  //       matchInfo,
-  //       matchNumber: 4,
-  //       matchPlayers: [
-  //         "player-1",
-  //         "player-2",
-  //       ],
-  //     });
+      bracket.updatePlayerSets({
+        brktGameNum: 2,
+        playerId: "player-2",        
+        matchInfo,
+        matchNumber: 4,
+        matchPlayers: [
+          "player-1",
+          "player-2",
+        ],
+      });
 
-  //     expect(
-  //       bracket.playerStatus("player-2"),
-  //     ).toBe(playerStatusValues.LOSER);
+      expect(
+        bracket.playerStatus("player-2"),
+      ).toBe(playerStatusValues.LOSER);
 
-  //     expect(
-  //       bracket.loserBrktGame1Ids,
-  //     ).toEqual(new Set());
+      expect(
+        bracket.loserBrktGame1Ids,
+      ).toEqual(new Set());
 
-  //     expect(
-  //       bracket.loserBrktGame2Ids,
-  //     ).toEqual(new Set(["player-2"]));
-  //   });
+      expect(
+        bracket.loserBrktGame2Ids,
+      ).toEqual(new Set(["player-2"]));
+    });
 
-  //   it("returns RUNNER_UP after player loses the final", () => {
-  //     const bracket = createBracket();
+    it("returns RUNNER_UP after player loses the final", () => {
+      const bracket = createBracket();
 
-  //     addPlayersToBracket(bracket, fullPlayers);
+      addPlayersToBracket(bracket, fullPlayers);
 
-  //     const matchInfo: matchSeedInfoType[] = [
-  //       {
-  //         playerId: "player-1",
-  //         result: "W",
-  //       } as matchSeedInfoType,
-  //       {
-  //         playerId: "player-2",
-  //         result: "L",
-  //       } as matchSeedInfoType,
-  //     ];
+      const matchInfo: matchSeedInfoType[] = [
+        {
+          playerId: "player-1",
+          result: "W",
+        } as matchSeedInfoType,
+        {
+          playerId: "player-2",
+          result: "L",
+        } as matchSeedInfoType,
+      ];
 
-  //     bracket.updatePlayerSets({
-  //       brktGameNum: 3,
-  //       playerId: "player-2",        
-  //       matchInfo,
-  //       matchNumber: 6,
-  //       matchPlayers: [
-  //         "player-1",
-  //         "player-2",
-  //       ],
-  //     });
+      bracket.updatePlayerSets({
+        brktGameNum: 3,
+        playerId: "player-2",        
+        matchInfo,
+        matchNumber: 6,
+        matchPlayers: [
+          "player-1",
+          "player-2",
+        ],
+      });
 
-  //     expect(
-  //       bracket.playerStatus("player-2"),
-  //     ).toBe(playerStatusValues.RUNNER_UP);
-  //   });
+      expect(
+        bracket.playerStatus("player-2"),
+      ).toBe(playerStatusValues.RUNNER_UP);
+    });
 
-  //   it("returns WINNER after player wins the final", () => {
-  //     const bracket = createBracket();
+    it("returns WINNER after player wins the final", () => {
+      const bracket = createBracket();
 
-  //     addPlayersToBracket(bracket, fullPlayers);
+      addPlayersToBracket(bracket, fullPlayers);
 
-  //     const matchInfo: matchSeedInfoType[] = [
-  //       {
-  //         playerId: "player-1",
-  //         result: "W",
-  //       } as matchSeedInfoType,
-  //       {
-  //         playerId: "player-2",
-  //         result: "L",
-  //       } as matchSeedInfoType,
-  //     ];
+      const matchInfo: matchSeedInfoType[] = [
+        {
+          playerId: "player-1",
+          result: "W",
+        } as matchSeedInfoType,
+        {
+          playerId: "player-2",
+          result: "L",
+        } as matchSeedInfoType,
+      ];
 
-  //     bracket.updatePlayerSets({
-  //       brktGameNum: 3,
-  //       playerId: "player-1",        
-  //       matchInfo,
-  //       matchNumber: 6,
-  //       matchPlayers: [
-  //         "player-1",
-  //         "player-2",
-  //       ],
-  //     });
+      bracket.updatePlayerSets({
+        brktGameNum: 3,
+        playerId: "player-1",        
+        matchInfo,
+        matchNumber: 6,
+        matchPlayers: [
+          "player-1",
+          "player-2",
+        ],
+      });
 
-  //     expect(
-  //       bracket.playerStatus("player-1"),
-  //     ).toBe(playerStatusValues.WINNER);
-  //   });
+      expect(
+        bracket.playerStatus("player-1"),
+      ).toBe(playerStatusValues.WINNER);
+    });
 
-  //   it("returns WINNER for both players when final is tied", () => {
-  //     const bracket = createBracket();
+    it("returns WINNER for both players when final is tied", () => {
+      const bracket = createBracket();
 
-  //     addPlayersToBracket(bracket, fullPlayers);
+      addPlayersToBracket(bracket, fullPlayers);
 
-  //     const matchInfo: matchSeedInfoType[] = [
-  //       {
-  //         playerId: "player-1",
-  //         result: "T",
-  //       } as matchSeedInfoType,
-  //       {
-  //         playerId: "player-2",
-  //         result: "T",
-  //       } as matchSeedInfoType,
-  //     ];
+      const matchInfo: matchSeedInfoType[] = [
+        {
+          playerId: "player-1",
+          result: "T",
+        } as matchSeedInfoType,
+        {
+          playerId: "player-2",
+          result: "T",
+        } as matchSeedInfoType,
+      ];
 
-  //     bracket.updatePlayerSets({
-  //       brktGameNum: 3,
-  //       playerId: "player-1",        
-  //       matchInfo,
-  //       matchNumber: 6,
-  //       matchPlayers: [
-  //         "player-1",
-  //         "player-2",
-  //       ],
-  //     });
+      bracket.updatePlayerSets({
+        brktGameNum: 3,
+        playerId: "player-1",        
+        matchInfo,
+        matchNumber: 6,
+        matchPlayers: [
+          "player-1",
+          "player-2",
+        ],
+      });
 
-  //     bracket.updatePlayerSets({
-  //       brktGameNum: 3,
-  //       playerId: "player-2",        
-  //       matchInfo,
-  //       matchNumber: 6,
-  //       matchPlayers: [
-  //         "player-1",
-  //         "player-2",
-  //       ],
-  //     });
+      bracket.updatePlayerSets({
+        brktGameNum: 3,
+        playerId: "player-2",        
+        matchInfo,
+        matchNumber: 6,
+        matchPlayers: [
+          "player-1",
+          "player-2",
+        ],
+      });
 
-  //     expect(
-  //       bracket.playerStatus("player-1"),
-  //     ).toBe(playerStatusValues.WINNER);
+      expect(
+        bracket.playerStatus("player-1"),
+      ).toBe(playerStatusValues.WINNER);
 
-  //     expect(
-  //       bracket.playerStatus("player-2"),
-  //     ).toBe(playerStatusValues.WINNER);
+      expect(
+        bracket.playerStatus("player-2"),
+      ).toBe(playerStatusValues.WINNER);
 
-  //     // since a tie in the final, there is no runner up, runnerUpIds should be empty
-  //     expect(
-  //       bracket.runnerUpIds,
-  //     ).toEqual(new Set());
+      // since a tie in the final, there is no runner up, runnerUpIds should be empty
+      expect(
+        bracket.runnerUpIds,
+      ).toEqual(new Set());
 
-  //   });
+    });
 
-  // });
+  });
 
   describe("updateFinalPlacements", () => {
     const createFinalBracket = (): Bracket => {
@@ -601,674 +687,674 @@ describe("Bracket Class - private functions", () => {
     });
   });
 
-  // describe("updatePlayerSets", () => {
+  describe("updatePlayerSets", () => {
 
-  //   const createMatchSeedInfo = (
-  //     playerId: string,
-  //     total: number,
-  //     result: "W" | "L" | "T",
-  //   ): matchSeedInfoType => {
-  //     return {
-  //       playerId,
-  //       first_name: "",
-  //       last_name: "",
-  //       average: 200,
-  //       score: total,
-  //       hdcp: 0,
-  //       total,
-  //       result,
-  //     };
-  //   };
+    const createMatchSeedInfo = (
+      playerId: string,
+      total: number,
+      result: "W" | "L" | "T",
+    ): matchSeedInfoType => {
+      return {
+        playerId,
+        first_name: "",
+        last_name: "",
+        average: 200,
+        score: total,
+        hdcp: 0,
+        total,
+        result,
+      };
+    };
 
-  //   const createPlayerMatchInfo = (
-  //     brktGameNum: number,
-  //     playerInfo: matchSeedInfoType,
-  //     matchInfo: matchSeedInfoType[],
-  //     matchNumber: 0 | 1 | 2 | 3 | 4 | 5 | 6,
-  //   ) => {
-  //     return {
-  //       brktGameNum,
-  //       playerId: playerInfo.playerId,
-  //       playerInfo,
-  //       matchInfo,
-  //       matchNumber,
-  //       matchPlayers: matchInfo.map(
-  //         (info) => info.playerId,
-  //       ),
-  //     };
-  //   };
+    const createPlayerMatchInfo = (
+      brktGameNum: number,
+      playerInfo: matchSeedInfoType,
+      matchInfo: matchSeedInfoType[],
+      matchNumber: 0 | 1 | 2 | 3 | 4 | 5 | 6,
+    ) => {
+      return {
+        brktGameNum,
+        playerId: playerInfo.playerId,
+        playerInfo,
+        matchInfo,
+        matchNumber,
+        matchPlayers: matchInfo.map(
+          (info) => info.playerId,
+        ),
+      };
+    };
 
-  //   describe("games before the final", () => {
-  //     it("does nothing when player result is undefined", () => {
-  //       const bracket = createBracket();
+    describe("games before the final", () => {
+      it("does nothing when player result is undefined", () => {
+        const bracket = createBracket();
 
-  //       const playerInfo: matchSeedInfoType = {
-  //         playerId: playerId1,
-  //         first_name: "",
-  //         last_name: "",
-  //         average: 200,
-  //         score: undefined,
-  //         hdcp: 0,
-  //         total: undefined,
-  //         result: undefined,
-  //       };
+        const playerInfo: matchSeedInfoType = {
+          playerId: playerId1,
+          first_name: "",
+          last_name: "",
+          average: 200,
+          score: undefined,
+          hdcp: 0,
+          total: undefined,
+          result: undefined,
+        };
 
-  //       bracket.updatePlayerSets({
-  //         brktGameNum: 1,
-  //         playerId: playerId1,          
-  //         matchInfo: [playerInfo],
-  //         matchNumber: 0,
-  //         matchPlayers: [playerId1],
-  //       });
+        bracket.updatePlayerSets({
+          brktGameNum: 1,
+          playerId: playerId1,          
+          matchInfo: [playerInfo],
+          matchNumber: 0,
+          matchPlayers: [playerId1],
+        });
         
-  //       expect(bracket.loserBrktGame1Ids).toEqual(new Set());
-  //       expect(bracket.loserBrktGame2Ids).toEqual(new Set());
-  //       expect(bracket.semiFinalTies).toEqual(new Set());
-  //       expect(bracket.runnerUpIds).toEqual(new Set());
-  //       expect(bracket.winnerIds).toEqual(new Set());
-  //     });
+        expect(bracket.loserBrktGame1Ids).toEqual(new Set());
+        expect(bracket.loserBrktGame2Ids).toEqual(new Set());
+        expect(bracket.semiFinalTies).toEqual(new Set());
+        expect(bracket.runnerUpIds).toEqual(new Set());
+        expect(bracket.winnerIds).toEqual(new Set());
+      });
 
-  //     it("adds player to loserGame1Ids when player loses game 1", () => {
-  //       const bracket = createBracket();
+      it("adds player to loserGame1Ids when player loses game 1", () => {
+        const bracket = createBracket();
 
-  //       const player1 = createMatchSeedInfo(playerId1, 200, "L");
-  //       const player2 = createMatchSeedInfo(playerId2, 210, "W");
+        const player1 = createMatchSeedInfo(playerId1, 200, "L");
+        const player2 = createMatchSeedInfo(playerId2, 210, "W");
 
-  //       const matchInfo = [player1, player2];
+        const matchInfo = [player1, player2];
 
-  //       bracket.updatePlayerSets(
-  //         createPlayerMatchInfo(
-  //           1,
-  //           player1,
-  //           matchInfo,
-  //           0,
-  //         ),
-  //       );
+        bracket.updatePlayerSets(
+          createPlayerMatchInfo(
+            1,
+            player1,
+            matchInfo,
+            0,
+          ),
+        );
 
-  //       expect(bracket.loserBrktGame1Ids).toEqual(new Set([playerId1]));
-  //       expect(bracket.loserBrktGame2Ids).toEqual(new Set());
-  //     });
+        expect(bracket.loserBrktGame1Ids).toEqual(new Set([playerId1]));
+        expect(bracket.loserBrktGame2Ids).toEqual(new Set());
+      });
 
-  //     it("adds other player to loserGame1Ids when player wins game 1", () => {
-  //       const bracket = createBracket();
+      it("adds other player to loserGame1Ids when player wins game 1", () => {
+        const bracket = createBracket();
 
-  //       const player1 = createMatchSeedInfo(playerId1, 210, "W");
-  //       const player2 = createMatchSeedInfo(playerId2, 200, "L");
+        const player1 = createMatchSeedInfo(playerId1, 210, "W");
+        const player2 = createMatchSeedInfo(playerId2, 200, "L");
 
-  //       const matchInfo = [player1, player2];
+        const matchInfo = [player1, player2];
 
-  //       bracket.updatePlayerSets(
-  //         createPlayerMatchInfo(
-  //           1,
-  //           player1,
-  //           matchInfo,
-  //           0,
-  //         ),
-  //       );
+        bracket.updatePlayerSets(
+          createPlayerMatchInfo(
+            1,
+            player1,
+            matchInfo,
+            0,
+          ),
+        );
 
-  //       expect(bracket.loserBrktGame1Ids).toEqual(new Set([playerId2]));
-  //       expect(bracket.loserBrktGame2Ids).toEqual(new Set());
-  //     });
+        expect(bracket.loserBrktGame1Ids).toEqual(new Set([playerId2]));
+        expect(bracket.loserBrktGame2Ids).toEqual(new Set());
+      });
 
-  //     it("does not add players to loser sets when game 1 is tied", () => {
-  //       const bracket = createBracket();
+      it("does not add players to loser sets when game 1 is tied", () => {
+        const bracket = createBracket();
 
-  //       const player1 = createMatchSeedInfo(playerId1, 210, "T");
-  //       const player2 = createMatchSeedInfo(playerId2, 210, "T");
+        const player1 = createMatchSeedInfo(playerId1, 210, "T");
+        const player2 = createMatchSeedInfo(playerId2, 210, "T");
 
-  //       const matchInfo = [player1, player2];
+        const matchInfo = [player1, player2];
 
-  //       bracket.updatePlayerSets(
-  //         createPlayerMatchInfo(
-  //           1,
-  //           player1,
-  //           matchInfo,
-  //           0,
-  //         ),
-  //       );
+        bracket.updatePlayerSets(
+          createPlayerMatchInfo(
+            1,
+            player1,
+            matchInfo,
+            0,
+          ),
+        );
         
-  //       expect(bracket.loserBrktGame1Ids).toEqual(new Set());
-  //       expect(bracket.loserBrktGame2Ids).toEqual(new Set());
-  //       expect(bracket.semiFinalTies).toEqual(new Set());
-  //     });
+        expect(bracket.loserBrktGame1Ids).toEqual(new Set());
+        expect(bracket.loserBrktGame2Ids).toEqual(new Set());
+        expect(bracket.semiFinalTies).toEqual(new Set());
+      });
 
-  //     it("adds player to loserGame2Ids when player loses game 2", () => {
-  //       const bracket = createBracket();
+      it("adds player to loserGame2Ids when player loses game 2", () => {
+        const bracket = createBracket();
 
-  //       const player1 = createMatchSeedInfo(playerId1, 200, "L");
-  //       const player2 = createMatchSeedInfo(playerId2, 210, "W");
+        const player1 = createMatchSeedInfo(playerId1, 200, "L");
+        const player2 = createMatchSeedInfo(playerId2, 210, "W");
 
-  //       const matchInfo = [player1, player2];
+        const matchInfo = [player1, player2];
 
-  //       bracket.updatePlayerSets(
-  //         createPlayerMatchInfo(
-  //           2,
-  //           player1,
-  //           matchInfo,
-  //           4,
-  //         ),
-  //       );
+        bracket.updatePlayerSets(
+          createPlayerMatchInfo(
+            2,
+            player1,
+            matchInfo,
+            4,
+          ),
+        );
 
-  //       expect(
-  //         bracket.loserBrktGame1Ids,
-  //       ).toEqual(new Set());
+        expect(
+          bracket.loserBrktGame1Ids,
+        ).toEqual(new Set());
 
-  //       expect(
-  //         bracket.loserBrktGame2Ids,
-  //       ).toEqual(new Set([playerId1]));
-  //     });
+        expect(
+          bracket.loserBrktGame2Ids,
+        ).toEqual(new Set([playerId1]));
+      });
 
-  //     it("adds other player to loserGame2Ids when player wins game 2", () => {
-  //       const bracket = createBracket();
+      it("adds other player to loserGame2Ids when player wins game 2", () => {
+        const bracket = createBracket();
 
-  //       const player1 = createMatchSeedInfo(playerId1, 210, "W");
-  //       const player2 = createMatchSeedInfo(playerId2, 200, "L");
+        const player1 = createMatchSeedInfo(playerId1, 210, "W");
+        const player2 = createMatchSeedInfo(playerId2, 200, "L");
 
-  //       const matchInfo = [player1, player2];
+        const matchInfo = [player1, player2];
 
-  //       bracket.updatePlayerSets(
-  //         createPlayerMatchInfo(
-  //           2,
-  //           player1,
-  //           matchInfo,
-  //           4,
-  //         ),
-  //       );
+        bracket.updatePlayerSets(
+          createPlayerMatchInfo(
+            2,
+            player1,
+            matchInfo,
+            4,
+          ),
+        );
 
-  //       expect(
-  //         bracket.loserBrktGame1Ids,
-  //       ).toEqual(new Set());
+        expect(
+          bracket.loserBrktGame1Ids,
+        ).toEqual(new Set());
 
-  //       expect(
-  //         bracket.loserBrktGame2Ids,
-  //       ).toEqual(new Set([playerId2]));
-  //     });
+        expect(
+          bracket.loserBrktGame2Ids,
+        ).toEqual(new Set([playerId2]));
+      });
 
-  //     it("adds all tied players to semiFinalTies when semifinal is tied", () => {
-  //       const bracket = createBracket();
+      it("adds all tied players to semiFinalTies when semifinal is tied", () => {
+        const bracket = createBracket();
 
-  //       const player1 = createMatchSeedInfo(playerId1, 220, "T");
-  //       const player2 = createMatchSeedInfo(playerId2, 220, "T");
+        const player1 = createMatchSeedInfo(playerId1, 220, "T");
+        const player2 = createMatchSeedInfo(playerId2, 220, "T");
 
-  //       const matchInfo = [player1, player2];
+        const matchInfo = [player1, player2];
 
-  //       bracket.updatePlayerSets(
-  //         createPlayerMatchInfo(
-  //           2,
-  //           player1,
-  //           matchInfo,
-  //           5,
-  //         ),
-  //       );
+        bracket.updatePlayerSets(
+          createPlayerMatchInfo(
+            2,
+            player1,
+            matchInfo,
+            5,
+          ),
+        );
 
-  //       expect(bracket.semiFinalTies).toEqual(
-  //         new Set([
-  //           playerId1,
-  //           playerId2,
-  //         ]),
-  //       );
+        expect(bracket.semiFinalTies).toEqual(
+          new Set([
+            playerId1,
+            playerId2,
+          ]),
+        );
 
-  //       expect(bracket.loserBrktGame1Ids).toEqual(new Set());
-  //       expect(bracket.loserBrktGame2Ids).toEqual(new Set());
-  //     });
+        expect(bracket.loserBrktGame1Ids).toEqual(new Set());
+        expect(bracket.loserBrktGame2Ids).toEqual(new Set());
+      });
 
-  //     it("does nothing when player is already in loserGame1Ids", () => {
-  //       const bracket = createBracket();
+      it("does nothing when player is already in loserGame1Ids", () => {
+        const bracket = createBracket();
 
-  //       const player1 = createMatchSeedInfo(playerId1, 200, "L");
-  //       const player2 = createMatchSeedInfo(playerId2, 210, "W");
+        const player1 = createMatchSeedInfo(playerId1, 200, "L");
+        const player2 = createMatchSeedInfo(playerId2, 210, "W");
 
-  //       const game1MatchInfo = [player1, player2];
+        const game1MatchInfo = [player1, player2];
 
-  //       /*
-  //       * Player 1 loses game 1.
-  //       *
-  //       * This adds player 1 to loserGame1Ids.
-  //       */
-  //       bracket.updatePlayerSets(
-  //         createPlayerMatchInfo(
-  //           1,
-  //           player1,
-  //           game1MatchInfo,
-  //           0,
-  //         ),
-  //       );
+        /*
+        * Player 1 loses game 1.
+        *
+        * This adds player 1 to loserGame1Ids.
+        */
+        bracket.updatePlayerSets(
+          createPlayerMatchInfo(
+            1,
+            player1,
+            game1MatchInfo,
+            0,
+          ),
+        );
 
-  //       expect(bracket.loserBrktGame1Ids).toEqual(new Set([playerId1]));
-  //       expect(bracket.loserBrktGame2Ids).toEqual(new Set());
+        expect(bracket.loserBrktGame1Ids).toEqual(new Set([playerId1]));
+        expect(bracket.loserBrktGame2Ids).toEqual(new Set());
 
-  //       /*
-  //       * Try to process player 1 again as if they
-  //       * won game 2.
-  //       *
-  //       * updatePlayerSets should return immediately
-  //       * because player 1 already lost game 1.
-  //       */
-  //       const game2Player1 = createMatchSeedInfo(playerId1, 220, "W");
-  //       const game2Player3 = createMatchSeedInfo(playerId3, 210, "L");
+        /*
+        * Try to process player 1 again as if they
+        * won game 2.
+        *
+        * updatePlayerSets should return immediately
+        * because player 1 already lost game 1.
+        */
+        const game2Player1 = createMatchSeedInfo(playerId1, 220, "W");
+        const game2Player3 = createMatchSeedInfo(playerId3, 210, "L");
 
-  //       const game2MatchInfo = [
-  //         game2Player1,
-  //         game2Player3,
-  //       ];
+        const game2MatchInfo = [
+          game2Player1,
+          game2Player3,
+        ];
 
-  //       bracket.updatePlayerSets(
-  //         createPlayerMatchInfo(
-  //           2,
-  //           game2Player1,
-  //           game2MatchInfo,
-  //           4,
-  //         ),
-  //       );
+        bracket.updatePlayerSets(
+          createPlayerMatchInfo(
+            2,
+            game2Player1,
+            game2MatchInfo,
+            4,
+          ),
+        );
 
-  //       /*
-  //       * Nothing should have changed.
-  //       *
-  //       * In particular, player 3 should NOT have
-  //       * been added to loserGame2Ids.
-  //       */
-  //       expect(bracket.loserBrktGame1Ids).toEqual(new Set([playerId1]));
-  //       expect(bracket.loserBrktGame2Ids).toEqual(new Set());
-  //     });  
+        /*
+        * Nothing should have changed.
+        *
+        * In particular, player 3 should NOT have
+        * been added to loserGame2Ids.
+        */
+        expect(bracket.loserBrktGame1Ids).toEqual(new Set([playerId1]));
+        expect(bracket.loserBrktGame2Ids).toEqual(new Set());
+      });  
       
-  //     it("does nothing when player is already in loserGame2Ids", () => {
-  //       const bracket = createBracket();
-
-  //       const player1 = createMatchSeedInfo(playerId1, 200, "L");
-  //       const player2 = createMatchSeedInfo(playerId2, 210, "W");
-
-  //       const game2MatchInfo = [player1, player2];
-
-  //       /*
-  //       * Player 1 loses game 2.
-  //       *
-  //       * This adds player 1 to loserGame2Ids.
-  //       */
-  //       bracket.updatePlayerSets(
-  //         createPlayerMatchInfo(
-  //           2,
-  //           player1,
-  //           game2MatchInfo,
-  //           4,
-  //         ),
-  //       );
-
-  //       expect(bracket.loserBrktGame1Ids).toEqual(new Set());
-  //       expect(bracket.loserBrktGame2Ids).toEqual(new Set([playerId1]));
-
-  //       /*
-  //       * Try to process player 1 again as if they
-  //       * won the final.
-  //       *
-  //       * updatePlayerSets should return immediately
-  //       * because player 1 already lost game 2.
-  //       */
-  //       const finalPlayer1 = createMatchSeedInfo(playerId1, 230, "W");
-  //       const finalPlayer3 = createMatchSeedInfo(playerId3, 220, "L");
-
-  //       const finalMatchInfo = [
-  //         finalPlayer1,
-  //         finalPlayer3,
-  //       ];
-
-  //       bracket.updatePlayerSets(
-  //         createPlayerMatchInfo(
-  //           3,
-  //           finalPlayer1,
-  //           finalMatchInfo,
-  //           6,
-  //         ),
-  //       );
-
-  //       /*
-  //       * Nothing should have changed.
-  //       *
-  //       * Without the guard, player 1 would have
-  //       * been added to winnerIds.
-  //       */
-  //       expect(bracket.loserBrktGame1Ids).toEqual(new Set());
-  //       expect(bracket.loserBrktGame2Ids).toEqual(new Set([playerId1]));
-  //       expect(bracket.winnerIds).toEqual(new Set());
-  //       expect(bracket.runnerUpIds).toEqual(new Set());
-  //     });      
-  //   });
-
-  //   describe("normal final", () => {
-  //     it("adds losing player to runnerUpIds", () => {
-  //       const bracket = createBracket();
-
-  //       const player1 = createMatchSeedInfo(playerId1, 220, "L");
-  //       const player2 = createMatchSeedInfo(playerId2, 230, "W");
-
-  //       const matchInfo = [player1, player2];
-
-  //       bracket.updatePlayerSets(
-  //         createPlayerMatchInfo(
-  //           3,
-  //           player1,
-  //           matchInfo,
-  //           6,
-  //         ),
-  //       );
-
-  //       expect(bracket.runnerUpIds).toEqual(
-  //         new Set([playerId1]),
-  //       );
-  //     });
-
-  //     it("adds winning player to winnerIds and other player to runnerUpIds", () => {
-  //       const bracket = createBracket();
-
-  //       const player1 = createMatchSeedInfo(playerId1, 230, "W");
-  //       const player2 = createMatchSeedInfo(playerId2, 220, "L");
-
-  //       const matchInfo = [player1, player2];
-
-  //       bracket.updatePlayerSets(
-  //         createPlayerMatchInfo(
-  //           3,
-  //           player1,
-  //           matchInfo,
-  //           6,
-  //         ),
-  //       );
-
-  //       expect(bracket.winnerIds).toEqual(new Set([playerId1]));
-  //       expect(bracket.runnerUpIds).toEqual(new Set([playerId2]));        
-  //       expect(bracket.loserBrktGame1Ids).toEqual(new Set());
-  //       expect(bracket.loserBrktGame2Ids).toEqual(new Set());
-  //     });
-
-  //     it("adds both players to winnerIds when final is tied", () => {
-  //       const bracket = createBracket();
-
-  //       const player1 = createMatchSeedInfo(playerId1, 230, "T");
-  //       const player2 = createMatchSeedInfo(playerId2, 230, "T");
-
-  //       const matchInfo = [player1, player2];
-
-  //       bracket.updatePlayerSets(
-  //         createPlayerMatchInfo(
-  //           3,
-  //           player1,
-  //           matchInfo,
-  //           6,
-  //         ),
-  //       );
-
-  //       bracket.updatePlayerSets(
-  //         createPlayerMatchInfo(
-  //           3,
-  //           player2,
-  //           matchInfo,
-  //           6,
-  //         ),
-  //       );
-
-  //       expect(bracket.winnerIds).toEqual(new Set([playerId1, playerId2]));
-  //       expect(bracket.runnerUpIds).toEqual(new Set());
-  //     });
-  //   });
-
-  //   describe("final after tie in match 5", () => {
-  //     it("puts both match 5 players in runnerUpIds when they tie behind match 4 winner", () => {
-  //       const bracket = createBracket();
-
-  //       // Match 5:
-  //       // playerId2 and playerId3 tie and both advance.
-  //       const semi1 = createMatchSeedInfo(playerId2, 220, "T");
-  //       const semi2 = createMatchSeedInfo(playerId3, 220, "T");
-
-  //       const semiInfo = [semi1, semi2];
-
-  //       bracket.updatePlayerSets(
-  //         createPlayerMatchInfo(
-  //           2,
-  //           semi1,
-  //           semiInfo,
-  //           5,
-  //         ),
-  //       );
-
-  //       // Match 6:
-  //       // playerId1 wins.
-  //       // playerId2 and playerId3 tie for second.
-  //       const player1 = createMatchSeedInfo(playerId1, 240, "W");
-  //       const player2 = createMatchSeedInfo(playerId2, 230, "L");
-  //       const player3 = createMatchSeedInfo(playerId3, 230, "L");
-
-  //       const finalInfo = [player1, player2, player3];
-
-  //       bracket.updatePlayerSets(
-  //         createPlayerMatchInfo(
-  //           3,
-  //           player1,
-  //           finalInfo,
-  //           6,
-  //         ),
-  //       );
-
-  //       expect(bracket.winnerIds).toEqual(new Set([playerId1]));
-  //       expect(bracket.runnerUpIds).toEqual(new Set([playerId2, playerId3]));        
-  //       expect(bracket.loserBrktGame1Ids).toEqual(new Set());
-  //       expect(bracket.loserBrktGame2Ids).toEqual(new Set());
-  //     });
-
-  //     it("puts high match 5 player in runnerUpIds and other match 5 player in loserGame2Ids", () => {
-  //       const bracket = createBracket();
-
-  //       // Match 5 tie.
-  //       const semi1 = createMatchSeedInfo(playerId2, 220, "T");
-  //       const semi2 = createMatchSeedInfo(playerId3, 220, "T");
-
-  //       const semiInfo = [semi1, semi2];
-
-  //       bracket.updatePlayerSets(
-  //         createPlayerMatchInfo(
-  //           2,
-  //           semi1,
-  //           semiInfo,
-  //           5,
-  //         ),
-  //       );
-
-  //       // Match 6:
-  //       // playerId1 wins.
-  //       // playerId2 is second.
-  //       // playerId3 is loser.
-  //       const player1 = createMatchSeedInfo(playerId1, 240, "W");
-  //       const player2 = createMatchSeedInfo(playerId2, 230, "L");
-  //       const player3 = createMatchSeedInfo(playerId3, 220, "L");
-
-  //       const finalInfo = [player1, player2, player3];
-
-  //       bracket.updatePlayerSets(
-  //         createPlayerMatchInfo(
-  //           3,
-  //           player1,
-  //           finalInfo,
-  //           6,
-  //         ),
-  //       );
-
-  //       expect(bracket.winnerIds).toEqual(new Set([playerId1]));
-  //       expect(bracket.runnerUpIds).toEqual(new Set([playerId2]));
-  //       expect(bracket.loserBrktGame1Ids).toEqual(new Set());
-  //       expect(bracket.loserBrktGame2Ids).toEqual(new Set([playerId3]));
-  //     });
-
-  //     it("puts match 4 player in runnerUpIds when match 5 player wins", () => {
-  //       const bracket = createBracket();
-
-  //       // Match 5 tie.
-  //       const semi1 = createMatchSeedInfo(playerId2, 220, "T");
-  //       const semi2 = createMatchSeedInfo(playerId3, 220, "T");
-
-  //       const semiInfo = [semi1, semi2];
-
-  //       bracket.updatePlayerSets(
-  //         createPlayerMatchInfo(
-  //           2,
-  //           semi1,
-  //           semiInfo,
-  //           5,
-  //         ),
-  //       );
-
-  //       // Match 6:
-  //       // playerId2 wins.
-  //       // playerId1 came from match 4 and finishes second.
-  //       // playerId3 came from tied match 5 and loses.
-  //       // playerId1 is second. even though playerId3 has a higher game score.
-  //       //   the tie breaker is only between playerId2 and playerId3 because
-  //       //   playerId2 and playerId3 tied in match 5, and playerId1 won match 4.
-  //       const player1 = createMatchSeedInfo(playerId1, 220, "L");
-  //       const player2 = createMatchSeedInfo(playerId2, 240, "W");
-  //       const player3 = createMatchSeedInfo(playerId3, 230, "L");
-
-  //       const finalInfo = [player1, player2, player3];
-
-  //       bracket.updatePlayerSets(
-  //         createPlayerMatchInfo(
-  //           3,
-  //           player2,
-  //           finalInfo,
-  //           6,
-  //         ),
-  //       );
-
-  //       expect(bracket.winnerIds).toEqual(new Set([playerId2]));
-  //       expect(bracket.runnerUpIds).toEqual(new Set([playerId1]));
-  //       expect(bracket.loserBrktGame1Ids).toEqual(new Set());
-  //       expect(bracket.loserBrktGame2Ids).toEqual(new Set([playerId3]));
-  //     });
-
-  //     it("puts both tied match 5 players in winnerIds and match 4 player in runnerUpIds", () => {
-  //       const bracket = createBracket();
-
-  //       // Match 5 tie.
-  //       const semi1 = createMatchSeedInfo(playerId2, 220, "T");
-  //       const semi2 = createMatchSeedInfo(playerId3, 220, "T");
-
-  //       const semiInfo = [semi1, semi2];
-
-  //       bracket.updatePlayerSets(
-  //         createPlayerMatchInfo(
-  //           2,
-  //           semi1,
-  //           semiInfo,
-  //           5,
-  //         ),
-  //       );
-
-  //       // Match 6:
-  //       // Both players from match 5 tie for first.
-  //       // playerId1 from match 4 finishes second.
-  //       const player1 = createMatchSeedInfo(playerId1, 230, "L");
-  //       const player2 = createMatchSeedInfo(playerId2, 240, "T");
-  //       const player3 = createMatchSeedInfo(playerId3, 240, "T");
-
-  //       const finalInfo = [player1, player2, player3];
-
-  //       bracket.updatePlayerSets(
-  //         createPlayerMatchInfo(
-  //           3,
-  //           player1,
-  //           finalInfo,
-  //           6,
-  //         ),
-  //       );
-
-  //       bracket.updatePlayerSets(
-  //         createPlayerMatchInfo(
-  //           3,
-  //           player2,
-  //           finalInfo,
-  //           6,
-  //         ),
-  //       );
-
-  //       bracket.updatePlayerSets(
-  //         createPlayerMatchInfo(
-  //           3,
-  //           player3,
-  //           finalInfo,
-  //           6,
-  //         ),
-  //       );
-
-  //       expect(bracket.winnerIds).toEqual(new Set([playerId2, playerId3]));
-  //       expect(bracket.runnerUpIds).toEqual(new Set([playerId1]));
-  //       expect(bracket.loserBrktGame1Ids).toEqual(new Set());
-  //       expect(bracket.loserBrktGame2Ids).toEqual(new Set());
-  //     });
-
-  //     it("puts both tied match 5 players in winnerIds and match 4 player in winnerIds when all three tie", () => {
-  //       const bracket = createBracket();
-
-  //       // Match 5 tie.
-  //       const semi1 = createMatchSeedInfo(playerId2, 220, "T");
-  //       const semi2 = createMatchSeedInfo(playerId3, 220, "T");
-
-  //       const semiInfo = [semi1, semi2];
-
-  //       bracket.updatePlayerSets(
-  //         createPlayerMatchInfo(
-  //           2,
-  //           semi1,
-  //           semiInfo,
-  //           5,
-  //         ),
-  //       );
-
-  //       // Match 6:
-  //       // all three players from match 5 tie for first.        
-  //       const player1 = createMatchSeedInfo(playerId1, 230, "T");
-  //       const player2 = createMatchSeedInfo(playerId2, 230, "T");
-  //       const player3 = createMatchSeedInfo(playerId3, 230, "T");
-
-  //       const finalInfo = [player1, player2, player3];
-
-  //       bracket.updatePlayerSets(
-  //         createPlayerMatchInfo(
-  //           3,
-  //           player1,
-  //           finalInfo,
-  //           6,
-  //         ),
-  //       );
-
-  //       bracket.updatePlayerSets(
-  //         createPlayerMatchInfo(
-  //           3,
-  //           player2,
-  //           finalInfo,
-  //           6,
-  //         ),
-  //       );
-
-  //       bracket.updatePlayerSets(
-  //         createPlayerMatchInfo(
-  //           3,
-  //           player3,
-  //           finalInfo,
-  //           6,
-  //         ),
-  //       );
-
-  //       expect(bracket.winnerIds).toEqual(
-  //         new Set([
-  //           playerId1,
-  //           playerId2,
-  //           playerId3,
-  //         ]),
-  //       );
-  //       expect(bracket.runnerUpIds).toEqual(new Set());
-  //       expect(bracket.loserBrktGame1Ids).toEqual(new Set());
-  //       expect(bracket.loserBrktGame2Ids).toEqual(new Set());        
-  //     });
-
-  //   });
-  // });
+      it("does nothing when player is already in loserGame2Ids", () => {
+        const bracket = createBracket();
+
+        const player1 = createMatchSeedInfo(playerId1, 200, "L");
+        const player2 = createMatchSeedInfo(playerId2, 210, "W");
+
+        const game2MatchInfo = [player1, player2];
+
+        /*
+        * Player 1 loses game 2.
+        *
+        * This adds player 1 to loserGame2Ids.
+        */
+        bracket.updatePlayerSets(
+          createPlayerMatchInfo(
+            2,
+            player1,
+            game2MatchInfo,
+            4,
+          ),
+        );
+
+        expect(bracket.loserBrktGame1Ids).toEqual(new Set());
+        expect(bracket.loserBrktGame2Ids).toEqual(new Set([playerId1]));
+
+        /*
+        * Try to process player 1 again as if they
+        * won the final.
+        *
+        * updatePlayerSets should return immediately
+        * because player 1 already lost game 2.
+        */
+        const finalPlayer1 = createMatchSeedInfo(playerId1, 230, "W");
+        const finalPlayer3 = createMatchSeedInfo(playerId3, 220, "L");
+
+        const finalMatchInfo = [
+          finalPlayer1,
+          finalPlayer3,
+        ];
+
+        bracket.updatePlayerSets(
+          createPlayerMatchInfo(
+            3,
+            finalPlayer1,
+            finalMatchInfo,
+            6,
+          ),
+        );
+
+        /*
+        * Nothing should have changed.
+        *
+        * Without the guard, player 1 would have
+        * been added to winnerIds.
+        */
+        expect(bracket.loserBrktGame1Ids).toEqual(new Set());
+        expect(bracket.loserBrktGame2Ids).toEqual(new Set([playerId1]));
+        expect(bracket.winnerIds).toEqual(new Set());
+        expect(bracket.runnerUpIds).toEqual(new Set());
+      });      
+    });
+
+    describe("normal final", () => {
+      it("adds losing player to runnerUpIds", () => {
+        const bracket = createBracket();
+
+        const player1 = createMatchSeedInfo(playerId1, 220, "L");
+        const player2 = createMatchSeedInfo(playerId2, 230, "W");
+
+        const matchInfo = [player1, player2];
+
+        bracket.updatePlayerSets(
+          createPlayerMatchInfo(
+            3,
+            player1,
+            matchInfo,
+            6,
+          ),
+        );
+
+        expect(bracket.runnerUpIds).toEqual(
+          new Set([playerId1]),
+        );
+      });
+
+      it("adds winning player to winnerIds and other player to runnerUpIds", () => {
+        const bracket = createBracket();
+
+        const player1 = createMatchSeedInfo(playerId1, 230, "W");
+        const player2 = createMatchSeedInfo(playerId2, 220, "L");
+
+        const matchInfo = [player1, player2];
+
+        bracket.updatePlayerSets(
+          createPlayerMatchInfo(
+            3,
+            player1,
+            matchInfo,
+            6,
+          ),
+        );
+
+        expect(bracket.winnerIds).toEqual(new Set([playerId1]));
+        expect(bracket.runnerUpIds).toEqual(new Set([playerId2]));        
+        expect(bracket.loserBrktGame1Ids).toEqual(new Set());
+        expect(bracket.loserBrktGame2Ids).toEqual(new Set());
+      });
+
+      it("adds both players to winnerIds when final is tied", () => {
+        const bracket = createBracket();
+
+        const player1 = createMatchSeedInfo(playerId1, 230, "T");
+        const player2 = createMatchSeedInfo(playerId2, 230, "T");
+
+        const matchInfo = [player1, player2];
+
+        bracket.updatePlayerSets(
+          createPlayerMatchInfo(
+            3,
+            player1,
+            matchInfo,
+            6,
+          ),
+        );
+
+        bracket.updatePlayerSets(
+          createPlayerMatchInfo(
+            3,
+            player2,
+            matchInfo,
+            6,
+          ),
+        );
+
+        expect(bracket.winnerIds).toEqual(new Set([playerId1, playerId2]));
+        expect(bracket.runnerUpIds).toEqual(new Set());
+      });
+    });
+
+    describe("final after tie in match 5", () => {
+      it("puts both match 5 players in runnerUpIds when they tie behind match 4 winner", () => {
+        const bracket = createBracket();
+
+        // Match 5:
+        // playerId2 and playerId3 tie and both advance.
+        const semi1 = createMatchSeedInfo(playerId2, 220, "T");
+        const semi2 = createMatchSeedInfo(playerId3, 220, "T");
+
+        const semiInfo = [semi1, semi2];
+
+        bracket.updatePlayerSets(
+          createPlayerMatchInfo(
+            2,
+            semi1,
+            semiInfo,
+            5,
+          ),
+        );
+
+        // Match 6:
+        // playerId1 wins.
+        // playerId2 and playerId3 tie for second.
+        const player1 = createMatchSeedInfo(playerId1, 240, "W");
+        const player2 = createMatchSeedInfo(playerId2, 230, "L");
+        const player3 = createMatchSeedInfo(playerId3, 230, "L");
+
+        const finalInfo = [player1, player2, player3];
+
+        bracket.updatePlayerSets(
+          createPlayerMatchInfo(
+            3,
+            player1,
+            finalInfo,
+            6,
+          ),
+        );
+
+        expect(bracket.winnerIds).toEqual(new Set([playerId1]));
+        expect(bracket.runnerUpIds).toEqual(new Set([playerId2, playerId3]));        
+        expect(bracket.loserBrktGame1Ids).toEqual(new Set());
+        expect(bracket.loserBrktGame2Ids).toEqual(new Set());
+      });
+
+      it("puts high match 5 player in runnerUpIds and other match 5 player in loserGame2Ids", () => {
+        const bracket = createBracket();
+
+        // Match 5 tie.
+        const semi1 = createMatchSeedInfo(playerId2, 220, "T");
+        const semi2 = createMatchSeedInfo(playerId3, 220, "T");
+
+        const semiInfo = [semi1, semi2];
+
+        bracket.updatePlayerSets(
+          createPlayerMatchInfo(
+            2,
+            semi1,
+            semiInfo,
+            5,
+          ),
+        );
+
+        // Match 6:
+        // playerId1 wins.
+        // playerId2 is second.
+        // playerId3 is loser.
+        const player1 = createMatchSeedInfo(playerId1, 240, "W");
+        const player2 = createMatchSeedInfo(playerId2, 230, "L");
+        const player3 = createMatchSeedInfo(playerId3, 220, "L");
+
+        const finalInfo = [player1, player2, player3];
+
+        bracket.updatePlayerSets(
+          createPlayerMatchInfo(
+            3,
+            player1,
+            finalInfo,
+            6,
+          ),
+        );
+
+        expect(bracket.winnerIds).toEqual(new Set([playerId1]));
+        expect(bracket.runnerUpIds).toEqual(new Set([playerId2]));
+        expect(bracket.loserBrktGame1Ids).toEqual(new Set());
+        expect(bracket.loserBrktGame2Ids).toEqual(new Set([playerId3]));
+      });
+
+      it("puts match 4 player in runnerUpIds when match 5 player wins", () => {
+        const bracket = createBracket();
+
+        // Match 5 tie.
+        const semi1 = createMatchSeedInfo(playerId2, 220, "T");
+        const semi2 = createMatchSeedInfo(playerId3, 220, "T");
+
+        const semiInfo = [semi1, semi2];
+
+        bracket.updatePlayerSets(
+          createPlayerMatchInfo(
+            2,
+            semi1,
+            semiInfo,
+            5,
+          ),
+        );
+
+        // Match 6:
+        // playerId2 wins.
+        // playerId1 came from match 4 and finishes second.
+        // playerId3 came from tied match 5 and loses.
+        // playerId1 is second. even though playerId3 has a higher game score.
+        //   the tie breaker is only between playerId2 and playerId3 because
+        //   playerId2 and playerId3 tied in match 5, and playerId1 won match 4.
+        const player1 = createMatchSeedInfo(playerId1, 220, "L");
+        const player2 = createMatchSeedInfo(playerId2, 240, "W");
+        const player3 = createMatchSeedInfo(playerId3, 230, "L");
+
+        const finalInfo = [player1, player2, player3];
+
+        bracket.updatePlayerSets(
+          createPlayerMatchInfo(
+            3,
+            player2,
+            finalInfo,
+            6,
+          ),
+        );
+
+        expect(bracket.winnerIds).toEqual(new Set([playerId2]));
+        expect(bracket.runnerUpIds).toEqual(new Set([playerId1]));
+        expect(bracket.loserBrktGame1Ids).toEqual(new Set());
+        expect(bracket.loserBrktGame2Ids).toEqual(new Set([playerId3]));
+      });
+
+      it("puts both tied match 5 players in winnerIds and match 4 player in runnerUpIds", () => {
+        const bracket = createBracket();
+
+        // Match 5 tie.
+        const semi1 = createMatchSeedInfo(playerId2, 220, "T");
+        const semi2 = createMatchSeedInfo(playerId3, 220, "T");
+
+        const semiInfo = [semi1, semi2];
+
+        bracket.updatePlayerSets(
+          createPlayerMatchInfo(
+            2,
+            semi1,
+            semiInfo,
+            5,
+          ),
+        );
+
+        // Match 6:
+        // Both players from match 5 tie for first.
+        // playerId1 from match 4 finishes second.
+        const player1 = createMatchSeedInfo(playerId1, 230, "L");
+        const player2 = createMatchSeedInfo(playerId2, 240, "T");
+        const player3 = createMatchSeedInfo(playerId3, 240, "T");
+
+        const finalInfo = [player1, player2, player3];
+
+        bracket.updatePlayerSets(
+          createPlayerMatchInfo(
+            3,
+            player1,
+            finalInfo,
+            6,
+          ),
+        );
+
+        bracket.updatePlayerSets(
+          createPlayerMatchInfo(
+            3,
+            player2,
+            finalInfo,
+            6,
+          ),
+        );
+
+        bracket.updatePlayerSets(
+          createPlayerMatchInfo(
+            3,
+            player3,
+            finalInfo,
+            6,
+          ),
+        );
+
+        expect(bracket.winnerIds).toEqual(new Set([playerId2, playerId3]));
+        expect(bracket.runnerUpIds).toEqual(new Set([playerId1]));
+        expect(bracket.loserBrktGame1Ids).toEqual(new Set());
+        expect(bracket.loserBrktGame2Ids).toEqual(new Set());
+      });
+
+      it("puts both tied match 5 players in winnerIds and match 4 player in winnerIds when all three tie", () => {
+        const bracket = createBracket();
+
+        // Match 5 tie.
+        const semi1 = createMatchSeedInfo(playerId2, 220, "T");
+        const semi2 = createMatchSeedInfo(playerId3, 220, "T");
+
+        const semiInfo = [semi1, semi2];
+
+        bracket.updatePlayerSets(
+          createPlayerMatchInfo(
+            2,
+            semi1,
+            semiInfo,
+            5,
+          ),
+        );
+
+        // Match 6:
+        // all three players from match 5 tie for first.        
+        const player1 = createMatchSeedInfo(playerId1, 230, "T");
+        const player2 = createMatchSeedInfo(playerId2, 230, "T");
+        const player3 = createMatchSeedInfo(playerId3, 230, "T");
+
+        const finalInfo = [player1, player2, player3];
+
+        bracket.updatePlayerSets(
+          createPlayerMatchInfo(
+            3,
+            player1,
+            finalInfo,
+            6,
+          ),
+        );
+
+        bracket.updatePlayerSets(
+          createPlayerMatchInfo(
+            3,
+            player2,
+            finalInfo,
+            6,
+          ),
+        );
+
+        bracket.updatePlayerSets(
+          createPlayerMatchInfo(
+            3,
+            player3,
+            finalInfo,
+            6,
+          ),
+        );
+
+        expect(bracket.winnerIds).toEqual(
+          new Set([
+            playerId1,
+            playerId2,
+            playerId3,
+          ]),
+        );
+        expect(bracket.runnerUpIds).toEqual(new Set());
+        expect(bracket.loserBrktGame1Ids).toEqual(new Set());
+        expect(bracket.loserBrktGame2Ids).toEqual(new Set());        
+      });
+
+    });
+  });
 
 });

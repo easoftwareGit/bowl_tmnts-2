@@ -22,12 +22,15 @@ describe("BracketClass - populateBracket", () => {
    *
    * Bracket gets its number of games from its parent BracketList.
    */
-  const createBracket = (): Bracket => {
+  const createBracket = (fee: number = 5): Bracket => {
     const bracket = new Bracket();
 
     bracket.parent = {
       games: defaultBrktGames,
-    } as BracketList;
+      brkt: {
+        fee,
+      },
+    } as unknown as BracketList;
 
     return bracket;
   };
@@ -56,6 +59,39 @@ describe("BracketClass - populateBracket", () => {
       playerId7,
       playerId8,
     ]);
+  });
+
+  it("should calculate prize amounts after populating a full bracket", () => {
+    const bracket = createBracket(5);
+    const brktSeeds = getBracketSeeds();
+
+    bracket.populateBracket(brktSeeds);
+
+    expect(bracket.hasByePlayer()).toBe(false);
+    expect(bracket.winnerAmount).toBe(25);
+    expect(bracket.runnerUpAmount).toBe(10);
+  });
+
+  it("should calculate prize amounts after populating a bracket with a bye", () => {
+    const bracket = createBracket(5);
+    const brktSeeds = getBracketSeeds();
+
+    brktSeeds[7].player_id = Bracket.byePlayerId;
+
+    bracket.populateBracket(brktSeeds);
+
+    expect(bracket.hasByePlayer()).toBe(true);
+    expect(bracket.winnerAmount).toBe(20);
+    expect(bracket.runnerUpAmount).toBe(10);
+  });  
+
+  it("should calculate prize amounts using the bracket fee", () => {
+    const bracket = createBracket(10);
+
+    bracket.populateBracket(getBracketSeeds());
+
+    expect(bracket.winnerAmount).toBe(50);
+    expect(bracket.runnerUpAmount).toBe(20);
   });
 
   it("should sort bracket seeds before populating the bracket", () => {

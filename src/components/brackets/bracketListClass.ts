@@ -2678,28 +2678,21 @@ export class BracketList {
     const playerInfo = this._playersMap.get(playerId);
     if (playerInfo == null) return 0;
 
-    // const first = isNumber(this._brkt.first)
-    //   ? Number(this._brkt.first)
-    //   : 0;
-    // const second = isNumber(this._brkt.second)
-    //   ? Number(this._brkt.second)
-    //   : 0;    
-
     let earnings = 0;
-
     playerInfo.bracketIds.forEach((oneBrktId) => {
       const bindex = this._bracketIndexMap?.get(oneBrktId);
       if (bindex == null) return;
       const oneBrkt = this._brackets[bindex];
       if (oneBrkt == null) return;
       if (oneBrkt.winnerIds.has(playerId)) {
-        if (oneBrkt.winnerIds.size > 1) {
-          earnings += (first + second) / oneBrkt.winnerIds.size;  
+        // if there is/are runner up(s), then divide the winner amount by # of winners
+        if (oneBrkt.runnerUpIds.size > 0) {
+          earnings += oneBrkt.winnerAmount / oneBrkt.winnerIds.size;
         } else {
-          earnings += first / oneBrkt.winnerIds.size;
+          earnings += (oneBrkt.winnerAmount + oneBrkt.runnerUpAmount) / oneBrkt.winnerIds.size;
         }
       } else if (oneBrkt.runnerUpIds.has(playerId)) {          
-        earnings += second / oneBrkt.runnerUpIds.size;
+        earnings += oneBrkt.runnerUpAmount / oneBrkt.runnerUpIds.size;
       }
     })
     return earnings;

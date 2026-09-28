@@ -22,6 +22,7 @@ import {
   playerId1,
   playerId2,
   playerId3,
+  playerId5,
   squadId1,
 } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 
@@ -346,8 +347,14 @@ describe("BracketList helper methods", () => {
     it("adds first and second place earnings across different brackets", () => {
       const brktList = createBracketList();
 
+      // Add a winner and runner-up for each bracket.
       brktList.brackets[0].winnerIds.add(playerId1);
+      brktList.brackets[0].runnerUpIds.add(playerId2);
+
       brktList.brackets[1].winnerIds.add(playerId1);
+      brktList.brackets[1].runnerUpIds.add(playerId2);
+
+      brktList.brackets[2].winnerIds.add(playerId2);
       brktList.brackets[2].runnerUpIds.add(playerId1);
 
       // Two first-place prizes ($25 each) and one second-place prize ($10).
@@ -402,6 +409,7 @@ describe("BracketList helper methods", () => {
       const brktList = createBracketList();
 
       brktList.brackets[0].winnerIds.add(playerId2);
+      brktList.brackets[0].runnerUpIds.add(playerId3);
 
       expect(brktList.playerEarnings(playerId1)).toBe(0);
       expect(brktList.playerEarnings(playerId2)).toBe(25);
