@@ -1,5 +1,10 @@
 import { populateStandingsRows } from "@/app/results/tmnt/[tmntId]/standings/populateStandingsRows";
 import type { tmntGameResult } from "@/lib/types/resultsTypes";
+import {
+  tgrGameKey,
+  tgrHdcpKey,
+  totalPlusHdcpSqlName,
+} from "@/lib/types/resultsTypes";
 import type { gameType } from "@/lib/types/types";
 import {
   divId1,
@@ -54,12 +59,13 @@ describe("populateResultRows", () => {
           average: player.average,
           hdcp: 0,
           total,
-          "total + Hdcp": total,
+          total_hdcp: 0,
+          [totalPlusHdcpSqlName]: total,
         };
 
         playerGames.forEach((game) => {
-          result[`Game ${game.game_num}`] = game.score;
-          result[`Game ${game.game_num} + Hdcp`] = game.score;
+          result[tgrGameKey(game.game_num)] = game.score;
+          result[tgrHdcpKey(game.game_num)] = game.score;
         });
 
         return result;
@@ -67,8 +73,8 @@ describe("populateResultRows", () => {
 
     return tmntResults.sort(
       (a, b) =>
-        (b["total + Hdcp"] ?? 0) -
-        (a["total + Hdcp"] ?? 0),
+        (b[totalPlusHdcpSqlName] ?? 0) -
+        (a[totalPlusHdcpSqlName] ?? 0),
     );
   };
 

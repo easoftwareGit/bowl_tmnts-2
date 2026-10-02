@@ -2,6 +2,7 @@ import { playerInfoType } from "@/lib/types/types";
 import { Bracket } from "./bracketClass";
 import type { gameScoreMapType, playerMapType } from "./bracketMaps";
 import { getGameScoreKey } from "./bracketMaps";
+import { byeName } from "@/lib/validation/constants";
 
 type brktPosInMatchType = 0 | 1; // top or bottom position
 
@@ -34,7 +35,7 @@ export type matchSeedInfoType = {
 };
 
 const byePlayerInfo: playerInfoType = {  
-  first_name: "Bye",
+  first_name: byeName,
   last_name: "",
   average: 0,
   hdcp: 0,

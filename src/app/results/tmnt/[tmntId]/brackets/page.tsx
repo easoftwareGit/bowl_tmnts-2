@@ -14,18 +14,12 @@ import {
   selectOneTmntGameResults,
 } from "@/redux/features/oneTmntGameResults/oneTmntGameResultsSlice";
 import WaitModal from "@/components/modal/waitModal";
-import {
-  fetchTmntFullData,
-  getTmntFullDataError,
-  getTmntFullDataLoadStatus,
-  getTmntFullDataRequestedTmntId,
-  selectTmntFullData
-} from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import TmntHomeHeader from "@/app/results/tmntHeader/tmntHomeHeader";
 import { GameNum } from "@/lib/types/resultsTypes";
 import { getBrktListRecords } from "@/redux/features/tmntFullData/brktListRecordsSelector";
 import { populatePlayerBrktRows2 } from "./populateBrktPlayerRows";
 import { getGameNums } from "@/components/tmnts/games";
+import { useTmntFullData } from "@/hooks/useTmntFullData";
 import "./bracketGames.css";
 
 export type brktGamesTableRow = {
@@ -46,12 +40,7 @@ const PlayerBrktsPage = () => {
 
   const dispatch = useDispatch<AppDispatch>();
 
-  const [squadId, setSquadId] = useState("");  
-
-  const requestedTmntId = useSelector(getTmntFullDataRequestedTmntId);
-  const tmntLoadStatus = useSelector(getTmntFullDataLoadStatus);
-  const tmntError = useSelector(getTmntFullDataError);
-  const tmntFullData = useSelector(selectTmntFullData);
+  const [squadId, setSquadId] = useState("");    
 
   const requestedResultsTmntId = useSelector(getOneTmntGameResultsRequestedTmntId);
   const resultsLoadStatus = useSelector(getOneTmntGameResultsLoadStatus);
@@ -61,29 +50,24 @@ const PlayerBrktsPage = () => {
   
   const brktListRecords = useSelector(getBrktListRecords);
 
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const gameNums = getGameNums(tmntResults);
 
-  // get tmnt data 
-  useEffect(() => {
-    const needsTmntData = tmntFullData.tmnt.id !== tmntId;
-
-    const failedForThisTmnt =
-      tmntLoadStatus === "failed" && requestedTmntId === tmntId;
-
-    if (
-      needsTmntData &&
-      tmntLoadStatus !== "loading" &&
-      !failedForThisTmnt
-    ) {
-      dispatch(fetchTmntFullData(tmntId));
-    }
-  }, [
-    tmntId,
-    tmntFullData.tmnt.id,
-    tmntLoadStatus,
-    requestedTmntId,
-    dispatch,
-  ]);
+  /*****************/
+  /* get tmnt data */
+  /*****************/
+  const {
+    data: tmntFullData,
+    hasData: hasTmntData,
+    failed: failedForThisTmnt,
+    error: tmntError,
+    retry: retryTmnt,
+  } = useTmntFullData(tmntId);
 
   // set initial squad id after tournament data is loaded
   useEffect(() => {
@@ -132,17 +116,9 @@ const PlayerBrktsPage = () => {
   /* render loading/error until data is loaded */
   /*********************************************/  
   
-  const hasTmntData =
-    tmntFullData.tmnt.id !== "" &&
-    tmntFullData.tmnt.id === tmntId;
-
   const hasTmntGamesData =
     resultsTmntId !== "" && resultsTmntId === tmntId;
-  
-  const failedForThisTmnt =
-    tmntLoadStatus === "failed" &&
-    requestedTmntId === tmntId;
-  
+    
   const failedForThisTmntGames =
     resultsLoadStatus === "failed" &&
     requestedResultsTmntId === tmntId;
@@ -162,7 +138,9 @@ const PlayerBrktsPage = () => {
         <button
           type="button"
           className="btn btn-primary"
-          onClick={() => dispatch(fetchOneTmntGameResults(tmntId))}
+          onClick={() => {
+            void retryTmnt();
+          }}    
         >
           Retry
         </button>
@@ -170,8 +148,15 @@ const PlayerBrktsPage = () => {
     );
   }
 
+  if (!hasTmntData) {
+    return <WaitModal show={mounted} message="Loading..." />;
+  }  
+
   if (!hasTmntGamesData && failedForThisTmntGames) {
-    const errmsg = `An error occurred while loading games for tournament with id: ${tmntId}.`;
+    const errmsg =
+      resultsError ||
+      `An error occurred while loading games for tournament with id: ${tmntId}.`;
+
     return (
       <div className="text-center mt-5">
         <h4>Unable to load tournament</h4>
@@ -181,13 +166,17 @@ const PlayerBrktsPage = () => {
         <button
           type="button"
           className="btn btn-primary"
-          onClick={() => dispatch(fetchTmntFullData(tmntId))}
+          onClick={() => dispatch(fetchOneTmntGameResults(tmntId))}
         >
           Retry
         </button>
       </div>
     );
   }
+
+  if (!hasTmntGamesData) {
+    return <WaitModal show={mounted} message="Loading..." />;
+  }  
 
   const cashWidth = 35;
   const firstNameWidth = 100;    
@@ -198,109 +187,96 @@ const PlayerBrktsPage = () => {
 
   return (
     <>
-      <WaitModal show={resultsLoadStatus === "loading"} message="Loading..." />
-      {resultsLoadStatus !== "loading" &&
-        resultsLoadStatus !== "succeeded" &&
-        resultsError && (
-          <div>
-            Error: {resultsError} tmntLoadStatus: {resultsLoadStatus}
-          </div>
-        )}
-      
-      <TmntHomeHeader
-        tmntFullData={tmntFullData}
-      />      
+      <TmntHomeHeader tmntFullData={tmntFullData} />      
 
-      {hasTmntData && hasTmntGamesData && (
-        <div className="text-center mb-2">
-          <h4>Player Brackets</h4>
-          <div className="d-flex justify-content-center">
-            <div className="brkt_table overflow-x-auto">
-              <table className="table table-sm table-striped table-hover w-auto">
-                <thead>
-                  <tr>
+      <div className="text-center mb-2">
+        <h4>Player Brackets</h4>
+        <div className="d-flex justify-content-center">
+          <div className="brkt_table overflow-x-auto">
+            <table className="table table-sm table-striped table-hover w-auto">
+              <thead>
+                <tr>
+                  <th
+                    className="text-end align-middle"
+                    style={{ width: laneWidth }}
+                  >
+                    Lane
+                  </th>
+                  <th
+                    className="text-start align-middle"
+                    style={{ width: lastNameWidth }}
+                  >
+                    Last Name
+                  </th>
+                  <th
+                    className="text-start align-middle"
+                    style={{ width: firstNameWidth }}
+                  >
+                    First Name
+                  </th>
+                  <th
+                    className="text-center align-middle"
+                    style={{ width: cashWidth }}
+                  >
+                    $
+                  </th>
+                  {gameNums.map((gameNum) => (
                     <th
-                      className="text-end align-middle"
-                      style={{ width: laneWidth }}
+                      key={gameNum}
+                      className="text-end align-middle game-header-align"
+                      style={{ width: gameWidth }}                    
                     >
-                      Lane
+                      {gameNum}
                     </th>
-                    <th
-                      className="text-start align-middle"
-                      style={{ width: lastNameWidth }}
-                    >
-                      Last Name
-                    </th>
-                    <th
-                      className="text-start align-middle"
-                      style={{ width: firstNameWidth }}
-                    >
-                      First Name
-                    </th>
-                    <th
-                      className="text-center align-middle"
-                      style={{ width: cashWidth }}
-                    >
-                      $
-                    </th>
-                    {gameNums.map((gameNum) => (
-                      <th
-                        key={gameNum}
-                        className="text-end align-middle game-header-align"
-                        style={{ width: gameWidth }}                    
-                      >
-                        {gameNum}
-                      </th>
-                    ))}
-                    <th
-                      className="text-end align-middle"
-                      style={{ width: inWidth }}
-                    >
-                      In
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="table-group-divider">
-                  {playerBrktRows.map((playerBrktRow) => (
-                    <tr key={playerBrktRow.id}>
-                      <td className="text-end align-middle">
-                        {playerBrktRow.lane}
-                      </td>
-                      <td className="text-start align-middle">
-                        <Link
-                          href={`/results/tmnt/${tmntId}/brackets/player/${playerBrktRow.id}`}
-                          className="p-0"
-                        >
-                          {playerBrktRow.last_name}
-                        </Link>
-                      </td>
-                      <td className="text-start align-middle">
-                        <Link
-                          href={`/results/tmnt/${tmntId}/brackets/player/${playerBrktRow.id}`}
-                          className="p-0"
-                        >
-                          {playerBrktRow.first_name}
-                        </Link>
-                      </td>
-                      <td className="text-center align-middle text-success">
-                        {playerBrktRow.cash}
-                      </td>
-                      {gameNums.map((gameNum) => (
-                        <td key={gameNum} className="text-end align-middle">
-                          {playerBrktRow[`Game ${gameNum}`]}
-                        </td>
-                      ))}
-                      <td className="text-end align-middle">
-                        {playerBrktRow.in}
-                      </td>
-                    </tr>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                  <th
+                    className="text-end align-middle"
+                    style={{ width: inWidth }}
+                  >
+                    In
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="table-group-divider">
+                {playerBrktRows.map((playerBrktRow) => (
+                  <tr key={playerBrktRow.id}>
+                    <td className="text-end align-middle">
+                      {playerBrktRow.lane}
+                    </td>
+                    <td className="text-start align-middle">
+                      <Link
+                        href={`/results/tmnt/${tmntId}/brackets/player/${playerBrktRow.id}`}
+                        className="p-0"
+                      >
+                        {playerBrktRow.last_name}
+                      </Link>
+                    </td>
+                    <td className="text-start align-middle">
+                      <Link
+                        href={`/results/tmnt/${tmntId}/brackets/player/${playerBrktRow.id}`}
+                        className="p-0"
+                      >
+                        {playerBrktRow.first_name}
+                      </Link>
+                    </td>
+                    <td className="text-center align-middle text-success">
+                      {playerBrktRow.cash}
+                    </td>
+                    {gameNums.map((gameNum) => (
+                      <td key={gameNum} className="text-end align-middle">
+                        {playerBrktRow[`Game ${gameNum}`]}
+                      </td>
+                    ))}
+                    <td className="text-end align-middle">
+                      {playerBrktRow.in}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
-      )}
+      </div>
     </>
   );
 };

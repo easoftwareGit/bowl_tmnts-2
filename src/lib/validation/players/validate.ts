@@ -6,6 +6,7 @@ import {
   isValidName,
 } from "@/lib/validation/validation";
 import {
+  byeName,
   maxFirstNameLength,
   maxLastNameLength,
   maxStartLane,  
@@ -128,7 +129,7 @@ const validPlayerData = (player: playerType): ErrorCode => {
       }
     } else {
       // else 'bye'
-      if (player.first_name !== "Bye") {
+      if (player.first_name !== byeName) {
         return ErrorCode.INVALID_DATA;
       }
       if (player.last_name !== null) {

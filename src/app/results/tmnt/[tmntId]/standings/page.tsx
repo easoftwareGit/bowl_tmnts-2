@@ -7,6 +7,7 @@ import { useParams } from "next/navigation";
 import { Tabs, Tab } from "react-bootstrap";
 import {
   fetchOneTmntGameResults,  
+  getOneTmntGameResultsError,
   getOneTmntGameResultsLoadStatus,
   getOneTmntGameResultsRequestedTmntId,
   getOneTmntGameResultsTmntId,
@@ -23,15 +24,9 @@ import {
 import type { divDataType } from "@/lib/types/types";
 import WaitModal from "@/components/modal/waitModal";
 import { blankDivData } from "@/lib/db/initVals";
-import {
-  fetchTmntFullData,
-  getTmntFullDataError,
-  getTmntFullDataLoadStatus,
-  getTmntFullDataRequestedTmntId,
-  selectTmntFullData
-} from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import TmntHomeHeader from "@/app/results/tmntHeader/tmntHomeHeader";
 import TmntStandingsForm from "./tmntStandingsForm";
+import { useTmntFullData } from "@/hooks/useTmntFullData";
 import "./tmntStandings.css";
 
 const TmntResultsPage = () => {
@@ -40,15 +35,11 @@ const TmntResultsPage = () => {
 
   const dispatch = useDispatch<AppDispatch>();
 
-  const requestedTmntId = useSelector(getTmntFullDataRequestedTmntId);
-  const tmntLoadStatus = useSelector(getTmntFullDataLoadStatus);
-  const tmntError = useSelector(getTmntFullDataError);
-  const stateTmntFullData = useSelector(selectTmntFullData);
-
   const requestedResultsTmntId = useSelector(getOneTmntGameResultsRequestedTmntId);
   const resultsLoadStatsus = useSelector(getOneTmntGameResultsLoadStatus);  
   const resultsTmntId = useSelector(getOneTmntGameResultsTmntId);
   const tmntResults = useSelector(selectOneTmntGameResults);
+  const resultsError = useSelector(getOneTmntGameResultsError);
     
   const requestedPrizesTmntId = useSelector(getDivPfRequestedTmntId);
   const prizesTmntId = useSelector(getDivPfsTmntId);
@@ -58,27 +49,22 @@ const TmntResultsPage = () => {
   
   const [tabKey, setTabKey] = useState("");
 
-  // get tmnt data 
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
-    const needsTmntData = stateTmntFullData.tmnt.id !== tmntId;
+    setMounted(true);
+  }, []);
 
-    const failedForThisTmnt =
-      tmntLoadStatus === "failed" && requestedTmntId === tmntId;
-
-    if (
-      needsTmntData &&
-      tmntLoadStatus !== "loading" &&
-      !failedForThisTmnt
-    ) {
-      dispatch(fetchTmntFullData(tmntId));
-    }
-  }, [
-    tmntId,
-    stateTmntFullData.tmnt.id,
-    tmntLoadStatus,
-    requestedTmntId,
-    dispatch,
-  ]);
+  /*****************/
+  /* get tmnt data */
+  /*****************/
+  const {
+    data: tmntFullData,
+    hasData: hasTmntData,
+    failed: failedForThisTmnt,
+    error: tmntError,
+    retry: retryTmnt,
+  } = useTmntFullData(tmntId);
  
   // get tmnt results 
   useEffect(() => {
@@ -125,9 +111,14 @@ const TmntResultsPage = () => {
   ]);
 
   const tmntDivs = useMemo<divDataType[]>(() => {
-    if (!tmntResults || tmntResults.length === 0) {
+    if (
+      tmntFullData.tmnt.id !== tmntId ||
+      resultsTmntId !== tmntId ||
+      !tmntResults ||
+      tmntResults.length === 0
+    ) {
       return [];
-    }
+    }    
 
     const tmntDivIds = Array.from(
       new Set(tmntResults.map((result) => result.div_id))
@@ -141,7 +132,7 @@ const TmntResultsPage = () => {
       );
 
       if (result) {
-        const div = stateTmntFullData.divs.find(
+        const div = tmntFullData.divs.find(
           (div) => div.id === divId
         )
         if (div) {
@@ -163,7 +154,7 @@ const TmntResultsPage = () => {
     return tDivs.sort(
       (a, b) => a.sort_order - b.sort_order
     );
-  }, [tmntResults, tmntId, stateTmntFullData]);
+  }, [tmntResults, resultsTmntId, tmntId, tmntFullData]);
 
   const defaultTabKey = tmntDivs[0]?.id ?? "";
 
@@ -178,20 +169,12 @@ const TmntResultsPage = () => {
   /* render loading/error until data is loaded */
   /*********************************************/  
   
-  const hasTmntData =
-    stateTmntFullData.tmnt.id !== "" &&
-    stateTmntFullData.tmnt.id === tmntId;
-
   const hasTmntGamesData =
     resultsTmntId !== "" && resultsTmntId === tmntId;
 
   const hasPrizesData =
     prizesTmntId !== "" &&
     prizesTmntId === tmntId;
-  
-  const failedForThisTmnt =
-    tmntLoadStatus === "failed" &&
-    requestedTmntId === tmntId;
   
   const failedForThisTmntGames =
     resultsLoadStatsus === "failed" &&
@@ -214,7 +197,9 @@ const TmntResultsPage = () => {
         <button
           type="button"
           className="btn btn-primary"
-          onClick={() => dispatch(fetchTmntFullData(tmntId))} 
+          onClick={() => {
+            void retryTmnt();
+          }}    
          >
           Retry
         </button>
@@ -222,8 +207,15 @@ const TmntResultsPage = () => {
     );
   }
 
+  if (!hasTmntData) {
+    return <WaitModal show={mounted} message="Loading..." />;
+  }
+
   if (!hasTmntGamesData && failedForThisTmntGames) {
-    const errmsg = `An error occurred while loading games for tournament with id: ${tmntId}.`;
+    const errmsg =
+      resultsError ||
+      `An error occurred while loading games for tournament with id: ${tmntId}.`;
+    
     return (
       <div className="text-center mt-5">
         <h4>Unable to load tournament</h4>
@@ -239,11 +231,15 @@ const TmntResultsPage = () => {
     );
   }
 
+  if (!hasTmntGamesData) {
+    return <WaitModal show={mounted} message="Loading..." />;
+  }
+
   if (!hasPrizesData && failedForThisTmntPrizes) {
     const errmsg =
-      prizesError ??
+      prizesError ||
       `An error occurred while loading prizes for tournament with id: ${tmntId}.`;
-
+    
     return (
       <div className="text-center mt-5">
         <h4>Unable to load tournament prizes</h4>
@@ -267,18 +263,7 @@ const TmntResultsPage = () => {
 
   return (
     <>
-      <WaitModal
-        show={
-          tmntLoadStatus === "loading" ||
-          resultsLoadStatsus === "loading" ||
-          prizesLoadStatsus === "loading"
-        }
-        message="Loading..."
-      />
-
-      <TmntHomeHeader
-        tmntFullData={stateTmntFullData}
-      />      
+      <TmntHomeHeader tmntFullData={tmntFullData} />      
 
       {hasTmntData && hasTmntGamesData && hasPrizesData && (
         <div className="d-flex flex-column justify-content-center align-items-center">

@@ -1,62 +1,31 @@
 "use client";
-import React, { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "@/redux/store";
+import React from "react";
 import { useParams } from "next/navigation";
-import {
-  fetchTmntFullData,
-  getTmntFullDataError,
-  getTmntFullDataLoadStatus,
-  getTmntFullDataRequestedTmntId,
-  selectTmntFullData,
-} from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import { getMonthDayYear } from "@/lib/dateTools";
 import { localConfig } from "@/lib/currency/const";
 import { formatValueSymbSep2Dec } from "@/lib/currency/formatValue";
 import WaitModal from "@/components/modal/waitModal";
 import TmntHomeHeader from "@/app/results/tmntHeader/tmntHomeHeader";
+import { useTmntFullData } from "@/hooks/useTmntFullData";
 
 const TmntHomePage = () => {
   const params = useParams();
   const tmntId = params.tmntId as string;
 
-  const dispatch = useDispatch<AppDispatch>();
-
-  const requestedTmntId = useSelector(getTmntFullDataRequestedTmntId);
-  const tmntLoadStatus = useSelector(getTmntFullDataLoadStatus);
-  const tmntError = useSelector(getTmntFullDataError);
-  const stateTmntFullData = useSelector(selectTmntFullData);
-
-  useEffect(() => {
-    const needsTmntData = stateTmntFullData.tmnt.id !== tmntId;
-
-    const failedForThisTmnt =
-      tmntLoadStatus === "failed" && requestedTmntId === tmntId;
-
-    if (
-      needsTmntData &&
-      tmntLoadStatus !== "loading" &&
-      !failedForThisTmnt
-    ) {
-      dispatch(fetchTmntFullData(tmntId));
-    }
-  }, [
-    tmntId,
-    stateTmntFullData,
-    tmntLoadStatus,
-    requestedTmntId,
-    dispatch
-  ]);
+  /*****************/
+  /* get tmnt data */
+  /*****************/
+  const {
+    data: tmntFullData,
+    hasData: hasTmntData,
+    failed: failedForThisTmnt,
+    error: tmntError,
+    retry: retryTmnt,
+  } = useTmntFullData(tmntId);
 
   /*********************************************/
   /* render loading/error until data is loaded */
   /*********************************************/
-
-  const hasTmntData =
-    stateTmntFullData.tmnt.id !== "" && stateTmntFullData.tmnt.id === tmntId;
-
-  const failedForThisTmnt =
-    tmntLoadStatus === "failed" && requestedTmntId === tmntId;
 
   if (!hasTmntData && failedForThisTmnt) {
     const errmsg = tmntError
@@ -73,7 +42,9 @@ const TmntHomePage = () => {
         <button
           type="button"
           className="btn btn-primary"
-          onClick={() => dispatch(fetchTmntFullData(tmntId))}
+          onClick={() => {
+            void retryTmnt();
+          }}          
         >
           Retry
         </button>
@@ -82,51 +53,48 @@ const TmntHomePage = () => {
   }
 
   if (!hasTmntData) {
-    return (
-      <WaitModal show={tmntLoadStatus === "loading"} message="Loading..." />
-    );
+    return <WaitModal show={true} message="Loading..." />;
   }
 
   const dateStr =
-    stateTmntFullData?.tmnt.start_date_str ===
-    stateTmntFullData?.tmnt.end_date_str
-      ? getMonthDayYear(stateTmntFullData.tmnt.start_date_str)
-      : getMonthDayYear(stateTmntFullData.tmnt.start_date_str) +
+    tmntFullData?.tmnt.start_date_str ===
+    tmntFullData?.tmnt.end_date_str
+      ? getMonthDayYear(tmntFullData.tmnt.start_date_str)
+      : getMonthDayYear(tmntFullData.tmnt.start_date_str) +
         " - " +
-        getMonthDayYear(stateTmntFullData.tmnt.end_date_str);
+        getMonthDayYear(tmntFullData.tmnt.end_date_str);
 
   const entryFeeStr =
-    stateTmntFullData.events.length === 0
+    tmntFullData.events.length === 0
       ? ""
       : formatValueSymbSep2Dec(
-          stateTmntFullData.events[0].entry_fee,
+          tmntFullData.events[0].entry_fee,
           localConfig,
         );  
   
   return (
     <>
-      <TmntHomeHeader
-        tmntFullData={stateTmntFullData}
-      />
+      <TmntHomeHeader tmntFullData={tmntFullData} />
+      
       <div className="text-center mb-4">
-        <h4>Welcome to {stateTmntFullData?.tmnt.tmnt_name}</h4>
+        <h4>Welcome to {tmntFullData?.tmnt.tmnt_name}</h4>
         <div className="mb-2">
           Hosted by{" "}
           <a
-            href={stateTmntFullData?.tmnt.bowl.url}
+            href={tmntFullData?.tmnt.bowl.url}
             target="_blank"
             rel="noopener noreferrer"
           >
-            {stateTmntFullData?.tmnt.bowl.bowl_name}
+            {tmntFullData?.tmnt.bowl.bowl_name}
           </a>
         </div>
         <div className="mb-2">
-          {stateTmntFullData?.tmnt.bowl.city},{" "}
-          {stateTmntFullData?.tmnt.bowl.state}
+          {tmntFullData?.tmnt.bowl.city},{" "}
+          {tmntFullData?.tmnt.bowl.state}
         </div>
         <div className="mb-2">{dateStr}</div>
         <div className="mb-2">
-          {stateTmntFullData?.tmnt.tmnt_name} - {entryFeeStr} entry
+          {tmntFullData?.tmnt.tmnt_name} - {entryFeeStr} entry
         </div>
         <div>
           <a href={`/results/tmnt/${tmntId}/contact`}>Contact Director</a>

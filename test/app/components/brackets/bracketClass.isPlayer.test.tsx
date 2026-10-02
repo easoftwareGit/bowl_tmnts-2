@@ -1,6 +1,4 @@
-import {
-  Bracket,
-} from "@/components/brackets/bracketClass";
+import { Bracket } from "@/components/brackets/bracketClass";
 import {
   BracketList,
   brktListInitialDataType,
@@ -17,10 +15,7 @@ import {
   playerId8,
   squadId1,
 } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
-import type {
-  gameType,
-  playerType,
-} from "@/lib/types/types";
+import type { gameType, playerType } from "@/lib/types/types";
 import { initPlayer } from "@/lib/db/initVals";
 import { cloneDeep } from "lodash";
 

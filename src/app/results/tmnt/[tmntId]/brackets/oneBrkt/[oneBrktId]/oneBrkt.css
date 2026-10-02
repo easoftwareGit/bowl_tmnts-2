@@ -1,0 +1,24 @@
+/* player bracket progress grid */
+.one-brkt-progress-outer {
+  width: 100%;
+  overflow-x: auto;
+  margin-bottom: 10px;
+}
+
+.one-brkt-progress-inner {
+  width: 100%;
+}
+
+.small-table-font {
+  font-size: 0.875rem;
+}
+
+.one-brkt-game-column {
+  line-height: 1.5;
+}
+
+/* Keep player and spacer rows equal in height, including borders. */
+.one-brkt-game-column > div {
+  box-sizing: border-box;
+  height: calc(1.5em + 1px);
+}

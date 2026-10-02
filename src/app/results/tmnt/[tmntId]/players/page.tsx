@@ -1,18 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch } from "@/redux/store";
+import React, { useState } from "react";
 import { useParams } from "next/navigation";
-import {
-  fetchTmntFullData,
-  getTmntFullDataError,
-  getTmntFullDataLoadStatus,
-  getTmntFullDataRequestedTmntId,
-  selectTmntFullData,
-} from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import WaitModal from "@/components/modal/waitModal";
 import TmntHomeHeader from "@/app/results/tmntHeader/tmntHomeHeader";
+import { useTmntFullData } from "@/hooks/useTmntFullData";
 
 type PlayerSort =
   | "lastName"
@@ -32,41 +24,22 @@ const TmntPlayersPage = () => {
   const params = useParams();
   const tmntId = params.tmntId as string;
 
-  const dispatch = useDispatch<AppDispatch>();
-
-  const requestedTmntId = useSelector(getTmntFullDataRequestedTmntId);
-  const tmntLoadStatus = useSelector(getTmntFullDataLoadStatus);
-  const tmntError = useSelector(getTmntFullDataError);
-  const stateTmntFullData = useSelector(selectTmntFullData);
+  /*****************/
+  /* get tmnt data */
+  /*****************/
+  const {
+    data: tmntFullData,
+    hasData: hasTmntData,
+    failed: failedForThisTmnt,
+    error: tmntError,
+    retry: retryTmnt,
+  } = useTmntFullData(tmntId);
 
   const [playerSort, setPlayerSort] = useState<PlayerSort>("lastName");
-
-  useEffect(() => {
-    const needsTmntData = stateTmntFullData.tmnt.id !== tmntId;
-
-    const failedForThisTmnt =
-      tmntLoadStatus === "failed" && requestedTmntId === tmntId;
-
-    if (needsTmntData && tmntLoadStatus !== "loading" && !failedForThisTmnt) {
-      dispatch(fetchTmntFullData(tmntId));
-    }
-  }, [
-    tmntId,
-    stateTmntFullData,
-    tmntLoadStatus,
-    requestedTmntId,
-    dispatch]
-  );
 
   /*********************************************/
   /* render loading/error until data is loaded */
   /*********************************************/
-
-  const hasTmntData =
-    stateTmntFullData.tmnt.id !== "" && stateTmntFullData.tmnt.id === tmntId;
-
-  const failedForThisTmnt =
-    tmntLoadStatus === "failed" && requestedTmntId === tmntId;
 
   if (!hasTmntData && failedForThisTmnt) {
     const errmsg = tmntError
@@ -83,7 +56,9 @@ const TmntPlayersPage = () => {
         <button
           type="button"
           className="btn btn-primary"
-          onClick={() => dispatch(fetchTmntFullData(tmntId))}
+          onClick={() => {
+            void retryTmnt();
+          }}      
         >
           Retry
         </button>
@@ -91,11 +66,17 @@ const TmntPlayersPage = () => {
     );
   }
 
+  if (!hasTmntData) {
+    return (
+      <WaitModal show={true} message="Loading..." />
+    );
+  }
+
   /****************************************/
   /* create player data for results grid  */
   /****************************************/
 
-  const nonByePlayers = stateTmntFullData.players.filter((player) =>
+  const nonByePlayers = tmntFullData.players.filter((player) =>
     player.id.startsWith("ply"),
   );
 
@@ -257,12 +238,7 @@ const TmntPlayersPage = () => {
 
   return (
     <>
-      <WaitModal
-        show={tmntLoadStatus === "loading"}        
-        message="Loading..."
-      /> 
-
-      <TmntHomeHeader tmntFullData={stateTmntFullData} />
+      <TmntHomeHeader tmntFullData={tmntFullData} />
 
       {hasTmntData && (
         <div className="d-flex justify-content-center">

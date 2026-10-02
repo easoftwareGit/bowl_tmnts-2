@@ -2,43 +2,53 @@ import { publicApi } from "@/lib/api/axios";
 import { baseResultsApi } from "@/lib/api/apiPaths";
 import { testBaseResultsApi } from "../../../../test/testApi";
 import { isValidBtDbId } from "@/lib/validation/validation";
-import { tmntGameResult } from "@/lib/types/resultsTypes";
+import {
+  tmntGameResult,
+  tgrGameKey,
+  tgrHdcpKey,
+  totalPlusHdcpSqlName
+} from "@/lib/types/resultsTypes";
 
 // If running tests AND a test URL is defined, use it; otherwise use the app API path
 const url = process.env.NODE_ENV === "test" && testBaseResultsApi
   ? testBaseResultsApi
   : baseResultsApi;
 
-const gameDivUrl = url + "/games/div/";
 const gameTmntUrl = url + "/games/tmnt/";
 
 /**
- * gets all game results for a div
+ * gets the number of games in the tournament
  *
- * @param {string} divId - id of div to get game results for
- * @returns {tmntGameResult[]} - array of game results
- * @throws {Error} - if divId is invalid or API call fails
+ * @param {tmntGameResult[]} gameResults
+ * @return {*} 
  */
-export const getGameResultsForDiv = async (divId: string): Promise<tmntGameResult[]> => {
-  if (!isValidBtDbId(divId, "div")) {
-    throw new Error("Invalid div id");
-  }
+const gameCount = (gameResults: tmntGameResult[]) => {
+  const gameNumRegex = /^Game \d+$/;
+  const gameKeys = Object.keys(gameResults[0]).filter((key) => gameNumRegex.test(key));
+  return gameKeys.length;
+};
 
-  try {
-    const response = await publicApi.get(gameDivUrl + divId);
-
-    if (!response.data?.games) {
-      throw new Error("Invalid API response: missing games");
+/**
+ * gets the scores + hdcp for each game, only if there is a score
+ *
+ * @param {tmntGameResult[]} gameResults - raw data from db
+ * @return {tmntGameResult[]} - data with scores + hdcp and total + total hdcp
+ */
+const getHdcpGameScores = (gameResults: tmntGameResult[]): tmntGameResult[] => {
+  const numGames = gameCount(gameResults);
+  gameResults.forEach((gameResult) => {
+    let totalHdcp = 0;    
+    for (let i = 1; i <= numGames; i++) {
+      const score = gameResult[tgrGameKey(i)];
+      if (score != null) {
+        gameResult[tgrHdcpKey(i)] = score + gameResult.hdcp;
+        totalHdcp += gameResult.hdcp;        
+      }      
     }
-
-    return response.data.games;
-  } catch (err) {
-    throw new Error(
-      `getGameResultsForDiv failed: ${
-        err instanceof Error ? err.message : err
-      }`
-    );
-  }
+    gameResult.total_hdcp = totalHdcp;
+    gameResult[totalPlusHdcpSqlName] = gameResult.total + totalHdcp;
+  })
+  return gameResults
 };
 
 /**
@@ -62,7 +72,18 @@ export const getGameResultsForTmnt = async (
       throw new Error("Invalid API response: missing games");
     }
 
-    return response.data.games as tmntGameResult[];
+    const tmntResults = response.data.games as tmntGameResult[];
+    if (tmntResults.length === 0) {
+      return tmntResults;
+    }
+
+    // get handicaps and then sort by total + total_hdcp
+    return getHdcpGameScores(tmntResults)
+      .sort((a, b) =>
+        (b[totalPlusHdcpSqlName] ?? 0) -
+        (a[totalPlusHdcpSqlName] ?? 0)
+      );
+
   } catch (err) {
     throw new Error(
       `getGameResultsForTmnt failed: ${

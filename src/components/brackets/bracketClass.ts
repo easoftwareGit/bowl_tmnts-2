@@ -137,18 +137,6 @@ export class Bracket {
       this._match = new BracketMatch(this);
     }
     this.calcPrizeAmounts();
-    // if (parent && parent.brkt && isNumber(parent.brkt.fee)) {            
-    //   const brktFeeAmount = Number(parent.brkt.fee);
-    //   // 8 players in bracket,
-    //   // 1 fee -> admin
-    //   // 2 fee -> runner up
-    //   // 4 or 5 fee -> winner (4 if there is a bye player)
-    //   // for bye = 7 players = 4 + 2 + 1
-    //   // for no bye = 8 players = 5 + 2 + 1
-    //   const feeToWinnerMultiplier = this.hasByePlayer() ? 4 : 5;
-    //   this._winnerAmount = brktFeeAmount * feeToWinnerMultiplier;
-    //   this._runnerUpAmount = brktFeeAmount * 2;
-    // }
   }
 
   /*********************
@@ -649,6 +637,27 @@ export class Bracket {
       !this._loserBrktGame2Ids.has(playerId) &&
       this.isPlayerInBracketGame2(playerId)
     );
+  }
+
+  /**
+   * returns the earnings for a player for this bracket
+   *
+   * @param {string} playerId - player id
+   * @return {number} - earnings for player for this bracket
+   */
+  playerEarnings = (playerId: string): number => {
+    if (this._winnerIds.has(playerId)) {
+      // if there is/are runner up(s), then divide the winner amount by # of winners
+      if (this._runnerUpIds.size > 0) {
+        return this._winnerAmount / this._winnerIds.size;
+      } else {
+        return (this._winnerAmount + this._runnerUpAmount) / this._winnerIds.size;
+      }
+    }
+    if (this._runnerUpIds.has(playerId)) {
+      return this._runnerUpAmount / this._runnerUpIds.size;
+    }
+    return 0;
   }
 
   /**

@@ -36,7 +36,7 @@ async function gamesUpsert_FullTmnt() {
     });
         
     // Sam Smith - Game 1
-    randomScore = 208;
+    randomScore = 208;    
     game = await prisma.game.upsert({
       where: {
         id: "gam_d9b0f7e8f1b84292a4e3ab711703d1f4",

@@ -1,30 +1,28 @@
 "use client";
 
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { useParams } from "next/navigation";
 import {
   fetchOneTmntGameResults,
-  getOneTmntGameResultsError,
   getOneTmntGameResultsLoadStatus,
   getOneTmntGameResultsRequestedTmntId,
   getOneTmntGameResultsTmntId,
   selectOneTmntGameResults,
+  getOneTmntGameResultsError,
 } from "@/redux/features/oneTmntGameResults/oneTmntGameResultsSlice";
 import WaitModal from "@/components/modal/waitModal";
-import {
-  fetchTmntFullData,
-  getTmntFullDataError,
-  getTmntFullDataLoadStatus,
-  getTmntFullDataRequestedTmntId,
-  selectTmntFullData
-} from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import TmntHomeHeader from "@/app/results/tmntHeader/tmntHomeHeader";
 import { getGameNums } from "@/components/tmnts/games";
-import { tmntGameResult } from "@/lib/types/resultsTypes";
+import {
+  tmntGameResult,
+  tgrGameKey,
+  tgrHdcpKey,
+} from "@/lib/types/resultsTypes";
+import { useTmntFullData } from "@/hooks/useTmntFullData";
 
-const TmntPlayerScoresPage = () => { 
+const TmntPlayerScoresPage = () => {
   const params = useParams();
   const divId = params.divId as string;
   const tmntId = params.tmntId as string;
@@ -32,43 +30,35 @@ const TmntPlayerScoresPage = () => {
 
   const dispatch = useDispatch<AppDispatch>();
 
-  const requestedTmntId = useSelector(getTmntFullDataRequestedTmntId);
-  const tmntLoadStatus = useSelector(getTmntFullDataLoadStatus);
-  const tmntError = useSelector(getTmntFullDataError);
-  const stateTmntFullData = useSelector(selectTmntFullData);
-
-  const requestedResultsTmntId = useSelector(getOneTmntGameResultsRequestedTmntId);
+  const requestedResultsTmntId = useSelector(
+    getOneTmntGameResultsRequestedTmntId,
+  );
   const resultsLoadStatsus = useSelector(getOneTmntGameResultsLoadStatus);
-  // const resultsError = useSelector(getOneTmntGameResultsError);
   const resultsTmntId = useSelector(getOneTmntGameResultsTmntId);
   const tmntResults = useSelector(selectOneTmntGameResults);
-        
-  const gameNums = getGameNums(tmntResults);
-  const games = gameNums.length;  
+  const resultsError = useSelector(getOneTmntGameResultsError);
 
-  // get tmnt data 
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
-    const needsTmntData = stateTmntFullData.tmnt.id !== tmntId;
+    setMounted(true);
+  }, []);
 
-    const failedForThisTmnt =
-      tmntLoadStatus === "failed" && requestedTmntId === tmntId;
+  const gameNums = getGameNums(tmntResults);
+  const games = gameNums.length;
 
-    if (
-      needsTmntData &&
-      tmntLoadStatus !== "loading" &&
-      !failedForThisTmnt
-    ) {
-      dispatch(fetchTmntFullData(tmntId));
-    }
-  }, [
-    tmntId,
-    stateTmntFullData.tmnt.id,
-    tmntLoadStatus,
-    requestedTmntId,
-    dispatch,
-  ]);
- 
-  // get tmnt results 
+  /*****************/
+  /* get tmnt data */
+  /*****************/
+  const {
+    data: tmntFullData,
+    hasData: hasTmntData,
+    failed: failedForThisTmnt,
+    error: tmntError,
+    retry: retryTmnt,
+  } = useTmntFullData(tmntId);
+
+  // get tmnt results
   useEffect(() => {
     const needTmntGames = resultsTmntId !== tmntId;
 
@@ -85,57 +75,43 @@ const TmntPlayerScoresPage = () => {
   }, [
     tmntId,
     resultsTmntId,
-    resultsLoadStatsus,    
+    resultsLoadStatsus,
     requestedResultsTmntId,
-    dispatch
+    dispatch,
   ]);
-  
-  const gotHdcp = useMemo<boolean>(() => {
-    if (!stateTmntFullData || stateTmntFullData.divs.length === 0) {
-      return false;
-    };
 
-    const foundDiv = stateTmntFullData.divs.find((div) => div.id === divId);
+  const gotHdcp = useMemo<boolean>(() => {
+    if (!tmntFullData || tmntFullData.divs.length === 0) {
+      return false;
+    }
+
+    const foundDiv = tmntFullData.divs.find((div) => div.id === divId);
     if (!foundDiv) {
       return false;
     }
-    return foundDiv.hdcp_per > 0; 
-  }, [stateTmntFullData, divId]);
+    return foundDiv.hdcp_per > 0;
+  }, [tmntFullData, divId]);
 
   const playerResult = useMemo<tmntGameResult>(() => {
     if (!tmntResults || tmntResults.length === 0) {
       return {} as tmntGameResult;
-    };    
+    }
     const result = tmntResults.find((result) => result.player_id === playerId);
     if (!result) {
       return {} as tmntGameResult;
     }
-    return result;    
-  }, [
-    tmntResults,
-    playerId,
-  ]);
+    return result;
+  }, [tmntResults, playerId]);
 
   /*********************************************/
   /* render loading/error until data is loaded */
-  /*********************************************/  
-  
-  const hasTmntData =
-    stateTmntFullData.tmnt.id !== "" &&
-    stateTmntFullData.tmnt.id === tmntId;
+  /*********************************************/
 
-  const hasTmntGamesData =
-    resultsTmntId !== "" && resultsTmntId === tmntId;
- 
-  const failedForThisTmnt =
-    tmntLoadStatus === "failed" &&
-    requestedTmntId === tmntId;
-  
+  const hasTmntGamesData = resultsTmntId !== "" && resultsTmntId === tmntId;
+
   const failedForThisTmntGames =
-    resultsLoadStatsus === "failed" &&
-    requestedResultsTmntId === tmntId;
-    
-    
+    resultsLoadStatsus === "failed" && requestedResultsTmntId === tmntId;
+
   if (!hasTmntData && failedForThisTmnt) {
     const errmsg = tmntError
       ? tmntError.includes("missing required child")
@@ -149,16 +125,24 @@ const TmntPlayerScoresPage = () => {
         <button
           type="button"
           className="btn btn-primary"
-          onClick={() => dispatch(fetchTmntFullData(tmntId))} 
-         >
+          onClick={() => {
+            void retryTmnt();
+          }}
+        >
           Retry
         </button>
       </div>
     );
   }
-  
+
+  if (!hasTmntData) {
+    return <WaitModal show={mounted} message="Loading..." />;
+  }
+
   if (!hasTmntGamesData && failedForThisTmntGames) {
-    const errmsg = `An error occurred while loading games for tournament with id: ${tmntId}.`;
+    const errmsg =
+      resultsError ||
+      `An error occurred while loading games for tournament with id: ${tmntId}.`;
     return (
       <div className="text-center mt-5">
         <h4>Unable to load tournament</h4>
@@ -174,180 +158,164 @@ const TmntPlayerScoresPage = () => {
     );
   }
 
-  const averageWidth = 70;  
+  if (!hasTmntGamesData) {
+    return <WaitModal show={mounted} message="Loading..." />;
+  }
+
+  const averageWidth = 70;
   const fullNameWidth = 150;
-  const hdcpWidth = 70;  
+  const hdcpWidth = 70;
   const gameWidth = 45;
   const scratchWidth = 70;
   const totalHdcpWidth = 60;
-  const totalPlusHdcpWidth = 60;    
+  const totalPlusHdcpWidth = 60;
 
   return (
     <>
-      <WaitModal
-        show={
-          tmntLoadStatus === "loading" ||
-          resultsLoadStatsus === "loading"          
-        }
-        message="Loading..."
-      />
+      <TmntHomeHeader tmntFullData={tmntFullData} />
 
-      <TmntHomeHeader
-        tmntFullData={stateTmntFullData}
-      />      
-
-      {hasTmntData && hasTmntGamesData && (
-        <div className="d-flex justify-content-center">
-          <div className="tmnt_table overflow-x-auto">
-            <table className="table table-sm table-striped table-hover w-auto">
-              <thead>
-                <tr>
-                  {gotHdcp && (
-                    <>
-                      <th
-                        className="text-center align-middle"
-                        style={{ width: averageWidth }}
-                      >
-                        Ave
-                      </th>
-                      <th
-                        className="text-center align-middle"
-                        style={{ width: hdcpWidth }}
-                      >
-                        Hdcp
-                      </th>                    
-                    </>
-                  )}
-                  <th
-                    className="text-start align-middle"
-                    style={{ width: fullNameWidth }}
-                  >
-                    Name
-                  </th>
-                  {gameNums.map((gameNum) => (
-                    <th
-                      key={gameNum}
-                      className="text-end align-middle game-header-align"
-                      style={{ width: gameWidth }}                    
-                    >
-                      {gameNum}
-                    </th>
-                  ))}
-                  {gotHdcp && (
-                    <>
-                      <th
-                        className="text-end align-middle"
-                        style={{ width: scratchWidth }}
-                      >
-                        Scratch
-                      </th>
-                      <th
-                        className="text-end align-middle"
-                        style={{ width: totalHdcpWidth }}
-                      >
-                        Hdcp
-                      </th>
-                    </>
-                  )}
-                  <th
-                    className="text-end align-middle"
-                    style={{ width: totalPlusHdcpWidth }}
-                  >
-                    Total
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {/* first row is ave, hdcp*, full name, scores,
-                    scratch*, total hdcp*, scratch + total hdcp 
-                    *columns only exist if got hdcp = true */}
-                <tr>
-                  {gotHdcp && (
-                    <>
-                      <td className="text-center align-middle">
-                        {playerResult.average}
-                      </td>
-                      <td className="text-center align-middle">
-                        {playerResult.hdcp}
-                      </td>
-                    </>
-                  )}
-                  <td>
-                    {playerResult.full_name}
-                  </td>
-                  {gameNums.map((gameNum) => (
-                    <td key={gameNum} className="text-end align-middle">
-                      {playerResult[`Game ${gameNum}`]}
-                    </td>
-                  ))}
-                  {gotHdcp && (
-                    <>
-                      <td className="text-end align-middle">
-                        {playerResult.total}
-                      </td>
-                      <td className="text-end align-middle">
-                        {playerResult.hdcp * games}
-                      </td>
-                    </>
-                  )}
-                  <td className="text-end align-middle">
-                    {/* ok to use ["total + Hdcp"], 
-                        for scratch, will be same as total */}
-                    {playerResult["total + Hdcp"]}
-                  </td>
-                </tr>
-                {/* second and third rows only visible if gotHdcp = true */}
-                { gotHdcp && (
+      <div className="d-flex justify-content-center">
+        <div className="tmnt_table overflow-x-auto">
+          <table className="table table-sm table-striped table-hover w-auto">
+            <thead>
+              <tr>
+                {gotHdcp && (
                   <>
-                    {/* second row is blank, blank, per game hdcp msg, 
-                        per game hdcp, total hdcp */}
-                    <tr>
-                      <td colSpan={2}>
-                        &nbsp;
-                      </td>
-                      <td className="text-end align-middle">
-                        per game hdcp
-                      </td>
-                      {gameNums.map((gameNum) => (
-                        <td key={gameNum} className="text-end align-middle">
-                          {playerResult.hdcp}
-                        </td>
-                      ))}
-                      <td className="text-end align-middle">
-                        {playerResult.hdcp * games}
-                      </td>
-                    </tr>
-                    {/* third row is blank, blank, total msg, 
-                        game score + per game hdcp, scratch + total hdcp */}
-                    <tr>
-                      <td colSpan={2}>
-                        &nbsp;
-                      </td>
-                      <td 
-                        className="text-end align-middle"                    
-                      >
-                        Total
-                      </td>
-                      {gameNums.map((gameNum) => (
-                        <td key={gameNum} className="text-end align-middle">
-                          {playerResult[`Game ${gameNum} + Hdcp`]}
-                        </td>
-                      ))}
-                      <td className="text-end align-middle">
-                        {playerResult["total + Hdcp"]}
-                      </td>
-                    </tr>
-                  </>                  
+                    <th
+                      className="text-center align-middle"
+                      style={{ width: averageWidth }}
+                    >
+                      Ave
+                    </th>
+                    <th
+                      className="text-center align-middle"
+                      style={{ width: hdcpWidth }}
+                    >
+                      Hdcp
+                    </th>
+                  </>
                 )}
-              </tbody>
-            </table>
-          </div>
+                <th
+                  className="text-start align-middle"
+                  style={{ width: fullNameWidth }}
+                >
+                  Name
+                </th>
+                {gameNums.map((gameNum) => (
+                  <th
+                    key={gameNum}
+                    className="text-end align-middle game-header-align"
+                    style={{ width: gameWidth }}
+                  >
+                    {gameNum}
+                  </th>
+                ))}
+                {gotHdcp && (
+                  <>
+                    <th
+                      className="text-end align-middle"
+                      style={{ width: scratchWidth }}
+                    >
+                      Scratch
+                    </th>
+                    <th
+                      className="text-end align-middle"
+                      style={{ width: totalHdcpWidth }}
+                    >
+                      Hdcp
+                    </th>
+                  </>
+                )}
+                <th
+                  className="text-end align-middle"
+                  style={{ width: totalPlusHdcpWidth }}
+                >
+                  Total
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {/* first row is ave, hdcp*, full name, scores,
+                  scratch*, total hdcp*, scratch + total hdcp 
+                  *columns only exist if got hdcp = true */}
+              <tr>
+                {gotHdcp && (
+                  <>
+                    <td className="text-center align-middle">
+                      {playerResult.average}
+                    </td>
+                    <td className="text-center align-middle">
+                      {playerResult.hdcp}
+                    </td>
+                  </>
+                )}
+                <td>{playerResult.full_name}</td>
+                {gameNums.map((gameNum) => (
+                  <td key={gameNum} className="text-end align-middle">
+                    {playerResult[`Game ${gameNum}`]}
+                  </td>
+                ))}
+                {gotHdcp && (
+                  <>
+                    <td className="text-end align-middle">
+                      {playerResult.total}
+                    </td>
+                    <td className="text-end align-middle">
+                      {playerResult.hdcp * games}
+                    </td>
+                  </>
+                )}
+                <td className="text-end align-middle">
+                  {/* ok to use ["total + Hdcp"], 
+                      for scratch, will be same as total */}
+                  {playerResult["total + Hdcp"]}
+                </td>
+              </tr>
+              {/* second and third rows only visible if gotHdcp = true */}
+              {gotHdcp && (
+                <>
+                  {/* second row is blank, blank, per game hdcp msg, 
+                      per game hdcp, total hdcp */}
+                  <tr>
+                    <td colSpan={2}>&nbsp;</td>
+                    <td className="text-end align-middle">per game hdcp</td>
+                    {gameNums.map((gameNum) => (
+                      <td key={gameNum} className="text-end align-middle">
+                        {playerResult[tgrHdcpKey(gameNum)] &&
+                          playerResult[tgrGameKey(gameNum)] && (
+                            <>
+                              {playerResult[tgrHdcpKey(gameNum)] -
+                                playerResult[tgrGameKey(gameNum)]}
+                            </>
+                          )}
+                      </td>
+                    ))}
+                    <td className="text-end align-middle">
+                      {playerResult.total_hdcp}
+                    </td>
+                  </tr>
+                  {/* third row is blank, blank, total msg, 
+                      game score + per game hdcp, scratch + total hdcp */}
+                  <tr>
+                    <td colSpan={2}>&nbsp;</td>
+                    <td className="text-end align-middle">Total</td>
+                    {gameNums.map((gameNum) => (
+                      <td key={gameNum} className="text-end align-middle">
+                        {playerResult[`Game ${gameNum} + Hdcp`]}
+                      </td>
+                    ))}
+                    <td className="text-end align-middle">
+                      {playerResult["total + Hdcp"]}
+                    </td>
+                  </tr>
+                </>
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
+      </div>
     </>
   );
+};
 
-
-}
-
-export default TmntPlayerScoresPage
+export default TmntPlayerScoresPage;

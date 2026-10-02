@@ -1,15 +1,8 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { useParams } from "next/navigation";
-import {
-  fetchTmntFullData,
-  getTmntFullDataError,
-  getTmntFullDataLoadStatus,
-  getTmntFullDataRequestedTmntId,
-  selectTmntFullData,
-} from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import {
   fetchUser,
   getUserError,
@@ -18,6 +11,7 @@ import {
 } from "@/redux/features/user/userSlice";
 import WaitModal from "@/components/modal/waitModal";
 import TmntHomeHeader from "@/app/results/tmntHeader/tmntHomeHeader";
+import { useTmntFullData } from "@/hooks/useTmntFullData";
 
 const TmntContactPage = () => {
   const params = useParams();
@@ -25,65 +19,55 @@ const TmntContactPage = () => {
 
   const dispatch = useDispatch<AppDispatch>();
 
-  const requestedTmntId = useSelector(getTmntFullDataRequestedTmntId);
-  const tmntLoadStatus = useSelector(getTmntFullDataLoadStatus);
-  const tmntError = useSelector(getTmntFullDataError);
-  const stateTmntFullData = useSelector(selectTmntFullData);
-
   const requestedUserId = useSelector(getUserRequestId);
   const userLoadStatus = useSelector(getUserLoadStatus);
   const userError = useSelector(getUserError);
   const userData = useSelector((state: RootState) => state.user.user);
 
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
-    const needsTmntData = stateTmntFullData.tmnt.id !== tmntId;
+    setMounted(true);
+  }, []);
 
-    const failedForThisTmnt =
-      tmntLoadStatus === "failed" && requestedTmntId === tmntId;
+  /*****************/
+  /* get tmnt data */
+  /*****************/
+  const {
+    data: tmntFullData,
+    hasData: hasTmntData,
+    failed: failedForThisTmnt,
+    error: tmntError,
+    retry: retryTmnt,
+  } = useTmntFullData(tmntId);
 
-    if (
-      needsTmntData &&
-      tmntLoadStatus !== "loading" &&
-      !failedForThisTmnt
-    ) {
-      dispatch(fetchTmntFullData(tmntId));
-    }
-  }, [
-    tmntId,
-    stateTmntFullData.tmnt.id,
-    tmntLoadStatus,
-    requestedTmntId,
-    dispatch,
-  ]);
-
-  // fetch user only after tmnt data is loaded
   useEffect(() => {
     const hasTmntData =
-      stateTmntFullData.tmnt.id !== "" &&
-      stateTmntFullData.tmnt.id === tmntId;
+      tmntFullData.tmnt.id !== "" &&
+      tmntFullData.tmnt.id === tmntId;
 
     if (!hasTmntData) return;
 
     const needUserData =
       userData.id === "" ||
-      userData.id !== stateTmntFullData.tmnt.user_id;
+      userData.id !== tmntFullData.tmnt.user_id;
 
     const failedForThisUser =
-      userLoadStatus === "failed" && requestedUserId === stateTmntFullData.tmnt.user_id;
+      userLoadStatus === "failed" && requestedUserId === tmntFullData.tmnt.user_id;
     
     if (
       needUserData &&
       userLoadStatus !== "loading" &&
       !failedForThisUser
     ) {
-      dispatch(fetchUser(stateTmntFullData.tmnt.user_id));
+      dispatch(fetchUser(tmntFullData.tmnt.user_id));
     }
   }, [
     tmntId,
     userData.id,
     userLoadStatus,
-    stateTmntFullData.tmnt.id,
-    stateTmntFullData.tmnt.user_id,
+    tmntFullData.tmnt.id,
+    tmntFullData.tmnt.user_id,
     requestedUserId,
     dispatch,
   ]);
@@ -91,21 +75,19 @@ const TmntContactPage = () => {
   /*********************************************/
   /* render loading/error until data is loaded */
   /*********************************************/  
-  const hasTmntData =
-    stateTmntFullData.tmnt.id !== "" &&
-    stateTmntFullData.tmnt.id === tmntId;
+
+  const directorId = hasTmntData
+    ? tmntFullData.tmnt.user_id
+    : "";
 
   const hasUserData =
-    userData.id !== "" &&
-    userData.id === stateTmntFullData.tmnt.user_id;
-
-  const failedForThisTmnt =
-    tmntLoadStatus === "failed" &&
-    requestedTmntId === tmntId;
+    hasTmntData && userData.id === directorId;
   
   const failedForThisUser =
+    hasTmntData &&
+    !hasUserData &&
     userLoadStatus === "failed" &&
-    requestedUserId === stateTmntFullData.tmnt.user_id;
+    requestedUserId === directorId;
   
   if (!hasTmntData && failedForThisTmnt) {
     const errmsg = tmntError
@@ -122,8 +104,10 @@ const TmntContactPage = () => {
 
         <button
           type="button"
-          className="btn btn-primary"
-          onClick={() => dispatch(fetchTmntFullData(tmntId))}
+          className="btn btn-primary"          
+          onClick={() => {
+            void retryTmnt();
+          }}             
         >
           Retry
         </button>
@@ -131,7 +115,11 @@ const TmntContactPage = () => {
     );
   }
 
-  if (!hasUserData && failedForThisUser) {
+  if (!hasTmntData) {
+    return <WaitModal show={mounted} message="Loading..." />;
+  }
+
+  if (failedForThisUser) {
     return (
       <div className="text-center mt-5">
         <h4>Unable to load tournament director</h4>
@@ -145,7 +133,7 @@ const TmntContactPage = () => {
           type="button"
           className="btn btn-primary"
           onClick={() =>
-            dispatch(fetchUser(stateTmntFullData.tmnt.user_id))
+            dispatch(fetchUser(directorId))
           }
         >
           Retry
@@ -154,21 +142,15 @@ const TmntContactPage = () => {
     );
   }
 
-  if (!hasTmntData || !hasUserData) {
-    return (
-      <WaitModal show={tmntLoadStatus === "loading"} message="Loading..." />
-    );
+  if (!hasUserData) {
+    return <WaitModal show={mounted} message="Loading..." />;
   }
 
-  const tmntDirName = userData
-    ? userData.first_name + " " + userData.last_name
-    : "";
+  const tmntDirName = userData.first_name + " " + userData.last_name
 
   return (
     <>
-      <TmntHomeHeader
-        tmntFullData={stateTmntFullData}
-      />
+      <TmntHomeHeader tmntFullData={tmntFullData} />
       <div className="text-center mb-4">
         <h4>Contact information for Tournament Director {tmntDirName}</h4>        
       </div>      

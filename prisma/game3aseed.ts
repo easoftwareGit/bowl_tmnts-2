@@ -162,7 +162,7 @@ async function gamesUpsert_FullTmnt() {
     });
 
     // Hal Johnson - Game 3
-    randomScore = 174;
+    randomScore = 174;    
     game = await prisma.game.upsert({
       where: {
         id: "gam_c6ed63d8e17b45edbf9f973edc889bb6",

@@ -1,7 +1,15 @@
-import { tmntGameResult, tmntStandingsTableRow } from "@/lib/types/resultsTypes";
+import {
+  tgrGameKey,
+  tgrHdcpKey,
+  tmntGameResult,
+  tmntStandingsTableRow
+} from "@/lib/types/resultsTypes";
 import { divPfType } from "@/lib/types/types";
 import { calcPositions, calcPrizesForDiv } from "@/components/tmnts/prizes";
 import { calcNumGames } from "@/components/tmnts/games";
+
+// const gameKey = (n: number): GameNum => `Game ${n}`;
+// const hdcpKey = (n: number): GameHdcp => `Game ${n} + Hdcp`;
 
 /**
  * Populate the standings rows from tnmtResults
@@ -28,7 +36,7 @@ export const populateStandingsRows = (
       average: result.average,
       hdcp: result.hdcp,
       total: result.total,      
-      total_hdcp: result.hdcp * numGames,
+      total_hdcp: result.total_hdcp,
       total_plus_total_hdcp: result["total + Hdcp"] ?? 0,  
       plus_minus: "",
       prize: "",
@@ -36,14 +44,14 @@ export const populateStandingsRows = (
 
     let plusMinus = 0;
     for (let game = 1; game <= numGames; game++) {
-      const gameCol = `Game ${game}` as const;
-      const gameHdcpCol = `Game ${game} + Hdcp` as const;
+      // const gameCol = `Game ${game}` as const;
+      // const gameHdcpCol = `Game ${game} + Hdcp` as const;
 
-      pRow[gameCol] = result[gameCol];
-      pRow[gameHdcpCol] = result[gameHdcpCol];
+      pRow[tgrGameKey(game)] = result[tgrGameKey(game)];
+      pRow[tgrHdcpKey(game)] = result[tgrHdcpKey(game)];
 
-      if (result[gameCol]) {
-        plusMinus += (result[gameCol] - 200);
+      if (result[tgrGameKey(game)]) {
+        plusMinus += (result[tgrGameKey(game)] - 200);
       }
     }
 

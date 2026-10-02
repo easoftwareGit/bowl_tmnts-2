@@ -1,6 +1,9 @@
 export type GameNum = `Game ${number}`;
 export type GameHdcp = `Game ${number} + Hdcp`;
 
+export const tgrGameKey = (n: number): GameNum => `Game ${n}`;
+export const tgrHdcpKey = (n: number): GameHdcp => `Game ${n} + Hdcp`;
+
 export const totalPlusHdcpSqlName = 'total + Hdcp';
 // API/raw SQL name
 export type tmntGameResult = {
@@ -14,7 +17,8 @@ export type tmntGameResult = {
   full_name: string;
   average: number;
   hdcp: number;
-  total: number;    
+  total: number;
+  total_hdcp: number;
 
   // API/raw SQL name
   "total + Hdcp"?: number;

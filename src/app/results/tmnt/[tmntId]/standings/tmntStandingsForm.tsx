@@ -50,10 +50,10 @@ const TmntStandingsForm: React.FC<ChildProps> = ({
   const [resultSort, setResultSort] = useState<ResultSort>("total");
 
   const gameNums = getGameNums(tmntResults);
-  const justDiv = tmntResults.filter((result) => result.div_id === div.id);
+  const justDivResults = tmntResults.filter((result) => result.div_id === div.id);
   const gotHdcp = div.hdcp_per > 0;
   const justDivPfs = divPfs.filter((pf) => pf.div_id === div.id);  
-  const standingsRows = populateStandingsRows(justDiv, justDivPfs);
+  const standingsRows = populateStandingsRows(justDivResults, justDivPfs);
   const lastCashRow = justDivPfs.length - 1;  
 
   /**

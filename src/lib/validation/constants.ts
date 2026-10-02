@@ -75,3 +75,5 @@ export const dummyTmntId = "tmnt_00000000000000000000000000000000";
 export const dummyEventId = "evt_00000000000000000000000000000000";
 export const dummyDivId = "div_00000000000000000000000000000000";
 export const dummySquadId = "sqd_00000000000000000000000000000000";
+
+export const byeName = "Bye";
