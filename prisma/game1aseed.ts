@@ -150,7 +150,8 @@ async function gamesUpsert_FullTmnt() {
     });
 
     // Greg Smith - Game 1
-    randomScore = 183;
+    // randomScore = 183;
+    randomScore = 188;
     game = await prisma.game.upsert({
       where: {
         id: "gam_19d7e4b2a6c843f5b0e8d31c7a925f64",
@@ -342,7 +343,8 @@ async function gamesUpsert_FullTmnt() {
     });
 
     // Pat Brown - Game 1
-    randomScore = 176;
+    // randomScore = 176;
+    randomScore = 203;
     game = await prisma.game.upsert({
       where: {
         id: "gam_6b4e9a1d3c725f80e8a2d6c1b9473f5e",

@@ -120,7 +120,8 @@ async function gamesUpsert_FullTmnt() {
     });
 
     // Fred Anderson - Game 3
-    randomScore = 158;
+    // randomScore = 158;
+    randomScore = 179;
     game = await prisma.game.upsert({
       where: {
         id: "gam_137967cf65d443adbdc0c505b89a63fe",
@@ -162,7 +163,8 @@ async function gamesUpsert_FullTmnt() {
     });
 
     // Hal Johnson - Game 3
-    randomScore = 174;    
+    // randomScore = 174;
+    randomScore = 186;
     game = await prisma.game.upsert({
       where: {
         id: "gam_c6ed63d8e17b45edbf9f973edc889bb6",

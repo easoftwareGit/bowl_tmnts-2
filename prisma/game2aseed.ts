@@ -144,7 +144,8 @@ async function gamesUpsert_FullTmnt() {
     });
 
     // Greg Smith - Game 2
-    randomScore = 237;
+    // randomScore = 237;
+    randomScore = 206;
     game = await prisma.game.upsert({
       where: {
         id: "gam_19d7e4b2a6c843f5b0e8d31c7a925f65",
@@ -207,7 +208,8 @@ async function gamesUpsert_FullTmnt() {
     });
 
     // Jim Williams - Game 2
-    randomScore = 169;
+    // randomScore = 169;
+    randomScore = 193;
     game = await prisma.game.upsert({
       where: {
         id: "gam_b2c84e1f7a593d60e6b0f2a9c4158d74",
@@ -228,7 +230,8 @@ async function gamesUpsert_FullTmnt() {
     });
 
     // Kyle Jones - Game 2
-    randomScore = 219;
+    // randomScore = 219;
+    randomScore = 203;
     game = await prisma.game.upsert({
       where: {
         id: "gam_4d9a7c2e1b653f80c8e4a6d219f375b1",
@@ -312,7 +315,9 @@ async function gamesUpsert_FullTmnt() {
     });
 
     // Otto Johnson - Game 2
-    randomScore = 220;
+    // randomScore = 220;
+    // randomScore = 211;
+    randomScore = 210;
     game = await prisma.game.upsert({
       where: {
         id: "gam_d5a2f8c1b6493e70a4d7c2e915f68b3b",
@@ -333,7 +338,8 @@ async function gamesUpsert_FullTmnt() {
     });
 
     // Pat Brown - Game 2
-    randomScore = 154;
+    // randomScore = 154;
+    randomScore = 202;
     game = await prisma.game.upsert({
       where: {
         id: "gam_6b4e9a1d3c725f80e8a2d6c1b9473f5f",

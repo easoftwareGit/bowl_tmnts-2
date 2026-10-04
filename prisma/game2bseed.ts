@@ -15,7 +15,9 @@ const prisma = new PrismaClient({ adapter });
 async function gamesUpsert_FullTmnt() {
   try {
     // Paul Jones - Game 2
-    let randomScore = 161;    
+    let randomScore = 161;
+    // randomScore = 161;
+    randomScore = 192;
     let game = await prisma.game.upsert({
       where: {
         id: "gam_d254ddd9a8f84d1aa9c484ba19940a0a",
@@ -36,7 +38,9 @@ async function gamesUpsert_FullTmnt() {
     });
         
     // Sam Smith - Game 2
-    randomScore = 159;
+    // randomScore = 159;
+    // randomScore = 207;
+    randomScore = 206;
     game = await prisma.game.upsert({
       where: {
         id: "gam_1bae77a91a9d40b9a0f20ca418c6593e",
