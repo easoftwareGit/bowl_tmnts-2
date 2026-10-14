@@ -1,0 +1,18 @@
+/* player bracket progress grid */
+.pots-outer {
+  width: 100%;
+  overflow-x: auto;
+  margin-bottom: 10px;
+}
+
+.pots-inner {
+  width: 100%;
+}
+
+.small-table-font {
+  font-size: 0.875rem;
+}
+
+.pots-title_backgroud {
+  background-color: #08316d;
+}

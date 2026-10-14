@@ -5,6 +5,8 @@ import {
 } from "@/components/brackets/bracketListClass";
 import type { playerType } from "@/lib/types/types";
 import { initPlayer } from "@/lib/db/initVals";
+import { tmntResultsToGameTypes } from "@/lib/tmntResultsToGameTypes";
+import type { tmntGameResult } from "@/lib/types/resultsTypes";
 import {
   brktId1,
   byeId,
@@ -23,8 +25,17 @@ import {
   playerId2,
   playerId3,
   playerId5,
+  playerId8,
   squadId1,
 } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
+
+// updateBracketMatches converts the results with this function; the tests
+// below hand it the mock games directly
+jest.mock("@/lib/tmntResultsToGameTypes", () => ({
+  tmntResultsToGameTypes: jest.fn(),
+}));
+
+const mockedToGameTypes = tmntResultsToGameTypes as jest.Mock;
 
 describe("BracketList helper methods", () => {
   const byePlayer: playerType = {
@@ -161,6 +172,261 @@ describe("BracketList helper methods", () => {
       expect(brktList.aliveCount(playerId1, 1)).toBe(0);
     });
   });
+
+  describe("allBracketsCompleted", () => {
+    // updateBracketMatches only needs a non-empty array; the games come from
+    // the mocked tmntResultsToGameTypes
+    const minimalResults = mockTmntFullData.players.map((p) => ({
+      player_id: p.id,
+      div_id: divId1,
+    })) as unknown as tmntGameResult[];
+
+    // gives the list these games and decides every match, as the results pages do
+    const updateWith = (list: BracketList, games: typeof mockGames) => {
+      mockedToGameTypes.mockReturnValue(games);
+      list.updateBracketMatches(minimalResults);
+    };
+
+    const addWinner = (
+      list: BracketList,
+      index: number,
+      playerId: string = playerId1,
+    ) => {
+      list.brackets[index].winnerIds.add(playerId);
+    };
+
+    beforeEach(() => {
+      mockedToGameTypes.mockReturnValue(mockGames);
+    });
+
+    describe("fixture sanity check", () => {
+      it("the list has eight brackets, games 1 to 3, and every mock player has a score for each", () => {
+        const list = createBracketList();
+
+        expect(list.brackets).toHaveLength(8);
+        expect(list.squadGameNums).toEqual([1, 2, 3]);
+        mockTmntFullData.players.forEach((p) => {
+          [1, 2, 3].forEach((game) => {
+            expect(
+              mockGames.some(
+                (g) => g.player_id === p.id && g.game_num === game,
+              ),
+            ).toBe(true);
+          });
+        });
+      });
+    });
+
+    describe("with winners set directly on the brackets", () => {
+      it("is false for a new list, before any scores are applied", () => {
+        expect(createBracketList().allBracketsCompleted()).toBe(false);
+      });
+
+      it("is false when only one bracket has a winner", () => {
+        const list = createBracketList();
+        addWinner(list, 0);
+
+        expect(list.allBracketsCompleted()).toBe(false);
+      });
+
+      it.each([0, 3, 7])(
+        "is false when every bracket except bracket %i has a winner",
+        (missing) => {
+          const list = createBracketList();
+          list.brackets.forEach((_, i) => {
+            if (i !== missing) addWinner(list, i);
+          });
+
+          expect(list.allBracketsCompleted()).toBe(false);
+        },
+      );
+
+      it("is true when every bracket has a winner", () => {
+        const list = createBracketList();
+        list.brackets.forEach((_, i) => addWinner(list, i));
+
+        expect(list.allBracketsCompleted()).toBe(true);
+      });
+
+      it("becomes true when the last bracket gets its winner", () => {
+        const list = createBracketList();
+        list.brackets.slice(0, 7).forEach((_, i) => addWinner(list, i));
+        expect(list.allBracketsCompleted()).toBe(false);
+
+        addWinner(list, 7);
+
+        expect(list.allBracketsCompleted()).toBe(true);
+      });
+
+      it("counts a bracket with a tied final (two winners) as completed", () => {
+        const list = createBracketList();
+        list.brackets.forEach((_, i) => addWinner(list, i));
+        addWinner(list, 0, playerId2);
+
+        expect(list.brackets[0].winnerIds.size).toBe(2);
+        expect(list.allBracketsCompleted()).toBe(true);
+      });
+
+      it("does not depend on who the winners are", () => {
+        const list = createBracketList();
+        list.brackets.forEach((_, i) =>
+          addWinner(list, i, i % 2 === 0 ? playerId1 : playerId2),
+        );
+
+        expect(list.allBracketsCompleted()).toBe(true);
+      });
+
+      it("looks only at winners: runners-up in every bracket do not count", () => {
+        const list = createBracketList();
+        list.brackets.forEach((b) => b.runnerUpIds.add(playerId2));
+
+        expect(list.allBracketsCompleted()).toBe(false);
+      });
+
+      it("only reads: calling it does not change any bracket's winners", () => {
+        const list = createBracketList();
+        addWinner(list, 0);
+        const before = list.brackets.map((b) => [...b.winnerIds]);
+
+        list.allBracketsCompleted();
+        list.allBracketsCompleted();
+
+        expect(list.brackets.map((b) => [...b.winnerIds])).toEqual(before);
+      });
+    });
+
+    describe("with scores, through updateBracketMatches", () => {
+      it("is true when every player has a score for all three games", () => {
+        const list = createBracketList();
+
+        updateWith(list, mockGames);
+
+        expect(list.allBracketsCompleted()).toBe(true);
+      });
+
+      it("decides player 8 as the winner of the first bracket", () => {
+        const list = createBracketList();
+
+        updateWith(list, mockGames);
+
+        const first = list.brackets.find((b) => b.id === oneBrktId1);
+        expect([...(first?.winnerIds ?? [])]).toEqual([playerId8]);
+      });
+
+      it("is false when the scores were given to the list but not applied", () => {
+        const list = createBracketList();
+        list.createGameScoresMap(mockGames);
+
+        // the scores are in the map, but no match has been decided yet
+        expect(list.allBracketsCompleted()).toBe(false);
+      });
+
+      it("is false when only games 1 and 2 have scores", () => {
+        const list = createBracketList();
+
+        updateWith(list, mockGames.filter((g) => g.game_num <= 2));
+
+        expect(list.allBracketsCompleted()).toBe(false);
+      });
+
+      it("is false when only game 1 has scores", () => {
+        const list = createBracketList();
+
+        updateWith(list, mockGames.filter((g) => g.game_num === 1));
+
+        expect(list.allBracketsCompleted()).toBe(false);
+      });
+
+      it("is false when no game has a score", () => {
+        const list = createBracketList();
+
+        updateWith(list, []);
+
+        expect(list.allBracketsCompleted()).toBe(false);
+      });
+
+      it("is false when a finalist has no game 3 score, and true once it is entered", () => {
+        const list = createBracketList();
+        // player 8 has the best game 1 and game 2 scores, so is a finalist in every bracket
+        const withoutGame3 = mockGames.filter(
+          (g) => !(g.player_id === playerId8 && g.game_num === 3),
+        );
+
+        updateWith(list, withoutGame3);
+        expect(list.allBracketsCompleted()).toBe(false);
+
+        updateWith(list, mockGames);
+        expect(list.allBracketsCompleted()).toBe(true);
+      });
+
+      it("goes back to false when the scores are removed and the matches are updated again", () => {
+        const list = createBracketList();
+        updateWith(list, mockGames);
+        expect(list.allBracketsCompleted()).toBe(true);
+
+        // updateMatches clears the winners before it decides the matches again
+        updateWith(list, []);
+
+        expect(list.allBracketsCompleted()).toBe(false);
+      });
+
+      it("stays true after a score is corrected, even when the correction makes a tied final", () => {
+        const list = createBracketList();
+        updateWith(list, mockGames);
+        expect(list.allBracketsCompleted()).toBe(true);
+
+        // player 2's game 3 score raised to tie player 8's 232 in the first bracket
+        const corrected = mockGames.map((g) =>
+          g.player_id === playerId2 && g.game_num === 3
+            ? { ...g, score: 232 }
+            : g,
+        );
+        updateWith(list, corrected);
+
+        expect(list.allBracketsCompleted()).toBe(true);
+        const first = list.brackets.find((b) => b.id === oneBrktId1);
+        expect(first?.winnerIds).toEqual(new Set([playerId2, playerId8]));
+      });
+
+      it("uses the list's squad game numbers: scores for games 1 to 3 do not complete a list that plays games 4 to 6", () => {
+        const list = createBracketList(initData, [4, 5, 6]);
+
+        updateWith(list, mockGames.filter((g) => g.game_num <= 3));
+        expect(list.allBracketsCompleted()).toBe(false);
+
+        updateWith(list, mockGames);
+        expect(list.allBracketsCompleted()).toBe(true);
+      });
+    });
+
+    describe("a list with no brackets", () => {
+      // NOTE: Array.every is true for an empty array, so a list with no brackets
+      // counts as completed. These two tests pin that current behavior.
+      it("is true for a list created without initial data (current behavior)", () => {
+        const list = createBracketList(null);
+
+        expect(list.brackets).toHaveLength(0);
+        expect(list.allBracketsCompleted()).toBe(false);
+      });
+
+      it("is true for a list whose tournament has no one-brackets yet (current behavior)", () => {
+        const list = createBracketList({
+          tmntFullData: { ...mockTmntFullData, oneBrkts: [] },
+          divId: divId1,
+        });
+
+        expect(list.brackets).toHaveLength(0);
+        expect(list.allBracketsCompleted()).toBe(false);
+      });
+
+      it("is false when the brackets array is missing", () => {
+        const list = createBracketList();
+        (list as unknown as { _brackets: null })._brackets = null;
+
+        expect(list.allBracketsCompleted()).toBe(false);
+      });
+    });
+  });  
 
   describe("createGameScoresMap", () => {
     it("creates the game score map from game data", () => {

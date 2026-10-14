@@ -32,6 +32,7 @@ export type matchSeedInfoType = {
   hdcp: number | undefined;
   total: number | undefined;
   result: matchResultType;
+  finalMatch: boolean;
 };
 
 const byePlayerInfo: playerInfoType = {  
@@ -199,7 +200,8 @@ export class BracketMatch {
         score: undefined,
         hdcp: undefined,
         total: undefined,
-        result: undefined,        
+        result: undefined,
+        finalMatch: false,
       }
       if (!(gScore == null)) { 
         oneMatchSeedInfo.score = gScore;

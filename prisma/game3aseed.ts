@@ -16,6 +16,8 @@ async function gamesUpsert_FullTmnt() {
   try {
     // Al Davis - Game 3
     let randomScore = 179;
+    randomScore = 179;
+    // randomScore = 217;
     let game = await prisma.game.upsert({
       where: {
         id: "gam_c3cde28964b544f29e3ff1c1ce7a6135",
@@ -57,7 +59,8 @@ async function gamesUpsert_FullTmnt() {
     });
 
     // Curt Johnson - Game 3
-    randomScore = 218;
+    // randomScore = 218;
+    randomScore = 173;
     game = await prisma.game.upsert({
       where: {
         id: "gam_7c548076575f4973805c4cc06847a545",
@@ -78,7 +81,8 @@ async function gamesUpsert_FullTmnt() {
     });
 
     // Don Brown - Game 3
-    randomScore = 164;
+    // randomScore = 164;
+    randomScore = 205;
     game = await prisma.game.upsert({
       where: {
         id: "gam_90c717a52eb74d2885e164603b59227c",
@@ -121,7 +125,8 @@ async function gamesUpsert_FullTmnt() {
 
     // Fred Anderson - Game 3
     // randomScore = 158;
-    randomScore = 179;
+    // randomScore = 179;
+    randomScore = 219;
     game = await prisma.game.upsert({
       where: {
         id: "gam_137967cf65d443adbdc0c505b89a63fe",
@@ -142,7 +147,8 @@ async function gamesUpsert_FullTmnt() {
     });
 
     // Greg Smith - Game 3
-    randomScore = 155;
+    // randomScore = 155;
+    randomScore = 218;
     game = await prisma.game.upsert({
       where: {
         id: "gam_697f9798a58548be8dd075055b8d5b60",
@@ -227,7 +233,8 @@ async function gamesUpsert_FullTmnt() {
     });
 
     // Kyle Jones - Game 3
-    randomScore = 188;
+    // randomScore = 188;
+    randomScore = 215;
     game = await prisma.game.upsert({
       where: {
         id: "gam_33554e484afb42a595b0995b60a0d2d1",
@@ -290,7 +297,8 @@ async function gamesUpsert_FullTmnt() {
     });
 
     // Nate Smith - Game 3
-    randomScore = 214;
+    // randomScore = 214;
+    randomScore = 219;
     game = await prisma.game.upsert({
       where: {
         id: "gam_93bfd9dcb617478ab5cf3369a40ef778",

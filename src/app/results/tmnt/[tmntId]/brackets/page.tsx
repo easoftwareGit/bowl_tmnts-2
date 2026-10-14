@@ -14,33 +14,20 @@ import {
   selectOneTmntGameResults,
 } from "@/redux/features/oneTmntGameResults/oneTmntGameResultsSlice";
 import WaitModal from "@/components/modal/waitModal";
-import TmntHomeHeader from "@/app/results/tmntHeader/tmntHomeHeader";
-import { GameNum } from "@/lib/types/resultsTypes";
+import TmntHomeHeader, { tmntPageBtnType } from "@/app/results/tmntHeader/tmntHomeHeader";
+import { brktGamesTableRow } from "@/lib/types/resultsTypes";
 import { getBrktListRecords } from "@/redux/features/tmntFullData/brktListRecordsSelector";
-import { populatePlayerBrktRows2 } from "./populateBrktPlayerRows";
+import { populatePlayerBrktRows } from "./populatePlayerBrktRows";
 import { getGameNums } from "@/components/tmnts/games";
 import { useTmntFullData } from "@/hooks/useTmntFullData";
+import BracketHeader, { type brktPageBtnType } from "./bracketHeader";
 import "./bracketGames.css";
-
-export type brktGamesTableRow = {
-  id: string;
-  player_id: string;
-  last_name: string;
-  first_name: string;
-  lane: number;
-  in: number;
-  cash: string;
-
-  [key: GameNum]: number;  
-}
 
 const PlayerBrktsPage = () => {
   const params = useParams();
   const tmntId = params.tmntId as string;
 
-  const dispatch = useDispatch<AppDispatch>();
-
-  const [squadId, setSquadId] = useState("");    
+  const dispatch = useDispatch<AppDispatch>();  
 
   const requestedResultsTmntId = useSelector(getOneTmntGameResultsRequestedTmntId);
   const resultsLoadStatus = useSelector(getOneTmntGameResultsLoadStatus);
@@ -51,6 +38,9 @@ const PlayerBrktsPage = () => {
   const brktListRecords = useSelector(getBrktListRecords);
 
   const [mounted, setMounted] = useState(false);
+
+  const tmntPageBtn: tmntPageBtnType = "Brackets";
+  const selectedBrktPageBtn: brktPageBtnType ="Brackets";
 
   useEffect(() => {
     setMounted(true);
@@ -68,22 +58,6 @@ const PlayerBrktsPage = () => {
     error: tmntError,
     retry: retryTmnt,
   } = useTmntFullData(tmntId);
-
-  // set initial squad id after tournament data is loaded
-  useEffect(() => {
-    if (
-      squadId === "" &&
-      tmntFullData.tmnt.id === tmntId &&
-      tmntFullData.squads.length > 0
-    ) {
-      setSquadId(tmntFullData.squads[0].id);
-    }
-  }, [
-    squadId,
-    tmntId,
-    tmntFullData.tmnt.id,
-    tmntFullData.squads,
-  ]);
 
   // get tmnt results 
   useEffect(() => {
@@ -107,18 +81,25 @@ const PlayerBrktsPage = () => {
     dispatch
   ]);
 
-  const playerBrktRows = useMemo<brktGamesTableRow[]>(
-    () => populatePlayerBrktRows2(tmntResults, brktListRecords),
-    [tmntResults, brktListRecords]
-  );
+  const hasTmntGamesData = resultsTmntId !== "" && resultsTmntId === tmntId;
+
+  // only true once the tournament is loaded, so tmntFullData is never read
+  // before then (the hook can return no data while loading)
+  const hasBrackets = hasTmntData && tmntFullData.brkts.length > 0;
+
+  // Only calculate the rows once the tournament, its brackets and its results
+  // are loaded for this tournament. Before that the store can still hold another
+  // tournament's results and bracket lists. (A hook cannot come after an early
+  // return, so the guard lives inside the memo.)
+  const playerBrktRows = useMemo<brktGamesTableRow[]>(() => {
+    if (!hasBrackets || !hasTmntGamesData) return [];
+    return populatePlayerBrktRows(tmntResults, brktListRecords);
+  }, [hasBrackets, hasTmntGamesData, tmntResults, brktListRecords]);
 
   /*********************************************/
   /* render loading/error until data is loaded */
   /*********************************************/  
-  
-  const hasTmntGamesData =
-    resultsTmntId !== "" && resultsTmntId === tmntId;
-    
+      
   const failedForThisTmntGames =
     resultsLoadStatus === "failed" &&
     requestedResultsTmntId === tmntId;
@@ -152,6 +133,18 @@ const PlayerBrktsPage = () => {
     return <WaitModal show={mounted} message="Loading..." />;
   }  
 
+  // a tournament with no brackets has nothing to show, so no results are needed
+  if (tmntFullData.brkts.length === 0) {
+    return (
+      <>
+        <TmntHomeHeader tmntFullData={tmntFullData} selectedTmntPageBtn={tmntPageBtn} />
+        <p className="text-center mt-3">
+          No brackets are available for this tournament.
+        </p>
+      </>
+    );
+  }
+
   if (!hasTmntGamesData && failedForThisTmntGames) {
     const errmsg =
       resultsError ||
@@ -178,41 +171,36 @@ const PlayerBrktsPage = () => {
     return <WaitModal show={mounted} message="Loading..." />;
   }  
 
-  const cashWidth = 35;
-  const firstNameWidth = 100;    
+  const cashWidth = 35;    
   const gameWidth = 45;
   const inWidth = 45;
-  const laneWidth = 50;
-  const lastNameWidth = 120;
+  const laneWidth = 50;  
+  const nameWidth = 140;
 
   return (
     <>
-      <TmntHomeHeader tmntFullData={tmntFullData} />      
+      <TmntHomeHeader tmntFullData={tmntFullData} selectedTmntPageBtn={tmntPageBtn}   />      
 
       <div className="text-center mb-2">
-        <h4>Player Brackets</h4>
+        
+        <BracketHeader tmntFullData={tmntFullData} selectedBrktPageBtn={selectedBrktPageBtn} />
+        
         <div className="d-flex justify-content-center">
           <div className="brkt_table overflow-x-auto">
             <table className="table table-sm table-striped table-hover w-auto">
               <thead>
                 <tr>
                   <th
-                    className="text-end align-middle"
+                    className="text-center align-middle"
                     style={{ width: laneWidth }}
                   >
                     Lane
                   </th>
                   <th
-                    className="text-start align-middle"
-                    style={{ width: lastNameWidth }}
+                    className="text-start align-middle ps-2"
+                    style={{ width: nameWidth }}
                   >
-                    Last Name
-                  </th>
-                  <th
-                    className="text-start align-middle"
-                    style={{ width: firstNameWidth }}
-                  >
-                    First Name
+                    Name
                   </th>
                   <th
                     className="text-center align-middle"
@@ -237,26 +225,18 @@ const PlayerBrktsPage = () => {
                   </th>
                 </tr>
               </thead>
-              <tbody className="table-group-divider">
+              <tbody className="table-group-divider small">
                 {playerBrktRows.map((playerBrktRow) => (
                   <tr key={playerBrktRow.id}>
-                    <td className="text-end align-middle">
+                    <td className="text-center align-middle">
                       {playerBrktRow.lane}
                     </td>
-                    <td className="text-start align-middle">
+                    <td className="text-start align-middle ps-2">
                       <Link
                         href={`/results/tmnt/${tmntId}/brackets/player/${playerBrktRow.id}`}
                         className="p-0"
                       >
-                        {playerBrktRow.last_name}
-                      </Link>
-                    </td>
-                    <td className="text-start align-middle">
-                      <Link
-                        href={`/results/tmnt/${tmntId}/brackets/player/${playerBrktRow.id}`}
-                        className="p-0"
-                      >
-                        {playerBrktRow.first_name}
+                        {playerBrktRow.last_first}
                       </Link>
                     </td>
                     <td className="text-center align-middle text-success">

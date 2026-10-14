@@ -33,6 +33,7 @@ export const maxHdcpFrom = 300;
 export const zeroAmount = 0;
 export const minFee = 1;
 export const maxScore = 300;
+export const PAR = 200;
 export const maxMoney = 999999;
 export const maxAverage = maxScore;
 export const minElimEntryFee = 0.01;

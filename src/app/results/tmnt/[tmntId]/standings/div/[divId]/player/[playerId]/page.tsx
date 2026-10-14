@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import {
   fetchOneTmntGameResults,
   getOneTmntGameResultsLoadStatus,
@@ -13,7 +14,7 @@ import {
   getOneTmntGameResultsError,
 } from "@/redux/features/oneTmntGameResults/oneTmntGameResultsSlice";
 import WaitModal from "@/components/modal/waitModal";
-import TmntHomeHeader from "@/app/results/tmntHeader/tmntHomeHeader";
+import TmntHomeHeader, { tmntPageBtnType } from "@/app/results/tmntHeader/tmntHomeHeader";
 import { getGameNums } from "@/components/tmnts/games";
 import {
   tmntGameResult,
@@ -28,12 +29,14 @@ const TmntPlayerScoresPage = () => {
   const tmntId = params.tmntId as string;
   const playerId = params.playerId as string;
 
+  const tmntPageBtn: tmntPageBtnType = "Standings";
+
   const dispatch = useDispatch<AppDispatch>();
 
   const requestedResultsTmntId = useSelector(
     getOneTmntGameResultsRequestedTmntId,
   );
-  const resultsLoadStatsus = useSelector(getOneTmntGameResultsLoadStatus);
+  const resultsLoadStatus = useSelector(getOneTmntGameResultsLoadStatus);
   const resultsTmntId = useSelector(getOneTmntGameResultsTmntId);
   const tmntResults = useSelector(selectOneTmntGameResults);
   const resultsError = useSelector(getOneTmntGameResultsError);
@@ -45,8 +48,7 @@ const TmntPlayerScoresPage = () => {
   }, []);
 
   const gameNums = getGameNums(tmntResults);
-  const games = gameNums.length;
-
+  
   /*****************/
   /* get tmnt data */
   /*****************/
@@ -63,11 +65,11 @@ const TmntPlayerScoresPage = () => {
     const needTmntGames = resultsTmntId !== tmntId;
 
     const failedForThisTmntGames =
-      resultsLoadStatsus === "failed" && requestedResultsTmntId === tmntId;
+      resultsLoadStatus === "failed" && requestedResultsTmntId === tmntId;
 
     if (
       needTmntGames &&
-      resultsLoadStatsus !== "loading" &&
+      resultsLoadStatus !== "loading" &&
       !failedForThisTmntGames
     ) {
       dispatch(fetchOneTmntGameResults(tmntId));
@@ -75,7 +77,7 @@ const TmntPlayerScoresPage = () => {
   }, [
     tmntId,
     resultsTmntId,
-    resultsLoadStatsus,
+    resultsLoadStatus,
     requestedResultsTmntId,
     dispatch,
   ]);
@@ -96,12 +98,15 @@ const TmntPlayerScoresPage = () => {
     if (!tmntResults || tmntResults.length === 0) {
       return {} as tmntGameResult;
     }
-    const result = tmntResults.find((result) => result.player_id === playerId);
-    if (!result) {
-      return {} as tmntGameResult;
-    }
-    return result;
-  }, [tmntResults, playerId]);
+
+    const result = tmntResults.find(
+      (result) =>
+        result.player_id === playerId &&
+        result.div_id === divId,
+    );
+
+    return result ?? ({} as tmntGameResult);
+  }, [tmntResults, playerId, divId]);
 
   /*********************************************/
   /* render loading/error until data is loaded */
@@ -110,7 +115,7 @@ const TmntPlayerScoresPage = () => {
   const hasTmntGamesData = resultsTmntId !== "" && resultsTmntId === tmntId;
 
   const failedForThisTmntGames =
-    resultsLoadStatsus === "failed" && requestedResultsTmntId === tmntId;
+    resultsLoadStatus === "failed" && requestedResultsTmntId === tmntId;
 
   if (!hasTmntData && failedForThisTmnt) {
     const errmsg = tmntError
@@ -162,6 +167,29 @@ const TmntPlayerScoresPage = () => {
     return <WaitModal show={mounted} message="Loading..." />;
   }
 
+  // guard against bad links: the division must belong to this tournament,
+  // and the player must have a result in that division
+  const divFound = tmntFullData.divs.some((div) => div.id === divId);
+  const playerFound = playerResult.player_id !== undefined;
+
+  if (!divFound || !playerFound) {
+    const heading = !divFound ? "Division not found" : "Player results not found";
+    const message = !divFound
+      ? `This tournament has no division with id: ${divId}.`
+      : "No results were found for this player in this division.";
+
+    return (
+      <>
+        <TmntHomeHeader tmntFullData={tmntFullData} selectedTmntPageBtn={tmntPageBtn} />
+        <div className="text-center mt-4">
+          <h4>{heading}</h4>
+          <p>{message}</p>
+          <Link href={`/results/tmnt/${tmntId}/standings`}>Back to standings</Link>
+        </div>
+      </>
+    );
+  }
+
   const averageWidth = 70;
   const fullNameWidth = 150;
   const hdcpWidth = 70;
@@ -172,10 +200,10 @@ const TmntPlayerScoresPage = () => {
 
   return (
     <>
-      <TmntHomeHeader tmntFullData={tmntFullData} />
+      <TmntHomeHeader tmntFullData={tmntFullData} selectedTmntPageBtn={tmntPageBtn} />
 
       <div className="d-flex justify-content-center">
-        <div className="tmnt_table overflow-x-auto">
+        <div className="overflow-x-auto">
           <table className="table table-sm table-striped table-hover w-auto">
             <thead>
               <tr>
@@ -204,7 +232,7 @@ const TmntPlayerScoresPage = () => {
                 {gameNums.map((gameNum) => (
                   <th
                     key={gameNum}
-                    className="text-end align-middle game-header-align"
+                    className="text-center align-middle game-header-align"
                     style={{ width: gameWidth }}
                   >
                     {gameNum}
@@ -261,7 +289,7 @@ const TmntPlayerScoresPage = () => {
                       {playerResult.total}
                     </td>
                     <td className="text-end align-middle">
-                      {playerResult.hdcp * games}
+                      {playerResult.total_hdcp}
                     </td>
                   </>
                 )}
@@ -281,8 +309,8 @@ const TmntPlayerScoresPage = () => {
                     <td className="text-end align-middle">per game hdcp</td>
                     {gameNums.map((gameNum) => (
                       <td key={gameNum} className="text-end align-middle">
-                        {playerResult[tgrHdcpKey(gameNum)] &&
-                          playerResult[tgrGameKey(gameNum)] && (
+                        {playerResult[tgrHdcpKey(gameNum)] != null &&
+                          playerResult[tgrGameKey(gameNum)] != null && (
                             <>
                               {playerResult[tgrHdcpKey(gameNum)] -
                                 playerResult[tgrGameKey(gameNum)]}
@@ -301,7 +329,9 @@ const TmntPlayerScoresPage = () => {
                     <td className="text-end align-middle">Total</td>
                     {gameNums.map((gameNum) => (
                       <td key={gameNum} className="text-end align-middle">
-                        {playerResult[`Game ${gameNum} + Hdcp`]}
+                        {playerResult[tgrGameKey(gameNum)] != null
+                          ? playerResult[tgrHdcpKey(gameNum)]
+                          : null}
                       </td>
                     ))}
                     <td className="text-end align-middle">

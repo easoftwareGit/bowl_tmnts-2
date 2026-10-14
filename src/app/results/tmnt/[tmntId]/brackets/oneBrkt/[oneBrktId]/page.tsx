@@ -1,7 +1,7 @@
 "use client";
 
 import "@/lib/syncfusion-license";
-import React, { JSX, useEffect, useState } from "react";
+import React, { JSX, useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { useParams } from "next/navigation";
@@ -10,11 +10,10 @@ import {
   getOneTmntGameResultsError,
   getOneTmntGameResultsLoadStatus,
   getOneTmntGameResultsRequestedTmntId,
-  getOneTmntGameResultsTmntId,
-  selectOneTmntGameResults,  
+  getOneTmntGameResultsTmntId,    
 } from "@/redux/features/oneTmntGameResults/oneTmntGameResultsSlice";
 import WaitModal from "@/components/modal/waitModal";
-import TmntHomeHeader from "@/app/results/tmntHeader/tmntHomeHeader";
+import TmntHomeHeader, { tmntPageBtnType } from "@/app/results/tmntHeader/tmntHomeHeader";
 import { fullName, getBrktOrElimName } from "@/lib/getName";
 import { getBrktListRecords } from "@/redux/features/tmntFullData/brktListRecordsSelector";
 import { useTmntFullData } from "@/hooks/useTmntFullData";
@@ -24,6 +23,8 @@ import { formatValueSymbSep2Dec } from "@/lib/currency/formatValue";
 import { IntlConfig } from "@/lib/currency/components/CurrencyInputProps";
 import { getLocaleConfig } from "@/lib/currency/components/utils";
 import Link from "next/link";
+import { btDbUuid } from "@/lib/uuid";
+import { missingDataError } from "../../player/[playerId]/playerBrktData";
 import "./oneBrkt.css";
 
 const ic: IntlConfig = {
@@ -32,20 +33,6 @@ const ic: IntlConfig = {
 };
 const localConfig = getLocaleConfig(ic);
 localConfig.prefix = "$";
-
-const missingDataError = (errMsg: string) => {
-  return (
-    <>
-      <div className="row">
-        <div className="col-12">
-          <div className="alert alert-danger" role="alert">
-            {errMsg}
-          </div>
-        </div>
-      </div>
-    </>
-  );
-}
 
 const OneBrktPage = () => {
   const params = useParams();
@@ -58,12 +45,16 @@ const OneBrktPage = () => {
   const resultsLoadStatus = useSelector(getOneTmntGameResultsLoadStatus);  
   const resultsError = useSelector(getOneTmntGameResultsError);
   const resultsTmntId = useSelector(getOneTmntGameResultsTmntId);
-  const tmntResults = useSelector(selectOneTmntGameResults);   
-
+    
   const brktListRecords = useSelector(getBrktListRecords);
 
   const [mounted, setMounted] = useState(false);
 
+  const tmntPageBtn: tmntPageBtnType = "Brackets";
+
+  const hasTmntGamesData =
+    resultsTmntId !== "" && resultsTmntId === tmntId;
+  
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -104,10 +95,7 @@ const OneBrktPage = () => {
   /*********************************************/
   /* render loading/error until data is loaded */
   /*********************************************/  
-  
-  const hasTmntGamesData =
-    resultsTmntId !== "" && resultsTmntId === tmntId;
-    
+
   const failedForThisTmntGames =
     resultsLoadStatus === "failed" &&
     requestedResultsTmntId === tmntId;
@@ -192,13 +180,58 @@ const OneBrktPage = () => {
   if (!brktMatch) {
     return missingDataError(`Bracket with index ${bindex} has no match class.`);
   }
+  bracket.updateMatches() // make sure matches are up to date
   const div = tmntFullData.divs.find((div) => div.id === brkt.div_id);
   if (!div) {
     return missingDataError(`Div with id ${brkt.div_id} not found.`);
   }
 
+  /**
+   * returns a map of player id to player earnings
+   *
+   * @param {matchSeedInfoType[]} topPlayersMi
+   * @return {Map<string, string>}
+   */
+  const getPlayerEarningsMap = (
+    topPlayersMi: matchSeedInfoType[]
+  ): Map<string, string> => {
+    const playerEarningsMap = new Map<string, string>();
+    topPlayersMi.forEach((mi) => {
+      const earnings = bracket.playerEarnings(mi.playerId)
+      const earningsStr = earnings === 0
+        ? ''
+        : formatValueSymbSep2Dec(earnings.toString(), localConfig)
+      playerEarningsMap.set(mi.playerId, earningsStr);
+    })
+    return playerEarningsMap
+  }
+
+  /**
+   * returns JSX for a vertical line spacer
+   *
+   * @param {string} key
+   * @param {boolean} endBorder
+   * @return {JSX.Element}
+   */
+  const lineSpacer = (key: string, endBorder: boolean): JSX.Element => {
+    return (
+      <div
+        key={key}
+        className={endBorder ? "border-end border-dark" : ""}
+      >
+        &nbsp;
+      </div>
+    )
+  }   
+
+  /**
+   * returns JSX for one player in a match
+   *
+   * @param {(matchSeedInfoType | undefined)} playerMatchInfo
+   * @return {JSX.Element}
+   */
   const matchElement = (
-    playerMatchInfo: matchSeedInfoType,    
+    playerMatchInfo: matchSeedInfoType | undefined,
   ): JSX.Element => {     
     let playerName = "";
     let resultClassName = "";
@@ -225,642 +258,88 @@ const OneBrktPage = () => {
           >
             {playerName}
           </span>
-          <span className="text-end text-nowrap pe-1">
-            {scoreStr}&nbsp;
-            <span className={resultClassName}>
-              {matchResult}
+          {!playerMatchInfo?.finalMatch && 
+            <span className="text-end text-nowrap pe-1">
+              {scoreStr}&nbsp;
+              <span className={resultClassName}>
+                {matchResult}
+              </span>
             </span>
-          </span>
+           } 
         </div>
       </>      
     )
   }
 
-  const lineSpacer = (key: string, endBorder: boolean): JSX.Element => {
+  /**
+   * returns JSX for one Game 1 or 2 player.
+   *
+   * @param {(matchSeedInfoType | undefined)} playerMi
+   * @param {number} gameNum
+   * @param {boolean} playerBorderEnd
+   * @return {JSX.Element}
+   */
+  const game1Or2PlayerElement = (
+    playerMi: matchSeedInfoType | undefined,
+    gameNum: number,
+    playerBorderEnd: boolean
+  ): JSX.Element => {
+    const playerClassNameStr = playerBorderEnd
+      ? "align-middle border-end border-bottom border-dark"
+      : "align-middle border-bottom border-dark";
+    const keyStr = playerMi != null
+      ? gameNum + playerMi.playerId
+      : gameNum + btDbUuid('ply')
     return (
-      <div
-        key={key}
-        className={endBorder ? "border-end border-dark" : ""}
-      >
-        &nbsp;
-      </div>
+      <>
+        <div
+          key={keyStr}
+          className={playerClassNameStr}
+        >
+          {matchElement(playerMi)}
+        </div>
+      </>
     )
-  } 
+  }
 
+  /**
+   * returns JSX for one Game 1 match.
+   *
+   * @param {matchSeedInfoType[]} matchInfo
+   * @param {matchNumberType} matchNum
+   * @return {JSX.Element}
+   */
   const game1MatchElement = (
     matchInfo: matchSeedInfoType[],
     matchNum: matchNumberType
   ): JSX.Element => {     
-    const player1mi = matchInfo[0];
-    const player2mi = matchInfo[1];
+    const midSpacerNum = matchNum === 0 
+      ? 2
+      : matchNum === 1
+        ? 6
+        : matchNum === 2
+          ? 10
+          : 14
+    const postSpacerNum = midSpacerNum + 2    
     return (
       <>
-        <div
-          key={matchNum + player1mi.playerId}
-          className="align-middle border-bottom border-dark"
-        >
-          {matchElement(player1mi)}
-        </div>
-        {lineSpacer(matchNum + 'spacer1', true)}
-        <div
-          key={matchNum + player2mi.playerId}
-          className="align-middle border-bottom border-end border-dark"
-        >
-          {matchElement(player2mi)}
-        </div>
-        {/* spacer row unless at match 3 */}
-        {matchNum < 3 && 
+        {game1Or2PlayerElement(matchInfo[0], 1, false)}
+        {lineSpacer(matchNum + 'spacer' + midSpacerNum, true)}
+        {game1Or2PlayerElement(matchInfo[1], 1, true)}
+        {matchNum < 3 &&
           <>
-            {lineSpacer(matchNum + 'spacer2', false)}
+            {lineSpacer(matchNum + 'spacer' + postSpacerNum, false)}
           </>
         }
       </>      
     )
   }
 
-  const game2MatchElementTopPlayersMi2 = (
-    topPlayersMi: matchSeedInfoType[],
-    matchNum: matchNumberType
-  ): JSX.Element => {
-    return (
-      <>
-        <div
-          key={matchNum + topPlayersMi[0].playerId}
-          className="align-middle border-bottom border-dark"
-        >
-          {matchElement(topPlayersMi[0])}
-        </div>
-        {lineSpacer(matchNum + 'spacer2', true)}
-        <div
-          key={matchNum + topPlayersMi[1].playerId}
-          className="align-middle border-end border-bottom border-dark"
-        >
-          {matchElement(topPlayersMi[1])}
-        </div>
-        {lineSpacer(matchNum + 'spacer4', true)}
-      </>
-    )
-  }
-
-  const game2MatchElementTopPlayersMiNot2 = (
-    topPlayersMi: matchSeedInfoType[],
-    matchNum: matchNumberType
-  ): JSX.Element => {
-    return (
-      <>
-        {lineSpacer(matchNum + 'spacer1', false)}
-        <div
-          key={matchNum + 'topPlayer'}
-          className="align-middle border-bottom border-dark"
-        >
-          {matchElement(topPlayersMi[0])}
-        </div>
-        {lineSpacer(matchNum + 'spacer3', true)}
-        {lineSpacer(matchNum + 'spacer4', true)}
-      </>
-    )
-  }
-
-  const game2MatchElementBottomPlayersMi2 = (
-    bottomPlayersMi: matchSeedInfoType[],
-    matchNum: matchNumberType
-  ): JSX.Element => {
-    return (
-      <>
-        <div
-          key={matchNum + bottomPlayersMi[0].playerId}
-          className="align-middle border-end border-bottom border-dark"
-        >
-          {matchElement(bottomPlayersMi[0])}
-        </div>
-        {lineSpacer(matchNum + 'spacer6', true)}
-        <div
-          key={matchNum + bottomPlayersMi[1].playerId}
-          className="align-middle border-end border-bottom border-dark"
-        >
-          {matchElement(bottomPlayersMi[1])}
-        </div>
-        {matchNum === 4 &&
-          <>
-            {lineSpacer(matchNum + 'spacer8', false)}
-          </>
-        }
-      </>
-    )
-  }
-
-  const game2MatchElementBottomPlayersMiNot2 = (
-    bottomPlayersMi: matchSeedInfoType[],
-    matchNum: matchNumberType
-  ): JSX.Element => {
-    return (
-      <>
-        {lineSpacer(matchNum + 'spacer5', true)}
-        <div
-          key={matchNum + 'bottomPlayer'}
-          className="align-middle border-end border-bottom border-dark"
-        >
-          {matchElement(bottomPlayersMi[0])}
-        </div>
-        {matchNum === 4 &&
-          <>
-            {lineSpacer(matchNum + 'spacer7', false)}
-            {lineSpacer(matchNum + 'spacer8', false)}
-          </>
-        }        
-      </>
-    )
-  }
-
-  const game2MatchElement = (
-    matchInfo: matchSeedInfoType[],
-    matchNum: matchNumberType
-  ): JSX.Element => {
-    const topPlayers = brktMatch.getPlayersForPosition(matchNum, 0);
-    const bottomPlayers = brktMatch.getPlayersForPosition(matchNum, 1);
-    const topPlayersMi = matchInfo.filter((mi) => topPlayers.includes(mi.playerId));
-    const bottomPlayersMi = matchInfo.filter((mi) => bottomPlayers.includes(mi.playerId));
-    
-    return (
-      <>
-        {topPlayersMi.length === 2
-          ? (
-            <>
-              {game2MatchElementTopPlayersMi2(topPlayersMi, matchNum)}
-            </>
-          ) : (
-            <>
-              {game2MatchElementTopPlayersMiNot2(topPlayersMi, matchNum)}
-            </>
-          )
-        }
-        {bottomPlayersMi.length === 2
-          ? (
-            <>
-              {game2MatchElementBottomPlayersMi2(bottomPlayersMi, matchNum)}
-            </>
-          ) : (
-            <>
-              {game2MatchElementBottomPlayersMiNot2(bottomPlayersMi, matchNum)}
-            </>
-        )}        
-      </>      
-    )
-  }
-
-  const getPlayerEarningsMap = (
-    topPlayersMi: matchSeedInfoType[]
-  ): Map<string, string> => {
-    const playerEarningsMap = new Map<string, string>();
-    topPlayersMi.forEach((mi) => {
-      const earnings = bracket.playerEarnings(mi.playerId)
-      const earningsStr = earnings === 0
-        ? ''
-        : formatValueSymbSep2Dec(earnings.toString(), localConfig)
-      playerEarningsMap.set(mi.playerId, earningsStr);
-    })
-    return playerEarningsMap
-  }
-
-  const game3MatchElementTopPlayersMi4 = (
-    topPlayersMi: matchSeedInfoType[]    
-  ): JSX.Element => {    
-
-    const playerEarningsMap = getPlayerEarningsMap(topPlayersMi);
-    return (
-      <>
-        <div
-          key={'6' + topPlayersMi[0].playerId}
-          className="align-middle border-bottom border-dark"
-        >
-          {matchElement(topPlayersMi[0])}
-        </div>
-        <div
-          key={'6' + 'spacer2'}
-          className="text-end align-middle border-end border-dark text-success pe-1"
-        >
-          {playerEarningsMap.get(topPlayersMi[0].playerId)}
-        </div>
-        <div
-          key={'6' + topPlayersMi[1].playerId}
-          className="align-middle border-end border-bottom border-dark"
-        >
-          {matchElement(topPlayersMi[1])}
-        </div>
-        <div
-          key={'6' + 'spacer4'}
-          className="text-end align-middle border-end border-dark text-success pe-1"
-        >
-          {playerEarningsMap.get(topPlayersMi[1].playerId)}
-        </div>
-        <div
-          key={'6' + topPlayersMi[2].playerId}
-          className="align-middle border-end border-bottom border-dark"
-        >
-          {matchElement(topPlayersMi[2])}
-        </div>
-        <div
-          key={'6' + 'spacer6'}
-          className="text-end align-middle border-end border-dark text-success pe-1"
-        >
-          {playerEarningsMap.get(topPlayersMi[2].playerId)}
-        </div>
-        <div
-          key={'6' + topPlayersMi[3].playerId}
-          className="align-middle border-end border-bottom border-dark"
-        >
-          {matchElement(topPlayersMi[3])}
-        </div>
-        <div
-          key={'6' + 'spacer8'}
-          className="text-end align-middle border-end border-dark text-success pe-1"
-        >
-          {playerEarningsMap.get(topPlayersMi[3].playerId)}
-        </div>
-      </>
-    )
-  }
-
-  const game3MatchElementTopPlayersMi3 = (
-    topPlayersMi: matchSeedInfoType[]    
-  ): JSX.Element => {    
-
-    const playerEarningsMap = getPlayerEarningsMap(topPlayersMi);
-    return (
-      <>
-        {lineSpacer('6spacer1', false)}
-        <div
-          key={'6' + topPlayersMi[0].playerId}
-          className="align-middle border-bottom border-dark"
-        >
-          {matchElement(topPlayersMi[0])}
-        </div>
-        <div
-          key={'6' + 'spacer3'}
-          className="text-end align-middle border-end border-dark text-success pe-1"
-        >
-          {playerEarningsMap.get(topPlayersMi[0].playerId)}
-        </div>
-        <div
-          key={'6' + topPlayersMi[1].playerId}
-          className="align-middle border-end border-bottom border-dark"
-        >
-          {matchElement(topPlayersMi[1])}
-        </div>
-        <div
-          key={'6' + 'spacer5'}
-          className="text-end align-middle border-end border-dark text-success pe-1"
-        >
-          {playerEarningsMap.get(topPlayersMi[1].playerId)}
-        </div>
-        <div
-          key={'6' + topPlayersMi[2].playerId}
-          className="align-middle border-end border-bottom border-dark"
-        >
-          {matchElement(topPlayersMi[2])}
-        </div>
-        <div
-          key={'6' + 'spacer7'}
-          className="text-end align-middle border-end border-dark text-success pe-1"
-        >
-          {playerEarningsMap.get(topPlayersMi[2].playerId)}
-        </div>
-        {lineSpacer('6spacer8', true)}
-      </>
-    )
-  }
-
-  const game3MatchElementTopPlayersMi2 = (
-    topPlayersMi: matchSeedInfoType[]    
-  ): JSX.Element => {    
-
-    const playerEarningsMap = getPlayerEarningsMap(topPlayersMi);
-    return (
-      <>
-        {lineSpacer('6spacer1', false)}
-        {lineSpacer('6spacer2', false)}
-        <div
-          key={'6' + topPlayersMi[0].playerId}
-          className="align-middle border-bottom border-dark"
-        >
-          {matchElement(topPlayersMi[0])}
-        </div>
-        <div
-          key={'6' + 'spacer4'}
-          className="text-end align-middle border-end border-dark text-success pe-1"
-        >
-          {playerEarningsMap.get(topPlayersMi[0].playerId)}
-        </div>
-        <div
-          key={'6' + topPlayersMi[1].playerId}
-          className="align-middle border-end border-bottom border-dark"
-        >
-          {matchElement(topPlayersMi[1])}
-        </div>
-        <div
-          key={'6' + 'spacer6'}
-          className="text-end align-middle border-end border-dark text-success pe-1"
-        >
-          {playerEarningsMap.get(topPlayersMi[1].playerId)}
-        </div>
-        {lineSpacer('6spacer7', true)}
-        {lineSpacer('6spacer8', true)}        
-      </>
-    )
-  }
-
-  const game3MatchElementTopPlayersMiLessThan2 = (
-    topPlayersMi: matchSeedInfoType[]
-  ): JSX.Element => {
-    const runnerUpAmntStr = formatValueSymbSep2Dec(bracket.runnerUpAmount.toString(), localConfig);
-
-    return (
-      <>
-        {lineSpacer('6spacer1', false)}
-        {lineSpacer('6spacer2', false)}
-        {lineSpacer('6spacer3', false)}
-        <div
-          key={'6' + topPlayersMi[0].playerId}
-          className="align-middle border-bottom border-dark"
-        >
-          {matchElement(topPlayersMi[0])}
-        </div>
-        {topPlayersMi[0].result === "L"
-          ? (
-            <>
-              <div
-                key={'6' + topPlayersMi[0].playerId + 'amount'}
-                className="text-end align-middle border-end border-dark text-success pe-1"
-              >
-                {runnerUpAmntStr}
-              </div>
-              {lineSpacer('6spacer6', true)}
-              {lineSpacer('6spacer7', true)}
-              {lineSpacer('6spacer8', true)}
-            </>
-          ) : (
-            <>
-              {lineSpacer('6spacer5', true)}
-              {lineSpacer('6spacer6', true)}
-              {lineSpacer('6spacer7', true)}
-              {lineSpacer('6spacer8', true)}
-            </>
-          )
-        }
-      </>
-    )
-  }
-
-  const game3MatchElementBottomPlayersMi4 = (
-    bottomPlayersMi: matchSeedInfoType[]    
-  ): JSX.Element => {    
-
-    const playerEarningsMap = getPlayerEarningsMap(bottomPlayersMi);
-    return (
-      <>
-        <div
-          key={'6' + bottomPlayersMi[0].playerId}
-          className="align-middle border-end border-bottom border-dark"
-        >
-          {matchElement(bottomPlayersMi[0])}
-        </div>
-        <div
-          key={'6' + 'spacer10'}
-          className="text-end align-middle border-end border-dark text-success pe-1"
-        >
-          {playerEarningsMap.get(bottomPlayersMi[0].playerId)}
-        </div>
-        <div
-          key={'6' + bottomPlayersMi[1].playerId}
-          className="align-middle border-end border-bottom border-dark"
-        >
-          {matchElement(bottomPlayersMi[1])}
-        </div>
-        <div
-          key={'6' + 'spacer12'}
-          className="text-end align-middle border-end border-dark text-success pe-1"
-        >
-          {playerEarningsMap.get(bottomPlayersMi[1].playerId)}
-        </div>
-        <div
-          key={'6' + bottomPlayersMi[2].playerId}
-          className="align-middle border-end border-bottom border-dark"
-        >
-          {matchElement(bottomPlayersMi[2])}
-        </div>
-        <div
-          key={'6' + 'spacer14'}
-          className="text-end align-middle border-end border-dark text-success pe-1"
-        >
-          {playerEarningsMap.get(bottomPlayersMi[2].playerId)}
-        </div>
-        <div
-          key={'6' + bottomPlayersMi[3].playerId}
-          className="align-middle border-end border-bottom border-dark"
-        >
-          {matchElement(bottomPlayersMi[3])}
-        </div>
-        <div
-          key={'6' + 'spacer16'}
-          className="text-end align-middle border-dark text-success pe-1"
-        >
-          {playerEarningsMap.get(bottomPlayersMi[3].playerId)}
-        </div>
-      </>
-    )
-  }
-
-  const game3MatchElementBottomPlayersMi3 = (
-    bottomPlayersMi: matchSeedInfoType[]    
-  ): JSX.Element => {    
-
-    const playerEarningsMap = getPlayerEarningsMap(bottomPlayersMi);
-    return (
-      <>
-        {lineSpacer('6spacer9', true)}
-        <div
-          key={'6' + bottomPlayersMi[0].playerId}
-          className="align-middle border-end border-bottom border-dark"
-        >
-          {matchElement(bottomPlayersMi[0])}
-        </div>
-        <div
-          key={'6' + 'spacer11'}
-          className="text-end align-middle border-end border-dark text-success pe-1"
-        >
-          {playerEarningsMap.get(bottomPlayersMi[0].playerId)}
-        </div>
-        <div
-          key={'6' + bottomPlayersMi[1].playerId}
-          className="align-middle border-end border-bottom border-dark"
-        >
-          {matchElement(bottomPlayersMi[1])}
-        </div>
-        <div
-          key={'6' + 'spacer13'}
-          className="text-end align-middle border-end border-dark text-success pe-1"
-        >
-          {playerEarningsMap.get(bottomPlayersMi[1].playerId)}
-        </div>
-        <div
-          key={'6' + bottomPlayersMi[2].playerId}
-          className="align-middle border-end border-bottom border-dark"
-        >
-          {matchElement(bottomPlayersMi[2])}
-        </div>
-        <div
-          key={'6' + 'spacer15'}
-          className="text-end align-middle border-end border-dark text-success pe-1"
-        >
-          {playerEarningsMap.get(bottomPlayersMi[2].playerId)}
-        </div>
-      </>
-    )
-  }  
-
-  const game3MatchElementBottomPlayersMi2 = (
-    bottomPlayersMi: matchSeedInfoType[]    
-  ): JSX.Element => {    
-    const playerEarningsMap = getPlayerEarningsMap(bottomPlayersMi);
-    return (
-      <>
-        {lineSpacer('6spacer9', true)}
-        {lineSpacer('6spacer10', true)}
-        <div
-          key={'6' + bottomPlayersMi[0].playerId}
-          className="align-middle border-bottom border-end border-dark"
-        >
-          {matchElement(bottomPlayersMi[0])}
-        </div>
-        <div
-          key={'6' + 'spacer12'}
-          className="text-end align-middle border-end border-dark text-success pe-1"
-        >
-          &nbsp;{playerEarningsMap.get(bottomPlayersMi[0].playerId)}
-        </div>
-        <div
-          key={'6' + bottomPlayersMi[1].playerId}
-          className="align-middle border-end border-bottom border-dark"
-        >
-          {matchElement(bottomPlayersMi[1])}
-        </div>
-        <div
-          key={'6' + 'spacer14'}
-          className="text-end align-middle border-dark text-success pe-1"
-        >
-          &nbsp;{playerEarningsMap.get(bottomPlayersMi[1].playerId)}
-        </div>
-      </>
-    )
-  } 
-
-  const game3MatchElementBottomPlayersMiLessThan2 = (
-    bottomPlayersMi: matchSeedInfoType[]
-  ): JSX.Element => {
-    const runnerUpAmntStr = formatValueSymbSep2Dec(bracket.runnerUpAmount.toString(), localConfig);
-
-    return (
-      <>
-        {lineSpacer('6spacer9', true)}
-        {lineSpacer('6spacer10', true)}
-        {lineSpacer('6spacer11', true)}      
-        <div
-          key={'6' + bottomPlayersMi[0].playerId}
-          className="align-middle border-end border-bottom border-dark"
-        >
-          {matchElement(bottomPlayersMi[0])}
-        </div> 
-        {bottomPlayersMi[0].result === "L" &&
-          <>
-            <div
-              key={'6' + bottomPlayersMi[0].playerId + 'amount'}
-              className="text-end align-middle border-dark text-success pe-1"
-            >
-              {runnerUpAmntStr}
-            </div>
-          </>
-        }                          
-      </>
-    )
-  }
-
-  const game3MatchElement = (
-    matchInfo: matchSeedInfoType[],    
-  ): JSX.Element => {
-    // game 3 is match 6
-    const topPlayers = brktMatch.getPlayersForPosition(6, 0);
-    const bottomPlayers = brktMatch.getPlayersForPosition(6, 1);
-    const topPlayersMi = matchInfo.filter((mi) => topPlayers.includes(mi.playerId));
-    const bottomPlayersMi = matchInfo.filter((mi) => bottomPlayers.includes(mi.playerId));    
-
-    return (
-      <>
-        {topPlayersMi.length === 4
-          ? (
-            <>
-              {game3MatchElementTopPlayersMi4(topPlayersMi)}
-            </>
-          ) : (
-            <>
-              {topPlayersMi.length === 3
-                ? (
-                  <>
-                    {game3MatchElementTopPlayersMi3(topPlayersMi)}
-                  </>
-                ) : (
-                  <>
-                    {topPlayersMi.length === 2
-                      ? (
-                        <>
-                          {game3MatchElementTopPlayersMi2(topPlayersMi)}
-                        </>
-                      ) : (
-                        <>
-                          {game3MatchElementTopPlayersMiLessThan2(topPlayersMi)}
-                        </>
-                      )
-                    }
-                  </>
-                )
-              }
-            </>
-          )
-        }
-        {bottomPlayersMi.length === 4
-          ? (
-            <>
-              {game3MatchElementBottomPlayersMi4(bottomPlayersMi)}
-            </>
-          ) : (
-            <>
-              {bottomPlayersMi.length === 3
-                ? (
-                  <>
-                    {game3MatchElementBottomPlayersMi3(bottomPlayersMi)}
-                  </>
-                ) : (
-                  <>
-                    {bottomPlayersMi.length === 2
-                      ? (
-                        <>
-                          {game3MatchElementBottomPlayersMi2(bottomPlayersMi)}
-                        </>
-                      ) : (
-                        <>
-                          {game3MatchElementBottomPlayersMiLessThan2(bottomPlayersMi)}
-                        </>
-                      )
-                    }
-                  </>
-                )
-              }
-            </>
-          )
-        }
-      </>      
-    )
-  }
-
+  /**
+   * Render all Game 1 matches.
+   *
+   * @return {JSX.Element}
+   */
   const game1Matches = (): JSX.Element => {
     return (
       <>
@@ -878,6 +357,116 @@ const OneBrktPage = () => {
     )
   }
 
+  /**
+   * Render one side of a Game 2 match.
+   *
+   * The top side fills four rows, including trailing spacers.
+   * The bottom side ends immediately after its last player.
+   * 
+   * @param {matchSeedInfoType[]} playersMi - Array of player match info
+   * @param {matchNumberType} matchNum - Game 2 match number
+   * @param {boolean} isTop - True for top side
+   * 
+   * @returns JSX
+   */
+  const game2MatchSideElement = (
+    playersMi: matchSeedInfoType[],
+    matchNum: matchNumberType,
+    isTop: boolean
+  ): JSX.Element => {
+    // Keep one blank player slot when no players have advanced yet.
+    const playerSlots = Math.max(playersMi.length, 1);
+    const spacerRows = 2 - playerSlots;
+
+    const sideKey = isTop ? "top" : "bottom";
+    const keyPrefix = `game2-${matchNum}-${sideKey}`;
+
+    return (
+      <>
+        {/* Leading spacers have a right border only on the bottom side. */}
+        {Array.from({ length: spacerRows }, (_, index) =>
+          lineSpacer(`${keyPrefix}-before-${index}`, !isTop)
+        )}
+
+        {Array.from({ length: playerSlots }, (_, index) => {
+          const playerMi = playersMi[index];
+
+          // The first top player starts the vertical connector.
+          const playerBorderEnd = !isTop || index > 0;
+
+          // Top players always have a spacer afterward.
+          // Bottom players have one only between players.
+          const showSpacerAfter = isTop || index < playerSlots - 1;
+
+          return (
+            <React.Fragment
+              key={`${keyPrefix}-${playerMi?.playerId ?? "blank"}`}
+            >
+              {game1Or2PlayerElement(
+                playerMi,
+                2,
+                playerBorderEnd
+              )}
+
+              {showSpacerAfter &&
+                lineSpacer(`${keyPrefix}-between-${index}`, true)}
+            </React.Fragment>
+          );
+        })}
+
+        {/* Fill the remaining top-side rows. */}
+        {isTop &&
+          Array.from({ length: spacerRows }, (_, index) =>
+            lineSpacer(`${keyPrefix}-after-${index}`, true)
+          )}
+      </>
+    );
+  };
+
+  /**
+   * returns JSX for one Game 2 match.
+   *
+   * @param {matchSeedInfoType[]} matchInfo - Array of player match info
+   * @param {matchNumberType} matchNum - Game 2 match number
+   * @return {JSX.Element}
+   */
+  const game2MatchElement = (
+    matchInfo: matchSeedInfoType[],
+    matchNum: matchNumberType
+  ): JSX.Element => {
+    const topPlayers = brktMatch.getPlayersForPosition(matchNum, 0);
+    const bottomPlayers = brktMatch.getPlayersForPosition(matchNum, 1);
+
+    const topPlayersMi = matchInfo.filter((mi) =>
+      topPlayers.includes(mi.playerId)
+    );
+    const bottomPlayersMi = matchInfo.filter((mi) =>
+      bottomPlayers.includes(mi.playerId)
+    );
+
+    const bottomPlayerSlots = Math.max(bottomPlayersMi.length, 1);
+
+    // Separate match 4 from match 5 using the original layout's spacing.
+    const betweenMatchesSpacerRows = 3 - bottomPlayerSlots;
+
+    return (
+      <>
+        {game2MatchSideElement(topPlayersMi, matchNum, true)}
+        {game2MatchSideElement(bottomPlayersMi, matchNum, false)}
+
+        {matchNum === 4 &&
+          Array.from({ length: betweenMatchesSpacerRows }, (_, index) =>
+            lineSpacer(`game2-${matchNum}-after-match-${index}`, false)
+          )}
+      </>
+    );
+  };  
+  
+  /**
+   * Render all Game 2 matches.
+   *
+   * @return {JSX.Element}
+   */
   const game2Matches = (): JSX.Element => {
     return (
       <>
@@ -895,6 +484,154 @@ const OneBrktPage = () => {
     )
   }
 
+  /**
+   * returns a Game 3 player element
+   *
+   * @param {(matchSeedInfoType | undefined)} playerMi
+   * @param {Map<string, string>} playerEarningsMap
+   * @param {boolean} playerBorderEnd
+   * @param {boolean} resultBorderEnd
+   * @param {number} lineNum
+   * @return {JSX.Element}
+   */
+  const game3PlayerElement = (
+    playerMi: matchSeedInfoType | undefined,
+    playerEarningsMap: Map<string, string>,
+    playerBorderEnd: boolean,
+    resultBorderEnd: boolean,
+    lineNum: number
+  ): JSX.Element => {
+    const playerClassNameStr = playerBorderEnd
+      ? "align-middle border-end border-bottom border-dark"
+      : "align-middle border-bottom border-dark";
+    const resultClassNameStr = resultBorderEnd
+      ? "text-end align-middle border-end border-dark text-success pe-1"
+      : "text-end align-middle border-dark text-success pe-1";
+    const keyStr = playerMi != null
+      ? '6' + playerMi.playerId
+      : '6' + btDbUuid('ply')    
+    return (
+      <>
+        <div
+          key={keyStr}
+          className={playerClassNameStr}
+        >
+          {matchElement(playerMi)}
+        </div>
+        <div
+          key={'6' + 'spacer' + (lineNum + 1)}
+          className={resultClassNameStr}          
+        >
+          {playerMi != null && playerEarningsMap.get(playerMi.playerId) !== "" && playerMi.result === "L"
+            ? playerEarningsMap.get(playerMi.playerId)
+            : ""
+          }
+        </div>
+      </>
+    )
+  }
+
+  /**
+   * Render one side of the final match.
+   *
+   * Each player occupies two rows: player information and earnings.
+   * The top side includes trailing spacers to fill its eight rows.
+   * The bottom side ends immediately after the last earnings row.
+   * 
+   * @param {matchSeedInfoType[]} playersMi - Array of player match info
+   * @param {boolean} isTop - True if this is the top side
+   * 
+   * @returns JSX
+   */
+  const game3MatchSideElement = (
+    playersMi: matchSeedInfoType[],
+    isTop: boolean
+  ): JSX.Element => {
+    const playerEarningsMap = getPlayerEarningsMap(playersMi);
+
+    // Keep one blank player slot when this side has no finalists yet.
+    const playerSlots = Math.max(playersMi.length, 1);
+    const spacerRows = 4 - playerSlots;
+
+    const sideKey = isTop ? "top" : "bottom";
+    const firstSideLine = isTop ? 1 : 9;
+
+    return (
+      <>
+        {/* Leading spacers have a right border only on the bottom side. */}
+        {Array.from({ length: spacerRows }, (_, index) =>
+          lineSpacer(`game3-${sideKey}-before-${index}`, !isTop)
+        )}
+
+        {Array.from({ length: playerSlots }, (_, index) => {
+          const playerMi = playersMi[index];
+
+          // Each earlier player occupies two rows.
+          const playerLineNum = firstSideLine + spacerRows + index * 2;
+
+          // The first top player starts the vertical connector.
+          const playerBorderEnd = !isTop || index > 0;
+
+          // The connector ends before the last bottom earnings row.
+          const resultBorderEnd = isTop || index < playerSlots - 1;
+
+          return (
+            <React.Fragment
+              key={`game3-${sideKey}-${playerMi?.playerId ?? "blank"}`}
+            >
+              {game3PlayerElement(
+                playerMi,
+                playerEarningsMap,
+                playerBorderEnd,
+                resultBorderEnd,
+                playerLineNum
+              )}
+            </React.Fragment>
+          );
+        })}
+
+        {/* Only the top side needs trailing spacers. */}
+        {isTop &&
+          Array.from({ length: spacerRows }, (_, index) =>
+            lineSpacer(`game3-${sideKey}-after-${index}`, true)
+          )}
+      </>
+    );
+  };
+
+  /**
+   * returns JSX for a Game 3 match.
+   *
+   * @param {matchSeedInfoType[]} matchInfo
+   * @return {JSX.Element}
+   */
+  const game3MatchElement = (
+    matchInfo: matchSeedInfoType[]
+  ): JSX.Element => {
+    // Game 3 is match 6.
+    const topPlayers = brktMatch.getPlayersForPosition(6, 0);
+    const bottomPlayers = brktMatch.getPlayersForPosition(6, 1);
+
+    const topPlayersMi = matchInfo.filter((mi) =>
+      topPlayers.includes(mi.playerId)
+    );
+    const bottomPlayersMi = matchInfo.filter((mi) =>
+      bottomPlayers.includes(mi.playerId)
+    );
+
+    return (
+      <>
+        {game3MatchSideElement(topPlayersMi, true)}
+        {game3MatchSideElement(bottomPlayersMi, false)}
+      </>
+    );
+  };
+
+  /**
+   * Render Game 3 match.
+   *
+   * @return {JSX.Element}
+   */
   const game3Match = (): JSX.Element => {
     // game 3 has only match 6
     const players = bracket.match!.getMatchPlayers(6 as matchNumberType);
@@ -907,37 +644,100 @@ const OneBrktPage = () => {
     )
   }
 
-  const winner = (): JSX.Element => {
-    const players = bracket.match!.getMatchPlayers(6); // final match
-    const squadGameNum = bracket.parent!.squadGameNumber(3);
-    const matchInfo = bracket.match!.getMatchInfo(players, squadGameNum);
-    const winnerMi = matchInfo.find((info) => info.result === "W")!;
-    const winnerAmntStr = formatValueSymbSep2Dec(bracket.winnerAmount.toString(), localConfig);
+  /**
+   * returns JSX for one Game 3 player.
+   *
+   * @param {matchSeedInfoType} playerMi
+   * @param {Map<string, string>} playerEarningsMap
+   * @param {number} lineNum
+   * @return {*}  {JSX.Element}
+   */
+  const winnerPlayerElement = (
+    playerMi: matchSeedInfoType,
+    playerEarningsMap: Map<string, string>,    
+    lineNum: number
+  ): JSX.Element => {
     return (
       <>
-        {[1, 2, 3, 4, 5, 6, 7].map((spacer) => { 
-          return (
-            <div key={'7spacer' + spacer}>
-              &nbsp;
-            </div>
-          )
-        })}
         <div
-          key={'7' + winnerMi.playerId}
+          key={'W' + playerMi.playerId}
           className="align-middle border-bottom border-dark"
         >
-          {matchElement(winnerMi)}
+          {matchElement(playerMi)}
         </div>
         <div
-          key={'7' + winnerMi.playerId + 'amount'}
-          className="text-end align-middle text-success pe-1"
+          key={'W' + 'spacer' + (lineNum + 1)}
+          className="text-end align-middle border-dark text-success pe-1"
         >
-          {winnerAmntStr}
+          {playerEarningsMap.get(playerMi.playerId)}
         </div>
-      </>      
+      </>
     )
   }
 
+  /**
+   * renders Game 3 winner(s).
+   *
+   * @return {JSX.Element}
+   */
+  const winner = (): JSX.Element => {
+    const players = brktMatch.getMatchPlayers(6);
+    const squadGameNum = bracket.parent!.squadGameNumber(3);
+    const matchInfo = brktMatch.getMatchInfo(players, squadGameNum);
+
+    const winnersMi = matchInfo.filter((info) => info.result === "W" || info.result === "T");
+    winnersMi.forEach((info) => info.finalMatch = true);
+    const playerEarningsMap = getPlayerEarningsMap(winnersMi);
+
+    // Each winner occupies two rows: player information and prize amount.
+    // Center the group within the bracket's 15-row layout. row 8 is middle.
+    const blankRowsPerSide = 8 - winnersMi.length;
+    const blankPlayerMi: matchSeedInfoType = {
+      playerId: btDbUuid('ply'),
+      first_name: '',
+      last_name: '',
+      average: undefined,
+      score: undefined,
+      hdcp: undefined,
+      total: undefined,
+      result: undefined, 
+      finalMatch: true,
+    }
+    return (
+      <>
+        {winnersMi.length === 0
+          ? (
+            <>
+              {Array.from({ length: 7 }, (_, index) =>
+                lineSpacer(`wSpacer${index}`, false)
+              )}
+              {winnerPlayerElement(blankPlayerMi, playerEarningsMap, 8)}
+            </>
+          ) : (
+            <>  
+              {Array.from({ length: blankRowsPerSide }, (_, index) =>
+                lineSpacer(`wSpacer-${index}`, false)
+              )}
+
+              {winnersMi.map((playerMi, index) => {
+                const playerLineNum = blankRowsPerSide + index * 2 + 1;
+                
+                return (
+                  <React.Fragment key={playerMi.playerId}>
+                    {winnerPlayerElement(
+                      playerMi,
+                      playerEarningsMap,
+                      playerLineNum
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </>
+          )
+        }
+      </>
+    );
+  };
 
   const brktMatchColWidth = "300px";
 
@@ -951,15 +751,15 @@ const OneBrktPage = () => {
 
   return (
     <>
-      <TmntHomeHeader tmntFullData={tmntFullData} /> 
+      <TmntHomeHeader tmntFullData={tmntFullData} selectedTmntPageBtn={tmntPageBtn} /> 
 
       <div className="container-fluid">
         <div
-          data-testid="GamesOuterWrapper"
+          data-testid="BrktProgressOuterWrapper"
           className="one-brkt-progress-outer"
         >      
           <div
-            data-testid="GamesInnerWrapper"
+            data-testid="BrktProgressInnerWrapper"
             className="one-brkt-progress-inner"
           >    
             {/* header for the bracket */}
@@ -1012,9 +812,12 @@ const OneBrktPage = () => {
               </div>
 
               {/* winner */}
-              {/* <div style={{ width: brktMatchColWidth }}>
+              <div
+                className="one-brkt-game-column"
+                style={{ width: brktMatchColWidth }}
+              >
                 {winner()}
-              </div> */}
+              </div>
             </div>
           </div>
         </div>

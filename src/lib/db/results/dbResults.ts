@@ -2,6 +2,7 @@ import { publicApi } from "@/lib/api/axios";
 import { baseResultsApi } from "@/lib/api/apiPaths";
 import { testBaseResultsApi } from "../../../../test/testApi";
 import { isValidBtDbId } from "@/lib/validation/validation";
+import { calcNumGames } from "@/components/tmnts/games";
 import {
   tmntGameResult,
   tgrGameKey,
@@ -17,31 +18,26 @@ const url = process.env.NODE_ENV === "test" && testBaseResultsApi
 const gameTmntUrl = url + "/games/tmnt/";
 
 /**
- * gets the number of games in the tournament
- *
- * @param {tmntGameResult[]} gameResults
- * @return {*} 
- */
-const gameCount = (gameResults: tmntGameResult[]) => {
-  const gameNumRegex = /^Game \d+$/;
-  const gameKeys = Object.keys(gameResults[0]).filter((key) => gameNumRegex.test(key));
-  return gameKeys.length;
-};
-
-/**
  * gets the scores + hdcp for each game, only if there is a score
  *
  * @param {tmntGameResult[]} gameResults - raw data from db
+ * @param {boolean} maxScore300 - if true, max score in a game is 300
  * @return {tmntGameResult[]} - data with scores + hdcp and total + total hdcp
  */
-const getHdcpGameScores = (gameResults: tmntGameResult[]): tmntGameResult[] => {
-  const numGames = gameCount(gameResults);
+const getHdcpGameScores = (
+  gameResults: tmntGameResult[],
+  // maxScore300: boolean = false,
+): tmntGameResult[] => {
+  const numGames = calcNumGames(gameResults);
   gameResults.forEach((gameResult) => {
     let totalHdcp = 0;    
     for (let i = 1; i <= numGames; i++) {
       const score = gameResult[tgrGameKey(i)];
       if (score != null) {
         gameResult[tgrHdcpKey(i)] = score + gameResult.hdcp;
+
+        // check for if handicap game is more than 300
+
         totalHdcp += gameResult.hdcp;        
       }      
     }
@@ -55,11 +51,13 @@ const getHdcpGameScores = (gameResults: tmntGameResult[]): tmntGameResult[] => {
  * gets all game results for a tmnt
  *
  * @param {string} tmntId - id of tmnt to get game results for
+ * @param {boolean} maxScore300 - if true, max score in a game is 300
  * @returns {tmntGameResult[] | null} - array of game results or null
  * @throws {Error} - if tmntId is invalid or API call fails
  */
 export const getGameResultsForTmnt = async (
-  tmntId: string
+  tmntId: string,
+  // maxScore300: boolean = false
 ): Promise<tmntGameResult[] | null> => {
   if (!isValidBtDbId(tmntId, "tmt")) {
     throw new Error("Invalid tmnt id");

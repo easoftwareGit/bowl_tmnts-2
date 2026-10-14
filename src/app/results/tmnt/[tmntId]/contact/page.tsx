@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import { useParams } from "next/navigation";
@@ -10,7 +10,7 @@ import {
   getUserRequestId
 } from "@/redux/features/user/userSlice";
 import WaitModal from "@/components/modal/waitModal";
-import TmntHomeHeader from "@/app/results/tmntHeader/tmntHomeHeader";
+import TmntHomeHeader, { tmntPageBtnType } from "@/app/results/tmntHeader/tmntHomeHeader";
 import { useTmntFullData } from "@/hooks/useTmntFullData";
 
 const TmntContactPage = () => {
@@ -25,6 +25,8 @@ const TmntContactPage = () => {
   const userData = useSelector((state: RootState) => state.user.user);
 
   const [mounted, setMounted] = useState(false);
+
+  const tmntPageBtn: tmntPageBtnType = "None";
 
   useEffect(() => {
     setMounted(true);
@@ -41,44 +43,83 @@ const TmntContactPage = () => {
     retry: retryTmnt,
   } = useTmntFullData(tmntId);
 
+  const requestedDirectorIdRef = useRef("");
+
+  const loadedTmntId = hasTmntData ? tmntFullData.tmnt.id : "";
+  const directorId = hasTmntData ? tmntFullData.tmnt.user_id : "";
+
   useEffect(() => {
-    const hasTmntData =
-      tmntFullData.tmnt.id !== "" &&
-      tmntFullData.tmnt.id === tmntId;
+    const tmntLoaded = loadedTmntId !== "" && loadedTmntId === tmntId;
 
-    if (!hasTmntData) return;
+    if (!tmntLoaded) return;
 
-    const needUserData =
-      userData.id === "" ||
-      userData.id !== tmntFullData.tmnt.user_id;
+    const needUserData = userData.id === "" || userData.id !== directorId;
 
-    const failedForThisUser =
-      userLoadStatus === "failed" && requestedUserId === tmntFullData.tmnt.user_id;
-    
+    const userFailed =
+      userLoadStatus === "failed" && requestedUserId === directorId;
+
+    const alreadyRequested = requestedDirectorIdRef.current === directorId;
+
     if (
       needUserData &&
       userLoadStatus !== "loading" &&
-      !failedForThisUser
+      !userFailed &&
+      !alreadyRequested
     ) {
-      dispatch(fetchUser(tmntFullData.tmnt.user_id));
+      requestedDirectorIdRef.current = directorId;
+      dispatch(fetchUser(directorId));
     }
   }, [
     tmntId,
+    loadedTmntId,
+    directorId,
     userData.id,
     userLoadStatus,
-    tmntFullData.tmnt.id,
-    tmntFullData.tmnt.user_id,
     requestedUserId,
     dispatch,
-  ]);
+  ]);  
+
+  // useEffect(() => {
+  //   const tmntLoaded =
+  //     tmntFullData.tmnt.id !== "" &&
+  //     tmntFullData.tmnt.id === tmntId;
+
+  //   if (!tmntLoaded) return;
+
+  //   const directorUserId = tmntFullData.tmnt.user_id;
+
+  //   const needUserData =
+  //     userData.id === "" ||
+  //     userData.id !== directorUserId;
+
+  //   const userFailed =
+  //     userLoadStatus === "failed" && requestedUserId === directorUserId;
+
+  //   const alreadyRequested =
+  //     requestedDirectorIdRef.current === directorUserId;
+
+  //   if (
+  //     needUserData &&
+  //     userLoadStatus !== "loading" &&
+  //     !userFailed &&
+  //     !alreadyRequested
+  //   ) {
+  //     requestedDirectorIdRef.current = directorUserId;
+  //     dispatch(fetchUser(directorUserId));
+  //   }
+  // }, [
+  //   tmntId,
+  //   userData.id,
+  //   userLoadStatus,
+  //   tmntFullData.tmnt.id,
+  //   tmntFullData.tmnt.user_id,
+  //   requestedUserId,
+  //   dispatch,
+  // ]);
 
   /*********************************************/
   /* render loading/error until data is loaded */
   /*********************************************/  
-
-  const directorId = hasTmntData
-    ? tmntFullData.tmnt.user_id
-    : "";
 
   const hasUserData =
     hasTmntData && userData.id === directorId;
@@ -88,6 +129,12 @@ const TmntContactPage = () => {
     !hasUserData &&
     userLoadStatus === "failed" &&
     requestedUserId === directorId;
+  
+  const userNotFound =
+    hasTmntData &&
+    !hasUserData &&
+    userLoadStatus === "succeeded" &&
+    requestedUserId === directorId;  
   
   if (!hasTmntData && failedForThisTmnt) {
     const errmsg = tmntError
@@ -118,23 +165,22 @@ const TmntContactPage = () => {
   if (!hasTmntData) {
     return <WaitModal show={mounted} message="Loading..." />;
   }
+  
+  if (failedForThisUser || userNotFound) {
+    const directorErrMsg = userNotFound
+      ? "The tournament director could not be found."
+      : userError || "An error occurred while loading the tournament director.";
 
-  if (failedForThisUser) {
     return (
       <div className="text-center mt-5">
         <h4>Unable to load tournament director</h4>
 
-        <p>
-          {userError ??
-            "An error occurred while loading the tournament director."}
-        </p>
+        <p>{directorErrMsg}</p>
 
         <button
           type="button"
           className="btn btn-primary"
-          onClick={() =>
-            dispatch(fetchUser(directorId))
-          }
+          onClick={() => dispatch(fetchUser(directorId))}
         >
           Retry
         </button>
@@ -150,7 +196,7 @@ const TmntContactPage = () => {
 
   return (
     <>
-      <TmntHomeHeader tmntFullData={tmntFullData} />
+      <TmntHomeHeader tmntFullData={tmntFullData} selectedTmntPageBtn={tmntPageBtn} />
       <div className="text-center mb-4">
         <h4>Contact information for Tournament Director {tmntDirName}</h4>        
       </div>      

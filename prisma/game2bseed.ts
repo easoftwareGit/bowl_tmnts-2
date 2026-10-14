@@ -39,8 +39,8 @@ async function gamesUpsert_FullTmnt() {
         
     // Sam Smith - Game 2
     // randomScore = 159;
-    // randomScore = 207;
-    randomScore = 206;
+    randomScore = 207;
+    // randomScore = 206;
     game = await prisma.game.upsert({
       where: {
         id: "gam_1bae77a91a9d40b9a0f20ca418c6593e",

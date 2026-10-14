@@ -1,5 +1,6 @@
-import type { brktType, divType, elimType, potType } from "@/lib/types/types";
+import type { brktType, divType, elimType, playerType, potType } from "@/lib/types/types";
 import { ptGame, ptLastGame } from "./validation/constants";
+import { isValidBtDbId } from "./validation/validation";
 
 const findDiv = (id: string, divs: divType[]): divType | undefined => {
   return divs.find((div) => div.id === id);
@@ -67,6 +68,28 @@ export const getBrktOrElimName = (feature: brktType | elimType, divs: divType[])
 }
 
 /**
+ * gets the name of a player
+ * 
+ * @param {playerType[]} players - array of players
+ * @param {string} playerId - id of player
+ * @param {boolean} firstLast - whether to return "last, first" or "first last"
+ * @returns {string} - name of player or empty string
+ */
+export const getPlayerName = (
+  players: playerType[],
+  playerId: string,
+  firstLast: boolean = true
+): string => {
+  if (!isValidBtDbId(playerId, 'ply')) return '';
+  if (players == null || !Array.isArray(players) || players.length === 0) return '';
+  const player = players.find((p) => p.id === playerId);
+  if (!player) return '';  
+  return (firstLast)
+    ? fullName(player.first_name, player.last_name)
+    : lastFirst(player.first_name, player.last_name);
+}
+
+/**
  * combines last and first name 
  * 
  * @param {string} first - first name 
@@ -78,7 +101,8 @@ export const lastFirst = (first: string, last: string): string => {
     return (!last || last.trim().length === 0) ? '' : last.trim();
   } else { 
     return (!last || last.trim().length === 0)
-      ? first : last.trim() + ', ' + first.trim();
+      ? first
+      : last.trim() + ', ' + first.trim();
   }
 }
 

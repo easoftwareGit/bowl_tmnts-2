@@ -28,9 +28,9 @@ const TestDatesList: FC<TestDatesListProps> = (props) => {
   return (
     <>
       <div className="d-flex bg-primary">
-        <div className="flex-grow-1 bg-secondary-subtle"></div>
+        <div className="grow bg-secondary-subtle"></div>
         <div
-          className="d-flex justify-content-center tmnt_table bg-primary-subtle"
+          className="d-flex justify-content-center bg-primary-subtle"
           style={{ width: 1100 }}
         >
           <table className="table table-striped table-hover w-100">
@@ -73,8 +73,7 @@ const TestDatesList: FC<TestDatesListProps> = (props) => {
               ))}
             </tbody>
           </table>
-        </div>
-        <div className="flex-grow-1 bg-secondary-subtle"></div>
+        </div>        
       </div>
     </>
   );

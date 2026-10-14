@@ -3,12 +3,23 @@ import Link from "next/link";
 import { tmntFullType } from "@/lib/types/types";
 import { getMonthDayYear } from "@/lib/dateTools";
 
+export type tmntPageBtnType = 
+  | "Home" 
+  | "Players"
+  | "Standings"
+  | "Pots"
+  | "Brackets"
+  | "Elims"
+  | "None";
+
 type TmntHomeHeaderProps = {
   tmntFullData: tmntFullType;
+  selectedTmntPageBtn: tmntPageBtnType;
 };
 
 const TmntHomeHeader = ({
   tmntFullData,
+  selectedTmntPageBtn,
 }: TmntHomeHeaderProps) => {
 
   const tmntId = tmntFullData.tmnt.id;
@@ -34,54 +45,61 @@ const TmntHomeHeader = ({
 
       <nav
         aria-label="Tournament navigation"
-        className="d-flex justify-content-center gap-2 flex-wrap"
+        className="d-flex justify-content-center align-items-center gap-2 flex-wrap"
       >
-        <Link
-          href={`/results/tmnt/${tmntId}/home`}
-          className="btn btn-primary"
-        >
-          Home
-        </Link>
-        <Link
-          href={`/results/tmnt/${tmntId}/players`}
-          className="btn btn-primary"
-        >
-          Players
-        </Link>
-
-        <Link
-          href={`/results/tmnt/${tmntId}/standings`}
-          className="btn btn-primary"
-        >
-          Standings
-        </Link>
-
-        {hasBrackets && (
+        <div
+          className="btn-group btn-group"
+          role="group"
+          aria-label="Select bracket"
+        >        
           <Link
-            href={`/results/tmnt/${tmntId}/brackets`}
-            className="btn btn-primary"
+            href={`/results/tmnt/${tmntId}/home`}            
+            className={`btn btn-outline-primary ${selectedTmntPageBtn === "Home" ? "active" : ""}`}
           >
-            Brackets
+            Home
           </Link>
-        )}
 
-        {hasPots && (
           <Link
-            href={`/results/tmnt/${tmntId}/pots`}
-            className="btn btn-primary"
+            href={`/results/tmnt/${tmntId}/players`}            
+            className={`btn btn-outline-primary ${selectedTmntPageBtn === "Players" ? "active" : ""}`}
           >
-            Pots
+            Players
           </Link>
-        )}
+          
+          <Link
+            href={`/results/tmnt/${tmntId}/standings`}            
+            className={`btn btn-outline-primary ${selectedTmntPageBtn === "Standings" ? "active" : ""}`}
+          >
+            Standings
+          </Link>
 
-        {hasElims && (
-          <Link
-            href={`/results/tmnt/${tmntId}/elims`}
-            className="btn btn-primary"
-          >
-            Elims
-          </Link>
-        )}
+          {hasBrackets && (
+            <Link
+              href={`/results/tmnt/${tmntId}/brackets`}              
+              className={`btn btn-outline-primary ${selectedTmntPageBtn === "Brackets" ? "active" : ""}`}
+            >
+              Brackets
+            </Link>
+          )}
+
+          {hasPots && (
+            <Link
+              href={`/results/tmnt/${tmntId}/pots`}              
+              className={`btn btn-outline-primary ${selectedTmntPageBtn === "Pots" ? "active" : ""}`}
+            >
+              Pots
+            </Link>
+          )}
+
+          {hasElims && (
+            <Link
+              href={`/results/tmnt/${tmntId}/elims`}              
+              className={`btn btn-outline-primary ${selectedTmntPageBtn === "Elims" ? "active" : ""}`}
+            >
+              Elims
+            </Link>
+          )}
+        </div>          
       </nav>
     </div>
   );

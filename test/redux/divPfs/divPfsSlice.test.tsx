@@ -1,42 +1,49 @@
 import reducer, {
-  divPfsState,
-  fetchDivPfs,
-  saveDivPfs,
-  selectDivPfs,
-  getDivPfRequestedTmntId,
-  getDivPfsTmntId,
-  getDivPfsLoadStatus,
-  getDivPfsSaveStatus,
-  getDivPfsError,
-  getDivPfsIoError,
-} from "@/redux/features/divPfs/divPfsSlice";
+  potPfsState,
+  fetchPotPfs,
+  savePotPfs,
+  selectPotPfs,
+  getPotPfsRequestedTmntId,
+  getPotPfsTmntId,
+  getPotPfsLoadStatus,
+  getPotPfsSaveStatus,
+  getPotPfsError,
+  getPotPfsIoError,
+} from "@/redux/features/potPfs/potPfsSlice";
 import { RootState } from "@/redux/store";
 import { ioStatusType } from "@/redux/statusTypes";
 import {
-  getAllDivPfsForTmnt,
-  updateAllDivPfsForTmnt,
-} from "@/lib/db/divPfs/dbDivPfs";
-import { tmntId, mockDivPfs } from "../../mocks/tmnts/tmntFullData/mockTmntFullData";
+  getAllPotPfsForTmnt,
+  updateAllPotPfsForTmnt,
+} from "@/lib/db/potPfs/dbPotPfs";
+import { tmntId, mockPotPfs } from "../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { configureStore } from "@reduxjs/toolkit";
 import { ioDataError } from "@/lib/enums/enums";
 import { cloneDeep } from "lodash";
-import { tmntDivPfSaveDataType } from "@/lib/types/types";
+import { tmntPotPfSaveDataType } from "@/lib/types/types";
 
-jest.mock("@/lib/db/divPfs/dbDivPfs");
+jest.mock("@/lib/db/potPfs/dbPotPfs");
 
-const mockedGetAllDivPfsForTmnt = jest.mocked(getAllDivPfsForTmnt);
-const mockedUpdateAllDivPfsForTmnt = jest.mocked(updateAllDivPfsForTmnt);
+const mockedGetAllPotPfsForTmnt = jest.mocked(getAllPotPfsForTmnt);
+const mockedUpdateAllPotPfsForTmnt = jest.mocked(updateAllPotPfsForTmnt);
 
-describe("divPfsSlice reducer + thunk", () => {
-  const initialState: divPfsState = {
-    divPfs: [],
+const makeStore = () =>
+  configureStore({
+    reducer: {
+      potPfs: reducer,
+    },
+  });
+
+describe("potPfsSlice reducer + thunk", () => {
+  const initialState: potPfsState = {
+    potPfs: [],
     requestedTmntId: "",
     tmntId: "",
     loadStatus: "idle",
     saveStatus: "idle",
     error: "",
     ioError: ioDataError.NONE,
-  };  
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -47,10 +54,9 @@ describe("divPfsSlice reducer + thunk", () => {
       expect(reducer(undefined, { type: undefined as any })).toEqual(initialState);
     });
 
-    it("should handle fetchDivPfs.pending", () => {
-
+    it("should handle fetchPotPfs.pending", () => {
       const state = reducer(initialState, {
-        type: fetchDivPfs.pending.type,
+        type: fetchPotPfs.pending.type,
         meta: {
           arg: tmntId,
         },
@@ -61,19 +67,37 @@ describe("divPfsSlice reducer + thunk", () => {
       expect(state.requestedTmntId).toBe(tmntId);
       expect(state.tmntId).toBe("");
       expect(state.error).toBe("");
-      expect(state.divPfs).toEqual([]);
+      expect(state.potPfs).toEqual([]);
     });
 
-    it("should handle fetchDivPfs.fulfilled", () => { 
-      const loadingState: divPfsState = {
+    it("should clear a previous error on fetchPotPfs.pending", () => {
+      const errorState: potPfsState = {
+        ...initialState,
+        loadStatus: "failed",
+        error: "previous error",
+      };
+
+      const state = reducer(errorState, {
+        type: fetchPotPfs.pending.type,
+        meta: {
+          arg: tmntId,
+        },
+      });
+
+      expect(state.loadStatus).toBe("loading");
+      expect(state.error).toBe("");
+    });
+
+    it("should handle fetchPotPfs.fulfilled", () => {
+      const loadingState: potPfsState = {
         ...initialState,
         requestedTmntId: tmntId,
         loadStatus: "loading",
       };
 
       const state = reducer(loadingState, {
-        type: fetchDivPfs.fulfilled.type,
-        payload: mockDivPfs,
+        type: fetchPotPfs.fulfilled.type,
+        payload: mockPotPfs,
       });
 
       expect(state.loadStatus).toBe("succeeded");
@@ -81,20 +105,38 @@ describe("divPfsSlice reducer + thunk", () => {
       expect(state.requestedTmntId).toBe(tmntId);
       expect(state.tmntId).toBe(tmntId);
       expect(state.error).toBe("");
-      expect(state.divPfs).toEqual(mockDivPfs);
+      expect(state.potPfs).toEqual(mockPotPfs);
     });
 
-    it("should handle fetchDivPfs.rejected", () => {
+    it("should replace existing potPfs on fetchPotPfs.fulfilled", () => {
+      const loadedState: potPfsState = {
+        ...initialState,
+        potPfs: mockPotPfs,
+        requestedTmntId: tmntId,
+        tmntId: tmntId,
+        loadStatus: "loading",
+      };
+
+      const state = reducer(loadedState, {
+        type: fetchPotPfs.fulfilled.type,
+        payload: [],
+      });
+
+      expect(state.loadStatus).toBe("succeeded");
+      expect(state.potPfs).toEqual([]);
+    });
+
+    it("should handle fetchPotPfs.rejected", () => {
       const errorMessage = "DB error";
 
-      const loadingState: divPfsState = {
+      const loadingState: potPfsState = {
         ...initialState,
         requestedTmntId: tmntId,
         loadStatus: "loading",
       };
 
       const state = reducer(loadingState, {
-        type: fetchDivPfs.rejected.type,
+        type: fetchPotPfs.rejected.type,
         error: { message: errorMessage },
       });
 
@@ -103,12 +145,12 @@ describe("divPfsSlice reducer + thunk", () => {
       expect(state.requestedTmntId).toBe(tmntId);
       expect(state.tmntId).toBe("");
       expect(state.error).toBe(errorMessage);
-      expect(state.divPfs).toEqual([]);
+      expect(state.potPfs).toEqual([]);
     });
 
-    it("should handle saveDivPfs.pending", () => {
+    it("should handle savePotPfs.pending", () => {
       const state = reducer(initialState, {
-        type: saveDivPfs.pending.type,
+        type: savePotPfs.pending.type,
       });
 
       expect(state.saveStatus).toBe("saving");
@@ -116,38 +158,74 @@ describe("divPfsSlice reducer + thunk", () => {
       expect(state.error).toBe("");
     });
 
-    it("should handle saveDivPfs.fulfilled", () => {
-
+    it("should handle savePotPfs.fulfilled", () => {
       const state = reducer(initialState, {
-        type: saveDivPfs.fulfilled.type,
-        payload: mockDivPfs,
+        type: savePotPfs.fulfilled.type,
+        payload: mockPotPfs,
       });
 
       expect(state.saveStatus).toBe("succeeded");
       expect(state.loadStatus).toBe("idle");
       expect(state.error).toBe("");
-      expect(state.divPfs).toEqual(mockDivPfs);
+      expect(state.potPfs).toEqual(mockPotPfs);
     });
 
-    it("should handle saveDivPfs.rejected", () => {
+    it("should not change tmntId or requestedTmntId on savePotPfs.fulfilled", () => {
+      const loadedState: potPfsState = {
+        ...initialState,
+        potPfs: mockPotPfs,
+        requestedTmntId: tmntId,
+        tmntId: tmntId,
+        loadStatus: "succeeded",
+      };
+
+      const state = reducer(loadedState, {
+        type: savePotPfs.fulfilled.type,
+        payload: [],
+      });
+
+      expect(state.saveStatus).toBe("succeeded");
+      expect(state.loadStatus).toBe("succeeded");
+      expect(state.requestedTmntId).toBe(tmntId);
+      expect(state.tmntId).toBe(tmntId);
+      expect(state.potPfs).toEqual([]);
+    });
+
+    it("should handle savePotPfs.rejected", () => {
       const errorMessage = "Save failed";
 
       const state = reducer(initialState, {
-        type: saveDivPfs.rejected.type,
+        type: savePotPfs.rejected.type,
         error: { message: errorMessage },
       });
 
       expect(state.saveStatus).toBe("failed");
       expect(state.loadStatus).toBe("idle");
       expect(state.error).toBe(errorMessage);
-      expect(state.divPfs).toEqual([]);
+      expect(state.potPfs).toEqual([]);
+    });
+
+    it("should keep existing potPfs on savePotPfs.rejected", () => {
+      const loadedState: potPfsState = {
+        ...initialState,
+        potPfs: mockPotPfs,
+        saveStatus: "saving",
+      };
+
+      const state = reducer(loadedState, {
+        type: savePotPfs.rejected.type,
+        error: { message: "Save failed" },
+      });
+
+      expect(state.saveStatus).toBe("failed");
+      expect(state.potPfs).toEqual(mockPotPfs);
     });
   });
 
   describe("selectors", () => {
     const selectorState = {
-      divPfs: {
-        divPfs: mockDivPfs,
+      potPfs: {
+        potPfs: mockPotPfs,
         requestedTmntId: tmntId,
         tmntId: tmntId,
         loadStatus: "succeeded" as ioStatusType,
@@ -157,173 +235,227 @@ describe("divPfsSlice reducer + thunk", () => {
       },
     } as RootState;
 
-    it("selectDivPfs returns the divPfs array", () => {
-      expect(selectDivPfs(selectorState)).toBe(mockDivPfs);
+    it("selectPotPfs returns the potPfs array", () => {
+      expect(selectPotPfs(selectorState)).toBe(mockPotPfs);
     });
 
-    it("getDivPfRequestedTmntId returns the requested tournament id", () => {
-      expect(getDivPfRequestedTmntId(selectorState)).toBe(tmntId);
+    it("getPotPfsRequestedTmntId returns the requested tournament id", () => {
+      expect(getPotPfsRequestedTmntId(selectorState)).toBe(tmntId);
     });
 
-    it("getDivPfsLoadStatus returns the load status", () => {
-      expect(getDivPfsLoadStatus(selectorState)).toBe("succeeded");
+    it("getPotPfsTmntId returns the loaded tournament id", () => {
+      expect(getPotPfsTmntId(selectorState)).toBe(tmntId);
     });
 
-    it("getDivPfsSaveStatus returns the save status", () => {
-      expect(getDivPfsSaveStatus(selectorState)).toBe("succeeded");
+    it("getPotPfsLoadStatus returns the load status", () => {
+      expect(getPotPfsLoadStatus(selectorState)).toBe("succeeded");
     });
 
-    it("getDivPfsError returns the error", () => {
-      expect(getDivPfsError(selectorState)).toBe("test error");
+    it("getPotPfsSaveStatus returns the save status", () => {
+      expect(getPotPfsSaveStatus(selectorState)).toBe("succeeded");
     });
 
-    it("getDivPfsIoError returns the io error", () => {
-      expect(getDivPfsIoError(selectorState)).toBe(ioDataError.NONE);
+    it("getPotPfsError returns the error", () => {
+      expect(getPotPfsError(selectorState)).toBe("test error");
+    });
+
+    it("getPotPfsIoError returns the io error", () => {
+      expect(getPotPfsIoError(selectorState)).toBe(ioDataError.NONE);
     });
   });
 
-  describe("Thunk tests fetchDivPfs", () => {    
+  describe("Thunk tests fetchPotPfs", () => {
+    it("dispatches fulfilled when getAllPotPfsForTmnt resolves", async () => {
+      mockedGetAllPotPfsForTmnt.mockResolvedValueOnce(mockPotPfs);
 
-    it("dispatches fulfilled when getAllDivPfsForTmnt resolves", async () => {      
-     
-      mockedGetAllDivPfsForTmnt.mockResolvedValueOnce(mockDivPfs);
+      const store = makeStore();
 
-      const store = configureStore({
-        reducer: {
-          divPfs: reducer,
-        },
-      });
+      const action = await store.dispatch(fetchPotPfs(tmntId) as any);
 
-      await store.dispatch(fetchDivPfs(tmntId) as any);
+      expect(fetchPotPfs.fulfilled.match(action)).toBe(true);
 
-      const state = store.getState().divPfs;
+      const state = store.getState().potPfs;
 
-      expect(mockedGetAllDivPfsForTmnt).toHaveBeenCalledWith(tmntId);
+      expect(mockedGetAllPotPfsForTmnt).toHaveBeenCalledTimes(1);
+      expect(mockedGetAllPotPfsForTmnt).toHaveBeenCalledWith(tmntId);
       expect(state.requestedTmntId).toBe(tmntId);
       expect(state.tmntId).toBe(tmntId);
       expect(state.loadStatus).toBe("succeeded");
       expect(state.saveStatus).toBe("idle");
       expect(state.error).toBe("");
-      expect(state.divPfs).toEqual(mockDivPfs);
+      expect(state.potPfs).toEqual(mockPotPfs);
     });
 
-    it("dispatches rejected when getAllDivPfsForTmnt rejects", async () => {
-      mockedGetAllDivPfsForTmnt.mockRejectedValueOnce(new Error("DB failed"));
+    it("dispatches rejected when getAllPotPfsForTmnt rejects", async () => {
+      mockedGetAllPotPfsForTmnt.mockRejectedValueOnce(new Error("DB failed"));
 
-      const store = configureStore({
-        reducer: {
-          divPfs: reducer,
-        },
-      });
+      const store = makeStore();
 
-      await store.dispatch(fetchDivPfs(tmntId) as any);
+      const action = await store.dispatch(fetchPotPfs(tmntId) as any);
 
-      const state = store.getState().divPfs;
+      expect(fetchPotPfs.rejected.match(action)).toBe(true);
+
+      const state = store.getState().potPfs;
 
       expect(state.requestedTmntId).toBe(tmntId);
       expect(state.tmntId).toBe("");
       expect(state.loadStatus).toBe("failed");
       expect(state.saveStatus).toBe("idle");
       expect(state.error).toBe("DB failed");
-      expect(state.divPfs).toEqual([]);
+      expect(state.potPfs).toEqual([]);
     });
 
-    it("dispatches fulfilled when getAllDivPfsForTmnt resolves an empty array", async () => {
-      mockedGetAllDivPfsForTmnt.mockResolvedValueOnce([]);
+    it("dispatches fulfilled when getAllPotPfsForTmnt resolves an empty array", async () => {
+      mockedGetAllPotPfsForTmnt.mockResolvedValueOnce([]);
 
-      const store = configureStore({
-        reducer: {
-          divPfs: reducer,
-        },
-      });
+      const store = makeStore();
 
-      const action = await store.dispatch(fetchDivPfs(tmntId) as any);
+      const action = await store.dispatch(fetchPotPfs(tmntId) as any);
 
-      expect(fetchDivPfs.fulfilled.match(action)).toBe(true);
+      expect(fetchPotPfs.fulfilled.match(action)).toBe(true);
 
-      const state = store.getState().divPfs;
+      const state = store.getState().potPfs;
 
-      expect(state.requestedTmntId).toBe(tmntId);  
+      expect(state.requestedTmntId).toBe(tmntId);
       expect(state.tmntId).toBe(tmntId);
       expect(state.loadStatus).toBe("succeeded");
-      expect(state.divPfs).toEqual([]);
+      expect(state.potPfs).toEqual([]);
+    });
+
+    it("clears a previous fetch error after a successful retry", async () => {
+      mockedGetAllPotPfsForTmnt
+        .mockRejectedValueOnce(new Error("DB failed"))
+        .mockResolvedValueOnce(mockPotPfs);
+
+      const store = makeStore();
+
+      await store.dispatch(fetchPotPfs(tmntId) as any);
+      expect(store.getState().potPfs.error).toBe("DB failed");
+
+      await store.dispatch(fetchPotPfs(tmntId) as any);
+
+      const state = store.getState().potPfs;
+
+      expect(mockedGetAllPotPfsForTmnt).toHaveBeenCalledTimes(2);
+      expect(state.loadStatus).toBe("succeeded");
+      expect(state.error).toBe("");
+      expect(state.tmntId).toBe(tmntId);
+      expect(state.potPfs).toEqual(mockPotPfs);
     });
   });
 
-  describe("Thunk tests saveDivPfs", () => {
+  describe("Thunk tests savePotPfs", () => {
+    const validPotIds = [mockPotPfs[0].pot_id];
+    const toSave: tmntPotPfSaveDataType = {
+      potPfData: mockPotPfs,
+      potIds: validPotIds,
+      tmntId: tmntId,
+    };
 
-    const validDivIds = [mockDivPfs[0].div_id];
-    const toSave: tmntDivPfSaveDataType = {
-      divPfData: mockDivPfs,
-      divIds: validDivIds,
-      tmntId: tmntId
-    }       
+    it("dispatches fulfilled when updateAllPotPfsForTmnt resolves", async () => {
+      // returned data differs from what was sent, so we know state uses the
+      // payload from the db call
+      const updatedPotPfs = cloneDeep(mockPotPfs).slice(0, 1);
 
-    it("dispatches fulfilled when updateAllDivPfsForTmnt resolves", async () => {
+      mockedUpdateAllPotPfsForTmnt.mockResolvedValueOnce(updatedPotPfs);
 
-      const updatedDivPfs = cloneDeep(mockDivPfs);
-      updatedDivPfs[0].amount = 450;
+      const store = makeStore();
 
-      mockedUpdateAllDivPfsForTmnt.mockResolvedValueOnce(updatedDivPfs);
+      const action = await store.dispatch(savePotPfs(toSave) as any);
 
-      const store = configureStore({
-        reducer: {
-          divPfs: reducer,
-        },
-      });
+      expect(savePotPfs.fulfilled.match(action)).toBe(true);
 
-      await store.dispatch(saveDivPfs(toSave) as any);
+      const state = store.getState().potPfs;
 
-      const state = store.getState().divPfs;
-
-      expect(mockedUpdateAllDivPfsForTmnt).toHaveBeenCalledWith(toSave);
+      expect(mockedUpdateAllPotPfsForTmnt).toHaveBeenCalledTimes(1);
+      expect(mockedUpdateAllPotPfsForTmnt).toHaveBeenCalledWith(toSave);
       expect(state.loadStatus).toBe("idle");
       expect(state.saveStatus).toBe("succeeded");
       expect(state.error).toBe("");
-      expect(state.divPfs).toEqual(updatedDivPfs);
+      expect(state.potPfs).toEqual(updatedPotPfs);
     });
 
-    it("dispatches rejected when updateAllDivPfsForTmnt resolves undefined", async () => {
-      
-      mockedUpdateAllDivPfsForTmnt.mockResolvedValueOnce(undefined as any);
+    it("dispatches fulfilled when updateAllPotPfsForTmnt resolves an empty array", async () => {
+      // an empty array is truthy, so it should NOT trigger the error branch
+      mockedUpdateAllPotPfsForTmnt.mockResolvedValueOnce([]);
 
-      const store = configureStore({
-        reducer: {
-          divPfs: reducer,
-        },
-      });
+      const store = makeStore();
 
-      const action = await store.dispatch(saveDivPfs(toSave) as any);
+      const action = await store.dispatch(savePotPfs(toSave) as any);
 
-      expect(saveDivPfs.rejected.match(action)).toBe(true);
+      expect(savePotPfs.fulfilled.match(action)).toBe(true);
 
-      const state = store.getState().divPfs;
+      const state = store.getState().potPfs;
+
+      expect(state.saveStatus).toBe("succeeded");
+      expect(state.potPfs).toEqual([]);
+    });
+
+    it("dispatches rejected when updateAllPotPfsForTmnt resolves undefined", async () => {
+      mockedUpdateAllPotPfsForTmnt.mockResolvedValueOnce(undefined as any);
+
+      const store = makeStore();
+
+      const action = await store.dispatch(savePotPfs(toSave) as any);
+
+      expect(savePotPfs.rejected.match(action)).toBe(true);
+
+      const state = store.getState().potPfs;
 
       expect(state.loadStatus).toBe("idle");
       expect(state.saveStatus).toBe("failed");
-      expect(state.error).toBe("Error updating divPfs");
-      expect(state.divPfs).toEqual([]);
+      expect(state.error).toBe("Error updating potPfs");
+      expect(state.potPfs).toEqual([]);
     });
 
-    it("dispatches rejected when updateAllDivPfsForTmnt rejects", async () => {      
+    it("dispatches rejected when updateAllPotPfsForTmnt resolves null", async () => {
+      mockedUpdateAllPotPfsForTmnt.mockResolvedValueOnce(null as any);
 
-      mockedUpdateAllDivPfsForTmnt.mockRejectedValueOnce(new Error("Save failed"));
+      const store = makeStore();
 
-      const store = configureStore({
-        reducer: {
-          divPfs: reducer,
-        },
-      });
+      const action = await store.dispatch(savePotPfs(toSave) as any);
 
-      await store.dispatch(saveDivPfs(toSave) as any);
+      expect(savePotPfs.rejected.match(action)).toBe(true);
 
-      const state = store.getState().divPfs;
+      const state = store.getState().potPfs;
+
+      expect(state.saveStatus).toBe("failed");
+      expect(state.error).toBe("Error updating potPfs");
+    });
+
+    it("dispatches rejected when updateAllPotPfsForTmnt rejects", async () => {
+      mockedUpdateAllPotPfsForTmnt.mockRejectedValueOnce(new Error("Save failed"));
+
+      const store = makeStore();
+
+      const action = await store.dispatch(savePotPfs(toSave) as any);
+
+      expect(savePotPfs.rejected.match(action)).toBe(true);
+
+      const state = store.getState().potPfs;
 
       expect(state.loadStatus).toBe("idle");
       expect(state.saveStatus).toBe("failed");
       expect(state.error).toBe("Save failed");
-      expect(state.divPfs).toEqual([]);
+      expect(state.potPfs).toEqual([]);
     });
 
+    it("keeps previously loaded potPfs when the save fails", async () => {
+      mockedGetAllPotPfsForTmnt.mockResolvedValueOnce(mockPotPfs);
+      mockedUpdateAllPotPfsForTmnt.mockRejectedValueOnce(new Error("Save failed"));
+
+      const store = makeStore();
+
+      await store.dispatch(fetchPotPfs(tmntId) as any);
+      await store.dispatch(savePotPfs(toSave) as any);
+
+      const state = store.getState().potPfs;
+
+      expect(state.loadStatus).toBe("succeeded");
+      expect(state.saveStatus).toBe("failed");
+      expect(state.tmntId).toBe(tmntId);
+      expect(state.error).toBe("Save failed");
+      expect(state.potPfs).toEqual(mockPotPfs);
+    });
   });
 });

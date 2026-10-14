@@ -1,7 +1,7 @@
 "use client";
 
 import "@/lib/syncfusion-license";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { useParams } from "next/navigation";
@@ -13,14 +13,16 @@ import {
   getOneTmntGameResultsTmntId,  
 } from "@/redux/features/oneTmntGameResults/oneTmntGameResultsSlice";
 import WaitModal from "@/components/modal/waitModal";
-import TmntHomeHeader from "@/app/results/tmntHeader/tmntHomeHeader";
+import TmntHomeHeader, { tmntPageBtnType } from "@/app/results/tmntHeader/tmntHomeHeader";
 import { fullName } from "@/lib/getName";
 import PlayerDivBrkts from "./playerDivBrackets";
-import { getBrktListRecords } from "@/redux/features/tmntFullData/brktListRecordsSelector";
 import { useTmntFullData } from "@/hooks/useTmntFullData";
+import { missingDataError, getBrktSummaryDataError } from "./playerBrktData";
+import { getBrktListRecordsWithResults } from "@/redux/features/tmntFullData/brktListRecordsSelector";
 import "./playerBrackets.css";
+import AllBrktsSummary from "./allBrktsSummary";
 
-const PlayerBrktPrgressPage = () => {
+const PlayerBrktProgressPage = () => {
   const params = useParams();
   const playerId = params.playerId as string;
   const tmntId = params.tmntId as string;
@@ -28,13 +30,15 @@ const PlayerBrktPrgressPage = () => {
   const dispatch = useDispatch<AppDispatch>();
 
   const requestedResultsTmntId = useSelector(getOneTmntGameResultsRequestedTmntId);
-  const resultsLoadStatsus = useSelector(getOneTmntGameResultsLoadStatus);  
+  const resultsLoadStatus = useSelector(getOneTmntGameResultsLoadStatus);  
   const resultsError = useSelector(getOneTmntGameResultsError);
   const resultsTmntId = useSelector(getOneTmntGameResultsTmntId);
-
-  const brktListRecords = useSelector(getBrktListRecords);
-
+  
+  const brktListRecords = useSelector(getBrktListRecordsWithResults);
+  
   const [mounted, setMounted] = useState(false);
+
+  const tmntPageBtn: tmntPageBtnType = "Brackets";
 
   useEffect(() => {
     setMounted(true);
@@ -56,11 +60,11 @@ const PlayerBrktPrgressPage = () => {
     const needTmntGames = resultsTmntId !== tmntId;
 
     const failedForThisTmntGames =
-      resultsLoadStatsus === "failed" && requestedResultsTmntId === tmntId;
+      resultsLoadStatus === "failed" && requestedResultsTmntId === tmntId;
 
     if (
       needTmntGames &&
-      resultsLoadStatsus !== "loading" &&
+      resultsLoadStatus !== "loading" &&
       !failedForThisTmntGames
     ) {
       dispatch(fetchOneTmntGameResults(tmntId));
@@ -68,21 +72,49 @@ const PlayerBrktPrgressPage = () => {
   }, [
     tmntId,
     resultsTmntId,
-    resultsLoadStatsus,    
+    resultsLoadStatus,    
     requestedResultsTmntId,
     dispatch
   ]);
 
+  // The player. Only read the tournament once the hook says it is loaded.
+  const playerRow = hasTmntData
+    ? tmntFullData.players.find((player) => player.id === playerId)
+    : undefined;
+
+  // Only the brackets this player has an entry in, in the brackets' sort order.
+  // PlayerDivBrkts shows an error for a bracket the player is not in, so those
+  // are not rendered.
+  const playerBrkts = useMemo(() => {
+    if (!hasTmntData || !playerRow) return [];
+    return tmntFullData.brkts
+      .filter((brkt) =>
+        tmntFullData.brktEntries.some(
+          (entry) => entry.player_id === playerId && entry.brkt_id === brkt.id,
+        ),
+      )
+      .sort((a, b) => a.sort_order - b.sort_order);
+  }, [hasTmntData, playerRow, tmntFullData, playerId]);
+
+  // data problems for each bracket the player is in; checked here, with plain
+  // code, because nothing needs a hook for this
+  const bracketDataErrors = hasTmntData
+    ? playerBrkts
+        .map((brkt) => getBrktSummaryDataError(tmntFullData, brkt.id, playerId))
+        .filter((err): err is string => err !== null)
+    : [];
+
+  const hasPlayerBrkts = playerBrkts.length > 0;
+  
+  const hasTmntGamesData = resultsTmntId !== "" && resultsTmntId === tmntId;
+
   /*********************************************/
   /* render loading/error until data is loaded */
   /*********************************************/  
-  
-  const hasTmntGamesData =
-    resultsTmntId !== "" && resultsTmntId === tmntId;
-  
+    
   const failedForThisTmntGames =
-    resultsLoadStatsus === "failed" &&
-    requestedResultsTmntId === tmntId;  
+    resultsLoadStatus === "failed" &&
+    requestedResultsTmntId === tmntId;     
   
   if (!hasTmntData && failedForThisTmnt) {
     const errmsg = tmntError
@@ -138,12 +170,10 @@ const PlayerBrktPrgressPage = () => {
     return <WaitModal show={mounted} message="Loading..." />;
   }
 
-  const playerRow = tmntFullData.players.find((player) => player.id === playerId);
-
   if (!playerRow) {
     return (
       <>
-        <TmntHomeHeader tmntFullData={tmntFullData} />
+        <TmntHomeHeader tmntFullData={tmntFullData} selectedTmntPageBtn={tmntPageBtn} />
         <div className="text-center mt-5">
           <h4>Player not found</h4>
           <p>No player with ID {playerId} was found in this tournament.</p>
@@ -151,38 +181,67 @@ const PlayerBrktPrgressPage = () => {
       </>
     );
   }  
+
+  // the first problem found, shown in place of the page content
+  if (bracketDataErrors.length > 0) {
+    return (
+      <>
+        <TmntHomeHeader tmntFullData={tmntFullData} selectedTmntPageBtn={tmntPageBtn} />
+        {missingDataError(bracketDataErrors[0])}
+      </>
+    );
+  }  
   
-  const playerName = playerRow
-    ? fullName(playerRow.first_name, playerRow.last_name)
-    : ""; 
+  const playerName = fullName(playerRow.first_name, playerRow.last_name);
 
   return (
     <>      
-      <TmntHomeHeader tmntFullData={tmntFullData} />
+      <TmntHomeHeader tmntFullData={tmntFullData} selectedTmntPageBtn={tmntPageBtn} />
       
       <div className="text-center mb-2">
         <h4>Bracket Progress for {playerName}</h4>
-        <div
-          data-testid="GamesOuterWrapper"
-          className="player-brkt-progress-outer"
-        >      
+
+        {!hasPlayerBrkts ? (
+          <p className="mt-3">
+            {tmntFullData.brkts.length === 0
+              ? "No brackets are available for this tournament."
+              : `${playerName} is not entered in any brackets.`}
+          </p>
+        ) : (
           <div
-            data-testid="GamesInnerWrapper"
-            className="player-brkt-progress-inner"
+            data-testid="BrktProgressOuterWrapper"
+            className="player-brkt-progress-outer"
           >
-            {tmntFullData.brkts.map((brkt) => (
-              <PlayerDivBrkts
-                key={brkt.id}
-                playerId={playerId}
-                tmntFullData={tmntFullData}
-                brktList={brktListRecords[brkt.id]}
-              />
-            ))}
+            <div
+              data-testid="BrktProgressInnerWrapper"
+              className="player-brkt-progress-inner"
+            >
+              {playerBrkts.map((brkt) => {
+                const brktList = brktListRecords[brkt.id];
+                // a brktList with no list has nothing to show
+                if (!brktList) return null;
+                return (
+                  <PlayerDivBrkts
+                    key={brkt.id}
+                    playerId={playerId}
+                    tmntFullData={tmntFullData}
+                    brktList={brktList}
+                  />
+                );
+              })}
+            </div>
+            <AllBrktsSummary
+              tmntFullData={tmntFullData}
+              brktListRecords={brktListRecords}
+              playerId={playerId}
+              playerName={playerName}
+              brktIds={playerBrkts.map((b) => b.id)}
+            />
           </div>
-        </div>
+        )}
       </div>
     </>
   );
 }
 
-export default PlayerBrktPrgressPage
+export default PlayerBrktProgressPage

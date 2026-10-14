@@ -26,11 +26,11 @@ const calcPrizeColWidth = (justDivPfs: divPfType[]): number => {
     justDivPfs.length === 0 ||
     !justDivPfs[0].amount
   )
-    return 90;
+    return 85;
 
-  if (justDivPfs[0].amount < 1000) return 90;
-  if (justDivPfs[0].amount < 10000) return 130;
-  return 180;
+  if (justDivPfs[0].amount < 1000) return 85;
+  if (justDivPfs[0].amount < 10000) return 125;
+  return 170;
 };
 
 interface ChildProps {
@@ -145,8 +145,8 @@ const TmntStandingsForm: React.FC<ChildProps> = ({
       break;
   }
 
-  const gameWidth = 45;
-  const playerNameWidth = 150;
+  const gameWidth = 40;
+  const playerNameWidth = 140;
   const plusMinusWidth = 55;
   const positionWidth = tmntResults.length > 100 ? 55 : 40;
   const prizeWidth = calcPrizeColWidth(justDivPfs);
@@ -157,7 +157,7 @@ const TmntStandingsForm: React.FC<ChildProps> = ({
     <>
       <div className="d-flex justify-content-center">
         <div className="tmnt_table overflow-x-auto">
-          <table className="table table-sm table-striped table-hover w-auto">
+          <table className="table table-sm table-striped table-hover w-auto fs-6">
             <thead>
               <tr>
                 <th
@@ -172,7 +172,7 @@ const TmntStandingsForm: React.FC<ChildProps> = ({
                 >
                   <button
                     type="button"
-                    className="btn btn-link p-0"
+                    className="btn btn-link p-0 text-decoration-none fw-semibold"
                     onClick={() => setResultSort("player")}
                   >
                     Player
@@ -194,7 +194,7 @@ const TmntStandingsForm: React.FC<ChildProps> = ({
                   >
                     <button
                       type="button"
-                      className="btn btn-link p-0"
+                      className="btn btn-link p-0 text-decoration-none fw-semibold"
                       onClick={() => setResultSort("scratch")}
                     >
                       Scratch
@@ -207,7 +207,7 @@ const TmntStandingsForm: React.FC<ChildProps> = ({
                 >
                   <button
                     type="button"
-                    className="btn btn-link p-0"
+                    className="btn btn-link p-0 text-decoration-none fw-semibold"
                     onClick={() => setResultSort("total")}
                   >
                     Total
@@ -229,7 +229,7 @@ const TmntStandingsForm: React.FC<ChildProps> = ({
                 </th>
               </tr>
             </thead>
-            <tbody className="table-group-divider">
+            <tbody className="table-group-divider small">
               {standingsRows.map((row, index) => (
                 <tr
                   key={row.player_id}

@@ -114,19 +114,16 @@ export class Bracket {
   }
   get runnerUpAmount(): number {
     return this._runnerUpAmount;
-  }
-  // only used in testing
+  }  
   get runnerUpIds(): Set<string> {
     return this._runnerUpIds;
-  }
-  // only used in testing
+  }  
   get semiFinalTies(): Set<string> {
     return this._semiFinalTies;
   }
   get winnerAmount(): number {    
     return this._winnerAmount;
-  }  
-  // only used in testing
+  }    
   get winnerIds(): Set<string> {
     return this._winnerIds;
   }
@@ -268,7 +265,7 @@ export class Bracket {
     const highScoreMatch4 = winnersMatch4[0].total!; 
     const highScoreMatch5 = winnersMatch5[0].total!;
 
-    // if high score for match 4 is higher than high score for match 5
+    // if high score for match 4 is >= high score for match 5
     if (highScoreMatch4 >= highScoreMatch5) {
       winnersMatch4.forEach((info) => this._winnerIds.add(info.playerId));
     } else {
@@ -328,12 +325,13 @@ export class Bracket {
           }
         });
       }
-      // if a tie in the semi final
-      // if (pmi.brktGameNum === this._games - 1 && pmi.playerInfo.result === "T") {
+      // if a tie in the semi final      
       if (pmi.brktGameNum === this.games - 1 && playerInfo.result === "T") {
         // add all tie players to semi final ties
         pmi.matchInfo.forEach((info) => {
-          this._semiFinalTies.add(info.playerId);
+          if (info.result === "T") {
+            this._semiFinalTies.add(info.playerId);
+          }
         });
       }
     } else {
@@ -535,12 +533,12 @@ export class Bracket {
   }
 
   /**
-   * get player status in this bracket
+   * resolves a player status in this bracket
    *
    * @param {string} playerId - player id
    * @return {playerStatusValues} - player status
    */
-  getPlayerStatus(playerId: string): playerStatusValues {
+  resolvePlayerStatus(playerId: string): playerStatusValues {
     let status = this.playerStatus(playerId);
     if (status !== playerStatusValues.IN_BRACKET) {
       return status;

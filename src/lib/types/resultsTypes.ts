@@ -59,3 +59,14 @@ export type tmntStandingsTableRow = {
   [key: GameNum]: number;
   [key: GameHdcp]: number;
 };
+
+export type brktGamesTableRow = {
+  id: string;
+  player_id: string;
+  last_first: string;
+  lane: number;
+  in: number;
+  cash: string;
+
+  [key: GameNum]: number;
+};

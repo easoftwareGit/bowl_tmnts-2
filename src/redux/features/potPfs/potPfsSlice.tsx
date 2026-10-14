@@ -8,6 +8,7 @@ import { getAllPotPfsForTmnt, updateAllPotPfsForTmnt } from "@/lib/db/potPfs/dbP
 export interface potPfsState {
   potPfs: potPfType[];
   requestedTmntId: string;
+  tmntId: string;
   loadStatus: ioStatusType;
   saveStatus: ioStatusType;
   error: string | undefined;
@@ -18,6 +19,7 @@ export interface potPfsState {
 const initialState: potPfsState = {
   potPfs: [],
   requestedTmntId: "",
+  tmntId: "",
   loadStatus: "idle" as ioStatusType,
   saveStatus: "idle" as ioStatusType,
   error: "",
@@ -62,6 +64,7 @@ export const potPfsSlice = createSlice({
         fetchPotPfs.fulfilled,
         (state, action: PayloadAction<potPfType[]>) => {
           state.loadStatus = "succeeded";
+          state.tmntId = state.requestedTmntId;
           state.potPfs = action.payload;
         }
       )
@@ -90,6 +93,7 @@ export const potPfsSlice = createSlice({
 export const selectPotPfs = (state: RootState) => state.potPfs.potPfs;
 
 export const getPotPfsRequestedTmntId = (state: RootState) => state.potPfs.requestedTmntId;
+export const getPotPfsTmntId = (state: RootState) => state.potPfs.tmntId;
 export const getPotPfsLoadStatus = (state: RootState) => state.potPfs.loadStatus;
 export const getPotPfsSaveStatus = (state: RootState) => state.potPfs.saveStatus;
 export const getPotPfsError = (state: RootState) => state.potPfs.error;

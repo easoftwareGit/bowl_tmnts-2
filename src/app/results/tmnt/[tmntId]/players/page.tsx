@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useParams } from "next/navigation";
 import WaitModal from "@/components/modal/waitModal";
-import TmntHomeHeader from "@/app/results/tmntHeader/tmntHomeHeader";
+import TmntHomeHeader, { tmntPageBtnType } from "@/app/results/tmntHeader/tmntHomeHeader";
 import { useTmntFullData } from "@/hooks/useTmntFullData";
 
 type PlayerSort =
@@ -23,6 +23,8 @@ type tmntPlayerInTableType = {
 const TmntPlayersPage = () => {
   const params = useParams();
   const tmntId = params.tmntId as string;
+
+  const tmntPageBtn: tmntPageBtnType = "Players";
 
   /*****************/
   /* get tmnt data */
@@ -231,18 +233,18 @@ const TmntPlayersPage = () => {
       break;
   }
 
-  const averageWidth = 70;  
-  const firstNameWidth = 100;  
+  const averageWidth = 65;  
+  const firstNameWidth = 95;  
   const lanePosWidth = 70;
-  const lastNameWidth = 120;
+  const lastNameWidth = 110;
 
   return (
     <>
-      <TmntHomeHeader tmntFullData={tmntFullData} />
+      <TmntHomeHeader tmntFullData={tmntFullData} selectedTmntPageBtn={tmntPageBtn} />
 
       {hasTmntData && (
         <div className="d-flex justify-content-center">
-          <div className="tmnt_table overflow-x-auto">
+          <div className="overflow-x-auto">
             <table className="table table-sm table-striped table-hover w-auto">
               <thead>
                 <tr>
@@ -252,7 +254,7 @@ const TmntPlayersPage = () => {
                   >
                     <button
                       type="button"
-                      className="btn btn-link p-0"
+                      className="btn btn-link p-0 text-decoration-none fw-semibold"
                       onClick={() => setPlayerSort("lastName")}
                     >
                       Last Name
@@ -264,7 +266,7 @@ const TmntPlayersPage = () => {
                   >
                     <button
                       type="button"
-                      className="btn btn-link p-0"
+                      className="btn btn-link p-0 text-decoration-none fw-semibold"
                       onClick={() => setPlayerSort("firstName")}
                     >
                       First Name
@@ -276,7 +278,7 @@ const TmntPlayersPage = () => {
                   >
                     <button
                       type="button"
-                      className="btn btn-link p-0"
+                      className="btn btn-link p-0 text-decoration-none fw-semibold"
                       onClick={() => setPlayerSort("average")}
                     >
                       Ave
@@ -288,7 +290,7 @@ const TmntPlayersPage = () => {
                   >
                     <button
                       type="button"
-                      className="btn btn-link p-0"
+                      className="btn btn-link p-0 text-decoration-none fw-semibold"
                       onClick={() => setPlayerSort("lanePos")}
                     >
                       Lane
@@ -296,7 +298,7 @@ const TmntPlayersPage = () => {
                   </th>
                 </tr>
               </thead>
-              <tbody className="table-group-divider">
+              <tbody className="table-group-divider small">
                 {playerRows.map((playerRow) => (
                   <tr key={playerRow.id}>
                     <td className="text-start">{playerRow.last_name}</td>

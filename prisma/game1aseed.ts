@@ -23,7 +23,9 @@ async function gamesUpsert_FullTmnt() {
       },
     })
     // Al Davis - Game 1
-    let randomScore = 214;    
+    let randomScore = 214;
+    // randomScore = 214;
+    randomScore = 242;
     let game = await prisma.game.upsert({
       where: {
         id: "gam_d9b0f7e8f1b84292a4e3ab711703d1f1",
@@ -300,7 +302,8 @@ async function gamesUpsert_FullTmnt() {
     });
 
     // Nate Smith - Game 1
-    randomScore = 188;
+    // randomScore = 188;
+    randomScore = 210;
     game = await prisma.game.upsert({
       where: {
         id: "gam_3e7b1c9a5d264f80b2a6e4c8f1739d5b",

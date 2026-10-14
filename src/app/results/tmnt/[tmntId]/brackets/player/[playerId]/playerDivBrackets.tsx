@@ -12,6 +12,7 @@ import { formatValueSymbSep2Dec } from "@/lib/currency/formatValue";
 import { IntlConfig } from "@/lib/currency/components/CurrencyInputProps";
 import { getLocaleConfig } from "@/lib/currency/components/utils";
 import { getResultClassName } from "../../resultClassName";
+import { missingDataError } from "./playerBrktData";
 
 type PlayerDivBrktProps = {
   playerId: string;
@@ -19,13 +20,18 @@ type PlayerDivBrktProps = {
   brktList: BracketList;
 };
 
+type oppoInfoType = {
+  playerId: string;
+  gameScore: number | null;
+  gameScoreStr: string;
+  fullName: string;
+};
+
 type brktInfoType = {
   playerResult: matchResultType;
   playerAmount: number;
   fmtdPlayerAmount: string;
-  oppoPlayerIds: string[];
-  oppoGameScores: string[];
-  oppoFullNames: string[];
+  oppoInfo: oppoInfoType[];
 };
 
 const ic: IntlConfig = {
@@ -34,20 +40,6 @@ const ic: IntlConfig = {
 };
 const localConfig = getLocaleConfig(ic);
 localConfig.prefix = "$";
-
-const missingDataError = (errMsg: string) => {
-  return (
-    <>
-      <div className="row">
-        <div className="col-12">
-          <div className="alert alert-danger" role="alert">
-            {errMsg}
-          </div>
-        </div>
-      </div>
-    </>
-  );
-};
 
 const PlayerDivBrkts = ({
   playerId,
@@ -76,11 +68,18 @@ const PlayerDivBrkts = ({
   const squad = tmntFullData.squads.find((s) => s.id === brkt.squad_id);
   if (!squad)
     return missingDataError(
-      "Squad configuration not found: Id: " + brkt.squad_id,
+      "Squad configuration not found. Id: " + brkt.squad_id,
     );
   const playerRow = tmntFullData.players.find((p) => p.id === playerId);
   if (!playerRow)
     return missingDataError("Player configuration not found. Id: " + playerId);
+  const playerBrktEntries = tmntFullData.brktEntries.find(
+    (be) => be.player_id === playerId && be.brkt_id === brkt.id,
+  );
+  if (!playerBrktEntries)
+    return missingDataError(
+      "Player bracket entries not found. Id: " + playerId,
+    );
   if (!brktList.bracketIndexMap || brktList.bracketIndexMap.size === 0)
     return missingDataError("Bracket index map not found.");
   if (!brktList.gameScoreMap || brktList.gameScoreMap.size === 0)
@@ -99,16 +98,18 @@ const PlayerDivBrkts = ({
   const tmntId = tmntFullData.tmnt.id;
   const brktName = getBrktOrElimName(brkt, tmntFullData.divs);
   const playerOneBrktIds = brktList.playerBracketIdsSorted(playerId);
+  const brktFeeNum = Number(brkt.fee);
+  const playerEntryAmt = brktFeeNum * playerOneBrktIds.length;
+  const numRefunds = playerBrktEntries.num_refunds ?? 0;
+  const refundAmnt = brktFeeNum * numRefunds;
   const fmtdEntryPerBrkt = formatValueSymbSep2Dec(
     brkt.fee.toString(),
     localConfig,
-  );
-  const playerEntryAmt = Number(brkt.fee) * playerOneBrktIds.length;
+  );  
   const fmtdPlayerEntryAmt = formatValueSymbSep2Dec(
     playerEntryAmt.toString(),
     localConfig,
   );
-  let totalAmt = 0;
 
   const getPlayerGameScore = (brktGameNum: number): string => {
     const squadGameNum = brktList.squadGameNumber(brktGameNum);
@@ -150,41 +151,121 @@ const PlayerDivBrkts = ({
     );
   };
 
-  const bracketSummaryElement = (): JSX.Element => {
-    const leftcolWidth = "33%";
+  /**
+   * Calculate total earnings for all the player's brackets
+   *
+   * note: this is only called when the player has a game 3 score
+   *
+   * @return {number} - total earnings for all of one player's brackets
+   */
+  const calcTotalEarnings = (): number =>
+    playerOneBrktIds.reduce((sum, oneBrktId) => {
+      const bindex = brktList.bracketIndexMap?.get(oneBrktId);
+      if (bindex === undefined) return sum;
+      const oneBrkt = brktList.brackets[bindex];
+      if (!oneBrkt) return sum;
+      if (
+        oneBrkt.winnerIds.has(playerId) ||
+        oneBrkt.runnerUpIds.has(playerId)
+      ) {
+        return sum + oneBrkt.playerEarnings(playerId);
+      }
+      return sum;
+    }, 0);  
+
+  const bracketSummaryElement = (): JSX.Element => {    
     const summaryWidth = "230px";
+    const totalEarnings = calcTotalEarnings();
     const fmtdPlayerEarnings = formatValueSymbSep2Dec(
-      totalAmt.toString(),
+      totalEarnings.toString(),
       localConfig,
     );
-    return (
-      <div className="row gx-0 align-middle fw-semibold small-table-font">
-        {/* spacer column */}
-        <div style={{ width: leftcolWidth }} />
+    const totalPaid = playerEntryAmt + refundAmnt;
+    const totalPayout = totalEarnings + refundAmnt;        
+    const fmtdRefunds = refundAmnt > 0
+      ? formatValueSymbSep2Dec(
+          (refundAmnt).toString(),
+          localConfig,
+        )
+      : "";
+    const entriesLabel = playerOneBrktIds.length === 1 ? "entry" : "entries";
+    const refundsLabel = numRefunds === 1 ? "refund" : "refunds";
 
+    return (
+      <div
+        className="d-flex justify-content-center align-middle fw-semibold small-table-font"
+        data-testid="brkt-summary"
+      >
         {/* summary column */}
-        <div className="text-center" style={{ width: summaryWidth }}>
+        <div
+          className="text-center"
+          data-testid="brkt-summary-box"
+          style={{ width: summaryWidth }}
+        >
           &nbsp;
           <div className="border border-dark rounded-top rounded-bottom">
-            <div className="text-center bracket-title_backgroud text-white rounded-top">
+            <div className="text-center bracket-title_backgroud text-white">
               {playerName}
             </div>
             <div className="text-center bracket-title_backgroud text-white">
               Summary for {brktName}
             </div>
-            <div className="border-top border-bottom border-dark text-end pe-1">
-              {playerOneBrktIds.length} entries @ {fmtdEntryPerBrkt} ={" "}
+            <div className="border-bottom border-dark text-end pe-1">
+              {playerOneBrktIds.length} {entriesLabel} @ {fmtdEntryPerBrkt} = {" "}
               {fmtdPlayerEntryAmt}
             </div>
-            <div className="text-end text-success pe-1 rounded-bottom">
-              Earnings: {fmtdPlayerEarnings}
-            </div>
+            {refundAmnt > 0 && (
+              <>
+                <div className="border-bottom border-dark text-end pe-1">
+                  {numRefunds} unused @ {fmtdEntryPerBrkt} = {" "}
+                  {fmtdRefunds}
+                </div>
+                <div className="border-bottom border-dark text-end pe-1">
+                  Total Paid:&nbsp;
+                  {formatValueSymbSep2Dec(
+                    (totalPaid).toString(),
+                    localConfig,
+                  )}
+                </div>
+              </>
+            )}
+            {refundAmnt === 0
+              ? (
+                <div className="border-top border-dark text-end text-success pe-1">
+                  Earnings: {fmtdPlayerEarnings}
+                </div>
+              ) : (
+                <div className="text-end text-success">
+                  <div className="border-top border-bottom border-dark pe-1">
+                    Earnings: {fmtdPlayerEarnings}
+                  </div>
+                  <div className="border-bottom border-dark pe-1">
+                    {numRefunds} {refundsLabel} @ {fmtdEntryPerBrkt} = {" "}
+                    {fmtdRefunds}
+                  </div>
+                  <div className="pe-1">
+                    Total Returned:&nbsp;
+                    {formatValueSymbSep2Dec(
+                      (totalPayout).toString(),
+                      localConfig,
+                    )}
+                  </div>
+                </div>
+              )
+            }
           </div>
         </div>
       </div>
     );
   };
 
+  /**
+   * Get bracket info for one bracket
+   *
+   * @param {string} oneBrktId - one bracket id
+   * @param {number} brktGameNum - bracket game number
+   * @return {brktInfoType} - bracket info
+   */
   const getBrktInfo = (
     oneBrktId: string,
     brktGameNum: number,
@@ -193,11 +274,10 @@ const PlayerDivBrkts = ({
       playerResult: undefined,
       playerAmount: 0,
       fmtdPlayerAmount: "",
-      oppoPlayerIds: [],
-      oppoGameScores: [],
-      oppoFullNames: [],
+      oppoInfo: [],
     };
-    const bindex = brktList.bracketIndexMap!.get(oneBrktId)!;
+    const bindex = brktList.bracketIndexMap?.get(oneBrktId);
+    if (bindex === undefined) return brktInfo;
     const oneBrkt = brktList.brackets[bindex];
     if (!oneBrkt) return brktInfo;
     const playerMatchInfo = oneBrkt.getPlayerMatchInfo(playerId, brktGameNum);
@@ -212,14 +292,11 @@ const PlayerDivBrkts = ({
     if (oppoMi.length === 0) return brktInfo;
 
     if (brktGameNum === 3) {
-      if (oneBrkt.runnerUpIds.has(playerId)) {        
-        brktInfo.playerAmount = oneBrkt.runnerUpAmount / oneBrkt.runnerUpIds.size;
-        brktInfo.fmtdPlayerAmount = formatValueSymbSep2Dec(
-          brktInfo.playerAmount.toString(),
-          localConfig,
-        );
-      } else if (oneBrkt.winnerIds.has(playerId)) {        
-        brktInfo.playerAmount = oneBrkt.winnerAmount / oneBrkt.winnerIds.size;
+      if (
+        oneBrkt.winnerIds.has(playerId) ||
+        oneBrkt.runnerUpIds.has(playerId)
+      ) {
+        brktInfo.playerAmount = oneBrkt.playerEarnings(playerId);
         brktInfo.fmtdPlayerAmount = formatValueSymbSep2Dec(
           brktInfo.playerAmount.toString(),
           localConfig,
@@ -229,25 +306,40 @@ const PlayerDivBrkts = ({
 
     oppoMi.forEach((matchInfo) => {
       brktInfo.playerResult = playerInfo.result;
-      let oppoGameStr = "";
+      const oppoInfo: oppoInfoType = {
+        playerId: matchInfo.playerId,
+        gameScore: null,
+        gameScoreStr: "",
+        fullName: fullName(matchInfo.first_name, matchInfo.last_name),
+      };
       if (matchInfo.score != null) {
-        oppoGameStr = matchInfo.score + "";
+        oppoInfo.gameScore = matchInfo.score;
+        oppoInfo.gameScoreStr = matchInfo.score + "";
         if (
           div.hdcp_per > 0 &&
           matchInfo.hdcp != null &&
           !matchInfo.playerId.startsWith("bye")
         ) {
-          oppoGameStr += ` + ${matchInfo.hdcp} = ${matchInfo.total}`;
+          oppoInfo.gameScore += matchInfo.hdcp;
+          oppoInfo.gameScoreStr += ` + ${matchInfo.hdcp} = ${matchInfo.total}`;
         }
-        brktInfo.oppoGameScores.push(oppoGameStr);
       }
-      brktInfo.oppoPlayerIds.push(matchInfo.playerId);
-      brktInfo.oppoFullNames.push(
-        fullName(matchInfo.first_name, matchInfo.last_name),
-      );
+      brktInfo.oppoInfo.push(oppoInfo);
     });
+
+    // sort oppoInfo by game score, highest to lowest
+    brktInfo.oppoInfo.sort((a, b) => {
+      if (a.gameScore === null && b.gameScore === null) return 0;
+      if (a.gameScore === null) return 1;
+      if (b.gameScore === null) return -1;
+
+      return b.gameScore - a.gameScore;
+    });
+
     return brktInfo;
   };
+
+  const minColumnWidth = "300px";
 
   return (
     <>
@@ -257,84 +349,81 @@ const PlayerDivBrkts = ({
         </div>
       </div>
 
-      <div className="row gx-0 pb-2">
-        {[1, 2, 3].map((brktGameNum) => {
-          const infoWidth = brktGameNum === 3 ? "36%" : "32%";
-          const playerGameScore = getPlayerGameScore(brktGameNum);
+      {/* scrolls sideways when the three columns do not fit the page */}
+      <div className="overflow-x-auto" data-testid="brkt-columns-scroll">
+        <div
+          className="row gx-0 pb-2 flex-nowrap"
+          data-testid="brkt-columns-row"
+        >
+          {[1, 2, 3].map((brktGameNum) => {
+            const infoWidth = brktGameNum === 3 ? "36%" : "32%";
+            const playerGameScore = getPlayerGameScore(brktGameNum);
 
-          return (
-            <React.Fragment key={brktGameNum}>
-              <div
-                className="text-start align-middle"
-                style={{ width: infoWidth }}
-              >
-                {playerColumnHeaderElement(brktGameNum, playerGameScore)}
+            return (
+              <React.Fragment key={brktGameNum}>
+                <div
+                  className="text-start align-middle"
+                  data-testid={`brkt-game-column-${brktGameNum}`}
+                  style={{ width: infoWidth, minWidth: minColumnWidth }}
+                >
+                  {playerColumnHeaderElement(brktGameNum, playerGameScore)}
 
-                {playerOneBrktIds.map((oneBrktId) => {
-                  const brktInfo = getBrktInfo(oneBrktId, brktGameNum);
-                  const resultClass = getResultClassName(brktInfo.playerResult);
+                  {playerOneBrktIds.map((oneBrktId) => {
+                    const brktInfo = getBrktInfo(oneBrktId, brktGameNum);
+                    const resultClass = getResultClassName(brktInfo.playerResult);
 
-                  if (brktGameNum === 3 && brktInfo.playerAmount > 0) {
-                    totalAmt += brktInfo.playerAmount;
-                  }
-                  if (brktInfo.oppoGameScores.length === 0) {
-                    brktInfo.oppoGameScores.push("");
-                  }
-                  if (brktInfo.oppoFullNames.length === 0) {
-                    brktInfo.oppoFullNames.push("");
-                  }
-
-                  return (
-                    <React.Fragment key={oneBrktId + playerId + brktGameNum}>
-                      {brktInfo.oppoPlayerIds.map((oppoPlayerId, index) => (
-                        <div
-                          key={oneBrktId + oppoPlayerId + brktGameNum}
-                          className="d-flex align-middle"
-                        >
-                          <Link
-                            href={`/results/tmnt/${tmntId}/brackets/oneBrkt/${oneBrktId}`}
-                            className="p-0"
+                    return (
+                      <React.Fragment key={oneBrktId + playerId + brktGameNum}>
+                        {brktInfo.oppoInfo.map((opi, index) => (
+                          <div
+                            key={oneBrktId + opi.playerId + brktGameNum}
+                            className="d-flex align-middle small"
                           >
-                            {brktInfo.oppoGameScores[index] !== "" &&
-                            playerGameScore !== "" ? (
-                              <>
+                            <Link
+                              href={`/results/tmnt/${tmntId}/brackets/oneBrkt/${oneBrktId}`}
+                              className="p-0"
+                            >
+                              {opi.gameScoreStr !== "" &&
+                              playerGameScore !== "" ? (
+                                <>
+                                  <span
+                                    className={`${resultClass} d-inline-block text-center`}
+                                    style={{ width: "1.5rem" }}
+                                  >
+                                    {index === 0 ? brktInfo.playerResult : ""}
+                                  </span>
+                                  {index === 0 ? "" : "& "}
+                                  {opi.gameScoreStr}
+                                </>
+                              ) : (
                                 <span
-                                  className={`${resultClass} d-inline-block text-center`}
+                                  className="d-inline-block text-center"
                                   style={{ width: "1.5rem" }}
                                 >
-                                  {brktInfo.playerResult}
+                                  __
                                 </span>
-                                {index === 0 ? "" : "& "}
-                                {brktInfo.oppoGameScores[index]}
-                              </>
-                            ) : (
-                              <span
-                                className="d-inline-block text-center"
-                                style={{ width: "1.5rem" }}
-                              >
-                                __
+                              )}
+                            </Link>
+                            &nbsp;{opi.fullName}
+                            {brktInfo.playerAmount > 0 && index === 0 && (
+                              <span className="ms-auto text-end text-success">
+                                {brktInfo.fmtdPlayerAmount}
                               </span>
                             )}
-                          </Link>
-                          &nbsp;{brktInfo.oppoFullNames[index]}
-                          {brktInfo.playerAmount > 0 && (
-                            <span className="ms-auto text-end text-success">
-                              {brktInfo.fmtdPlayerAmount}
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                    </React.Fragment>
-                  );
-                })}
-                {brktGameNum === 3 && playerGameScore !== "" && (
-                  <div>{bracketSummaryElement()}</div>
-                )}
-              </div>
-            </React.Fragment>
-          );
-        })}
-      </div>
+                          </div>
+                        ))}
+                      </React.Fragment>
+                    );
+                  })}
+                  {brktGameNum === 3 && playerGameScore !== "" && (
+                    <div>{bracketSummaryElement()}</div>
+                  )}
+                </div>
+              </React.Fragment>
+            );
+          })}
+        </div>
+      </div>      
     </>
   );
 };

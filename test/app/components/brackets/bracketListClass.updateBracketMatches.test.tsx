@@ -54,6 +54,7 @@ describe("BracketList.updateBracketMatches", () => {
       average: 200,
       hdcp: 10,
       total: 645,
+      total_hdcp: 635,
       "Game 1": 210,
       "Game 1 + Hdcp": 220,
       "Game 2": 215,
@@ -72,6 +73,7 @@ describe("BracketList.updateBracketMatches", () => {
       average: 190,
       hdcp: 15,
       total: 600,
+      total_hdcp: 645,
       "Game 1": 190,
       "Game 1 + Hdcp": 205,
       "Game 2": 200,
@@ -322,12 +324,12 @@ describe("BracketList.updateBracketMatches", () => {
       );
 
       /*
-      * Prevent getPlayerStatus() from doing additional bracket
+      * Prevent resolvePlayerStatus() from doing additional bracket
       * calculations that are not relevant to this test.
       */
       jest.spyOn(
         bracket,
-        "getPlayerStatus",
+        "resolvePlayerStatus",
       ).mockReturnValue(
         playerStatusValues.IN_BRACKET,
       );

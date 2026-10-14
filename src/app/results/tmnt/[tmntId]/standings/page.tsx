@@ -4,7 +4,6 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { useParams } from "next/navigation";
-import { Tabs, Tab } from "react-bootstrap";
 import {
   fetchOneTmntGameResults,  
   getOneTmntGameResultsError,
@@ -24,9 +23,10 @@ import {
 import type { divDataType } from "@/lib/types/types";
 import WaitModal from "@/components/modal/waitModal";
 import { blankDivData } from "@/lib/db/initVals";
-import TmntHomeHeader from "@/app/results/tmntHeader/tmntHomeHeader";
+import TmntHomeHeader, { tmntPageBtnType } from "@/app/results/tmntHeader/tmntHomeHeader";
 import TmntStandingsForm from "./tmntStandingsForm";
 import { useTmntFullData } from "@/hooks/useTmntFullData";
+import TmntDivHeader from "./tmntDivHeader";
 import "./tmntStandings.css";
 
 const TmntResultsPage = () => {
@@ -36,20 +36,22 @@ const TmntResultsPage = () => {
   const dispatch = useDispatch<AppDispatch>();
 
   const requestedResultsTmntId = useSelector(getOneTmntGameResultsRequestedTmntId);
-  const resultsLoadStatsus = useSelector(getOneTmntGameResultsLoadStatus);  
+  const resultsLoadStatus = useSelector(getOneTmntGameResultsLoadStatus);  
   const resultsTmntId = useSelector(getOneTmntGameResultsTmntId);
   const tmntResults = useSelector(selectOneTmntGameResults);
   const resultsError = useSelector(getOneTmntGameResultsError);
     
   const requestedPrizesTmntId = useSelector(getDivPfRequestedTmntId);
   const prizesTmntId = useSelector(getDivPfsTmntId);
-  const prizesLoadStatsus = useSelector(getDivPfsLoadStatus);
+  const prizesLoadStatus = useSelector(getDivPfsLoadStatus);
   const prizesError = useSelector(getDivPfsError);    
   const divPfs = useSelector(selectDivPfs);
   
-  const [tabKey, setTabKey] = useState("");
+  const [selectedDivId, setSelectedDivId] = useState("");
 
   const [mounted, setMounted] = useState(false);
+
+  const tmntPageBtn: tmntPageBtnType = "Standings";
 
   useEffect(() => {
     setMounted(true);
@@ -65,17 +67,17 @@ const TmntResultsPage = () => {
     error: tmntError,
     retry: retryTmnt,
   } = useTmntFullData(tmntId);
- 
+
   // get tmnt results 
   useEffect(() => {
     const needTmntGames = resultsTmntId !== tmntId;
 
     const failedForThisTmntGames =
-      resultsLoadStatsus === "failed" && requestedResultsTmntId === tmntId;
+      resultsLoadStatus === "failed" && requestedResultsTmntId === tmntId;
 
     if (
       needTmntGames &&
-      resultsLoadStatsus !== "loading" &&
+      resultsLoadStatus !== "loading" &&
       !failedForThisTmntGames
     ) {
       dispatch(fetchOneTmntGameResults(tmntId));
@@ -83,7 +85,7 @@ const TmntResultsPage = () => {
   }, [
     tmntId,
     resultsTmntId,
-    resultsLoadStatsus,    
+    resultsLoadStatus,    
     requestedResultsTmntId,
     dispatch
   ]);
@@ -93,11 +95,11 @@ const TmntResultsPage = () => {
     const needsDivPrizes = prizesTmntId !== tmntId;
 
     const failedForThisTmntPrizes =
-      prizesLoadStatsus === "failed" && requestedPrizesTmntId === tmntId;
+      prizesLoadStatus === "failed" && requestedPrizesTmntId === tmntId;
 
     if (
       needsDivPrizes &&
-      prizesLoadStatsus !== "loading" &&
+      prizesLoadStatus !== "loading" &&
       !failedForThisTmntPrizes
     ) {
       dispatch(fetchDivPfs(tmntId));
@@ -106,12 +108,13 @@ const TmntResultsPage = () => {
     prizesTmntId,
     tmntId,
     requestedPrizesTmntId,
-    prizesLoadStatsus,    
+    prizesLoadStatus,    
     dispatch
   ]);
 
   const tmntDivs = useMemo<divDataType[]>(() => {
     if (
+      !hasTmntData ||
       tmntFullData.tmnt.id !== tmntId ||
       resultsTmntId !== tmntId ||
       !tmntResults ||
@@ -154,16 +157,20 @@ const TmntResultsPage = () => {
     return tDivs.sort(
       (a, b) => a.sort_order - b.sort_order
     );
-  }, [tmntResults, resultsTmntId, tmntId, tmntFullData]);
+  }, [
+    hasTmntData,
+    tmntResults,
+    resultsTmntId,
+    tmntId,
+    tmntFullData
+  ]);
 
-  const defaultTabKey = tmntDivs[0]?.id ?? "";
+  // fall back to the first division until the user picks one
+  const activeDivId = tmntDivs.some((d) => d.id === selectedDivId)
+    ? selectedDivId
+    : (tmntDivs[0]?.id ?? "");
 
-  // set tab key
-  useEffect(() => {
-    if (tmntDivs.length > 0) {
-      setTabKey(tmntDivs[0].id);
-    }
-  }, [tmntDivs, setTabKey]);
+  const activeDiv = tmntDivs.find((d) => d.id === activeDivId);
     
   /*********************************************/
   /* render loading/error until data is loaded */
@@ -177,11 +184,11 @@ const TmntResultsPage = () => {
     prizesTmntId === tmntId;
   
   const failedForThisTmntGames =
-    resultsLoadStatsus === "failed" &&
+    resultsLoadStatus === "failed" &&
     requestedResultsTmntId === tmntId;
   
   const failedForThisTmntPrizes =
-    prizesLoadStatsus === "failed" &&
+    prizesLoadStatus === "failed" &&
     requestedPrizesTmntId === tmntId;
     
   if (!hasTmntData && failedForThisTmnt) {
@@ -255,39 +262,40 @@ const TmntResultsPage = () => {
     );
   }  
 
-  const handleTabSelect = (key: string | null) => {
-    if (key) {
-      setTabKey(key);
-    }
-  };
+  if (!activeDiv) {
+    return (
+      <>
+        <TmntHomeHeader tmntFullData={tmntFullData} selectedTmntPageBtn={tmntPageBtn} />
+        <p className="text-center mt-3">
+          No results are available for this tournament yet.
+        </p>
+      </>
+    );
+  }
+
+  if (!hasPrizesData) {
+    return <WaitModal show={mounted} message="Loading..." />;
+  }  
 
   return (
     <>
-      <TmntHomeHeader tmntFullData={tmntFullData} />      
-
-      {hasTmntData && hasTmntGamesData && hasPrizesData && (
+      <TmntHomeHeader tmntFullData={tmntFullData} selectedTmntPageBtn={tmntPageBtn} />      
+     
+      <div className="d-flex flex-column justify-content-center align-items-center">
         <div className="d-flex flex-column justify-content-center align-items-center">
-          <Tabs
-            defaultActiveKey={defaultTabKey}
-            id="tmnt-tabs"
-            className="mb-1"
-            variant="pills"
-            activeKey={tabKey ?? defaultTabKey} // ensure a tab is alwas selected
-            onSelect={handleTabSelect}
-          >
-            {tmntDivs.map((div) => (
-              <Tab key={div.id} eventKey={`${div.id}`} title={div.div_name}>
-                <TmntStandingsForm
-                  tmntId={tmntId}
-                  div={div}
-                  tmntResults={tmntResults}
-                  divPfs={divPfs}
-                />
-              </Tab>
-            ))}
-          </Tabs>          
-        </div>
-      )}
+          <TmntDivHeader
+            divs={tmntDivs}
+            selectedDivId={activeDivId}
+            onSelectDiv={setSelectedDivId}
+          />
+          <TmntStandingsForm
+            tmntId={tmntId}
+            div={activeDiv}
+            tmntResults={tmntResults}
+            divPfs={divPfs}
+          />
+        </div>          
+      </div>
     </>
   );
 };

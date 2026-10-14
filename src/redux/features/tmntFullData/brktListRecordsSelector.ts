@@ -6,6 +6,11 @@ import {
 } from "@/components/brackets/buildBrktLists";
 import type { RootState } from "@/redux/store";
 import type { BracketList } from "@/components/brackets/bracketListClass";
+import { updateAllBracketMatches } from "@/app/results/tmnt/[tmntId]/brackets/updateAllBracketMatches";
+import {
+  getOneTmntGameResultsTmntId,
+  selectOneTmntGameResults,
+} from "@/redux/features/oneTmntGameResults/oneTmntGameResultsSlice";
 
 /**
 * state
@@ -82,6 +87,36 @@ export const getBrktListRecords = createSelector(
     return buildBrktListRecords(
       tmntFullData,
     );
+  },
+);
+
+/**
+ * Builds the bracket lists for the tournament and applies the game results
+ * to them, so every match is decided before the lists are used.
+ *
+ * Unlike getBrktListRecords, this builds its own lists. The results are
+ * applied to those new lists before they are returned, so the lists in the
+ * getBrktListRecords record are never changed, and the same inputs always
+ * give the same finished lists.
+ *
+ * The results are only applied when they are for the same tournament as
+ * tmntFullData, so another tournament's results are never used.
+ *
+ * createSelector memoizes the record: it is rebuilt only when tmntFullData
+ * or the results change.
+ *
+ * @returns {brktListRecord} bracket lists keyed by bracket id, with results applied
+ */
+export const getBrktListRecordsWithResults = createSelector(
+  [selectTmntFullData, selectOneTmntGameResults, getOneTmntGameResultsTmntId],
+  (tmntFullData, tmntResults, resultsTmntId): brktListRecord => {
+    const records = buildBrktListRecords(tmntFullData);
+
+    if (resultsTmntId !== "" && resultsTmntId === tmntFullData.tmnt.id) {
+      updateAllBracketMatches(records, tmntResults);
+    }
+
+    return records;
   },
 );
 

@@ -52,7 +52,7 @@ type BracketPrivate = {
   ) => void;
 };
 
-describe("Bracket Class - getPlayerStatus", () => {
+describe("Bracket Class - resolvePlayerStatus", () => {
   const fullPlayers = [
     playerId1,
     playerId2,
@@ -190,7 +190,7 @@ describe("Bracket Class - getPlayerStatus", () => {
    *
    * This is easier to maintain than a long chain of
    * mockReturnValueOnce() calls, especially when a test calls
-   * getPlayerStatus() for several players.
+   * resolvePlayerStatus() for several players.
    */
   const mockPlayerMatchInfo = (
     bracket: Bracket,
@@ -240,7 +240,7 @@ describe("Bracket Class - getPlayerStatus", () => {
         spyOnUpdatePlayerSets(bracket);
 
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           "player-not-in-bracket",
         ),
       ).toBe(
@@ -258,7 +258,7 @@ describe("Bracket Class - getPlayerStatus", () => {
       spyOnGetPlayerMatchInfo(bracket).mockReturnValue(undefined);
 
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId1,
         ),
       ).toBe(
@@ -299,7 +299,7 @@ describe("Bracket Class - getPlayerStatus", () => {
       );
 
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId1,
         ),
       ).toBe(
@@ -344,7 +344,7 @@ describe("Bracket Class - getPlayerStatus", () => {
       const updatePlayerSetsSpy = spyOnUpdatePlayerSets(bracket);
 
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId1,
         ),
       ).toBe(
@@ -389,7 +389,7 @@ describe("Bracket Class - getPlayerStatus", () => {
       );
 
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId1,
         ),
       ).toBe(
@@ -430,7 +430,7 @@ describe("Bracket Class - getPlayerStatus", () => {
       );
 
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId1,
         ),
       ).toBe(
@@ -496,7 +496,7 @@ describe("Bracket Class - getPlayerStatus", () => {
       );
 
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId1,
         ),
       ).toBe(
@@ -562,7 +562,7 @@ describe("Bracket Class - getPlayerStatus", () => {
       );
 
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId1,
         ),
       ).toBe(
@@ -626,7 +626,7 @@ describe("Bracket Class - getPlayerStatus", () => {
       );
 
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId5,
         ),
       ).toBe(
@@ -715,7 +715,7 @@ describe("Bracket Class - getPlayerStatus", () => {
       );
 
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId1,
         ),
       ).toBe(
@@ -802,7 +802,7 @@ describe("Bracket Class - getPlayerStatus", () => {
       );
 
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId1,
         ),
       ).toBe(
@@ -944,7 +944,7 @@ describe("Bracket Class - getPlayerStatus", () => {
       );
 
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId1,
         ),
       ).toBe(
@@ -952,7 +952,7 @@ describe("Bracket Class - getPlayerStatus", () => {
       );
 
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId5,
         ),
       ).toBe(
@@ -1099,7 +1099,7 @@ describe("Bracket Class - getPlayerStatus", () => {
 
       // First record the semifinal tie.
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId5,
         ),
       ).toBe(
@@ -1109,7 +1109,7 @@ describe("Bracket Class - getPlayerStatus", () => {
       // Processing the winner determines the final
       // status of the other finalists.
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId1,
         ),
       ).toBe(
@@ -1117,7 +1117,7 @@ describe("Bracket Class - getPlayerStatus", () => {
       );
 
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId5,
         ),
       ).toBe(
@@ -1125,7 +1125,7 @@ describe("Bracket Class - getPlayerStatus", () => {
       );
 
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId7,
         ),
       ).toBe(
@@ -1270,7 +1270,7 @@ describe("Bracket Class - getPlayerStatus", () => {
 
       // Record the semifinal tie first.
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId5,
         ),
       ).toBe(
@@ -1278,7 +1278,7 @@ describe("Bracket Class - getPlayerStatus", () => {
       );
 
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId1,
         ),
       ).toBe(
@@ -1286,7 +1286,7 @@ describe("Bracket Class - getPlayerStatus", () => {
       );
 
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId5,
         ),
       ).toBe(
@@ -1294,7 +1294,7 @@ describe("Bracket Class - getPlayerStatus", () => {
       );
 
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId7,
         ),
       ).toBe(
@@ -1393,7 +1393,7 @@ describe("Bracket Class - getPlayerStatus", () => {
       );
 
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId5,
         ),
       ).toBe(
@@ -1401,7 +1401,7 @@ describe("Bracket Class - getPlayerStatus", () => {
       );
 
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId1,
         ),
       ).toBe(
@@ -1409,7 +1409,7 @@ describe("Bracket Class - getPlayerStatus", () => {
       );
 
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId7,
         ),
       ).toBe(
@@ -1597,7 +1597,7 @@ describe("Bracket Class - getPlayerStatus", () => {
       );
 
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId5,
         ),
       ).toBe(
@@ -1605,7 +1605,7 @@ describe("Bracket Class - getPlayerStatus", () => {
       );
 
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId7,
         ),
       ).toBe(
@@ -1613,7 +1613,7 @@ describe("Bracket Class - getPlayerStatus", () => {
       );
 
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId1,
         ),
       ).toBe(
@@ -1802,7 +1802,7 @@ describe("Bracket Class - getPlayerStatus", () => {
       );
 
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId1,
         ),
       ).toBe(
@@ -1810,7 +1810,7 @@ describe("Bracket Class - getPlayerStatus", () => {
       );
 
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId5,
         ),
       ).toBe(
@@ -1818,7 +1818,7 @@ describe("Bracket Class - getPlayerStatus", () => {
       );
 
       expect(
-        bracket.getPlayerStatus(
+        bracket.resolvePlayerStatus(
           playerId7,
         ),
       ).toBe(

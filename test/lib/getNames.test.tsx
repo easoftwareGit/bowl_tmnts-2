@@ -1,10 +1,27 @@
-import { getPotName, getBrktOrElimName, exportedForTesting, getDivName, fullName, getPotShortName, lastFirst } from "@/lib/getName";
+import {
+  getPotName,
+  getBrktOrElimName,
+  exportedForTesting,
+  getDivName,  
+  getPotShortName,
+  getPlayerName,
+  fullName,
+  lastFirst
+} from "@/lib/getName";
 import {
   mockDivs,
   mockPots,
   mockBrkts,
   mockElims,  
 } from "../mocks/tmnts/twoDivs/mockDivs";
+import {
+  mockTmntFullData,
+  playerId1,
+  playerId2,
+  playerId5,
+  playerId9,
+  tmntId,
+} from "../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { initDivs } from "@/lib/db/initVals";
 import { cloneDeep } from "lodash";
 import { ptSeries } from "@/lib/validation/constants";
@@ -216,6 +233,93 @@ describe("getName functions", () => {
       expect(result).toBe('');
       const result2 = fullName(undefined as any, null as any);
       expect(result2).toBe('');
+    });
+  });
+
+  describe('getPlayerName', () => {
+    const players = mockTmntFullData.players;
+
+    describe('firstLast = true (default)', () => {
+      it('returns "first last" by default', () => {
+        expect(getPlayerName(players, playerId1)).toBe('John Doe');
+      });
+      it('returns "first last" when firstLast is explicitly true', () => {
+        expect(getPlayerName(players, playerId2, true)).toBe('Jane Doe');
+      });
+      it('returns the correct name for a different player', () => {
+        expect(getPlayerName(players, playerId5)).toBe('Tom Smith');
+      });
+    });
+
+    describe('firstLast = false', () => {
+      it('returns "last, first"', () => {
+        expect(getPlayerName(players, playerId1, false)).toBe('Doe, John');
+      });
+      it('returns "last, first" for a different player', () => {
+        expect(getPlayerName(players, playerId5, false)).toBe('Smith, Tom');
+      });
+    });
+
+    describe('missing name parts', () => {
+      it('returns only the last name when first name is blank (firstLast true)', () => {
+        const testPlayers = cloneDeep(players);
+        testPlayers[0].first_name = '';
+        expect(getPlayerName(testPlayers, playerId1, true)).toBe('Doe');
+      });
+      it('returns only the last name when first name is blank (firstLast false)', () => {
+        const testPlayers = cloneDeep(players);
+        testPlayers[0].first_name = '   ';
+        expect(getPlayerName(testPlayers, playerId1, false)).toBe('Doe');
+      });
+      it('returns only the first name when last name is blank (firstLast true)', () => {
+        const testPlayers = cloneDeep(players);
+        testPlayers[0].last_name = '';
+        expect(getPlayerName(testPlayers, playerId1, true)).toBe('John');
+      });
+      it('returns only the first name when last name is blank (firstLast false)', () => {
+        const testPlayers = cloneDeep(players);
+        testPlayers[0].last_name = '';
+        expect(getPlayerName(testPlayers, playerId1, false)).toBe('John');
+      });
+      it('returns an empty string when both names are blank', () => {
+        const testPlayers = cloneDeep(players);
+        testPlayers[0].first_name = '';
+        testPlayers[0].last_name = '';
+        expect(getPlayerName(testPlayers, playerId1, true)).toBe('');
+        expect(getPlayerName(testPlayers, playerId1, false)).toBe('');
+      });
+    });
+
+    describe('invalid input', () => {
+      it('returns an empty string when the player id is not found', () => {
+        // valid id format, but not in the 8 mock players
+        expect(getPlayerName(players, playerId9)).toBe('');
+      });
+      it('returns an empty string when the player id is blank', () => {
+        expect(getPlayerName(players, '')).toBe('');
+      });
+      it('returns an empty string when the player id is not a valid id', () => {
+        expect(getPlayerName(players, 'abc')).toBe('');
+        expect(getPlayerName(players, 'ply_123')).toBe('');
+      });
+      it('returns an empty string when the id has the wrong prefix', () => {
+        expect(getPlayerName(players, tmntId)).toBe('');
+      });
+      it('returns an empty string when the id is null or undefined', () => {
+        expect(getPlayerName(players, null as any)).toBe('');
+        expect(getPlayerName(players, undefined as any)).toBe('');
+      });
+      it('returns an empty string when the players array is empty', () => {
+        expect(getPlayerName([], playerId1)).toBe('');
+      });
+      it('returns an empty string when players is null or undefined', () => {
+        expect(getPlayerName(null as any, playerId1)).toBe('');
+        expect(getPlayerName(undefined as any, playerId1)).toBe('');
+      });
+      it('returns an empty string when players is not an array', () => {
+        expect(getPlayerName({} as any, playerId1)).toBe('');
+        expect(getPlayerName('players' as any, playerId1)).toBe('');
+      });
     });
   });
 

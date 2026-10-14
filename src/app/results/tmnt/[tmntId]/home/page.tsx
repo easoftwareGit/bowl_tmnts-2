@@ -5,12 +5,14 @@ import { getMonthDayYear } from "@/lib/dateTools";
 import { localConfig } from "@/lib/currency/const";
 import { formatValueSymbSep2Dec } from "@/lib/currency/formatValue";
 import WaitModal from "@/components/modal/waitModal";
-import TmntHomeHeader from "@/app/results/tmntHeader/tmntHomeHeader";
+import TmntHomeHeader, { tmntPageBtnType } from "@/app/results/tmntHeader/tmntHomeHeader";
 import { useTmntFullData } from "@/hooks/useTmntFullData";
 
 const TmntHomePage = () => {
   const params = useParams();
   const tmntId = params.tmntId as string;
+
+  const tmntPageBtn: tmntPageBtnType = "Home";
 
   /*****************/
   /* get tmnt data */
@@ -74,7 +76,7 @@ const TmntHomePage = () => {
   
   return (
     <>
-      <TmntHomeHeader tmntFullData={tmntFullData} />
+      <TmntHomeHeader tmntFullData={tmntFullData} selectedTmntPageBtn={tmntPageBtn} />
       
       <div className="text-center mb-4">
         <h4>Welcome to {tmntFullData?.tmnt.tmnt_name}</h4>

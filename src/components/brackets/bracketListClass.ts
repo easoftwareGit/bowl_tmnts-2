@@ -3,7 +3,7 @@ import {
   entryNumBrktsColName,
   timeStampColName,
 } from "@/app/dataEntry/playersForm/sfCreatePlayerColumns";
-import { isNumber, isOdd, isValidBtDbId } from "@/lib/validation/validation";
+import { isOdd, isValidBtDbId } from "@/lib/validation/validation";
 import { byeName, maxBrackets } from "@/lib/validation/constants";
 import {
   blankPlayer,
@@ -2628,6 +2628,17 @@ export class BracketList {
   }
 
   /**
+   * Returns true if all brackets are completed
+   *
+   * @return {boolean} - true if all brackets are completed
+   */
+  allBracketsCompleted(): boolean {
+    if (!this._brackets || this._brackets.length === 0) return false;
+    // winnerIds only set when final match in bracket is completed
+    return this._brackets.every((brkt) => brkt.winnerIds.size > 0);
+  }
+
+  /**
    * creates the gameScoreMap
    *
    * @param {gameType[]} games
@@ -2685,18 +2696,7 @@ export class BracketList {
       const oneBrkt = this._brackets[bindex];
       if (oneBrkt == null) return;
 
-      earnings += oneBrkt.playerEarnings(playerId);
-      
-      // if (oneBrkt.winnerIds.has(playerId)) {
-      //   // if there is/are runner up(s), then divide the winner amount by # of winners
-      //   if (oneBrkt.runnerUpIds.size > 0) {
-      //     earnings += oneBrkt.winnerAmount / oneBrkt.winnerIds.size;
-      //   } else {
-      //     earnings += (oneBrkt.winnerAmount + oneBrkt.runnerUpAmount) / oneBrkt.winnerIds.size;
-      //   }
-      // } else if (oneBrkt.runnerUpIds.has(playerId)) {          
-      //   earnings += oneBrkt.runnerUpAmount / oneBrkt.runnerUpIds.size;
-      // }
+      earnings += oneBrkt.playerEarnings(playerId);      
     })
     return earnings;
   }
