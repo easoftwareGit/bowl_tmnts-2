@@ -3,7 +3,7 @@
 import React, { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { prizeFundEntryRow, tmntDivPfSaveDataType } from "@/lib/types/types";
-import type { AppDispatch, RootState } from "@/redux/store";
+import type { AppDispatch } from "@/redux/store";
 import {
   getDivPfsSaveStatus,
   saveDivPfs,
@@ -26,6 +26,7 @@ interface DivPrizeFundGridProps {
   onNavigateAfterSave?: () => void;
   onBack: () => void;
   onSaveComplete?: (savedRows: prizeFundEntryRow[]) => void;
+  onCancel?: () => void;
 }
 
 /**
@@ -59,6 +60,7 @@ const DivPrizeFundGrid = React.forwardRef<PrizeFundGridHandle, DivPrizeFundGridP
   onNavigateAfterSave,
   onBack,
   onSaveComplete,
+  onCancel,
 }, ref) => {
   const dispatch = useDispatch<AppDispatch>();
   const saveStatus = useSelector(getDivPfsSaveStatus);
@@ -139,6 +141,7 @@ const DivPrizeFundGrid = React.forwardRef<PrizeFundGridHandle, DivPrizeFundGridP
       onNavigateAfterSave={onNavigateAfterSave}
       onBack={onBack}
       onSaveComplete={onSaveComplete}
+      onCancel={onCancel}
     />    
   );
 });

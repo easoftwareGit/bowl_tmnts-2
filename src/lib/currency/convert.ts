@@ -37,3 +37,18 @@ export const moneyNumber = (moneyStr: unknown): number | null => {
     return null
   }  
 }
+
+/**
+ * truncates a value to two decimal places
+ * 
+ * @param {number} value - value to round
+ * @returns {number} - rounded value to two decimal places, or zero  
+ */
+export const truncateToTwoDecimals = (value: number): number => {  
+  if (Number.isNaN(value) || !Number.isFinite(value)) return 0;
+  /*
+  * toFixed(6) removes floating-point error before truncating
+  * (0.29 * 100 = 28.999999999999996 would otherwise become 0.28).
+  */
+  return Math.trunc(Number((value * 100).toFixed(6))) / 100;
+}

@@ -35,6 +35,7 @@ export const getGameNums = (tmntResults: tmntGameResult[]): number[] => {
  */
 export const getLastGameWithScores = (tmntResults: tmntGameResult[]): number => {
   const numGames = calcNumGames(tmntResults);
+
   let lastGame = 1;
   for (let game = 1; game <= numGames; game++) {
     const completed = tmntResults.filter(

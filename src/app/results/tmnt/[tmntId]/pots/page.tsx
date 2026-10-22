@@ -18,7 +18,7 @@ import { useTmntFullData } from "@/hooks/useTmntFullData";
 import { getPotShortName } from "@/lib/getName";
 import { divType, potType } from "@/lib/types/types";
 import { calcNumGames } from "@/components/tmnts/games";
-import { buildPotResultsRows } from "./potResults";
+import { buildPotResultsRows } from "../../../../../lib/results/pots/potResults";
 import {
   fetchPotPfs,
   getPotPfsError,
@@ -262,7 +262,6 @@ const PotsPage = () => {
       </div>
     );
   }
-
 
   if (!hasTmntGamesData) {
     return <WaitModal show={mounted} message="Loading..." />;

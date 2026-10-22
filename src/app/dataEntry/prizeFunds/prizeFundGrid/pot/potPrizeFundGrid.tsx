@@ -2,16 +2,17 @@
 
 import React, { useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import type { prizeFundEntryRow, tmntPotPfSaveDataType } from "@/lib/types/types";
+import type {
+  prizeFundEntryRow,
+  tmntPotPfSaveDataType,
+} from "@/lib/types/types";
 import type { AppDispatch } from "@/redux/store";
 import {
   getPotPfsSaveStatus,
   savePotPfs,
   selectPotPfs,
 } from "@/redux/features/potPfs/potPfsSlice";
-import {
-  selectTmntFullData,
-} from "@/redux/features/tmntFullData/tmntFullDataSlice";
+import { selectTmntFullData } from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import { extractPotPfs } from "@/lib/db/potPfs/dbPotPfs";
 import { pfEntryRowsToPotPfEntryRows } from "../convertPfTypes";
 import PrizeFundGrid, { type PrizeFundGridHandle } from "../prizeFundGrid";
@@ -28,6 +29,7 @@ interface PotPrizeFundGridProps {
   onNavigateAfterSave?: () => void;
   onBack: () => void;
   onSaveComplete?: (savedRows: prizeFundEntryRow[]) => void;
+  onCancel?: () => void;
 }
 
 /**
@@ -49,104 +51,108 @@ interface PotPrizeFundGridProps {
  * This component does not define the methods exposed by the ref.
  * PrizeFundGrid defines those methods with useImperativeHandle.
  */
-const PotPrizeFundGrid = React.forwardRef<PrizeFundGridHandle, PotPrizeFundGridProps>(({
-  rows,
-  setRows,
-  potId,
-  totalPrizeFund,
-  enableEditing = true,
-  gridDataWasChanged,
-  onGridDataChanged,
-  onGridDataReset,
-  onNavigateAfterSave,
-  onBack,
-  onSaveComplete,
-}, ref) => {
-  const dispatch = useDispatch<AppDispatch>();
-  const saveStatus = useSelector(getPotPfsSaveStatus);
-
-  const allPotPfs = useSelector(selectPotPfs);
-  const tmntData = useSelector(selectTmntFullData);
-
-  /**
-   * Saves generic prize-fund rows as pot prize-fund records.
-   *
-   * PrizeFundGrid calls this function after Syncfusion completes its
-   * batch-save operation. The currentRows argument contains the grid's
-   * current values, including the user's completed batch edits.
-   *
-   * Data flow:
-   * prizeFundEntryRow[]
-   *   -> potPfEntryRow[]
-   *   -> potPfType[]
-   *   -> Redux save
-   *
-   * @param currentRows - Current rows supplied by PrizeFundGrid.
-   */
-  const handleSave = useCallback(
-    async (
-      currentRows: prizeFundEntryRow[],
-    ): Promise<void> => {
-      // 1. Convert generic rows to pot entry rows.
-      const potPfEntryRows = pfEntryRowsToPotPfEntryRows(currentRows);
-
-      // 2. Extract the database pot prize-fund records.
-      const potPfsToSave = extractPotPfs(potPfEntryRows);
-
-      // 3. Replace this pot's existing rows with the
-      // current rows from the grid.
-      const toSavePotPfs = [
-        ...allPotPfs.filter((potPf) => potPf.pot_id !== potId),
-        ...potPfsToSave,
-      ];
-
-      // 4. Save through the division prize-fund Redux slice.
-      if (toSavePotPfs.length === 0) {
-        return;
-      }
-      const potIdsForPotPfs: string[] = [
-        ...new Set(
-          toSavePotPfs.map(
-            (potPf) => potPf.pot_id,
-          ),
-        ),
-      ];
-      const toSave: tmntPotPfSaveDataType = {
-        potPfData: toSavePotPfs,
-        potIds: potIdsForPotPfs,
-        tmntId: tmntData.tmnt.id,
-      }
-      await dispatch(savePotPfs(toSave)).unwrap();
+const PotPrizeFundGrid = React.forwardRef<
+  PrizeFundGridHandle,
+  PotPrizeFundGridProps
+>(
+  (
+    {
+      rows,
+      setRows,
+      potId,
+      totalPrizeFund,
+      enableEditing = true,
+      gridDataWasChanged,
+      onGridDataChanged,
+      onGridDataReset,
+      onNavigateAfterSave,
+      onBack,
+      onSaveComplete,
+      onCancel,
     },
-    [dispatch, allPotPfs, potId, tmntData],
-  );
+    ref,
+  ) => {
+    const dispatch = useDispatch<AppDispatch>();
+    const saveStatus = useSelector(getPotPfsSaveStatus);
 
-  return (
-    <PrizeFundGrid
-      /*
-       * Forward the ref received from the page to PrizeFundGrid.
-       *
-       * PrizeFundGrid uses useImperativeHandle to attach its public
-       * methods, such as getCurrentRows(), to this ref.
-       */      
-      ref={ref}
-      gridId="potPfGrid"
-      prizeFundType="pot"
-      rows={rows}
-      setRows={setRows}
-      totalPrizeFund={totalPrizeFund}
-      enableEditing={enableEditing}
-      gridDataWasChanged={gridDataWasChanged}
-      saveStatus={saveStatus}
-      onGridDataChanged={onGridDataChanged}
-      onGridDataReset={onGridDataReset}
-      onSave={handleSave}
-      onNavigateAfterSave={onNavigateAfterSave}
-      onBack={onBack}
-      onSaveComplete={onSaveComplete}
-    />    
-  );
-});
+    const allPotPfs = useSelector(selectPotPfs);
+    const tmntData = useSelector(selectTmntFullData);
+
+    /**
+     * Saves generic prize-fund rows as pot prize-fund records.
+     *
+     * PrizeFundGrid calls this function after Syncfusion completes its
+     * batch-save operation. The currentRows argument contains the grid's
+     * current values, including the user's completed batch edits.
+     *
+     * Data flow:
+     * prizeFundEntryRow[]
+     *   -> potPfEntryRow[]
+     *   -> potPfType[]
+     *   -> Redux save
+     *
+     * @param currentRows - Current rows supplied by PrizeFundGrid.
+     */
+    const handleSave = useCallback(
+      async (currentRows: prizeFundEntryRow[]): Promise<void> => {
+        // 1. Convert generic rows to pot entry rows.
+        const potPfEntryRows = pfEntryRowsToPotPfEntryRows(currentRows);
+
+        // 2. Extract the database pot prize-fund records.
+        const potPfsToSave = extractPotPfs(potPfEntryRows);
+
+        // 3. Replace this pot's existing rows with the
+        // current rows from the grid.
+        const toSavePotPfs = [
+          ...allPotPfs.filter((potPf) => potPf.pot_id !== potId),
+          ...potPfsToSave,
+        ];
+
+        // 4. Save through the pot prize-fund Redux slice.
+        if (toSavePotPfs.length === 0) {
+          return;
+        }
+        const potIdsForPotPfs: string[] = [
+          ...new Set(toSavePotPfs.map((potPf) => potPf.pot_id)),
+        ];
+        const toSave: tmntPotPfSaveDataType = {
+          potPfData: toSavePotPfs,
+          potIds: potIdsForPotPfs,
+          tmntId: tmntData.tmnt.id,
+        };
+        await dispatch(savePotPfs(toSave)).unwrap();
+      },
+      [dispatch, allPotPfs, potId, tmntData],
+    );
+
+    return (
+      <PrizeFundGrid
+        /*
+         * Forward the ref received from the page to PrizeFundGrid.
+         *
+         * PrizeFundGrid uses useImperativeHandle to attach its public
+         * methods, such as getCurrentRows(), to this ref.
+         */
+        ref={ref}
+        gridId="potPfGrid"
+        prizeFundType="pot"
+        rows={rows}
+        setRows={setRows}
+        totalPrizeFund={totalPrizeFund}
+        enableEditing={enableEditing}
+        gridDataWasChanged={gridDataWasChanged}
+        saveStatus={saveStatus}
+        onGridDataChanged={onGridDataChanged}
+        onGridDataReset={onGridDataReset}
+        onSave={handleSave}
+        onNavigateAfterSave={onNavigateAfterSave}
+        onBack={onBack}
+        onSaveComplete={onSaveComplete}
+        onCancel={onCancel}
+      />
+    );
+  },
+);
 
 PotPrizeFundGrid.displayName = "PotPrizeFundGrid";
 

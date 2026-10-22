@@ -54,7 +54,7 @@ const TmntStandingsForm: React.FC<ChildProps> = ({
   const gotHdcp = div.hdcp_per > 0;
   const justDivPfs = divPfs.filter((pf) => pf.div_id === div.id);  
   const standingsRows = populateStandingsRows(justDivResults, justDivPfs);
-  const lastCashRow = justDivPfs.length - 1;  
+  const lastCashIndex = justDivPfs.length - 1;  
 
   /**
    * Sorts the standings rows by total_plus_total_hdcp.
@@ -233,7 +233,7 @@ const TmntStandingsForm: React.FC<ChildProps> = ({
               {standingsRows.map((row, index) => (
                 <tr
                   key={row.player_id}
-                  className={index === lastCashRow ? "cut-row" : ""}
+                  className={index === lastCashIndex ? "cut-row" : ""}
                 >
                   <td className="text-center align-middle">{row.position}</td>
                   <td className="text-start align-middle">{row.full_name}</td>

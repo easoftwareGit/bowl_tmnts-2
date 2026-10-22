@@ -1,97 +1,110 @@
+import { fireEvent, screen } from "@testing-library/react";
 import {
-  performSave,
+  flushTimeouts,
+  getCurrentRowsFromHandle,
+  mockBatchSave,
+  mockEditCell,
   setup,
   standardBeforeEach,
 } from "./prizeFundGrid.testSetup";
 
-describe("PrizeFundGrid ActionComplete edge cases", () => {
+/*
+ * Edge cases that do not belong to a single feature file.
+ *
+ * Covered elsewhere (do not duplicate here):
+ *   - ignored / unrequested actionComplete events -> saveSuccessful.test
+ *   - saving with no rows                         -> saveValidation.test
+ *   - invalid prizeFundType                       -> render.test
+ *   - unknown toolbar ids                         -> toolbar.test
+ *
+ * Several tests below need two clicks to land before the component's
+ * setTimeout(0) runs, so they use fireEvent (synchronous) instead of
+ * userEvent (which yields to timers between actions).
+ */
+
+const clickNow = (name: string): void => {
+  fireEvent.click(screen.getByRole("button", { name }));
+};
+
+describe("PrizeFundGrid edge cases", () => {
   beforeEach(standardBeforeEach);
 
-  describe("non-batchsave request", () => {
-    it("ignores ActionComplete events that are not batchsave", async () => {
-      const {
-        onSave,
-        onSaveComplete,
-        onNavigateAfterSave,
-        setRows,
-        triggerActionComplete,
-      } = setup();
+  /*******************
+   * Empty grid      *
+   *******************/
 
-      await triggerActionComplete("refresh");
-
-      expect(onSave).not.toHaveBeenCalled();
-      expect(onSaveComplete).not.toHaveBeenCalled();
-      expect(onNavigateAfterSave).not.toHaveBeenCalled();
-      expect(setRows).not.toHaveBeenCalled();
+  it("getCurrentRows() returns an empty array when the grid has no rows", () => {
+    const { gridHandleRef } = setup({
+      rows: [],
+      currentRows: [],
+      totalPrizeFund: 0,
     });
+
+    expect(getCurrentRowsFromHandle(gridHandleRef)).toEqual([]);
   });
 
-  describe("save not requested", () => {
-    it("ignores batchsave events when a save was not requested", async () => {
-      const {
-        onSave,
-        onSaveComplete,
-        onNavigateAfterSave,
-        setRows,
-        triggerActionComplete,
-      } = setup();
+  /************************************
+   * Clicks before validation has run *
+   ************************************/
+
+  describe("repeated clicks before validation runs", () => {
+    it("two quick Save clicks start two batch saves but save only once", async () => {
+      const { onSave, onSaveComplete, setRows, triggerActionComplete } = setup();
+
+      clickNow("Save");
+      clickNow("Save");
+      await flushTimeouts();
+
+      expect(mockBatchSave).toHaveBeenCalledTimes(2);
 
       await triggerActionComplete("batchsave");
+      await triggerActionComplete("batchsave");
 
-      expect(onSave).not.toHaveBeenCalled();
-      expect(onSaveComplete).not.toHaveBeenCalled();
-      expect(onNavigateAfterSave).not.toHaveBeenCalled();
+      expect(onSave).toHaveBeenCalledTimes(1);
+      expect(onSaveComplete).toHaveBeenCalledTimes(1);
+      expect(setRows).not.toHaveBeenCalled();
+    });
+
+    it("Save then Save and Close: the last click decides whether to close", async () => {
+      const { onNavigateAfterSave, setRows, triggerActionComplete } = setup();
+
+      clickNow("Save");
+      clickNow("Save and Close");
+      await flushTimeouts();
+      await triggerActionComplete("batchsave");
+
+      expect(onNavigateAfterSave).toHaveBeenCalledTimes(1);
       expect(setRows).not.toHaveBeenCalled();
     });
   });
 
-  describe("empty rows", () => {
-    it("does not call onSave when there are no rows", async () => {
-      const {
-        user,
-        onSave,
-        onSaveComplete,
-        onNavigateAfterSave,
-        setRows,
-        triggerActionComplete,
-      } = setup({
-        rows: [],
-        currentRows: [],
-        totalPrizeFund: 0,
-      });
+  /*********************************
+   * Unmount with pending timeouts *
+   *********************************/
 
-      await performSave(
-        user,
-        triggerActionComplete,
-      );
+  describe("unmounting with work still pending", () => {
+    it("does not save when unmounted before validation runs", async () => {
+      const { view, onSave } = setup();
 
+      clickNow("Save");
+      view.unmount();
+
+      await expect(flushTimeouts()).resolves.toBeUndefined();
+
+      // gridRef is cleared on unmount, so validation cannot pass
+      expect(mockBatchSave).not.toHaveBeenCalled();
       expect(onSave).not.toHaveBeenCalled();
+    });
 
-      expect(onSaveComplete).toHaveBeenCalledTimes(1);
-      expect(onSaveComplete).toHaveBeenCalledWith([]);
+    it("does not throw when unmounted before the Edit timeout runs", async () => {
+      const { view } = setup();
 
-      expect(setRows).toHaveBeenCalledTimes(1);
-      expect(setRows).toHaveBeenCalledWith([]);
-      
-      expect(onNavigateAfterSave).not.toHaveBeenCalled();
+      clickNow("Edit");
+      view.unmount();
+
+      await expect(flushTimeouts()).resolves.toBeUndefined();
+      // editCell still runs on the grid instance captured before unmount
+      expect(mockEditCell).toHaveBeenCalledTimes(1);
     });
   });
-
-  describe("public grid handle", () => {
-    it("returns an empty array when the grid contains no rows", () => {
-      const {
-        gridHandleRef,
-      } = setup({
-        rows: [],
-        currentRows: [],
-        totalPrizeFund: 0,
-      });
-
-      expect(gridHandleRef.current).not.toBeNull();
-
-      expect(
-        gridHandleRef.current?.getCurrentRows(),
-      ).toEqual([]);
-    });
-  });  
 });

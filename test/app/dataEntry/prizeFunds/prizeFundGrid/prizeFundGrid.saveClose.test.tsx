@@ -1,171 +1,215 @@
-import { waitFor } from "@testing-library/react";
+import { act } from "@testing-library/react";
 import type { prizeFundEntryRow } from "@/lib/types/types";
 import {
   clickSaveAndClose,
-  mockBatchSave,
-  savedRowsCopy,
-  setup,
+  getLatestGridProps,
   makeRows,
+  performSave,
+  performSaveAndClose,
+  queryErrorModal,
+  setCurrentRows,
+  setup,
   standardBeforeEach,
 } from "./prizeFundGrid.testSetup";
+
+/*
+ * Save and Close follows the same path as Save (see saveSuccessful.test),
+ * except that after onSave finishes and onSaveComplete is called, it also
+ * calls onNavigateAfterSave.
+ *
+ * Neither Save nor Save and Close calls setRows; the parent updates its
+ * rows in onSaveComplete.
+ *
+ * Validation failures with Save and Close are in saveValidation.test.
+ * Save failures (onSave rejects) with Save and Close are in saveError.test.
+ */
+
+/** Rows as Syncfusion holds them after batchSave applied the edits. */
+const editedRows = (): prizeFundEntryRow[] => {
+  const rows = makeRows();
+  rows[0].amount = 110;
+  rows[1].amount = 50;
+  return rows; // 110, 50, 40 = 200
+};
 
 describe("PrizeFundGrid Save and Close", () => {
   beforeEach(standardBeforeEach);
 
-  it("calls onNavigateAfterSave after a successful save", async () => {
-    const {
-      user,
-      onNavigateAfterSave,
-      triggerActionComplete,
-    } = setup();
+  /*****************
+   * Happy path    *
+   *****************/
+
+  describe("after a successful save", () => {
+    it("calls onSave once with the grid's current rows, not the rows prop", async () => {
+      const { user, onSave, triggerActionComplete } = setup();
+      const gridRows = setCurrentRows(editedRows());
+
+      await performSaveAndClose(user, triggerActionComplete);
+
+      expect(onSave).toHaveBeenCalledTimes(1);
+      expect(onSave).toHaveBeenCalledWith(gridRows);
+    });
+
+    it("calls onSaveComplete exactly once, with copies of the saved rows", async () => {
+      const { user, onSaveComplete, triggerActionComplete } = setup();
+      const gridRows = setCurrentRows(editedRows());
+
+      await performSaveAndClose(user, triggerActionComplete);
+
+      // guards against the earlier double-call bug
+      expect(onSaveComplete).toHaveBeenCalledTimes(1);
+
+      const savedRows = onSaveComplete.mock.calls[0][0] as prizeFundEntryRow[];
+      expect(savedRows).toEqual(gridRows);
+      expect(savedRows).not.toBe(gridRows);
+      savedRows.forEach((row, index) => {
+        expect(row).not.toBe(gridRows[index]);
+      });
+    });
+
+    it("navigates away once", async () => {
+      const { user, onNavigateAfterSave, onBack, triggerActionComplete } =
+        setup();
+
+      await performSaveAndClose(user, triggerActionComplete);
+
+      expect(onNavigateAfterSave).toHaveBeenCalledTimes(1);
+      expect(onBack).not.toHaveBeenCalled();
+    });
+
+    it("does not update the parent's rows itself", async () => {
+      const { user, setRows, triggerActionComplete } = setup();
+
+      await performSaveAndClose(user, triggerActionComplete);
+
+      expect(setRows).not.toHaveBeenCalled();
+    });
+
+    it("does not show an error modal", async () => {
+      const { user, triggerActionComplete } = setup();
+
+      await performSaveAndClose(user, triggerActionComplete);
+
+      expect(queryErrorModal()).not.toBeInTheDocument();
+    });
+
+    it("saves, then completes, then navigates", async () => {
+      const {
+        user,
+        onSave,
+        onSaveComplete,
+        onNavigateAfterSave,
+        triggerActionComplete,
+      } = setup();
+
+      await performSaveAndClose(user, triggerActionComplete);
+
+      const [saveOrder] = onSave.mock.invocationCallOrder;
+      const [completeOrder] = onSaveComplete.mock.invocationCallOrder;
+      const [navigateOrder] = onNavigateAfterSave.mock.invocationCallOrder;
+
+      expect(saveOrder).toBeLessThan(completeOrder);
+      expect(completeOrder).toBeLessThan(navigateOrder);
+    });
+  });
+
+  /***********************
+   * Waiting for onSave  *
+   ***********************/
+
+  it("does not navigate until onSave finishes", async () => {
+    const { user, onSave, onSaveComplete, onNavigateAfterSave } = setup();
+
+    let resolveSave!: () => void;
+    onSave.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveSave = resolve;
+        }),
+    );
 
     await clickSaveAndClose(user);
 
-    await waitFor(() => {
-      expect(mockBatchSave).toHaveBeenCalledTimes(1);
+    let pending: void | Promise<void> = undefined;
+    act(() => {
+      pending = getLatestGridProps()?.actionComplete?.({
+        requestType: "batchsave",
+      });
     });
 
-    await triggerActionComplete("batchsave");
+    expect(onSaveComplete).not.toHaveBeenCalled();
+    expect(onNavigateAfterSave).not.toHaveBeenCalled();
 
+    await act(async () => {
+      resolveSave();
+      await pending;
+    });
+
+    expect(onSaveComplete).toHaveBeenCalledTimes(1);
     expect(onNavigateAfterSave).toHaveBeenCalledTimes(1);
   });
 
-  it("does not call setRows after Save and Close", async () => {
-    const {
-      user,
-      setRows,
-      triggerActionComplete,
-    } = setup();
+  /*************************
+   * Optional callbacks    *
+   *************************/
 
-    await clickSaveAndClose(user);
-
-    await waitFor(() => {
-      expect(mockBatchSave).toHaveBeenCalledTimes(1);
+  it("works when onSaveComplete and onNavigateAfterSave are not supplied", async () => {
+    const { user, onSave, setRows, triggerActionComplete } = setup({
+      omitOptionalCallbacks: true,
     });
 
-    await triggerActionComplete("batchsave");
-
-    expect(setRows).not.toHaveBeenCalled();
-  });
-
-  it("calls onSaveComplete with the current grid rows after Save and Close", async () => {
-    const rows = savedRowsCopy(makeRows());
-
-    const currentRows = savedRowsCopy(rows);
-
-    // Simulate an unsaved edit in the Syncfusion grid.
-    currentRows[0].amount = 125;
-    currentRows[0].percentage = 125 / 225; // 225 = 125 + 60 + 40
-
-    const {
-      user,
-      onSaveComplete,
-      triggerActionComplete,
-    } = setup({
-      rows,
-      currentRows,
-      totalPrizeFund: 225, // 225 = 125 + 60 + 40
-    });
-
-    await clickSaveAndClose(user);
-
-    await waitFor(() => {
-      expect(mockBatchSave).toHaveBeenCalledTimes(1);
-    });
-
-    await triggerActionComplete("batchsave");
-
-    expect(onSaveComplete).toHaveBeenCalled();
-
-    const savedRows =
-      onSaveComplete.mock.calls.at(-1)?.[0] as prizeFundEntryRow[];
-
-    expect(savedRows).toEqual(currentRows);
-
-    expect(savedRows).not.toBe(currentRows);
-
-    savedRows.forEach((row, index) => {
-      expect(row).not.toBe(currentRows[index]);
-    });
-  });
-
-  // it("calls onSaveComplete twice with copies of the saved rows", async () => {
-  //   const {
-  //     user,
-  //     rows,
-  //     onSaveComplete,
-  //     triggerActionComplete,
-  //   } = setup();
-
-  //   const expectedRows = savedRowsCopy(rows);
-
-  //   await clickSaveAndClose(user);
-
-  //   await waitFor(() => {
-  //     expect(mockBatchSave).toHaveBeenCalledTimes(1);
-  //   });
-
-  //   await triggerActionComplete("batchsave");
-
-  //   expect(onSaveComplete).toHaveBeenCalledTimes(2);
-
-  //   expect(onSaveComplete).toHaveBeenNthCalledWith(
-  //     1,
-  //     expectedRows,
-  //   );
-
-  //   expect(onSaveComplete).toHaveBeenNthCalledWith(
-  //     2,
-  //     expectedRows,
-  //   );
-
-  //   const firstSavedRows =
-  //     onSaveComplete.mock.calls[0][0] as prizeFundEntryRow[];
-
-  //   const secondSavedRows =
-  //     onSaveComplete.mock.calls[1][0] as prizeFundEntryRow[];
-
-  //   expect(firstSavedRows).not.toBe(rows);
-  //   expect(secondSavedRows).not.toBe(rows);
-
-  //   firstSavedRows.forEach((row, index) => {
-  //     expect(row).not.toBe(rows[index]);
-  //   });
-
-  //   secondSavedRows.forEach((row, index) => {
-  //     expect(row).not.toBe(rows[index]);
-  //   });
-  // });
-
-  it("saves the current Syncfusion rows instead of the original rows prop", async () => {
-    const rows = savedRowsCopy(makeRows());
-
-    const currentRows = savedRowsCopy(rows);
-
-    currentRows[1].amount = 80;
-    currentRows[1].percentage = 0.4;
-
-    const {
-      user,
-      onSave,
-      triggerActionComplete,
-    } = setup({
-      rows,
-      currentRows,
-      totalPrizeFund: 220,
-    });
-
-    await clickSaveAndClose(user);
-
-    await waitFor(() => {
-      expect(mockBatchSave).toHaveBeenCalledTimes(1);
-    });
-
-    await triggerActionComplete("batchsave");
+    await performSaveAndClose(user, triggerActionComplete);
 
     expect(onSave).toHaveBeenCalledTimes(1);
-
-    expect(onSave).toHaveBeenCalledWith(currentRows);
+    expect(setRows).not.toHaveBeenCalled();
+    expect(queryErrorModal()).not.toBeInTheDocument();
   });
 
+  /******************************
+   * Close flag does not linger *
+   ******************************/
+
+  describe("switching between Save and Save and Close", () => {
+    it("a plain Save after Save and Close does not navigate", async () => {
+      const {
+        user,
+        onSaveComplete,
+        onNavigateAfterSave,
+        setRows,
+        triggerActionComplete,
+      } = setup();
+
+      await performSaveAndClose(user, triggerActionComplete);
+      await performSave(user, triggerActionComplete);
+
+      expect(onSaveComplete).toHaveBeenCalledTimes(2);
+      expect(onNavigateAfterSave).toHaveBeenCalledTimes(1);
+      expect(setRows).not.toHaveBeenCalled();
+
+      // the single navigation came from the first (Save and Close) save
+      const [, secondCompleteOrder] = onSaveComplete.mock.invocationCallOrder;
+      const [navigateOrder] = onNavigateAfterSave.mock.invocationCallOrder;
+      expect(navigateOrder).toBeLessThan(secondCompleteOrder);
+    });
+
+    it("Save and Close after a plain Save navigates", async () => {
+      const {
+        user,
+        onSaveComplete,
+        onNavigateAfterSave,
+        setRows,
+        triggerActionComplete,
+      } = setup();
+
+      await performSave(user, triggerActionComplete);
+
+      expect(onNavigateAfterSave).not.toHaveBeenCalled();
+
+      await performSaveAndClose(user, triggerActionComplete);
+
+      expect(onSaveComplete).toHaveBeenCalledTimes(2);
+      expect(onNavigateAfterSave).toHaveBeenCalledTimes(1);
+      expect(setRows).not.toHaveBeenCalled();
+    });
+  });
 });

@@ -1,11 +1,11 @@
 import React from "react";
-import { potResultsRowType } from "./potResults";
+import { potLastGameResults, potResultsRowType } from "../../../../../lib/results/pots/potResults";
 import { potPfType, tmntFullType } from "@/lib/types/types";
 import { missingDataError } from "../brackets/player/[playerId]/playerBrktData";
-import { getPlayerName } from "@/lib/getName";
 import { formatValueSymbSep2Dec } from "@/lib/currency/formatValue";
 import { IntlConfig } from "@/lib/currency/components/CurrencyInputProps";
 import { getLocaleConfig } from "@/lib/currency/components/utils";
+import PlayerNameWithScore from "./playerNameWithScore";
 
 type potGameProps = {
   pot_id: string;
@@ -48,13 +48,6 @@ const PotLastGame = ({
   if (!potPrizeFund || potPrizeFund.length === 0) {
     return missingDataError("No pot prize fund");
   }  
-  const potPlayers = tmntFullData.potEntries.filter(
-    (potEntry) => potEntry.pot_id === pot_id,
-  );
-  if (!potPlayers || potPlayers.length === 0) {
-    return missingDataError("No pot players");
-  }
-  const potPlayerIds = new Set(potPlayers.map((potPlayer) => potPlayer.player_id));
 
   // sort by amount, highest to lowest
   potPrizeFund.sort((a, b) => {
@@ -64,25 +57,7 @@ const PotLastGame = ({
     return b.amount! - a.amount!;
   });
 
-  const gameResults = potResultsRows
-    .filter((row) => row.gameNum === numGames && potPlayerIds.has(row.player_id))
-    .sort((a, b) => (b.scoreWithHdcp ?? 0) - (a.scoreWithHdcp ?? 0));
-
-  const PlayerNameWithScore = ({row}: playerNameWithScoreProps) => {
-    return (
-      <div className="d-flex align-items-center">
-        <span>{getPlayerName(tmntFullData.players, row.player_id)}</span>
-        <span className="ms-auto ps-2 text-nowrap">
-          {row.scoreWithHdcp}
-          {div.hdcp_per > 0 && row.score != null &&  (
-            <span className="small">
-              {" "}({row.score} + {row.hdcp})
-            </span>
-          )}
-        </span>
-      </div>
-    )
-  }
+  const lastGameResults = potLastGameResults(pot_id, tmntFullData, potResultsRows, numGames);
 
   const payoutWidth = 80;
   const gameWidth = (div.hdcp_per > 0) ? 240 : 180;
@@ -132,13 +107,17 @@ const PotLastGame = ({
                 </tr>
               </thead>
               <tbody className="table-group-divider small">
-                {gameResults.map((row) => (
+                {lastGameResults.map((row) => (
                   <tr key={row.player_id}>
                     <td
                       className="align-middle"
                       style={{ width: gameWidth }}
                     >
-                      <PlayerNameWithScore row={row} />
+                      <PlayerNameWithScore
+                        row={row}
+                        tmntFullData={tmntFullData}
+                        div={div}
+                      />
                     </td>
                   </tr>
                 ))}

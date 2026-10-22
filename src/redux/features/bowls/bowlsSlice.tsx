@@ -34,6 +34,9 @@ export const saveBowl = createAsyncThunk(
   "bowls/saveBowl",
   async (bowl: bowlType) => {
     const upserted = await upsertBowl(bowl);
+    if (!upserted) {
+      throw new Error("Error saving bowl");
+    }
     return upserted;
   }
 )
@@ -47,28 +50,26 @@ export const bowlsSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(fetchBowls.pending, (state: bowlsSliceState) => {
+    builder.addCase(fetchBowls.pending, (state) => {
       state.loadStatus = "loading";
       state.error = "";
     });
-    builder.addCase(fetchBowls.fulfilled, (state: bowlsSliceState, action: PayloadAction<bowlType[]>) => {
+    builder.addCase(fetchBowls.fulfilled, (state, action) => {
       state.loadStatus = "succeeded";
       state.bowls = action.payload;
       state.error = "";
     });
-    builder.addCase(fetchBowls.rejected, (state: bowlsSliceState, action) => {
-      state.loadStatus = "failed";
-      // state.error = action.error.message;
+    builder.addCase(fetchBowls.rejected, (state, action) => {
+      state.loadStatus = "failed";      
       state.error =
-        (action.payload as string) ||
-        action.error.message ||
+        action.error.message ??
         "Unknown error fetching bowls";
     });
-    builder.addCase(saveBowl.pending, (state: bowlsSliceState, action) => {
+    builder.addCase(saveBowl.pending, (state) => {
       state.saveStatus = "saving";
       state.error = "";
     });
-    builder.addCase(saveBowl.fulfilled, (state: bowlsSliceState, action) => {
+    builder.addCase(saveBowl.fulfilled, (state, action) => {
       state.saveStatus = "succeeded";
       state.error = "";
       const updatedBowl = action.payload;
@@ -86,9 +87,9 @@ export const bowlsSlice = createSlice({
         })
       );
     });
-    builder.addCase(saveBowl.rejected, (state: bowlsSliceState, action) => {
+    builder.addCase(saveBowl.rejected, (state, action) => {
       state.saveStatus = "failed";
-      state.error = action.error.message;
+      state.error = action.error.message ?? "Unknown error saving bowl";
     });
   },
 });

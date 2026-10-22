@@ -2,11 +2,13 @@ import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ioStatusType } from "@/redux/statusTypes";
 import { RootState } from "@/redux/store";
 import type { tmntFullType } from "@/lib/types/types";
-import { ioDataError } from "@/lib/enums/enums";
 import { blankFullStage, blankTmnt } from "@/lib/db/initVals";
 import { cloneDeep } from "lodash";
-import { getTmntFullData } from "@/lib/db/tmnts/dbTmnts";
-import { replaceTmntFullData, replaceTmntEntriesData } from "@/lib/db/tmnts/dbTmnts";
+import {
+  getTmntFullData,
+  replaceTmntFullData,
+  replaceTmntEntriesData,
+} from "@/lib/db/tmnts/dbTmnts";
 
 export interface tmntFullDataState {
   tmntFullData: tmntFullType;
@@ -14,7 +16,6 @@ export interface tmntFullDataState {
   loadStatus: ioStatusType;
   saveStatus: ioStatusType;
   error: string | undefined;
-  ioError: ioDataError | undefined;
 }
 
 // initial state constant
@@ -35,58 +36,56 @@ const initialState: tmntFullDataState = {
     potEntries: [],
     pots: [],
     squads: [],
-    stage: blankFullStage,
+    stage: cloneDeep(blankFullStage),
     moneys: [],
   },
   requestedTmntId: "",
   loadStatus: "idle",
   saveStatus: "idle",
   error: "",
-  ioError: ioDataError.NONE,
 };
 
 export const fetchTmntFullData = createAsyncThunk(
   "tmntFullData/fetchTmntFullData",
   async (tmntId: string) => {
-    // DO NOT return the current state if the tournament ID matches the one being fetched
-    // child data might have changed, and there is too much complexity in checking all that
-    // const state = getState() as RootState;
-    // const currentTmnt = state.tmntFulldata.tmntFullData?.tmnt.id;
-    // if (currentTmnt === tmntId) {
-    //   // Return the current state if the tournament ID matches the one being fetched
-    //   return state.tmntFullData.tmntData;
-    // }
+    // Always fetch, even if tmntId matches the loaded tournament: child data
+    // might have changed, and checking all of it is too complex.
 
     // Do not use try / catch blocks here. Need the promise to be fulfilled or
     // rejected which will have the appropriate response in the extraReducers.
-
     return getTmntFullData(tmntId);
-  }
+  },
 );
 
 export const saveTmntFullData = createAsyncThunk(
   "tmntFullData/saveTmntFullData",
   async (tmntFullData: tmntFullType) => {
+    // Do not use try / catch blocks here. Need the promise to be fulfilled or
+    // rejected which will have the appropriate response in the extraReducers.
     const result = await replaceTmntFullData(tmntFullData);
     if (!result) {
       throw new Error("Failed to save tournament full data");
     }
     return tmntFullData;
-  }
+  },
 );
 
 export const saveTmntEntriesData = createAsyncThunk(
-  "tmntFullData/saveTmntFullEntriesData",
+  "tmntFullData/saveTmntEntriesData",
   async (tmntFullData: tmntFullType) => {
-    const { stage } = await replaceTmntEntriesData(tmntFullData);
-    // no longer need to throw error here, because the saveTmntFullData will throw    
+    // Do not use try / catch blocks here. Need the promise to be fulfilled or
+    // rejected which will have the appropriate response in the extraReducers.
+    const result = await replaceTmntEntriesData(tmntFullData);
+    if (!result.stage) {
+      throw new Error("Failed to save tournament entries data");
+    }
 
     // merge server stage fields into what we sent
     return {
       ...tmntFullData,
-      stage, // server is authoritative for stage fields
-    } as tmntFullType;
-  }
+      stage: result.stage, // server is authoritative for stage fields
+    };
+  },
 );
 
 export const tmntFullDataSlice = createSlice({
@@ -100,27 +99,30 @@ export const tmntFullDataSlice = createSlice({
         state.requestedTmntId = action.meta.arg;
         state.error = "";
       })
-      .addCase(
-        fetchTmntFullData.fulfilled,
-        (state, action: PayloadAction<tmntFullType>) => {
-          state.loadStatus = "succeeded";
-          state.tmntFullData = action.payload;
-        }
-      )
+      .addCase(fetchTmntFullData.fulfilled, (state, action) => {
+        if (action.meta.arg !== state.requestedTmntId) return; // stale response
+        state.loadStatus = "succeeded";
+        state.tmntFullData = action.payload;
+      })
       .addCase(fetchTmntFullData.rejected, (state, action) => {
+        if (action.meta.arg !== state.requestedTmntId) return; // stale failure
         state.loadStatus = "failed";
         state.error = action.error.message;
       });
     builder
       .addCase(saveTmntFullData.pending, (state) => {
         state.saveStatus = "saving";
+        state.error = "";
       })
       .addCase(
         saveTmntFullData.fulfilled,
         (state, action: PayloadAction<tmntFullType>) => {
           state.saveStatus = "succeeded";
+          // a different tournament was requested while this save was running,
+          // so don't overwrite its data with the one just saved
+          if (state.requestedTmntId && state.requestedTmntId !== action.payload.tmnt.id) return;
           state.tmntFullData = action.payload;
-        }
+        },
       )
       .addCase(saveTmntFullData.rejected, (state, action) => {
         state.saveStatus = "failed";
@@ -129,13 +131,17 @@ export const tmntFullDataSlice = createSlice({
     builder
       .addCase(saveTmntEntriesData.pending, (state) => {
         state.saveStatus = "saving";
+        state.error = "";
       })
       .addCase(
         saveTmntEntriesData.fulfilled,
         (state, action: PayloadAction<tmntFullType>) => {
           state.saveStatus = "succeeded";
+          // a different tournament was requested while this save was running,
+          // so don't overwrite its data with the one just saved
+          if (state.requestedTmntId && state.requestedTmntId !== action.payload.tmnt.id) return;
           state.tmntFullData = action.payload;
-        }
+        },
       )
       .addCase(saveTmntEntriesData.rejected, (state, action) => {
         state.saveStatus = "failed";
@@ -154,6 +160,166 @@ export const getTmntDataSaveStatus = (state: RootState) =>
   state.tmntFullData.saveStatus;
 export const getTmntFullDataError = (state: RootState) =>
   state.tmntFullData.error;
-export const getTmntFullDataIoError = (state: RootState) =>
-  state.tmntFullData.ioError;
+
 export default tmntFullDataSlice.reducer;
+
+// import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+// import { ioStatusType } from "@/redux/statusTypes";
+// import { RootState } from "@/redux/store";
+// import type { tmntFullType } from "@/lib/types/types";
+// import { ioDataError } from "@/lib/enums/enums";
+// import { blankFullStage, blankTmnt } from "@/lib/db/initVals";
+// import { cloneDeep } from "lodash";
+// import { getTmntFullData } from "@/lib/db/tmnts/dbTmnts";
+// import { replaceTmntFullData, replaceTmntEntriesData } from "@/lib/db/tmnts/dbTmnts";
+
+// export interface tmntFullDataState {
+//   tmntFullData: tmntFullType;
+//   requestedTmntId: string;
+//   loadStatus: ioStatusType;
+//   saveStatus: ioStatusType;
+//   error: string | undefined;
+//   ioError: ioDataError | undefined;
+// }
+
+// // initial state constant
+// const initialState: tmntFullDataState = {
+//   tmntFullData: {
+//     tmnt: cloneDeep(blankTmnt),
+//     brktEntries: [],
+//     brktSeeds: [],
+//     brkts: [],
+//     divs: [],
+//     divEntries: [],
+//     elimEntries: [],
+//     elims: [],
+//     events: [],
+//     lanes: [],
+//     oneBrkts: [],
+//     players: [],
+//     potEntries: [],
+//     pots: [],
+//     squads: [],
+//     stage: blankFullStage,
+//     moneys: [],
+//   },
+//   requestedTmntId: "",
+//   loadStatus: "idle",
+//   saveStatus: "idle",
+//   error: "",
+//   ioError: ioDataError.NONE,
+// };
+
+// export const fetchTmntFullData = createAsyncThunk(
+//   "tmntFullData/fetchTmntFullData",
+//   async (tmntId: string) => {
+//     // DO NOT return the current state if the tournament ID matches the one being fetched
+//     // child data might have changed, and there is too much complexity in checking all that
+//     // const state = getState() as RootState;
+//     // const currentTmnt = state.tmntFulldata.tmntFullData?.tmnt.id;
+//     // if (currentTmnt === tmntId) {
+//     //   // Return the current state if the tournament ID matches the one being fetched
+//     //   return state.tmntFullData.tmntData;
+//     // }
+
+//     // Do not use try / catch blocks here. Need the promise to be fulfilled or
+//     // rejected which will have the appropriate response in the extraReducers.
+
+//     return getTmntFullData(tmntId);
+//   }
+// );
+
+// export const saveTmntFullData = createAsyncThunk(
+//   "tmntFullData/saveTmntFullData",
+//   async (tmntFullData: tmntFullType) => {
+//     const result = await replaceTmntFullData(tmntFullData);
+//     if (!result) {
+//       throw new Error("Failed to save tournament full data");
+//     }
+//     return tmntFullData;
+//   }
+// );
+
+// export const saveTmntEntriesData = createAsyncThunk(
+//   "tmntFullData/saveTmntFullEntriesData",
+//   async (tmntFullData: tmntFullType) => {
+//     const { stage } = await replaceTmntEntriesData(tmntFullData);
+//     // no longer need to throw error here, because the saveTmntFullData will throw
+
+//     // merge server stage fields into what we sent
+//     return {
+//       ...tmntFullData,
+//       stage, // server is authoritative for stage fields
+//     } as tmntFullType;
+//   }
+// );
+
+// export const tmntFullDataSlice = createSlice({
+//   name: "tmntFullData",
+//   initialState,
+//   reducers: {},
+//   extraReducers: (builder) => {
+//     builder
+//       .addCase(fetchTmntFullData.pending, (state, action) => {
+//         state.loadStatus = "loading";
+//         state.requestedTmntId = action.meta.arg;
+//         state.error = "";
+//       })
+//       .addCase(
+//         fetchTmntFullData.fulfilled,
+//         (state, action: PayloadAction<tmntFullType>) => {
+//           state.loadStatus = "succeeded";
+//           state.tmntFullData = action.payload;
+//         }
+//       )
+//       .addCase(fetchTmntFullData.rejected, (state, action) => {
+//         state.loadStatus = "failed";
+//         state.error = action.error.message;
+//       });
+//     builder
+//       .addCase(saveTmntFullData.pending, (state) => {
+//         state.saveStatus = "saving";
+//       })
+//       .addCase(
+//         saveTmntFullData.fulfilled,
+//         (state, action: PayloadAction<tmntFullType>) => {
+//           state.saveStatus = "succeeded";
+//           state.tmntFullData = action.payload;
+//         }
+//       )
+//       .addCase(saveTmntFullData.rejected, (state, action) => {
+//         state.saveStatus = "failed";
+//         state.error = action.error.message;
+//       });
+//     builder
+//       .addCase(saveTmntEntriesData.pending, (state) => {
+//         state.saveStatus = "saving";
+//       })
+//       .addCase(
+//         saveTmntEntriesData.fulfilled,
+//         (state, action: PayloadAction<tmntFullType>) => {
+//           state.saveStatus = "succeeded";
+//           state.tmntFullData = action.payload;
+//         }
+//       )
+//       .addCase(saveTmntEntriesData.rejected, (state, action) => {
+//         state.saveStatus = "failed";
+//         state.error = action.error.message;
+//       });
+//   },
+// });
+
+// export const selectTmntFullData = (state: RootState) => state.tmntFullData.tmntFullData;
+
+// export const getTmntFullDataRequestedTmntId = (state: RootState) =>
+//   state.tmntFullData.requestedTmntId;
+// export const getTmntFullDataLoadStatus = (state: RootState) =>
+//   state.tmntFullData.loadStatus;
+// export const getTmntDataSaveStatus = (state: RootState) =>
+//   state.tmntFullData.saveStatus;
+// export const getTmntFullDataError = (state: RootState) =>
+//   state.tmntFullData.error;
+// export const getTmntFullDataIoError = (state: RootState) =>
+//   state.tmntFullData.ioError;
+// export default tmntFullDataSlice.reducer;
+

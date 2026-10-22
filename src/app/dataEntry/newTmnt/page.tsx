@@ -21,21 +21,6 @@ const NewTmntPage = () => {
     stage: SquadStage.DEFINE,
     parentForm: tmntFormParent.NEW,
   }
-  
-  /*************************
-   * Unsaved Changes Guard *
-   *************************/
-  // const hasPendingChangesRef = useRef(false);
-
-  // const markPendingChanges = useCallback((pending: boolean): void => {
-  //   hasPendingChangesRef.current = pending;
-  // }, []);
-
-  // const dataWasChanged = useCallback((): boolean => {
-  //   return hasPendingChangesRef.current;
-  // }, []);
-
-  // useUnsavedChangesGuard(dataWasChanged);
 
   const [hasPendingChanges, setHasPendingChanges] = useState(false);
 

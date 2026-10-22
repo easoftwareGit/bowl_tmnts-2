@@ -1,5 +1,4 @@
 import React from "react";
-import { potResultsRowType } from "./potResults";
 import { potPfType, tmntFullType } from "@/lib/types/types";
 import { missingDataError } from "../brackets/player/[playerId]/playerBrktData";
 import { getPlayerName } from "@/lib/getName";
@@ -24,9 +23,26 @@ const ic: IntlConfig = {
 const localConfig = getLocaleConfig(ic);
 localConfig.prefix = "$";
 
-type playerNameWithScoreProps = {
+type playerNameWithScoreForSeriesProps = {
   row: tmntGameResult;
+  tmntFullData: tmntFullType
 };
+
+const PlayerNameWithScoreForSeries = ({
+  row,
+  tmntFullData
+}: playerNameWithScoreForSeriesProps) => {
+  return (
+    <div className="d-flex align-items-center">
+      <span>
+        {getPlayerName(tmntFullData.players, row.player_id)}
+      </span>
+      <span className="ms-auto ps-2 text-nowrap">
+        {row["total + Hdcp"]}
+      </span>
+    </div>
+  )
+}
 
 const PotSeries = ({
   pot_id,
@@ -67,24 +83,11 @@ const PotSeries = ({
   });
 
   const gameResults = tmntResults
-    .filter((row) => {potPlayerIds.has(row.player_id)})
+    .filter((row) => potPlayerIds.has(row.player_id))
     .sort((a, b) => (b["total + Hdcp"] ?? 0) - (a["total + Hdcp"] ?? 0));
 
   const gameNums = getGameNums(tmntResults);
   
-  const PlayerNameWithScore = ({row}: playerNameWithScoreProps) => {
-    return (
-      <div className="d-flex align-items-center">
-        <span>
-          {getPlayerName(tmntFullData.players, row.player_id)}
-        </span>
-        <span className="ms-auto ps-2 text-nowrap">
-          {row["total + Hdcp"]}
-        </span>
-      </div>
-    )
-  }
-
   const payoutWidth = 100;
   const gameWidth = 40;
 
@@ -133,20 +136,23 @@ const PotSeries = ({
             <table
               key={numGames}
               className="table table-sm table-striped table-hover w-auto shrink-0"
-              data-testid="pot-series-games"
+              data-testid="pot-series-totals"
             >
               <thead>
                 <tr>
-                  <td className="text-center align-middle">
+                  <th className="text-center align-middle">
                     Total
-                  </td>
+                  </th>
                 </tr>
               </thead>
               <tbody className="table-group-divider small">
                 {gameResults.map((row) => (
                   <tr key={row.player_id}>
                     <td className="align-middle">
-                      <PlayerNameWithScore row={row} />
+                      <PlayerNameWithScoreForSeries
+                        row={row}
+                        tmntFullData={tmntFullData}
+                      />
                     </td>
                   </tr>
                 ))}

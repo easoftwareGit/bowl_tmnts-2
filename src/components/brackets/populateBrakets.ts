@@ -50,7 +50,7 @@ export const populateBrackets = (
     // Get the array of seeds for this one_brkt.
     const brktSeeds = seedsByOneBrkt.get(one_brkt.id) ?? [];
     // Create a new bracket.
-    const bracket = new Bracket(one_brkt.id, playersPerMatch, brkt.games);
+    const bracket = new Bracket(one_brkt.id, playersPerMatch);
     // Populate the bracket with players.
     bracket.populateBracket(brktSeeds);
     

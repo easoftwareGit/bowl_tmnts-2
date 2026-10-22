@@ -11,8 +11,6 @@ const url = process.env.NODE_ENV === "test" && testBasePotPfsApi
   : basePotPfsApi;
 
 const tmntUrl = url + "/tmnt/";  
-// const potUrl = url + "/pot/";
-// const onePotPfUrl = url + "/potPf/";
 
 /**
  * maps API value to app potPf

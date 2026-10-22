@@ -1,6 +1,4 @@
-// test/lib/currency/curr_convert.test.tsx
-
-import { moneyNumber } from "@/lib/currency/convert";
+import { moneyNumber, truncateToTwoDecimals } from "@/lib/currency/convert";
 
 describe("moneyNumber", () => {
   describe("valid money strings", () => {
@@ -148,6 +146,111 @@ describe("moneyNumber", () => {
 
     it("returns null for an array", () => {
       expect(moneyNumber([])).toBeNull();
+    });
+  });
+});
+
+describe("truncateToTwoDecimals", () => {
+  describe("values already at two or fewer decimals", () => {
+    it("returns a whole number unchanged", () => {
+      expect(truncateToTwoDecimals(5)).toBe(5);
+    });
+
+    it("returns zero unchanged", () => {
+      expect(truncateToTwoDecimals(0)).toBe(0);
+    });
+
+    it("returns a one-decimal value unchanged", () => {
+      expect(truncateToTwoDecimals(1.5)).toBe(1.5);
+    });
+
+    it("returns a two-decimal value unchanged", () => {
+      expect(truncateToTwoDecimals(1.23)).toBe(1.23);
+    });
+
+    it("returns a typical price unchanged", () => {
+      expect(truncateToTwoDecimals(19.99)).toBe(19.99);
+    });
+  });
+
+  describe("drops digits past two decimals (truncates, does not round up)", () => {
+    it("truncates a third decimal digit", () => {
+      expect(truncateToTwoDecimals(1.239)).toBe(1.23);
+    });
+
+    it("truncates 1.999 to 1.99", () => {
+      expect(truncateToTwoDecimals(1.999)).toBe(1.99);
+    });
+
+    it("truncates a half-cent value down", () => {
+      expect(truncateToTwoDecimals(8.675)).toBe(8.67);
+    });
+
+    it("truncates 1.005 to 1", () => {
+      expect(truncateToTwoDecimals(1.005)).toBe(1);
+    });
+
+    it("truncates a sub-cent value to zero", () => {
+      expect(truncateToTwoDecimals(0.009)).toBe(0);
+    });
+
+    it("truncates a large value", () => {
+      expect(truncateToTwoDecimals(1234567.891)).toBe(1234567.89);
+    });
+  });
+
+  describe("floating-point error correction", () => {
+    it("keeps 0.29 as 0.29 (0.29 * 100 = 28.999999999999996)", () => {
+      expect(truncateToTwoDecimals(0.29)).toBe(0.29);
+    });
+
+    it("keeps 0.57 as 0.57", () => {
+      expect(truncateToTwoDecimals(0.57)).toBe(0.57);
+    });
+
+    it("keeps 1.15 as 1.15", () => {
+      expect(truncateToTwoDecimals(1.15)).toBe(1.15);
+    });
+
+    it("keeps 4.35 as 4.35", () => {
+      expect(truncateToTwoDecimals(4.35)).toBe(4.35);
+    });
+
+    it("cleans up 0.1 + 0.2 to 0.3", () => {
+      expect(truncateToTwoDecimals(0.1 + 0.2)).toBe(0.3);
+    });
+  });
+
+  describe("negative values", () => {
+    it("returns a negative two-decimal value unchanged", () => {
+      expect(truncateToTwoDecimals(-19.99)).toBe(-19.99);
+    });
+
+    it("keeps -0.29 as -0.29", () => {
+      expect(truncateToTwoDecimals(-0.29)).toBe(-0.29);
+    });
+
+    it("truncates toward zero for negatives", () => {
+      expect(truncateToTwoDecimals(-1.239)).toBe(-1.23);
+    });
+
+    it("truncates a small negative value to zero", () => {
+      // Math.trunc(-0.1) is -0; toBeCloseTo treats -0 and 0 as equal
+      expect(truncateToTwoDecimals(-0.001)).toBeCloseTo(0);
+    });
+  });
+
+  describe("invalid numbers", () => {
+    it("returns 0 for NaN", () => {
+      expect(truncateToTwoDecimals(NaN)).toBe(0);
+    });
+
+    it("returns 0 for Infinity", () => {
+      expect(truncateToTwoDecimals(Infinity)).toBe(0);
+    });
+
+    it("returns 0 for -Infinity", () => {
+      expect(truncateToTwoDecimals(-Infinity)).toBe(0);
     });
   });
 });

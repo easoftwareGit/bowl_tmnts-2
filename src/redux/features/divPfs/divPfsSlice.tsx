@@ -2,7 +2,6 @@ import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ioStatusType } from "@/redux/statusTypes";
 import { RootState } from "@/redux/store";
 import type { divPfType, tmntDivPfSaveDataType } from "@/lib/types/types";
-import { ioDataError } from "@/lib/enums/enums";
 import { getAllDivPfsForTmnt, updateAllDivPfsForTmnt } from "@/lib/db/divPfs/dbDivPfs";
 
 export interface divPfsState {
@@ -11,8 +10,7 @@ export interface divPfsState {
   tmntId: string;
   loadStatus: ioStatusType;
   saveStatus: ioStatusType;
-  error: string | undefined;
-  ioError: ioDataError | undefined;
+  error: string | undefined;  
 }
 
 // initial state constant
@@ -22,8 +20,7 @@ const initialState: divPfsState = {
   tmntId: "",
   loadStatus: "idle" as ioStatusType,
   saveStatus: "idle" as ioStatusType,
-  error: "",
-  ioError: ioDataError.NONE,
+  error: "",  
 };
 
 export const fetchDivPfs = createAsyncThunk(
@@ -61,20 +58,24 @@ export const divPfsSlice = createSlice({
         state.error = "";
       })
       .addCase(
-        fetchDivPfs.fulfilled,
-        (state, action: PayloadAction<divPfType[]>) => {
+        fetchDivPfs.fulfilled, (state, action) => {
+          if (action.meta.arg !== state.requestedTmntId) return; // stale response
           state.loadStatus = "succeeded";
-          state.tmntId = state.requestedTmntId;
+          state.tmntId = action.meta.arg;
           state.divPfs = action.payload;
         }
       )
       .addCase(fetchDivPfs.rejected, (state, action) => {
+        if (action.meta.arg !== state.requestedTmntId) return; // stale failure
         state.loadStatus = "failed";
-        state.error = action.error.message;
+        state.error =
+          action.error.message ??
+          "Unknown error fetching divPfs for tmnt";
       });
     builder
       .addCase(saveDivPfs.pending, (state) => {
         state.saveStatus = "saving";
+        state.error = "";
       })
       .addCase(
         saveDivPfs.fulfilled,
@@ -85,18 +86,17 @@ export const divPfsSlice = createSlice({
       )
       .addCase(saveDivPfs.rejected, (state, action) => {
         state.saveStatus = "failed";
-        state.error = action.error.message;
+        state.error = action.error.message ?? "Unknown error saving divPfs";
       });
   },
 });
   
 export const selectDivPfs = (state: RootState) => state.divPfs.divPfs;
 
-export const getDivPfRequestedTmntId = (state: RootState) => state.divPfs.requestedTmntId;
+export const getDivPfsRequestedTmntId = (state: RootState) => state.divPfs.requestedTmntId;
 export const getDivPfsTmntId = (state: RootState) => state.divPfs.tmntId;
 export const getDivPfsLoadStatus = (state: RootState) => state.divPfs.loadStatus;
 export const getDivPfsSaveStatus = (state: RootState) => state.divPfs.saveStatus;
 export const getDivPfsError = (state: RootState) => state.divPfs.error;
-export const getDivPfsIoError = (state: RootState) => state.divPfs.ioError;
 
 export default divPfsSlice.reducer;

@@ -2,26 +2,25 @@ import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ioStatusType } from "@/redux/statusTypes";
 import { RootState } from "@/redux/store";
 import type { elimPfType, tmntElimPfSaveDataType } from "@/lib/types/types";
-import { ioDataError } from "@/lib/enums/enums";
 import { getAllElimPfsForTmnt, updateAllElimPfsForTmnt } from "@/lib/db/elimPfs/dbElimPfs";
 
 export interface elimPfsState {
   elimPfs: elimPfType[];
   requestedTmntId: string;
+  tmntId: string;
   loadStatus: ioStatusType;
   saveStatus: ioStatusType;
-  error: string | undefined;
-  ioError: ioDataError | undefined;
+  error: string | undefined;  
 }
 
 // initial state constant
 const initialState: elimPfsState = {
   elimPfs: [],
   requestedTmntId: "",
+  tmntId: "",
   loadStatus: "idle" as ioStatusType,
   saveStatus: "idle" as ioStatusType,
-  error: "",
-  ioError: ioDataError.NONE,
+  error: "",  
 };
 
 export const fetchElimPfs = createAsyncThunk(
@@ -59,19 +58,24 @@ export const elimPfsSlice = createSlice({
         state.error = "";
       })
       .addCase(
-        fetchElimPfs.fulfilled,
-        (state, action: PayloadAction<elimPfType[]>) => {
+        fetchElimPfs.fulfilled, (state, action) => {
+          if (action.meta.arg !== state.requestedTmntId) return; // stale response
           state.loadStatus = "succeeded";
+          state.tmntId = action.meta.arg;
           state.elimPfs = action.payload;
         }
       )
       .addCase(fetchElimPfs.rejected, (state, action) => {
+        if (action.meta.arg !== state.requestedTmntId) return; // stale failure
         state.loadStatus = "failed";
-        state.error = action.error.message;
+        state.error =
+          action.error.message ??
+          "Unknown error fetching elimPfs for tmnt";
       });
     builder
       .addCase(saveElimPfs.pending, (state) => {
         state.saveStatus = "saving";
+        state.error = "";
       })
       .addCase(
         saveElimPfs.fulfilled,
@@ -82,17 +86,17 @@ export const elimPfsSlice = createSlice({
       )
       .addCase(saveElimPfs.rejected, (state, action) => {
         state.saveStatus = "failed";
-        state.error = action.error.message;
+        state.error = action.error.message ?? "Unknown error saving elimPfs";
       });
   },
 });
-
+  
 export const selectElimPfs = (state: RootState) => state.elimPfs.elimPfs;
 
-export const getElimRequestedId = (state: RootState) => state.elimPfs.requestedTmntId;
+export const getElimPfsRequestedTmntId = (state: RootState) => state.elimPfs.requestedTmntId;
+export const getElimPfsTmntId = (state: RootState) => state.elimPfs.tmntId;
 export const getElimPfsLoadStatus = (state: RootState) => state.elimPfs.loadStatus;
 export const getElimPfsSaveStatus = (state: RootState) => state.elimPfs.saveStatus;
 export const getElimPfsError = (state: RootState) => state.elimPfs.error;
-export const getElimPfsIoError = (state: RootState) => state.elimPfs.ioError;
 
 export default elimPfsSlice.reducer;

@@ -26,6 +26,7 @@ interface ElimPrizeFundGridProps {
   onNavigateAfterSave?: () => void;
   onBack: () => void;
   onSaveComplete?: (savedRows: prizeFundEntryRow[]) => void;
+  onCancel?: () => void;
 }
 
 /**
@@ -59,6 +60,7 @@ const ElimPrizeFundGrid = React.forwardRef<PrizeFundGridHandle, ElimPrizeFundGri
   onNavigateAfterSave,
   onBack,
   onSaveComplete,
+  onCancel,
 }, ref) => {
   const dispatch = useDispatch<AppDispatch>();
   const saveStatus = useSelector(getElimPfsSaveStatus);
@@ -104,19 +106,14 @@ const ElimPrizeFundGrid = React.forwardRef<PrizeFundGridHandle, ElimPrizeFundGri
         return;
       }
       const elimIdsForElimPfs: string[] = [
-        ...new Set(
-          toSaveElimPfs.map(
-            (elimPf) => elimPf.elim_id,
-          ),
-        ),
+        ...new Set(toSaveElimPfs.map((elimPf) => elimPf.elim_id)),
       ];
       const toSave: tmntElimPfSaveDataType = {
         elimPfData: toSaveElimPfs,
         elimIds: elimIdsForElimPfs,
         tmntId: tmntData.tmnt.id,
-      }
+      };
       await dispatch(saveElimPfs(toSave)).unwrap();
-
     },
     [dispatch, allElimPfs, elimId, tmntData],
   );
@@ -128,7 +125,7 @@ const ElimPrizeFundGrid = React.forwardRef<PrizeFundGridHandle, ElimPrizeFundGri
        *
        * PrizeFundGrid uses useImperativeHandle to attach its public
        * methods, such as getCurrentRows(), to this ref.
-       */      
+       */
       ref={ref}
       gridId="elimPfGrid"
       prizeFundType="elm"
@@ -144,7 +141,8 @@ const ElimPrizeFundGrid = React.forwardRef<PrizeFundGridHandle, ElimPrizeFundGri
       onNavigateAfterSave={onNavigateAfterSave}
       onBack={onBack}
       onSaveComplete={onSaveComplete}
-    />    
+      onCancel={onCancel}
+    />
   );
 });
 

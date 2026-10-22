@@ -2,7 +2,6 @@ import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { ioStatusType } from "@/redux/statusTypes";
 import { RootState } from "@/redux/store";
 import type { potPfType, tmntPotPfSaveDataType } from "@/lib/types/types";
-import { ioDataError } from "@/lib/enums/enums";
 import { getAllPotPfsForTmnt, updateAllPotPfsForTmnt } from "@/lib/db/potPfs/dbPotPfs";
 
 export interface potPfsState {
@@ -12,7 +11,6 @@ export interface potPfsState {
   loadStatus: ioStatusType;
   saveStatus: ioStatusType;
   error: string | undefined;
-  ioError: ioDataError | undefined;
 }
 
 // initial state constant
@@ -23,7 +21,6 @@ const initialState: potPfsState = {
   loadStatus: "idle" as ioStatusType,
   saveStatus: "idle" as ioStatusType,
   error: "",
-  ioError: ioDataError.NONE,
 };
 
 export const fetchPotPfs = createAsyncThunk(
@@ -60,32 +57,32 @@ export const potPfsSlice = createSlice({
         state.requestedTmntId = action.meta.arg;
         state.error = "";
       })
-      .addCase(
-        fetchPotPfs.fulfilled,
-        (state, action: PayloadAction<potPfType[]>) => {
-          state.loadStatus = "succeeded";
-          state.tmntId = state.requestedTmntId;
-          state.potPfs = action.payload;
-        }
-      )
+      .addCase(fetchPotPfs.fulfilled, (state, action) => {
+        if (action.meta.arg !== state.requestedTmntId) return; // stale response
+        state.loadStatus = "succeeded";
+        state.tmntId = action.meta.arg;
+        state.potPfs = action.payload;
+      })
       .addCase(fetchPotPfs.rejected, (state, action) => {
+        if (action.meta.arg !== state.requestedTmntId) return; // stale failure
         state.loadStatus = "failed";
-        state.error = action.error.message;
+        state.error = action.error.message ?? "Unknown error fetching potPfs";
       });
     builder
       .addCase(savePotPfs.pending, (state) => {
         state.saveStatus = "saving";
+        state.error = "";
       })
       .addCase(
         savePotPfs.fulfilled,
         (state, action: PayloadAction<potPfType[]>) => {
           state.saveStatus = "succeeded";
           state.potPfs = action.payload;
-        }
+        },
       )
       .addCase(savePotPfs.rejected, (state, action) => {
         state.saveStatus = "failed";
-        state.error = action.error.message;
+        state.error = action.error.message ?? "Unknown error saving potPfs";
       });
   },
 });
@@ -97,6 +94,5 @@ export const getPotPfsTmntId = (state: RootState) => state.potPfs.tmntId;
 export const getPotPfsLoadStatus = (state: RootState) => state.potPfs.loadStatus;
 export const getPotPfsSaveStatus = (state: RootState) => state.potPfs.saveStatus;
 export const getPotPfsError = (state: RootState) => state.potPfs.error;
-export const getPotPfsIoError = (state: RootState) => state.potPfs.ioError;
 
 export default potPfsSlice.reducer;

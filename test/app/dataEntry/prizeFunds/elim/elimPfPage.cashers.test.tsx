@@ -1,715 +1,526 @@
-"use client";
-
-import { screen, waitFor } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import {
   cancelRemoveCashers,
+  cashersRangeError,
+  clickGridCancel,
   confirmRemoveCashers,
+  enterCashers,
+  getInputs,
   getLatestRows,
   mockBtDbUuid,
   mockUseUnsavedChangesGuard,
   setCurrentGridRows,
   setup,
   standardBeforeEach,
-} from "./elimPfPage.testSetup.test";
-import {  
-  mockTmntFullData,
+  type SetupOptions,
+} from "./elimPfPage.testSetup";
+import {
   elimId1,
+  mockElimPfs,
 } from "../../../../mocks/tmnts/tmntFullData/mockTmntFullData";
+
+/*************
+ * Helpers   *
+ *************/
+
+const findConfirmModal = () =>
+  screen.findByRole("dialog", { name: "confirm-modal" });
+
+const queryConfirmModal = () =>
+  screen.queryByRole("dialog", { name: "confirm-modal" });
+
+/** The Cashers error message element. */
+const cashersError = () => screen.getByTestId("dangerCashers");
+
+/**
+ * The Remove Cashers message built by updateCashers() in page.tsx.
+ */
+const removeMessage = (from: number, to: number): string =>
+  `Do you want to remove ${from - to} cashers? ` +
+  `Going from ${from} cashers to ${to} cashers.`;
+
+/**
+ * Expected shape of a row added by updateCashers().
+ */
+const newRow = (position: number) =>
+  expect.objectContaining({
+    id: expect.stringMatching(/^epf_/),
+    parent_id: elimId1,
+    position,
+    amount: 0,
+    percentage: 0,
+  });
 
 describe("Elim Prize Fund web page cashers input", () => {
   beforeEach(standardBeforeEach);
 
+  /*******************************
+   * No saved prize-fund rows    *
+   *******************************/
+
   describe("when there are no existing prize fund rows", () => {
+    const setupEmpty = (numPlayers?: number) =>
+      setup({ elimPfs: [], numPlayers });
 
-    const setupEmpty = () =>
-      setup({
-        elimPfs: [],
-      });
-
-    it("shows 0 cashers when no prize fund rows exist", async () => {
+    it("shows 0 cashers and passes no rows to the grid", () => {
       setupEmpty();
 
-      const cashersInput = screen.getByLabelText("Cashers");
-
-      await waitFor(() => {
-        expect(cashersInput).toHaveValue(0);
-      });
-
+      expect(getInputs().cashers).toHaveValue(0);
       expect(getLatestRows()).toHaveLength(0);
-    });  
+    });
 
     it("entering the first casher creates the first row", async () => {
       const { user } = setupEmpty();
 
-      const cashersInput = screen.getByLabelText("Cashers");
+      await enterCashers(user, "1");
 
-      await waitFor(() => {
-        expect(cashersInput).toHaveValue(0);        
-      });
-      expect(getLatestRows()).toHaveLength(0);
-
-      await user.clear(cashersInput);
-      await user.type(cashersInput, "1");
-      await user.tab();
-
-      await waitFor(() => {
-        expect(cashersInput).toHaveValue(1);        
-      });
-      expect(getLatestRows()).toHaveLength(1);
-
-      expect(getLatestRows()[0]).toEqual(
-        expect.objectContaining({
-          id: expect.stringMatching(/^epf_/),
-          parent_id: elimId1,
-          position: 1,
-          amount: 0,
-          percentage: 0,
-        }),
-      );
-
+      expect(getInputs().cashers).toHaveValue(1);
+      expect(getLatestRows()).toEqual([newRow(1)]);
       expect(mockBtDbUuid).toHaveBeenCalledTimes(1);
       expect(mockBtDbUuid).toHaveBeenCalledWith("epf");
-    });    
+      expect(cashersError()).toHaveTextContent("");
+    });
 
-  });  
+    it("entering several cashers creates numbered rows without a confirmation", async () => {
+      const { user, numPlayers } = setupEmpty();
+
+      // Precondition: enough players for 3 cashers.
+      expect(numPlayers).toBeGreaterThanOrEqual(3);
+
+      await enterCashers(user, "3");
+
+      expect(getLatestRows()).toEqual([newRow(1), newRow(2), newRow(3)]);
+      expect(queryConfirmModal()).not.toBeInTheDocument();
+    });
+
+    it.each([0, 1])(
+      "allows at most 1 casher when the eliminator has %i player(s)",
+      async (players) => {
+        const { user, maxCashers } = setupEmpty(players);
+
+        expect(maxCashers).toBe(1);
+
+        await enterCashers(user, "5");
+
+        expect(getInputs().cashers).toHaveValue(1);
+        expect(getLatestRows()).toEqual([newRow(1)]);
+        expect(cashersError()).toHaveTextContent(cashersRangeError(1));
+      },
+    );
+  });
+
+  /*******************************
+   * Saved prize-fund rows       *
+   *******************************/
 
   describe("when there are existing prize fund rows", () => {
+    /*
+     * Most tests below need room to add and remove cashers.
+     * These preconditions make a mock-data change fail clearly
+     * instead of producing a confusing assertion failure.
+     */
+    const setupWithRows = (options: SetupOptions = {}) => {
+      const result = setup(options);
+      const initialCashers = result.populatedRows.length;
 
-    const getElimPlayerCount = (): number =>
-      mockTmntFullData.elimEntries.filter(
-        (entry) => entry.elim_id === elimId1,
-      ).length;
+      expect(initialCashers).toBe(result.expectedCashers);
+      expect(initialCashers).toBeGreaterThan(1);
+      expect(result.numPlayers).toBeGreaterThanOrEqual(initialCashers + 2);
 
-    it("updates the cashers input when its value changes", async () => {
-      const { user } = setup();
+      return { ...result, initialCashers };
+    };
 
-      const initialCashers = getLatestRows().length;
-      const cashersInput = screen.getByLabelText("Cashers");
+    it("shows the number of saved prize fund rows", () => {
+      const { initialCashers } = setupWithRows();
 
-      await waitFor(() => {
-        expect(cashersInput).toHaveValue(
-          initialCashers,
-        );
-      });
-
-      await user.clear(cashersInput);
-      await user.type(cashersInput, "3");
-
-      expect(cashersInput).toHaveValue(3);
+      expect(getInputs().cashers).toHaveValue(initialCashers);
+      expect(getLatestRows()).toHaveLength(initialCashers);
+      expect(cashersError()).toHaveTextContent("");
     });
 
-    it("adds rows on blur when the cashers value increases", async () => {
-      const { user } = setup();
+    describe("typing", () => {
+      it("updates the input without changing the rows until applied", async () => {
+        const { user, initialCashers } = setupWithRows();
+        const { cashers } = getInputs();
 
-      const initialCashers = getLatestRows().length;
-      const newCashers = initialCashers + 2;
-      const cashersInput = screen.getByLabelText("Cashers");
+        await user.clear(cashers);
+        await user.type(cashers, "3");
 
-      await waitFor(() => {
-        expect(cashersInput).toHaveValue(
-          initialCashers,
-        );
+        expect(cashers).toHaveValue(3);
+        expect(getLatestRows()).toHaveLength(initialCashers);
       });
 
-      await user.clear(cashersInput);
-      await user.type(
-        cashersInput,
-        newCashers.toString(),
+      it("ignores non-digit input", async () => {
+        const { user, initialCashers } = setupWithRows();
+        const { cashers } = getInputs();
+
+        await user.clear(cashers);
+        await user.type(cashers, "abc");
+
+        // Clearing sets cashers to 0; the letters are rejected.
+        expect(cashers).toHaveValue(0);
+        expect(getLatestRows()).toHaveLength(initialCashers);
+      });
+
+      it("arms the unsaved changes guard", async () => {
+        const { user } = setupWithRows();
+        const { cashers } = getInputs();
+
+        await user.clear(cashers);
+        await user.type(cashers, "3");
+
+        expect(mockUseUnsavedChangesGuard).toHaveBeenLastCalledWith(true);
+      });
+    });
+
+    describe("increasing cashers", () => {
+      it.each(["blur", "enter"] as const)(
+        "adds rows on %s",
+        async (applyWith) => {
+          const { user, initialCashers } = setupWithRows();
+          const newCashers = initialCashers + 2;
+
+          await enterCashers(user, String(newCashers), applyWith);
+
+          expect(getInputs().cashers).toHaveValue(newCashers);
+          expect(getLatestRows()).toHaveLength(newCashers);
+          expect(getLatestRows().slice(initialCashers)).toEqual([
+            newRow(initialCashers + 1),
+            newRow(initialCashers + 2),
+          ]);
+          expect(queryConfirmModal()).not.toBeInTheDocument();
+
+          expect(mockBtDbUuid).toHaveBeenCalledTimes(2);
+          expect(mockBtDbUuid).toHaveBeenCalledWith("epf");
+
+          const addedIds = getLatestRows()
+            .slice(initialCashers)
+            .map((row) => row.id);
+          expect(new Set(addedIds).size).toBe(addedIds.length);
+        },
       );
-      await user.tab();
 
-      await waitFor(() => {
-        expect(getLatestRows()).toHaveLength(
-          newCashers,
+      it("keeps the existing rows unchanged", async () => {
+        const { user, initialCashers, populatedRows } = setupWithRows();
+
+        await enterCashers(user, String(initialCashers + 1));
+
+        expect(getLatestRows().slice(0, initialCashers)).toEqual(
+          populatedRows,
         );
       });
 
-      expect(cashersInput).toHaveValue(newCashers);
-      expect(mockBtDbUuid).toHaveBeenCalledTimes(newCashers - initialCashers);
-      expect(mockBtDbUuid).toHaveBeenCalledWith("epf");
+      it("preserves unsaved grid edits", async () => {
+        const { user, initialCashers } = setupWithRows();
 
-      const addedRows = getLatestRows().slice(initialCashers);
-
-      expect(addedRows).toEqual([
-        expect.objectContaining({
-          id: expect.stringMatching(/^epf_/),
-          parent_id: elimId1,
-          position: initialCashers + 1,
-          amount: 0,
-          percentage: 0,
-        }),
-        expect.objectContaining({
-          id: expect.stringMatching(/^epf_/),
-          parent_id: elimId1,
-          position: initialCashers + 2,
-          amount: 0,
-          percentage: 0,
-        }),
-      ]);
-
-      const addedIds = addedRows.map((row) => row.id);
-      expect(new Set(addedIds).size).toBe(addedIds.length);
-    });
-
-    it("preserves unsaved grid edits when adding cashers", async () => {
-      const { user } = setup();
-
-      const initialRows = getLatestRows();
-
-      const editedRows = getLatestRows().map(
-        (row) => ({
+        // Simulate an edit that exists only inside the Syncfusion grid.
+        const editedRows = getLatestRows().map((row) => ({
           ...row,
-          amount:
-            row.position === 1
-              ? 999
-              : row.amount,
-        }),
-      );
+          amount: row.position === 1 ? 999 : row.amount,
+        }));
+        setCurrentGridRows(editedRows);
+        expect(getLatestRows()[0].amount).not.toBe(999);
 
-      setCurrentGridRows(editedRows);
+        await enterCashers(user, String(initialCashers + 1));
 
-      /*
-       * Prove the unsaved edit exists only in the
-       * mocked Syncfusion grid.
-       */
-      expect(getLatestRows()[0].amount).not.toBe(999);
-      expect(getLatestRows()).toHaveLength(initialRows.length);
-
-      const cashersInput = screen.getByLabelText("Cashers");
-
-      await user.clear(cashersInput);
-      await user.type(
-        cashersInput,
-        (editedRows.length + 1).toString(),
-      );
-      await user.tab();
-
-      await waitFor(() => {
-        expect(getLatestRows()).toHaveLength(
-          editedRows.length + 1,
+        expect(getLatestRows()).toHaveLength(initialCashers + 1);
+        expect(getLatestRows()[0]).toEqual(
+          expect.objectContaining({ position: 1, amount: 999 }),
         );
+        expect(getLatestRows().at(-1)).toEqual(newRow(initialCashers + 1));
       });
-
-      /*
-       * The existing grid-only edit was preserved.
-       */
-      expect(getLatestRows()[0]).toEqual(
-        expect.objectContaining({
-          position: 1,
-          amount: 999,
-        }),
-      );
-
-      /*
-       * The newly added row has the expected defaults.
-       */
-      expect(getLatestRows().at(-1)).toEqual(
-        expect.objectContaining({
-          parent_id: elimId1,
-          position: editedRows.length + 1,
-          amount: 0,
-          percentage: 0,
-        }),
-      );
     });
 
-    it("adds rows when Enter is pressed and the cashers value increases", async () => {
-      const { user } = setup();
+    describe("decreasing cashers", () => {
+      it.each(["blur", "enter"] as const)(
+        "asks for confirmation on %s and keeps the rows until confirmed",
+        async (applyWith) => {
+          const { user, initialCashers } = setupWithRows();
+          const newCashers = initialCashers - 1;
 
-      const initialCashers = getLatestRows().length;
-      const newCashers = initialCashers + 2;
-      const cashersInput = screen.getByLabelText("Cashers");
+          await enterCashers(user, String(newCashers), applyWith);
 
-      await waitFor(() => {
-        expect(cashersInput).toHaveValue(
-          initialCashers,
-        );
-      });
+          expect(await findConfirmModal()).toBeInTheDocument();
+          expect(screen.getByText("Remove Cashers")).toBeInTheDocument();
+          expect(
+            screen.getByText(removeMessage(initialCashers, newCashers)),
+          ).toBeInTheDocument();
 
-      await user.clear(cashersInput);
-      await user.type(
-        cashersInput,
-        newCashers.toString(),
+          expect(getInputs().cashers).toHaveValue(newCashers);
+          expect(getLatestRows()).toHaveLength(initialCashers);
+        },
       );
-      await user.keyboard("{Enter}");
 
-      await waitFor(() => {
-        expect(getLatestRows()).toHaveLength(
-          newCashers,
-        );
+      it("removes rows from the end when Yes is clicked", async () => {
+        const { user, populatedRows } = setupWithRows();
+
+        await enterCashers(user, "1");
+        await findConfirmModal();
+        await confirmRemoveCashers(user);
+
+        expect(queryConfirmModal()).not.toBeInTheDocument();
+        expect(getInputs().cashers).toHaveValue(1);
+        expect(getLatestRows()).toEqual([populatedRows[0]]);
       });
 
-      expect(cashersInput).toHaveValue(newCashers);
-      expect(mockBtDbUuid).toHaveBeenCalledTimes(newCashers - initialCashers);
-      expect(mockBtDbUuid).toHaveBeenCalledWith("epf");
-    });
+      it("preserves unsaved grid edits in the remaining rows", async () => {
+        const { user } = setupWithRows();
 
-    it("opens a confirmation dialog on blur when the cashers value decreases", async () => {
-      const { user } = setup();
-
-      const initialCashers = getLatestRows().length;
-      const newCashers = initialCashers - 1;
-      const removeCount = initialCashers - newCashers;
-
-      const cashersInput = screen.getByLabelText("Cashers");
-
-      await waitFor(() => {
-        expect(cashersInput).toHaveValue(
-          initialCashers,
-        );
-      });
-
-      await user.clear(cashersInput);
-      await user.type(
-        cashersInput,
-        newCashers.toString(),
-      );
-      await user.tab();
-
-      expect(
-        await screen.findByRole("dialog", {
-          name: "confirm-modal",
-        }),
-      ).toBeInTheDocument();
-
-      expect(screen.getByText("Remove Cashers")).toBeInTheDocument();
-      expect(
-        screen.getByText(
-          `Do you want to remove ${removeCount} cashers? ` +
-          `Going from ${initialCashers} cashers to ${newCashers} cashers.`,
-        ),
-      ).toBeInTheDocument();
-      expect(cashersInput).toHaveValue(newCashers);
-
-      /*
-       * Rows are not removed until the user confirms.
-       */
-      expect(getLatestRows()).toHaveLength(initialCashers);
-    });
-
-    it("opens a confirmation dialog when Enter decreases the cashers value", async () => {
-      const { user } = setup();
-
-      const initialCashers = getLatestRows().length;
-      const newCashers = 1;
-      const cashersInput = screen.getByLabelText("Cashers");
-
-      await waitFor(() => {
-        expect(cashersInput).toHaveValue(
-          initialCashers,
-        );
-      });
-
-      await user.clear(cashersInput);
-      await user.type(
-        cashersInput,
-        newCashers.toString(),
-      );
-      await user.keyboard("{Enter}");
-
-      expect(
-        await screen.findByRole("dialog", {
-          name: "confirm-modal",
-        }),
-      ).toBeInTheDocument();
-
-      expect(screen.getByText("Remove Cashers")).toBeInTheDocument();
-      expect(getLatestRows()).toHaveLength(initialCashers);
-    });
-
-    it("changes values below the minimum to 1 when Enter is pressed", async () => {
-      const { user } = setup();
-
-      const initialCashers = getLatestRows().length;
-      const expectedCashers = 1;
-      const cashersInput = screen.getByLabelText("Cashers");
-
-      await user.clear(cashersInput);
-      await user.type(cashersInput, "0");
-      await user.keyboard("{Enter}");
-
-      /*
-       * Zero is clamped to the minimum of one casher.
-       *
-       * Because this decreases the current number of cashers,
-       * the rows are not removed until the user confirms.
-       */
-      expect(
-        await screen.findByRole("dialog", {
-          name: "confirm-modal",
-        }),
-      ).toBeInTheDocument();
-
-      expect(
-        screen.getByText(
-          `Do you want to remove ${initialCashers - expectedCashers
-          } cashers? ` +
-          `Going from ${initialCashers} cashers to ${expectedCashers} cashers.`,
-        ),
-      ).toBeInTheDocument();
-
-      /*
-       * The grid still contains the original rows
-       * before confirmation.
-       */
-      expect(getLatestRows()).toHaveLength(initialCashers);
-
-      await confirmRemoveCashers(user);
-
-      await waitFor(() => {
-        expect(getLatestRows()).toHaveLength(
-          expectedCashers,
-        );
-      });
-
-      expect(cashersInput).toHaveValue(expectedCashers);
-    });
-
-    it("changes values above the maximum to the number of elim players when Enter is pressed", async () => {
-      const { user } = setup();
-
-      const initialCashers = getLatestRows().length;
-      const expectedCashers = getElimPlayerCount();
-      const cashersInput = screen.getByLabelText("Cashers");
-
-      await user.clear(cashersInput);
-      await user.type(cashersInput, "999");
-      await user.keyboard("{Enter}");
-
-      /*
-       * The entered value is clamped to the number of
-       * entries belonging to this elim.
-       *
-       * Because this increases the number of cashers,
-       * rows are added immediately without confirmation.
-       */
-      await waitFor(() => {
-        expect(getLatestRows()).toHaveLength(
-          expectedCashers,
-        );
-      });
-
-      expect(cashersInput).toHaveValue(expectedCashers);
-
-      expect(
-        screen.queryByRole("dialog", {
-          name: "confirm-modal",
-        }),
-      ).not.toBeInTheDocument();
-
-      expect(mockBtDbUuid).toHaveBeenCalledTimes(
-        expectedCashers - initialCashers,
-      );
-      expect(mockBtDbUuid).toHaveBeenCalledWith("epf");
-    });
-
-    it("removes rows when the confirmation Yes button is clicked", async () => {
-      const { user } = setup();
-
-      const initialCashers = getLatestRows().length;
-      const newCashers = 1;
-      const cashersInput = screen.getByLabelText("Cashers");
-
-      await waitFor(() => {
-        expect(cashersInput).toHaveValue(
-          initialCashers,
-        );
-      });
-
-      await user.clear(cashersInput);
-      await user.type(
-        cashersInput,
-        newCashers.toString(),
-      );
-      await user.tab();
-
-      expect(
-        await screen.findByRole("dialog", {
-          name: "confirm-modal",
-        }),
-      ).toBeInTheDocument();
-
-      await confirmRemoveCashers(user);
-
-      await waitFor(() => {
-        expect(
-          screen.queryByRole("dialog", {
-            name: "confirm-modal",
-          }),
-        ).not.toBeInTheDocument();
-      });
-
-      expect(cashersInput).toHaveValue(newCashers);
-      expect(getLatestRows()).toHaveLength(newCashers);
-
-      expect(getLatestRows()).toEqual([
-        expect.objectContaining({
-          parent_id: elimId1,
-          position: 1,
-        }),
-      ]);
-    });
-
-    it("preserves unsaved grid edits before removing cashers", async () => {
-      const { user } = setup();
-
-      const editedRows = getLatestRows().map(
-        (row) => ({
+        const editedRows = getLatestRows().map((row) => ({
           ...row,
-          amount:
-            row.position === 1
-              ? 777
-              : row.amount,
-        }),
-      );
+          amount: row.position === 1 ? 777 : row.amount,
+        }));
+        setCurrentGridRows(editedRows);
 
-      setCurrentGridRows(editedRows);
+        await enterCashers(user, "1");
+        await findConfirmModal();
+        await confirmRemoveCashers(user);
 
-      const cashersInput = screen.getByLabelText("Cashers");
-
-      await user.clear(cashersInput);
-      await user.type(cashersInput, "1");
-      await user.tab();
-
-      await confirmRemoveCashers(user);
-
-      await waitFor(() => {
         expect(getLatestRows()).toHaveLength(1);
+        expect(getLatestRows()[0].amount).toBe(777);
       });
 
-      expect(getLatestRows()[0].amount).toBe(777);
+      it("keeps the rows and restores the applied count when No is clicked", async () => {
+        const { user, initialCashers } = setupWithRows();
+
+        await enterCashers(user, "1");
+        await findConfirmModal();
+        await cancelRemoveCashers(user);
+
+        expect(queryConfirmModal()).not.toBeInTheDocument();
+        expect(getLatestRows()).toHaveLength(initialCashers);
+        expect(getInputs().cashers).toHaveValue(initialCashers);
+      });
+
+      it("can add rows again after a removal is confirmed", async () => {
+        const { user } = setupWithRows();
+
+        await enterCashers(user, "1");
+        await findConfirmModal();
+        await confirmRemoveCashers(user);
+
+        await enterCashers(user, "2");
+
+        expect(getLatestRows()).toHaveLength(2);
+        expect(getLatestRows()[1]).toEqual(newRow(2));
+      });
     });
 
-    it("keeps the existing rows when the confirmation No button is clicked", async () => {
-      const { user } = setup();
+    describe("range limits", () => {
+      it.each(["blur", "enter"] as const)(
+        "changes 0 to the minimum of 1 on %s, after confirmation",
+        async (applyWith) => {
+          const { user, initialCashers } = setupWithRows();
 
-      const initialCashers = getLatestRows().length;
-      const newCashers = 1;
-      const cashersInput = screen.getByLabelText("Cashers");
+          await enterCashers(user, "0", applyWith);
 
-      await waitFor(() => {
-        expect(cashersInput).toHaveValue(
-          initialCashers,
-        );
+          expect(await findConfirmModal()).toBeInTheDocument();
+          expect(
+            screen.getByText(removeMessage(initialCashers, 1)),
+          ).toBeInTheDocument();
+          expect(getLatestRows()).toHaveLength(initialCashers);
+
+          await confirmRemoveCashers(user);
+
+          expect(getLatestRows()).toHaveLength(1);
+          expect(getInputs().cashers).toHaveValue(1);
+        },
+      );
+
+      it.each(["blur", "enter"] as const)(
+        "changes values above the maximum to the number of players on %s",
+        async (applyWith) => {
+          const { user, initialCashers, numPlayers } = setupWithRows();
+
+          await enterCashers(user, "999", applyWith);
+
+          expect(getInputs().cashers).toHaveValue(numPlayers);
+          expect(getLatestRows()).toHaveLength(numPlayers);
+          expect(queryConfirmModal()).not.toBeInTheDocument();
+          expect(mockBtDbUuid).toHaveBeenCalledTimes(
+            numPlayers - initialCashers,
+          );
+        },
+      );
+
+      it("uses only this eliminator's entries for the maximum", async () => {
+        const initialCashers = mockElimPfs.filter(
+          (elimPf) => elimPf.elim_id === elimId1,
+        ).length;
+
+        /*
+         * Trim this eliminator's entries to one more than the saved
+         * rows. Entries for other eliminators are left in tmntData,
+         * so a maximum based on all entries would allow more rows.
+         */
+        const { user, tmntData } = setup({
+          numPlayers: initialCashers + 1,
+        });
+
+        const otherElimEntries =
+          tmntData?.elimEntries?.filter(
+            (entry) => entry.elim_id !== elimId1,
+          ) ?? [];
+        expect(otherElimEntries.length).toBeGreaterThan(0);
+
+        await enterCashers(user, "999");
+
+        expect(getInputs().cashers).toHaveValue(initialCashers + 1);
+        expect(getLatestRows()).toHaveLength(initialCashers + 1);
       });
 
-      await user.clear(cashersInput);
-      await user.type(
-        cashersInput,
-        newCashers.toString(),
-      );
-      await user.tab();
+      /*
+       * Number("") is 0, not NaN, so a cleared input is applied as 0
+       * (clamped to 1). The NaN branch in applyEnteredCashers() does not
+       * catch it.
+       */
+      it("treats a cleared input as 0 and asks to go down to 1 casher", async () => {
+        const { user, initialCashers, maxCashers } = setupWithRows();
 
-      expect(
-        await screen.findByRole("dialog", {
-          name: "confirm-modal",
-        }),
-      ).toBeInTheDocument();
+        await enterCashers(user, "");
 
-      await cancelRemoveCashers(user);
-
-      await waitFor(() => {
+        expect(await findConfirmModal()).toBeInTheDocument();
         expect(
-          screen.queryByRole("dialog", {
-            name: "confirm-modal",
-          }),
-        ).not.toBeInTheDocument();
+          screen.getByText(removeMessage(initialCashers, 1)),
+        ).toBeInTheDocument();
+        expect(cashersError()).toHaveTextContent(
+          cashersRangeError(maxCashers),
+        );
       });
-
-      /*
-       * confirmNo() only closes the modal. The controlled
-       * input keeps the typed value, but the rows remain
-       * unchanged.
-       */
-      expect(cashersInput).toHaveValue(newCashers);
-      expect(getLatestRows()).toHaveLength(initialCashers);
     });
 
-    it("ignores invalid non-digit input", async () => {
-      const { user } = setup();
+    describe("error message", () => {
+      it("shows no error for a valid count", async () => {
+        const { user, initialCashers } = setupWithRows();
 
-      const initialCashers = getLatestRows().length;
-      const cashersInput = screen.getByLabelText("Cashers");
+        await enterCashers(user, String(initialCashers + 1));
 
-      await waitFor(() => {
-        expect(cashersInput).toHaveValue(
-          initialCashers,
+        expect(cashersError()).toHaveTextContent("");
+      });
+
+      it.each(["blur", "enter"] as const)(
+        "shows the range error for a value above the maximum on %s",
+        async (applyWith) => {
+          const { user, maxCashers } = setupWithRows();
+
+          await enterCashers(user, "999", applyWith);
+
+          expect(cashersError()).toHaveTextContent(
+            cashersRangeError(maxCashers),
+          );
+        },
+      );
+
+      it("shows the range error for 0 and keeps it after the removal is confirmed", async () => {
+        const { user, maxCashers } = setupWithRows();
+
+        await enterCashers(user, "0");
+        await findConfirmModal();
+
+        expect(cashersError()).toHaveTextContent(
+          cashersRangeError(maxCashers),
+        );
+
+        // confirmYes() does not clear the error.
+        await confirmRemoveCashers(user);
+
+        expect(cashersError()).toHaveTextContent(
+          cashersRangeError(maxCashers),
         );
       });
 
-      await user.clear(cashersInput);
-      await user.type(cashersInput, "abc");
+      it("clears the error when No is clicked", async () => {
+        const { user } = setupWithRows();
 
-      /*
-       * Clearing the controlled input sets cashers to zero.
-       * The number input rejects the letters, so no valid
-       * replacement value is entered.
-       */
-      expect(cashersInput).toHaveValue(0);
-      expect(getLatestRows()).toHaveLength(initialCashers);
+        await enterCashers(user, "0");
+        await findConfirmModal();
+        await cancelRemoveCashers(user);
+
+        expect(cashersError()).toHaveTextContent("");
+      });
+
+      it("clears the error when the user types again", async () => {
+        const { user, maxCashers } = setupWithRows();
+        const { cashers } = getInputs();
+
+        await enterCashers(user, "999");
+        expect(cashersError()).toHaveTextContent(
+          cashersRangeError(maxCashers),
+        );
+
+        await user.type(cashers, "{Backspace}");
+
+        expect(cashersError()).toHaveTextContent("");
+      });
     });
 
-    it("changes values below the minimum to 1 on blur after removal is confirmed", async () => {
-      const { user } = setup();
+    describe("leaving the input for the grid Cancel button", () => {
+      it("discards the typed count instead of applying it", async () => {
+        const { user, initialCashers, populatedRows } = setupWithRows();
+        const { cashers } = getInputs();
 
-      const initialCashers = getLatestRows().length;
-      const cashersInput = screen.getByLabelText("Cashers");
+        // Typed but not applied: a decrease would open the modal.
+        await user.clear(cashers);
+        await user.type(cashers, "1");
 
-      await waitFor(() => {
-        expect(cashersInput).toHaveValue(
-          initialCashers,
-        );
+        await clickGridCancel(user);
+
+        expect(queryConfirmModal()).not.toBeInTheDocument();
+        expect(getInputs().cashers).toHaveValue(initialCashers);
+        expect(getLatestRows()).toEqual(populatedRows);
+        expect(cashersError()).toHaveTextContent("");
       });
 
-      await user.clear(cashersInput);
-      await user.type(cashersInput, "0");
-      await user.tab();
+      it("applies the typed count when the Cancel button is disabled", async () => {
+        const { user, initialCashers } = setupWithRows({
+          gridCancelDisabled: true,
+        });
+        const { cashers } = getInputs();
 
-      /*
-       * handleCashersBlur() clamps zero to one.
-       * Since this decreases the number of cashers,
-       * the confirmation modal opens before rows
-       * are removed.
-       */
-      expect(
-        await screen.findByRole("dialog", {
-          name: "confirm-modal",
-        }),
-      ).toBeInTheDocument();
+        await user.clear(cashers);
+        await user.type(cashers, "1");
 
-      expect(
-        screen.getByText("Remove Cashers"),
-      ).toBeInTheDocument();
+        await clickGridCancel(user);
 
-      expect(
-        screen.getByText(
-          `Do you want to remove ${initialCashers - 1
-          } cashers? ` +
-          `Going from ${initialCashers} cashers to 1 cashers.`,
-        ),
-      ).toBeInTheDocument();
-
-      await confirmRemoveCashers(user);
-
-      await waitFor(() => {
-        expect(getLatestRows()).toHaveLength(1);
-      });
-
-      expect(cashersInput).toHaveValue(1);
-    });
-
-    it("changes values above the maximum to the number of elim players on blur", async () => {
-      const { user } = setup();
-
-      const initialCashers = getLatestRows().length;
-      const maxCashers = getElimPlayerCount();
-      const cashersInput = screen.getByLabelText("Cashers");
-
-      await waitFor(() => {
-        expect(cashersInput).toHaveValue(
-          initialCashers,
-        );
-      });
-
-      await user.clear(cashersInput);
-      await user.type(cashersInput, "999");
-      await user.tab();
-
-      await waitFor(() => {
-        expect(getLatestRows()).toHaveLength(
-          maxCashers,
-        );
-      });
-
-      expect(cashersInput).toHaveValue(maxCashers);
-      expect(
-        screen.queryByRole("dialog", {
-          name: "confirm-modal",
-        }),
-      ).not.toBeInTheDocument();
-
-      expect(mockBtDbUuid).toHaveBeenCalledTimes(maxCashers - initialCashers);
-      expect(mockBtDbUuid).toHaveBeenCalledWith("epf");
-    });
-
-    it("arms the unsaved changes guard when the cashers input changes", async () => {
-      const { user } = setup();
-
-      const initialCashers = getLatestRows().length;
-      const cashersInput = screen.getByLabelText("Cashers");
-
-      await waitFor(() => {
-        expect(cashersInput).toHaveValue(
-          initialCashers,
-        );
-      });
-
-      await user.clear(cashersInput);
-      await user.type(cashersInput, "3");
-
-      await waitFor(() => {
+        // The blur was not treated as a Cancel, so the decrease applied.
+        expect(await findConfirmModal()).toBeInTheDocument();
         expect(
-          mockUseUnsavedChangesGuard,
-        ).toHaveBeenLastCalledWith(true);
+          screen.getByText(removeMessage(initialCashers, 1)),
+        ).toBeInTheDocument();
       });
     });
 
-    it("does not add more cashers than the number of entries for the current elim", async () => {
-      const { user } = setup();
+    describe("re-entering the applied count", () => {
+      it("does not change rows or open a confirmation", async () => {
+        const { user, initialCashers, populatedRows } = setupWithRows();
 
-      const maxCashers = getElimPlayerCount();
-      const cashersInput = screen.getByLabelText("Cashers");
+        await enterCashers(user, String(initialCashers));
 
-      await user.clear(cashersInput);
-      await user.type(
-        cashersInput,
-        (maxCashers + 10).toString(),
-      );
-      await user.tab();
-
-      await waitFor(() => {
-        expect(cashersInput).toHaveValue(
-          maxCashers,
-        );
+        expect(queryConfirmModal()).not.toBeInTheDocument();
+        expect(getLatestRows()).toEqual(populatedRows);
+        expect(mockBtDbUuid).not.toHaveBeenCalled();
+        expect(cashersError()).toHaveTextContent("");
       });
 
-      expect(getLatestRows()).toHaveLength(maxCashers);
-    });
-
-    it("uses only entries belonging to the current elim when determining the maximum cashers", async () => {
-      const { user } = setup();
-
-      const currentElimEntries =
-        mockTmntFullData.elimEntries.filter(
-          (entry) => entry.elim_id === elimId1,
+      it("restores 1 when 0 is entered and the applied count is already 1", async () => {
+        const firstElimPf = mockElimPfs.find(
+          (elimPf) => elimPf.elim_id === elimId1,
         );
+        expect(firstElimPf).toBeDefined();
 
-      const otherElimEntries =
-        mockTmntFullData.elimEntries.filter(
-          (entry) => entry.elim_id !== elimId1,
-        );
+        const { user, populatedRows, maxCashers } = setup({
+          elimPfs: [firstElimPf!],
+        });
 
-      expect(
-        mockTmntFullData.elimEntries.length,
-      ).toBe(
-        currentElimEntries.length +
-        otherElimEntries.length,
-      );
+        await enterCashers(user, "0");
 
-      const cashersInput = screen.getByLabelText("Cashers");
-
-      await user.clear(cashersInput);
-      await user.type(cashersInput, "999");
-      await user.keyboard("{Enter}");
-
-      await waitFor(() => {
-        expect(cashersInput).toHaveValue(
-          currentElimEntries.length,
+        expect(getInputs().cashers).toHaveValue(1);
+        expect(queryConfirmModal()).not.toBeInTheDocument();
+        expect(getLatestRows()).toEqual(populatedRows);
+        expect(cashersError()).toHaveTextContent(
+          cashersRangeError(maxCashers),
         );
       });
-
-      expect(getLatestRows()).toHaveLength(currentElimEntries.length);
     });
-
-  });  
+  });
 });

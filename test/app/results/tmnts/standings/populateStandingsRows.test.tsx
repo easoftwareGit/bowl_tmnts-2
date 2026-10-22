@@ -1,5 +1,5 @@
 import { populateStandingsRows } from "@/app/results/tmnt/[tmntId]/standings/populateStandingsRows";
-import { calcNumGames, getLastGameWithScores } from "@/components/tmnts/games";
+import { calcNumGames } from "@/components/tmnts/games";
 import { formatValueSymbSep2Dec } from "@/lib/currency/formatValue";
 import { localConfig } from "@/lib/currency/const";
 import { PAR } from "@/lib/validation/constants";
@@ -20,23 +20,23 @@ import {
 /*************************/
 jest.mock("@/components/tmnts/games", () => ({
   calcNumGames: jest.fn(),
-  getLastGameWithScores: jest.fn(),
 }));
 
 const mockedCalcNumGames = calcNumGames as jest.Mock;
-const mockedLastGame = getLastGameWithScores as jest.Mock;
 
 /********************************************/
 /* fixtures built from mockTmntFullData     */
 /********************************************/
-const { players } = mockTmntFullData;
+const { players, squads } = mockTmntFullData;
 const [scratchDiv, hdcpDiv] = mockTmntFullData.divs;
 // mock scratch division pays 212 for first and 120 for second
 const justDivPfs: divPfType[] = mockDivPfs.filter(
   (pf) => pf.div_id === scratchDiv.id
 );
 
-const NUM_GAMES = 6;
+// number of games for the squad the mock players bowled in
+const NUM_GAMES =
+  squads.find((s) => s.id === players[0].squad_id)?.games ?? 0;
 
 // player number (1-8) -> player id from the mock
 const pid = (n: number) => players[n - 1].id;
@@ -112,7 +112,17 @@ const setTotal = (
   asRecord(getResult(results, playerNum))["total + Hdcp"] = total;
 };
 
-const makePf = (position: number, amount: number) =>
+// clear the score for a game for every result, e.g. last game not bowled yet.
+// totals are left alone so the standings order does not change.
+const clearGame = (results: tmntGameResult[], gameNum: number) => {
+  results.forEach((r) => {
+    asRecord(r)[tgrGameKey(gameNum)] = null;
+    asRecord(r)[tgrHdcpKey(gameNum)] = null;
+  });
+  return results;
+};
+
+const makePf = (position: number, amount: number | null) =>
   ({
     id: `pf_${position}`,
     div_id: scratchDiv.id,
@@ -127,7 +137,6 @@ describe("populateStandingsRows", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockedCalcNumGames.mockReturnValue(NUM_GAMES);
-    mockedLastGame.mockReturnValue(NUM_GAMES); // at the last game, so ties are calculated
   });
 
   describe("fixture sanity check", () => {
@@ -135,10 +144,16 @@ describe("populateStandingsRows", () => {
       expect(PAR).toBe(200);
     });
 
-    it("every mock player has six scores, none above 300", () => {
+    it("the mock squad has at least one game", () => {
+      expect(NUM_GAMES).toBeGreaterThan(0);
+    });
+
+    it("every mock player has one score per squad game, none above 300", () => {
       players.forEach((p) => {
+        const numGames =
+          squads.find((s) => s.id === p.squad_id)?.games ?? 0;
         const scores = scoresFor(p.id);
-        expect(scores).toHaveLength(NUM_GAMES);
+        expect(scores).toHaveLength(numGames);
         scores.forEach((s) => expect(s).toBeLessThanOrEqual(300));
       });
     });
@@ -147,16 +162,38 @@ describe("populateStandingsRows", () => {
       expect(buildResults().map((r) => r.player_id)).toEqual(SORTED_ORDER);
     });
 
-    it("the mock scratch division has two prize funds, 212 and 120", () => {
-      expect(justDivPfs.map((pf) => pf.amount)).toEqual([212, 120]);
-    });
-
     it("the mock scratch prize funds are position 1 = 212 and position 2 = 120", () => {
       expect(justDivPfs.map((pf) => [pf.position, pf.amount])).toEqual([
         [1, 212],
         [2, 120],
       ]);
-    });    
+    });
+  });
+
+  describe("input guards", () => {
+    it("returns an empty array when there are no results", () => {
+      expect(populateStandingsRows([], justDivPfs)).toEqual([]);
+    });
+
+    it("returns an empty array when results is not an array", () => {
+      expect(
+        populateStandingsRows(
+          null as unknown as tmntGameResult[],
+          justDivPfs
+        )
+      ).toEqual([]);
+    });
+
+    it("does not call calcNumGames when there are no results", () => {
+      populateStandingsRows([], justDivPfs);
+      expect(mockedCalcNumGames).not.toHaveBeenCalled();
+    });
+
+    it("still returns every row when the division has no prize funds", () => {
+      const rows = populateStandingsRows(buildResults(), []);
+
+      expect(rows.map((r) => r.player_id)).toEqual(SORTED_ORDER);
+    });
   });
 
   describe("row mapping", () => {
@@ -185,8 +222,8 @@ describe("populateStandingsRows", () => {
         average: 191,
         hdcp: 35, // floor(0.9 * (230 - 191))
         total: 1456,
-        total_hdcp: 210, // 35 * 6
-        total_plus_total_hdcp: 1666,
+        total_hdcp: 35 * NUM_GAMES,
+        total_plus_total_hdcp: 1456 + 35 * NUM_GAMES,
       });
     });
 
@@ -201,11 +238,6 @@ describe("populateStandingsRows", () => {
 
       const rows = populateStandingsRows([result], justDivPfs);
       expect(rows[0].total_plus_total_hdcp).toBe(0);
-    });
-
-    it("returns an empty array when there are no results", () => {
-      mockedCalcNumGames.mockReturnValue(0);
-      expect(populateStandingsRows([], justDivPfs)).toEqual([]);
     });
   });
 
@@ -238,12 +270,14 @@ describe("populateStandingsRows", () => {
       const resultIds = unsorted.map((r) => r.player_id);
       const fundIds = reversedFunds.map((pf) => pf.id);
       const resultsBefore = JSON.stringify(unsorted);
+      const fundsBefore = JSON.stringify(reversedFunds);
 
       populateStandingsRows(unsorted, reversedFunds);
 
       expect(unsorted.map((r) => r.player_id)).toEqual(resultIds);
       expect(reversedFunds.map((pf) => pf.id)).toEqual(fundIds);
       expect(JSON.stringify(unsorted)).toBe(resultsBefore);
+      expect(JSON.stringify(reversedFunds)).toBe(fundsBefore);
     });
   });
 
@@ -251,9 +285,9 @@ describe("populateStandingsRows", () => {
     it("copies every game score and game handicap score from the mock games", () => {
       const rows = populateStandingsRows(buildResults(), justDivPfs);
 
-      // player 1: 201, 202, 203, 252, 182, 185; handicap 9 per game
+      // player 1 has a handicap of 9 per game
       const row = asRecord(rows.find((r) => r.player_id === pid(1)));
-      [201, 202, 203, 252, 182, 185].forEach((score, i) => {
+      scoresFor(pid(1)).forEach((score, i) => {
         expect(row[tgrGameKey(i + 1)]).toBe(score);
         expect(row[tgrHdcpKey(i + 1)]).toBe(score + 9);
       });
@@ -366,9 +400,18 @@ describe("populateStandingsRows", () => {
 
       rows.forEach((row) => expect(row.position).toBe(1));
     });
+
+    it("still shows tied positions before the last game", () => {
+      // only prizes wait for the last game, positions do not
+      const results = clearGame(buildResults(), NUM_GAMES);
+      setTotal(results, 3, 1666);
+      const rows = populateStandingsRows(results, justDivPfs);
+
+      expect(rows.map((r) => r.position).slice(0, 4)).toEqual([1, 1, 3, 4]);
+    });
   });
 
-  describe("prizes", () => {
+  describe("prizes at the last game", () => {
     it("pays the top rows and leaves the rest blank", () => {
       const rows = populateStandingsRows(buildResults(), justDivPfs);
 
@@ -429,14 +472,37 @@ describe("populateStandingsRows", () => {
       expect(rows[3].prize).toBe(NO_PRIZE);
     });
 
-    it("does not calculate ties before the last game", () => {
-      mockedLastGame.mockReturnValue(4); // games 5 and 6 have no scores yet
+    it("formats an uneven split", () => {
       const results = buildResults();
-      setTotal(results, 3, 1666); // tied for first, but ties are ignored for now
+      setTotal(results, 3, 1666);
+      setTotal(results, 4, 1666); // three-way tie for first
       const rows = populateStandingsRows(results, justDivPfs);
 
-      expect(rows[0].prize).toBe(fmt(212));
-      expect(rows[1].prize).toBe(fmt(120));
+      // (212 + 120) / 3 = 110.666...
+      rows.slice(0, 3).forEach((row) => expect(row.prize).toBe(fmt(332 / 3)));
+      expect(rows[3].prize).toBe(NO_PRIZE);
+    });
+
+    it("calculates ties once any one result has a score for the last game", () => {
+      const results = clearGame(buildResults(), NUM_GAMES);
+      // only player 1 has bowled the last game
+      asRecord(getResult(results, 1))[tgrGameKey(NUM_GAMES)] = 185;
+      setTotal(results, 3, 1666);
+      const rows = populateStandingsRows(results, justDivPfs);
+
+      expect(rows[0].prize).toBe(fmt(166));
+      expect(rows[1].prize).toBe(fmt(166));
+    });
+
+    it("uses the game count from calcNumGames to find the last game", () => {
+      mockedCalcNumGames.mockReturnValue(NUM_GAMES - 1);
+      // the last real game is empty, but calcNumGames says the game before is last
+      const results = clearGame(buildResults(), NUM_GAMES);
+      setTotal(results, 3, 1666);
+      const rows = populateStandingsRows(results, justDivPfs);
+
+      expect(rows[0].prize).toBe(fmt(166));
+      expect(rows[1].prize).toBe(fmt(166));
     });
 
     it("does not throw when there are fewer results than prize funds", () => {
@@ -454,14 +520,14 @@ describe("populateStandingsRows", () => {
       rows.forEach((row) => expect(row.prize).toBe(NO_PRIZE));
     });
 
-    it("leaves every prize blank when no games have been bowled", () => {
-      mockedCalcNumGames.mockReturnValue(0);
-      const rows = populateStandingsRows(buildResults(), justDivPfs);
+    it("treats a prize fund with a null amount as 0", () => {
+      const rows = populateStandingsRows(buildResults(), [makePf(1, null)]);
 
-      rows.forEach((row) => expect(row.prize).toBe(NO_PRIZE));
+      expect(rows[0].prize).toBe(fmt(0));
+      expect(rows[1].prize).toBe(NO_PRIZE);
     });
 
-    it("treats a prize fund with no amount as 0", () => {
+    it("treats a prize fund with an undefined amount as 0", () => {
       const noAmount = {
         id: "pf_1",
         div_id: scratchDiv.id,
@@ -471,6 +537,86 @@ describe("populateStandingsRows", () => {
       const rows = populateStandingsRows(buildResults(), [noAmount]);
 
       expect(rows[0].prize).toBe(fmt(0));
+    });
+  });
+
+  describe("prizes before the last game", () => {
+    it("shows the prize fund amounts and leaves the rest blank", () => {
+      const results = clearGame(buildResults(), NUM_GAMES);
+      const rows = populateStandingsRows(results, justDivPfs);
+
+      expect(rows.map((r) => r.prize)).toEqual([
+        fmt(212),
+        fmt(120),
+        NO_PRIZE,
+        NO_PRIZE,
+        NO_PRIZE,
+        NO_PRIZE,
+        NO_PRIZE,
+        NO_PRIZE,
+      ]);
+    });
+
+    it("does not calculate ties", () => {
+      const results = clearGame(buildResults(), NUM_GAMES);
+      setTotal(results, 3, 1666); // tied for first, but ties are ignored for now
+      const rows = populateStandingsRows(results, justDivPfs);
+
+      expect(rows[0].prize).toBe(fmt(212));
+      expect(rows[1].prize).toBe(fmt(120));
+    });
+
+    it("shows the prize fund amounts in position order when the funds arrive out of order", () => {
+      const results = clearGame(buildResults(), NUM_GAMES);
+      const rows = populateStandingsRows(results, [...justDivPfs].reverse());
+
+      expect(rows[0].prize).toBe(fmt(212));
+      expect(rows[1].prize).toBe(fmt(120));
+    });
+
+    it("shows the prize fund amounts when no games have been bowled", () => {
+      const none = players.map((p) =>
+        buildResult(p, Array(NUM_GAMES).fill(null))
+      );
+      const rows = populateStandingsRows(none, justDivPfs);
+
+      expect(rows[0].prize).toBe(fmt(212));
+      expect(rows[1].prize).toBe(fmt(120));
+      rows.slice(2).forEach((row) => expect(row.prize).toBe(NO_PRIZE));
+    });
+
+    it("shows the prize fund amounts when calcNumGames returns 0", () => {
+      mockedCalcNumGames.mockReturnValue(0);
+      const rows = populateStandingsRows(buildResults(), justDivPfs);
+
+      expect(rows[0].prize).toBe(fmt(212));
+      expect(rows[1].prize).toBe(fmt(120));
+      rows.slice(2).forEach((row) => expect(row.prize).toBe(NO_PRIZE));
+    });
+
+    it("treats a prize fund with no amount as 0", () => {
+      const results = clearGame(buildResults(), NUM_GAMES);
+      const funds = [makePf(1, 100), makePf(2, null)];
+      const rows = populateStandingsRows(results, funds);
+
+      expect(rows[0].prize).toBe(fmt(100));
+      expect(rows[1].prize).toBe(fmt(0));
+    });
+
+    it("does not throw when there are fewer results than prize funds", () => {
+      const threeFunds = [makePf(1, 100), makePf(2, 50), makePf(3, 25)];
+      const twoResults = clearGame(buildResults(), NUM_GAMES).slice(0, 2);
+
+      expect(() => populateStandingsRows(twoResults, threeFunds)).not.toThrow();
+      const rows = populateStandingsRows(twoResults, threeFunds);
+      expect(rows.map((r) => r.prize)).toEqual([fmt(100), fmt(50)]);
+    });
+
+    it("leaves every prize blank when the division has no prize funds", () => {
+      const results = clearGame(buildResults(), NUM_GAMES);
+      const rows = populateStandingsRows(results, []);
+
+      rows.forEach((row) => expect(row.prize).toBe(NO_PRIZE));
     });
   });
 

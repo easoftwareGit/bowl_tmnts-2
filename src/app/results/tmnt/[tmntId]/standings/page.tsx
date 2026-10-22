@@ -14,7 +14,7 @@ import {
 } from "@/redux/features/oneTmntGameResults/oneTmntGameResultsSlice";
 import { 
   fetchDivPfs,
-  getDivPfRequestedTmntId,
+  getDivPfsRequestedTmntId,
   getDivPfsTmntId,
   getDivPfsError,
   getDivPfsLoadStatus,
@@ -41,7 +41,7 @@ const TmntResultsPage = () => {
   const tmntResults = useSelector(selectOneTmntGameResults);
   const resultsError = useSelector(getOneTmntGameResultsError);
     
-  const requestedPrizesTmntId = useSelector(getDivPfRequestedTmntId);
+  const requestedPrizesTmntId = useSelector(getDivPfsRequestedTmntId);
   const prizesTmntId = useSelector(getDivPfsTmntId);
   const prizesLoadStatus = useSelector(getDivPfsLoadStatus);
   const prizesError = useSelector(getDivPfsError);    

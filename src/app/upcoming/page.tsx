@@ -34,6 +34,7 @@ export default function TmntUpcomingPage() {
         years={yearsArr}        
         tmnts={stateTmnts.tmnts}
         showResults={false}
+        tmntYear={tmntYear}
         onYearChange={yearChanged}
       />
     </div>

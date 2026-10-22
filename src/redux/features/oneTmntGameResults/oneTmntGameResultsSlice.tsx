@@ -1,8 +1,8 @@
-import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { ioStatusType } from "@/redux/statusTypes";
 import { RootState } from "@/redux/store";
 import { getGameResultsForTmnt } from "@/lib/db/results/dbResults";
-import { tmntGameResult } from "@/lib/types/resultsTypes";
+import type { tmntGameResult } from "@/lib/types/resultsTypes";
 
 export interface oneTmntGameResultsState {
   games: tmntGameResult[];
@@ -22,11 +22,14 @@ const initialState: oneTmntGameResultsState = {
 
 export const fetchOneTmntGameResults = createAsyncThunk(
   "oneTmntGameResults/fetchOneTmntGameResults",
-  async (tmntId: string): Promise<tmntGameResult[] | null> => {
+  async (tmntId: string) => {
     // Do not use try / catch blocks here. Need the promise to be fulfilled or
     // rejected which will have the appropriate response in the extraReducers.
-
-    return getGameResultsForTmnt(tmntId);
+    const games = await getGameResultsForTmnt(tmntId);
+    if (!games) {
+      throw new Error("Error fetching game results for tournament");
+    }
+    return games;
   },
 );
 
@@ -35,23 +38,23 @@ export const oneTmntGameResultsSlice = createSlice({
   initialState,
   reducers: {},
   extraReducers: (builder) => {
-    builder.addCase(fetchOneTmntGameResults.pending, (state, action) => {
-      state.loadStatus = "loading";
-      state.requestedTmntId = action.meta.arg;
-      state.error = "";
-    });
-    builder.addCase(
-      fetchOneTmntGameResults.fulfilled,
-      (state, action: PayloadAction<any[] | null>) => {
+    builder
+      .addCase(fetchOneTmntGameResults.pending, (state, action) => {
+        state.loadStatus = "loading";
+        state.requestedTmntId = action.meta.arg;
+        state.error = "";
+      })
+      .addCase(fetchOneTmntGameResults.fulfilled, (state, action) => {
+        if (action.meta.arg !== state.requestedTmntId) return; // stale response
         state.loadStatus = "succeeded";
-        state.tmntId = state.requestedTmntId;
-        state.games = action.payload as any[];
-      },
-    );
-    builder.addCase(fetchOneTmntGameResults.rejected, (state, action) => {
-      state.loadStatus = "failed";
-      state.error = action.error.message;
-    });
+        state.tmntId = action.meta.arg;
+        state.games = action.payload;
+      })
+      .addCase(fetchOneTmntGameResults.rejected, (state, action) => {
+        if (action.meta.arg !== state.requestedTmntId) return; // stale failure
+        state.loadStatus = "failed";
+        state.error = action.error.message ?? "Unknown error fetching games";
+      });
   },
 });
 

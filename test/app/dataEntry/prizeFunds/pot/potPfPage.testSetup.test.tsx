@@ -21,13 +21,14 @@ import { populatePfRows } from "@/app/dataEntry/prizeFunds/prizeFundGrid/prizeFu
 import { potPfsToPrizeFunds } from "@/app/dataEntry/prizeFunds/prizeFundGrid/convertPfTypes";
 import { getPotName } from "@/lib/getName";
 import { btDbUuid } from "@/lib/uuid";
+import { ptGame } from "@/lib/validation/constants";
 import PotPrizeFundEntry from "@/app/dataEntry/prizeFunds/tmnt/[tmntId]/pot/[potId]/page";
 import {
   tmntId as defaultTmntId,
   potId1 as defaultPotId,
-  mockPotPfs,  
+  mockPotPfs,
   mockPot1PerGamePrizeFund,
-  mockTmntFullData,  
+  mockTmntFullData,
 } from "../../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import cloneDeep from "lodash/cloneDeep";
 
@@ -48,8 +49,8 @@ type MockRootState = {
 /**
  * Props captured from the mocked PotPrizeFundGrid.
  *
- * Page tests can invoke these callbacks without rendering the generic
- * PrizeFundGrid or the Syncfusion grid.
+ * Matches PotPrizeFundGridProps, so page tests can invoke these callbacks
+ * without rendering the generic PrizeFundGrid or the Syncfusion grid.
  */
 export type MockPotPrizeFundGridProps = {
   rows: prizeFundEntryRow[];
@@ -62,11 +63,12 @@ export type MockPotPrizeFundGridProps = {
   gridDataWasChanged: boolean;
   onGridDataChanged: () => void;
   onGridDataReset: () => void;
-  onNavigateAfterSave: () => void;
+  onNavigateAfterSave?: () => void;
   onBack: () => void;
-  onSaveComplete: (
+  onSaveComplete?: (
     savedRows: prizeFundEntryRow[],
   ) => void;
+  onCancel?: () => void;
 };
 
 export type MockConfirmModalProps = {
@@ -98,6 +100,23 @@ export type SetupOptions = {
   populatedRows?: prizeFundEntryRow[];
 
   confirmLeavePage?: boolean;
+};
+
+/**
+ * Values the page should show after it initializes.
+ * See calcExpectedPotValues().
+ */
+export type ExpectedPotValues = {
+  isGamePot: boolean;
+  games: number;
+  entryFees: number;
+  recordedExpenses: number;
+  expenses: number;
+  prizeFund: number;
+  perGame: number;
+  gridTotalPrizeFund: number;
+  numCashers: number;
+  numPlayers: number;
 };
 
 /******************
@@ -147,6 +166,14 @@ let latestConfirmModalProps:
  */
 let currentGridRows: prizeFundEntryRow[] = [];
 
+/**
+ * Number of times the mocked grid has mounted.
+ *
+ * The page changes the grid's key on Cancel, which remounts the grid.
+ * Tests can compare this count before and after Cancel.
+ */
+let mockGridMountCount = 0;
+
 export const getLatestGridProps =
   (): MockPotPrizeFundGridProps | null =>
     latestGridProps;
@@ -165,6 +192,9 @@ export const setCurrentGridRows = (
 export const getLatestConfirmModalProps =
   (): MockConfirmModalProps | null =>
     latestConfirmModalProps;
+
+export const getGridMountCount = (): number =>
+  mockGridMountCount;
 
 /****************
  * Module mocks *
@@ -291,6 +321,11 @@ jest.mock(
       ) => {
         latestGridProps = props;
 
+        // count mounts; the page remounts the grid on Cancel
+        React.useEffect(() => {
+          mockGridMountCount++;
+        }, []);
+
         /*
          * Keep the mocked grid rows synchronized with rows received from
          * the page.
@@ -317,8 +352,19 @@ jest.mock(
             })),
         }));
 
+        /*
+         * Like the real grid, Cancel is enabled only when data has changed.
+         */
+        const cancelDisabled = !props.gridDataWasChanged;
+
+        /*
+         * id="potPfGrid" and the "_undo_all" button id match the DOM the
+         * real Syncfusion grid renders. The page's mousedown capture looks
+         * for '#potPfGrid [id$="undo_all"]' to discard a typed
+         * Cashers/Expenses value when the user clicks Cancel.
+         */
         return (
-          <div data-testid="mock-pot-prize-fund-grid">
+          <div id="potPfGrid" data-testid="mock-pot-prize-fund-grid">
             <div data-testid="mock-grid-row-count">
               {props.rows.length}
             </div>
@@ -345,6 +391,24 @@ jest.mock(
               Grid Reset
             </button>
 
+            {/*
+              Simulates the grid's Cancel toolbar button after the user
+              confirms. The real PrizeFundGrid's confirmYes() calls
+              onGridDataReset() and then onCancel().
+            */}
+            <button
+              type="button"
+              id="potPfGrid_undo_all"
+              aria-disabled={cancelDisabled ? "true" : "false"}
+              onClick={() => {
+                if (cancelDisabled) return;
+                props.onGridDataReset?.();
+                props.onCancel?.();
+              }}
+            >
+              Cancel
+            </button>
+
             <button
               type="button"
               onClick={props.onBack}
@@ -355,7 +419,7 @@ jest.mock(
             <button
               type="button"
               onClick={() => {
-                props.onSaveComplete(
+                props.onSaveComplete?.(
                   currentGridRows.map((row) => ({
                     ...row,
                   })),
@@ -367,7 +431,7 @@ jest.mock(
 
             <button
               type="button"
-              onClick={props.onNavigateAfterSave}
+              onClick={() => props.onNavigateAfterSave?.()}
             >
               Navigate After Save
             </button>
@@ -491,6 +555,134 @@ jest.mock(
   }),
 );
 
+/**************************
+ * Expected-value helpers *
+ **************************/
+
+/**
+ * Returns a pot money record's amount, or 0 if there is none.
+ * Uses the same lookup as the page.
+ */
+export const getPotMoneyAmount = (
+  tmntData: tmntFullType,
+  potId: string,
+  descrip: "ENTRIES" | "EXPENSES" | "PRIZEFUND",
+): number => {
+  const flow = descrip === "ENTRIES" ? "IN" : "OUT";
+  return (
+    tmntData.moneys?.find(
+      (money) =>
+        money.descrip === descrip &&
+        money.flow === flow &&
+        money.pot_id === potId &&
+        money.brkt_id === null &&
+        money.elim_id === null,
+    )?.amount ?? 0
+  );
+};
+
+/**
+ * Balances expenses the same way the page does.
+ *
+ * For a game pot, the cents lost when the prize fund is split across games
+ * move into expenses, so fees = expenses + perGame * games exactly.
+ *
+ * Example: fees 100, expenses 0, 3 games
+ *   -> { expenses: 0.01, prizeFund: 99.99, perGame: 33.33 }
+ *
+ * Use it to work out the expected values after a user enters expenses.
+ */
+export const balancePotExpenses = (
+  fees: number,
+  expenses: number,
+  games: number,
+  isGamePot: boolean,
+): { expenses: number; prizeFund: number; perGame: number } => {
+  const feesCents = Math.round(fees * 100);
+  const expensesCents = Math.round(expenses * 100);
+  const prizeFundCents = feesCents - expensesCents;
+
+  if (!isGamePot || games <= 0) {
+    return {
+      expenses: expensesCents / 100,
+      prizeFund: prizeFundCents / 100,
+      perGame: 0,
+    };
+  }
+
+  const perGameCents = Math.floor(prizeFundCents / games);
+
+  return {
+    expenses: (feesCents - perGameCents * games) / 100,
+    prizeFund: (perGameCents * games) / 100,
+    perGame: perGameCents / 100,
+  };
+};
+
+/**
+ * Calculates the values the page should show after it initializes.
+ *
+ * Initial expenses:
+ * - saved rows: fees minus the saved payout
+ *   (a game pot's rows are for one game, so the sum is multiplied by games)
+ * - no saved rows: the pot's EXPENSES money record, limited to 0..fees
+ * then balanced by balancePotExpenses().
+ */
+export const calcExpectedPotValues = ({
+  tmntData,
+  potId,
+  potPfs,
+}: {
+  tmntData: tmntFullType;
+  potId: string;
+  potPfs: potPfType[];
+}): ExpectedPotValues => {
+  const pot = tmntData.pots?.find((p) => p.id === potId);
+  const isGamePot = pot?.pot_type === ptGame;
+  const games = tmntData.events?.[0]?.games ?? 0;
+
+  const entryFees = getPotMoneyAmount(tmntData, potId, "ENTRIES");
+  const recordedExpenses = getPotMoneyAmount(tmntData, potId, "EXPENSES");
+
+  const currentPotPfs = potPfs.filter((pf) => pf.pot_id === potId);
+  const savedPrizesTotal = currentPotPfs.reduce(
+    (sum, pf) => sum + (pf.amount ?? 0),
+    0,
+  );
+  const savedAllGamesPrizes = isGamePot
+    ? savedPrizesTotal * games
+    : savedPrizesTotal;
+
+  const unbalancedExpenses =
+    currentPotPfs.length > 0
+      ? Math.max(entryFees - savedAllGamesPrizes, 0)
+      : Math.min(Math.max(recordedExpenses, 0), Math.max(entryFees, 0));
+
+  const balanced = balancePotExpenses(
+    entryFees,
+    unbalancedExpenses,
+    games,
+    isGamePot,
+  );
+
+  const numPlayers =
+    tmntData.potEntries?.filter((entry) => entry.pot_id === potId).length ??
+    0;
+
+  return {
+    isGamePot,
+    games,
+    entryFees,
+    recordedExpenses,
+    expenses: balanced.expenses,
+    prizeFund: balanced.prizeFund,
+    perGame: balanced.perGame,
+    gridTotalPrizeFund: isGamePot ? balanced.perGame : balanced.prizeFund,
+    numCashers: currentPotPfs.length,
+    numPlayers,
+  };
+};
+
 /********************
  * Test data makers *
  ********************/
@@ -511,8 +703,7 @@ export const makePrizeFunds = (
 };
 
 /**
- * Converts the mocked pot prize funds to the generic potPf type
- * expected by the page's conversion helper.
+ * Returns copies of the pot prize funds, all assigned to potId.
  */
 export const makePotPfsForPot = (
   potId: string,
@@ -524,9 +715,8 @@ export const makePotPfsForPot = (
   }));
 
 /**
- * Converts the mocked pot prize funds to the generic potPf type
- * expected by the page's conversion helper.
- * Each potPf has a different pot_id than the current pot.
+ * Returns copies of the pot prize funds in which none belong to
+ * currentPotId. Use it to test a pot with no saved rows.
  */
 export const makePotPfsForDifferentPot = (
   currentPotId: string,
@@ -543,11 +733,12 @@ export const makePotPfsForDifferentPot = (
 /**
  * Creates the generic rows returned by the mocked populatePfRows().
  *
- * For Game pots, the rows are based on the per-game prize fund.
- * For Last Game and Series pots, the rows are based on the total prize fund.
+ * totalPrizeFund is the grid total used for the percentages:
+ * - Game pots: the per-game prize fund
+ * - Last Game and Series pots: the total prize fund
  *
- * The default implementation assumes a Game pot because the mock tournament
- * data uses that pot type.
+ * setup() passes the grid total calculated by calcExpectedPotValues().
+ * The defaults assume pot 1, a Game pot, as in the mock tournament data.
  */
 export const makeRows = (
   potPfs: potPfType[] = mockPotPfs,
@@ -569,11 +760,25 @@ export const makeRows = (
  * page queries *
  ****************/
 
-/**
- * Queries the page for the Per Game element.
- */
+/** Queries the page for the Per Game input (only shown for game pots). */
 export const queryPerGame = () =>
   screen.queryByLabelText("Per Game");
+
+export const getCashersInput = () =>
+  screen.getByLabelText("Cashers") as HTMLInputElement;
+
+export const getExpensesInput = () =>
+  screen.getByLabelText("Expenses") as HTMLInputElement;
+
+export const getPrizeFundInput = () =>
+  screen.getByLabelText("Prize Fund") as HTMLInputElement;
+
+export const getCashersError = () =>
+  screen.getByTestId("dangerCashers");
+
+/** The mocked grid's Cancel toolbar button. */
+export const getGridCancelButton = () =>
+  screen.getByRole("button", { name: "Cancel" });
 
 /***********
  * setup() *
@@ -615,9 +820,11 @@ export const setup = ({
   tmntData: tmntFullType;
   prizeFunds: prizeFundType[];
   populatedRows: prizeFundEntryRow[];
+  expected: ExpectedPotValues;
 
   triggerGridDataChanged: () => void;
   triggerGridDataReset: () => void;
+  triggerGridCancel: () => void;
   triggerSaveComplete: (
     savedRows?: prizeFundEntryRow[],
   ) => void;
@@ -654,13 +861,16 @@ export const setup = ({
     }
   }
 
+  // values the page should show once it initializes
+  const expected = calcExpectedPotValues({ tmntData, potId, potPfs });
+
   const prizeFunds =
     suppliedPrizeFunds ??
     makePrizeFunds(currentPotPfs);
 
   const populatedRows =
     suppliedPopulatedRows ??
-    makeRows(currentPotPfs);
+    makeRows(currentPotPfs, expected.gridTotalPrizeFund);
 
   const runTmntUrl = `/dataEntry/runTmnt/${tmntId}`;
 
@@ -677,7 +887,7 @@ export const setup = ({
       loadStatus: tmntLoadStatus,
       error: tmntError,
     },
-  };  
+  };
 
   jest.mocked(useParams).mockReturnValue({
     tmntId,
@@ -730,49 +940,6 @@ export const setup = ({
     <PotPrizeFundEntry />,
   );
 
-  const triggerGridDataChanged =
-    (): void => {
-      act(() => {
-        latestGridProps
-          ?.onGridDataChanged();
-      });
-    };
-
-  const triggerGridDataReset =
-    (): void => {
-      act(() => {
-        latestGridProps
-          ?.onGridDataReset();
-      });
-    };
-
-  const triggerSaveComplete = (
-    savedRows: prizeFundEntryRow[] =
-      populatedRows,
-  ): void => {
-    act(() => {
-      latestGridProps?.onSaveComplete(
-        savedRows.map((row) => ({
-          ...row,
-        })),
-      );
-    });
-  };
-
-  const triggerNavigateAfterSave =
-    (): void => {
-      act(() => {
-        latestGridProps
-          ?.onNavigateAfterSave();
-      });
-    };
-
-  const triggerBack = (): void => {
-    act(() => {
-      latestGridProps?.onBack();
-    });
-  };
-
   return {
     user,
     view,
@@ -787,33 +954,18 @@ export const setup = ({
     tmntData,
     prizeFunds,
     populatedRows,
+    expected,
 
     triggerGridDataChanged,
     triggerGridDataReset,
-    triggerSaveComplete,
+    triggerGridCancel,
+    // defaults to the rows populatePfRows() returned for this setup
+    triggerSaveComplete: (
+      savedRows: prizeFundEntryRow[] = populatedRows,
+    ) => triggerSaveComplete(savedRows),
     triggerNavigateAfterSave,
     triggerBack,
   };
-
-  // return {
-  //   user,
-  //   view,
-
-  //   tmntId,
-  //   potId,
-  //   runTmntUrl,
-
-  //   potPfs,
-  //   tmntData,
-  //   prizeFunds,
-  //   populatedRows,
-
-  //   triggerGridDataChanged,
-  //   triggerGridDataReset,
-  //   triggerSaveComplete,
-  //   triggerNavigateAfterSave,
-  //   triggerBack,
-  // };
 };
 
 /************************
@@ -827,6 +979,7 @@ export const standardBeforeEach = (): void => {
   latestGridProps = null;
   latestConfirmModalProps = null;
   currentGridRows = [];
+  mockGridMountCount = 0;
 
   jest
     .spyOn(window, "confirm")
@@ -865,6 +1018,21 @@ export const triggerGridDataReset =
     });
   };
 
+/**
+ * Simulates the user confirming the grid's Cancel toolbar button.
+ *
+ * The real PrizeFundGrid calls onGridDataReset() and then onCancel().
+ * This skips the mousedown, so the page's blur handlers are not involved;
+ * use user.click(getGridCancelButton()) to test the full click.
+ */
+export const triggerGridCancel =
+  (): void => {
+    act(() => {
+      latestGridProps?.onGridDataReset();
+      latestGridProps?.onCancel?.();
+    });
+  };
+
 export const triggerSaveComplete = (
   savedRows?: prizeFundEntryRow[],
 ): void => {
@@ -874,7 +1042,7 @@ export const triggerSaveComplete = (
       latestGridProps?.rows ??
       [];
 
-    latestGridProps?.onSaveComplete(
+    latestGridProps?.onSaveComplete?.(
       rows.map((row) => ({
         ...row,
       })),
@@ -886,7 +1054,7 @@ export const triggerNavigateAfterSave =
   (): void => {
     act(() => {
       latestGridProps
-        ?.onNavigateAfterSave();
+        ?.onNavigateAfterSave?.();
     });
   };
 
@@ -915,3 +1083,922 @@ export const cancelRemoveCashers = async (
     }),
   );
 };
+
+// import React from "react";
+// import { act, render, screen, type RenderResult } from "@testing-library/react";
+// import userEvent from "@testing-library/user-event";
+// import { useDispatch, useSelector } from "react-redux";
+// import { useParams, useRouter } from "next/navigation";
+// import type {
+//   potCategoriesTypes,
+//   potPfType,
+//   prizeFundEntryRow,
+//   prizeFundType,
+//   tmntFullType
+// } from "@/lib/types/types";
+// import type {
+//   PrizeFundGridHandle,
+// } from "@/app/dataEntry/prizeFunds/prizeFundGrid/prizeFundGrid";
+// import type { AppDispatch, RootState } from "@/redux/store";
+// import { fetchPotPfs } from "@/redux/features/potPfs/potPfsSlice";
+// import { fetchTmntFullData } from "@/redux/features/tmntFullData/tmntFullDataSlice";
+// import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
+// import { populatePfRows } from "@/app/dataEntry/prizeFunds/prizeFundGrid/prizeFundRows";
+// import { potPfsToPrizeFunds } from "@/app/dataEntry/prizeFunds/prizeFundGrid/convertPfTypes";
+// import { getPotName } from "@/lib/getName";
+// import { btDbUuid } from "@/lib/uuid";
+// import PotPrizeFundEntry from "@/app/dataEntry/prizeFunds/tmnt/[tmntId]/pot/[potId]/page";
+// import {
+//   tmntId as defaultTmntId,
+//   potId1 as defaultPotId,
+//   mockPotPfs,  
+//   mockPot1PerGamePrizeFund,
+//   mockTmntFullData,  
+// } from "../../../../mocks/tmnts/tmntFullData/mockTmntFullData";
+// import cloneDeep from "lodash/cloneDeep";
+
+// type MockRootState = {
+//   potPfs: {
+//     potPfs: potPfType[];
+//     requestedTmntId: string;
+//     loadStatus: string;
+//     error: string | null;
+//   };
+//   tmntFullData: {
+//     tmntFullData: tmntFullType;
+//     loadStatus: string;
+//     error: string | null;
+//   };
+// };
+
+// /**
+//  * Props captured from the mocked PotPrizeFundGrid.
+//  *
+//  * Page tests can invoke these callbacks without rendering the generic
+//  * PrizeFundGrid or the Syncfusion grid.
+//  */
+// export type MockPotPrizeFundGridProps = {
+//   rows: prizeFundEntryRow[];
+//   setRows: React.Dispatch<
+//     React.SetStateAction<prizeFundEntryRow[]>
+//   >;
+//   potId: string;
+//   totalPrizeFund: number;
+//   enableEditing?: boolean;
+//   gridDataWasChanged: boolean;
+//   onGridDataChanged: () => void;
+//   onGridDataReset: () => void;
+//   onNavigateAfterSave: () => void;
+//   onBack: () => void;
+//   onSaveComplete: (
+//     savedRows: prizeFundEntryRow[],
+//   ) => void;
+// };
+
+// export type MockConfirmModalProps = {
+//   show: boolean;
+//   title: string;
+//   message: string;
+//   onConfirm: () => void | Promise<void>;
+//   onCancel: () => void;
+// };
+
+// export type SetupOptions = {
+//   tmntId?: string;
+//   potId?: string;
+
+//   potName?: string;
+//   potType?: potCategoriesTypes;
+
+//   potPfs?: potPfType[];
+//   tmntData?: tmntFullType;
+
+//   potPfsRequestedTmntId?: string;
+//   potPfsLoadStatus?: string;
+//   tmntLoadStatus?: string;
+
+//   potPfsError?: string | null;
+//   tmntError?: string | null;
+
+//   prizeFunds?: prizeFundType[];
+//   populatedRows?: prizeFundEntryRow[];
+
+//   confirmLeavePage?: boolean;
+// };
+
+// /******************
+//  * Exported mocks *
+//  ******************/
+
+// // Redux
+// export const mockDispatch = jest.fn();
+
+// // Router
+// export const mockPush = jest.fn();
+
+// // Redux thunks
+// export const mockFetchPotPfs = jest.mocked(fetchPotPfs);
+// export const mockFetchTmntFullData = jest.mocked(fetchTmntFullData);
+
+// // Helper functions
+// export const mockPotPfsToPrizeFunds = jest.mocked(potPfsToPrizeFunds);
+// export const mockPopulatePfRows = jest.mocked(populatePfRows);
+// export const mockGetPotName = jest.mocked(getPotName);
+
+// // Hooks
+// export const mockUseUnsavedChangesGuard =
+//   jest.mocked(useUnsavedChangesGuard);
+
+// // Misc.
+// export const mockBtDbUuid = jest.mocked(btDbUuid);
+// export const mockWindowConfirm = jest.fn();
+
+// /****************
+//  * Latest props *
+//  ****************/
+
+// let latestGridProps:
+//   | MockPotPrizeFundGridProps
+//   | null = null;
+
+// let latestConfirmModalProps:
+//   | MockConfirmModalProps
+//   | null = null;
+
+// /**
+//  * Represents the rows currently inside the mocked Syncfusion grid.
+//  *
+//  * This simulates PrizeFundGrid.getCurrentRows(), which may contain edits
+//  * that have not yet been pushed into React state.
+//  */
+// let currentGridRows: prizeFundEntryRow[] = [];
+
+// export const getLatestGridProps =
+//   (): MockPotPrizeFundGridProps | null =>
+//     latestGridProps;
+
+// export const getLatestRows = (): prizeFundEntryRow[] =>
+//   latestGridProps?.rows ?? [];
+
+// export const setCurrentGridRows = (
+//   rows: prizeFundEntryRow[],
+// ): void => {
+//   currentGridRows = rows.map((row) => ({
+//     ...row,
+//   }));
+// };
+
+// export const getLatestConfirmModalProps =
+//   (): MockConfirmModalProps | null =>
+//     latestConfirmModalProps;
+
+// /****************
+//  * Module mocks *
+//  ****************/
+
+// jest.mock("react-redux", () => ({
+//   __esModule: true,
+//   useDispatch: jest.fn(),
+//   useSelector: jest.fn(),
+// }));
+
+// jest.mock("next/navigation", () => ({
+//   __esModule: true,
+//   useParams: jest.fn(),
+//   useRouter: jest.fn(),
+// }));
+
+// jest.mock("@/lib/getName", () => ({
+//   __esModule: true,
+//   getPotName: jest.fn(),
+// }));
+
+// jest.mock(
+//   "@/redux/features/potPfs/potPfsSlice",
+//   () => ({
+//     __esModule: true,
+
+//     fetchPotPfs: jest.fn(
+//       (tmntId: string) => ({
+//         type: "potPfs/fetchPotPfs",
+//         payload: tmntId,
+//       }),
+//     ),
+
+//     selectPotPfs: (
+//       state: MockRootState,
+//     ): potPfType[] =>
+//       state.potPfs.potPfs,
+
+//     getPotPfsRequestedTmntId: (
+//       state: MockRootState,
+//     ): string =>
+//       state.potPfs.requestedTmntId,
+
+//     getPotPfsLoadStatus: (
+//       state: MockRootState,
+//     ): string =>
+//       state.potPfs.loadStatus,
+
+//     getPotPfsError: (
+//       state: MockRootState,
+//     ): string | null =>
+//       state.potPfs.error,
+//   }),
+// );
+
+// jest.mock(
+//   "@/redux/features/tmntFullData/tmntFullDataSlice",
+//   () => ({
+//     __esModule: true,
+
+//     fetchTmntFullData: jest.fn(
+//       (tmntId: string) => ({
+//         type: "tmntFullData/fetchTmntFullData",
+//         payload: tmntId,
+//       }),
+//     ),
+
+//     selectTmntFullData: (
+//       state: MockRootState,
+//     ): tmntFullType =>
+//       state.tmntFullData.tmntFullData,
+
+//     getTmntFullDataLoadStatus: (
+//       state: MockRootState,
+//     ): string =>
+//       state.tmntFullData.loadStatus,
+
+//     getTmntFullDataError: (
+//       state: MockRootState,
+//     ): string | null =>
+//       state.tmntFullData.error,
+//   }),
+// );
+
+// jest.mock(
+//   "@/hooks/useUnsavedChangesGuard",
+//   () => ({
+//     __esModule: true,
+//     useUnsavedChangesGuard: jest.fn(),
+//   }),
+// );
+
+// jest.mock(
+//   "@/app/dataEntry/prizeFunds/prizeFundGrid/prizeFundRows",
+//   () => ({
+//     __esModule: true,
+//     populatePfRows: jest.fn(),
+//   }),
+// );
+
+// jest.mock(
+//   "@/app/dataEntry/prizeFunds/prizeFundGrid/convertPfTypes",
+//   () => ({
+//     __esModule: true,
+//     potPfsToPrizeFunds: jest.fn(),
+//   }),
+// );
+
+// jest.mock("@/lib/uuid", () => ({
+//   __esModule: true,
+//   btDbUuid: jest.fn(),
+// }));
+
+// jest.mock(
+//   "@/app/dataEntry/prizeFunds/prizeFundGrid/pot/potPrizeFundGrid",
+//   () => {
+//     const React = require("react");
+
+//     const MockPotPrizeFundGrid = React.forwardRef(
+//       (
+//         props: MockPotPrizeFundGridProps,
+//         ref: React.Ref<PrizeFundGridHandle>,
+//       ) => {
+//         latestGridProps = props;
+
+//         /*
+//          * Keep the mocked grid rows synchronized with rows received from
+//          * the page.
+//          *
+//          * currentGridRows can later be changed by setCurrentGridRows() to
+//          * simulate unsaved Syncfusion batch edits.
+//          */
+//         React.useEffect(() => {
+//           currentGridRows = props.rows.map((row) => ({
+//             ...row,
+//           }));
+//         }, [props.rows]);
+
+//         /*
+//          * Expose the same public method as the real PrizeFundGrid.
+//          *
+//          * The page calls getCurrentRows() before adding or removing cashers
+//          * so it can preserve edits that still exist only inside Syncfusion.
+//          */
+//         React.useImperativeHandle(ref, () => ({
+//           getCurrentRows: () =>
+//             currentGridRows.map((row) => ({
+//               ...row,
+//             })),
+//         }));
+
+//         return (
+//           <div data-testid="mock-pot-prize-fund-grid">
+//             <div data-testid="mock-grid-row-count">
+//               {props.rows.length}
+//             </div>
+
+//             <div data-testid="mock-grid-total-prize-fund">
+//               {props.totalPrizeFund}
+//             </div>
+
+//             <div data-testid="mock-grid-data-was-changed">
+//               {String(props.gridDataWasChanged)}
+//             </div>
+
+//             <button
+//               type="button"
+//               onClick={props.onGridDataChanged}
+//             >
+//               Grid Changed
+//             </button>
+
+//             <button
+//               type="button"
+//               onClick={props.onGridDataReset}
+//             >
+//               Grid Reset
+//             </button>
+
+//             <button
+//               type="button"
+//               onClick={props.onBack}
+//             >
+//               Back
+//             </button>
+
+//             <button
+//               type="button"
+//               onClick={() => {
+//                 props.onSaveComplete(
+//                   currentGridRows.map((row) => ({
+//                     ...row,
+//                   })),
+//                 );
+//               }}
+//             >
+//               Save Complete
+//             </button>
+
+//             <button
+//               type="button"
+//               onClick={props.onNavigateAfterSave}
+//             >
+//               Navigate After Save
+//             </button>
+//           </div>
+//         );
+//       },
+//     );
+
+//     MockPotPrizeFundGrid.displayName =
+//       "MockPotPrizeFundGrid";
+
+//     return {
+//       __esModule: true,
+//       default: MockPotPrizeFundGrid,
+//     };
+//   },
+// );
+
+// jest.mock(
+//   "@/components/modal/waitModal",
+//   () => ({
+//     __esModule: true,
+
+//     default: ({
+//       show,
+//       message,
+//     }: {
+//       show: boolean;
+//       message: string;
+//     }) => {
+//       if (!show) {
+//         return null;
+//       }
+
+//       return (
+//         <div role="status">
+//           {message}
+//         </div>
+//       );
+//     },
+//   }),
+// );
+
+// jest.mock(
+//   "@/components/modal/confirmModal",
+//   () => ({
+//     __esModule: true,
+
+//     default: (
+//       props: MockConfirmModalProps,
+//     ) => {
+//       latestConfirmModalProps = props;
+
+//       if (!props.show) {
+//         return null;
+//       }
+
+//       return (
+//         <div
+//           role="dialog"
+//           aria-label="confirm-modal"
+//         >
+//           <div>{props.title}</div>
+//           <div>{props.message}</div>
+
+//           <button
+//             type="button"
+//             onClick={() => {
+//               void props.onConfirm();
+//             }}
+//           >
+//             Yes
+//           </button>
+
+//           <button
+//             type="button"
+//             onClick={props.onCancel}
+//           >
+//             No
+//           </button>
+//         </div>
+//       );
+//     },
+//   }),
+// );
+
+// jest.mock(
+//   "@/components/currency/eaCurrencyInput",
+//   () => ({
+//     __esModule: true,
+
+//     default: ({
+//       id,
+//       name,
+//       value,
+//       disabled,
+//       className,
+//       onBlur,
+//       onChange,
+//     }: {
+//       id: string;
+//       name: string;
+//       value: number | string;
+//       disabled?: boolean;
+//       className?: string;
+//       onBlur?: React.FocusEventHandler<HTMLInputElement>;
+//       onChange?: React.ChangeEventHandler<HTMLInputElement>;
+//     }) => (
+//       <input
+//         type="text"
+//         id={id}
+//         name={name}
+//         value={value}
+//         disabled={disabled}
+//         className={className}
+//         onBlur={onBlur}
+//         onChange={onChange}
+//         readOnly={!onChange}
+//       />
+//     ),
+//   }),
+// );
+
+// /********************
+//  * Test data makers *
+//  ********************/
+
+// /**
+//  * Converts the mocked pot prize funds to the generic prize-fund type
+//  * expected by the page's conversion helper.
+//  */
+// export const makePrizeFunds = (
+//   potPfs: potPfType[] = mockPotPfs,
+// ): prizeFundType[] => {
+//   return potPfs.map((potPf) => ({
+//     id: potPf.id,
+//     parent_id: potPf.pot_id,
+//     position: potPf.position,
+//     amount: potPf.amount,
+//   }));
+// };
+
+// /**
+//  * Converts the mocked pot prize funds to the generic potPf type
+//  * expected by the page's conversion helper.
+//  */
+// export const makePotPfsForPot = (
+//   potId: string,
+//   potPfs: potPfType[] = mockPotPfs,
+// ): potPfType[] =>
+//   potPfs.map((pf) => ({
+//     ...pf,
+//     pot_id: potId,
+//   }));
+
+// /**
+//  * Converts the mocked pot prize funds to the generic potPf type
+//  * expected by the page's conversion helper.
+//  * Each potPf has a different pot_id than the current pot.
+//  */
+// export const makePotPfsForDifferentPot = (
+//   currentPotId: string,
+//   potPfs: potPfType[] = mockPotPfs,
+// ): potPfType[] =>
+//   potPfs.map((pf) => ({
+//     ...pf,
+//     pot_id:
+//       pf.pot_id === currentPotId
+//         ? "different-pot-id"
+//         : pf.pot_id,
+//   }));
+
+// /**
+//  * Creates the generic rows returned by the mocked populatePfRows().
+//  *
+//  * For Game pots, the rows are based on the per-game prize fund.
+//  * For Last Game and Series pots, the rows are based on the total prize fund.
+//  *
+//  * The default implementation assumes a Game pot because the mock tournament
+//  * data uses that pot type.
+//  */
+// export const makeRows = (
+//   potPfs: potPfType[] = mockPotPfs,
+//   totalPrizeFund: number = mockPot1PerGamePrizeFund,
+// ): prizeFundEntryRow[] => {
+//   return potPfs.map((potPf) => ({
+//     id: potPf.id,
+//     parent_id: potPf.pot_id,
+//     position: potPf.position!,
+//     amount: potPf.amount!,
+//     percentage:
+//       totalPrizeFund > 0
+//         ? potPf.amount! / totalPrizeFund
+//         : 0,
+//   }));
+// };
+
+// /****************
+//  * page queries *
+//  ****************/
+
+// /**
+//  * Queries the page for the Per Game element.
+//  */
+// export const queryPerGame = () =>
+//   screen.queryByLabelText("Per Game");
+
+// /***********
+//  * setup() *
+//  ***********/
+
+// export const setup = ({
+//   tmntId = defaultTmntId,
+//   potId = defaultPotId,
+
+//   potPfs: suppliedPotPfs = mockPotPfs,
+//   tmntData: suppliedTmntData = mockTmntFullData,
+
+//   potPfsRequestedTmntId: suppliedPotPfsRequestedTmntId,
+
+//   potPfsLoadStatus = "succeeded",
+//   tmntLoadStatus = "succeeded",
+
+//   potPfsError = null,
+//   tmntError = null,
+
+//   prizeFunds: suppliedPrizeFunds,
+//   populatedRows: suppliedPopulatedRows,
+
+//   potName = "Mock Pot",
+//   potType,
+
+//   confirmLeavePage = true,
+// }: SetupOptions = {}): {
+//   user: ReturnType<typeof userEvent.setup>;
+//   view: RenderResult;
+
+//   tmntId: string;
+//   potId: string;
+//   potPfsRequestedTmntId: string;
+//   runTmntUrl: string;
+
+//   potPfs: potPfType[];
+//   currentPotPfs: potPfType[];
+//   tmntData: tmntFullType;
+//   prizeFunds: prizeFundType[];
+//   populatedRows: prizeFundEntryRow[];
+
+//   triggerGridDataChanged: () => void;
+//   triggerGridDataReset: () => void;
+//   triggerSaveComplete: (
+//     savedRows?: prizeFundEntryRow[],
+//   ) => void;
+//   triggerNavigateAfterSave: () => void;
+//   triggerBack: () => void;
+// } => {
+//   const user = userEvent.setup();
+
+//   const potPfsRequestedTmntId = suppliedPotPfsRequestedTmntId ?? tmntId;
+
+//   /*
+//    * Redux contains all pot prize-fund rows for the tournament.
+//    * Clone them so individual tests cannot mutate shared mock data.
+//    */
+//   const potPfs = cloneDeep(suppliedPotPfs);
+
+//   /*
+//    * The page filters the tournament-level Redux data to the currently
+//    * selected pot before initializing its editable prize-fund rows.
+//    */
+//   const currentPotPfs = potPfs.filter(
+//     (potPf) => potPf.pot_id === potId,
+//   );
+
+//   const tmntData = cloneDeep(suppliedTmntData);
+
+//   if (potType !== undefined) {
+//     const selectedPot = tmntData.pots.find(
+//       (pot) => pot.id === potId,
+//     );
+
+//     if (selectedPot) {
+//       selectedPot.pot_type = potType;
+//     }
+//   }
+
+//   const prizeFunds =
+//     suppliedPrizeFunds ??
+//     makePrizeFunds(currentPotPfs);
+
+//   const populatedRows =
+//     suppliedPopulatedRows ??
+//     makeRows(currentPotPfs);
+
+//   const runTmntUrl = `/dataEntry/runTmnt/${tmntId}`;
+
+//   const mockState: MockRootState = {
+//     potPfs: {
+//       potPfs,
+//       requestedTmntId: potPfsRequestedTmntId,
+//       loadStatus: potPfsLoadStatus,
+//       error: potPfsError,
+//     },
+
+//     tmntFullData: {
+//       tmntFullData: tmntData,
+//       loadStatus: tmntLoadStatus,
+//       error: tmntError,
+//     },
+//   };  
+
+//   jest.mocked(useParams).mockReturnValue({
+//     tmntId,
+//     potId,
+//   });
+
+//   jest.mocked(useRouter).mockReturnValue({
+//     push: mockPush,
+//     back: jest.fn(),
+//     forward: jest.fn(),
+//     refresh: jest.fn(),
+//     replace: jest.fn(),
+//     prefetch: jest.fn(),
+//   });
+
+//   jest.mocked(useDispatch).mockReturnValue(
+//     mockDispatch as AppDispatch,
+//   );
+
+//   jest.mocked(useSelector).mockImplementation(
+//     (
+//       selector: (
+//         state: RootState,
+//       ) => unknown,
+//     ) =>
+//       selector(
+//         mockState as unknown as RootState,
+//       ),
+//   );
+
+//   mockPotPfsToPrizeFunds.mockReturnValue(
+//     prizeFunds,
+//   );
+
+//   mockPopulatePfRows.mockReturnValue(
+//     populatedRows,
+//   );
+
+//   mockGetPotName.mockReturnValue(
+//     potName,
+//   );
+
+//   setCurrentGridRows(populatedRows);
+
+//   mockWindowConfirm.mockReturnValue(
+//     confirmLeavePage,
+//   );
+
+//   const view = render(
+//     <PotPrizeFundEntry />,
+//   );
+
+//   const triggerGridDataChanged =
+//     (): void => {
+//       act(() => {
+//         latestGridProps
+//           ?.onGridDataChanged();
+//       });
+//     };
+
+//   const triggerGridDataReset =
+//     (): void => {
+//       act(() => {
+//         latestGridProps
+//           ?.onGridDataReset();
+//       });
+//     };
+
+//   const triggerSaveComplete = (
+//     savedRows: prizeFundEntryRow[] =
+//       populatedRows,
+//   ): void => {
+//     act(() => {
+//       latestGridProps?.onSaveComplete(
+//         savedRows.map((row) => ({
+//           ...row,
+//         })),
+//       );
+//     });
+//   };
+
+//   const triggerNavigateAfterSave =
+//     (): void => {
+//       act(() => {
+//         latestGridProps
+//           ?.onNavigateAfterSave();
+//       });
+//     };
+
+//   const triggerBack = (): void => {
+//     act(() => {
+//       latestGridProps?.onBack();
+//     });
+//   };
+
+//   return {
+//     user,
+//     view,
+
+//     tmntId,
+//     potId,
+//     potPfsRequestedTmntId,
+//     runTmntUrl,
+
+//     potPfs,
+//     currentPotPfs,
+//     tmntData,
+//     prizeFunds,
+//     populatedRows,
+
+//     triggerGridDataChanged,
+//     triggerGridDataReset,
+//     triggerSaveComplete,
+//     triggerNavigateAfterSave,
+//     triggerBack,
+//   };
+
+//   // return {
+//   //   user,
+//   //   view,
+
+//   //   tmntId,
+//   //   potId,
+//   //   runTmntUrl,
+
+//   //   potPfs,
+//   //   tmntData,
+//   //   prizeFunds,
+//   //   populatedRows,
+
+//   //   triggerGridDataChanged,
+//   //   triggerGridDataReset,
+//   //   triggerSaveComplete,
+//   //   triggerNavigateAfterSave,
+//   //   triggerBack,
+//   // };
+// };
+
+// /************************
+//  * Common test helpers  *
+//  ************************/
+
+// export const standardBeforeEach = (): void => {
+//   jest.restoreAllMocks();
+//   jest.clearAllMocks();
+
+//   latestGridProps = null;
+//   latestConfirmModalProps = null;
+//   currentGridRows = [];
+
+//   jest
+//     .spyOn(window, "confirm")
+//     .mockImplementation(mockWindowConfirm);
+
+//   mockWindowConfirm.mockReturnValue(true);
+
+//   let uuidCounter = 1;
+
+//   mockBtDbUuid.mockImplementation(
+//     (prefix: string): string => {
+//       const suffix = uuidCounter
+//         .toString()
+//         .padStart(32, "0");
+
+//       uuidCounter++;
+
+//       return `${prefix}_${suffix}`;
+//     },
+//   );
+// };
+
+// export const triggerGridDataChanged =
+//   (): void => {
+//     act(() => {
+//       latestGridProps
+//         ?.onGridDataChanged();
+//     });
+//   };
+
+// export const triggerGridDataReset =
+//   (): void => {
+//     act(() => {
+//       latestGridProps
+//         ?.onGridDataReset();
+//     });
+//   };
+
+// export const triggerSaveComplete = (
+//   savedRows?: prizeFundEntryRow[],
+// ): void => {
+//   act(() => {
+//     const rows =
+//       savedRows ??
+//       latestGridProps?.rows ??
+//       [];
+
+//     latestGridProps?.onSaveComplete(
+//       rows.map((row) => ({
+//         ...row,
+//       })),
+//     );
+//   });
+// };
+
+// export const triggerNavigateAfterSave =
+//   (): void => {
+//     act(() => {
+//       latestGridProps
+//         ?.onNavigateAfterSave();
+//     });
+//   };
+
+// export const triggerBack = (): void => {
+//   act(() => {
+//     latestGridProps?.onBack();
+//   });
+// };
+
+// export const confirmRemoveCashers = async (
+//   user: ReturnType<typeof userEvent.setup>,
+// ): Promise<void> => {
+//   await user.click(
+//     screen.getByRole("button", {
+//       name: "Yes",
+//     }),
+//   );
+// };
+
+// export const cancelRemoveCashers = async (
+//   user: ReturnType<typeof userEvent.setup>,
+// ): Promise<void> => {
+//   await user.click(
+//     screen.getByRole("button", {
+//       name: "No",
+//     }),
+//   );
+// };
+

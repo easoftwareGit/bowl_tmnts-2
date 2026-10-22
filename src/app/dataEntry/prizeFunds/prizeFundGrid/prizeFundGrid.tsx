@@ -49,7 +49,8 @@ import { maxMoney } from "@/lib/validation/constants";
 import { localConfig } from "@/lib/currency/const";
 import { formatValueSymbSep2Dec } from "@/lib/currency/formatValue";
 import { sfRowHeight } from "@/lib/syncfusionTools";
-
+import { truncateToTwoDecimals } from "@/lib/currency/convert";
+// import "./prizeFundGrid.css";
 
 /*********************
  * Validation Errors *
@@ -101,11 +102,12 @@ interface PrizeFundGridProps {
   gridDataWasChanged: boolean;
   saveStatus: string;
   onGridDataChanged: () => void;
-  onGridDataReset: () => void;
+  onGridDataReset?: () => void;
   onSave: (rows: prizeFundEntryRow[]) => Promise<void>;
   onNavigateAfterSave?: () => void;
   onBack: () => void;
   onSaveComplete?: (savedRows: prizeFundEntryRow[]) => void;
+  onCancel?: () => void;
 }
 
 /**
@@ -124,7 +126,7 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
       prizeFundType,
       rows,
       setRows,
-      totalPrizeFund,
+      totalPrizeFund: rawTotalPrizeFund,
       enableEditing = true,
       gridHeight = "150",
       gridDataWasChanged = false,
@@ -135,6 +137,7 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
       onNavigateAfterSave,
       onBack,
       onSaveComplete,
+      onCancel,
     },
     ref,
   ) => {
@@ -147,6 +150,8 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
     )
       throw new Error("prizeFundType must be 'div', 'pot', or 'elm'");
 
+    const roundedTotalPrizeFund = truncateToTwoDecimals(rawTotalPrizeFund);
+    
     const [confModalObj, setConfModalObj] = useState<modalObjectType>(initModalObj);
     const [errModalObj, setErrModalObj] = useState<modalObjectType>(initModalObj);
 
@@ -207,14 +212,8 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
     const gridRef = useRef<GridComponent | null>(null);
     const lastFocusedRowIndexRef = useRef<number | null | undefined>(null);
 
-    const currentEditRef = useRef<{
-      rowIndex: number;
-      field: string;
-    } | null>(null);
-
     const saveRequestedRef = useRef(false);
-    const closeAfterSaveRef = useRef(false);
-    const gridDataWasChangedRef = useRef(gridDataWasChanged);
+    const closeAfterSaveRef = useRef(false);    
 
     /**
      * Stores the latest total prize fund.
@@ -223,8 +222,8 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
      * first render. The retained callback reads this ref so it always uses the
      * current total instead of the total captured during the first render.
      */
-    const totalPrizeFundRef = useRef(totalPrizeFund);
-    totalPrizeFundRef.current = totalPrizeFund;
+    const totalPrizeFundRef = useRef(roundedTotalPrizeFund);
+    totalPrizeFundRef.current = roundedTotalPrizeFund;
 
     /******************
      * modal Handlers *
@@ -250,9 +249,8 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
         grid.editModule.batchCancel();
         grid.clearSelection();
 
-        currentEditRef.current = null;
-
         onGridDataReset?.();
+        onCancel?.();   // notify the page
 
         return;
       }
@@ -336,7 +334,7 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
      *
      * @returns {number} - total amount in the grid
      */
-    const getGridTotalPrizeFund = (): number => {
+    const getGridTotalPrizeFund = useCallback((): number => {
       const grid = gridRef.current;
       if (!grid) return 0;
 
@@ -356,11 +354,13 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
         return changedRow ? { ...row, ...changedRow } : row;
       });
 
-      return currentRowsWithChanges.reduce(
+      const totalPf = currentRowsWithChanges.reduce(
         (sum, row) => sum + (Number(row.amount) || 0),
         0,
       );
-    };
+
+      return truncateToTwoDecimals(totalPf);
+    }, []);
 
     /**
      * Validates that prize fund amounts never increase as the finishing
@@ -371,7 +371,7 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
      * than 100 rows, so the additional O(n) pass has negligible performance
      * impact while keeping each function focused on a single responsibility.
      *
-     * @returns {validationErrors} true if all prize amounts are valid
+     * @returns {validationErrors} validationError.NONE or error code
      */
     const validatePrizeFundAmounts = useCallback(
       (): validationError => {
@@ -470,7 +470,7 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
         setTimeout(() => {
           const total = getGridTotalPrizeFund();
 
-          if (total !== totalPrizeFund) {
+          if (total !== roundedTotalPrizeFund) {
             const amountsDontMatchMsg =
               prizeFundType === "div"
                 ? 'The sum of the "Amount" columns does not match the "Total Prize Fund" amount.'
@@ -491,11 +491,12 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
               case validationError.NO_ROWS:
                 message = "Prize amounts must have at least one row.";
                 break;
-              case validationError.INVALID_AMOUNT:
+              case validationError.INVALID_AMOUNT: {
                 const minStr = formatValueSymbSep2Dec("1.00", localConfig);
                 const maxStr = formatValueSymbSep2Dec(maxMoney.toString(), localConfig);
                 message = `Prize amounts must be between ${minStr} and ${maxStr}.`;
                 break;
+              }
               case validationError.INVALID_SEQUENCE:
                 message =
                   "Prize amounts must be in descending order of finishing position.";
@@ -520,8 +521,9 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
       },
       [
         validatePrizeFundAmounts,
-        totalPrizeFund,
-        prizeFundType,                
+        prizeFundType,
+        getGridTotalPrizeFund,
+        roundedTotalPrizeFund,
       ],
     );
 
@@ -628,9 +630,9 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
 
         const rowAmount = Number(rowData.amount) || 0;
         const rowPercent =
-          rowAmount === 0 || totalPrizeFund === 0
+          rowAmount === 0 || roundedTotalPrizeFund === 0
             ? 0
-            : rowAmount / totalPrizeFund;
+            : rowAmount / roundedTotalPrizeFund;
 
         const rowId = rowData[pfEntryIdColName];
         if (rowId) {
@@ -638,9 +640,8 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
         }
 
         onGridDataChanged();
-        currentEditRef.current = null;
       },
-      [onGridDataChanged, totalPrizeFund],
+      [onGridDataChanged, roundedTotalPrizeFund],
     );
 
     const handleRecordClick = useCallback(
@@ -657,10 +658,6 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
       [],
     );
 
-    /**********************
-     * Grid Event Handlers *
-     **********************/
-
     const handleActionComplete = useCallback(
       async (args: ActionEventArgs) => {
         if (args.requestType !== "batchsave") {
@@ -675,27 +672,32 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
         const grid = gridRef.current;
         if (!grid) return;
 
-        const currentRows = grid.getCurrentViewRecords() as prizeFundEntryRow[];
-        if (currentRows.length > 0) {
+        const currentRows = grid.getCurrentViewRecords() as prizeFundEntryRow[];        
+
+        try {
           await onSave(currentRows);
-        }
+        } catch (err) {
+          closeAfterSaveRef.current = false;
+          setErrModalObj({
+            show: true,
+            title: "Save Error",
+            message: err instanceof Error ? err.message : "Unable to save prize funds.",
+            id: "save_error",
+          });
+          return;
+        }        
 
         const savedRows = currentRows.map((row) => ({ ...row }));
         const shouldCloseAfterSave = closeAfterSaveRef.current;
 
-        closeAfterSaveRef.current = false;
-        currentEditRef.current = null;
+        closeAfterSaveRef.current = false;        
 
         onSaveComplete?.(savedRows);
-        if (shouldCloseAfterSave) {
-          onSaveComplete?.(savedRows);
-          onNavigateAfterSave?.();
-          return;
-        }
-
-        setRows(savedRows);
-      },
-      [onSave, onSaveComplete, onNavigateAfterSave, setRows],
+        if (shouldCloseAfterSave) {          
+          onNavigateAfterSave?.();          
+        }        
+      },      
+      [onSave, onSaveComplete, onNavigateAfterSave],
     );
 
     /***********
@@ -712,15 +714,6 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
     }, [updateToolbarState]);
 
     /**
-     * Updates the gridDataWasChangedRef when the gridDataWasChanged prop changes
-     *
-     * @returns {void}
-     */
-    useEffect(() => {
-      gridDataWasChangedRef.current = gridDataWasChanged;
-    }, [gridDataWasChanged]);
-
-    /**
      * Refreshes the grid so Syncfusion recalculates the custom aggregates.
      *
      * The total prize fund is supplied from outside the grid's dataSource.
@@ -732,7 +725,7 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
       if (!grid) return;
 
       grid.refresh();
-    }, [totalPrizeFund]);
+    }, [roundedTotalPrizeFund]);
 
     /******************
      * Memoized Data  *

@@ -1,3 +1,5 @@
+import Image from "next/image";
+import { truncateToTwoDecimals } from "@/lib/currency/convert";
 import type {
   AggregateFooterProps,
   prizeFundEntryRow,
@@ -9,12 +11,78 @@ import {
   pfEntryPositionColName,
 } from "./sfCreatePfColumns";
 
+const imageWidth = 16;
+const imageHeight = 16;
+
 const emptyCustomAggregate = () => "";
 
+/**
+ * Converts a (possibly formatted) aggregate value into a number.
+ *
+ * Syncfusion may pass Custom/Sum values already formatted, e.g. "$1,234.00"
+ * or "12.50%", so currency symbols, commas and percent signs are removed.
+ * 
+ * @param {number | string | null | undefined} value - value to convert
+ * @returns {number} - number, or 0 if the value is null or undefined
+ */
+const customValueToNumber = (
+  value: number | string | null | undefined,
+): number => {
+  if (value == null) return 0;
+
+  if (typeof value === "number") {
+    return value;
+  }
+
+  const cleaned = value
+    .replace(/\$/g, "")
+    .replace(/,/g, "")
+    .replace(/%/g, "");
+
+  const num = Number(cleaned);
+
+  return Number.isFinite(num) ? num : 0;
+};
+
 const footerTotalCustom = (_props: AggregateFooterProps) => <div>Total</div>;
-const footerDiffCustom = (_props: AggregateFooterProps) => (
-  <div>Difference</div>
-);
+
+/**
+ * Footer for the position column of the difference row.
+ *
+ * props.Custom is the dollar difference (total prize fund - sum of amounts),
+ * supplied by the position column's customAggregate. A check is shown when
+ * the amounts add up to the total prize fund, otherwise an X.
+ */
+const footerDiffCustom = (props: AggregateFooterProps) => {
+  // truncateToTwoDecimals removes floating-point noise such as 0.0000000001.
+  const sumMatchesTotal =
+    truncateToTwoDecimals(customValueToNumber(props.Custom)) === 0;
+
+  return (
+    <div>
+      Difference
+      {sumMatchesTotal ? (
+        <Image
+          src="/check-circle-fill-success.svg"
+          alt="Amounts equal the prize fund"
+          title="Amounts equal the prize fund"
+          width={imageWidth}
+          height={imageHeight}
+          className="ms-1 align-text-bottom"
+        />
+      ) : (
+        <Image
+          src="/x-circle-fill-danger.svg"
+          alt="Amounts do not equal the prize fund"
+          title="Amounts do not equal the prize fund"
+          width={imageWidth}
+          height={imageHeight}
+          className="ms-1 align-text-bottom"
+        />
+      )}
+    </div>
+  );
+};
 
 function footerSum(props: AggregateFooterProps) {
   return <div>{props.Sum ?? 0}</div>;
@@ -71,28 +139,6 @@ export const createPfDiffAggregates = (
   getTotalPrizeFund: () => number,
 ): syncFusionAggregateDef[] => {
   /**
-   * Converts a formatted aggregate value into a number.
-   */
-  const customValueToNumber = (
-    value: number | string | null | undefined,
-  ): number => {
-    if (value == null) return 0;
-
-    if (typeof value === "number") {
-      return value;
-    }
-
-    const cleaned = value
-      .replace(/\$/g, "")
-      .replace(/,/g, "")
-      .replace(/%/g, "");
-
-    const num = Number(cleaned);
-
-    return Number.isFinite(num) ? num : 0;
-  };
-
-  /**
    * Calculates the sum of the amount column.
    */
   const totalAmount = (data: unknown): number => {
@@ -117,13 +163,14 @@ export const createPfDiffAggregates = (
   const amountDifferenceAggregate = (data: unknown): number => {
     const totalPrizeFund = getTotalPrizeFund();
 
-console.log("aggregate total =", getTotalPrizeFund());
-
     return totalPrizeFund - totalAmount(data);
   };
 
   /**
    * Calculates the unallocated percentage.
+   * 
+   * @param {unknown} data - Row data
+   * @returns {number} - unallocated percentage
    */
   const percentDifferenceAggregate = (data: unknown): number => {
     const totalPrizeFund = getTotalPrizeFund();
@@ -147,9 +194,11 @@ console.log("aggregate total =", getTotalPrizeFund());
     let className = "";
 
     if (value < 0) {
-      className = "pf-negative";
+      // className = "pf-negative";
+      className = "text-danger";
     } else if (value > 0) {
-      className = "pf-positive";
+      // className = "pf-positive";
+      className = "text-success";
     }
 
     return (
@@ -163,7 +212,9 @@ console.log("aggregate total =", getTotalPrizeFund());
     {
       field: pfEntryPositionColName,
       type: "Custom",
-      customAggregate: () => "",
+      // Same dollar difference as the amount column; footerDiffCustom uses
+      // it to choose the check or the X. No format, so it is not displayed.
+      customAggregate: amountDifferenceAggregate,
       footerTemplate: footerDiffCustom,
     },
     {

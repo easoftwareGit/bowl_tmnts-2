@@ -1006,12 +1006,12 @@ export type SyncfusionValidationArgs = {
 };
 
 export type AggregateFooterProps = Partial<{
-  Sum: number;
-  Average: number;
-  Min: number;
-  Max: number;
-  Count: number;
-  Custom: number;
+  Sum: number | string;
+  Average: number | string;
+  Min: number | string;
+  Max: number | string;
+  Count: number | string;
+  Custom: number | string;
 }>;
 
 export type syncFusionAggregateDef = {

@@ -9,7 +9,7 @@ import {
   getDivPfsError,
   getDivPfsLoadStatus,
   selectDivPfs,
-  getDivPfRequestedTmntId,
+  getDivPfsRequestedTmntId,
 } from "@/redux/features/divPfs/divPfsSlice";
 import type { prizeFundEntryRow } from "@/lib/types/types";
 import WaitModal from "@/components/modal/waitModal";
@@ -57,14 +57,16 @@ export default function DivPrizeFundEntry() {
   const initializedRef = useRef(false);
   
   const allDivPfs = useSelector(selectDivPfs);
-  const divPfsRequestedTmntId = useSelector(getDivPfRequestedTmntId);
+  const divPfsRequestedTmntId = useSelector(getDivPfsRequestedTmntId);
   const divPfs = useMemo(
     () => allDivPfs.filter((divPf) => divPf.div_id === divId),
     [allDivPfs, divId],
   );
 
   const tmntData = useSelector(selectTmntFullData);
-  const divName = tmntData?.divs.find((div) => div.id === divId)?.div_name;
+  const gotTmntData = tmntData.tmnt.id === tmntId;
+
+  const divName = tmntData.divs.find((div) => div.id === divId)?.div_name;
   const divPrizeFund =
     tmntData.moneys.find(
       (money) =>
@@ -76,7 +78,7 @@ export default function DivPrizeFundEntry() {
         money.elim_id === null,
     )?.amount ?? 0;
 
-  const numPlayers = tmntData?.players?.length || 0;
+  const numPlayers = tmntData.players.length;
 
   const [rows, setRows] = useState<prizeFundEntryRow[]>([]);
 
@@ -93,8 +95,26 @@ export default function DivPrizeFundEntry() {
 
   const [confModalObj, setConfModalObj] = useState<modalObjectType>(initModalObj);
 
+  /**
+   * Changing this key remounts DivPrizeFundGrid.
+   *
+   * Cancel uses it to rebuild the Syncfusion grid from the saved rows.
+   * Syncfusion does not reliably rebind a new dataSource while
+   * batchCancel() is refreshing the grid, so rows added or removed by
+   * changing cashers/ratio would otherwise remain.
+   */
+  const [gridKey, setGridKey] = useState(0);
+
   const lastRatioRef = useRef(defaultRatio);
   const lastCashersRef = useRef(1);
+
+  /**
+   * Last saved (or initially loaded) state. Cancel restores these.
+   * Unlike lastRatioRef/lastCashersRef, these change only on load and save.
+   */
+  const savedRowsRef = useRef<prizeFundEntryRow[]>([]);
+  const savedRatioRef = useRef(defaultRatio);
+  const savedCashersRef = useRef(1);  
 
   /**
    * Ref to the public methods exposed by PrizeFundGrid.
@@ -120,10 +140,10 @@ export default function DivPrizeFundEntry() {
 
   // Fetch tournament if missing
   useEffect(() => {
-    if ((!tmntData || tmntData.tmnt.id !== tmntId) && tmntId) {
+    if (tmntId && !gotTmntData) {
       dispatch(fetchTmntFullData(tmntId));
     }
-  }, [tmntData, tmntId, dispatch]);
+  }, [tmntId, dispatch, gotTmntData]);
 
   /**
    * Initializes the editable page state after the required Redux data loads.
@@ -144,8 +164,7 @@ export default function DivPrizeFundEntry() {
     if (
       divPfsLoadStatus !== "succeeded" ||
       divPfsRequestedTmntId !== tmntId ||
-      !tmntData ||
-      tmntData.tmnt.id !== tmntId
+      !gotTmntData
     )
       return;
     if (initializedRef.current) return; // run only once
@@ -172,11 +191,15 @@ export default function DivPrizeFundEntry() {
       lastCashersRef.current = 0;
     }
 
+    savedRowsRef.current = currentRows.map((row) => ({ ...row }));
+    savedCashersRef.current = numCashers;
+    savedRatioRef.current = numCashers > 0 ? numPlayers / numCashers : 0;    
+
     initializedRef.current = true;
   }, [
     divPfsLoadStatus,
     divPfsRequestedTmntId,
-    tmntData,
+    gotTmntData,
     tmntId,
     divPfs,
     divId,
@@ -204,6 +227,59 @@ export default function DivPrizeFundEntry() {
     return prizeFundGridRef.current?.getCurrentRows() ??
       rows.map((row) => ({ ...row }));
   };
+
+  /**
+   * True from the moment the grid's Cancel button is pressed until the
+   * current event finishes. Set by handleGridMouseDownCapture.
+   *
+   * Safari does not focus buttons on click, so blur's relatedTarget is null
+   * there. Recording the mousedown works in every browser because mousedown
+   * fires before the input's blur.
+   */
+  const gridCancelPressedRef = useRef(false);
+
+  /**
+   * Returns true if the element is (or is inside) the grid's enabled
+   * Cancel toolbar button.
+   *
+   * @param target - Element from a mouse or focus event.
+   * @returns true for an enabled Cancel button.
+   */
+  const isGridCancelButton = (target: EventTarget | null): boolean => {
+    if (!(target instanceof Element)) return false;
+    const button = target.closest('#divPfGrid [id$="undo_all"]');
+    return button !== null && button.getAttribute("aria-disabled") !== "true";
+  };
+
+  /**
+   * Records a mousedown on the grid's Cancel button before the
+   * Ratio/Cashers input blurs.
+   *
+   * The flag is cleared after the current event finishes, so it only
+   * affects the blur caused by this mousedown.
+   */
+  const handleGridMouseDownCapture = (
+    e: React.MouseEvent<HTMLDivElement>,
+  ): void => {
+    if (!isGridCancelButton(e.target)) return;
+
+    gridCancelPressedRef.current = true;
+    setTimeout(() => {
+      gridCancelPressedRef.current = false;
+    }, 0);
+  };
+
+  /**
+   * Returns true when the current blur was caused by clicking the grid's
+   * Cancel button.
+   *
+   * @param relatedTarget - e.relatedTarget from the blur event.
+   * @returns true if the user is moving to the grid's Cancel button.
+   */
+  const isFocusMovingToGridCancel = (
+    relatedTarget: EventTarget | null,
+  ): boolean =>
+    gridCancelPressedRef.current || isGridCancelButton(relatedTarget);
 
   /******************
    * modal Handlers *
@@ -240,10 +316,18 @@ export default function DivPrizeFundEntry() {
    * @returns void
    */
   const confirmNo = (): void => {
-    setConfModalObj(initModalObj); // reset modal object (hides modal)
-  };
+    const appliedRatio = lastRatioRef.current;
 
-  const gotTmntData = tmntData.tmnt.id === tmntId;
+    setRatio(appliedRatio);
+    setRatioText(appliedRatio.toFixed(2));
+    setCalcCashers(appliedRatio > 0 ? numPlayers / appliedRatio : 0);
+    setCashers(lastCashersRef.current);
+
+    setRatioErr("");
+    setCashersErr("");
+    
+    setConfModalObj(initModalObj); // hides modal
+  };
 
   /**
    * Applies a requested number of cashers to the prize-fund grid.
@@ -255,9 +339,10 @@ export default function DivPrizeFundEntry() {
    * current rows, including unsaved batch edits, and then appends new rows.
    * This preserves amounts already edited by the user.
    *
-   * @param value - Requested number of cashers.
+   * @param {number} value - Requested number of cashers.
+   * @returns {boolean} - whether the number of cashers has changed. 
    */
-  const updateCashers = (value: number): void => {
+  const updateCashers = (value: number): boolean  => {
     const actualCashers = rows.length;
 
     if (value < actualCashers) {
@@ -272,19 +357,15 @@ export default function DivPrizeFundEntry() {
           `Going from ${actualCashers} cashers to ${value} cashers.`,
       });
 
-      return;
+      return false; // pending confirmation
     }
 
-    if (value <= actualCashers) {
-      return;
-    }
+    if (value === actualCashers) return true; // nothing to change    
 
     const currentRows = getCurrentPrizeFundRows();
     const numToAdd = value - currentRows.length;
 
-    if (numToAdd <= 0) {
-      return;
-    }
+    if (numToAdd <= 0) return true; // nothing to add    
 
     const updatedRows = currentRows.map((row) => ({ ...row }));
     let position = currentRows.length + 1;
@@ -306,6 +387,7 @@ export default function DivPrizeFundEntry() {
     setCashers(value);
 
     lastCashersRef.current = value;
+    return true;
   };
   
   /******************
@@ -326,39 +408,47 @@ export default function DivPrizeFundEntry() {
    */
   const applyRatio = (value: number): void => {    
 
-    if (isNaN(value)) {
-      setRatio(0);
-      setRatioText("0.00");
-      setCalcCashers(0);
-      updateCashers(0);
-      lastRatioRef.current = 0;
-    } else {
-      setRatio(value);
-      setRatioText(value.toFixed(2));
-      setCalcCashers(value > 0 ? numPlayers / value : 0);
-      updateCashers(value > 0 ? Math.floor(numPlayers / value) : 0);
-      lastRatioRef.current = value;
+    const newRatio = isNaN(value) ? 0 : value;
+
+    setRatio(newRatio);
+    setRatioText(newRatio.toFixed(2));
+    setCalcCashers(newRatio > 0 ? numPlayers / newRatio : 0);
+
+    const applied = updateCashers(
+      newRatio > 0 ? Math.floor(numPlayers / newRatio) : 0,
+    );
+
+    // When a reduction is pending, confirmYes updates the ref.
+    if (applied) {
+      lastRatioRef.current = newRatio;
     }
   };
 
   /**
    * Recalculates the player-to-casher ratio from a casher count.
    *
-   * @param {number} value
+   * @param {number} value - New casher count
+   * @returns {number} - New player-to-casher ratio
    */
-  const updateRatioFromCashers = (value: number): void => {
-    if (isNaN(value)) {
-      setRatio(0);
-      setRatioText("0.00");
-      setCalcCashers(0);
-      return
-    } 
+  const updateRatioFromCashers = (value: number): number => {
+    const newRatio = !isNaN(value) && value > 0 ? numPlayers / value : 0;
 
-    const newRatio = value > 0 ? numPlayers / value : 0;
     setRatio(newRatio);
     setRatioText(newRatio.toFixed(2));
     setCalcCashers(newRatio > 0 ? numPlayers / newRatio : 0);
+
+    return newRatio;
   }  
+
+  /**
+   * Compares two ratios at the precision shown in the input (2 decimals).
+   * 
+   * @param a - First ratio to compare.
+   * @param b - Second ratio to compare.
+   * @returns True if the ratios are numerically equal.
+   */
+  const isSameRatio = (a: number, b: number): boolean =>
+    a.toFixed(2) === b.toFixed(2);
 
   /** 
    * Restricts a ratio to the valid range. 
@@ -389,33 +479,45 @@ export default function DivPrizeFundEntry() {
   * 
   * @param value - Ratio value entered by the user. 
   */ 
-  const applyEnteredRatio = (value: number): void => { 
-    if (isNaN(value)) { 
-      applyRatio(0); 
-      return; 
-    } 
-    const safeValue = getSafeRatio(value); 
-    if (safeValue !== lastRatioRef.current) { 
-      applyRatio(safeValue); 
-    } else { 
-      /* 
-      * Restore the formatted text when the entered value resolves to the 
-      * ratio that is already applied. 
-      */ 
-      setRatioText(safeValue.toFixed(2)); 
-    } 
-  };  
+  const applyEnteredRatio = (value: number): void => {
+    if (isSameRatio(value, lastRatioRef.current)) {
+      setRatioText(lastRatioRef.current.toFixed(2));
+      setRatioErr("");
+      return;
+    }
+
+    const safeValue = getSafeRatio(isNaN(value) ? 0 : value);
+    setRatioErr(
+      safeValue !== value
+        ? `Ratio must be between 1 and ${numPlayers <= 1 ? 1 : numPlayers}`
+        : "",
+    );
+
+    if (!isSameRatio(safeValue, lastRatioRef.current)) {
+      applyRatio(safeValue);
+    } else {
+      setRatioText(safeValue.toFixed(2));
+    }
+  };
 
   /**
    * Applies the ratio when the ratio input loses focus.
    *
-   * The calculation is skipped when the value matches the last ratio
-   * that was already applied.
-   */  
-  const handleRatioBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+   * If focus is moving to the grid's Cancel button, the typed value is
+   * discarded and the input shows the last applied ratio. The user is
+   * cancelling, so there is nothing to apply.
+   */
+  const handleRatioBlur = (e: React.FocusEvent<HTMLInputElement>): void => {
+    if (isFocusMovingToGridCancel(e.relatedTarget)) {
+      const appliedRatio = lastRatioRef.current;
+      setRatio(appliedRatio);
+      setRatioText(appliedRatio.toFixed(2));
+      setRatioErr("");
+      return;
+    }
 
     applyEnteredRatio(Number(e.target.value));
-  }
+  };
 
   /**
    * Updates the controlled ratio input while the user types.
@@ -424,8 +526,9 @@ export default function DivPrizeFundEntry() {
    * not resize the grid until the value is applied by blur or Enter.
    */
   const handleRatioChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    setDataWasChanged(true);
-
+    setDataWasChanged(true);    
+    setRatioErr("");
+    
     const text = e.target.value;
 
     // allow only digits and one decimal point
@@ -487,16 +590,22 @@ export default function DivPrizeFundEntry() {
   * @param value - Casher count entered by the user. 
   */ 
   const applyEnteredCashers = ( value: number ): void => { 
-    if (isNaN(value)) { 
-      updateCashers(0); 
-      updateRatioFromCashers(0); 
-      return; 
-    } 
+   
+    if (value === lastCashersRef.current) return; 
     
-    const safeValue = getSafeCashers(value); 
+    const safeValue = getSafeCashers(isNaN(value) ? 0 : value); 
+    setCashersErr(
+      safeValue !== value
+        ? `Cashers must be a whole number between 1 and ${numPlayers <= 1 ? 1 : numPlayers}`
+        : "",
+    );    
     if (safeValue !== lastCashersRef.current) { 
-      updateCashers(safeValue); 
-      updateRatioFromCashers(safeValue); 
+      const applied = updateCashers(safeValue);
+      const newRatio = updateRatioFromCashers(safeValue);
+
+      if (applied) {
+        lastRatioRef.current = newRatio;
+      }
     } else { 
       /* 
       * Restore the controlled input when the entered value is outside the 
@@ -511,13 +620,18 @@ export default function DivPrizeFundEntry() {
   /**
    * Applies the casher count when the input loses focus.
    *
-   * The grid is changed only when the value differs from the last applied
-   * casher count.
-   */  
-  const handleCashersBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+   * If focus is moving to the grid's Cancel button, the typed value is
+   * discarded and the input shows the last applied casher count.
+   */
+  const handleCashersBlur = (e: React.FocusEvent<HTMLInputElement>): void => {
+    if (isFocusMovingToGridCancel(e.relatedTarget)) {
+      setCashers(lastCashersRef.current);
+      setCashersErr("");
+      return;
+    }
 
     applyEnteredCashers(Number(e.target.value));
-  }
+  };
 
   /**
    * Updates the controlled casher input while the user types.
@@ -527,6 +641,7 @@ export default function DivPrizeFundEntry() {
    */  
   const handleCashersChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setDataWasChanged(true);
+    setCashersErr("");
 
     const text = e.target.value;
     if (text === "") {
@@ -555,12 +670,39 @@ export default function DivPrizeFundEntry() {
     applyEnteredCashers(Number(e.currentTarget.value));
   };
 
-/**
- * Returns to the Run Tournament page.
- *
- * The user must confirm navigation when either the page inputs or the
- * Syncfusion grid contain unsaved changes.
- */
+  /**
+   * Restores the page inputs and grid rows to the last saved state.
+   *
+   * Called by PrizeFundGrid after the user confirms Cancel.
+   * The grid's batchCancel() reverts only cell edits. Rows added or removed
+   * by changing cashers/ratio must be restored here.
+   */
+  const handleGridCancel = (): void => {
+    const savedRatio = savedRatioRef.current;
+    const savedCashers = savedCashersRef.current;
+
+    setRows(savedRowsRef.current.map((row) => ({ ...row })));
+    setGridKey((key) => key + 1);   // remount the grid with the saved rows
+
+    setRatio(savedRatio);
+    setRatioText(savedRatio.toFixed(2));
+    setCalcCashers(savedRatio > 0 ? numPlayers / savedRatio : 0);
+    setCashers(savedCashers);
+
+    lastRatioRef.current = savedRatio;
+    lastCashersRef.current = savedCashers;
+
+    setRatioErr("");
+    setCashersErr("");
+    setDataWasChanged(false);
+  };
+
+  /**
+   * Returns to the Run Tournament page.
+   *
+   * The user must confirm navigation when either the page inputs or the
+   * Syncfusion grid contain unsaved changes.
+   */
   const handleBack = (): void => {
     if (dataWasChanged || gridDataWasChanged) {
       const ok = window.confirm(
@@ -593,7 +735,7 @@ export default function DivPrizeFundEntry() {
 
   const isLoading =
     divPfsLoadStatus === "loading" ||
-    (!tmntData && tmntLoadStatus === "loading");
+    (!gotTmntData && tmntLoadStatus === "loading");
 
   const canRender =
     divPfsLoadStatus === "succeeded" &&
@@ -650,7 +792,7 @@ export default function DivPrizeFundEntry() {
                   id="inputPlayers"
                   name="players"
                   className="form-control text-end numeric-align"
-                  value={tmntData?.players?.length}
+                  value={numPlayers}
                   disabled={true}
                 />
               </div>
@@ -676,7 +818,7 @@ export default function DivPrizeFundEntry() {
                   onChange={handleRatioChange}
                   onKeyDown={handleRatioKeyDown}
                 />
-                <div className="text-danger" data-testid="dangerRation">
+                <div className="text-danger" data-testid="dangerRatio">
                   {ratioErr}
                 </div>
               </div>
@@ -740,24 +882,37 @@ export default function DivPrizeFundEntry() {
                 />
               </div>
             </div>
-            <DivPrizeFundGrid
-              ref={prizeFundGridRef}
-              rows={rows}
-              setRows={setRows}
-              divId={divId}
-              totalPrizeFund={divPrizeFund}
-              enableEditing={true}
-              gridDataWasChanged={gridDataWasChanged}
-              onGridDataChanged={() => setGridDataWasChanged(true)}
-              onGridDataReset={() => setGridDataWasChanged(false)}
-              onNavigateAfterSave={() => setIsNavigatingAfterSave(true)}
-              onBack={handleBack}
-              onSaveComplete={(savedRows) => {
-                setRows(savedRows);
-                setDataWasChanged(false);
-                setGridDataWasChanged(false);
-              }}
-            />
+            {/*
+              Records a mousedown on the grid's Cancel button so the
+              Ratio/Cashers blur handlers can skip applying a typed value.
+              Does not call preventDefault, so focus works normally.
+            */}
+            <div onMouseDownCapture={handleGridMouseDownCapture}>
+              <DivPrizeFundGrid
+                key={gridKey}
+                ref={prizeFundGridRef}
+                rows={rows}
+                setRows={setRows}
+                divId={divId}
+                totalPrizeFund={divPrizeFund}
+                enableEditing={true}
+                gridDataWasChanged={dataWasChanged || gridDataWasChanged}
+                onGridDataChanged={() => setGridDataWasChanged(true)}
+                onGridDataReset={() => setGridDataWasChanged(false)}
+                onNavigateAfterSave={() => setIsNavigatingAfterSave(true)}
+                onBack={handleBack}
+                onCancel={handleGridCancel}
+                onSaveComplete={(savedRows) => {
+                  savedRowsRef.current = savedRows.map((row) => ({ ...row }));
+                  savedCashersRef.current = savedRows.length;
+                  savedRatioRef.current = lastRatioRef.current;
+
+                  setRows(savedRows);
+                  setDataWasChanged(false);
+                  setGridDataWasChanged(false);
+                }}
+              />
+            </div>
           </div>
         </div>
       )}

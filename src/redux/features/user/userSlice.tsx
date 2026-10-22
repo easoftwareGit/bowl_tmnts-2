@@ -27,16 +27,19 @@ const initialState: userSliceState = {
  * gets a user by id
  *
  * @param {string} userId - id of user to get
- * @returns {userDataType | null} - user from database
+ * @returns {userDataType | null} - user from database or null
  */
 export const fetchUser = createAsyncThunk(
   "user/fetchUser",
   async (userId: string) => {
     // Do not use try / catch blocks here. Need the promise to be fulfilled or
     // rejected which will have the appropriate response in the extraReducers.
-
-    return getUserById(userId);
-  }
+    const user = await getUserById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+    return user;
+  },
 );
 
 export const userSlice = createSlice({
@@ -51,24 +54,25 @@ export const userSlice = createSlice({
         state.error = "";
       })
       .addCase(fetchUser.fulfilled, (state, action) => {
+        if (action.meta.arg !== state.requestedUserId) return; // stale response
         state.loadStatus = "succeeded";
         state.error = "";
-
-        if (action.payload) {
-          state.user = {
-            ...state.user,
-            id: action.payload.id,
-            first_name: action.payload.first_name,
-            last_name: action.payload.last_name,
-            email: action.payload.email,
-            phone: action.payload.phone,
-            role: action.payload.role,
-          };
-        }
+        // start from a blank user, not the previous one, so no fields from a
+        // previously loaded user carry over. Only these fields are copied.
+        state.user = {
+          ...cloneDeep(blankUserData),
+          id: action.payload.id,
+          first_name: action.payload.first_name,
+          last_name: action.payload.last_name,
+          email: action.payload.email,
+          phone: action.payload.phone,
+          role: action.payload.role,
+        };
       })
       .addCase(fetchUser.rejected, (state, action) => {
+        if (action.meta.arg !== state.requestedUserId) return; // stale failure
         state.loadStatus = "failed";
-        state.error = action.error.message;
+        state.error = action.error.message ?? "Unknown error fetching user";
       });
   },
 });

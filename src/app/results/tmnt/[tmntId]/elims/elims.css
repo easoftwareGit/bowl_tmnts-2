@@ -1,0 +1,4 @@
+/* separator line - last casher's row */
+.tmnt_table .cut-row > td {
+  border-bottom: 3px solid red;
+}

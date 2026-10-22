@@ -1,91 +1,202 @@
-"use client";
-
 import { screen } from "@testing-library/react";
 import {
+  enterCashers,
+  enterRatio,
   mockPush,
+  mockUseUnsavedChangesGuard,
   mockWindowConfirm,
   setup,
   standardBeforeEach,
-} from "./divPfPage.testSetup.test";
+  triggerBack,
+  triggerGridCancel,
+  triggerGridDataChanged,
+  triggerGridDataReset,
+} from "./divPfPage.testSetup";
+
+/*
+ * handleBack():
+ *   - no unsaved changes        -> router.push(runTmntUrl), no confirm
+ *   - page or grid changes      -> window.confirm(leaveMsg)
+ *       - confirmed             -> router.push(runTmntUrl)
+ *       - declined              -> stay, changes kept
+ *
+ * "Page changes" = dataWasChanged (typing in Ratio/Cashers, adding or
+ * removing cashers). "Grid changes" = gridDataWasChanged (cell edits
+ * reported by the grid).
+ *
+ * Back after a save is covered in afterSave.test.
+ *
+ * Page changes are made by typing the current casher count without
+ * committing it: onChange marks the page dirty, but nothing is resized,
+ * so the tests do not depend on the mock data's row or player counts.
+ */
+
+const leaveMsg = "You have unsaved changes. Leave this page?";
 
 describe("Division Prize Fund web page back button", () => {
   beforeEach(standardBeforeEach);
 
-  it("navigates back immediately when there are no unsaved changes", () => {
-    const { triggerBack, runTmntUrl } = setup();
+  /**********************
+   * No unsaved changes *
+   **********************/
 
-    triggerBack();
+  describe("with no unsaved changes", () => {
+    it("navigates back immediately without asking", () => {
+      const { runTmntUrl } = setup();
 
-    expect(mockWindowConfirm).not.toHaveBeenCalled();
+      triggerBack();
 
-    expect(mockPush).toHaveBeenCalledWith(runTmntUrl);
-  });
-
-  it("shows a browser confirmation when there are unsaved page changes", async () => {
-    const { user, triggerBack, runTmntUrl } = setup();
-
-    const cashersInput = screen.getByLabelText("Cashers");
-
-    await user.clear(cashersInput);
-    await user.type(cashersInput, "3");
-    await user.tab();
-
-    triggerBack();
-
-    expect(mockWindowConfirm).toHaveBeenCalledWith(
-      "You have unsaved changes. Leave this page?",
-    );
-
-    expect(mockPush).toHaveBeenCalledWith(runTmntUrl);
-  });
-
-  it("shows a browser confirmation when there are unsaved grid changes", () => {
-    const { triggerBack, triggerGridDataChanged, runTmntUrl } = setup();
-
-    triggerGridDataChanged();
-
-    triggerBack();
-
-    expect(mockWindowConfirm).toHaveBeenCalledWith(
-      "You have unsaved changes. Leave this page?",
-    );
-
-    expect(mockPush).toHaveBeenCalledWith(runTmntUrl);
-  });
-
-  it("does not navigate when the browser confirmation is cancelled", async () => {
-    const { user, triggerBack } = setup({
-      confirmLeavePage: false,
+      expect(mockWindowConfirm).not.toHaveBeenCalled();
+      expect(mockPush).toHaveBeenCalledTimes(1);
+      expect(mockPush).toHaveBeenCalledWith(runTmntUrl);
     });
 
-    const cashersInput = screen.getByLabelText("Cashers");
+    it("navigates back when the grid's Back button is clicked", async () => {
+      const { user, runTmntUrl } = setup();
 
-    await user.clear(cashersInput);
-    await user.type(cashersInput, "3");
-    await user.tab();
+      await user.click(screen.getByRole("button", { name: "Back" }));
 
-    triggerBack();
-
-    expect(mockWindowConfirm).toHaveBeenCalledWith(
-      "You have unsaved changes. Leave this page?",
-    );
-
-    expect(mockPush).not.toHaveBeenCalled();
+      expect(mockWindowConfirm).not.toHaveBeenCalled();
+      expect(mockPush).toHaveBeenCalledWith(runTmntUrl);
+    });
   });
 
-  it("does not navigate when grid changes exist and the browser confirmation is cancelled", () => {
-    const { triggerBack, triggerGridDataChanged } = setup({
-      confirmLeavePage: false,
+  /*******************
+   * Unsaved changes *
+   *******************/
+
+  describe("with unsaved changes, confirmed", () => {
+    it("asks before leaving when the Cashers input was changed", async () => {
+      const { user, populatedRows, runTmntUrl } = setup();
+
+      await enterCashers(user, String(populatedRows.length), "none");
+      triggerBack();
+
+      expect(mockWindowConfirm).toHaveBeenCalledTimes(1);
+      expect(mockWindowConfirm).toHaveBeenCalledWith(leaveMsg);
+      expect(mockPush).toHaveBeenCalledWith(runTmntUrl);
     });
 
-    triggerGridDataChanged();
+    it("asks before leaving when the Ratio input was changed", async () => {
+      const { user, runTmntUrl } = setup();
 
-    triggerBack();
+      await enterRatio(user, "", "none");
+      triggerBack();
 
-    expect(mockWindowConfirm).toHaveBeenCalledWith(
-      "You have unsaved changes. Leave this page?",
-    );
+      expect(mockWindowConfirm).toHaveBeenCalledWith(leaveMsg);
+      expect(mockPush).toHaveBeenCalledWith(runTmntUrl);
+    });
 
-    expect(mockPush).not.toHaveBeenCalled();
+    it("asks before leaving when the grid reports changes", () => {
+      const { runTmntUrl } = setup();
+
+      triggerGridDataChanged();
+      triggerBack();
+
+      expect(mockWindowConfirm).toHaveBeenCalledWith(leaveMsg);
+      expect(mockPush).toHaveBeenCalledWith(runTmntUrl);
+    });
+
+    it("asks only once when both the page and the grid have changes", async () => {
+      const { user, populatedRows } = setup();
+
+      await enterCashers(user, String(populatedRows.length), "none");
+      triggerGridDataChanged();
+      triggerBack();
+
+      expect(mockWindowConfirm).toHaveBeenCalledTimes(1);
+      expect(mockPush).toHaveBeenCalledTimes(1);
+    });
+
+    it("asks when the grid's Back button is clicked while an input has focus", async () => {
+      const { user, populatedRows, runTmntUrl } = setup();
+
+      // Focus stays in Cashers; clicking Back blurs it first.
+      await enterCashers(user, String(populatedRows.length), "none");
+      await user.click(screen.getByRole("button", { name: "Back" }));
+
+      expect(mockWindowConfirm).toHaveBeenCalledWith(leaveMsg);
+      expect(mockPush).toHaveBeenCalledWith(runTmntUrl);
+    });
+  });
+
+  describe("with unsaved changes, declined", () => {
+    it("stays on the page when page changes exist", async () => {
+      const { user, populatedRows } = setup({ confirmLeavePage: false });
+
+      await enterCashers(user, String(populatedRows.length), "none");
+      triggerBack();
+
+      expect(mockWindowConfirm).toHaveBeenCalledWith(leaveMsg);
+      expect(mockPush).not.toHaveBeenCalled();
+    });
+
+    it("stays on the page when grid changes exist", () => {
+      setup({ confirmLeavePage: false });
+
+      triggerGridDataChanged();
+      triggerBack();
+
+      expect(mockWindowConfirm).toHaveBeenCalledWith(leaveMsg);
+      expect(mockPush).not.toHaveBeenCalled();
+    });
+
+    it("keeps the unsaved changes after declining", () => {
+      setup({ confirmLeavePage: false });
+
+      triggerGridDataChanged();
+      triggerBack();
+
+      expect(screen.getByTestId("mock-grid-data-was-changed")).toHaveTextContent(
+        "true",
+      );
+      expect(mockUseUnsavedChangesGuard).toHaveBeenLastCalledWith(true);
+    });
+
+    it("asks again and navigates when Back is pressed again and confirmed", () => {
+      const { runTmntUrl } = setup();
+      mockWindowConfirm.mockReturnValueOnce(false).mockReturnValueOnce(true);
+
+      triggerGridDataChanged();
+
+      triggerBack();
+      expect(mockPush).not.toHaveBeenCalled();
+
+      triggerBack();
+      expect(mockWindowConfirm).toHaveBeenCalledTimes(2);
+      expect(mockPush).toHaveBeenCalledTimes(1);
+      expect(mockPush).toHaveBeenCalledWith(runTmntUrl);
+    });
+  });
+
+  /****************************
+   * Changes cleared by Cancel *
+   ****************************/
+
+  describe("after Cancel clears the changes", () => {
+    it("does not ask after page changes are cancelled", async () => {
+      const { user, populatedRows, runTmntUrl } = setup();
+
+      await enterCashers(user, String(populatedRows.length), "none");
+      triggerGridCancel();
+      triggerBack();
+
+      expect(mockWindowConfirm).not.toHaveBeenCalled();
+      expect(mockPush).toHaveBeenCalledWith(runTmntUrl);
+    });
+
+    it("does not ask after grid changes are cancelled", () => {
+      const { runTmntUrl } = setup();
+
+      triggerGridDataChanged();
+
+      // Real grid order on confirmed Cancel: onGridDataReset, then onCancel.
+      triggerGridDataReset();
+      triggerGridCancel();
+      triggerBack();
+
+      expect(mockWindowConfirm).not.toHaveBeenCalled();
+      expect(mockPush).toHaveBeenCalledWith(runTmntUrl);
+    });
   });
 });
