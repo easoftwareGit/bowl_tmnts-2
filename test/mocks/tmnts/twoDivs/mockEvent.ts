@@ -1,6 +1,5 @@
-import { Event } from "@prisma/client";
+import { Prisma, Event } from "@prisma/client";
 import type { eventType } from "@/lib/types/types";
-import { Decimal } from "@prisma/client/runtime/library";
 
 export const mockEvent: eventType[] = [
   {
@@ -40,12 +39,12 @@ export const mockPrimsmaEvents: Event[] = [
     event_name: "Singles",
     team_size: 1,
     games: 6,
-    entry_fee: new Decimal(80),
-    lineage: new Decimal(18),
-    prize_fund: new Decimal(55),
-    other: new Decimal(0),
-    expenses: new Decimal(5),
-    added_money: new Decimal(0),    
+    entry_fee: new Prisma.Decimal(80),
+    lineage: new Prisma.Decimal(18),
+    prize_fund: new Prisma.Decimal(55),
+    other: new Prisma.Decimal(0),
+    expenses: new Prisma.Decimal(5),
+    added_money: new Prisma.Decimal(0),    
     sort_order: 1,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -56,12 +55,12 @@ export const mockPrimsmaEvents: Event[] = [
     event_name: "Doubles",
     team_size: 2,
     games: 6,
-    entry_fee: new Decimal(160),
-    lineage: new Decimal(36),
-    prize_fund: new Decimal(110),
-    other: new Decimal(0),
-    expenses: new Decimal(10),
-    added_money: new Decimal(0),    
+    entry_fee: new Prisma.Decimal(160),
+    lineage: new Prisma.Decimal(36),
+    prize_fund: new Prisma.Decimal(110),
+    other: new Prisma.Decimal(0),
+    expenses: new Prisma.Decimal(10),
+    added_money: new Prisma.Decimal(0),    
     sort_order: 2,
     createdAt: new Date(),
     updatedAt: new Date(),

@@ -10,8 +10,8 @@ const createJestConfig = nextJest({
 const config: Config = {
   // coverageProvider: 'v8',
   testEnvironment: 'jsdom',
-  // Add more setup options before each test is run
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],   
+  // Add more setup options before each test is run  
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts', '<rootDir>/test/prismaMock.ts'],
   testEnvironmentOptions: {
     url: 'http://localhost:3000'
   },  

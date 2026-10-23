@@ -1,4 +1,4 @@
-import { http, HttpResponse, HttpHandler } from "msw"; // Correct imports
+import { http, HttpResponse } from "msw"; // Correct imports
 import { mockYears } from "../mocks/tmnts/mockYears";
 import { mockResults } from '../mocks/tmnts/mockResults';
 import { mockUpcoming } from "../mocks/tmnts/mockUpcoming";

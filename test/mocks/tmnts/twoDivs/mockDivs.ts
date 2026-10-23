@@ -16,7 +16,6 @@ import {
 import { todayStr } from "@/lib/dateTools";
 import { Prisma, Div, Pot, Brkt, Elim } from "@prisma/client";
 import { ptGame, ptLastGame, ptSeries } from "@/lib/validation/constants";
-// import { Decimal } from "@prisma/client/runtime/library";
 
 const divId1 = "div_578834e04e5e4885bbae79229d8b96e8";
 const divId2 = "div_24b1cd5dee0542038a1244fc2978e862";
