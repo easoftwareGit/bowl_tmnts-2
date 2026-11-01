@@ -11,7 +11,7 @@ import {
   setCurrentGridRows,
   setup,
   standardBeforeEach,
-} from "./potPfPage.testSetup.test";
+} from "./potPfPage.testSetup";
 import {
   mockTmntFullData,
   potId1,

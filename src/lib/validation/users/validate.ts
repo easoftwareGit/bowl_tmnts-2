@@ -69,7 +69,7 @@ const gotUserData = (
     }
 
     return ErrorCode.NONE;
-  } catch (error) {
+  } catch {
     return ErrorCode.OTHER_ERROR;
   }
 };
@@ -89,8 +89,7 @@ export const validUserEmail = (email: string): boolean => {
 
 export const validUserPhone = (phone: string): boolean => {
   if (!phone) return false;
-  return (
-    phone.length > 0 &&
+  return (    
     phone.length <= maxPhoneLength &&
     phoneChecking(phone).isValid
   );
@@ -98,7 +97,7 @@ export const validUserPhone = (phone: string): boolean => {
 
 export const validUserPassword = (password: string): boolean => {
   if (!password) return false;
-  return password.length > 0 && isPassword8to20(password);
+  return isPassword8to20(password);
 };
 
 /**
@@ -144,7 +143,7 @@ const validUserData = (
     }
 
     return ErrorCode.NONE;
-  } catch (error) {
+  } catch {
     return ErrorCode.OTHER_ERROR;
   }
 };
@@ -154,12 +153,16 @@ const validUserData = (
  *
  * @param user - user data to scrub
  * @returns - sanitized user:
+ *  - id sanitized
  *  - sanitized first & last name
+ *  - sanitized email
  *  - phone in correct format (not validated, just format OK)
  *  - password preserved only for form input when valid
+ *  - role preserved
+ *  null if user is null
  */
-export const sanitizeUser = (user: UserInput): SanitizedUser => {
-  if (!user) return null as never;
+export const sanitizeUser = (user: UserInput): SanitizedUser | null => {
+  if (!user) return null;
 
   if (isUserForm(user)) {
     const sanitizedUser: SanitizedUserForm = {
@@ -201,8 +204,8 @@ export const sanitizeUser = (user: UserInput): SanitizedUser => {
     role: "",
   };
 
-  if (isValidBtDbId(user.id, "usr")) {
-    sanitizedUser.id = user.id;
+  if (user.id) {
+    sanitizedUser.id = sanitizeBtDbId(user.id);
   }
   sanitizedUser.first_name = sanitizeName(user.first_name);
   sanitizedUser.last_name = sanitizeName(user.last_name);
@@ -226,7 +229,7 @@ export const sanitizeUser = (user: UserInput): SanitizedUser => {
 };
 
 /**
- * valildates a user data object
+ * validates a user data object
  *
  * @param user - user data to check
  * @param checkPhone - true if need to check phone
@@ -244,7 +247,7 @@ export function validateUser(
       return errCode;
     }
     return validUserData(user, checkPhone, checkPass);
-  } catch (error) {
+  } catch {
     return ErrorCode.OTHER_ERROR;
   }
 }

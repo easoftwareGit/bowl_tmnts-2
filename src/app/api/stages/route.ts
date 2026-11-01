@@ -10,15 +10,6 @@ import { SquadStage } from "@prisma/client";
 
 // routes /api/stages
 
-export async function GET(request: NextRequest) {
-  try {
-    const stages = await prisma.stage.findMany()    
-    return NextResponse.json({ stages }, { status: 200 });    
-  } catch (error) {
-    return standardCatchReturn(error, "error getting stages");
-  }
-}
-
 export async function POST(request: Request) {
   try {
     const {
@@ -57,8 +48,13 @@ export async function POST(request: Request) {
       let errMsg: string;
       switch (errCode) {
         case ErrorCode.MISSING_DATA:
-          errMsg = 'missing data'
-          break;
+          // if sanitize removed invalid stage data
+				  if (stage != null && toPost.stage == null) {
+						errMsg = 'invalid data'
+					} else {
+						errMsg = 'missing data'
+					}          
+          break;          
         case ErrorCode.INVALID_DATA:
           errMsg = 'invalid data'
           break;        

@@ -8,22 +8,26 @@ import {
 } from "@/lib/validation/constants";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Alert } from "@/components/ui/index";
 import { phone } from "phone";
-import { getUserByEmail, patchUser } from "@/lib/db/users/dbUsers";
+import { isEmailInUse, patchUser } from "@/lib/db/users/dbUsers";
 import ModalErrorMsg, {
   cannotSaveTitle,
 } from "@/components/modal/errorModal";
 import { initModalObj } from "@/components/modal/modalObjType";
-import type { userDataType } from "@/lib/types/types";
-
+import type { acctUserType, userDataType } from "@/lib/types/types";
 
 const savedAcctInfoTitle = "Saved Account Info";
 
+// only directors and admins can change account information; other users
+// see their account read-only (the PATCH route enforces this on the server)
+const editRoles: userDataType["role"][] = ["DIRECTOR", "ADMIN"];
+const readOnlyMsg =
+  "Only directors and admins can change account information.";
+
 interface ChildProps {
-  user: userDataType;
-  setUser: (user: userDataType) => void;
-  origUserData: userDataType;
+  user: acctUserType;
+  setUser: (user: acctUserType) => void;
+  origUserData: acctUserType;
   setInfoType: (infoType: string) => void;
 }
 
@@ -34,6 +38,9 @@ const blankErrors = {
   phone: "",
 };
 
+// emails are stored trimmed and in lower case
+const normalizeEmail = (email: string) => email.trim().toLowerCase();
+
 const AcctInfo: React.FC<ChildProps> = ({
   user,
   setUser,
@@ -43,17 +50,18 @@ const AcctInfo: React.FC<ChildProps> = ({
   const { update } = useSession();
 
   const [formErrors, setFormErrors] = useState(blankErrors);
-  const [usedEmail, setUsedEmail] = useState("");
   const [errModalObj, setErrModalObj] = useState(initModalObj);
 
   const router = useRouter();
 
   const phoneRequired = origUserData.phone ? true : false;
 
-  const hasPassword =
-    "password_hash" in user &&
-    typeof user.password_hash === "string" &&
-    user.password_hash !== "";
+  // the API sends has_password, never password_hash
+  // (no password = e.g. a Google sign-in, nothing to change)
+  const hasPassword = user.has_password === true;
+
+  // use the role loaded from the database (origUserData), not the edited copy
+  const canEdit = editRoles.includes(origUserData.role);
 
   const validUserData = async (): Promise<boolean> => {
     const errors = {
@@ -68,16 +76,12 @@ const AcctInfo: React.FC<ChildProps> = ({
     if (!user.first_name.trim()) {
       errors.first_name = "First Name is required";
       isValid = false;
-    } else {
-      errors.first_name = "";
     }
 
     // last name
     if (!user.last_name.trim()) {
       errors.last_name = "Last Name is required";
       isValid = false;
-    } else {
-      errors.last_name = "";
     }
 
     // email
@@ -87,33 +91,28 @@ const AcctInfo: React.FC<ChildProps> = ({
     } else if (!isEmail(user.email)) {
       errors.email = "Email is not valid";
       isValid = false;
-    } else {
-      errors.email = "";
     }
 
     // phone
     // if phone is not required (google auth) and phone is blank, then ok
-    if (!phoneRequired && !user.phone.trim()) {
-      errors.phone = "";
-    } else {
+    if (phoneRequired || user.phone.trim()) {
       // else if entered phone, check if valid
       if (!user.phone.trim()) {
         errors.phone = "Phone is required";
         isValid = false;
-      } else {
-        const phoneCheck = phone(user.phone);
-        if (!phoneCheck.isValid) {
-          errors.phone = "Phone is not valid";
-          isValid = false;
-        } else {
-          errors.phone = "";
-        }
+      } else if (!phone(user.phone).isValid) {
+        errors.phone = "Phone is not valid";
+        isValid = false;
       }
     }
 
-    if (isValid && user.email !== origUserData.email) {
-      const foundEmail = await getUserByEmail(user.email);
-      if (foundEmail) {
+    // only check for a used email when it really changed; a change in case
+    // or spaces only is the same email, and would find this user's own account
+    if (
+      isValid &&
+      normalizeEmail(user.email) !== normalizeEmail(origUserData.email)
+    ) {
+      if (await isEmailInUse(user.email)) {
         errors.email = "Email already in use";
         isValid = false;
       }
@@ -132,6 +131,7 @@ const AcctInfo: React.FC<ChildProps> = ({
   };
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (!canEdit) return;
     const { name, value } = e.target;
     setUser({
       ...user,
@@ -141,9 +141,6 @@ const AcctInfo: React.FC<ChildProps> = ({
       ...formErrors,
       [name]: "",
     });
-    if (name === "email") {
-      setUsedEmail("");
-    }
   };
 
   const handleChangePasswordClick = () => {
@@ -154,37 +151,47 @@ const AcctInfo: React.FC<ChildProps> = ({
     router.push("/"); // back to home
   };
 
-  const save = async () => {
+  const saveButtonClick = async () => {
+    if (!canEdit) return;
     try {
       const dataValid = await validUserData();
       if (!dataValid) return;
 
-      // update session
-      await update({
-        first_name: user.first_name,
-        last_name: user.last_name,
-        email: user.email,
-      });
-
-      // patch user
       const dataToPatch: userDataType = {
         id: user.id,
         email: user.email,
         first_name: user.first_name,
         last_name: user.last_name,
-        phone: origUserData.phone ? user.phone : origUserData.phone,
+        phone: user.phone, // validated above; blank is allowed only when not required
         role: user.role,
       };
 
+      // save to the database first, so the session never gets ahead of the db
       const patchedUser = await patchUser(dataToPatch);
-      if (patchedUser) {
-        setErrModalObj({
-          show: true,
-          title: savedAcctInfoTitle,
-          message: "Successfully updated account information.",
-          id: "success",
-        });
+      if (!patchedUser) {
+        throw new Error("patchUser did not return a user");
       }
+
+      // db is saved; now update the session with what the db saved (the route
+      // may have cleaned up the values). If this fails the account is still
+      // saved, and the session catches up on the next sign-in, so it should
+      // not be reported as a failed save.
+      try {
+        await update({
+          first_name: patchedUser.first_name,
+          last_name: patchedUser.last_name,
+          email: patchedUser.email,
+        });
+      } catch {
+        // intentionally ignored, see comment above
+      }
+
+      setErrModalObj({
+        show: true,
+        title: savedAcctInfoTitle,
+        message: "Successfully updated account information.",
+        id: "success",
+      });
     } catch {
       setErrModalObj({
         show: true,
@@ -192,13 +199,6 @@ const AcctInfo: React.FC<ChildProps> = ({
         message: "Cannot save Account Info.",
         id: initModalObj.id,
       });
-    }
-  };
-
-  const saveButtonClick = async () => {
-    const dataIsValid = await validUserData();
-    if (dataIsValid) {
-      save();
     }
   };
 
@@ -211,6 +211,11 @@ const AcctInfo: React.FC<ChildProps> = ({
         onCancel={canceledModalErr}
       />
       <div>
+        {!canEdit && (
+          <div className="alert alert-info mb-3" role="note" data-testid="readOnlyMsg">
+            {readOnlyMsg}
+          </div>
+        )}
         <div className="row g-3 mb-3">
           <div className="col-md-6">
             <label htmlFor="inputFirstName" className="form-label">
@@ -223,6 +228,7 @@ const AcctInfo: React.FC<ChildProps> = ({
               name="first_name"
               value={user.first_name}
               maxLength={maxFirstNameLength}
+              readOnly={!canEdit}
               onChange={handleInputChange}
             />
             <div className="text-danger">{formErrors.first_name}</div>
@@ -238,6 +244,7 @@ const AcctInfo: React.FC<ChildProps> = ({
               name="last_name"
               value={user.last_name}
               maxLength={maxLastNameLength}
+              readOnly={!canEdit}
               onChange={handleInputChange}
             />
             <div className="text-danger">{formErrors.last_name}</div>
@@ -255,12 +262,12 @@ const AcctInfo: React.FC<ChildProps> = ({
               name="email"
               value={user.email}
               maxLength={maxEmailLength}
+              readOnly={!canEdit}
               onChange={handleInputChange}
             />
             <div className="text-danger" id="emailError">
               {formErrors.email}
             </div>
-            {usedEmail && <Alert>{usedEmail}</Alert>}
           </div>
           <div className="col-md-6">
             <label htmlFor="inputPhone" className="form-label">
@@ -273,6 +280,7 @@ const AcctInfo: React.FC<ChildProps> = ({
               name="phone"
               value={user.phone}
               maxLength={maxPhoneLength}
+              readOnly={!canEdit}
               onChange={handleInputChange}
             />
             <div className="text-danger">{formErrors.phone}</div>
@@ -291,19 +299,21 @@ const AcctInfo: React.FC<ChildProps> = ({
           </div>
           <div className="col-md-6">
             <div className="d-grid gap-2 d-md-flex justify-content-md-end">
-              <button
-                type="button"
-                className="btn btn-success"
-                onClick={saveButtonClick}
-              >
-                Save
-              </button>
+              {canEdit && (
+                <button
+                  type="button"
+                  className="btn btn-success"
+                  onClick={saveButtonClick}
+                >
+                  Save
+                </button>
+              )}
               <button
                 type="button"
                 className="btn btn-danger"
                 onClick={handleCancelClick}
               >
-                Cancel
+                {canEdit ? "Cancel" : "Back"}
               </button>
             </div>
           </div>

@@ -1,23 +1,36 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider, { type GoogleProfile } from "next-auth/providers/google";
 
 import { prisma } from "@/lib/prisma";
-import { compare } from "bcrypt";
+import { accountLockedCode, normalizeEmail } from "@/lib/auth/authUtils";
+import {
+  authorizeCredentials,
+  type AppUser,
+} from "@/lib/auth/authorizeCredentials";
+import { btDbUuid } from "@/lib/uuid";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
 
-const DB_RECHECK_MS = Number(process.env.AUTH_DB_RECHECK_MINUTES ?? 5);
+// the env var is in MINUTES; Date.now() math is in milliseconds
+const DB_RECHECK_MS =
+  Number(process.env.AUTH_DB_RECHECK_MINUTES ?? 5) * 60 * 1000;
 
-type AppUser = {
-  id: string;
-  email: string;
-  name: string;
-  first_name: string;
-  last_name: string;
-  role: string;
-};
+// thrown by authorize() so the login form gets res.code === "account_locked"
+// instead of the generic "CredentialsSignin"
+class AccountLockedError extends CredentialsSignin {
+  code = accountLockedCode;
+}
+
+// the user fields the token keeps in sync with the database
+const tokenUserSelect = {
+  id: true,
+  email: true,
+  first_name: true,
+  last_name: true,
+  role: true,
+} as const;
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   pages: {
@@ -37,40 +50,15 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       },
 
       async authorize(credentials) {
-        const email =
-          typeof credentials?.email === "string" ? credentials.email.trim() : "";
-        const password =
-          typeof credentials?.password === "string" ? credentials.password : "";
+        // the email + password check and the lockout live in
+        // authorizeCredentials.ts, where they are unit tested
+        const result = await authorizeCredentials(credentials);
 
-        if (!email || !password) return null;
-
-        const dbUser = await prisma.user.findUnique({
-          where: { email },
-          select: {
-            id: true,
-            email: true,
-            first_name: true,
-            last_name: true,
-            role: true,
-            password_hash: true,
-          },
-        });
-
-        if (!dbUser) return null;
-        if (!dbUser.password_hash) return null;
-
-        const isPasswordValid = await compare(password, dbUser.password_hash);
-        if (!isPasswordValid) return null;
+        if (result.status === "locked") throw new AccountLockedError();
+        if (result.status === "invalid") return null;
 
         // This becomes `user` in jwt() when provider === "credentials"
-        return {
-          id: dbUser.id,
-          email: dbUser.email,
-          name: `${dbUser.first_name} ${dbUser.last_name}`.trim(),
-          first_name: dbUser.first_name,
-          last_name: dbUser.last_name,
-          role: dbUser.role,
-        } satisfies AppUser;
+        return result.user satisfies AppUser;
       },
     }),
 
@@ -82,8 +70,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         return {
           id: profile.sub,
           name: profile.name,
-          email: profile.email,
-          image: (profile as any).picture,
+          email: normalizeEmail(profile.email),
+          image: profile.picture,
         };
       },
     }),
@@ -101,29 +89,14 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       return session;
     },
 
-    async jwt({ token, user, account, session, trigger }) {
-      // 1) Handle useSession().update(...) payloads      
-      if (trigger === "update" && session) {
-        // session here is the update payload, not a full Session
-        const s = session as Partial<{
-          first_name: string;
-          last_name: string;
-          email: string;
-        }>;
-
-        if (s.first_name) token.first_name = s.first_name;
-        if (s.last_name) token.last_name = s.last_name;
-        if (s.email) token.email = s.email;
-
-        token.name = `${token.first_name ?? ""} ${token.last_name ?? ""}`.trim();
-      }
-      
-      // 2) Initial sign-in (user is present only at sign-in time)
+    async jwt({ token, user, account, trigger }) {
+      // 1) Initial sign-in (user is present only at sign-in time)
       if (user) {
         if (account?.provider === "credentials") {
           const u = user as AppUser;
 
           token.id = u.id;
+          token.email = u.email;
           token.first_name = u.first_name;
           token.last_name = u.last_name;
           token.role = u.role;
@@ -135,57 +108,36 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           return token;
         }
 
-        // oauth (google)
-        const name = user.name ?? "";
-        let firstName = "none";
-        let lastName = "none";
+        // oauth (google): signIn() has already created/found the row, so
+        // read id, names and role from the database, not from Google
+        const email = user.email ? normalizeEmail(user.email) : "";
+        if (!email) return null;
 
-        try {
-          if (name) {
-            const parts = name.split(" ");
-            firstName = parts[0] || "none";
-            lastName = name.substring(firstName.length + 1) || "none";
-          }
-        } catch {
-          firstName = "none";
-          lastName = "none";
-        }
+        const dbUser = await prisma.user.findUnique({
+          where: { email },
+          select: tokenUserSelect,
+        });
+        if (!dbUser) return null;
 
-        token.first_name = firstName;
-        token.last_name = lastName;
-        token.name = `${firstName} ${lastName}`.trim();
-
-        // Option B: fetch id/role from DB using email
-        if (user.email) {
-          const dbUser = await prisma.user.findUnique({
-            where: { email: user.email },
-            select: { id: true, role: true },
-          });
-
-          if (dbUser) {
-            token.id = dbUser.id;
-            token.role = dbUser.role ?? "USER";
-
-            // confirmed in DB
-            token.dbCheckedAt = Date.now();
-          } else {
-            // rare; signIn upsert should have created it
-            token.role = "USER";
-            token.dbCheckedAt = Date.now();
-          }
-        } else {
-          token.role = "USER";
-          token.dbCheckedAt = Date.now();
-        }
+        token.id = dbUser.id;
+        token.email = dbUser.email;
+        token.first_name = dbUser.first_name;
+        token.last_name = dbUser.last_name;
+        token.role = dbUser.role ?? "USER";
+        token.name = `${dbUser.first_name} ${dbUser.last_name}`.trim();
+        token.dbCheckedAt = Date.now();
 
         return token;
       }
-      
-      // 3) Periodic DB validation for existing sessions
-      // (runs on normal requests when `user` is NOT present)
+
+      // 2) useSession().update() or periodic check: re-read the user from
+      // the database. The update() payload comes from the browser, so it is
+      // never trusted; the account page saves to the db first, then calls
+      // update() so the token picks up the new values here.
       const now = Date.now();
       const lastChecked = token.dbCheckedAt ?? 0;
-      const shouldRecheck = !lastChecked || now - lastChecked > DB_RECHECK_MS;
+      const shouldRecheck =
+        trigger === "update" || !lastChecked || now - lastChecked > DB_RECHECK_MS;
 
       if (shouldRecheck) {
         // If we can't identify the user, invalidate the session
@@ -193,14 +145,18 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { id: true, role: true },
+          select: tokenUserSelect,
         });
 
         // If user was deleted, invalidate session => middleware redirects to login
         if (!dbUser) return null;
 
-        // Keep token synced
+        // Keep token synced with the database
+        token.email = dbUser.email;
+        token.first_name = dbUser.first_name;
+        token.last_name = dbUser.last_name;
         token.role = dbUser.role ?? "USER";
+        token.name = `${dbUser.first_name} ${dbUser.last_name}`.trim();
 
         // Update timestamp so we don't recheck too often
         token.dbCheckedAt = now;
@@ -217,27 +173,33 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
 
       const googleInfo = profile as unknown as GoogleProfile;
 
-      const given = (googleInfo as any).given_name as string | undefined;
-      const family = (googleInfo as any).family_name as string | undefined;
+      // SECURITY: only trust an email Google has verified. Otherwise anyone
+      // could sign in as an existing account that uses that email.
+      if (!googleInfo.email_verified) return false;
 
-      let fName = given && given.trim() ? given.trim() : "none";
-      let lName = family && family.trim() ? family.trim() : "none";
+      const email = normalizeEmail(googleInfo.email);
+
+      const given = googleInfo.given_name?.trim();
+      const family = googleInfo.family_name?.trim();
+
+      let fName = given || "none";
+      const lName = family || "none";
 
       if (fName === "none" && lName === "none" && profile.name) {
         fName = profile.name;
       }
 
       await prisma.user.upsert({
-        where: { email: googleInfo.email },
+        where: { email },
         create: {
-          email: googleInfo.email,
+          id: btDbUuid("usr"),
+          email,
           first_name: fName,
           last_name: lName,
+          role: "DIRECTOR", // currently all new users are directors
         },
-        update: {
-          first_name: fName,
-          last_name: lName,
-        },
+        // existing user: keep the names they may have edited in the app
+        update: {},
       });
 
       return true;

@@ -35,6 +35,8 @@ async function userUpsert() {
         last_name: "Smith",
         phone: "+18005551212",
         role: "ADMIN",
+        failed_pwd_attempts: 0,
+        pwd_locked_until: null as any,
       },
       create: {
         id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
@@ -44,6 +46,8 @@ async function userUpsert() {
         last_name: "Smith",
         phone: "+18005551212",
         role: "ADMIN",
+        failed_pwd_attempts: 0,
+        pwd_locked_until: null as any,
       },
     });
     user = await prisma.user.upsert({
@@ -56,6 +60,8 @@ async function userUpsert() {
         first_name: "Chad",
         last_name: "White",
         phone: "+18005557890",
+        failed_pwd_attempts: 0,
+        pwd_locked_until: null as any,
       },
       create: {
         id: "usr_516a113083983234fc316e31fb695b85",
@@ -64,6 +70,8 @@ async function userUpsert() {
         first_name: "Chad",
         last_name: "White",
         phone: "+18005557890",
+        failed_pwd_attempts: 0,
+        pwd_locked_until: null as any,
       },
     });
     user = await prisma.user.upsert({
@@ -76,6 +84,8 @@ async function userUpsert() {
         first_name: "Doug",
         last_name: "Jones",
         phone: "+18005552211",
+        failed_pwd_attempts: 0,
+        pwd_locked_until: null as any,
       },
       create: {
         id: "usr_5735c309d480323662da31e13c35b91e",
@@ -84,6 +94,8 @@ async function userUpsert() {
         first_name: "Doug",
         last_name: "Jones",
         phone: "+18005552211",
+        failed_pwd_attempts: 0,
+        pwd_locked_until: null as any,
       },
     });
     user = await prisma.user.upsert({
@@ -97,6 +109,8 @@ async function userUpsert() {
         last_name: "Johnson",
         phone: "+18005551234",
         role: "DIRECTOR",
+        failed_pwd_attempts: 0,
+        pwd_locked_until: null as any,
       },
       create: {
         id: "usr_a24894ed10c5dd835d5cbbfea7ac6dca",
@@ -106,6 +120,8 @@ async function userUpsert() {
         last_name: "Johnson",
         phone: "+18005551234",
         role: "DIRECTOR",
+        failed_pwd_attempts: 0,
+        pwd_locked_until: null as any,
       },
     });
     user = await prisma.user.upsert({
@@ -119,6 +135,8 @@ async function userUpsert() {
         last_name: "Adolphson",
         phone: null as any,
         role: "DIRECTOR",
+        failed_pwd_attempts: 0,
+        pwd_locked_until: null as any,
       },
       create: {
         id: "usr_c8fcd7146f9a4c5fb4c42f386304e7a6",
@@ -128,6 +146,8 @@ async function userUpsert() {
         last_name: "Adolphson",
         phone: null as any,
         role: "DIRECTOR",
+        failed_pwd_attempts: 0,
+        pwd_locked_until: null as any,
       },
     });
     user = await prisma.user.upsert({
@@ -140,6 +160,8 @@ async function userUpsert() {
         first_name: "Fred",
         last_name: "Green",
         phone: "+18005554321",
+        failed_pwd_attempts: 0,
+        pwd_locked_until: null as any,
       },
       create: {
         id: "usr_07de11929565179487c7a04759ff9866",
@@ -148,6 +170,8 @@ async function userUpsert() {
         first_name: "Fred",
         last_name: "Green",
         phone: "+18005554321",
+        failed_pwd_attempts: 0,
+        pwd_locked_until: null as any,
       },
     });
     console.log("Upserted users:", 6);

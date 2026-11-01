@@ -7,107 +7,8 @@ import { initFullStage } from "@/lib/db/initVals";
 import { sanitizeFullStage, validateFullStage } from "@/lib/validation/stages/validate";
 import { standardCatchReturn } from "@/app/api/apiCatch";
 import { SquadStage } from "@prisma/client";
-import { extractStageFromPrisma } from "@/lib/db/stageMappers";
 
 // routes /api/stages/stage/:id
-
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) { 
-  try {
-    const { id } = await params;
-    if (!isValidBtDbId(id, "stg")) {
-      return NextResponse.json({ error: "invalid request" }, { status: 404 });
-    }
-    const stage = await prisma.stage.findUnique({
-      where: {
-        id: id,
-      },
-    });
-    if (!stage) {
-      return NextResponse.json({ error: "not found" }, { status: 404 });
-    }    
-    return NextResponse.json({ stage }, { status: 200 });    
-  } catch (error) {
-    return standardCatchReturn(error, "error getting stage");
-  }
-}
-
-export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) { 
-  try {
-    const { id } = await params;
-    if (!isValidBtDbId(id, "stg")) {
-      return NextResponse.json({ error: "invalid request" }, { status: 404 });
-    }
-
-    const {
-      squad_id,
-      stage,
-      stage_set_at,
-      scores_started_at,
-      stage_override_enabled,
-      stage_override_at,
-      stage_override_reason,
-    } = await request.json();    
-
-    const toCheck: fullStageType = {
-      ...initFullStage,
-      squad_id,
-      stage,
-      stage_set_at,
-      scores_started_at,
-      stage_override_enabled,
-      stage_override_at,
-      stage_override_reason,
-    };
-
-    const toPut = sanitizeFullStage(toCheck);
-    // set systen stage dates AFTER sanitize and BEFORE validation
-    const stageDateStr = new Date().toISOString(); // app sets stage date
-    toPut.stage_set_at = stageDateStr;
-    toPut.scores_started_at = (toPut.stage && toPut.stage === SquadStage.SCORES) ? stageDateStr : null;
-    toPut.stage_override_at = (toPut.stage_override_enabled) ? stageDateStr : null;
-
-    const errCode = validateFullStage(toPut);
-    if (errCode !== ErrorCode.NONE) {
-      let errMsg: string;
-      switch (errCode) {
-        case ErrorCode.MISSING_DATA:
-          errMsg = "missing data";
-          break;
-        case ErrorCode.INVALID_DATA:
-          errMsg = "invalid data";
-          break;
-        default:
-          errMsg = "unknown error";
-          break;
-      }
-      return NextResponse.json({ error: errMsg }, { status: 422 });
-    }
-    
-    const puttedStage = await prisma.stage.update({
-      where: {
-        id: id,
-      },
-      data: {
-        // squad_id: toPut.event_id, // do not update squad_id
-        stage: toPut.stage,
-        stage_set_at: toPut.stage_set_at,
-        scores_started_at: toPut.scores_started_at,
-        stage_override_enabled: toPut.stage_override_enabled,
-        stage_override_at: toPut.stage_override_at,
-        stage_override_reason: toPut.stage_override_reason,
-      },
-    });
-    return NextResponse.json({ stage: puttedStage }, { status: 200 });
-  } catch (error) {
-    return standardCatchReturn(error, "error putting stage");
-  }
-}
 
 export async function PATCH(
   request: Request,
@@ -148,9 +49,6 @@ export async function PATCH(
     // populate toCheck with json
     const jsonProps = Object.getOwnPropertyNames(json);
     let gotDataToPatch = false;
-    // if (jsonProps.includes("squad_id")) {
-    //   toCheck.squad_id = json.squad_id;
-    // }
     if (jsonProps.includes("stage")) {
       toCheck.stage = json.stage;
       gotDataToPatch = true;
@@ -194,7 +92,12 @@ export async function PATCH(
       let errMsg: string;
       switch (errCode) {
         case ErrorCode.MISSING_DATA:
-          errMsg = "missing data";
+          // if sanitize removed invalid stage data
+				  if (toCheck.stage != null && toBePatched.stage == null) {
+						errMsg = 'invalid data'
+					} else {
+						errMsg = 'missing data'
+					}
           break;
         case ErrorCode.INVALID_DATA:
           errMsg = "invalid data";
@@ -205,15 +108,6 @@ export async function PATCH(
       }
       return NextResponse.json({ error: errMsg }, { status: 422 });
     }
-    
-    // const toPatch = {
-    //   stage: null as SquadStage | null,
-    //   stage_set_at: null as Date | null,
-    //   scores_started_at: null as Date | null,
-    //   stage_override_enabled: null as boolean | null,
-    //   stage_override_at: null as Date | null,
-    //   stage_override_reason: null as string | null,
-    // };    
     
     const toPatch: {
       stage?: SquadStage;
@@ -253,26 +147,5 @@ export async function PATCH(
     return NextResponse.json({ stage }, { status: 200 });
   } catch (error) {
     return standardCatchReturn(error, "error patching stage");
-  }
-}
-
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) { 
-  try {
-    const { id } = await params;
-    if (!isValidBtDbId(id, "stg")) {
-      return NextResponse.json({ error: "invalid request" }, { status: 404 });
-    }
-
-    const result = await prisma.stage.deleteMany({
-      where: {
-        id: id,
-      },
-    });
-    return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (error) {
-    return standardCatchReturn(error, "error deleting stage");
   }
 }

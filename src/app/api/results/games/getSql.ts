@@ -14,11 +14,8 @@ const getScoresPlusHdcp = (squadGames: number) => {
   let scoresSql = ''
   for (let i = 1; i <= squadGames; i++) {
     scoresSql += `game_scores."Game ${i}", `;
-    // scoresSql += `game_scores."Game ${i}" + calculated_hdcp.hdcp AS "Game ${i} + Hdcp", `;  
   }
   scoresSql += `game_scores.total `;  // removed trailing comma
-  // scoresSql += `game_scores.total, `;  
-  // scoresSql += `game_scores.total + (calculated_hdcp.hdcp * ${squadGames}) AS "total + Hdcp" `
   return scoresSql
 }
 
@@ -113,8 +110,6 @@ export const getTmntGamesSql = (tmntId: string, squadGames: number): string => {
     `) ` +
     `SELECT * ` +
     `FROM final_result;` // added semi colon for end
-    // `FROM final_result ` +
-    // `ORDER BY "total + Hdcp" DESC NULLS LAST;`
 
   return tmntGamesSql
 }

@@ -305,10 +305,20 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps,  markPendingChanges }) =
 
       // 2) Only create initial stage rows when making a NEW tournament
       if (newTmnt) {
-        // Use squads from the *saved* object (they now have DB ids)
-        await Promise.all(
-          savedTmnt.squads.map((squad) => postInitialStageForSquad(squad.id)),
-        );
+        try {
+          // Use squads from the *saved* object (they now have DB ids)
+          await Promise.all(
+            savedTmnt.squads.map((squad) => postInitialStageForSquad(squad.id)),
+          );          
+        } catch (err: any) {          
+          setErrModalObj({
+            show: true,
+            title: cannotSaveTitle,
+            message: 'Tournament saved, but squad stage could not be initialized.',
+            id: initModalObj.id,
+          });
+          return;
+        }
       }
 
       //3 show success modal

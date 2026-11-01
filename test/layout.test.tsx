@@ -32,7 +32,7 @@ jest.mock("@/components/navBar/eaNavbar", () => ({
 }));
 
 // Your bootstrap Container wrapper
-jest.mock("@/components/boostrap", () => ({
+jest.mock("@/components/bootstrap", () => ({
   __esModule: true,
   Container: ({
     children,

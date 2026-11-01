@@ -3,8 +3,7 @@
 import React, { ChangeEvent, useState } from "react";
 import Image from "next/image";
 import { isPassword8to20 } from "@/lib/validation/validation";
-import type { userDataType, userFormType } from "@/lib/types/types";
-// import { doCompare } from "@/lib/server/hashServer";
+import type { acctUserType } from "@/lib/types/types";
 import { changePassword } from "@/lib/db/users/dbUsers";
 import { initModalObj } from "@/components/modal/modalObjType";
 import ModalErrorMsg from "@/components/modal/errorModal";
@@ -15,17 +14,17 @@ const blankValues = {
   confirm: "",
 };
 
-// type UserWithPasswordHash = userDataType & {
-//   password_hash: string;
-// };
-
-// interface ChildProps {
-//   user: UserWithPasswordHash;
-//   setInfoType: (infoType: string) => void;
-// }
+const invalidFormatMsg =
+  "Password not in a valid format: at least 1 lower case, 1 UPPER case, 1 digit, 1 special character, 8 to 20 characters long";
+const currentIncorrectMsg = "Current Password is incorrect";
+// the route's lock message ends with the number of minutes, so match the start
+const lockedMsgStart = "Too many attempts";
+const defaultFailMsg = "Cannot update new password.";
+const noPasswordMsg =
+  "This account signs in without a password, so there is no password to change.";
 
 interface ChildProps {
-  user: userDataType;
+  user: acctUserType;
   setInfoType: (infoType: string) => void;
 }
 
@@ -37,8 +36,9 @@ const ChangePassword: React.FC<ChildProps> = ({ user, setInfoType }) => {
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [errModalObj, setErrModalObj] = useState(initModalObj);
+  const [saving, setSaving] = useState(false);
 
-  const validUserData = async (): Promise<boolean> => {
+  const validUserData = (): boolean => {
     const errors = {
       current: "",
       new: "",
@@ -51,11 +51,8 @@ const ChangePassword: React.FC<ChildProps> = ({ user, setInfoType }) => {
       errors.current = "Current Password is required";
       isValid = false;
     } else if (!isPassword8to20(pwdData.current)) {
-      errors.current =
-        "Password not in a valid format: at least 1 lower case, 1 UPPER case, 1 digit, 1 special character, 8 to 20 charaters long";
+      errors.current = invalidFormatMsg;
       isValid = false;
-    } else {
-      errors.current = "";
     }
 
     // new
@@ -63,14 +60,11 @@ const ChangePassword: React.FC<ChildProps> = ({ user, setInfoType }) => {
       errors.new = "New Password is required";
       isValid = false;
     } else if (!isPassword8to20(pwdData.new)) {
-      errors.new =
-        "Password not in a valid format: at least 1 lower case, 1 UPPER case, 1 digit, 1 special character, 8 to 20 charaters long";
+      errors.new = invalidFormatMsg;
       isValid = false;
     } else if (pwdData.new === pwdData.current) {
       errors.new = "New Password cannot be the same as Current Password";
       isValid = false;
-    } else {
-      errors.new = "";
     }
 
     // confirm
@@ -78,39 +72,18 @@ const ChangePassword: React.FC<ChildProps> = ({ user, setInfoType }) => {
       errors.confirm = "Confirm Password is required";
       isValid = false;
     } else if (!isPassword8to20(pwdData.confirm)) {
-      errors.confirm =
-        "Password not in a valid format: at least 1 lower case, 1 UPPER case, 1 digit, 1 special character, 8 to 20 charaters long";
+      errors.confirm = invalidFormatMsg;
       isValid = false;
     } else if (pwdData.new !== pwdData.confirm) {
       errors.confirm = "New and Confirm Passwords do not match";
       isValid = false;
-    } else {
-      errors.confirm = "";
     }
-
-    // // compare current password to hashed password
-    // if (isValid) {
-    //   const dbUser = await getUserById(user.id);
-    //   if (!dbUser) {
-    //     errors.current = "Error getting user from database";
-    //     isValid = false;
-    //   } else {
-    //     const isCurrentValid = await doCompare(
-    //       pwdData.current,
-    //       user.password_hash
-    //     );
-    //     if (!isCurrentValid) {
-    //       errors.current = "Current Password is incorrect";
-    //       isValid = false;
-    //     }
-    //   }
-    // }
 
     setFormErrors(errors);
     return isValid;
   };
 
-  const handleAcctInfoClick = async () => {
+  const handleAcctInfoClick = () => {
     setInfoType("AcctInfo");
   };
 
@@ -144,71 +117,87 @@ const ChangePassword: React.FC<ChildProps> = ({ user, setInfoType }) => {
     setShowConfirm(!showConfirm);
   };
 
-  const updatePassword = async () => {
+  const showFailModal = (message: string) => {
+    setErrModalObj({
+      show: true,
+      title: "Update Password Failed",
+      message,
+      id: "fail",
+    });
+  };
 
-    const result = await changePassword(
-      user.id,
-      pwdData.current,
-      pwdData.new
-    );
-    if (!result.success) {
-      if (result.error === "Current Password is incorrect") {
-        setFormErrors({
-          ...formErrors,
-          current: result.error,
+  const updatePassword = async () => {
+    setSaving(true);
+    try {
+      const result = await changePassword(
+        user.id,
+        pwdData.current,
+        pwdData.new
+      );
+
+      if (result.success) {
+        setErrModalObj({
+          show: true,
+          title: "Update Password Success",
+          message: "Successfully updated password.",
+          id: "success",
         });
         return;
       }
 
-      setErrModalObj({
-        show: true,
-        title: "Update Password Failed",
-        message: result.error ?? "Cannot update new password.",
-        id: "fail",
-      });
-    } else { 
-      setErrModalObj({
-        show: true,
-        title: "Update Password Success",
-        message: "Successfully updated password.",
-        id: "success",
-      })
+      // wrong current password, or too many wrong tries (account locked):
+      // show it on the Current Password field
+      if (
+        result.error === currentIncorrectMsg ||
+        result.error?.startsWith(lockedMsgStart)
+      ) {
+        const currentError = result.error;
+        setFormErrors((prev) => ({ ...prev, current: currentError }));
+        return;
+      }
+
+      showFailModal(result.error ?? defaultFailMsg);
+    } catch {
+      // network / server error
+      showFailModal(defaultFailMsg);
+    } finally {
+      setSaving(false);
     }
-
-    // const dataToPatch: userFormType = {
-    //   id: user.id,
-    //   email: user.email,
-    //   password: pwdData.new,
-    //   first_name: user.first_name,
-    //   last_name: user.last_name,
-    //   phone: user.phone,
-    //   role: user.role,
-    // };
-
-    // const patchedUser = await patchUser(dataToPatch);
-    // if (!patchedUser) {
-    //   setErrModalObj({
-    //     show: true,
-    //     title: "Update Password Failed",
-    //     message: "Cannot update new password.",
-    //     id: "fail",
-    //   });
-    // } else {
-    //   setErrModalObj({
-    //     show: true,
-    //     title: "Update Password Success",
-    //     message: "Successfully updated password.",
-    //     id: "success",
-    //   });
-    // }
   };
 
   const handleUpdateClick = async () => {
-    const isValid = await validUserData();
-    if (isValid) {
-      updatePassword();
+    if (saving) return; // ignore double clicks while a request is in flight
+    if (validUserData()) {
+      await updatePassword();
     }
   };
+
+  // e.g. a Google login: nothing to change, so don't show the form
+  if (!user.has_password) {
+    return (
+      <div className="form_container">
+        <div className="row g-3 mb-1">
+          <h5>{user.first_name + " " + user.last_name}</h5>
+        </div>
+        <div className="row g-3 mb-3">
+          <div className="col-12" data-testid="noPasswordMsg">
+            {noPasswordMsg}
+          </div>
+        </div>
+        <div className="row g-3">
+          <div className="col-md-6">
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={handleAcctInfoClick}
+            >
+              Acct Info
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -353,6 +342,7 @@ const ChangePassword: React.FC<ChildProps> = ({ user, setInfoType }) => {
                 type="button"
                 className="btn btn-success"
                 onClick={handleUpdateClick}
+                disabled={saving}
               >
                 Update
               </button>

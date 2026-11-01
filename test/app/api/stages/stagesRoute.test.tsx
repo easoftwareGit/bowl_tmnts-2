@@ -1,1762 +1,370 @@
-import { privateApi } from "@/lib/api/axios";
-import { AxiosError } from "axios";
-import { baseStagesApi } from "@/lib/api/apiPaths";
-import { testBaseStagesApi } from "../../../testApi";
-import type { fullStageType } from "@/lib/types/types";
+/**
+ * @jest-environment node
+ */
+// Tests for src/app/api/stages/route.ts using mocked prisma.
+// No database or server needed.
+import { POST } from "@/app/api/stages/route";
+import { prismaMock } from "../../../prismaMock";
 import { mockStageToPost, mockSquadsToPost } from "../../../mocks/tmnts/singlesAndDoubles/mockSquads";
+import type { fullStageType } from "@/lib/types/types";
 import { maxReasonLength } from "@/lib/validation/constants";
+import { stageDataForPrisma } from "@/lib/db/stageMappers";
 import { SquadStage } from "@prisma/client";
-import { deleteSquad, postSquad } from "@/lib/db/squads/dbSquads";
-import { initFullStage } from "@/lib/db/initVals";
 
-// before running this test, run the following commands in the terminal:
-// 1) clear and re-seed the database
-//    a) clear the database
-//       npx prisma db push --force-reset
-//    b) re-seed
-//       npx prisma db seed  
-//    if just need to re-seed, then only need step 1b
-// 2) make sure the server is running
-//    in the VS activity bar, 
-//      a) click on "Run and Debug" (Ctrl+Shift+D)
-//      b) at the top of the window, click on the drop-down arrow
-//      c) select "Node.js: debug server-side"
-//      d) directly to the left of the drop down select, click the green play button
-//         This will start the server in debug mode. 
+// Keep the real stageDataForPrisma, but wrap it in a jest.fn so a test can
+// make it return null (the route's "invalid data" 422 branch)
+jest.mock("@/lib/db/stageMappers", () => {
+  const actual = jest.requireActual("@/lib/db/stageMappers");
+  return { ...actual, stageDataForPrisma: jest.fn() };
+});
+const mockStageDataForPrisma = stageDataForPrisma as jest.MockedFunction<
+  typeof stageDataForPrisma
+>;
+const actualStageDataForPrisma = jest.requireActual(
+  "@/lib/db/stageMappers"
+).stageDataForPrisma as typeof stageDataForPrisma;
 
-// If running tests AND a test URL is defined, use it; otherwise use the app API path
-const url = process.env.NODE_ENV === "test" && testBaseStagesApi
-  ? testBaseStagesApi
-  : baseStagesApi;
-
-const oneStageUrl = url + "/stage/"
-const squadUrl = url + "/squad/"
-
-const notFoundStageId = "stg_01234567890123456789012345678901";
-const notFoundSquadId = "sqd_01234567890123456789012345678901";
-const userId = "usr_01234567890123456789012345678901";
+// The URL only needs to be valid; no server is running
+const url = "http://localhost:3000/api/stages";
 
 const toPostStageId = mockStageToPost.id;
 const toPostSquadId = mockSquadsToPost[0].id;
 
-const dateStr = "2025-09-01T00:00:00.000Z";
+// the route uses new Date() for all stage dates; freeze the clock
+const fixedNow = new Date("2026-10-26T12:00:00.000Z");
+const fixedNowStr = fixedNow.toISOString();
 
-// from prisma/seed.ts
-const testStage: fullStageType = {
-  id: "stg_c5f562c4c4304d919ac43fead73123e2",
-  squad_id: "sqd_7116ce5f80164830830a7157eb093396",
-  stage: "DEFINE",
-  stage_set_at: "2022-10-23T12:00:00.000Z",
+// a date passed in by the caller; the route should ignore it
+const aDateStr = "2022-01-01T00:00:00.000Z";
+
+// fixed dates for the row prisma "returns"
+const dates = {
+  createdAt: new Date("2025-01-01T00:00:00.000Z"),
+  updatedAt: new Date("2025-01-01T00:00:00.000Z"),
+};
+
+// valid stage in DEFINE stage with no override, so each test starts from a
+// known state
+const baseStage: fullStageType = {
+  ...mockStageToPost,
+  stage: SquadStage.DEFINE,
   scores_started_at: null,
   stage_override_enabled: false,
   stage_override_at: null,
-  stage_override_reason: '',
-}
-const wholeTmntStage: fullStageType = {
-  id: "stg_124dd9efc30f4352b691dfd93d1e284e",
-  squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
-  // stage: "DEFINE",
-  stage: "SCORES",
-  stage_set_at: "2024-07-01T00:00:00.000Z",
-  scores_started_at: null,
-  stage_override_enabled: false,
-  stage_override_at: null,
-  stage_override_reason: '',
-}
-const toDeleteStage: fullStageType = {
-  id: "stg_57f542b0c5664845a631be0148bc8b89",
-  squad_id: "sqd_3397da1adc014cf58c44e07c19914f72",
-  stage: "DEFINE",
-  stage_set_at: "2023-09-16T12:00:00.000Z",
-  scores_started_at: null,
-  stage_override_enabled: false,
-  stage_override_at: null,
-  stage_override_reason: '',  
-}
+  stage_override_reason: "",
+};
 
-const deletePostedStage = async (stageId: string) => {
-  
-  try {      
-    await privateApi.delete(oneStageUrl + stageId);
-  } catch (err) {
-    if (err instanceof AxiosError) console.log(err.message);
-  }
-}
+// builds a POST request with a JSON body
+const postRequest = (body: unknown) =>
+  new Request(url, {
+    method: "POST",
+    body: JSON.stringify(body),
+    headers: { "Content-Type": "application/json" },
+  });
 
-const resetStage = async (fullStage: fullStageType) => {
-  // make sure test stage is reset in database
-  try {
-    const stageJSON = JSON.stringify(fullStage);    
-    await privateApi.put(oneStageUrl + fullStage.id, stageJSON);
-  } catch (err) {
-    if (err instanceof AxiosError) console.log(err.message);
-  }
-}
+// the data object the route passed to prisma.stage.create()
+type sentStage = Record<string, unknown>;
+const sentData = (): sentStage =>
+  (prismaMock.stage.create as unknown as jest.Mock).mock.calls[0][0].data;
 
-const rePostStage = async (stageToRepost: fullStageType) => {
-  
-  try {
-    const response = await privateApi.get(oneStageUrl + stageToRepost.id);        
-    const found = response.data.stage;
-    if (found) return;    
-  } catch (err) {     
-    if (err instanceof AxiosError) {
-      if (err.status !== 404) {     // if not a NOT FOUND error
-        console.log(err.message);   // log error        
-      }
-    }    
-  }
-  try {
-    const stageJSON = JSON.stringify(stageToRepost);
-    await privateApi.post(url, stageJSON);    
-  } catch (err) {
-    if (err instanceof AxiosError) console.log(err.message);
-  }
-}
+// stageDataForPrisma may send dates as Date objects or ISO strings;
+// compare them as ISO strings either way
+const toIso = (value: unknown) =>
+  value === null || value === undefined
+    ? value
+    : new Date(value as string | Date).toISOString();
 
-describe('Stages - API: /api/stages', () => { 
+beforeEach(() => {
+  // this jest.fn mock is not reset by prismaMock, so clear its calls
+  // (and any leftover mock...Once values) before each test
+  mockStageDataForPrisma.mockReset();
+  mockStageDataForPrisma.mockImplementation(actualStageDataForPrisma);
 
-  describe('GET all stages API: /api/stages', () => { 
+  // fake only Date; list every other timer API in doNotFake so promises,
+  // setTimeout and request.json() still work normally
+  jest.useFakeTimers({
+    now: fixedNow,
+    doNotFake: [
+      "hrtime",
+      "nextTick",
+      "performance",
+      "queueMicrotask",
+      "requestAnimationFrame",
+      "cancelAnimationFrame",
+      "requestIdleCallback",
+      "cancelIdleCallback",
+      "setImmediate",
+      "clearImmediate",
+      "setInterval",
+      "clearInterval",
+      "setTimeout",
+      "clearTimeout",
+    ],
+  });
 
-    beforeAll(async () => {
-      await deletePostedStage(toPostStageId);      
-      await rePostStage(toDeleteStage)
-    })
+  // stage.create echoes back what it was asked to save
+  (prismaMock.stage.create as unknown as jest.Mock).mockImplementation(
+    (args: { data: Record<string, unknown> }) =>
+      Promise.resolve({ ...args.data, ...dates })
+  );
+});
 
-    it('should get all stages', async () => {
-      const response = await privateApi.get(url);
-      expect(response.status).toBe(200);
-      // 12 rows in prisma/seed.ts
-      expect(response.data.stages).toHaveLength(12);
-    })  
-  })
+afterEach(() => {
+  jest.useRealTimers();
+});
 
-  describe('GET one stage API: /api/stages/:id', () => { 
+describe("Stages - API: /api/stages", () => {
+  describe("POST", () => {
+    it("should post a full stage", async () => {
+      const response = await POST(postRequest(baseStage));
+      const body = await response.json();
 
-    beforeAll(async () => {
-      await deletePostedStage(toPostStageId);
-      await resetStage(testStage);
-    })
-
-    it('should get one stage', async () => {
-      const before = Date.now();
-
-      const response = await privateApi.get(oneStageUrl + testStage.id);
-      expect(response.status).toBe(200);
-      const gotStage = response.data.stage;
-
-      const after = Date.now();
-      const twoMinutes = 2 * 60 * 1000;
-
-      const stageSetAtMs = new Date(gotStage.stage_set_at).getTime();      
-
-      expect(gotStage.id).toBe(testStage.id);
-      expect(gotStage.squad_id).toBe(testStage.squad_id);
-      expect(gotStage.stage).toBe(testStage.stage);
-
-      expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
-
-      expect(gotStage.scores_started_at).toBe(testStage.scores_started_at);
-      expect(gotStage.stage_override_enabled).toBe(testStage.stage_override_enabled);
-      expect(gotStage.stage_override_at).toBe(testStage.stage_override_at);
-      expect(        
-        gotStage.stage_override_reason === "" ||
-        gotStage.stage_override_reason === null
-      ).toBe(true);
-    })
-    it('should get one stage - Whole tmnt', async () => {       
-      const response = await privateApi.get(oneStageUrl + wholeTmntStage.id);
-      expect(response.status).toBe(200);
-      const gotStage = response.data.stage;
-      expect(gotStage.id).toBe(wholeTmntStage.id);
-      expect(gotStage.squad_id).toBe(wholeTmntStage.squad_id);
-      expect(gotStage.stage).toBe(wholeTmntStage.stage);
-      expect(gotStage.stage_set_at).toBe(wholeTmntStage.stage_set_at);
-      expect(gotStage.scores_started_at).toBe(wholeTmntStage.scores_started_at);
-      expect(gotStage.stage_override_enabled).toBe(wholeTmntStage.stage_override_enabled);
-      expect(gotStage.stage_override_at).toBe(wholeTmntStage.stage_override_at);
-      expect(        
-        gotStage.stage_override_reason === "" ||
-        gotStage.stage_override_reason === null
-      ).toBe(true);
-    })
-    it('should NOT get a stage by ID when ID is invalid', async () => {
-      try {
-        const response = await privateApi.get(oneStageUrl + 'test');
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT get a stage by ID when ID is valid, but not a stage ID', async () => {
-      try {
-        const response = await privateApi.get(oneStageUrl + toPostSquadId);
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT get a squad by ID when ID is not found', async () => {
-      try {
-        const response = await privateApi.get(oneStageUrl + notFoundStageId);        
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-
-    describe('get an edited stage API: /api/stages/stage/:id', () => {
-      
-      const editedStage: fullStageType = {
-        ...testStage,
-        stage: SquadStage.SCORES,
-        stage_set_at: dateStr,
-        scores_started_at: dateStr,
-        stage_override_enabled: true,
-        stage_override_at: dateStr,
-        stage_override_reason: "test reason"
-      }
-
-      beforeAll(async () => {
-        await deletePostedStage(toPostStageId);        
-        try {
-          const stageJSON = JSON.stringify(editedStage);
-          await privateApi.put(oneStageUrl + editedStage.id, stageJSON);
-        }
-        catch (err) {
-          if (err instanceof AxiosError) console.log(err.message);
-        }
-      })
-
-      afterAll(async () => {
-        await resetStage(testStage);
-      })
-
-      it('should get an edited stage', async () => {
-        const before = Date.now();
-
-        const response = await privateApi.get(oneStageUrl + editedStage.id);
-        expect(response.status).toBe(200);
-        const postedStage = response.data.stage;
-
-        const after = Date.now();
-        const twoMinutes = 2 * 60 * 1000;
-
-        const stageSetAtMs = new Date(postedStage.stage_set_at).getTime();      
-        const scoresSetAtMs = new Date(postedStage.scores_started_at).getTime();
-        const overrideSetAtMs = new Date(postedStage.stage_override_at!).getTime();
-
-        expect(postedStage.id).toBe(editedStage.id);
-        expect(postedStage.squad_id).toBe(editedStage.squad_id);
-        expect(postedStage.stage).toBe(editedStage.stage);
-
-        expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-        expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
-        expect(scoresSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-        expect(scoresSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
-        expect(overrideSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-        expect(overrideSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
-
-        expect(postedStage.stage_override_enabled).toBe(editedStage.stage_override_enabled);
-        expect(postedStage.stage_override_reason).toBe(editedStage.stage_override_reason);
-      })
-    })
-  })
-
-  describe('GET one stage from squad API: /api/stages/squad/:squadId', () => { 
-
-    beforeAll(async () => {
-      await deletePostedStage(toPostStageId);
-      await resetStage(testStage);
-    })
-
-    it('should get one stage', async () => {
-
-      const before = Date.now();
-
-      const response = await privateApi.get(squadUrl + testStage.squad_id);
-      expect(response.status).toBe(200);
-      const gotStage = response.data.stage;
-
-      const after = Date.now();
-      const twoMinutes = 2 * 60 * 1000;
-
-      const stageSetAtMs = new Date(gotStage.stage_set_at).getTime();      
-
-      expect(gotStage.id).toBe(testStage.id);
-      expect(gotStage.squad_id).toBe(testStage.squad_id);
-      expect(gotStage.stage).toBe(testStage.stage);
-
-      expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);        
-
-      expect(gotStage.scores_started_at).toBe(testStage.scores_started_at);
-      expect(gotStage.stage_override_enabled).toBe(testStage.stage_override_enabled);
-      expect(gotStage.stage_override_at).toBe(testStage.stage_override_at);
-      expect(        
-        gotStage.stage_override_reason === "" ||
-        gotStage.stage_override_reason === null
-      ).toBe(true);
-    })
-    it('should get one stage - Whole tmnt', async () => {       
-      const response = await privateApi.get(squadUrl + wholeTmntStage.squad_id);
-      expect(response.status).toBe(200);
-      const gotStage = response.data.stage;
-      expect(gotStage.id).toBe(wholeTmntStage.id);
-      expect(gotStage.squad_id).toBe(wholeTmntStage.squad_id);
-      expect(gotStage.stage).toBe(wholeTmntStage.stage);
-      expect(gotStage.stage_set_at).toBe(wholeTmntStage.stage_set_at);
-      expect(gotStage.scores_started_at).toBe(wholeTmntStage.scores_started_at);
-      expect(gotStage.stage_override_enabled).toBe(wholeTmntStage.stage_override_enabled);
-      expect(gotStage.stage_override_at).toBe(wholeTmntStage.stage_override_at);
-      expect(        
-        gotStage.stage_override_reason === "" ||
-        gotStage.stage_override_reason === null
-      ).toBe(true);
-    })
-    it('should NOT get a stage by ID when ID is invalid', async () => {
-      try {
-        const response = await privateApi.get(squadUrl + 'test');
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT get a stage by ID when ID is valid, but not a squad ID', async () => {
-      try {
-        const response = await privateApi.get(squadUrl + toPostStageId);
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT get a squad by ID when ID is not found', async () => {
-      try {
-        const response = await privateApi.get(squadUrl + notFoundSquadId);        
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-
-    describe('get an edited stage API: /api/stages/squad/:sqiadId', () => {
-
-      const editedStage: fullStageType = {
-        ...testStage,
-        stage: SquadStage.SCORES,
-        stage_set_at: dateStr,
-        scores_started_at: dateStr,
-        stage_override_enabled: true,
-        stage_override_at: dateStr,
-        stage_override_reason: "test reason"
-      }
-
-      beforeAll(async () => {
-        await deletePostedStage(toPostStageId);        
-        try {
-          const stageJSON = JSON.stringify(editedStage);
-          await privateApi.put(oneStageUrl + editedStage.id, stageJSON);
-        }
-        catch (err) {
-          if (err instanceof AxiosError) console.log(err.message);
-        }
-      })
-
-      afterAll(async () => {
-        await resetStage(testStage);
-      })
-
-      it('should get an edited stage', async () => {
-        const before = Date.now();
-
-        const response = await privateApi.get(squadUrl + editedStage.squad_id);
-
-        expect(response.status).toBe(200);
-        const postedStage = response.data.stage;
-
-        const after = Date.now();
-        const twoMinutes = 2 * 60 * 1000;
-
-        const stageSetAtMs = new Date(postedStage.stage_set_at).getTime();      
-        const scoresSetAtMs = new Date(postedStage.scores_started_at).getTime();
-        const overrideSetAtMs = new Date(postedStage.stage_override_at!).getTime();
-
-        expect(postedStage.id).toBe(editedStage.id);
-        expect(postedStage.squad_id).toBe(editedStage.squad_id);
-        expect(postedStage.stage).toBe(editedStage.stage);
-
-        expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-        expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);        
-        expect(scoresSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-        expect(scoresSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
-        expect(overrideSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-        expect(overrideSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
-                
-        expect(postedStage.stage_override_enabled).toBe(editedStage.stage_override_enabled);        
-        expect(postedStage.stage_override_reason).toBe(editedStage.stage_override_reason);
-      })
-    })
-
-  })
-
-  describe('POST API: /api/stages', () => {
-
-    let didPost: boolean = false;
-    const aDateStr = "2022-01-01T00:00:00.000Z";
-    
-    beforeAll(async () => {
-      await deleteSquad(mockSquadsToPost[0].id); // also deletes posted mock stage      
-      await postSquad(mockSquadsToPost[0]);
-    })
-
-    beforeEach(async () => {
-      didPost = false;
-    })
-
-    afterEach(async () => {
-      if (didPost) await deletePostedStage(mockStageToPost.id);
-    })
-
-    afterAll(async () => {
-      await deleteSquad(mockSquadsToPost[0].id); // also deletes posted mock stage      
-    })
-
-    it('should post a full stage', async () => {
-      const before = Date.now();
-      const response = await privateApi.post(url, JSON.stringify(mockStageToPost));
       expect(response.status).toBe(201);
-      didPost = true;
-      const postedStage = response.data.stage;
-      
-      const after = Date.now();
-      const twoMinutes = 2 * 60 * 1000;
-      const stageSetAtMs = new Date(postedStage.stage_set_at).getTime();      
-      
-      expect(postedStage.id).toBe(mockStageToPost.id);
-      expect(postedStage.squad_id).toBe(mockStageToPost.squad_id);
-      expect(postedStage.stage).toBe(mockStageToPost.stage);
-      
-      expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
+      expect(prismaMock.stage.create).toHaveBeenCalledTimes(1);
 
-      // expect(postedStage.stage_set_at).toBe(mockStageToPost.stage_set_at.toISOString());
-      expect(postedStage.scores_started_at).toBe(mockStageToPost.scores_started_at);
-      expect(postedStage.stage_override_enabled).toBe(mockStageToPost.stage_override_enabled);
-      expect(postedStage.stage_override_at).toBe(mockStageToPost.stage_override_at);
-      expect(postedStage.stage_override_reason).toBe(mockStageToPost.stage_override_reason);
-    })
-    it('should post a full stage - all fields', async () => {
-      const before = Date.now();
+      const sent = sentData();
+      expect(sent.id).toBe(baseStage.id);
+      expect(sent.squad_id).toBe(baseStage.squad_id);
+      expect(sent.stage).toBe(SquadStage.DEFINE);
+      expect(toIso(sent.stage_set_at)).toBe(fixedNowStr);
+      expect(sent.scores_started_at).toBeNull();
+      expect(sent.stage_override_enabled).toBe(false);
+      expect(sent.stage_override_at).toBeNull();
+
+      expect(body.stage.id).toBe(baseStage.id);
+      expect(body.stage.squad_id).toBe(baseStage.squad_id);
+      expect(body.stage.stage).toBe(SquadStage.DEFINE);
+      expect(body.stage.stage_set_at).toBe(fixedNowStr);
+      expect(body.stage.scores_started_at).toBeNull();
+      expect(body.stage.stage_override_enabled).toBe(false);
+      expect(body.stage.stage_override_at).toBeNull();
+    });
+
+    it("should post a full stage - all fields", async () => {
       const allStageFields: fullStageType = {
-        ...mockStageToPost,
+        ...baseStage,
         stage: SquadStage.SCORES,
         stage_override_enabled: true,
-        stage_override_reason: "test reason"
-      }
-      const stageJSON = JSON.stringify(allStageFields);
-      const response = await privateApi.post(url, stageJSON);
+        stage_override_reason: "test reason",
+      };
+
+      const response = await POST(postRequest(allStageFields));
+      const body = await response.json();
+
       expect(response.status).toBe(201);
-      didPost = true;
-      const postedStage = response.data.stage;
-      
-      const after = Date.now();
-      const twoMinutes = 2 * 60 * 1000;
-      const stageSetAtMs = new Date(allStageFields.stage_set_at).getTime(); 
-      const scoresStartedAtMs = new Date(postedStage.scores_started_at as Date).getTime();
-      const stageOverrideAtMs = new Date(postedStage.stage_override_at as Date).getTime();
-      
-      expect(postedStage.id).toBe(allStageFields.id);
-      expect(postedStage.squad_id).toBe(allStageFields.squad_id);
-      expect(postedStage.stage).toBe(allStageFields.stage);
-      
-      expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
-      expect(scoresStartedAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(scoresStartedAtMs).toBeLessThanOrEqual(after + twoMinutes);
-      
-      expect(postedStage.stage_override_enabled).toBe(allStageFields.stage_override_enabled);
+      const sent = sentData();
+      expect(sent.id).toBe(allStageFields.id);
+      expect(sent.squad_id).toBe(allStageFields.squad_id);
+      expect(sent.stage).toBe(SquadStage.SCORES);
+      expect(toIso(sent.stage_set_at)).toBe(fixedNowStr);
+      expect(toIso(sent.scores_started_at)).toBe(fixedNowStr);
+      expect(sent.stage_override_enabled).toBe(true);
+      expect(toIso(sent.stage_override_at)).toBe(fixedNowStr);
+      expect(sent.stage_override_reason).toBe("test reason");
 
-      expect(stageOverrideAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(stageOverrideAtMs).toBeLessThanOrEqual(after + twoMinutes);
+      expect(body.stage.stage).toBe(SquadStage.SCORES);
+      expect(body.stage.stage_set_at).toBe(fixedNowStr);
+      expect(body.stage.scores_started_at).toBe(fixedNowStr);
+      expect(body.stage.stage_override_enabled).toBe(true);
+      expect(body.stage.stage_override_at).toBe(fixedNowStr);
+      expect(body.stage.stage_override_reason).toBe("test reason");
+    });
 
-      expect(postedStage.stage_override_reason).toBe(allStageFields.stage_override_reason);
-    })   
-    it('should post a full stage - all fields and ignore dates passed in. system sets dates', async () => {
-      const before = new Date();      
+    // runs the same test once for each stage that is not SCORES
+    it.each([SquadStage.DEFINE, SquadStage.ENTRIES, SquadStage.FINISHED])(
+      "should set stage_set_at, but not scores_started_at, when stage is %s",
+      async (stage) => {
+        const response = await POST(postRequest({ ...baseStage, stage }));
+
+        expect(response.status).toBe(201);
+        const sent = sentData();
+        expect(sent.stage).toBe(stage);
+        expect(toIso(sent.stage_set_at)).toBe(fixedNowStr);
+        expect(sent.scores_started_at).toBeNull();
+      }
+    );
+
+    it("should ignore dates passed in - system sets dates", async () => {
       const ignoreDatesStage: fullStageType = {
-        ...mockStageToPost,
+        ...baseStage,
         stage: SquadStage.SCORES,
         stage_set_at: aDateStr,
         scores_started_at: aDateStr,
         stage_override_enabled: true,
         stage_override_at: aDateStr,
-        stage_override_reason: 'test reason',
-      };
-      const response = await privateApi.post(url, JSON.stringify(ignoreDatesStage));
-      expect(response.status).toBe(201);
-      didPost = true;
-      const postedStage = response.data.stage;
-
-      const after = new Date();
-      const twoMinutes = 2 * 60 * 1000;
-      const stageSetAtMs = new Date(postedStage.stage_set_at).getTime();      
-      const scoresStartedAtMs = new Date(postedStage.scores_started_at as Date).getTime();
-      const stageOverrideAtMs = new Date(postedStage.stage_override_at as Date).getTime();
-
-      expect(postedStage.id).toBe(ignoreDatesStage.id);
-      expect(postedStage.squad_id).toBe(ignoreDatesStage.squad_id);
-      expect(postedStage.stage).toBe(ignoreDatesStage.stage);
-
-      expect(stageSetAtMs).toBeGreaterThanOrEqual(before.getTime() - twoMinutes);
-      expect(stageSetAtMs).toBeLessThanOrEqual(after.getTime() + twoMinutes);
-
-      expect(scoresStartedAtMs).toBeGreaterThanOrEqual(before.getTime() - twoMinutes);
-      expect(scoresStartedAtMs).toBeLessThanOrEqual(after.getTime() + twoMinutes);
-
-      expect(postedStage.stage_override_enabled).toBe(ignoreDatesStage.stage_override_enabled);
-
-      expect(stageOverrideAtMs).toBeGreaterThanOrEqual(before.getTime() - twoMinutes);
-      expect(stageOverrideAtMs).toBeLessThanOrEqual(after.getTime() + twoMinutes);
-
-      expect(postedStage.stage_override_reason).toBe(ignoreDatesStage.stage_override_reason);
-    });
-    it('should post a full stage with all values sanitized', async () => {
-      const before = new Date();      
-      const toSanitzeStage: fullStageType = {
-        ...mockStageToPost,
-        stage: SquadStage.SCORES,
-        stage_set_at: aDateStr,
-        scores_started_at: aDateStr,
-        stage_override_enabled: true,
-        stage_override_at: aDateStr,
-        stage_override_reason: '     test  reason    ',
-      };
-      const response = await privateApi.post(url,JSON.stringify(toSanitzeStage));
-      expect(response.status).toBe(201);
-      didPost = true;
-      const postedStage = response.data.stage;
-
-      const after = new Date();
-      const twoMinutes = 2 * 60 * 1000;
-      const stageSetAtMs = new Date(postedStage.stage_set_at).getTime();      
-      const scoresStartedAtMs = new Date(postedStage.scores_started_at as Date).getTime();
-      const stageOverrideAtMs = new Date(postedStage.stage_override_at as Date).getTime();
-
-      expect(postedStage.id).toBe(toSanitzeStage.id);
-      expect(postedStage.squad_id).toBe(toSanitzeStage.squad_id);
-      expect(postedStage.stage).toBe(toSanitzeStage.stage);
-
-      expect(stageSetAtMs).toBeGreaterThanOrEqual(before.getTime() - twoMinutes);
-      expect(stageSetAtMs).toBeLessThanOrEqual(after.getTime() + twoMinutes);
-
-      expect(scoresStartedAtMs).toBeGreaterThanOrEqual(before.getTime() - twoMinutes);
-      expect(scoresStartedAtMs).toBeLessThanOrEqual(after.getTime() + twoMinutes);
-
-      expect(postedStage.stage_override_enabled).toBe(toSanitzeStage.stage_override_enabled);
-
-      expect(stageOverrideAtMs).toBeGreaterThanOrEqual(before.getTime() - twoMinutes);
-      expect(stageOverrideAtMs).toBeLessThanOrEqual(after.getTime() + twoMinutes);
-
-      expect(postedStage.stage_override_reason).toBe("test reason");
-    });
-    it('should NOT post a full stage when id is missing', async () => { 
-      const invalidStage: fullStageType = {
-        ...mockStageToPost,
-        id: null as any,
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.post(url, stageJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT post a full stage when id is blank', async () => { 
-      const invalidStage: fullStageType = {
-        ...mockStageToPost,
-        id: '',
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.post(url, stageJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT post a full stage when id is valid, but not a stage id', async () => { 
-      const invalidStage: fullStageType = {
-        ...mockStageToPost,
-        id: toPostSquadId,
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.post(url, stageJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT post a full stage when squad_id is missing', async () => { 
-      const invalidStage: fullStageType = {
-        ...mockStageToPost,
-        squad_id: null as any,
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.post(url, stageJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT post a full stage when squad_id is blank', async () => { 
-      const invalidStage: fullStageType = {
-        ...mockStageToPost,
-        squad_id: '',
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.post(url, stageJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT post a full stage when squad_id is valid, but not a squad id', async () => { 
-      const invalidStage: fullStageType = {
-        ...mockStageToPost,
-        squad_id: toPostStageId,
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.post(url, stageJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT post a full stage when squad_id is a valid squad id, but squad is not in database', async () => { 
-      const invalidStage: fullStageType = {
-        ...mockStageToPost,
-        squad_id: notFoundSquadId,
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.post(url, stageJSON);
-        expect(response.status).toBe(409);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(409);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT post a full stage when stage is missing', async () => { 
-      const invalidStage: fullStageType = {
-        ...mockStageToPost,
-        stage: null as any,
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.post(url, stageJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT post a full stage when stage is invalid', async () => { 
-      const invalidStage: fullStageType = {
-        ...mockStageToPost,
-        stage: 'test' as any,
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.post(url, stageJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT post a full stage when stage_override_enabled is missing', async () => { 
-      const invalidStage: fullStageType = {
-        ...mockStageToPost,
-        stage_override_enabled: null as any,
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.post(url, stageJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT post a full stage when stage_override_enabled is invalid', async () => { 
-      const invalidStage: fullStageType = {
-        ...mockStageToPost,
-        stage_override_enabled: 'testing' as any,
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.post(url, stageJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT post a full stage when stage_override_enabled = true and stage_override_reason is blank', async () => { 
-      const invalidStage: fullStageType = {
-        ...mockStageToPost,
-        stage_override_enabled: true,
-        stage_override_at: new Date().toDateString(),
-        stage_override_reason: '',
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.post(url, stageJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT post a full stage when stage_override_enabled = true and stage_override_reason is sanitzied to blank', async () => { 
-      const invalidStage: fullStageType = {
-        ...mockStageToPost,
-        stage_override_enabled: true,
-        stage_override_at: new Date().toDateString(),
-        stage_override_reason: '<script>test</script>',
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.post(url, stageJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT post a full stage when stage_override_enabled = true and stage_override_reason is invalid', async () => { 
-      const invalidStage: fullStageType = {
-        ...mockStageToPost,
-        stage_override_enabled: true,
-        stage_override_at: new Date().toISOString(),
-        stage_override_reason: 'a'.repeat(maxReasonLength + 1),
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.post(url, stageJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })    
-    it('should NOT post a full stage when stage_override_enabled = false and stage_override_reason has a value', async () => { 
-      const invalidStage: fullStageType = {
-        ...mockStageToPost,
-        stage_override_enabled: false,
-        stage_override_reason: 'test',
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.post(url, stageJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-  })
-
-  describe('PUT by ID - update - API: /api/stages/stage/:id', () => {
-
-    let didUpdate = false;
-
-    beforeAll(async () => {
-      await resetStage(testStage)
-    });
-
-    beforeEach(() => {
-      didUpdate = false;
-    })
-
-    afterEach(async () => {
-      if (didUpdate) {
-        await resetStage(testStage)
-      }
-    })
-
-    afterAll(async () => {      
-      await resetStage(testStage)      
-    })
-
-    it('should update a stage - Just stage', async () => {
-      const before = Date.now();
-      const stageToPut: fullStageType = {
-        ...testStage,
-        stage: SquadStage.ENTRIES,        
-      }
-      const response = await privateApi.put(
-        oneStageUrl + stageToPut.id,
-        JSON.stringify(stageToPut),
-      );
-      expect(response.status).toBe(200);
-      const updatedStage = response.data.stage;
-      didUpdate = true;
-
-      const after = Date.now();
-      const twoMinutes = 2 * 60 * 1000;
-
-      const stageSetAtMs = new Date(updatedStage.stage_set_at).getTime();
-
-      expect(updatedStage.id).toBe(stageToPut.id);
-      expect(updatedStage.squad_id).toBe(stageToPut.squad_id);
-      expect(updatedStage.stage).toBe(stageToPut.stage);
-
-      expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
-      
-      expect(updatedStage.scores_started_at).toBe(null);
-      expect(updatedStage.stage_override_enabled).toBe(stageToPut.stage_override_enabled);
-      expect(updatedStage.stage_override_at).toBe(null);
-      expect(updatedStage.stage_override_reason).toBe(stageToPut.stage_override_reason);
-    })
-    it('should update a stage - Stage = "SCORES"', async () => {
-      const before = Date.now();
-      const stageToPut: fullStageType = {
-        ...testStage,
-        stage: SquadStage.SCORES,
-      }
-      const response = await privateApi.put(
-        oneStageUrl + stageToPut.id, 
-        JSON.stringify(stageToPut),        
-      );
-      expect(response.status).toBe(200);
-      const updatedStage = response.data.stage;
-      didUpdate = true;
-
-      const after = Date.now();
-      const twoMinutes = 2 * 60 * 1000;
-
-      const stageSetAtMs = new Date(updatedStage.stage_set_at).getTime();
-      const scoresStartedAtMs = new Date(updatedStage.scores_started_at as Date).getTime();
-
-      expect(updatedStage.id).toBe(stageToPut.id);
-      expect(updatedStage.squad_id).toBe(stageToPut.squad_id);
-      expect(updatedStage.stage).toBe(stageToPut.stage);
-
-      expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
-      expect(scoresStartedAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(scoresStartedAtMs).toBeLessThanOrEqual(after + twoMinutes);
-
-      expect(updatedStage.stage_override_enabled).toBe(stageToPut.stage_override_enabled);
-      expect(updatedStage.stage_override_at).toBe(null);
-      expect(updatedStage.stage_override_reason).toBe(stageToPut.stage_override_reason);
-    })
-    it('should update a stage - Just Override Enabled', async () => {
-      const before = Date.now();
-      const stageToPut: fullStageType = {
-        ...testStage,
-        stage_override_enabled: true,                
         stage_override_reason: "test reason",
-      }
-      const response = await privateApi.put(
-        oneStageUrl + stageToPut.id,
-        JSON.stringify(stageToPut),
-      );
-      expect(response.status).toBe(200);
-      const updatedStage = response.data.stage;
-      didUpdate = true;
-
-      const after = Date.now();
-      const twoMinutes = 2 * 60 * 1000;
-
-      const stageSetAtMs = new Date(updatedStage.stage_set_at).getTime();
-      const stageOverrideAtMs = new Date(updatedStage.stage_override_at).getTime();      
-
-      expect(updatedStage.id).toBe(stageToPut.id);
-      expect(updatedStage.squad_id).toBe(stageToPut.squad_id);
-      expect(updatedStage.stage).toBe(stageToPut.stage);
-
-      expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);      
-
-      expect(updatedStage.scores_started_at).toBe(null);
-      expect(updatedStage.stage_override_enabled).toBe(stageToPut.stage_override_enabled);
-
-      expect(stageOverrideAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(stageOverrideAtMs).toBeLessThanOrEqual(after + twoMinutes);
-      
-      expect(updatedStage.stage_override_reason).toBe(stageToPut.stage_override_reason);
-    })
-    it('should update a stage - full stage, and ignore date fields', async () => {
-      const before = Date.now();
-      const stageToPut: fullStageType = {
-        ...testStage,
-        stage: SquadStage.SCORES,
-        stage_override_enabled: true,                
-        stage_override_reason: "test reason",
-      }
-      const response = await privateApi.put(
-        oneStageUrl + stageToPut.id,
-        JSON.stringify(stageToPut),
-      );
-      expect(response.status).toBe(200);
-      const updatedStage = response.data.stage;
-      didUpdate = true;
-
-      const after = Date.now();
-      const twoMinutes = 2 * 60 * 1000;
-
-      const stageSetAtMs = new Date(updatedStage.stage_set_at).getTime();
-      const scoresStartedAtMs = new Date(updatedStage.scores_started_at as Date).getTime();
-      const stageOverrideAtMs = new Date(updatedStage.stage_override_at).getTime();      
-
-      expect(updatedStage.id).toBe(stageToPut.id);
-      expect(updatedStage.squad_id).toBe(stageToPut.squad_id);
-      expect(updatedStage.stage).toBe(stageToPut.stage);
-
-      expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
-      expect(scoresStartedAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(scoresStartedAtMs).toBeLessThanOrEqual(after + twoMinutes);
-      
-      expect(updatedStage.stage_override_enabled).toBe(stageToPut.stage_override_enabled);
-
-      expect(stageOverrideAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(stageOverrideAtMs).toBeLessThanOrEqual(after + twoMinutes);
-      
-      expect(updatedStage.stage_override_reason).toBe(stageToPut.stage_override_reason);
-    })
-    it('should put a full stage with all values sanitized', async () => {
-      const before = Date.now();
-      const toSanitzeStage: fullStageType = {
-        ...testStage,
-        stage: SquadStage.SCORES,
-        stage_override_enabled: true,
-        stage_override_reason: '   test  reason     ',
       };
-      const response = await privateApi.put(
-        oneStageUrl + toSanitzeStage.id,
-        JSON.stringify(toSanitzeStage),        
-      );
-      expect(response.status).toBe(200);
-      didUpdate = true;
-      const postedStage = response.data.stage;
 
-      const after = Date.now();
-      const twoMinutes = 2 * 60 * 1000;
+      const response = await POST(postRequest(ignoreDatesStage));
+      const body = await response.json();
 
-      const stageSetAtMs = new Date(postedStage.stage_set_at).getTime();
-      const scoresStartedAtMs = new Date(postedStage.scores_started_at as Date).getTime();
-      const stageOverrideAtMs = new Date(postedStage.stage_override_at as Date).getTime();
+      expect(response.status).toBe(201);
+      const sent = sentData();
+      expect(toIso(sent.stage_set_at)).toBe(fixedNowStr);
+      expect(toIso(sent.scores_started_at)).toBe(fixedNowStr);
+      expect(toIso(sent.stage_override_at)).toBe(fixedNowStr);
 
-      expect(postedStage.id).toBe(toSanitzeStage.id);
-      expect(postedStage.squad_id).toBe(toSanitzeStage.squad_id);
-      expect(postedStage.stage).toBe(toSanitzeStage.stage);
-
-      expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
-      expect(scoresStartedAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(scoresStartedAtMs).toBeLessThanOrEqual(after + twoMinutes);
-    
-      expect(postedStage.stage_override_enabled).toBe(toSanitzeStage.stage_override_enabled);
-
-      expect(stageOverrideAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(stageOverrideAtMs).toBeLessThanOrEqual(after + twoMinutes);
-
-      expect(postedStage.stage_override_reason).toBe("test reason");
+      expect(body.stage.stage_set_at).toBe(fixedNowStr);
+      expect(body.stage.scores_started_at).toBe(fixedNowStr);
+      expect(body.stage.stage_override_at).toBe(fixedNowStr);
     });
 
-    it('should NOT put a full stage when id is missing', async () => { 
-      const invalidStage: fullStageType = {
-        ...testStage,
-        id: null as any,
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.put(
-          oneStageUrl + invalidStage.id,
-          stageJSON,          
-        );
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT put a full stage when id is blank', async () => { 
-      const invalidStage: fullStageType = {
-        ...testStage,
-        id: '',
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.put(
-          oneStageUrl + invalidStage.id,
-          stageJSON,          
-        );
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT put a full stage when id is valid, but not a stage id', async () => { 
-      const invalidStage: fullStageType = {
-        ...testStage,
-        id: testStage.squad_id,
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.put(
-          oneStageUrl + invalidStage.id,
-          stageJSON,          
-        );
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT put a full stage when id is not found', async () => { 
-      const invalidStage: fullStageType = {
-        ...testStage,
-        id: notFoundStageId,
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.put(
-          oneStageUrl + invalidStage.id,
-          stageJSON,
-        );
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT put a full stage when squad_id is missing', async () => { 
-      const invalidStage: fullStageType = {
-        ...testStage,
-        squad_id: null as any,
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.put(
-          oneStageUrl + invalidStage.id,
-          stageJSON,
-        );
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT put a full stage when squad_id is blank', async () => { 
-      const invalidStage: fullStageType = {
-        ...testStage,
-        squad_id: '',
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.put(
-          oneStageUrl + invalidStage.id,
-          stageJSON,
-        );
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT put a full stage when squad_id is valid, but not a squad id', async () => { 
-      const invalidStage: fullStageType = {
-        ...testStage,
-        squad_id: testStage.id,
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.put(
-          oneStageUrl + invalidStage.id,
-          stageJSON,
-        );
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT put a full stage when stage is missing', async () => { 
-      const invalidStage: fullStageType = {
-        ...testStage,
-        stage: null as any,
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.put(
-          oneStageUrl + invalidStage.id,
-          stageJSON,
-        );
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT put a full stage when stage is invalid', async () => { 
-      const invalidStage: fullStageType = {
-        ...testStage,
-        stage: 'test' as any,
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.put(
-          oneStageUrl + invalidStage.id,
-          stageJSON,
-        );
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT put a full stage when stage_override_enabled is missing', async () => { 
-      const invalidStage: fullStageType = {
-        ...testStage,
-        stage_override_enabled: null as any,
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.put(
-          oneStageUrl + invalidStage.id,
-          stageJSON,
-        );
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT put a full stage when stage_override_enabled is invalid', async () => { 
-      const invalidStage: fullStageType = {
-        ...testStage,
-        stage_override_enabled: 'test' as any,
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.put(
-          oneStageUrl + invalidStage.id,
-          stageJSON,
-        );
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT put a full stage when stage_override_enabled = true and stage_override_reason is blank', async () => { 
-      const invalidStage: fullStageType = {
-        ...testStage,
-        stage_override_enabled: true,
-        stage_override_at: new Date().toISOString(),
-        stage_override_reason: '',
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.put(
-          oneStageUrl + invalidStage.id,
-          stageJSON,
-        );
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT put a full stage when stage_override_enabled = true and stage_override_reason is sanitized to blank', async () => { 
-      const invalidStage: fullStageType = {
-        ...testStage,
-        stage_override_enabled: true,
-        stage_override_at: new Date().toISOString(),
-        stage_override_reason: '<script>alert("test")</script>',
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.put(
-          oneStageUrl + invalidStage.id,
-          stageJSON,
-        );
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
+    it("should clear passed in scores_started_at and stage_override_at when not SCORES and no override", async () => {
+      const response = await POST(
+        postRequest({
+          ...baseStage,
+          stage_set_at: aDateStr,
+          scores_started_at: aDateStr,
+          stage_override_at: aDateStr,
+        })
+      );
 
-  })
-
-  describe('PATCH by ID - API: /api/stages/stage/:id', () => { 
-
-    const toPatchId = "stg_dd11c8a65dee4e5db60ee5353a7f0b26";
-
-    const toPatch = {
-      ...initFullStage,
-      id: "stg_dd11c8a65dee4e5db60ee5353a7f0b26",
-      squad_id: "sqd_ae4266e1174642c7a1bcec47a50f275f",
-      stage: "DEFINE",
-      stage_set_at: new Date("2024-12-01"),
-      scores_started_at: null,
-      stage_override_enabled: false,
-      stage_override_at: null,
-      stage_override_reason: null,
-    }
-
-    const resetPatched = async () => {
-      // make sure toPatch is reset in database
-      const stageJSON = JSON.stringify(toPatch);
-      await privateApi.put(oneStageUrl + toPatch.id, stageJSON);      
-    }
-
-    let didUpdate = false;
-
-    beforeAll(async () => {
-      await resetStage(testStage)
+      expect(response.status).toBe(201);
+      const sent = sentData();
+      expect(toIso(sent.stage_set_at)).toBe(fixedNowStr);
+      expect(sent.scores_started_at).toBeNull();
+      expect(sent.stage_override_at).toBeNull();
     });
 
-    beforeEach(() => {
-      didUpdate = false;
-    })
-
-    afterEach(async () => {
-      if (didUpdate) {
-        await resetStage(testStage)
-      }
-    })
-
-    afterAll(async () => {      
-      await resetStage(testStage)      
-    })
-
-    it('should patch a stage - Just stage', async () => {
-      const before = Date.now();
-      const stageToPatch = {
-        id: testStage.id,
-        stage: SquadStage.ENTRIES,        
-      }
-      const response = await privateApi.patch(
-        oneStageUrl + stageToPatch.id,
-        JSON.stringify(stageToPatch)
-      );
-      expect(response.status).toBe(200);
-      const patchedStage = response.data.stage;
-      didUpdate = true;
-
-      const after = Date.now()
-      const twoMinutes = 2 * 60 * 1000;
-      const stageSetAtMs = new Date(patchedStage.stage_set_at).getTime();
-      
-      expect(patchedStage.id).toBe(stageToPatch.id);
-      expect(patchedStage.squad_id).toBe(testStage.squad_id);
-      expect(patchedStage.stage).toBe(stageToPatch.stage);
-
-      expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
-
-      expect(patchedStage.scores_started_at).toBe(testStage.scores_started_at);
-      expect(patchedStage.stage_override_enabled).toBe(testStage.stage_override_enabled);
-      expect(patchedStage.stage_override_at).toBe(testStage.stage_override_at);
-      expect(patchedStage.stage_override_reason).toBe(testStage.stage_override_reason);
-    })
-    it('should patch a stage - Just stage when .stage = "SCORES"', async () => {
-      const before = Date.now();
-      const stageToPatch = {
-        id: testStage.id,
+    it("should post a full stage with all values sanitized", async () => {
+      const toSanitizeStage: fullStageType = {
+        ...baseStage,
         stage: SquadStage.SCORES,
-      }
-      const response = await privateApi.patch(
-        oneStageUrl + stageToPatch.id,
-        JSON.stringify(stageToPatch)
+        stage_override_enabled: true,
+        stage_override_reason: "     test  reason    ",
+      };
+
+      const response = await POST(postRequest(toSanitizeStage));
+      const body = await response.json();
+
+      expect(response.status).toBe(201);
+      // the real check: the route sent SANITIZED data to the database
+      expect(sentData().stage_override_reason).toBe("test reason");
+      expect(body.stage.stage_override_reason).toBe("test reason");
+    });
+
+    // runs the same test once for each invalid value
+    it.each<[string, Partial<Record<keyof fullStageType, unknown>>]>([
+      ["id is missing", { id: null }],
+      ["id is blank", { id: "" }],
+      ["id is valid, but not a stage id", { id: toPostSquadId }],
+      ["squad_id is missing", { squad_id: null }],
+      ["squad_id is blank", { squad_id: "" }],
+      ["squad_id is valid, but not a squad id", { squad_id: toPostStageId }],
+      ["stage is missing", { stage: null }],
+      ["stage is invalid", { stage: "test" }],
+      ["stage_override_enabled is missing", { stage_override_enabled: null }],
+      ["stage_override_enabled is invalid", { stage_override_enabled: "testing" }],
+      [
+        "stage_override_enabled = true and stage_override_reason is blank",
+        { stage_override_enabled: true, stage_override_reason: "" },
+      ],
+      [
+        "stage_override_enabled = true and stage_override_reason is sanitized to blank",
+        { stage_override_enabled: true, stage_override_reason: "<script>test</script>" },
+      ],
+      [
+        "stage_override_enabled = true and stage_override_reason is too long",
+        {
+          stage_override_enabled: true,
+          stage_override_reason: "a".repeat(maxReasonLength + 1),
+        },
+      ],
+      [
+        "stage_override_enabled = false and stage_override_reason has a value",
+        { stage_override_enabled: false, stage_override_reason: "test" },
+      ],
+    ])("should NOT post a full stage when %s", async (_desc, changes) => {
+      const response = await POST(postRequest({ ...baseStage, ...changes }));
+      const body = await response.json();
+
+      expect(response.status).toBe(422);
+      expect(body.error).toMatch(/^(missing data|invalid data)$/);
+      expect(prismaMock.stage.create).not.toHaveBeenCalled();
+    });
+
+    it("should return 422 'missing data' when id is blank", async () => {
+      const response = await POST(postRequest({ ...baseStage, id: "" }));
+      const body = await response.json();
+
+      expect(response.status).toBe(422);
+      expect(body).toEqual({ error: "missing data" });
+    });
+
+    it("should return 422 'invalid data' when stage is invalid", async () => {
+      const response = await POST(postRequest({ ...baseStage, stage: "test" }));
+      const body = await response.json();
+
+      expect(response.status).toBe(422);
+      expect(body).toEqual({ error: "invalid data" });
+    });
+
+    it("should return 422 'missing data' when stage is null", async () => {
+      const response = await POST(postRequest({ ...baseStage, stage: null }));
+      const body = await response.json();
+
+      expect(response.status).toBe(422);
+      expect(body).toEqual({ error: "missing data" });
+    });
+
+    it("should return 422 'missing data' when stage is not sent", async () => {
+      // JSON.stringify drops undefined, so stage is absent from the body
+      const response = await POST(postRequest({ ...baseStage, stage: undefined }));
+      const body = await response.json();
+
+      expect(response.status).toBe(422);
+      expect(body).toEqual({ error: "missing data" });
+    });
+
+    it("should return 422 when stageDataForPrisma returns null", async () => {
+      mockStageDataForPrisma.mockReturnValueOnce(null as never);
+
+      const response = await POST(postRequest(baseStage));
+      const body = await response.json();
+
+      expect(response.status).toBe(422);
+      expect(body).toEqual({ error: "invalid data" });
+      expect(prismaMock.stage.create).not.toHaveBeenCalled();
+    });
+
+    it("should return 409 when the squad is not in the database", async () => {
+      // foreign key constraint; standardCatchReturn only checks err.code
+      prismaMock.stage.create.mockRejectedValue({ code: "P2003" });
+
+      const response = await POST(postRequest(baseStage));
+
+      expect(response.status).toBe(409);
+    });
+
+    it("should return 409 when the stage id or squad_id already exists", async () => {
+      prismaMock.stage.create.mockRejectedValue({ code: "P2002" });
+
+      const response = await POST(postRequest(baseStage));
+
+      expect(response.status).toBe(409);
+    });
+
+    it("should return 500 when the database throws", async () => {
+      prismaMock.stage.create.mockRejectedValue(new Error("connection failed"));
+
+      const response = await POST(postRequest(baseStage));
+      const body = await response.json();
+
+      expect(response.status).toBe(500);
+      expect(body).toEqual({ message: "error posting stage - connection failed" });
+    });
+
+    it("should return 500 when the request body is not valid JSON", async () => {
+      const response = await POST(
+        new Request(url, {
+          method: "POST",
+          body: "not json",
+          headers: { "Content-Type": "application/json" },
+        })
       );
-      expect(response.status).toBe(200);
-      const patchedStage = response.data.stage;
-      didUpdate = true;
 
-      const after = Date.now()
-      const twoMinutes = 2 * 60 * 1000;
-      const stageSetAtMs = new Date(patchedStage.stage_set_at).getTime();      
-      
-      expect(patchedStage.id).toBe(stageToPatch.id);
-      expect(patchedStage.squad_id).toBe(testStage.squad_id);
-      expect(patchedStage.stage).toBe(stageToPatch.stage);
-
-      expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);      
-
-      expect(patchedStage.stage_override_enabled).toBe(testStage.stage_override_enabled);
-      expect(patchedStage.stage_override_at).toBe(testStage.stage_override_at);
-      expect(patchedStage.stage_override_reason).toBe(testStage.stage_override_reason);
-    })
-    
-    it('should patch a stage - just stage_override_enabled', async () => {
-      const before = Date.now();
-      const stageToPatch = {        
-        stage_override_enabled: true,
-        stage_override_reason: "test reason"
-      }
-      const response = await privateApi.patch(
-        oneStageUrl + toPatchId,
-        JSON.stringify(stageToPatch),
-      );
-      expect(response.status).toBe(200);
-      const patchedStage = response.data.stage;
-      didUpdate = true;
-
-      const after = Date.now()
-      const twoMinutes = 2 * 60 * 1000;
-      const stageOverrideAtMs = new Date(patchedStage.stage_override_at).getTime();
-
-      expect(patchedStage.squad_id).toBe(toPatch.squad_id);      
-      expect(patchedStage.stage_override_enabled).toBe(stageToPatch.stage_override_enabled);
-
-      expect(stageOverrideAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(stageOverrideAtMs).toBeLessThanOrEqual(after + twoMinutes);            
-
-      expect(patchedStage.stage_override_reason).toBe(stageToPatch.stage_override_reason);
-    })
-    it('should patch a full stage, and ignore dates', async () => {
-      const before = Date.now();
-      const stageToPatch = {        
-        stage: SquadStage.SCORES,        
-        stage_set_at: new Date("2022-01-01T00:00:00.000Z"),
-        scores_started_at: new Date("2022-01-01T00:00:00.000Z"),
-        stage_override_enabled: true,
-        stage_override_at: new Date("2022-01-01T00:00:00.000Z"),
-        stage_override_reason: "test reason 3"
-      }
-      const response = await privateApi.patch(
-        oneStageUrl + toPatchId,
-        JSON.stringify(stageToPatch),
-      );
-      expect(response.status).toBe(200);
-      const patchedStage = response.data.stage;
-      didUpdate = true;
-
-      const after = Date.now()
-      const twoMinutes = 2 * 60 * 1000;
-      const stageSetAtMs = new Date(patchedStage.stage_set_at).getTime();
-      const scoresStartedAtMs = new Date(patchedStage.scores_started_at).getTime();
-      const stageOverrideAtMs = new Date(patchedStage.stage_override_at).getTime();
-                  
-      expect(patchedStage.stage).toBe(stageToPatch.stage);
-
-      expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
-      expect(scoresStartedAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(scoresStartedAtMs).toBeLessThanOrEqual(after + twoMinutes);
-
-      expect(patchedStage.stage_override_enabled).toBe(stageToPatch.stage_override_enabled);
-
-      expect(stageOverrideAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(stageOverrideAtMs).toBeLessThanOrEqual(after + twoMinutes);            
-      
-      expect(patchedStage.stage_override_reason).toBe(stageToPatch.stage_override_reason);
-    })
-
-    it('should not patch stage by ID when just passing in ID', async () => {
-      try {
-        const invalidJSON = JSON.stringify({          
-          id: toPatchId,
-        })
-        const response = await privateApi.patch(oneStageUrl + toPatchId, invalidJSON)
-        expect(response.status).toBe(400);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(400);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not patch stage by ID when ID is invalid', async () => {
-      try {
-        const invalidJSON = JSON.stringify({          
-          sort_order: 1234,
-        })
-        const response = await privateApi.patch(oneStageUrl + 'test', invalidJSON)
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not patch stage by ID when ID is valid, but not found', async () => {
-      try {
-        const invalidJSON = JSON.stringify({          
-          stage: "DEFINE",
-        })
-        const response = await privateApi.patch(oneStageUrl + notFoundStageId, invalidJSON)
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not patch stage by ID when ID is valid, but not a stage id', async () => {
-      try {
-        const invalidJSON = JSON.stringify({          
-          stage: "DEFINE",
-        })
-        const response = await privateApi.patch(oneStageUrl + userId, invalidJSON)
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-
-    it('should not patch squad ID when patching stage by ID', async () => {
-      try {
-        const invalidJSON = JSON.stringify({          
-          squad_id: testStage.squad_id,
-        })
-        const response = await privateApi.patch(oneStageUrl + toPatchId, invalidJSON)
-        expect(response.status).toBe(400);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(400);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-
-    it('should NOT patch a full stage when stage_override_enabled is not included and stage_override_reason is valid', async () => { 
-      const invalidStage = {                          
-        stage_override_reason: 'test reason'
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.patch(
-          oneStageUrl + toPatchId,
-          stageJSON,
-        );
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a full stage when stage_override_enabled is invalid', async () => { 
-      const invalidStage = {        
-        stage_override_enabled: 'test',
-        stage_override_reason: 'test reason'
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.patch(
-          oneStageUrl + toPatchId,
-          stageJSON,
-        );
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a full stage when stage_override_enabled = TRUE and stage_override_reason is missing', async () => { 
-      const invalidStage = {        
-        stage_override_enabled: true,
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.patch(
-          oneStageUrl + toPatchId,
-          stageJSON,
-        );
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a full stage when stage_override_enabled = TRUE and stage_override_reason is null', async () => { 
-      const invalidStage = {                
-        stage_override_enabled: true,
-        stage_override_reason: null
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.patch(
-          oneStageUrl + toPatchId,
-          stageJSON,
-        );
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a full stage when stage_override_enabled = TRUE and stage_override_reason is blank', async () => { 
-      const invalidStage = {                
-        stage_override_enabled: true,
-        stage_override_reason: ''
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.patch(
-          oneStageUrl + toPatchId,
-          stageJSON,
-        );
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a full stage when stage_override_enabled = TRUE and stage_override_reason is invalid', async () => { 
-      const invalidStage = {                
-        stage_override_enabled: true,
-        stage_override_reason: 'a'.repeat(maxReasonLength + 1)
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.patch(
-          oneStageUrl + toPatchId,
-          stageJSON,
-        );
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a full stage when stage_override_enabled = FALSE and stage_override_reason is valid', async () => { 
-      const invalidStage = {                      
-        stage_override_enabled: false,
-        stage_override_reason: 'test reason'
-      };
-      const stageJSON = JSON.stringify(invalidStage);
-      try {
-        const response = await privateApi.patch(
-          oneStageUrl + toPatchId,
-          stageJSON,
-        );
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-  })
-
-  describe('DELETE stage - API: /api/stages/stage/:id', () => {
-
-    let didDelete = false;
-
-    beforeAll(async () => {
-      await rePostStage(toDeleteStage);      
-    })  
-
-    beforeEach(() => {
-      didDelete = false;
-    })
-
-    afterEach(async () => {
-      if (!didDelete) return;
-      await rePostStage(toDeleteStage);
-    })
-
-    afterAll(async () => {
-      await rePostStage(toDeleteStage);
-    })
-
-    it('should delete a stage', async () => {
-      const response = await privateApi.delete(
-        oneStageUrl + toDeleteStage.id,        
-      );
-      expect(response.status).toBe(200);
-      didDelete = true;
-    })
-    it('should NOT delete a stage when ID is invalid', async () => {
-      try {
-        const response = await privateApi.delete(oneStageUrl + "/invalid");
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT delete a stage when ID is valid, but not a stage ID', async () => {
-      try {
-        const response = await privateApi.delete(oneStageUrl + '/' + toDeleteStage.squad_id);
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not delete a stage when id is not found', async () => {
-      const response = await privateApi.delete(oneStageUrl + notFoundStageId);
-      expect(response.status).toBe(200);
-      expect(response.data.count).toBe(0);
-    })
-  })  
-
-})
+      expect(response.status).toBe(500);
+      expect(prismaMock.stage.create).not.toHaveBeenCalled();
+    });
+  });
+});

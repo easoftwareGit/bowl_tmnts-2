@@ -1,1768 +1,332 @@
-import { privateApi } from "@/lib/api/axios";
-import { AxiosError } from "axios";
-import { baseBowlsApi, baseEventsApi, baseGamesApi, basePlayersApi, baseSquadsApi, baseTmntsApi, baseUsersApi } from "@/lib/api/apiPaths";
-import { testBaseBowlsApi, testBaseEventsApi, testBaseGamesApi, testBasePlayersApi, testBaseSquadsApi, testBaseTmntsApi, testBaseUsersApi } from "../../../testApi";
+/**
+ * @jest-environment node
+ */
+// Tests for src/app/api/games/squad/[squadId]/route.ts using mocked prisma.
+// No database or server needed.
+//
+// PUT builds one prisma.game.upsert() per game and passes the array to
+// prisma.$transaction([...]). Here upsert returns the row it was asked to
+// create, and $transaction just awaits the array, so the response holds
+// exactly what the route sent to the "db".
+//
+// isValidBtDbId and validateGames are the REAL functions, so validation
+// errors (404) come from the real code.
+import type { Game } from "@prisma/client";
+import { GET, PUT } from "@/app/api/games/squad/[squadId]/route";
+import { prismaMock } from "../../../prismaMock";
 import type { gameType } from "@/lib/types/types";
-import { initGame } from "@/lib/db/initVals";
 import { maxGames, maxScore } from "@/lib/validation/constants";
-import { mockBowl, mockGames, mockTmntFullData, mockUser } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
+import {
+  mockGames,
+  mockTmntFullData,
+} from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { cloneDeep } from "lodash";
-import { isValidBtDbId } from "@/lib/validation/validation";
 
-// before running this test, run the following commands in the terminal:
-// 1) clear and re-seed the database
-//    a) clear the database
-//       npx prisma db push --force-reset
-//    b) re-seed
-//       npx prisma db seed  
-//    if just need to re-seed, then only need step 1b
-// 2) make sure the server is running
-//    in the VS activity bar, 
-//      a) click on "Run and Debug" (Ctrl+Shift+D)
-//      b) at the top of the window, click on the drop-down arrow
-//      c) select "Node.js: debug server-side"
-//      d) directly to the left of the drop down select, click the green play button
-//         This will start the server in debug mode. 
+// The URL only needs to be valid; the route reads squadId from params
+const url = "http://localhost:3000/api/games/squad";
 
-// If running tests AND a test URL is defined, use it; otherwise use the app API path
-const url = process.env.NODE_ENV === "test" && testBaseGamesApi
-  ? testBaseGamesApi
-  : baseGamesApi;
+// Next.js passes route params as a Promise; this builds the 2nd argument
+const ctx = (squadId: string) => ({ params: Promise.resolve({ squadId }) });
 
-const oneGameUrl = url + "/game/";
-const gamesSquadUrl = url + "/squad/";
+const getRequest = (squadId: string) => new Request(`${url}/${squadId}`);
 
-const userBaseUrl = process.env.NODE_ENV === "test" && testBaseUsersApi
-  ? testBaseUsersApi
-  : baseUsersApi;  
-const mockUserUrl = userBaseUrl + "/user/";
+// builds a PUT request; a string body is sent as-is (for bad JSON tests)
+const putRequest = (squadId: string, body: unknown) =>
+  new Request(`${url}/${squadId}`, {
+    method: "PUT",
+    body: typeof body === "string" ? body : JSON.stringify(body),
+    headers: { "Content-Type": "application/json" },
+  });
 
-const tmntBaseUrl = process.env.NODE_ENV === "test" && testBaseTmntsApi
-  ? testBaseTmntsApi
-  : baseTmntsApi;  
-const mockTmntUrl = tmntBaseUrl + "/tmnt/";
+// NextResponse.json() converts Date objects to ISO strings
+const toJson = <T,>(data: T) => JSON.parse(JSON.stringify(data));
 
-const bowlBaseUrl = process.env.NODE_ENV === "test" && testBaseBowlsApi
-  ? testBaseBowlsApi
-  : baseBowlsApi;  
-const mockBowlUrl = bowlBaseUrl + "/bowl/";
-
-const squadBaseUrl = process.env.NODE_ENV === "test" && testBaseSquadsApi
-  ? testBaseSquadsApi
-  : baseSquadsApi;
-
-const eventBaseUrl = process.env.NODE_ENV === "test" && testBaseEventsApi
-  ? testBaseEventsApi
-  : baseEventsApi;
-
-const playersBaseUrl = process.env.NODE_ENV === "test" && testBasePlayersApi
-  ? testBasePlayersApi
-  : basePlayersApi;
-
-const notFoundId = "gam_01234567890123456789012345678901";
 const notFoundSquadId = "sqd_01234567890123456789012345678901";
-const notFoundplayerId = "ply_01234567890123456789012345678901";
+const notFoundPlayerId = "ply_01234567890123456789012345678901";
 const userId = "usr_01234567890123456789012345678901";
+const squad2Id = "sqd_1a6c885ee19a49489960389193e8f819";
 
-const squad2Id = 'sqd_1a6c885ee19a49489960389193e8f819'; // from prisma\seed.ts
-const player2Id = 'ply_aa6c885ee19a49489960389193e8f819';
+const squadId = mockTmntFullData.squads[0].id;
 
-const testGame: gameType = {
-  ...initGame,
-  id: 'gam_99ea810b452843018f3f1db5139ffa72',
-  squad_id: 'sqd_7116ce5f80164830830a7157eb093396',
-  player_id: 'ply_88be0472be3d476ea1caa99dd05953fa',
-  game_num: 1,
-  score: 201,
-}
+const dates = {
+  createdAt: new Date("2026-01-01T00:00:00.000Z"),
+  updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+};
 
-const gameToPost: gameType = {
-  ...initGame,
-  id: "gam_1234567890abcdef1234567890abcdef",
-  squad_id: "sqd_7116ce5f80164830830a7157eb093396",
-  player_id: "ply_bb0fd8bbd9e34d34a7fa90b4111c6e40",
-  game_num: 11,
-  score: 292,
-}
+// a Game row as prisma would return it
+const dbGame = (
+  id: string,
+  squad_id: string,
+  player_id: string,
+  game_num: number,
+  score: number
+): Game => ({ id, squad_id, player_id, game_num, score, ...dates });
 
-const deletePostedGame = async (id: string) => { 
-  try {
-    await privateApi.delete(oneGameUrl + id);    
-  } catch (err) {
-    if (err instanceof Error) console.log(err.message);    
-  }
-}
+// the shape of the rows the route upserts
+type upsertArgs = {
+  where: { id: string };
+  create: Omit<Game, "id" | "createdAt" | "updatedAt">;
+};
 
-const resetGame = async () => { 
-  // make sure test game is reset in database
-  const gameJSON = JSON.stringify(testGame);
-  await privateApi.put(oneGameUrl + testGame.id, gameJSON);
-}
+beforeEach(() => {
+  // each upsert "returns" the row it would create, with its id
+  prismaMock.game.upsert.mockImplementation(((args: upsertArgs) =>
+    Promise.resolve({
+      id: args.where.id,
+      ...args.create,
+      ...dates,
+    })) as never);
+  // array transaction: resolve every upsert in the array
+  prismaMock.$transaction.mockImplementation(((ops: Promise<unknown>[]) =>
+    Promise.all(ops)) as never);
+});
 
-describe('Games - API: /api/games', () => { 
+describe("Games - API: /api/games/squad/:squadId", () => {
+  // ---------------------------------------------------------------- GET
+  describe("GET all games for squad", () => {
+    const getSquadId = "sqd_7116ce5f80164830830a7157eb093396";
+    const playerIds = [
+      "ply_88be0472be3d476ea1caa99dd05953fa",
+      "ply_be57bef21fc64d199c2f6de4408bd136",
+      "ply_bb0fd8bbd9e34d34a7fa90b4111c6e40",
+    ];
+    // 3 players x 6 games, already in route order: player_id, game_num
+    const rows: Game[] = playerIds.flatMap((playerId, p) =>
+      Array.from({ length: 6 }, (_, g) =>
+        dbGame(
+          `gam_${p}${g}000000000000000000000000000000`,
+          getSquadId,
+          playerId,
+          g + 1,
+          200 + g
+        )
+      )
+    );
 
-  const blankGame = {
-    id: testGame.id,
-    squad_id: testGame.squad_id,
-    player_id: testGame.player_id,
-  }
+    it("should get all games for squad", async () => {
+      prismaMock.game.findMany.mockResolvedValue(rows);
 
-  describe('GET', () => { 
+      const response = await GET(getRequest(getSquadId), ctx(getSquadId));
+      const body = await response.json();
 
-    beforeAll(async () => {
-      await deletePostedGame(gameToPost.id);
-    })
-
-    it('should get all games', async () => {
-      const response = await privateApi.get(url);
-      const games = response.data.games;
-      // 61 rows in prisma/seed.ts
-      expect(games.length).toBe(61);
-    })
-  })
-
-  describe('GET by id - API: /api/games/game/:id', () => {
-
-    beforeAll(async () => {
-      await deletePostedGame(gameToPost.id);
-    })
-
-    it('should get game by id', async () => { 
-      const response = await privateApi.get(oneGameUrl + testGame.id);
       expect(response.status).toBe(200);
-      const game = response.data.game;
-      expect(game.id).toBe(testGame.id);
-      expect(game.squad_id).toBe(testGame.squad_id);
-      expect(game.player_id).toBe(testGame.player_id);      
-      expect(game.game_num).toBe(testGame.game_num);
-      expect(game.score).toBe(testGame.score);
-    })
-    it('should NOT get game by id when ID is invalid', async () => { 
-      try {
-        const response = await privateApi.get(oneGameUrl + 'invalid');
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
+      expect(body.games).toHaveLength(18);
+      expect(body.games).toEqual(toJson(rows));
+      for (let i = 0; i < body.games.length; i++) {
+        expect(body.games[i].squad_id).toBe(getSquadId);
+        expect(body.games[i].game_num).toBe((i % 6) + 1); // 1...6
       }
-    })
-    it('should NOT get game by id when ID is not found', async () => { 
-      try {
-        const response = await privateApi.get(oneGameUrl + notFoundId);
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })  
-    it('should NOT get game by id when ID is valid, but not a game ID', async () => { 
-      try {
-        const response = await privateApi.get(oneGameUrl + userId);
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
+    });
 
-  })
+    it("should query games by squad, sorted by player_id then game_num", async () => {
+      prismaMock.game.findMany.mockResolvedValue([]);
 
-  describe('GET all games for squad API: /api/games/squad/:squadId', () => { 
+      await GET(getRequest(getSquadId), ctx(getSquadId));
 
-    beforeAll(async () => {
-      await deletePostedGame(gameToPost.id);
-    })
+      expect(prismaMock.game.findMany).toHaveBeenCalledTimes(1);
+      expect(prismaMock.game.findMany).toHaveBeenCalledWith({
+        where: { squad_id: getSquadId },
+        orderBy: [{ player_id: "asc" }, { game_num: "asc" }],
+      });
+    });
 
-    const squadId = 'sqd_7116ce5f80164830830a7157eb093396'
+    it("should return status 200 and an empty array when squad is not found", async () => {
+      prismaMock.game.findMany.mockResolvedValue([]);
 
-    it('should get all games for squad', async () => { 
-      const response = await privateApi.get(gamesSquadUrl + squadId);
-      const games = response.data.games;
-      expect(games.length).toBe(18);
-      for (let i = 0; i < games.length; i++) {
-        expect(games[i].squad_id).toBe(squadId);
-        expect(games[i].game_num).toBe((i % 6) + 1); // 1...6
-      }
-    })
-    it('should NOT get all games for a squad when ID is invalid', async () => { 
-      try {
-        const response = await privateApi.get(gamesSquadUrl + 'invalid');
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT get all games for a squad when ID is valid, but not a squad id', async () => { 
-      try {
-        const response = await privateApi.get(gamesSquadUrl + userId);
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should return empty array when squad is not found', async () => { 
-      const response = await privateApi.get(gamesSquadUrl + notFoundSquadId);
-      const games = response.data.games;
-      expect(games.length).toBe(0); 
-    })
-  })
-
-  describe('POST', () => { 
-      
-    let createdGame = false;
-
-    beforeAll(async () => {
-      await deletePostedGame(gameToPost.id);
-    })
-
-    beforeEach(() => {
-      createdGame = false;
-    })
-
-    afterEach(async () => {
-      if (createdGame) {
-        await deletePostedGame(gameToPost.id);
-      }
-    })
-
-    it('should create new game', async () => {
-      const gamesJSON = JSON.stringify(gameToPost);
-      const response = await privateApi.post(url, gamesJSON);
-      expect(response.status).toBe(201);
-      const postedGame = response.data.game;
-      createdGame = true;
-      expect(isValidBtDbId(postedGame.id, "gam")).toBe(true);
-      expect(postedGame.squad_id).toBe(gameToPost.squad_id);
-      expect(postedGame.player_id).toBe(gameToPost.player_id);
-      expect(postedGame.game_num).toBe(gameToPost.game_num);
-      expect(postedGame.score).toBe(gameToPost.score);
-    })
-    it('should NOT create a new game when id is blank', async () => {
-      const invalidGame = {
-        ...gameToPost,
-        id: "",
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.post(url, invalidJSON);        
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create a new game when squad_id is blank', async () => {
-      const invalidGame = {
-        ...gameToPost,
-        squad_id: "",
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.post(url, invalidJSON);        
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create a new game when player_id is blank', async () => {
-      const invalidGame = {
-        ...gameToPost,
-        player_id: "",
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.post(url, invalidJSON);        
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create a new game when id is null', async () => {
-      const invalidGame = {
-        ...gameToPost,
-        id: null as any,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.post(url, invalidJSON);        
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create a new game when squad_id is null', async () => {
-      const invalidGame = {
-        ...gameToPost,
-        squad_id: null as any,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.post(url, invalidJSON);        
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create a new game when player_id is null', async () => {
-      const invalidGame = {
-        ...gameToPost,
-        player_id: null as any,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.post(url, invalidJSON);        
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create a new game when game_num is null', async () => {
-      const invalidGame = {
-        ...gameToPost,
-        game_num: null as any,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.post(url, invalidJSON);        
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create a new game when score is null', async () => {
-      const invalidGame = {
-        ...gameToPost,
-        score: null as any,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.post(url, invalidJSON);        
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create a new game when id is invalid', async () => {
-      const invalidGame = {
-        ...gameToPost,
-        id: "test",
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.post(url, invalidJSON);        
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create a new game when id is sanitized but not a game id', async () => {
-      const invalidGame = {
-        ...gameToPost,
-        id: "<script>alert(1)</script>",
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.post(url, invalidJSON);        
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create a new game when id is valid, but not a game id', async () => {
-      const invalidGame = {
-        ...gameToPost,
-        id: userId,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.post(url, invalidJSON);        
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create a new game when squad_id is invalid', async () => {
-      const invalidGame = {
-        ...gameToPost,
-        squad_id: "test",
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.post(url, invalidJSON);        
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create a new game when squad_id is valid, but not a squad id', async () => {
-      const invalidGame = {
-        ...gameToPost,
-        squad_id: userId,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.post(url, invalidJSON);        
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create a new game when squad_id is sanitized but not a squad id', async () => {
-      const invalidGame = {
-        ...gameToPost,
-        squad_id: "<script>alert(1)</script>",
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.post(url, invalidJSON);        
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create a new game when player_id is invalid', async () => {
-      const invalidGame = {
-        ...gameToPost,
-        player_id: "test",
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.post(url, invalidJSON);        
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create a new game when player_id is valid, but not a player id', async () => {
-      const invalidGame = {
-        ...gameToPost,
-        player_id: userId,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.post(url, invalidJSON);        
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create a new game when player_id is sanitized but not a player id', async () => {
-      const invalidGame = {
-        ...gameToPost,
-        player_id: "<script>alert(1)</script>",
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.post(url, invalidJSON);        
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create a new game when game_num is too low', async () => {
-      const invalidGame = {
-        ...gameToPost,
-        game_num: 0,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.post(url, invalidJSON);        
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create a new game when game_num is too high', async () => {
-      const invalidGame = {
-        ...gameToPost,
-        game_num: maxGames + 1,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.post(url, invalidJSON);        
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create a new game when game_num is not an integer', async () => {
-      const invalidGame = {
-        ...gameToPost,
-        game_num: 1.5,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.post(url, invalidJSON);        
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create a new game when game_num is not a number', async () => {
-      const invalidGame = {
-        ...gameToPost,
-        game_num: 'test',
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.post(url, invalidJSON);        
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create a new game when score is too low', async () => {
-      const invalidGame = {
-        ...gameToPost,
-        score: -1,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.post(url, invalidJSON);        
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create a new game when score is too high', async () => {
-      const invalidGame = {
-        ...gameToPost,
-        score: maxScore + 1,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.post(url, invalidJSON);        
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create a new game when score is not an integer', async () => {
-      const invalidGame = {
-        ...gameToPost,
-        score: 1.5,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.post(url, invalidJSON);        
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT create a new game when score is not a number', async () => {
-      const invalidGame = {
-        ...gameToPost,
-        score: 'test',
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.post(url, invalidJSON);        
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-  })
-
-  describe('PUT by ID - API: /api/games/game/:id', () => { 
-
-    const putGame = {
-      ...testGame,
-      squad_id: 'sqd_1a6c885ee19a49489960389193e8f819',
-      player_id: 'ply_be57bef21fc64d199c2f6de4408bd136',      
-      game_num: 13,
-      score: 291
-    }
-
-    let didPatch = false;
-
-    beforeAll(async () => {
-      await resetGame();
-    })
-
-    afterEach(async () => {
-      if (didPatch) {
-        await resetGame();
-      }      
-    })
-
-    it('should update game by id', async () => {
-      const gameJSON = JSON.stringify(putGame);
-      const response = await privateApi.put(oneGameUrl + testGame.id, gameJSON);
-      const game = response.data.game;
-      expect(response.status).toBe(200);
-      didPatch = true;
-      expect(game.squad_id).toBe(putGame.squad_id);
-      expect(game.player_id).toBe(putGame.player_id);      
-      expect(game.game_num).toBe(putGame.game_num);      
-      expect(game.score).toBe(putGame.score);
-    })
-    it('should NOT update game by id when ID is invalid', async () => {
-      try {
-        const gameJSON = JSON.stringify(putGame);
-        const response = await privateApi.put(oneGameUrl + 'test', gameJSON);
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT update game by id when ID is valid, but not a game ID', async () => {
-      try {
-        const gameJSON = JSON.stringify(putGame);
-        const response = await privateApi.put(oneGameUrl + userId, gameJSON);
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT update game by id when ID is not found', async () => {
-      try {
-        const gameJSON = JSON.stringify(putGame);
-        const response = await privateApi.put(oneGameUrl + notFoundId, gameJSON);
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT update game when squad_id is blank', async () => {
-      const invalidGame = {
-        ...putGame,
-        squad_id: "",
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.put(oneGameUrl + invalidGame.id, invalidJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT update game when player_id is blank', async () => {
-      const invalidGame = {
-        ...putGame,
-        player_id: "",
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.put(oneGameUrl + putGame.id, invalidJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT update pot when game_num is null', async () => {
-      const invalidGame = {
-        ...putGame,
-        game_num: null,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.put(oneGameUrl + putGame.id, invalidJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT update game when score is null', async () => {
-      const invalidGame = {
-        ...putGame,
-        score: null,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.put(oneGameUrl + putGame.id, invalidJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT update pot when game_num is too low', async () => {
-      const invalidGame = {
-        ...putGame,
-        game_num: 0,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.put(oneGameUrl + putGame.id, invalidJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT update pot when game_num is too high', async () => {
-      const invalidGame = {
-        ...putGame,
-        game_num: maxGames + 1,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.put(oneGameUrl + putGame.id, invalidJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT update pot when game_num is not an integer', async () => {
-      const invalidGame = {
-        ...putGame,
-        game_num: 1.5,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.put(oneGameUrl + putGame.id, invalidJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })   
-    it('should NOT update pot when game_num is not a number', async () => {
-      const invalidGame = {
-        ...putGame,
-        game_num: 'invalid',
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.put(oneGameUrl + putGame.id, invalidJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT update pot when score is too low', async () => {
-      const invalidGame = {
-        ...putGame,
-        score: -1,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.put(oneGameUrl + putGame.id, invalidJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT update pot when score is too high', async () => {
-      const invalidGame = {
-        ...putGame,
-        score: maxScore + 1,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.put(oneGameUrl + putGame.id, invalidJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT update pot when score is not an integer', async () => {
-      const invalidGame = {
-        ...putGame,
-        score: 1.5,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.put(oneGameUrl + putGame.id, invalidJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })   
-    it('should NOT update pot when score is not a number', async () => {
-      const invalidGame = {
-        ...putGame,
-        score: 'invalid',
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.put(oneGameUrl + putGame.id, invalidJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-  })
-
-  describe('PUT all games for a squad API: /api/games/squad/:squadId', () => { 
-
-    beforeAll(async () => {
-      try {
-        // remove any old mock data
-        let tmntId = mockTmntFullData.tmnt.id;          
-        await privateApi.delete(mockTmntUrl + tmntId);
-        
-        let bowlId = mockBowl.id;        
-        await privateApi.delete(mockBowlUrl + bowlId);
-
-        let userId = mockUser.id;        
-        await privateApi.delete(mockUserUrl + userId);
-
-        // add mock data
-        const userJSON = JSON.stringify(mockUser);
-        let response = await privateApi.post(userBaseUrl, userJSON);
-
-        const bowlJSON = JSON.stringify(mockBowl);        
-        response = await privateApi.post(bowlBaseUrl, bowlJSON);
-
-        const tmntJSON = JSON.stringify(mockTmntFullData.tmnt);
-        response = await privateApi.post(tmntBaseUrl, tmntJSON);        
-
-        const eventJSON = JSON.stringify(mockTmntFullData.events[0]);
-        response = await privateApi.post(eventBaseUrl, eventJSON);        
-
-        const squadJSON = JSON.stringify(mockTmntFullData.squads[0]);
-        response = await privateApi.post(squadBaseUrl, squadJSON);      
-        
-        // upserts many players
-        const playersJSON = JSON.stringify(mockTmntFullData.players);
-        response = await privateApi.put(playersBaseUrl, playersJSON);
-        
-      } catch (err) {
-        if (err instanceof Error) console.log(err.message);
-      }
-    })
-
-    afterEach(async () => {
-      try {
-        // remove any old mock data
-        let tmntId = mockTmntFullData.tmnt.id;          
-        let response = await privateApi.delete(mockTmntUrl + tmntId);
-        
-        let bowlId = mockBowl.id;        
-        response = await privateApi.delete(mockBowlUrl + bowlId);
-
-        let userId = mockUser.id;        
-        response = await privateApi.delete(mockUserUrl + userId);
-
-      } catch (err) {
-        if (err instanceof Error) console.log(err.message);
-      }
-    })
-
-    it('should upsert all games for a squad', async () => { 
-      const squadGamesJSON = JSON.stringify(mockGames);
-      const response = await privateApi.put(
-        gamesSquadUrl + mockTmntFullData.squads[0].id,
-        squadGamesJSON
+      const response = await GET(
+        getRequest(notFoundSquadId),
+        ctx(notFoundSquadId)
       );
+      const body = await response.json();
+
       expect(response.status).toBe(200);
-      expect(response.data.games).toHaveLength(mockGames.length);
-    })
-    it('should not upsert all games for a squad when game data has invalid id', async () => { 
-      const invalidGames = cloneDeep(mockGames);
-      invalidGames[1].id = 'invalid';
-      const invalidJSON = JSON.stringify(invalidGames);
-      try {
-        const response = await privateApi.put(
-          gamesSquadUrl + mockTmntFullData.squads[0].id,
-          invalidJSON
-        );
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not upsert all games for a squad when game data has missing id', async () => { 
-      const invalidGames = cloneDeep(mockGames);
-      invalidGames[1].id = null as any;
-      const invalidJSON = JSON.stringify(invalidGames);
-      try {
-        const response = await privateApi.put(
-          gamesSquadUrl + mockTmntFullData.squads[0].id,
-          invalidJSON
-        );
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not upsert all games for a squad when game data id, but not a valid game id', async () => { 
-      const invalidGames = cloneDeep(mockGames);
-      invalidGames[1].id = userId;
-      const invalidJSON = JSON.stringify(invalidGames);
-      try {
-        const response = await privateApi.put(
-          gamesSquadUrl + mockTmntFullData.squads[0].id,
-          invalidJSON
-        );
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
+      expect(body.games).toHaveLength(0);
+    });
 
-    it('should not upsert all games for a squad when game data has invalid squad_id', async () => { 
-      const invalidGames = cloneDeep(mockGames);
-      invalidGames[1].squad_id = 'invalid';
-      const invalidJSON = JSON.stringify(invalidGames);
-      try {
-        const response = await privateApi.put(
-          gamesSquadUrl + mockTmntFullData.squads[0].id,
-          invalidJSON
-        );
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not upsert all games for a squad when game data has missing squad_id', async () => { 
-      const invalidGames = cloneDeep(mockGames);
-      invalidGames[1].squad_id = null as any;
-      const invalidJSON = JSON.stringify(invalidGames);
-      try {
-        const response = await privateApi.put(
-          gamesSquadUrl + mockTmntFullData.squads[0].id,
-          invalidJSON
-        );
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not upsert all games for a squad when game data has squad id, but not a valid squad id', async () => { 
-      const invalidGames = cloneDeep(mockGames);
-      invalidGames[1].squad_id = userId;
-      const invalidJSON = JSON.stringify(invalidGames);
-      try {
-        const response = await privateApi.put(
-          gamesSquadUrl + mockTmntFullData.squads[0].id,
-          invalidJSON
-        );
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not upsert all games for a squad when game data has valid but not found squad_id', async () => { 
-      const invalidGames = cloneDeep(mockGames);
-      invalidGames[1].squad_id = notFoundSquadId;
-      const invalidJSON = JSON.stringify(invalidGames);
-      try {
-        const response = await privateApi.put(
-          gamesSquadUrl + mockTmntFullData.squads[0].id,
-          invalidJSON
-        );
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not upsert all games for a squad when game data has more than 1 squad_id', async () => { 
-      const invalidGames = cloneDeep(mockGames);
-      invalidGames[1].squad_id = squad2Id;
-      const invalidJSON = JSON.stringify(invalidGames);
-      try {
-        const response = await privateApi.put(
-          gamesSquadUrl + mockTmntFullData.squads[0].id,
-          invalidJSON
-        );
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
+    it.each([
+      { desc: "squadId is invalid", id: "invalid" },
+      { desc: "squadId is valid, but not a squad id", id: userId },
+    ])("should return 404 when $desc", async ({ id }) => {
+      const response = await GET(getRequest(id), ctx(id));
+      const body = await response.json();
 
-    it('should not upsert all games for a squad when game data has invalid player_id', async () => { 
-      const invalidGames = cloneDeep(mockGames);
-      invalidGames[1].player_id = 'invalid';
-      const invalidJSON = JSON.stringify(invalidGames);
-      try {
-        const response = await privateApi.put(
-          gamesSquadUrl + mockTmntFullData.squads[0].id,
-          invalidJSON
-        );
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not upsert all games for a squad when game data has missing player_id', async () => { 
-      const invalidGames = cloneDeep(mockGames);
-      invalidGames[1].player_id = null as any;
-      const invalidJSON = JSON.stringify(invalidGames);
-      try {
-        const response = await privateApi.put(
-          gamesSquadUrl + mockTmntFullData.squads[0].id,
-          invalidJSON
-        );
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not upsert all games for a squad when game data has player id, but not a valid player id', async () => { 
-      const invalidGames = cloneDeep(mockGames);
-      invalidGames[1].player_id = userId;
-      const invalidJSON = JSON.stringify(invalidGames);
-      try {
-        const response = await privateApi.put(
-          gamesSquadUrl + mockTmntFullData.squads[0].id,
-          invalidJSON
-        );
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not upsert all games for a squad when game data has valid but not found player_id', async () => { 
-      const invalidGames = cloneDeep(mockGames);
-      invalidGames[1].squad_id = notFoundplayerId;
-      const invalidJSON = JSON.stringify(invalidGames);
-      try {
-        const response = await privateApi.put(
-          gamesSquadUrl + mockTmntFullData.squads[0].id,
-          invalidJSON
-        );
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
+      expect(response.status).toBe(404);
+      expect(body).toEqual({ error: "not found" });
+      expect(prismaMock.game.findMany).not.toHaveBeenCalled();
+    });
 
-    it('should not upsert all games for a squad when game data has game_num too low', async () => { 
-      const invalidGames = cloneDeep(mockGames);
-      invalidGames[1].game_num = 0;
-      const invalidJSON = JSON.stringify(invalidGames);
-      try {
-        const response = await privateApi.put(
-          gamesSquadUrl + mockTmntFullData.squads[0].id,
-          invalidJSON
-        );
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not upsert all games for a squad when game data has game_num too high', async () => { 
-      const invalidGames = cloneDeep(mockGames);
-      invalidGames[1].game_num = maxGames + 1;
-      const invalidJSON = JSON.stringify(invalidGames);
-      try {
-        const response = await privateApi.put(
-          gamesSquadUrl + mockTmntFullData.squads[0].id,
-          invalidJSON
-        );
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not upsert all games for a squad when game data has missing game_num', async () => { 
-      const invalidGames = cloneDeep(mockGames);
-      invalidGames[1].game_num = null as any;
-      const invalidJSON = JSON.stringify(invalidGames);
-      try {
-        const response = await privateApi.put(
-          gamesSquadUrl + mockTmntFullData.squads[0].id,
-          invalidJSON
-        );
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not upsert all games for a squad when game data has game_num not a number', async () => { 
-      const invalidGames = cloneDeep(mockGames);
-      invalidGames[1].game_num = 'not a number' as any;
-      const invalidJSON = JSON.stringify(invalidGames);
-      try {
-        const response = await privateApi.put(
-          gamesSquadUrl + mockTmntFullData.squads[0].id,
-          invalidJSON
-        );
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not upsert all games for a squad when game data has game_num not an integer', async () => { 
-      const invalidGames = cloneDeep(mockGames);
-      invalidGames[1].game_num = 1.5;
-      const invalidJSON = JSON.stringify(invalidGames);
-      try {
-        const response = await privateApi.put(
-          gamesSquadUrl + mockTmntFullData.squads[0].id,
-          invalidJSON
-        );
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
+    it("should return 500 when the database throws", async () => {
+      prismaMock.game.findMany.mockRejectedValue(new Error("connection failed"));
 
-    it('should not upsert all games for a squad when game data has score too low', async () => { 
-      const invalidGames = cloneDeep(mockGames);
-      invalidGames[1].score = -1;
-      const invalidJSON = JSON.stringify(invalidGames);
-      try {
-        const response = await privateApi.put(
-          gamesSquadUrl + mockTmntFullData.squads[0].id,
-          invalidJSON
-        );
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not upsert all games for a squad when game data has score too high', async () => { 
-      const invalidGames = cloneDeep(mockGames);
-      invalidGames[1].score = maxScore + 1;
-      const invalidJSON = JSON.stringify(invalidGames);
-      try {
-        const response = await privateApi.put(
-          gamesSquadUrl + mockTmntFullData.squads[0].id,
-          invalidJSON
-        );
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not upsert all games for a squad when game data has missing score', async () => { 
-      const invalidGames = cloneDeep(mockGames);
-      invalidGames[1].score = null as any;
-      const invalidJSON = JSON.stringify(invalidGames);
-      try {
-        const response = await privateApi.put(
-          gamesSquadUrl + mockTmntFullData.squads[0].id,
-          invalidJSON
-        );
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not upsert all games for a squad when game data has score not a number', async () => { 
-      const invalidGames = cloneDeep(mockGames);
-      invalidGames[1].score = 'not a number' as any;
-      const invalidJSON = JSON.stringify(invalidGames);
-      try {
-        const response = await privateApi.put(
-          gamesSquadUrl + mockTmntFullData.squads[0].id,
-          invalidJSON
-        );
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not upsert all games for a squad when game data has score not an integer', async () => { 
-      const invalidGames = cloneDeep(mockGames);
-      invalidGames[1].score = 1.5;
-      const invalidJSON = JSON.stringify(invalidGames);
-      try {
-        const response = await privateApi.put(
-          gamesSquadUrl + mockTmntFullData.squads[0].id,
-          invalidJSON
-        );
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-  })
+      const response = await GET(getRequest(getSquadId), ctx(getSquadId));
+      const body = await response.json();
 
-  describe('PATCH by ID - API: /api/games/game/:id', () => { 
+      expect(response.status).toBe(500);
+      expect(body).toEqual({
+        message: "error getting games for squad - connection failed",
+      });
+    });
 
-    const toPatchId = "gam_c1dfffcefd344ef0a9a2aaacda98635a";
+    it("should return 404 for a Prisma 'record not found' error", async () => {
+      // standardCatchReturn only checks err.code, so a plain object works
+      prismaMock.game.findMany.mockRejectedValue({ code: "P2025" });
 
-    const toPatch = {
-      ...initGame,
-      id: toPatchId,
-      squad_id: "sqd_1a6c885ee19a49489960389193e8f819",
-      player_id: "ply_bb0fd8bbd9e34d34a7fa90b4111c6e40",
-      game_num: 1,
-      score: 222,
-    }
+      const response = await GET(getRequest(getSquadId), ctx(getSquadId));
 
-    const resetPatched = async () => { 
-      const gameJSON = JSON.stringify(toPatch);
-      await privateApi.put(oneGameUrl + toPatch.id, gameJSON);
-    }
+      expect(response.status).toBe(404);
+    });
+  });
 
-    let didPatch = false;
+  // ---------------------------------------------------------------- PUT
+  describe("PUT all games for a squad", () => {
+    it("should upsert all games for a squad", async () => {
+      const response = await PUT(putRequest(squadId, mockGames), ctx(squadId));
+      const body = await response.json();
 
-    beforeAll(async () => {
-      await resetPatched();
-    })
-      
-    afterEach(async () => {
-      if (didPatch) {
-        await resetPatched();
-      }
-    })
-
-    it('should patch game_num for a game by ID', async () => { 
-      const patchGame = {        
-        game_num: 12
-      }
-      const gameJSON = JSON.stringify(patchGame);
-      const response = await privateApi.patch(oneGameUrl+ toPatchId, gameJSON);
       expect(response.status).toBe(200);
-      didPatch = true;
-      const patchedGame = response.data.game;
-      expect(patchedGame.game_num).toBe(patchGame.game_num);
-    })
-    it('should patch score for a game by ID', async () => {
-      const patchGame = {        
-        score: 282,
+      expect(body.games).toHaveLength(mockGames.length);
+      expect(prismaMock.$transaction).toHaveBeenCalledTimes(1);
+      expect(prismaMock.game.upsert).toHaveBeenCalledTimes(mockGames.length);
+      for (let i = 0; i < body.games.length; i++) {
+        expect(body.games[i].id).toBe(mockGames[i].id);
+        expect(body.games[i].squad_id).toBe(squadId);
+        expect(body.games[i].player_id).toBe(mockGames[i].player_id);
+        expect(body.games[i].game_num).toBe(mockGames[i].game_num);
+        expect(body.games[i].score).toBe(mockGames[i].score);
       }
-      const gameJSON = JSON.stringify(patchGame);
-      const response = await privateApi.patch(oneGameUrl+ toPatchId, gameJSON);
-      expect(response.status).toBe(200);
-      didPatch = true;
-      const patchedGame = response.data.game;
-      expect(patchedGame.score).toBe(patchGame.score);
-    })
+    });
 
-    it('should not patch game by ID when just passing in ID', async () => {
-      try {
-        const invalidJSON = JSON.stringify({          
-          id: toPatchId,
-        })
-        const response = await privateApi.patch(oneGameUrl + toPatchId, invalidJSON)
-        expect(response.status).toBe(400);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(400);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not patch game by ID when ID is invalid', async () => {
-      try {
-        const invalidJSON = JSON.stringify({          
-          game_num: 12,
-        })
-        const response = await privateApi.patch(oneGameUrl + 'test', invalidJSON)
+    it("should send each game to prisma.game.upsert with the squad id from the url", async () => {
+      await PUT(putRequest(squadId, mockGames), ctx(squadId));
+
+      mockGames.forEach((game, i) => {
+        const fields = {
+          squad_id: squadId,
+          player_id: game.player_id,
+          game_num: game.game_num,
+          score: game.score,
+        };
+        expect(prismaMock.game.upsert).toHaveBeenNthCalledWith(i + 1, {
+          where: { id: game.id },
+          update: fields,
+          create: fields,
+        });
+      });
+    });
+
+    it.each([
+      { desc: "squadId is invalid", id: "invalid" },
+      { desc: "squadId is valid, but not a squad id", id: userId },
+    ])("should return 404 when $desc", async ({ id }) => {
+      const response = await PUT(putRequest(id, mockGames), ctx(id));
+      const body = await response.json();
+
+      expect(response.status).toBe(404);
+      expect(body).toEqual({ error: "invalid squad" });
+      expect(prismaMock.$transaction).not.toHaveBeenCalled();
+    });
+
+    it("should return 400 when games is not an array", async () => {
+      const response = await PUT(
+        putRequest(squadId, mockGames[0]),
+        ctx(squadId)
+      );
+      const body = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(body).toEqual({ error: "games must be an array" });
+      expect(prismaMock.$transaction).not.toHaveBeenCalled();
+    });
+
+    // each case changes one field of the 2nd game; the real validateGames
+    // must reject it before anything reaches the database
+    const invalidCases: {
+      desc: string;
+      field: keyof gameType;
+      value: unknown;
+    }[] = [
+      { desc: "invalid id", field: "id", value: "invalid" },
+      { desc: "missing id", field: "id", value: null },
+      { desc: "id, but not a valid game id", field: "id", value: userId },
+      { desc: "invalid squad_id", field: "squad_id", value: "invalid" },
+      { desc: "missing squad_id", field: "squad_id", value: null },
+      { desc: "squad id, but not a valid squad id", field: "squad_id", value: userId },
+      { desc: "valid but not found squad_id", field: "squad_id", value: notFoundSquadId },
+      { desc: "more than 1 squad_id", field: "squad_id", value: squad2Id },
+      { desc: "invalid player_id", field: "player_id", value: "invalid" },
+      { desc: "missing player_id", field: "player_id", value: null },
+      { desc: "player id, but not a valid player id", field: "player_id", value: userId },
+      // kept from the integration test, which sets squad_id here
+      { desc: "a player id as the squad_id", field: "squad_id", value: notFoundPlayerId },
+      { desc: "game_num too low", field: "game_num", value: 0 },
+      { desc: "game_num too high", field: "game_num", value: maxGames + 1 },
+      { desc: "missing game_num", field: "game_num", value: null },
+      { desc: "game_num not a number", field: "game_num", value: "not a number" },
+      { desc: "game_num not an integer", field: "game_num", value: 1.5 },
+      { desc: "score too low", field: "score", value: -1 },
+      { desc: "score too high", field: "score", value: maxScore + 1 },
+      { desc: "missing score", field: "score", value: null },
+      { desc: "score not a number", field: "score", value: "not a number" },
+      { desc: "score not an integer", field: "score", value: 1.5 },
+    ];
+
+    it.each(invalidCases)(
+      "should not upsert games when game data has $desc",
+      async ({ field, value }) => {
+        const invalidGames = cloneDeep(mockGames) as unknown as Record<
+          string,
+          unknown
+        >[];
+        invalidGames[1][field] = value;
+
+        const response = await PUT(
+          putRequest(squadId, invalidGames),
+          ctx(squadId)
+        );
+        const body = await response.json();
+
         expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
+        expect(body).toEqual({ error: "invalid games" });
+        expect(prismaMock.game.upsert).not.toHaveBeenCalled();
+        expect(prismaMock.$transaction).not.toHaveBeenCalled();
       }
-    })
-    it('should not patch money by ID when ID is valid, but not found', async () => {
-      try {
-        const invalidJSON = JSON.stringify({          
-          game_num: 12,
-        })
-        const response = await privateApi.patch(oneGameUrl + notFoundId, invalidJSON)
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not patch game by ID when ID is valid, but not a game id', async () => {
-      try {
-        const invalidJSON = JSON.stringify({          
-          game_num: 12,
-        })
-        const response = await privateApi.patch(oneGameUrl + userId, invalidJSON)
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
+    );
 
-    it('should NOT patch squad_id for a game by ID', async () => {
-      try {
-        const invalidJSON = JSON.stringify({          
-          squad_id: squad2Id,
-        })
-        const response = await privateApi.patch(oneGameUrl + toPatchId, invalidJSON)
-        expect(response.status).toBe(400);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(400);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch player_id for a game by ID', async () => {
-      try {
-        const invalidJSON = JSON.stringify({          
-          squad_id: player2Id,
-        })
-        const response = await privateApi.patch(oneGameUrl + toPatchId, invalidJSON)
-        expect(response.status).toBe(400);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(400);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
+    it("should return 500 when the body is not valid JSON", async () => {
+      const response = await PUT(putRequest(squadId, "{not json"), ctx(squadId));
+      const body = await response.json();
 
-    it('should NOT patch a game when game_num is too low', async () => {
-      const invalidGame = {        
-        game_num: -1,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.patch(oneGameUrl + toPatchId, invalidJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a game when game_num is too high', async () => {
-      const invalidGame = {        
-        game_num: maxGames + 1,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.patch(oneGameUrl + toPatchId, invalidJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a game when game_num is not an integer', async () => {
-      const invalidGame = {        
-        game_num: 1.3,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.patch(oneGameUrl + toPatchId, invalidJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a game when game_num is not a number', async () => {
-      const invalidGame = {        
-        game_num: 'test',
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.patch(oneGameUrl + toPatchId, invalidJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
+      expect(response.status).toBe(500);
+      expect(body.message).toMatch(/^error upserting games for squad - /);
+      expect(prismaMock.$transaction).not.toHaveBeenCalled();
+    });
 
-    it('should NOT patch a game when score is too low', async () => {
-      const invalidGame = {
-        score: -1,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.patch(oneGameUrl + toPatchId, invalidJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a game when score is too high', async () => {
-      const invalidGame = {        
-        score: maxScore + 1,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.patch(oneGameUrl + toPatchId, invalidJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a game when score is not an integer', async () => {
-      const invalidGame = {        
-        score: 1.3,
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.patch(oneGameUrl + toPatchId, invalidJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT patch a game when score is not a number', async () => {
-      const invalidGame = {        
-        score: 'test',
-      }
-      const invalidJSON = JSON.stringify(invalidGame);
-      try {
-        const response = await privateApi.patch(oneGameUrl + toPatchId, invalidJSON);
-        expect(response.status).toBe(422);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(422);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-  })
+    it("should return 500 when the database throws", async () => {
+      prismaMock.$transaction.mockRejectedValue(new Error("connection failed"));
 
-  describe('DELETE by ID - API: /api/games/:id', () => { 
+      const response = await PUT(putRequest(squadId, mockGames), ctx(squadId));
+      const body = await response.json();
 
-    const toDelGame = {
-      ...initGame,
-      id: 'gam_c1dfffcefd344ef0a9a2aaacda98635a',
-      squad_id: 'sqd_1a6c885ee19a49489960389193e8f819',
-      player_id: 'ply_bb0fd8bbd9e34d34a7fa90b4111c6e40',
-      game_num: 1,
-      score: 222,
-    }
+      expect(response.status).toBe(500);
+      expect(body).toEqual({
+        message: "error upserting games for squad - connection failed",
+      });
+    });
 
-    let didDel = false
+    it("should return 409 for a Prisma foreign key error (player not found)", async () => {
+      prismaMock.$transaction.mockRejectedValue({ code: "P2003" });
 
-    beforeEach(() => {
-      didDel = false;
-    })
+      const response = await PUT(putRequest(squadId, mockGames), ctx(squadId));
 
-    afterEach(async () => {
-      if (!didDel) return;
-      try {
-        const gameJSON = JSON.stringify(toDelGame);
-        await privateApi.post(url, gameJSON);
-      } catch (err) {
-        if (err instanceof Error) console.log(err.message);
-      }
-    })
-    it('should delete a game by ID', async () => {
-      const response = await privateApi.delete(oneGameUrl + toDelGame.id);
-      didDel = true;
-      expect(response.status).toBe(200);
-      expect(response.data.count).toBe(1);
-    })
-    it('should NOT delete a game by ID when ID is not found', async () => { 
-      const response = await privateApi.delete(oneGameUrl + notFoundId);
-      expect(response.status).toBe(200);
-      expect(response.data.count).toBe(0);
-    })
-    it('should NOT delete a game by ID when ID is invalid', async () => { 
-      try {
-        const response = await privateApi.delete(oneGameUrl + 'test');
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT delete a game by ID when ID is valid, but not an game id', async () => { 
-      try {
-        const response = await privateApi.delete(oneGameUrl + userId);
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-  })
+      expect(response.status).toBe(409);
+    });
 
-})
+    it("should return 409 for a Prisma unique constraint error", async () => {
+      prismaMock.$transaction.mockRejectedValue({ code: "P2002" });
+
+      const response = await PUT(putRequest(squadId, mockGames), ctx(squadId));
+
+      expect(response.status).toBe(409);
+    });
+  });
+});

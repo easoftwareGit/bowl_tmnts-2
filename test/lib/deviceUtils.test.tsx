@@ -1,4 +1,4 @@
-import { isTouchDevice } from "@/lib/deviceUtils";
+import { isTouchDevice } from "@/lib/mobileDevices/mobileDevices";
 
 describe('isTouchDevice', () => {
   let originalNavigator: any;

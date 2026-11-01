@@ -96,24 +96,3 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ squadId: string }> }
-) {
-  try {
-    const { squadId } = await params;
-    // check if squadId is a valid squad id
-    if (!isValidBtDbId(squadId, "sqd")) {
-      return NextResponse.json({ error: "not found" }, { status: 404 });
-    }
-    const result = await prisma.game.deleteMany({
-      where: {
-        squad_id: squadId,
-      },
-    });
-    return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (error) {
-    return standardCatchReturn(error, "error deleting games for squad");
-  }
-}
-

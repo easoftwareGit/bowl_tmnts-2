@@ -55,6 +55,10 @@ describe('BracketList class functions', () => {
   
   describe('class functions for testing only', () => { 
 
+    it('just one test for now', () => {
+      expect(true).toBe(true);
+    })
+
     describe('calcTotalBrkts - adjustPlayersNumBrkts', () => { 
     
       // it('should make no adjustemnts when brackets are already balanced', () => {

@@ -72,9 +72,7 @@ const validateElim = (
       || squadGames < 1
       || squadGames > maxGames) {
     return null as any;
-  }
-
-  const maxStartGame = squadGames - (defaultElimGames - 1);
+  }  
   
   const vElim = {
     ...elim,
@@ -97,8 +95,8 @@ const validateElim = (
   }
   if (elim.start < 1) {
     vElim.start_err = 'Start cannot be less than 1';    
-  } else if (elim.start > maxStartGame) {
-    vElim.start_err = 'Start cannot be more than ' + maxStartGame;
+  } else if (elim.start > squadGames) {
+    vElim.start_err = 'Start cannot be more than ' + squadGames;
   }
   if (elim.games < 1) {
     vElim.games_err  = 'Games cannot be less than 1';
@@ -106,7 +104,7 @@ const validateElim = (
     vElim.games_err  = 'Games cannot be more than ' + squadGames;    
   } 
   // right now only 1 squad is allowed, so just grab the first one
-  if (elim.start + elim.games - 1 > maxStartGame) {
+  if (elim.start + (elim.games - 1) > squadGames) {
     vElim.start_err = 'Eliminator ends after last game';     
   }
   if (!vElim.div_err && !vElim.fee_err && !vElim.start_err && !vElim.games_err) {

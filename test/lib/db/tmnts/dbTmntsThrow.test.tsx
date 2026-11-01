@@ -1,470 +1,601 @@
+import { AxiosError, AxiosHeaders } from "axios";
 import { publicApi, privateApi } from "@/lib/api/axios";
 import { baseTmntsApi } from "@/lib/api/apiPaths";
 import { testBaseTmntsApi } from "../../../testApi";
-import type { tmntFullType, tmntType } from "@/lib/types/types";
-import { blankTmnt } from "@/lib/db/initVals";
 import {
+  deleteTmnt,
   getTmnt,
+  getTmnts,
   getTmntYears,
   getUserTmnts,
-  exportedForTesting,
-  getTmntFullData,
-  postTmnt,
-  putTmnt,
-  deleteTmnt,
   replaceTmntFullData,
   replaceTmntEntriesData,
+  exportedForTesting,
+  getTmntFullData,
 } from "@/lib/db/tmnts/dbTmnts";
+import { todayYearStr } from "@/lib/dateTools";
 import { mockTmntFullData } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
+import { cloneDeep } from "lodash";
 
 const { getTmntsForYear, getUpcomingTmnts } = exportedForTesting;
+
+jest.mock("@/lib/api/axios", () => ({
+  __esModule: true,
+  publicApi: {
+    get: jest.fn(),
+  },
+  privateApi: {
+    put: jest.fn(),
+    delete: jest.fn(),
+  },
+}));
+
+const mockPublicGet = publicApi.get as jest.Mock;
+const mockPrivatePut = privateApi.put as jest.Mock;
+const mockPrivateDelete = privateApi.delete as jest.Mock;
 
 // If running tests AND a test URL is defined, use it; otherwise use the app API path
 const url = process.env.NODE_ENV === "test" && testBaseTmntsApi
   ? testBaseTmntsApi
   : baseTmntsApi;
 
+const fullUrl = url + "/full/";
+const fullEntriesUrl = url + "/fullEntries/";
 const tmntUrl = url + "/tmnt/";
+const userUrl = url + "/user/";
+const yearsUrl = url + "/years/";
+const upcomingUrl = url + "/upcoming";
+const resultsUrl = url + "/results/";
 
-jest.mock("@/lib/api/axios", () => ({
-  publicApi: {
-    get: jest.fn(),
-  },
-  privateApi: {
-    post: jest.fn(),
-    put: jest.fn(),
-    delete: jest.fn(),
-  },
-}));
-
-const mockedPublicApi = publicApi as jest.Mocked<typeof publicApi>;
-const mockedPrivateApi = privateApi as jest.Mocked<typeof privateApi>;
+// a real AxiosError, like axios rejects with for a non-2xx response
+const axiosError = (status: number) =>
+  new AxiosError(
+    `Request failed with status code ${status}`,
+    status >= 500 ? "ERR_BAD_RESPONSE" : "ERR_BAD_REQUEST",
+    undefined,
+    undefined,
+    {
+      status,
+      statusText: "",
+      data: {},
+      headers: {},
+      config: { headers: new AxiosHeaders() },
+    }
+  );
 
 const tmntId = "tmt_fd99387c33d9c78aba290286576ddce5";
 const userId = "usr_5bcefb5d314fff1ff5da6521a2fa7bde";
 
-const validTmnt: tmntType = {
-  ...blankTmnt,
-  id: "tmt_1234387c33d9c78aba290286576ddce5",
-  user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
-  tmnt_name: "Test Tournament",
-  bowl_id: "bwl_561540bd64974da9abdd97765fdb3659",
-  start_date_str: "2025-01-31",
-  end_date_str: "2025-01-31",
-};
-
 describe("non standard throw cases", () => {
-  afterEach(() => {
-    jest.clearAllMocks();
+  beforeEach(() => {
+    // mockReset also clears mockResolvedValue implementations,
+    // clearAllMocks only clears the call history
+    mockPublicGet.mockReset();
+    mockPrivatePut.mockReset();
+    mockPrivateDelete.mockReset();
   });
 
   describe("getTmnt - non standard throw cases", () => {
     it("should throw an error when response.data.tmnt is missing", async () => {
-      mockedPublicApi.get.mockResolvedValue({
+      mockPublicGet.mockResolvedValue({
         data: {},
-      } as any);
+      });
 
       await expect(getTmnt(tmntId)).rejects.toThrow(
-        "getTmnt failed: Missing tmnt data",
+        "getTmnt failed: Missing tmnt data"
       );
 
-      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
-      expect(mockedPublicApi.get).toHaveBeenCalledWith(
-        expect.stringContaining(tmntId),
+      expect(mockPublicGet).toHaveBeenCalledTimes(1);
+      expect(mockPublicGet).toHaveBeenCalledWith(tmntUrl + tmntId);
+    });
+
+    it("should throw an error when response.data is null", async () => {
+      mockPublicGet.mockResolvedValue({
+        data: null,
+      });
+
+      await expect(getTmnt(tmntId)).rejects.toThrow(
+        "getTmnt failed: Missing tmnt data"
       );
+    });
+
+    it("should throw an error when response.data.tmnt has no bowl", async () => {
+      mockPublicGet.mockResolvedValue({
+        data: {
+          tmnt: {
+            id: tmntId,
+            user_id: userId,
+            tmnt_name: "Gold Pin",
+            start_date: "2022-10-23T00:00:00.000Z",
+            end_date: "2022-10-23T00:00:00.000Z",
+          },
+        },
+      });
+
+      await expect(getTmnt(tmntId)).rejects.toThrow(/^getTmnt failed: .*bowl_name/);
     });
 
     it("should throw with custom message if publicApi.get rejects", async () => {
-      mockedPublicApi.get.mockRejectedValueOnce(new Error("Network Error"));
+      mockPublicGet.mockRejectedValueOnce(new Error("Network Error"));
 
       await expect(getTmnt(tmntId)).rejects.toThrow(
-        "getTmnt failed: Network Error",
+        "getTmnt failed: Network Error"
       );
 
-      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
+      expect(mockPublicGet).toHaveBeenCalledTimes(1);
     });
 
     it("should throw an error when publicApi.get rejects with non-error", async () => {
-      mockedPublicApi.get.mockRejectedValueOnce("testing 123");
+      mockPublicGet.mockRejectedValueOnce("testing 123");
 
       await expect(getTmnt(tmntId)).rejects.toThrow(
-        "getTmnt failed: testing 123",
+        "getTmnt failed: testing 123"
       );
-
-      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
     });
   });
 
   describe("getUserTmnts - non standard throw cases", () => {
     it("should throw an error when response.data.tmnts is missing", async () => {
-      mockedPublicApi.get.mockResolvedValue({
+      mockPublicGet.mockResolvedValue({
         data: {},
-      } as any);
+      });
 
       await expect(getUserTmnts(userId)).rejects.toThrow(
-        "getUserTmnts failed: Missing tmnts data",
+        "getUserTmnts failed: Missing tmnts data"
       );
 
-      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
-      expect(mockedPublicApi.get).toHaveBeenCalledWith(
-        expect.stringContaining(userId),
+      expect(mockPublicGet).toHaveBeenCalledTimes(1);
+      expect(mockPublicGet).toHaveBeenCalledWith(userUrl + userId);
+    });
+
+    it("should throw an error when response.data is null", async () => {
+      mockPublicGet.mockResolvedValue({
+        data: null,
+      });
+
+      await expect(getUserTmnts(userId)).rejects.toThrow(
+        "getUserTmnts failed: Missing tmnts data"
+      );
+    });
+
+    it("should throw an error when response.data.tmnts is not an array", async () => {
+      mockPublicGet.mockResolvedValue({
+        data: { tmnts: "not an array" },
+      });
+
+      await expect(getUserTmnts(userId)).rejects.toThrow(
+        /^getUserTmnts failed: .*is not a function/
       );
     });
 
     it("should throw with custom message if publicApi.get rejects", async () => {
-      mockedPublicApi.get.mockRejectedValueOnce(new Error("Network Error"));
+      mockPublicGet.mockRejectedValueOnce(new Error("Network Error"));
 
       await expect(getUserTmnts(userId)).rejects.toThrow(
-        "getUserTmnts failed: Network Error",
+        "getUserTmnts failed: Network Error"
       );
 
-      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
+      expect(mockPublicGet).toHaveBeenCalledTimes(1);
     });
 
     it("should throw an error when publicApi.get rejects with non-error", async () => {
-      mockedPublicApi.get.mockRejectedValueOnce("testing 123");
+      mockPublicGet.mockRejectedValueOnce("testing 123");
 
       await expect(getUserTmnts(userId)).rejects.toThrow(
-        "getUserTmnts failed: testing 123",
+        "getUserTmnts failed: testing 123"
       );
-
-      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
     });
   });
 
   describe("getTmntYears - non standard throw cases", () => {
     it("should throw an error when response.data.years is missing", async () => {
-      mockedPublicApi.get.mockResolvedValue({
+      mockPublicGet.mockResolvedValue({
         data: {},
-      } as any);
+      });
 
       await expect(getTmntYears()).rejects.toThrow(
-        "getTmntYears failed: Missing years data",
+        "getTmntYears failed: Missing years data"
       );
 
-      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
-      expect(mockedPublicApi.get).toHaveBeenCalledWith(
-        expect.stringContaining("years"),
+      expect(mockPublicGet).toHaveBeenCalledTimes(1);
+      expect(mockPublicGet).toHaveBeenCalledWith(yearsUrl + todayYearStr);
+    });
+
+    it("should throw an error when response.data is null", async () => {
+      mockPublicGet.mockResolvedValue({
+        data: null,
+      });
+
+      await expect(getTmntYears()).rejects.toThrow(
+        "getTmntYears failed: Missing years data"
       );
     });
 
-    it("should reject if publicApi.get rejects with Error", async () => {
-      mockedPublicApi.get.mockRejectedValueOnce(new Error("Network Error"));
+    // getTmntYears has no try / catch, so a reject is passed on as is
+    it("should pass on the error if publicApi.get rejects", async () => {
+      const err = new Error("Network Error");
+      mockPublicGet.mockRejectedValueOnce(err);
 
-      await expect(getTmntYears()).rejects.toThrow("Network Error");
+      await expect(getTmntYears()).rejects.toBe(err);
 
-      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
+      expect(mockPublicGet).toHaveBeenCalledTimes(1);
     });
 
-    it("should reject if publicApi.get rejects with non-error", async () => {
-      mockedPublicApi.get.mockRejectedValueOnce("testing 123");
+    it("should pass on the value when publicApi.get rejects with non-error", async () => {
+      mockPublicGet.mockRejectedValueOnce("testing 123");
 
       await expect(getTmntYears()).rejects.toBe("testing 123");
-
-      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
     });
   });
 
   describe("getTmntsForYear - non standard throw cases", () => {
-    it("should throw an error when year is invalid", async () => {
-      await expect(getTmntsForYear("abcd")).rejects.toThrow("Invalid year");
-      expect(mockedPublicApi.get).not.toHaveBeenCalled();
-    });
-
     it("should throw an error when response.data.tmnts is missing", async () => {
-      mockedPublicApi.get.mockResolvedValue({
+      mockPublicGet.mockResolvedValue({
         data: {},
-      } as any);
+      });
 
-      await expect(getTmntsForYear("2024")).rejects.toThrow(
-        "getTmntsForYear failed: Missing tournaments data for year 2024",
+      await expect(getTmntsForYear("2023")).rejects.toThrow(
+        "getTmntsForYear failed: Missing tournaments data for year 2023"
       );
 
-      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
-      expect(mockedPublicApi.get).toHaveBeenCalledWith(
-        expect.stringContaining("2024"),
-        expect.objectContaining({ params: {} }),
+      expect(mockPublicGet).toHaveBeenCalledTimes(1);
+      expect(mockPublicGet).toHaveBeenCalledWith(resultsUrl + "2023", { params: {} });
+    });
+
+    it("should throw an error when response.data is null", async () => {
+      mockPublicGet.mockResolvedValue({
+        data: null,
+      });
+
+      await expect(getTmnts("2023")).rejects.toThrow(
+        "getTmntsForYear failed: Missing tournaments data for year 2023"
       );
     });
 
-    it("should throw if publicApi.get rejects with Error", async () => {
-      mockedPublicApi.get.mockRejectedValueOnce(new Error("Network Error"));
+    it("should throw an error when response.data.tmnts is not an array", async () => {
+      mockPublicGet.mockResolvedValue({
+        data: { tmnts: "not an array" },
+      });
 
-      await expect(getTmntsForYear("2024")).rejects.toThrow(
-        "getTmntsForYear failed: Network Error",
+      await expect(getTmntsForYear("2023")).rejects.toThrow(
+        /^getTmntsForYear failed: .*is not a function/
       );
-
-      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
     });
 
-    it("should throw if publicApi.get rejects with non-error", async () => {
-      mockedPublicApi.get.mockRejectedValueOnce("testing 123");
+    it("should throw with custom message if publicApi.get rejects", async () => {
+      mockPublicGet.mockRejectedValueOnce(new Error("Network Error"));
 
-      await expect(getTmntsForYear("2024")).rejects.toThrow(
-        "getTmntsForYear failed: testing 123",
+      await expect(getTmnts("2023")).rejects.toThrow(
+        "getTmntsForYear failed: Network Error"
       );
 
-      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
+      expect(mockPublicGet).toHaveBeenCalledTimes(1);
+    });
+
+    it("should throw an error when publicApi.get rejects with non-error", async () => {
+      mockPublicGet.mockRejectedValueOnce("testing 123");
+
+      await expect(getTmntsForYear("2023")).rejects.toThrow(
+        "getTmntsForYear failed: testing 123"
+      );
     });
   });
 
   describe("getUpcomingTmnts - non standard throw cases", () => {
     it("should throw an error when response.data.tmnts is missing", async () => {
-      mockedPublicApi.get.mockResolvedValue({
+      mockPublicGet.mockResolvedValue({
         data: {},
-      } as any);
+      });
 
       await expect(getUpcomingTmnts()).rejects.toThrow(
-        "getUpcomingTmnts failed: Missing upcoming tournaments data",
+        "getUpcomingTmnts failed: Missing upcoming tournaments data"
       );
 
-      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
-      expect(mockedPublicApi.get).toHaveBeenCalledWith(
-        expect.stringContaining("upcoming"),
-        expect.objectContaining({ params: {} }),
+      expect(mockPublicGet).toHaveBeenCalledTimes(1);
+      expect(mockPublicGet).toHaveBeenCalledWith(upcomingUrl, { params: {} });
+    });
+
+    it("should throw an error when response.data is null", async () => {
+      mockPublicGet.mockResolvedValue({
+        data: null,
+      });
+
+      await expect(getTmnts("")).rejects.toThrow(
+        "getUpcomingTmnts failed: Missing upcoming tournaments data"
       );
     });
 
-    it("should throw if publicApi.get rejects with Error", async () => {
-      mockedPublicApi.get.mockRejectedValueOnce(new Error("Network Error"));
+    it("should throw an error when response.data.tmnts is not an array", async () => {
+      mockPublicGet.mockResolvedValue({
+        data: { tmnts: "not an array" },
+      });
 
       await expect(getUpcomingTmnts()).rejects.toThrow(
-        "getUpcomingTmnts failed: Network Error",
+        /^getUpcomingTmnts failed: .*is not a function/
       );
-
-      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
     });
 
-    it("should throw if publicApi.get rejects with non-error", async () => {
-      mockedPublicApi.get.mockRejectedValueOnce("testing 123");
+    it("should throw with custom message if publicApi.get rejects", async () => {
+      mockPublicGet.mockRejectedValueOnce(new Error("Network Error"));
 
-      await expect(getUpcomingTmnts()).rejects.toThrow(
-        "getUpcomingTmnts failed: testing 123",
+      await expect(getTmnts("")).rejects.toThrow(
+        "getUpcomingTmnts failed: Network Error"
       );
 
-      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
+      expect(mockPublicGet).toHaveBeenCalledTimes(1);
+    });
+
+    it("should throw an error when publicApi.get rejects with non-error", async () => {
+      mockPublicGet.mockRejectedValueOnce("testing 123");
+
+      await expect(getUpcomingTmnts()).rejects.toThrow(
+        "getUpcomingTmnts failed: testing 123"
+      );
     });
   });
 
   describe("getTmntFullData - non standard throw cases", () => {
     it("should throw an error when response.data.tmntFullData is missing", async () => {
-      mockedPublicApi.get.mockResolvedValue({
+      mockPublicGet.mockResolvedValue({
         data: {},
-      } as any);
+      });
 
       await expect(getTmntFullData(tmntId)).rejects.toThrow(
-        "getTmntFullData failed: Missing tmntFullData",
+        "getTmntFullData failed: Missing tmntFullData"
       );
 
-      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
-      expect(mockedPublicApi.get).toHaveBeenCalledWith(
-        expect.stringContaining(tmntId),
+      expect(mockPublicGet).toHaveBeenCalledTimes(1);
+      expect(mockPublicGet).toHaveBeenCalledWith(fullUrl + tmntId);
+    });
+
+    it("should throw an error when response.data is null", async () => {
+      mockPublicGet.mockResolvedValue({
+        data: null,
+      });
+
+      await expect(getTmntFullData(tmntId)).rejects.toThrow(
+        "getTmntFullData failed: Missing tmntFullData"
       );
     });
 
     it("should throw with custom message if publicApi.get rejects", async () => {
-      mockedPublicApi.get.mockRejectedValueOnce(new Error("Network Error"));
+      mockPublicGet.mockRejectedValueOnce(new Error("Network Error"));
 
       await expect(getTmntFullData(tmntId)).rejects.toThrow(
-        "getTmntFullData failed: Network Error",
+        "getTmntFullData failed: Network Error"
       );
 
-      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
+      expect(mockPublicGet).toHaveBeenCalledTimes(1);
     });
 
     it("should throw an error when publicApi.get rejects with non-error", async () => {
-      mockedPublicApi.get.mockRejectedValueOnce("testing 123");
+      mockPublicGet.mockRejectedValueOnce("testing 123");
 
       await expect(getTmntFullData(tmntId)).rejects.toThrow(
-        "getTmntFullData failed: testing 123",
-      );
-
-      expect(mockedPublicApi.get).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("postTmnt - non standard throw cases", () => {
-    it("should throw an error when response.data.tmnt is missing", async () => {
-      mockedPrivateApi.post.mockResolvedValueOnce({
-        data: {},
-      } as any);
-
-      await expect(postTmnt(validTmnt)).rejects.toThrow("postTmnt failed: Error posting tmnt");
-
-      expect(mockedPrivateApi.post).toHaveBeenCalledTimes(1);
-      expect(mockedPrivateApi.post).toHaveBeenCalledWith(
-        url,
-        JSON.stringify(validTmnt),
+        "getTmntFullData failed: testing 123"
       );
     });
 
-    it("should throw with custom message if privateApi.post rejects", async () => {
-      mockedPrivateApi.post.mockRejectedValueOnce(new Error("Network Error"));
+    it("should throw with a custom message if publicApi.get rejects with a 404 AxiosError", async () => {
+      mockPublicGet.mockRejectedValueOnce(axiosError(404));
 
-      await expect(postTmnt(validTmnt)).rejects.toThrow(
-        "postTmnt failed: Network Error",
-      );
-
-      expect(mockedPrivateApi.post).toHaveBeenCalledTimes(1);
-    });
-
-    it("should throw an error when privateApi.post rejects with non-error", async () => {
-      mockedPrivateApi.post.mockRejectedValueOnce("testing 123");
-
-      await expect(postTmnt(validTmnt)).rejects.toThrow(
-        "postTmnt failed: testing 123",
-      );
-
-      expect(mockedPrivateApi.post).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("putTmnt - non standard throw cases", () => {
-    it("should throw an error when response.data.tmnt is missing", async () => {
-      mockedPrivateApi.put.mockResolvedValueOnce({
-        data: {},
-      } as any);
-
-      await expect(putTmnt(validTmnt)).rejects.toThrow("putTmnt failed: Error putting tmnt");
-
-      expect(mockedPrivateApi.put).toHaveBeenCalledTimes(1);
-      expect(mockedPrivateApi.put).toHaveBeenCalledWith(
-        tmntUrl + validTmnt.id,
-        JSON.stringify(validTmnt),
+      await expect(getTmntFullData(tmntId)).rejects.toThrow(
+        "getTmntFullData failed: Request failed with status code 404"
       );
     });
 
-    it("should throw with custom message if privateApi.put rejects", async () => {
-      mockedPrivateApi.put.mockRejectedValueOnce(new Error("Network Error"));
+    // only the api call is in the try / catch; reading the data is not,
+    // so bad data throws the plain TypeError, without "getTmntFullData failed"
+    it("should throw a TypeError when response.data.tmntFullData has no bowl", async () => {
+      mockPublicGet.mockResolvedValue({
+        data: {
+          tmntFullData: {
+            id: tmntId,
+            user_id: userId,
+            tmnt_name: "Gold Pin",
+            start_date: "2022-10-23T00:00:00.000Z",
+            end_date: "2022-10-23T00:00:00.000Z",
+            divs: [],
+            events: [],
+          },
+        },
+      });
 
-      await expect(putTmnt(validTmnt)).rejects.toThrow(
-        "putTmnt failed: Network Error",
-      );
-
-      expect(mockedPrivateApi.put).toHaveBeenCalledTimes(1);
-    });
-
-    it("should throw an error when privateApi.put rejects with non-error", async () => {
-      mockedPrivateApi.put.mockRejectedValueOnce("testing 123");
-
-      await expect(putTmnt(validTmnt)).rejects.toThrow(
-        "putTmnt failed: testing 123",
-      );
-
-      expect(mockedPrivateApi.put).toHaveBeenCalledTimes(1);
+      await expect(getTmntFullData(tmntId)).rejects.toThrow(TypeError);
     });
   });
 
   describe("replaceTmntFullData - non standard throw cases", () => {
-    const validFullTmnt: tmntFullType = mockTmntFullData;
+    it("should throw an error when response.data.success is missing", async () => {
+      mockPrivatePut.mockResolvedValue({
+        data: {},
+      });
+      const toReplace = cloneDeep(mockTmntFullData);
 
-    beforeEach(() => {
-      jest.clearAllMocks();
-    });
+      await expect(replaceTmntFullData(toReplace)).rejects.toThrow(
+        "replaceTmntFullData failed: Error replacing full tmnt"
+      );
 
-    it("should throw when privateApi.put rejects", async () => {
-      mockedPrivateApi.put.mockRejectedValue(new Error("network fail"));
-
-      await expect(replaceTmntFullData(validFullTmnt)).rejects.toThrow(
-        "replaceTmntFullData failed: network fail",
+      expect(mockPrivatePut).toHaveBeenCalledTimes(1);
+      expect(mockPrivatePut).toHaveBeenCalledWith(
+        fullUrl + toReplace.tmnt.id,
+        JSON.stringify(toReplace)
       );
     });
 
-    it("should throw when response.data.success is missing", async () => {
-      mockedPrivateApi.put.mockResolvedValue({ data: {} } as any);
+    it("should throw an error when response.data is null", async () => {
+      mockPrivatePut.mockResolvedValue({
+        data: null,
+      });
 
-      await expect(replaceTmntFullData(validFullTmnt)).rejects.toThrow(
-        "replaceTmntFullData failed: Error replacing full tmnt",
+      await expect(replaceTmntFullData(cloneDeep(mockTmntFullData))).rejects.toThrow(
+        "replaceTmntFullData failed: Error replacing full tmnt"
       );
     });
 
-    it("should throw when response.data.success !== true", async () => {
-      mockedPrivateApi.put.mockResolvedValue({
-        data: { success: false },
-      } as any);
+    it("should throw with custom message if privateApi.put rejects", async () => {
+      mockPrivatePut.mockRejectedValueOnce(new Error("Network Error"));
 
-      await expect(replaceTmntFullData(validFullTmnt)).rejects.toThrow(
-        "replaceTmntFullData failed: Error replacing full tmnt",
+      await expect(replaceTmntFullData(cloneDeep(mockTmntFullData))).rejects.toThrow(
+        "replaceTmntFullData failed: Network Error"
+      );
+
+      expect(mockPrivatePut).toHaveBeenCalledTimes(1);
+    });
+
+    it("should throw an error when privateApi.put rejects with non-error", async () => {
+      mockPrivatePut.mockRejectedValueOnce("testing 123");
+
+      await expect(replaceTmntFullData(cloneDeep(mockTmntFullData))).rejects.toThrow(
+        "replaceTmntFullData failed: testing 123"
+      );
+    });
+
+    it("should pass on the message when privateApi.put rejects with a 422 AxiosError", async () => {
+      mockPrivatePut.mockRejectedValueOnce(axiosError(422));
+
+      await expect(replaceTmntFullData(cloneDeep(mockTmntFullData))).rejects.toThrow(
+        "replaceTmntFullData failed: Request failed with status code 422"
+      );
+    });
+
+    it("should pass on the message when privateApi.put rejects with an AxiosError with no response", async () => {
+      mockPrivatePut.mockRejectedValueOnce(
+        new AxiosError("Network Error", "ERR_NETWORK")
+      );
+
+      await expect(replaceTmntFullData(cloneDeep(mockTmntFullData))).rejects.toThrow(
+        "replaceTmntFullData failed: Network Error"
       );
     });
   });
 
-  describe("replaceTmntFullEntriesData - non standard throw cases", () => {
-    const validFullTmnt: tmntFullType = mockTmntFullData;
+  describe("replaceTmntEntriesData - non standard throw cases", () => {
+    // the message prefix is replaceTmntFullEntriesData, not the function name
+    it("should throw an error when response.data.success and stage are missing", async () => {
+      mockPrivatePut.mockResolvedValue({
+        data: {},
+      });
+      const toReplace = cloneDeep(mockTmntFullData);
 
-    beforeEach(() => {
-      jest.clearAllMocks();
-    });
+      await expect(replaceTmntEntriesData(toReplace)).rejects.toThrow(
+        "replaceTmntFullEntriesData failed: Error replacing full tmnt entries"
+      );
 
-    it("should throw when privateApi.put rejects", async () => {
-      mockedPrivateApi.put.mockRejectedValue(new Error("network fail"));
-
-      await expect(replaceTmntEntriesData(validFullTmnt)).rejects.toThrow(
-        "replaceTmntFullEntriesData failed: network fail",
+      expect(mockPrivatePut).toHaveBeenCalledTimes(1);
+      expect(mockPrivatePut).toHaveBeenCalledWith(
+        fullEntriesUrl + toReplace.tmnt.id,
+        expect.any(String)
       );
     });
 
-    it("should throw when response.data.success is missing", async () => {
-      mockedPrivateApi.put.mockResolvedValue({ data: {} } as any);
+    it("should throw an error when response.data is null", async () => {
+      mockPrivatePut.mockResolvedValue({
+        data: null,
+      });
 
-      await expect(replaceTmntEntriesData(validFullTmnt)).rejects.toThrow(
-        "replaceTmntFullEntriesData failed: Error replacing full tmnt entries",
+      await expect(replaceTmntEntriesData(cloneDeep(mockTmntFullData))).rejects.toThrow(
+        "replaceTmntFullEntriesData failed: Error replacing full tmnt entries"
       );
     });
 
-    it("should throw when response.data.success !== true", async () => {
-      mockedPrivateApi.put.mockResolvedValue({
-        data: { success: false },
-      } as any);
-
-      await expect(replaceTmntEntriesData(validFullTmnt)).rejects.toThrow(
-        "replaceTmntFullEntriesData failed: Error replacing full tmnt entries",
-      );
-    });
-
-    it("should throw when response.data.stage is missing", async () => {
-      mockedPrivateApi.put.mockResolvedValue({
+    it("should throw an error when response.data.stage is missing", async () => {
+      mockPrivatePut.mockResolvedValue({
         data: { success: true },
-      } as any);
+      });
 
-      await expect(replaceTmntEntriesData(validFullTmnt)).rejects.toThrow(
-        "replaceTmntFullEntriesData failed: Error replacing full tmnt entries",
+      await expect(replaceTmntEntriesData(cloneDeep(mockTmntFullData))).rejects.toThrow(
+        "replaceTmntFullEntriesData failed: Error replacing full tmnt entries"
+      );
+    });
+
+    it("should throw an error when response.data.success is false", async () => {
+      mockPrivatePut.mockResolvedValue({
+        data: { success: false, stage: mockTmntFullData.stage },
+      });
+
+      await expect(replaceTmntEntriesData(cloneDeep(mockTmntFullData))).rejects.toThrow(
+        "replaceTmntFullEntriesData failed: Error replacing full tmnt entries"
+      );
+    });
+
+    it("should throw with custom message if privateApi.put rejects", async () => {
+      mockPrivatePut.mockRejectedValueOnce(new Error("Network Error"));
+
+      await expect(replaceTmntEntriesData(cloneDeep(mockTmntFullData))).rejects.toThrow(
+        "replaceTmntFullEntriesData failed: Network Error"
+      );
+
+      expect(mockPrivatePut).toHaveBeenCalledTimes(1);
+    });
+
+    it("should throw an error when privateApi.put rejects with non-error", async () => {
+      mockPrivatePut.mockRejectedValueOnce("testing 123");
+
+      await expect(replaceTmntEntriesData(cloneDeep(mockTmntFullData))).rejects.toThrow(
+        "replaceTmntFullEntriesData failed: testing 123"
+      );
+    });
+
+    it("should pass on the message when privateApi.put rejects with a 422 AxiosError", async () => {
+      mockPrivatePut.mockRejectedValueOnce(axiosError(422));
+
+      await expect(replaceTmntEntriesData(cloneDeep(mockTmntFullData))).rejects.toThrow(
+        "replaceTmntFullEntriesData failed: Request failed with status code 422"
       );
     });
   });
 
   describe("deleteTmnt - non standard throw cases", () => {
     it("should throw an error when response.data.count is missing", async () => {
-      mockedPrivateApi.delete.mockResolvedValueOnce({
+      mockPrivateDelete.mockResolvedValue({
         data: {},
-      } as any);
+      });
 
       await expect(deleteTmnt(tmntId)).rejects.toThrow(
-        "deleteTmnt failed: Error deleting tmnt",
+        "deleteTmnt failed: Error deleting tmnt"
       );
 
-      expect(mockedPrivateApi.delete).toHaveBeenCalledTimes(1);
-      expect(mockedPrivateApi.delete).toHaveBeenCalledWith(tmntUrl + tmntId);
+      expect(mockPrivateDelete).toHaveBeenCalledTimes(1);
+      expect(mockPrivateDelete).toHaveBeenCalledWith(tmntUrl + tmntId);
+    });
+
+    it("should throw an error when response.data is null", async () => {
+      mockPrivateDelete.mockResolvedValue({
+        data: null,
+      });
+
+      await expect(deleteTmnt(tmntId)).rejects.toThrow(
+        "deleteTmnt failed: Error deleting tmnt"
+      );
+    });
+
+    it("should throw an error when response.data.count is not a number", async () => {
+      mockPrivateDelete.mockResolvedValue({
+        data: { count: "1" },
+      });
+
+      await expect(deleteTmnt(tmntId)).rejects.toThrow(
+        "deleteTmnt failed: Error deleting tmnt"
+      );
     });
 
     it("should throw with custom message if privateApi.delete rejects", async () => {
-      mockedPrivateApi.delete.mockRejectedValueOnce(new Error("Network Error"));
+      mockPrivateDelete.mockRejectedValueOnce(new Error("Network Error"));
 
       await expect(deleteTmnt(tmntId)).rejects.toThrow(
-        "deleteTmnt failed: Network Error",
+        "deleteTmnt failed: Network Error"
       );
 
-      expect(mockedPrivateApi.delete).toHaveBeenCalledTimes(1);
+      expect(mockPrivateDelete).toHaveBeenCalledTimes(1);
     });
 
     it("should throw an error when privateApi.delete rejects with non-error", async () => {
-      mockedPrivateApi.delete.mockRejectedValueOnce("testing 123");
+      mockPrivateDelete.mockRejectedValueOnce("testing 123");
 
       await expect(deleteTmnt(tmntId)).rejects.toThrow(
-        "deleteTmnt failed: testing 123",
+        "deleteTmnt failed: testing 123"
       );
-
-      expect(mockedPrivateApi.delete).toHaveBeenCalledTimes(1);
     });
   });
 });

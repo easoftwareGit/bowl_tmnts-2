@@ -3,7 +3,7 @@ import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer";
 import { sortedDivsByOrder, sortedPlayersByLanePos, tmntObjectHasData } from "@/lib/reportTools";
 import type { tmntFullType, divEntryType, divType, playerType } from "@/lib/types/types";
 import { fullName } from "@/lib/getName";
-import { calcHandicap } from "@/lib/db/divEntries/calcHdcp";
+import { calcHandicap } from "@/lib/db/helpers";
 import { dateTo_MMddyyyy } from "@/lib/dateTools";
 
 type gridCol = {

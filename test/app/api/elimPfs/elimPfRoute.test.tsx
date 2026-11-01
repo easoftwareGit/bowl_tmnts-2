@@ -1,1162 +1,546 @@
-import { privateApi } from "@/lib/api/axios";
-import { AxiosError } from "axios";
-import { baseElimPfsApi } from "@/lib/api/apiPaths";
-import { testBaseElimPfsApi } from "../../../testApi";
-import type { elimPfDataType, elimPfSaveDataType, elimPfType } from "@/lib/types/types";
+/**
+ * @jest-environment node
+ */
+// Tests for src/app/api/elimPfs/tmnt/[tmntId]/route.ts using mocked prisma.
+// No database or server needed.
+//
+// PUT runs its queries inside prisma.$transaction(async (tx) => {...}).
+// Here $transaction just calls that callback with prismaMock as tx, so
+// tx.elim_PF.deleteMany / createMany are the same mocks the tests check.
+//
+// isElimPfSaveDataType, validateElimPfs and elimPfDataForPrisma are the REAL
+// functions, so validation errors (400 / 422) come from the real code.
+import type { Elim_PF } from "@prisma/client";
+import { GET, PUT } from "@/app/api/elimPfs/tmnt/[tmntId]/route";
+import { prismaMock } from "../../../prismaMock";
+import type { elimPfSaveDataType, elimPfType } from "@/lib/types/types";
 import { initElimPf } from "@/lib/db/initVals";
 import { maxMoney, maxPosition } from "@/lib/validation/constants";
 import { cloneDeep } from "lodash";
 
-// before running this test, run the following commands in the terminal:
-// 1) clear and re-seed the database
-//    a) clear the database
-//       npx prisma db push --force-reset
-//    b) re-seed
-//       npx prisma db seed  
-//    if just need to re-seed, then only need step 1b
-// 2) make sure the server is running
-//    in the VS activity bar, 
-//      a) click on "Run and Debug" (Ctrl+Shift+D)
-//      b) at the top of the window, click on the drop-down arrow
-//      c) select "Node.js: debug server-side"
-//      d) directly to the left of the drop down select, click the green play button
-//         This will start the server in debug mode. 
+// The URL only needs to be valid; the route reads tmntId from params
+const url = "http://localhost:3000/api/elimPfs/tmnt";
 
-// If running tests AND a test URL is defined, use it; otherwise use the app API path
-const url = process.env.NODE_ENV === "test" && testBaseElimPfsApi
-  ? testBaseElimPfsApi
-  : baseElimPfsApi;
+// Next.js passes route params as a Promise; this builds the 2nd argument
+const ctx = (tmntId: string) => ({ params: Promise.resolve({ tmntId }) });
 
-const oneElimPfUrl = url + "/elimPf/";
-const tmntUrl = url + "/tmnt/";
+const getRequest = (tmntId: string) => new Request(`${url}/${tmntId}`);
 
-const notFoundId = "epf_01234567890123456789012345678901";
-const notFoundElimId = "elm_01234567890123456789012345678901";
+// builds a PUT request with a JSON body
+const putRequest = (tmntId: string, body: unknown) =>
+  new Request(`${url}/${tmntId}`, {
+    method: "PUT",
+    body: JSON.stringify(body),
+    headers: { "Content-Type": "application/json" },
+  });
+
+// NextResponse.json() converts Date objects to ISO strings
+const toJson = <T,>(data: T) => JSON.parse(JSON.stringify(data));
+
+// first argument of the first call to a mock
+const firstArg = (fn: unknown) => (fn as jest.Mock).mock.calls[0][0];
+
 const notFoundTmntId = "tmt_01234567890123456789012345678901";
+const notFoundElimId = "elm_01234567890123456789012345678901";
 const userId = "usr_01234567890123456789012345678901";
 
-describe('ElimPfs - GETs and POST API: /api/elimPfs', () => {
+// an Elim_PF row as prisma would return it. GET passes rows straight through,
+// so amount is a plain number here instead of a Prisma Decimal.
+const dbElimPf = (
+  id: string,
+  elim_id: string,
+  position: number,
+  amount: number
+): Elim_PF => ({
+  id,
+  elim_id,
+  position,
+  amount: amount as unknown as Elim_PF["amount"],
+  createdAt: new Date("2026-01-01T00:00:00.000Z"),
+  updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+});
 
-  const testElimPf: elimPfType = {
-    ...initElimPf,
-    id: "epf_42c133340c174d05ba7098930e2f0f90",
-    elim_id: "elm_c47a4ec07f824b0e93169ae78e8b4b1e",
-    position: 1,
-    amount: 30,
-  }
+// what tx.elim_PF.createMany sends to the "db" for each row
+const sentFields = (elimPfs: elimPfType[]) =>
+  elimPfs.map((epf) => ({
+    id: epf.id,
+    elim_id: epf.elim_id,
+    position: epf.position,
+    amount: epf.amount,
+  }));
 
-  describe('GET - API: API: /api/elimPfs/elimPf/:id', () => {
+beforeEach(() => {
+  // interactive transaction: run the route's callback with prismaMock as tx
+  prismaMock.$transaction.mockImplementation(((
+    cb: (tx: typeof prismaMock) => Promise<unknown>
+  ) => cb(prismaMock)) as never);
+  prismaMock.elim_PF.deleteMany.mockResolvedValue({ count: 0 });
+});
 
-    // beforeAll(async () => {
-    //   await deletePostedElimPf(elimPfToPost.id);
-    // });
+describe("ElimPfs - API: /api/elimPfs/tmnt/:tmntId", () => {
+  // ---------------------------------------------------------------- GET
+  describe("GET all elimPfs for a tmnt", () => {
+    it("should get all elimPfs for a tournament - two divs, four elims", async () => {
+      const tmntId = "tmt_fe8ac53dad0f400abe6354210a8f4cd1";
+      const elimIds = [
+        "elm_c01077494c2d4d9da166d697c08c28d2",
+        "elm_c02077494c2d4d9da166d697c08c28d2",
+        "elm_c03077494c2d4d9da166d697c08c28d2",
+        "elm_c04077494c2d4d9da166d697c08c28d2",
+      ];
+      // already in route order: elim_id, then position
+      const rows = [
+        dbElimPf("epf_094a1a974e034940b847bef5b67a4b63", elimIds[0], 1, 60),
+        dbElimPf("epf_710eda589d3f4106abe78006195e328a", elimIds[0], 2, 30),
+        dbElimPf("epf_7e44498e84034bc1a080bfff569680bb", elimIds[1], 1, 60),
+        dbElimPf("epf_9032c654c42240d78eeea91de320049f", elimIds[1], 2, 30),
+        dbElimPf("epf_7e7d7dca4de74085b609030192aa15a5", elimIds[2], 1, 60),
+        dbElimPf("epf_b14d1847af30480aa4123594b0072cb1", elimIds[2], 2, 30),
+        dbElimPf("epf_560a2316645844bb9bdeb094911b9e9d", elimIds[3], 1, 40),
+        dbElimPf("epf_840e009bd5bd4e4aa389ddd02df50f23", elimIds[3], 2, 15),
+      ];
+      prismaMock.elim_PF.findMany.mockResolvedValue(rows);
 
-    it('should get all elimPfs', async () => {
-      const response = await privateApi.get(url);
+      const response = await GET(getRequest(tmntId), ctx(tmntId));
+      const body = await response.json();
+
       expect(response.status).toBe(200);
-      // 19 rows in prisma/seed.ts
-      expect(response.data.elimPfs).toHaveLength(19);
-      const elimPfs: elimPfType[] = response.data.elimPfs;
-      elimPfs.forEach((elimPf: elimPfType) => {
-        expect(elimPf.elim_id).not.toBeNull();
-        expect(elimPf.position).not.toBeNull();
-        expect(elimPf.amount).not.toBeNull();
-      })
+      expect(body.elimPfs).toHaveLength(8);
+      expect(body.elimPfs).toEqual(toJson(rows));
+      for (let i = 0; i < body.elimPfs.length; i++) {
+        expect(body.elimPfs[i].elim_id).toBe(elimIds[Math.floor(i / 2)]);
+        expect(body.elimPfs[i].position).toBe((i % 2) + 1);
+      }
     });
-  })
 
-  describe('GET by ID - API: API: /api/elimPfs/elimPf/:id', () => {
+    it("should query elimPfs by tmnt, sorted by elim_id then position", async () => {
+      const tmntId = "tmt_fe8ac53dad0f400abe6354210a8f4cd1";
+      prismaMock.elim_PF.findMany.mockResolvedValue([]);
 
-    // beforeAll(async () => {
-    //   await deletePostedElimPf(elimPfToPost.id);
-    // });
+      await GET(getRequest(tmntId), ctx(tmntId));
 
-    it('should get one elimPf', async () => {
-      const response = await privateApi.get(oneElimPfUrl + testElimPf.id);
+      expect(prismaMock.elim_PF.findMany).toHaveBeenCalledWith({
+        where: { elim: { div: { tmnt_id: tmntId } } },
+        orderBy: [{ elim_id: "asc" }, { position: "asc" }],
+      });
+    });
+
+    it("should return status 200 and no elimPfs when tmntId is not found", async () => {
+      prismaMock.elim_PF.findMany.mockResolvedValue([]);
+
+      const response = await GET(getRequest(notFoundTmntId), ctx(notFoundTmntId));
+      const body = await response.json();
+
       expect(response.status).toBe(200);
-      // the "GET" returns json'ed data, so decimal values return as strings
-      const elimPf: elimPfType = response.data.elimPf;
-      expect(elimPf.id).toBe(testElimPf.id);
-      expect(elimPf.elim_id).toBe(testElimPf.elim_id);
-      expect(elimPf.position).toBe(testElimPf.position);
-      expect(Number(elimPf.amount)).toBe(testElimPf.amount);
+      expect(body.elimPfs).toHaveLength(0);
     });
-    it('should not get one elimPf when ID is invalid', async () => {
-      try {
-        const response = await privateApi.get(oneElimPfUrl + "/test");
-        expect(true).toBeFalsy();
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
+
+    it.each([
+      { desc: "tmntId is invalid", id: "invalid" },
+      { desc: "tmntId is valid, but not a tmnt id", id: userId },
+    ])("should return 404 when $desc", async ({ id }) => {
+      const response = await GET(getRequest(id), ctx(id));
+
+      expect(response.status).toBe(404);
+      expect(prismaMock.elim_PF.findMany).not.toHaveBeenCalled();
     });
-    it('should not get one elimPf when ID is valid, but not an elimPf ID', async () => {
-      try {
-        const response = await privateApi.get(oneElimPfUrl + userId);
-        expect(true).toBeFalsy();
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not get one elimPf when ID is not found', async () => {
-      try {
-        const response = await privateApi.get(oneElimPfUrl + notFoundId);
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
+
+    it("should return 500 when the database throws", async () => {
+      const tmntId = "tmt_fe8ac53dad0f400abe6354210a8f4cd1";
+      prismaMock.elim_PF.findMany.mockRejectedValue(new Error("connection failed"));
+
+      const response = await GET(getRequest(tmntId), ctx(tmntId));
+      const body = await response.json();
+
+      expect(response.status).toBe(500);
+      expect(body).toEqual({
+        message: "error getting elimPfs for tournament - connection failed",
+      });
     });
   });
 
-  describe('GET all elimPfs for a tmnt - API: /api/elimPfs/tmnt/:tmntId', () => {    
+  // ---------------------------------------------------------------- PUT
+  describe("PUT many elimPfs for a tmnt", () => {
+    // PUTs a valid body, mocks createMany's count, and returns status + body
+    const putValid = async (
+      tmntId: string,
+      elimPfs: elimPfType[],
+      elimIds: string[]
+    ) => {
+      prismaMock.elim_PF.createMany.mockResolvedValue({ count: elimPfs.length });
+      const data: elimPfSaveDataType = { elimPfData: elimPfs, elimIds };
+      const response = await PUT(putRequest(tmntId, data), ctx(tmntId));
+      return { status: response.status, body: await response.json() };
+    };
 
-    it('should get all elimPfs for a tournament - two divs in tournament', async () => {
-      // const values taken from prisma/seed.ts
-      const tmntId = 'tmt_fe8ac53dad0f400abe6354210a8f4cd1';
-      const elimIds: string[] = [
-        'elm_c01077494c2d4d9da166d697c08c28d2',
-        'elm_c02077494c2d4d9da166d697c08c28d2',
-        'elm_c03077494c2d4d9da166d697c08c28d2',
-        'elm_c04077494c2d4d9da166d697c08c28d2'
-      ] 
-
-      const response = await privateApi.get(tmntUrl + tmntId, {
-        withCredentials: true
-      });
-      expect(response.status).toBe(200);
-      // 4 elimPf rows for tmnt in prisma/seed.ts
-      expect(response.data.elimPfs).toHaveLength(8);
-      const elimPfs: elimPfType[] = response.data.elimPfs;
-      // query in /api/elimPf/tmnt/[tmntId] GET sorts by position
-
-      expect(elimPfs[0].elim_id).toBe(elimIds[0]);
-      expect(elimPfs[0].position).toBe(1);
-      expect(elimPfs[0].amount).not.toBeNull();
-
-      expect(elimPfs[1].elim_id).toBe(elimIds[0]);
-      expect(elimPfs[1].position).toBe(2);
-      expect(elimPfs[1].amount).not.toBeNull();
-
-      expect(elimPfs[2].elim_id).toBe(elimIds[1]);
-      expect(elimPfs[2].position).toBe(1);
-      expect(elimPfs[2].amount).not.toBeNull();
-
-      expect(elimPfs[3].elim_id).toBe(elimIds[1]);
-      expect(elimPfs[3].position).toBe(2);
-      expect(elimPfs[3].amount).not.toBeNull();
-
-      expect(elimPfs[4].elim_id).toBe(elimIds[2]);
-      expect(elimPfs[4].position).toBe(1);
-      expect(elimPfs[4].amount).not.toBeNull();
-
-      expect(elimPfs[5].elim_id).toBe(elimIds[2]);
-      expect(elimPfs[5].position).toBe(2);
-      expect(elimPfs[5].amount).not.toBeNull();
-
-      expect(elimPfs[6].elim_id).toBe(elimIds[3]);
-      expect(elimPfs[6].position).toBe(1);
-      expect(elimPfs[6].amount).not.toBeNull();
-
-      expect(elimPfs[7].elim_id).toBe(elimIds[3]);
-      expect(elimPfs[7].position).toBe(2);
-      expect(elimPfs[7].amount).not.toBeNull();
-    });
-    it('should return status 200 when tmntId is not found', async () => {
-      const response = await privateApi.get(tmntUrl + notFoundTmntId, {
-        withCredentials: true
-      });
-      expect(response.status).toBe(200);
-      expect(response.data.elimPfs).toHaveLength(0);
-    });
-    it('should return status 404 when tmntId is invalid', async () => {
-      try {
-        const response = await privateApi.get(tmntUrl + 'invalid', {
-          withCredentials: true
-        });
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should return starus 404 when tmntId is valid, but not a tmnt id', async () => {
-      try {
-        const response = await privateApi.get(tmntUrl + userId, {
-          withCredentials: true
-        })
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-  });
- 
-  describe('PUT many elimPfs API: /api/elimPfs/tmnt/:tmntId', () => {
-
-    describe('should update many elimPfs for a tournament - 1 elim', () => {
-      // values for prisma/seeds.ts      
+    describe("1 elim", () => {
       const pmTmntId = "tmt_fd99387c33d9c78aba290286576ddce5";
       const pmElimId = "elm_45d884582e7042bb95b4818ccdd9974c";
-      const pmElimPf1 = {
+      const pmElimPf1: elimPfType = {
         ...initElimPf,
         id: "epf_59eac0c17bf74348b44041e97469ad76",
         elim_id: pmElimId,
         position: 1,
         amount: 50,
-      }
-      const pmElimPf2 = {
+      };
+      const pmElimPf2: elimPfType = {
         ...initElimPf,
         id: "epf_0fed31aae5374e6690b6535ced1ebff5",
         elim_id: pmElimId,
         position: 2,
         amount: 20,
-      }
+      };
+      const validElimIds = [pmElimId];
 
-      const validElimIds: string[] = [pmElimId];
+      it("should delete then create elimPfs in one transaction", async () => {
+        const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2]);
 
-      const restoreElimPfs = async () => {
-        await privateApi.delete(tmntUrl + pmTmntId);
-        const restorePmElimPfs = cloneDeep([pmElimPf1, pmElimPf2]);
-        const restoreElimIds = cloneDeep(validElimIds); 
-        const restoreData: elimPfSaveDataType = {
-          elimPfData: restorePmElimPfs,
-          elimIds: restoreElimIds
-        }
-        const restoreJSON = JSON.stringify(restoreData);
-        await privateApi.put(tmntUrl + pmTmntId, restoreJSON);
-      }
+        const { status, body } = await putValid(pmTmntId, pmElimPfs, validElimIds);
 
-      let putMany = false;
+        expect(status).toBe(200);
+        expect(body.message).toBe("elimPfs replaced");
+        expect(prismaMock.$transaction).toHaveBeenCalledTimes(1);
+        expect(prismaMock.elim_PF.deleteMany).toHaveBeenCalledWith({
+          where: { elim: { div: { tmnt_id: pmTmntId } } },
+        });
+        // delete runs before create
+        expect(
+          prismaMock.elim_PF.deleteMany.mock.invocationCallOrder[0]
+        ).toBeLessThan(prismaMock.elim_PF.createMany.mock.invocationCallOrder[0]);
+        // the rows sent to the "db" are the rows returned
+        expect(prismaMock.elim_PF.createMany).toHaveBeenCalledWith({
+          data: body.elimPfs,
+        });
+      });
 
-      beforeAll(async () => {
-        await restoreElimPfs();
-      })
-
-      afterEach(async () => {
-        if (putMany) {
-          await restoreElimPfs();
-        }
-        putMany = false;
-      })
-
-      it('should update many elimPfs for a tournament - 1 div - change amount', async () => {
+      it("should update many elimPfs - change amount", async () => {
         const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2]);
         pmElimPfs[0].amount = 350;
         pmElimPfs[1].amount = 250;
 
-        const validData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: validElimIds
-        }
-        const elimPfJSON = JSON.stringify(validData);
+        const { status, body } = await putValid(pmTmntId, pmElimPfs, validElimIds);
 
-        const response = await privateApi.put(tmntUrl + pmTmntId, elimPfJSON);
-        expect(response.status).toBe(200);
-        putMany = true;
-        expect(response.data.count).toBe(pmElimPfs.length);
-        expect(response.data.elimPfs).toHaveLength(pmElimPfs.length);
-        const puttedElimPfs = response.data.elimPfs;
-        expect(puttedElimPfs[0].amount).toBe(pmElimPfs[0].amount);
-        expect(puttedElimPfs[1].amount).toBe(pmElimPfs[1].amount);
+        expect(status).toBe(200);
+        expect(body.count).toBe(pmElimPfs.length);
+        expect(body.elimPfs).toMatchObject(sentFields(pmElimPfs));
       });
-      it('should update many elimPfs for a tournament - 1 div - add row', async () => {
+
+      it("should update many elimPfs - add row", async () => {
         const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2]);
         pmElimPfs.push({
-          ...initElimPf,          
+          ...initElimPf,
           id: "epf_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
           elim_id: pmElimId,
           position: 3,
           amount: 10,
         });
-        
-        const validData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: validElimIds
-        }
-        const elimPfJSON = JSON.stringify(validData);
 
-        const response = await privateApi.put(tmntUrl + pmTmntId, elimPfJSON);
-        expect(response.status).toBe(200);
-        putMany = true;
-        expect(response.data.count).toBe(pmElimPfs.length);
-        expect(response.data.elimPfs).toHaveLength(pmElimPfs.length);
-        const puttedElimPfs = response.data.elimPfs;
-        expect(puttedElimPfs[0].amount).toBe(pmElimPfs[0].amount);
-        expect(puttedElimPfs[1].amount).toBe(pmElimPfs[1].amount);
-        expect(puttedElimPfs[2].amount).toBe(pmElimPfs[2].amount);
-      })
-      it('should update many elimPfs for a tournament - 1 div - change amount and delete a row', async () => {
+        const { status, body } = await putValid(pmTmntId, pmElimPfs, validElimIds);
+
+        expect(status).toBe(200);
+        expect(body.count).toBe(3);
+        expect(body.elimPfs).toMatchObject(sentFields(pmElimPfs));
+      });
+
+      it("should update many elimPfs - change amount and delete a row", async () => {
         const pmElimPfs = cloneDeep([pmElimPf1]);
         pmElimPfs[0].amount = 400;
-        
-        const validData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: validElimIds
-        }
-        const elimPfJSON = JSON.stringify(validData);
-        
-        const response = await privateApi.put(tmntUrl + pmTmntId, elimPfJSON);
-        expect(response.status).toBe(200);
-        putMany = true;
-        expect(response.data.count).toBe(pmElimPfs.length);
-        expect(response.data.elimPfs).toHaveLength(pmElimPfs.length);
-        const puttedElimPfs = response.data.elimPfs;
-        expect(puttedElimPfs[0].amount).toBe(pmElimPfs[0].amount);
-      })
-      it('should update many elimPfs for a tournament - 1 div - sanitize amount', async () => {
+
+        const { status, body } = await putValid(pmTmntId, pmElimPfs, validElimIds);
+
+        expect(status).toBe(200);
+        expect(body.count).toBe(1);
+        expect(body.elimPfs).toMatchObject(sentFields(pmElimPfs));
+      });
+
+      it("should update many elimPfs - sanitize amount", async () => {
         const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2]);
         pmElimPfs[0].amount = 350.351;
-        
-        const validData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: validElimIds
-        }
-        const elimPfJSON = JSON.stringify(validData);
-        
-        const response = await privateApi.put(tmntUrl + pmTmntId, elimPfJSON);
-        expect(response.status).toBe(200);
-        putMany = true;
-        expect(response.data.count).toBe(pmElimPfs.length);
-        expect(response.data.elimPfs).toHaveLength(pmElimPfs.length);
-        const puttedElimPfs = response.data.elimPfs;
-        expect(puttedElimPfs[0].amount).toBe(350.35);
-        expect(puttedElimPfs[1].amount).toBe(pmElimPfs[1].amount);
+
+        const { status, body } = await putValid(pmTmntId, pmElimPfs, validElimIds);
+
+        expect(status).toBe(200);
+        expect(body.elimPfs[0].amount).toBe(350.35);
+        expect(body.elimPfs[1].amount).toBe(pmElimPfs[1].amount);
+        // the sanitized amount is what was sent to the "db"
+        const sent = firstArg(prismaMock.elim_PF.createMany) as {
+          data: { amount: number }[];
+        };
+        expect(sent.data[0].amount).toBe(350.35);
       });
-      it('should update many elimPfs for a tournament - 1 div - empty pmElimPfs', async () => {
-        const pmElimPfs: elimPfDataType[] = [];
 
-        const validData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: validElimIds
-        }
-        const elimPfJSON = JSON.stringify(validData);
+      it("should update many elimPfs - empty elimPfs deletes all rows", async () => {
+        const { status, body } = await putValid(pmTmntId, [], validElimIds);
 
-        const response = await privateApi.put(tmntUrl + pmTmntId, elimPfJSON);
-        expect(response.status).toBe(200);
-        putMany = true;
-        expect(response.data.count).toBe(pmElimPfs.length);
-        expect(response.data.elimPfs).toHaveLength(pmElimPfs.length);
+        expect(status).toBe(200);
+        expect(body.count).toBe(0);
+        expect(body.elimPfs).toHaveLength(0);
+        expect(prismaMock.elim_PF.deleteMany).toHaveBeenCalledTimes(1);
+        expect(prismaMock.elim_PF.createMany).toHaveBeenCalledWith({ data: [] });
       });
     });
 
-    describe('should update many elimPfs for a tournament - 2 divs, 4 elims', () => { 
-      // values for prisma/seeds.ts      
+    describe("2 divs, 4 elims", () => {
       const pmTmntId = "tmt_fe8ac53dad0f400abe6354210a8f4cd1";
       const pmElimId1 = "elm_c01077494c2d4d9da166d697c08c28d2";
       const pmElimId2 = "elm_c02077494c2d4d9da166d697c08c28d2";
       const pmElimId3 = "elm_c03077494c2d4d9da166d697c08c28d2";
       const pmElimId4 = "elm_c04077494c2d4d9da166d697c08c28d2";
-      const pmElimPf1 = {
-        ...initElimPf,
-        id: "epf_094a1a974e034940b847bef5b67a4b63",
-        elim_id: pmElimId1,
-        position: 1,
-        amount: 60,
-      }
-      const pmElimPf2 = {
-        ...initElimPf,
-        id: "epf_710eda589d3f4106abe78006195e328a",
-        elim_id: pmElimId1,
-        position: 2,
-        amount: 30,
-      }
-      const pmElimPf3 = {
-        ...initElimPf,
-        id: "epf_7e44498e84034bc1a080bfff569680bb",
-        elim_id: pmElimId2,
-        position: 1,
-        amount: 60,
-      }
-      const pmElimPf4 = {
-        ...initElimPf,
-        id: "epf_9032c654c42240d78eeea91de320049f",
-        elim_id: pmElimId2,
-        position: 2,
-        amount: 30,
-      }
-      const pmElimPf5 = {
-        ...initElimPf,
-        id: "epf_7e7d7dca4de74085b609030192aa15a5",
-        elim_id: pmElimId3,
-        position: 1,
-        amount: 60,        
-      }
-      const pmElimPf6 = {
-        ...initElimPf,
-        id: "epf_b14d1847af30480aa4123594b0072cb1",
-        elim_id: pmElimId3,
-        position: 2,
-        amount: 30,        
-      }
-      const pmElimPf7 = {
-        ...initElimPf,
-        id: "epf_560a2316645844bb9bdeb094911b9e9d",
-        elim_id: pmElimId4,
-        position: 1,
-        amount: 40,        
-      }
-      const pmElimPf8 = {
-        ...initElimPf,
-        id: "epf_840e009bd5bd4e4aa389ddd02df50f23",
-        elim_id: pmElimId4,
-        position: 2,
-        amount: 15,     
-      }
-      const validElimIds: string[] = [pmElimId1, pmElimId2, pmElimId3, pmElimId4];
+      const makePf = (
+        id: string,
+        elim_id: string,
+        position: number,
+        amount: number
+      ): elimPfType => ({ ...initElimPf, id, elim_id, position, amount });
+      const allElimPfs: elimPfType[] = [
+        makePf("epf_094a1a974e034940b847bef5b67a4b63", pmElimId1, 1, 60),
+        makePf("epf_710eda589d3f4106abe78006195e328a", pmElimId1, 2, 30),
+        makePf("epf_7e44498e84034bc1a080bfff569680bb", pmElimId2, 1, 60),
+        makePf("epf_9032c654c42240d78eeea91de320049f", pmElimId2, 2, 30),
+        makePf("epf_7e7d7dca4de74085b609030192aa15a5", pmElimId3, 1, 60),
+        makePf("epf_b14d1847af30480aa4123594b0072cb1", pmElimId3, 2, 30),
+        makePf("epf_560a2316645844bb9bdeb094911b9e9d", pmElimId4, 1, 40),
+        makePf("epf_840e009bd5bd4e4aa389ddd02df50f23", pmElimId4, 2, 15),
+      ];
+      const validElimIds = [pmElimId1, pmElimId2, pmElimId3, pmElimId4];
 
-      const restoreElimPfs = async () => {
-        await privateApi.delete(tmntUrl + pmTmntId);
-        const restorePmElimPfs = cloneDeep([pmElimPf1, pmElimPf2, pmElimPf3, pmElimPf4, pmElimPf5, pmElimPf6, pmElimPf7, pmElimPf8]);
-        const restoreElimIds = cloneDeep(validElimIds);
-        const restoreData: elimPfSaveDataType = {
-          elimPfData: restorePmElimPfs,
-          elimIds: restoreElimIds
-        }
-        const restoreJSON = JSON.stringify(restoreData);
-        await privateApi.put(tmntUrl + pmTmntId, restoreJSON);    
-      }
-
-      let putMany = false;
-
-      beforeAll(async () => {
-        await restoreElimPfs();
-      })
-
-      afterEach(async () => {
-        if (putMany) {
-          await restoreElimPfs();
-        }
-        putMany = false;
-      })
-
-      it('should update many elimPfs for a tournament - 2 divs - change amount 1 div', async () => {
-
-        const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2, pmElimPf3, pmElimPf4, pmElimPf5, pmElimPf6, pmElimPf7, pmElimPf8]);
+      it("should update many elimPfs - change amount 1 elim", async () => {
+        const pmElimPfs = cloneDeep(allElimPfs);
         pmElimPfs[0].amount = 350;
         pmElimPfs[1].amount = 250;
 
-        const validData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: validElimIds
-        }        
-        const elimPfJSON = JSON.stringify(validData);
+        const { status, body } = await putValid(pmTmntId, pmElimPfs, validElimIds);
 
-        const response = await privateApi.put(tmntUrl + pmTmntId, elimPfJSON);
-        expect(response.status).toBe(200);
-        putMany = true;
-        expect(response.data.count).toBe(pmElimPfs.length);
-        expect(response.data.elimPfs).toHaveLength(pmElimPfs.length);
-        const puttedElimPfs = response.data.elimPfs;
-        
-        for (let i = 0; i < pmElimPfs.length; i++) {
-          expect(puttedElimPfs[i].id).toBe(pmElimPfs[i].id);
-          expect(puttedElimPfs[i].elim_id).toBe(pmElimPfs[i].elim_id);
-          expect(puttedElimPfs[i].amount).toBe(pmElimPfs[i].amount);
-          expect(puttedElimPfs[i].position).toBe(pmElimPfs[i].position);          
-        }
+        expect(status).toBe(200);
+        expect(body.count).toBe(8);
+        expect(body.elimPfs).toMatchObject(sentFields(pmElimPfs));
       });
-      it('should update many elimPfs for a tournament - 2 divs - add row', async () => {
-        const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2, pmElimPf3, pmElimPf4, pmElimPf5, pmElimPf6, pmElimPf7, pmElimPf8]);
-        pmElimPfs.push({
-          ...initElimPf,          
-          id: "epf_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-          elim_id: pmElimId1,
-          position: 3,
-          amount: 10,
-        });
-                
-        const validData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: validElimIds
-        }        
-        const elimPfJSON = JSON.stringify(validData);
 
-        const response = await privateApi.put(tmntUrl + pmTmntId, elimPfJSON);
-        expect(response.status).toBe(200);
-        putMany = true;
-        expect(response.data.count).toBe(pmElimPfs.length);
-        expect(response.data.elimPfs).toHaveLength(pmElimPfs.length);
-        const puttedElimPfs = response.data.elimPfs;
+      it("should update many elimPfs - add row", async () => {
+        const pmElimPfs = cloneDeep(allElimPfs);
+        pmElimPfs.push(
+          makePf("epf_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", pmElimId1, 3, 10)
+        );
 
-        // sort by elim_id and position like the PUT request
+        const { status, body } = await putValid(pmTmntId, pmElimPfs, validElimIds);
+
+        expect(status).toBe(200);
+        expect(body.count).toBe(9);
+        // validateElimPfs returns rows sorted by elim_id, then position
         const sortedElimPfs = pmElimPfs.toSorted((a, b) => {
           const elimCompare = a.elim_id.localeCompare(b.elim_id);
           if (elimCompare !== 0) {
             return elimCompare;
           }
-          return a.position! - b.position!;
+          return (a.position ?? 0) - (b.position ?? 0);
         });
-
-        for (let i = 0; i < sortedElimPfs.length; i++) {
-          expect(puttedElimPfs[i].id).toBe(sortedElimPfs[i].id);
-          expect(puttedElimPfs[i].elim_id).toBe(sortedElimPfs[i].elim_id);
-          expect(puttedElimPfs[i].amount).toBe(sortedElimPfs[i].amount);
-          expect(puttedElimPfs[i].position).toBe(sortedElimPfs[i].position);          
-        }
+        expect(body.elimPfs).toMatchObject(sentFields(sortedElimPfs));
       });
-      it('should update many elimPfs for a tournament - 2 divs - change amount and delete a row', async () => {
-        const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2, pmElimPf3, pmElimPf4, pmElimPf5, pmElimPf6, pmElimPf7, pmElimPf8]);
+
+      it("should update many elimPfs - change amount and delete a row", async () => {
+        const pmElimPfs = cloneDeep(allElimPfs.slice(0, 7));
         pmElimPfs[2].amount = 400;
-        
-        const validData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: validElimIds
-        }        
-        const elimPfJSON = JSON.stringify(validData);
-        
-        const response = await privateApi.put(tmntUrl + pmTmntId, elimPfJSON);
-        expect(response.status).toBe(200);
-        putMany = true;
-        expect(response.data.count).toBe(pmElimPfs.length);
-        expect(response.data.elimPfs).toHaveLength(pmElimPfs.length);
-        const puttedElimPfs = response.data.elimPfs;
-        for (let i = 0; i < pmElimPfs.length; i++) {
-          expect(puttedElimPfs[i].id).toBe(pmElimPfs[i].id);
-          expect(puttedElimPfs[i].elim_id).toBe(pmElimPfs[i].elim_id);
-          expect(puttedElimPfs[i].amount).toBe(pmElimPfs[i].amount);
-          expect(puttedElimPfs[i].position).toBe(pmElimPfs[i].position);          
-        }
-      });
-    })
 
-    describe('should update many elimPfs for a tournament with errors', () => { 
+        const { status, body } = await putValid(pmTmntId, pmElimPfs, validElimIds);
+
+        expect(status).toBe(200);
+        expect(body.count).toBe(7);
+        expect(body.elimPfs).toMatchObject(sentFields(pmElimPfs));
+      });
+    });
+
+    describe("errors", () => {
       const pmTmntId = "tmt_fd99387c33d9c78aba290286576ddce5";
       const pmElimId = "elm_45d884582e7042bb95b4818ccdd9974c";
-      const pmElimPf1 = {
+      const pmElimPf1: elimPfType = {
         ...initElimPf,
         id: "epf_59eac0c17bf74348b44041e97469ad76",
         elim_id: pmElimId,
         position: 1,
         amount: 50,
-      }
-      const pmElimPf2 = {
+      };
+      const pmElimPf2: elimPfType = {
         ...initElimPf,
         id: "epf_0fed31aae5374e6690b6535ced1ebff5",
         elim_id: pmElimId,
         position: 2,
         amount: 20,
-      }
-
-      const validElimIds: string[] = [pmElimId];
-
-      it('should NOT update many elimPfs for a tournament when elimPfData is not an array', async () => {
-        const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2]);
-        pmElimPfs[0].amount = 350;
-        pmElimPfs[1].amount = 250;
-
-        const validData: elimPfSaveDataType = {
-          elimPfData: pmElimPf2 as any,
-          elimIds: validElimIds
-        }
-        const invalidJSON = JSON.stringify(validData);
-
-        try {
-          const response = await privateApi.put(tmntUrl + notFoundTmntId, invalidJSON);
-          expect(response.status).toBe(400);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(400);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
+      };
+      const validElimIds = [pmElimId];
+      const validData = (): elimPfSaveDataType => ({
+        elimPfData: cloneDeep([pmElimPf1, pmElimPf2]),
+        elimIds: cloneDeep(validElimIds),
       });
-      it('should NOT update many elimPfs for a tournament when elimPfData is not formatted correctly', async () => {
+
+      // valid data with one field of the 1st elimPf replaced
+      const withField = (field: string, value: unknown) => {
+        const data = validData();
+        return {
+          ...data,
+          elimPfData: [{ ...data.elimPfData[0], [field]: value }, data.elimPfData[1]],
+        };
+      };
+
+      // PUTs a body and checks the status and that nothing was saved
+      const expectRejected = async (
+        body: unknown,
+        status: number,
+        tmntId = pmTmntId
+      ) => {
+        const response = await PUT(putRequest(tmntId, body), ctx(tmntId));
+        expect(response.status).toBe(status);
+        expect(prismaMock.$transaction).not.toHaveBeenCalled();
+      };
+
+      it.each([
+        { desc: "tmntId is invalid", id: "invalid" },
+        { desc: "tmntId is valid, but not a tmnt id", id: userId },
+      ])("should return 404 when $desc", async ({ id }) => {
+        await expectRejected(validData(), 404, id);
+      });
+
+      // ---- 400: isElimPfSaveDataType fails
+      it("should return 400 when elimPfData is not an array", async () => {
+        await expectRejected({ ...validData(), elimPfData: pmElimPf2 }, 400);
+      });
+
+      it("should return 400 when elimPfData is not formatted correctly", async () => {
         const invalidPmElimPf1 = {
-          id: "dpf_ce55c52bd60d4943bb747590a03c9732",
+          id: "epf_59eac0c17bf74348b44041e97469ad76",
           position: 1,
-          amount: 300,
-        }
-        const validPmElimPf2 = {
-          ...initElimPf,
-          id: "dpf_ce55c52bd60d4943bb747590a03c9733",
-          elim_id: pmElimId,
-          position: 2,
-          amount: 200,
-        }
-
-        const invalidElimPfs = [invalidPmElimPf1, validPmElimPf2];
-        const validData: elimPfSaveDataType = {
-          elimPfData: invalidElimPfs as any,
-          elimIds: validElimIds
-        }
-        const invalidJSON = JSON.stringify(validData);
-
-        try {
-          const response = await privateApi.put(tmntUrl + notFoundTmntId, invalidJSON);
-          expect(response.status).toBe(400);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(400);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
+          amount: 50,
+        };
+        await expectRejected(
+          { ...validData(), elimPfData: [invalidPmElimPf1, pmElimPf2] },
+          400
+        );
       });
-      it('should NOT update many elimPfs for a tournament when divIds is not an array', async () => {
-        const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2]);
-        pmElimPfs[0].amount = 350;
-        pmElimPfs[1].amount = 250;
 
-        const validData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: pmElimPfs as any
-        }
-
-        const invalidJSON = JSON.stringify(validData);
-
-        try {
-          const response = await privateApi.put(tmntUrl + notFoundTmntId, invalidJSON);
-          expect(response.status).toBe(400);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(400);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
+      it("should return 400 when elimIds is not an array", async () => {
+        const data = validData();
+        await expectRejected({ ...data, elimIds: data.elimPfData }, 400);
       });
-      it('should NOT update many elimPfs for a tournament when divIds is not an array of strings', async () => {
-        const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2]);
-        pmElimPfs[0].amount = 350;
-        pmElimPfs[1].amount = 250;
 
-        const notStringDivIds = [123];
-
-        const validData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: notStringDivIds as any
-        }
-
-        const invalidJSON = JSON.stringify(validData);
-
-        try {
-          const response = await privateApi.put(tmntUrl + notFoundTmntId, invalidJSON);
-          expect(response.status).toBe(400);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(400);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
+      it("should return 400 when elimIds is not an array of strings", async () => {
+        await expectRejected({ ...validData(), elimIds: [123] }, 400);
       });
-            
-      it('should NOT update many elimPfs for a tournament when tmntId is not found', async () => { 
-        const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2]);
-        pmElimPfs[0].amount = 350;
-        pmElimPfs[1].amount = 250;
 
-        const validData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: validElimIds
-        }        
-        const invalidJSON = JSON.stringify(validData);
-
-        try {
-          const response = await privateApi.put(tmntUrl + notFoundTmntId, invalidJSON);
-          expect(response.status).toBe(409);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(409);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-      it('should NOT update many elimPfs for a tournament when id is invalid', async () => { 
-        const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2]);
-        pmElimPfs[0].id = 'test';
-
-        const invalidData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: validElimIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          expect(response.status).toBe(422);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(422);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-      it('should NOT update many elimPfs for a tournament when id is missing', async () => { 
-        const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2]);
-        pmElimPfs[0].id = null as any;
-
-        const invalidData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: validElimIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          // not a string triggers a 400 return from isElimPfSaveDataType return false
-          expect(response.status).toBe(400);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(400);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-      it('should NOT update many elimPfs for a tournament when id is valid, but not a elimPf id', async () => { 
-        const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2]);
-        pmElimPfs[0].id = userId;
-
-        const invalidData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: validElimIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          expect(response.status).toBe(422);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(422);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-
-      it('should NOT update many elimPfs for a tournament when elim_id is invalid', async () => { 
-        const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2]);
-        pmElimPfs[0].elim_id = 'test';
-
-        const invalidData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: validElimIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          expect(response.status).toBe(422);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(422);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-      it('should NOT update many elimPfs for a tournament when elim_id is missing', async () => { 
-        const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2]);
-        pmElimPfs[0].elim_id = null as any;
-
-        const invalidData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: validElimIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          // not a string triggers a 400 return from isElimPfSaveDataType return false
-          expect(response.status).toBe(400);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(400);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-      it('should NOT update many elimPfs for a tournament when elim_id is valid, but not a div id', async () => { 
-        const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2]);
-        pmElimPfs[0].elim_id = userId;
-
-        const invalidData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: validElimIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          expect(response.status).toBe(422);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(422);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-      it('should NOT update many elimPfs for a tournament when all div id are not in valid list', async () => {       
-        const pmOtherDivId = "div_99a3cae28786485bb7a036935f0f6a0a"; // valid and found (from seeds.ts)
-        const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2]);
-        pmElimPfs[0].elim_id = pmOtherDivId;
-
-        const invalidData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: validElimIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          expect(response.status).toBe(422);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(422);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-
-      it('should NOT update many elimPfs for a tournament when position is too low', async () => { 
-        const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2]);
-        pmElimPfs[0].position = 0;
-
-        const invalidData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: validElimIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          expect(response.status).toBe(422);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(422);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-      it('should NOT update many elimPfs for a tournament when position is too high', async () => { 
-        const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2]);
-        pmElimPfs[0].position = maxPosition + 1;
-
-        const invalidData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: validElimIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          expect(response.status).toBe(422);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(422);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-      it('should NOT update many elimPfs for a tournament when position is not a number', async () => { 
-        const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2]);
-        pmElimPfs[0].position = "test" as any;
-
-        const invalidData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: validElimIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          // not a number triggers a 400 return from isElimPfSaveDataType return false
-          expect(response.status).toBe(400);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(400);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-      it('should NOT update many elimPfs for a tournament when position is not an integer', async () => { 
-        const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2]);
-        pmElimPfs[0].position = 1.5;
-
-        const invalidData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: validElimIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          expect(response.status).toBe(422);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(422);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-      it('should NOT update many elimPfs for a tournament - 1 div - when 1st position is not 1', async () => { 
-        const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2]);
-        pmElimPfs[0].position = 4;
-        pmElimPfs[1].position = 5;
-
-        const invalidData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: validElimIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          expect(response.status).toBe(422);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(422);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-      it('should NOT update many elimPfs for a tournament - 1 div - when position is not in squence', async () => { 
-        const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2]);
-        pmElimPfs[1].position = 4;
-
-        const invalidData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: validElimIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          expect(response.status).toBe(422);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(422);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-      it('should NOT update many elimPfs for a tournament when position is missing', async () => { 
-        const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2]);
-        pmElimPfs[0].position = null as any;
-
-        const invalidData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: validElimIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          // not a number triggers a 400 return from isElimPfSaveDataType return false
-          expect(response.status).toBe(400);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(400);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-
-      it('should NOT update many elimPfs for a tournament when amount is too low', async () => { 
-        const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2]);
-        pmElimPfs[0].amount = -1;
-
-        const invalidData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: validElimIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          expect(response.status).toBe(422);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(422);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-      it('should NOT update many elimPfs for a tournament when amount is too high', async () => {
-        const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2]);
-        pmElimPfs[0].amount = maxMoney + 1;
-
-        const invalidData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: validElimIds
-        }
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          expect(response.status).toBe(422);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(422);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
+      it("should return 500 when the body is not JSON", async () => {
+        const response = await PUT(
+          new Request(`${url}/${pmTmntId}`, { method: "PUT", body: "not json" }),
+          ctx(pmTmntId)
+        );
+        // request.json() throws a SyntaxError, which standardCatchReturn maps to 500
+        expect(response.status).toBe(500);
+        expect(prismaMock.$transaction).not.toHaveBeenCalled();
       });
-      it('should NOT update many elimPfs for a tournament when amount is decreasing', async () => {
-        const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2]);
-        pmElimPfs[1].amount = pmElimPfs[0].amount + 1;
 
-        const invalidData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: validElimIds
+      // runs the same test once for each field set to null
+      it.each(["id", "elim_id", "position", "amount"])(
+        "should return 400 when %s is missing",
+        async (field) => {
+          await expectRejected(withField(field, null), 400);
         }
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          expect(response.status).toBe(422);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(422);
-          } else {
-            expect(true).toBeFalsy();
-          }
+      );
+
+      it.each(["position", "amount"])(
+        "should return 400 when %s is not a number",
+        async (field) => {
+          await expectRejected(withField(field, "test"), 400);
         }
+      );
+
+      // ---- 422: validateElimPfs fails
+      it.each([
+        { desc: "id is invalid", field: "id", value: "test" },
+        { desc: "id is valid, but not an elimPf id", field: "id", value: userId },
+        { desc: "elim_id is invalid", field: "elim_id", value: "test" },
+        { desc: "elim_id is valid, but not an elim id", field: "elim_id", value: userId },
+        {
+          desc: "elim_id is a div id",
+          field: "elim_id",
+          value: "div_99a3cae28786485bb7a036935f0f6a0a",
+        },
+        {
+          desc: "elim_id is not in the valid elim id list",
+          field: "elim_id",
+          value: notFoundElimId,
+        },
+        { desc: "position is too low", field: "position", value: 0 },
+        { desc: "position is too high", field: "position", value: maxPosition + 1 },
+        { desc: "position is not an integer", field: "position", value: 1.5 },
+        { desc: "amount is too low", field: "amount", value: -1 },
+        { desc: "amount is too high", field: "amount", value: maxMoney + 1 },
+      ])("should return 422 when $desc", async ({ field, value }) => {
+        await expectRejected(withField(field, value), 422);
       });
-      it('should NOT update many elimPfs for a tournament when amount is not a number', async () => { 
-        const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2]);
-        pmElimPfs[0].amount = 'test' as any;
 
-        const invalidData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: validElimIds
-        }
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          // not a number triggers a 400 return from isElimPfSaveDataType return false
-          expect(response.status).toBe(400);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(400);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-      it('should NOT update many elimPfs for a tournament when amount is missing', async () => { 
-        const pmElimPfs = cloneDeep([pmElimPf1, pmElimPf2]);
-        pmElimPfs[0].amount = null as any;
+      it("should return 422 when 1st position is not 1", async () => {
+        const data = validData();
+        data.elimPfData[0].position = 4;
+        data.elimPfData[1].position = 5;
+        await expectRejected(data, 422);
+      });
 
-        const invalidData: elimPfSaveDataType = {
-          elimPfData: pmElimPfs,
-          elimIds: validElimIds
-        }
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          // not a number triggers a 400 return from isElimPfSaveDataType return false
-          expect(response.status).toBe(400);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(400);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-    })
-  })
+      it("should return 422 when position is not in sequence", async () => {
+        const data = validData();
+        data.elimPfData[1].position = 4;
+        await expectRejected(data, 422);
+      });
 
-  describe('DELETE by tmnt_id, all elimPfs for a tmnt - API: /api/elimPfs/tmnt/:tmntId', () => { 
+      it("should return 422 when amount is not decreasing", async () => {
+        const data = validData();
+        // 1st amount is 50 (pmElimPf1), so the 2nd is higher than the 1st
+        data.elimPfData[1].amount = 51;
+        await expectRejected(data, 422);
+      });
 
-    // values for prisma/seeds.ts
-    const delTmntId = "tmt_fd99387c33d9c78aba290286576ddce5";
-    const delElimId = "elm_45d884582e7042bb95b4818ccdd9974c";
-    const delElimPf1 = {
-      ...initElimPf,
-      id: "epf_59eac0c17bf74348b44041e97469ad76",
-      elim_id: delElimId,
-      position: 1,
-      amount: 50,
-    }
-    const delElimPf2 = {
-      ...initElimPf,
-      id: "epf_0fed31aae5374e6690b6535ced1ebff5",
-      elim_id: delElimId,
-      position: 2,
-      amount: 20,
-    }
-    const restoreElimPfs = async () => {
-      await privateApi.delete(tmntUrl + delTmntId);
-      const restorePmElimPfs = cloneDeep([delElimPf1, delElimPf2]);
-      const restoreElimIds = [delElimId]; 
-      const restoreData: elimPfSaveDataType = {
-        elimPfData: restorePmElimPfs,
-        elimIds: restoreElimIds
-      }
-      const restoreJSON = JSON.stringify(restoreData);
-      await privateApi.put(tmntUrl + delTmntId, restoreJSON);
-    }        
+      // ---- database errors
+      it("should return 409 when tmntId is not found (elim foreign key fails)", async () => {
+        // with a real db, createMany fails the elim_id foreign key (P2003)
+        // because the elims do not belong to a tmnt that exists
+        prismaMock.elim_PF.createMany.mockRejectedValue({ code: "P2003" });
 
-    let didDel = false
+        const response = await PUT(
+          putRequest(notFoundTmntId, validData()),
+          ctx(notFoundTmntId)
+        );
 
-    beforeAll(async () => {
-      await restoreElimPfs();
-    })
+        expect(response.status).toBe(409);
+      });
 
-    beforeEach(() => {
-      didDel = false;
-    })
+      it("should return 409 when an elim_id / position pair is duplicated", async () => {
+        prismaMock.elim_PF.createMany.mockRejectedValue({ code: "P2002" });
 
-    afterEach(async () => {
-      if (!didDel) return;
-      // if deleted elimPfs, add them back
-      await restoreElimPfs();
-    })
+        const response = await PUT(putRequest(pmTmntId, validData()), ctx(pmTmntId));
 
-    it('should delete all elimPfs for an tmnt by tmntId', async () => {
-      const response = await privateApi.delete(tmntUrl + delTmntId);
-      expect(response.status).toBe(200);
-      expect(response.data.count).toBe(2);
-      didDel = true;
-    })
-    it('should NOT delete all elimPfs for an tmnt by tmntId when tmntId is valid, but not found', async () => {
-      const response = await privateApi.delete(tmntUrl + notFoundTmntId);
-      expect(response.status).toBe(200);
-      expect(response.data.count).toBe(0);
-    })    
-    it('should NOT delete all elimPfs for an tmnt by tmntId when tmntId is invalid', async () => {
-      try {
-        const response = await privateApi.delete(tmntUrl + 'test');
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT delete all elimPfs for an tmnt by tmntId when tmntId is valid, but not a tmnt ID', async () => {
-      try {        
-        const response = await privateApi.delete(tmntUrl + userId);
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-  })
+        expect(response.status).toBe(409);
+      });
+
+      it("should return 500 when the delete throws", async () => {
+        prismaMock.elim_PF.deleteMany.mockRejectedValue(new Error("connection failed"));
+
+        const response = await PUT(putRequest(pmTmntId, validData()), ctx(pmTmntId));
+        const body = await response.json();
+
+        expect(response.status).toBe(500);
+        expect(body).toEqual({
+          message: "error replacing elimPfs for elim - connection failed",
+        });
+        expect(prismaMock.elim_PF.createMany).not.toHaveBeenCalled();
+      });
+
+      it("should return 500 when the transaction throws", async () => {
+        prismaMock.$transaction.mockRejectedValue(new Error("connection failed"));
+
+        const response = await PUT(putRequest(pmTmntId, validData()), ctx(pmTmntId));
+        const body = await response.json();
+
+        expect(response.status).toBe(500);
+        expect(body).toEqual({
+          message: "error replacing elimPfs for elim - connection failed",
+        });
+      });
+    });
+  });
 });

@@ -13,24 +13,26 @@ export type roleTypes = "ADMIN" | "DIRECTOR" | "USER"
 
 export type idTypes = typeof idTypesArray[number];
 
+export type registerUserType = {  
+  email: string
+  first_name: string
+  last_name: string
+  phone: string
+  password: string
+}
+
 export type userDataType = {
   id: string
   email: string
   first_name: string
   last_name: string
-  phone: string
+  phone: string  
   role: roleTypes
 }
 
-export type userFormType = {
-  id: string
-  email: string
-  password: string    
-  first_name: string
-  last_name: string
-  phone: string
-  role: roleTypes
-}
+export type userFormType = userDataType & { password: string };
+
+export type acctUserType = userDataType & { has_password: boolean };
 
 export type bowlType = {
   id: string,

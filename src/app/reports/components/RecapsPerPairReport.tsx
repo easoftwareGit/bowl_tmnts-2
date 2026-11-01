@@ -4,8 +4,9 @@ import { sortedDivsByOrder, sortedPlayersByLanePos, tmntObjectHasData } from "@/
 import type { tmntFullType, divEntryType, divType, playerType } from "@/lib/types/types";
 import { isOdd } from "@/lib/validation/validation";
 import { fullName } from "@/lib/getName";
-import { calcHandicap } from "@/lib/db/divEntries/calcHdcp";
+import { calcHandicap } from "@/lib/db/helpers";
 import { dateTo_MMddyyyy } from "@/lib/dateTools";
+
 
 type gridCol = {
   key: string;

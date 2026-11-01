@@ -11,7 +11,6 @@ import tmntsReducer from './features/tmnts/tmntsSlice';
 import tmntYearsReducer from './features/tmnts/yearsSlice';
 import userReducer from './features/user/userSlice';
 import userTmntsReducer from './features/userTmnts/userTmntsSlice';
-import testdatesReducer from './features/testdates/testdatesSlice';
 
 // create the store, include reduces in object
 export const store = configureStore({
@@ -27,7 +26,6 @@ export const store = configureStore({
     tmntYears: tmntYearsReducer,
     user: userReducer,
     userTmnts: userTmntsReducer,
-    testdates: testdatesReducer,
   }
 });
 

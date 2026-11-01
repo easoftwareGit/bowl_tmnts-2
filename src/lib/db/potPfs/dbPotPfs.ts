@@ -1,7 +1,11 @@
 import { privateApi } from "@/lib/api/axios";
 import { basePotPfsApi } from "@/lib/api/apiPaths";
 import { testBasePotPfsApi } from "../../../../test/testApi";
-import type { potPfSaveDataType, potPfType, tmntPotPfSaveDataType } from "@/lib/types/types";
+import type {
+  potPfSaveDataType,
+  potPfType,
+  tmntPotPfSaveDataType,
+} from "@/lib/types/types";
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { blankPotPf } from "../initVals";
 
@@ -10,7 +14,7 @@ const url = process.env.NODE_ENV === "test" && testBasePotPfsApi
   ? testBasePotPfsApi
   : basePotPfsApi;
 
-const tmntUrl = url + "/tmnt/";  
+const tmntUrl = url + "/tmnt/";
 
 /**
  * maps API value to app potPf
@@ -32,12 +36,12 @@ const mapPotPf = (value: unknown): potPfType => {
 /**
  * extract potPf data from GET API response
  *
- * @param {any} potPfs - array of potPfs from GET API response
+ * @param {unknown} potPfs - array of potPfs from GET API response
  * @returns {potPfType[]} - array of potPfs
  */
-export const extractPotPfs = (potPfs: any): potPfType[] => {
+export const extractPotPfs = (potPfs: unknown): potPfType[] => {
   if (potPfs == null || !Array.isArray(potPfs)) return [];
-  return potPfs.map((potPf: any) => mapPotPf(potPf));
+  return potPfs.map((potPf: unknown) => mapPotPf(potPf));
 };
 
 /**
@@ -73,42 +77,38 @@ export const getAllPotPfsForTmnt = async (tmntId: string): Promise<potPfType[]> 
  * @param {tmntPotPfSaveDataType} dataToUpdate - data to update
  * - tmntId: id of tmnt to update potPfs for
  * - potIds: array of valid potIds in potPfs
- * - potPfs: array of potPfs to update
+ * - potPfData: array of potPfs to update
  * @returns {potPfType[]} - array of updated potPfs
  * @throws {Error} - if tmntId is invalid or API call fails
  */
+
 export const updateAllPotPfsForTmnt = async (
   dataToUpdate: tmntPotPfSaveDataType
-  // tmntId: string,
-  // potIds: string[],
-  // potPfs: potPfType[]
 ): Promise<potPfType[]> => {
+
   if (!isValidBtDbId(dataToUpdate.tmntId, "tmt")) {
     throw new Error("Invalid tmnt id");
-  }  
+  }
   if (!Array.isArray(dataToUpdate.potIds)) {
     throw new Error("Invalid potIds array");
   }
   if (!Array.isArray(dataToUpdate.potPfData)) {
     throw new Error("Invalid potPfs array");
   }
-
-  // potPfs.length = 0 is OK - clears all potPfs for a tmnt
-
   try {
     const tmntPotPfData: potPfSaveDataType = {
       potPfData: dataToUpdate.potPfData,
       potIds: dataToUpdate.potIds
     }
-    const potPgJSON = JSON.stringify(tmntPotPfData);
-    const response = await privateApi.put(tmntUrl + dataToUpdate.tmntId, potPgJSON);    
+    const potPfJSON = JSON.stringify(tmntPotPfData);
+    const response = await privateApi.put(tmntUrl + dataToUpdate.tmntId, potPfJSON);    
 
-    // only check if passed potPfs to update
-    if (dataToUpdate.potPfData.length > 0 && !response.data?.potPfs) {
+    // the API always sends back an array, even when potPfData is empty
+    if (!Array.isArray(response.data?.potPfs)) {
       throw new Error("Error updating potPfs for tmnt");
     }
 
-    return response.data.potPfs;
+    return extractPotPfs(response.data.potPfs);
   } catch (err) {
     throw new Error(
       `updateAllPotPfsForTmnt failed: ${

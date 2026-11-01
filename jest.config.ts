@@ -7,7 +7,7 @@ const createJestConfig = nextJest({
 })
 
 // Add any custom config to be passed to Jest
-const config: Config = {
+export const baseConfig: Config = {
   // coverageProvider: 'v8',
   testEnvironment: 'jsdom',
   // Add more setup options before each test is run  
@@ -25,7 +25,12 @@ const config: Config = {
     // Non-module CSS imports (optional but recommended)
     "^.+\\.(css|sass|scss)$": "<rootDir>/test/__mocks__/styleMock.ts",
   },  
+  testPathIgnorePatterns: [
+    "<rootDir>/node_modules/",
+    "<rootDir>/.next/",
+    "\\.integration\\.test\\.tsx?$",   // skip *.integration.test.ts(x)
+  ],  
 }
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
-export default createJestConfig(config)
+export default createJestConfig(baseConfig)

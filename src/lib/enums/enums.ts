@@ -14,6 +14,7 @@ export enum ioDataError {
   POTS,
   BRKTS,
   ELIMS,
+  SERVER_ERROR,
   OTHER_ERROR,
 }
 

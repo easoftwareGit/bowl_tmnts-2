@@ -1,5 +1,5 @@
 import { playerEntryRow } from "@/app/dataEntry/playersForm/populatePlayerRows";
-import { calcHandicap } from "@/lib/db/divEntries/calcHdcp";
+import { calcHandicap } from "@/lib/db/helpers";
 import type {
   playerInfoType,  
   divEntryType,

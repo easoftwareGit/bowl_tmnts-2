@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireDirector } from "@/lib/auth/requireDirector";
+import { ErrorCode } from "@/lib/enums/enums";
+import { standardCatchReturn } from "@/app/api/apiCatch";
 import type { bowlType } from "@/lib/types/types";
 import { initBowl } from "@/lib/db/initVals";
 import { isValidBtDbId } from "@/lib/validation/validation";
-import { ErrorCode } from "@/lib/enums/enums";
 import { sanitizeBowl, validateBowl } from "../../../../../lib/validation/bowls/validate";
-import { getErrorStatus, standardCatchReturn } from "@/app/api/apiCatch";
-import { init } from "next/dist/compiled/webpack/webpack";
 
 export async function GET(
   request: Request,
@@ -36,6 +36,10 @@ export async function PUT(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // only admin and super admins can put a bowl
+  const authError = await requireDirector();
+  if (authError) return authError;  
+
   try {
     const { id } = await params;
     if (!isValidBtDbId(id, "bwl")) {
@@ -92,6 +96,10 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // only admin and super admins can patch a bowl
+  const authError = await requireDirector();
+  if (authError) return authError;  
+
   try {
     const { id } = await params;    
     if (!isValidBtDbId(id, "bwl")) {
@@ -200,6 +208,10 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // only admin and super admins can delete a bowl
+  const authError = await requireDirector();
+  if (authError) return authError;  
+
   try {
     const { id } = await params;    
     if (!isValidBtDbId(id, "bwl")) {

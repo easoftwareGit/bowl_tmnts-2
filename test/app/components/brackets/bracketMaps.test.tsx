@@ -25,10 +25,11 @@ import {
   playerId7,
   playerId8,  
 } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
-import { calcHandicap } from "@/lib/db/divEntries/calcHdcp";
+import { calcHandicap } from "@/lib/db/helpers";
 import { populatePlayerRows } from "@/app/dataEntry/playersForm/populatePlayerRows";
 import { Bracket } from "@/components/brackets/bracketClass";
 import cloneDeep from "lodash/cloneDeep";
+
 
 describe("bracketMaps", () => {
 

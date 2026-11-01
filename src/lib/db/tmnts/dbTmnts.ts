@@ -11,25 +11,26 @@ import type {
 import { isValidBtDbId, validYear } from "@/lib/validation/validation";
 import { removeTimeFromISODateStr, todayYearStr } from "@/lib/dateTools";
 import { blankTmnt, linkedInitTmntFullData } from "../initVals";
-import { extractEvents } from "../events/dbEvents";
-import { extractDivs } from "../divs/dbDivs";
-import { extractSquads } from "../squads/dbSquads";
-import { extractLanes } from "../lanes/dbLanes";
-import { extractPots } from "../pots/dbPots";
-import { extractBrkts } from "../brkts/dbBrkts";
-import { extractElims } from "../elims/dbElims";
-import { extractDivEntries } from "../divEntries/dbDivEntries";
-import { extractBrktEntries2 } from "../brktEntries/dbBrktEntries";
-import { extractOneBrkts } from "../oneBrkts/dbOneBrkts";
-import { extractBrktSeeds } from "../brktSeeds/dbBrktSeeds";
-import { extractElimEntries } from "../elimEntries/dbElimEntries";
-import { extractPotEntries } from "../potEntries/dbPotEntries";
-import { extractPlayers } from "../players/dbPlayers";
+import {
+  extractBrktEntries,
+  extractBrkts,
+  extractBrktSeeds,
+  extractDivEntries,
+  extractDivs,
+  extractElimEntries,
+  extractElims,
+  extractEvents,
+  extractLanes,
+  extractOneBrkts,
+  extractPlayers,
+  extractPotEntries,
+  extractPots,
+  extractSquads,
+  extractTmntMoneys,
+} from "@/lib/db/tmnts/dbExtractData";
 import { SquadStage } from "@prisma/client";
 import { validateFullTmnt } from "@/lib/validation/tmnts/full/validate";
 import { ErrorCode } from "@/lib/enums/enums";
-import { extractTmntMoneys } from "../moneys/dbMoneys";
-import { dummyUserId } from "@/lib/validation/constants";
 import { cloneDeep } from "lodash";
 
 // If running tests AND a test URL is defined, use it; otherwise use the app API path
@@ -331,7 +332,7 @@ export const getTmntFullData = async (
       tmntFullData.brkts.push(...extractedBrkts);
 
       dbDiv.brkts.forEach((dbBrkt: any) => {
-        const extractedBrktEntries = extractBrktEntries2(dbBrkt);
+        const extractedBrktEntries = extractBrktEntries(dbBrkt);
         tmntFullData.brktEntries.push(...extractedBrktEntries);
 
         const extractedOneBrkts = extractOneBrkts(dbBrkt.one_brkts);
@@ -406,76 +407,6 @@ export const getTmntFullData = async (
 };
 
 /**
- * posts a tmnt - just the tmnt row and no child data
- *
- * @param {tmntType} tmnt - tmnt to post
- * @returns {tmntType} - tmnt posted
- * @throws {Error} - if data is invalid or API call fails
- */
-export const postTmnt = async (tmnt: tmntType): Promise<tmntType> => {
-  if (!tmnt || !isValidBtDbId(tmnt.id, "tmt")) {
-    throw new Error("Invalid tmnt data");
-  }
-
-  try {
-    const tmntJSON = JSON.stringify(tmnt);
-    const response = await privateApi.post(url, tmntJSON);
-
-    if (!response.data?.tmnt) {
-      throw new Error("Error posting tmnt");
-    }
-
-    const dbTmnt = response.data.tmnt;
-    return {
-      ...blankTmnt,
-      id: dbTmnt.id,
-      user_id: dbTmnt.user_id,
-      bowl_id: dbTmnt.bowl_id,
-      tmnt_name: dbTmnt.tmnt_name,
-      start_date_str: removeTimeFromISODateStr(dbTmnt.start_date),
-      end_date_str: removeTimeFromISODateStr(dbTmnt.end_date),
-    };
-  } catch (err) {
-    throw new Error(`postTmnt failed: ${err instanceof Error ? err.message : err}`);
-  }
-};
-
-/**
- * puts a tmnt - just the tmnt row and no child data
- *
- * @param {tmntType} tmnt - tmnt to put
- * @returns {tmntType} - put tmnt
- * @throws {Error} - if data is invalid or API call fails
- */
-export const putTmnt = async (tmnt: tmntType): Promise<tmntType> => {
-  if (!tmnt || !isValidBtDbId(tmnt.id, "tmt")) {
-    throw new Error("Invalid tmnt data");
-  }
-
-  try {
-    const tmntJSON = JSON.stringify(tmnt);
-    const response = await privateApi.put(tmntUrl + tmnt.id, tmntJSON);
-
-    if (!response.data?.tmnt) {
-      throw new Error("Error putting tmnt");
-    }
-
-    const dbTmnt = response.data.tmnt;
-    return {
-      ...blankTmnt,
-      id: dbTmnt.id,
-      user_id: dbTmnt.user_id,
-      bowl_id: dbTmnt.bowl_id,
-      tmnt_name: dbTmnt.tmnt_name,
-      start_date_str: removeTimeFromISODateStr(dbTmnt.start_date),
-      end_date_str: removeTimeFromISODateStr(dbTmnt.end_date),
-    };
-  } catch (err) {
-    throw new Error(`putTmnt failed: ${err instanceof Error ? err.message : err}`);
-  }
-};
-
-/**
  * replaces full tmnt data, tmnt table and all child/grandchild tables
  *
  * @param {tmntFullType} tmntFullData - tmnt full data
@@ -488,14 +419,14 @@ export const replaceTmntFullData = async (
     throw new Error("invalid tmntFullData data");
   }
 
-  const stageDate = new Date();
-  const stageDateStr = stageDate.toISOString();
-  tmntFullData.stage.stage_set_at = stageDateStr;
-  tmntFullData.stage.scores_started_at =
-    tmntFullData.stage.stage === SquadStage.SCORES ? stageDateStr : null;
-  tmntFullData.stage.stage_override_at = tmntFullData.stage.stage_override_enabled
-    ? stageDateStr
-    : null;
+  // const stageDate = new Date();
+  // const stageDateStr = stageDate.toISOString();
+  // tmntFullData.stage.stage_set_at = stageDateStr;
+  // tmntFullData.stage.scores_started_at =
+  //   tmntFullData.stage.stage === SquadStage.SCORES ? stageDateStr : null;
+  // tmntFullData.stage.stage_override_at = tmntFullData.stage.stage_override_enabled
+  //   ? stageDateStr
+  //   : null;
 
   const validateResult = validateFullTmnt(tmntFullData);
   if (validateResult.errorCode !== ErrorCode.NONE) {

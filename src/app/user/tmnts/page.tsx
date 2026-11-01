@@ -20,7 +20,6 @@ import {
   getBowlsError,
   getBowlsLoadStatus
 } from "@/redux/features/bowls/bowlsSlice";
-// import "./userTmnts.css";
 import styles from "./userTmnts.module.css";
 
 export default function UserTmntsPage() { 

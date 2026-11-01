@@ -8,7 +8,7 @@ import {
   setup,
   standardBeforeEach,
   triggerGridCancel,
-} from "./potPfPage.testSetup.test";
+} from "./potPfPage.testSetup";
 
 const leavePageMessage = "You have unsaved changes. Leave this page?";
 

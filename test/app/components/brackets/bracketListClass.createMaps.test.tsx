@@ -8,7 +8,7 @@ import {
   mockGames,
 } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { cloneDeep } from "lodash";
-import { calcHandicap } from "@/lib/db/divEntries/calcHdcp";
+import { calcHandicap } from "@/lib/db/helpers";
 
 describe("bracketList class - create maps", () => {
   
@@ -78,243 +78,243 @@ describe("bracketList class - create maps", () => {
   * change to private back after testing *
   ***************************************/
   
-  describe("createPlayersMap - now private", () => {
+  // describe("createPlayersMap - now private", () => {
 
-    // BracketList.getPlayerBbrktIds is a private method
-    // this getPlayerBbrktIds does the same thing
-    const getPlayerBbrktIds = (brktList: BracketList, playerId: string) => {
-      return brktList.brackets
-        .filter((brkt) => brkt.hasPlayer(playerId))
-        .map((brkt) => brkt.id);      
-    }
+  //   // BracketList.getPlayerBbrktIds is a private method
+  //   // this getPlayerBbrktIds does the same thing
+  //   const getPlayerBbrktIds = (brktList: BracketList, playerId: string) => {
+  //     return brktList.brackets
+  //       .filter((brkt) => brkt.hasPlayer(playerId))
+  //       .map((brkt) => brkt.id);      
+  //   }
 
-    it("creates the player map for a scratch division", () => {
-      const initBrktData: brktListInitialDataType = {
-        tmntFullData: mockTmntFullData,
-        divId: divId1,
-      }
-      const testBracketList = new BracketList(
-        brktId1,
-        2,
-        3,
-        defaultSquadGameNums,
-        mockByePlayer,
-        initBrktData,
-      );
+  //   it("creates the player map for a scratch division", () => {
+  //     const initBrktData: brktListInitialDataType = {
+  //       tmntFullData: mockTmntFullData,
+  //       divId: divId1,
+  //     }
+  //     const testBracketList = new BracketList(
+  //       brktId1,
+  //       2,
+  //       3,
+  //       defaultSquadGameNums,
+  //       mockByePlayer,
+  //       initBrktData,
+  //     );
 
-      const brkt1PlayerIds = new Set(
-        mockTmntFullData.brktEntries
-          .filter((brktEntry) => brktEntry.brkt_id === brktId1)
-          .map((brktEntry) => brktEntry.player_id),
-      );
+  //     const brkt1PlayerIds = new Set(
+  //       mockTmntFullData.brktEntries
+  //         .filter((brktEntry) => brktEntry.brkt_id === brktId1)
+  //         .map((brktEntry) => brktEntry.player_id),
+  //     );
 
-      const playerRows = populatePlayerRows(mockTmntFullData);
-      const brkt1PlayerRows = playerRows.filter((playerRow) =>
-        brkt1PlayerIds.has(playerRow.id),
-      );
+  //     const playerRows = populatePlayerRows(mockTmntFullData);
+  //     const brkt1PlayerRows = playerRows.filter((playerRow) =>
+  //       brkt1PlayerIds.has(playerRow.id),
+  //     );
 
-      testBracketList.addBrktEntries(brkt1PlayerRows);
+  //     testBracketList.addBrktEntries(brkt1PlayerRows);
 
-      testBracketList.createPlayersMap(
-        mockTmntFullData.divEntries,
-        mockTmntFullData.divs[0],
-      );
+  //     testBracketList.createPlayersMap(
+  //       mockTmntFullData.divEntries,
+  //       mockTmntFullData.divs[0],
+  //     );
 
-      const result = testBracketList.playersMap;
+  //     const result = testBracketList.playersMap;
 
-      if (result === null) {
-        throw new Error("playerMap is null");
-      }
+  //     if (result === null) {
+  //       throw new Error("playerMap is null");
+  //     }
 
-      expect(result).toBeInstanceOf(Map);
-      expect(result.size).toBe(brkt1PlayerRows.length);
+  //     expect(result).toBeInstanceOf(Map);
+  //     expect(result.size).toBe(brkt1PlayerRows.length);
 
-      brkt1PlayerRows.forEach((player) => {
-        const resultPlayer = result.get(player.id);
+  //     brkt1PlayerRows.forEach((player) => {
+  //       const resultPlayer = result.get(player.id);
 
-        if (resultPlayer === undefined) {
-          throw new Error(
-            `Player ${player.id} not found in playerMap`,
-          );
-        }
+  //       if (resultPlayer === undefined) {
+  //         throw new Error(
+  //           `Player ${player.id} not found in playerMap`,
+  //         );
+  //       }
 
-        expect(resultPlayer).toEqual({
-          first_name: player.first_name,
-          last_name: player.last_name,
-          average: player.average,
-          hdcp: 0,
-          lane: player.lane,
-          bracketIds: getPlayerBbrktIds(testBracketList, player.id),
-        });
-      });
-    });
+  //       expect(resultPlayer).toEqual({
+  //         first_name: player.first_name,
+  //         last_name: player.last_name,
+  //         average: player.average,
+  //         hdcp: 0,
+  //         lane: player.lane,
+  //         bracketIds: getPlayerBbrktIds(testBracketList, player.id),
+  //       });
+  //     });
+  //   });
 
-    it("creates the player map for a handicap division", () => {
-      const hdcpTmntData = cloneDeep(mockTmntFullData);
+  //   it("creates the player map for a handicap division", () => {
+  //     const hdcpTmntData = cloneDeep(mockTmntFullData);
 
-      const hdcpDiv = hdcpTmntData.divs[0];
+  //     const hdcpDiv = hdcpTmntData.divs[0];
 
-      hdcpDiv.div_name = "HDCP";
-      hdcpDiv.hdcp_per = 0.9;
-      hdcpDiv.hdcp_from = 230;
-      hdcpDiv.int_hdcp = true;
-      hdcpDiv.hdcp_for = "Game";
+  //     hdcpDiv.div_name = "HDCP";
+  //     hdcpDiv.hdcp_per = 0.9;
+  //     hdcpDiv.hdcp_from = 230;
+  //     hdcpDiv.int_hdcp = true;
+  //     hdcpDiv.hdcp_for = "Game";
 
-      const testBracketList = new BracketList(
-        brktId1,
-        2,
-        3,
-      );
+  //     const testBracketList = new BracketList(
+  //       brktId1,
+  //       2,
+  //       3,
+  //     );
 
-      const brkt1PlayerIds = new Set(
-        hdcpTmntData.brktEntries
-          .filter((brktEntry) => brktEntry.brkt_id === brktId1)
-          .map((brktEntry) => brktEntry.player_id),
-      );
+  //     const brkt1PlayerIds = new Set(
+  //       hdcpTmntData.brktEntries
+  //         .filter((brktEntry) => brktEntry.brkt_id === brktId1)
+  //         .map((brktEntry) => brktEntry.player_id),
+  //     );
 
-      const playerRows = populatePlayerRows(hdcpTmntData);
+  //     const playerRows = populatePlayerRows(hdcpTmntData);
 
-      const brkt1PlayerRows =
-        playerRows.filter((playerRow) =>
-          brkt1PlayerIds.has(playerRow.id),
-        );
+  //     const brkt1PlayerRows =
+  //       playerRows.filter((playerRow) =>
+  //         brkt1PlayerIds.has(playerRow.id),
+  //       );
 
-      testBracketList.addBrktEntries(brkt1PlayerRows);
+  //     testBracketList.addBrktEntries(brkt1PlayerRows);
 
-      testBracketList.createPlayersMap(
-        hdcpTmntData.divEntries,
-        hdcpDiv,
-      );
+  //     testBracketList.createPlayersMap(
+  //       hdcpTmntData.divEntries,
+  //       hdcpDiv,
+  //     );
 
-      const result = testBracketList.playersMap;
+  //     const result = testBracketList.playersMap;
 
-      if (result === null) {
-        throw new Error("playerMap is null");
-      }
+  //     if (result === null) {
+  //       throw new Error("playerMap is null");
+  //     }
 
-      expect(result).toBeInstanceOf(Map);
-      expect(result.size).toBe(brkt1PlayerRows.length);
+  //     expect(result).toBeInstanceOf(Map);
+  //     expect(result.size).toBe(brkt1PlayerRows.length);
 
-      brkt1PlayerRows.forEach((player) => {
-        const resultPlayer = result.get(player.id);
+  //     brkt1PlayerRows.forEach((player) => {
+  //       const resultPlayer = result.get(player.id);
 
-        if (resultPlayer === undefined) {
-          throw new Error(
-            `Player ${player.id} not found in playerMap`,
-          );
-        }
+  //       if (resultPlayer === undefined) {
+  //         throw new Error(
+  //           `Player ${player.id} not found in playerMap`,
+  //         );
+  //       }
 
-        const expectedHdcp = calcHandicap(
-          player.average,
-          hdcpDiv.hdcp_from,
-          hdcpDiv.hdcp_per,
-          hdcpDiv.int_hdcp,
-          hdcpDiv.hdcp_for,
-        );
+  //       const expectedHdcp = calcHandicap(
+  //         player.average,
+  //         hdcpDiv.hdcp_from,
+  //         hdcpDiv.hdcp_per,
+  //         hdcpDiv.int_hdcp,
+  //         hdcpDiv.hdcp_for,
+  //       );
 
-        expect(resultPlayer).toEqual({
-          first_name: player.first_name,
-          last_name: player.last_name,
-          average: player.average,
-          hdcp: expectedHdcp,
-          lane: player.lane,
-          bracketIds: getPlayerBbrktIds(testBracketList, player.id),
-        });
-      });
-    });
+  //       expect(resultPlayer).toEqual({
+  //         first_name: player.first_name,
+  //         last_name: player.last_name,
+  //         average: player.average,
+  //         hdcp: expectedHdcp,
+  //         lane: player.lane,
+  //         bracketIds: getPlayerBbrktIds(testBracketList, player.id),
+  //       });
+  //     });
+  //   });
 
-    it("returns null if no bracket player entries", () => {
-      const testBracketList = new BracketList(
-        brktId1,
-        2,
-        3,
-      );
+  //   it("returns null if no bracket player entries", () => {
+  //     const testBracketList = new BracketList(
+  //       brktId1,
+  //       2,
+  //       3,
+  //     );
 
-      testBracketList.createPlayersMap(
-        mockTmntFullData.divEntries,
-        mockTmntFullData.divs[0],
-      );
+  //     testBracketList.createPlayersMap(
+  //       mockTmntFullData.divEntries,
+  //       mockTmntFullData.divs[0],
+  //     );
 
-      expect(testBracketList.playersMap).toBeNull();
-    });
+  //     expect(testBracketList.playersMap).toBeNull();
+  //   });
 
-    it("returns null if divEntries is null", () => {
-      const testBracketList = new BracketList(
-        brktId1,
-        2,
-        3,
-      );
+  //   it("returns null if divEntries is null", () => {
+  //     const testBracketList = new BracketList(
+  //       brktId1,
+  //       2,
+  //       3,
+  //     );
 
-      const playerRows = populatePlayerRows(mockTmntFullData);
+  //     const playerRows = populatePlayerRows(mockTmntFullData);
 
-      testBracketList.addBrktEntries(playerRows);
+  //     testBracketList.addBrktEntries(playerRows);
 
-      testBracketList.createPlayersMap(
-        null as any,
-        mockTmntFullData.divs[0],
-      );
+  //     testBracketList.createPlayersMap(
+  //       null as any,
+  //       mockTmntFullData.divs[0],
+  //     );
 
-      expect(testBracketList.playersMap).toBeNull();
-    });
+  //     expect(testBracketList.playersMap).toBeNull();
+  //   });
 
-    it("returns null if divEntries is not an array", () => {
-      const testBracketList = new BracketList(
-        brktId1,
-        2,
-        3,
-      );
+  //   it("returns null if divEntries is not an array", () => {
+  //     const testBracketList = new BracketList(
+  //       brktId1,
+  //       2,
+  //       3,
+  //     );
 
-      const playerRows = populatePlayerRows(mockTmntFullData);
+  //     const playerRows = populatePlayerRows(mockTmntFullData);
 
-      testBracketList.addBrktEntries(playerRows);
+  //     testBracketList.addBrktEntries(playerRows);
 
-      testBracketList.createPlayersMap(
-        mockTmntFullData as any,
-        mockTmntFullData.divs[0],
-      );
+  //     testBracketList.createPlayersMap(
+  //       mockTmntFullData as any,
+  //       mockTmntFullData.divs[0],
+  //     );
 
-      expect(
-        testBracketList.playersMap,
-      ).toBeNull();
-    });
+  //     expect(
+  //       testBracketList.playersMap,
+  //     ).toBeNull();
+  //   });
 
-    it("returns null if no divEntries", () => {
-      const testBracketList = new BracketList(
-        brktId1,
-        2,
-        3,
-      );
+  //   it("returns null if no divEntries", () => {
+  //     const testBracketList = new BracketList(
+  //       brktId1,
+  //       2,
+  //       3,
+  //     );
 
-      const playerRows = populatePlayerRows(mockTmntFullData);
+  //     const playerRows = populatePlayerRows(mockTmntFullData);
 
-      testBracketList.addBrktEntries(playerRows);
+  //     testBracketList.addBrktEntries(playerRows);
 
-      testBracketList.createPlayersMap(
-        [],
-        mockTmntFullData.divs[0],
-      );
+  //     testBracketList.createPlayersMap(
+  //       [],
+  //       mockTmntFullData.divs[0],
+  //     );
 
-      expect(testBracketList.playersMap).toBeNull();
-    });
+  //     expect(testBracketList.playersMap).toBeNull();
+  //   });
 
-    it("returns null if div is null", () => {
-      const testBracketList = new BracketList(
-        brktId1,
-        2,
-        3,
-      );
+  //   it("returns null if div is null", () => {
+  //     const testBracketList = new BracketList(
+  //       brktId1,
+  //       2,
+  //       3,
+  //     );
 
-      const playerRows = populatePlayerRows(mockTmntFullData);
+  //     const playerRows = populatePlayerRows(mockTmntFullData);
 
-      testBracketList.addBrktEntries(playerRows);
+  //     testBracketList.addBrktEntries(playerRows);
 
-      testBracketList.createPlayersMap(
-        mockTmntFullData.divEntries,
-        null as any,
-      );
+  //     testBracketList.createPlayersMap(
+  //       mockTmntFullData.divEntries,
+  //       null as any,
+  //     );
 
-      expect(testBracketList.playersMap).toBeNull();
-    });
-  });
+  //     expect(testBracketList.playersMap).toBeNull();
+  //   });
+  // });
 
 });

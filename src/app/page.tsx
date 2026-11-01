@@ -1,8 +1,5 @@
 'use client';
 
-// IMPORTANT: import FIRST
-import "@/lib/syncfusion-license";
-
 export default function Home() {  
   return (
     <div>

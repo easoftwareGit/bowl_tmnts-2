@@ -1,37 +1,52 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { ErrorCode } from "@/lib/enums/enums";
-import type { roleTypes, userDataType, userFormType } from "@/lib/types/types";
+import type {
+  roleTypes,
+  registerUserType,
+  userDataType,
+  userFormType,  
+} from "@/lib/types/types";
+import { normalizeEmail } from "@/lib/auth/authUtils";
 import { initUserForm } from "@/lib/db/initVals";
 import { sanitizeUser, validateUser } from "@/lib/validation/users/validate";
+import { btDbUuid } from "@/lib/uuid";
 import { doHash } from "@/lib/server/hashServer";
 import { standardCatchReturn } from "../../apiCatch";
 
 export async function POST(req: Request) {
+  let body: unknown;
   try {
-    const { id, first_name, last_name, email, phone, password } =
-      (await req.json()) as Partial<userFormType>;
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "invalid JSON" }, { status: 400 });
+  }
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ error: "invalid JSON" }, { status: 400 });
+  }
+
+  try {
+    const { first_name, last_name, email, phone, password } = 
+      body as registerUserType;
 
     const postUser: userFormType = {
       ...initUserForm,
-      id: id ?? initUserForm.id,
+      id: btDbUuid("usr"),
       first_name: first_name ?? "",
       last_name: last_name ?? "",
-      email: email ?? "",
+      email: typeof email === "string" ? normalizeEmail(email) : "",
       phone: phone ?? "",
       password: password ?? "",
+      role: "DIRECTOR", // currently all new users are directors
     };
 
     const checkPhone = !!postUser.phone;
 
     const sanitized = sanitizeUser(postUser);
 
-    const sanitizedRole: roleTypes =
-      sanitized.role === "ADMIN" ||
-      sanitized.role === "DIRECTOR" ||
-      sanitized.role === "USER"
-        ? sanitized.role
-        : postUser.role;
+    if (!sanitized) {
+      return NextResponse.json({ error: "invalid data" }, { status: 422 });
+    }
 
     const sanitizedUser: userFormType = {
       id: sanitized.id,
@@ -39,7 +54,7 @@ export async function POST(req: Request) {
       first_name: sanitized.first_name,
       last_name: sanitized.last_name,
       phone: sanitized.phone,
-      role: sanitizedRole,
+      role: sanitized.role as roleTypes,
       password: "password" in sanitized ? sanitized.password : postUser.password,
     };
 
@@ -70,7 +85,7 @@ export async function POST(req: Request) {
 
     if (oldUser) {
       return NextResponse.json(
-        { error: "email already in use" },
+        { error: "Email already in use" },
         { status: 409 }
       );
     }
@@ -85,6 +100,7 @@ export async function POST(req: Request) {
         email: sanitizedUser.email,
         phone: sanitizedUser.phone || null,
         password_hash: hashedPassword,
+        role: sanitizedUser.role,
       },
       select: {
         id: true,
@@ -102,11 +118,11 @@ export async function POST(req: Request) {
       first_name: createdUser.first_name,
       last_name: createdUser.last_name,
       phone: createdUser.phone ?? "",
-      role: sanitizedUser.role,
+      role: createdUser.role as userDataType["role"],
     };
 
     return NextResponse.json({ user }, { status: 201 });
   } catch (error) {
-    return standardCatchReturn(error, "Error creating user");
+    return standardCatchReturn(error, "Error registering user");
   }
 }

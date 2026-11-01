@@ -54,7 +54,7 @@ import {
   maxFirstNameLength,
   maxLastNameLength,
 } from "@/lib/validation/constants";
-import { calcHandicap } from "@/lib/db/divEntries/calcHdcp";
+import { calcHandicap } from "@/lib/db/helpers";
 import { validAverage } from "@/lib/validation/players/validate";
 import ModalConfirm, {
   delConfTitle,
@@ -66,6 +66,7 @@ import { validateFinalizeRows } from "./finalizeValidation";
 import { randomizeAllBrkts } from "./buildBrktList";
 import "./playersForm.css";
 import { sfRowHeight } from "@/lib/syncfusionTools";
+
 
 interface ChildProps {
   rows: playerEntryRow[];

@@ -31,7 +31,13 @@ export async function GET(
     if (!squads || squads.length === 0 || !squads[0].games) {    
       return NextResponse.json({ games: [] }, { status: 200 });
     }    
-    const tmntGamesSql = getTmntGamesSql(tmntId, squads[0].games);    
+    const tmntGamesSql = getTmntGamesSql(tmntId, squads[0].games); 
+    if (!tmntGamesSql) {
+      return NextResponse.json(
+        { error: "could not get game results for tmnt" },
+        { status: 500 }
+      );
+    }
     // ok to use queryRaw because call to sanitizing in getDivGamesSql
     const games = await prisma.$queryRawUnsafe(tmntGamesSql);
     
@@ -39,7 +45,7 @@ export async function GET(
     return NextResponse.json({ games }, { status: 200 });
   } catch (err: any) {
     return NextResponse.json(
-      { error: "error getting games for div" },
+      { error: "error getting game results for tmnt" },
       { status: 500 }
     );
   }

@@ -103,12 +103,12 @@ export const updateAllDivPfsForTmnt = async (
     const divPfJSON = JSON.stringify(tmntDivPfData);
     const response = await privateApi.put(tmntUrl + dataToUpdate.tmntId, divPfJSON);    
 
-    // only check if passed divPfs to update
-    if (dataToUpdate.divPfData.length > 0 && !response.data?.divPfs) {
+    // the API always sends back an array, even when divPfData is empty
+    if (!Array.isArray(response.data?.divPfs)) {
       throw new Error("Error updating divPfs for tmnt");
     }
-
-    return response.data.divPfs;
+    return extractDivPfs(response.data.divPfs);
+    
   } catch (err) {
     throw new Error(
       `updateAllDivPfsForTmnt failed: ${

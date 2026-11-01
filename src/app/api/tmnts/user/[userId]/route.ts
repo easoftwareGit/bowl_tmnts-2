@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { standardCatchReturn } from "@/app/api/apiCatch";
+import { requireDirector } from "@/lib/auth/requireDirector";
 
 // routes /api/tmnts/user/:userId
 
@@ -9,6 +10,9 @@ export async function GET(
   request: Request,  
   { params }: { params: Promise<{ userId: string }> }
 ) {
+  // only admin and super admins can get tournaments for a user
+  const authError = await requireDirector();
+  if (authError) return authError;  
 
   try {
     const { userId } = await params;    

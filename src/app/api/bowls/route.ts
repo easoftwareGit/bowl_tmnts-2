@@ -1,10 +1,11 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { requireDirector } from "@/lib/auth/requireDirector";
+import { ErrorCode } from "@/lib/enums/enums";
+import { standardCatchReturn } from "../apiCatch";
 import type { bowlType } from "@/lib/types/types";
 import { initBowl } from "@/lib/db/initVals";
 import { sanitizeBowl, validateBowl } from "../../../lib/validation/bowls/validate";
-import { ErrorCode } from "@/lib/enums/enums";
-import { standardCatchReturn } from "../apiCatch";
 
 // routes /api/bowls
 
@@ -23,6 +24,9 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   // only admin and super admins can create new bowls
+  const authError = await requireDirector();
+  if (authError) return authError;  
+  
   try {
     const { id, bowl_name, city, state, url } = await request.json();  
 

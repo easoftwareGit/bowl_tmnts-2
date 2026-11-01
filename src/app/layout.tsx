@@ -3,11 +3,11 @@ import "./bootstrapOverrides.css";
 import "./globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { Container } from "@/components/boostrap";
+import { Container } from "@/components/bootstrap";
 import EaNavbar from "@/components/navBar/eaNavbar";
 import { ReduxProvider } from "@/redux/provider";
 import { Providers } from "./providers";
-import { auth } from "@/auth"; // <-- add this
+import { auth } from "@/auth"; 
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,7 +21,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth(); // <-- add this
+  const session = await auth();
   return (
     <html lang="en">
       <body className={inter.className}>

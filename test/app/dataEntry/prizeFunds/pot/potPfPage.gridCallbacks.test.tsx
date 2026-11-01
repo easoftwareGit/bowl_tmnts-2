@@ -17,7 +17,7 @@ import {
   triggerGridDataReset,
   triggerNavigateAfterSave,
   triggerSaveComplete,
-} from "./potPfPage.testSetup.test";
+} from "./potPfPage.testSetup";
 
 describe("Pot Prize Fund web page grid callbacks", () => {
   beforeEach(standardBeforeEach);

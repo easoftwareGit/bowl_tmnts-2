@@ -134,29 +134,3 @@ export async function PUT(
     return standardCatchReturn(error, "error replacing potPfs for tournament");
   }
 }
-
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ tmntId: string }> },
-) {
-  try {
-    const { tmntId } = await params;
-
-    if (!isValidBtDbId(tmntId, "tmt")) {
-      return NextResponse.json({ error: "not found" }, { status: 404 });
-    }
-
-    const result = await prisma.pot_PF.deleteMany({
-      where: {
-        pot: {
-          div: {
-            tmnt_id: tmntId,
-          }
-        },
-      },
-    });
-    return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (error) {
-    return standardCatchReturn(error, "error deleting potPfs for tournament");
-  }
-}

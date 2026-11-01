@@ -8,7 +8,7 @@ import {
   mockFetchTmntFullData,
   setup,
   standardBeforeEach,
-} from "./potPfPage.testSetup.test";
+} from "./potPfPage.testSetup";
 import {
   mockPotPfs,
   mockTmntFullData,

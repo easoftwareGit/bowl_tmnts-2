@@ -25,7 +25,7 @@ import {
 import EaCurrencyInput, { minMoneyText, maxMoneyText } from "@/components/currency/eaCurrencyInput";
 import { localConfig, currRexEx } from "@/lib/currency/const";
 import { btDbUuid } from "@/lib/uuid";
-import { calcLpox, calcLpoxValid } from "@/lib/db/events/calcLpox";
+import { calcLpox, calcLpoxValid } from "@/lib/db/helpers";
 
 interface ChildProps {
   events: eventType[];

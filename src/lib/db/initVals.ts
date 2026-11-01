@@ -70,18 +70,6 @@ export const blankUserForm = {
   id: "",  
 }
 
-export const initPrismaUser: User = {
-  id: "",  
-  email: "",  
-  password_hash: "",  
-  first_name: "",
-  last_name: "",
-  phone: "",
-  role: 'USER',
-  createdAt: new Date(),
-  updatedAt: new Date(),
-}
-
 export const initBowl: bowlType = {
   id: btDbUuid('bwl'),  
   bowl_name: "",

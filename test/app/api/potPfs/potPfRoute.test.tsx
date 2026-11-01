@@ -1,1176 +1,546 @@
-import { privateApi } from "@/lib/api/axios";
-import { AxiosError } from "axios";
-import { basePotPfsApi } from "@/lib/api/apiPaths";
-import { testBasePotPfsApi } from "../../../testApi";
-import type { potPfDataType, potPfSaveDataType, potPfType } from "@/lib/types/types";
+/**
+ * @jest-environment node
+ */
+// Tests for src/app/api/potPfs/tmnt/[tmntId]/route.ts using mocked prisma.
+// No database or server needed.
+//
+// PUT runs its queries inside prisma.$transaction(async (tx) => {...}).
+// Here $transaction just calls that callback with prismaMock as tx, so
+// tx.pot_PF.deleteMany / createMany are the same mocks the tests check.
+//
+// isPotPfSaveDataType, validatePotPfs and potPfDataForPrisma are the REAL
+// functions, so validation errors (400 / 422) come from the real code.
+import type { Pot_PF } from "@prisma/client";
+import { GET, PUT } from "@/app/api/potPfs/tmnt/[tmntId]/route";
+import { prismaMock } from "../../../prismaMock";
+import type { potPfSaveDataType, potPfType } from "@/lib/types/types";
 import { initPotPf } from "@/lib/db/initVals";
 import { maxMoney, maxPosition } from "@/lib/validation/constants";
 import { cloneDeep } from "lodash";
 
-// before running this test, run the following commands in the terminal:
-// 1) clear and re-seed the database
-//    a) clear the database
-//       npx prisma db push --force-reset
-//    b) re-seed
-//       npx prisma db seed  
-//    if just need to re-seed, then only need step 1b
-// 2) make sure the server is running
-//    in the VS activity bar, 
-//      a) click on "Run and Debug" (Ctrl+Shift+D)
-//      b) at the top of the window, click on the drop-down arrow
-//      c) select "Node.js: debug server-side"
-//      d) directly to the left of the drop down select, click the green play button
-//         This will start the server in debug mode. 
+// The URL only needs to be valid; the route reads tmntId from params
+const url = "http://localhost:3000/api/potPfs/tmnt";
 
-// If running tests AND a test URL is defined, use it; otherwise use the app API path
-const url = process.env.NODE_ENV === "test" && testBasePotPfsApi
-  ? testBasePotPfsApi
-  : basePotPfsApi;
+// Next.js passes route params as a Promise; this builds the 2nd argument
+const ctx = (tmntId: string) => ({ params: Promise.resolve({ tmntId }) });
 
-const onePotPfUrl = url + "/potPf/";
-const tmntUrl = url + "/tmnt/"; 
+const getRequest = (tmntId: string) => new Request(`${url}/${tmntId}`);
 
-const notFoundId = "ppf_01234567890123456789012345678901";
-const notFoundPotId = "pot_01234567890123456789012345678901";
+// builds a PUT request with a JSON body
+const putRequest = (tmntId: string, body: unknown) =>
+  new Request(`${url}/${tmntId}`, {
+    method: "PUT",
+    body: JSON.stringify(body),
+    headers: { "Content-Type": "application/json" },
+  });
+
+// NextResponse.json() converts Date objects to ISO strings
+const toJson = <T,>(data: T) => JSON.parse(JSON.stringify(data));
+
+// first argument of the first call to a mock
+const firstArg = (fn: unknown) => (fn as jest.Mock).mock.calls[0][0];
+
 const notFoundTmntId = "tmt_01234567890123456789012345678901";
+const notFoundPotId = "pot_01234567890123456789012345678901";
 const userId = "usr_01234567890123456789012345678901";
 
-describe('PotPfs - GETs and POST API: /api/potPfs', () => {
+// an Pot_PF row as prisma would return it. GET passes rows straight through,
+// so amount is a plain number here instead of a Prisma Decimal.
+const dbPotPf = (
+  id: string,
+  pot_id: string,
+  position: number,
+  amount: number
+): Pot_PF => ({
+  id,
+  pot_id,
+  position,
+  amount: amount as unknown as Pot_PF["amount"],
+  createdAt: new Date("2026-01-01T00:00:00.000Z"),
+  updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+});
 
-  const testPotPf: potPfType = {
-    ...initPotPf,
-    id: "ppf_59eac0c17bf74348b44041e97469ad76",
-    pot_id: "pot_b2a7b02d761b4f5ab5438be84f642c3b",
-    position: 1,
-    amount: 50,
-  }
+// what tx.pot_PF.createMany sends to the "db" for each row
+const sentFields = (potPfs: potPfType[]) =>
+  potPfs.map((ppf) => ({
+    id: ppf.id,
+    pot_id: ppf.pot_id,
+    position: ppf.position,
+    amount: ppf.amount,
+  }));
 
-  describe('GET - API: API: /api/potPfs/potPf/:id', () => {
+beforeEach(() => {
+  // interactive transaction: run the route's callback with prismaMock as tx
+  prismaMock.$transaction.mockImplementation(((
+    cb: (tx: typeof prismaMock) => Promise<unknown>
+  ) => cb(prismaMock)) as never);
+  prismaMock.pot_PF.deleteMany.mockResolvedValue({ count: 0 });
+});
 
-    // beforeAll(async () => {
-    //   await deletePostedPotPf(potPfToPost.id);
-    // });
+describe("PotPfs - API: /api/potPfs/tmnt/:tmntId", () => {
+  // ---------------------------------------------------------------- GET
+  describe("GET all potPfs for a tmnt", () => {
+    it("should get all potPfs for a tournament - two divs, four pots", async () => {
+      const tmntId = "tmt_fe8ac53dad0f400abe6354210a8f4cd1";
+      const potIds = [
+        "pot_761fb6d8a9a04cb4b3372e212da2a3b0",
+        "pot_771fb6d8a9a04cb4b3372e212da2a3b0",
+        "pot_781fb6d8a9a04cb4b3372e212da2a3b0",
+        "pot_791fb6d8a9a04cb4b3372e212da2a3b0",
+      ];
+      // already in route order: pot_id, then position
+      const rows = [
+        dbPotPf("ppf_560a2316645844bb9bdeb094911b9e9d", potIds[0], 1, 75),
+        dbPotPf("ppf_840e009bd5bd4e4aa389ddd02df50f23", potIds[0], 2, 15),
+        dbPotPf("ppf_7e7d7dca4de74085b609030192aa15a5", potIds[1], 1, 40),
+        dbPotPf("ppf_b14d1847af30480aa4123594b0072cb1", potIds[1], 2, 10),
+        dbPotPf("ppf_7e44498e84034bc1a080bfff569680bb", potIds[2], 1, 80),
+        dbPotPf("ppf_9032c654c42240d78eeea91de320049f", potIds[2], 2, 20),
+        dbPotPf("ppf_094a1a974e034940b847bef5b67a4b63", potIds[3], 1, 40),
+        dbPotPf("ppf_710eda589d3f4106abe78006195e328a", potIds[3], 2, 10),
+      ];
+      prismaMock.pot_PF.findMany.mockResolvedValue(rows);
 
-    it('should get all potPfs', async () => {
-      const response = await privateApi.get(url);
+      const response = await GET(getRequest(tmntId), ctx(tmntId));
+      const body = await response.json();
+
       expect(response.status).toBe(200);
-      // 15 rows in prisma/seed.ts
-      expect(response.data.potPfs).toHaveLength(15);
-      const potPfs: potPfType[] = response.data.potPfs;
-      potPfs.forEach((potPf: potPfType) => {
-        expect(potPf.pot_id).not.toBeNull();
-        expect(potPf.position).not.toBeNull();
-        expect(potPf.amount).not.toBeNull();
-      })
+      expect(body.potPfs).toHaveLength(8);
+      expect(body.potPfs).toEqual(toJson(rows));
+      for (let i = 0; i < body.potPfs.length; i++) {
+        expect(body.potPfs[i].pot_id).toBe(potIds[Math.floor(i / 2)]);
+        expect(body.potPfs[i].position).toBe((i % 2) + 1);
+      }
     });
-  })
 
-  describe('GET by ID - API: API: /api/potPfs/potPf/:id', () => {
+    it("should query potPfs by tmnt, sorted by pot_id then position", async () => {
+      const tmntId = "tmt_fe8ac53dad0f400abe6354210a8f4cd1";
+      prismaMock.pot_PF.findMany.mockResolvedValue([]);
 
-    // beforeAll(async () => {
-    //   await deletePostedPotPf(potPfToPost.id);
-    // });
+      await GET(getRequest(tmntId), ctx(tmntId));
 
-    it('should get one potPf', async () => {
-      const response = await privateApi.get(onePotPfUrl + testPotPf.id);
+      expect(prismaMock.pot_PF.findMany).toHaveBeenCalledWith({
+        where: { pot: { div: { tmnt_id: tmntId } } },
+        orderBy: [{ pot_id: "asc" }, { position: "asc" }],
+      });
+    });
+
+    it("should return status 200 and no potPfs when tmntId is not found", async () => {
+      prismaMock.pot_PF.findMany.mockResolvedValue([]);
+
+      const response = await GET(getRequest(notFoundTmntId), ctx(notFoundTmntId));
+      const body = await response.json();
+
       expect(response.status).toBe(200);
-      // the "GET" returns json'ed data, so decimal values return as strings
-      const potPf: potPfType = response.data.potPf;
-      expect(potPf.id).toBe(testPotPf.id);
-      expect(potPf.pot_id).toBe(testPotPf.pot_id);
-      expect(potPf.position).toBe(testPotPf.position);
-      expect(Number(potPf.amount)).toBe(testPotPf.amount);
+      expect(body.potPfs).toHaveLength(0);
     });
-    it('should not get one potPf when ID is invalid', async () => {
-      try {
-        const response = await privateApi.get(onePotPfUrl + "/test");
-        expect(true).toBeFalsy();
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
+
+    it.each([
+      { desc: "tmntId is invalid", id: "invalid" },
+      { desc: "tmntId is valid, but not a tmnt id", id: userId },
+    ])("should return 404 when $desc", async ({ id }) => {
+      const response = await GET(getRequest(id), ctx(id));
+
+      expect(response.status).toBe(404);
+      expect(prismaMock.pot_PF.findMany).not.toHaveBeenCalled();
     });
-    it('should not get one potPf when ID is valid, but not a potPf ID', async () => {
-      try {
-        const response = await privateApi.get(onePotPfUrl + userId);
-        expect(true).toBeFalsy();
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should not get one potPf when ID is not found', async () => {
-      try {
-        const response = await privateApi.get(onePotPfUrl + notFoundId);
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
+
+    it("should return 500 when the database throws", async () => {
+      const tmntId = "tmt_fe8ac53dad0f400abe6354210a8f4cd1";
+      prismaMock.pot_PF.findMany.mockRejectedValue(new Error("connection failed"));
+
+      const response = await GET(getRequest(tmntId), ctx(tmntId));
+      const body = await response.json();
+
+      expect(response.status).toBe(500);
+      expect(body).toEqual({
+        message: "error getting potPfs for tournament - connection failed",
+      });
     });
   });
 
-  describe('GET all potPfs for a tmnt - API: /api/potPfs/tmnt/:tmntId', () => {    
+  // ---------------------------------------------------------------- PUT
+  describe("PUT many potPfs for a tmnt", () => {
+    // PUTs a valid body, mocks createMany's count, and returns status + body
+    const putValid = async (
+      tmntId: string,
+      potPfs: potPfType[],
+      potIds: string[]
+    ) => {
+      prismaMock.pot_PF.createMany.mockResolvedValue({ count: potPfs.length });
+      const data: potPfSaveDataType = { potPfData: potPfs, potIds };
+      const response = await PUT(putRequest(tmntId, data), ctx(tmntId));
+      return { status: response.status, body: await response.json() };
+    };
 
-    it('should get all potPfs for a tournament - one pot in tournament', async () => {
-      // const values taken from prisma/seed.ts
-      const tmntId = 'tmt_fd99387c33d9c78aba290286576ddce5';
-      const potId = 'pot_b2a7b02d761b4f5ab5438be84f642c3b';
-
-      const response = await privateApi.get(tmntUrl + tmntId, {
-        withCredentials: true
-      });
-      expect(response.status).toBe(200);
-      // 2 potPf rows for tmnt in prisma/seed.ts
-      expect(response.data.potPfs).toHaveLength(2);
-      const potPfs: potPfType[] = response.data.potPfs;
-      // query in /api/potPfs/tmnt/[tmntId] GET sorts by position
-      for (let i = 0; i < potPfs.length; i++) {
-        expect(potPfs[i].pot_id).toBe(potId);
-        expect(potPfs[i].position).toBe(i + 1);
-        expect(potPfs[i].amount).not.toBeNull();
-      }
-    });
-    it('should get all potPfs for a tournament - two divs, 4 pots in tournament', async () => {
-      // const values taken from prisma/seed.ts
-      const tmntId = 'tmt_fe8ac53dad0f400abe6354210a8f4cd1';
-      const potIds: string[] = [
-        'pot_761fb6d8a9a04cb4b3372e212da2a3b0',
-        'pot_771fb6d8a9a04cb4b3372e212da2a3b0',
-        'pot_781fb6d8a9a04cb4b3372e212da2a3b0',
-        'pot_791fb6d8a9a04cb4b3372e212da2a3b0',
-      ] 
-
-      const response = await privateApi.get(tmntUrl + tmntId, {
-        withCredentials: true
-      });
-      expect(response.status).toBe(200);
-      // 8 potPf rows for tmnt in prisma/seed.ts
-      expect(response.data.potPfs).toHaveLength(8);
-      const potPfs: potPfType[] = response.data.potPfs;
-      // query in /api/potPfs/tmnt/[tmntId] GET sorts by position
-
-      expect(potPfs[0].pot_id).toBe(potIds[0]);
-      expect(potPfs[0].position).toBe(1);
-      expect(potPfs[0].amount).not.toBeNull();
-
-      expect(potPfs[1].pot_id).toBe(potIds[0]);
-      expect(potPfs[1].position).toBe(2);
-      expect(potPfs[1].amount).not.toBeNull();
-
-      expect(potPfs[2].pot_id).toBe(potIds[1]);
-      expect(potPfs[2].position).toBe(1);
-      expect(potPfs[2].amount).not.toBeNull();
-
-      expect(potPfs[3].pot_id).toBe(potIds[1]);
-      expect(potPfs[3].position).toBe(2);
-      expect(potPfs[3].amount).not.toBeNull();
-
-      expect(potPfs[4].pot_id).toBe(potIds[2]);
-      expect(potPfs[4].position).toBe(1);
-      expect(potPfs[4].amount).not.toBeNull();
-
-      expect(potPfs[5].pot_id).toBe(potIds[2]);
-      expect(potPfs[5].position).toBe(2);
-      expect(potPfs[5].amount).not.toBeNull();
-
-      expect(potPfs[6].pot_id).toBe(potIds[3]);
-      expect(potPfs[6].position).toBe(1);
-      expect(potPfs[6].amount).not.toBeNull();
-
-      expect(potPfs[7].pot_id).toBe(potIds[3]);
-      expect(potPfs[7].position).toBe(2);
-      expect(potPfs[7].amount).not.toBeNull();
-
-    });
-    it('should return status 200 when tmntId is not found', async () => {
-      const response = await privateApi.get(tmntUrl + notFoundTmntId, {
-        withCredentials: true
-      });
-      expect(response.status).toBe(200);
-      expect(response.data.potPfs).toHaveLength(0);
-    });
-    it('should return status 404 when tmntId is invalid', async () => {
-      try {
-        const response = await privateApi.get(tmntUrl + 'invalid', {
-          withCredentials: true
-        });
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should return starus 404 when tmntId is valid, but not a tmnt id', async () => {
-      try {
-        const response = await privateApi.get(tmntUrl + userId, {
-          withCredentials: true
-        })
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-  });
-
-  describe('PUT many potPfs API: /api/potPfs/tmnt/:tmntId', () => { 
-
-    describe('should update many potPfs for a tournament - 1 pot', () => {
-      // values for prisma/seeds.ts      
+    describe("1 pot", () => {
       const pmTmntId = "tmt_fd99387c33d9c78aba290286576ddce5";
       const pmPotId = "pot_b2a7b02d761b4f5ab5438be84f642c3b";
-      const pmPotPf1 = {
+      const pmPotPf1: potPfType = {
         ...initPotPf,
         id: "ppf_59eac0c17bf74348b44041e97469ad76",
         pot_id: pmPotId,
         position: 1,
         amount: 50,
-      }
-      const pmPotPf2 = {
+      };
+      const pmPotPf2: potPfType = {
         ...initPotPf,
         id: "ppf_0fed31aae5374e6690b6535ced1ebff5",
         pot_id: pmPotId,
         position: 2,
         amount: 10,
-      }
+      };
+      const validPotIds = [pmPotId];
 
-      const validPotIds: string[] = [pmPotId];
-
-      const restorePotPfs = async () => {
-        await privateApi.delete(tmntUrl + pmTmntId);
-        const restorePmPotPfs = cloneDeep([pmPotPf1, pmPotPf2]);
-        const restorePotIds = cloneDeep(validPotIds); 
-        const restoreData: potPfSaveDataType = {
-          potPfData: restorePmPotPfs,
-          potIds: restorePotIds
-        }
-        const restoreJSON = JSON.stringify(restoreData);
-        await privateApi.put(tmntUrl + pmTmntId, restoreJSON);
-      }
-
-      let putMany = false;
-
-      beforeAll(async () => {
-        await restorePotPfs();
-      })
-
-      afterEach(async () => {
-        if (putMany) {
-          await restorePotPfs();
-        }
-        putMany = false;
-      })
-
-      it('should update many potPfs for a tournament - 1 pot - change amount', async () => {
+      it("should delete then create potPfs in one transaction", async () => {
         const pmPotPfs = cloneDeep([pmPotPf1, pmPotPf2]);
-        pmPotPfs[0].amount = 35;
-        pmPotPfs[1].amount = 25;
 
-        const validData: potPfSaveDataType = {
-          potPfData: pmPotPfs,
-          potIds: validPotIds
-        }
-        const potPfJSON = JSON.stringify(validData);
+        const { status, body } = await putValid(pmTmntId, pmPotPfs, validPotIds);
 
-        const response = await privateApi.put(tmntUrl + pmTmntId, potPfJSON);
-        expect(response.status).toBe(200);
-        putMany = true;
-        expect(response.data.count).toBe(pmPotPfs.length);
-        expect(response.data.potPfs).toHaveLength(pmPotPfs.length);
-        const puttedPotPfs = response.data.potPfs;
-        expect(puttedPotPfs[0].amount).toBe(pmPotPfs[0].amount);
-        expect(puttedPotPfs[1].amount).toBe(pmPotPfs[1].amount);
+        expect(status).toBe(200);
+        expect(body.message).toBe("potPfs replaced");
+        expect(prismaMock.$transaction).toHaveBeenCalledTimes(1);
+        expect(prismaMock.pot_PF.deleteMany).toHaveBeenCalledWith({
+          where: { pot: { div: { tmnt_id: pmTmntId } } },
+        });
+        // delete runs before create
+        expect(
+          prismaMock.pot_PF.deleteMany.mock.invocationCallOrder[0]
+        ).toBeLessThan(prismaMock.pot_PF.createMany.mock.invocationCallOrder[0]);
+        // the rows sent to the "db" are the rows returned
+        expect(prismaMock.pot_PF.createMany).toHaveBeenCalledWith({
+          data: body.potPfs,
+        });
       });
-      it('should update many potPfs for a tournament - 1 pot - add row', async () => {
+
+      it("should update many potPfs - change amount", async () => {
+        const pmPotPfs = cloneDeep([pmPotPf1, pmPotPf2]);
+        pmPotPfs[0].amount = 350;
+        pmPotPfs[1].amount = 250;
+
+        const { status, body } = await putValid(pmTmntId, pmPotPfs, validPotIds);
+
+        expect(status).toBe(200);
+        expect(body.count).toBe(pmPotPfs.length);
+        expect(body.potPfs).toMatchObject(sentFields(pmPotPfs));
+      });
+
+      it("should update many potPfs - add row", async () => {
         const pmPotPfs = cloneDeep([pmPotPf1, pmPotPf2]);
         pmPotPfs.push({
-          ...initPotPf,          
+          ...initPotPf,
           id: "ppf_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
           pot_id: pmPotId,
           position: 3,
           amount: 5,
         });
-        
-        const validData: potPfSaveDataType = {
-          potPfData: pmPotPfs,
-          potIds: validPotIds
-        }
-        const potPfJSON = JSON.stringify(validData);
 
-        const response = await privateApi.put(tmntUrl + pmTmntId, potPfJSON);
-        expect(response.status).toBe(200);
-        putMany = true;
-        expect(response.data.count).toBe(pmPotPfs.length);
-        expect(response.data.potPfs).toHaveLength(pmPotPfs.length);
-        const puttedPotPfs = response.data.potPfs;
-        expect(puttedPotPfs[0].amount).toBe(pmPotPfs[0].amount);
-        expect(puttedPotPfs[1].amount).toBe(pmPotPfs[1].amount);
-        expect(puttedPotPfs[2].amount).toBe(pmPotPfs[2].amount);
-      })
-      it('should update many potPfs for a tournament - 1 pot - change amount and delete a row', async () => {
+        const { status, body } = await putValid(pmTmntId, pmPotPfs, validPotIds);
+
+        expect(status).toBe(200);
+        expect(body.count).toBe(3);
+        expect(body.potPfs).toMatchObject(sentFields(pmPotPfs));
+      });
+
+      it("should update many potPfs - change amount and delete a row", async () => {
         const pmPotPfs = cloneDeep([pmPotPf1]);
         pmPotPfs[0].amount = 400;
-        
-        const validData: potPfSaveDataType = {
-          potPfData: pmPotPfs,
-          potIds: validPotIds
-        }
-        const potPfJSON = JSON.stringify(validData);
-        
-        const response = await privateApi.put(tmntUrl + pmTmntId, potPfJSON);
-        expect(response.status).toBe(200);
-        putMany = true;
-        expect(response.data.count).toBe(pmPotPfs.length);
-        expect(response.data.potPfs).toHaveLength(pmPotPfs.length);
-        const puttedPotPfs = response.data.potPfs;
-        expect(puttedPotPfs[0].amount).toBe(pmPotPfs[0].amount);
-      })
-      it('should update many potPfs for a tournament - 1 pot - sanitize amount', async () => {
+
+        const { status, body } = await putValid(pmTmntId, pmPotPfs, validPotIds);
+
+        expect(status).toBe(200);
+        expect(body.count).toBe(1);
+        expect(body.potPfs).toMatchObject(sentFields(pmPotPfs));
+      });
+
+      it("should update many potPfs - sanitize amount", async () => {
         const pmPotPfs = cloneDeep([pmPotPf1, pmPotPf2]);
         pmPotPfs[0].amount = 350.351;
-        
-        const validData: potPfSaveDataType = {
-          potPfData: pmPotPfs,
-          potIds: validPotIds
-        }
-        const potPfJSON = JSON.stringify(validData);
-        
-        const response = await privateApi.put(tmntUrl + pmTmntId, potPfJSON);
-        expect(response.status).toBe(200);
-        putMany = true;
-        expect(response.data.count).toBe(pmPotPfs.length);
-        expect(response.data.potPfs).toHaveLength(pmPotPfs.length);
-        const puttedPotPfs = response.data.potPfs;
-        expect(puttedPotPfs[0].amount).toBe(350.35);
-        expect(puttedPotPfs[1].amount).toBe(pmPotPfs[1].amount);
+
+        const { status, body } = await putValid(pmTmntId, pmPotPfs, validPotIds);
+
+        expect(status).toBe(200);
+        expect(body.potPfs[0].amount).toBe(350.35);
+        expect(body.potPfs[1].amount).toBe(pmPotPfs[1].amount);
+        // the sanitized amount is what was sent to the "db"
+        const sent = firstArg(prismaMock.pot_PF.createMany) as {
+          data: { amount: number }[];
+        };
+        expect(sent.data[0].amount).toBe(350.35);
       });
-      it('should update many potPfs for a tournament - 1 pot - empty pmPotPfs', async () => {
-        const pmPotPfs: potPfDataType[] = [];
 
-        const validData: potPfSaveDataType = {
-          potPfData: pmPotPfs,
-          potIds: validPotIds
-        }
-        const potPfJSON = JSON.stringify(validData);
+      it("should update many potPfs - empty potPfs deletes all rows", async () => {
+        const { status, body } = await putValid(pmTmntId, [], validPotIds);
 
-        const response = await privateApi.put(tmntUrl + pmTmntId, potPfJSON);
-        expect(response.status).toBe(200);
-        putMany = true;
-        expect(response.data.count).toBe(pmPotPfs.length);
-        expect(response.data.potPfs).toHaveLength(pmPotPfs.length);
+        expect(status).toBe(200);
+        expect(body.count).toBe(0);
+        expect(body.potPfs).toHaveLength(0);
+        expect(prismaMock.pot_PF.deleteMany).toHaveBeenCalledTimes(1);
+        expect(prismaMock.pot_PF.createMany).toHaveBeenCalledWith({ data: [] });
       });
     });
-    
-    describe('should update many potPfs for a tournament - 2 divs, 4 pots', () => { 
-      // values for prisma/seeds.ts      
+
+    describe("2 divs, 4 pots", () => {
       const pmTmntId = "tmt_fe8ac53dad0f400abe6354210a8f4cd1";
       const pmPotId1 = "pot_761fb6d8a9a04cb4b3372e212da2a3b0";
       const pmPotId2 = "pot_771fb6d8a9a04cb4b3372e212da2a3b0";
       const pmPotId3 = "pot_781fb6d8a9a04cb4b3372e212da2a3b0";
       const pmPotId4 = "pot_791fb6d8a9a04cb4b3372e212da2a3b0";
-      const pnPotPf1 = {
-        ...initPotPf,
-        id: "ppf_560a2316645844bb9bdeb094911b9e9d",
-        pot_id: pmPotId1,
-        position: 1,
-        amount: 75,
-      }
-      const pnPotPf2 = {
-        ...initPotPf,
-        id: "ppf_840e009bd5bd4e4aa389ddd02df50f23",
-        pot_id: pmPotId1,
-        position: 2,
-        amount: 15,
-      }
-      const pnPotPf3 = {
-        ...initPotPf,
-        id: "ppf_7e7d7dca4de74085b609030192aa15a5",
-        pot_id: pmPotId2,
-        position: 1,
-        amount: 40,
-      }
-      const pnPotPf4 = {
-        ...initPotPf,
-        id: "ppf_b14d1847af30480aa4123594b0072cb1",
-        pot_id: pmPotId2,
-        position: 2,
-        amount: 10,
-      }
-      const pnPotPf5 = {
-        ...initPotPf,
-        id: "ppf_7e44498e84034bc1a080bfff569680bb",
-        pot_id: pmPotId3,
-        position: 1,
-        amount: 80,
-      }
-      const pnPotPf6 = {
-        ...initPotPf,
-        id: "ppf_9032c654c42240d78eeea91de320049f",
-        pot_id: pmPotId3,
-        position: 2,
-        amount: 20,        
-      }
-      const pnPotPf7 = {
-        ...initPotPf,
-        id: "ppf_094a1a974e034940b847bef5b67a4b63",
-        pot_id: pmPotId4,
-        position: 1,
-        amount: 40,        
-      }
-      const pnPotPf8 = {
-        ...initPotPf,
-        id: "ppf_710eda589d3f4106abe78006195e328a",
-        pot_id: pmPotId4,
-        position: 2,
-        amount: 10,        
-      }
+      const makePf = (
+        id: string,
+        pot_id: string,
+        position: number,
+        amount: number
+      ): potPfType => ({ ...initPotPf, id, pot_id, position, amount });
+      const allPotPfs: potPfType[] = [
+        makePf("ppf_560a2316645844bb9bdeb094911b9e9d", pmPotId1, 1, 75),
+        makePf("ppf_840e009bd5bd4e4aa389ddd02df50f23", pmPotId1, 2, 15),
+        makePf("ppf_7e7d7dca4de74085b609030192aa15a5", pmPotId2, 1, 40),
+        makePf("ppf_b14d1847af30480aa4123594b0072cb1", pmPotId2, 2, 10),
+        makePf("ppf_7e44498e84034bc1a080bfff569680bb", pmPotId3, 1, 80),
+        makePf("ppf_9032c654c42240d78eeea91de320049f", pmPotId3, 2, 20),
+        makePf("ppf_094a1a974e034940b847bef5b67a4b63", pmPotId4, 1, 40),
+        makePf("ppf_710eda589d3f4106abe78006195e328a", pmPotId4, 2, 10),
+      ];
+      const validPotIds = [pmPotId1, pmPotId2, pmPotId3, pmPotId4];
 
-      const valildPotIds: string[] = [pmPotId1, pmPotId2, pmPotId3, pmPotId4];      
+      it("should update many potPfs - change amount 1 pot", async () => {
+        const pmPotPfs = cloneDeep(allPotPfs);
+        pmPotPfs[0].amount = 350;
+        pmPotPfs[1].amount = 250;
 
-      const restorePotPfs = async () => {
-        await privateApi.delete(tmntUrl + pmTmntId);
-        const restorePmPotPfs = cloneDeep([pnPotPf1, pnPotPf2, pnPotPf3, pnPotPf4, pnPotPf5, pnPotPf6, pnPotPf7, pnPotPf8]);
-        const restorePotIds = cloneDeep(valildPotIds);
-        const restoreData: potPfSaveDataType = {
-          potPfData: restorePmPotPfs,
-          potIds: restorePotIds
-        }
-        const restoreJSON = JSON.stringify(restoreData);
-        await privateApi.put(tmntUrl + pmTmntId, restoreJSON);   
-      }
+        const { status, body } = await putValid(pmTmntId, pmPotPfs, validPotIds);
 
-      let putMany = false;
-
-      beforeAll(async () => {
-        await restorePotPfs();
-      })
-
-      afterEach(async () => {
-        if (putMany) {
-          await restorePotPfs();
-        }
-        putMany = false;
-      })
-
-      it('should update many potPfs for a tournament - 2 divs, 4 pots - change amount 1 pot', async () => {
-
-        const pmPotsPfs = cloneDeep([pnPotPf1, pnPotPf2, pnPotPf3, pnPotPf4, pnPotPf5, pnPotPf6, pnPotPf7, pnPotPf8]);
-        pmPotsPfs[0].amount = 350;
-        pmPotsPfs[1].amount = 250;
-
-        const validData: potPfSaveDataType = {
-          potPfData: pmPotsPfs,
-          potIds: valildPotIds
-        }        
-        const potPfJSON = JSON.stringify(validData);
-
-        const response = await privateApi.put(tmntUrl + pmTmntId, potPfJSON);
-        expect(response.status).toBe(200);
-        putMany = true;
-        expect(response.data.count).toBe(pmPotsPfs.length);
-        expect(response.data.potPfs).toHaveLength(pmPotsPfs.length);
-        const puttedPotPfs = response.data.potPfs;
-        
-        for (let i = 0; i < pmPotsPfs.length; i++) {
-          expect(puttedPotPfs[i].id).toBe(pmPotsPfs[i].id);
-          expect(puttedPotPfs[i].pot_id).toBe(pmPotsPfs[i].pot_id);
-          expect(puttedPotPfs[i].amount).toBe(pmPotsPfs[i].amount);
-          expect(puttedPotPfs[i].position).toBe(pmPotsPfs[i].position);          
-        }
+        expect(status).toBe(200);
+        expect(body.count).toBe(8);
+        expect(body.potPfs).toMatchObject(sentFields(pmPotPfs));
       });
-      it('should update many potPfs for a tournament - 2 divs, 4 pots - add row', async () => {
-        const pnPotPfs = cloneDeep([pnPotPf1, pnPotPf2]);
-        pnPotPfs.push({
-          ...initPotPf,          
-          id: "ppf_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-          pot_id: pmPotId1,
-          position: 3,
-          amount: 10,
+
+      it("should update many potPfs - add row", async () => {
+        const pmPotPfs = cloneDeep(allPotPfs);
+        pmPotPfs.push(
+          makePf("ppf_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", pmPotId1, 3, 10)
+        );
+
+        const { status, body } = await putValid(pmTmntId, pmPotPfs, validPotIds);
+
+        expect(status).toBe(200);
+        expect(body.count).toBe(9);
+        // validatePotPfs returns rows sorted by pot_id, then position
+        const sortedPotPfs = pmPotPfs.toSorted((a, b) => {
+          const potCompare = a.pot_id.localeCompare(b.pot_id);
+          if (potCompare !== 0) {
+            return potCompare;
+          }
+          return (a.position ?? 0) - (b.position ?? 0);
         });
-        pnPotPfs.push(pnPotPf3, pnPotPf4);
-        
-        const validData: potPfSaveDataType = {
-          potPfData: pnPotPfs,
-          potIds: valildPotIds
-        }        
-        const potPfJSON = JSON.stringify(validData);
-
-        const response = await privateApi.put(tmntUrl + pmTmntId, potPfJSON);
-        expect(response.status).toBe(200);
-        putMany = true;
-        expect(response.data.count).toBe(pnPotPfs.length);
-        expect(response.data.potPfs).toHaveLength(pnPotPfs.length);
-        const puttedPotPfs = response.data.potPfs;
-        for (let i = 0; i < pnPotPfs.length; i++) {
-          expect(puttedPotPfs[i].id).toBe(pnPotPfs[i].id);
-          expect(puttedPotPfs[i].pot_id).toBe(pnPotPfs[i].pot_id);
-          expect(puttedPotPfs[i].amount).toBe(pnPotPfs[i].amount);
-          expect(puttedPotPfs[i].position).toBe(pnPotPfs[i].position);          
-        }
+        expect(body.potPfs).toMatchObject(sentFields(sortedPotPfs));
       });
-      it('should update many potPfs for a tournament - 2 divs, 4 pots - change amount and delete a row', async () => {
-        const pnPotPfs = cloneDeep([pnPotPf1, pnPotPf2, pnPotPf3]);
-        pnPotPfs[2].amount = 400;
-        
-        const validData: potPfSaveDataType = {
-          potPfData: pnPotPfs,
-          potIds: valildPotIds
-        }        
-        const potPfJSON = JSON.stringify(validData);
-        
-        const response = await privateApi.put(tmntUrl + pmTmntId, potPfJSON);
-        expect(response.status).toBe(200);
-        putMany = true;
-        expect(response.data.count).toBe(pnPotPfs.length);
-        expect(response.data.potPfs).toHaveLength(pnPotPfs.length);
-        const puttedPotPfs = response.data.potPfs;
-        for (let i = 0; i < pnPotPfs.length; i++) {
-          expect(puttedPotPfs[i].id).toBe(pnPotPfs[i].id);
-          expect(puttedPotPfs[i].pot_id).toBe(pnPotPfs[i].pot_id);
-          expect(puttedPotPfs[i].amount).toBe(pnPotPfs[i].amount);
-          expect(puttedPotPfs[i].position).toBe(pnPotPfs[i].position);          
-        }
-      });
-    })
 
-    describe('should update many potPfs for a tournament with errors', () => { 
-      // values for prisma/seeds.ts      
+      it("should update many potPfs - change amount and delete a row", async () => {
+        const pmPotPfs = cloneDeep(allPotPfs.slice(0, 7));
+        pmPotPfs[2].amount = 400;
+
+        const { status, body } = await putValid(pmTmntId, pmPotPfs, validPotIds);
+
+        expect(status).toBe(200);
+        expect(body.count).toBe(7);
+        expect(body.potPfs).toMatchObject(sentFields(pmPotPfs));
+      });
+    });
+
+    describe("errors", () => {
       const pmTmntId = "tmt_fd99387c33d9c78aba290286576ddce5";
       const pmPotId = "pot_b2a7b02d761b4f5ab5438be84f642c3b";
-      const pmPotPf1 = {
+      const pmPotPf1: potPfType = {
         ...initPotPf,
         id: "ppf_59eac0c17bf74348b44041e97469ad76",
         pot_id: pmPotId,
         position: 1,
-        amount: 300,
-      }
-      const pmPotPf2 = {
+        amount: 50,
+      };
+      const pmPotPf2: potPfType = {
         ...initPotPf,
         id: "ppf_0fed31aae5374e6690b6535ced1ebff5",
         pot_id: pmPotId,
         position: 2,
-        amount: 200,
-      }
-
-      const validPotIds: string[] = [pmPotId];
-
-      it('should NOT update many potPfs for a tournament when potPfData is not an array', async () => {
-        const pmPotPfs = cloneDeep([pmPotPf1, pmPotPf2]);
-        pmPotPfs[0].amount = 350;
-        pmPotPfs[1].amount = 250;
-
-        const validData: potPfSaveDataType = {
-          potPfData: pmPotPf2 as any,
-          potIds: validPotIds
-        }
-        const invalidJSON = JSON.stringify(validData);
-
-        try {
-          const response = await privateApi.put(tmntUrl + notFoundTmntId, invalidJSON);
-          expect(response.status).toBe(400);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(400);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
+        amount: 10,
+      };
+      const validPotIds = [pmPotId];
+      const validData = (): potPfSaveDataType => ({
+        potPfData: cloneDeep([pmPotPf1, pmPotPf2]),
+        potIds: cloneDeep(validPotIds),
       });
-      it('should NOT update many potPfs for a tournament when potPfData is not formatted correctly', async () => {
+
+      // valid data with one field of the 1st potPf replaced
+      const withField = (field: string, value: unknown) => {
+        const data = validData();
+        return {
+          ...data,
+          potPfData: [{ ...data.potPfData[0], [field]: value }, data.potPfData[1]],
+        };
+      };
+
+      // PUTs a body and checks the status and that nothing was saved
+      const expectRejected = async (
+        body: unknown,
+        status: number,
+        tmntId = pmTmntId
+      ) => {
+        const response = await PUT(putRequest(tmntId, body), ctx(tmntId));
+        expect(response.status).toBe(status);
+        expect(prismaMock.$transaction).not.toHaveBeenCalled();
+      };
+
+      it.each([
+        { desc: "tmntId is invalid", id: "invalid" },
+        { desc: "tmntId is valid, but not a tmnt id", id: userId },
+      ])("should return 404 when $desc", async ({ id }) => {
+        await expectRejected(validData(), 404, id);
+      });
+
+      // ---- 400: isPotPfSaveDataType fails
+      it("should return 400 when potPfData is not an array", async () => {
+        await expectRejected({ ...validData(), potPfData: pmPotPf2 }, 400);
+      });
+
+      it("should return 400 when potPfData is not formatted correctly", async () => {
         const invalidPmPotPf1 = {
-          id: "ppf_ce55c52bd60d4943bb747590a03c9732",
+          id: "ppf_59eac0c17bf74348b44041e97469ad76",
           position: 1,
-          amount: 300,
-        }
-        const validPmPotPf2 = {
-          ...initPotPf,
-          id: "ppf_ce55c52bd60d4943bb747590a03c9733",
-          pot_id: pmPotId,
-          position: 2,
-          amount: 200,
-        }
-
-        const invalidPotPfs = [invalidPmPotPf1, validPmPotPf2];
-        const validData: potPfSaveDataType = {
-          potPfData: invalidPotPfs as any,
-          potIds: validPotIds
-        }
-        const invalidJSON = JSON.stringify(validData);
-
-        try {
-          const response = await privateApi.put(tmntUrl + notFoundTmntId, invalidJSON);
-          expect(response.status).toBe(400);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(400);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
+          amount: 50,
+        };
+        await expectRejected(
+          { ...validData(), potPfData: [invalidPmPotPf1, pmPotPf2] },
+          400
+        );
       });
-      it('should NOT update many potPfs for a tournament when potIds is not an array', async () => {
-        const pmPotPfs = cloneDeep([pmPotPf1, pmPotPf2]);
-        pmPotPfs[0].amount = 350;
-        pmPotPfs[1].amount = 250;
 
-        const validData: potPfSaveDataType = {
-          potPfData: pmPotPfs,
-          potIds: pmPotPfs as any
-        }
-
-        const invalidJSON = JSON.stringify(validData);
-
-        try {
-          const response = await privateApi.put(tmntUrl + notFoundTmntId, invalidJSON);
-          expect(response.status).toBe(400);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(400);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
+      it("should return 400 when potIds is not an array", async () => {
+        const data = validData();
+        await expectRejected({ ...data, potIds: data.potPfData }, 400);
       });
-      it('should NOT update many potPfs for a tournament when potIds is not an array of strings', async () => {
-        const pmPotPfs = cloneDeep([pmPotPf1, pmPotPf2]);
-        pmPotPfs[0].amount = 350;
-        pmPotPfs[1].amount = 250;
 
-        const notStringPotIds = [123];
-
-        const validData: potPfSaveDataType = {
-          potPfData: pmPotPfs,
-          potIds: notStringPotIds as any
-        }
-
-        const invalidJSON = JSON.stringify(validData);
-
-        try {
-          const response = await privateApi.put(tmntUrl + notFoundTmntId, invalidJSON);
-          expect(response.status).toBe(400);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(400);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
+      it("should return 400 when potIds is not an array of strings", async () => {
+        await expectRejected({ ...validData(), potIds: [123] }, 400);
       });
-            
-      it('should NOT update many potPfs for a tournament when tmntId is not found', async () => { 
-        const pmPotPfs = cloneDeep([pmPotPf1, pmPotPf2]);
-        pmPotPfs[0].amount = 350;
-        pmPotPfs[1].amount = 250;
 
-        const validData: potPfSaveDataType = {
-          potPfData: pmPotPfs,
-          potIds: validPotIds
-        }        
-        const invalidJSON = JSON.stringify(validData);
-
-        try {
-          const response = await privateApi.put(tmntUrl + notFoundTmntId, invalidJSON);
-          expect(response.status).toBe(409);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(409);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-      it('should NOT update many potPfs for a tournament when id is invalid', async () => { 
-        const pmPotPfs = cloneDeep([pmPotPf1, pmPotPf2]);
-        pmPotPfs[0].id = 'test';
-
-        const invalidData: potPfSaveDataType = {
-          potPfData: pmPotPfs,
-          potIds: validPotIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          expect(response.status).toBe(422);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(422);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-      it('should NOT update many potPfs for a tournament when id is missing', async () => { 
-        const pmPotPfs = cloneDeep([pmPotPf1, pmPotPf2]);
-        pmPotPfs[0].id = null as any;
-
-        const invalidData: potPfSaveDataType = {
-          potPfData: pmPotPfs,
-          potIds: validPotIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          // not a string triggers a 400 return from isPotPfsaveDataType return false
-          expect(response.status).toBe(400);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(400);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-      it('should NOT update many potPfs for a tournament when id is valid, but not a potPf id', async () => { 
-        const pmPotPfs = cloneDeep([pmPotPf1, pmPotPf2]);
-        pmPotPfs[0].id = userId;
-
-        const invalidData: potPfSaveDataType = {
-          potPfData: pmPotPfs,
-          potIds: validPotIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          expect(response.status).toBe(422);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(422);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-
-      it('should NOT update many potPfs for a tournament when pot_id is invalid', async () => { 
-        const pmPotPfs = cloneDeep([pmPotPf1, pmPotPf2]);
-        pmPotPfs[0].pot_id = 'test';
-
-        const invalidData: potPfSaveDataType = {
-          potPfData: pmPotPfs,
-          potIds: validPotIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          expect(response.status).toBe(422);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(422);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-      it('should NOT update many potPfs for a tournament when pot_id is missing', async () => { 
-        const pmPotPfs = cloneDeep([pmPotPf1, pmPotPf2]);
-        pmPotPfs[0].pot_id = null as any;
-
-        const invalidData: potPfSaveDataType = {
-          potPfData: pmPotPfs,
-          potIds: validPotIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          // not a string triggers a 400 return from isPotPfsaveDataType return false
-          expect(response.status).toBe(400);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(400);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-      it('should NOT update many potPfs for a tournament when pot_id is valid, but not a pot id', async () => { 
-        const pmPotPfs = cloneDeep([pmPotPf1, pmPotPf2]);
-        pmPotPfs[0].pot_id = userId;
-
-        const invalidData: potPfSaveDataType = {
-          potPfData: pmPotPfs,
-          potIds: validPotIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          expect(response.status).toBe(422);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(422);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-      it('should NOT update many potPfs for a tournament when all pot id are not in valid list', async () => {       
-        const pmOtherPotId = "pot_99a3cae28786485bb7a036935f0f6a0a"; // valid and found (from seeds.ts)
-        const pmPotPfs = cloneDeep([pmPotPf1, pmPotPf2]);
-        pmPotPfs[0].pot_id = pmOtherPotId;
-
-        const invalidData: potPfSaveDataType = {
-          potPfData: pmPotPfs,
-          potIds: validPotIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          expect(response.status).toBe(422);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(422);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-
-      it('should NOT update many potPfs for a tournament when position is too low', async () => { 
-        const pmPotPfs = cloneDeep([pmPotPf1, pmPotPf2]);
-        pmPotPfs[0].position = 0;
-
-        const invalidData: potPfSaveDataType = {
-          potPfData: pmPotPfs,
-          potIds: validPotIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          expect(response.status).toBe(422);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(422);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-      it('should NOT update many potPfs for a tournament when position is too high', async () => { 
-        const pmPotPfs = cloneDeep([pmPotPf1, pmPotPf2]);
-        pmPotPfs[0].position = maxPosition + 1;
-
-        const invalidData: potPfSaveDataType = {
-          potPfData: pmPotPfs,
-          potIds: validPotIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          expect(response.status).toBe(422);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(422);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-      it('should NOT update many potPfs for a tournament when position is not a number', async () => { 
-        const pmPotPfs = cloneDeep([pmPotPf1, pmPotPf2]);
-        pmPotPfs[0].position = "test" as any;
-
-        const invalidData: potPfSaveDataType = {
-          potPfData: pmPotPfs,
-          potIds: validPotIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          // not a number triggers a 400 return from isPotPfsaveDataType return false
-          expect(response.status).toBe(400);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(400);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-      it('should NOT update many potPfs for a tournament when position is not an integer', async () => { 
-        const pmPotPfs = cloneDeep([pmPotPf1, pmPotPf2]);
-        pmPotPfs[0].position = 1.5;
-
-        const invalidData: potPfSaveDataType = {
-          potPfData: pmPotPfs,
-          potIds: validPotIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          expect(response.status).toBe(422);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(422);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-      it('should NOT update many potPfs for a tournament - 1 pot - when 1st position is not 1', async () => { 
-        const pmPotPfs = cloneDeep([pmPotPf1, pmPotPf2]);
-        pmPotPfs[0].position = 4;
-        pmPotPfs[1].position = 5;
-
-        const invalidData: potPfSaveDataType = {
-          potPfData: pmPotPfs,
-          potIds: validPotIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          expect(response.status).toBe(422);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(422);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-      it('should NOT update many potPfs for a tournament - 1 pot - when position is not in squence', async () => { 
-        const pmPotPfs = cloneDeep([pmPotPf1, pmPotPf2]);
-        pmPotPfs[1].position = 4;
-
-        const invalidData: potPfSaveDataType = {
-          potPfData: pmPotPfs,
-          potIds: validPotIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          expect(response.status).toBe(422);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(422);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-      it('should NOT update many potPfs for a tournament when position is missing', async () => { 
-        const pmPotPfs = cloneDeep([pmPotPf1, pmPotPf2]);
-        pmPotPfs[0].position = null as any;
-
-        const invalidData: potPfSaveDataType = {
-          potPfData: pmPotPfs,
-          potIds: validPotIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          // not a number triggers a 400 return from isPotPfsaveDataType return false
-          expect(response.status).toBe(400);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(400);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-
-      it('should NOT update many potPfs for a tournament when amount is too low', async () => { 
-        const pmPotPfs = cloneDeep([pmPotPf1, pmPotPf2]);
-        pmPotPfs[0].amount = -1;
-
-        const invalidData: potPfSaveDataType = {
-          potPfData: pmPotPfs,
-          potIds: validPotIds
-        }        
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          expect(response.status).toBe(422);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(422);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-      it('should NOT update many potPfs for a tournament when amount is too high', async () => {
-        const pmPotPfs = cloneDeep([pmPotPf1, pmPotPf2]);
-        pmPotPfs[0].amount = maxMoney + 1;
-
-        const invalidData: potPfSaveDataType = {
-          potPfData: pmPotPfs,
-          potIds: validPotIds
-        }
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          expect(response.status).toBe(422);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(422);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
+      it("should return 500 when the body is not JSON", async () => {
+        const response = await PUT(
+          new Request(`${url}/${pmTmntId}`, { method: "PUT", body: "not json" }),
+          ctx(pmTmntId)
+        );
+        // request.json() throws a SyntaxError, which standardCatchReturn maps to 500
+        expect(response.status).toBe(500);
+        expect(prismaMock.$transaction).not.toHaveBeenCalled();
       });
-      it('should NOT update many potPfs for a tournament when amount is decreasing', async () => {
-        const pmPotPfs = cloneDeep([pmPotPf1, pmPotPf2]);
-        pmPotPfs[1].amount = pmPotPfs[0].amount + 1;
 
-        const invalidData: potPfSaveDataType = {
-          potPfData: pmPotPfs,
-          potIds: validPotIds
+      // runs the same test once for each field set to null
+      it.each(["id", "pot_id", "position", "amount"])(
+        "should return 400 when %s is missing",
+        async (field) => {
+          await expectRejected(withField(field, null), 400);
         }
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          expect(response.status).toBe(422);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(422);
-          } else {
-            expect(true).toBeFalsy();
-          }
+      );
+
+      it.each(["position", "amount"])(
+        "should return 400 when %s is not a number",
+        async (field) => {
+          await expectRejected(withField(field, "test"), 400);
         }
+      );
+
+      // ---- 422: validatePotPfs fails
+      it.each([
+        { desc: "id is invalid", field: "id", value: "test" },
+        { desc: "id is valid, but not an potPf id", field: "id", value: userId },
+        { desc: "pot_id is invalid", field: "pot_id", value: "test" },
+        { desc: "pot_id is valid, but not a pot id", field: "pot_id", value: userId },
+        {
+          desc: "pot_id is a div id",
+          field: "pot_id",
+          value: "div_99a3cae28786485bb7a036935f0f6a0a",
+        },
+        {
+          desc: "pot_id is not in the valid pot id list",
+          field: "pot_id",
+          value: notFoundPotId,
+        },
+        { desc: "position is too low", field: "position", value: 0 },
+        { desc: "position is too high", field: "position", value: maxPosition + 1 },
+        { desc: "position is not an integer", field: "position", value: 1.5 },
+        { desc: "amount is too low", field: "amount", value: -1 },
+        { desc: "amount is too high", field: "amount", value: maxMoney + 1 },
+      ])("should return 422 when $desc", async ({ field, value }) => {
+        await expectRejected(withField(field, value), 422);
       });
-      it('should NOT update many potPfs for a tournament when amount is not a number', async () => { 
-        const pmPotPfs = cloneDeep([pmPotPf1, pmPotPf2]);
-        pmPotPfs[0].amount = 'test' as any;
 
-        const invalidData: potPfSaveDataType = {
-          potPfData: pmPotPfs,
-          potIds: validPotIds
-        }
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          // not a number triggers a 400 return from isPotPfsaveDataType return false
-          expect(response.status).toBe(400);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(400);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-      it('should NOT update many potPfs for a tournament when amount is missing', async () => { 
-        const pmPotPfs = cloneDeep([pmPotPf1, pmPotPf2]);
-        pmPotPfs[0].amount = null as any;
+      it("should return 422 when 1st position is not 1", async () => {
+        const data = validData();
+        data.potPfData[0].position = 4;
+        data.potPfData[1].position = 5;
+        await expectRejected(data, 422);
+      });
 
-        const invalidData: potPfSaveDataType = {
-          potPfData: pmPotPfs,
-          potIds: validPotIds
-        }
-        const invalidJSON = JSON.stringify(invalidData);
-        try {
-          const response = await privateApi.put(tmntUrl + pmTmntId, invalidJSON);
-          // not a number triggers a 400 return from isPotPfsaveDataType return false
-          expect(response.status).toBe(400);
-        } catch (err) {
-          if (err instanceof AxiosError) {
-            expect(err.response?.status).toBe(400);
-          } else {
-            expect(true).toBeFalsy();
-          }
-        }
-      })
-    })
-  })
+      it("should return 422 when position is not in sequence", async () => {
+        const data = validData();
+        data.potPfData[1].position = 4;
+        await expectRejected(data, 422);
+      });
 
-  describe('DELETE by tmnt_id, all potPfs for a tmnt - API: /api/potPfs/tmnt/:tmntId', () => { 
+      it("should return 422 when amount is not decreasing", async () => {
+        const data = validData();
+        // 1st amount is 50 (pmPotPf1), so the 2nd is higher than the 1st
+        data.potPfData[1].amount = 51;
+        await expectRejected(data, 422);
+      });
 
-    // values for prisma/seeds.ts
-    const delTmntId = "tmt_fd99387c33d9c78aba290286576ddce5";
-    const delPotId = "pot_b2a7b02d761b4f5ab5438be84f642c3b";
-    const delPotPf1 = {
-      ...initPotPf,
-      id: "ppf_59eac0c17bf74348b44041e97469ad76",
-      pot_id: delPotId,
-      position: 1,
-      amount: 50,
-    }
-    const delPotPf2 = {
-      ...initPotPf,
-      id: "ppf_0fed31aae5374e6690b6535ced1ebff5",
-      pot_id: delPotId,
-      position: 2,
-      amount: 10,
-    }
-    const restorePotPfs = async () => {
-      await privateApi.delete(tmntUrl + delTmntId);
-      const restorePmPotPfs = cloneDeep([delPotPf1, delPotPf2]);
-      const restorePotIds = [delPotId]; 
-      const restoreData: potPfSaveDataType = {
-        potPfData: restorePmPotPfs,
-        potIds: restorePotIds
-      }
-      const restoreJSON = JSON.stringify(restoreData);
-      await privateApi.put(tmntUrl + delTmntId, restoreJSON);
-    }
-    
-    let didDel = false
+      // ---- database errors
+      it("should return 409 when tmntId is not found (pot foreign key fails)", async () => {
+        // with a real db, createMany fails the pot_id foreign key (P2003)
+        // because the pots do not belong to a tmnt that exists
+        prismaMock.pot_PF.createMany.mockRejectedValue({ code: "P2003" });
 
-    beforeAll(async () => {
-      await restorePotPfs();
-    })
+        const response = await PUT(
+          putRequest(notFoundTmntId, validData()),
+          ctx(notFoundTmntId)
+        );
 
-    beforeEach(() => {
-      didDel = false;
-    })
+        expect(response.status).toBe(409);
+      });
 
-    afterEach(async () => {
-      if (!didDel) return;
-      // if deleted potPfs, add them back
-      await restorePotPfs();
-    })
+      it("should return 409 when an pot_id / position pair is duplicated", async () => {
+        prismaMock.pot_PF.createMany.mockRejectedValue({ code: "P2002" });
 
-    it('should delete all potPfs for a tmnt by tmntId', async () => {
-      const response = await privateApi.delete(tmntUrl + delTmntId);
-      expect(response.status).toBe(200);
-      expect(response.data.count).toBe(2);
-      didDel = true;
-    })
-    it('should NOT delete all potPfs for a tmnt by tmntId when tmntId is valid, but not found', async () => {
-      const response = await privateApi.delete(tmntUrl + notFoundTmntId);
-      expect(response.status).toBe(200);
-      expect(response.data.count).toBe(0);
-    })    
-    it('should NOT delete all potPfs for a tmnt by tmntId when tmntId is invalid', async () => {
-      try {
-        const response = await privateApi.delete(tmntUrl + 'test');
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-    it('should NOT delete all potPfs for a tmnt by tmntId when tmntId is valid, but not a tmnt ID', async () => {
-      try {        
-        const response = await privateApi.delete(tmntUrl + userId);
-        expect(response.status).toBe(404);
-      } catch (err) {
-        if (err instanceof AxiosError) {
-          expect(err.response?.status).toBe(404);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-    })
-  })
-  
+        const response = await PUT(putRequest(pmTmntId, validData()), ctx(pmTmntId));
+
+        expect(response.status).toBe(409);
+      });
+
+      it("should return 500 when the delete throws", async () => {
+        prismaMock.pot_PF.deleteMany.mockRejectedValue(new Error("connection failed"));
+
+        const response = await PUT(putRequest(pmTmntId, validData()), ctx(pmTmntId));
+        const body = await response.json();
+
+        expect(response.status).toBe(500);
+        expect(body).toEqual({
+          message: "error replacing potPfs for tournament - connection failed",
+        });
+        expect(prismaMock.pot_PF.createMany).not.toHaveBeenCalled();
+      });
+
+      it("should return 500 when the transaction throws", async () => {
+        prismaMock.$transaction.mockRejectedValue(new Error("connection failed"));
+
+        const response = await PUT(putRequest(pmTmntId, validData()), ctx(pmTmntId));
+        const body = await response.json();
+
+        expect(response.status).toBe(500);
+        expect(body).toEqual({
+          message: "error replacing potPfs for tournament - connection failed",
+        });
+      });
+    });
+  });
 });

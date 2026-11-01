@@ -4,7 +4,7 @@ import { tmntFullType } from "@/lib/types/types";
 import { fullName } from "@/lib/getName";
 import { BracketList } from "@/components/brackets/bracketListClass";
 import { getGameScoreKey } from "@/components/brackets/bracketMaps";
-import { calcHandicap } from "@/lib/db/divEntries/calcHdcp";
+import { calcHandicap } from "@/lib/db/helpers";
 import { matchResultType } from "@/components/brackets/bracketMatchClass";
 import { getBrktOrElimName } from "@/lib/getName";
 import { isNumber, isValidBtDbId } from "@/lib/validation/validation";

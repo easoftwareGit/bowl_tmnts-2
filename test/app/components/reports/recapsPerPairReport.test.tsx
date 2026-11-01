@@ -1,3 +1,5 @@
+// test/app/components/reports/recapsPerPairReport.test.tsx
+// tests src/app/reports/components/RecapsPerPairReport.test.tsx
 import React from "react";
 
 jest.mock("@react-pdf/renderer", () => ({

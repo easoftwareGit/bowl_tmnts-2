@@ -13,7 +13,7 @@ import {
   setup,
   standardBeforeEach,
   triggerGridCancel,
-} from "./potPfPage.testSetup.test";
+} from "./potPfPage.testSetup";
 
 /** "true"/"false" shown by the mocked grid for its gridDataWasChanged prop */
 const gridDataWasChangedText = (): string | null =>

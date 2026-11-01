@@ -10,7 +10,7 @@ import {
   queryPerGame,
   setup,
   standardBeforeEach,
-} from "./potPfPage.testSetup.test";
+} from "./potPfPage.testSetup";
 
 type User = ReturnType<typeof userEvent.setup>;
 

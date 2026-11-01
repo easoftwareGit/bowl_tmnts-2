@@ -4,8 +4,8 @@ import PlayerDivBrkts from "@/app/results/tmnt/[tmntId]/brackets/player/[playerI
 import { BracketList } from "@/components/brackets/bracketListClass";
 import { getGameScoreKey } from "@/components/brackets/bracketMaps";
 import type { matchSeedInfoType } from "@/components/brackets/bracketMatchClass";
-import { calcHandicap } from "@/lib/db/divEntries/calcHdcp";
 import { fullName, getBrktOrElimName } from "@/lib/getName";
+import { calcHandicap } from "@/lib/db/helpers";
 import { formatValueSymbSep2Dec } from "@/lib/currency/formatValue";
 import { getLocaleConfig } from "@/lib/currency/components/utils";
 import { defaultPlayersPerMatch } from "@/lib/db/initVals";

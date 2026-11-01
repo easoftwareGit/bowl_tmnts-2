@@ -133,29 +133,3 @@ export async function PUT(
     return standardCatchReturn(error, "error replacing elimPfs for elim");
   }
 }
-
-export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ tmntId: string }> },
-) {
-  try {
-    const { tmntId } = await params;
-
-    if (!isValidBtDbId(tmntId, "tmt")) {
-      return NextResponse.json({ error: "not found" }, { status: 404 });
-    }
-
-    const result = await prisma.elim_PF.deleteMany({
-      where: {
-        elim: {
-          div: {
-            tmnt_id: tmntId,
-          }
-        },
-      },
-    });
-    return NextResponse.json({ count: result.count }, { status: 200 });
-  } catch (error) {
-    return standardCatchReturn(error, "error deleting elimPfs for elim");
-  }
-}

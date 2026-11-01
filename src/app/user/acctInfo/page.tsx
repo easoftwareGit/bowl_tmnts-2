@@ -1,5 +1,5 @@
 "use client"  
-import AcctInfoForm from "./form";
+import AcctInfoForm from "./acctInfoForm";
 
 export default function AcctInfoPage() {
   return (

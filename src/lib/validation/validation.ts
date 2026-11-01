@@ -17,16 +17,16 @@ import { validMoney } from "../currency/validate";
  * checks if string is in a valid email format
  *
  * @param {string} str
- * @return {*}  {boolean} - true: str has a valid email format;
+ * @return {boolean} - true: str has a valid email format;
  */
 export function isEmail(str: string): boolean {
+  if (typeof str !== "string") return false;
   if ((str.match(/@/g) || []).length !== 1) {
     return false;
   }
-  const regex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+  const regex = /^\w+([.+-]\w+)*@\w+([.-]\w+)*(\.\w{2,3})+$/;
   return regex.test(str);
 }
-
 /**
  * checks if string is a valid password
  *  8-20 chars long

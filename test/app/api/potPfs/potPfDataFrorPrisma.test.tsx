@@ -1,3 +1,5 @@
+// test/app/api/potPfs/potPfDataFrorPrisma.test.tsx
+// tests for src/app/api/potPfs/potPfsDataForPisma
 import type { potPfType } from "@/lib/types/types";
 import { mockPotPfs } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { cloneDeep } from "lodash";

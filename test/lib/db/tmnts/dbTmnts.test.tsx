@@ -1,1061 +1,946 @@
+// Tests for src/lib/db/tmnts/dbTmnts.ts using a mocked axios instance module.
+// No database or server needed.
+import { AxiosError, AxiosHeaders } from "axios";
 import { publicApi, privateApi } from "@/lib/api/axios";
-import {
-  baseBowlsApi,
-  baseDivsApi,
-  baseEventsApi,
-  baseLanesApi,
-  baseSquadsApi,
-  baseTmntsApi,
-  baseUsersApi,
-} from "@/lib/api/apiPaths";
-import {
-  testBaseBowlsApi,
-  testBaseDivsApi,
-  testBaseEventsApi,
-  testBaseLanesApi,
-  testBaseSquadsApi,
-  testBaseTmntsApi,
-  testBaseUsersApi,
-} from "../../../testApi";
-import type { bowlType, tmntType, userDataType } from "@/lib/types/types";
-import { initPlayer, initTmnt } from "@/lib/db/initVals";
+import { baseTmntsApi } from "@/lib/api/apiPaths";
+import { testBaseTmntsApi } from "../../../testApi";
+import type { tmntFullType } from "@/lib/types/types";
+import { blankTmnt, linkedInitTmntFullData } from "@/lib/db/initVals";
 import {
   deleteTmnt,
   getTmnt,
   getTmnts,
   getTmntYears,
   getUserTmnts,
-  postTmnt,
-  putTmnt,
   replaceTmntFullData,
   replaceTmntEntriesData,
   exportedForTesting,
   getTmntFullData,
 } from "@/lib/db/tmnts/dbTmnts";
-import { todayStr } from "@/lib/dateTools";
 import {
-  mockBowl,
-  mockTmntFullData,
-  mockUser,  
-  playerId9,
-} from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
+  extractBrktEntries,
+  extractBrkts,
+  extractBrktSeeds,
+  extractDivEntries,
+  extractDivs,
+  extractElimEntries,
+  extractElims,
+  extractEvents,
+  extractLanes,
+  extractOneBrkts,
+  extractPlayers,
+  extractPotEntries,
+  extractPots,
+  extractSquads,
+  extractTmntMoneys,
+} from "@/lib/db/tmnts/dbExtractData";
+import { todayYearStr } from "@/lib/dateTools";
+import { mockTmntFullData } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { cloneDeep } from "lodash";
 import { SquadStage } from "@prisma/client";
-import { getAllPlayersForTmnt } from "@/lib/db/players/dbPlayers";
-import { getAllDivEntriesForTmnt } from "@/lib/db/divEntries/dbDivEntries";
-import { getAllPotEntriesForTmnt } from "@/lib/db/potEntries/dbPotEntries";
-import { getAllOneBrktsForTmnt } from "@/lib/db/oneBrkts/dbOneBrkts";
-import { getAllBrktSeedsForTmnt } from "@/lib/db/brktSeeds/dbBrktSeeds";
-import { getAllElimEntriesForTmnt } from "@/lib/db/elimEntries/dbElimEntries";
-import { getAllBrktEntriesForTmnt } from "@/lib/db/brktEntries/dbBrktEntries";
-import { ptGame, ptLastGame, ptSeries } from "@/lib/validation/constants";
-import { isValidBtDbId } from "@/lib/validation/validation";
 
 const { getTmntsForYear, getUpcomingTmnts } = exportedForTesting;
 
-// before running this test, run the following commands in the terminal:
-// 1) clear and re-seed the database
-//    a) clear the database
-//       npx prisma db push --force-reset
-//    b) re-seed
-//       npx prisma db seed
-//    if just need to re-seed, then only need step 1b
-// 2) make sure the server is running
-//    in the VS activity bar,
-//      a) click on "Run and Debug" (Ctrl+Shift+D)
-//      b) at the top of the window, click on the drop-down arrow
-//      c) select "Node.js: debug server-side"
-//      d) directly to the left of the drop down select, click the green play button
-//         This will start the server in debug mode.
+// Replace the axios instances with mock functions each test can control
+jest.mock("@/lib/api/axios", () => ({
+  publicApi: { get: jest.fn() },
+  privateApi: { put: jest.fn(), delete: jest.fn() },
+}));
+const mockGet = publicApi.get as jest.Mock;
+const mockPut = privateApi.put as jest.Mock;
+const mockDelete = privateApi.delete as jest.Mock;
 
-// If running tests AND a test URL is defined, use it; otherwise use the app API path
+// The extract functions turn db rows into app types and have their own
+// tests. Here they hand back what they are given, so these tests only
+// check how getTmntFullData walks the data and puts it together.
+jest.mock("@/lib/db/tmnts/dbExtractData", () => ({
+  extractBrktEntries: jest.fn(),
+  extractBrkts: jest.fn(),
+  extractBrktSeeds: jest.fn(),
+  extractDivEntries: jest.fn(),
+  extractDivs: jest.fn(),
+  extractElimEntries: jest.fn(),
+  extractElims: jest.fn(),
+  extractEvents: jest.fn(),
+  extractLanes: jest.fn(),
+  extractOneBrkts: jest.fn(),
+  extractPlayers: jest.fn(),
+  extractPotEntries: jest.fn(),
+  extractPots: jest.fn(),
+  extractSquads: jest.fn(),
+  extractTmntMoneys: jest.fn(),
+}));
+
+// every extract function that takes an array of rows
+const rowExtractMocks = [
+  extractBrkts,
+  extractBrktSeeds,
+  extractDivEntries,
+  extractDivs,
+  extractElimEntries,
+  extractElims,
+  extractEvents,
+  extractLanes,
+  extractOneBrkts,
+  extractPlayers,
+  extractPotEntries,
+  extractPots,
+  extractSquads,
+  extractTmntMoneys,
+].map((fn) => fn as jest.Mock);
+// extractBrktEntries takes the whole brkt row
+const mockExtractBrktEntries = extractBrktEntries as jest.Mock;
+
+// same url logic as dbTmnts.ts; only used to check what was called
 const url = process.env.NODE_ENV === "test" && testBaseTmntsApi
   ? testBaseTmntsApi
   : baseTmntsApi;
-
+const fullUrl = url + "/full/";
+const fullEntriesUrl = url + "/fullEntries/";
 const tmntUrl = url + "/tmnt/";
+const userUrl = url + "/user/";
+const yearsUrl = url + "/years/";
+const upcomingUrl = url + "/upcoming";
+const resultsUrl = url + "/results/";
 
-const bowlUrl = process.env.NODE_ENV === "test" && testBaseBowlsApi
-  ? testBaseBowlsApi
-  : baseBowlsApi;  
+// A real AxiosError, like axios rejects with for a non-2xx response.
+const axiosError = (status: number) =>
+  new AxiosError(
+    `Request failed with status code ${status}`,
+    status >= 500 ? "ERR_BAD_RESPONSE" : "ERR_BAD_REQUEST",
+    undefined,
+    undefined,
+    {
+      status,
+      statusText: "",
+      data: {},
+      headers: {},
+      config: { headers: new AxiosHeaders() },
+    }
+  );
 
-const userUrl = process.env.NODE_ENV === "test" && testBaseUsersApi
-  ? testBaseUsersApi
-  : baseUsersApi;  
-
-const eventsUrl = process.env.NODE_ENV === "test" && testBaseEventsApi
-  ? testBaseEventsApi
-  : baseEventsApi;  
-
-const divsUrl = process.env.NODE_ENV === "test" && testBaseDivsApi
-  ? testBaseDivsApi
-  : baseDivsApi;  
-
-const squadsUrl = process.env.NODE_ENV === "test" && testBaseSquadsApi
-  ? testBaseSquadsApi
-  : baseSquadsApi;  
-
-const lanesUrl = process.env.NODE_ENV === "test" && testBaseLanesApi
-  ? testBaseLanesApi
-  : baseLanesApi;  
-
-const gpBowlId = "bwl_561540bd64974da9abdd97765fdb3659";
+const tmntId = "tmt_fd99387c33d9c78aba290286576ddce5";
 const notFoundId = "tmt_00000000000000000000000000000000";
 const userId = "usr_5bcefb5d314fff1ff5da6521a2fa7bde";
 const notFoundUserId = "usr_00000000000000000000000000000000";
+const gpBowlId = "bwl_561540bd64974da9abdd97765fdb3659";
+
+const apiBowl = {
+  bowl_name: "Earl Anthony's Dublin Bowl",
+  city: "Dublin",
+  state: "CA",
+  url: "https://www.earlanthonysdublinbowl.com",
+};
+
+// what the tmnt api sends back for one tmnt (dates are full ISO strings)
+const apiTmnt = {
+  id: tmntId,
+  user_id: userId,
+  bowl_id: gpBowlId,
+  tmnt_name: "Gold Pin",
+  start_date: "2022-10-23T00:00:00.000Z",
+  end_date: "2022-10-24T00:00:00.000Z",
+  bowl: apiBowl,
+};
+
+// what the list apis send back
+const apiTmntList = [
+  {
+    id: "tmt_ce35f0c119aa49fd9b89aa86cb980a6a",
+    user_id: userId,
+    tmnt_name: "Year End Classic",
+    start_date: "2026-12-31T00:00:00.000Z",
+    bowl: apiBowl,
+  },
+  {
+    id: tmntId,
+    user_id: userId,
+    tmnt_name: "Gold Pin",
+    start_date: "2022-10-23T00:00:00.000Z",
+    bowl: {
+      bowl_name: "Yosemite Lanes",
+      city: "Modesto",
+      state: "CA",
+      url: "http://yosemitelanes.com",
+    },
+  },
+];
+
+const expectedTmntList = [
+  {
+    id: apiTmntList[0].id,
+    user_id: userId,
+    tmnt_name: apiTmntList[0].tmnt_name,
+    start_date_str: "2026-12-31",
+    bowl: apiTmntList[0].bowl,
+  },
+  {
+    id: apiTmntList[1].id,
+    user_id: userId,
+    tmnt_name: apiTmntList[1].tmnt_name,
+    start_date_str: "2022-10-23",
+    bowl: apiTmntList[1].bowl,
+  },
+];
+
+// upcoming tmnts do not include user_id
+const expectedUpcomingList = expectedTmntList.map((tmnt) => ({
+  id: tmnt.id,
+  tmnt_name: tmnt.tmnt_name,
+  start_date_str: tmnt.start_date_str,
+  bowl: tmnt.bowl,
+}));
+
+// fixed time for the stage dates replaceTmntEntriesData sets
+const fixedNow = new Date("2026-10-27T12:00:00.000Z");
+const fixedNowStr = fixedNow.toISOString();
+
+beforeEach(() => {
+  // jest config does not auto-reset mocks
+  mockGet.mockReset();
+  mockPut.mockReset();
+  mockDelete.mockReset();
+  rowExtractMocks.forEach((fn) => {
+    fn.mockReset();
+    fn.mockImplementation((rows: unknown[]) => rows);
+  });
+  mockExtractBrktEntries.mockReset();
+  mockExtractBrktEntries.mockImplementation(
+    (brkt: { brkt_entries: unknown[] }) => brkt.brkt_entries
+  );
+});
 
 describe("dbTmnts", () => {
-  const postBowl = async (bowl: bowlType) => {
-    try {
-      const bowlJSON = JSON.stringify(bowl);
-      await privateApi.post(bowlUrl, bowlJSON);
-    } catch (err) {
-      if (err instanceof Error) console.log(err.message);
-    }
-  };
-
-  const postUser = async (user: userDataType) => {
-    try {
-      const userJSON = JSON.stringify(user);
-      await privateApi.post(userUrl, userJSON);
-    } catch (err) {
-      if (err instanceof Error) console.log(err.message);
-    }
-  };
-
-  const deleteMockTmnt = async (tmntId: string) => {
-    try {
-      await privateApi.delete(tmntUrl + tmntId);
-    } catch (err) {
-      if (err instanceof Error) console.log(err.message);
-    }
-  };
-
-  const deleteBowl = async (bowlId: string) => {
-    try {
-      await privateApi.delete(bowlUrl + "/bowl/" + bowlId);
-    } catch (err) {
-      if (err instanceof Error) console.log(err.message);
-    }
-  };
-
-  const deleteUser = async (deleteUserId: string) => {
-    try {
-      await privateApi.delete(userUrl + "/user/" + deleteUserId);
-    } catch (err) {
-      if (err instanceof Error) console.log(err.message);
-    }
-  };
-
-  describe("getTmnt", () => {
-    const tmntToGet = {
-      ...initTmnt,
-      id: "tmt_fd99387c33d9c78aba290286576ddce5",
-      user_id: userId,
-      tmnt_name: "Gold Pin",
-      bowl_id: gpBowlId,
-      start_date_str: "2022-10-23",
-      end_date_str: "2022-10-23",
-    };
-    const bowlToGet = {
-      bowl_name: "Earl Anthony's Dublin Bowl",
-      city: "Dublin",
-      state: "CA",
-      url: "https://www.earlanthonysdublinbowl.com",
-    };
-
+  describe("getTmnt()", () => {
     it("should get a single tmnt", async () => {
-      const gotTmnt = await getTmnt(tmntToGet.id);
-      expect(gotTmnt).not.toBeNull();
-      expect(gotTmnt.id).toBe(tmntToGet.id);
-      expect(gotTmnt.user_id).toBe(tmntToGet.user_id);
-      expect(gotTmnt.tmnt_name).toBe(tmntToGet.tmnt_name);
-      expect(gotTmnt.bowl_id).toBe(tmntToGet.bowl_id);
-      expect(gotTmnt.start_date_str).toBe(tmntToGet.start_date_str);
-      expect(gotTmnt.end_date_str).toBe(tmntToGet.end_date_str);
-      expect(gotTmnt.bowl).not.toBeNull();
-      expect(gotTmnt.bowl.bowl_name).toBe(bowlToGet.bowl_name);
-      expect(gotTmnt.bowl.city).toBe(bowlToGet.city);
-      expect(gotTmnt.bowl.state).toBe(bowlToGet.state);
-      expect(gotTmnt.bowl.url).toBe(bowlToGet.url);
+      mockGet.mockResolvedValue({ data: { tmnt: apiTmnt } });
+
+      const gotTmnt = await getTmnt(tmntId);
+
+      expect(gotTmnt).toEqual({
+        ...blankTmnt,
+        id: tmntId,
+        user_id: userId,
+        bowl_id: gpBowlId,
+        tmnt_name: "Gold Pin",
+        start_date_str: "2022-10-23",
+        end_date_str: "2022-10-24",
+        bowl: apiBowl,
+      });
+    });
+
+    it("should call the tmnt url once with the public api", async () => {
+      mockGet.mockResolvedValue({ data: { tmnt: apiTmnt } });
+
+      await getTmnt(tmntId);
+
+      expect(mockGet).toHaveBeenCalledTimes(1);
+      expect(mockGet).toHaveBeenCalledWith(tmntUrl + tmntId);
+      expect(mockPut).not.toHaveBeenCalled();
+      expect(mockDelete).not.toHaveBeenCalled();
+    });
+
+    it("should only keep the api fields it maps", async () => {
+      mockGet.mockResolvedValue({
+        data: {
+          tmnt: {
+            ...apiTmnt,
+            extra: "not kept",
+            bowl: { ...apiBowl, id: gpBowlId },
+          },
+        },
+      });
+
+      const gotTmnt = await getTmnt(tmntId);
+
+      expect(gotTmnt).not.toHaveProperty("extra");
+      expect(gotTmnt.bowl).toEqual(apiBowl);
     });
 
     it("should throw error when trying to get a tmnt that does not exist", async () => {
+      mockGet.mockRejectedValue(axiosError(404));
+
       await expect(getTmnt(notFoundId)).rejects.toThrow(
-        "getTmnt failed: Request failed with status code 404",
+        new Error("getTmnt failed: Request failed with status code 404")
       );
     });
 
-    it("should throw error if tmmt id is invalid", async () => {
-      await expect(getTmnt("test")).rejects.toThrow("Invalid tmnt id");
+    it("should throw error when the response has no tmnt", async () => {
+      mockGet.mockResolvedValue({ data: {} });
+
+      await expect(getTmnt(tmntId)).rejects.toThrow(
+        new Error("getTmnt failed: Missing tmnt data")
+      );
+    });
+
+    it("should throw error if tmnt id is invalid", async () => {
+      await expect(getTmnt("test")).rejects.toThrow(
+        new Error("Invalid tmnt id")
+      );
+      expect(mockGet).not.toHaveBeenCalled();
     });
 
     it("should throw error if tmnt id is a valid id, but not a tmnt id", async () => {
-      await expect(getTmnt(userId)).rejects.toThrow("Invalid tmnt id");
+      await expect(getTmnt(userId)).rejects.toThrow(
+        new Error("Invalid tmnt id")
+      );
+      expect(mockGet).not.toHaveBeenCalled();
     });
 
     it("should throw error if tmnt id is null", async () => {
       await expect(getTmnt(null as unknown as string)).rejects.toThrow(
-        "Invalid tmnt id",
+        new Error("Invalid tmnt id")
       );
+      expect(mockGet).not.toHaveBeenCalled();
     });
   });
 
-  describe("getUserTmnts", () => {
+  describe("getUserTmnts()", () => {
     it("should get user's tmnts", async () => {
+      mockGet.mockResolvedValue({ data: { tmnts: apiTmntList } });
+
       const userTmnts = await getUserTmnts(userId);
-      expect(userTmnts).toHaveLength(11);
-      expect(userTmnts[0].user_id).toBe(userId);
-      expect(userTmnts[10].user_id).toBe(userId);
-      expect(userTmnts[0].id).toBe("tmt_ce35f0c119aa49fd9b89aa86cb980a6a");
-      expect(userTmnts[0].start_date_str).toBe("2026-12-31");
-      expect(userTmnts[1].id).toBe("tmt_e134ac14c5234d708d26037ae812ac33");
-      expect(userTmnts[1].start_date_str).toBe("2026-08-19");
-      expect(userTmnts[2].id).toBe("tmt_2d494e9bb51f4b9abba428c3f37131c9");
-      expect(userTmnts[2].start_date_str).toBe("2024-12-20");
-      expect(userTmnts[3].id).toBe("tmt_a237a388a8fc4641a2e37233f1d6bebd");
-      expect(userTmnts[3].start_date_str).toBe("2024-12-01");
-      expect(userTmnts[4].id).toBe("tmt_d237a388a8fc4641a2e37233f1d6bebd");
-      expect(userTmnts[4].start_date_str).toBe("2024-07-01");
-      expect(userTmnts[5].id).toBe("tmt_9a34a65584f94f548f5ce3b3becbca19");
-      expect(userTmnts[5].start_date_str).toBe("2024-01-05");
-      expect(userTmnts[6].id).toBe("tmt_fe8ac53dad0f400abe6354210a8f4cd1");
-      expect(userTmnts[6].start_date_str).toBe("2023-12-31");
-      expect(userTmnts[7].id).toBe("tmt_718fe20f53dd4e539692c6c64f991bbe");
-      expect(userTmnts[7].start_date_str).toBe("2023-12-20");
-      expect(userTmnts[8].id).toBe("tmt_467e51d71659d2e412cbc64a0d19ecb4");
-      expect(userTmnts[8].start_date_str).toBe("2023-09-16");
-      expect(userTmnts[9].id).toBe("tmt_a78f073789cc0f8a9a0de8c6e273eab1");
-      expect(userTmnts[9].start_date_str).toBe("2023-01-02");
-      expect(userTmnts[10].id).toBe("tmt_fd99387c33d9c78aba290286576ddce5");
-      expect(userTmnts[10].start_date_str).toBe("2022-10-23");
-      expect(userTmnts[0].bowl).not.toBeNull();
+
+      expect(userTmnts).toEqual(expectedTmntList);
     });
 
-    it("should not get user tmnts when user has no tmnts", async () => {
+    it("should call the user url once with the public api", async () => {
+      mockGet.mockResolvedValue({ data: { tmnts: apiTmntList } });
+
+      await getUserTmnts(userId);
+
+      expect(mockGet).toHaveBeenCalledTimes(1);
+      expect(mockGet).toHaveBeenCalledWith(userUrl + userId);
+    });
+
+    it("should return an empty array when user has no tmnts", async () => {
+      mockGet.mockResolvedValue({ data: { tmnts: [] } });
+
       const userTmnts = await getUserTmnts(notFoundUserId);
-      expect(userTmnts).toHaveLength(0);
+
+      expect(userTmnts).toEqual([]);
+    });
+
+    it("should throw error when the response has no tmnts", async () => {
+      mockGet.mockResolvedValue({ data: {} });
+
+      await expect(getUserTmnts(userId)).rejects.toThrow(
+        new Error("getUserTmnts failed: Missing tmnts data")
+      );
+    });
+
+    it("should throw error when the API call fails", async () => {
+      mockGet.mockRejectedValue(axiosError(500));
+
+      await expect(getUserTmnts(userId)).rejects.toThrow(
+        new Error("getUserTmnts failed: Request failed with status code 500")
+      );
     });
 
     it("should throw error if user id is invalid", async () => {
-      await expect(getUserTmnts("test")).rejects.toThrow("Invalid user id");
+      await expect(getUserTmnts("test")).rejects.toThrow(
+        new Error("Invalid user id")
+      );
+      expect(mockGet).not.toHaveBeenCalled();
     });
 
-    it("should not get user tmnts when user id is valid, but not a user id", async () => {
-      await expect(getUserTmnts(notFoundId)).rejects.toThrow("Invalid user id");
+    it("should throw error when user id is valid, but not a user id", async () => {
+      await expect(getUserTmnts(notFoundId)).rejects.toThrow(
+        new Error("Invalid user id")
+      );
+      expect(mockGet).not.toHaveBeenCalled();
     });
 
     it("should throw error if user id is null", async () => {
       await expect(getUserTmnts(null as unknown as string)).rejects.toThrow(
-        "Invalid user id",
+        new Error("Invalid user id")
+      );
+      expect(mockGet).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("getTmntYears()", () => {
+    const apiYears = [{ year: "2026" }, { year: "2024" }, { year: "2023" }];
+
+    it("should get list of tmnt years", async () => {
+      mockGet.mockResolvedValue({ data: { years: apiYears } });
+
+      const years = await getTmntYears();
+
+      expect(years).toEqual(apiYears);
+    });
+
+    it("should call the years url with this year", async () => {
+      mockGet.mockResolvedValue({ data: { years: apiYears } });
+
+      await getTmntYears();
+
+      expect(mockGet).toHaveBeenCalledTimes(1);
+      expect(mockGet).toHaveBeenCalledWith(yearsUrl + todayYearStr);
+    });
+
+    it("should throw error when the response has no years", async () => {
+      mockGet.mockResolvedValue({ data: {} });
+
+      await expect(getTmntYears()).rejects.toThrow(
+        new Error("getTmntYears failed: Missing years data")
       );
     });
-  });
 
-  describe("getTmntYears", () => {
-    it("should get list tmnt years", async () => {
-      const years = await getTmntYears();
-      expect(years).not.toBeNull();
-      expect(years.length).toBeGreaterThan(1);
-      for (let i = 0; i < years.length - 1; i++) {
-        expect(Number(years[i].year)).toBeGreaterThan(Number(years[i + 1].year));
-      }
+    it("should pass on the API error as is (no try / catch)", async () => {
+      const err = axiosError(500);
+      mockGet.mockRejectedValue(err);
+
+      await expect(getTmntYears()).rejects.toBe(err);
     });
   });
 
-  describe("getTmnts() - upcomining tmnts", () => {
+  describe("getTmnts() - upcoming tmnts", () => {
     it("should get all upcoming tmnts - getTmnts()", async () => {
+      mockGet.mockResolvedValue({ data: { tmnts: apiTmntList } });
+
       const tmnts = await getTmnts("");
-      expect(tmnts).toHaveLength(1);
-      expect(tmnts[0].bowl).not.toBeNull();
-      expect(tmnts[0].start_date_str).toBe("2026-12-31");
+
+      expect(tmnts).toEqual(expectedUpcomingList);
+      expect(mockGet).toHaveBeenCalledTimes(1);
+      expect(mockGet).toHaveBeenCalledWith(upcomingUrl, { params: {} });
     });
 
     it("should get all upcoming tmnts - getUpcomingTmnts()", async () => {
+      mockGet.mockResolvedValue({ data: { tmnts: apiTmntList } });
+
       const tmnts = await getUpcomingTmnts();
-      expect(tmnts).toHaveLength(1);
-      expect(tmnts[0].bowl).not.toBeNull();
-      expect(tmnts[0].start_date_str).toBe("2026-12-31");
+
+      expect(tmnts).toEqual(expectedUpcomingList);
+      expect(mockGet).toHaveBeenCalledWith(upcomingUrl, { params: {} });
     });
 
-    it("should get all upcoming tmnts take 1", async () => {
-      const tmnts = await getTmnts("", 0, 1);
-      expect(tmnts).toHaveLength(1);
-      expect(tmnts[0].bowl).not.toBeNull();
-      expect(tmnts[0].start_date_str).toBe("2026-12-31");
+    it("should not include user_id in upcoming tmnts", async () => {
+      mockGet.mockResolvedValue({ data: { tmnts: apiTmntList } });
+
+      const tmnts = await getTmnts("");
+
+      expect(tmnts[0]).not.toHaveProperty("user_id");
     });
 
-    it("should get all upcoming tmnts skip 1, take 1", async () => {
-      const tmnts = await getTmnts("", 1, 1);
-      expect(tmnts).toHaveLength(0);
-      // expect(tmnts[0].bowl).not.toBeNull();
-      // expect(tmnts[0].start_date_str).toBe("2026-12-31");
+    it("should pass skip and take", async () => {
+      mockGet.mockResolvedValue({ data: { tmnts: [] } });
+
+      await getTmnts("", 1, 1);
+
+      expect(mockGet).toHaveBeenCalledWith(upcomingUrl, {
+        params: { skip: 1, take: 1 },
+      });
     });
 
-    it("should get all upcoming tmnts - ignore invalid skip and take", async () => {
+    it("should pass skip of 0", async () => {
+      mockGet.mockResolvedValue({ data: { tmnts: [] } });
+
+      await getTmnts("", 0, 1);
+
+      expect(mockGet).toHaveBeenCalledWith(upcomingUrl, {
+        params: { skip: 0, take: 1 },
+      });
+    });
+
+    it("should ignore invalid skip and take", async () => {
+      mockGet.mockResolvedValue({ data: { tmnts: apiTmntList } });
+
       const tmnts = await getTmnts("", -1, 1.1);
-      expect(tmnts).toHaveLength(1);
-      expect(tmnts[0].bowl).not.toBeNull();
-      expect(tmnts[0].start_date_str).toBe("2026-12-31");
+
+      expect(tmnts).toEqual(expectedUpcomingList);
+      expect(mockGet).toHaveBeenCalledWith(upcomingUrl, { params: {} });
+    });
+
+    it("should ignore take of 0 and take over 100", async () => {
+      mockGet.mockResolvedValue({ data: { tmnts: [] } });
+
+      await getUpcomingTmnts(0, 0);
+      await getUpcomingTmnts(0, 101);
+
+      expect(mockGet).toHaveBeenNthCalledWith(1, upcomingUrl, {
+        params: { skip: 0 },
+      });
+      expect(mockGet).toHaveBeenNthCalledWith(2, upcomingUrl, {
+        params: { skip: 0 },
+      });
+    });
+
+    it("should allow take of 100", async () => {
+      mockGet.mockResolvedValue({ data: { tmnts: [] } });
+
+      await getUpcomingTmnts(undefined, 100);
+
+      expect(mockGet).toHaveBeenCalledWith(upcomingUrl, {
+        params: { take: 100 },
+      });
+    });
+
+    it("should return an empty array when there are no upcoming tmnts", async () => {
+      mockGet.mockResolvedValue({ data: { tmnts: [] } });
+
+      const tmnts = await getTmnts("", 1, 1);
+
+      expect(tmnts).toEqual([]);
+    });
+
+    it("should throw error when the response has no tmnts", async () => {
+      mockGet.mockResolvedValue({ data: {} });
+
+      await expect(getTmnts("")).rejects.toThrow(
+        new Error("getUpcomingTmnts failed: Missing upcoming tournaments data")
+      );
+    });
+
+    it("should throw error when the API call fails", async () => {
+      mockGet.mockRejectedValue(axiosError(500));
+
+      await expect(getTmnts("")).rejects.toThrow(
+        new Error("getUpcomingTmnts failed: Request failed with status code 500")
+      );
     });
 
     it("should throw error if year is null", async () => {
       await expect(getTmnts(null as unknown as string)).rejects.toThrow(
-        "Invalid year",
+        new Error("Invalid year")
       );
+      expect(mockGet).not.toHaveBeenCalled();
     });
   });
 
   describe("getTmnts() - for a year", () => {
-    it("should get tmnt results for year 2023 - getTmnts()", async () => {
-      const tmnts = await getTmnts("2023");
-      expect(tmnts).toHaveLength(5);
-      expect(tmnts[0].bowl).not.toBeNull();
-      expect(tmnts[0].start_date_str).toBe("2023-12-31");
-    });
+    it("should get tmnts for year 2022 - getTmnts()", async () => {
+      mockGet.mockResolvedValue({ data: { tmnts: apiTmntList } });
 
-    it("should get tmnt results for year 2023 - getTmntsForYear()", async () => {
-      const tmnts = await getTmntsForYear("2023");
-      expect(tmnts).toHaveLength(5);
-      expect(tmnts[0].bowl).not.toBeNull();
-      expect(tmnts[0].start_date_str).toBe("2023-12-31");
-    });
-
-    it("should get tmnt results for year 2022 - getTmntsForYear()", async () => {
-      const tmnts = await getTmntsForYear("2022");
-      expect(tmnts).toHaveLength(3);
-      expect(tmnts[0].start_date_str).toBe("2022-10-23");
-    });
-
-    it("should get tmnt results for year 2022 - getTmnts()", async () => {
       const tmnts = await getTmnts("2022");
-      expect(tmnts).toHaveLength(3);
-      expect(tmnts[0].start_date_str).toBe("2022-10-23");
+
+      expect(tmnts).toEqual(expectedTmntList);
+      expect(mockGet).toHaveBeenCalledTimes(1);
+      expect(mockGet).toHaveBeenCalledWith(resultsUrl + "2022", { params: {} });
     });
 
-    it("should get tmnt results for year 2001 - getTmntsForYear()", async () => {
-      const tmnts = await getTmntsForYear("2001");
-      expect(tmnts).toHaveLength(0);
+    it("should get tmnts for year 2022 - getTmntsForYear()", async () => {
+      mockGet.mockResolvedValue({ data: { tmnts: apiTmntList } });
+
+      const tmnts = await getTmntsForYear("2022");
+
+      expect(tmnts).toEqual(expectedTmntList);
+      expect(mockGet).toHaveBeenCalledWith(resultsUrl + "2022", { params: {} });
     });
 
-    it("should get tmnt results for year 2001 - getTmnts()", async () => {
+    it("should pass skip and take", async () => {
+      mockGet.mockResolvedValue({ data: { tmnts: [] } });
+
+      await getTmnts("2023", 5, 10);
+
+      expect(mockGet).toHaveBeenCalledWith(resultsUrl + "2023", {
+        params: { skip: 5, take: 10 },
+      });
+    });
+
+    it("should ignore invalid skip and take", async () => {
+      mockGet.mockResolvedValue({ data: { tmnts: [] } });
+
+      await getTmntsForYear("2023", -1, 1.1);
+
+      expect(mockGet).toHaveBeenCalledWith(resultsUrl + "2023", { params: {} });
+    });
+
+    it("should return an empty array when there are no tmnts for the year", async () => {
+      mockGet.mockResolvedValue({ data: { tmnts: [] } });
+
       const tmnts = await getTmnts("2001");
-      expect(tmnts).toHaveLength(0);
+
+      expect(tmnts).toEqual([]);
+    });
+
+    it("should throw error when the response has no tmnts", async () => {
+      mockGet.mockResolvedValue({ data: {} });
+
+      await expect(getTmnts("2023")).rejects.toThrow(
+        new Error("getTmntsForYear failed: Missing tournaments data for year 2023")
+      );
+    });
+
+    it("should throw error when the API call fails", async () => {
+      mockGet.mockRejectedValue(axiosError(500));
+
+      await expect(getTmnts("2023")).rejects.toThrow(
+        new Error("getTmntsForYear failed: Request failed with status code 500")
+      );
     });
 
     it("should throw error if year is invalid", async () => {
-      await expect(getTmnts("test")).rejects.toThrow("Invalid year");
+      await expect(getTmnts("test")).rejects.toThrow(new Error("Invalid year"));
+      expect(mockGet).not.toHaveBeenCalled();
+    });
+
+    it("should throw error if year is invalid - getTmntsForYear()", async () => {
+      await expect(getTmntsForYear("test")).rejects.toThrow(
+        new Error("Invalid year")
+      );
+      expect(mockGet).not.toHaveBeenCalled();
     });
   });
 
-  describe("getTmntFullData", () => {
-    it("should get a tmnt and its full data - Full Tournament", async () => {
-      const fullTmntId = "tmt_d237a388a8fc4641a2e37233f1d6bebd";
-      const fullBowlId = "bwl_561540bd64974da9abdd97765fdb3659";
-      const fullDivId = "div_99a3cae28786485bb7a036935f0f6a0a";
-      const fullEventId = "evt_4ff710c8493f4a218d2e2b045442974a";
-      const fullSquadId = "sqd_8e4266e1174642c7a1bcec47a50f275f";
-      const fullStageId = "stg_124dd9efc30f4352b691dfd93d1e284e";
+  describe("getTmntFullData()", () => {
+    const divId1 = "div_99a3cae28786485bb7a036935f0f6a0a";
+    const divId2 = "div_29b9225d8dd44a4eae276f8bde855729";
+    const eventId = "evt_4ff710c8493f4a218d2e2b045442974a";
+    const squadId1 = "sqd_8e4266e1174642c7a1bcec47a50f275f";
+    const squadId2 = "sqd_1a6c885ee19a49489960389193e8f819";
 
-      const tmntFullData = await getTmntFullData(fullTmntId);
-      expect(tmntFullData.tmnt.id).toBe(fullTmntId);
+    const stage1 = {
+      id: "stg_124dd9efc30f4352b691dfd93d1e284e",
+      squad_id: squadId1,
+      stage: SquadStage.ENTRIES,
+      stage_set_at: "2024-07-01T00:00:00.000Z",
+      scores_started_at: null,
+      stage_override_enabled: false,
+      stage_override_at: null,
+      stage_override_reason: null,
+    };
+    const stage2 = {
+      ...stage1,
+      id: "stg_c5f562c4c4304d919ac43fead73123e2",
+      squad_id: squadId2,
+      stage: SquadStage.SCORES,
+    };
 
-      expect(tmntFullData.tmnt.tmnt_name).toBe("Full Tournament");
-      expect(tmntFullData.tmnt.bowl).not.toBeNull();
-      expect(tmntFullData.tmnt.bowl_id).toBe(fullBowlId);
-      expect(tmntFullData.tmnt.bowl.bowl_name).toBe("Earl Anthony's Dublin Bowl");
-      expect(tmntFullData.tmnt.bowl.city).toBe("Dublin");
-      expect(tmntFullData.tmnt.bowl.state).toBe("CA");
-      expect(tmntFullData.tmnt.bowl.url).toBe(
-        "https://www.earlanthonysdublinbowl.com",
-      );
-      
-      const events = tmntFullData.events;
-      expect(events).toHaveLength(1);
-      expect(events[0].id).toBe(fullEventId);
-      expect(events[0].tmnt_id).toBe(fullTmntId);
-      expect(events[0].event_name).toBe("Singles");
-      expect(events[0].team_size).toBe(1);
-      expect(events[0].games).toBe(6);
-      expect(events[0].entry_fee).toBe("90");
-      expect(events[0].lineage).toBe("21");
-      expect(events[0].prize_fund).toBe("62");
-      expect(events[0].other).toBe("2");
-      expect(events[0].expenses).toBe("5");
-      expect(events[0].added_money).toBe("0");
-      expect(events[0].lpox).toBe("90");
-      expect(events[0].sort_order).toBe(1);
+    // rows only need ids; the extract functions are mocked
+    const brkt1 = {
+      id: "brk_3e6bf51cc1ca4748ad5e8abab88277e0",
+      brkt_entries: [{ id: "ben_c0126ba58d3f4a7d950101a5674ce595" }],
+      one_brkts: [
+        {
+          id: "obk_557f12f3875f42baa29b8b3c4b9c3e01",
+          brkt_seeds: [{ one_brkt_id: "obk_557f12f3875f42baa29b8b3c4b9c3e01", seed: 0 }],
+        },
+        {
+          id: "obk_5423c16d58a948748f32c7c72c632297",
+          brkt_seeds: [{ one_brkt_id: "obk_5423c16d58a948748f32c7c72c632297", seed: 0 }],
+        },
+      ],
+    };
+    const brkt2 = {
+      id: "brk_fd88cd2f5a164e8c8f758daae18bfc83",
+      brkt_entries: [{ id: "ben_c0226ba58d3f4a7d950101a5674ce595" }],
+      one_brkts: [],
+    };
+    const elim1 = {
+      id: "elm_c47a4ec07f824b0e93169ae78e8b4b1e",
+      elim_entries: [{ id: "een_a01758cff1cc4bab9d9133e661bd49b0" }],
+    };
+    const pot1 = {
+      id: "pot_89fd8f787de942a1a92aaa2df3e7c185",
+      pot_entries: [{ id: "pen_a01758cff1cc4bab9d9133e661bd49b0" }],
+    };
+    const div1 = {
+      id: divId1,
+      div_entries: [{ id: "den_a01631c1c94d4627bde16fad72e5e5d4" }],
+      brkts: [brkt1, brkt2],
+      elims: [elim1],
+      pots: [pot1],
+    };
+    const div2 = {
+      id: divId2,
+      div_entries: [{ id: "den_a02631c1c94d4627bde16fad72e5e5d4" }],
+      brkts: [],
+      elims: [],
+      pots: [],
+    };
+    const squad1 = {
+      id: squadId1,
+      stage: stage1,
+      lanes: [
+        { id: "lan_ab019d9e6b6e4c5b9f6b7d9e7f9b6c5d" },
+        { id: "lan_ab029d9e6b6e4c5b9f6b7d9e7f9b6c5d" },
+      ],
+      players: [{ id: "ply_a01758cff1cc4bab9d9133e661bd49b0" }],
+      moneys: [{ id: "mny_a01758cff1cc4bab9d9133e661bd49b0" }],
+    };
+    const squad2 = {
+      id: squadId2,
+      stage: stage2,
+      lanes: [{ id: "lan_4e24c5cc04f6463d89f24e6e19a126a2" }],
+      players: [{ id: "ply_a02758cff1cc4bab9d9133e661bd49b0" }],
+      moneys: [],
+    };
+    const event1 = {
+      id: eventId,
+      squads: [squad1, squad2],
+    };
 
-      const divs = tmntFullData.divs;
-      expect(divs).toHaveLength(1);
-      expect(divs[0].id).toBe(fullDivId);
-      expect(divs[0].div_name).toBe("Scratch");
-      expect(divs[0].hdcp_per).toBe(0);
-      expect(divs[0].hdcp_from).toBe(230);
-      expect(divs[0].int_hdcp).toBe(true);
-      expect(divs[0].hdcp_for).toBe("Game");
-      expect(divs[0].sort_order).toBe(1);
+    // what the full api sends back for a tmnt
+    const apiTmntFull = {
+      ...apiTmnt,
+      divs: [div1, div2],
+      events: [event1],
+    };
 
-      const divEntries = tmntFullData.divEntries;
-      expect(divEntries).toHaveLength(37);
-      for (let d = 0; d < 37; d++) {
-        let idNum = (d + 1).toString().padStart(2, "0");
-        const id = (d < 36) 
-          ? `den_a${idNum}631c1c94d4627bde16fad72e5e5d4`
-          : 'den_b34567c1c94d4627bde16fad72e5e5d4'
-        const playerId = (d < 36)
-          ? `ply_a${idNum}758cff1cc4bab9d9133e661bd49b0`
-          : 'ply_a13758cff1cc4bab9d9133e661bd49af'
-        expect(divEntries[d].id).toBe(id);
-        expect(divEntries[d].div_id).toBe(fullDivId);
-        expect(divEntries[d].squad_id).toBe(fullSquadId);
-        expect(divEntries[d].player_id).toBe(playerId);
-        expect(divEntries[d].fee).toBe("90");
-        expect(divEntries[d].hdcp).toBe(0);
-      }
+    // the parts of the init value getTmntFullData starts from and keeps
+    const base: tmntFullType = cloneDeep(linkedInitTmntFullData);
 
-      const squads = tmntFullData.squads;
-      expect(squads).toHaveLength(1);
-      expect(squads[0].id).toBe(fullSquadId);
-      expect(squads[0].event_id).toBe(fullEventId);
-      expect(squads[0].squad_name).toBe("Squad 1");
-      expect(squads[0].games).toBe(6);
-      expect(squads[0].lane_count).toBe(12);
-      expect(squads[0].starting_lane).toBe(29);
-      expect(squads[0].sort_order).toBe(1);
+    it("should get the tmnt part of the full data", async () => {
+      mockGet.mockResolvedValue({ data: { tmntFullData: apiTmntFull } });
 
-      const squad = tmntFullData.stage;
-      expect(squad.id).toBe(fullStageId);
-      expect(squad.squad_id).toBe(fullSquadId);
-      expect(squad.stage).toBe(SquadStage.ENTRIES);
-      // expect(squad.stage).toBe(SquadStage.SCORES);
-      expect(squad.stage_set_at).toBe("2024-07-01T00:00:00.000Z");
-      expect(squad.scores_started_at).toBe(null);
-      expect(squad.stage_override_enabled).toBe(false);
-      expect(squad.stage_override_reason).toBe(null);
+      const tmntFullData = await getTmntFullData(tmntId);
 
-      const lanes = tmntFullData.lanes;
-      expect(lanes).toHaveLength(12);
-      expect(lanes[0].id).toBe("lan_ab019d9e6b6e4c5b9f6b7d9e7f9b6c5d");
-      expect(lanes[0].squad_id).toBe(fullSquadId);
-      expect(lanes[0].lane_number).toBe(29);
-      expect(lanes[0].in_use).toBe(true);
-      expect(lanes[1].id).toBe("lan_ab029d9e6b6e4c5b9f6b7d9e7f9b6c5d");
-      expect(lanes[1].squad_id).toBe(fullSquadId);
-      expect(lanes[1].lane_number).toBe(30);
-      expect(lanes[1].in_use).toBe(true);
-      expect(lanes[2].id).toBe("lan_ab039d9e6b6e4c5b9f6b7d9e7f9b6c5d");
-      expect(lanes[2].squad_id).toBe(fullSquadId);
-      expect(lanes[2].lane_number).toBe(31);
-      expect(lanes[2].in_use).toBe(true);
-      expect(lanes[3].id).toBe("lan_ab049d9e6b6e4c5b9f6b7d9e7f9b6c5d");
-      expect(lanes[3].squad_id).toBe(fullSquadId);
-      expect(lanes[3].lane_number).toBe(32);
-      expect(lanes[3].in_use).toBe(true);
-      expect(lanes[4].id).toBe("lan_ab059d9e6b6e4c5b9f6b7d9e7f9b6c5d");
-      expect(lanes[4].squad_id).toBe(fullSquadId);
-      expect(lanes[4].lane_number).toBe(33);
-      expect(lanes[4].in_use).toBe(true);
-      expect(lanes[5].id).toBe("lan_ab069d9e6b6e4c5b9f6b7d9e7f9b6c5d");
-      expect(lanes[5].squad_id).toBe(fullSquadId);
-      expect(lanes[5].lane_number).toBe(34);
-      expect(lanes[5].in_use).toBe(true);
-      expect(lanes[6].id).toBe("lan_ab079d9e6b6e4c5b9f6b7d9e7f9b6c5d");
-      expect(lanes[6].squad_id).toBe(fullSquadId);
-      expect(lanes[6].lane_number).toBe(35);
-      expect(lanes[6].in_use).toBe(true);
-      expect(lanes[7].id).toBe("lan_ab089d9e6b6e4c5b9f6b7d9e7f9b6c5d");
-      expect(lanes[7].squad_id).toBe(fullSquadId);
-      expect(lanes[7].lane_number).toBe(36);
-      expect(lanes[7].in_use).toBe(true);
-      expect(lanes[8].id).toBe("lan_ab099d9e6b6e4c5b9f6b7d9e7f9b6c5d");
-      expect(lanes[8].squad_id).toBe(fullSquadId);
-      expect(lanes[8].lane_number).toBe(37);
-      expect(lanes[8].in_use).toBe(true);
-      expect(lanes[9].id).toBe("lan_ab109d9e6b6e4c5b9f6b7d9e7f9b6c5d");
-      expect(lanes[9].squad_id).toBe(fullSquadId);
-      expect(lanes[9].lane_number).toBe(38);
-      expect(lanes[9].in_use).toBe(true);
-      expect(lanes[10].id).toBe("lan_ab119d9e6b6e4c5b9f6b7d9e7f9b6c5d");
-      expect(lanes[10].squad_id).toBe(fullSquadId);
-      expect(lanes[10].lane_number).toBe(39);
-      expect(lanes[10].in_use).toBe(true);
-      expect(lanes[11].id).toBe("lan_ab129d9e6b6e4c5b9f6b7d9e7f9b6c5d");
-      expect(lanes[11].squad_id).toBe(fullSquadId);
-      expect(lanes[11].lane_number).toBe(40);
-      expect(lanes[11].in_use).toBe(true);
-
-      const pots = tmntFullData.pots;
-      expect(pots.length).toBe(2);
-      expect(pots[0].id).toBe("pot_89fd8f787de942a1a92aaa2df3e7c185");
-      expect(pots[0].squad_id).toBe(fullSquadId);
-      expect(pots[0].div_id).toBe(fullDivId);
-      expect(pots[0].fee).toBe("20");
-      expect(pots[0].pot_type).toBe("Game");
-      expect(pots[0].sort_order).toBe(1);
-
-      expect(pots[1].id).toBe("pot_aa5268ed78ad4a1599675b6a85d193b3");
-      expect(pots[1].squad_id).toBe(fullSquadId);
-      expect(pots[1].div_id).toBe(fullDivId);
-      expect(pots[1].fee).toBe("10");
-      expect(pots[1].pot_type).toBe("Last Game");
-      expect(pots[1].sort_order).toBe(2);
-
-      const potEntries = tmntFullData.potEntries;
-      expect(potEntries).toHaveLength(38);
-      for (let i = 0; i < 30; i++) {
-        expect(potEntries[i].fee).toBe("20");
-        expect(potEntries[i].player_id).not.toBeNull();
-      }
-      for (let i = 31; i < 38; i++) {
-        expect(potEntries[i].fee).toBe("10");
-        expect(potEntries[i].player_id).not.toBeNull();
-      }
-
-      const brkts = tmntFullData.brkts;
-      expect(brkts.length).toBe(2);
-      for (let i = 0; i < brkts.length; i++) {
-        expect(brkts[i].squad_id).toBe(fullSquadId);
-        expect(brkts[i].div_id).toBe(fullDivId);
-        expect(brkts[i].games).toBe(3);
-        expect(brkts[i].players).toBe(8);
-        expect(brkts[i].fee).toBe("5");
-        expect(brkts[i].first).toBe("25");
-        expect(brkts[i].second).toBe("10");
-        expect(brkts[i].admin).toBe("5");
-        expect(brkts[i].fsa).toBe("40");
-        if (brkts[i].id === "brk_3e6bf51cc1ca4748ad5e8abab88277e0") {
-          expect(brkts[i].start).toBe(1);
-          expect(brkts[i].sort_order).toBe(1);
-        } else if (brkts[i].id === "brk_fd88cd2f5a164e8c8f758daae18bfc83") {
-          expect(brkts[i].start).toBe(4);
-          expect(brkts[i].sort_order).toBe(2);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-
-      const brktEntries = tmntFullData.brktEntries;
-      for (let i = 0; i < brktEntries.length; i++) {
-        if (brktEntries[i].id === "ben_c0126ba58d3f4a7d950101a5674ce595") {
-          expect(brktEntries[i].num_brackets).toBe(10);
-          expect(brktEntries[i].player_id).toBe(
-            "ply_a01758cff1cc4bab9d9133e661bd49b0",
-          );
-          expect(brktEntries[i].fee).toBe("50");
-          expect(brktEntries[i].num_refunds).toBe(0);
-        } else if (brktEntries[i].id === "ben_c0226ba58d3f4a7d950101a5674ce595") {
-          expect(brktEntries[i].num_brackets).toBe(10);
-          expect(brktEntries[i].player_id).toBe(
-            "ply_a01758cff1cc4bab9d9133e661bd49b0",
-          );
-          expect(brktEntries[i].fee).toBe("50");
-          expect(brktEntries[i].num_refunds).toBe(0);
-        } else if (brktEntries[i].id === "ben_c0326ba58d3f4a7d950101a5674ce595") {
-          expect(brktEntries[i].num_brackets).toBe(8);
-          expect(brktEntries[i].player_id).toBe(
-            "ply_a02758cff1cc4bab9d9133e661bd49b0",
-          );
-          expect(brktEntries[i].fee).toBe("40");
-          expect(brktEntries[i].num_refunds).toBe(0);
-        } else if (brktEntries[i].id === "ben_c2126ba58d3f4a7d950101a5674ce595") {
-          expect(brktEntries[i].num_brackets).toBe(21);
-          expect(brktEntries[i].player_id).toBe(
-            "ply_a11758cff1cc4bab9d9133e661bd49b0",
-          );
-          expect(brktEntries[i].fee).toBe("105");
-          expect(brktEntries[i].num_refunds).toBe(4);
-        } else if (brktEntries[i].id === "ben_c2226ba58d3f4a7d950101a5674ce595") {
-          expect(brktEntries[i].num_brackets).toBe(21);
-          expect(brktEntries[i].player_id).toBe(
-            "ply_a11758cff1cc4bab9d9133e661bd49b0",
-          );
-          expect(brktEntries[i].fee).toBe("105");
-          expect(brktEntries[i].num_refunds).toBe(4);
-        } else {
-          expect(brktEntries[i].num_brackets).toBeGreaterThan(0);
-          expect(brktEntries[i].player_id).not.toBeNull();
-          expect(Number(brktEntries[i].fee)).toBeGreaterThan(0);
-          expect(brktEntries[i].num_refunds).toBe(0);
-        }
-      }
-
-      const elims = tmntFullData.elims;
-      expect(elims.length).toBe(2);
-      for (let i = 0; i < 2; i++) {
-        expect(elims[i].squad_id).toBe(fullSquadId);
-        expect(elims[i].div_id).toBe(fullDivId);
-        expect(elims[i].games).toBe(3);
-        expect(elims[i].fee).toBe("5");
-        if (elims[i].id === "elm_c47a4ec07f824b0e93169ae78e8b4b1e") {
-          expect(elims[i].start).toBe(1);
-          expect(elims[i].sort_order).toBe(1);
-        } else if (elims[i].id === "elm_461eece3c50241e9925e9a520730ac7e") {
-          expect(elims[i].start).toBe(4);
-          expect(elims[i].sort_order).toBe(2);
-        } else {
-          expect(true).toBeFalsy();
-        }
-      }
-
-      const elimEntries = tmntFullData.elimEntries;
-      for (let i = 0; i < elimEntries.length; i++) {
-        expect(elimEntries[i].player_id).not.toBeNull();
-        expect([
-          "elm_c47a4ec07f824b0e93169ae78e8b4b1e",
-          "elm_461eece3c50241e9925e9a520730ac7e",
-        ]).toContain(elimEntries[i].elim_id);
-        expect(elimEntries[i].fee).toBe("5");
-      }
-
-      const players = tmntFullData.players;
-      expect(players.length).toBe(38);
-      for (let p = 0; p < 38; p++) {
-
-        if (players[p].id.startsWith('bye')) {
-          expect(players[p].first_name).toBe('Bye');
-          expect(players[p].last_name).toBe('')
-          expect(players[p].average).toBe(0);
-          expect(players[p].lane).toBeNull();
-        } else { 
-          expect(players[p].lane).toBeGreaterThanOrEqual(29);
-          expect(players[p].lane).toBeLessThanOrEqual(40);
-
-          const positions = ["A", "B", "C", "D", "E", "F"];
-          expect(positions.includes(players[p].position)).toBe(true);  
-
-          expect(isValidBtDbId(players[p].id, "ply")).toBe(true);
-
-          expect(players[p].first_name).not.toBeNull();
-          expect(players[p].last_name).not.toBeNull();
-          expect(players[p].average).toBeGreaterThan(190);
-          expect(players[p].average).toBeLessThan(231);
-        }
-      }
-
-      const moneys = tmntFullData.moneys;
-      expect(moneys.length).toBe(26);
-      for (let m = 0; m < 26; m++) {
-        expect(moneys[m].id).not.toBeNull();
-        expect(moneys[m].event_id).toBe(fullEventId);
-        expect(moneys[m].squad_id).toBe(fullSquadId); 
-        expect(moneys[m].div_id).toBe(fullDivId);
-        expect(moneys[m].amount).not.toBeNull();
-        expect(moneys[m].descrip).not.toBeNull();
-        expect(moneys[m].flow).not.toBeNull();
-        expect(moneys[m].sort_order).toBe(m + 1);
-      }
+      expect(tmntFullData.tmnt).toEqual({
+        ...base.tmnt,
+        id: tmntId,
+        user_id: userId,
+        bowl_id: gpBowlId,
+        tmnt_name: "Gold Pin",
+        start_date_str: "2022-10-23",
+        end_date_str: "2022-10-24",
+        bowl: { ...base.tmnt.bowl, ...apiBowl },
+      });
     });
 
-    it("should get a tmnt and its configuration - Yosemite 6 Gamer", async () => {
-      const fullTmntId = "tmt_56d916ece6b50e6293300248c6792316";
-      const fullBowlId = "bwl_8b4a5c35ad1247049532ff53a12def0a";
-      const tmntFullData = await getTmntFullData(fullTmntId);
+    it("should call the full url once with the public api", async () => {
+      mockGet.mockResolvedValue({ data: { tmntFullData: apiTmntFull } });
 
-      expect(tmntFullData.tmnt.id).toBe(fullTmntId);
-      expect(tmntFullData.tmnt.tmnt_name).toBe("Yosemite 6 Gamer");
-      expect(tmntFullData.tmnt.bowl).not.toBeNull();
-      expect(tmntFullData.tmnt.bowl_id).toBe(fullBowlId);
-      expect(tmntFullData.tmnt.bowl.bowl_name).toBe("Yosemite Lanes");
-      expect(tmntFullData.tmnt.bowl.city).toBe("Modesto");
-      expect(tmntFullData.tmnt.bowl.state).toBe("CA");
-      expect(tmntFullData.tmnt.bowl.url).toBe("http://yosemitelanes.com");
+      await getTmntFullData(tmntId);
 
-      const events = tmntFullData.events;
-      expect(events).toHaveLength(1);
-      expect(events[0].id).toBe("evt_dadfd0e9c11a4aacb87084f1609a0afd");
-      expect(events[0].tmnt_id).toBe(fullTmntId);
-      expect(events[0].event_name).toBe("Singles");
-      expect(events[0].team_size).toBe(1);
-      expect(events[0].games).toBe(6);
-      expect(events[0].entry_fee).toBe("60");
-      expect(events[0].lineage).toBe("15");
-      expect(events[0].prize_fund).toBe("45");
-      expect(events[0].other).toBe("0");
-      expect(events[0].expenses).toBe("0");
-      expect(events[0].added_money).toBe("0");
-      expect(events[0].lpox).toBe("60");
-      expect(events[0].sort_order).toBe(1);
+      expect(mockGet).toHaveBeenCalledTimes(1);
+      expect(mockGet).toHaveBeenCalledWith(fullUrl + tmntId);
+      expect(mockPut).not.toHaveBeenCalled();
+    });
 
-      const divs = tmntFullData.divs;
-      expect(divs).toHaveLength(2);
-      expect(divs[0].id).toBe("div_1f42042f9ef24029a0a2d48cc276a087");
-      expect(divs[0].div_name).toBe("Scratch");
-      expect(divs[0].hdcp_per).toBe(0);
-      expect(divs[0].hdcp_from).toBe(230);
-      expect(divs[0].int_hdcp).toBe(true);
-      expect(divs[0].hdcp_for).toBe("Game");
-      expect(divs[0].sort_order).toBe(1);
-      expect(divs[1].id).toBe("div_29b9225d8dd44a4eae276f8bde855729");
-      expect(divs[1].div_name).toBe("50+ Scratch");
-      expect(divs[1].hdcp_per).toBe(0);
-      expect(divs[1].hdcp_from).toBe(230);
-      expect(divs[1].int_hdcp).toBe(true);
-      expect(divs[1].hdcp_for).toBe("Game");
-      expect(divs[1].sort_order).toBe(2);
+    it("should replace the init divs, events, squads and lanes", async () => {
+      mockGet.mockResolvedValue({ data: { tmntFullData: apiTmntFull } });
 
-      const squads = tmntFullData.squads;
-      expect(squads).toHaveLength(1);
-      expect(squads[0].id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-      expect(squads[0].event_id).toBe("evt_dadfd0e9c11a4aacb87084f1609a0afd");
-      expect(squads[0].squad_name).toBe("Squad 1");
-      expect(squads[0].games).toBe(6);
-      expect(squads[0].lane_count).toBe(24);
-      expect(squads[0].starting_lane).toBe(9);
-      expect(squads[0].sort_order).toBe(1);
+      const tmntFullData = await getTmntFullData(tmntId);
 
-      const lanes = tmntFullData.lanes;
-      expect(lanes).toHaveLength(24);
-      expect(lanes[0].id).toBe("lan_4e24c5cc04f6463d89f24e6e19a126a2");
-      expect(lanes[0].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-      expect(lanes[0].lane_number).toBe(9);
-      expect(lanes[0].in_use).toBe(true);
-      expect(lanes[1].id).toBe("lan_4e24c5cc04f6463d89f24e6e19a11234");
-      expect(lanes[1].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-      expect(lanes[1].lane_number).toBe(10);
-      expect(lanes[1].in_use).toBe(true);
-      expect(lanes[2].id).toBe("lan_4e24c5cc04f6463d89f24e6e19a11235");
-      expect(lanes[2].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-      expect(lanes[2].lane_number).toBe(11);
-      expect(lanes[2].in_use).toBe(true);
-      expect(lanes[3].id).toBe("lan_4e24c5cc04f6463d89f24e6e19a11236");
-      expect(lanes[3].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-      expect(lanes[3].lane_number).toBe(12);
-      expect(lanes[3].in_use).toBe(true);
-      expect(lanes[4].id).toBe("lan_4e24c5cc04f6463d89f24e6e19a11237");
-      expect(lanes[4].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-      expect(lanes[4].lane_number).toBe(13);
-      expect(lanes[4].in_use).toBe(true);
-      expect(lanes[5].id).toBe("lan_4e24c5cc04f6463d89f24e6e19a11238");
-      expect(lanes[5].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-      expect(lanes[5].lane_number).toBe(14);
-      expect(lanes[5].in_use).toBe(true);
-      expect(lanes[6].id).toBe("lan_4e24c5cc04f6463d89f24e6e19a11239");
-      expect(lanes[6].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-      expect(lanes[6].lane_number).toBe(15);
-      expect(lanes[6].in_use).toBe(true);
-      expect(lanes[7].id).toBe("lan_4e24c5cc04f6463d89f24e6e19a11240");
-      expect(lanes[7].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-      expect(lanes[7].lane_number).toBe(16);
-      expect(lanes[7].in_use).toBe(true);
-      expect(lanes[8].id).toBe("lan_4e24c5cc04f6463d89f24e6e19a11241");
-      expect(lanes[8].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-      expect(lanes[8].lane_number).toBe(17);
-      expect(lanes[8].in_use).toBe(true);
-      expect(lanes[9].id).toBe("lan_4e24c5cc04f6463d89f24e6e19a11242");
-      expect(lanes[9].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-      expect(lanes[9].lane_number).toBe(18);
-      expect(lanes[9].in_use).toBe(true);
-      expect(lanes[10].id).toBe("lan_4e24c5cc04f6463d89f24e6e19a11243");
-      expect(lanes[10].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-      expect(lanes[10].lane_number).toBe(19);
-      expect(lanes[10].in_use).toBe(true);
-      expect(lanes[11].id).toBe("lan_4e24c5cc04f6463d89f24e6e19a11244");
-      expect(lanes[11].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-      expect(lanes[11].lane_number).toBe(20);
-      expect(lanes[11].in_use).toBe(true);
-      expect(lanes[12].id).toBe("lan_4e24c5cc04f6463d89f24e6e19a11245");
-      expect(lanes[12].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-      expect(lanes[12].lane_number).toBe(21);
-      expect(lanes[12].in_use).toBe(true);
-      expect(lanes[13].id).toBe("lan_4e24c5cc04f6463d89f24e6e19a11246");
-      expect(lanes[13].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-      expect(lanes[13].lane_number).toBe(22);
-      expect(lanes[13].in_use).toBe(true);
-      expect(lanes[14].id).toBe("lan_4e24c5cc04f6463d89f24e6e19a11247");
-      expect(lanes[14].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-      expect(lanes[14].lane_number).toBe(23);
-      expect(lanes[14].in_use).toBe(true);
-      expect(lanes[15].id).toBe("lan_4e24c5cc04f6463d89f24e6e19a11248");
-      expect(lanes[15].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-      expect(lanes[15].lane_number).toBe(24);
-      expect(lanes[15].in_use).toBe(true);
-      expect(lanes[16].id).toBe("lan_4e24c5cc04f6463d89f24e6e19a11249");
-      expect(lanes[16].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-      expect(lanes[16].lane_number).toBe(25);
-      expect(lanes[16].in_use).toBe(true);
-      expect(lanes[17].id).toBe("lan_4e24c5cc04f6463d89f24e6e19a11250");
-      expect(lanes[17].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-      expect(lanes[17].lane_number).toBe(26);
-      expect(lanes[17].in_use).toBe(true);
-      expect(lanes[18].id).toBe("lan_4e24c5cc04f6463d89f24e6e19a11251");
-      expect(lanes[18].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-      expect(lanes[18].lane_number).toBe(27);
-      expect(lanes[18].in_use).toBe(true);
-      expect(lanes[19].id).toBe("lan_4e24c5cc04f6463d89f24e6e19a11252");
-      expect(lanes[19].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-      expect(lanes[19].lane_number).toBe(28);
-      expect(lanes[19].in_use).toBe(true);
-      expect(lanes[20].id).toBe("lan_4e24c5cc04f6463d89f24e6e19a11253");
-      expect(lanes[20].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-      expect(lanes[20].lane_number).toBe(29);
-      expect(lanes[20].in_use).toBe(true);
-      expect(lanes[21].id).toBe("lan_4e24c5cc04f6463d89f24e6e19a11254");
-      expect(lanes[21].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-      expect(lanes[21].lane_number).toBe(30);
-      expect(lanes[21].in_use).toBe(true);
-      expect(lanes[22].id).toBe("lan_4e24c5cc04f6463d89f24e6e19a11255");
-      expect(lanes[22].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-      expect(lanes[22].lane_number).toBe(31);
-      expect(lanes[22].in_use).toBe(true);
-      expect(lanes[23].id).toBe("lan_4e24c5cc04f6463d89f24e6e19a11256");
-      expect(lanes[23].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-      expect(lanes[23].lane_number).toBe(32);
-      expect(lanes[23].in_use).toBe(true);
+      expect(tmntFullData.divs).toEqual(apiTmntFull.divs);
+      expect(tmntFullData.events).toEqual(apiTmntFull.events);
+      expect(tmntFullData.squads).toEqual([squad1, squad2]);
+      expect(tmntFullData.lanes).toEqual([...squad1.lanes, ...squad2.lanes]);
+    });
 
-      const pots = tmntFullData.pots;
-      expect(pots.length).toBe(2);
-      expect(pots[0].id).toBe("pot_98b3a008619b43e493abf17d9f462a65");
-      expect(pots[0].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-      expect(pots[0].div_id).toBe("div_1f42042f9ef24029a0a2d48cc276a087");
-      expect(pots[0].fee).toBe("10");
-      expect(pots[0].pot_type).toBe(ptGame);
-      expect(pots[0].sort_order).toBe(1);
-      expect(pots[1].id).toBe("pot_ab80213899ea424b938f52a062deacfe");
-      expect(pots[1].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-      expect(pots[1].div_id).toBe("div_1f42042f9ef24029a0a2d48cc276a087");
-      expect(pots[1].fee).toBe("10");
-      expect(pots[1].pot_type).toBe(ptLastGame);
-      expect(pots[1].sort_order).toBe(2);
+    it("should collect the div child and grand child data from every div", async () => {
+      mockGet.mockResolvedValue({ data: { tmntFullData: apiTmntFull } });
 
-      const brkts = tmntFullData.brkts;
-      expect(brkts.length).toBe(2);
-      for (let i = 0; i < brkts.length; i++) {
-        expect(brkts[i].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-        expect(brkts[i].div_id).toBe("div_1f42042f9ef24029a0a2d48cc276a087");
-        expect(brkts[i].games).toBe(3);
-        expect(brkts[i].players).toBe(8);
-        expect(brkts[i].fee).toBe("5");
-        expect(brkts[i].first).toBe("25");
-        expect(brkts[i].second).toBe("10");
-        expect(brkts[i].admin).toBe("5");
-      }
-      if (brkts[0].id === "brk_aa3da3a411b346879307831b6fdadd5f") {
-        expect(brkts[0].start).toBe(1);
-        expect(brkts[1].start).toBe(4);
-        expect(brkts[0].sort_order).toBe(1);
-        expect(brkts[1].sort_order).toBe(2);
-      } else if (brkts[0].id === "brk_37345eb6049946ad83feb9fdbb43a307") {
-        expect(brkts[0].start).toBe(4);
-        expect(brkts[1].start).toBe(1);
-        expect(brkts[0].sort_order).toBe(2);
-        expect(brkts[1].sort_order).toBe(1);
-      } else {
-        expect(true).toBeFalsy();
-      }
+      const tmntFullData = await getTmntFullData(tmntId);
 
-      const elims = tmntFullData.elims;
-      expect(elims.length).toBe(2);
-      for (let i = 0; i < brkts.length; i++) {
-        expect(elims[i].squad_id).toBe("sqd_1a6c885ee19a49489960389193e8f819");
-        expect(elims[i].div_id).toBe("div_1f42042f9ef24029a0a2d48cc276a087");
-        expect(brkts[i].games).toBe(3);
-        expect(brkts[i].fee).toBe("5");
-      }
-      if (elims[0].id === "elm_b4c3939adca140898b1912b75b3725f8") {
-        expect(elims[0].start).toBe(1);
-        expect(elims[1].start).toBe(4);
-        expect(elims[0].sort_order).toBe(1);
-        expect(elims[1].sort_order).toBe(2);
-      } else if (elims[0].id === "elm_4f176545e4294a0292732cccada91b9d") {
-        expect(elims[0].start).toBe(4);
-        expect(elims[1].start).toBe(1);
-        expect(elims[0].sort_order).toBe(2);
-        expect(elims[1].sort_order).toBe(1);
-      } else {
-        expect(true).toBeFalsy();
-      }
+      expect(tmntFullData.divEntries).toEqual([
+        ...base.divEntries,
+        ...div1.div_entries,
+        ...div2.div_entries,
+      ]);
+      expect(tmntFullData.brkts).toEqual([...base.brkts, brkt1, brkt2]);
+      expect(tmntFullData.brktEntries).toEqual([
+        ...base.brktEntries,
+        ...brkt1.brkt_entries,
+        ...brkt2.brkt_entries,
+      ]);
+      expect(tmntFullData.oneBrkts).toEqual([...base.oneBrkts, ...brkt1.one_brkts]);
+      expect(tmntFullData.brktSeeds).toEqual([
+        ...base.brktSeeds,
+        ...brkt1.one_brkts[0].brkt_seeds,
+        ...brkt1.one_brkts[1].brkt_seeds,
+      ]);
+      expect(tmntFullData.elims).toEqual([...base.elims, elim1]);
+      expect(tmntFullData.elimEntries).toEqual([
+        ...base.elimEntries,
+        ...elim1.elim_entries,
+      ]);
+      expect(tmntFullData.pots).toEqual([...base.pots, pot1]);
+      expect(tmntFullData.potEntries).toEqual([
+        ...base.potEntries,
+        ...pot1.pot_entries,
+      ]);
+    });
+
+    it("should collect the squad child data from every squad", async () => {
+      mockGet.mockResolvedValue({ data: { tmntFullData: apiTmntFull } });
+
+      const tmntFullData = await getTmntFullData(tmntId);
+
+      expect(tmntFullData.players).toEqual([
+        ...base.players,
+        ...squad1.players,
+        ...squad2.players,
+      ]);
+      expect(tmntFullData.moneys).toEqual([
+        ...base.moneys,
+        ...squad1.moneys,
+        ...squad2.moneys,
+      ]);
+    });
+
+    it("should use the stage of the first squad", async () => {
+      mockGet.mockResolvedValue({ data: { tmntFullData: apiTmntFull } });
+
+      const tmntFullData = await getTmntFullData(tmntId);
+
+      expect(tmntFullData.stage).toEqual(stage1);
+    });
+
+    it("should pass the right rows to each extract function", async () => {
+      mockGet.mockResolvedValue({ data: { tmntFullData: apiTmntFull } });
+
+      await getTmntFullData(tmntId);
+
+      expect(extractDivs).toHaveBeenCalledTimes(1);
+      expect(extractDivs).toHaveBeenCalledWith(apiTmntFull.divs);
+      expect(extractDivEntries).toHaveBeenNthCalledWith(1, div1.div_entries);
+      expect(extractDivEntries).toHaveBeenNthCalledWith(2, div2.div_entries);
+      expect(extractBrkts).toHaveBeenNthCalledWith(1, div1.brkts);
+      expect(extractBrkts).toHaveBeenNthCalledWith(2, div2.brkts);
+      // extractBrktEntries gets the whole brkt row, not brkt_entries
+      expect(extractBrktEntries).toHaveBeenNthCalledWith(1, brkt1);
+      expect(extractBrktEntries).toHaveBeenNthCalledWith(2, brkt2);
+      expect(extractOneBrkts).toHaveBeenNthCalledWith(1, brkt1.one_brkts);
+      expect(extractOneBrkts).toHaveBeenNthCalledWith(2, brkt2.one_brkts);
+      expect(extractBrktSeeds).toHaveBeenCalledTimes(2);
+      expect(extractBrktSeeds).toHaveBeenNthCalledWith(1, brkt1.one_brkts[0].brkt_seeds);
+      expect(extractBrktSeeds).toHaveBeenNthCalledWith(2, brkt1.one_brkts[1].brkt_seeds);
+      expect(extractElims).toHaveBeenNthCalledWith(1, div1.elims);
+      expect(extractElimEntries).toHaveBeenCalledTimes(1);
+      expect(extractElimEntries).toHaveBeenCalledWith(elim1.elim_entries);
+      expect(extractPots).toHaveBeenNthCalledWith(1, div1.pots);
+      expect(extractPotEntries).toHaveBeenCalledTimes(1);
+      expect(extractPotEntries).toHaveBeenCalledWith(pot1.pot_entries);
+
+      expect(extractEvents).toHaveBeenCalledTimes(1);
+      expect(extractEvents).toHaveBeenCalledWith(apiTmntFull.events);
+      expect(extractSquads).toHaveBeenCalledWith(event1.squads);
+      expect(extractLanes).toHaveBeenNthCalledWith(1, squad1.lanes);
+      expect(extractLanes).toHaveBeenNthCalledWith(2, squad2.lanes);
+      expect(extractPlayers).toHaveBeenNthCalledWith(1, squad1.players);
+      expect(extractPlayers).toHaveBeenNthCalledWith(2, squad2.players);
+      expect(extractTmntMoneys).toHaveBeenNthCalledWith(1, squad1.moneys);
+      expect(extractTmntMoneys).toHaveBeenNthCalledWith(2, squad2.moneys);
+    });
+
+    it("should not change linkedInitTmntFullData", async () => {
+      const before = cloneDeep(linkedInitTmntFullData);
+      mockGet.mockResolvedValue({ data: { tmntFullData: apiTmntFull } });
+
+      await getTmntFullData(tmntId);
+
+      expect(linkedInitTmntFullData).toEqual(before);
     });
 
     it("should throw error if tmnt id is invalid", async () => {
-      await expect(getTmntFullData("test")).rejects.toThrow("Invalid tmnt id");
+      await expect(getTmntFullData("test")).rejects.toThrow(
+        new Error("Invalid tmnt id")
+      );
+      expect(mockGet).not.toHaveBeenCalled();
     });
 
     it("should throw error if tmnt id is a valid id, but not found in db", async () => {
+      mockGet.mockRejectedValue(axiosError(404));
+
       await expect(getTmntFullData(notFoundId)).rejects.toThrow(
-        "getTmntFullData failed: Request failed with status code 404",
+        new Error("getTmntFullData failed: Request failed with status code 404")
       );
     });
 
     it("should throw error if tmnt id is a valid id, but not a tmnt id", async () => {
-      await expect(getTmntFullData(userId)).rejects.toThrow("Invalid tmnt id");
+      await expect(getTmntFullData(userId)).rejects.toThrow(
+        new Error("Invalid tmnt id")
+      );
+      expect(mockGet).not.toHaveBeenCalled();
     });
 
     it("should throw error if tmnt id is null", async () => {
       await expect(getTmntFullData(null as unknown as string)).rejects.toThrow(
-        "Invalid tmnt id",
+        new Error("Invalid tmnt id")
       );
+      expect(mockGet).not.toHaveBeenCalled();
     });
 
     describe("getTmntFullData - invalid child data", () => {
-      const postMockTmnt = async () => {
-        const response = await publicApi.get(url);
-        const tmnts = response.data?.tmnts ?? [];
-        const found = tmnts.find(
-          (tmnt: { id: string }) => tmnt.id === mockTmntFullData.tmnt.id,
-        );
-        if (found) return;
-
-        try {
-          const tmntJSON = JSON.stringify(mockTmntFullData.tmnt);
-          await privateApi.post(url, tmntJSON);
-        } catch (err) {
-          if (err instanceof Error) console.log(err.message);
-        }
-      };
-
-      const postMockDivs = async () => {
-        const response = await publicApi.get(divsUrl);
-        const divs = response.data?.divs ?? [];
-        const found = divs.find(
-          (div: { id: string }) => div.id === mockTmntFullData.divs[0].id,
-        );
-        if (found) return;
-
-        try {
-          const divsJSON = JSON.stringify(mockTmntFullData.divs[0]);
-          await privateApi.post(divsUrl, divsJSON);
-        } catch (err) {
-          if (err instanceof Error) console.log(err.message);
-        }
-      };
-
-      const postMockEvents = async () => {
-        const response = await publicApi.get(eventsUrl);
-        const events = response.data?.events ?? [];
-        const found = events.find(
-          (event: { id: string }) => event.id === mockTmntFullData.events[0].id,
-        );
-        if (found) return;
-
-        try {
-          const eventsJSON = JSON.stringify(mockTmntFullData.events[0]);
-          await privateApi.post(eventsUrl, eventsJSON);
-        } catch (err) {
-          if (err instanceof Error) console.log(err.message);
-        }
-      };
-
-      const postMockSquads = async () => {
-        const response = await publicApi.get(squadsUrl);
-        const squads = response.data?.squads ?? [];
-        const found = squads.find(
-          (squad: { id: string }) => squad.id === mockTmntFullData.squads[0].id,
-        );
-        if (found) return;
-
-        try {
-          const squadsJSON = JSON.stringify(mockTmntFullData.squads[0]);
-          await privateApi.post(squadsUrl, squadsJSON);
-        } catch (err) {
-          if (err instanceof Error) console.log(err.message);
-        }
-      };
-
-      const postMockLanes = async () => {
-        const response = await publicApi.get(lanesUrl);
-        const lanes = response.data?.lanes ?? [];
-        const found = lanes.find(
-          (lane: { id: string }) =>
-            lane.id === mockTmntFullData.lanes[0].id ||
-            lane.id === mockTmntFullData.lanes[1].id,
-        );
-        if (found) return;
-
-        try {
-          const lane0JSON = JSON.stringify(mockTmntFullData.lanes[0]);
-          await privateApi.post(lanesUrl, lane0JSON);
-          const lane1JSON = JSON.stringify(mockTmntFullData.lanes[1]);
-          await privateApi.post(lanesUrl, lane1JSON);
-        } catch (err) {
-          if (err instanceof Error) console.log(err.message);
-        }
-      };
-
-      beforeAll(async () => {
-        await deleteMockTmnt(mockTmntFullData.tmnt.id);
-        await deleteBowl(mockBowl.id);
-        await deleteUser(mockUser.id);
-        await postUser(mockUser);
-        await postBowl(mockBowl);
-      });
-
-      beforeEach(async () => {
-        await postMockTmnt();
-      });
-
-      afterEach(async () => {
-        await deleteMockTmnt(mockTmntFullData.tmnt.id);
-      });
-
-      afterAll(async () => {
-        await deleteBowl(mockBowl.id);
-        await deleteUser(mockUser.id);
-      });
+      const missingMsg = (missing: string) =>
+        `getTmntFullData failed: tournament "${tmntId}" is missing required child data: ${missing}`;
 
       it("should throw error if tmnt has no div(s)", async () => {
-        await postMockEvents();
-        await postMockSquads();
-        await postMockLanes();
-        await expect(getTmntFullData(mockTmntFullData.tmnt.id)).rejects.toThrow(
-          /missing required child data: Div/,
+        mockGet.mockResolvedValue({
+          data: { tmntFullData: { ...apiTmntFull, divs: [] } },
+        });
+
+        await expect(getTmntFullData(tmntId)).rejects.toThrow(
+          new Error(missingMsg("Div"))
+        );
+      });
+
+      it("should throw error if divs is missing", async () => {
+        const noDivs: Record<string, unknown> = { ...apiTmntFull };
+        delete noDivs.divs;
+        mockGet.mockResolvedValue({ data: { tmntFullData: noDivs } });
+
+        await expect(getTmntFullData(tmntId)).rejects.toThrow(
+          new Error(missingMsg("Div"))
         );
       });
 
       it("should throw error if tmnt has no event(s)", async () => {
-        await postMockDivs();
-        await expect(getTmntFullData(mockTmntFullData.tmnt.id)).rejects.toThrow(
-          /missing required child data: Event/,
+        mockGet.mockResolvedValue({
+          data: { tmntFullData: { ...apiTmntFull, events: [] } },
+        });
+
+        // no events means no squads or lanes either
+        await expect(getTmntFullData(tmntId)).rejects.toThrow(
+          new Error(missingMsg("Event, Squad, Lane"))
         );
       });
 
       it("should throw error if tmnt has no squad(s)", async () => {
-        await postMockDivs();
-        await postMockEvents();
-        await expect(getTmntFullData(mockTmntFullData.tmnt.id)).rejects.toThrow(
-          /missing required child data: Squad/,
+        mockGet.mockResolvedValue({
+          data: {
+            tmntFullData: {
+              ...apiTmntFull,
+              events: [{ ...event1, squads: [] }],
+            },
+          },
+        });
+
+        await expect(getTmntFullData(tmntId)).rejects.toThrow(
+          new Error(missingMsg("Squad, Lane"))
         );
       });
 
       it("should throw error if tmnt has no lane(s)", async () => {
-        await postMockDivs();
-        await postMockEvents();
-        await postMockSquads();
-        await expect(getTmntFullData(mockTmntFullData.tmnt.id)).rejects.toThrow(
-          /missing required child data: Lane/,
+        mockGet.mockResolvedValue({
+          data: {
+            tmntFullData: {
+              ...apiTmntFull,
+              events: [
+                {
+                  ...event1,
+                  squads: [
+                    { ...squad1, lanes: [] },
+                    { ...squad2, lanes: [] },
+                  ],
+                },
+              ],
+            },
+          },
+        });
+
+        await expect(getTmntFullData(tmntId)).rejects.toThrow(
+          new Error(missingMsg("Lane"))
+        );
+      });
+
+      it("should list all missing child data", async () => {
+        mockGet.mockResolvedValue({
+          data: { tmntFullData: { ...apiTmntFull, divs: [], events: [] } },
+        });
+
+        await expect(getTmntFullData(tmntId)).rejects.toThrow(
+          new Error(missingMsg("Div, Event, Squad, Lane"))
         );
       });
     });
   });
 
   describe("replaceTmntFullData()", () => {
-    let replacedTmnt = false;
-
-    beforeAll(async () => {
-      await deleteMockTmnt(mockTmntFullData.tmnt.id);
-      await deleteBowl(mockBowl.id);
-      await deleteUser(mockUser.id);
-      await postBowl(mockBowl);
-      await postUser(mockUser);
-    });
-
-    beforeEach(() => {
-      replacedTmnt = false;
-    });
-
-    afterEach(async () => {
-      if (replacedTmnt) {
-        await deleteMockTmnt(mockTmntFullData.tmnt.id);
-      }
-    });
-
-    afterAll(async () => {
-      await deleteMockTmnt(mockTmntFullData.tmnt.id);
-      await deleteBowl(mockBowl.id);
-      await deleteUser(mockUser.id);
-    });
-
-    it("returns a boolean success flag", async () => {
+    // mockTmntFullData with only the core four: events, divs, squads, lanes
+    const coreFour = (): tmntFullType => {
       const toReplace = cloneDeep(mockTmntFullData);
       toReplace.brktEntries = [];
       toReplace.brktSeeds = [];
@@ -1067,28 +952,33 @@ describe("dbTmnts", () => {
       toReplace.potEntries = [];
       toReplace.pots = [];
       toReplace.moneys = [];
-      const result = await replaceTmntFullData(toReplace);
+      return toReplace;
+    };
+
+    it("returns a boolean success flag", async () => {
+      mockPut.mockResolvedValue({ data: { success: true } });
+
+      const result = await replaceTmntFullData(coreFour());
+
       expect(typeof result).toBe("boolean");
+      expect(result).toBe(true);
     });
 
     it("should replace a tmnt - just core four: events, divs, squads and lanes", async () => {
-      const toReplace = cloneDeep(mockTmntFullData);
-      toReplace.brktEntries = [];
-      toReplace.brktSeeds = [];
-      toReplace.brkts = [];
-      toReplace.divEntries = [];
-      toReplace.elimEntries = [];
-      toReplace.elims = [];
-      toReplace.oneBrkts = [];
-      toReplace.potEntries = [];
-      toReplace.pots = [];
-      toReplace.moneys = [];
+      mockPut.mockResolvedValue({ data: { success: true } });
+      const toReplace = coreFour();
 
       const result = await replaceTmntFullData(toReplace);
+
       expect(result).toBe(true);
+      expect(mockPut).toHaveBeenCalledWith(
+        fullUrl + toReplace.tmnt.id,
+        JSON.stringify(toReplace)
+      );
     });
 
     it("should replace a tmnt - core four + pots, brkts and elims", async () => {
+      mockPut.mockResolvedValue({ data: { success: true } });
       const toReplace = cloneDeep(mockTmntFullData);
       toReplace.brktEntries = [];
       toReplace.brktSeeds = [];
@@ -1098,245 +988,190 @@ describe("dbTmnts", () => {
       toReplace.potEntries = [];
 
       const result = await replaceTmntFullData(toReplace);
+
       expect(result).toBe(true);
     });
 
-    it("replaces a full tmnt - tmnt not in database", async () => {
-      const result = await replaceTmntFullData(mockTmntFullData);
-      expect(result).toBe(true);
-      replacedTmnt = true;
+    it("should put the full tmnt JSON to the full url with the private api", async () => {
+      mockPut.mockResolvedValue({ data: { success: true } });
+      const toReplace = cloneDeep(mockTmntFullData);
 
-      const tmnt = await getTmnt(mockTmntFullData.tmnt.id);
-      expect(tmnt).toEqual(mockTmntFullData.tmnt);
+      const result = await replaceTmntFullData(toReplace);
+
+      expect(result).toBe(true);
+      expect(mockPut).toHaveBeenCalledTimes(1);
+      // validateFullTmnt clears tab_title in the passed data, so compare
+      // to toReplace after the call, not to mockTmntFullData
+      expect(mockPut).toHaveBeenCalledWith(
+        fullUrl + mockTmntFullData.tmnt.id,
+        JSON.stringify(toReplace)
+      );
+      expect(mockGet).not.toHaveBeenCalled();
+      expect(mockDelete).not.toHaveBeenCalled();
     });
 
-    it("replaces a full tmnt - tmnt in database", async () => {
-      const result = await replaceTmntFullData(mockTmntFullData);
-      expect(result).toBe(true);
-      replacedTmnt = true;
+    it("should not change the stage dates", async () => {
+      mockPut.mockResolvedValue({ data: { success: true } });
+      const toReplace = cloneDeep(mockTmntFullData);
 
-      const editedTmnt = cloneDeep(mockTmntFullData);
-      editedTmnt.tmnt.tmnt_name = "Edited Tmnt";
-      editedTmnt.events[0].event_name = "Edited Event";
-      editedTmnt.divs[0].div_name = "Edited Div";
-      editedTmnt.squads[0].squad_name = "Edited Squad";
-      const result2 = await replaceTmntFullData(editedTmnt);
-      expect(result2).toBe(true);
+      await replaceTmntFullData(toReplace);
 
-      const tmnt = await getTmnt(editedTmnt.tmnt.id);
-      expect(tmnt).toEqual(editedTmnt.tmnt);
+      expect(toReplace.stage).toEqual(mockTmntFullData.stage);
+    });
+
+    it("should throw error when the response is not a success", async () => {
+      mockPut.mockResolvedValue({ data: { success: false } });
+
+      await expect(replaceTmntFullData(cloneDeep(mockTmntFullData))).rejects.toThrow(
+        new Error("replaceTmntFullData failed: Error replacing full tmnt")
+      );
+    });
+
+    it("should throw error when the route answers 422", async () => {
+      mockPut.mockRejectedValue(axiosError(422));
+
+      await expect(replaceTmntFullData(cloneDeep(mockTmntFullData))).rejects.toThrow(
+        new Error("replaceTmntFullData failed: Request failed with status code 422")
+      );
     });
 
     it("should throw error when post a tmnt if invalid tmnt id", async () => {
       const invalidTmnt = cloneDeep(mockTmntFullData);
       invalidTmnt.tmnt.id = "invalid id";
+
       await expect(replaceTmntFullData(invalidTmnt)).rejects.toThrow(
-        "tmnt has invalid data",
+        "tmnt has invalid data"
       );
+      expect(mockPut).not.toHaveBeenCalled();
     });
 
     it("should throw error when post a tmnt if got invalid data", async () => {
       const invalidTmnt = cloneDeep(mockTmntFullData);
       invalidTmnt.tmnt.tmnt_name = "";
+
       await expect(replaceTmntFullData(invalidTmnt)).rejects.toThrow(
-        "tmnt is missing data",
+        "tmnt is missing data"
       );
+      expect(mockPut).not.toHaveBeenCalled();
     });
 
     it("should throw error when post a tmnt if passed null", async () => {
       await expect(
-        replaceTmntFullData(null as unknown as typeof mockTmntFullData),
-      ).rejects.toThrow("invalid tmntFullData data");
+        replaceTmntFullData(null as unknown as tmntFullType)
+      ).rejects.toThrow(new Error("invalid tmntFullData data"));
+      expect(mockPut).not.toHaveBeenCalled();
     });
 
     it("should throw error when post a tmnt if passed non object", async () => {
       await expect(
-        replaceTmntFullData("test" as unknown as typeof mockTmntFullData),
-      ).rejects.toThrow("invalid tmntFullData data");
+        replaceTmntFullData("test" as unknown as tmntFullType)
+      ).rejects.toThrow(new Error("invalid tmntFullData data"));
+      expect(mockPut).not.toHaveBeenCalled();
     });
   });
 
-  describe("replaceTmntFullEntriesData()", () => {
-    const postMockTmntNoEntries = async (): Promise<boolean> => {
-      const toReplace = cloneDeep(mockTmntFullData);
-      toReplace.brktEntries = [];
-      toReplace.brktSeeds = [];
-      toReplace.divEntries = [];
-      toReplace.elimEntries = [];
-      toReplace.oneBrkts = [];
-      toReplace.potEntries = [];
-      try {
-        return await replaceTmntFullData(toReplace);
-      } catch (err) {
-        if (err instanceof Error) console.log(err.message);
-      }
-      return false;
-    };
-
-    let replacedTmnt = false;
-
-    beforeAll(async () => {
-      await deleteMockTmnt(mockTmntFullData.tmnt.id);
-      await deleteBowl(mockBowl.id);
-      await deleteUser(mockUser.id);
-      await postUser(mockUser);
-      await postBowl(mockBowl);
-      await postMockTmntNoEntries();
+  describe("replaceTmntEntriesData()", () => {
+    beforeEach(() => {
+      // fake only Date; list every other timer API in doNotFake so
+      // promises and timers still work normally
+      jest.useFakeTimers({
+        now: fixedNow,
+        doNotFake: [
+          "hrtime",
+          "nextTick",
+          "performance",
+          "queueMicrotask",
+          "requestAnimationFrame",
+          "cancelAnimationFrame",
+          "requestIdleCallback",
+          "cancelIdleCallback",
+          "setImmediate",
+          "clearImmediate",
+          "setInterval",
+          "clearInterval",
+          "setTimeout",
+          "clearTimeout",
+        ],
+      });
     });
 
-    beforeEach(async () => {
-      replacedTmnt = false;
-      const success = await postMockTmntNoEntries();
-      if (success) {
-        replacedTmnt = true;
-      }
+    afterEach(() => {
+      jest.useRealTimers();
     });
 
-    afterEach(async () => {
-      if (replacedTmnt) {
-        await deleteMockTmnt(mockTmntFullData.tmnt.id);
-      }
+    // the route echoes back the stage it saved
+    const putResponse = (sent: tmntFullType) => ({
+      data: { success: true, stage: sent.stage },
     });
 
-    afterAll(async () => {
-      await deleteMockTmnt(mockTmntFullData.tmnt.id);
-      await deleteBowl(mockBowl.id);
-      await deleteUser(mockUser.id);
-    });
+    // the tmnt data replaceTmntEntriesData sent to the api
+    const sentData = (): tmntFullType => JSON.parse(mockPut.mock.calls[0][1]);
 
     it("should replace a tmnt entries - all entries data", async () => {
-      await postMockTmntNoEntries();
-      replacedTmnt = true;
-
       const toReplace = cloneDeep(mockTmntFullData);
-      const before = Date.now();
+      mockPut.mockResolvedValue(putResponse(toReplace));
 
       const result = await replaceTmntEntriesData(toReplace);
 
-      const after = Date.now();
-      const twoMinutes = 2 * 60 * 1000;
-
       expect(result.success).toBe(true);
-      expect(result.stage).not.toBeNull();
+      expect(result.stage).toEqual({
+        ...mockTmntFullData.stage,
+        stage_set_at: fixedNowStr,
+        scores_started_at:
+          mockTmntFullData.stage.stage === SquadStage.SCORES ? fixedNowStr : null,
+        stage_override_at: mockTmntFullData.stage.stage_override_enabled
+          ? fixedNowStr
+          : null,
+      });
+    });
 
-      const puttedStage = result.stage;
-      const stageSetAtMs = new Date(puttedStage.stage_set_at).getTime();
-      expect(puttedStage.id).toBe(toReplace.stage.id);
-      expect(puttedStage.squad_id).toBe(toReplace.stage.squad_id);
-      expect(puttedStage.stage).toBe(toReplace.stage.stage);
+    it("should put the entries JSON to the full entries url with the private api", async () => {
+      const toReplace = cloneDeep(mockTmntFullData);
+      mockPut.mockResolvedValue(putResponse(toReplace));
 
-      expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
+      await replaceTmntEntriesData(toReplace);
 
-      expect(puttedStage.stage_override_enabled).toBe(
-        toReplace.stage.stage_override_enabled,
+      expect(mockPut).toHaveBeenCalledTimes(1);
+      expect(mockPut).toHaveBeenCalledWith(
+        fullEntriesUrl + mockTmntFullData.tmnt.id,
+        JSON.stringify(toReplace)
       );
-      expect(puttedStage.stage_override_at).toBe(toReplace.stage.stage_override_at);
-      expect(puttedStage.stage_override_reason).toBe(
-        toReplace.stage.stage_override_reason,
-      );
+      expect(mockGet).not.toHaveBeenCalled();
+      expect(mockDelete).not.toHaveBeenCalled();
+    });
 
-      const players = await getAllPlayersForTmnt(toReplace.tmnt.id);
-      expect(players.length).toEqual(toReplace.players.length);
-      for (let i = 0; i < players.length; i++) {
-        const foundPlayer = toReplace.players.find((p) => p.id === players[i].id);
-        expect(foundPlayer).not.toBeUndefined();
-        expect(foundPlayer?.squad_id).toBe(toReplace.players[i].squad_id);
+    it("should send the entries data unchanged and the stage with new dates", async () => {
+      const toReplace = cloneDeep(mockTmntFullData);
+      mockPut.mockResolvedValue(putResponse(toReplace));
 
-        if (foundPlayer?.id === toReplace.players[i].id) { 
-          expect(foundPlayer?.first_name).toBe(toReplace.players[i].first_name);
-          expect(foundPlayer?.last_name).toBe(toReplace.players[i].last_name);
-          expect(foundPlayer?.average).toBe(toReplace.players[i].average);
-          expect(foundPlayer?.lane).toBe(toReplace.players[i].lane);
-          expect(foundPlayer?.position).toBe(toReplace.players[i].position);
-        }
-      }
+      await replaceTmntEntriesData(toReplace);
 
-      const divEntries = await getAllDivEntriesForTmnt(toReplace.tmnt.id);
-      expect(divEntries.length).toEqual(toReplace.divEntries.length);
-      for (let i = 0; i < divEntries.length; i++) {
-        const foundDivEntry = toReplace.divEntries.find((d) => d.id === divEntries[i].id);
-        expect(foundDivEntry).not.toBeUndefined();
-        expect(foundDivEntry?.squad_id).toBe(toReplace.divEntries[i].squad_id);
-        expect(foundDivEntry?.div_id).toBe(toReplace.divEntries[i].div_id);
+      // validateFullTmnt clears tab_title in the passed data, so only the
+      // entries arrays are compared to mockTmntFullData
+      const sent = sentData();
+      const asJson = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
+      expect(sent).toEqual(asJson(toReplace));
+      expect(sent.players).toEqual(asJson(mockTmntFullData.players));
+      expect(sent.divEntries).toEqual(asJson(mockTmntFullData.divEntries));
+      expect(sent.potEntries).toEqual(asJson(mockTmntFullData.potEntries));
+      expect(sent.brktEntries).toEqual(asJson(mockTmntFullData.brktEntries));
+      expect(sent.oneBrkts).toEqual(asJson(mockTmntFullData.oneBrkts));
+      expect(sent.brktSeeds).toEqual(asJson(mockTmntFullData.brktSeeds));
+      expect(sent.elimEntries).toEqual(asJson(mockTmntFullData.elimEntries));
+      expect(sent.stage.id).toBe(mockTmntFullData.stage.id);
+      expect(sent.stage.squad_id).toBe(mockTmntFullData.stage.squad_id);
+      expect(sent.stage.stage).toBe(mockTmntFullData.stage.stage);
+      expect(sent.stage.stage_set_at).toBe(fixedNowStr);
+    });
 
-        if (foundDivEntry?.id === toReplace.divEntries[i].id) { 
-          expect(foundDivEntry?.fee).toBe(toReplace.divEntries[i].fee);
-          expect(foundDivEntry?.player_id).toBe(toReplace.divEntries[i].player_id);
-        }
-      }
+    it("should return the response data", async () => {
+      const toReplace = cloneDeep(mockTmntFullData);
+      const apiStage = { ...toReplace.stage, stage_set_at: fixedNowStr };
+      mockPut.mockResolvedValue({ data: { success: true, stage: apiStage } });
 
-      const potEntries = await getAllPotEntriesForTmnt(toReplace.tmnt.id);
-      expect(potEntries.length).toEqual(toReplace.potEntries.length);
-      for (let i = 0; i < potEntries.length; i++) {
-        const foundPotEntry = toReplace.potEntries.find((p) => p.id === potEntries[i].id);
-        expect(foundPotEntry).not.toBeUndefined();
-        expect(foundPotEntry?.pot_id).toBe(toReplace.potEntries[i].pot_id);
+      const result = await replaceTmntEntriesData(toReplace);
 
-        if (foundPotEntry?.id === toReplace.potEntries[i].id) { 
-          expect(foundPotEntry?.fee).toBe(toReplace.potEntries[i].fee);
-          expect(foundPotEntry?.player_id).toBe(toReplace.potEntries[i].player_id);
-        }
-      }
-
-      const brktEntries = await getAllBrktEntriesForTmnt(toReplace.tmnt.id);
-      expect(brktEntries.length).toEqual(toReplace.brktEntries.length);
-      for (let i = 0; i < brktEntries.length; i++) {
-        const foundBrktEntry = toReplace.brktEntries.find((b) => b.id === brktEntries[i].id);
-        expect(foundBrktEntry).not.toBeUndefined();
-
-        if (foundBrktEntry?.id === toReplace.brktEntries[i].id) { 
-          expect(foundBrktEntry?.brkt_id).toBe(toReplace.brktEntries[i].brkt_id);
-          expect(foundBrktEntry?.player_id).toBe(toReplace.brktEntries[i].player_id);
-          expect(foundBrktEntry?.num_brackets).toBe(
-            toReplace.brktEntries[i].num_brackets,
-          );
-          expect(foundBrktEntry?.time_stamp).toBe(toReplace.brktEntries[i].time_stamp);
-        }
-      }
-
-      const oneBrkts = await getAllOneBrktsForTmnt(toReplace.tmnt.id);
-      expect(oneBrkts.length).toEqual(toReplace.oneBrkts.length);
-      for (let i = 0; i < oneBrkts.length; i++) {
-        const foundOneBrkt = toReplace.oneBrkts.find((o) => o.id === oneBrkts[i].id);
-        expect(foundOneBrkt).not.toBeUndefined();
-
-        if (foundOneBrkt?.id === toReplace.oneBrkts[i].id) { 
-          expect(foundOneBrkt?.brkt_id).toBe(toReplace.oneBrkts[i].brkt_id);
-          expect(foundOneBrkt?.bindex).toBe(toReplace.oneBrkts[i].bindex);
-        }
-      }
-
-      const brktSeeds = await getAllBrktSeedsForTmnt(toReplace.tmnt.id);
-      expect(brktSeeds.length).toEqual(toReplace.brktSeeds.length);
-      for (let i = 0; i < brktSeeds.length; i++) {
-        const foundBrktSeed = toReplace.brktSeeds.find(
-          (b) =>
-            b.one_brkt_id === brktSeeds[i].one_brkt_id &&
-            b.seed === brktSeeds[i].seed,
-        );
-        expect(foundBrktSeed).not.toBeUndefined();
-
-        if (
-          foundBrktSeed?.one_brkt_id === toReplace.brktSeeds[i].one_brkt_id &&
-          foundBrktSeed?.seed === toReplace.brktSeeds[i].seed
-        ) { 
-          expect(foundBrktSeed?.player_id).toBe(toReplace.brktSeeds[i].player_id);
-        }
-      }
-
-      const elimEntries = await getAllElimEntriesForTmnt(toReplace.tmnt.id);
-      expect(elimEntries.length).toEqual(toReplace.elimEntries.length);
-      for (let i = 0; i < elimEntries.length; i++) {
-        const foundElimEntry = toReplace.elimEntries.find((e) => e.id === elimEntries[i].id);
-        expect(foundElimEntry).not.toBeUndefined();
-
-        if (foundElimEntry?.id === toReplace.elimEntries[i].id) { 
-          expect(foundElimEntry?.elim_id).toBe(toReplace.elimEntries[i].elim_id);
-          expect(foundElimEntry?.player_id).toBe(toReplace.elimEntries[i].player_id);
-          expect(foundElimEntry?.fee).toBe(toReplace.elimEntries[i].fee);
-        }
-      }
+      expect(result).toEqual({ success: true, stage: apiStage });
     });
 
     it("should replace a tmnt entries - no entries data", async () => {
@@ -1348,545 +1183,231 @@ describe("dbTmnts", () => {
       toReplace.oneBrkts = [];
       toReplace.potEntries = [];
       toReplace.players = [];
+      mockPut.mockResolvedValue(putResponse(toReplace));
 
-      const before = Date.now();
       const result = await replaceTmntEntriesData(toReplace);
+
       expect(result.success).toBe(true);
-
-      const after = Date.now();
-      const twoMinutes = 2 * 60 * 1000;
-
-      const puttedStage = result.stage;
-      const stageSetAtMs = new Date(puttedStage.stage_set_at).getTime();
-      expect(puttedStage.id).toBe(toReplace.stage.id);
-      expect(puttedStage.squad_id).toBe(toReplace.stage.squad_id);
-      expect(puttedStage.stage).toBe(toReplace.stage.stage);
-
-      expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
-
-      expect(puttedStage.stage_override_enabled).toBe(
-        toReplace.stage.stage_override_enabled,
-      );
-      expect(puttedStage.stage_override_at).toBe(toReplace.stage.stage_override_at);
-      expect(puttedStage.stage_override_reason).toBe(
-        toReplace.stage.stage_override_reason,
-      );
-
-      const playerResult = await getAllPlayersForTmnt(toReplace.tmnt.id);
-      expect(playerResult.length).toEqual(toReplace.players.length);
-      const divEntriesResult = await getAllDivEntriesForTmnt(toReplace.tmnt.id);
-      expect(divEntriesResult.length).toEqual(toReplace.divEntries.length);
-      const potEntriesResult = await getAllPotEntriesForTmnt(toReplace.tmnt.id);
-      expect(potEntriesResult.length).toEqual(toReplace.potEntries.length);
-      const brktEntriesResult = await getAllBrktEntriesForTmnt(toReplace.tmnt.id);
-      expect(brktEntriesResult.length).toEqual(toReplace.brktEntries.length);
-      const elimEntriesResult = await getAllElimEntriesForTmnt(toReplace.tmnt.id);
-      expect(elimEntriesResult.length).toEqual(toReplace.elimEntries.length);
-      const oneBrktsResult = await getAllOneBrktsForTmnt(toReplace.tmnt.id);
-      expect(oneBrktsResult.length).toEqual(toReplace.oneBrkts.length);
-      const brktSeedsResult = await getAllBrktSeedsForTmnt(toReplace.tmnt.id);
-      expect(brktSeedsResult.length).toEqual(toReplace.brktSeeds.length);
+      const sent = sentData();
+      expect(sent.players).toEqual([]);
+      expect(sent.divEntries).toEqual([]);
+      expect(sent.potEntries).toEqual([]);
+      expect(sent.brktEntries).toEqual([]);
+      expect(sent.elimEntries).toEqual([]);
+      expect(sent.oneBrkts).toEqual([]);
+      expect(sent.brktSeeds).toEqual([]);
     });
 
-    it("should replace a tmnt entries - all entries data; stage = SCORES", async () => {
-      await postMockTmntNoEntries();
-      replacedTmnt = true;
-
+    it("should set stage_set_at and scores_started_at when stage = SCORES", async () => {
       const toReplace = cloneDeep(mockTmntFullData);
       toReplace.stage.stage = SquadStage.SCORES;
+      toReplace.stage.stage_override_enabled = false;
+      mockPut.mockResolvedValue(putResponse(toReplace));
 
-      const before = Date.now();
       const result = await replaceTmntEntriesData(toReplace);
-      const after = Date.now();
-      const twoMinutes = 2 * 60 * 1000;
 
       expect(result.success).toBe(true);
-      const puttedStage = result.stage;
-      const stageSetAtMs = new Date(puttedStage.stage_set_at).getTime();
-      const scoresSetAtMs = new Date(puttedStage.scores_started_at!).getTime();
-
-      expect(puttedStage.scores_started_at).not.toBeNull();
-      expect(puttedStage.id).toBe(toReplace.stage.id);
-      expect(puttedStage.squad_id).toBe(toReplace.stage.squad_id);
-      expect(puttedStage.stage).toBe(toReplace.stage.stage);
-
-      expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
-      expect(scoresSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(scoresSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
-
-      expect(puttedStage.stage_override_enabled).toBe(
-        toReplace.stage.stage_override_enabled,
-      );
-      expect(puttedStage.stage_override_at).toBe(toReplace.stage.stage_override_at);
-      expect(puttedStage.stage_override_reason).toBe(
-        toReplace.stage.stage_override_reason,
-      );
+      const sentStage = sentData().stage;
+      expect(sentStage.stage).toBe(SquadStage.SCORES);
+      expect(sentStage.stage_set_at).toBe(fixedNowStr);
+      expect(sentStage.scores_started_at).toBe(fixedNowStr);
+      expect(sentStage.stage_override_at).toBeNull();
     });
 
-    it("should replace a tmnt entries - all entries dat; stage = ENTRIES and stage_override_enabled = true", async () => {
-      await postMockTmntNoEntries();
-      replacedTmnt = true;
-
+    it("should set stage_override_at when stage = ENTRIES and stage_override_enabled = true", async () => {
       const toReplace = cloneDeep(mockTmntFullData);
       toReplace.stage.stage = SquadStage.ENTRIES;
       toReplace.stage.stage_override_enabled = true;
       toReplace.stage.stage_override_reason = "override reason";
+      mockPut.mockResolvedValue(putResponse(toReplace));
 
-      const before = Date.now();
       const result = await replaceTmntEntriesData(toReplace);
-      const after = Date.now();
-      const twoMinutes = 2 * 60 * 1000;
 
       expect(result.success).toBe(true);
-      const puttedStage = result.stage;
-      const stageSetAtMs = new Date(puttedStage.stage_set_at).getTime();
-      const overrideSetAtMs = new Date(puttedStage.stage_override_at!).getTime();
+      const sentStage = sentData().stage;
+      expect(sentStage.stage).toBe(SquadStage.ENTRIES);
+      expect(sentStage.stage_set_at).toBe(fixedNowStr);
+      expect(sentStage.scores_started_at).toBeNull();
+      expect(sentStage.stage_override_at).toBe(fixedNowStr);
+      expect(sentStage.stage_override_reason).toBe("override reason");
+    });
 
-      expect(puttedStage.id).toBe(toReplace.stage.id);
-      expect(puttedStage.squad_id).toBe(toReplace.stage.squad_id);
-      expect(puttedStage.stage).toBe(toReplace.stage.stage);
+    it("should clear scores_started_at and stage_override_at when not SCORES and no override", async () => {
+      const toReplace = cloneDeep(mockTmntFullData);
+      toReplace.stage.stage = SquadStage.ENTRIES;
+      toReplace.stage.scores_started_at = "2020-01-01T00:00:00.000Z";
+      toReplace.stage.stage_override_enabled = false;
+      toReplace.stage.stage_override_at = "2020-01-01T00:00:00.000Z";
+      toReplace.stage.stage_override_reason = "";
+      mockPut.mockResolvedValue(putResponse(toReplace));
 
-      expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
-      expect(overrideSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(overrideSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
+      await replaceTmntEntriesData(toReplace);
 
-      expect(puttedStage.stage_override_enabled).toBe(
-        toReplace.stage.stage_override_enabled,
-      );
-      expect(puttedStage.stage_override_reason).toBe(
-        toReplace.stage.stage_override_reason,
+      const sentStage = sentData().stage;
+      expect(sentStage.scores_started_at).toBeNull();
+      expect(sentStage.stage_override_at).toBeNull();
+    });
+
+    it("should throw error when the response has no success", async () => {
+      mockPut.mockResolvedValue({ data: { stage: mockTmntFullData.stage } });
+
+      await expect(
+        replaceTmntEntriesData(cloneDeep(mockTmntFullData))
+      ).rejects.toThrow(
+        new Error("replaceTmntFullEntriesData failed: Error replacing full tmnt entries")
       );
     });
 
-    it("should throw error when post tmnt entries - tmnt not in database", async () => {
+    it("should throw error when the response has no stage", async () => {
+      mockPut.mockResolvedValue({ data: { success: true } });
+
+      await expect(
+        replaceTmntEntriesData(cloneDeep(mockTmntFullData))
+      ).rejects.toThrow(
+        new Error("replaceTmntFullEntriesData failed: Error replacing full tmnt entries")
+      );
+    });
+
+    it("should throw error when the route answers 422", async () => {
+      mockPut.mockRejectedValue(axiosError(422));
+
+      await expect(
+        replaceTmntEntriesData(cloneDeep(mockTmntFullData))
+      ).rejects.toThrow(
+        new Error("replaceTmntFullEntriesData failed: Request failed with status code 422")
+      );
+    });
+
+    it("should throw error when post tmnt entries - events do not belong to the tmnt", async () => {
       const notInDbTmnt = cloneDeep(mockTmntFullData);
       notInDbTmnt.tmnt.id = "tmt_00000000000000000000000000000000";
+
       await expect(replaceTmntEntriesData(notInDbTmnt)).rejects.toThrow(
-        "events has no parent tmnt at index 0",
+        "events has no parent tmnt at index 0"
       );
+      expect(mockPut).not.toHaveBeenCalled();
     });
 
-    it("replaces a full tmnt - tmnt in database", async () => {
-      const result = await replaceTmntFullData(mockTmntFullData);
-      expect(result).toBe(true);
-      replacedTmnt = true;
-
-      const tmntEntries = cloneDeep(mockTmntFullData);
-      tmntEntries.tmnt.tmnt_name = "DoNotUpdate";
-      tmntEntries.events[0].event_name = "DoNotUpdate";
-      tmntEntries.divs[0].div_name = "DoNotUpdate";
-      tmntEntries.squads[0].squad_name = "DoNotUpdate";
-      tmntEntries.lanes[0].lane_number = 100;
-      tmntEntries.pots[0].pot_type = ptSeries;
-      tmntEntries.brkts[0].start = 2;
-      tmntEntries.elims[0].start = 2;
-      tmntEntries.players[0].first_name = "Updated";
-      tmntEntries.players[0].last_name = "ThisToo";
-      tmntEntries.players.push({
-        ...initPlayer,
-        id: playerId9,
-        squad_id: tmntEntries.squads[0].id,
-        first_name: "New",
-        last_name: "Player",
-        average: 199,
-        lane: 29,
-        position: "Z",
-      });
-
-      const divEntryId = tmntEntries.divEntries[0].id;
-      tmntEntries.divEntries[0].fee = "100";
-
-      const potEntryId = tmntEntries.potEntries[0].id;
-      tmntEntries.potEntries[0].player_id = playerId9;
-
-      const brktEntryId = tmntEntries.brktEntries[0].id;
-      tmntEntries.brktEntries[0].num_brackets = 100;
-
-      const obkId = tmntEntries.brktSeeds[0].one_brkt_id;
-      tmntEntries.brktSeeds[0].player_id = playerId9;
-
-      const elimEntryId = tmntEntries.elimEntries[0].id;
-      tmntEntries.elimEntries[0].player_id = playerId9;
-
-      const before = Date.now();
-      const result2 = await replaceTmntEntriesData(tmntEntries);
-      expect(result2.success).toBe(true);
-
-      const after = Date.now();
-      const twoMinutes = 2 * 60 * 1000;
-
-      const puttedStage = result2.stage;
-      const stageSetAtMs = new Date(puttedStage.stage_set_at).getTime();
-      expect(puttedStage.id).toBe(tmntEntries.stage.id);
-      expect(puttedStage.squad_id).toBe(tmntEntries.stage.squad_id);
-      expect(puttedStage.stage).toBe(tmntEntries.stage.stage);
-
-      expect(stageSetAtMs).toBeGreaterThanOrEqual(before - twoMinutes);
-      expect(stageSetAtMs).toBeLessThanOrEqual(after + twoMinutes);
-
-      expect(puttedStage.stage_override_enabled).toBe(
-        tmntEntries.stage.stage_override_enabled,
-      );
-      expect(puttedStage.stage_override_at).toBe(tmntEntries.stage.stage_override_at);
-      expect(puttedStage.stage_override_reason).toBe(
-        tmntEntries.stage.stage_override_reason,
-      );
-
-      const postedEntries = await getTmntFullData(tmntEntries.tmnt.id);
-      expect(postedEntries.tmnt.tmnt_name).toBe(mockTmntFullData.tmnt.tmnt_name);
-      expect(postedEntries.events[0].event_name).toBe(
-        mockTmntFullData.events[0].event_name,
-      );
-      for (let i = 0; i < postedEntries.divs.length; i++) {
-        if (postedEntries.divs[i].id === mockTmntFullData.divs[0].id) {
-          expect(postedEntries.divs[i].div_name).toBe(mockTmntFullData.divs[0].div_name);
-        }
-      }
-      expect(postedEntries.squads[0].squad_name).toBe(
-        mockTmntFullData.squads[0].squad_name,
-      );
-      for (let i = 0; i < postedEntries.lanes.length; i++) {
-        if (postedEntries.lanes[i].id === mockTmntFullData.lanes[0].id) {
-          expect(postedEntries.lanes[i].lane_number).toBe(
-            mockTmntFullData.lanes[0].lane_number,
-          );
-        }
-      }
-      for (let i = 0; i < postedEntries.pots.length; i++) {
-        if (postedEntries.pots[i].id === mockTmntFullData.pots[0].id) {
-          expect(postedEntries.pots[i].pot_type).toBe(
-            mockTmntFullData.pots[0].pot_type,
-          );
-        }
-      }
-      for (let i = 0; i < postedEntries.brkts.length; i++) {
-        if (postedEntries.brkts[i].id === mockTmntFullData.brkts[0].id) {
-          expect(postedEntries.brkts[i].start).toBe(mockTmntFullData.brkts[0].start);
-        }
-      }
-      for (let i = 0; i < postedEntries.elims.length; i++) {
-        if (postedEntries.elims[i].id === mockTmntFullData.elims[0].id) {
-          expect(postedEntries.elims[i].start).toBe(mockTmntFullData.elims[0].start);
-        }
-      }
-
-      for (let i = 0; i < postedEntries.players.length; i++) {
-        if (postedEntries.players[i].id === tmntEntries.players[0].id) {
-          expect(postedEntries.players[i].first_name).toBe("Updated");
-          expect(postedEntries.players[i].last_name).toBe("ThisToo");
-        }
-      }
-
-      const divEntry = postedEntries.divEntries.find(
-        (divEntry) => divEntry.id === divEntryId,
-      );
-      expect(divEntry).toBeDefined();
-      if (!divEntry) throw new Error("divEntry not found in postedEntries.divEntries");
-      expect(divEntry.fee).toBe("100");
-
-      const potEntry = postedEntries.potEntries.find(
-        (potEntry) => potEntry.id === potEntryId,
-      );
-      expect(potEntry).toBeDefined();
-      if (!potEntry) throw new Error("potEntry not found in postedEntries.potEntries");
-      expect(potEntry.player_id).toBe(playerId9);
-
-      const brktEntry = postedEntries.brktEntries.find(
-        (brktEntry) => brktEntry.id === brktEntryId,
-      );
-      expect(brktEntry).toBeDefined();
-      if (!brktEntry) throw new Error("brktEntry not found in postedEntries.brktEntries");
-      expect(brktEntry.num_brackets).toBe(100);
-
-      const brktSeed = postedEntries.brktSeeds.find(
-        (brktSeed) => brktSeed.one_brkt_id === obkId && brktSeed.seed === 0,
-      );
-      expect(brktSeed).toBeDefined();
-      if (!brktSeed)
-        throw new Error("brktSeed not found in postedEntries.brktSeeds");
-      expect(brktSeed.player_id).toBe(playerId9);
-      
-      const elimEntry = postedEntries.elimEntries.find(
-        (elimEntry) => elimEntry.id === elimEntryId,
-      )
-      expect(elimEntry).toBeDefined();
-      if (!elimEntry) throw new Error("elimEntry not found in postedEntries.elimEntries");
-      expect(elimEntry.player_id).toBe(playerId9);
-
-    });
-
-    it("should throw error when post tmnt entries if invalid tmnt id", async () => {
+    it("should throw error when post tmnt entries if invalid div entry id", async () => {
       const invalidTmnt = cloneDeep(mockTmntFullData);
       invalidTmnt.divEntries[0].id = "invalid id";
+
       await expect(replaceTmntEntriesData(invalidTmnt)).rejects.toThrow(
-        "divEntries has invalid data at index 0",
+        "divEntries has invalid data at index 0"
       );
+      expect(mockPut).not.toHaveBeenCalled();
     });
 
     it("should throw error when post tmnt entries if got invalid data", async () => {
       const invalidTmnt = cloneDeep(mockTmntFullData);
       invalidTmnt.players[0].first_name = "";
+
       await expect(replaceTmntEntriesData(invalidTmnt)).rejects.toThrow(
-        "players has missing data at index 0",
+        "players has missing data at index 0"
       );
+      expect(mockPut).not.toHaveBeenCalled();
     });
 
     it("should throw error when post tmnt entries if passed null", async () => {
       await expect(
-        replaceTmntEntriesData(null as unknown as typeof mockTmntFullData),
-      ).rejects.toThrow("invalid tmntFullData data");
+        replaceTmntEntriesData(null as unknown as tmntFullType)
+      ).rejects.toThrow(new Error("invalid tmntFullData data"));
+      expect(mockPut).not.toHaveBeenCalled();
     });
 
     it("should throw error when post tmnt entries if passed non object", async () => {
       await expect(
-        replaceTmntEntriesData("test" as unknown as typeof mockTmntFullData),
-      ).rejects.toThrow("invalid tmntFullData data");
+        replaceTmntEntriesData("test" as unknown as tmntFullType)
+      ).rejects.toThrow(new Error("invalid tmntFullData data"));
+      expect(mockPut).not.toHaveBeenCalled();
     });
 
     it("should throw error when post tmnt entries if squad is empty", async () => {
       const invalidTmnt = cloneDeep(mockTmntFullData);
       invalidTmnt.squads = [];
+
       await expect(replaceTmntEntriesData(invalidTmnt)).rejects.toThrow(
-        "no squads data",
+        "no squads data"
       );
+      expect(mockPut).not.toHaveBeenCalled();
     });
 
     it("should throw error when post tmnt entries if squad is invalid", async () => {
       const invalidTmnt = cloneDeep(mockTmntFullData);
       invalidTmnt.squads[0].id = "invalid id";
+
       await expect(replaceTmntEntriesData(invalidTmnt)).rejects.toThrow(
-        "squads has invalid data at index 0",
+        "squads has invalid data at index 0"
       );
+      expect(mockPut).not.toHaveBeenCalled();
     });
   });
 
-  describe("postTmnt", () => {
-    const tmntToPost = {
-      ...initTmnt,
-      id: "tmt_1234567890abcdef1234567890abcdef",
-      user_id: mockUser.id,
-      tmnt_name: "Test Tournament",
-      bowl_id: mockBowl.id,
-      start_date_str: todayStr,
-      end_date_str: todayStr,
-    };
-
-    let createdTmnt = false;
-
-    beforeAll(async () => {
-      await deleteMockTmnt(tmntToPost.id);
-      await deleteBowl(mockBowl.id);
-      await deleteUser(mockUser.id);
-      await postUser(mockUser);
-      await postBowl(mockBowl);
-    });
-
-    beforeEach(() => {
-      createdTmnt = false;
-    });
-
-    afterEach(async () => {
-      if (createdTmnt) {
-        await deleteMockTmnt(tmntToPost.id);
-      }
-    });
-
-    afterAll(async () => {
-      await deleteMockTmnt(tmntToPost.id);
-      await deleteBowl(mockBowl.id);
-      await deleteUser(mockUser.id);
-    });
-
-    it("should post a tmnt", async () => {
-      const postedTmnt = await postTmnt(tmntToPost);
-      createdTmnt = true;
-      expect(postedTmnt.id).toBe(tmntToPost.id);
-      expect(postedTmnt.tmnt_name).toBe(tmntToPost.tmnt_name);
-      expect(postedTmnt.user_id).toBe(tmntToPost.user_id);
-      expect(postedTmnt.bowl_id).toBe(tmntToPost.bowl_id);
-      expect(postedTmnt.start_date_str).toBe(tmntToPost.start_date_str);
-      expect(postedTmnt.end_date_str).toBe(tmntToPost.end_date_str);
-    });
-
-    it("should throw error when post a tmnt if invalid tmnt id", async () => {
-      const invalidTmnt = cloneDeep(tmntToPost);
-      invalidTmnt.id = "invalid id";
-      await expect(postTmnt(invalidTmnt)).rejects.toThrow("Invalid tmnt data");
-    });
-
-    it("should throw error when post a tmnt if got invalid data", async () => {
-      const invalidTmnt = cloneDeep(tmntToPost);
-      invalidTmnt.tmnt_name = " ";
-      await expect(postTmnt(invalidTmnt)).rejects.toThrow(
-        "postTmnt failed: Request failed with status code 422",
-      );
-    });
-
-    it("should throw error when post a tmnt if passed null", async () => {
-      await expect(postTmnt(null as unknown as tmntType)).rejects.toThrow(
-        "Invalid tmnt data",
-      );
-    });
-
-    it("should throw error when post a tmnt if passed non object", async () => {
-      await expect(postTmnt("test" as unknown as tmntType)).rejects.toThrow(
-        "Invalid tmnt data",
-      );
-    });
-  });
-
-  describe("putTmnt", () => {
-    const tmntToPut = {
-      ...initTmnt,
-      id: "tmt_fd99387c33d9c78aba290286576ddce5",
-      user_id: userId,
-      tmnt_name: "Test Tournament",
-      bowl_id: "bwl_8b4a5c35ad1247049532ff53a12def0a",
-      start_date_str: todayStr,
-      end_date_str: todayStr,
-    };
-
-    const putUrl = tmntUrl + tmntToPut.id;
-
-    const resetTmnt = {
-      ...initTmnt,
-      id: "tmt_fd99387c33d9c78aba290286576ddce5",
-      user_id: userId,
-      tmnt_name: "Gold Pin",
-      bowl_id: gpBowlId,
-      start_date_str: "2022-10-23",
-      end_date_str: "2022-10-23",
-    };
-
-    const doResetTmnt = async () => {
-      try {
-        const tmntJSON = JSON.stringify(resetTmnt);
-        await privateApi.put(putUrl, tmntJSON);
-      } catch (err) {
-        if (err instanceof Error) console.log(err.message);
-      }
-    };
-
-    let didPut = false;
-
-    beforeAll(async () => {
-      await doResetTmnt();
-    });
-
-    beforeEach(() => {
-      didPut = false;
-    });
-
-    afterEach(async () => {
-      if (didPut) {
-        await doResetTmnt();
-      }
-    });
-
-    it("should put a tmnt", async () => {
-      const puttedTmnt = await putTmnt(tmntToPut);
-      didPut = true;
-      expect(puttedTmnt.tmnt_name).toBe(tmntToPut.tmnt_name);
-      expect(puttedTmnt.bowl_id).toBe(tmntToPut.bowl_id);
-      expect(puttedTmnt.user_id).toBe(tmntToPut.user_id);
-      expect(puttedTmnt.start_date_str).toBe(tmntToPut.start_date_str);
-      expect(puttedTmnt.end_date_str).toBe(tmntToPut.end_date_str);
-    });
-
-    it("should thorw error when trying to put a tmnt when passed an invalid tmnt id", async () => {
-      const invalidTmnt = cloneDeep(tmntToPut);
-      invalidTmnt.id = "test";
-      await expect(putTmnt(invalidTmnt)).rejects.toThrow("Invalid tmnt data");
-    });
-
-    it("should throw error when trying to put a tmnt with invalid data", async () => {
-      const invalidTmnt = cloneDeep(tmntToPut);
-      invalidTmnt.tmnt_name = "";
-      await expect(putTmnt(invalidTmnt)).rejects.toThrow(
-        "putTmnt failed: Request failed with status code 422",
-      );
-    });
-
-    it("should thorw error when trying to put a tmnt when passed null", async () => {
-      await expect(putTmnt(null as unknown as tmntType)).rejects.toThrow(
-        "Invalid tmnt data",
-      );
-    });
-
-    it("should thorw error when trying to put a tmnt when passed non object", async () => {
-      await expect(putTmnt("test" as unknown as tmntType)).rejects.toThrow(
-        "Invalid tmnt data",
-      );
-    });
-  });
-
-  describe("deleteTmnt", () => {
-    const toDel = {
-      ...initTmnt,
-      id: "tmt_e134ac14c5234d708d26037ae812ac33",
-      user_id: "usr_5bcefb5d314fff1ff5da6521a2fa7bde",
-      tmnt_name: "Gold Pin",
-      bowl_id: "bwl_561540bd64974da9abdd97765fdb3659",
-      start_date_str: "2026-08-19",
-      end_date_str: "2026-08-19",
-    };
-
-    const rePostToDel = async () => {
-      const response = await publicApi.get(url);
-      const tmnts = response.data?.tmnts ?? [];
-      const foundToDel = tmnts.find((t: tmntType) => t.id === toDel.id);
-      if (!foundToDel) {
-        try {
-          const tmntJSON = JSON.stringify(toDel);
-          await privateApi.post(url, tmntJSON);
-        } catch (err) {
-          if (err instanceof Error) console.log(err.message);
-        }
-      }
-    };
-
-    let didDel = false;
-
-    beforeAll(async () => {
-      await rePostToDel();
-    });
-
-    beforeEach(() => {
-      didDel = false;
-    });
-
-    afterEach(async () => {
-      if (didDel) {
-        await rePostToDel();
-      }
-    });
+  describe("deleteTmnt()", () => {
+    const toDelId = "tmt_e134ac14c5234d708d26037ae812ac33";
 
     it("should delete a tmnt by ID", async () => {
-      const deletedTmnt = await deleteTmnt(toDel.id);
-      expect(deletedTmnt).toBe(1);
-      didDel = true;
+      mockDelete.mockResolvedValue({ data: { count: 1 } });
+
+      const deleted = await deleteTmnt(toDelId);
+
+      expect(deleted).toBe(1);
+    });
+
+    it("should call the tmnt url once with the private api", async () => {
+      mockDelete.mockResolvedValue({ data: { count: 1 } });
+
+      await deleteTmnt(toDelId);
+
+      expect(mockDelete).toHaveBeenCalledTimes(1);
+      expect(mockDelete).toHaveBeenCalledWith(tmntUrl + toDelId);
+      expect(mockGet).not.toHaveBeenCalled();
+      expect(mockPut).not.toHaveBeenCalled();
     });
 
     it("should return 0 when trying to delete a tmnt when id is not found", async () => {
-      const deletedTmnt = await deleteTmnt(notFoundId);
-      expect(deletedTmnt).toBe(0);
+      mockDelete.mockResolvedValue({ data: { count: 0 } });
+
+      const deleted = await deleteTmnt(notFoundId);
+
+      expect(deleted).toBe(0);
+    });
+
+    it("should throw error when the response has no count", async () => {
+      mockDelete.mockResolvedValue({ data: {} });
+
+      await expect(deleteTmnt(toDelId)).rejects.toThrow(
+        new Error("deleteTmnt failed: Error deleting tmnt")
+      );
+    });
+
+    it("should throw error when the API call fails", async () => {
+      mockDelete.mockRejectedValue(axiosError(500));
+
+      await expect(deleteTmnt(toDelId)).rejects.toThrow(
+        new Error("deleteTmnt failed: Request failed with status code 500")
+      );
     });
 
     it("should throw error when trying to delete a tmnt when id is invalid", async () => {
-      await expect(deleteTmnt("test")).rejects.toThrow("Invalid tmnt id");
+      await expect(deleteTmnt("test")).rejects.toThrow(
+        new Error("Invalid tmnt id")
+      );
+      expect(mockDelete).not.toHaveBeenCalled();
     });
 
     it("should throw error when trying to delete a tmnt when id is valid, but not a tmnt id", async () => {
-      await expect(deleteTmnt(userId)).rejects.toThrow("Invalid tmnt id");
+      await expect(deleteTmnt(userId)).rejects.toThrow(
+        new Error("Invalid tmnt id")
+      );
+      expect(mockDelete).not.toHaveBeenCalled();
     });
 
     it("should throw error when trying to delete a tmnt when id is null", async () => {
       await expect(deleteTmnt(null as unknown as string)).rejects.toThrow(
-        "Invalid tmnt id",
+        new Error("Invalid tmnt id")
       );
+      expect(mockDelete).not.toHaveBeenCalled();
     });
   });
 });

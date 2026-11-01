@@ -321,32 +321,3 @@ export const patchJustStageOverride = async (
     );
   }
 };
-
-/**
- * deletes a full stage
- *
- * @param {string} stageId - id of stage to delete
- * @returns {number} - number of stages deleted
- * @throws {Error} - if stageId is invalid or API call fails
- */
-export const deleteFullStage = async (stageId: string): Promise<number> => {
-  if (!isValidBtDbId(stageId, "stg")) {
-    throw new Error("Invalid stage id");
-  }
-
-  try {
-    const response = await privateApi.delete(stageUrl + stageId);
-
-    if (typeof response.data?.count !== "number") {
-      throw new Error("Error deleting stage");
-    }
-
-    return response.data.count;
-  } catch (err) {
-    throw new Error(
-      `deleteFullStage failed: ${
-        err instanceof Error ? err.message : String(err)
-      }`
-    );
-  }
-};

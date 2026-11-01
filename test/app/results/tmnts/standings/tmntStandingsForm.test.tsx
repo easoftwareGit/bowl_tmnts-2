@@ -475,11 +475,11 @@ describe("TmntStandingsForm", () => {
 
   describe("column widths", () => {
     it.each([
-      [0, "90px"],
-      [999, "90px"],
-      [1000, "130px"],
-      [9999, "130px"],
-      [10000, "180px"],
+      [0, "85px"],
+      [999, "85px"],
+      [1000, "125px"],
+      [9999, "125px"],
+      [10000, "170px"],
     ])("sets the Prize column width for a first prize of %i to %s", (amount, width) => {
       renderForm({
         div: scratchDiv,
@@ -493,7 +493,7 @@ describe("TmntStandingsForm", () => {
       renderForm({ div: scratchDiv, divPfs: [] });
 
       expect(screen.getByRole("columnheader", { name: "Prize" })).toHaveStyle({
-        width: "90px",
+        width: "85px",
       });
     });
 
