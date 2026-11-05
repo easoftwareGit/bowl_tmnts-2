@@ -59,8 +59,16 @@ const PlayerBrktsPage = () => {
     retry: retryTmnt,
   } = useTmntFullData(tmntId);
 
-  // get tmnt results 
+  // get tmnt results
+
+  // a tournament with no brackets has nothing to show, so its results are not
+  // needed. While the tournament is still loading the results are fetched
+  // anyway, so the two requests run side by side.
+  const tmntHasNoBrackets = hasTmntData && tmntFullData.brkts.length === 0;  
+
   useEffect(() => {
+    if (tmntHasNoBrackets) return;
+
     const needTmntGames = resultsTmntId !== tmntId;
 
     const failedForThisTmntGames =
@@ -74,6 +82,7 @@ const PlayerBrktsPage = () => {
       dispatch(fetchOneTmntGameResults(tmntId));
     }
   }, [
+    tmntHasNoBrackets,
     tmntId,
     resultsTmntId,
     resultsLoadStatus,    
@@ -121,7 +130,7 @@ const PlayerBrktsPage = () => {
           className="btn btn-primary"
           onClick={() => {
             void retryTmnt();
-          }}    
+          }}
         >
           Retry
         </button>
@@ -148,18 +157,20 @@ const PlayerBrktsPage = () => {
   if (!hasTmntGamesData && failedForThisTmntGames) {
     const errmsg =
       resultsError ||
-      `An error occurred while loading games for tournament with id: ${tmntId}.`;
+      `An error occurred while loading game results for tournament with id: ${tmntId}.`;
 
     return (
       <div className="text-center mt-5">
-        <h4>Unable to load tournament</h4>
+        <h4>Unable to load tournament game results</h4>
 
         <p>{errmsg}</p>
 
         <button
           type="button"
           className="btn btn-primary"
-          onClick={() => dispatch(fetchOneTmntGameResults(tmntId))}
+          onClick={() => {
+            void dispatch(fetchOneTmntGameResults(tmntId));
+          }}
         >
           Retry
         </button>

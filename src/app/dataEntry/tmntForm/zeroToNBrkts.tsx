@@ -1,7 +1,7 @@
 import React, { useState, ChangeEvent } from "react";
 import type { divType, squadType, AcdnErrType, brktType } from "../../../lib/types/types";
 import { initModalObj } from "@/components/modal/modalObjType";
-import ModalConfirm, { delConfTitle } from "@/components/modal/confirmModal";
+import ConfirmModal, { delConfTitle } from "@/components/modal/confirmModal";
 import { Tab, Tabs, OverlayTrigger, Tooltip } from "react-bootstrap";
 import EaCurrencyInput, {
   maxMoneyText,
@@ -582,7 +582,7 @@ const ZeroToNBrackets: React.FC<ChildProps> = ({
 
   return (
     <>
-      <ModalConfirm
+      <ConfirmModal
         show={modalObj.show}
         title={modalObj.title}
         message={modalObj.message}

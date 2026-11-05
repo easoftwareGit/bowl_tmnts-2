@@ -24,6 +24,9 @@ export const baseConfig: Config = {
 
     // Non-module CSS imports (optional but recommended)
     "^.+\\.(css|sass|scss)$": "<rootDir>/test/__mocks__/styleMock.ts",
+
+    // jest.config: inside moduleNameMapper
+    "^server-only$": "<rootDir>/test/__mocks__/serverOnly.ts",
   },  
   testPathIgnorePatterns: [
     "<rootDir>/node_modules/",

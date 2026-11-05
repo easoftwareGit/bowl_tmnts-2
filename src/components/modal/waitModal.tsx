@@ -1,35 +1,31 @@
-import Modal from 'react-bootstrap/Modal';
-import Spinner from 'react-bootstrap/Spinner';
+"use client";
 
-interface ChildProps {
-  show: boolean; 
+import Modal from "react-bootstrap/Modal";
+import Spinner from "react-bootstrap/Spinner";
+
+interface WaitModalProps {
+  show: boolean;
   message: string;
 }
 
-const WaitModal: React.FC<ChildProps> = ({
-  show,
-  message,
-}) => {
-
-  return (
-    <>
-      <Modal
-        show={show}
-        backdrop="static"
-        keyboard={false}
-        data-testid="modalWait"
-        aria-label="Please wait..."
+const WaitModal: React.FC<WaitModalProps> = ({ show, message }) => (
+  <Modal
+    show={show}
+    backdrop="static"
+    keyboard={false}
+    data-testid="modalWait"
+    aria-label={message}
+  >
+    <Modal.Body>
+      <div
+        className="d-flex justify-content-center align-items-center gap-2"
+        role="status"
       >
-        <Modal.Body>
-          <div className="d-flex justify-content-center align-items-center">            
-            <span>{message}&nbsp;&nbsp;</span>
-            <Spinner animation="border" role="status" variant='primary'>              
-            </Spinner>
-          </div>
-        </Modal.Body>
-      </Modal>
-    </>
-  )
-}
+        <span>{message}</span>
+        <Spinner animation="border" variant="primary" aria-hidden="true" />
+      </div>
+    </Modal.Body>
+  </Modal>
+);
 
-export default WaitModal
+export default WaitModal;

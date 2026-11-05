@@ -1,7 +1,7 @@
 import React, { ChangeEvent, useState } from 'react'
 import type { elimType, divType, squadType, AcdnErrType } from "../../../lib/types/types";
 import { initModalObj } from '@/components/modal/modalObjType';
-import ModalConfirm, { delConfTitle } from '@/components/modal/confirmModal';
+import ConfirmModal, { delConfTitle } from '@/components/modal/confirmModal';
 import { Tab, Tabs } from 'react-bootstrap';
 import { getBrktOrElimName, getDivName } from '@/lib/getName';
 import EaCurrencyInput, { maxMoneyText, minFeeText } from '@/components/currency/eaCurrencyInput';
@@ -429,7 +429,7 @@ const ZeroToNElims: React.FC<ChildProps> = ({
 
   return (
     <>
-      <ModalConfirm
+      <ConfirmModal
         show={modalObj.show}
         title={modalObj.title}
         message={modalObj.message}

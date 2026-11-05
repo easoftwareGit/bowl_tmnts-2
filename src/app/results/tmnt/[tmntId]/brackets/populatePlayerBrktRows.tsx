@@ -73,7 +73,7 @@ export const populatePlayerBrktRows = (
         };
         playerRows.push(playerRow);
       }
-      let btPlayerRow = bracketGames.find((bGames) => bGames.player_id === player_id);
+      const btPlayerRow = bracketGames.find((bGames) => bGames.player_id === player_id);
       if (btPlayerRow) {
         for (let game = 1; game <= numGames; game++) {
           const gameCol = `Game ${game}` as const;

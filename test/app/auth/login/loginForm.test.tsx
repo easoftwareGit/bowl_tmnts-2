@@ -127,6 +127,16 @@ const deferSignIn = () => {
   return handle;
 };
 
+// renders the form with any search params, e.g. { error: "no_account" }
+const setupWithParams = (params: Record<string, string>) => {
+  mockGet.mockImplementation((key: string) => params[key] ?? null);
+  const user = userEvent.setup();
+  render(<LoginForm />);
+  return user;
+};
+
+const noAccountMsg = /no account exists for this email/i;
+
 beforeEach(() => {
   jest.resetAllMocks();
   mockIsEmail.mockImplementation((email: string) => /\S+@\S+\.\S+/.test(email));
@@ -566,4 +576,78 @@ describe("LoginForm", () => {
       );
     });
   });
+
+  describe("error from the URL", () => {
+    it("shows the no_account message", () => {
+      setupWithParams({ error: "no_account" });
+
+      expect(screen.getByRole("alert")).toHaveTextContent(noAccountMsg);
+      expect(mockGet).toHaveBeenCalledWith("error");
+    });
+
+    it("shows nothing when there is no error param", () => {
+      setupWithParams({});
+
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    });
+
+    it("ignores an unknown code and never shows the URL text", () => {
+      setupWithParams({ error: "Your account is suspended, call 555-0100" });
+
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+      expect(screen.queryByText(/suspended/i)).not.toBeInTheDocument();
+    });
+
+    it.each(["constructor", "toString", "__proto__"])(
+      "ignores the built-in property name %s",
+      (code) => {
+        setupWithParams({ error: code });
+
+        expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+      },
+    );
+
+    it("clears the message when an input changes", async () => {
+      const user = setupWithParams({ error: "no_account" });
+      expect(screen.getByRole("alert")).toBeInTheDocument();
+
+      await user.type(emailInput(), "a");
+
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    });
+
+    it("clears the message when Login is clicked", async () => {
+      const user = setupWithParams({ error: "no_account" });
+
+      // an empty submit fails validation, but the URL message still clears
+      await user.click(loginButton());
+
+      expect(await screen.findByText("Email is required")).toBeInTheDocument();
+      expect(screen.queryByText(noAccountMsg)).not.toBeInTheDocument();
+    });
+
+    it("clears the message when Sign in with Google is clicked", async () => {
+      const user = setupWithParams({ error: "no_account" });
+
+      await user.click(googleButton());
+
+      expect(screen.queryByText(noAccountMsg)).not.toBeInTheDocument();
+      expect(mockSignIn).toHaveBeenCalledWith("google", {
+        callbackUrl: defaultCallback,
+      });
+    });
+
+    it("still uses the callbackUrl alongside an error", async () => {
+      const user = setupWithParams({
+        error: "no_account",
+        callbackUrl: "/dataEntry/runTmnt/1",
+      });
+
+      await fillAndSubmit(user);
+
+      await waitFor(() =>
+        expect(mockPush).toHaveBeenCalledWith("/dataEntry/runTmnt/1"),
+      );
+    });
+  });  
 });

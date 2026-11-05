@@ -8,7 +8,7 @@ import type {
   tmntFullType,
 } from "@/lib/types/types";
 import { tmntFormParent, ioDataError } from "@/lib/enums/enums";
-import ModalErrorMsg, { cannotSaveTitle } from "@/components/modal/errorModal";
+import ErrorModalMsg, { cannotSaveTitle } from "@/components/modal/errorModal";
 import { initModalObj } from "@/components/modal/modalObjType";
 import { maxTmntNameLength } from "@/lib/validation/constants";
 import { startOfDayFromString, validDateString } from "@/lib/dateTools";
@@ -21,7 +21,7 @@ import ZeroToNPots, { validatePots } from "./zeroToNPots";
 import ZeroToNBrackets, { validateBrkts } from "./zeroToNBrkts";
 import ZeroToNElims, { validateElims } from "./zeroToNElims";
 import { compareAsc } from "date-fns";
-import ModalConfirm from "@/components/modal/confirmModal";
+import ConfirmModal from "@/components/modal/confirmModal";
 import { useRouter } from "next/navigation";
 import {
   saveTmntFullData,
@@ -393,14 +393,14 @@ const TmntDataForm: React.FC<FormProps> = ({ tmntProps,  markPendingChanges }) =
 
   return (
     <>
-      <ModalConfirm
+      <ConfirmModal
         show={modalObj.show}
         title={modalObj.title}
         message={modalObj.message}
         onConfirm={confirmedCancel}
         onCancel={canceledCancel}
       />
-      <ModalErrorMsg
+      <ErrorModalMsg
         show={errModalObj.show}
         title={errModalObj.title}
         message={errModalObj.message}

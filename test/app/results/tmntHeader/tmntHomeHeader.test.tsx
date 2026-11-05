@@ -10,23 +10,20 @@ import {
   tmntId,
 } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 
-// All sections present: this is the mock as-is
-const dataAll = (): tmntFullType => ({ ...mockTmntFullData });
+type sectionFlags = { brkts: boolean; pots: boolean; elims: boolean };
 
-// Brackets only
-const dataBracketsOnly = (): tmntFullType => ({
+// Builds data with each optional section either kept from the mock or emptied
+const dataWith = ({ brkts, pots, elims }: sectionFlags): tmntFullType => ({
   ...mockTmntFullData,
-  pots: [],
-  elims: [],
+  brkts: brkts ? mockTmntFullData.brkts : [],
+  pots: pots ? mockTmntFullData.pots : [],
+  elims: elims ? mockTmntFullData.elims : [],
 });
 
-// No optional sections at all
-const dataNone = (): tmntFullType => ({
-  ...mockTmntFullData,
-  brkts: [],
-  pots: [],
-  elims: [],
-});
+const dataAll = (): tmntFullType =>
+  dataWith({ brkts: true, pots: true, elims: true });
+const dataNone = (): tmntFullType =>
+  dataWith({ brkts: false, pots: false, elims: false });
 
 const withTmnt = (
   tmntOverrides: Partial<tmntFullType["tmnt"]>,
@@ -39,34 +36,77 @@ const withTmnt = (
 const renderHeader = (
   data: tmntFullType,
   selected: tmntPageBtnType = "Home"
-) => render(<TmntHomeHeader tmntFullData={data} selectedTmntPageBtn={selected} />);
+) =>
+  render(<TmntHomeHeader tmntFullData={data} selectedTmntPageBtn={selected} />);
+
+const getLinkLabels = () =>
+  within(screen.getByRole("navigation", { name: "Tournament navigation" }))
+    .getAllByRole("link")
+    .map((link) => link.textContent);
+
+const mockName = mockTmntFullData.tmnt.tmnt_name;
+const mockStart = mockTmntFullData.tmnt.start_date_str;
+const otherDate = "2025-09-03";
 
 describe("TmntHomeHeader", () => {
-  describe("title (name and date)", () => {
-    it("renders the mock tournament name and a single date when start and end dates match", () => {
-      renderHeader(dataBracketsOnly());
-
-      const heading = screen.getByRole("heading", { level: 3 });
-      expect(heading).toHaveTextContent(
-        `Mock Tournament: ${getMonthDayYear("2025-09-01")}`
+  describe("mock data (fixture sanity check)", () => {
+    it("has brackets, pots and elims, and a one-day tournament", () => {
+      expect(mockTmntFullData.brkts.length).toBeGreaterThan(0);
+      expect(mockTmntFullData.pots.length).toBeGreaterThan(0);
+      expect(mockTmntFullData.elims.length).toBeGreaterThan(0);
+      expect(mockTmntFullData.tmnt.start_date_str).toBe(
+        mockTmntFullData.tmnt.end_date_str
       );
-      expect(heading).not.toHaveTextContent(" - ");
+      expect(mockName).not.toBe("");
+    });
+  });
+
+  describe("title (name and date)", () => {
+    // `name` on getByRole is an exact match of the whole heading text,
+    // so these also prove nothing extra (like " - " or ": ") is in it.
+    it("renders the name and a single date when start and end dates match", () => {
+      renderHeader(dataAll());
+      expect(
+        screen.getByRole("heading", {
+          level: 3,
+          name: `${mockName}: ${getMonthDayYear(mockStart)}`,
+        })
+      ).toBeInTheDocument();
     });
 
     it("renders a date range when start and end dates differ", () => {
-      renderHeader(withTmnt({ end_date_str: "2025-09-03" }));
-
-      expect(screen.getByRole("heading", { level: 3 })).toHaveTextContent(
-        `Mock Tournament: ${getMonthDayYear("2025-09-01")} - ${getMonthDayYear("2025-09-03")}`
-      );
+      renderHeader(withTmnt({ end_date_str: otherDate }));
+      expect(
+        screen.getByRole("heading", {
+          level: 3,
+          name: `${mockName}: ${getMonthDayYear(mockStart)} - ${getMonthDayYear(otherDate)}`,
+        })
+      ).toBeInTheDocument();
     });
 
     it("omits the separator when the tournament name is empty", () => {
       renderHeader(withTmnt({ tmnt_name: "" }));
+      expect(
+        screen.getByRole("heading", {
+          level: 3,
+          name: getMonthDayYear(mockStart),
+        })
+      ).toBeInTheDocument();
+    });
 
-      const heading = screen.getByRole("heading", { level: 3 });
-      expect(heading).toHaveTextContent(getMonthDayYear("2025-09-01"));
-      expect(heading).not.toHaveTextContent(":");
+    it("omits the separator and shows only the range when the name is empty and dates differ", () => {
+      renderHeader(withTmnt({ tmnt_name: "", end_date_str: otherDate }));
+      expect(
+        screen.getByRole("heading", {
+          level: 3,
+          name: `${getMonthDayYear(mockStart)} - ${getMonthDayYear(otherDate)}`,
+        })
+      ).toBeInTheDocument();
+    });
+
+    it("renders exactly one heading", () => {
+      renderHeader(dataAll());
+      expect(screen.getAllByRole("heading")).toHaveLength(1);
     });
   });
 
@@ -78,11 +118,11 @@ describe("TmntHomeHeader", () => {
       ).toBeInTheDocument();
     });
 
-    it("renders the button group", () => {
+    it("puts every link inside the labelled button group", () => {
       renderHeader(dataAll());
-      expect(
-        screen.getByRole("group", { name: "Select bracket" })
-      ).toBeInTheDocument();
+      const group = screen.getByRole("group", { name: "Select tournament page" });
+      expect(within(group).getAllByRole("link")).toHaveLength(6);
+      expect(screen.getAllByRole("link")).toHaveLength(6);
     });
   });
 
@@ -101,6 +141,17 @@ describe("TmntHomeHeader", () => {
         );
       }
     );
+
+    it("builds hrefs from the tournament id in the data", () => {
+      const otherId = "tmt_ffffffffffffffffffffffffffffffff";
+      renderHeader(withTmnt({ id: otherId }));
+      screen.getAllByRole("link").forEach((link) => {
+        expect(link).toHaveAttribute(
+          "href",
+          expect.stringMatching(new RegExp(`^/results/tmnt/${otherId}/`))
+        );
+      });
+    });
   });
 
   describe("conditional links", () => {
@@ -120,60 +171,24 @@ describe("TmntHomeHeader", () => {
       );
     });
 
-    it("shows only Brackets when there are brackets but no pots or elims", () => {
-      renderHeader(dataBracketsOnly());
-      expect(screen.getByRole("link", { name: "Brackets" })).toBeInTheDocument();
-      expect(screen.queryByRole("link", { name: "Pots" })).not.toBeInTheDocument();
-      expect(screen.queryByRole("link", { name: "Elims" })).not.toBeInTheDocument();
-      expect(screen.getAllByRole("link")).toHaveLength(4);
-    });
-
-    it("shows only Pots when only pots exist", () => {
-      renderHeader({ ...dataNone(), pots: mockTmntFullData.pots });
-      expect(screen.getByRole("link", { name: "Pots" })).toBeInTheDocument();
-      expect(screen.queryByRole("link", { name: "Brackets" })).not.toBeInTheDocument();
-      expect(screen.queryByRole("link", { name: "Elims" })).not.toBeInTheDocument();
-    });
-
-    it("shows only Elims when only elims exist", () => {
-      renderHeader({ ...dataNone(), elims: mockTmntFullData.elims });
-      expect(screen.getByRole("link", { name: "Elims" })).toBeInTheDocument();
-      expect(screen.queryByRole("link", { name: "Brackets" })).not.toBeInTheDocument();
-      expect(screen.queryByRole("link", { name: "Pots" })).not.toBeInTheDocument();
-    });    
-
-    it("mock data has brackets, pots and elims (fixture sanity check)", () => {
-      expect(mockTmntFullData.brkts.length).toBeGreaterThan(0);
-      expect(mockTmntFullData.pots.length).toBeGreaterThan(0);
-      expect(mockTmntFullData.elims.length).toBeGreaterThan(0);
-    });
-
-    it("hides Brackets, Pots and Elims when there is no data", () => {
-      renderHeader(dataNone());
-      expect(screen.queryByRole("link", { name: "Brackets" })).not.toBeInTheDocument();
-      expect(screen.queryByRole("link", { name: "Pots" })).not.toBeInTheDocument();
-      expect(screen.queryByRole("link", { name: "Elims" })).not.toBeInTheDocument();
-      expect(screen.getAllByRole("link")).toHaveLength(3);
-    });
-
-    it("renders links in order: Home, Players, Standings, Brackets, Pots, Elims", () => {
-      renderHeader(dataAll());
-      const nav = screen.getByRole("navigation");
-      const labels = within(nav)
-        .getAllByRole("link")
-        .map((l) => l.textContent);
-      expect(labels).toEqual([
-        "Home",
-        "Players",
-        "Standings",
-        "Brackets",
-        "Pots",
-        "Elims",
-      ]);
+    // Every combination of brackets / pots / elims, checked against the
+    // full ordered list of links so nothing extra or missing slips through.
+    it.each<[string, sectionFlags, string[]]>([
+      ["none", { brkts: false, pots: false, elims: false }, []],
+      ["brackets only", { brkts: true, pots: false, elims: false }, ["Brackets"]],
+      ["pots only", { brkts: false, pots: true, elims: false }, ["Pots"]],
+      ["elims only", { brkts: false, pots: false, elims: true }, ["Elims"]],
+      ["brackets and pots", { brkts: true, pots: true, elims: false }, ["Brackets", "Pots"]],
+      ["brackets and elims", { brkts: true, pots: false, elims: true }, ["Brackets", "Elims"]],
+      ["pots and elims", { brkts: false, pots: true, elims: true }, ["Pots", "Elims"]],
+      ["all three", { brkts: true, pots: true, elims: true }, ["Brackets", "Pots", "Elims"]],
+    ])("with %s, renders the matching links in order", (_desc, flags, extra) => {
+      renderHeader(dataWith(flags));
+      expect(getLinkLabels()).toEqual(["Home", "Players", "Standings", ...extra]);
     });
   });
 
-  describe("active button state", () => {
+  describe("selected page state (active class and aria-current)", () => {
     const allButtons: Exclude<tmntPageBtnType, "None">[] = [
       "Home",
       "Players",
@@ -186,36 +201,57 @@ describe("TmntHomeHeader", () => {
     it.each(allButtons)("marks only the %s link as active when selected", (selected) => {
       renderHeader(dataAll(), selected);
 
-      allButtons.forEach((label) => {
-        const link = screen.getByRole("link", { name: label });
-        if (label === selected) {
-          expect(link).toHaveClass("active");
-        } else {
-          expect(link).not.toHaveClass("active");
-        }
-      });
+      expect(screen.getByRole("link", { name: selected })).toHaveClass("active");
+      allButtons
+        .filter((label) => label !== selected)
+        .forEach((label) => {
+          expect(screen.getByRole("link", { name: label })).not.toHaveClass("active");
+        });
+    });
+
+    it.each(allButtons)("sets aria-current=\"page\" only on the %s link when selected", (selected) => {
+      renderHeader(dataAll(), selected);
+
+      // getByRole throws if more than one link has aria-current="page"
+      const current = screen.getByRole("link", { current: "page" });
+      expect(current).toHaveAccessibleName(selected);
+      expect(current).toHaveAttribute("aria-current", "page");
+      allButtons
+        .filter((label) => label !== selected)
+        .forEach((label) => {
+          expect(screen.getByRole("link", { name: label })).not.toHaveAttribute("aria-current");
+        });
     });
 
     it("marks no link as active when selectedTmntPageBtn is None", () => {
       renderHeader(dataAll(), "None");
       screen.getAllByRole("link").forEach((link) => {
         expect(link).not.toHaveClass("active");
+        expect(link).not.toHaveAttribute("aria-current");
       });
+      expect(screen.queryByRole("link", { current: "page" })).not.toBeInTheDocument();
     });
 
     it("keeps the btn and btn-outline-primary classes on every link", () => {
-      renderHeader(dataAll());
+      renderHeader(dataAll(), "Players");
       screen.getAllByRole("link").forEach((link) => {
         expect(link).toHaveClass("btn", "btn-outline-primary");
       });
     });
 
-    it("renders no active link when the selected page is hidden (Pots with no pots)", () => {
-      renderHeader(dataBracketsOnly(), "Pots");
-      expect(screen.queryByRole("link", { name: "Pots" })).not.toBeInTheDocument();
+    it.each<[Exclude<tmntPageBtnType, "None" | "Home" | "Players" | "Standings">, sectionFlags]>([
+      ["Brackets", { brkts: false, pots: true, elims: true }],
+      ["Pots", { brkts: true, pots: false, elims: true }],
+      ["Elims", { brkts: true, pots: true, elims: false }],
+    ])("renders no active or current link when %s is selected but has no data", (selected, flags) => {
+      renderHeader(dataWith(flags), selected);
+      expect(screen.queryByRole("link", { name: selected })).not.toBeInTheDocument();
       screen.getAllByRole("link").forEach((link) => {
         expect(link).not.toHaveClass("active");
+        expect(link).not.toHaveAttribute("aria-current");
       });
+      expect(screen.queryByRole("link", { current: "page" })).not.toBeInTheDocument();
     });
   });
 });
+

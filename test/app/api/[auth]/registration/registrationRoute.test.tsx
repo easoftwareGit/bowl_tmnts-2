@@ -12,6 +12,7 @@ import {
   maxFirstNameLength,
   maxLastNameLength,
 } from "@/lib/validation/constants";
+import { isBetaRegistrationOpen } from "@/lib/auth/registration";
 
 // Replace password hashing with a mock so tests are fast and predictable
 jest.mock("@/lib/server/hashServer", () => ({
@@ -26,6 +27,15 @@ jest.mock("@/lib/uuid", () => ({
   btDbUuid: jest.fn(),
 }));
 const mockBtDbUuid = btDbUuid as jest.MockedFunction<typeof btDbUuid>;
+
+// Registration is controlled by REGISTRATION_MODE; mock it so these tests
+// don't depend on what's in the local .env file
+jest.mock("@/lib/auth/registration", () => ({
+  isBetaRegistrationOpen: jest.fn(),
+}));
+const mockIsOpen = isBetaRegistrationOpen as jest.MockedFunction<
+  typeof isBetaRegistrationOpen
+>;
 
 // The URL only needs to be valid; no server is running
 const url = "http://localhost:3000/api/auth/register";
@@ -106,11 +116,66 @@ describe("Auth - API: /api/auth/register", () => {
       // reset non-prisma mocks first, so calls do not leak between tests
       mockDoHash.mockReset();
       mockBtDbUuid.mockReset();
-      // default for every test: email is not in use, hashing works,
-      // and the server makes serverId for the new user
+      mockIsOpen.mockReset();
+      // default for every test: registration is open, email is not in use,
+      // hashing works, and the server makes serverId for the new user
+      mockIsOpen.mockReturnValue(true);
       prismaMock.user.findUnique.mockResolvedValue(null);
       mockDoHash.mockResolvedValue(hashedPassword);
       mockBtDbUuid.mockReturnValue(serverId);
+    });
+
+    describe("registration closed - 403", () => {
+      beforeEach(() => {
+        mockIsOpen.mockReturnValue(false);
+      });
+
+      it("should return 403 and not register a valid user", async () => {
+        const response = await POST(postRequest(registerUser));
+        const body = await response.json();
+
+        expect(response.status).toBe(403);
+        expect(body).toEqual({ error: "Registration is closed." });
+        expectNoDbWork();
+        expect(mockBtDbUuid).not.toHaveBeenCalled();
+      });
+
+      // the check runs before the body is read, so a closed route gives
+      // nothing away about what it would accept
+      it("should return 403, not 400, for a body that is not valid JSON", async () => {
+        const response = await POST(
+          new NextRequest(url, {
+            method: "POST",
+            body: "not json",
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
+
+        expect(response.status).toBe(403);
+        expectNoDbWork();
+      });
+
+      it("should return 403, not 422, for invalid user data", async () => {
+        const response = await POST(postRequest({}));
+
+        expect(response.status).toBe(403);
+        expectNoDbWork();
+      });
+
+      it("should return 403 even when the client sends role ADMIN", async () => {
+        const response = await POST(
+          postRequest({ ...registerUser, role: "ADMIN" }),
+        );
+
+        expect(response.status).toBe(403);
+        expect(prismaMock.user.create).not.toHaveBeenCalled();
+      });
+
+      it("should check the registration mode once per request", async () => {
+        await POST(postRequest(registerUser));
+
+        expect(mockIsOpen).toHaveBeenCalledTimes(1);
+      });
     });
 
     describe("success", () => {
@@ -526,7 +591,7 @@ describe("Auth - API: /api/auth/register", () => {
         expect(prismaMock.user.create).not.toHaveBeenCalled();
       });
 
-      it("should return 409 when create hits a unique constraint", async () => {
+      it("should return 409 with the same message when create hits a unique constraint", async () => {
         // e.g. another signup with the same email between findUnique and create
         prismaMock.user.create.mockRejectedValue({ code: "P2002" });
 
@@ -534,7 +599,8 @@ describe("Auth - API: /api/auth/register", () => {
         const body = await response.json();
 
         expect(response.status).toBe(409);
-        expect(body.message).toMatch(/^Error registering user/);
+        // same shape and text as the findUnique check, so the form handles both
+        expect(body).toEqual({ error: "Email already in use" });
       });
     });
 

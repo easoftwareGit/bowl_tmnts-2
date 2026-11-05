@@ -1,7 +1,9 @@
+// test/app/results/tmnts/brackets/bracketHeader.test.tsx
+// tests src/app/results/tmnts/brackets/bracketHeader.tsx
 import React from "react";
 import { render, screen, within } from "@testing-library/react";
 import BracketHeader, {
-  type brktPageBtnType
+  type brktPageBtnType,
 } from "@/app/results/tmnt/[tmntId]/brackets/bracketHeader";
 import type { tmntFullType } from "@/lib/types/types";
 import {
@@ -20,7 +22,16 @@ const renderHeader = (
     />
   );
 
+const getBracketsLink = () => screen.getByRole("link", { name: "Brackets" });
+const getPayoutsLink = () => screen.getByRole("link", { name: "Payouts" });
+
 describe("BracketHeader", () => {
+  describe("fixture sanity check", () => {
+    it("mock tournament has an id that matches the exported tmntId", () => {
+      expect(mockTmntFullData.tmnt.id).toBe(tmntId);
+    });
+  });
+
   describe("structure", () => {
     it("renders the header container", () => {
       renderHeader();
@@ -36,28 +47,34 @@ describe("BracketHeader", () => {
       ).toBeInTheDocument();
     });
 
-    it("renders the labelled button group", () => {
+    it("renders the labelled button group inside the navigation", () => {
       renderHeader();
 
+      const nav = screen.getByRole("navigation", {
+        name: "Bracket navigation",
+      });
       expect(
-        screen.getByRole("group", { name: "Select bracket" })
+        within(nav).getByRole("group", { name: "Select bracket" })
       ).toBeInTheDocument();
     });
 
-    it("renders exactly two links, in the order Brackets then Payouts", () => {
-      renderHeader();
-
-      const labels = screen
-        .getAllByRole("link")
-        .map((link) => link.textContent);
-      expect(labels).toEqual(["Brackets", "Payouts"]);
-    });
-
-    it("renders the links inside the button group", () => {
+    it("renders exactly two links, in the order Brackets then Payouts, all inside the button group", () => {
       renderHeader();
 
       const group = screen.getByRole("group", { name: "Select bracket" });
-      expect(within(group).getAllByRole("link")).toHaveLength(2);
+      const labels = within(group)
+        .getAllByRole("link")
+        .map((link) => link.textContent);
+      expect(labels).toEqual(["Brackets", "Payouts"]);
+      // nothing else on the page is a link
+      expect(screen.getAllByRole("link")).toHaveLength(2);
+    });
+
+    it("renders both links even when the tournament has no brackets", () => {
+      renderHeader("Brackets", { ...mockTmntFullData, brkts: [] });
+
+      expect(getBracketsLink()).toBeInTheDocument();
+      expect(getPayoutsLink()).toBeInTheDocument();
     });
   });
 
@@ -65,7 +82,7 @@ describe("BracketHeader", () => {
     it("links Brackets to the tournament's brackets page", () => {
       renderHeader();
 
-      expect(screen.getByRole("link", { name: "Brackets" })).toHaveAttribute(
+      expect(getBracketsLink()).toHaveAttribute(
         "href",
         `/results/tmnt/${tmntId}/brackets`
       );
@@ -74,7 +91,7 @@ describe("BracketHeader", () => {
     it("links Payouts to the tournament's payouts page", () => {
       renderHeader();
 
-      expect(screen.getByRole("link", { name: "Payouts" })).toHaveAttribute(
+      expect(getPayoutsLink()).toHaveAttribute(
         "href",
         `/results/tmnt/${tmntId}/brackets/payouts`
       );
@@ -87,31 +104,41 @@ describe("BracketHeader", () => {
         tmnt: { ...mockTmntFullData.tmnt, id: otherId },
       });
 
-      expect(screen.getByRole("link", { name: "Brackets" })).toHaveAttribute(
+      expect(getBracketsLink()).toHaveAttribute(
         "href",
         `/results/tmnt/${otherId}/brackets`
       );
-      expect(screen.getByRole("link", { name: "Payouts" })).toHaveAttribute(
+      expect(getPayoutsLink()).toHaveAttribute(
         "href",
         `/results/tmnt/${otherId}/brackets/payouts`
       );
     });
 
-    it("keeps the btn and btn-outline-primary classes on every link", () => {
-      renderHeader();
+    it.each<brktPageBtnType>(["Brackets", "Payouts", "None"])(
+      "keeps the btn and btn-outline-primary classes on every link when %s is selected",
+      (selected) => {
+        renderHeader(selected);
 
-      screen.getAllByRole("link").forEach((link) => {
-        expect(link).toHaveClass("btn", "btn-outline-primary");
-      });
-    });
+        screen.getAllByRole("link").forEach((link) => {
+          expect(link).toHaveClass("btn", "btn-outline-primary");
+        });
+      }
+    );
   });
 
   describe("active button state", () => {
     it("marks only Brackets as active when Brackets is selected", () => {
       renderHeader("Brackets");
 
-      expect(screen.getByRole("link", { name: "Brackets" })).toHaveClass("active");
-      expect(screen.getByRole("link", { name: "Payouts" })).not.toHaveClass("active");
+      expect(getBracketsLink()).toHaveClass("active");
+      expect(getPayoutsLink()).not.toHaveClass("active");
+    });
+
+    it("marks only Payouts as active when Payouts is selected", () => {
+      renderHeader("Payouts");
+
+      expect(getPayoutsLink()).toHaveClass("active");
+      expect(getBracketsLink()).not.toHaveClass("active");
     });
 
     it("marks no link as active when None is selected", () => {
@@ -139,7 +166,7 @@ describe("BracketHeader", () => {
 
     it("updates the active link when the selected button changes", () => {
       const { rerender } = renderHeader("Brackets");
-      expect(screen.getByRole("link", { name: "Brackets" })).toHaveClass("active");
+      expect(getBracketsLink()).toHaveClass("active");
 
       rerender(
         <BracketHeader
@@ -148,14 +175,225 @@ describe("BracketHeader", () => {
         />
       );
 
-      expect(screen.getByRole("link", { name: "Brackets" })).not.toHaveClass("active");
-      expect(screen.getByRole("link", { name: "Payouts" })).toHaveClass("active");
+      expect(getBracketsLink()).not.toHaveClass("active");
+      expect(getPayoutsLink()).toHaveClass("active");
     });
   });
 
-  describe("fixture sanity check", () => {
-    it("mock tournament has an id that matches the exported tmntId", () => {
-      expect(mockTmntFullData.tmnt.id).toBe(tmntId);
+  describe("aria-current", () => {
+    it("sets aria-current=page only on Brackets when Brackets is selected", () => {
+      renderHeader("Brackets");
+
+      expect(getBracketsLink()).toHaveAttribute("aria-current", "page");
+      expect(getPayoutsLink()).not.toHaveAttribute("aria-current");
+    });
+
+    it("sets aria-current=page only on Payouts when Payouts is selected", () => {
+      renderHeader("Payouts");
+
+      expect(getPayoutsLink()).toHaveAttribute("aria-current", "page");
+      expect(getBracketsLink()).not.toHaveAttribute("aria-current");
+    });
+
+    it("sets aria-current on no link when None is selected", () => {
+      renderHeader("None");
+
+      screen.getAllByRole("link").forEach((link) => {
+        expect(link).not.toHaveAttribute("aria-current");
+      });
+    });
+
+    it.each<brktPageBtnType>(["Brackets", "Payouts", "None"])(
+      "puts aria-current on the same link that has the active class when %s is selected",
+      (selected) => {
+        renderHeader(selected);
+
+        const active = screen
+          .getAllByRole("link")
+          .filter((link) => link.classList.contains("active"));
+        const current = screen.queryAllByRole("link", { current: "page" });
+        expect(current).toEqual(active);
+      }
+    );
+
+    it("moves aria-current when the selected button changes", () => {
+      const { rerender } = renderHeader("Brackets");
+      expect(getBracketsLink()).toHaveAttribute("aria-current", "page");
+
+      rerender(
+        <BracketHeader
+          tmntFullData={mockTmntFullData}
+          selectedBrktPageBtn="Payouts"
+        />
+      );
+
+      expect(getBracketsLink()).not.toHaveAttribute("aria-current");
+      expect(getPayoutsLink()).toHaveAttribute("aria-current", "page");
     });
   });
 });
+
+
+
+// import React from "react";
+// import { render, screen, within } from "@testing-library/react";
+// import BracketHeader, {
+//   type brktPageBtnType
+// } from "@/app/results/tmnt/[tmntId]/brackets/bracketHeader";
+// import type { tmntFullType } from "@/lib/types/types";
+// import {
+//   mockTmntFullData,
+//   tmntId,
+// } from "../../../../mocks/tmnts/tmntFullData/mockTmntFullData";
+
+// const renderHeader = (
+//   selectedBrktPageBtn: brktPageBtnType = "Brackets",
+//   data: tmntFullType = mockTmntFullData
+// ) =>
+//   render(
+//     <BracketHeader
+//       tmntFullData={data}
+//       selectedBrktPageBtn={selectedBrktPageBtn}
+//     />
+//   );
+
+// describe("BracketHeader", () => {
+//   describe("structure", () => {
+//     it("renders the header container", () => {
+//       renderHeader();
+//       expect(screen.getByTestId("bracket-header")).toBeInTheDocument();
+//     });
+
+//     it("renders a labelled navigation landmark inside the header", () => {
+//       renderHeader();
+
+//       const header = screen.getByTestId("bracket-header");
+//       expect(
+//         within(header).getByRole("navigation", { name: "Bracket navigation" })
+//       ).toBeInTheDocument();
+//     });
+
+//     it("renders the labelled button group", () => {
+//       renderHeader();
+
+//       expect(
+//         screen.getByRole("group", { name: "Select bracket" })
+//       ).toBeInTheDocument();
+//     });
+
+//     it("renders exactly two links, in the order Brackets then Payouts", () => {
+//       renderHeader();
+
+//       const labels = screen
+//         .getAllByRole("link")
+//         .map((link) => link.textContent);
+//       expect(labels).toEqual(["Brackets", "Payouts"]);
+//     });
+
+//     it("renders the links inside the button group", () => {
+//       renderHeader();
+
+//       const group = screen.getByRole("group", { name: "Select bracket" });
+//       expect(within(group).getAllByRole("link")).toHaveLength(2);
+//     });
+//   });
+
+//   describe("links", () => {
+//     it("links Brackets to the tournament's brackets page", () => {
+//       renderHeader();
+
+//       expect(screen.getByRole("link", { name: "Brackets" })).toHaveAttribute(
+//         "href",
+//         `/results/tmnt/${tmntId}/brackets`
+//       );
+//     });
+
+//     it("links Payouts to the tournament's payouts page", () => {
+//       renderHeader();
+
+//       expect(screen.getByRole("link", { name: "Payouts" })).toHaveAttribute(
+//         "href",
+//         `/results/tmnt/${tmntId}/brackets/payouts`
+//       );
+//     });
+
+//     it("uses the id of the tournament that is passed in", () => {
+//       const otherId = "tmt_differentid00000000000000000000";
+//       renderHeader("Brackets", {
+//         ...mockTmntFullData,
+//         tmnt: { ...mockTmntFullData.tmnt, id: otherId },
+//       });
+
+//       expect(screen.getByRole("link", { name: "Brackets" })).toHaveAttribute(
+//         "href",
+//         `/results/tmnt/${otherId}/brackets`
+//       );
+//       expect(screen.getByRole("link", { name: "Payouts" })).toHaveAttribute(
+//         "href",
+//         `/results/tmnt/${otherId}/brackets/payouts`
+//       );
+//     });
+
+//     it("keeps the btn and btn-outline-primary classes on every link", () => {
+//       renderHeader();
+
+//       screen.getAllByRole("link").forEach((link) => {
+//         expect(link).toHaveClass("btn", "btn-outline-primary");
+//       });
+//     });
+//   });
+
+//   describe("active button state", () => {
+//     it("marks only Brackets as active when Brackets is selected", () => {
+//       renderHeader("Brackets");
+
+//       expect(screen.getByRole("link", { name: "Brackets" })).toHaveClass("active");
+//       expect(screen.getByRole("link", { name: "Payouts" })).not.toHaveClass("active");
+//     });
+
+//     it("marks no link as active when None is selected", () => {
+//       renderHeader("None");
+
+//       screen.getAllByRole("link").forEach((link) => {
+//         expect(link).not.toHaveClass("active");
+//       });
+//     });
+
+//     it.each([
+//       ["an empty string", ""],
+//       ["an unknown name", "Elims"],
+//       ["a different case", "brackets"],
+//     ])(
+//       "marks no link as active when the selected button is %s (not possible through the type)",
+//       (_label, selected) => {
+//         renderHeader(selected as brktPageBtnType);
+
+//         screen.getAllByRole("link").forEach((link) => {
+//           expect(link).not.toHaveClass("active");
+//         });
+//       }
+//     );
+
+//     it("updates the active link when the selected button changes", () => {
+//       const { rerender } = renderHeader("Brackets");
+//       expect(screen.getByRole("link", { name: "Brackets" })).toHaveClass("active");
+
+//       rerender(
+//         <BracketHeader
+//           tmntFullData={mockTmntFullData}
+//           selectedBrktPageBtn="Payouts"
+//         />
+//       );
+
+//       expect(screen.getByRole("link", { name: "Brackets" })).not.toHaveClass("active");
+//       expect(screen.getByRole("link", { name: "Payouts" })).toHaveClass("active");
+//     });
+//   });
+
+//   describe("fixture sanity check", () => {
+//     it("mock tournament has an id that matches the exported tmntId", () => {
+//       expect(mockTmntFullData.tmnt.id).toBe(tmntId);
+//     });
+//   });
+// });
+

@@ -7,7 +7,7 @@ import type {
   potType,
   potCategoriesTypes,
 } from "@/lib/types/types";
-import ModalConfirm, { delConfTitle } from "@/components/modal/confirmModal";
+import ConfirmModal, { delConfTitle } from "@/components/modal/confirmModal";
 import { Tab, Tabs } from "react-bootstrap";
 import { initModalObj } from "@/components/modal/modalObjType";
 import EaCurrencyInput, {
@@ -356,7 +356,7 @@ const ZeroToNPots: React.FC<ChildProps> = ({
 
   return (
     <>
-      <ModalConfirm
+      <ConfirmModal
         show={modalObj.show}
         title={modalObj.title}
         message={modalObj.message}

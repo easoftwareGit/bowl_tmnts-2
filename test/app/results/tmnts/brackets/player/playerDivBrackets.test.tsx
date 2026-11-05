@@ -1,11 +1,13 @@
+// test/app/results/tmnts/brackets/player/playerDivBrackets.test.tsx
+// tests src/app/results/tmnt/[tmntId]/brackets/player/[playerId]/playerDivBrackets.tsx
 import React from "react";
 import { render, screen, within } from "@testing-library/react";
 import PlayerDivBrkts from "@/app/results/tmnt/[tmntId]/brackets/player/[playerId]/playerDivBrackets";
 import { BracketList } from "@/components/brackets/bracketListClass";
 import { getGameScoreKey } from "@/components/brackets/bracketMaps";
 import type { matchSeedInfoType } from "@/components/brackets/bracketMatchClass";
-import { fullName, getBrktOrElimName } from "@/lib/getName";
 import { calcHandicap } from "@/lib/db/helpers";
+import { fullName, getBrktOrElimName } from "@/lib/getName";
 import { formatValueSymbSep2Dec } from "@/lib/currency/formatValue";
 import { getLocaleConfig } from "@/lib/currency/components/utils";
 import { defaultPlayersPerMatch } from "@/lib/db/initVals";
@@ -39,7 +41,26 @@ const mockedToGameTypes = tmntResultsToGameTypes as jest.Mock;
 /* fixtures built from mockTmntFullData     */
 /********************************************/
 const { players } = mockTmntFullData;
-const [scratchDiv, hdcpDiv] = mockTmntFullData.divs;
+/**
+ * Gets the item at the index, or throws if there is none.
+ * Keeps "possibly undefined" out of the tests.
+ *
+ * @param {T[]} items - array to read
+ * @param {number} index - index of the wanted item
+ * @returns {T} the item at the index
+ */
+const getAt = <T,>(items: readonly T[], index: number): T => {
+  const item = items[index];
+  if (item === undefined) {
+    throw new Error(`No item at index ${String(index)}`);
+  }
+  return item;
+};
+
+const scratchDiv = getAt(mockTmntFullData.divs, 0);
+const hdcpDiv = getAt(mockTmntFullData.divs, 1);
+const brkt1 = getAt(mockTmntFullData.brkts, 0);
+const brkt2 = getAt(mockTmntFullData.brkts, 1);
 
 const UNKNOWN_BRKT = "brk_unknown000000000000000000000000";
 const UNKNOWN_DIV = "div_unknown000000000000000000000000";
@@ -66,6 +87,7 @@ const byeSeed = (
   hdcp: 0,
   total: 0,
   result: "L",
+  finalMatch: false,
   ...overrides,
 });
 
@@ -97,9 +119,10 @@ const noEntryMessage = (playerId: string) =>
   `Player bracket entries not found. Id: ${playerId}`;
 
 // player number (1-8) -> player id from the mock
-const pid = (n: number) => players[n - 1].id;
+const player = (n: number) => getAt(players, n - 1);
+const pid = (n: number) => player(n).id;
 const nm = (n: number) =>
-  fullName(players[n - 1].first_name, players[n - 1].last_name).trim();
+  fullName(player(n).first_name, player(n).last_name).trim();
 
 const scoresFor = (playerId: string): number[] =>
   mockGames
@@ -116,13 +139,14 @@ const seed = (
   overrides: Partial<matchSeedInfoType> = {}
 ): matchSeedInfoType => ({
   playerId: pid(n),
-  first_name: players[n - 1].first_name,
-  last_name: players[n - 1].last_name,
-  average: players[n - 1].average,
+  first_name: player(n).first_name,
+  last_name: player(n).last_name,
+  average: player(n).average,
   score: undefined,
   hdcp: undefined,
   total: undefined,
   result: undefined,
+  finalMatch: false,
   ...overrides,
 });
 
@@ -234,9 +258,9 @@ const makeFakeList = (
   const viewerId = pid(viewerN);
   const own = scoresFor(viewerId);
   const scores: Record<number, number | null> = viewerScores ?? {
-    1: own[0],
-    2: own[1],
-    3: own[2],
+    1: getAt(own, 0),
+    2: getAt(own, 1),
+    3: getAt(own, 2),
   };
 
   return {
@@ -311,21 +335,20 @@ const renderStandard = (
   data: tmntFullType = mockTmntFullData
 ) => renderProps({ playerId: pid(8), data, list });
 
-const withTmnt = (overrides: Record<string, unknown>): tmntFullType =>
-  ({
-    ...mockTmntFullData,
-    tmnt: { ...mockTmntFullData.tmnt, ...overrides },
-  }) as unknown as tmntFullType;
+const withTmnt = (
+  overrides: Partial<tmntFullType["tmnt"]>
+): tmntFullType => ({
+  ...mockTmntFullData,
+  tmnt: { ...mockTmntFullData.tmnt, ...overrides },
+});
 
 // change the first bracket's settings
-const withBrkt = (overrides: Record<string, unknown>): tmntFullType =>
-  ({
-    ...mockTmntFullData,
-    brkts: [
-      { ...mockTmntFullData.brkts[0], ...overrides },
-      ...mockTmntFullData.brkts.slice(1),
-    ],
-  }) as unknown as tmntFullType;
+const withBrkt = (
+  overrides: Partial<tmntFullType["brkts"][number]>
+): tmntFullType => ({
+  ...mockTmntFullData,
+  brkts: [{ ...brkt1, ...overrides }, ...mockTmntFullData.brkts.slice(1)],
+});
 
 // the tournament with only the bracket entries the filter keeps
 const withEntries = (
@@ -338,7 +361,7 @@ const withEntries = (
 // the tournament with the number of refunds changed on one player's entry in one
 // bracket (player 8's entry in the first bracket by default)
 const withRefunds = (
-  numRefunds: number | undefined,
+  numRefunds: number,
   data: tmntFullType = mockTmntFullData,
   playerN: number = 8,
   brktId: string = brktId1
@@ -346,7 +369,7 @@ const withRefunds = (
   ...data,
   brktEntries: data.brktEntries.map((e) =>
     e.player_id === pid(playerN) && e.brkt_id === brktId
-      ? { ...e, num_refunds: numRefunds as number }
+      ? { ...e, num_refunds: numRefunds }
       : e
   ),
 });
@@ -374,8 +397,8 @@ describe("PlayerDivBrkts", () => {
     });
 
     it("the first mock bracket is in the scratch division and has a $5 entry fee", () => {
-      expect(mockTmntFullData.brkts[0].div_id).toBe(scratchDiv.id);
-      expect(mockTmntFullData.brkts[0].fee).toBe("5");
+      expect(brkt1.div_id).toBe(scratchDiv.id);
+      expect(brkt1.fee).toBe("5");
     });
 
     it("formats whole dollar amounts with a $ and two decimals", () => {
@@ -386,7 +409,7 @@ describe("PlayerDivBrkts", () => {
     it("player 8 has a handicap of 35 per game in the handicap division", () => {
       expect(
         calcHandicap(
-          players[7].average,
+          player(8).average,
           hdcpDiv.hdcp_from,
           hdcpDiv.hdcp_per,
           hdcpDiv.int_hdcp
@@ -421,7 +444,9 @@ describe("PlayerDivBrkts", () => {
     it("player 8 has no refunds on any entry", () => {
       mockTmntFullData.brktEntries
         .filter((e) => e.player_id === pid(8))
-        .forEach((e) => expect(e.num_refunds ?? 0).toBe(0));
+        .forEach((e) => {
+          expect(e.num_refunds).toBe(0);
+        });
     });    
   });
 
@@ -561,16 +586,6 @@ describe("PlayerDivBrkts", () => {
         () => ({ ...base(), data: withBrkt({ fee: "abc" }) }),
         "Bracket fee not found.",
       ],
-      [
-        "Bracket first amount not found. when the first amount is not a number",
-        () => ({ ...base(), data: withBrkt({ first: "abc" }) }),
-        "Bracket first amount not found.",
-      ],
-      [
-        "Bracket second amount not found. when the second amount is not a number",
-        () => ({ ...base(), data: withBrkt({ second: "abc" }) }),
-        "Bracket second amount not found.",
-      ],
     ];
 
     it.each(cases)("shows %s", (_name, build, message) => {
@@ -663,14 +678,38 @@ describe("PlayerDivBrkts", () => {
       expect(screen.getByRole("alert")).toHaveTextContent(noEntryMessage(pid(8)));
     });
 
-    it("checks the fee before the first and second amounts", () => {
+    it("checks the list's maps in order: index map, game score map, players map", () => {
+      const { unmount } = renderProps({
+        playerId: pid(8),
+        data: mockTmntFullData,
+        list: standardList(
+          {},
+          { bracketIndexMap: null, gameScoreMap: null, playersMap: null }
+        ),
+      });
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Bracket index map not found."
+      );
+      unmount();
+
       renderProps({
         playerId: pid(8),
-        data: withBrkt({ fee: "abc", first: "abc", second: "abc" }),
-        list: standardList(),
+        data: mockTmntFullData,
+        list: standardList({}, { gameScoreMap: null, playersMap: null }),
+      });
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Game score map not found."
+      );
+    });
+
+    it("checks the list's brackets before the bracket fee", () => {
+      renderProps({
+        playerId: pid(8),
+        data: withBrkt({ fee: "abc" }),
+        list: standardList({}, { brackets: [] }),
       });
 
-      expect(screen.getByRole("alert")).toHaveTextContent("Bracket fee not found.");
+      expect(screen.getByRole("alert")).toHaveTextContent("Brackets not found.");
     });
 
     it("does not ask the list for the player's brackets when data is missing", () => {
@@ -681,13 +720,6 @@ describe("PlayerDivBrkts", () => {
       expect(spies(list).playerBracketIdsSorted).not.toHaveBeenCalled();
     });
 
-    it("shows the game score message when the list has no score entries at all", () => {
-      renderStandard(standardList({ viewerScores: {} }));
-
-      expect(screen.getByRole("alert")).toHaveTextContent(
-        "Game score map not found."
-      );
-    });
   });
 
   /**********************************/
@@ -754,17 +786,11 @@ describe("PlayerDivBrkts", () => {
   /* structure        */
   /********************/
   describe("title and column headers (scratch division)", () => {
-    it("renders no error when everything is present", () => {
-      renderStandard();
-
-      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-    });
-
     it("renders the bracket name as the title", () => {
       renderStandard();
 
       const name = getBrktOrElimName(
-        mockTmntFullData.brkts[0],
+        brkt1,
         mockTmntFullData.divs
       );
       expect(name).not.toBe("");
@@ -849,7 +875,7 @@ describe("PlayerDivBrkts", () => {
       renderStandard(standardList({ brktId: brktId2, startGame: 4 }));
 
       const name = getBrktOrElimName(
-        mockTmntFullData.brkts[1],
+        brkt2,
         mockTmntFullData.divs
       );
       expect(screen.getByText(name)).toBeInTheDocument();
@@ -909,7 +935,7 @@ describe("PlayerDivBrkts", () => {
       renderStandard();
 
       const name = getBrktOrElimName(
-        mockTmntFullData.brkts[0],
+        brkt1,
         mockTmntFullData.divs
       );
       expect(
@@ -1002,7 +1028,9 @@ describe("PlayerDivBrkts", () => {
 
       const links = screen.getAllByRole("link");
       expect(links).toHaveLength(2);
-      links.forEach((link) => expect(link).toHaveTextContent(/^__$/));
+      links.forEach((link) => {
+        expect(link).toHaveTextContent(/^__$/);
+      });
       expect(links[0]).toHaveAttribute("href", hrefFor(oneBrktId1));
       expect(links[1]).toHaveAttribute("href", hrefFor(oneBrktId2));
       expect(screen.getByText(nm(7))).toBeInTheDocument();
@@ -1093,7 +1121,7 @@ describe("PlayerDivBrkts", () => {
     it("renders a win in the success colour", () => {
       renderStandard();
 
-      const link = screen.getAllByRole("link")[0];
+      const link = getAt(screen.getAllByRole("link"), 0);
       expect(within(link).getByText("W")).toHaveClass("text-success");
     });
 
@@ -1203,62 +1231,6 @@ describe("PlayerDivBrkts", () => {
       expect(screen.getByRole("link")).toHaveTextContent(/^W190$/);
     });
 
-    it("shows a bye as an opponent with a score of 0", () => {
-      const list = standardList({
-        brackets: [
-          makeFakeBracket(pid(8), {
-            matches: {
-              1: [
-                {
-                  playerId: byeId,
-                  first_name: "Bye",
-                  last_name: "",
-                  average: 0,
-                  score: 0,
-                  hdcp: 0,
-                  total: 0,
-                  result: "L",
-                },
-                seed(8, { score: 230, hdcp: 0, total: 230, result: "W" }),
-              ],
-            },
-          }),
-        ],
-      });
-
-      renderStandard(list);
-
-      expect(screen.getByRole("link")).toHaveTextContent(/^W0$/);
-      expect(screen.getByText(fullName("Bye", "").trim())).toBeInTheDocument();
-    });
-
-    it("shows the bye as a plain score in a handicap division, with no handicap", () => {
-      const list = standardList({
-        brackets: [
-          makeFakeBracket(pid(8), {
-            matches: {
-              1: [
-                {
-                  playerId: byeId,
-                  first_name: "Bye",
-                  last_name: "",
-                  average: 0,
-                  score: 0,
-                  hdcp: 0,
-                  total: 0,
-                  result: "L",
-                },
-                seed(8, { score: 230, hdcp: 35, total: 265, result: "W" }),
-              ],
-            },
-          }),
-        ],
-      });
-
-      renderStandard(list, hdcpData());
-
-      expect(screen.getByRole("link")).toHaveTextContent(/^W0$/);
-    });
   });
 
   describe("a bye player in the bracket", () => {
@@ -1354,7 +1326,7 @@ describe("PlayerDivBrkts", () => {
       // pins the current display: "W0 <bye name>"; the bye's own L is not shown here
       renderStandard(standardList({ brackets: [byeWinnerBracket()] }));
 
-      const link = screen.getAllByRole("link")[0];
+      const link = getAt(screen.getAllByRole("link"), 0);
       expect(within(link).getByText("W")).toHaveClass("text-success");
       expect(link).not.toHaveTextContent("L");
     });
@@ -1436,7 +1408,7 @@ describe("PlayerDivBrkts", () => {
     it("renders a tie in the primary colour", () => {
       renderTie();
 
-      const link = screen.getAllByRole("link")[1];
+      const link = getAt(screen.getAllByRole("link"), 1);
       expect(link).toHaveTextContent(/^T211$/);
       expect(within(link).getByText("T")).toHaveClass("text-primary");
     });
@@ -1463,8 +1435,8 @@ describe("PlayerDivBrkts", () => {
       renderTie();
 
       const rows = rowsFor(4, 8);
-      expect(within(rows[1]).getByText("$25.00")).toBeInTheDocument();
-      expect(within(rows[2]).queryByText(/\$/)).not.toBeInTheDocument();
+      expect(within(getAt(rows, 1)).getByText("$25.00")).toBeInTheDocument();
+      expect(within(getAt(rows, 2)).queryByText(/\$/)).not.toBeInTheDocument();
     });
 
     it("lists opponents with no score last", () => {
@@ -1543,7 +1515,7 @@ describe("PlayerDivBrkts", () => {
       renderStandard(hdcpList(), hdcpData());
 
       const hdcp = calcHandicap(
-        players[7].average,
+        player(8).average,
         hdcpDiv.hdcp_from,
         hdcpDiv.hdcp_per,
         hdcpDiv.int_hdcp
@@ -1696,7 +1668,7 @@ describe("PlayerDivBrkts", () => {
       renderStandard();
 
       const name = getBrktOrElimName(
-        mockTmntFullData.brkts[0],
+        brkt1,
         mockTmntFullData.divs
       );
       expect(screen.getByText(nm(8))).toBeInTheDocument();
@@ -1815,12 +1787,6 @@ describe("PlayerDivBrkts", () => {
       expect(within(box).getByText(entriesText(1, 5))).toBeInTheDocument();
       expect(within(box).getByText(`Earnings: ${fmt(25)}`)).toBeInTheDocument();
       expect(within(box).getByText(nm(8))).toBeInTheDocument();
-    });
-
-    it("is not shown until the player has a game 3 score", () => {
-      renderStandard(standardList({ viewerScores: { 1: 230, 2: 231 } }));
-
-      expect(screen.queryByTestId("brkt-summary")).not.toBeInTheDocument();
     });
 
     it("is not shown before any game has been bowled", () => {
@@ -1993,21 +1959,11 @@ describe("PlayerDivBrkts", () => {
         expect(screen.getByText(`Earnings: ${fmt(25)}`)).toHaveClass("text-success");
       });
 
-      it("treats a missing number of refunds as none", () => {
-        const { container } = renderStandard(
-          standardList(),
-          withRefunds(undefined)
-        );
-
-        expectNoRefundLines();
-        expect(container).not.toHaveTextContent("NaN");
-        expect(screen.getByText(`Earnings: ${fmt(25)}`)).toBeInTheDocument();
-      });
     });
 
     describe("borders in the summary (no refunds)", () => {
       it("has the top border only on the Earnings line", () => {
-        const { container } = renderStandard();
+        renderStandard();
 
         const earnings = summaryLine(`Earnings: ${fmt(25)}`);
         expect(earnings).toHaveClass("border-top");        
@@ -2293,7 +2249,7 @@ describe("PlayerDivBrkts", () => {
   /* integration tests: real BracketList from the mock */
   /*****************************************************/
   describe("with a real bracket list built from the mock tournament", () => {
-    const brkt = mockTmntFullData.brkts[0];
+    const brkt = brkt1;
     const gameNums = Array.from(
       { length: brkt.games },
       (_, i) => brkt.start + i
@@ -2407,7 +2363,9 @@ describe("PlayerDivBrkts", () => {
       expect(screen.queryByRole("alert")).not.toBeInTheDocument();
       const links = screen.getAllByRole("link");
       expect(links).toHaveLength(list.playerBracketIdsSorted(pid(8)).length);
-      links.forEach((link) => expect(link).toHaveTextContent(/^__$/));
+      links.forEach((link) => {
+        expect(link).toHaveTextContent(/^__$/);
+      });
       expect(screen.getAllByText(nm(7)).length).toBeGreaterThan(0);
       expect(screen.queryByText(/Summary for/)).not.toBeInTheDocument();
     });

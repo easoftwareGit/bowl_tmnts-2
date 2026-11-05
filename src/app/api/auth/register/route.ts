@@ -13,8 +13,25 @@ import { sanitizeUser, validateUser } from "@/lib/validation/users/validate";
 import { btDbUuid } from "@/lib/uuid";
 import { doHash } from "@/lib/server/hashServer";
 import { standardCatchReturn } from "../../apiCatch";
+import { isBetaRegistrationOpen } from "@/lib/auth/registration";
+
+// Prisma reports a unique constraint violation with code "P2002"
+function isUniqueConstraintError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "P2002"
+  );
+}
 
 export async function POST(req: Request) {
+  if (!isBetaRegistrationOpen()) {
+    return NextResponse.json(
+      { error: "Registration is closed." },
+      { status: 403 }
+    );
+  }
   let body: unknown;
   try {
     body = await req.json();
@@ -37,7 +54,7 @@ export async function POST(req: Request) {
       email: typeof email === "string" ? normalizeEmail(email) : "",
       phone: phone ?? "",
       password: password ?? "",
-      role: "DIRECTOR", // currently all new users are directors
+      role: "DIRECTOR", // beta only: registration is closed otherwise (checked above)
     };
 
     const checkPhone = !!postUser.phone;
@@ -123,6 +140,15 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ user }, { status: 201 });
   } catch (error) {
+    // Another signup with the same email can land between findUnique and
+    // create. Answer exactly like the findUnique check above, so the form
+    // shows the same "Email already in use" message either way.
+    if (isUniqueConstraintError(error)) {
+      return NextResponse.json(
+        { error: "Email already in use" },
+        { status: 409 }
+      );
+    }
     return standardCatchReturn(error, "Error registering user");
   }
 }

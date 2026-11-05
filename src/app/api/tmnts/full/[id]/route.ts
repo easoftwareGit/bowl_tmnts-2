@@ -7,7 +7,7 @@ import { tmntFullDataForPrisma } from "../../tmntDataForPrisma";
 import { standardCatchReturn } from "@/app/api/apiCatch";
 import { sanitizeFullTmnt, validateFullTmnt } from "@/lib/validation/tmnts/full/validate";
 import { Prisma } from "@prisma/client";
-import { requireDirector } from "@/lib/auth/requireDirector";
+import { requireDirector } from "@/lib/auth/guards";
 
 // routes /api/tmnts/full/:id
 

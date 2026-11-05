@@ -1,52 +1,33 @@
-"use client";
-import React, { ChangeEvent, useState } from "react";
+import React from "react";
 import "./contactForm.css";
 
-const name = "Eric Adolpshon"
-const email = 'easoftware@gmail.com'
-const phone = '(925) 689-5397'
+const name = "Eric Adolphson";
+const email = "easoftware@gmail.com";
+const phone = "(925) 689-5397";
+// tel: links should be digits only, with country code: tel:+19256895397
+const phoneHref = `tel:+1${phone.replace(/\D/g, "")}`;
 
 export const ContactForm = () => {
   return (
-    <>
-      <div className="contact_container">
-        <div className="row g-3">
-          <div className="col-md-3">
-            <label className="form-label">
-              Name:
-            </label>
-          </div>
-          <div className="col-md-9">
-            <label className="form-label">
-              {name}
-            </label>
-          </div>
-        </div>
-        <div className="row g-3">
-          <div className="col-md-3">
-            <label className="form-label">
-              email:
-            </label>
-          </div>
-          <div className="col-md-9">
-            <a href={`mailto:${email}`} className="email-link">
-              {email}
-            </a>
-          </div>
-        </div>
-        <div className="row g-3">
-          <div className="col-md-3">
-            <label className="form-label">
-              Phone:
-            </label>
-          </div>
-          <div className="col-md-9">
-            <label className="form-label">
-              {phone}
-            </label>
-          </div>
-        </div>
-      </div>
-    </>
-  )
+    <div className="contact_container">
+      <dl className="row g-3">
+        <dt className="col-md-3">Name:</dt>
+        <dd className="col-md-9">{name}</dd>
+
+        <dt className="col-md-3">Email:</dt>
+        <dd className="col-md-9">
+          <a href={`mailto:${email}`} className="email-link">
+            {email}
+          </a>
+        </dd>
+
+        <dt className="col-md-3">Phone:</dt>
+        <dd className="col-md-9">
+          <a href={phoneHref} className="phone-link">
+            {phone}
+          </a>
+        </dd>
+      </dl>
+    </div>
+  );
 };

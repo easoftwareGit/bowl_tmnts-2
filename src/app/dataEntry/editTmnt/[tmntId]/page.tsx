@@ -127,9 +127,9 @@ export default function EditTmntPage() {
     <>
       <WaitModal show={showLoading} message="Loading..." />
       {showError && (
-        <>
-          Error: {tmntError} tmntLoadStatus: {tmntLoadStatus}
-        </>
+        <div className="alert alert-danger" role="alert">
+          Error: {tmntError} Load Status: {tmntLoadStatus}
+        </div>
       )}      
       {tmntLoadStatus === "succeeded" && stage !== null && (
         <div className="d-flex flex-column justify-content-center align-items-center">

@@ -4,7 +4,6 @@ import { tmntFullType } from "@/lib/types/types";
 import { fullName } from "@/lib/getName";
 import { BracketList } from "@/components/brackets/bracketListClass";
 import { getGameScoreKey } from "@/components/brackets/bracketMaps";
-import { calcHandicap } from "@/lib/db/helpers";
 import { matchResultType } from "@/components/brackets/bracketMatchClass";
 import { getBrktOrElimName } from "@/lib/getName";
 import { isNumber, isValidBtDbId } from "@/lib/validation/validation";
@@ -13,6 +12,7 @@ import { IntlConfig } from "@/lib/currency/components/CurrencyInputProps";
 import { getLocaleConfig } from "@/lib/currency/components/utils";
 import { getResultClassName } from "../../resultClassName";
 import { missingDataError } from "./playerBrktData";
+import { calcHandicap } from "@/lib/db/helpers";
 
 type PlayerDivBrktProps = {
   playerId: string;
@@ -89,10 +89,10 @@ const PlayerDivBrkts = ({
   if (brktList.brackets.length === 0)
     return missingDataError("Brackets not found.");
   if (!isNumber(brkt.fee)) return missingDataError("Bracket fee not found.");
-  if (!isNumber(brkt.first))
-    return missingDataError("Bracket first amount not found.");
-  if (!isNumber(brkt.second))
-    return missingDataError("Bracket second amount not found.");
+  // if (!isNumber(brkt.first))
+  //   return missingDataError("Bracket first amount not found.");
+  // if (!isNumber(brkt.second))
+  //   return missingDataError("Bracket second amount not found.");
 
   const playerName = fullName(playerRow.first_name, playerRow.last_name);
   const tmntId = tmntFullData.tmnt.id;

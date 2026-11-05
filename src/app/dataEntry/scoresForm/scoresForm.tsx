@@ -28,7 +28,7 @@ import {
   scoreEntryPlusMinusColName,
   scoreEntryTotalColName
 } from "./sfCreateScoreColumns";
-import ModalConfirm, { cancelConfTitle } from "@/components/modal/confirmModal";
+import ConfirmModal, { cancelConfTitle } from "@/components/modal/confirmModal";
 import { initModalObj, modalObjectType } from "@/components/modal/modalObjType";
 import WaitModal from "@/components/modal/waitModal";
 import "./scoresForm.css";
@@ -585,7 +585,7 @@ const ScoresEntryForm: React.FC<ChildProps> = ({
 
       <WaitModal show={saveStatus === "saving"} message="Saving..." />
 
-      <ModalConfirm
+      <ConfirmModal
         show={confModalObj.show}
         title={confModalObj.title}
         message={confModalObj.message}

@@ -1,18 +1,27 @@
-"use client"
+"use client";
 
+import { useEffect } from "react";
 import { Button } from "react-bootstrap";
 
 interface ErrorPageProps {
-  error: Error;
+  error: Error & { digest?: string };
   reset: () => void;
 }
 
-export default function Error({error, reset}: ErrorPageProps ) {
+export default function ErrorPage({ error, reset }: ErrorPageProps) {
+  useEffect(() => {
+    console.error(error);
+  }, [error]);
+
   return (
-    <div>
-      <h1>Error 😧</h1>
+    <div role="alert">
+      <h1>
+        Error <span aria-hidden="true">😧</span>
+      </h1>
       <p>Something went wrong!</p>
-      <Button className="btn btn-warning" onClick={reset}>Try Again</Button>
+      <Button variant="warning" onClick={reset}>
+        Try Again
+      </Button>
     </div>
-  )
+  );
 }

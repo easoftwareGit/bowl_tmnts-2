@@ -13,8 +13,7 @@ import type { Prisma, User } from "@prisma/client";
 import { GET, PATCH, DELETE } from "@/app/api/users/user/[id]/route";
 import { prismaMock } from "../../../prismaMock";
 import { doHash } from "@/lib/server/hashServer";
-import { requireDirector } from "@/lib/auth/requireDirector";
-import { requireSelfOrDirector } from "@/lib/auth/requireSelfOrDirector";
+import { requireDirector, requireSelfOrDirector } from "@/lib/auth/guards";
 import { publicUserWithHashSelect } from "@/lib/server/publicUser";
 import {
   maxEmailLength,
@@ -24,16 +23,13 @@ import {
 } from "@/lib/validation/constants";
 
 // Replace the auth checks with mock functions each test can control
-jest.mock("@/lib/auth/requireDirector", () => ({
+jest.mock("@/lib/auth/guards", () => ({
   requireDirector: jest.fn(),
+  requireSelfOrDirector: jest.fn(),
 }));
 const mockRequireDirector = requireDirector as jest.MockedFunction<
   typeof requireDirector
 >;
-
-jest.mock("@/lib/auth/requireSelfOrDirector", () => ({
-  requireSelfOrDirector: jest.fn(),
-}));
 const mockRequireSelfOrDirector = requireSelfOrDirector as jest.MockedFunction<
   typeof requireSelfOrDirector
 >;

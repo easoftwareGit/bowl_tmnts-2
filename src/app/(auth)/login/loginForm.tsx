@@ -23,6 +23,17 @@ const demoUser = {
   password: "Test123!",
 };
 
+// errors other code sends here with ?error=... (e.g. the Google sign-in in
+// auth.ts). Only these known codes are shown; text from the URL never is,
+// so nobody can craft a login link that displays their own message.
+const urlErrorMessages: Record<string, string> = {
+  no_account:
+    "No account exists for this email. Contact the tournament administrator.",
+};
+
+const getUrlErrorMessage = (code: string | null): string =>
+  code && Object.hasOwn(urlErrorMessages, code) ? urlErrorMessages[code] : "";
+
 // emails are saved in lower case, so log in with the same form
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
@@ -71,6 +82,9 @@ export const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState("");
   const [googleError, setGoogleError] = useState("");
+  const [urlError, setUrlError] = useState(() =>
+    getUrlErrorMessage(searchParams.get("error")),
+  );  
 
   // submitting: disables the button. submittingRef: blocks a 2nd submit
   // right away, before React has re-rendered with the disabled button
@@ -115,6 +129,7 @@ export const LoginForm = () => {
       [name]: "",
     }));
     setLoginError("");
+    setUrlError("");
   };
 
   const onSubmit = async (e: FormEvent) => {
@@ -123,6 +138,7 @@ export const LoginForm = () => {
     if (submittingRef.current) return;
 
     setLoginError("");
+    setUrlError("");
     if (!validateForm()) return;
 
     submittingRef.current = true;
@@ -155,6 +171,7 @@ export const LoginForm = () => {
 
   const googleButtonClicked = async () => {
     setGoogleError("");
+    setUrlError("");
     try {
       // NextAuth redirects to Google, then back to callbackUrl
       await signIn("google", { callbackUrl });
@@ -177,6 +194,7 @@ export const LoginForm = () => {
   return (
     <form onSubmit={onSubmit} noValidate>
       <div className="form_container">
+        {urlError && <Alert>{urlError}</Alert>}
         <div className="row g-3 mb-3">
           <div className="col">
             <label htmlFor="inputEmail" className="form-label">

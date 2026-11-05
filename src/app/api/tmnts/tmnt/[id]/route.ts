@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma"; 
 import { isValidBtDbId } from "@/lib/validation/validation";
 import { standardCatchReturn } from "@/app/api/apiCatch";
-import { requireDirector } from "@/lib/auth/requireDirector";
+import { requireDirector } from "@/lib/auth/guards";
 
 // routes /api/tmnts/tmnt/:id
 

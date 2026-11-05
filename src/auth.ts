@@ -9,6 +9,7 @@ import {
   type AppUser,
 } from "@/lib/auth/authorizeCredentials";
 import { btDbUuid } from "@/lib/uuid";
+import { isBetaRegistrationOpen } from "@/lib/auth/registration";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
@@ -169,7 +170,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       if (account?.provider === "credentials") return true;
 
       // oauth (google)
-      if (!profile?.email) throw new Error("No Profile email");
+      if (!profile?.email) return false;
 
       const googleInfo = profile as unknown as GoogleProfile;
 
@@ -178,6 +179,17 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       if (!googleInfo.email_verified) return false;
 
       const email = normalizeEmail(googleInfo.email);
+
+      // Existing user: sign in, whatever the registration mode
+      const existing = await prisma.user.findUnique({
+        where: { email },
+        select: { id: true },
+      });
+      if (existing) return true;
+
+      // New user: only beta allows self sign-up. After launch, ADMIN creates
+      // director accounts, so send them to the login page with an explanation.
+      if (!isBetaRegistrationOpen()) return "/login?error=no_account";
 
       const given = googleInfo.given_name?.trim();
       const family = googleInfo.family_name?.trim();
@@ -189,6 +201,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         fName = profile.name;
       }
 
+      // upsert rather than create: if two sign-ins race, the second
+      // finds the row instead of failing on the unique email
       await prisma.user.upsert({
         where: { email },
         create: {
@@ -196,9 +210,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           email,
           first_name: fName,
           last_name: lName,
-          role: "DIRECTOR", // currently all new users are directors
+          role: "DIRECTOR", // beta only: new Google users are directors
         },
-        // existing user: keep the names they may have edited in the app
         update: {},
       });
 

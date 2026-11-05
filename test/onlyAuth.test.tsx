@@ -13,6 +13,7 @@ import type { User } from "@prisma/client";
 import { prismaMock } from "./prismaMock";
 import { authorizeCredentials } from "@/lib/auth/authorizeCredentials";
 import { accountLockedCode } from "@/lib/auth/authUtils";
+import { isBetaRegistrationOpen } from "@/lib/auth/registration";
 import "@/auth"; // runs NextAuth(config) once, with the mock below
 
 // ---- mocks ----
@@ -59,6 +60,16 @@ jest.mock("@/lib/uuid", () => ({
   btDbUuid: () => "usr_11111111111111111111111111111111",
 }));
 
+// REGISTRATION_MODE decides whether new Google users may sign up;
+// mock it so these tests don't depend on the local .env file
+jest.mock("@/lib/auth/registration", () => ({
+  __esModule: true,
+  isBetaRegistrationOpen: jest.fn(),
+}));
+const mockIsOpen = isBetaRegistrationOpen as jest.MockedFunction<
+  typeof isBetaRegistrationOpen
+>;
+
 // ---- the captured config ----
 
 type Token = Record<string, unknown>;
@@ -82,7 +93,7 @@ type CapturedConfig = {
     signIn: (args: {
       account?: { provider: string } | null;
       profile?: Record<string, unknown>;
-    }) => Promise<boolean>;
+    }) => Promise<boolean | string>;
     session: (args: {
       session: { user?: Record<string, unknown> };
       token: Token;
@@ -156,6 +167,7 @@ const googleUserProfile = (patch: Record<string, unknown> = {}) => ({
 beforeEach(() => {
   // clear, not reset: keeps NextAuth's recorded call (the config)
   jest.clearAllMocks();
+  mockIsOpen.mockReturnValue(true);
   prismaMock.user.findUnique.mockResolvedValue(adamRow);
   prismaMock.user.upsert.mockResolvedValue(adamRow);
 });
@@ -221,15 +233,28 @@ describe("auth.ts", () => {
   describe("signIn callback", () => {
     const google = { provider: "google" };
 
-    it("allows credentials sign-in without touching the database", async () => {
-      await expect(signIn({ account: { provider: "credentials" } })).resolves.toBe(true);
-      expect(prismaMock.user.upsert).not.toHaveBeenCalled();
+    beforeEach(() => {
+      // most Google tests below are a brand-new user; the existing-user
+      // tests set findUnique back to adamRow
+      prismaMock.user.findUnique.mockResolvedValue(null);
     });
 
-    it("throws when Google sends no email", async () => {
-      await expect(
-        signIn({ account: google, profile: googleUserProfile({ email: undefined }) }),
-      ).rejects.toThrow("No Profile email");
+    it("allows credentials sign-in without touching the database", async () => {
+      await expect(signIn({ account: { provider: "credentials" } })).resolves.toBe(true);
+      expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
+      expect(prismaMock.user.upsert).not.toHaveBeenCalled();
+      expect(mockIsOpen).not.toHaveBeenCalled();
+    });
+
+    it("refuses when Google sends no email", async () => {
+      const result = await signIn({
+        account: google,
+        profile: googleUserProfile({ email: undefined }),
+      });
+
+      expect(result).toBe(false);
+      expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
+      expect(prismaMock.user.upsert).not.toHaveBeenCalled();
     });
 
     // SECURITY
@@ -243,80 +268,154 @@ describe("auth.ts", () => {
       });
 
       expect(result).toBe(false);
+      // refused before any lookup, so an unverified email can't probe for accounts
+      expect(prismaMock.user.findUnique).not.toHaveBeenCalled();
       expect(prismaMock.user.upsert).not.toHaveBeenCalled();
     });
 
-    it("upserts by the lower case email", async () => {
+    it("looks the user up by the lower case email, selecting only the id", async () => {
       await signIn({ account: google, profile: googleUserProfile() });
 
-      expect(prismaMock.user.upsert).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { email: "adam@gmail.com" } }),
-      );
-    });
-
-    it("creates new Google users as DIRECTOR with a usr_ id", async () => {
-      await signIn({ account: google, profile: googleUserProfile() });
-
-      expect(prismaMock.user.upsert).toHaveBeenCalledWith(
-        expect.objectContaining({
-          create: {
-            id: newUserId,
-            email: "adam@gmail.com",
-            first_name: "Adam",
-            last_name: "Smith",
-            role: "DIRECTOR",
-          },
-        }),
-      );
-    });
-
-    it("does not overwrite an existing user's names", async () => {
-      await signIn({ account: google, profile: googleUserProfile() });
-
-      expect(prismaMock.user.upsert).toHaveBeenCalledWith(
-        expect.objectContaining({ update: {} }),
-      );
-    });
-
-    it("trims Google's first and last names", async () => {
-      await signIn({
-        account: google,
-        profile: googleUserProfile({ given_name: "  Adam ", family_name: " Smith  " }),
+      expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
+        where: { email: "adam@gmail.com" },
+        select: { id: true },
       });
-
-      const { create } = prismaMock.user.upsert.mock.calls[0][0];
-      expect(create.first_name).toBe("Adam");
-      expect(create.last_name).toBe("Smith");
     });
 
-    it("uses 'none' when Google has no first or last name", async () => {
-      await signIn({
-        account: google,
-        profile: googleUserProfile({ given_name: "Adam", family_name: undefined }),
-      });
-
-      const { create } = prismaMock.user.upsert.mock.calls[0][0];
-      expect(create.first_name).toBe("Adam");
-      expect(create.last_name).toBe("none");
-    });
-
-    it("uses the full name as the first name when both names are missing", async () => {
-      await signIn({
-        account: google,
-        profile: googleUserProfile({ given_name: "", family_name: "  " }),
-      });
-
-      const { create } = prismaMock.user.upsert.mock.calls[0][0];
-      expect(create.first_name).toBe("Adam Smith");
-      expect(create.last_name).toBe("none");
-    });
-
-    it("lets a database error stop the sign-in", async () => {
-      prismaMock.user.upsert.mockRejectedValue(new Error("connection failed"));
+    it("lets a database error from the lookup stop the sign-in", async () => {
+      prismaMock.user.findUnique.mockRejectedValue(new Error("connection failed"));
 
       await expect(
         signIn({ account: google, profile: googleUserProfile() }),
       ).rejects.toThrow("connection failed");
+      expect(prismaMock.user.upsert).not.toHaveBeenCalled();
+    });
+
+    describe("existing user", () => {
+      beforeEach(() => {
+        prismaMock.user.findUnique.mockResolvedValue(adamRow);
+      });
+
+      it("signs in without creating or changing the row", async () => {
+        await expect(
+          signIn({ account: google, profile: googleUserProfile() }),
+        ).resolves.toBe(true);
+        expect(prismaMock.user.upsert).not.toHaveBeenCalled();
+      });
+
+      it("signs in even when registration is closed", async () => {
+        mockIsOpen.mockReturnValue(false);
+
+        await expect(
+          signIn({ account: google, profile: googleUserProfile() }),
+        ).resolves.toBe(true);
+        // the registration mode only matters for new users
+        expect(mockIsOpen).not.toHaveBeenCalled();
+      });
+    });
+
+    // SECURITY: after launch, only ADMIN creates accounts
+    describe("new user, registration closed", () => {
+      beforeEach(() => {
+        mockIsOpen.mockReturnValue(false);
+      });
+
+      it("redirects to the login page with the no_account error", async () => {
+        await expect(
+          signIn({ account: google, profile: googleUserProfile() }),
+        ).resolves.toBe("/login?error=no_account");
+      });
+
+      it("does not create a user", async () => {
+        await signIn({ account: google, profile: googleUserProfile() });
+
+        expect(mockIsOpen).toHaveBeenCalledTimes(1);
+        expect(prismaMock.user.upsert).not.toHaveBeenCalled();
+      });
+    });
+
+    describe("new user, beta registration open", () => {
+      it("signs in after creating the user", async () => {
+        await expect(
+          signIn({ account: google, profile: googleUserProfile() }),
+        ).resolves.toBe(true);
+        expect(prismaMock.user.upsert).toHaveBeenCalledTimes(1);
+      });
+
+      it("upserts by the lower case email", async () => {
+        await signIn({ account: google, profile: googleUserProfile() });
+
+        expect(prismaMock.user.upsert).toHaveBeenCalledWith(
+          expect.objectContaining({ where: { email: "adam@gmail.com" } }),
+        );
+      });
+
+      it("creates the user as DIRECTOR with a usr_ id", async () => {
+        await signIn({ account: google, profile: googleUserProfile() });
+
+        expect(prismaMock.user.upsert).toHaveBeenCalledWith(
+          expect.objectContaining({
+            create: {
+              id: newUserId,
+              email: "adam@gmail.com",
+              first_name: "Adam",
+              last_name: "Smith",
+              role: "DIRECTOR",
+            },
+          }),
+        );
+      });
+
+      // if two first sign-ins race, the second upsert finds the row the
+      // first created; it must leave that row as it is
+      it("does not change the row if it already exists by then", async () => {
+        await signIn({ account: google, profile: googleUserProfile() });
+
+        expect(prismaMock.user.upsert).toHaveBeenCalledWith(
+          expect.objectContaining({ update: {} }),
+        );
+      });
+
+      it("trims Google's first and last names", async () => {
+        await signIn({
+          account: google,
+          profile: googleUserProfile({ given_name: "  Adam ", family_name: " Smith  " }),
+        });
+
+        const { create } = prismaMock.user.upsert.mock.calls[0][0];
+        expect(create.first_name).toBe("Adam");
+        expect(create.last_name).toBe("Smith");
+      });
+
+      it("uses 'none' when Google has no first or last name", async () => {
+        await signIn({
+          account: google,
+          profile: googleUserProfile({ given_name: "Adam", family_name: undefined }),
+        });
+
+        const { create } = prismaMock.user.upsert.mock.calls[0][0];
+        expect(create.first_name).toBe("Adam");
+        expect(create.last_name).toBe("none");
+      });
+
+      it("uses the full name as the first name when both names are missing", async () => {
+        await signIn({
+          account: google,
+          profile: googleUserProfile({ given_name: "", family_name: "  " }),
+        });
+
+        const { create } = prismaMock.user.upsert.mock.calls[0][0];
+        expect(create.first_name).toBe("Adam Smith");
+        expect(create.last_name).toBe("none");
+      });
+
+      it("lets a database error from the upsert stop the sign-in", async () => {
+        prismaMock.user.upsert.mockRejectedValue(new Error("connection failed"));
+
+        await expect(
+          signIn({ account: google, profile: googleUserProfile() }),
+        ).rejects.toThrow("connection failed");
+      });
     });
   });
 

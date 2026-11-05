@@ -2,7 +2,7 @@ import React, { useState, ChangeEvent } from "react";
 import type { squadType, AcdnErrType, eventType, laneType } from "../../../lib/types/types";
 import { initSquad } from "../../../lib/db/initVals";
 import { Tabs, Tab, OverlayTrigger, Tooltip } from "react-bootstrap";
-import ModalConfirm, { delConfTitle } from "@/components/modal/confirmModal";
+import ConfirmModal, { delConfTitle } from "@/components/modal/confirmModal";
 import { initModalObj } from "@/components/modal/modalObjType";
 import { 
   objErrClassName,
@@ -628,7 +628,7 @@ const OneToNSquads: React.FC<ChildProps> = ({
 
   return (
     <>
-      <ModalConfirm
+      <ConfirmModal
         show={modalObj.show}
         title={modalObj.title}
         message={modalObj.message}

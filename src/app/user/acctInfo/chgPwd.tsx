@@ -6,7 +6,7 @@ import { isPassword8to20 } from "@/lib/validation/validation";
 import type { acctUserType } from "@/lib/types/types";
 import { changePassword } from "@/lib/db/users/dbUsers";
 import { initModalObj } from "@/components/modal/modalObjType";
-import ModalErrorMsg from "@/components/modal/errorModal";
+import ErrorModalMsg from "@/components/modal/errorModal";
 
 const blankValues = {
   current: "",
@@ -201,7 +201,7 @@ const ChangePassword: React.FC<ChildProps> = ({ user, setInfoType }) => {
 
   return (
     <>
-      <ModalErrorMsg
+      <ErrorModalMsg
         show={errModalObj.show}
         title={errModalObj.title}
         message={errModalObj.message}

@@ -38,7 +38,7 @@ const blankValues: registerFormStateType = {
 };
 
 const passwordFormatMsg =
-  "Password not in a valid format: at least 1 lower case, 1 UPPER case, 1 digit, 1 special character, 8 to 20 charaters long";
+  "Password not in a valid format: at least 1 lower case, 1 UPPER case, 1 digit, 1 special character, 8 to 20 characters long";
 
 export const RegisterForm = () => {
   const router = useRouter();
@@ -46,6 +46,7 @@ export const RegisterForm = () => {
   const [formData, setFormData] = useState<registerFormStateType>(blankValues);
   const [formErrors, setFormErrors] = useState<registerFormStateType>(blankValues);
   const [usedEmail, setUsedEmail] = useState("");
+  const [closedMsg, setClosedMsg] = useState("");
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -189,6 +190,9 @@ export const RegisterForm = () => {
       if (axios.isAxiosError(error)) {
         if (error.response?.status === 409) {
           setUsedEmail(error.response?.data?.error || "Other error registering");
+        } else if (error.response?.status === 403) {
+          // registration closed after this page was loaded
+          setClosedMsg(error.response?.data?.error || "Registration is closed.");          
         } else {
           setFormErrors((prev) => ({
             ...prev,
@@ -353,12 +357,13 @@ export const RegisterForm = () => {
         </div>
         <div className="row justify-content-md-center">
           <div className="col-md-6">
+            {closedMsg && <Alert>{closedMsg}</Alert>}
             <div className="d-grid mt-2">
               <button
                 type="submit"
                 id="btnSubmit"
                 className="btn btn-primary"
-                disabled={submitting}
+                disabled={submitting || !!closedMsg}
                 aria-busy={submitting}
               >
                 {submitting ? "Registering..." : "Register"}

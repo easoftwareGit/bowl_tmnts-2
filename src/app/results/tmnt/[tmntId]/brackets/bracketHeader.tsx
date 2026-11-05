@@ -32,12 +32,14 @@ const BracketHeader = ({
           <Link
             href={`/results/tmnt/${tmntId}/brackets`}
             className={`btn btn-outline-primary ${selectedBrktPageBtn === "Brackets" ? "active" : ""}`}
+            aria-current={selectedBrktPageBtn === "Brackets" ? "page" : undefined}
           >
             Brackets
           </Link>
           <Link
             href={`/results/tmnt/${tmntId}/brackets/payouts`}
             className={`btn btn-outline-primary ${selectedBrktPageBtn === "Payouts" ? "active" : ""}`}
+            aria-current={selectedBrktPageBtn === "Payouts" ? "page" : undefined}
           >
             Payouts
           </Link>

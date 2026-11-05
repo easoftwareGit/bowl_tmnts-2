@@ -26,7 +26,7 @@ import type {
   PrizeFundGridHandle
 } from "@/app/dataEntry/prizeFunds/prizeFundGrid/prizeFundGrid";
 import { populatePfRows } from "@/app/dataEntry/prizeFunds/prizeFundGrid/prizeFundRows";
-import ModalConfirm from "@/components/modal/confirmModal";
+import ConfirmModal from "@/components/modal/confirmModal";
 import { initModalObj, modalObjectType } from "@/components/modal/modalObjType";
 import { btDbUuid } from "@/lib/uuid";
 import { getPotName } from "@/lib/getName";
@@ -789,7 +789,7 @@ export default function PotPrizeFundEntry() {
     <>
       <WaitModal show={isLoading} message="Loading..." />
 
-      <ModalConfirm
+      <ConfirmModal
         show={confModalObj.show}
         title={confModalObj.title}
         message={confModalObj.message}

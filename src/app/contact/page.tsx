@@ -1,10 +1,10 @@
 import { ContactForm } from "./contactForm";
 
-export default function RegisterPage() {
+export default function ContactPage() {
   return (
-    <div className="d-flex flex-column min-vh-100 align-items-center">
-      <div className="shadow p-3 m-5 rounded-3">
-        <h2 className="mb-3">Contact</h2>
+    <div className="d-flex flex-column grow align-items-center">
+      <div className="shadow p-3 m-3 rounded-3">
+        <h1 className="mb-3 h2">Contact</h1>
         <ContactForm />
       </div>
     </div>

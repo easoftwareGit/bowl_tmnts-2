@@ -8,7 +8,7 @@ import type { Bowl } from "@prisma/client";
 import { GET, PUT, PATCH, DELETE } from "@/app/api/bowls/bowl/[id]/route";
 import { prismaMock } from "../../../prismaMock";
 import { mockBowls } from "../../../mocks/bowls/mockBowls";
-import { requireDirector } from "@/lib/auth/requireDirector";
+import { requireDirector } from "@/lib/auth/guards";
 import {
   maxBowlNameLemgth,
   maxCityLength,
@@ -17,7 +17,7 @@ import {
 } from "@/lib/validation/constants";
 
 // Replace the auth check with a mock function each test can control
-jest.mock("@/lib/auth/requireDirector", () => ({
+jest.mock("@/lib/auth/guards", () => ({
   requireDirector: jest.fn(),
 }));
 const mockRequireDirector = requireDirector as jest.MockedFunction<

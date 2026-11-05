@@ -12,7 +12,7 @@ import {
 } from "@/redux/features/userTmnts/userTmntsSlice";
 import type { tmntsListType } from "@/lib/types/types";
 import { yyyyMMdd_To_ddMMyyyy } from "@/lib/dateTools";
-import ModalConfirm from "@/components/modal/confirmModal";
+import ConfirmModal from "@/components/modal/confirmModal";
 import WaitModal from "@/components/modal/waitModal";
 import { initModalObj } from "@/components/modal/modalObjType";
 import {
@@ -76,7 +76,7 @@ export default function UserTmntsPage() {
 
   return (
     <>
-      <ModalConfirm
+      <ConfirmModal
         show={confModalObj.show}
         title={confModalObj.title}
         message={confModalObj.message}

@@ -1,29 +1,67 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+// test/app/results/resultsPage.test.tsx
+// tests for src/app/results/page.tsx
+import type { ComponentProps } from "react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import TmntResultsPage from "@/app/results/page";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  clearTmnts,
-  fetchTmnts,
-} from "@/redux/features/tmnts/tmntsSlice";
+import { clearTmnts, fetchTmnts } from "@/redux/features/tmnts/tmntsSlice";
 import { fetchTmntYears } from "@/redux/features/tmnts/yearsSlice";
+import type TmntsList from "@/components/tmnts/tmntsList";
+import type { RootState } from "@/redux/store";
+import type { YearObj, tmntsListType } from "@/lib/types/types";
+import {
+  mockBowl,
+  mockTmntFullData,
+} from "../../mocks/tmnts/tmntFullData/mockTmntFullData";
+
+type TmntsListProps = ComponentProps<typeof TmntsList>;
+type LoadStatus = RootState["tmnts"]["status"];
+
+/** the parts of the Redux state the page reads */
+interface MockState {
+  tmnts: Pick<RootState["tmnts"], "tmnts" | "status">;
+  tmntYears: Pick<RootState["tmntYears"], "data" | "status">;
+}
+
+// jest.mock factories run before the consts below are set, so these
+// values are literals. They must match currentYear and changedYear.
+jest.mock("@/lib/dateTools", () => ({
+  todayYearStr: "2025",
+}));
+
+const currentYear = "2025"; // todayYearStr, and the year of mockTmntFullData
+const changedYear = "2024"; // the year the TmntsList mock picks
+
+// --- redux ---
+
+const mockDispatch = jest.fn();
+let mockState: MockState;
 
 jest.mock("react-redux", () => ({
-  useDispatch: jest.fn(),
-  useSelector: jest.fn(),
+  useDispatch: () => mockDispatch,
+  useSelector: (selector: (state: MockState) => unknown) =>
+    selector(mockState),
 }));
 
 jest.mock("@/redux/features/tmnts/tmntsSlice", () => ({
-  clearTmnts: jest.fn(),
-  fetchTmnts: jest.fn(),
+  clearTmnts: jest.fn(() => ({ type: "tmnts/clearTmnts" })),
+  fetchTmnts: jest.fn((year: string) => ({
+    type: "tmnts/fetchTmnts",
+    payload: year,
+  })),
 }));
 
 jest.mock("@/redux/features/tmnts/yearsSlice", () => ({
-  fetchTmntYears: jest.fn(),
+  fetchTmntYears: jest.fn(() => ({ type: "tmntYears/fetchTmntYears" })),
 }));
 
-jest.mock("@/lib/dateTools", () => ({
-  todayYearStr: "2026",
-}));
+const clearTmntsAction = { type: "tmnts/clearTmnts" };
+const fetchTmntYearsAction = { type: "tmntYears/fetchTmntYears" };
+const fetchTmntsAction = (year: string) => ({
+  type: "tmnts/fetchTmnts",
+  payload: year,
+});
+
+// --- child components ---
 
 jest.mock("@/components/modal/waitModal", () => {
   return function MockWaitModal({
@@ -33,28 +71,22 @@ jest.mock("@/components/modal/waitModal", () => {
     show: boolean;
     message: string;
   }) {
-    return show ? (
-      <div data-testid="WaitModalMock">{message}</div>
-    ) : null;
+    return show ? <div data-testid="WaitModalMock">{message}</div> : null;
   };
 });
 
-const mockTmntsList = jest.fn();
+const mockTmntsList = jest.fn<undefined, [TmntsListProps]>();
 
 jest.mock("@/components/tmnts/tmntsList", () => {
-  return function MockTmntsList(props: any) {
+  return function MockTmntsList(props: TmntsListProps) {
     mockTmntsList(props);
-
     return (
       <div data-testid="TmntsListMock">
-        <div data-testid="years">{JSON.stringify(props.years)}</div>
-        <div data-testid="tmnts">{JSON.stringify(props.tmnts)}</div>
-        <div data-testid="tmntYear">{props.tmntYear}</div>
-        <div data-testid="showResults">{String(props.showResults)}</div>
-
         <button
           type="button"
-          onClick={() => props.onYearChange("2025")}
+          onClick={() => {
+            props.onYearChange("2024");
+          }}
         >
           Change Year
         </button>
@@ -63,147 +95,147 @@ jest.mock("@/components/tmnts/tmntsList", () => {
   };
 });
 
-describe("TmntResultsPage", () => {
-  const mockDispatch = jest.fn();
+// --- mock data ---
 
-  const mockYears = [
-    { year: "2026" },
-    { year: "2025" },
-  ];
+/** the tournament from the full tournament mock data: Mock Bowl, CA */
+const mockTmnt: tmntsListType = {
+  ...mockTmntFullData.tmnt,
+  bowl: {
+    bowl_name: mockBowl.bowl_name,
+    city: mockBowl.city,
+    state: mockBowl.state,
+    url: mockBowl.url,
+  },
+};
 
-  const mockTmnts = [
-    {
-      id: "tmnt1",
-      tmnt_name: "Tournament One",
-      start_date: "2026-01-01",
-    },
-    {
-      id: "tmnt2",
-      tmnt_name: "Tournament Two",
-      start_date: "2026-02-01",
-    },
-  ];
+const nvTmnt: tmntsListType = {
+  ...mockTmnt,
+  id: `${mockTmnt.id.slice(0, -1)}2`,
+  tmnt_name: "Silver State Classic",
+  start_date_str: "2025-06-14",
+  bowl: {
+    bowl_name: "Reno Lanes",
+    city: "Reno",
+    state: "NV",
+    url: "https://www.example.com/reno",
+  },
+};
 
-  const mockReduxState = (
-    tmntsStatus: string = "succeeded",
-    yearsStatus: string = "succeeded",
-  ) => {
-    (useSelector as unknown as jest.Mock).mockImplementation(
-      (selector) =>
-        selector({
-          tmnts: {
-            tmnts: mockTmnts,
-            status: tmntsStatus,
-          },
-          tmntYears: {
-            data: mockYears,
-            status: yearsStatus,
-          },
-        }),
-    );
+const mockTmnts: tmntsListType[] = [mockTmnt, nvTmnt];
+
+const mockYears: YearObj[] = [{ year: currentYear }, { year: changedYear }];
+
+const loadErrorText = "Unable to load tournament results.";
+
+// --- helpers ---
+
+/** sets the status of the two loads the page waits for, and the years */
+const setLoadStatus = (
+  tmntsStatus: LoadStatus,
+  yearsStatus: LoadStatus,
+  years: YearObj[] = mockYears,
+): void => {
+  mockState = {
+    tmnts: { tmnts: mockTmnts, status: tmntsStatus },
+    tmntYears: { data: years, status: yearsStatus },
   };
+};
 
+const clickChangeYear = (): void => {
+  fireEvent.click(screen.getByRole("button", { name: "Change Year" }));
+};
+
+describe("TmntResultsPage", () => {
   beforeEach(() => {
+    // clears calls only; the mock action creators keep their return values
     jest.clearAllMocks();
-
-    (useDispatch as unknown as jest.Mock).mockReturnValue(mockDispatch);
-
-    mockReduxState();
-
-    (clearTmnts as unknown as jest.Mock).mockReturnValue({
-      type: "tmnts/clearTmnts",
-    });
-
-    (fetchTmnts as unknown as jest.Mock).mockImplementation(
-      (year: string) => ({
-        type: "tmnts/fetchTmnts",
-        payload: year,
-      }),
-    );
-
-    (fetchTmntYears as unknown as jest.Mock).mockReturnValue({
-      type: "tmntYears/fetchTmntYears",
-    });
+    setLoadStatus("succeeded", "succeeded");
   });
 
   describe("loading", () => {
-    it("shows WaitModal when tournaments are loading", () => {
-      mockReduxState("loading", "succeeded");
+    const loadingCases: [LoadStatus, LoadStatus][] = [
+      ["idle", "succeeded"],
+      ["loading", "succeeded"],
+      ["succeeded", "idle"],
+      ["succeeded", "loading"],
+      ["loading", "loading"],
+      ["idle", "idle"],
+    ];
 
-      render(<TmntResultsPage />);
+    it.each(loadingCases)(
+      "shows WaitModal when tmnts are %s and years are %s",
+      (tmntsStatus, yearsStatus) => {
+        setLoadStatus(tmntsStatus, yearsStatus);
+        render(<TmntResultsPage />);
 
-      expect(screen.getByTestId("WaitModalMock")).toHaveTextContent(
-        "Loading...",
-      );
-    });
+        expect(screen.getByTestId("WaitModalMock")).toHaveTextContent(
+          "Loading...",
+        );
+      },
+    );
 
-    it("shows WaitModal when tournament years are loading", () => {
-      mockReduxState("succeeded", "loading");
+    it.each(loadingCases)(
+      "does not show the title, list or error when tmnts are %s and years are %s",
+      (tmntsStatus, yearsStatus) => {
+        setLoadStatus(tmntsStatus, yearsStatus);
+        render(<TmntResultsPage />);
 
-      render(<TmntResultsPage />);
+        expect(screen.queryByRole("heading")).not.toBeInTheDocument();
+        expect(screen.queryByTestId("TmntsListMock")).not.toBeInTheDocument();
+        expect(screen.queryByText(loadErrorText)).not.toBeInTheDocument();
+      },
+    );
 
-      expect(screen.getByTestId("WaitModalMock")).toHaveTextContent(
-        "Loading...",
-      );
-    });
+    it("shows the list once both loads succeed", () => {
+      setLoadStatus("loading", "loading");
+      const { rerender } = render(<TmntResultsPage />);
+      expect(screen.queryByTestId("TmntsListMock")).not.toBeInTheDocument();
 
-    it("shows WaitModal when tournaments are idle", () => {
-      mockReduxState("idle", "succeeded");
-
-      render(<TmntResultsPage />);
-
+      setLoadStatus("succeeded", "loading");
+      rerender(<TmntResultsPage />);
       expect(screen.getByTestId("WaitModalMock")).toBeInTheDocument();
-    });
+      expect(screen.queryByTestId("TmntsListMock")).not.toBeInTheDocument();
 
-    it("shows WaitModal when tournament years are idle", () => {
-      mockReduxState("succeeded", "idle");
-
-      render(<TmntResultsPage />);
-
-      expect(screen.getByTestId("WaitModalMock")).toBeInTheDocument();
-    });
-
-    it("does not render TmntsList while loading", () => {
-      mockReduxState("loading", "succeeded");
-
-      render(<TmntResultsPage />);
-
-      expect(
-        screen.queryByTestId("TmntsListMock"),
-      ).not.toBeInTheDocument();
+      setLoadStatus("succeeded", "succeeded");
+      rerender(<TmntResultsPage />);
+      expect(screen.queryByTestId("WaitModalMock")).not.toBeInTheDocument();
+      expect(screen.getByTestId("TmntsListMock")).toBeInTheDocument();
     });
   });
 
   describe("load failure", () => {
-    it("shows an error when tournaments fail to load", () => {
-      mockReduxState("failed", "succeeded");
+    const failedCases: [LoadStatus, LoadStatus][] = [
+      ["failed", "succeeded"],
+      ["succeeded", "failed"],
+      ["failed", "failed"],
+      // one load failed while the other is still running: the error wins
+      ["failed", "loading"],
+      ["loading", "failed"],
+      ["failed", "idle"],
+      ["idle", "failed"],
+    ];
 
-      render(<TmntResultsPage />);
+    it.each(failedCases)(
+      "shows the error when tmnts are %s and years are %s",
+      (tmntsStatus, yearsStatus) => {
+        setLoadStatus(tmntsStatus, yearsStatus);
+        render(<TmntResultsPage />);
 
-      expect(
-        screen.getByText("Unable to load tournament results."),
-      ).toBeInTheDocument();
-    });
+        expect(screen.getByText(loadErrorText)).toBeInTheDocument();
+      },
+    );
 
-    it("shows an error when tournament years fail to load", () => {
-      mockReduxState("succeeded", "failed");
+    it.each(failedCases)(
+      "does not show WaitModal, the title or the list when tmnts are %s and years are %s",
+      (tmntsStatus, yearsStatus) => {
+        setLoadStatus(tmntsStatus, yearsStatus);
+        render(<TmntResultsPage />);
 
-      render(<TmntResultsPage />);
-
-      expect(
-        screen.getByText("Unable to load tournament results."),
-      ).toBeInTheDocument();
-    });
-
-    it("does not render TmntsList when loading fails", () => {
-      mockReduxState("failed", "succeeded");
-
-      render(<TmntResultsPage />);
-
-      expect(
-        screen.queryByTestId("TmntsListMock"),
-      ).not.toBeInTheDocument();
-    });
+        expect(screen.queryByTestId("WaitModalMock")).not.toBeInTheDocument();
+        expect(screen.queryByRole("heading")).not.toBeInTheDocument();
+        expect(screen.queryByTestId("TmntsListMock")).not.toBeInTheDocument();
+      },
+    );
   });
 
   describe("successful load", () => {
@@ -211,397 +243,195 @@ describe("TmntResultsPage", () => {
       render(<TmntResultsPage />);
 
       expect(
-        screen.getByRole("heading", {
-          name: "Tournament Results",
-        }),
+        screen.getByRole("heading", { level: 1, name: "Tournament Results" }),
       ).toBeInTheDocument();
     });
 
     it("renders TmntsList", () => {
       render(<TmntResultsPage />);
 
-      expect(
-        screen.getByTestId("TmntsListMock"),
-      ).toBeInTheDocument();
+      expect(screen.getByTestId("TmntsListMock")).toBeInTheDocument();
     });
 
-    it("does not show WaitModal", () => {
+    it("does not show WaitModal or the load error", () => {
       render(<TmntResultsPage />);
 
-      expect(
-        screen.queryByTestId("WaitModalMock"),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByTestId("WaitModalMock")).not.toBeInTheDocument();
+      expect(screen.queryByText(loadErrorText)).not.toBeInTheDocument();
     });
 
-    it("does not show the load error", () => {
+    it("passes the years and tmnts from Redux, the current year and showResults to TmntsList", () => {
       render(<TmntResultsPage />);
 
-      expect(
-        screen.queryByText("Unable to load tournament results."),
-      ).not.toBeInTheDocument();
+      expect(mockTmntsList).toHaveBeenLastCalledWith({
+        years: mockYears,
+        tmnts: mockTmnts,
+        tmntYear: currentYear,
+        showResults: true,
+        onYearChange: expect.any(Function) as unknown,
+      });
     });
 
-    it("passes years from Redux state to TmntsList", () => {
+    it("passes an empty tmnts list when the year has no tournaments", () => {
+      mockState = {
+        ...mockState,
+        tmnts: { tmnts: [], status: "succeeded" },
+      };
       render(<TmntResultsPage />);
 
+      expect(screen.getByTestId("TmntsListMock")).toBeInTheDocument();
       expect(mockTmntsList).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          years: mockYears,
-        }),
-      );
-    });
-
-    it("passes tournaments from Redux state to TmntsList", () => {
-      render(<TmntResultsPage />);
-
-      expect(mockTmntsList).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          tmnts: mockTmnts,
-        }),
-      );
-    });
-
-    it("passes the current year to TmntsList", () => {
-      render(<TmntResultsPage />);
-
-      expect(mockTmntsList).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          tmntYear: "2026",
-        }),
-      );
-    });
-
-    it("passes showResults true to TmntsList", () => {
-      render(<TmntResultsPage />);
-
-      expect(mockTmntsList).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          showResults: true,
-        }),
-      );
-    });
-
-    it("passes onYearChange function to TmntsList", () => {
-      render(<TmntResultsPage />);
-
-      expect(mockTmntsList).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          onYearChange: expect.any(Function),
-        }),
+        expect.objectContaining({ tmnts: [] }),
       );
     });
   });
 
-  describe("dispatches", () => {
-    it("dispatches clearTmnts when the page loads", () => {
+  describe("dispatches on page load", () => {
+    it("dispatches clearTmnts, then fetchTmntYears, then fetchTmnts for the current year", () => {
+      render(<TmntResultsPage />);
+
+      expect(mockDispatch.mock.calls).toEqual([
+        [clearTmntsAction],
+        [fetchTmntYearsAction],
+        [fetchTmntsAction(currentYear)],
+      ]);
+    });
+
+    it("calls each action creator once", () => {
       render(<TmntResultsPage />);
 
       expect(clearTmnts).toHaveBeenCalledTimes(1);
-
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: "tmnts/clearTmnts",
-      });
-    });
-
-    it("dispatches fetchTmntYears when the page loads", () => {
-      render(<TmntResultsPage />);
-
       expect(fetchTmntYears).toHaveBeenCalledTimes(1);
-
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: "tmntYears/fetchTmntYears",
-      });
+      expect(fetchTmnts).toHaveBeenCalledTimes(1);
+      expect(fetchTmnts).toHaveBeenCalledWith(currentYear);
     });
 
-    it("dispatches fetchTmnts with the current year when the page loads", () => {
-      render(<TmntResultsPage />);
+    it("does not dispatch again when the tmnts finish loading", () => {
+      setLoadStatus("loading", "succeeded");
+      const { rerender } = render(<TmntResultsPage />);
+      expect(mockDispatch).toHaveBeenCalledTimes(3);
 
-      expect(fetchTmnts).toHaveBeenCalledWith("2026");
+      setLoadStatus("succeeded", "succeeded");
+      rerender(<TmntResultsPage />);
 
-      expect(mockDispatch).toHaveBeenCalledWith({
-        type: "tmnts/fetchTmnts",
-        payload: "2026",
-      });
+      expect(mockDispatch).toHaveBeenCalledTimes(3);
+    });
+  });
+
+  describe("year to load", () => {
+    it.each<LoadStatus>(["idle", "loading", "failed"])(
+      "does not fetch tmnts while the years are %s",
+      (yearsStatus) => {
+        setLoadStatus("idle", yearsStatus);
+        render(<TmntResultsPage />);
+
+        expect(fetchTmnts).not.toHaveBeenCalled();
+      },
+    );
+
+    it("fetches tmnts once the years load", () => {
+      setLoadStatus("idle", "loading");
+      const { rerender } = render(<TmntResultsPage />);
+      expect(fetchTmnts).not.toHaveBeenCalled();
+
+      setLoadStatus("idle", "succeeded");
+      rerender(<TmntResultsPage />);
+
+      expect(fetchTmnts).toHaveBeenCalledTimes(1);
+      expect(fetchTmnts).toHaveBeenCalledWith(currentYear);
     });
 
-    it("dispatches fetchTmnts again when year changes", () => {
+    it("fetches and shows the newest year when the current year has no tournaments", () => {
+      // not in order, so the test checks for the newest year, not the first
+      const olderYears: YearObj[] = [
+        { year: "2022" },
+        { year: "2024" },
+        { year: "2023" },
+      ];
+      setLoadStatus("succeeded", "succeeded", olderYears);
       render(<TmntResultsPage />);
 
-      fireEvent.click(
-        screen.getByRole("button", {
-          name: "Change Year",
-        }),
+      expect(fetchTmnts).toHaveBeenCalledTimes(1);
+      expect(fetchTmnts).toHaveBeenCalledWith("2024");
+      expect(mockTmntsList).toHaveBeenLastCalledWith(
+        expect.objectContaining({ tmntYear: "2024" }),
       );
+    });
 
-      expect(fetchTmnts).toHaveBeenCalledWith("2026");
-      expect(fetchTmnts).toHaveBeenCalledWith("2025");
+    it("does not fetch the current year first when it has no tournaments", () => {
+      const olderYears: YearObj[] = [{ year: "2024" }];
+      setLoadStatus("idle", "loading", olderYears);
+      const { rerender } = render(<TmntResultsPage />);
+
+      setLoadStatus("idle", "succeeded", olderYears);
+      rerender(<TmntResultsPage />);
+
+      expect(fetchTmnts).toHaveBeenCalledTimes(1);
+      expect(fetchTmnts).not.toHaveBeenCalledWith(currentYear);
+    });
+
+    it("fetches and shows the current year when there are no years", () => {
+      setLoadStatus("succeeded", "succeeded", []);
+      render(<TmntResultsPage />);
+
+      expect(fetchTmnts).toHaveBeenCalledTimes(1);
+      expect(fetchTmnts).toHaveBeenCalledWith(currentYear);
+      expect(mockTmntsList).toHaveBeenLastCalledWith(
+        expect.objectContaining({ tmntYear: currentYear, years: [] }),
+      );
+    });
+  });
+
+  describe("year change", () => {
+    it("dispatches fetchTmnts for the new year", () => {
+      render(<TmntResultsPage />);
+      clickChangeYear();
+
       expect(fetchTmnts).toHaveBeenCalledTimes(2);
+      expect(fetchTmnts).toHaveBeenLastCalledWith(changedYear);
+      expect(mockDispatch).toHaveBeenLastCalledWith(
+        fetchTmntsAction(changedYear),
+      );
     });
 
-    it("does not dispatch clearTmnts again when year changes", () => {
+    it("does not dispatch clearTmnts or fetchTmntYears again", () => {
       render(<TmntResultsPage />);
-
-      fireEvent.click(
-        screen.getByRole("button", {
-          name: "Change Year",
-        }),
-      );
+      clickChangeYear();
 
       expect(clearTmnts).toHaveBeenCalledTimes(1);
-    });
-
-    it("does not dispatch fetchTmntYears again when year changes", () => {
-      render(<TmntResultsPage />);
-
-      fireEvent.click(
-        screen.getByRole("button", {
-          name: "Change Year",
-        }),
-      );
-
       expect(fetchTmntYears).toHaveBeenCalledTimes(1);
+      expect(mockDispatch).toHaveBeenCalledTimes(4);
     });
 
-    it("passes the changed year back to TmntsList", () => {
+    it("passes the new year to TmntsList", () => {
       render(<TmntResultsPage />);
-
-      fireEvent.click(
-        screen.getByRole("button", {
-          name: "Change Year",
-        }),
-      );
+      clickChangeYear();
 
       expect(mockTmntsList).toHaveBeenLastCalledWith(
-        expect.objectContaining({
-          tmntYear: "2025",
-        }),
+        expect.objectContaining({ tmntYear: changedYear }),
       );
+    });
+
+    it("keeps the new year while the new year's tmnts load", () => {
+      const { rerender } = render(<TmntResultsPage />);
+      clickChangeYear();
+
+      // the store marks tmnts as loading: the list is hidden
+      setLoadStatus("loading", "succeeded");
+      rerender(<TmntResultsPage />);
+      expect(screen.getByTestId("WaitModalMock")).toBeInTheDocument();
+      expect(screen.queryByTestId("TmntsListMock")).not.toBeInTheDocument();
+
+      // the new tmnts arrive: the list comes back with the new year
+      setLoadStatus("succeeded", "succeeded");
+      rerender(<TmntResultsPage />);
+      expect(screen.getByTestId("TmntsListMock")).toBeInTheDocument();
+      expect(mockTmntsList).toHaveBeenLastCalledWith(
+        expect.objectContaining({ tmntYear: changedYear }),
+      );
+
+      // and the year change was fetched only once
+      expect(fetchTmnts).toHaveBeenCalledTimes(2);
     });
   });
 });
-
-// import { render, screen, fireEvent } from "@testing-library/react";
-// import TmntResultsPage from "@/app/results/page";
-// import { useDispatch, useSelector } from "react-redux";
-// import { clearTmnts, fetchTmnts } from "@/redux/features/tmnts/tmntsSlice";
-// import { fetchTmntYears } from "@/redux/features/tmnts/yearsSlice";
-
-// jest.mock("react-redux", () => ({
-//   useDispatch: jest.fn(),
-//   useSelector: jest.fn(),
-// }));
-
-// jest.mock("@/redux/features/tmnts/tmntsSlice", () => ({
-//   clearTmnts: jest.fn(),
-//   fetchTmnts: jest.fn(),
-// }));
-
-// jest.mock("@/redux/features/tmnts/yearsSlice", () => ({
-//   fetchTmntYears: jest.fn(),
-// }));
-
-// jest.mock("@/lib/dateTools", () => ({
-//   todayYearStr: "2026",
-// }));
-
-// const mockTmntsList = jest.fn();
-
-// jest.mock("@/components/tmnts/tmntsList", () => {
-//   return function MockTmntsList(props: any) {
-//     mockTmntsList(props);
-
-//     return (
-//       <div data-testid="TmntsListMock">
-//         <div data-testid="years">{JSON.stringify(props.years)}</div>
-//         <div data-testid="tmnts">{JSON.stringify(props.tmnts)}</div>
-//         <div data-testid="showResults">{String(props.showResults)}</div>
-
-//         <button
-//           type="button"
-//           onClick={() => props.onYearChange("2025")}
-//         >
-//           Change Year
-//         </button>
-//       </div>
-//     );
-//   };
-// });
-
-// describe("TmntResultsPage", () => {
-//   const mockDispatch = jest.fn();
-
-//   const mockYears = [
-//     { year: "2026" },
-//     { year: "2025" },
-//   ];
-
-//   const mockTmnts = [
-//     {
-//       id: "tmnt1",
-//       tmnt_name: "Tournament One",
-//       start_date: "2026-01-01",
-//     },
-//     {
-//       id: "tmnt2",
-//       tmnt_name: "Tournament Two",
-//       start_date: "2026-02-01",
-//     },
-//   ];
-
-//   beforeEach(() => {
-//     jest.clearAllMocks();
-
-//     (useDispatch as unknown as jest.Mock).mockReturnValue(mockDispatch);
-
-//     (useSelector as unknown as jest.Mock).mockImplementation((selector) =>
-//       selector({
-//         tmnts: {
-//           tmnts: mockTmnts,
-//         },
-//         tmntYears: {
-//           data: mockYears,
-//         },
-//       }),
-//     );
-
-//     (clearTmnts as unknown as jest.Mock).mockReturnValue({
-//       type: "tmnts/clearTmnts",
-//     });
-
-//     (fetchTmnts as unknown as jest.Mock).mockImplementation((year: string) => ({
-//       type: "tmnts/fetchTmnts",
-//       payload: year,
-//     }));
-
-//     (fetchTmntYears as unknown as jest.Mock).mockReturnValue({
-//       type: "tmntYears/fetchTmntYears",
-//     });
-//   });
-
-//   it("renders the page title", () => {
-//     render(<TmntResultsPage />);
-
-//     expect(
-//       screen.getByRole("heading", {
-//         name: "Tournament Results",
-//       }),
-//     ).toBeInTheDocument();
-//   });
-
-//   it("renders TmntsList", () => {
-//     render(<TmntResultsPage />);
-
-//     expect(screen.getByTestId("TmntsListMock")).toBeInTheDocument();
-//   });
-
-//   it("dispatches clearTmnts when the page loads", () => {
-//     render(<TmntResultsPage />);
-
-//     expect(clearTmnts).toHaveBeenCalledTimes(1);
-
-//     expect(mockDispatch).toHaveBeenCalledWith({
-//       type: "tmnts/clearTmnts",
-//     });
-//   });
-
-//   it("dispatches fetchTmnts with the current year when the page loads", () => {
-//     render(<TmntResultsPage />);
-
-//     expect(fetchTmnts).toHaveBeenCalledWith("2026");
-
-//     expect(mockDispatch).toHaveBeenCalledWith({
-//       type: "tmnts/fetchTmnts",
-//       payload: "2026",
-//     });
-//   });
-
-//   it("dispatches fetchTmntYears when the page loads", () => {
-//     render(<TmntResultsPage />);
-
-//     expect(fetchTmntYears).toHaveBeenCalledTimes(1);
-
-//     expect(mockDispatch).toHaveBeenCalledWith({
-//       type: "tmntYears/fetchTmntYears",
-//     });
-//   });
-
-//   it("passes years from Redux state to TmntsList", () => {
-//     render(<TmntResultsPage />);
-
-//     expect(mockTmntsList).toHaveBeenLastCalledWith(
-//       expect.objectContaining({
-//         years: mockYears,
-//       }),
-//     );
-//   });
-
-//   it("passes tournaments from Redux state to TmntsList", () => {
-//     render(<TmntResultsPage />);
-
-//     expect(mockTmntsList).toHaveBeenLastCalledWith(
-//       expect.objectContaining({
-//         tmnts: mockTmnts,
-//       }),
-//     );
-//   });
-
-//   it("passes showResults true to TmntsList", () => {
-//     render(<TmntResultsPage />);
-
-//     expect(mockTmntsList).toHaveBeenLastCalledWith(
-//       expect.objectContaining({
-//         showResults: true,
-//       }),
-//     );
-//   });
-
-//   it("passes onYearChange function to TmntsList", () => {
-//     render(<TmntResultsPage />);
-
-//     expect(mockTmntsList).toHaveBeenLastCalledWith(
-//       expect.objectContaining({
-//         onYearChange: expect.any(Function),
-//       }),
-//     );
-//   });
-
-//   it("dispatches fetchTmnts again when year changes", () => {
-//     render(<TmntResultsPage />);
-
-//     fireEvent.click(
-//       screen.getByRole("button", {
-//         name: "Change Year",
-//       }),
-//     );
-
-//     expect(fetchTmnts).toHaveBeenCalledWith("2026");
-//     expect(fetchTmnts).toHaveBeenCalledWith("2025");
-
-//     expect(fetchTmnts).toHaveBeenCalledTimes(2);
-//   });
-
-//   it("does not dispatch clearTmnts again when year changes", () => {
-//     render(<TmntResultsPage />);
-
-//     fireEvent.click(
-//       screen.getByRole("button", {
-//         name: "Change Year",
-//       }),
-//     );
-
-//     expect(clearTmnts).toHaveBeenCalledTimes(1);
-//   });
-
-//   it("does not dispatch fetchTmntYears again when year changes", () => {
-//     render(<TmntResultsPage />);
-
-//     fireEvent.click(
-//       screen.getByRole("button", {
-//         name: "Change Year",
-//       }),
-//     );
-
-//     expect(fetchTmntYears).toHaveBeenCalledTimes(1);
-//   });
-// });
-

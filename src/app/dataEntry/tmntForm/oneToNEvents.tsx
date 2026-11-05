@@ -2,8 +2,8 @@ import React, { useState, ChangeEvent } from "react";
 import type { eventType, AcdnErrType, squadType } from "../../../lib/types/types";
 import { initEvent } from "../../../lib/db/initVals";
 import { Tabs, Tab, OverlayTrigger, Tooltip } from "react-bootstrap";
-import ModalConfirm, { delConfTitle } from "@/components/modal/confirmModal";
-import ModalErrorMsg, { cannotDeleteTitle } from "@/components/modal/errorModal";
+import ConfirmModal, { delConfTitle } from "@/components/modal/confirmModal";
+import ErrorModalMsg, { cannotDeleteTitle } from "@/components/modal/errorModal";
 import { initModalObj } from "@/components/modal/modalObjType";
 import { formatValue2Dec } from "@/lib/currency/formatValue";
 import { 
@@ -696,14 +696,14 @@ const OneToNEvents: React.FC<ChildProps> = ({
 
   return (
     <>
-      <ModalConfirm
+      <ConfirmModal
         show={confModalObj.show}
         title={confModalObj.title}
         message={confModalObj.message}
         onConfirm={confirmedDelete}
         onCancel={canceledDelete}
       />
-      <ModalErrorMsg
+      <ErrorModalMsg
         show={errModalObj.show}
         title={errModalObj.title}
         message={errModalObj.message}   

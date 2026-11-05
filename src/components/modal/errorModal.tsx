@@ -1,39 +1,36 @@
-import Button from 'react-bootstrap/Button';
-import Modal from 'react-bootstrap/Modal';
-import styles from "./model.module.css";
+"use client";
 
-export const cannotDeleteTitle = 'Cannot Delete'
-export const cannotSaveTitle = 'Cannot Save'
+import Button from "react-bootstrap/Button";
+import Modal from "react-bootstrap/Modal";
+import styles from "./modal.module.css";
 
-interface ChildProps {
-  show: boolean,
-  title: string,
-  message: string, 
-  onCancel?: () => void;
+export const cannotDeleteTitle = "Cannot Delete";
+export const cannotSaveTitle = "Cannot Save";
+
+interface ErrorModalProps {
+  show: boolean;
+  title: string;
+  message: string;
+  onCancel: () => void;
 }
 
-const ModalErrorMsg: React.FC<ChildProps> = ({
+const ErrorModalMsg: React.FC<ErrorModalProps> = ({
   show,
-  title: heading,
-  message,  
-  onCancel
-}) => { 
+  title,
+  message,
+  onCancel,
+}) => (
+  <Modal show={show} onHide={onCancel} aria-label={title}>
+    <Modal.Header closeButton>
+      <Modal.Title>{title}</Modal.Title>
+    </Modal.Header>
+    <Modal.Body className={styles.modalBody}>{message}</Modal.Body>
+    <Modal.Footer>
+      <Button className="me-2" variant="success" onClick={onCancel}>
+        OK
+      </Button>
+    </Modal.Footer>
+  </Modal>
+);
 
-  return (
-    <>
-      <Modal show={show} onHide={onCancel} aria-label="Error">
-      <Modal.Header closeButton>
-          <Modal.Title>{heading}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className={styles.modalBody}>{message}</Modal.Body>
-        <Modal.Footer>
-          <Button className='me-2' variant="success" onClick={onCancel}>
-            OK
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    </>
-  )
-}
-
-export default ModalErrorMsg;
+export default ErrorModalMsg;

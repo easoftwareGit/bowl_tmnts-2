@@ -1,32 +1,16 @@
+// test/app/results/tmnts/brackets/resultsClass.test.tsx
+// tests src/app/results/tmnt/[tmntId]/brackets/resultClassName.ts
 import { getResultClassName } from "@/app/results/tmnt/[tmntId]/brackets/resultClassName";
 import type { matchResultType } from "@/components/brackets/bracketMatchClass";
 
 describe("getResultClassName", () => {
   describe("each match result", () => {
-    it("returns the success class (green) for a win", () => {
-      expect(getResultClassName("W")).toBe("text-success");
-    });
-
-    it("returns the danger class (red) for a loss", () => {
-      expect(getResultClassName("L")).toBe("text-danger");
-    });
-
-    it("returns the primary class (blue) for a tie", () => {
-      expect(getResultClassName("T")).toBe("text-primary");
-    });
-
-    it("returns the primary class (blue) when there is no result yet", () => {
-      expect(getResultClassName(undefined)).toBe("text-primary");
-    });
-  });
-
-  describe("table of all results", () => {
-    it.each<[matchResultType, string]>([
-      ["W", "text-success"],
-      ["L", "text-danger"],
-      ["T", "text-primary"],
-      [undefined, "text-primary"],
-    ])("result %s gives class %s", (result, className) => {
+    it.each<[string, matchResultType, string]>([
+      ["a win (green)", "W", "text-success"],
+      ["a loss (red)", "L", "text-danger"],
+      ["a tie (blue)", "T", "text-primary"],
+      ["no result yet (blue)", undefined, "text-primary"],
+    ])("returns the right class for %s", (_label, result, className) => {
       expect(getResultClassName(result)).toBe(className);
     });
   });
@@ -42,30 +26,30 @@ describe("getResultClassName", () => {
       expect(classNames.size).toBe(3);
     });
 
-    it("returns a single Bootstrap text class with no extra spaces", () => {
-      (["W", "L", "T", undefined] as matchResultType[]).forEach((result) => {
-        expect(getResultClassName(result)).toMatch(/^text-[a-z]+$/);
-      });
+    it("gives no result the same class as a tie", () => {
+      expect(getResultClassName(undefined)).toBe(getResultClassName("T"));
     });
+
+    it.each<[matchResultType]>([["W"], ["L"], ["T"], [undefined]])(
+      "returns a single Bootstrap text class for result %s",
+      (result) => {
+        expect(getResultClassName(result)).toMatch(/^text-[a-z]+$/);
+      }
+    );
   });
 
   describe("unexpected input", () => {
-    it("falls back to the primary class for a value that is not a valid result", () => {
-      // not possible through the type, but the data comes from calculations
-      expect(getResultClassName("X" as unknown as matchResultType)).toBe(
-        "text-primary"
-      );
-      expect(getResultClassName("w" as unknown as matchResultType)).toBe(
-        "text-primary"
-      );
-      expect(getResultClassName(null as unknown as matchResultType)).toBe(
+    // not possible through the type, but the data comes from calculations
+    it.each<[string, unknown]>([
+      ["an unknown letter", "X"],
+      ["a lower case win", "w"],
+      ["a lower case loss", "l"],
+      ["an empty string", ""],
+      ["null", null],
+    ])("falls back to the primary class for %s", (_label, value) => {
+      expect(getResultClassName(value as matchResultType)).toBe(
         "text-primary"
       );
     });
-  });
-
-  it("is a pure function: the same result always gives the same class", () => {
-    expect(getResultClassName("W")).toBe(getResultClassName("W"));
-    expect(getResultClassName("L")).toBe(getResultClassName("L"));
   });
 });

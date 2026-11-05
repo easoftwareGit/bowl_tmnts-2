@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireDirector } from "@/lib/auth/requireDirector";
+import { requireDirector } from "@/lib/auth/guards";
 import { ErrorCode } from "@/lib/enums/enums";
 import { standardCatchReturn } from "../apiCatch";
 import type { bowlType } from "@/lib/types/types";

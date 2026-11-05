@@ -7,10 +7,10 @@ import { NextResponse } from "next/server";
 import type { Tmnt } from "@prisma/client";
 import { GET } from "@/app/api/tmnts/user/[userId]/route";
 import { prismaMock } from "../../../../prismaMock";
-import { requireDirector } from "@/lib/auth/requireDirector";
+import { requireDirector } from "@/lib/auth/guards";
 
 // Replace the auth check with a mock function each test can control
-jest.mock("@/lib/auth/requireDirector", () => ({
+jest.mock("@/lib/auth/guards", () => ({
   requireDirector: jest.fn(),
 }));
 const mockRequireDirector = requireDirector as jest.MockedFunction<

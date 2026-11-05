@@ -31,19 +31,23 @@ export const getGameNums = (tmntResults: tmntGameResult[]): number[] => {
  * Finds the last game that has at least one score entered.
  * 
  * @param {tmntGameResult[]} tmntResults - array of TmntGameResult
- * @returns {number} last completed game 
+ * @returns {number} last game with at least one score, or 0 if none 
  */
 export const getLastGameWithScores = (tmntResults: tmntGameResult[]): number => {
   const numGames = calcNumGames(tmntResults);
 
-  let lastGame = 1;
+  let lastGame = 0;
   for (let game = 1; game <= numGames; game++) {
-    const completed = tmntResults.filter(
-      (result) => result[`Game ${game}`] !== null
+    // check if there are scores for the game number
+    const hasScores = tmntResults.some(
+      (result) => result[`Game ${game}`] != null
     );
-    if (completed.length === 0) {
+    // if there are no scores for game number, return current last game
+    if (!hasScores) {
       return lastGame;
     }
+    // if got here, at least one player has a score for this game,
+    // so it becomes the last game with scores
     lastGame = game;
   }
   return lastGame;

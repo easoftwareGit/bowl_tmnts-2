@@ -31,7 +31,7 @@ import {
   type RecordClickEventArgs,
   type RecordDoubleClickEventArgs,
 } from "@syncfusion/ej2-react-grids";
-import ModalConfirm, { cancelConfTitle } from "@/components/modal/confirmModal";
+import ConfirmModal, { cancelConfTitle } from "@/components/modal/confirmModal";
 import { initModalObj, modalObjectType } from "@/components/modal/modalObjType";
 import WaitModal from "@/components/modal/waitModal";
 import {
@@ -44,7 +44,7 @@ import {
   createPfDiffAggregates,
   createPfTotalAggregates,
 } from "./sfPfAggregates";
-import ModalErrorMsg from "@/components/modal/errorModal";
+import ErrorModalMsg from "@/components/modal/errorModal";
 import { maxMoney } from "@/lib/validation/constants";
 import { localConfig } from "@/lib/currency/const";
 import { formatValueSymbSep2Dec } from "@/lib/currency/formatValue";
@@ -749,7 +749,7 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
       <>
         <WaitModal show={saveStatus === "saving"} message="Saving..." />
 
-        <ModalConfirm
+        <ConfirmModal
           show={confModalObj.show}
           title={confModalObj.title}
           message={confModalObj.message}
@@ -757,7 +757,7 @@ const PrizeFundGrid = forwardRef<PrizeFundGridHandle, PrizeFundGridProps>(
           onCancel={confirmNo}
         />
 
-        <ModalErrorMsg
+        <ErrorModalMsg
           show={errModalObj.show}
           title={errModalObj.title}
           message={errModalObj.message}

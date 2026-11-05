@@ -1,3 +1,5 @@
+// test/app/results/tmnts/brackets/populatePlayerBrktRows.test.tsx
+// tests src/app/results/tmnt/[tmntId]/brackets/populatePlayerBrktRows.tsx
 import { populatePlayerBrktRows } from "@/app/results/tmnt/[tmntId]/brackets/populatePlayerBrktRows";
 import { updateAllBracketMatches } from "@/app/results/tmnt/[tmntId]/brackets/updateAllBracketMatches";
 import { calcNumGames } from "@/components/tmnts/games";
@@ -7,7 +9,6 @@ import { tmntResultsToGameTypes } from "@/lib/tmntResultsToGameTypes";
 import { lastFirst } from "@/lib/getName";
 import { defaultPlayersPerMatch } from "@/lib/db/initVals";
 import { tgrGameKey, tgrHdcpKey, type tmntGameResult } from "@/lib/types/resultsTypes";
-import type { divDataType, playerType } from "@/lib/types/types";
 import {
   mockTmntFullData,
   mockGames,
@@ -38,13 +39,67 @@ jest.mock("@/lib/tmntResultsToGameTypes", () => ({
   tmntResultsToGameTypes: jest.fn(),
 }));
 
-const mockedUpdateAll = updateAllBracketMatches as jest.Mock;
-const mockedCalcNumGames = calcNumGames as jest.Mock;
-const mockedToGameTypes = tmntResultsToGameTypes as jest.Mock;
+const mockedUpdateAll = jest.mocked(updateAllBracketMatches);
+const mockedCalcNumGames = jest.mocked(calcNumGames);
+const mockedToGameTypes = jest.mocked(tmntResultsToGameTypes);
 
 const { updateAllBracketMatches: actualUpdateAll } = jest.requireActual<{
   updateAllBracketMatches: typeof updateAllBracketMatches;
 }>("@/app/results/tmnt/[tmntId]/brackets/updateAllBracketMatches");
+
+/*********************************************/
+/* helpers that keep "possibly undefined" out */
+/*********************************************/
+
+/**
+ * Gets the item at an index, or throws if there is none.
+ *
+ * @param {T[]} items - array to read from
+ * @param {number} index - index of the item
+ * @returns {T} the item at the index
+ */
+const getAt = <T,>(items: readonly T[], index: number): T => {
+  const item = items[index];
+  if (item === undefined) {
+    throw new Error(`No item at index ${String(index)}`);
+  }
+  return item;
+};
+
+/**
+ * Finds the first item that matches, or throws if none does.
+ *
+ * @param {T[]} items - array to search
+ * @param {(item: T) => boolean} match - test for the wanted item
+ * @param {string} what - name of the item, for the error message
+ * @returns {T} the matching item
+ */
+const findOrThrow = <T,>(
+  items: readonly T[],
+  match: (item: T) => boolean,
+  what: string
+): T => {
+  const item = items.find(match);
+  if (item === undefined) {
+    throw new Error(`No ${what} found`);
+  }
+  return item;
+};
+
+/**
+ * Gets a bracket list from a record, or throws if it is not there.
+ *
+ * @param {brktListRecord} record - bracket list record
+ * @param {string} id - bracket id
+ * @returns {BracketList} the bracket list
+ */
+const listIn = (record: brktListRecord, id: string): BracketList => {
+  const list = record[id];
+  if (list === undefined) {
+    throw new Error(`No bracket list for ${id}`);
+  }
+  return list;
+};
 
 /********************************************/
 /* fixtures built from mockTmntFullData     */
@@ -52,8 +107,9 @@ const { updateAllBracketMatches: actualUpdateAll } = jest.requireActual<{
 const { players, brkts } = mockTmntFullData;
 const NUM_GAMES = 6;
 
-// player number (1-8) -> player id from the mock
-const pid = (n: number) => players[n - 1].id;
+// player number (1-8) -> player from the mock
+const player = (n: number) => getAt(players, n - 1);
+const pid = (n: number) => player(n).id;
 const order = (...nums: number[]) => nums.map(pid);
 
 type Row = Record<string, unknown>;
@@ -64,7 +120,6 @@ const scoresFor = (playerId: string): number[] =>
     .sort((a, b) => a.game_num - b.game_num)
     .map((g) => g.score);
 
-// one game result for a mock player; scores default to the player's mock scores
 // one game result for a mock player in a mock division. The game scores are
 // the same in every division; only the handicap values change
 const makeResult = (
@@ -72,10 +127,8 @@ const makeResult = (
   divId: string = divId1,
   scores: number[] = scoresFor(pid(n))
 ): tmntGameResult => {
-  const p = players[n - 1];
-  const div = (mockTmntFullData.divs as divDataType[]).find(
-    (d) => d.id === divId
-  ) as divDataType;
+  const p = player(n);
+  const div = findOrThrow(mockTmntFullData.divs, (d) => d.id === divId, "division");
   const hdcp =
     div.hdcp_per > 0
       ? Math.floor(div.hdcp_per * (div.hdcp_from - p.average))
@@ -108,10 +161,12 @@ const allResults = players.map((_, i) => makeResult(i + 1));
 
 // rows come back typed; the tests read them as plain records
 const run = (results: tmntGameResult[], record: brktListRecord): Row[] =>
-  populatePlayerBrktRows(results, record) as unknown as Row[];
+  populatePlayerBrktRows(results, record);
 
-const rowFor = (rows: Row[], n: number) =>
-  rows.find((r) => r.player_id === pid(n)) as Row;
+const firstRow = (rows: Row[]): Row => getAt(rows, 0);
+
+const rowFor = (rows: Row[], n: number): Row =>
+  findOrThrow(rows, (r) => r.player_id === pid(n), `row for player ${String(n)}`);
 
 /*****************************/
 /* unit tests: fake lists    */
@@ -125,9 +180,9 @@ type FakePlayer = {
 
 // a fake player built from a mock player
 const fakePlayer = (n: number, bracketIds: string[] = []): FakePlayer => ({
-  first_name: players[n - 1].first_name,
-  last_name: players[n - 1].last_name,
-  lane: players[n - 1].lane,
+  first_name: player(n).first_name,
+  last_name: player(n).last_name,
+  lane: player(n).lane,
   bracketIds,
 });
 
@@ -192,8 +247,8 @@ describe("populatePlayerBrktRows", () => {
     });
 
     it("both mock brackets are in the first division, which is not the second", () => {
-      expect(brkts[0].div_id).toBe(divId1);
-      expect(brkts[1].div_id).toBe(divId1);
+      expect(getAt(brkts, 0).div_id).toBe(divId1);
+      expect(getAt(brkts, 1).div_id).toBe(divId1);
       expect(divId2).not.toBe(divId1);
     });
 
@@ -221,25 +276,43 @@ describe("populatePlayerBrktRows", () => {
       expect(r["total + Hdcp"]).toBe(1279);
       expect(r["Game 1"]).toBe(201);
       expect(r["Game 1 + Hdcp"]).toBe(210);
-    });    
+    });
   });
 
   describe("updating the bracket matches", () => {
-    it("updates the bracket matches once, with the record and the results, before building rows", () => {
+    it("updates the bracket matches once, with the same record and results objects", () => {
       const record: brktListRecord = { [brktId1]: makeFakeList() };
 
       run(allResults, record);
 
       expect(mockedUpdateAll).toHaveBeenCalledTimes(1);
-      expect(mockedUpdateAll).toHaveBeenCalledWith(record, allResults);
-      expect(mockedUpdateAll.mock.calls[0][0]).toBe(record);
-      expect(mockedUpdateAll.mock.calls[0][1]).toBe(allResults);
+      const [recordArg, resultsArg] = getAt(mockedUpdateAll.mock.calls, 0);
+      expect(recordArg).toBe(record);
+      expect(resultsArg).toBe(allResults);
     });
 
     it("updates the bracket matches even when the record is empty", () => {
       run(allResults, {});
 
       expect(mockedUpdateAll).toHaveBeenCalledTimes(1);
+    });
+
+    it("builds the rows from the brackets as they are after the update", () => {
+      // the bracket only reports the player as alive and cashing once the
+      // matches have been updated, so the row shows whether the update ran first
+      let updated = false;
+      const bracket = {
+        isPlayerAlive: jest.fn(() => updated),
+        isPlayerFirstOrSecond: jest.fn(() => updated),
+      };
+      mockedUpdateAll.mockImplementation(() => {
+        updated = true;
+      });
+
+      const rows = run([], { [brktId1]: singlePlayerList(1, bracket) });
+
+      expect(firstRow(rows).in).toBe(1);
+      expect(firstRow(rows).cash).toBe("$");
     });
   });
 
@@ -298,7 +371,7 @@ describe("populatePlayerBrktRows", () => {
       const rows = run(allResults, record);
 
       expect(rows).toHaveLength(1);
-      expect(rows[0].player_id).toBe(pid(1));
+      expect(firstRow(rows).player_id).toBe(pid(1));
     });
 
     it("does not ask calcNumGames about a list that is skipped", () => {
@@ -328,7 +401,7 @@ describe("populatePlayerBrktRows", () => {
       const rows = run([], record);
 
       expect(rows).toHaveLength(1);
-      expect(rows[0]).not.toHaveProperty("Game 1");
+      expect(firstRow(rows)).not.toHaveProperty("Game 1");
     });
   });
 
@@ -341,24 +414,29 @@ describe("populatePlayerBrktRows", () => {
       const rows = run([], record);
 
       expect(rows).toHaveLength(1);
-      expect(rows[0]).toMatchObject({
+      expect(firstRow(rows)).toEqual({
         id: pid(1),
         player_id: pid(1),
-        last_first: lastFirst(players[0].first_name, players[0].last_name),
-        lane: players[0].lane,
+        last_first: lastFirst(player(1).first_name, player(1).last_name),
+        lane: player(1).lane,
         in: 0,
         cash: "",
       });
     });
 
-    it("sets id to the player id", () => {
+    it("sets id to the player id on every row", () => {
       const record = {
         [brktId1]: makeFakeList({
           players: { [pid(1)]: fakePlayer(1), [pid(2)]: fakePlayer(2) },
         }),
       };
 
-      run([], record).forEach((row) => expect(row.id).toBe(row.player_id));
+      const rows = run([], record);
+
+      expect(rows).toHaveLength(2);
+      rows.forEach((row) => {
+        expect(row.id).toBe(row.player_id);
+      });
     });
 
     it("creates one row for each player in the list", () => {
@@ -386,7 +464,7 @@ describe("populatePlayerBrktRows", () => {
       const rows = run(allResults, recordWithPlayer1());
 
       [201, 202, 203, 252, 182, 185].forEach((score, i) => {
-        expect(rows[0][`Game ${i + 1}`]).toBe(score);
+        expect(firstRow(rows)[`Game ${String(i + 1)}`]).toBe(score);
       });
     });
 
@@ -395,9 +473,9 @@ describe("populatePlayerBrktRows", () => {
 
       const rows = run(allResults, recordWithPlayer1());
 
-      expect(rows[0]["Game 3"]).toBe(203);
-      expect(rows[0]).not.toHaveProperty("Game 4");
-      expect(rows[0]).not.toHaveProperty("Game 6");
+      expect(firstRow(rows)["Game 3"]).toBe(203);
+      expect(firstRow(rows)).not.toHaveProperty("Game 4");
+      expect(firstRow(rows)).not.toHaveProperty("Game 6");
     });
 
     it("copies only the game columns, not the handicap or total fields of the result", () => {
@@ -410,7 +488,7 @@ describe("populatePlayerBrktRows", () => {
 
       const rows = run([makeResult(1, divId2)], record);
 
-      expect(rows[0]["Game 1"]).toBe(201);
+      expect(firstRow(rows)["Game 1"]).toBe(201);
       [
         "Game 1 + Hdcp",
         "hdcp",
@@ -419,21 +497,23 @@ describe("populatePlayerBrktRows", () => {
         "total + Hdcp",
         "full_name",
         "average",
-      ].forEach((key) => expect(rows[0]).not.toHaveProperty(key));
+      ].forEach((key) => {
+        expect(firstRow(rows)).not.toHaveProperty(key);
+      });
     });
-        
+
     it("leaves the game columns off a player who has no result", () => {
       const rows = run([makeResult(2)], recordWithPlayer1());
 
       expect(rows).toHaveLength(1);
-      expect(rows[0]).not.toHaveProperty("Game 1");
+      expect(firstRow(rows)).not.toHaveProperty("Game 1");
     });
 
     it("asks calcNumGames about only the results of this list's players", () => {
       run(allResults, recordWithPlayer1());
 
       expect(mockedCalcNumGames).toHaveBeenCalledTimes(1);
-      const arg = mockedCalcNumGames.mock.calls[0][0] as tmntGameResult[];
+      const [arg] = getAt(mockedCalcNumGames.mock.calls, 0);
       expect(arg.map((r) => r.player_id)).toEqual([pid(1)]);
     });
 
@@ -451,15 +531,10 @@ describe("populatePlayerBrktRows", () => {
   });
 
   describe("the list's division", () => {
-    const listFor = (
-      divId: string,
-      n = 1,
-      extra: Partial<FakeListOpts> = {}
-    ) =>
+    const listFor = (divId: string, n = 1) =>
       makeFakeList({
         players: { [pid(n)]: fakePlayer(n) },
         divId,
-        ...extra,
       });
 
     const SCORES = [201, 202, 203, 252, 182, 185];
@@ -476,12 +551,12 @@ describe("populatePlayerBrktRows", () => {
       (_label, getResults) => {
         const results = getResults();
 
-        const rowsDiv1 = run(results, { [brktId1]: listFor(divId1) });
-        const rowsDiv2 = run(results, { [brktId2]: listFor(divId2) });
+        const rowDiv1 = firstRow(run(results, { [brktId1]: listFor(divId1) }));
+        const rowDiv2 = firstRow(run(results, { [brktId2]: listFor(divId2) }));
 
         SCORES.forEach((score, i) => {
-          expect(rowsDiv1[0][`Game ${i + 1}`]).toBe(score);
-          expect(rowsDiv2[0][`Game ${i + 1}`]).toBe(score);
+          expect(rowDiv1[`Game ${String(i + 1)}`]).toBe(score);
+          expect(rowDiv2[`Game ${String(i + 1)}`]).toBe(score);
         });
       }
     );
@@ -501,6 +576,8 @@ describe("populatePlayerBrktRows", () => {
       const rowsDiv1 = run(results, { [brktId1]: listFor(divId1) });
       const rowsDiv2 = run(results, { [brktId2]: listFor(divId2) });
 
+      expect(rowsDiv1).toHaveLength(1);
+      expect(rowsDiv2).toHaveLength(1);
       [...rowsDiv1, ...rowsDiv2].forEach((row) => {
         expect(row).not.toHaveProperty("Game 1 + Hdcp");
         expect(row).not.toHaveProperty("hdcp");
@@ -517,9 +594,9 @@ describe("populatePlayerBrktRows", () => {
       (_label, divId) => {
         run([scratchResult1(), hdcpResult1()], { [brktId1]: listFor(divId) });
 
-        const arg = mockedCalcNumGames.mock.calls[0][0] as tmntGameResult[];
+        const [arg] = getAt(mockedCalcNumGames.mock.calls, 0);
         expect(arg).toHaveLength(1);
-        expect(arg[0].div_id).toBe(divId);
+        expect(getAt(arg, 0).div_id).toBe(divId);
       }
     );
 
@@ -533,7 +610,7 @@ describe("populatePlayerBrktRows", () => {
       const rows = run([hdcpResult1()], { [brktId1]: listFor(divId1) });
 
       expect(rows).toHaveLength(1);
-      expect(rows[0]).not.toHaveProperty("Game 1");
+      expect(firstRow(rows)).not.toHaveProperty("Game 1");
     });
 
     it("creates one row for a player in two divisions, with the same scores whichever list runs last", () => {
@@ -550,7 +627,7 @@ describe("populatePlayerBrktRows", () => {
       expect(scratchFirst).toHaveLength(1);
       expect(hdcpFirst).toHaveLength(1);
       expect(scratchFirst).toEqual(hdcpFirst);
-      expect(scratchFirst[0]["Game 1"]).toBe(201);
+      expect(firstRow(scratchFirst)["Game 1"]).toBe(201);
     });
 
     it("keeps the earlier list's scores when the later division has no result for the player", () => {
@@ -560,7 +637,7 @@ describe("populatePlayerBrktRows", () => {
       });
 
       expect(rows).toHaveLength(1);
-      expect(rows[0]["Game 1"]).toBe(201);
+      expect(firstRow(rows)["Game 1"]).toBe(201);
     });
 
     it("gives each list's players the scores of their own result", () => {
@@ -572,8 +649,9 @@ describe("populatePlayerBrktRows", () => {
 
       const rows = run(results, record);
 
+      // player 1: 201 scratch; player 2: game 1 score from the mock
       expect(rowFor(rows, 1)["Game 1"]).toBe(201);
-      expect(rowFor(rows, 2)["Game 1"]).toBe(210);
+      expect(rowFor(rows, 2)["Game 1"]).toBe(getAt(scoresFor(pid(2)), 0));
     });
 
     it("does not give a player the scores of a division the player's list is not in", () => {
@@ -591,12 +669,13 @@ describe("populatePlayerBrktRows", () => {
   });
 
   describe("counting the brackets a player is still in", () => {
-    it("counts a bracket the player is alive in", () => {
+    it("counts a bracket the player is alive in, including the bracket at index 0", () => {
+      // index 0 is falsy, so it must not be treated as missing
       const rows = run([], {
         [brktId1]: singlePlayerList(1, makeBracket({ alive: true })),
       });
 
-      expect(rows[0].in).toBe(1);
+      expect(firstRow(rows).in).toBe(1);
     });
 
     it("does not count a bracket the player has lost in", () => {
@@ -604,7 +683,7 @@ describe("populatePlayerBrktRows", () => {
         [brktId1]: singlePlayerList(1, makeBracket({ alive: false })),
       });
 
-      expect(rows[0].in).toBe(0);
+      expect(firstRow(rows).in).toBe(0);
     });
 
     it("counts only the brackets the player is alive in", () => {
@@ -620,7 +699,7 @@ describe("populatePlayerBrktRows", () => {
         }),
       };
 
-      expect(run([], record)[0].in).toBe(2);
+      expect(firstRow(run([], record)).in).toBe(2);
     });
 
     it("adds up the brackets across the lists the player is in", () => {
@@ -640,7 +719,7 @@ describe("populatePlayerBrktRows", () => {
       const rows = run([], record);
 
       expect(rows).toHaveLength(1);
-      expect(rows[0].in).toBe(3);
+      expect(firstRow(rows).in).toBe(3);
     });
 
     it("asks each bracket about this player", () => {
@@ -652,13 +731,22 @@ describe("populatePlayerBrktRows", () => {
       expect(bracket.isPlayerFirstOrSecond).toHaveBeenCalledWith(pid(1));
     });
 
-    it("counts a player in the bracket at index 0", () => {
-      // index 0 is falsy, so it must not be treated as missing
-      const rows = run([], {
-        [brktId1]: singlePlayerList(1, makeBracket()),
-      });
+    it("only asks the brackets the player is in", () => {
+      const inBracket = makeBracket();
+      const otherBracket = makeBracket();
+      const record = {
+        [brktId1]: makeFakeList({
+          players: { [pid(1)]: fakePlayer(1, ["b0"]) },
+          brackets: [inBracket, otherBracket],
+          bracketIndexes: { b0: 0, b1: 1 },
+        }),
+      };
 
-      expect(rows[0].in).toBe(1);
+      run([], record);
+
+      expect(inBracket.isPlayerAlive).toHaveBeenCalledTimes(1);
+      expect(otherBracket.isPlayerAlive).not.toHaveBeenCalled();
+      expect(otherBracket.isPlayerFirstOrSecond).not.toHaveBeenCalled();
     });
 
     it("ignores a bracket id that is not in the index map", () => {
@@ -672,11 +760,11 @@ describe("populatePlayerBrktRows", () => {
 
       const rows = run([], record);
 
-      expect(rows[0].in).toBe(0);
-      expect(rows[0].cash).toBe("");
+      expect(firstRow(rows).in).toBe(0);
+      expect(firstRow(rows).cash).toBe("");
     });
 
-    it("ignores an index that has no bracket", () => {
+    it("ignores an index that has no bracket, without throwing", () => {
       const record = {
         [brktId1]: makeFakeList({
           players: { [pid(1)]: fakePlayer(1, ["b5"]) },
@@ -685,8 +773,10 @@ describe("populatePlayerBrktRows", () => {
         }),
       };
 
-      expect(() => run([], record)).not.toThrow();
-      expect(run([], record)[0].in).toBe(0);
+      const rows = run([], record);
+
+      expect(firstRow(rows).in).toBe(0);
+      expect(firstRow(rows).cash).toBe("");
     });
 
     it("gives 0 for a player who is in no brackets", () => {
@@ -698,7 +788,7 @@ describe("populatePlayerBrktRows", () => {
         }),
       };
 
-      expect(run([], record)[0].in).toBe(0);
+      expect(firstRow(run([], record)).in).toBe(0);
     });
   });
 
@@ -708,7 +798,7 @@ describe("populatePlayerBrktRows", () => {
         [brktId1]: singlePlayerList(1, makeBracket({ cash: true })),
       });
 
-      expect(rows[0].cash).toBe("$");
+      expect(firstRow(rows).cash).toBe("$");
     });
 
     it("shows nothing when the player is not first or second", () => {
@@ -716,7 +806,7 @@ describe("populatePlayerBrktRows", () => {
         [brktId1]: singlePlayerList(1, makeBracket({ cash: false })),
       });
 
-      expect(rows[0].cash).toBe("");
+      expect(firstRow(rows).cash).toBe("");
     });
 
     it("keeps the $ when a later bracket is not a cash for the player", () => {
@@ -728,7 +818,7 @@ describe("populatePlayerBrktRows", () => {
         }),
       };
 
-      expect(run([], record)[0].cash).toBe("$");
+      expect(firstRow(run([], record)).cash).toBe("$");
     });
 
     it("keeps the $ from an earlier list when a later list is not a cash", () => {
@@ -737,7 +827,7 @@ describe("populatePlayerBrktRows", () => {
         [brktId2]: singlePlayerList(1, makeBracket({ cash: false })),
       };
 
-      expect(run([], record)[0].cash).toBe("$");
+      expect(firstRow(run([], record)).cash).toBe("$");
     });
 
     it("counts a player as in and as a cash for the same bracket", () => {
@@ -745,8 +835,17 @@ describe("populatePlayerBrktRows", () => {
         [brktId1]: singlePlayerList(1, makeBracket({ alive: true, cash: true })),
       });
 
-      expect(rows[0].in).toBe(1);
-      expect(rows[0].cash).toBe("$");
+      expect(firstRow(rows).in).toBe(1);
+      expect(firstRow(rows).cash).toBe("$");
+    });
+
+    it("shows $ for a player who cashed but is no longer alive", () => {
+      const rows = run([], {
+        [brktId1]: singlePlayerList(1, makeBracket({ alive: false, cash: true })),
+      });
+
+      expect(firstRow(rows).in).toBe(0);
+      expect(firstRow(rows).cash).toBe("$");
     });
 
     it("marks only the players who cash", () => {
@@ -781,8 +880,21 @@ describe("populatePlayerBrktRows", () => {
     it("keeps the game scores on the single row", () => {
       const rows = run(allResults, twoLists());
 
-      expect(rows[0]["Game 1"]).toBe(201);
-      expect(rows[0]["Game 6"]).toBe(185);
+      expect(firstRow(rows)["Game 1"]).toBe(201);
+      expect(firstRow(rows)["Game 6"]).toBe(185);
+    });
+
+    it("keeps the lane from the first list the player is in", () => {
+      const record = {
+        [brktId1]: makeFakeList({
+          players: { [pid(1)]: { ...fakePlayer(1), lane: 11 } },
+        }),
+        [brktId2]: makeFakeList({
+          players: { [pid(1)]: { ...fakePlayer(1), lane: 22 } },
+        }),
+      };
+
+      expect(firstRow(run([], record)).lane).toBe(11);
     });
 
     it("creates rows for the players that are only in one of the lists", () => {
@@ -831,6 +943,7 @@ describe("populatePlayerBrktRows", () => {
         ply_lane30: sam(30),
       };
 
+      // numeric, not string, order: 2, 9, 30
       expect(rowsInOrderOf(fakePlayers)).toEqual([
         "ply_lane2",
         "ply_lane9",
@@ -903,21 +1016,18 @@ describe("populatePlayerBrktRows", () => {
   /*****************************************************/
   describe("with real bracket lists built from the mock tournament", () => {
     // squad game numbers for a bracket: start .. start + games - 1
-    const gameNumsFor = (brktIndex: number) =>
-      Array.from(
-        { length: brkts[brktIndex].games },
-        (_, i) => brkts[brktIndex].start + i
-      );
-
-    const buildList = (brktIndex: number) =>
-      new BracketList(
-        brkts[brktIndex].id,
+    const buildList = (brktIndex: number) => {
+      const brkt = getAt(brkts, brktIndex);
+      const gameNums = Array.from({ length: brkt.games }, (_, i) => brkt.start + i);
+      return new BracketList(
+        brkt.id,
         defaultPlayersPerMatch,
-        brkts[brktIndex].games,
-        gameNumsFor(brktIndex),
+        brkt.games,
+        gameNums,
         undefined,
-        { tmntFullData: mockTmntFullData, divId: brkts[brktIndex].div_id }
+        { tmntFullData: mockTmntFullData, divId: brkt.div_id }
       );
+    };
 
     const buildRecord = (): brktListRecord => ({
       [brktId1]: buildList(0),
@@ -949,18 +1059,18 @@ describe("populatePlayerBrktRows", () => {
         : "";
 
     it("builds lists that are ready", () => {
-      const record = buildRecord();
+      const list1 = listIn(buildRecord(), brktId1);
 
-      expect(record[brktId1].playersMap).not.toBeNull();
-      expect(record[brktId1].bracketIndexMap).not.toBeNull();
-      expect(record[brktId1].playersMap?.size).toBe(8);
+      expect(list1.playersMap).not.toBeNull();
+      expect(list1.bracketIndexMap).not.toBeNull();
+      expect(list1.playersMap?.size).toBe(8);
     });
 
     it("builds lists whose bracket definition has the division the results are filtered by", () => {
       const record = buildRecord();
 
-      expect(record[brktId1].brkt?.div_id).toBe(divId1);
-      expect(record[brktId2].brkt?.div_id).toBe(divId1);
+      expect(listIn(record, brktId1).brkt?.div_id).toBe(divId1);
+      expect(listIn(record, brktId2).brkt?.div_id).toBe(divId1);
     });
 
     it("creates one row per mock player, even though each is in both lists", () => {
@@ -980,12 +1090,14 @@ describe("populatePlayerBrktRows", () => {
 
     it("fills in the names and lanes from the lists' players", () => {
       const record = buildRecord();
+      const playersMap = listIn(record, brktId1).playersMap;
       const rows = run(allResults, record);
 
+      expect(rows).toHaveLength(8);
       rows.forEach((row) => {
-        const player = players.find((p) => p.id === row.player_id) as playerType;
-        expect(row.last_first).toBe(lastFirst(player.first_name, player.last_name));
-        expect(row.lane).toBe(record[brktId1].playersMap?.get(player.id)?.lane);
+        const p = findOrThrow(players, (pl) => pl.id === row.player_id, "player");
+        expect(row.last_first).toBe(lastFirst(p.first_name, p.last_name));
+        expect(row.lane).toBe(playersMap?.get(p.id)?.lane);
         expect(typeof row.lane).toBe("number");
       });
     });
@@ -993,9 +1105,12 @@ describe("populatePlayerBrktRows", () => {
     it("copies the six game scores from the mock games onto every row", () => {
       const rows = run(allResults, buildRecord());
 
+      expect(rows).toHaveLength(8);
       rows.forEach((row) => {
-        scoresFor(row.player_id as string).forEach((score, i) => {
-          expect(row[`Game ${i + 1}`]).toBe(score);
+        const scores = scoresFor(String(row.player_id));
+        expect(scores).toHaveLength(NUM_GAMES);
+        scores.forEach((score, i) => {
+          expect(row[`Game ${String(i + 1)}`]).toBe(score);
         });
       });
       expect(rowFor(rows, 8)["Game 4"]).toBe(263);
@@ -1007,7 +1122,9 @@ describe("populatePlayerBrktRows", () => {
       const rows = run(otherDivResults, buildRecord());
 
       expect(rows).toHaveLength(8);
-      rows.forEach((row) => expect(row).not.toHaveProperty("Game 1"));
+      rows.forEach((row) => {
+        expect(row).not.toHaveProperty("Game 1");
+      });
     });
 
     it("marks the finalists of the first bracket of each list with a $", () => {
@@ -1023,8 +1140,9 @@ describe("populatePlayerBrktRows", () => {
       const record = buildRecord();
       const rows = run(allResults, record);
 
+      expect(rows).toHaveLength(8);
       rows.forEach((row) => {
-        expect(row.cash).toBe(expectedCash(record, row.player_id as string));
+        expect(row.cash).toBe(expectedCash(record, String(row.player_id)));
       });
     });
 
@@ -1032,9 +1150,9 @@ describe("populatePlayerBrktRows", () => {
       const record = buildRecord();
       const rows = run(allResults, record);
 
+      expect(rows).toHaveLength(8);
       rows.forEach((row) => {
-        const id = row.player_id as string;
-        expect(row.in).toBe(expectedIn(record, id));
+        expect(row.in).toBe(expectedIn(record, String(row.player_id)));
       });
       // player 8 won the first bracket of each list, so is alive in at least two
       expect(rowFor(rows, 8).in).toBeGreaterThanOrEqual(2);
@@ -1058,500 +1176,11 @@ describe("populatePlayerBrktRows", () => {
 
       expect(rows).toHaveLength(8);
       rows.forEach((row) => {
-        const id = row.player_id as string;
         expect(row.cash).toBe("");
-        expect(row.in).toBe(expectedIn(record, id));
+        expect(row.in).toBe(expectedIn(record, String(row.player_id)));
         expect(row.in).toBeGreaterThan(0);
         expect(row).not.toHaveProperty("Game 1");
       });
     });
   });
 });
-
-
-// import {
-//   populatePlayerBrktRows,
-// } from "@/app/results/tmnt/[tmntId]/brackets/populateBrktPlayerRows";
-// import {
-//   BracketList,
-//   brktListInitialDataType,
-// } from "@/components/brackets/bracketListClass";
-// import type { brktListRecord } from "@/components/brackets/buildBrktLists";
-// import type { tmntGameResult } from "@/lib/types/resultsTypes";
-// import {
-//   brktId1,
-//   brktId2,
-//   divId1,
-//   mockByePlayer,
-//   mockGames,
-//   mockTmntFullData,
-//   playerId1,
-//   playerId2,
-//   playerId3,
-//   playerId4,
-//   playerId5,
-//   playerId6,
-//   playerId7,
-//   playerId8,
-// } from "../../../../mocks/tmnts/tmntFullData/mockTmntFullData";
-
-// describe("populatePlayerBrktRows", () => {
-//   let brktListRecords: brktListRecord;
-
-//   const initData: brktListInitialDataType = {
-//     tmntFullData: mockTmntFullData,
-//     divId: divId1,
-//   };
-
-//   /**
-//    * Creates the two bracket lists used by mockTmntFullData.
-//    *
-//    * brktId1 uses games 1, 2 and 3.
-//    * brktId2 uses games 4, 5 and 6.
-//    */
-//   const setup = (): void => {
-//     const brktList1 = new BracketList(
-//       brktId1,
-//       2,
-//       3,
-//       [1, 2, 3],
-//       mockByePlayer,
-//       initData,
-//     );
-
-//     const brktList2 = new BracketList(
-//       brktId2,
-//       2,
-//       3,
-//       [4, 5, 6],
-//       mockByePlayer,
-//       initData,
-//     );
-
-//     brktListRecords = {
-//       [brktId1]: brktList1,
-//       [brktId2]: brktList2,
-//     };
-//   };
-
-//   /**
-//    * Converts mockGames into the tournament-result format used by
-//    * populatePlayerBrktRows().
-//    *
-//    * Only games through lastGame are included. This lets each test
-//    * simulate scores being entered one game at a time.
-//    */
-//   const resultsThrough = (
-//     lastGame: number,
-//   ): tmntGameResult[] => {
-//     const playerIds = [
-//       playerId1,
-//       playerId2,
-//       playerId3,
-//       playerId4,
-//       playerId5,
-//       playerId6,
-//       playerId7,
-//       playerId8,
-//     ];
-
-//     return playerIds.map((playerId) => {
-//       const result = {
-//         player_id: playerId,
-//       } as tmntGameResult;
-
-//       mockGames
-//         .filter(
-//           (game) =>
-//             game.player_id === playerId &&
-//             game.game_num <= lastGame,
-//         )
-//         .forEach((game) => {
-//           const gameCol =
-//             `Game ${game.game_num}` as keyof tmntGameResult;
-
-//           (
-//             result as unknown as Record<string, unknown>
-//           )[gameCol] = game.score;
-//         });
-
-//       return result;
-//     });
-//   };
-
-//   /**
-//    * Returns one player row or throws a useful test error if
-//    * populatePlayerBrktRows() did not create the row.
-//    */
-//   const getPlayerRow = (
-//     rows: ReturnType<typeof populatePlayerBrktRows>,
-//     playerId: string,
-//   ) => {
-//     const row = rows.find(
-//       (playerRow) =>
-//         playerRow.player_id === playerId,
-//     );
-
-//     if (row === undefined) {
-//       throw new Error(
-//         `Player row not found for ${playerId}.`,
-//       );
-//     }
-
-//     return row;
-//   };
-
-//   beforeEach(() => {
-//     setup();
-//   });
-
-//   it("creates one row for each player when no scores have been entered", () => {
-//     const rows = populatePlayerBrktRows(
-//       [],
-//       brktListRecords,
-//     );
-
-//     expect(rows).toHaveLength(8);
-
-//     expect(
-//       rows.map((row) => row.player_id),
-//     ).toEqual(
-//       expect.arrayContaining([
-//         playerId1,
-//         playerId2,
-//         playerId3,
-//         playerId4,
-//         playerId5,
-//         playerId6,
-//         playerId7,
-//         playerId8,
-//       ]),
-//     );
-//   });
-
-//   it("combines the In counts from both bracket lists when no scores have been entered", () => {
-//     const rows = populatePlayerBrktRows(
-//       [],
-//       brktListRecords,
-//     );
-
-//     /*
-//      * Every player is entered in:
-//      *
-//      *   8 brackets for brktId1
-//      * + 8 brackets for brktId2
-//      * ------------------------
-//      *  16 brackets total
-//      */
-//     rows.forEach((row) => {
-//       expect(row.in).toBe(16);
-//       expect(row.cash).toBe("");
-//     });
-//   });
-
-//   it("does not add game columns when no scores have been entered", () => {
-//     const rows = populatePlayerBrktRows(
-//       [],
-//       brktListRecords,
-//     );
-
-//     rows.forEach((row) => {
-//       expect(row).not.toHaveProperty("Game 1");
-//       expect(row).not.toHaveProperty("Game 2");
-//       expect(row).not.toHaveProperty("Game 3");
-//       expect(row).not.toHaveProperty("Game 4");
-//       expect(row).not.toHaveProperty("Game 5");
-//       expect(row).not.toHaveProperty("Game 6");
-//     });
-//   });
-
-//   it("copies game 1 scores into the player rows", () => {
-//     const rows = populatePlayerBrktRows(
-//       resultsThrough(1),
-//       brktListRecords,
-//     );
-
-//     expect(
-//       getPlayerRow(rows, playerId1)["Game 1"],
-//     ).toBe(201);
-
-//     expect(
-//       getPlayerRow(rows, playerId2)["Game 1"],
-//     ).toBe(210);
-
-//     expect(
-//       getPlayerRow(rows, playerId3)["Game 1"],
-//     ).toBe(195);
-
-//     expect(
-//       getPlayerRow(rows, playerId4)["Game 1"],
-//     ).toBe(205);
-
-//     expect(
-//       getPlayerRow(rows, playerId5)["Game 1"],
-//     ).toBe(225);
-
-//     expect(
-//       getPlayerRow(rows, playerId6)["Game 1"],
-//     ).toBe(229);
-
-//     expect(
-//       getPlayerRow(rows, playerId7)["Game 1"],
-//     ).toBe(190);
-
-//     expect(
-//       getPlayerRow(rows, playerId8)["Game 1"],
-//     ).toBe(230);
-//   });
-
-//   it("does not change the second bracket list before game 4 is entered", () => {
-//     const rows = populatePlayerBrktRows(
-//       resultsThrough(3),
-//       brktListRecords,
-//     );
-
-//     /*
-//      * Games 1-3 can eliminate players from brktId1.
-//      *
-//      * brktId2 does not start until game 4, so every player
-//      * must still have at least the 8 brktId2 entries alive.
-//      */
-//     rows.forEach((row) => {
-//       expect(row.in).toBeGreaterThanOrEqual(8);
-//     });
-//   });
-
-//   it("copies games 1 through 3 without adding games 4 through 6", () => {
-//     const rows = populatePlayerBrktRows(
-//       resultsThrough(3),
-//       brktListRecords,
-//     );
-
-//     const player1Row = getPlayerRow(
-//       rows,
-//       playerId1,
-//     );
-
-//     expect(player1Row["Game 1"]).toBe(201);
-//     expect(player1Row["Game 2"]).toBe(202);
-//     expect(player1Row["Game 3"]).toBe(203);
-
-//     expect(player1Row).not.toHaveProperty("Game 4");
-//     expect(player1Row).not.toHaveProperty("Game 5");
-//     expect(player1Row).not.toHaveProperty("Game 6");
-//   });
-
-//   it("starts updating the second bracket list when game 4 is entered", () => {
-//     const rowsBeforeGame4 =
-//       populatePlayerBrktRows(
-//         resultsThrough(3),
-//         brktListRecords,
-//       );
-
-//     /*
-//      * Recreate the lists because populatePlayerBrktRows()
-//      * updates their bracket state.
-//      */
-//     setup();
-
-//     const rowsAfterGame4 =
-//       populatePlayerBrktRows(
-//         resultsThrough(4),
-//         brktListRecords,
-//       );
-
-//     /*
-//      * Game 4 is the first game used by brktId2.
-//      * At least one player's total number of live brackets
-//      * should therefore decrease.
-//      */
-//     const inChanged = rowsAfterGame4.some(
-//       (row) => {
-//         const beforeRow = getPlayerRow(
-//           rowsBeforeGame4,
-//           row.player_id,
-//         );
-
-//         return row.in < beforeRow.in;
-//       },
-//     );
-
-//     expect(inChanged).toBe(true);
-//   });
-
-//   it("copies the new random game 4 scores into the player rows", () => {
-//     const rows = populatePlayerBrktRows(
-//       resultsThrough(4),
-//       brktListRecords,
-//     );
-
-//     expect(
-//       getPlayerRow(rows, playerId1)["Game 4"],
-//     ).toBe(252);
-
-//     expect(
-//       getPlayerRow(rows, playerId2)["Game 4"],
-//     ).toBe(265);
-
-//     expect(
-//       getPlayerRow(rows, playerId3)["Game 4"],
-//     ).toBe(264);
-
-//     expect(
-//       getPlayerRow(rows, playerId4)["Game 4"],
-//     ).toBe(181);
-
-//     expect(
-//       getPlayerRow(rows, playerId5)["Game 4"],
-//     ).toBe(228);
-
-//     expect(
-//       getPlayerRow(rows, playerId6)["Game 4"],
-//     ).toBe(222);
-
-//     expect(
-//       getPlayerRow(rows, playerId7)["Game 4"],
-//     ).toBe(193);
-
-//     expect(
-//       getPlayerRow(rows, playerId8)["Game 4"],
-//     ).toBe(263);
-//   });
-
-//   it("copies the new random game 5 scores into the player rows", () => {
-//     const rows = populatePlayerBrktRows(
-//       resultsThrough(5),
-//       brktListRecords,
-//     );
-
-//     expect(
-//       getPlayerRow(rows, playerId1)["Game 5"],
-//     ).toBe(182);
-
-//     expect(
-//       getPlayerRow(rows, playerId2)["Game 5"],
-//     ).toBe(202);
-
-//     expect(
-//       getPlayerRow(rows, playerId3)["Game 5"],
-//     ).toBe(242);
-
-//     expect(
-//       getPlayerRow(rows, playerId4)["Game 5"],
-//     ).toBe(188);
-
-//     expect(
-//       getPlayerRow(rows, playerId5)["Game 5"],
-//     ).toBe(182);
-
-//     expect(
-//       getPlayerRow(rows, playerId6)["Game 5"],
-//     ).toBe(183);
-
-//     expect(
-//       getPlayerRow(rows, playerId7)["Game 5"],
-//     ).toBe(228);
-
-//     expect(
-//       getPlayerRow(rows, playerId8)["Game 5"],
-//     ).toBe(261);
-//   });
-
-//   it("copies all six game scores into the player rows", () => {
-//     const rows = populatePlayerBrktRows(
-//       resultsThrough(6),
-//       brktListRecords,
-//     );
-
-//     const player1Row = getPlayerRow(
-//       rows,
-//       playerId1,
-//     );
-
-//     expect(player1Row).toMatchObject({
-//       "Game 1": 201,
-//       "Game 2": 202,
-//       "Game 3": 203,
-//       "Game 4": 252,
-//       "Game 5": 182,
-//       "Game 6": 185,
-//     });
-
-//     const player8Row = getPlayerRow(
-//       rows,
-//       playerId8,
-//     );
-
-//     expect(player8Row).toMatchObject({
-//       "Game 1": 230,
-//       "Game 2": 231,
-//       "Game 3": 232,
-//       "Game 4": 263,
-//       "Game 5": 261,
-//       "Game 6": 239,
-//     });
-//   });
-
-//   it("marks players who cash after completed brackets", () => {
-//     const rows = populatePlayerBrktRows(
-//       resultsThrough(6),
-//       brktListRecords,
-//     );
-
-//     /*
-//      * At least one player must finish first or second in
-//      * one of the sixteen individual brackets.
-//      */
-//     expect(
-//       rows.some((row) => row.cash === "$"),
-//     ).toBe(true);
-//   });
-
-//   it("returns the rows sorted by last name and first name", () => {
-//     const rows = populatePlayerBrktRows(
-//       [],
-//       brktListRecords,
-//     );
-
-//     expect(
-//       rows.map((row) => ({
-//         first_name: row.first_name,
-//         last_name: row.last_name,
-//       })),
-//     ).toEqual([
-//       {
-//         first_name: "Jane",
-//         last_name: "Doe",
-//       },
-//       {
-//         first_name: "Jill",
-//         last_name: "Doe",
-//       },
-//       {
-//         first_name: "Joe",
-//         last_name: "Doe",
-//       },
-//       {
-//         first_name: "John",
-//         last_name: "Doe",
-//       },
-//       {
-//         first_name: "Terri",
-//         last_name: "Smith",
-//       },
-//       {
-//         first_name: "Tina",
-//         last_name: "Smith",
-//       },
-//       {
-//         first_name: "Tom",
-//         last_name: "Smith",
-//       },
-//       {
-//         first_name: "Tony",
-//         last_name: "Smith",
-//       },
-//     ]);
-//   });
-// });
-

@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { isPassword8to20, isValidBtDbId } from "@/lib/validation/validation";
 import { doCompare, doHash } from "@/lib/server/hashServer";
 import { standardCatchReturn } from "@/app/api/apiCatch";
-import { requireSelf } from "@/lib/auth/requireSelf";
+import { requireSelf } from "@/lib/auth/guards";
 import { maxPwdAttempts, pwdLockMinutes } from "@/lib/auth/authUtils";
 
 const MS_PER_MINUTE = 60 * 1000;

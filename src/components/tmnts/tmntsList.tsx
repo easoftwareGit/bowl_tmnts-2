@@ -9,7 +9,7 @@ interface TmntListProps {
   tmnts: tmntsListType[];
   tmntYear: string;
   showResults: boolean;
-  onYearChange: (val: string) => void | undefined;
+  onYearChange: (val: string) => void;
 }
 
 interface SelectOption {
@@ -19,15 +19,6 @@ interface SelectOption {
 
 type SortDir = "ASC" | "DESC";
 
-/**
- * for a sorted array, gets the inder to insert a new item,
- * keeping the array sorted
- *
- * @param {SelectOption[]} arr - array of sorted objects
- * @param {string} toBeAdded - new value to be added to sorted array
- * @param {SortDir} [sortDir="ASC"] - direction of sort
- * @return {number} - index to insert new item
- */
 function sortedIndex(
   arr: SelectOption[],
   toBeAdded: string,
@@ -37,13 +28,14 @@ function sortedIndex(
   let high = arr.length;
 
   while (low < high) {
-    // same as Math.floor((low + high) / 2);
-    let mid = (low + high) >>> 1;
+    const mid = (low + high) >>> 1;
+    const midOption = arr[mid];
+    if (midOption === undefined) break; // can't happen: mid is always < arr.length
     if (sortDir === "ASC") {
-      if (arr[mid].text < toBeAdded) low = mid + 1;
+      if (midOption.text < toBeAdded) low = mid + 1;
       else high = mid;
     } else {
-      if (arr[mid].text > toBeAdded) low = mid + 1;
+      if (midOption.text > toBeAdded) low = mid + 1;
       else high = mid;
     }
   }
@@ -52,24 +44,20 @@ function sortedIndex(
 
 /**
  * gets an array of sorted state objects, no duplicates
- *
- * @param {tmntsListType[]} tmnts
- * @return {*}  {SelectOption[]}
+ * 
+ * @param {tmntsListType[]} tmnts - array of tmnts
+ * @return {SelectOption[]} - array of sorted state objects, or empty array
  */
-export function getSortedStateOptions(tmnts: tmntsListType[]): SelectOption[] {
-  if (!tmnts) return [];
+export function getSortedStateOptions(tmnts: tmntsListType[]): SelectOption[] {  
+  if (!Array.isArray(tmnts)) return [];
   const stateOptions: SelectOption[] = [];
   tmnts.forEach((tmnt) => {
     const state = tmnt.bowl.state;
     const index: number = sortedIndex(stateOptions, state);
-    if (stateOptions.length > 0) {
-      if (index === stateOptions.length) {
-        stateOptions.push({ value: state, text: state });
-      } else if (stateOptions[index].text !== state) {
-        stateOptions.splice(index, 0, { value: state, text: state });
-      }
-    } else {
-      stateOptions.push({ value: state, text: state });
+    // stateOptions[index] is undefined when index === length (add at end),
+    // and splice at length works the same as push
+    if (stateOptions[index]?.text !== state) {
+      stateOptions.splice(index, 0, { value: state, text: state });
     }
   });
   return stateOptions;
@@ -78,53 +66,46 @@ export function getSortedStateOptions(tmnts: tmntsListType[]): SelectOption[] {
 const TmntsList: FC<TmntListProps> = (props) => {
   const { years, tmnts, tmntYear, showResults } = props;
 
-  let stateFilter: string = "all";
+  const [stateFilter, setStateFilter] = useState("all");
   const [filteredTmnts, setFilteredTmnts] = useState(tmnts);
 
+  // new tmnts from the parent: show them all, and reset the state filter
+  // so the select matches the list
   useEffect(() => {
-    setFilteredTmnts(tmnts)
-  }, [tmnts, years])
+    setFilteredTmnts(tmnts);
+    setStateFilter("all");
+  }, [tmnts]);
 
   const TmntMonthDay = (tmnt: tmntsListType): string => {
     return getMonthDay(tmnt.start_date_str);
   };
 
-  function filterTmnt(tmnt: tmntsListType): boolean {
-    if (stateFilter === "all") return true;
-    return tmnt.bowl.state === stateFilter;
-  }
-
-  // populate array of states (no duplicates), keeping array sorted
   const sortedStates = getSortedStateOptions(tmnts);
-  // add "all" at top
   sortedStates.splice(0, 0, { value: "all", text: "all" });
 
   function handleYearChange(e: React.ChangeEvent<HTMLSelectElement>): void {
     const { value } = e.target;
 
-    props.onYearChange(value);    // send value to parent, so parent can re-load tmnts for selected year
-    stateFilter = "all";          // reset state filter
-    setFilteredTmnts([]);         // reset filtered tmnts to all tmnts for year
-
-    // get state filter element
-    const selFilter = document.getElementById(
-      "stateFilter",
-    ) as HTMLSelectElement | null;
-    if (selFilter) {
-      selFilter.selectedIndex = 0;  // reset selcted state filter to top value, 'all'
-    }
+    props.onYearChange(value); // parent re-loads tmnts for the selected year
+    setStateFilter("all");     // reset state filter; the controlled select follows
+    setFilteredTmnts([]);      // clear the list until the parent sends the new year's tmnts
   }
 
-  function handleStateFilterChange(e: any): void {
+  function handleStateFilterChange(
+    e: React.ChangeEvent<HTMLSelectElement>,
+  ): void {
     const { value } = e.target;
-    stateFilter = value;
-    setFilteredTmnts(tmnts.filter(filterTmnt));
+    setStateFilter(value);
+    setFilteredTmnts(
+      value === "all"
+        ? tmnts
+        : tmnts.filter((tmnt) => tmnt.bowl.state === value),
+    );
   }
 
   return (
     <>
-      <div className="d-flex justify-content-center">        
-        {/* style width is in pixels */}
+      <div className="d-flex justify-content-center">
         <div
           className="tmnt_table"
           style={{ width: 720 }}
@@ -135,7 +116,7 @@ const TmntsList: FC<TmntListProps> = (props) => {
                 <th className="align-middle" style={{ width: 100 }}>
                   Tournament
                 </th>
-                <th style={{ width: 150 }}>   
+                <th style={{ width: 150 }}>
                   {years.length ? (
                     <select
                       className="form-select w-auto"
@@ -153,8 +134,8 @@ const TmntsList: FC<TmntListProps> = (props) => {
                           {yearObj.year}
                         </option>
                       ))}
-                    </select>                  
-                  ) : null }  
+                    </select>
+                  ) : null }
                 </th>
                 <th className="align-middle" style={{ width: 300 }}>
                   Center
@@ -165,6 +146,7 @@ const TmntsList: FC<TmntListProps> = (props) => {
                     className="form-select w-100"
                     aria-label="Select State"
                     data-testid="stateSelect"
+                    value={stateFilter}
                     onChange={handleStateFilterChange}
                   >
                     {sortedStates.map((stateObj) => (
@@ -204,7 +186,7 @@ const TmntsList: FC<TmntListProps> = (props) => {
               ))}
             </tbody>
           </table>
-        </div>        
+        </div>
       </div>
     </>
   );

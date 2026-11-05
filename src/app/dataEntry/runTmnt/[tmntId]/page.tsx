@@ -8,7 +8,7 @@ import type { tmntFormDataType } from "@/lib/types/types";
 import { tmntFormParent } from "@/lib/enums/enums";
 import Link from "next/link";
 import WaitModal from "@/components/modal/waitModal";
-import ModalErrorMsg from "@/components/modal/errorModal";
+import ErrorModalMsg from "@/components/modal/errorModal";
 import { initModalObj } from "@/components/modal/modalObjType";
 import {
   fetchTmntFullData,
@@ -141,7 +141,7 @@ const RunTmntPage = () => {
   return (
     <>
       <WaitModal show={tmntLoadStatus === 'loading' || gotStage === false} message="Loading..." />
-      <ModalErrorMsg
+      <ErrorModalMsg
         show={errModalObj.show}
         title={errModalObj.title}
         message={errModalObj.message}

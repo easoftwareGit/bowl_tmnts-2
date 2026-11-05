@@ -880,6 +880,76 @@ describe("RegisterForm", () => {
       await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/user/tmnts"));
     });
 
+    it("shows the server message in an alert on 403 and disables Register", async () => {
+      const user = userEvent.setup();
+      mockRegisterUser.mockRejectedValueOnce(
+        axiosError(403, { error: "Registration is closed." }),
+      );
+      render(<RegisterForm />);
+
+      await fillForm(user);
+      await submit(user);
+
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "Registration is closed.",
+      );
+      // not submitting any more, but registration is closed, so stay disabled
+      await waitFor(() => expect(submitButton()).toBeDisabled());
+      expect(submitButton()).toHaveTextContent(/^Register$/);
+      expect(mockedSignIn).not.toHaveBeenCalled();
+      expect(mockPush).not.toHaveBeenCalled();
+    });
+
+    it("shows 'Registration is closed.' in the alert on 403 with no message", async () => {
+      const user = userEvent.setup();
+      mockRegisterUser.mockRejectedValueOnce(axiosError(403));
+      render(<RegisterForm />);
+
+      await fillForm(user);
+      await submit(user);
+
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "Registration is closed.",
+      );
+    });
+
+    it("does not show a 403 as an email error", async () => {
+      const user = userEvent.setup();
+      mockRegisterUser.mockRejectedValueOnce(
+        axiosError(403, { error: "Registration is closed." }),
+      );
+      render(<RegisterForm />);
+
+      await fillForm(user);
+      await submit(user);
+
+      await screen.findByRole("alert");
+      expect(
+        screen.queryByText("Other error registering"),
+      ).not.toBeInTheDocument();
+      expect(inputs().email).not.toHaveClass("is-invalid");
+    });
+
+    it("keeps the closed alert and disabled button when a field changes", async () => {
+      const user = userEvent.setup();
+      mockRegisterUser.mockRejectedValueOnce(
+        axiosError(403, { error: "Registration is closed." }),
+      );
+      render(<RegisterForm />);
+
+      await fillForm(user);
+      await submit(user);
+      await screen.findByRole("alert");
+
+      // unlike the 409 alert, editing the email does not clear it
+      await user.type(inputs().email, "x");
+
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Registration is closed.",
+      );
+      expect(submitButton()).toBeDisabled();
+    });
+
     it.each([400, 422, 500])(
       "shows 'Other error registering' under email for a %i response",
       async (status) => {

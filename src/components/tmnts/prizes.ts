@@ -63,35 +63,6 @@ export const calcPositions = (tmntResults: tmntGameResult[]): number[] => {
   return positions;
 };
 
-// export const calcPositions = (tmntResults: tmntGameResult[]): number[] => {
-//   if (!tmntResults || !Array.isArray(tmntResults) || tmntResults.length === 0) return [];
-
-//   // make sure data is sorted correctly
-//   const sortedResults = [...tmntResults].sort(
-//     (a, b) => (b["total + Hdcp"] ?? 0) - (a["total + Hdcp"] ?? 0)
-//   );
-
-//   const positions: number[] = [];
-//   let position = 1;
-//   let resultIndex = 0;
-
-//   while (resultIndex < sortedResults.length) {
-//     const currentTotal = sortedResults[resultIndex]["total + Hdcp"];
-//     const allWithSameTotal = sortedResults.filter(
-//       (result) => result["total + Hdcp"] === currentTotal);
-    
-//     const lastResultIndex = resultIndex + allWithSameTotal.length - 1;
-//     for (let r = resultIndex; r <= lastResultIndex; r++) {
-//       positions.push(position);
-//     }
-
-//     resultIndex += allWithSameTotal.length;
-//     position += allWithSameTotal.length;
-//   }
-
-//   return positions;
-// };
-
 /** 
  * distribute prizes for a division
  * note 1: tmntResults is sorted by "total + Hdcp"
@@ -158,39 +129,4 @@ export const calcPrizesForDiv = (
     resultIndex += numTied;
   }
   return prizes;
-
-  // // if not at last game, ties are not calculated
-  // if (numGames > lastGameWithScore) { 
-  //   for (let p = 0; p < sortedDivPfs.length; p++) {
-  //     prizes.push(formatValueSymbSep2Dec(sortedDivPfs[p].amount!.toString(), localConfig));
-  //   }
-  //   return prizes;
-  // };
-  
-  // // at last game, check for ties and adjust prizes appropriately
-  // while (prizeIndex < sortedDivPfs.length) {
-  //   const currentTotal = sortedResults[resultIndex]["total + Hdcp"]
-  //   const allWithSameTotal = sortedResults.filter(
-  //     (result) => result["total + Hdcp"] === currentTotal);
-
-  //   /*
-  //   * A tie occupies one prize position for each tied player.
-  //   * Only include prize positions that actually exist.
-  //   */    
-  //   const lastPrizeIndex = prizeIndex + allWithSameTotal.length - 1;
-  //   let totalPrize = 0;
-  //   for (let p = prizeIndex; p <= lastPrizeIndex && p < sortedDivPfs.length; p++) {
-  //     const divPf = sortedDivPfs[p];
-  //     totalPrize += divPf.amount!;      
-  //   }
-  //   prizeIndex += allWithSameTotal.length;
-    
-  //   const lastResultIndex = resultIndex + allWithSameTotal.length - 1;
-  //   const prizePerPlayer = totalPrize / allWithSameTotal.length;
-  //   for (let r = resultIndex; r <= lastResultIndex && r < sortedResults.length; r++) {
-  //     prizes.push(formatValueSymbSep2Dec(prizePerPlayer.toString(), localConfig));
-  //   }
-  //   resultIndex += allWithSameTotal.length    
-  // }
-  // return prizes;
-}
+};

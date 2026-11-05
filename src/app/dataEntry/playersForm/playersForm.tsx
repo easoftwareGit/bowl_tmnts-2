@@ -56,11 +56,11 @@ import {
 } from "@/lib/validation/constants";
 import { calcHandicap } from "@/lib/db/helpers";
 import { validAverage } from "@/lib/validation/players/validate";
-import ModalConfirm, {
+import ConfirmModal, {
   delConfTitle,
   cancelConfTitle
 } from "@/components/modal/confirmModal";
-import ModalErrorMsg from "@/components/modal/errorModal";
+import ErrorModalMsg from "@/components/modal/errorModal";
 import { type modalObjectType, initModalObj } from "@/components/modal/modalObjType";
 import { validateFinalizeRows } from "./finalizeValidation";
 import { randomizeAllBrkts } from "./buildBrktList";
@@ -1312,7 +1312,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
     <>
       <WaitModal show={entriesSaveStatus === "saving"} message="Saving..." />
 
-      <ModalConfirm
+      <ConfirmModal
         show={confModalObj.show}
         title={confModalObj.title}
         message={confModalObj.message}
@@ -1320,7 +1320,7 @@ const PlayersEntryForm: React.FC<ChildProps> = ({
         onCancel={confirmNo}
       />      
 
-      <ModalErrorMsg
+      <ErrorModalMsg
         show={errModalObj.show}
         title={errModalObj.title}
         message={errModalObj.message}

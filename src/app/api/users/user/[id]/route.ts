@@ -9,8 +9,8 @@ import { doHash } from "@/lib/server/hashServer";
 import { standardCatchReturn } from "@/app/api/apiCatch";
 import { normalizeEmail } from "@/lib/auth/authUtils";
 import { toPublicUser, publicUserWithHashSelect } from "@/lib/server/publicUser";
-import { requireDirector } from "@/lib/auth/requireDirector";
-import { requireSelfOrDirector } from "@/lib/auth/requireSelfOrDirector";
+import { requireDirector } from "@/lib/auth/guards";
+import { requireSelfOrDirector } from "@/lib/auth/guards";
 
 // routes /api/users/:id
 

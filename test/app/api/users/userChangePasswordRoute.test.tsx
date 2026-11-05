@@ -10,10 +10,10 @@ import type { User } from "@prisma/client";
 import { PATCH } from "@/app/api/users/user/[id]/changePassword/route";
 import { prismaMock } from "../../../prismaMock";
 import { doCompare, doHash } from "@/lib/server/hashServer";
-import { requireSelf } from "@/lib/auth/requireSelf";
+import { requireSelf } from "@/lib/auth/guards";
 
 // Replace the auth check with a mock function each test can control
-jest.mock("@/lib/auth/requireSelf", () => ({
+jest.mock("@/lib/auth/guards", () => ({
   requireSelf: jest.fn(),
 }));
 const mockRequireSelf = requireSelf as jest.MockedFunction<typeof requireSelf>;

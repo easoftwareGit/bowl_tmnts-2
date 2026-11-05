@@ -9,8 +9,8 @@ import type {
 } from "../../../lib/types/types";
 import { defaultHdcpFrom, initDiv } from "../../../lib/db/initVals";
 import { Tabs, Tab, OverlayTrigger, Tooltip } from "react-bootstrap";
-import ModalConfirm, { delConfTitle } from "@/components/modal/confirmModal";
-import ModalErrorMsg, {
+import ConfirmModal, { delConfTitle } from "@/components/modal/confirmModal";
+import ErrorModalMsg, {
   cannotDeleteTitle,
 } from "@/components/modal/errorModal";
 import { initModalObj } from "@/components/modal/modalObjType";
@@ -529,14 +529,14 @@ const OneToNDivs: React.FC<ChildProps> = ({
 
   return (
     <>
-      <ModalConfirm
+      <ConfirmModal
         show={confModalObj.show}
         title={confModalObj.title}
         message={confModalObj.message}
         onConfirm={confirmedDelete}
         onCancel={canceledDelete}
       />
-      <ModalErrorMsg
+      <ErrorModalMsg
         show={errModalObj.show}
         title={errModalObj.title}
         message={errModalObj.message}

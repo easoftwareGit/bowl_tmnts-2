@@ -1,5 +1,7 @@
+// test/app/components/navBar/eaNavbar.test.tsx
+// tests src/app/components/navBar/eaNavbar.tsx
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 
@@ -7,16 +9,11 @@ import EaNavbar from "@/components/navBar/eaNavbar";
 
 // --------- mocks ---------
 jest.mock("next/link", () => {
-  // react-bootstrap supports `as={Link}`; this keeps it simple in tests
   return function MockNextLink({
     href,
     children,
     ...rest
-  }: {
-    href: string;
-    children: React.ReactNode;
-    [key: string]: any;
-  }) {
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) {
     return (
       <a href={href} {...rest}>
         {children}
@@ -38,10 +35,9 @@ const mockSignOut = jest.fn();
 
 jest.mock("next-auth/react", () => ({
   useSession: () => mockUseSession(),
-  signOut: (...args: any[]) => mockSignOut(...args),
+  signOut: (...args: unknown[]) => mockSignOut(...args),
 }));
 
-// Capture ModelConfirm props so we can assert show/title/message and invoke handlers.
 type ConfirmProps = {
   show: boolean;
   title: string;
@@ -50,11 +46,8 @@ type ConfirmProps = {
   onCancel: () => void;
 };
 
-let lastConfirmProps: ConfirmProps | null = null;
-
 jest.mock("@/components/modal/confirmModal", () => {
   return function MockConfirmModal(props: ConfirmProps) {
-    lastConfirmProps = props;
     return (
       <div data-testid="confirm-modal">
         <div data-testid="confirm-show">{String(props.show)}</div>
@@ -72,133 +65,177 @@ jest.mock("@/components/modal/confirmModal", () => {
 });
 
 // --------- helpers ---------
+function setLoading(pathname = "/") {
+  mockUsePathname.mockReturnValue(pathname);
+  mockUseSession.mockReturnValue({ status: "loading", data: null });
+}
+
 function setUnauthed(pathname = "/") {
   mockUsePathname.mockReturnValue(pathname);
   mockUseSession.mockReturnValue({ status: "unauthenticated", data: null });
 }
 
-function setAuthed(name = "Eric", pathname = "/") {
+function setAuthed(
+  user: { name?: string | null; email?: string | null } = { name: "Eric" },
+  pathname = "/"
+) {
   mockUsePathname.mockReturnValue(pathname);
-  mockUseSession.mockReturnValue({
-    status: "authenticated",
-    data: { user: { name } },
-  });
+  mockUseSession.mockReturnValue({ status: "authenticated", data: { user } });
+}
+
+async function openLogoutModal(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("button", { name: "Eric" }));
+  await user.click(screen.getByRole("button", { name: /^log out$/i }));
 }
 
 beforeEach(() => {
   jest.clearAllMocks();
-  lastConfirmProps = null;
 });
 
 // --------- tests ---------
 describe("EaNavbar", () => {
-  it("renders basic nav links and brand", () => {
-    setUnauthed("/");
+  describe("public links", () => {
+    it("renders the brand linking to home and the public nav links", () => {
+      setUnauthed();
+      render(<EaNavbar />);
 
-    render(<EaNavbar />);
+      expect(screen.getByRole("link", { name: "BT DB" })).toHaveAttribute("href", "/");
+      expect(screen.getByRole("link", { name: /hello/i })).toHaveAttribute("href", "/hello");
+      expect(screen.getByRole("link", { name: /results/i })).toHaveAttribute("href", "/results");
+      expect(screen.getByRole("link", { name: /upcoming/i })).toHaveAttribute("href", "/upcoming");
+      expect(screen.getByRole("link", { name: /contact/i })).toHaveAttribute("href", "/contact");
+      expect(screen.getByRole("link", { name: /sample/i })).toHaveAttribute("href", "/sample");
+    });
 
-    expect(screen.getByText("BT DB")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /hello/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /results/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /upcoming/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /contact/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /sample/i })).toBeInTheDocument();
+    it("marks the link matching the pathname as active", () => {
+      setUnauthed("/results");
+      render(<EaNavbar />);
 
-    // confirm modal exists and is closed by default
-    expect(screen.getByTestId("confirm-show")).toHaveTextContent("false");
-    expect(screen.getByTestId("confirm-title")).toHaveTextContent("Confirm log out");
-    expect(screen.getByTestId("confirm-message")).toHaveTextContent("Do you want to log out?");
+      expect(screen.getByRole("link", { name: /results/i })).toHaveClass("active");
+      expect(screen.getByRole("link", { name: /hello/i })).not.toHaveClass("active");
+    });
+
+    it("renders the confirm modal closed by default with the right text", () => {
+      setUnauthed();
+      render(<EaNavbar />);
+
+      expect(screen.getByTestId("confirm-show")).toHaveTextContent("false");
+      expect(screen.getByTestId("confirm-title")).toHaveTextContent("Confirm log out");
+      expect(screen.getByTestId("confirm-message")).toHaveTextContent("Do you want to log out?");
+    });
   });
-  it("when unauthenticated, shows Log In link and no user dropdown", () => {
-    setUnauthed("/results");
 
-    render(<EaNavbar />);
+  describe("while the session is loading", () => {
+    it("shows a placeholder instead of Log In or the user menu", () => {
+      setLoading();
+      render(<EaNavbar />);
 
-    expect(screen.getByRole("link", { name: /log in/i })).toBeInTheDocument();
-    expect(screen.queryByText("Eric")).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /tournaments/i })).not.toBeInTheDocument();
+      expect(screen.getByTestId("auth-loading")).toBeInTheDocument();
+      expect(screen.queryByRole("link", { name: /log in/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Eric" })).not.toBeInTheDocument();
+    });
+
+    it("still renders the public links", () => {
+      setLoading();
+      render(<EaNavbar />);
+
+      expect(screen.getByRole("link", { name: /results/i })).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /upcoming/i })).toBeInTheDocument();
+    });
   });
-  it("when authenticated, shows user dropdown title and dropdown items", async () => {
-    setAuthed("Eric", "/results");
-    const user = userEvent.setup();
 
-    render(<EaNavbar />);
+  describe("when unauthenticated", () => {
+    it("shows the Log In link and no user menu or placeholder", () => {
+      setUnauthed("/results");
+      render(<EaNavbar />);
 
-    // Dropdown toggle uses the title text; react-bootstrap renders it as a button-like element
-    const dropdownToggle = screen.getByText("Eric");
-    expect(dropdownToggle).toBeInTheDocument();
-
-    // Open dropdown
-    await user.click(dropdownToggle);
-
-    expect(
-      screen.getByRole("link", { name: /^tournaments$/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: /^account$/i })
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: /^log out$/i })
-    ).toBeInTheDocument();
+      expect(screen.getByRole("link", { name: /log in/i })).toHaveAttribute(
+        "href",
+        "/api/auth/signin"
+      );
+      expect(screen.queryByRole("button", { name: "Eric" })).not.toBeInTheDocument();
+      expect(screen.queryByTestId("auth-loading")).not.toBeInTheDocument();
+    });
   });
-  it("clicking 'Log out' opens confirm modal", async () => {
-    setAuthed("Eric", "/");
-    const user = userEvent.setup();
 
-    render(<EaNavbar />);
+  describe("when authenticated", () => {
+    it("shows the user menu with Tournaments, Account and Log out", async () => {
+      setAuthed({ name: "Eric" }, "/results");
+      const user = userEvent.setup();
+      render(<EaNavbar />);
 
-    await user.click(screen.getByText("Eric"));
-    await user.click(screen.getByText(/^log out$/i));
+      expect(screen.queryByRole("link", { name: /log in/i })).not.toBeInTheDocument();
+      expect(screen.queryByTestId("auth-loading")).not.toBeInTheDocument();
 
-    expect(screen.getByTestId("confirm-show")).toHaveTextContent("true");
-    expect(lastConfirmProps?.show).toBe(true);
+      await user.click(screen.getByRole("button", { name: "Eric" }));
+
+      expect(screen.getByRole("link", { name: /^tournaments$/i })).toHaveAttribute(
+        "href",
+        "/user/tmnts"
+      );
+      expect(screen.getByRole("link", { name: /^account$/i })).toHaveAttribute(
+        "href",
+        "/user/acctInfo"
+      );
+      expect(screen.getByRole("button", { name: /^log out$/i })).toBeInTheDocument();
+    });
+
+    it("falls back to the email when the user has no name", () => {
+      setAuthed({ name: null, email: "eric@example.com" });
+      render(<EaNavbar />);
+
+      expect(screen.getByRole("button", { name: "eric@example.com" })).toBeInTheDocument();
+    });
+
+    it("falls back to 'Account' when the user has no name or email", () => {
+      setAuthed({ name: null, email: null });
+      render(<EaNavbar />);
+
+      expect(screen.getByRole("button", { name: "Account" })).toBeInTheDocument();
+    });
   });
-  it("cancel closes confirm modal", async () => {
-    setAuthed("Eric", "/");
-    const user = userEvent.setup();
 
-    render(<EaNavbar />);
+  describe("log out flow", () => {
+    it("clicking Log out opens the confirm modal", async () => {
+      setAuthed();
+      const user = userEvent.setup();
+      render(<EaNavbar />);
 
-    await user.click(screen.getByText("Eric"));
-    await user.click(screen.getByText(/^log out$/i));
-    expect(screen.getByTestId("confirm-show")).toHaveTextContent("true");
+      await openLogoutModal(user);
 
-    await user.click(screen.getByRole("button", { name: /cancel/i }));
+      expect(screen.getByTestId("confirm-show")).toHaveTextContent("true");
+    });
 
-    expect(screen.getByTestId("confirm-show")).toHaveTextContent("false");
-    expect(lastConfirmProps?.show).toBe(false);
-  });
-  it("confirm signs out (redirect:false), routes to '/', and closes modal", async () => {
-    setAuthed("Eric", "/");
-    mockSignOut.mockResolvedValueOnce(undefined);
+    it("cancel closes the modal without signing out", async () => {
+      setAuthed();
+      const user = userEvent.setup();
+      render(<EaNavbar />);
 
-    const user = userEvent.setup();
-    render(<EaNavbar />);
+      await openLogoutModal(user);
+      await user.click(screen.getByRole("button", { name: /^cancel$/i }));
 
-    await user.click(screen.getByText("Eric"));
-    await user.click(screen.getByText(/^log out$/i));
-    expect(screen.getByTestId("confirm-show")).toHaveTextContent("true");
+      expect(screen.getByTestId("confirm-show")).toHaveTextContent("false");
+      expect(mockSignOut).not.toHaveBeenCalled();
+      expect(mockPush).not.toHaveBeenCalled();
+    });
 
-    await user.click(screen.getByRole("button", { name: /confirm/i }));
+    it("confirm signs out with redirect:false, routes to '/', and closes the modal", async () => {
+      setAuthed();
+      mockSignOut.mockResolvedValueOnce(undefined);
+      const user = userEvent.setup();
+      render(<EaNavbar />);
 
-    expect(mockSignOut).toHaveBeenCalledTimes(1);
-    expect(mockSignOut).toHaveBeenCalledWith({ redirect: false });
+      await openLogoutModal(user);
+      await user.click(screen.getByRole("button", { name: /^confirm$/i }));
 
-    expect(mockPush).toHaveBeenCalledTimes(1);
-    expect(mockPush).toHaveBeenCalledWith("/");
+      expect(mockSignOut).toHaveBeenCalledTimes(1);
+      expect(mockSignOut).toHaveBeenCalledWith({ redirect: false });
 
-    // modal should be closed after confirm
-    expect(screen.getByTestId("confirm-show")).toHaveTextContent("false");
-  });
-  it("marks the matching pathname link as active (react-bootstrap adds 'active' class)", () => {
-    setUnauthed("/results");
-
-    render(<EaNavbar />);
-
-    const resultsLink = screen.getByRole("link", { name: /results/i });
-    expect(resultsLink).toHaveClass("active");
-
-    const helloLink = screen.getByRole("link", { name: /hello/i });
-    expect(helloLink).not.toHaveClass("active");
+      await waitFor(() => expect(mockPush).toHaveBeenCalledWith("/"));
+      expect(mockPush).toHaveBeenCalledTimes(1);
+      await waitFor(() =>
+        expect(screen.getByTestId("confirm-show")).toHaveTextContent("false")
+      );
+    });
   });
 });

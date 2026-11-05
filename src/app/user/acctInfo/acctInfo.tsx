@@ -10,7 +10,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { phone } from "phone";
 import { isEmailInUse, patchUser } from "@/lib/db/users/dbUsers";
-import ModalErrorMsg, {
+import ErrorModalMsg, {
   cannotSaveTitle,
 } from "@/components/modal/errorModal";
 import { initModalObj } from "@/components/modal/modalObjType";
@@ -204,7 +204,7 @@ const AcctInfo: React.FC<ChildProps> = ({
 
   return (
     <>
-      <ModalErrorMsg
+      <ErrorModalMsg
         show={errModalObj.show}
         title={errModalObj.title}
         message={errModalObj.message}
