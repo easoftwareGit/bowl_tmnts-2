@@ -15,12 +15,19 @@ type potGameProps = {
   numGames: number;
 };
 
+export const potPayoutWidth = 90;
+export const potHdcpGameWidth = 240;
+export const potNoHdcpGameWidth = 180;
+
 const ic: IntlConfig = {
   // locale: window.navigator.language,
   locale: "en-US",
 };
 const localConfig = getLocaleConfig(ic);
 localConfig.prefix = "$";
+
+export const hasAmount = (potPf: potPfType): potPf is potPfType & { amount: number } =>
+  potPf.amount !== null;
 
 const PotGames = ({
   pot_id,
@@ -41,87 +48,92 @@ const PotGames = ({
   if (!div) return missingDataError("Could not find div. Id: " + pot.div_id);
 
   const potPrizeFund = potPfs.filter((potPf) => potPf.pot_id === pot_id);
-  if (!potPrizeFund || potPrizeFund.length === 0) {
+  if (potPrizeFund.length === 0) {
     return missingDataError("No pot prize fund");
-  }  
+  }
+  // every saved prize fund has an amount; after this check TypeScript
+  // knows amount is a number for every item in potPrizeFund
+  if (!potPrizeFund.every(hasAmount)) {
+    return missingDataError("Pot prize fund has no amount");
+  }
 
   // sort by amount, highest to lowest
-  potPrizeFund.sort((a, b) => {
-    if (a.amount === null || b.amount === null) {
-      return 0;
-    }
-    return b.amount! - a.amount!;
-  });
+  potPrizeFund.sort((a, b) => b.amount - a.amount);
 
   const gameResults = potGameResults(pot_id, tmntFullData, potResultsRows, numGames);
 
-  const payoutWidth = 80;
-  const gameWidth = (div.hdcp_per > 0) ? 240 : 180;
+  const gameWidth = (div.hdcp_per > 0) ? potHdcpGameWidth : potNoHdcpGameWidth;
 
   return (
     <div className="d-flex justify-content-center">
-      <div className="overflow-x-auto">
-        {/* scrolls sideways when the pot columns do not fit the page */}
-        <div className="overflow-x-auto" data-testid="pots-columns-scroll">
-          <div
-            className="d-flex flex-nowrap align-items-start gap-2 pb-2"
-            data-testid="pot-columns-row"
+      {/* scrolls sideways when the pot columns do not fit the page */}
+      <div className="overflow-x-auto" data-testid="pots-columns-scroll">
+        <div
+          className="d-flex flex-nowrap align-items-start gap-2 pb-2"
+          data-testid="pot-columns-row"
+        >
+          <table
+            className="table table-sm table-striped table-hover w-auto flex-shrink-0"
+            data-testid="pot-payouts"
           >
-            <table className="table table-sm table-striped table-hover w-auto">
+            <thead>
+              <tr>
+                <th
+                  className="text-center align-middle"
+                  style={{ width: potPayoutWidth }}
+                >
+                  Game $
+                </th>
+              </tr>
+            </thead>
+            <tbody className="table-group-divider small">
+              {potPrizeFund.map((potPrize) => (
+                <tr key={potPrize.id}>
+                  <td className="text-center align-middle text-success">
+                    {formatValueSymbSep2Dec(
+                      potPrize.amount.toString(),
+                      localConfig,
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {gameResults.map(({ gameNum, rows }) => (
+            <table
+              key={gameNum}
+              className="table table-sm table-striped table-hover w-auto flex-shrink-0"
+              data-testid={`pot-game-${gameNum}`}
+            >
               <thead>
                 <tr>
-                  <th
+                  <th 
                     className="text-center align-middle"
-                    style={{ width: payoutWidth }}
+                    style={{ width: gameWidth }}
                   >
-                    Game $
+                    Game {gameNum}
                   </th>
                 </tr>
               </thead>
               <tbody className="table-group-divider small">
-                {potPrizeFund.map((potPrize) => (
-                  <tr key={potPrize.id}>
-                    <td className="text-center align-middle text-success">
-                      {formatValueSymbSep2Dec(
-                        (potPrize.amount!).toString(),
-                        localConfig,
-                      )}
+                {rows.map((row) => (
+                  <tr key={row.player_id}>
+                    <td
+                      className="align-middle"
+                      style={{ width: gameWidth }}
+                    >
+                      <PlayerNameWithScore
+                        row={row}
+                        tmntFullData={tmntFullData}
+                        div={div}
+                      />
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-
-            {gameResults.map(({ gameNum, rows }) => (
-              <table
-                key={gameNum}
-                className="table table-sm table-striped table-hover w-auto shrink-0"
-                data-testid={`pot-game-${gameNum}`}
-              >
-                <thead>
-                  <tr>
-                    <th className="text-center align-middle">Game {gameNum}</th>
-                  </tr>
-                </thead>
-                <tbody className="table-group-divider small">
-                  {rows.map((row) => (
-                    <tr key={row.player_id}>
-                      <td
-                        className="align-middle"
-                        style={{ width: gameWidth }}
-                      >
-                        <PlayerNameWithScore
-                          row={row}
-                          tmntFullData={tmntFullData}
-                          div={div}
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ))}
-          </div>
+          ))}
         </div>
       </div>
     </div>

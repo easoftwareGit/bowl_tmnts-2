@@ -1,7 +1,6 @@
 import {
   buildElimResultsRows,
   erAliveKey,
-  getElimAdvancingScores,
   type elimResults,
 } from "@/lib/results/elims/elimResults";
 import { calcPositions } from "@/lib/results/calcResults";
@@ -10,7 +9,7 @@ import {
   tgrHdcpKey,
   type tmntGameResult,
 } from "@/lib/types/resultsTypes";
-import type { elimPfType, elimType, tmntFullType } from "@/lib/types/types";
+import type { elimPfType, tmntFullType } from "@/lib/types/types";
 import { getPlayerName } from "@/lib/getName";
 import {
   divId1,

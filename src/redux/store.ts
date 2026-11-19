@@ -6,6 +6,7 @@ import elimPfsReducer from './features/elimPfs/elimPfsSlice';
 import gamesForSquadReducer from './features/gamesForSquad/gamesForSquadSlice';
 import oneTmntGameResultsReducer from './features/oneTmntGameResults/oneTmntGameResultsSlice';
 import potPfsReducer from './features/potPfs/potPfsSlice';
+import tmntDirectorReducer from './features/director/directorSlice';
 import tmntFullDataReducer from './features/tmntFullData/tmntFullDataSlice';
 import tmntsReducer from './features/tmnts/tmntsSlice';
 import tmntYearsReducer from './features/tmnts/yearsSlice';
@@ -21,6 +22,7 @@ export const store = configureStore({
     gamesForSquad: gamesForSquadReducer,    
     oneTmntGameResults: oneTmntGameResultsReducer,
     potPfs: potPfsReducer,
+    tmntDirector: tmntDirectorReducer,
     tmntFullData: tmntFullDataReducer,
     tmnts: tmntsReducer,
     tmntYears: tmntYearsReducer,

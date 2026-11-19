@@ -1,4 +1,5 @@
 // test/app/results/tmnts/brackets/player/tmntBracketPlayerPage.test.tsx
+// tests src/app/results/tmnt/[tmntId]/brackets/player/[playerId]/page.tsx
 import React from "react";
 import { render, screen, fireEvent, within } from "@testing-library/react";
 import { useParams } from "next/navigation";

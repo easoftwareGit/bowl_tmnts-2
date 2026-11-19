@@ -34,6 +34,13 @@ export type userFormType = userDataType & { password: string };
 
 export type acctUserType = userDataType & { has_password: boolean };
 
+export type publicTmntDirectorType = {
+  first_name: string,
+  last_name: string,
+  email: string,
+  phone: string,
+}
+
 export type bowlType = {
   id: string,
   bowl_name: string,  

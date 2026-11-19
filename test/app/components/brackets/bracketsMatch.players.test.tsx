@@ -15,7 +15,7 @@ import {
 } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { cloneDeep } from "lodash";
 import { BracketList, brktListInitialDataType } from "@/components/brackets/bracketListClass";
-import { playerEntryRow, populatePlayerRows } from "@/app/dataEntry/playersForm/populatePlayerRows";
+import { playerEntryRow, populatePlayerRows } from "@/app/(private)/dataEntry/playersForm/populatePlayerRows";
 import { gameType } from "@/lib/types/types";
 
 describe("BracketMatch - players functions", () => {

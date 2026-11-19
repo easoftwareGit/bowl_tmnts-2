@@ -44,10 +44,8 @@ const TmntPlayersPage = () => {
   /*********************************************/
 
   if (!hasTmntData && failedForThisTmnt) {
-    const errmsg = tmntError
-      ? tmntError.includes("missing required child")
-        ? `Tournament with id: ${tmntId} is missing data.`
-        : `An error occurred while loading the tournament with id: ${tmntId}.`
+    const errmsg = tmntError?.includes("missing required child")
+      ? `Tournament with id: ${tmntId} is missing data.`
       : `An error occurred while loading the tournament with id: ${tmntId}.`;
     return (
       <div className="text-center mt-5">
@@ -114,8 +112,8 @@ const TmntPlayersPage = () => {
         a.first_name.localeCompare(b.first_name, undefined, {
           sensitivity: "base",
         }) ||
-        a.lane_pos.localeCompare(b.lane_pos, undefined, {
-          sensitivity: "base",
+        a.lane_pos.localeCompare(b.lane_pos, undefined, { 
+          sensitivity: "base", numeric: true,
         }) ||
         b.average - a.average,
     );
@@ -145,8 +143,8 @@ const TmntPlayersPage = () => {
         a.last_name.localeCompare(b.last_name, undefined, {
           sensitivity: "base",
         }) ||
-        a.lane_pos.localeCompare(b.lane_pos, undefined, {
-          sensitivity: "base",
+        a.lane_pos.localeCompare(b.lane_pos, undefined, { 
+          sensitivity: "base", numeric: true,
         }) ||
         b.average - a.average,
     );
@@ -171,7 +169,7 @@ const TmntPlayersPage = () => {
     return playerRows.sort(
       (a, b) =>
         a.lane_pos.localeCompare(b.lane_pos, undefined, {
-          sensitivity: "base",
+          sensitivity: "base", numeric: true,
         }) ||
         a.last_name.localeCompare(b.last_name, undefined, {
           sensitivity: "base",
@@ -198,18 +196,18 @@ const TmntPlayersPage = () => {
   const sortPlayerRowsByAverage = (
     playerRows: tmntPlayerInTableType[],
   ): tmntPlayerInTableType[] => {
-    // sort by lane, then last name, then first name, then average
+    // sort by average, then last name, then first name, then lane position
     return playerRows.sort(
       (a, b) =>
         b.average - a.average ||
+        a.last_name.localeCompare(b.last_name, undefined, {
+          sensitivity: "base",
+        }) ||        
         a.first_name.localeCompare(b.first_name, undefined, {
           sensitivity: "base",
         }) ||
-        a.last_name.localeCompare(b.last_name, undefined, {
-          sensitivity: "base",
-        }) ||
         a.lane_pos.localeCompare(b.lane_pos, undefined, {
-          sensitivity: "base",
+          sensitivity: "base", numeric: true,
         }),
     );
   };  
@@ -241,77 +239,74 @@ const TmntPlayersPage = () => {
   return (
     <>
       <TmntHomeHeader tmntFullData={tmntFullData} selectedTmntPageBtn={tmntPageBtn} />
-
-      {hasTmntData && (
-        <div className="d-flex justify-content-center">
-          <div className="overflow-x-auto">
-            <table className="table table-sm table-striped table-hover w-auto">
-              <thead>
-                <tr>
-                  <th
-                    className="text-start align-middle"
-                    style={{ width: lastNameWidth }}
+      <div className="d-flex justify-content-center">
+        <div className="overflow-x-auto">
+          <table className="table table-sm table-striped table-hover w-auto">
+            <thead>
+              <tr>
+                <th
+                  className="text-start align-middle"
+                  style={{ width: lastNameWidth }}
+                >
+                  <button
+                    type="button"
+                    className="btn btn-link p-0 text-decoration-none fw-semibold"
+                    onClick={() => {setPlayerSort("lastName")}}
                   >
-                    <button
-                      type="button"
-                      className="btn btn-link p-0 text-decoration-none fw-semibold"
-                      onClick={() => setPlayerSort("lastName")}
-                    >
-                      Last Name
-                    </button>
-                  </th>
-                  <th
-                    className="text-start align-middle"
-                    style={{ width: firstNameWidth }}                  
+                    Last Name
+                  </button>
+                </th>
+                <th
+                  className="text-start align-middle"
+                  style={{ width: firstNameWidth }}                  
+                >
+                  <button
+                    type="button"
+                    className="btn btn-link p-0 text-decoration-none fw-semibold"
+                    onClick={() => {setPlayerSort("firstName")}}
                   >
-                    <button
-                      type="button"
-                      className="btn btn-link p-0 text-decoration-none fw-semibold"
-                      onClick={() => setPlayerSort("firstName")}
-                    >
-                      First Name
-                    </button>
-                  </th>
-                  <th
-                    className="text-end align-middle"
-                    style={{ width: averageWidth }}
+                    First Name
+                  </button>
+                </th>
+                <th
+                  className="text-end align-middle"
+                  style={{ width: averageWidth }}
+                >
+                  <button
+                    type="button"
+                    className="btn btn-link p-0 text-decoration-none fw-semibold"
+                    onClick={() => {setPlayerSort("average")}}
                   >
-                    <button
-                      type="button"
-                      className="btn btn-link p-0 text-decoration-none fw-semibold"
-                      onClick={() => setPlayerSort("average")}
-                    >
-                      Ave
-                    </button>
-                  </th>
-                  <th
-                    className="text-end align-middle"
-                    style={{ width: lanePosWidth }}
+                    Ave
+                  </button>
+                </th>
+                <th
+                  className="text-end align-middle"
+                  style={{ width: lanePosWidth }}
+                >
+                  <button
+                    type="button"
+                    className="btn btn-link p-0 text-decoration-none fw-semibold"
+                    onClick={() => {setPlayerSort("lanePos")}}
                   >
-                    <button
-                      type="button"
-                      className="btn btn-link p-0 text-decoration-none fw-semibold"
-                      onClick={() => setPlayerSort("lanePos")}
-                    >
-                      Lane
-                    </button>
-                  </th>
+                    Lane
+                  </button>
+                </th>
+              </tr>
+            </thead>
+            <tbody className="table-group-divider small">
+              {playerRows.map((playerRow) => (
+                <tr key={playerRow.id}>
+                  <td className="text-start">{playerRow.last_name}</td>
+                  <td className="text-start">{playerRow.first_name}</td>
+                  <td className="text-end">{playerRow.average}</td>
+                  <td className="text-end">{playerRow.lane_pos}</td>
                 </tr>
-              </thead>
-              <tbody className="table-group-divider small">
-                {playerRows.map((playerRow) => (
-                  <tr key={playerRow.id}>
-                    <td className="text-start">{playerRow.last_name}</td>
-                    <td className="text-start">{playerRow.first_name}</td>
-                    <td className="text-end">{playerRow.average}</td>
-                    <td className="text-end">{playerRow.lane_pos}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>        
-      )}
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </>
   );
 };

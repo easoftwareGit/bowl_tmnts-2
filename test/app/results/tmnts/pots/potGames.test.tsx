@@ -1,3 +1,5 @@
+// test/app/results/tmnts/pots/potGames.test.tsx
+// tests for src/app/results/tmnt/[tmntId]/pots/potGames.tsx
 import React from "react";
 import { render, screen, within } from "@testing-library/react";
 import "@testing-library/jest-dom";

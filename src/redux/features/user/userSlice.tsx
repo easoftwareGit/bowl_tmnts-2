@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { ioStatusType } from "@/redux/statusTypes";
-import { RootState } from "@/redux/store";
+import type { RootState } from "@/redux/store";
 import { getUserById } from "@/lib/db/users/dbUsers";
 import type { userDataType } from "@/lib/types/types";
 import { blankUserData } from "@/lib/db/initVals";
@@ -78,7 +78,7 @@ export const userSlice = createSlice({
 });
 
 export const getUserRequestId = (state: RootState) => state.user.requestedUserId;
-export const selectUser = (state: RootState) => state.user;
+export const selectUser = (state: RootState) => state.user.user;
 export const getUserLoadStatus = (state: RootState) => state.user.loadStatus;
 export const getUserError = (state: RootState) => state.user.error;
 

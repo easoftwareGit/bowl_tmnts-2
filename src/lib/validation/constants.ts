@@ -78,3 +78,7 @@ export const dummyDivId = "div_00000000000000000000000000000000";
 export const dummySquadId = "sqd_00000000000000000000000000000000";
 
 export const byeName = "Bye";
+
+// a figure space is the same width as a digit, so padding with it keeps
+// numbers lined up in a right-aligned column
+export const FIGURE_SPACE = "\u2007";

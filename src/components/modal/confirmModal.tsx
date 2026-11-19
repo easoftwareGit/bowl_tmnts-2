@@ -2,7 +2,8 @@
 
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
-import styles from "./modal.module.css";
+// import styles from "./modal.module.css";
+import "./modal.css";
 
 export const delConfTitle = "Confirm Delete";
 export const cancelConfTitle = "Confirm Cancel";
@@ -31,7 +32,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
     <Modal.Header closeButton>
       <Modal.Title>{title}</Modal.Title>
     </Modal.Header>
-    <Modal.Body className={styles.modalBody}>{message}</Modal.Body>
+    <Modal.Body className="modalBody">{message}</Modal.Body>
     <Modal.Footer>
       <Button className="me-2" variant="success" onClick={onConfirm}>
         Yes

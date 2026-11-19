@@ -1,0 +1,27 @@
+/*
+  Scroll area for the tournaments table.
+  The [New Tournament] button sits above this box, so it never scrolls.
+  Only the table scrolls, and its header sticks to the top of this box.
+
+  --tmnts-top-offset = height of everything above the table
+  (site navbar + New Tournament row + margins). Adjust if the
+  page shows a second scrollbar or leaves a gap at the bottom.
+*/
+.tmnts_scroll {
+  --tmnts-top-offset: 180px;
+  max-height: calc(100vh - var(--tmnts-top-offset));
+  overflow-y: auto;
+  width: 100%;
+}
+
+/* sticky must be on the cells; position: sticky on <tr> is not reliable */
+.tmnts_scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  /* solid background so rows don't show through the header */
+  background-color: var(--bs-body-bg, #fff);
+  /* divider line under the header that stays with it while scrolling
+     (a border would scroll away because the table uses border-collapse) */
+  box-shadow: inset 0 -2px 0 currentColor;
+}

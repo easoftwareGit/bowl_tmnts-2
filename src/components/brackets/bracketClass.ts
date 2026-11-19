@@ -6,6 +6,7 @@ import { BracketMatch } from "./bracketMatchClass";
 import type { matchNumberType, matchSeedInfoType } from "./bracketMatchClass";
 import { brktSeedType } from "@/lib/types/types";
 import { isNumber } from "@/lib/validation/validation";
+import { truncateToTwoDecimals } from "@/lib/currency/convert";
 
 export enum playerStatusValues {
   NOT_IN_BRACKET = 0,
@@ -645,18 +646,18 @@ export class Bracket {
    */
   playerEarnings = (playerId: string): number => {
     if (this._winnerIds.has(playerId)) {
-      // if there is/are runner up(s), then divide the winner amount by # of winners
-      if (this._runnerUpIds.size > 0) {
-        return this._winnerAmount / this._winnerIds.size;
-      } else {
-        return (this._winnerAmount + this._runnerUpAmount) / this._winnerIds.size;
-      }
+      // with runner up(s), winners share first; with none, winners share first + second
+      const prize =
+        this._runnerUpIds.size > 0
+          ? this._winnerAmount
+          : this._winnerAmount + this._runnerUpAmount;
+      return truncateToTwoDecimals(prize / this._winnerIds.size);
     }
     if (this._runnerUpIds.has(playerId)) {
-      return this._runnerUpAmount / this._runnerUpIds.size;
+      return truncateToTwoDecimals(this._runnerUpAmount / this._runnerUpIds.size);
     }
     return 0;
-  }
+  };
 
   /**
    * populates the bracket with players

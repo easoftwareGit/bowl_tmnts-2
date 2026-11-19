@@ -16,3 +16,7 @@
 .pots-title_backgroud {
   background-color: #08316d;
 }
+
+.pots-table .game-header-align {  
+  padding-right: 0.74rem;
+}

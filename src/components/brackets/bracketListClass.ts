@@ -2,7 +2,7 @@ import { Bracket } from "./bracketClass";
 import {
   entryNumBrktsColName,
   timeStampColName,
-} from "@/app/dataEntry/playersForm/sfCreatePlayerColumns";
+} from "@/app/(private)/dataEntry/playersForm/sfCreatePlayerColumns";
 import { isOdd, isValidBtDbId } from "@/lib/validation/validation";
 import { byeName, maxBrackets } from "@/lib/validation/constants";
 import {
@@ -22,7 +22,7 @@ import type {
 import {
   populatePlayerRows,
   type playerEntryRow,
-} from "@/app/dataEntry/playersForm/populatePlayerRows";
+} from "@/app/(private)/dataEntry/playersForm/populatePlayerRows";
 import {
   createBracketIndexMap,
   createGameScoreMap,

@@ -1,7 +1,6 @@
 import React from "react";
 import { getDefaultNormalizer, render, screen, within } from "@testing-library/react";
 import "@testing-library/jest-dom";
-import { cloneDeep } from "lodash";
 import ElimGame from "@/app/results/tmnt/[tmntId]/elims/elimGame";
 import { elimResults, erAliveKey } from "@/lib/results/elims/elimResults";
 import { tgrGameKey, tgrHdcpKey } from "@/lib/types/resultsTypes";
@@ -32,17 +31,27 @@ jest.mock("next/image", () => {
   };
 });
 
-const FIGURE_SPACE = "\u2007";
+const FIGURE_SPACE = " ";
 
 // keep figure spaces when checking text; toHaveTextContent collapses
-// whitespace by default and JS treats \u2007 as whitespace
+// whitespace by default and JS treats   as whitespace
 const exact = { normalizeWhitespace: false };
 
 // the &nbsp; placeholder is trimmed away by default text matching
 const nbspOptions = {
   normalizer: getDefaultNormalizer({ trim: false, collapseWhitespace: false }),
 };
-const queryNbspSpan = () => screen.queryByText("\u00a0", nbspOptions);
+const getNbspSpan = () => screen.getByText(" ", nbspOptions);
+const queryNbspSpan = () => screen.queryByText(" ", nbspOptions);
+
+// noUncheckedIndexedAccess: fail loudly if the mock data changes
+const findDiv = (hasHdcp: boolean): divType => {
+  const div = mockTmntFullData.divs.find((d) => d.hdcp_per > 0 === hasHdcp);
+  if (!div) throw new Error(`mock data has no ${hasHdcp ? "handicap" : "scratch"} div`);
+  return div;
+};
+const firstPlayer = mockTmntFullData.players[0];
+if (!firstPlayer) throw new Error("mock data has no players");
 
 /*
  * Rows follow the rules of buildElimResultsRows:
@@ -54,42 +63,50 @@ const queryNbspSpan = () => screen.queryByText("\u00a0", nbspOptions);
  *  eliminated in game 1: alive [false, null, null]
  *  eliminated in game 2: alive [true,  false, null]
  *  not eliminated:       alive [true,  true,  true]
+ *
+ * gameNum is the tournament game number, so an elim that starts at
+ * game 4 uses the game 4, 5 and 6 columns (start sets the first one).
  */
 type rowValues = {
   games: (number | null)[];
   alive: (boolean | null)[];
-  hdcp?: number;
+  // null when there is no handicap (scratch event)
+  hdcp?: number | null;
+  start?: number;
 };
 
 describe("ElimGame", () => {
-  let hdcpDiv: divType;
-  let scratchDiv: divType;
+  // the mock divs are only read, never changed, so no clone is needed
+  const hdcpDiv = findDiv(true);
+  const scratchDiv = findDiv(false);
 
-  const makeRow = ({ games, alive, hdcp = 15 }: rowValues): elimResults => {
+  const makeRow = ({ games, alive, hdcp = 15, start = 1 }: rowValues): elimResults => {
+    if (games.length !== alive.length) {
+      throw new Error("games and alive must have the same length");
+    }
     const row: Record<string, unknown> = {
       position: null,
-      player_id: mockTmntFullData.players[0].id,
+      player_id: firstPlayer.id,
       full_name: "Test Player",
       hdcp,
       prize: null,
     };
     games.forEach((game, i) => {
-      const gameNum = i + 1;
+      const gameNum = start + i;
       row[tgrGameKey(gameNum)] = game;
-      row[tgrHdcpKey(gameNum)] = game == null ? null : game + hdcp;
+      row[tgrHdcpKey(gameNum)] = game == null ? null : game + (hdcp ?? 0);
       row[erAliveKey(gameNum)] = alive[i];
     });
     return row as unknown as elimResults;
   };
 
-  // not eliminated; game 2 is 200 + 15 = 215; the last game has no status
+  // not eliminated; game 1 = 205, game 2 = 200 + 15 = 215, game 3 = 225
   const advancedRow = () =>
-    makeRow({ games: [190, 200, 210], alive: [true, true, null] });
+    makeRow({ games: [190, 200, 210], alive: [true, true, true] });
 
-  beforeEach(() => {
-    const div = cloneDeep(mockTmntFullData.divs[0]);
-    hdcpDiv = { ...div, hdcp_per: 0.9 };
-    scratchDiv = { ...div, hdcp_per: 0 };
+  it("uses a handicap div and a scratch div from the mock data", () => {
+    expect(hdcpDiv.hdcp_per).toBeGreaterThan(0);
+    expect(scratchDiv.hdcp_per).toBe(0);
   });
 
   // getByText matches an element's own text nodes, so:
@@ -108,7 +125,15 @@ describe("ElimGame", () => {
     it("renders only the score in a scratch division", () => {
       const row = makeRow({ games: [190, 200, 210], alive: [true, true, true], hdcp: 0 });
       render(<ElimGame row={row} elimDiv={scratchDiv} gameNum={2} />);
+      // no breakdown and no figure space, even though hdcp < 10
       expect(screen.getByText("200")).toHaveTextContent(/^200$/, exact);
+    });
+
+    it("renders only the score in a scratch event where hdcp is null", () => {
+      const row = makeRow({ games: [190, 200, 210], alive: [true, true, true], hdcp: null });
+      render(<ElimGame row={row} elimDiv={scratchDiv} gameNum={2} />);
+      expect(screen.getByText("200")).toHaveTextContent(/^200$/, exact);
+      expect(screen.getByRole("img", { name: "Advanced" })).toBeInTheDocument();
     });
 
     it("renders no score, breakdown or status when the game has not been bowled", () => {
@@ -116,7 +141,16 @@ describe("ElimGame", () => {
       render(<ElimGame row={row} elimDiv={hdcpDiv} gameNum={2} />);
       expect(screen.queryByText(/\d/)).not.toBeInTheDocument();
       expect(screen.queryByRole("img")).not.toBeInTheDocument();
-      expect(queryNbspSpan()).toHaveClass("pe-2");
+      expect(getNbspSpan()).toHaveClass("pe-2");
+    });
+
+    it("uses the tournament game number for an elim that starts after game 1", () => {
+      // like mock elims[1]: games 4-6
+      const row = makeRow({ games: [190, 200, 210], alive: [true, false, null], start: 4 });
+      render(<ElimGame row={row} elimDiv={hdcpDiv} gameNum={5} />);
+      expect(screen.getByText("215")).toBeInTheDocument();
+      expect(screen.getByText("(200 + 15)")).toBeInTheDocument();
+      expect(screen.getByRole("img", { name: "Eliminated" })).toBeInTheDocument();
     });
   });
 
@@ -135,6 +169,12 @@ describe("ElimGame", () => {
       expect(screen.queryByText(/\+/)).not.toBeInTheDocument();
     });
 
+    it("does not render the breakdown when the game has not been bowled", () => {
+      const row = makeRow({ games: [190, null, null], alive: [true, null, null] });
+      render(<ElimGame row={row} elimDiv={hdcpDiv} gameNum={2} />);
+      expect(screen.queryByText(/\+/)).not.toBeInTheDocument();
+    });
+
     it("renders the breakdown when the score is 0", () => {
       const row = makeRow({ games: [190, 0, null], alive: [true, false, null], hdcp: 0 });
       render(<ElimGame row={row} elimDiv={hdcpDiv} gameNum={2} />);
@@ -149,30 +189,20 @@ describe("ElimGame", () => {
       render(<ElimGame row={row} elimDiv={hdcpDiv} gameNum={2} />);
     };
 
-    it("adds a figure space when hdcp is a single digit", () => {
-      renderWithHdcp(7);
-      expect(screen.getByText("(200 + 7)")).toHaveTextContent(
-        new RegExp(`^ \\(200 \\+ 7\\)${FIGURE_SPACE}$`),
+    it.each([0, 7, 9])("adds a figure space when hdcp is %i", (hdcp) => {
+      renderWithHdcp(hdcp);
+      expect(screen.getByText(`(200 + ${String(hdcp)})`)).toHaveTextContent(
+        new RegExp(`^ \\(200 \\+ ${String(hdcp)}\\)${FIGURE_SPACE}$`),
         exact
       );
     });
 
-    it("adds a figure space when hdcp is 0", () => {
-      renderWithHdcp(0);
-      expect(screen.getByText("(200 + 0)")).toHaveTextContent(
-        new RegExp(`^ \\(200 \\+ 0\\)${FIGURE_SPACE}$`),
+    it.each([10, 45, 100])("does not add a figure space when hdcp is %i", (hdcp) => {
+      renderWithHdcp(hdcp);
+      expect(screen.getByText(`(200 + ${String(hdcp)})`)).toHaveTextContent(
+        new RegExp(`^ \\(200 \\+ ${String(hdcp)}\\)$`),
         exact
       );
-    });
-
-    it("does not add a figure space when hdcp is 10", () => {
-      renderWithHdcp(10);
-      expect(screen.getByText("(200 + 10)")).toHaveTextContent(/^ \(200 \+ 10\)$/, exact);
-    });
-
-    it("does not add a figure space when hdcp is 2+ digits", () => {
-      renderWithHdcp(45);
-      expect(screen.getByText("(200 + 45)")).toHaveTextContent(/^ \(200 \+ 45\)$/, exact);
     });
   });
 
@@ -210,7 +240,7 @@ describe("ElimGame", () => {
       render(<ElimGame row={row} elimDiv={hdcpDiv} gameNum={2} />);
       expect(screen.getByText("215")).toBeInTheDocument();
       expect(screen.queryByRole("img")).not.toBeInTheDocument();
-      expect(queryNbspSpan()).toHaveClass("pe-2");
+      expect(getNbspSpan()).toHaveClass("pe-2");
     });
 
     it("shows the status inside the score span, after the score", () => {
@@ -220,25 +250,27 @@ describe("ElimGame", () => {
       expect(scoreSpan).toHaveTextContent(/^215 \(200 \+ 15\)$/, exact);
     });
 
+    it.each([
+      [true, "Advanced"],
+      [false, "Eliminated"],
+    ])("shows the status in a scratch division (alive %s: %s)", (alive, status) => {
+      const row = makeRow({ games: [190, 200, null], alive: [true, alive, null], hdcp: 0 });
+      render(<ElimGame row={row} elimDiv={scratchDiv} gameNum={2} />);
+      const scoreSpan = screen.getByText("200");
+      expect(within(scoreSpan).getByRole("img", { name: status })).toBeInTheDocument();
+      expect(scoreSpan).toHaveTextContent(/^200$/, exact);
+    });
+
     describe("uses the status for gameNum", () => {
       const eliminatedGame1 = () =>
         makeRow({ games: [190, null, null], alive: [false, null, null] });
       const eliminatedGame2 = () =>
         makeRow({ games: [190, 200, null], alive: [true, false, null] });
 
-      it.each([
-        [1, "Advanced"],
-        [2, "Advanced"],
-      ])("not eliminated: game %i shows %s", (gameNum, status) => {
+      it.each([1, 2, 3])("not eliminated: game %i shows Advanced", (gameNum) => {
         render(<ElimGame row={advancedRow()} elimDiv={hdcpDiv} gameNum={gameNum} />);
-        expect(screen.getByRole("img", { name: status })).toBeInTheDocument();
-      });
-
-      it("not eliminated: last game shows the score and no status icon", () => {
-        render(<ElimGame row={advancedRow()} elimDiv={hdcpDiv} gameNum={3} />);
-        expect(screen.getByText("225")).toBeInTheDocument();
-        expect(screen.queryByRole("img")).not.toBeInTheDocument();
-        expect(queryNbspSpan()).toHaveClass("pe-2");
+        expect(screen.getAllByRole("img")).toHaveLength(1);
+        expect(screen.getByRole("img", { name: "Advanced" })).toBeInTheDocument();
       });
 
       it.each([
@@ -254,11 +286,12 @@ describe("ElimGame", () => {
         render(<ElimGame row={eliminatedGame2()} elimDiv={hdcpDiv} gameNum={3} />);
         expect(screen.queryByText(/\d/)).not.toBeInTheDocument();
         expect(screen.queryByRole("img")).not.toBeInTheDocument();
-        expect(queryNbspSpan()).toBeInTheDocument();
+        expect(getNbspSpan()).toBeInTheDocument();
       });
 
       it("eliminated in game 1: game 1 shows Eliminated", () => {
         render(<ElimGame row={eliminatedGame1()} elimDiv={hdcpDiv} gameNum={1} />);
+        expect(screen.getAllByRole("img")).toHaveLength(1);
         expect(screen.getByRole("img", { name: "Eliminated" })).toBeInTheDocument();
       });
 
@@ -268,7 +301,7 @@ describe("ElimGame", () => {
           render(<ElimGame row={eliminatedGame1()} elimDiv={hdcpDiv} gameNum={gameNum} />);
           expect(screen.queryByText(/\d/)).not.toBeInTheDocument();
           expect(screen.queryByRole("img")).not.toBeInTheDocument();
-          expect(queryNbspSpan()).toBeInTheDocument();
+          expect(getNbspSpan()).toBeInTheDocument();
         }
       );
     });

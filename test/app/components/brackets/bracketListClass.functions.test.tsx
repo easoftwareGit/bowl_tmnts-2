@@ -4,7 +4,7 @@ import {
   initBrktCountsType,
 } from "@/components/brackets/bracketListClass"
 import { maxBrackets } from "@/lib/validation/constants";
-import type { playerEntryRow } from "@/app/dataEntry/playersForm/populatePlayerRows";
+import type { playerEntryRow } from "@/app/(private)/dataEntry/playersForm/populatePlayerRows";
 import { cloneDeep } from "lodash";
 import { playerType } from "@/lib/types/types";
 import { initPlayer } from "@/lib/db/initVals";

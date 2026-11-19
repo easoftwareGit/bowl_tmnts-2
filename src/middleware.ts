@@ -22,8 +22,8 @@ export default auth((req) => {
     const role = req.auth.user?.role;
 
     if (role !== "DIRECTOR" && role !== "ADMIN") {
-      // show denied page (no login redirect loop)
-      return NextResponse.rewrite(new URL("/denied", req.url));
+      // send the browser to /denied; the address bar changes to /denied
+      return NextResponse.redirect(new URL("/denied", req.url));
     }
   }
 
@@ -33,9 +33,9 @@ export default auth((req) => {
 export const config = {
   matcher: [
     "/dataEntry/:path*",
+    "/reports/:path*",
     "/hello",
-    "/sample",
     "/secret",
-    "/user/:path*", // if you want /user and anything under it protected
+    "/user/:path*", // /user and anything under it protected
   ],
 };

@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useSelector } from "react-redux"
 import { RootState } from "@/redux/store";
-import PlayersEntryForm from "../../playersForm/playersForm";
+import PlayersEntryForm from "../../../(private)/dataEntry/playersForm/playersForm";
 import type {
   brktType,  
   tmntFormDataType,  
@@ -12,7 +12,7 @@ import {
   entryFeeColName,
   entryNumBrktsColName,
   feeColNameEnd,
-} from "../../playersForm/sfCreatePlayerColumns";
+} from "../../../(private)/dataEntry/playersForm/sfCreatePlayerColumns";
 import { getBrktOrElimName, getPotName } from "@/lib/getName";
 import { OverlayTrigger, Tooltip, Tab, Tabs } from "react-bootstrap";
 import { BracketList } from "@/components/brackets/bracketListClass";
@@ -23,11 +23,11 @@ import {
   getTmntFullDataLoadStatus,
   selectTmntFullData,
 } from "@/redux/features/tmntFullData/tmntFullDataSlice";
-import { playerEntryRow, populatePlayerRows } from "../../playersForm/populatePlayerRows";
+import { playerEntryRow, populatePlayerRows } from "../../../(private)/dataEntry/playersForm/populatePlayerRows";
 import { SquadStage } from "@prisma/client";
 import { createByePlayer } from "@/components/brackets/byePlayer";
 import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
-import { getSquadStage } from "../../tmntForm/tmntTools";
+import { getSquadStage } from "../../../(private)/dataEntry/tmntForm/tmntTools";
 import { dummySquadId } from "@/lib/validation/constants";
 
 // run tmnt:

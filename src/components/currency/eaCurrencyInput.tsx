@@ -92,13 +92,7 @@ const EaCurrencyInput: React.FC<EaCurrencyInputProps> = (props) => {
   return <CurrencyInput {...mergedProps} />;
 };
 
-const EaPercentInput: React.FC<EaPercentInputProps> = (props) => {
-  //  const ic: IntlConfig = {
-  //   // locale: window.navigator.language,
-  //   locale: 'en-US'
-  // };
-  // const localConfig = getLocaleConfig(ic);
-  // localConfig.prefix = "$";  
+const EaPercentInput: React.FC<EaPercentInputProps> = (props) => { 
   const amountPlaceHolder = formatValueSymbSep2Dec('0', percentConfig);  
   const decimals = 2
   const maxNumLength = 9

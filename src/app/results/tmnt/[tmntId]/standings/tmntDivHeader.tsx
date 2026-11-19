@@ -29,7 +29,7 @@ const TmntDivHeader: React.FC<ChildProps> = ({
               type="button"
               className={`btn ${isSelected ? "btn-primary" : "btn-outline-primary"}`}
               aria-pressed={isSelected}
-              onClick={() => onSelectDiv(div.id)}
+              onClick={() => {onSelectDiv(div.id)}}
             >
               {div.div_name}
             </button>

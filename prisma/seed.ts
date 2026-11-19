@@ -9,7 +9,7 @@ import {
   startOfDayFromString,
 } from "../src/lib/dateTools";
 import { addDays, addMilliseconds, endOfDay, startOfDay } from "date-fns";
-import { ptGame, ptLastGame } from "../src/lib/validation/constants";
+import { ptGame, ptLastGame, ptSeries } from "../src/lib/validation/constants";
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
@@ -3493,6 +3493,26 @@ async function potsUpsert() {
         pot_type: ptLastGame
       },
     });
+    pot = await prisma.pot.upsert({
+      where: {
+        id: "pot_89fd8f787de942a1a92aaa2df3e7c186",
+      },
+      update: {
+        squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+        div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+        sort_order: 3,
+        fee: 10,
+        pot_type: ptSeries,
+      },
+      create: {
+        id: "pot_89fd8f787de942a1a92aaa2df3e7c186",
+        squad_id: "sqd_8e4266e1174642c7a1bcec47a50f275f",
+        div_id: "div_99a3cae28786485bb7a036935f0f6a0a",
+        sort_order: 3,
+        fee: 10,
+        pot_type: ptSeries,
+      },
+    });    
     // new tmnt pot
     pot = await prisma.pot.upsert({
       where: {
@@ -7172,6 +7192,58 @@ async function potEntriesUpsert() {
           fee: 10,
         },
       });
+
+      /** series */
+
+      potEntry = await prisma.pot_Entry.upsert({
+        where: {
+          id: "pen_c5dd7ce6725d4db1be69e5ea11b63fe6",
+        },
+        update: {
+          pot_id: "pot_89fd8f787de942a1a92aaa2df3e7c186",
+          player_id: "ply_a01758cff1cc4bab9d9133e661bd49b0",
+          fee: 10,
+        },
+        create: {
+          id: "pen_c5dd7ce6725d4db1be69e5ea11b63fe6",
+          pot_id: "pot_89fd8f787de942a1a92aaa2df3e7c186",
+          player_id: "ply_a01758cff1cc4bab9d9133e661bd49b0",
+          fee: 10,
+        },
+      });
+      potEntry = await prisma.pot_Entry.upsert({
+        where: {
+          id: "pen_c5dd7ce6725d4db1be69e5ea11b63fe6",
+        },
+        update: {
+          pot_id: "pot_89fd8f787de942a1a92aaa2df3e7c186",
+          player_id: "ply_a01758cff1cc4bab9d9133e661bd49b0",
+          fee: 10,
+        },
+        create: {
+          id: "pen_c5dd7ce6725d4db1be69e5ea11b63fe6",
+          pot_id: "pot_89fd8f787de942a1a92aaa2df3e7c186",
+          player_id: "ply_a01758cff1cc4bab9d9133e661bd49b0",
+          fee: 10,
+        },
+      });      
+      potEntry = await prisma.pot_Entry.upsert({
+        where: {
+          id: "pen_b4961fa8c1654e309a196682689d38ef",
+        },
+        update: {
+          pot_id: "pot_89fd8f787de942a1a92aaa2df3e7c186",
+          player_id: "ply_a02758cff1cc4bab9d9133e661bd49b0",
+          fee: 10,
+        },
+        create: {
+          id: "pen_b4961fa8c1654e309a196682689d38ef",
+          pot_id: "pot_89fd8f787de942a1a92aaa2df3e7c186",
+          player_id: "ply_a02758cff1cc4bab9d9133e661bd49b0",
+          fee: 10,
+        },
+      });
+      
       return 38;
     } catch (error) {
       console.log(error);
@@ -12936,6 +13008,41 @@ async function potPfUpserts() {
           amount: 20,
         }
       });
+
+// pot_89fd8f787de942a1a92aaa2df3e7c186
+
+      prizeFund = await prisma.pot_PF.upsert({
+        where: {
+          id: "ppf_87415abe7ca444d898f14568961578cc",
+        },
+        update: {
+          pot_id: "pot_89fd8f787de942a1a92aaa2df3e7c186",
+          position: 1,
+          amount: 18,
+        },
+        create: {
+          id: "ppf_87415abe7ca444d898f14568961578cc",
+          pot_id: "pot_89fd8f787de942a1a92aaa2df3e7c186",
+          position: 1,
+          amount: 18,
+        }
+      });
+      prizeFund = await prisma.pot_PF.upsert({
+        where: {
+          id: "ppf_87415abe7ca444d898f14568961578dd",
+        },
+        update: {
+          pot_id: "pot_89fd8f787de942a1a92aaa2df3e7c186",
+          position: 2,
+          amount: 12,
+        },
+        create: {
+          id: "ppf_87415abe7ca444d898f14568961578dd",
+          pot_id: "pot_89fd8f787de942a1a92aaa2df3e7c186",
+          position: 2,
+          amount: 12,
+        }
+      });      
 
       return 4;
     } catch (error) {

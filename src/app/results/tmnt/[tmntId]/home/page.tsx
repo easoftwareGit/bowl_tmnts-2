@@ -30,10 +30,8 @@ const TmntHomePage = () => {
   /*********************************************/
 
   if (!hasTmntData && failedForThisTmnt) {
-    const errmsg = tmntError
-      ? tmntError.includes("missing required child")
-        ? `Tournament with id: ${tmntId} is missing data.`
-        : `An error occurred while loading the tournament with id: ${tmntId}.`
+    const errmsg = tmntError?.includes("missing required child")
+      ? `Tournament with id: ${tmntId} is missing data.`
       : `An error occurred while loading the tournament with id: ${tmntId}.`;
     return (
       <div className="text-center mt-5">
@@ -59,44 +57,43 @@ const TmntHomePage = () => {
   }
 
   const dateStr =
-    tmntFullData?.tmnt.start_date_str ===
-    tmntFullData?.tmnt.end_date_str
+    tmntFullData.tmnt.start_date_str ===
+    tmntFullData.tmnt.end_date_str
       ? getMonthDayYear(tmntFullData.tmnt.start_date_str)
       : getMonthDayYear(tmntFullData.tmnt.start_date_str) +
         " - " +
         getMonthDayYear(tmntFullData.tmnt.end_date_str);
 
-  const entryFeeStr =
-    tmntFullData.events.length === 0
-      ? ""
-      : formatValueSymbSep2Dec(
-          tmntFullData.events[0].entry_fee,
-          localConfig,
-        );  
+  const event = tmntFullData.events[0];
+  if (!event) {
+    throw new Error(`Tournament with id: ${tmntId} has no events.`);
+  }
+
+  const entryFeeStr = formatValueSymbSep2Dec(event.entry_fee, localConfig); 
   
   return (
     <>
       <TmntHomeHeader tmntFullData={tmntFullData} selectedTmntPageBtn={tmntPageBtn} />
       
       <div className="text-center mb-4">
-        <h4>Welcome to {tmntFullData?.tmnt.tmnt_name}</h4>
+        <h4>Welcome to {tmntFullData.tmnt.tmnt_name}</h4>
         <div className="mb-2">
           Hosted by{" "}
           <a
-            href={tmntFullData?.tmnt.bowl.url}
+            href={tmntFullData.tmnt.bowl.url}
             target="_blank"
             rel="noopener noreferrer"
           >
-            {tmntFullData?.tmnt.bowl.bowl_name}
+            {tmntFullData.tmnt.bowl.bowl_name}
           </a>
         </div>
         <div className="mb-2">
-          {tmntFullData?.tmnt.bowl.city},{" "}
-          {tmntFullData?.tmnt.bowl.state}
+          {tmntFullData.tmnt.bowl.city},{" "}
+          {tmntFullData.tmnt.bowl.state}
         </div>
         <div className="mb-2">{dateStr}</div>
         <div className="mb-2">
-          {tmntFullData?.tmnt.tmnt_name} - {entryFeeStr} entry
+          {tmntFullData.tmnt.tmnt_name} - {entryFeeStr} entry
         </div>
         <div>
           <a href={`/results/tmnt/${tmntId}/contact`}>Contact Director</a>

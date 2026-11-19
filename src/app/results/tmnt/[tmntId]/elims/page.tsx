@@ -38,6 +38,7 @@ import ElimGame from "./elimGame";
 import { formatValueSymbSep2Dec } from "@/lib/currency/formatValue";
 import { IntlConfig } from "@/lib/currency/components/CurrencyInputProps";
 import { getLocaleConfig } from "@/lib/currency/components/utils";
+import { missingDataError } from "../brackets/player/[playerId]/playerBrktData";
 import "./elims.css";
 
 type ElimsHeaderProps = {
@@ -71,9 +72,9 @@ const ElimsHeader = ({
           key={elim.id}
           type="button"
           className={`btn btn-outline-primary ${selectedElimId === elim.id ? "active" : ""}`}
-          onClick={() => onSelect(elim.id)}
+          onClick={() => {onSelect(elim.id)}}
         >
-          {getBrktOrElimName(elim as elimType, divs)}
+          {getBrktOrElimName(elim, divs)}
         </button>
       ))}
     </div>
@@ -93,6 +94,7 @@ const ElimsPrize = ({
   index,
   justElimPfs
 }: ElimsPrizeProps) => {
+  const pf = justElimPfs[index];
   return (
     <>
       {resultsFinal ? (
@@ -106,13 +108,9 @@ const ElimsPrize = ({
         </>
       ) : (
         <>
-          {index < justElimPfs.length &&
-          justElimPfs[index].amount
-            ? formatValueSymbSep2Dec(
-                justElimPfs[index].amount.toString(),
-                localConfig,
-              )
-            : ""}
+          {pf?.amount != null
+            ? formatValueSymbSep2Dec(pf.amount.toString(), localConfig)
+            : ""} 
         </>
       )}
     </>
@@ -209,7 +207,7 @@ const ElimsPage = () => {
       resultsLoadStatus !== "loading" &&
       !failedForThisTmntGames
     ) {
-      dispatch(fetchOneTmntGameResults(tmntId));
+      void dispatch(fetchOneTmntGameResults(tmntId));
     }
   }, [
     hasElims,
@@ -234,7 +232,7 @@ const ElimsPage = () => {
       prizesLoadStatus !== "loading" &&
       !failedForThisTmntPrizes
     ) {
-      dispatch(fetchElimPfs(tmntId));
+      void dispatch(fetchElimPfs(tmntId));
     }
   }, [
     hasElims,
@@ -298,7 +296,7 @@ const ElimsPage = () => {
   );
 
   const resultsFinal =
-    elimResultsRows.length > 0 && elimResultsRows[0].position != null;
+    elimResultsRows.length > 0 && elimResultsRows[0]?.position != null;
   const lastCashIndex = justElimPfs.length - 1;
 
   /*********************************************/
@@ -312,12 +310,9 @@ const ElimsPage = () => {
     prizesLoadStatus === "failed" && requestedPrizesTmntId === tmntId;
 
   if (!hasTmntData && failedForThisTmnt) {
-    const errmsg = tmntError
-      ? tmntError.includes("missing required child")
-        ? `Tournament with id: ${tmntId} is missing data.`
-        : `An error occurred while loading the tournament with id: ${tmntId}.`
+    const errmsg = tmntError?.includes("missing required child")
+      ? `Tournament with id: ${tmntId} is missing data.`
       : `An error occurred while loading the tournament with id: ${tmntId}.`;
-
     return (
       <div className="text-center mt-5">
         <h4>Unable to load tournament</h4>
@@ -349,9 +344,7 @@ const ElimsPage = () => {
           tmntFullData={tmntFullData}
           selectedTmntPageBtn={tmntPageBtn}
         />
-        <p className="text-center mt-3">
-          No eliminators are available for this tournament.
-        </p>
+        {missingDataError("No Elims for this squad")}
       </>
     );
   }
@@ -368,7 +361,7 @@ const ElimsPage = () => {
         <button
           type="button"
           className="btn btn-primary"
-          onClick={() => dispatch(fetchOneTmntGameResults(tmntId))}
+          onClick={() => void dispatch(fetchOneTmntGameResults(tmntId))}
         >
           Retry
         </button>
@@ -392,7 +385,7 @@ const ElimsPage = () => {
         <button
           type="button"
           className="btn btn-primary"
-          onClick={() => dispatch(fetchElimPfs(tmntId))}
+          onClick={() => void dispatch(fetchElimPfs(tmntId))}
         >
           Retry
         </button>
@@ -420,7 +413,7 @@ const ElimsPage = () => {
           tmntFullData={tmntFullData}
           selectedTmntPageBtn={tmntPageBtn}
         />
-        <p className="text-center mt-3">{errMsg}</p>
+        {missingDataError(errMsg)}
       </>
     );
   }
@@ -490,7 +483,7 @@ const ElimsPage = () => {
                         </td>
                         <td className="text-start align-middle">
                           <Link
-                            href={`/results/tmnt/${tmntId}/standings/div/${elimDiv!.id}/player/${row.player_id}`}
+                            href={`/results/tmnt/${tmntId}/standings/div/${elimDiv.id}/player/${row.player_id}`}
                             className="p-0"
                           >
                             {row.full_name}
@@ -500,7 +493,7 @@ const ElimsPage = () => {
                           <td key={gameNum} className="align-middle">
                             <ElimGame
                               row={row}
-                              elimDiv={elimDiv!}
+                              elimDiv={elimDiv}
                               gameNum={gameNum}
                             />
                           </td>

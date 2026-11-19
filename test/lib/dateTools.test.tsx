@@ -17,7 +17,7 @@ import {
   validDateString,
   removeTimeFromISODateStr,
   valid_yyyyMMdd,
-  yyyyMMdd_To_ddMMyyyy,
+  yyyyMMdd_To_MMddyyyy,
   ymdType,
   dateStringToTimeStamp,
   toIso,
@@ -495,39 +495,39 @@ describe("tests for dateTools", () => {
 
   describe('yyyyMMdd_To_ddMMyyyy', () => { 
     it('should return correct date string when given a valid YYYY-MM-DD date string', () => { 
-      const result = yyyyMMdd_To_ddMMyyyy('2023-10-05');
+      const result = yyyyMMdd_To_MMddyyyy('2023-10-05');
       expect(result).toBe('10/05/2023');
     })
     it('should return empty string when given an invalid YYYY-MM-DD date string', () => { 
-      const result = yyyyMMdd_To_ddMMyyyy('2023-13-05');
+      const result = yyyyMMdd_To_MMddyyyy('2023-13-05');
       expect(result).toBe('');
     })
     it('should return empty string when given an invalid date string with time', () => {
-      const result = yyyyMMdd_To_ddMMyyyy('2023-10-05T14:48:00.000Z');
+      const result = yyyyMMdd_To_MMddyyyy('2023-10-05T14:48:00.000Z');
       expect(result).toBe('');
     })
     it('should return empty string when given an invalid date string just text', () => {
-      const result = yyyyMMdd_To_ddMMyyyy('invalid-date-string');
+      const result = yyyyMMdd_To_MMddyyyy('invalid-date-string');
       expect(result).toBe('');
     })
     it('should return empty string when given an invalid date string not in YYYY-MM-DD format', () => {
-      const result = yyyyMMdd_To_ddMMyyyy('2024-10-5');
+      const result = yyyyMMdd_To_MMddyyyy('2024-10-5');
       expect(result).toBe('');
     })
     it('should return empty string when given an invalid date string in MM/DD/YYYY format', () => {
-      const result = yyyyMMdd_To_ddMMyyyy('10/05/2023');
+      const result = yyyyMMdd_To_MMddyyyy('10/05/2023');
       expect(result).toBe('');
     })
     it('should return empty string when given an empty string', () => {
-      const result = yyyyMMdd_To_ddMMyyyy('');
+      const result = yyyyMMdd_To_MMddyyyy('');
       expect(result).toBe('');
     })
     it('should return empty string when given null', () => {
-      const result = yyyyMMdd_To_ddMMyyyy(null as any);
+      const result = yyyyMMdd_To_MMddyyyy(null as any);
       expect(result).toBe('');
     })
     it('should return empty string when given undefined', () => {
-      const result = yyyyMMdd_To_ddMMyyyy(undefined as any);
+      const result = yyyyMMdd_To_MMddyyyy(undefined as any);
       expect(result).toBe('');
     })  
   })

@@ -114,10 +114,8 @@ const PlayerBrktsPage = () => {
     requestedResultsTmntId === tmntId;
     
   if (!hasTmntData && failedForThisTmnt) {
-    const errmsg = tmntError
-      ? tmntError.includes("missing required child")
-        ? `Tournament with id: ${tmntId} is missing data.`
-        : `An error occurred while loading the tournament with id: ${tmntId}.`
+    const errmsg = tmntError?.includes("missing required child")
+      ? `Tournament with id: ${tmntId} is missing data.`
       : `An error occurred while loading the tournament with id: ${tmntId}.`;
     return (
       <div className="text-center mt-5">

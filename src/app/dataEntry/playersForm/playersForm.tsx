@@ -36,7 +36,7 @@ import {
   getBrktIdFromColName,
   isBrktsColumnName,  
 } from "./sfCreatePlayerColumns";
-import { createAggregates } from "./sfPlayerAggregates";
+import { createAggregates } from "../../(private)/dataEntry/playersForm/sfPlayerAggregates";
 import type { playerEntryRow } from "./populatePlayerRows";
 import { btDbUuid } from "@/lib/uuid";
 import { useRouter } from "next/navigation";
@@ -46,7 +46,7 @@ import {
 } from "@/redux/features/tmntFullData/tmntFullDataSlice";
 import WaitModal from "@/components/modal/waitModal";
 import { BracketList } from "@/components/brackets/bracketListClass";
-import { extractDataFromRows, extractFullBrktsData } from "./extractData";
+import { extractDataFromRows, extractFullBrktsData } from "../../(private)/dataEntry/playersForm/extractData";
 import { SquadStage } from "@prisma/client";
 import { sanitizeName } from "@/lib/validation/sanitize";
 import {  

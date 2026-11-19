@@ -1,5 +1,5 @@
 import { BracketList, brktListInitialDataType, defaultSquadGameNums } from "@/components/brackets/bracketListClass";
-import { populatePlayerRows } from "@/app/dataEntry/playersForm/populatePlayerRows";
+import { populatePlayerRows } from "@/app/(private)/dataEntry/playersForm/populatePlayerRows";
 import {
   brktId1,
   mockTmntFullData,

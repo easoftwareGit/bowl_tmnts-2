@@ -22,6 +22,7 @@ import {
   tgrHdcpKey,
 } from "@/lib/types/resultsTypes";
 import { useTmntFullData } from "@/hooks/useTmntFullData";
+import "./../../../../tmntStandings.css";
 
 const TmntPlayerScoresPage = () => {
   const params = useParams();
@@ -48,7 +49,7 @@ const TmntPlayerScoresPage = () => {
   }, []);
 
   const gameNums = getGameNums(tmntResults);
-  
+
   /*****************/
   /* get tmnt data */
   /*****************/
@@ -72,7 +73,7 @@ const TmntPlayerScoresPage = () => {
       resultsLoadStatus !== "loading" &&
       !failedForThisTmntGames
     ) {
-      dispatch(fetchOneTmntGameResults(tmntId));
+      void dispatch(fetchOneTmntGameResults(tmntId));
     }
   }, [
     tmntId,
@@ -82,31 +83,17 @@ const TmntPlayerScoresPage = () => {
     dispatch,
   ]);
 
-  const gotHdcp = useMemo<boolean>(() => {
-    if (!tmntFullData || tmntFullData.divs.length === 0) {
-      return false;
-    }
+  const gotHdcp =
+    (tmntFullData.divs.find((div) => div.id === divId)?.hdcp_per ?? 0) > 0;
 
-    const foundDiv = tmntFullData.divs.find((div) => div.id === divId);
-    if (!foundDiv) {
-      return false;
-    }
-    return foundDiv.hdcp_per > 0;
-  }, [tmntFullData, divId]);
-
-  const playerResult = useMemo<tmntGameResult>(() => {
-    if (!tmntResults || tmntResults.length === 0) {
-      return {} as tmntGameResult;
-    }
-
-    const result = tmntResults.find(
-      (result) =>
-        result.player_id === playerId &&
-        result.div_id === divId,
-    );
-
-    return result ?? ({} as tmntGameResult);
-  }, [tmntResults, playerId, divId]);
+  // undefined when the player has no result in this division
+  const playerResult = useMemo<tmntGameResult | undefined>(
+    () =>
+      tmntResults.find(
+        (result) => result.player_id === playerId && result.div_id === divId,
+      ),
+    [tmntResults, playerId, divId],
+  );
 
   /*********************************************/
   /* render loading/error until data is loaded */
@@ -118,10 +105,8 @@ const TmntPlayerScoresPage = () => {
     resultsLoadStatus === "failed" && requestedResultsTmntId === tmntId;
 
   if (!hasTmntData && failedForThisTmnt) {
-    const errmsg = tmntError
-      ? tmntError.includes("missing required child")
-        ? `Tournament with id: ${tmntId} is missing data.`
-        : `An error occurred while loading the tournament with id: ${tmntId}.`
+    const errmsg = tmntError?.includes("missing required child")
+      ? `Tournament with id: ${tmntId} is missing data.`
       : `An error occurred while loading the tournament with id: ${tmntId}.`;
     return (
       <div className="text-center mt-5">
@@ -150,12 +135,14 @@ const TmntPlayerScoresPage = () => {
       `An error occurred while loading games for tournament with id: ${tmntId}.`;
     return (
       <div className="text-center mt-5">
-        <h4>Unable to load tournament</h4>
+        <h4>Unable to load tournament results</h4>
         <p>{errmsg}</p>
         <button
           type="button"
           className="btn btn-primary"
-          onClick={() => dispatch(fetchOneTmntGameResults(tmntId))}
+          onClick={() => {
+            void dispatch(fetchOneTmntGameResults(tmntId));
+          }}
         >
           Retry
         </button>
@@ -170,9 +157,8 @@ const TmntPlayerScoresPage = () => {
   // guard against bad links: the division must belong to this tournament,
   // and the player must have a result in that division
   const divFound = tmntFullData.divs.some((div) => div.id === divId);
-  const playerFound = playerResult.player_id !== undefined;
 
-  if (!divFound || !playerFound) {
+  if (!divFound || !playerResult) {
     const heading = !divFound ? "Division not found" : "Player results not found";
     const message = !divFound
       ? `This tournament has no division with id: ${divId}.`
@@ -204,7 +190,7 @@ const TmntPlayerScoresPage = () => {
 
       <div className="d-flex justify-content-center">
         <div className="overflow-x-auto">
-          <table className="table table-sm table-striped table-hover w-auto">
+          <table className="table table-sm table-striped table-hover w-auto tmnt-table">
             <thead>
               <tr>
                 {gotHdcp && (
@@ -232,7 +218,7 @@ const TmntPlayerScoresPage = () => {
                 {gameNums.map((gameNum) => (
                   <th
                     key={gameNum}
-                    className="text-center align-middle game-header-align"
+                    className="text-end align-middle game-header-align"
                     style={{ width: gameWidth }}
                   >
                     {gameNum}
@@ -263,9 +249,6 @@ const TmntPlayerScoresPage = () => {
               </tr>
             </thead>
             <tbody>
-              {/* first row is ave, hdcp*, full name, scores,
-                  scratch*, total hdcp*, scratch + total hdcp 
-                  *columns only exist if got hdcp = true */}
               <tr>
                 {gotHdcp && (
                   <>
@@ -280,7 +263,7 @@ const TmntPlayerScoresPage = () => {
                 <td>{playerResult.full_name}</td>
                 {gameNums.map((gameNum) => (
                   <td key={gameNum} className="text-end align-middle">
-                    {playerResult[`Game ${gameNum}`]}
+                    {playerResult[tgrGameKey(gameNum)]}
                   </td>
                 ))}
                 {gotHdcp && (
@@ -294,16 +277,11 @@ const TmntPlayerScoresPage = () => {
                   </>
                 )}
                 <td className="text-end align-middle">
-                  {/* ok to use ["total + Hdcp"], 
-                      for scratch, will be same as total */}
                   {playerResult["total + Hdcp"]}
                 </td>
               </tr>
-              {/* second and third rows only visible if gotHdcp = true */}
               {gotHdcp && (
                 <>
-                  {/* second row is blank, blank, per game hdcp msg, 
-                      per game hdcp, total hdcp */}
                   <tr>
                     <td colSpan={2}>&nbsp;</td>
                     <td className="text-end align-middle">per game hdcp</td>
@@ -322,8 +300,6 @@ const TmntPlayerScoresPage = () => {
                       {playerResult.total_hdcp}
                     </td>
                   </tr>
-                  {/* third row is blank, blank, total msg, 
-                      game score + per game hdcp, scratch + total hdcp */}
                   <tr>
                     <td colSpan={2}>&nbsp;</td>
                     <td className="text-end align-middle">Total</td>

@@ -1,4 +1,4 @@
-import { playerEntryRow } from "@/app/dataEntry/playersForm/populatePlayerRows";
+import { playerEntryRow } from "@/app/(private)/dataEntry/playersForm/populatePlayerRows";
 import { calcHandicap } from "@/lib/db/helpers";
 import type {
   playerInfoType,  

@@ -1,6 +1,6 @@
 import { sanitizeFullTmnt } from "@/lib/validation/tmnts/full/validate";
 import { mockTmntFullData } from "../../mocks/tmnts/tmntFullData/mockTmntFullData";
-import { getBlankTmntFullData } from "@/app/dataEntry/tmntForm/tmntTools";
+import { getBlankTmntFullData } from "@/app/(private)/dataEntry/tmntForm/tmntTools";
 import { sanitizeTmnt } from "@/lib/validation/tmnts/valildate";
 import { sanitizeEvent } from "@/lib/validation/events/validate";
 import { sanitizeDiv } from "@/lib/validation/divs/validate";

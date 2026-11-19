@@ -26,7 +26,7 @@ import {
   playerId8,  
 } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { calcHandicap } from "@/lib/db/helpers";
-import { populatePlayerRows } from "@/app/dataEntry/playersForm/populatePlayerRows";
+import { populatePlayerRows } from "@/app/(private)/dataEntry/playersForm/populatePlayerRows";
 import { Bracket } from "@/components/brackets/bracketClass";
 import cloneDeep from "lodash/cloneDeep";
 

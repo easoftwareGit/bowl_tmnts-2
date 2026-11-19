@@ -2,6 +2,7 @@ import Image from "next/image";
 import { elimResults, erAliveKey } from "@/lib/results/elims/elimResults";
 import { tgrGameKey, tgrHdcpKey } from "@/lib/types/resultsTypes";
 import { divType } from "@/lib/types/types";
+import { FIGURE_SPACE } from "@/lib/validation/constants";
 
 const imageWidth = 16;
 const imageHeight = 16;
@@ -48,7 +49,6 @@ const ElimStatus = ({ isAlive }: ElimStatusProps) => {
   );
 };
 
-
 interface ChildProps { 
   row: elimResults;
   elimDiv: divType;  
@@ -57,6 +57,9 @@ interface ChildProps {
 
 const ElimGame = ({ row, elimDiv, gameNum }: ChildProps) => {
 
+  // buildElimResultsRows sets game, hdcp and alive to null for every game
+  // after a player's elimination, so later games show no score and no icon.
+  // isAlive is null until every player still in has a score for gameNum.
   const isAlive = row[erAliveKey(gameNum)];
   const gameWithHdcp = row[tgrHdcpKey(gameNum)];
   
@@ -68,7 +71,7 @@ const ElimGame = ({ row, elimDiv, gameNum }: ChildProps) => {
           <>
             <span className="small">
               {" "}({row[tgrGameKey(gameNum)]} + {row.hdcp})
-              {(row.hdcp != null && row.hdcp < 10) && "\u2007"}
+              {(row.hdcp != null && row.hdcp < 10) && FIGURE_SPACE}
             </span>
           </>
         )}

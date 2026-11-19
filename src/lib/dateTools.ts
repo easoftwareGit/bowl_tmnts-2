@@ -145,7 +145,7 @@ export const valid_yyyyMMdd = (dateStr: string): boolean => {
  * @param {string} dateStr - date in YYYY-MM-DD format
  * @returns {string} - date in MM/dd/yyyy
  */
-export const yyyyMMdd_To_ddMMyyyy = (dateStr: string): string => {
+export const yyyyMMdd_To_MMddyyyy = (dateStr: string): string => {
   if (!valid_yyyyMMdd(dateStr)) return '';
   return dateStr.split('-')[1] + '/' + dateStr.split('-')[2] + '/' + dateStr.split('-')[0]
 }

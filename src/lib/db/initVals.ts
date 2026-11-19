@@ -1,6 +1,7 @@
 import type {  
   userDataType,
   userFormType,  
+  publicTmntDirectorType,
   bowlType,
   tmntType,  
   eventType,
@@ -68,6 +69,13 @@ export const blankUserData = {
 export const blankUserForm = {
   ...initUserForm,
   id: "",  
+}
+
+export const blankTmntDirector: publicTmntDirectorType = {
+  first_name: "",
+  last_name: "",
+  email: "",
+  phone: "",
 }
 
 export const initBowl: bowlType = {

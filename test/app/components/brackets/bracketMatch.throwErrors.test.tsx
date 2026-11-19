@@ -14,7 +14,7 @@ import {
   playerId8,
 } from "../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 import { BracketList } from "@/components/brackets/bracketListClass";
-import { playerEntryRow, populatePlayerRows } from "@/app/dataEntry/playersForm/populatePlayerRows";
+import { playerEntryRow, populatePlayerRows } from "@/app/(private)/dataEntry/playersForm/populatePlayerRows";
 import { gameType, playerType } from "@/lib/types/types";
 import { initPlayer } from "@/lib/db/initVals";
 import { cloneDeep } from "lodash";

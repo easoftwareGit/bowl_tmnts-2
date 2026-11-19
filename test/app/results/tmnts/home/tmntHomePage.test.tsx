@@ -1,3 +1,5 @@
+// test/app/results/tmnts/home/tmntHomePage.test.tsx
+// tests src/app/results/tmnt/[tmntId]/home/page.tsx
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { useParams } from "next/navigation";
@@ -13,9 +15,9 @@ import {
   tmntId,
 } from "../../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 
-/*************************/
+/**************************/
 /* mocks for dependencies */
-/*************************/
+/**************************/
 jest.mock("next/navigation", () => ({
   useParams: jest.fn(),
 }));
@@ -39,27 +41,38 @@ jest.mock("@/app/results/tmntHeader/tmntHomeHeader", () => ({
   ),
 }));
 
-const mockedUseParams = useParams as jest.Mock;
-const mockedUseTmntFullData = useTmntFullData as jest.Mock;
-const mockedHeader = TmntHomeHeader as unknown as jest.Mock;
+const mockedUseParams = jest.mocked(useParams);
+const mockedUseTmntFullData = jest.mocked(useTmntFullData);
+const mockedHeader = jest.mocked(TmntHomeHeader);
 
 /***********/
 /* helpers */
 /***********/
-const retryMock = jest.fn();
+type HookResult = ReturnType<typeof useTmntFullData>;
+type RetryFn = HookResult["retry"];
+
+const retryMock = jest.fn<ReturnType<RetryFn>, Parameters<RetryFn>>();
+
+// the hook always returns a tmntFullType (never null); before the tmnt is
+// loaded it is a blank tmnt. The page does not read events until hasData.
+const blankTmntData = (): tmntFullType => ({
+  ...mockTmntFullData,
+  tmnt: { ...mockTmntFullData.tmnt, id: "", tmnt_name: "" },
+  events: [],
+});
 
 type HookState = {
-  data?: tmntFullType | null;
+  data?: tmntFullType;
   hasData?: boolean;
   failed?: boolean;
-  error?: string | null;
+  error?: string;
 };
 
 const setHook = ({
   data = mockTmntFullData,
   hasData = true,
   failed = false,
-  error = null,
+  error,
 }: HookState = {}) => {
   mockedUseTmntFullData.mockReturnValue({
     data,
@@ -70,6 +83,14 @@ const setHook = ({
   });
 };
 
+const setLoading = () => {
+  setHook({ data: blankTmntData(), hasData: false, failed: false });
+};
+
+const setFailed = (error?: string) => {
+  setHook({ data: blankTmntData(), hasData: false, failed: true, error });
+};
+
 const withTmnt = (
   tmntOverrides: Partial<tmntFullType["tmnt"]>
 ): tmntFullType => ({
@@ -77,8 +98,16 @@ const withTmnt = (
   tmnt: { ...mockTmntFullData.tmnt, ...tmntOverrides },
 });
 
+const firstEvent = mockTmntFullData.events[0];
+if (!firstEvent) {
+  throw new Error("mockTmntFullData must have one event");
+}
+
 const { bowl } = mockTmntFullData.tmnt;
 const tmntName = mockTmntFullData.tmnt.tmnt_name;
+const startDateStr = mockTmntFullData.tmnt.start_date_str;
+const genericErrMsg = `An error occurred while loading the tournament with id: ${tmntId}.`;
+const missingDataMsg = `Tournament with id: ${tmntId} is missing data.`;
 
 describe("TmntHomePage", () => {
   beforeEach(() => {
@@ -88,8 +117,14 @@ describe("TmntHomePage", () => {
   });
 
   describe("fixture sanity check", () => {
-    it("mock data has at least one event", () => {
-      expect(mockTmntFullData.events.length).toBeGreaterThan(0);
+    // a tmnt is never saved without an event, and only one event is allowed
+    it("mock data is a one day tournament with a bowl and exactly one event", () => {
+      expect(mockTmntFullData.events).toHaveLength(1);
+      expect(mockTmntFullData.tmnt.start_date_str).toBe(
+        mockTmntFullData.tmnt.end_date_str
+      );
+      expect(bowl.bowl_name).not.toBe("");
+      expect(bowl.url).not.toBe("");
     });
   });
 
@@ -99,72 +134,123 @@ describe("TmntHomePage", () => {
       expect(mockedUseTmntFullData).toHaveBeenCalledWith(tmntId);
     });
 
-    it("shows the wait modal with a loading message while data is loading", () => {
-      setHook({ data: null, hasData: false, failed: false });
+    it("uses the route tmntId, not the loaded tmnt id, for the hook and the contact link", () => {
+      const routeId = "tmt_routeid00000000000000000000000";
+      mockedUseParams.mockReturnValue({ tmntId: routeId });
+      render(<TmntHomePage />);
+
+      expect(mockedUseTmntFullData).toHaveBeenCalledWith(routeId);
+      expect(
+        screen.getByRole("link", { name: "Contact Director" })
+      ).toHaveAttribute("href", `/results/tmnt/${routeId}/contact`);
+    });
+
+    it("shows only the wait modal with a loading message while data is loading", () => {
+      setLoading();
       render(<TmntHomePage />);
 
       expect(screen.getByTestId("wait-modal")).toHaveTextContent("Loading...");
       expect(screen.queryByTestId("tmnt-header")).not.toBeInTheDocument();
-      expect(screen.queryByText("Unable to load tournament")).not.toBeInTheDocument();
+      expect(screen.queryByRole("heading")).not.toBeInTheDocument();
+      expect(screen.queryByRole("button")).not.toBeInTheDocument();
+      expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    });
+
+    it("does not render the header while loading", () => {
+      setLoading();
+      render(<TmntHomePage />);
+      expect(mockedHeader).not.toHaveBeenCalled();
+    });
+
+    it("does not call retry while loading", () => {
+      setLoading();
+      render(<TmntHomePage />);
+      expect(retryMock).not.toHaveBeenCalled();
+    });
+
+    it("does not show the wait modal once data is loaded", () => {
+      render(<TmntHomePage />);
+      expect(screen.queryByTestId("wait-modal")).not.toBeInTheDocument();
     });
   });
 
   describe("error state", () => {
-    it("shows a generic error message when loading failed", () => {
-      setHook({
-        data: null,
-        hasData: false,
-        failed: true,
-        error: "Network error",
-      });
+    it("shows the error heading and the generic message when loading failed", () => {
+      setFailed("Network error");
       render(<TmntHomePage />);
 
       expect(
         screen.getByRole("heading", { level: 4, name: "Unable to load tournament" })
       ).toBeInTheDocument();
-      expect(
-        screen.getByText(
-          `An error occurred while loading the tournament with id: ${tmntId}.`
-        )
-      ).toBeInTheDocument();
-      expect(screen.queryByTestId("wait-modal")).not.toBeInTheDocument();
-      expect(screen.queryByTestId("tmnt-header")).not.toBeInTheDocument();
+      expect(screen.getByText(genericErrMsg)).toBeInTheDocument();
+      expect(screen.queryByText(missingDataMsg)).not.toBeInTheDocument();
     });
 
-    it("shows the generic error message when failed but the error is null", () => {
-      setHook({ data: null, hasData: false, failed: true, error: null });
+    it("shows only the error, not the wait modal, header or welcome content", () => {
+      setFailed("Network error");
       render(<TmntHomePage />);
 
-      expect(
-        screen.getByText(
-          `An error occurred while loading the tournament with id: ${tmntId}.`
-        )
-      ).toBeInTheDocument();
+      expect(screen.queryByTestId("wait-modal")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("tmnt-header")).not.toBeInTheDocument();
+      expect(mockedHeader).not.toHaveBeenCalled();
+      expect(screen.queryByText(/Welcome to/)).not.toBeInTheDocument();
+      expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    });
+
+    it("shows the generic message when failed and there is no error text", () => {
+      setFailed(undefined);
+      render(<TmntHomePage />);
+      expect(screen.getByText(genericErrMsg)).toBeInTheDocument();
+    });
+
+    it("shows the generic message when failed and the error text is empty", () => {
+      setFailed("");
+      render(<TmntHomePage />);
+      expect(screen.getByText(genericErrMsg)).toBeInTheDocument();
     });
 
     it("shows the missing data message when the error mentions a missing required child", () => {
-      setHook({
-        data: null,
-        hasData: false,
-        failed: true,
-        error: "Tournament has a missing required child: events",
-      });
+      setFailed("Tournament has a missing required child: events");
       render(<TmntHomePage />);
 
-      expect(
-        screen.getByText(`Tournament with id: ${tmntId} is missing data.`)
-      ).toBeInTheDocument();
+      expect(screen.getByText(missingDataMsg)).toBeInTheDocument();
       expect(
         screen.queryByText(/An error occurred while loading/)
       ).not.toBeInTheDocument();
     });
 
-    it("calls retry when the Retry button is clicked", () => {
-      setHook({ data: null, hasData: false, failed: true, error: "boom" });
+    it("uses the route tmntId in the error message", () => {
+      const routeId = "tmt_routeid00000000000000000000000";
+      mockedUseParams.mockReturnValue({ tmntId: routeId });
+      setFailed("Network error");
       render(<TmntHomePage />);
 
-      fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+      expect(
+        screen.getByText(
+          `An error occurred while loading the tournament with id: ${routeId}.`
+        )
+      ).toBeInTheDocument();
+    });
+
+    it("does not call retry until the Retry button is clicked", () => {
+      setFailed("boom");
+      render(<TmntHomePage />);
+      expect(retryMock).not.toHaveBeenCalled();
+    });
+
+    it("calls retry with no arguments each time the Retry button is clicked", () => {
+      setFailed("boom");
+      render(<TmntHomePage />);
+
+      const retryBtn = screen.getByRole("button", { name: "Retry" });
+      expect(retryBtn).toHaveAttribute("type", "button");
+
+      fireEvent.click(retryBtn);
       expect(retryMock).toHaveBeenCalledTimes(1);
+      expect(retryMock).toHaveBeenCalledWith();
+
+      fireEvent.click(retryBtn);
+      expect(retryMock).toHaveBeenCalledTimes(2);
     });
 
     it("renders the page instead of the error when data exists even if failed is true", () => {
@@ -172,6 +258,7 @@ describe("TmntHomePage", () => {
       render(<TmntHomePage />);
 
       expect(screen.queryByText("Unable to load tournament")).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Retry" })).not.toBeInTheDocument();
       expect(
         screen.getByRole("heading", { level: 4, name: `Welcome to ${tmntName}` })
       ).toBeInTheDocument();
@@ -184,12 +271,9 @@ describe("TmntHomePage", () => {
 
       expect(screen.getByTestId("tmnt-header")).toHaveTextContent("Home");
       expect(mockedHeader).toHaveBeenCalled();
-      const props = mockedHeader.mock.calls[0][0] as {
-        tmntFullData: tmntFullType;
-        selectedTmntPageBtn: string;
-      };
-      expect(props.tmntFullData).toBe(mockTmntFullData);
-      expect(props.selectedTmntPageBtn).toBe("Home");
+      const props = mockedHeader.mock.lastCall?.[0];
+      expect(props?.tmntFullData).toBe(mockTmntFullData);
+      expect(props?.selectedTmntPageBtn).toBe("Home");
     });
   });
 
@@ -222,45 +306,59 @@ describe("TmntHomePage", () => {
     it("renders a single date when start and end dates match", () => {
       render(<TmntHomePage />);
 
-      const dateStr = getMonthDayYear(mockTmntFullData.tmnt.start_date_str);
-      expect(screen.getByText(dateStr)).toBeInTheDocument();
-      expect(screen.queryByText(/ - .*\d{4}/)).not.toBeInTheDocument();
+      // exact match: the date line holds only the one date, no range
+      const start = getMonthDayYear(startDateStr);
+      expect(screen.getByText(start)).toBeInTheDocument();
+      expect(screen.queryByText(`${start} - ${start}`)).not.toBeInTheDocument();
     });
 
     it("renders a date range when start and end dates differ", () => {
-      setHook({ data: withTmnt({ end_date_str: "2025-09-03" }) });
+      const endDateStr = "2025-09-03";
+      setHook({ data: withTmnt({ end_date_str: endDateStr }) });
       render(<TmntHomePage />);
 
-      const start = getMonthDayYear("2025-09-01");
-      const end = getMonthDayYear("2025-09-03");
+      const start = getMonthDayYear(startDateStr);
+      const end = getMonthDayYear(endDateStr);
       expect(screen.getByText(`${start} - ${end}`)).toBeInTheDocument();
+      expect(screen.queryByText(start)).not.toBeInTheDocument();
     });
 
-    it("renders the tournament name and formatted entry fee of the first event", () => {
+    it("renders the tournament name and formatted entry fee of the event", () => {
       render(<TmntHomePage />);
 
-      const expectedFee = formatValueSymbSep2Dec(
-        mockTmntFullData.events[0].entry_fee,
-        localConfig
-      );
+      const expectedFee = formatValueSymbSep2Dec(firstEvent.entry_fee, localConfig);
       expect(
         screen.getByText(`${tmntName} - ${expectedFee} entry`)
       ).toBeInTheDocument();
     });
 
-    it("renders an empty entry fee when there are no events", () => {
-      setHook({ data: { ...mockTmntFullData, events: [] } });
+    it("formats an entry fee with cents", () => {
+      setHook({
+        data: {
+          ...mockTmntFullData,
+          events: [{ ...firstEvent, entry_fee: "85.5" }],
+        },
+      });
       render(<TmntHomePage />);
 
-      // empty fee leaves a double space, which toHaveTextContent normalizes
-      const line = screen.getByText((_, el) =>
-        Boolean(
-          el?.tagName === "DIV" &&
-            el.className === "mb-2" &&
-            el.textContent?.endsWith("entry")
-        )
+      const expectedFee = formatValueSymbSep2Dec("85.5", localConfig);
+      expect(
+        screen.getByText(`${tmntName} - ${expectedFee} entry`)
+      ).toBeInTheDocument();
+    });
+
+    it("throws when the loaded tournament has no events", () => {
+      // a tmnt is never saved without an event, so this is an impossible state
+      setHook({ data: { ...mockTmntFullData, events: [] } });
+      // React logs the render error; keep the test output clean
+      const consoleErrorSpy = jest
+        .spyOn(console, "error")
+        .mockImplementation(() => undefined);
+
+      expect(() => render(<TmntHomePage />)).toThrow(
+        `Tournament with id: ${tmntId} has no events.`
       );
-      expect(line).toHaveTextContent(`${tmntName} - entry`);
+      consoleErrorSpy.mockRestore();
     });
 
     it("renders the Contact Director link for this tournament", () => {
@@ -269,13 +367,19 @@ describe("TmntHomePage", () => {
         screen.getByRole("link", { name: "Contact Director" })
       ).toHaveAttribute("href", `/results/tmnt/${tmntId}/contact`);
     });
+
+    it("renders exactly two links: the bowl site and Contact Director", () => {
+      render(<TmntHomePage />);
+      expect(screen.getAllByRole("link")).toHaveLength(2);
+    });
   });
 });
 
+
+// // test/app/results/tmnts/home/tmntHomePage.test.tsx
+// // tests src/app/results/tmnt/[tmntId]/home/page.tsx
 // import React from "react";
-// import "@testing-library/jest-dom";
-// import { fireEvent, render, screen } from "@testing-library/react";
-// import cloneDeep from "lodash/cloneDeep";
+// import { render, screen, fireEvent } from "@testing-library/react";
 // import { useParams } from "next/navigation";
 // import TmntHomePage from "@/app/results/tmnt/[tmntId]/home/page";
 // import TmntHomeHeader from "@/app/results/tmntHeader/tmntHomeHeader";
@@ -283,12 +387,15 @@ describe("TmntHomePage", () => {
 // import { getMonthDayYear } from "@/lib/dateTools";
 // import { localConfig } from "@/lib/currency/const";
 // import { formatValueSymbSep2Dec } from "@/lib/currency/formatValue";
-// import type { tmntFullType } from "@/lib/types/types";
+// import { tmntFullType } from "@/lib/types/types";
 // import {
 //   mockTmntFullData,
 //   tmntId,
 // } from "../../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 
+// /*************************/
+// /* mocks for dependencies */
+// /*************************/
 // jest.mock("next/navigation", () => ({
 //   useParams: jest.fn(),
 // }));
@@ -297,374 +404,251 @@ describe("TmntHomePage", () => {
 //   useTmntFullData: jest.fn(),
 // }));
 
-// // These tests verify which dates the page displays.
-// // The date formatter's own tests should verify its formatting rules.
-// jest.mock("@/lib/dateTools", () => ({
-//   getMonthDayYear: jest.fn(),
-// }));
-
-// jest.mock("@/lib/currency/formatValue", () => ({
-//   formatValueSymbSep2Dec: jest.fn(),
-// }));
-
 // jest.mock("@/components/modal/waitModal", () => ({
 //   __esModule: true,
-//   default: function MockWaitModal({
-//     show,
-//     message,
-//   }: {
-//     show: boolean;
-//     message: string;
-//   }) {
-//     return show ? <div role="status">{message}</div> : null;
-//   },
+//   default: ({ show, message }: { show: boolean; message: string }) =>
+//     show ? <div data-testid="wait-modal">{message}</div> : null,
 // }));
 
 // jest.mock("@/app/results/tmntHeader/tmntHomeHeader", () => ({
 //   __esModule: true,
-//   default: jest.fn(function MockTmntHomeHeader() {
-//     return <div data-testid="tmnt-home-header" />;
-//   }),
+//   default: jest.fn(
+//     ({ selectedTmntPageBtn }: { selectedTmntPageBtn: string }) => (
+//       <div data-testid="tmnt-header">{selectedTmntPageBtn}</div>
+//     )
+//   ),
 // }));
 
-// const mockedUseParams = jest.mocked(useParams);
-// const mockedUseTmntFullData = jest.mocked(useTmntFullData);
-// const mockedGetMonthDayYear = jest.mocked(getMonthDayYear);
-// const mockedFormatEntryFee = jest.mocked(formatValueSymbSep2Dec);
-// const mockedTmntHomeHeader = jest.mocked(TmntHomeHeader);
+// const mockedUseParams = useParams as jest.Mock;
+// const mockedUseTmntFullData = useTmntFullData as jest.Mock;
+// const mockedHeader = TmntHomeHeader as unknown as jest.Mock;
 
-// type PageHookResult = Pick<
-//   ReturnType<typeof useTmntFullData>,
-//   "data" | "hasData" | "failed" | "error" | "retry"
-// >;
+// /***********/
+// /* helpers */
+// /***********/
+// const retryMock = jest.fn();
+
+// type HookState = {
+//   data?: tmntFullType | null;
+//   hasData?: boolean;
+//   failed?: boolean;
+//   error?: string | null;
+// };
+
+// const setHook = ({
+//   data = mockTmntFullData,
+//   hasData = true,
+//   failed = false,
+//   error = null,
+// }: HookState = {}) => {
+//   mockedUseTmntFullData.mockReturnValue({
+//     data,
+//     hasData,
+//     failed,
+//     error,
+//     retry: retryMock,
+//   });
+// };
+
+// const withTmnt = (
+//   tmntOverrides: Partial<tmntFullType["tmnt"]>
+// ): tmntFullType => ({
+//   ...mockTmntFullData,
+//   tmnt: { ...mockTmntFullData.tmnt, ...tmntOverrides },
+// });
+
+// const { bowl } = mockTmntFullData.tmnt;
+// const tmntName = mockTmntFullData.tmnt.tmnt_name;
 
 // describe("TmntHomePage", () => {
-//   let tournamentData: tmntFullType;
-//   let hookResult: PageHookResult;
-
-//   const retryTmnt = jest.fn();
-
-//   const setHookResult = (
-//     overrides: Partial<PageHookResult> = {},
-//   ) => {
-//     hookResult = { ...hookResult, ...overrides };
-
-//     // Supply the fields this page consumes.
-//     // Other fields returned by the hook are unused by this page.
-//     mockedUseTmntFullData.mockReturnValue(
-//       hookResult as ReturnType<typeof useTmntFullData>,
-//     );
-//   };
-
 //   beforeEach(() => {
 //     jest.clearAllMocks();
-
-//     // Give each test its own copy of the shared mock data.
-//     tournamentData = cloneDeep(mockTmntFullData);
-
-//     retryTmnt.mockReset();
-//     retryTmnt.mockResolvedValue(undefined);
-
 //     mockedUseParams.mockReturnValue({ tmntId });
-
-//     mockedGetMonthDayYear.mockReset();
-//     mockedGetMonthDayYear.mockReturnValue("September 1, 2025");
-
-//     mockedFormatEntryFee.mockReset();
-//     mockedFormatEntryFee.mockReturnValue("$85.00");
-
-//     hookResult = {
-//       data: tournamentData,
-//       hasData: true,
-//       failed: false,
-//       error: "",
-//       retry: retryTmnt,
-//     };
-
-//     setHookResult();
+//     setHook();
 //   });
 
-//   it("passes the tournament ID from the route to useTmntFullData", () => {
-//     render(<TmntHomePage />);
-
-//     expect(mockedUseTmntFullData).toHaveBeenCalledWith(tmntId);
+//   describe("fixture sanity check", () => {
+//     it("mock data has at least one event", () => {
+//       expect(mockTmntFullData.events.length).toBeGreaterThan(0);
+//     });
 //   });
 
-//   it("shows the loading modal when tournament data is not ready", () => {
-//     setHookResult({ hasData: false });
-
-//     render(<TmntHomePage />);
-
-//     expect(screen.getByRole("status")).toHaveTextContent("Loading...");
-
-//     expect(screen.queryByRole("heading")).not.toBeInTheDocument();
-
-//     expect(
-//       screen.queryByRole("button", { name: "Retry" }),
-//     ).not.toBeInTheDocument();
-
-//     expect(mockedTmntHomeHeader).not.toHaveBeenCalled();
-//     expect(mockedGetMonthDayYear).not.toHaveBeenCalled();
-//     expect(mockedFormatEntryFee).not.toHaveBeenCalled();
-//   });
-
-//   it("shows the missing-data message when a required child is missing", () => {
-//     setHookResult({
-//       hasData: false,
-//       failed: true,
-//       error: "Tournament is missing required child: events",
+//   describe("data loading", () => {
+//     it("requests the tournament data using the tmntId from the route params", () => {
+//       render(<TmntHomePage />);
+//       expect(mockedUseTmntFullData).toHaveBeenCalledWith(tmntId);
 //     });
 
-//     render(<TmntHomePage />);
+//     it("shows the wait modal with a loading message while data is loading", () => {
+//       setHook({ data: null, hasData: false, failed: false });
+//       render(<TmntHomePage />);
 
-//     expect(
-//       screen.getByRole("heading", {
-//         name: "Unable to load tournament",
-//       }),
-//     ).toBeInTheDocument();
-
-//     expect(
-//       screen.getByText(
-//         `Tournament with id: ${tmntId} is missing data.`,
-//       ),
-//     ).toBeInTheDocument();
-
-//     expect(
-//       screen.getByRole("button", { name: "Retry" }),
-//     ).toBeInTheDocument();
-
-//     expect(screen.queryByRole("status")).not.toBeInTheDocument();
-//     expect(mockedTmntHomeHeader).not.toHaveBeenCalled();
+//       expect(screen.getByTestId("wait-modal")).toHaveTextContent("Loading...");
+//       expect(screen.queryByTestId("tmnt-header")).not.toBeInTheDocument();
+//       expect(screen.queryByText("Unable to load tournament")).not.toBeInTheDocument();
+//     });
 //   });
 
-//   it.each(["Network error", ""])(
-//     "shows the generic error message when the hook error is %j",
-//     (error) => {
-//       setHookResult({
+//   describe("error state", () => {
+//     it("shows a generic error message when loading failed", () => {
+//       setHook({
+//         data: null,
 //         hasData: false,
 //         failed: true,
-//         error,
+//         error: "Network error",
 //       });
-
 //       render(<TmntHomePage />);
 
 //       expect(
-//         screen.getByRole("heading", {
-//           name: "Unable to load tournament",
-//         }),
+//         screen.getByRole("heading", { level: 4, name: "Unable to load tournament" })
 //       ).toBeInTheDocument();
+//       expect(
+//         screen.getByText(
+//           `An error occurred while loading the tournament with id: ${tmntId}.`
+//         )
+//       ).toBeInTheDocument();
+//       expect(screen.queryByTestId("wait-modal")).not.toBeInTheDocument();
+//       expect(screen.queryByTestId("tmnt-header")).not.toBeInTheDocument();
+//     });
+
+//     it("shows the generic error message when failed but the error is null", () => {
+//       setHook({ data: null, hasData: false, failed: true, error: null });
+//       render(<TmntHomePage />);
 
 //       expect(
 //         screen.getByText(
-//           `An error occurred while loading the tournament with id: ${tmntId}.`,
-//         ),
+//           `An error occurred while loading the tournament with id: ${tmntId}.`
+//         )
 //       ).toBeInTheDocument();
+//     });
+
+//     it("shows the missing data message when the error mentions a missing required child", () => {
+//       setHook({
+//         data: null,
+//         hasData: false,
+//         failed: true,
+//         error: "Tournament has a missing required child: events",
+//       });
+//       render(<TmntHomePage />);
 
 //       expect(
-//         screen.getByRole("button", { name: "Retry" }),
+//         screen.getByText(`Tournament with id: ${tmntId} is missing data.`)
 //       ).toBeInTheDocument();
-
-//       expect(screen.queryByRole("status")).not.toBeInTheDocument();
-//       expect(mockedTmntHomeHeader).not.toHaveBeenCalled();
-//     },
-//   );
-
-//   it("calls retryTmnt when the Retry button is clicked", () => {
-//     setHookResult({
-//       hasData: false,
-//       failed: true,
-//       error: "Network error",
+//       expect(
+//         screen.queryByText(/An error occurred while loading/)
+//       ).not.toBeInTheDocument();
 //     });
 
-//     render(<TmntHomePage />);
+//     it("calls retry when the Retry button is clicked", () => {
+//       setHook({ data: null, hasData: false, failed: true, error: "boom" });
+//       render(<TmntHomePage />);
 
-//     expect(retryTmnt).not.toHaveBeenCalled();
-
-//     fireEvent.click(screen.getByRole("button", { name: "Retry" }));
-
-//     expect(retryTmnt).toHaveBeenCalledTimes(1);
-//   });
-
-//   it("renders the welcome heading and passes tournament data to the header", () => {
-//     render(<TmntHomePage />);
-
-//     expect(
-//       screen.getByRole("heading", {
-//         name: `Welcome to ${tournamentData.tmnt.tmnt_name}`,
-//       }),
-//     ).toBeInTheDocument();
-
-//     expect(
-//       screen.getByTestId("tmnt-home-header"),
-//     ).toBeInTheDocument();
-
-//     // Inspect the props directly to avoid depending on React's
-//     // additional arguments when it calls a function component.
-//     expect(mockedTmntHomeHeader.mock.calls[0][0]).toEqual({
-//       tmntFullData: tournamentData,
+//       fireEvent.click(screen.getByRole("button", { name: "Retry" }));
+//       expect(retryMock).toHaveBeenCalledTimes(1);
 //     });
 
-//     expect(screen.queryByRole("status")).not.toBeInTheDocument();
+//     it("renders the page instead of the error when data exists even if failed is true", () => {
+//       setHook({ hasData: true, failed: true, error: "stale error" });
+//       render(<TmntHomePage />);
 
-//     expect(
-//       screen.queryByRole("button", { name: "Retry" }),
-//     ).not.toBeInTheDocument();
+//       expect(screen.queryByText("Unable to load tournament")).not.toBeInTheDocument();
+//       expect(
+//         screen.getByRole("heading", { level: 4, name: `Welcome to ${tmntName}` })
+//       ).toBeInTheDocument();
+//     });
 //   });
 
-//   it("renders the host link and bowling center location", () => {
-//     render(<TmntHomePage />);
+//   describe("header", () => {
+//     it("renders TmntHomeHeader with the tournament data and Home selected", () => {
+//       render(<TmntHomePage />);
 
-//     const bowl = tournamentData.tmnt.bowl;
-//     const hostLink = screen.getByRole("link", {
-//       name: bowl.bowl_name,
+//       expect(screen.getByTestId("tmnt-header")).toHaveTextContent("Home");
+//       expect(mockedHeader).toHaveBeenCalled();
+//       const props = mockedHeader.mock.calls[0][0] as {
+//         tmntFullData: tmntFullType;
+//         selectedTmntPageBtn: string;
+//       };
+//       expect(props.tmntFullData).toBe(mockTmntFullData);
+//       expect(props.selectedTmntPageBtn).toBe("Home");
+//     });
+//   });
+
+//   describe("welcome content", () => {
+//     it("renders the welcome heading with the tournament name", () => {
+//       render(<TmntHomePage />);
+//       expect(
+//         screen.getByRole("heading", { level: 4, name: `Welcome to ${tmntName}` })
+//       ).toBeInTheDocument();
 //     });
 
-//     expect(hostLink).toHaveAttribute("href", bowl.url);
-//     expect(hostLink).toHaveAttribute("target", "_blank");
-//     expect(hostLink).toHaveAttribute("rel", "noopener noreferrer");
+//     it("renders the host bowling center as a link that opens in a new tab", () => {
+//       render(<TmntHomePage />);
 
-//     expect(screen.getByText("Hosted by")).toBeInTheDocument();
+//       const link = screen.getByRole("link", { name: bowl.bowl_name });
+//       expect(link).toHaveAttribute("href", bowl.url);
+//       expect(link).toHaveAttribute("target", "_blank");
+//       expect(link).toHaveAttribute("rel", "noopener noreferrer");
 
-//     expect(
-//       screen.getByText(`${bowl.city}, ${bowl.state}`),
-//     ).toBeInTheDocument();
-//   });
-    
-//   it("renders one formatted date for a single-day tournament", () => {
-//     render(<TmntHomePage />);
-
-//     expect(
-//       screen.getByText("September 1, 2025"),
-//     ).toBeInTheDocument();
-
-//     expect(mockedGetMonthDayYear).toHaveBeenCalledTimes(1);
-
-//     expect(mockedGetMonthDayYear).toHaveBeenCalledWith(
-//       tournamentData.tmnt.start_date_str,
-//     );
-//   });
-
-//   it("renders both formatted dates for a multi-day tournament", () => {
-//     tournamentData.tmnt.end_date_str = "2025-09-03";
-
-//     mockedGetMonthDayYear.mockImplementation((date) =>
-//       date === "2025-09-01"
-//         ? "September 1, 2025"
-//         : "September 3, 2025",
-//     );
-
-//     render(<TmntHomePage />);
-
-//     expect(
-//       screen.getByText(
-//         "September 1, 2025 - September 3, 2025",
-//       ),
-//     ).toBeInTheDocument();
-
-//     expect(mockedGetMonthDayYear).toHaveBeenCalledTimes(2);
-
-//     expect(mockedGetMonthDayYear).toHaveBeenNthCalledWith(
-//       1,
-//       "2025-09-01",
-//     );
-
-//     expect(mockedGetMonthDayYear).toHaveBeenNthCalledWith(
-//       2,
-//       "2025-09-03",
-//     );
-//   });
-
-//   it("formats and displays the first event's entry fee", () => {
-//     // Add another event with a different fee to verify that
-//     // the home page uses the first event's fee.
-//     tournamentData.events.push({
-//       ...tournamentData.events[0],
-//       id: "evt_012310c8493f4a218d2e2b045442974b",
-//       entry_fee: "150",
+//       expect(screen.getByText("Hosted by")).toHaveTextContent(
+//         `Hosted by ${bowl.bowl_name}`
+//       );
 //     });
 
-//     render(<TmntHomePage />);
-
-//     expect(mockedFormatEntryFee).toHaveBeenCalledTimes(1);
-
-//     expect(mockedFormatEntryFee).toHaveBeenCalledWith(
-//       "85",
-//       localConfig,
-//     );
-
-//     expect(
-//       screen.getByText(
-//         `${tournamentData.tmnt.tmnt_name} - $85.00 entry`,
-//       ),
-//     ).toBeInTheDocument();
-//   });
-
-//   it("renders successfully without events and leaves the entry fee blank", () => {
-//     tournamentData.events = [];
-
-//     render(<TmntHomePage />);
-
-//     // Testing Library normalizes the extra space caused
-//     // by the empty entry fee.
-//     expect(
-//       screen.getByText(
-//         `${tournamentData.tmnt.tmnt_name} - entry`,
-//       ),
-//     ).toBeInTheDocument();
-
-//     expect(mockedFormatEntryFee).not.toHaveBeenCalled();
-//   });
-
-//   it("links to the contact page for the tournament in the route", () => {
-//     render(<TmntHomePage />);
-
-//     expect(
-//       screen.getByRole("link", { name: "Contact Director" }),
-//     ).toHaveAttribute(
-//       "href",
-//       `/results/tmnt/${tmntId}/contact`,
-//     );
-//   });
-
-//   it("shows tournament data when hasData is true even if failed is also true", () => {
-//     setHookResult({
-//       failed: true,
-//       error: "Network error",
+//     it("renders the bowl city and state", () => {
+//       render(<TmntHomePage />);
+//       expect(screen.getByText(`${bowl.city}, ${bowl.state}`)).toBeInTheDocument();
 //     });
 
-//     render(<TmntHomePage />);
+//     it("renders a single date when start and end dates match", () => {
+//       render(<TmntHomePage />);
 
-//     expect(
-//       screen.getByRole("heading", {
-//         name: `Welcome to ${tournamentData.tmnt.tmnt_name}`,
-//       }),
-//     ).toBeInTheDocument();
+//       const dateStr = getMonthDayYear(mockTmntFullData.tmnt.start_date_str);
+//       expect(screen.getByText(dateStr)).toBeInTheDocument();
+//       expect(screen.queryByText(/ - .*\d{4}/)).not.toBeInTheDocument();
+//     });
 
-//     expect(
-//       screen.queryByText("Unable to load tournament"),
-//     ).not.toBeInTheDocument();
+//     it("renders a date range when start and end dates differ", () => {
+//       setHook({ data: withTmnt({ end_date_str: "2025-09-03" }) });
+//       render(<TmntHomePage />);
 
-//     expect(screen.queryByRole("status")).not.toBeInTheDocument();
-//   });
+//       const start = getMonthDayYear("2025-09-01");
+//       const end = getMonthDayYear("2025-09-03");
+//       expect(screen.getByText(`${start} - ${end}`)).toBeInTheDocument();
+//     });
 
-//   it("replaces the loading modal when tournament data becomes ready", () => {
-//     setHookResult({ hasData: false });
+//     it("renders the tournament name and formatted entry fee of the first event", () => {
+//       render(<TmntHomePage />);
 
-//     const { rerender } = render(<TmntHomePage />);
+//       const expectedFee = formatValueSymbSep2Dec(
+//         mockTmntFullData.events[0].entry_fee,
+//         localConfig
+//       );
+//       expect(
+//         screen.getByText(`${tmntName} - ${expectedFee} entry`)
+//       ).toBeInTheDocument();
+//     });
 
-//     expect(screen.getByRole("status")).toHaveTextContent("Loading...");
+//     it("renders an empty entry fee when there are no events", () => {
+//       setHook({ data: { ...mockTmntFullData, events: [] } });
+//       render(<TmntHomePage />);
 
-//     setHookResult({ hasData: true });
+//       // empty fee leaves a double space, which toHaveTextContent normalizes
+//       const line = screen.getByText((_, el) =>
+//         Boolean(
+//           el?.tagName === "DIV" &&
+//             el.className === "mb-2" &&
+//             el.textContent?.endsWith("entry")
+//         )
+//       );
+//       expect(line).toHaveTextContent(`${tmntName} - entry`);
+//     });
 
-//     rerender(<TmntHomePage />);
-
-//     expect(screen.queryByRole("status")).not.toBeInTheDocument();
-
-//     expect(
-//       screen.getByRole("heading", {
-//         name: `Welcome to ${tournamentData.tmnt.tmnt_name}`,
-//       }),
-//     ).toBeInTheDocument();
+//     it("renders the Contact Director link for this tournament", () => {
+//       render(<TmntHomePage />);
+//       expect(
+//         screen.getByRole("link", { name: "Contact Director" })
+//       ).toHaveAttribute("href", `/results/tmnt/${tmntId}/contact`);
+//     });
 //   });
 // });
 

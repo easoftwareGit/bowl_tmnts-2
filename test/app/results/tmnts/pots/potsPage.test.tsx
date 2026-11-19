@@ -1,3 +1,6 @@
+// test/app/results/tmnts/pots/potsPage.test.tsx
+// tests for src/app/results/tmnt/[tmntId]/pots/page.tsx
+// (expects aria-pressed on the pot buttons and the "Unable to load tournament results" heading)
 import React from "react";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -15,10 +18,21 @@ import PotGames from "@/app/results/tmnt/[tmntId]/pots/potGames";
 import PotLastGame from "@/app/results/tmnt/[tmntId]/pots/potLastGame";
 import PotSeries from "@/app/results/tmnt/[tmntId]/pots/potsSeries";
 import { getPotShortName } from "@/lib/getName";
+import { initPot } from "@/lib/db/initVals";
 import { ptGame, ptLastGame } from "@/lib/validation/constants";
 import { tmntGameResult } from "@/lib/types/resultsTypes";
 import { potPfType, potType, tmntFullType } from "@/lib/types/types";
-import { mockTmntFullData } from "../../../../mocks/tmnts/tmntFullData/mockTmntFullData";
+import {
+  divId1,
+  mockPotPfs,
+  mockTmntFullData,
+  playerId1,
+  playerId2,
+  potId1,
+  potId2,
+  squadId1,
+  tmntId,
+} from "../../../../mocks/tmnts/tmntFullData/mockTmntFullData";
 
 // ---------------------------------------------------------------------------
 // redux state used by the mocked selectors
@@ -60,9 +74,9 @@ jest.mock("react-redux", () => ({
 }));
 
 jest.mock("@/redux/features/oneTmntGameResults/oneTmntGameResultsSlice", () => ({
-  fetchOneTmntGameResults: jest.fn((tmntId: string) => ({
+  fetchOneTmntGameResults: jest.fn((id: string) => ({
     type: "oneTmntGameResults/fetch",
-    payload: tmntId,
+    payload: id,
   })),
   getOneTmntGameResultsRequestedTmntId: (s: MockState) => s.results.requestedTmntId,
   getOneTmntGameResultsTmntId: (s: MockState) => s.results.tmntId,
@@ -72,9 +86,9 @@ jest.mock("@/redux/features/oneTmntGameResults/oneTmntGameResultsSlice", () => (
 }));
 
 jest.mock("@/redux/features/potPfs/potPfsSlice", () => ({
-  fetchPotPfs: jest.fn((tmntId: string) => ({
+  fetchPotPfs: jest.fn((id: string) => ({
     type: "potPfs/fetch",
-    payload: tmntId,
+    payload: id,
   })),
   getPotPfsRequestedTmntId: (s: MockState) => s.potPfs.requestedTmntId,
   getPotPfsTmntId: (s: MockState) => s.potPfs.tmntId,
@@ -149,42 +163,61 @@ jest.mock("@/app/results/tmnt/[tmntId]/pots/potsSeries", () => {
   };
 });
 
-const mockUseParams = useParams as jest.Mock;
-const mockUseTmntFullData = useTmntFullData as jest.MockedFunction<typeof useTmntFullData>;
-const mockCalcNumGames = calcNumGames as jest.MockedFunction<typeof calcNumGames>;
-const mockBuildPotResultsRows = buildPotResultsRows as jest.MockedFunction<
-  typeof buildPotResultsRows
->;
-const mockFetchOneTmntGameResults = fetchOneTmntGameResults as unknown as jest.Mock;
-const mockFetchPotPfs = fetchPotPfs as unknown as jest.Mock;
-const mockTmntHomeHeader = TmntHomeHeader as unknown as jest.Mock;
-const mockPotGames = PotGames as unknown as jest.Mock;
-const mockPotLastGame = PotLastGame as unknown as jest.Mock;
-const mockPotSeries = PotSeries as unknown as jest.Mock;
+const mockUseParams = jest.mocked(useParams);
+const mockUseTmntFullData = jest.mocked(useTmntFullData);
+const mockCalcNumGames = jest.mocked(calcNumGames);
+const mockBuildPotResultsRows = jest.mocked(buildPotResultsRows);
+const mockFetchOneTmntGameResults = jest.mocked(fetchOneTmntGameResults);
+const mockFetchPotPfs = jest.mocked(fetchPotPfs);
+const mockTmntHomeHeader = jest.mocked(TmntHomeHeader);
+const mockPotGames = jest.mocked(PotGames);
+const mockPotLastGame = jest.mocked(PotLastGame);
+const mockPotSeries = jest.mocked(PotSeries);
+
+type tmntHookType = ReturnType<typeof useTmntFullData>;
+type retryType = tmntHookType["retry"];
+
+// ---------------------------------------------------------------------------
+// helpers
+// ---------------------------------------------------------------------------
+
+// noUncheckedIndexedAccess: fail loudly instead of returning undefined
+const at = <T,>(items: T[], index: number): T => {
+  const item = items[index];
+  if (item === undefined) throw new Error(`no item at index ${String(index)}`);
+  return item;
+};
+
+// props of the last render of a mocked component
+// (React 19 calls function components with one argument)
+const lastProps = <P,>(lastCall: [P] | undefined): P => {
+  if (!lastCall) throw new Error("component was not rendered");
+  return lastCall[0];
+};
 
 // ---------------------------------------------------------------------------
 // test data
 // ---------------------------------------------------------------------------
 
-const tmntId = "tmt_fd99387c33d9c78aba290286576ddce5";
 const otherTmntId = "tmt_00000000000000000000000000000000";
-const numGames = 3;
+const seriesPotId = "pot_99999999999999999999999999999999";
+const numGames = 6; // mock squad has 6 games
 
 const resultsAction = { type: "oneTmntGameResults/fetch", payload: tmntId };
 const potPfsAction = { type: "potPfs/fetch", payload: tmntId };
 
 describe("PotsPage", () => {
   let tmntFullData: tmntFullType;
-  let gamePot: potType;
-  let lastGamePot: potType;
-  let seriesPot: potType;
+  let gamePot: potType; // mock pots[0]
+  let lastGamePot: potType; // mock pots[1]
+  let seriesPot: potType; // added, same div and squad as the mock pots
   let tmntResults: tmntGameResult[];
   let potPfs: potPfType[];
   let potResultsRows: potResultsRowType[];
-  let retryTmnt: jest.Mock;
+  let retryTmnt: jest.Mock<ReturnType<retryType>, Parameters<retryType>>;
 
   // tmnt data hook result
-  const setTmntHook = (overrides: Partial<ReturnType<typeof useTmntFullData>> = {}) => {
+  const setTmntHook = (overrides: Partial<tmntHookType> = {}) => {
     mockUseTmntFullData.mockReturnValue({
       data: tmntFullData,
       hasData: true,
@@ -192,7 +225,7 @@ describe("PotsPage", () => {
       error: undefined,
       retry: retryTmnt,
       ...overrides,
-    } as unknown as ReturnType<typeof useTmntFullData>);
+    });
   };
 
   // everything loaded for tmntId
@@ -215,43 +248,74 @@ describe("PotsPage", () => {
     };
   };
 
+  // nothing loaded yet for any tournament
+  const setIdleState = () => {
+    mockState.results = { ...mockState.results, requestedTmntId: "", tmntId: "", loadStatus: "idle" };
+    mockState.potPfs = { ...mockState.potPfs, requestedTmntId: "", tmntId: "", loadStatus: "idle" };
+  };
+
   const getPotButtons = () =>
     within(screen.getByRole("group", { name: "Select pot" })).getAllByRole("button");
 
-  const lastProps = (mockComp: jest.Mock) =>
-    mockComp.mock.calls[mockComp.mock.calls.length - 1][0];
+  const makeRow = (player_id: string, gameNum: number, score: number): potResultsRowType => ({
+    player_id,
+    div_id: divId1,
+    gameNum,
+    score,
+    hdcp: 0,
+    scoreWithHdcp: score,
+    prizeMoney: null,
+  });
 
   beforeEach(() => {
     jest.clearAllMocks();
 
     mockUseParams.mockReturnValue({ tmntId });
-    retryTmnt = jest.fn();
+    retryTmnt = jest.fn<ReturnType<retryType>, Parameters<retryType>>();
 
     tmntFullData = cloneDeep(mockTmntFullData);
-
-    // one pot of each kind: game, last game, series (anything else)
-    gamePot = { ...tmntFullData.pots[0], pot_type: ptGame } as potType;
-    lastGamePot = { ...tmntFullData.pots[1], pot_type: ptLastGame } as potType;
+    gamePot = at(tmntFullData.pots, 0);
+    lastGamePot = at(tmntFullData.pots, 1);
     seriesPot = {
-      ...tmntFullData.pots[0],
-      id: "pot_99999999999999999999999999999999",
+      ...initPot,
+      id: seriesPotId,
+      squad_id: squadId1,
+      div_id: divId1,
+      sort_order: 3,
+      fee: "20",
       pot_type: "Series",
-    } as potType;
+    };
     tmntFullData.pots = [gamePot, lastGamePot, seriesPot];
 
+    // only passed through: calcNumGames and buildPotResultsRows are mocked
     tmntResults = [
-      { player_id: tmntFullData.players[0].id },
+      { player_id: playerId1, div_id: divId1 },
+      { player_id: playerId2, div_id: divId1 },
     ] as unknown as tmntGameResult[];
-    potPfs = [{ id: "ppf_test_1", pot_id: gamePot.id, amount: 100 }] as potPfType[];
-    potResultsRows = [
-      { player_id: tmntFullData.players[0].id, score: 200, hdcp: 0, scoreWithHdcp: 200 },
-    ] as potResultsRowType[];
+    potPfs = cloneDeep(mockPotPfs);
+    potResultsRows = [makeRow(playerId1, 1, 200), makeRow(playerId2, 1, 190)];
 
     mockCalcNumGames.mockReturnValue(numGames);
     mockBuildPotResultsRows.mockReturnValue(potResultsRows);
 
     setTmntHook();
     setLoadedState();
+  });
+
+  // -------------------------------------------------------------------------
+  describe("mock data", () => {
+    it("has a game pot then a last game pot in the same division", () => {
+      expect(gamePot.id).toBe(potId1);
+      expect(gamePot.pot_type).toBe(ptGame);
+      expect(lastGamePot.id).toBe(potId2);
+      expect(lastGamePot.pot_type).toBe(ptLastGame);
+      expect(lastGamePot.div_id).toBe(gamePot.div_id);
+    });
+
+    it("has prize funds for both pots", () => {
+      expect(potPfs.filter((pf) => pf.pot_id === potId1)).toHaveLength(2);
+      expect(potPfs.filter((pf) => pf.pot_id === potId2)).toHaveLength(2);
+    });
   });
 
   // -------------------------------------------------------------------------
@@ -266,19 +330,28 @@ describe("PotsPage", () => {
       expect(mockDispatch).not.toHaveBeenCalled();
     });
 
+    it("fetches both results and prizes when neither is loaded", () => {
+      setIdleState();
+      render(<PotsPage />);
+      expect(mockDispatch).toHaveBeenCalledTimes(2);
+      expect(mockDispatch).toHaveBeenCalledWith(resultsAction);
+      expect(mockDispatch).toHaveBeenCalledWith(potPfsAction);
+    });
+
+    it("fetches results and prizes while the tournament data is still loading", () => {
+      setTmntHook({ hasData: false });
+      setIdleState();
+      render(<PotsPage />);
+      expect(mockDispatch).toHaveBeenCalledWith(resultsAction);
+      expect(mockDispatch).toHaveBeenCalledWith(potPfsAction);
+    });
+
     it("fetches results when they are for a different tournament", () => {
       mockState.results.tmntId = otherTmntId;
       mockState.results.requestedTmntId = otherTmntId;
       render(<PotsPage />);
       expect(mockFetchOneTmntGameResults).toHaveBeenCalledWith(tmntId);
-      expect(mockDispatch).toHaveBeenCalledWith(resultsAction);
-    });
-
-    it("fetches results when none are loaded", () => {
-      mockState.results.tmntId = "";
-      mockState.results.requestedTmntId = "";
-      mockState.results.loadStatus = "idle";
-      render(<PotsPage />);
+      expect(mockDispatch).toHaveBeenCalledTimes(1);
       expect(mockDispatch).toHaveBeenCalledWith(resultsAction);
     });
 
@@ -292,7 +365,6 @@ describe("PotsPage", () => {
     it("does not fetch results again after they failed for this tournament", () => {
       mockState.results.tmntId = "";
       mockState.results.loadStatus = "failed";
-      mockState.results.requestedTmntId = tmntId;
       render(<PotsPage />);
       expect(mockFetchOneTmntGameResults).not.toHaveBeenCalled();
     });
@@ -310,6 +382,7 @@ describe("PotsPage", () => {
       mockState.potPfs.requestedTmntId = otherTmntId;
       render(<PotsPage />);
       expect(mockFetchPotPfs).toHaveBeenCalledWith(tmntId);
+      expect(mockDispatch).toHaveBeenCalledTimes(1);
       expect(mockDispatch).toHaveBeenCalledWith(potPfsAction);
     });
 
@@ -323,7 +396,6 @@ describe("PotsPage", () => {
     it("does not fetch prizes again after they failed for this tournament", () => {
       mockState.potPfs.tmntId = "";
       mockState.potPfs.loadStatus = "failed";
-      mockState.potPfs.requestedTmntId = tmntId;
       render(<PotsPage />);
       expect(mockFetchPotPfs).not.toHaveBeenCalled();
     });
@@ -334,6 +406,14 @@ describe("PotsPage", () => {
       mockState.potPfs.requestedTmntId = otherTmntId;
       render(<PotsPage />);
       expect(mockDispatch).toHaveBeenCalledWith(potPfsAction);
+    });
+
+    it("does not fetch anything when a different pot is selected", async () => {
+      const user = userEvent.setup();
+      render(<PotsPage />);
+      await user.click(at(getPotButtons(), 1));
+      await user.click(at(getPotButtons(), 2));
+      expect(mockDispatch).not.toHaveBeenCalled();
     });
   });
 
@@ -358,6 +438,7 @@ describe("PotsPage", () => {
         screen.getByText(`An error occurred while loading the tournament with id: ${tmntId}.`)
       ).toBeInTheDocument();
       expect(screen.queryByTestId("wait-modal")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("tmnt-home-header")).not.toBeInTheDocument();
     });
 
     it("shows a general error when the failure has no message", () => {
@@ -380,12 +461,38 @@ describe("PotsPage", () => {
       ).toBeInTheDocument();
     });
 
-    it("calls retry when Retry is clicked after a tournament error", async () => {
+    it("shows the tournament error before a results error", () => {
+      setTmntHook({ hasData: false, failed: true, error: "Network Error" });
+      mockState.results.tmntId = "";
+      mockState.results.loadStatus = "failed";
+      mockState.results.error = "Results server error";
+      render(<PotsPage />);
+      expect(
+        screen.getByRole("heading", { name: "Unable to load tournament" })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(`An error occurred while loading the tournament with id: ${tmntId}.`)
+      ).toBeInTheDocument();
+      expect(screen.queryByText("Results server error")).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("heading", { name: "Unable to load tournament results" })
+      ).not.toBeInTheDocument();
+    });
+
+    it("calls retry, and dispatches nothing, when Retry is clicked after a tournament error", async () => {
       const user = userEvent.setup();
       setTmntHook({ hasData: false, failed: true, error: "Network Error" });
       render(<PotsPage />);
       await user.click(screen.getByRole("button", { name: "Retry" }));
       expect(retryTmnt).toHaveBeenCalledTimes(1);
+      expect(mockDispatch).not.toHaveBeenCalled();
+    });
+
+    it("does not build pot rows before the tournament data is loaded", () => {
+      setTmntHook({ hasData: false });
+      render(<PotsPage />);
+      expect(mockCalcNumGames).not.toHaveBeenCalled();
+      expect(mockBuildPotResultsRows).not.toHaveBeenCalled();
     });
   });
 
@@ -403,6 +510,9 @@ describe("PotsPage", () => {
         screen.getByText("No pots are available for this tournament.")
       ).toBeInTheDocument();
       expect(screen.queryByRole("group", { name: "Select pot" })).not.toBeInTheDocument();
+      expect(mockPotGames).not.toHaveBeenCalled();
+      expect(mockPotLastGame).not.toHaveBeenCalled();
+      expect(mockPotSeries).not.toHaveBeenCalled();
     });
 
     it("shows the no pots message even while results and prizes are not loaded", () => {
@@ -416,6 +526,18 @@ describe("PotsPage", () => {
       ).toBeInTheDocument();
       expect(screen.queryByTestId("wait-modal")).not.toBeInTheDocument();
     });
+
+    it("shows the no pots message instead of a results or prizes error", () => {
+      mockState.results.tmntId = "";
+      mockState.results.loadStatus = "failed";
+      mockState.potPfs.tmntId = "";
+      mockState.potPfs.loadStatus = "failed";
+      render(<PotsPage />);
+      expect(
+        screen.getByText("No pots are available for this tournament.")
+      ).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Retry" })).not.toBeInTheDocument();
+    });
   });
 
   // -------------------------------------------------------------------------
@@ -428,15 +550,25 @@ describe("PotsPage", () => {
       expect(screen.queryByTestId("tmnt-home-header")).not.toBeInTheDocument();
     });
 
+    it("shows the wait modal while results for another tournament are loaded", () => {
+      mockState.results.tmntId = otherTmntId;
+      mockState.results.requestedTmntId = tmntId;
+      mockState.results.loadStatus = "loading";
+      render(<PotsPage />);
+      expect(screen.getByTestId("wait-modal")).toBeInTheDocument();
+      expect(mockBuildPotResultsRows).not.toHaveBeenCalled();
+    });
+
     it("shows the results error message when the results fail", () => {
       mockState.results.tmntId = "";
       mockState.results.loadStatus = "failed";
       mockState.results.error = "Results server error";
       render(<PotsPage />);
       expect(
-        screen.getByRole("heading", { name: "Unable to load tournament" })
+        screen.getByRole("heading", { name: "Unable to load tournament results" })
       ).toBeInTheDocument();
       expect(screen.getByText("Results server error")).toBeInTheDocument();
+      expect(screen.queryByTestId("tmnt-home-header")).not.toBeInTheDocument();
     });
 
     it("shows a default error when the results fail with no message", () => {
@@ -460,7 +592,17 @@ describe("PotsPage", () => {
 
       await user.click(screen.getByRole("button", { name: "Retry" }));
       expect(mockFetchOneTmntGameResults).toHaveBeenCalledWith(tmntId);
+      expect(mockFetchPotPfs).not.toHaveBeenCalled();
+      expect(mockDispatch).toHaveBeenCalledTimes(1);
       expect(mockDispatch).toHaveBeenCalledWith(resultsAction);
+    });
+
+    it("does not build pot rows before the results are loaded", () => {
+      mockState.results.tmntId = "";
+      mockState.results.loadStatus = "loading";
+      render(<PotsPage />);
+      expect(mockCalcNumGames).not.toHaveBeenCalled();
+      expect(mockBuildPotResultsRows).not.toHaveBeenCalled();
     });
   });
 
@@ -483,6 +625,7 @@ describe("PotsPage", () => {
         screen.getByRole("heading", { name: "Unable to load tournament prizes" })
       ).toBeInTheDocument();
       expect(screen.getByText("Prizes server error")).toBeInTheDocument();
+      expect(screen.queryByTestId("tmnt-home-header")).not.toBeInTheDocument();
     });
 
     it("shows a default error when the prizes fail with no message", () => {
@@ -506,6 +649,8 @@ describe("PotsPage", () => {
 
       await user.click(screen.getByRole("button", { name: "Retry" }));
       expect(mockFetchPotPfs).toHaveBeenCalledWith(tmntId);
+      expect(mockFetchOneTmntGameResults).not.toHaveBeenCalled();
+      expect(mockDispatch).toHaveBeenCalledTimes(1);
       expect(mockDispatch).toHaveBeenCalledWith(potPfsAction);
     });
 
@@ -516,8 +661,20 @@ describe("PotsPage", () => {
       mockState.potPfs.loadStatus = "failed";
       render(<PotsPage />);
       expect(
-        screen.getByRole("heading", { name: "Unable to load tournament" })
+        screen.getByRole("heading", { name: "Unable to load tournament results" })
       ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("heading", { name: "Unable to load tournament prizes" })
+      ).not.toBeInTheDocument();
+    });
+
+    it("shows the wait modal for loading results before a prizes error", () => {
+      mockState.results.tmntId = "";
+      mockState.results.loadStatus = "loading";
+      mockState.potPfs.tmntId = "";
+      mockState.potPfs.loadStatus = "failed";
+      render(<PotsPage />);
+      expect(screen.getByTestId("wait-modal")).toBeInTheDocument();
       expect(
         screen.queryByRole("heading", { name: "Unable to load tournament prizes" })
       ).not.toBeInTheDocument();
@@ -529,7 +686,7 @@ describe("PotsPage", () => {
     it("renders the tournament header with the Pots button selected", () => {
       render(<PotsPage />);
       expect(screen.getByTestId("tmnt-home-header")).toHaveTextContent("Pots");
-      const props = lastProps(mockTmntHomeHeader);
+      const props = lastProps(mockTmntHomeHeader.mock.lastCall);
       expect(props.tmntFullData).toBe(tmntFullData);
       expect(props.selectedTmntPageBtn).toBe("Pots");
       expect(screen.queryByTestId("wait-modal")).not.toBeInTheDocument();
@@ -541,30 +698,44 @@ describe("PotsPage", () => {
       expect(mockBuildPotResultsRows).toHaveBeenCalledWith(tmntResults, numGames);
     });
 
-    it("does not build pot rows before the results are loaded", () => {
-      mockState.results.tmntId = "";
-      mockState.results.loadStatus = "loading";
-      render(<PotsPage />);
-      expect(mockCalcNumGames).not.toHaveBeenCalled();
-      expect(mockBuildPotResultsRows).not.toHaveBeenCalled();
-    });
-
     it("renders a button for each pot using the pot short name", () => {
       render(<PotsPage />);
       const buttons = getPotButtons();
       expect(buttons).toHaveLength(3);
       tmntFullData.pots.forEach((pot, i) => {
-        expect(buttons[i]).toHaveTextContent(getPotShortName(pot, tmntFullData.divs));
-        expect(buttons[i]).toHaveClass("btn", "btn-outline-primary");
+        const button = at(buttons, i);
+        expect(button).toHaveTextContent(getPotShortName(pot, tmntFullData.divs));
+        expect(button).toHaveClass("btn", "btn-outline-primary");
+        expect(button).toHaveAttribute("type", "button");
       });
     });
 
     it("selects the first pot by default", () => {
       render(<PotsPage />);
       const buttons = getPotButtons();
-      expect(buttons[0]).toHaveClass("active");
-      expect(buttons[1]).not.toHaveClass("active");
-      expect(buttons[2]).not.toHaveClass("active");
+      expect(at(buttons, 0)).toHaveClass("active");
+      expect(at(buttons, 1)).not.toHaveClass("active");
+      expect(at(buttons, 2)).not.toHaveClass("active");
+    });
+
+    it("marks only the selected pot button as pressed", () => {
+      render(<PotsPage />);
+      const buttons = getPotButtons();
+      expect(at(buttons, 0)).toHaveAttribute("aria-pressed", "true");
+      expect(at(buttons, 1)).toHaveAttribute("aria-pressed", "false");
+      expect(at(buttons, 2)).toHaveAttribute("aria-pressed", "false");
+      expect(screen.getByRole("button", { name: getPotShortName(gamePot, tmntFullData.divs), pressed: true })).toBeInTheDocument();
+    });
+
+    it("moves aria-pressed to the pot button that is clicked", async () => {
+      const user = userEvent.setup();
+      render(<PotsPage />);
+      await user.click(at(getPotButtons(), 2));
+      const buttons = getPotButtons();
+      expect(at(buttons, 0)).toHaveAttribute("aria-pressed", "false");
+      expect(at(buttons, 1)).toHaveAttribute("aria-pressed", "false");
+      expect(at(buttons, 2)).toHaveAttribute("aria-pressed", "true");
+      expect(screen.getAllByRole("button", { pressed: true })).toHaveLength(1);
     });
 
     it("renders PotGames for a game pot with the right props", () => {
@@ -573,7 +744,7 @@ describe("PotsPage", () => {
       expect(screen.queryByTestId("pot-last-game")).not.toBeInTheDocument();
       expect(screen.queryByTestId("pot-series")).not.toBeInTheDocument();
 
-      const props = lastProps(mockPotGames);
+      const props = lastProps(mockPotGames.mock.lastCall);
       expect(props.pot_id).toBe(gamePot.id);
       expect(props.tmntFullData).toBe(tmntFullData);
       expect(props.potResultsRows).toBe(potResultsRows);
@@ -584,14 +755,15 @@ describe("PotsPage", () => {
     it("renders PotLastGame when a last game pot is selected", async () => {
       const user = userEvent.setup();
       render(<PotsPage />);
-      await user.click(getPotButtons()[1]);
+      await user.click(at(getPotButtons(), 1));
 
-      expect(getPotButtons()[1]).toHaveClass("active");
-      expect(getPotButtons()[0]).not.toHaveClass("active");
+      expect(at(getPotButtons(), 1)).toHaveClass("active");
+      expect(at(getPotButtons(), 0)).not.toHaveClass("active");
       expect(screen.getByTestId("pot-last-game")).toHaveTextContent(lastGamePot.id);
       expect(screen.queryByTestId("pot-games")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("pot-series")).not.toBeInTheDocument();
 
-      const props = lastProps(mockPotLastGame);
+      const props = lastProps(mockPotLastGame.mock.lastCall);
       expect(props.pot_id).toBe(lastGamePot.id);
       expect(props.tmntFullData).toBe(tmntFullData);
       expect(props.potResultsRows).toBe(potResultsRows);
@@ -602,14 +774,15 @@ describe("PotsPage", () => {
     it("renders PotSeries when a series pot is selected", async () => {
       const user = userEvent.setup();
       render(<PotsPage />);
-      await user.click(getPotButtons()[2]);
+      await user.click(at(getPotButtons(), 2));
 
-      expect(getPotButtons()[2]).toHaveClass("active");
+      expect(at(getPotButtons(), 2)).toHaveClass("active");
       expect(screen.getByTestId("pot-series")).toHaveTextContent(seriesPot.id);
       expect(screen.queryByTestId("pot-games")).not.toBeInTheDocument();
       expect(screen.queryByTestId("pot-last-game")).not.toBeInTheDocument();
 
-      const props = lastProps(mockPotSeries);
+      // the series pot gets the raw results, not the pot rows
+      const props = lastProps(mockPotSeries.mock.lastCall);
       expect(props.pot_id).toBe(seriesPot.id);
       expect(props.tmntFullData).toBe(tmntFullData);
       expect(props.tmntResults).toBe(tmntResults);
@@ -617,21 +790,40 @@ describe("PotsPage", () => {
       expect(props.numGames).toBe(numGames);
     });
 
+    it("keeps the pot selected when its button is clicked again", async () => {
+      const user = userEvent.setup();
+      render(<PotsPage />);
+      await user.click(at(getPotButtons(), 1));
+      await user.click(at(getPotButtons(), 1));
+
+      expect(at(getPotButtons(), 1)).toHaveClass("active");
+      expect(screen.getByTestId("pot-last-game")).toHaveTextContent(lastGamePot.id);
+    });
+
     it("switches back to the first pot when it is clicked again", async () => {
       const user = userEvent.setup();
       render(<PotsPage />);
-      await user.click(getPotButtons()[2]);
-      await user.click(getPotButtons()[0]);
+      await user.click(at(getPotButtons(), 2));
+      await user.click(at(getPotButtons(), 0));
 
-      expect(getPotButtons()[0]).toHaveClass("active");
+      expect(at(getPotButtons(), 0)).toHaveClass("active");
       expect(screen.getByTestId("pot-games")).toHaveTextContent(gamePot.id);
       expect(screen.queryByTestId("pot-series")).not.toBeInTheDocument();
+    });
+
+    it("does not rebuild the pot rows when a different pot is selected", async () => {
+      const user = userEvent.setup();
+      render(<PotsPage />);
+      const builds = mockBuildPotResultsRows.mock.calls.length;
+      await user.click(at(getPotButtons(), 1));
+      await user.click(at(getPotButtons(), 2));
+      expect(mockBuildPotResultsRows).toHaveBeenCalledTimes(builds);
     });
 
     it("falls back to the first pot when the selected pot no longer exists", async () => {
       const user = userEvent.setup();
       const { rerender } = render(<PotsPage />);
-      await user.click(getPotButtons()[2]);
+      await user.click(at(getPotButtons(), 2));
       expect(screen.getByTestId("pot-series")).toBeInTheDocument();
 
       // series pot removed from the tournament data
@@ -640,15 +832,35 @@ describe("PotsPage", () => {
       rerender(<PotsPage />);
 
       expect(getPotButtons()).toHaveLength(2);
-      expect(getPotButtons()[0]).toHaveClass("active");
+      expect(at(getPotButtons(), 0)).toHaveClass("active");
       expect(screen.getByTestId("pot-games")).toHaveTextContent(gamePot.id);
+      expect(screen.queryByTestId("pot-series")).not.toBeInTheDocument();
     });
 
     it("renders PotSeries first when the first pot is a series pot", () => {
       tmntFullData.pots = [seriesPot, gamePot];
       setTmntHook();
       render(<PotsPage />);
+      expect(at(getPotButtons(), 0)).toHaveClass("active");
       expect(screen.getByTestId("pot-series")).toHaveTextContent(seriesPot.id);
+      expect(screen.queryByTestId("pot-games")).not.toBeInTheDocument();
+    });
+
+    it("renders PotLastGame first when the first pot is a last game pot", () => {
+      tmntFullData.pots = [lastGamePot, gamePot];
+      setTmntHook();
+      render(<PotsPage />);
+      expect(screen.getByTestId("pot-last-game")).toHaveTextContent(lastGamePot.id);
+      expect(screen.queryByTestId("pot-games")).not.toBeInTheDocument();
+    });
+
+    it("shows one button and its pot when the tournament has one pot", () => {
+      tmntFullData.pots = [lastGamePot];
+      setTmntHook();
+      render(<PotsPage />);
+      expect(getPotButtons()).toHaveLength(1);
+      expect(at(getPotButtons(), 0)).toHaveClass("active");
+      expect(screen.getByTestId("pot-last-game")).toHaveTextContent(lastGamePot.id);
     });
   });
 });

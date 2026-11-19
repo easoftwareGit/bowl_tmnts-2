@@ -5,10 +5,14 @@ import { getPlayerName } from "@/lib/getName";
 import { formatValueSymbSep2Dec } from "@/lib/currency/formatValue";
 import { IntlConfig } from "@/lib/currency/components/CurrencyInputProps";
 import { getLocaleConfig } from "@/lib/currency/components/utils";
-import { tmntGameResult } from "@/lib/types/resultsTypes";
+import { tgrGameKey, tmntGameResult } from "@/lib/types/resultsTypes";
 import { getGameNums } from "@/components/tmnts/games";
+import { calcPrizes } from "@/lib/results/calcResults";
+import { hasAmount } from "./potGames";
+import { FIGURE_SPACE } from "@/lib/validation/constants";
+import "./pots.css";
 
-type potGameProps = {
+type potSeriesProps = {
   pot_id: string;
   tmntFullData: tmntFullType;
   tmntResults: tmntGameResult[];
@@ -23,34 +27,13 @@ const ic: IntlConfig = {
 const localConfig = getLocaleConfig(ic);
 localConfig.prefix = "$";
 
-type playerNameWithScoreForSeriesProps = {
-  row: tmntGameResult;
-  tmntFullData: tmntFullType
-};
-
-const PlayerNameWithScoreForSeries = ({
-  row,
-  tmntFullData
-}: playerNameWithScoreForSeriesProps) => {
-  return (
-    <div className="d-flex align-items-center">
-      <span>
-        {getPlayerName(tmntFullData.players, row.player_id)}
-      </span>
-      <span className="ms-auto ps-2 text-nowrap">
-        {row["total + Hdcp"]}
-      </span>
-    </div>
-  )
-}
-
 const PotSeries = ({
   pot_id,
   tmntFullData,
   tmntResults,
   potPfs,
   numGames,
-}: potGameProps) => {
+}: potSeriesProps) => {
   if (!pot_id) return missingDataError("No pot id");
   if (!tmntFullData) return missingDataError("No tournament data");
   if (!tmntResults) return missingDataError("No pot results rows");
@@ -63,129 +46,167 @@ const PotSeries = ({
   if (!div) return missingDataError("Could not find div. Id: " + pot.div_id);
 
   const potPrizeFund = potPfs.filter((potPf) => potPf.pot_id === pot_id);
-  if (!potPrizeFund || potPrizeFund.length === 0) {
+  if (potPrizeFund.length === 0) {
     return missingDataError("No pot prize fund");
-  }  
+  }
   const potPlayers = tmntFullData.potEntries.filter(
     (potEntry) => potEntry.pot_id === pot_id,
   );
-  if (!potPlayers || potPlayers.length === 0) {
+  if (potPlayers.length === 0) {
     return missingDataError("No pot players");
   }
   const potPlayerIds = new Set(potPlayers.map((potPlayer) => potPlayer.player_id));
 
-  // sort by amount, highest to lowest
-  potPrizeFund.sort((a, b) => {
-    if (a.amount === null || b.amount === null) {
-      return 0;
-    }
-    return b.amount! - a.amount!;
-  });
+  // every saved prize fund has an amount; after this check TypeScript
+  // knows amount is a number for every item in potPrizeFund
+  if (!potPrizeFund.every(hasAmount)) {
+    return missingDataError("Pot prize fund has no amount");
+  }
+
+  // calcPrizes needs the prize fund in position order (1st, 2nd, ...).
+  // amounts never increase by position (checked when saved), so sorting
+  // by amount, highest to lowest, gives position order
+  potPrizeFund.sort((a, b) => b.amount - a.amount);
 
   const gameResults = tmntResults
-    .filter((row) => potPlayerIds.has(row.player_id))
+    .filter((row) => row.div_id === div.id && potPlayerIds.has(row.player_id))
     .sort((a, b) => (b["total + Hdcp"] ?? 0) - (a["total + Hdcp"] ?? 0));
 
+  // only calculate ties once at least one result has a score for the last game;
+  // before that, show the prize fund amounts in position order.
+  // after: one prize per paid row of gameResults, tied totals split the
+  // prizes they cover
+  const lastGameKey = tgrGameKey(numGames);
+  const prizes: number[] = gameResults.some((r) => r[lastGameKey] != null)
+    ? calcPrizes(gameResults, "total + Hdcp", potPrizeFund)
+    : potPrizeFund.map((pf) => pf.amount);
+  // only paid places get a payout row; no rows for 0 prizes
+  const paidPrizes = prizes.filter((prize) => prize > 0);
+
   const gameNums = getGameNums(tmntResults);
-  
-  const payoutWidth = 100;
+
+  const nameWidth = 140;
+  const payoutWidth = 90;
   const gameWidth = 40;
+  const totalWidth = 70;
 
   return (
-    <div data-testid="PotsOuterWrapper" className="pots-outer">
-      <div data-testid="PotsInnerWrapper" className="pots-inner">
-        {/* scrolls sideways when the pot columns do not fit the page */}
-        <div className="overflow-x-auto" data-testid="brkt-columns-scroll">
-          <div
-            className="d-flex flex-nowrap align-items-start gap-2 pb-2"
-            data-testid="pot-columns-row"
+    <div className="d-flex justify-content-center">
+      {/* scrolls sideways when the pot columns do not fit the page */}
+      <div className="overflow-x-auto" data-testid="pots-columns-scroll">
+        <div
+          className="d-flex flex-nowrap align-items-start gap-2 pb-2"
+          data-testid="pot-columns-row"
+        >
+          {/* player name */}
+          <table
+            className="table table-sm table-striped table-hover w-auto flex-shrink-0"
+            data-testid="pot-players"
           >
-            {/* game scores table */}
-            <table
-              key={numGames}
-              className="table table-sm table-striped table-hover w-auto shrink-0"
-              data-testid="pot-series-games"
-            >
-              <thead>
-                <tr>
+            <thead>
+              <tr>
+                <th className="text-start align-middle" style={{ width: nameWidth }}>
+                  Name
+                </th>
+              </tr>
+            </thead>
+            <tbody className="table-group-divider small">
+              {gameResults.map((row) => {
+                const name = getPlayerName(tmntFullData.players, row.player_id);
+                return (
+                  <tr key={row.player_id}>
+                    <td className="text-start align-middle">
+                      {/* one line per name so every table's rows line up;
+                          a long name is cut with "..." and shown in full on hover */}
+                      <div className="text-truncate" style={{ maxWidth: nameWidth }} title={name}>
+                        {name}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          {/* game scores table */}
+          <table
+            className="table table-sm table-striped table-hover w-auto flex-shrink-0 pots-table"
+            data-testid="pot-series-games"
+          >
+            <thead>
+              <tr>
+                {gameNums.map((gameNum) => (
+                  <th
+                    key={gameNum}
+                    className="text-end align-middle game-header-align"
+                    style={{ width: gameWidth }}
+                  >
+                    {gameNum}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="table-group-divider small">
+              {gameResults.map((row) => (
+                <tr key={row.player_id}>
                   {gameNums.map((gameNum) => (
-                    <th
-                      key={gameNum}
-                      className="text-end align-middle game-header-align"
-                      style={{ width: gameWidth }}                    
-                    >
-                      {gameNum}
-                    </th>
+                    <td key={gameNum} className="text-end align-middle">
+                      {row[`Game ${gameNum}`]}
+                    </td>
                   ))}
                 </tr>
-              </thead>
-              <tbody className="table-group-divider small">                
-                {gameResults.map((row) => (
-                  <tr key={row.player_id}>
-                    {gameNums.map((gameNum) => (
-                      <td key={gameNum} className="text-end align-middle">
-                        {row[`Game ${gameNum}`]}
-                      </td>
-                    ))}                    
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+              ))}
+            </tbody>
+          </table>
 
-            {/* player name and total table */}
-            <table
-              key={numGames}
-              className="table table-sm table-striped table-hover w-auto shrink-0"
-              data-testid="pot-series-totals"
-            >
-              <thead>
-                <tr>
-                  <th className="text-center align-middle">
-                    Total
-                  </th>
+          {/* total table */}
+          <table
+            className="table table-sm table-striped table-hover w-auto flex-shrink-0"
+            data-testid="pot-series-totals"
+          >
+            <thead>
+              <tr>
+                <th className="text-center align-middle" style={{ width: totalWidth }}>
+                  Total
+                </th>
+              </tr>
+            </thead>
+            <tbody className="table-group-divider small">
+              {gameResults.map((row) => (
+                <tr key={row.player_id}>
+                  <td className="text-end align-middle text-nowrap">
+                    {row["total + Hdcp"]}{FIGURE_SPACE}
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="table-group-divider small">
-                {gameResults.map((row) => (
-                  <tr key={row.player_id}>
-                    <td className="align-middle">
-                      <PlayerNameWithScoreForSeries
-                        row={row}
-                        tmntFullData={tmntFullData}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+              ))}
+            </tbody>
+          </table>
 
-            {/* prizes table */}
-            <table className="table table-sm table-striped table-hover w-auto shrink-0">
-              <thead>
-                <tr>
-                  <th
-                    className="text-center align-middle"
-                    style={{ width: payoutWidth }}
-                  >
-                    Total $
-                  </th>
+          {/* prizes table */}
+          <table
+            className="table table-sm table-striped table-hover w-auto flex-shrink-0"
+            data-testid="pot-payouts"
+          >
+            <thead>
+              <tr>
+                <th
+                  className="text-end align-middle pe-3"
+                  style={{ width: payoutWidth }}
+                >
+                  Total $
+                </th>
+              </tr>
+            </thead>
+            <tbody className="table-group-divider small">
+              {paidPrizes.map((prize, index) => (
+                <tr key={`payout-${String(index)}`}>
+                  <td className="text-end align-middle text-success pe-3">
+                    {formatValueSymbSep2Dec(prize.toString(), localConfig)}
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="table-group-divider small">
-                {potPrizeFund.map((potPrize) => (
-                  <tr key={potPrize.id}>
-                    <td className="text-center align-middle text-success">
-                      {formatValueSymbSep2Dec(
-                        (potPrize.amount!).toString(),
-                        localConfig,
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            
-          </div>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

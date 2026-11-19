@@ -49,7 +49,7 @@ import { sanitizeDivEntry, validateDivEntries } from "../../divEntries/validate"
 import { sanitizeElim, validateElims } from "../../elims/validate";
 import { sanitizeElimEntry, validateElimEntries } from "../../elimEntries/validate";
 import { sanitizeFullStage, validateFullStage } from "../../stages/validate";
-import { getBlankTmntFullData } from "@/app/dataEntry/tmntForm/tmntTools";
+import { getBlankTmntFullData } from "@/app/(private)/dataEntry/tmntForm/tmntTools";
 import { cloneDeep } from "lodash";
 import { sanitizeTmntMoney, validateTmntMoneys } from "../../moneys/validate";
 

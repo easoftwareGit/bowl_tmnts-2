@@ -1,14 +1,15 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "@/redux/store";
+import { AppDispatch } from "@/redux/store";
 import { useParams } from "next/navigation";
 import {
-  fetchUser,
-  getUserError,
-  getUserLoadStatus,
-  getUserRequestId
-} from "@/redux/features/user/userSlice";
+  fetchTmntDirector,
+  getTmntDirectorError,
+  getTmntDirectorLoadStatus,
+  getTmntDirectorRequestId,
+  selectTmntDirector,
+} from "@/redux/features/director/directorSlice";
 import WaitModal from "@/components/modal/waitModal";
 import TmntHomeHeader, { tmntPageBtnType } from "@/app/results/tmntHeader/tmntHomeHeader";
 import { useTmntFullData } from "@/hooks/useTmntFullData";
@@ -19,10 +20,10 @@ const TmntContactPage = () => {
 
   const dispatch = useDispatch<AppDispatch>();
 
-  const requestedUserId = useSelector(getUserRequestId);
-  const userLoadStatus = useSelector(getUserLoadStatus);
-  const userError = useSelector(getUserError);
-  const userData = useSelector((state: RootState) => state.user.user);
+  const requestedTmntId = useSelector(getTmntDirectorRequestId);
+  const directorLoadStatus = useSelector(getTmntDirectorLoadStatus);
+  const directorError = useSelector(getTmntDirectorError);
+  const tmntDirector = useSelector(selectTmntDirector);
 
   const [mounted, setMounted] = useState(false);
 
@@ -43,106 +44,34 @@ const TmntContactPage = () => {
     retry: retryTmnt,
   } = useTmntFullData(tmntId);
 
-  const requestedDirectorIdRef = useRef("");
-
-  const loadedTmntId = hasTmntData ? tmntFullData.tmnt.id : "";
-  const directorId = hasTmntData ? tmntFullData.tmnt.user_id : "";
-
+  /**************************/
+  /* get tmnt director data */
+  /**************************/
+  // only needs the tmntId, so it loads at the same time as the tmnt data
   useEffect(() => {
-    const tmntLoaded = loadedTmntId !== "" && loadedTmntId === tmntId;
-
-    if (!tmntLoaded) return;
-
-    const needUserData = userData.id === "" || userData.id !== directorId;
-
-    const userFailed =
-      userLoadStatus === "failed" && requestedUserId === directorId;
-
-    const alreadyRequested = requestedDirectorIdRef.current === directorId;
-
-    if (
-      needUserData &&
-      userLoadStatus !== "loading" &&
-      !userFailed &&
-      !alreadyRequested
-    ) {
-      requestedDirectorIdRef.current = directorId;
-      dispatch(fetchUser(directorId));
-    }
-  }, [
-    tmntId,
-    loadedTmntId,
-    directorId,
-    userData.id,
-    userLoadStatus,
-    requestedUserId,
-    dispatch,
-  ]);  
-
-  // useEffect(() => {
-  //   const tmntLoaded =
-  //     tmntFullData.tmnt.id !== "" &&
-  //     tmntFullData.tmnt.id === tmntId;
-
-  //   if (!tmntLoaded) return;
-
-  //   const directorUserId = tmntFullData.tmnt.user_id;
-
-  //   const needUserData =
-  //     userData.id === "" ||
-  //     userData.id !== directorUserId;
-
-  //   const userFailed =
-  //     userLoadStatus === "failed" && requestedUserId === directorUserId;
-
-  //   const alreadyRequested =
-  //     requestedDirectorIdRef.current === directorUserId;
-
-  //   if (
-  //     needUserData &&
-  //     userLoadStatus !== "loading" &&
-  //     !userFailed &&
-  //     !alreadyRequested
-  //   ) {
-  //     requestedDirectorIdRef.current = directorUserId;
-  //     dispatch(fetchUser(directorUserId));
-  //   }
-  // }, [
-  //   tmntId,
-  //   userData.id,
-  //   userLoadStatus,
-  //   tmntFullData.tmnt.id,
-  //   tmntFullData.tmnt.user_id,
-  //   requestedUserId,
-  //   dispatch,
-  // ]);
+    if (!tmntId) return;
+    // already loading, loaded or failed for this tmnt. A failure is retried
+    // with the Retry button, not automatically.
+    if (requestedTmntId === tmntId && directorLoadStatus !== "idle") return;
+    void dispatch(fetchTmntDirector(tmntId));
+  }, [tmntId, requestedTmntId, directorLoadStatus, dispatch]);
 
   /*********************************************/
   /* render loading/error until data is loaded */
-  /*********************************************/  
+  /*********************************************/
 
-  const hasUserData =
-    hasTmntData && userData.id === directorId;
-  
-  const failedForThisUser =
-    hasTmntData &&
-    !hasUserData &&
-    userLoadStatus === "failed" &&
-    requestedUserId === directorId;
-  
-  const userNotFound =
-    hasTmntData &&
-    !hasUserData &&
-    userLoadStatus === "succeeded" &&
-    requestedUserId === directorId;  
-  
+  const directorIsForThisTmnt = requestedTmntId === tmntId;
+
+  const hasDirectorData =
+    directorIsForThisTmnt && directorLoadStatus === "succeeded";
+
+  const failedForThisDirector =
+    directorIsForThisTmnt && directorLoadStatus === "failed";
+
   if (!hasTmntData && failedForThisTmnt) {
-    const errmsg = tmntError
-      ? tmntError.includes("missing required child")
-        ? `Tournament with id: ${tmntId} is missing data.`
-        : `An error occurred while loading the tournament with id: ${tmntId}.`
+    const errmsg = tmntError?.includes("missing required child")
+      ? `Tournament with id: ${tmntId} is missing data.`
       : `An error occurred while loading the tournament with id: ${tmntId}.`;
-
     return (
       <div className="text-center mt-5">
         <h4>Unable to load tournament</h4>
@@ -151,10 +80,10 @@ const TmntContactPage = () => {
 
         <button
           type="button"
-          className="btn btn-primary"          
+          className="btn btn-primary"
           onClick={() => {
             void retryTmnt();
-          }}             
+          }}
         >
           Retry
         </button>
@@ -165,11 +94,10 @@ const TmntContactPage = () => {
   if (!hasTmntData) {
     return <WaitModal show={mounted} message="Loading..." />;
   }
-  
-  if (failedForThisUser || userNotFound) {
-    const directorErrMsg = userNotFound
-      ? "The tournament director could not be found."
-      : userError || "An error occurred while loading the tournament director.";
+
+  if (failedForThisDirector) {
+    const directorErrMsg =
+      directorError || "An error occurred while loading the tournament director.";
 
     return (
       <div className="text-center mt-5">
@@ -180,7 +108,7 @@ const TmntContactPage = () => {
         <button
           type="button"
           className="btn btn-primary"
-          onClick={() => dispatch(fetchUser(directorId))}
+          onClick={() => void dispatch(fetchTmntDirector(tmntId))}
         >
           Retry
         </button>
@@ -188,27 +116,27 @@ const TmntContactPage = () => {
     );
   }
 
-  if (!hasUserData) {
+  if (!hasDirectorData) {
     return <WaitModal show={mounted} message="Loading..." />;
   }
 
-  const tmntDirName = userData.first_name + " " + userData.last_name
+  const tmntDirName = tmntDirector.first_name + " " + tmntDirector.last_name;
 
   return (
     <>
       <TmntHomeHeader tmntFullData={tmntFullData} selectedTmntPageBtn={tmntPageBtn} />
       <div className="text-center mb-4">
-        <h4>Contact information for Tournament Director {tmntDirName}</h4>        
-      </div>      
+        <h4>Contact information for Tournament Director {tmntDirName}</h4>
+      </div>
       <div className="text-center mb-2">
         <span className="fw-bold">Email: </span>
-        <a href={`mailto:${userData.email}`}>
-          {userData.email}
+        <a href={`mailto:${tmntDirector.email}`}>
+          {tmntDirector.email}
         </a>
       </div>
       <div className="text-center">
         <span className="fw-bold">Phone: </span>
-        {userData.phone}
+        {tmntDirector.phone}
       </div>
     </>
   );
